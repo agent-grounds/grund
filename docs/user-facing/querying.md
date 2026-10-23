@@ -118,13 +118,10 @@ $ grund list examples/authored-citations/repo --unused --format json
 ```
 
 With `--format json` each uncited declaration is one NDJSON object of the shape
-`--kind` lists. `--unused` leaves out `E2E` cases unless `--kind` selects them, since
-nothing is expected to cite a test. Where the project configures an `E2E` kind,
-`grund list --unused --kind E2E` lists the uncited cases on their own, for an inventory:
-
-```bash
-grund list --unused --kind E2E
-```
+`--kind` lists. `--unused` leaves out the cases of a configured `E2E` kind unless `--kind`
+selects them, since nothing is expected to cite a test. The kinds `grund init` writes have
+no such kind: their e2e folder declares no IDs, so there is no case to leave out, and
+`--kind E2E` is refused there as an unknown kind.
 
 An entry in a kind's index does not count as a use, which is why the row above still
 carries `refs: 1`: read the rows `--unused` lists rather than thresholding on `refs`.

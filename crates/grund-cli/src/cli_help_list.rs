@@ -27,8 +27,9 @@ fn print_list_help() {
     println!(
         "  --glob PATTERN      only coordinates the pattern matches; repeatable  e.g. --glob 'FS-login.**'"
     );
+    // §FS-list.1.3.1: only a configured `E2E` kind's cases are left out.
     println!(
-        "  --unused            only declarations nothing cites yet (skips E2E unless E2E is selected)"
+        "  --unused            only declarations nothing cites yet (skips a configured E2E kind unless selected)"
     );
     println!("  --summary           one row per kind with count and home  e.g. grund list --summary");
     // §FS-list.total: the count of the rows the same filters list.
@@ -53,10 +54,12 @@ fn print_list_help() {
     println!("  grund list --selector FS.requirements # every FS requirements chapter");
     println!("  grund list --glob 'FS-login.**' --total # how many sections FS-login holds");
     println!("  grund list --size=words --top 10 # largest coordinate leads");
+    // §FS-list.1.3.1: only a configured `E2E` kind's cases are left out.
     println!(
-        "  grund list --unused             # uncited declarations (specs, decisions, …) — E2E cases excluded"
+        "  grund list --unused             # uncited declarations (specs, decisions, …) — configured E2E cases excluded"
     );
-    println!("  grund list --unused --kind E2E  # uncited e2e cases only, for inventory");
+    // §FS-list.1.3.2: a taught `--unused --kind` example selects a default kind, never `E2E`.
+    println!("  grund list --unused --kind FS   # uncited FS declarations only");
     println!("  grund list --kind FS --format json # one NDJSON record per ID, with its refs count");
     print_guide_links(
         &[
