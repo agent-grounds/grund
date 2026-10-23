@@ -14,7 +14,7 @@
 use super::assets::{AGENTS_PROJECT_NAMESPACES_TEMPLATE, AGENTS_TEMPLATE, canonical_template_text};
 use super::citation_directions::citation_directions_section;
 use super::clickable_citations::{ConversationSurface, clickable_citations_section};
-use crate::config::{Compiled, Place, Project, Run, kind_prefixes};
+use crate::config::{Compiled, KindConfig, Place, Project, Run, guided_kind, kind_prefixes};
 use crate::grammar::{
     AGENTS_BLOCK_BASE_VERSION, agents_block_heading, id_shape, inline_note_layout_sentence,
     literal_after_kind_placeholder,
@@ -76,7 +76,8 @@ fn agents_template_substitutions(
     let cite_example = format!("<{marker}>{id_example}{sep}3{sep}1");
     // §FS-init.2.3.4.4.2: a config with no citable kind says so rather than
     // naming the empty set.
-    let citable = kind_prefixes(&project.kind_configs());
+    let kind_configs = project.kind_configs();
+    let citable = kind_prefixes(&kind_configs);
     let kinds_set = if citable.is_empty() {
         "no `KIND` is declared yet".to_string()
     } else {
@@ -115,6 +116,7 @@ fn agents_template_substitutions(
         ("{ID_SHAPE}", id_shape),
         ("{CITE_EXAMPLE}", cite_example),
         ("{KINDS_SET}", kinds_set),
+        ("{KIND_DISCOVERY}", kind_discovery_bullet(&kind_configs)),
         ("{BARE_TOKEN_NOTE}", bare_note),
         ("{SECTION_HEADING_NOTE}", section_heading_note),
         ("{INLINE_CITATION_STYLE}", inline_citation_style),
@@ -139,6 +141,24 @@ fn agents_template_substitutions(
         ),
         ("{WORKSPACE_MEMBERS}", workspace.members.clone()),
     ]
+}
+
+/// The discovery rung (§FS-init.2.3.4.3): its `--kind` example names the kind
+/// init's guidance names, then the first other citable kind with a `folder`
+/// home, in config order, so the recipe runs in the project it was rendered for;
+/// a config with no citable kind gets the bare `grund list` alone.
+fn kind_discovery_bullet(kinds: &[KindConfig]) -> String {
+    let Some(first) = guided_kind(kinds) else {
+        return "- `grund list` — discover IDs if you get lost".to_string();
+    };
+    let second = kinds
+        .iter()
+        .find(|row| row.citable && row.folder.is_some() && row.kind != first.kind);
+    let example = match second {
+        Some(second) => format!("{},{}", first.kind, second.kind),
+        None => first.kind.clone(),
+    };
+    format!("- `grund list` / `grund list --kind {example}` — discover IDs if you get lost")
 }
 
 fn section_heading_note(project: &Project, marker: &str) -> String {
