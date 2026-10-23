@@ -18,7 +18,7 @@ use crate::model::{
 };
 use crate::queries::{
     GlobSelection, ListCitationCounts, check_list_scope, read_globs, reported_scope, reports,
-    require_unique_literal,
+    require_unique_literal, unused_leaves_out,
 };
 use crate::resolver::{WorkspaceProject, load_reported_workspace_context};
 
@@ -147,7 +147,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 continue;
             }
             // §FS-list.1.3.1: a configured `E2E` kind is left out unless `--kind` selects it.
-            if opts.unused_only && id.kind == "E2E" && !opts.kind_filter.contains("E2E") {
+            if opts.unused_only && unused_leaves_out(&id.kind, &opts.kind_filter) {
                 continue;
             }
             // §AR-scanner.4.6: the declarations every command counts, each at its record,

@@ -66,6 +66,7 @@ mod lsp_snapshot;
 mod path_report;
 mod refs;
 mod refs_annotations;
+mod refs_note;
 mod refs_query;
 mod refs_sites;
 mod report;

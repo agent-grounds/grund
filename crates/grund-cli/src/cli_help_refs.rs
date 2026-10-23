@@ -59,9 +59,10 @@ fn print_refs_help() {
     print_run_flag_help("grund refs FS-login src/", true);
     println!();
     println!("The citation list is the result, so it goes to stdout (text and json alike) —");
-    println!(
-        "`grund refs <ID> | …` works like `grund list`. Only the typo `note:` goes to stderr."
-    );
+    println!("`grund refs <ID> | …` works like `grund list`. Only a `note:` goes to stderr:");
+    // §FS-refs.2.1: the typo note, or the §FS-refs.2.1.1 pointer to the bulk query.
+    println!("one for an ID declared nowhere, or, with no PATH and no section, one naming");
+    println!("`grund list --unused` for a declared ID nothing cites.");
     println!();
     println!(
         "Exit:  0 scan succeeded (with or without hits) · 1 ID or --from source rejected after context"

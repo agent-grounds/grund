@@ -29,7 +29,6 @@ fn every_rendering(fixture: &Fixture, cwd: &str, id: &str, list: &str, failures:
 /// §FS-refs.2.1.1: one project under either configuration version, from its
 /// root and from below it, in all eight renderings.
 #[test]
-#[ignore = "red until #936 prints the list --unused note; implement removes this"]
 fn unused_note_every_rendering() {
     let mut failures = Vec::new();
     for v2 in [false, true] {
@@ -50,7 +49,6 @@ fn unused_note_every_rendering() {
 /// §FS-refs.2.1.1: an alias-qualified query names its project; an
 /// unqualified one, at the workspace root or member-local, keeps the bare call.
 #[test]
-#[ignore = "red until #936 prints the list --unused note; implement removes this"]
 fn unused_note_workspace_forms() {
     let mut failures = Vec::new();
     for v2 in [false, true] {
@@ -83,7 +81,6 @@ fn unused_note_workspace_forms() {
 /// §FS-refs.2.1.1: an `E2E` case adds `--kind E2E`, with or without the alias;
 /// a custom kind is in the plain listing and takes no filter.
 #[test]
-#[ignore = "red until #936 prints the list --unused note; implement removes this"]
 fn unused_note_kind_forms() {
     let mut failures = Vec::new();
     for v2 in [false, true] {

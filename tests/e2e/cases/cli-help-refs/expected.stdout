@@ -39,7 +39,9 @@ Options:
                        --format json replaces a version-1 `[output] format = "json"`; a flag outranks its key.
 
 The citation list is the result, so it goes to stdout (text and json alike) —
-`grund refs <ID> | …` works like `grund list`. Only the typo `note:` goes to stderr.
+`grund refs <ID> | …` works like `grund list`. Only a `note:` goes to stderr:
+one for an ID declared nowhere, or, with no PATH and no section, one naming
+`grund list --unused` for a declared ID nothing cites.
 
 Exit:  0 scan succeeded (with or without hits) · 1 ID or --from source rejected after context
        · 2 run/scan error, or a refused --glob.

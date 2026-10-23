@@ -85,6 +85,14 @@ pub(crate) fn check_list_scope(
         .map_err(|refusal| selector_refusal(refusal.render(&table.known_kinds_line(scope))))
 }
 
+/// Whether `--unused` under the `--kind` selection `kind_filter` leaves a
+/// declaration of `kind` out though nothing cites it: an `E2E` case, unless
+/// that kind is selected (§FS-list.1.3.1). `list`, `list --size` and the `refs`
+/// note that names the listing (§FS-refs.2.1.1) all read this one rule.
+pub(crate) fn unused_leaves_out(kind: &str, kind_filter: &BTreeSet<String>) -> bool {
+    kind == "E2E" && !kind_filter.contains(kind)
+}
+
 /// `--project` needs workspace mode and names only loaded aliases
 /// (§FS-list.1.2).
 fn check_project_aliases(

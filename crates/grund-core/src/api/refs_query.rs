@@ -3,8 +3,9 @@
 //! resolver rejection (§FS-refs.2, §FS-refs.4, §AR-bindings.2).
 //!
 //! The adapter §AR-core-module-layout.2 keeps out of `refs.rs`, which is the
-//! published surface: what is here is the project selection, the hit walk, the
-//! sort and the breadcrumb a miss earns, none of them a signature a caller sees.
+//! published surface: what is here is the project selection, the hit walk and
+//! the sort, none of them a signature a caller sees. The breadcrumb an empty
+//! answer earns is `refs_note.rs`'s (§FS-refs.2.1).
 
 /// Data-producing implementation behind `refs_outcome`: scan once, select the target
 /// grammar, and return either citation data or the typed resolver rejection
@@ -14,9 +15,10 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsWithMetadata};
+use super::refs_note::{NoteQuery, empty_answer_note};
 use super::report::context_run_warnings;
 use crate::config::{display_path, format_guidance};
-use crate::grammar::{path_at_or_under, render_catalog_id, render_citation_id, render_input_id};
+use crate::grammar::{path_at_or_under, render_catalog_id, render_citation_id};
 use crate::model::{Citation, sort_path_key};
 use crate::queries::{declaration_ambiguity_refusal, reported_scope, reports_site};
 use crate::resolver::{WorkspaceContext, WorkspaceProject, load_classifying_workspace_context};
@@ -125,7 +127,6 @@ pub(super) fn refs_impl_with_annotations(
             }
         })?,
     };
-    let target_alias = target_project.alias.as_str();
     let render_config = &target_project.config;
     let scan_errors = refs_scan_errors(&context);
     // §FS-show.3.5.1: the format hint is for an argument that does not match
@@ -266,44 +267,21 @@ pub(super) fn refs_impl_with_annotations(
             enclosing_section: hit.citation.enclosing_section.clone(),
         })
         .collect::<Vec<_>>();
-    let note = if public_hits.is_empty() && !target_project.findings.declarations.contains_key(&id)
-    {
-        // §FS-config.3.2.8: a missing query reports its own authored digits.
-        let rendered_id = render_input_id(&render_config.grammar, raw_id, &id);
-        // §FS-refs.2.1: explicit paths qualify both the denial and the list advice.
-        let (scan_scope, outside_scan) = if opts.path_provided {
-            (
-                format!(" in scan path `{}`", opts.path.display()),
-                ", including outside this scan",
-            )
-        } else {
-            (String::new(), "")
-        };
-        let (query_id, list_command, declarations) = if context.workspace_loaded && alias.is_some()
-        {
-            (
-                format!("{target_alias}/{rendered_id}"),
-                format!("grund list --project {target_alias}"),
-                format!("{target_alias}'s declared IDs"),
-            )
-        } else {
-            let declarations = if opts.path_provided {
-                "project declarations"
-            } else {
-                "every declared ID"
-            };
-            (
-                rendered_id,
-                "grund list".to_string(),
-                declarations.to_string(),
-            )
-        };
-        Some(format!(
-            "{query_id} is neither declared nor cited{scan_scope} — run `{list_command}` to see {declarations}{outside_scan}"
-        ))
-    } else {
-        None
-    };
+    // §FS-refs.2.1: the breadcrumb an empty answer earns, decided in one place.
+    let note = public_hits
+        .is_empty()
+        .then(|| {
+            empty_answer_note(&NoteQuery {
+                path: opts.path_provided.then_some(opts.path.as_path()),
+                target: target_project,
+                raw_id,
+                id: &id,
+                qualified: context.workspace_loaded && alias.is_some(),
+                section: section.is_some(),
+                complete: scan_errors.is_empty(),
+            })
+        })
+        .flatten();
     // §FS-refs.3.2: kind metadata does not require an existing declaration.
     let kind_title = render_config
         .kinds

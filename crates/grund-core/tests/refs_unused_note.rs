@@ -65,7 +65,6 @@ fn host_results(repo: &Repo, id: &str, root: bool) -> [Value; 2] {
 /// §FS-refs.2.1.1: a no-path whole-ID query of the uncited declaration
 /// carries the note, in catalog spelling whatever digits the operand used.
 #[test]
-#[ignore = "red until #936 returns the list --unused note from refs; implement removes this"]
 fn api_note_names_the_catalog_spelling() {
     for repo in repos() {
         for id in ["ADR-3", "ADR-03", "ADR-0003"] {
@@ -92,7 +91,6 @@ fn api_note_withheld() {
 /// §FS-refs.2.1.1, §FS-distribution.3.2.2.2: both host transports carry the
 /// engine's one note unchanged, with no new field.
 #[test]
-#[ignore = "red until #936 returns the list --unused note from refs; implement removes this"]
 fn host_note_matches_the_api() {
     for repo in repos() {
         for result in host_results(&repo, "ADR-03", false) {

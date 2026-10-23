@@ -253,8 +253,9 @@ impl View<'_> {
                 None => files.push((c.file.clone(), 1)),
             }
         }
-        let declared =
-            (0..self.m.decls.len()).any(|d| self.qualified(d) == id && self.declared_within(d));
+        let declaration =
+            (0..self.m.decls.len()).find(|&d| self.qualified(d) == id && self.declared_within(d));
+        let declared = declaration.is_some();
         // §FS-refs.2.1: the no-hit note uses the requested citation set;
         // explicit paths qualify it and its project-list advice (§FS-refs.1).
         let note = (hits.is_empty() && !declared).then(|| match (project.as_str(), self.explicit_path) {
@@ -262,6 +263,16 @@ impl View<'_> {
             (None, Some(path)) => format!("{id} is neither declared nor cited in scan path `{path}` \u{2014} run `grund list` to see project declarations, including outside this scan"),
             (Some(alias), None) => format!("{id} is neither declared nor cited \u{2014} run `grund list --project {alias}` to see {alias}'s declared IDs"),
             (None, None) => format!("{id} is neither declared nor cited \u{2014} run `grund list` to see every declared ID"),
+        });
+        // §FS-refs.2.1.1: a declared whole ID nothing cites, asked with no path
+        // over a complete scan, names the `list --unused` call that holds it.
+        let whole = hits.is_empty() && section.is_none() && self.explicit_path.is_none();
+        let complete = self.scan_errors_in(false).is_empty();
+        let note = note.or_else(|| {
+            let d = declaration.filter(|_| whole && complete)?;
+            let project = project.as_str().map_or(String::new(), |a| format!(" --project {a}"));
+            let kind = if self.m.decls[d].kind == "E2E" { " --kind E2E" } else { "" };
+            Some(format!("{id} is declared but nothing cites it; `grund list{project} --unused{kind}` lists every such declaration"))
         });
         ok(
             json!({"run_cautions":[],"output_format":"text","workspace":self.workspace(),
