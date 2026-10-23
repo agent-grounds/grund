@@ -87,3 +87,36 @@ fn querying_guide_and_skill_hold_the_query_recipes() {
         );
     }
 }
+
+/// The guide teaches the declarations nothing cites yet as one call, `list --unused`, with
+/// `--kind E2E` for the e2e cases it skips and the JSON form, and links the checking
+/// guide for why an index entry is not a use; both skill copies name the call, so an agent
+/// that reads them never loops `grund refs` over every ID (§FS-init.2.3.4.3.1).
+#[test]
+#[ignore = "red until #938 the guide and skill teach grund list --unused; implement removes this"]
+fn querying_guide_and_skill_teach_the_unused_recipe() {
+    let root = manifest_dir();
+    let guide = fs::read_to_string(root.join("docs/user-facing/querying.md"))
+        .expect("docs/user-facing/querying.md, the Querying grund guide");
+    for recipe in [
+        "grund list --unused",
+        "--unused --kind E2E",
+        "--unused --format json",
+        "checking.md#when-only-an-index-cites-a-declaration",
+    ] {
+        assert!(
+            guide.contains(recipe),
+            "querying.md does not teach `{recipe}`"
+        );
+    }
+    for skill in [
+        "skills/grund-init/references/queries.md",
+        "crates/grund-core/assets/skills/grund-init/references/queries.md",
+    ] {
+        let text = fs::read_to_string(root.join(skill)).expect(skill);
+        assert!(
+            text.contains("grund list --unused"),
+            "{skill} does not name `grund list --unused`"
+        );
+    }
+}
