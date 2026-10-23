@@ -398,7 +398,11 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// the anchors are what still tells them apart. The same pass owns the carve-out
 /// that keeps §AR-checker.2.6 honest: an index entry is not an inbound citation, so the
 /// unused warning still fires for a declaration only its own index names
-/// (§DF-index-not-an-inbound-citation). The finding pass lives in
+/// (§DF-index-not-an-inbound-citation). Whether a citation in the index rides on
+/// a declaration heading is decided once, in `index_entries.rs`: the entry rule
+/// and that carve-out, and with it `list --unused` and the `refs` label, read the
+/// same answer, so such a citation is the entry for none of them
+/// (§FS-check.3.18.5.1, §FS-check.4.1.2.1). The finding pass lives in
 /// `index.rs` and its shared membership derivation in
 /// `index_entries.rs`, one file per invariant family and bounded helper
 /// (§AR-core-module-layout.1, §AR-core-module-layout.3).

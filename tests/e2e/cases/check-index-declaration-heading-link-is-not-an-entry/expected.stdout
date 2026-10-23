@@ -1,5 +1,4 @@
 docs/fs/FS-002-session.md:1: error: FS-002-session is not listed in docs/fs/README.md: an entry is a `§`-marked Markdown link to the declaration; write `[§FS-002-session](FS-002-session.md#fs-002-session-user-session)` in docs/fs/README.md — became an error in grund 0.13.0
 docs/fs/README.md:1: error: FS-000-index is not listed in docs/fs/README.md: an entry is a `§`-marked Markdown link to the declaration; write `[§FS-000-index](README.md#fs-000-index-index-after-fs-002-session)` in docs/fs/README.md — became an error in grund 0.13.0
 docs/fs/FS-001-login.md:1: warning: declared but never cited: FS-001-login (its index entry at docs/fs/README.md:3 does not count as a use)
-docs/fs/FS-002-session.md:1: warning: declared but never cited: FS-002-session (its index entry at docs/fs/README.md:1 does not count as a use)
 docs/fs/README.md:1: warning: declared but never cited: FS-000-index
