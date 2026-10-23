@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "case": "declare-line-prefix-forms",
+  "inputFiles": {
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/architecture": {"directory":true},
+    "repo/docs/architecture/README.md": {"bytes":[35,32,65,114,99,104,105,116,101,99,116,117,114,101,10]},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-entry.md": {"bytes":[35,32,70,83,45,101,110,116,114,121,58,32,69,110,116,114,121,112,111,105,110,116,10,10,72,111,115,116,115,58,32,194,167,65,82,45,108,117,97,44,32,194,167,65,82,45,104,97,115,107,101,108,108,44,32,194,167,65,82,45,104,97,115,107,101,108,108,45,99,97,114,101,116,44,32,194,167,65,82,45,99,108,111,106,117,114,101,44,32,194,167,65,82,45,101,108,105,115,112,44,32,194,167,65,82,45,108,105,115,112,44,32,194,167,65,82,45,115,113,108,44,32,194,167,65,82,45,114,117,115,116,46,10,10,35,35,32,49,46,32,67,111,110,116,114,97,99,116,10,10,84,104,101,32,114,111,117,116,101,114,32,114,111,117,116,101,115,46,10]},
+    "repo/docs/functional-spec/README.md": {"bytes":[35,32,70,117,110,99,116,105,111,110,97,108,32,115,112,101,99,10,10,45,32,91,194,167,70,83,45,101,110,116,114,121,93,40,70,83,45,101,110,116,114,121,46,109,100,41,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,91,107,105,110,100,115,93,93,10,107,105,110,100,32,61,32,34,70,83,34,10,102,111,108,100,101,114,32,61,32,34,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,34,10,116,105,116,108,101,32,61,32,34,87,104,97,116,34,10,10,91,91,107,105,110,100,115,93,93,10,107,105,110,100,32,61,32,34,65,82,34,10,102,111,108,100,101,114,32,61,32,34,100,111,99,115,47,97,114,99,104,105,116,101,99,116,117,114,101,34,10,116,105,116,108,101,32,61,32,34,72,111,119,34,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,116,114,117,101,10,10,91,105,100,93,10,102,111,114,109,97,116,32,61,32,34,123,107,105,110,100,125,45,123,115,108,117,103,125,34,10,115,108,117,103,95,112,97,116,116,101,114,110,32,61,32,34,91,97,45,122,93,91,97,45,122,48,45,57,45,93,42,34,10,10,91,115,99,97,110,93,10,105,110,99,108,117,100,101,32,61,32,91,34,100,111,99,115,34,44,32,34,115,114,99,34,93,10,101,120,116,101,110,115,105,111,110,115,32,61,32,91,34,109,100,34,44,32,34,114,115,34,44,32,34,115,113,108,34,44,32,34,104,115,34,44,32,34,108,117,97,34,44,32,34,108,105,115,112,34,44,32,34,99,108,106,34,44,32,34,101,108,34,93,10,114,101,115,112,101,99,116,95,103,105,116,105,103,110,111,114,101,32,61,32,102,97,108,115,101,10]},
+    "repo/src": {"directory":true},
+    "repo/src/clojure": {"directory":true},
+    "repo/src/clojure/router.clj": {"bytes":[59,59,32,65,82,45,99,108,111,106,117,114,101,58,32,99,108,111,106,117,114,101,32,114,111,117,116,101,114,10,59,59,32,82,111,117,116,101,115,32,114,101,113,117,101,115,116,115,44,32,112,101,114,32,194,167,70,83,45,101,110,116,114,121,46,49,46,10,59,59,10,59,59,32,35,35,32,49,46,32,67,111,110,116,114,97,99,116,10,59,59,32,79,110,101,32,114,111,117,116,101,32,112,101,114,32,112,97,116,104,46,10,59,59,32,65,110,111,116,104,101,114,32,108,105,110,101,46,10,59,59,32,65,110,100,32,97,110,111,116,104,101,114,46,10,40,100,101,102,117,110,32,114,111,117,116,101,32,40,112,41,32,112,41,10]},
+    "repo/src/elisp": {"directory":true},
+    "repo/src/elisp/router.el": {"bytes":[59,59,32,65,82,45,101,108,105,115,112,58,32,101,108,105,115,112,32,114,111,117,116,101,114,10,59,59,32,82,111,117,116,101,115,32,114,101,113,117,101,115,116,115,44,32,112,101,114,32,194,167,70,83,45,101,110,116,114,121,46,49,46,10,59,59,10,59,59,32,35,35,32,49,46,32,67,111,110,116,114,97,99,116,10,59,59,32,79,110,101,32,114,111,117,116,101,32,112,101,114,32,112,97,116,104,46,10,59,59,32,65,110,111,116,104,101,114,32,108,105,110,101,46,10,59,59,32,65,110,100,32,97,110,111,116,104,101,114,46,10,40,100,101,102,117,110,32,114,111,117,116,101,32,40,112,41,32,112,41,10]},
+    "repo/src/haskell": {"directory":true},
+    "repo/src/haskell/Router.hs": {"bytes":[109,111,100,117,108,101,32,82,111,117,116,101,114,32,119,104,101,114,101,10,10,45,45,32,124,32,65,82,45,104,97,115,107,101,108,108,58,32,72,97,115,107,101,108,108,32,114,111,117,116,101,114,10,45,45,32,82,111,117,116,101,115,32,114,101,113,117,101,115,116,115,44,32,112,101,114,32,194,167,70,83,45,101,110,116,114,121,46,49,46,10,45,45,10,45,45,32,35,35,32,49,46,32,67,111,110,116,114,97,99,116,10,45,45,32,79,110,101,32,114,111,117,116,101,32,112,101,114,32,112,97,116,104,46,10,114,111,117,116,101,32,58,58,32,83,116,114,105,110,103,32,45,62,32,83,116,114,105,110,103,10,114,111,117,116,101,32,112,32,61,32,112,10,10,100,97,116,97,32,82,101,113,32,61,32,82,101,113,10,32,32,123,32,112,97,116,104,32,58,58,32,83,116,114,105,110,103,10,32,32,45,45,32,94,32,65,82,45,104,97,115,107,101,108,108,45,99,97,114,101,116,58,32,116,104,101,32,114,101,113,117,101,115,116,32,112,97,116,104,10,32,32,45,45,32,112,101,114,32,194,167,70,83,45,101,110,116,114,121,46,49,46,10,32,32,45,45,10,32,32,45,45,32,35,35,32,49,46,32,67,111,110,116,114,97,99,116,10,32,32,45,45,32,78,101,118,101,114,32,101,109,112,116,121,46,10,32,32,125,10,10,123,45,124,32,65,82,45,104,97,115,107,101,108,108,45,98,108,111,99,107,58,32,72,97,115,107,101,108,108,32,98,108,111,99,107,32,114,111,117,116,101,114,10,82,111,117,116,101,115,32,114,101,113,117,101,115,116,115,44,32,112,101,114,32,194,167,70,83,45,101,110,116,114,121,46,49,46,10,10,35,35,32,49,46,32,67,111,110,116,114,97,99,116,10,79,110,101,32,114,111,117,116,101,32,112,101,114,32,112,97,116,104,46,10,45,125,10,114,111,117,116,101,50,32,58,58,32,83,116,114,105,110,103,32,45,62,32,83,116,114,105,110,103,10,114,111,117,116,101,50,32,112,32,61,32,112,10]},
+    "repo/src/lisp": {"directory":true},
+    "repo/src/lisp/router.lisp": {"bytes":[59,59,32,65,82,45,108,105,115,112,58,32,108,105,115,112,32,114,111,117,116,101,114,10,59,59,32,82,111,117,116,101,115,32,114,101,113,117,101,115,116,115,44,32,112,101,114,32,194,167,70,83,45,101,110,116,114,121,46,49,46,10,59,59,10,59,59,32,35,35,32,49,46,32,67,111,110,116,114,97,99,116,10,59,59,32,79,110,101,32,114,111,117,116,101,32,112,101,114,32,112,97,116,104,46,10,59,59,32,65,110,111,116,104,101,114,32,108,105,110,101,46,10,59,59,32,65,110,100,32,97,110,111,116,104,101,114,46,10,40,100,101,102,117,110,32,114,111,117,116,101,32,40,112,41,32,112,41,10]},
+    "repo/src/lua": {"directory":true},
+    "repo/src/lua/router.lua": {"bytes":[45,45,45,32,65,82,45,108,117,97,58,32,76,117,97,32,114,111,117,116,101,114,10,45,45,32,82,111,117,116,101,115,32,114,101,113,117,101,115,116,115,44,32,112,101,114,32,194,167,70,83,45,101,110,116,114,121,46,49,46,10,45,45,10,45,45,32,35,35,32,49,46,32,67,111,110,116,114,97,99,116,10,45,45,32,79,110,101,32,114,111,117,116,101,32,112,101,114,32,112,97,116,104,46,10,108,111,99,97,108,32,102,117,110,99,116,105,111,110,32,114,111,117,116,101,40,112,97,116,104,41,32,114,101,116,117,114,110,32,112,97,116,104,32,101,110,100,10]},
+    "repo/src/rust": {"directory":true},
+    "repo/src/rust/router.rs": {"bytes":[47,47,47,32,65,82,45,114,117,115,116,58,32,82,117,115,116,32,114,111,117,116,101,114,10,47,47,47,32,82,111,117,116,101,115,32,114,101,113,117,101,115,116,115,44,32,112,101,114,32,194,167,70,83,45,101,110,116,114,121,46,49,46,10,47,47,47,10,47,47,47,32,35,35,32,49,46,32,67,111,110,116,114,97,99,116,10,47,47,47,32,79,110,101,32,114,111,117,116,101,32,112,101,114,32,112,97,116,104,46,10,112,117,98,32,102,110,32,114,111,117,116,101,40,41,32,123,125,10]},
+    "repo/src/sql": {"directory":true},
+    "repo/src/sql/router.sql": {"bytes":[45,45,32,65,82,45,115,113,108,58,32,83,81,76,32,114,111,117,116,101,114,10,45,45,32,82,111,117,116,101,115,32,114,101,113,117,101,115,116,115,44,32,112,101,114,32,194,167,70,83,45,101,110,116,114,121,46,49,46,10,45,45,10,45,45,32,35,35,32,49,46,32,67,111,110,116,114,97,99,116,10,45,45,32,79,110,101,32,114,111,117,116,101,32,112,101,114,32,112,97,116,104,46,10,67,82,69,65,84,69,32,70,85,78,67,84,73,79,78,32,114,111,117,116,101,40,41,32,82,69,84,85,82,78,83,32,105,110,116,32,65,83,32,36,36,32,83,69,76,69,67,84,32,49,32,36,36,32,76,65,78,71,85,65,71,69,32,115,113,108,59,10]},
+    "spec.refs": {"bytes":[70,83,45,108,97,110,103,117,97,103,101,115,46,112,114,101,102,105,120,101,115,46,102,111,114,109,115,10,70,83,45,100,101,99,108,97,114,97,116,105,111,110,115,46,108,105,110,101,10,70,83,45,99,104,101,99,107,46,51,46,49,10,70,83,45,105,110,108,105,110,101,45,99,105,116,97,116,105,111,110,45,115,116,121,108,101,46,49,46,49,46,50,10]}
+  },
+  "facts": {
+    "point": "§FS-languages.prefixes.forms",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict, `[id] format = \"{kind}-{slug}\"` with slug pattern `[a-z][a-z0-9-]*`, FS \"What\" in docs/functional-spec and AR \"How\" in docs/architecture, both indexed, `[scan] include = [\"docs\", \"src\"]`, extensions md, rs, sql, hs, lua, lisp, clj and el). Each source file declares its AR ID on a line-comment prefix form, `;;` for Lisp, Clojure and Emacs Lisp, `-- |` and the indented `-- ^` for Haskell, `---` for Lua, `--` for SQL and `///` for Rust (§FS-languages.prefixes.forms, §FS-declarations.line), its body the rest of that comment block stripped of the prefix and its section 1 inside it, with null anchors (§FS-show.3.1.3.1); the Haskell `{-| … -}` block declares nothing (§FS-languages.prefixes.haskell-block), though its marked §FS-entry.1 is a citation in no body. FS-entry with its section 1 cites all eight; every source block cites FS-entry.1. Source declarations have no index entry to miss, and the AR index lists none; FS-entry's index link lacks its anchor. Every citation resolves and every declaration is cited, so the one finding is the site-less version caution (§FS-check.2.1.1). Cross-reference emission wraps FS-entry's eight marked citations as links to their source files without an anchor (§FS-fmt.6.2) and re-derives the index entry's link (§FS-fmt.6.3); source files are not Markdown (§FS-fmt.6.1). FS-absent is the absent control.",
+    "kinds": [
+      {"kind":"FS","title":"What","home":"docs/functional-spec"},
+      {"kind":"AR","title":"How","home":"docs/architecture"}
+    ],
+    "scanned": ["docs/architecture/README.md","docs/functional-spec/FS-entry.md","docs/functional-spec/README.md","src/clojure/router.clj","src/elisp/router.el","src/haskell/Router.hs","src/lisp/router.lisp","src/lua/router.lua","src/rust/router.rs","src/sql/router.sql"],
+    "declarations": [
+      {"id":"AR-clojure","kind":"AR","file":"src/clojure/router.clj","heading":"AR-clojure: clojure router","title":"clojure router","body":[2,7],"anchor":null,"strip":";; "},
+      {"id":"AR-elisp","kind":"AR","file":"src/elisp/router.el","heading":"AR-elisp: elisp router","title":"elisp router","body":[2,7],"anchor":null,"strip":";; "},
+      {"id":"AR-haskell","kind":"AR","file":"src/haskell/Router.hs","heading":"AR-haskell: Haskell router","title":"Haskell router","body":[4,7],"anchor":null,"strip":"-- "},
+      {"id":"AR-haskell-caret","kind":"AR","file":"src/haskell/Router.hs","heading":"AR-haskell-caret: the request path","title":"the request path","body":[14,17],"anchor":null,"strip":"  -- "},
+      {"id":"AR-lisp","kind":"AR","file":"src/lisp/router.lisp","heading":"AR-lisp: lisp router","title":"lisp router","body":[2,7],"anchor":null,"strip":";; "},
+      {"id":"AR-lua","kind":"AR","file":"src/lua/router.lua","heading":"AR-lua: Lua router","title":"Lua router","body":[2,5],"anchor":null,"strip":"-- "},
+      {"id":"AR-rust","kind":"AR","file":"src/rust/router.rs","heading":"AR-rust: Rust router","title":"Rust router","body":[2,5],"anchor":null,"strip":"/// "},
+      {"id":"AR-sql","kind":"AR","file":"src/sql/router.sql","heading":"AR-sql: SQL router","title":"SQL router","body":[2,5],"anchor":null,"strip":"-- "},
+      {"id":"FS-entry","kind":"FS","file":"docs/functional-spec/FS-entry.md","heading":"FS-entry: Entrypoint","title":"Entrypoint","body":[2,7],"anchor":"fs-entry-entrypoint"}
+    ],
+    "sections": [
+      {"of":"AR-clojure","path":"1","heading":"1. Contract","title":"Contract","anchor":null,"end":7},
+      {"of":"AR-elisp","path":"1","heading":"1. Contract","title":"Contract","anchor":null,"end":7},
+      {"of":"AR-haskell","path":"1","heading":"1. Contract","title":"Contract","anchor":null,"end":7},
+      {"of":"AR-haskell-caret","path":"1","heading":"1. Contract","title":"Contract","anchor":null,"end":17},
+      {"of":"AR-lisp","path":"1","heading":"1. Contract","title":"Contract","anchor":null,"end":7},
+      {"of":"AR-lua","path":"1","heading":"1. Contract","title":"Contract","anchor":null,"end":5},
+      {"of":"AR-rust","path":"1","heading":"1. Contract","title":"Contract","anchor":null,"end":5},
+      {"of":"AR-sql","path":"1","heading":"1. Contract","title":"Contract","anchor":null,"end":5},
+      {"of":"FS-entry","path":"1","heading":"1. Contract","title":"Contract","anchor":"1-contract","end":7}
+    ],
+    "citations": [
+      {"file":"docs/functional-spec/FS-entry.md","token":"§AR-lua","enclosing":["FS-entry",null]},
+      {"file":"docs/functional-spec/FS-entry.md","token":"§AR-haskell","enclosing":["FS-entry",null]},
+      {"file":"docs/functional-spec/FS-entry.md","token":"§AR-haskell-caret","enclosing":["FS-entry",null]},
+      {"file":"docs/functional-spec/FS-entry.md","token":"§AR-clojure","enclosing":["FS-entry",null]},
+      {"file":"docs/functional-spec/FS-entry.md","token":"§AR-elisp","enclosing":["FS-entry",null]},
+      {"file":"docs/functional-spec/FS-entry.md","token":"§AR-lisp","enclosing":["FS-entry",null]},
+      {"file":"docs/functional-spec/FS-entry.md","token":"§AR-sql","enclosing":["FS-entry",null]},
+      {"file":"docs/functional-spec/FS-entry.md","token":"§AR-rust","enclosing":["FS-entry",null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-entry","enclosing":[null,null]},
+      {"file":"src/clojure/router.clj","token":"§FS-entry.1","enclosing":["AR-clojure",null]},
+      {"file":"src/elisp/router.el","token":"§FS-entry.1","enclosing":["AR-elisp",null]},
+      {"file":"src/haskell/Router.hs","token":"§FS-entry.1","enclosing":["AR-haskell",null]},
+      {"file":"src/haskell/Router.hs","token":"§FS-entry.1","enclosing":["AR-haskell-caret",null],"nth":2},
+      {"file":"src/lisp/router.lisp","token":"§FS-entry.1","enclosing":["AR-lisp",null]},
+      {"file":"src/lua/router.lua","token":"§FS-entry.1","enclosing":["AR-lua",null]},
+      {"file":"src/rust/router.rs","token":"§FS-entry.1","enclosing":["AR-rust",null]},
+      {"file":"src/sql/router.sql","token":"§FS-entry.1","enclosing":["AR-sql",null]},
+      {"file":"src/haskell/Router.hs","token":"§FS-entry.1","enclosing":[null,null],"nth":3}
+    ],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "absentQuery": "FS-absent",
+    "fmt": {
+      "changes": [{"path":"docs/functional-spec/FS-entry.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/README.md","line":3,"label":"markdown link"}],
+      "writeChanges": [{"path":"docs/functional-spec/FS-entry.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/README.md","line":3,"label":"markdown link"}],
+      "written": {"docs/functional-spec/FS-entry.md":{"3":"Hosts: [§AR-lua](../../src/lua/router.lua), [§AR-haskell](../../src/haskell/Router.hs), [§AR-haskell-caret](../../src/haskell/Router.hs), [§AR-clojure](../../src/clojure/router.clj), [§AR-elisp](../../src/elisp/router.el), [§AR-lisp](../../src/lisp/router.lisp), [§AR-sql](../../src/sql/router.sql), [§AR-rust](../../src/rust/router.rs)."},"docs/functional-spec/README.md":{"3":"- [§FS-entry](FS-entry.md#fs-entry-entrypoint)"}}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

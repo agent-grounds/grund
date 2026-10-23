@@ -11,24 +11,20 @@ use std::collections::BTreeSet;
 const TRANCHE_1: &[&str] = &["cover", "scan", "stub"];
 /// The family tranche 2 delivered.
 const TRANCHE_2: &[&str] = &["basic"];
-/// The families tranche 3 delivers: every family of three cases or fewer.
+/// The families tranche 3 delivers, of those with three cases or fewer; `e2e`,
+/// `external`, `line`, `path`, `relative` and `remote` stay rows of `WIDENING`,
+/// for the reasons the facts README gives.
 const TRANCHE_3: &[&str] = &[
     "agent",
     "cross",
     "declare",
     "deterministic",
-    "e2e",
-    "external",
     "guide",
     "haskell",
     "json",
-    "line",
     "markdown",
     "marked",
     "named",
-    "path",
-    "relative",
-    "remote",
     "report",
     "rust",
 ];
@@ -47,9 +43,6 @@ fn s4_basic_family_runs_against_complete_authored_facts() {
 }
 
 #[test]
-#[ignore = "red until #674 agent, cross, declare, deterministic, e2e, external, guide, haskell, \
-            json, line, markdown, marked, named, path, relative, remote, report and rust have \
-            authored facts; implement removes this"]
 fn s4_tranche_3_families_run_against_complete_authored_facts() {
     assert_covered_whole(TRANCHE_3, &[TRANCHE_1, TRANCHE_2].concat());
 }

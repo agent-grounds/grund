@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "case": "agent-setup-instructions-removed",
+  "inputFiles": {
+    "command.args": {"bytes":[97,103,101,110,116,45,115,101,116,117,112,45,105,110,115,116,114,117,99,116,105,111,110,115,32,45,45,102,117,108,108,10]},
+    "expected.exit": {"bytes":[49,10]},
+    "expected.stderr": {"bytes":[105,110,118,97,108,105,100,32,73,68,32,96,97,103,101,110,116,45,115,101,116,117,112,45,105,110,115,116,114,117,99,116,105,111,110,115,96,10,104,105,110,116,58,32,116,104,105,115,32,114,101,112,111,39,115,32,91,115,99,104,101,109,97,93,32,105,100,95,102,111,114,109,97,116,32,105,115,32,96,123,107,105,110,100,125,45,123,115,108,117,103,125,96,32,40,114,117,110,32,96,103,114,117,110,100,32,99,111,110,102,105,103,32,115,104,111,119,96,41,59,32,96,103,114,117,110,100,32,108,105,115,116,96,32,115,104,111,119,115,32,116,104,101,32,73,68,115,32,116,104,97,116,32,101,120,105,115,116,10]},
+    "expected.stdout": {"bytes":[10]},
+    "spec.refs": {"bytes":[70,83,45,105,110,105,116,46,53,46,55,10,70,83,45,99,108,105,46,49,46,50,10,70,83,45,99,108,105,46,52,10]}
+  },
+  "variants": {
+    "whole-tree": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "narrowed": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "path-argument": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "editor-overlay": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."}
+  }
+}

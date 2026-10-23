@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "case": "json-report",
+  "inputFiles": {
+    "command.args": {"bytes":[99,104,101,99,107,32,45,45,102,111,114,109,97,116,61,106,115,111,110,32,123,114,101,112,111,125,10]},
+    "expected.exit": {"bytes":[49,10]},
+    "expected.stderr": {"bytes":[123,34,115,101,118,101,114,105,116,121,34,58,34,119,97,114,110,105,110,103,34,44,34,112,97,116,104,34,58,110,117,108,108,44,34,108,105,110,101,34,58,110,117,108,108,44,34,99,111,100,101,34,58,34,99,111,110,102,105,103,45,118,101,114,115,105,111,110,45,49,34,44,34,109,101,115,115,97,103,101,34,58,34,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,34,44,34,115,105,116,101,115,34,58,110,117,108,108,44,34,97,117,116,104,111,114,105,116,121,34,58,110,117,108,108,125,10]},
+    "expected.stdout": {"bytes":[123,34,115,101,118,101,114,105,116,121,34,58,34,101,114,114,111,114,34,44,34,112,97,116,104,34,58,34,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,48,48,49,45,97,108,112,104,97,46,109,100,34,44,34,108,105,110,101,34,58,51,44,34,99,111,100,101,34,58,34,100,97,110,103,108,105,110,103,34,44,34,109,101,115,115,97,103,101,34,58,34,117,110,107,110,111,119,110,32,114,101,102,101,114,101,110,99,101,32,70,83,45,57,57,57,45,109,105,115,115,105,110,103,34,44,34,115,105,116,101,115,34,58,110,117,108,108,44,34,97,117,116,104,111,114,105,116,121,34,58,110,117,108,108,125,10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-001-alpha.md": {"bytes":[35,32,70,83,45,48,48,49,45,97,108,112,104,97,58,32,65,108,112,104,97,10,10,82,101,102,101,114,101,110,99,101,115,32,70,83,45,48,48,50,45,98,101,116,97,32,97,110,100,32,70,83,45,57,57,57,45,109,105,115,115,105,110,103,46,10,10]},
+    "repo/docs/functional-spec/FS-002-beta.md": {"bytes":[35,32,70,83,45,48,48,50,45,98,101,116,97,58,32,66,101,116,97,10,10,82,101,102,101,114,101,110,99,101,115,32,70,83,45,48,48,49,45,97,108,112,104,97,46,10]},
+    "repo/docs/functional-spec/README.md": {"bytes":[35,32,70,83,32,105,110,100,101,120,10,10,69,118,101,114,121,32,96,70,83,96,32,100,101,99,108,97,114,97,116,105,111,110,32,105,110,32,116,104,105,115,32,102,111,108,100,101,114,44,32,111,110,101,32,108,105,110,107,101,100,32,101,110,116,114,121,32,101,97,99,104,46,10,10,45,32,91,194,167,70,83,45,48,48,49,45,97,108,112,104,97,93,40,70,83,45,48,48,49,45,97,108,112,104,97,46,109,100,35,102,115,45,48,48,49,45,97,108,112,104,97,45,97,108,112,104,97,41,10,45,32,91,194,167,70,83,45,48,48,50,45,98,101,116,97,93,40,70,83,45,48,48,50,45,98,101,116,97,46,109,100,35,102,115,45,48,48,50,45,98,101,116,97,45,98,101,116,97,41,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,102,97,108,115,101,10]},
+    "spec.refs": {"bytes":[70,83,45,48,48,49,45,99,104,101,99,107,46,50,10,70,83,45,111,117,116,112,117,116,45,115,104,97,112,101,115,46,49,10,70,83,45,99,108,105,46,51,46,49,10]}
+  },
+  "facts": {
+    "point": "§FS-output-shapes.1",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `strict = false`, default kinds and scan), FS-001-alpha (body to its blank last line) and FS-002-beta (body to its last line, line 3), and the FS index with both linked entries (§FS-show.2.1.2, §FS-list.3.4.1). Unmarked prose IDs are citations in this compatibility mode (§FS-citations.recognized): alpha cites beta and undeclared FS-999-missing, which dangles (§FS-check.3.1); beta cites alpha, so neither is unused. The one finding with a site is the JSON report row, the version caution is site-less on stderr (§FS-output-shapes.1, §FS-check.2.1.1). Fmt adds no marker without --marker (§FS-fmt.2.2) and the index's marked entries already link where the cross-reference writer would (§FS-fmt.6.1), so both passes write nothing. FS-404 is the absent control.",
+    "scanned": ["docs/functional-spec/FS-001-alpha.md","docs/functional-spec/FS-002-beta.md","docs/functional-spec/README.md"],
+    "declarations": [
+      {"id":"FS-001-alpha","kind":"FS","file":"docs/functional-spec/FS-001-alpha.md","heading":"FS-001-alpha: Alpha","title":"Alpha","body":[2,4],"anchor":"fs-001-alpha-alpha"},
+      {"id":"FS-002-beta","kind":"FS","file":"docs/functional-spec/FS-002-beta.md","heading":"FS-002-beta: Beta","title":"Beta","body":[2,3],"anchor":"fs-002-beta-beta"}
+    ],
+    "sections": [],
+    "citations": [
+      {"file":"docs/functional-spec/FS-001-alpha.md","token":"FS-002-beta","enclosing":["FS-001-alpha",null]},
+      {"file":"docs/functional-spec/FS-001-alpha.md","token":"FS-999-missing","enclosing":["FS-001-alpha",null]},
+      {"file":"docs/functional-spec/FS-002-beta.md","token":"FS-001-alpha","enclosing":["FS-002-beta",null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-001-alpha","enclosing":[null,null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-002-beta","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"error","code":"dangling","path":"docs/functional-spec/FS-001-alpha.md","line":3,"message":"unknown reference FS-999-missing","sites":[],"token":"FS-999-missing"},
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [],
+      "writeChanges": [],
+      "written": {}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

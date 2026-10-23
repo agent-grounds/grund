@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "case": "marked-file-path-is-a-citation",
+  "inputFiles": {
+    "expected.exit": {"bytes":[49,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[100,111,99,115,47,110,111,116,101,115,46,109,100,58,51,58,32,101,114,114,111,114,58,32,117,110,107,110,111,119,110,32,112,114,111,106,101,99,116,32,97,108,105,97,115,32,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-login.md": {"bytes":[35,32,70,83,45,108,111,103,105,110,58,32,84,104,101,32,99,117,115,116,111,109,101,114,32,115,105,103,110,115,32,105,110,10,10,65,32,115,101,115,115,105,111,110,32,98,101,103,105,110,115,46,10]},
+    "repo/docs/notes.md": {"bytes":[35,32,78,111,116,101,115,10,10,77,97,114,107,105,110,103,32,97,32,102,105,108,101,32,112,97,116,104,32,105,115,32,119,104,97,116,32,115,97,121,115,32,34,114,101,115,111,108,118,101,32,116,104,105,115,34,58,32,194,167,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,108,111,103,105,110,46,109,100,46,10,10,84,104,101,32,115,97,109,101,32,116,101,120,116,32,117,110,109,97,114,107,101,100,32,105,115,32,97,32,112,97,116,104,58,32,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,108,111,103,105,110,46,109,100,46,10,10,79,117,116,115,105,100,101,32,116,104,101,32,99,105,116,97,116,105,111,110,32,105,116,32,105,115,32,97,32,112,97,116,104,32,116,111,111,58,32,91,116,104,101,32,115,112,101,99,93,40,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,108,111,103,105,110,46,109,100,41,46,10,10,84,104,101,32,108,111,99,97,108,32,100,101,99,108,97,114,97,116,105,111,110,32,105,116,115,101,108,102,32,105,115,32,99,105,116,101,100,32,97,115,32,194,167,70,83,45,108,111,103,105,110,46,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,109,97,114,107,101,114,32,61,32,34,194,167,34,10,115,116,114,105,99,116,32,61,32,116,114,117,101,10,10,91,105,100,93,10,102,111,114,109,97,116,32,61,32,34,123,107,105,110,100,125,45,123,115,108,117,103,125,34,10,115,108,117,103,95,112,97,116,116,101,114,110,32,61,32,34,91,97,45,122,93,91,97,45,122,48,45,57,45,93,42,34,10,10,91,91,107,105,110,100,115,93,93,10,107,105,110,100,32,61,32,34,70,83,34,10,102,111,108,100,101,114,32,61,32,34,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,34,10,105,110,100,101,120,32,61,32,102,97,108,115,101,10,10,91,115,99,97,110,93,10,105,110,99,108,117,100,101,32,61,32,91,34,100,111,99,115,34,93,10]},
+    "spec.refs": {"bytes":[70,83,45,119,111,114,107,115,112,97,99,101,46,49,46,52,10]}
+  },
+  "facts": {
+    "point": "§FS-workspace.1.4",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict, marker §, `[id] format = \"{kind}-{slug}\"` with slug pattern `[a-z][a-z0-9-]*`, one untitled FS kind in docs/functional-spec with `index = false`, `[scan] include = [\"docs\"]`) with no `[workspace]`; FS-login, its body to line 3; docs/notes.md. Its line 3 marks a file path, which reads as the two-segment alias path docs/functional-spec and the ID FS-login, the `.md` no section of this grammar (§FS-workspace.1.4, §FS-workspace.1.1); the alias names no project, so the citation is the unknown-alias error at its site, its cover ID keeping the alias path (§FS-check.3.8, §FS-workspace.1.2.1, §FS-cover.2.1), and `show` and `refs` of it exit 2 before any scan (§FS-workspace.8.1.3). The same path unmarked on line 5 and as a link destination on line 7 is no citation (§FS-check.1.1); line 9's §FS-login is, and resolves, so FS-login is cited. The version caution is site-less (§FS-check.2.1.1). Cross-reference emission wraps the resolving §FS-login to its heading from docs/ (§FS-fmt.6.2.1) and leaves the unresolved one (§FS-fmt.6.4). FS-absent is the absent control.",
+    "kinds": [
+      {"kind":"FS","title":null,"home":"docs/functional-spec","index":false}
+    ],
+    "scanned": ["docs/functional-spec/FS-login.md","docs/notes.md"],
+    "declarations": [
+      {"id":"FS-login","kind":"FS","file":"docs/functional-spec/FS-login.md","heading":"FS-login: The customer signs in","title":"The customer signs in","body":[2,3],"anchor":"fs-login-the-customer-signs-in"}
+    ],
+    "sections": [],
+    "citations": [
+      {"file":"docs/notes.md","token":"§docs/functional-spec/FS-login","enclosing":[null,null],"id":"docs/functional-spec/FS-login","section":null},
+      {"file":"docs/notes.md","token":"§FS-login","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"error","code":"unknown-project","path":"docs/notes.md","line":3,"message":"unknown project alias docs/functional-spec","sites":[],"token":"§docs/functional-spec/FS-login"},
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {
+      "docs/functional-spec/FS-login": {"code":"unknown-project","message":"unknown project alias `docs/functional-spec`\nnote: workspace aliases are defined in the root grund.toml under [workspace]","beforeScan":true,"cli":{"exit":2,"stderr":"error: unknown project alias `docs/functional-spec`\nnote: workspace aliases are defined in the root grund.toml under [workspace]\n"}}
+    },
+    "absentQuery": "FS-absent",
+    "fmt": {
+      "changes": [{"path":"docs/notes.md","line":9,"label":"markdown link"}],
+      "writeChanges": [{"path":"docs/notes.md","line":9,"label":"markdown link"}],
+      "written": {"docs/notes.md":{"9":"The local declaration itself is cited as [§FS-login](functional-spec/FS-login.md#fs-login-the-customer-signs-in)."}}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

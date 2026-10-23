@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "case": "markdown-fenced-examples-ignored",
+  "inputFiles": {
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-001-alpha.md": {"bytes":[35,32,70,83,45,48,48,49,45,97,108,112,104,97,58,32,65,108,112,104,97,10,10,82,101,102,101,114,101,110,99,101,115,32,194,167,70,83,45,48,48,50,45,98,101,116,97,46,10,10,96,96,96,109,97,114,107,100,111,119,110,10,35,32,70,83,45,48,48,49,45,97,108,112,104,97,58,32,68,117,112,108,105,99,97,116,101,32,101,120,97,109,112,108,101,32,111,110,108,121,10,84,104,105,115,32,101,120,97,109,112,108,101,32,109,101,110,116,105,111,110,115,32,194,167,70,83,45,57,57,57,45,109,105,115,115,105,110,103,46,10,96,96,96,10,10,126,126,126,116,101,120,116,10,84,104,105,115,32,116,105,108,100,101,32,101,120,97,109,112,108,101,32,109,101,110,116,105,111,110,115,32,194,167,70,83,45,57,57,56,45,109,105,115,115,105,110,103,46,10,126,126,126,10,10,82,101,102,101,114,101,110,99,101,115,32,194,167,70,83,45,48,48,50,45,98,101,116,97,32,97,102,116,101,114,32,98,111,116,104,32,102,101,110,99,101,115,46,10]},
+    "repo/docs/functional-spec/FS-002-beta.md": {"bytes":[35,32,70,83,45,48,48,50,45,98,101,116,97,58,32,66,101,116,97,10,10,82,101,102,101,114,101,110,99,101,115,32,194,167,70,83,45,48,48,49,45,97,108,112,104,97,46,10]},
+    "repo/docs/functional-spec/README.md": {"bytes":[35,32,70,83,32,105,110,100,101,120,10,10,69,118,101,114,121,32,96,70,83,96,32,100,101,99,108,97,114,97,116,105,111,110,32,105,110,32,116,104,105,115,32,102,111,108,100,101,114,44,32,111,110,101,32,108,105,110,107,101,100,32,101,110,116,114,121,32,101,97,99,104,46,10,10,45,32,91,194,167,70,83,45,48,48,49,45,97,108,112,104,97,93,40,70,83,45,48,48,49,45,97,108,112,104,97,46,109,100,35,102,115,45,48,48,49,45,97,108,112,104,97,45,97,108,112,104,97,41,10,45,32,91,194,167,70,83,45,48,48,50,45,98,101,116,97,93,40,70,83,45,48,48,50,45,98,101,116,97,46,109,100,35,102,115,45,48,48,50,45,98,101,116,97,45,98,101,116,97,41,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,116,114,117,101,10]},
+    "spec.refs": {"bytes":[70,83,45,48,48,49,45,99,104,101,99,107,46,51,46,49,10,70,83,45,100,101,99,108,97,114,97,116,105,111,110,115,46,99,104,101,99,107,115,46,100,117,112,108,105,99,97,116,101,10]}
+  },
+  "facts": {
+    "point": "§FS-check.1.1",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict, default kinds and scan); FS-001-alpha, whose body runs to its last line because the backtick fence's `# FS-001-alpha` line is no heading (§FS-declarations.checks.duplicate, §FS-show.2.1.2); FS-002-beta; and the FS index with both linked entries. A citation inside a backtick or tilde fence is no citation (§FS-check.1.1), so §FS-999-missing and §FS-998-missing are neither dangling nor listed, and alpha cites beta twice, on lines 3 and 14, beta cites alpha; every citation resolves and both are cited, so the only finding is the site-less version caution (§FS-check.2.1.1). Cross-reference emission, on by default (§FS-config.3.7), wraps each bare marked prose citation to its target heading (§FS-fmt.6.2.1), never inside a fence (§FS-fmt.2.3); the index entries are already those links. FS-404 is the absent control.",
+    "scanned": ["docs/functional-spec/FS-001-alpha.md","docs/functional-spec/FS-002-beta.md","docs/functional-spec/README.md"],
+    "declarations": [
+      {"id":"FS-001-alpha","kind":"FS","file":"docs/functional-spec/FS-001-alpha.md","heading":"FS-001-alpha: Alpha","title":"Alpha","body":[2,14],"anchor":"fs-001-alpha-alpha"},
+      {"id":"FS-002-beta","kind":"FS","file":"docs/functional-spec/FS-002-beta.md","heading":"FS-002-beta: Beta","title":"Beta","body":[2,3],"anchor":"fs-002-beta-beta"}
+    ],
+    "sections": [],
+    "citations": [
+      {"file":"docs/functional-spec/FS-001-alpha.md","token":"§FS-002-beta","enclosing":["FS-001-alpha",null]},
+      {"file":"docs/functional-spec/FS-001-alpha.md","token":"§FS-002-beta","enclosing":["FS-001-alpha",null],"nth":2},
+      {"file":"docs/functional-spec/FS-002-beta.md","token":"§FS-001-alpha","enclosing":["FS-002-beta",null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-001-alpha","enclosing":[null,null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-002-beta","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-001-alpha.md","line":14,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link"}],
+      "writeChanges": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-001-alpha.md","line":14,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link"}],
+      "written": {"docs/functional-spec/FS-001-alpha.md":{"3":"References [§FS-002-beta](FS-002-beta.md#fs-002-beta-beta).","14":"References [§FS-002-beta](FS-002-beta.md#fs-002-beta-beta) after both fences."},"docs/functional-spec/FS-002-beta.md":{"3":"References [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha)."}}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}
