@@ -11,8 +11,8 @@ use crate::grammar::{
     CitationLink, LineLinks, MarkdownLinks, citation_link, markdown_never_rewrite_context,
 };
 use crate::model::{
-    Catalog, Citation, Declaration, Id, paired_declarations, scanned_decl_relative_path,
-    scanned_path_key,
+    Catalog, Citation, Declaration, HeadingKind, Id, paired_declarations,
+    scanned_decl_relative_path, scanned_path_key,
 };
 use crate::sources::{Sources, physical_path_key};
 
@@ -23,7 +23,9 @@ use crate::sources::{Sources, physical_path_key};
 /// so another citation of the same external ID on the page remains real use
 /// (§DF-index-not-an-inbound-citation.2.2). `binding_sites` holds the citation
 /// sites of the recognized value bindings on each index, which are use rather
-/// than the entry even for a folder-owned ID (§FS-check.4.1.2.1).
+/// than the entry even for a folder-owned ID (§FS-check.4.1.2.1). `headings`
+/// holds each index's declaration heading lines, whose citations are the entry
+/// of no ID (§FS-check.4.1.2.1, §FS-citations.recognized.title-lines).
 pub(crate) struct KindIndexEntries {
     configured_root: PathBuf,
     physical_root: PathBuf,
@@ -31,6 +33,7 @@ pub(crate) struct KindIndexEntries {
     folder_owed: BTreeMap<PathBuf, BTreeSet<Id>>,
     external_sites: BTreeMap<PathBuf, BTreeSet<(usize, usize)>>,
     binding_sites: BTreeMap<PathBuf, BTreeSet<(usize, usize)>>,
+    headings: IndexHeadings,
 }
 
 impl KindIndexEntries {
@@ -84,6 +87,7 @@ impl KindIndexEntries {
             }
         }
         let mut owed = folder_owed.clone();
+        let headings = IndexHeadings::new(findings, &targets, &configured_root, &physical_root);
         let external_sites = enroll_external_inline_declarations(
             findings,
             &targets,
@@ -93,6 +97,7 @@ impl KindIndexEntries {
             index_targets,
             frame.sources(),
             only,
+            &headings,
             &mut owed,
         );
         let binding_sites =
@@ -104,6 +109,7 @@ impl KindIndexEntries {
             folder_owed,
             external_sites,
             binding_sites,
+            headings,
         }
     }
 
@@ -126,6 +132,9 @@ impl KindIndexEntries {
     /// §FS-check.4.1.2.1: a folder-owned ID's entry is a citation of the
     /// declaration itself, so a section citation, or the citation inside a
     /// recognized value binding (a root-aimed one with no section included), is use.
+    /// So is a citation on a declaration heading, for either branch: it is a
+    /// citation from the declaration that heading declares, and it enrolled nothing
+    /// (§FS-citations.recognized.title-lines, §FS-check.3.18.3).
     pub(crate) fn is_index_entry(&self, citation: &Citation) -> bool {
         if citation.namespace.is_some() || self.owed.is_empty() {
             return false;
@@ -135,6 +144,9 @@ impl KindIndexEntries {
         else {
             return false;
         };
+        if self.headings.holds(relative.as_ref(), citation.line) {
+            return false;
+        }
         let site = (citation.line, citation.column);
         (citation.section.is_none()
             && self
@@ -149,6 +161,64 @@ impl KindIndexEntries {
                 .external_sites
                 .get(relative.as_ref())
                 .is_some_and(|sites| sites.contains(&site))
+    }
+
+    /// Whether line `line` of the kind index at `path` is a declaration heading:
+    /// the one answer the entry rule, its mention look, the unused carve-out, `list
+    /// --unused` and the `refs` label all read (§AR-checker.2.16). A citation on one
+    /// is the entry of no ID (§FS-check.4.1.2.1), and the line declares an ID rather
+    /// than mentioning one (§FS-check.3.18.5.1).
+    pub(super) fn on_declaration_heading(&self, path: &Path, line: usize) -> bool {
+        scanned_decl_relative_path(path, &self.configured_root, &self.physical_root)
+            .is_some_and(|relative| self.headings.holds(relative.as_ref(), line))
+    }
+}
+
+/// The lines of each kind index the scan read as a declaration heading, keyed by
+/// the index's config-root-relative path (§AR-checker.2.16). They are read off the
+/// index's file record, the record of the text every look at the index reads
+/// (§AR-scanner.2.8.5), so the line is not parsed again. The scan records no
+/// heading in a fence or in a raw-text HTML block (§FS-check.1.1.5.1), so a
+/// recorded line needs no second test of its own.
+struct IndexHeadings(BTreeMap<PathBuf, BTreeSet<usize>>);
+
+impl IndexHeadings {
+    fn new(
+        findings: &Catalog,
+        targets: &[KindIndexTarget<'_>],
+        configured_root: &Path,
+        physical_root: &Path,
+    ) -> Self {
+        let mut lines: BTreeMap<PathBuf, BTreeSet<usize>> = BTreeMap::new();
+        if targets.is_empty() {
+            return Self(lines);
+        }
+        let keys: BTreeSet<&Path> = targets
+            .iter()
+            .map(|target| target.index_key.as_path())
+            .collect();
+        for (file, record) in &findings.files {
+            let Some(relative) = scanned_decl_relative_path(file, configured_root, physical_root)
+            else {
+                continue;
+            };
+            if !keys.contains(relative.as_ref()) {
+                continue;
+            }
+            lines.entry(relative.into_owned()).or_default().extend(
+                record
+                    .headings
+                    .iter()
+                    .filter(|heading| heading.kind == HeadingKind::Declaration)
+                    .map(|heading| heading.line),
+            );
+        }
+        Self(lines)
+    }
+
+    /// Whether line `line` of the index at config-root-relative `index` is one.
+    fn holds(&self, index: &Path, line: usize) -> bool {
+        self.0.get(index).is_some_and(|lines| lines.contains(&line))
     }
 }
 
@@ -194,6 +264,7 @@ fn enroll_external_inline_declarations(
     index_targets: &BTreeMap<(PathBuf, Id), String>,
     sources: Sources<'_>,
     only: Option<&BTreeSet<Id>>,
+    headings: &IndexHeadings,
     owed: &mut BTreeMap<PathBuf, BTreeSet<Id>>,
 ) -> BTreeMap<PathBuf, BTreeSet<(usize, usize)>> {
     let mut targets_by_index: BTreeMap<&Path, Vec<&KindIndexTarget<'_>>> = BTreeMap::new();
@@ -233,6 +304,11 @@ fn enroll_external_inline_declarations(
         else {
             continue;
         };
+        // §FS-check.3.18.3: the link that enrolls is the entry that satisfies, and a
+        // citation on a declaration heading is no entry (§FS-check.4.1.2.1).
+        if headings.holds(relative.as_ref(), citation.line) {
+            continue;
+        }
         let Some(target) = targets_by_index.get(relative.as_ref()).and_then(|targets| {
             targets
                 .iter()

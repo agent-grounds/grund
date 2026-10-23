@@ -5,7 +5,8 @@
 use super::*;
 
 fn kinds(text: &str) -> Vec<MarkdownLine> {
-    markdown_line_kinds(text.lines())
+    let mut blocks = MarkdownBlocks::default();
+    text.lines().map(|line| blocks.line(line)).collect()
 }
 
 use MarkdownLine::{FenceDelimiter, Fenced, RawHtml, Text};

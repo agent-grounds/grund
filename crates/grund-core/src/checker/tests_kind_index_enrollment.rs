@@ -352,3 +352,39 @@ fn a_link_nested_in_a_markdown_destination_does_not_enroll() {
     );
     assert!(!entries.is_index_entry(&findings.citations[0]));
 }
+
+/// §FS-check.3.18.3 / §FS-check.4.1.2.1: the link that enrolls is the entry that
+/// satisfies, and a canonical link riding on the index's own declaration heading is
+/// a citation from that declaration, never the entry. So it enrolls nothing: the
+/// index owes no entry it could not take, and the link is use.
+#[test]
+fn a_canonical_link_on_a_declaration_heading_does_not_enroll() {
+    let root = external_index_repo(
+        "a_canonical_link_on_a_declaration_heading_does_not_enroll",
+        "# AR-000-index: Architecture, after [§AR-001-bus](../../src/bus.rs)\n",
+    );
+
+    let run = check_run(&root, false);
+    let about_bus: Vec<String> = findings(&run)
+        .into_iter()
+        .filter(|finding| finding.starts_with("src/bus.rs"))
+        .collect();
+    assert!(
+        about_bus.is_empty(),
+        "the heading link is neither an unmet enrollment nor navigation: {about_bus:?}"
+    );
+
+    let (config, findings, entries) = scanned_index(&root);
+    assert!(
+        entries
+            .entries_in(&config.root.join("docs/architecture/README.md"))
+            .is_some_and(|owed| !owed.contains(&bus_id())),
+        "the heading link creates no external membership"
+    );
+    let citation = findings
+        .citations
+        .iter()
+        .find(|citation| citation.id == bus_id())
+        .expect("the heading citation");
+    assert!(!entries.is_index_entry(citation));
+}

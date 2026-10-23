@@ -15,11 +15,11 @@ use super::index_mention::index_mentions;
 use crate::config::{Frame, Owners, Schema};
 use crate::grammar::{
     CitationLink, LineLinks, MarkdownLinks, citation_link, is_inside_inline_code,
-    markdown_line_kinds, markdown_never_rewrite_context, render_catalog_id,
+    markdown_never_rewrite_context, render_catalog_id,
 };
 use crate::model::{
-    Catalog, CheckReport, Citation, Code, Declaration, Diagnostic, HeadingKind, Id,
-    paired_declarations, scanned_decl_relative_path, scanned_path_key, section_resolves,
+    Catalog, CheckReport, Citation, Code, Declaration, Diagnostic, Id, paired_declarations,
+    scanned_decl_relative_path, scanned_path_key, section_resolves,
 };
 use crate::sources::{path_is_dir, physical_path_key};
 
@@ -208,8 +208,11 @@ pub(super) fn marked_index_entries<'a>(
     findings
         .edges()
         .filter(|cite| {
+            // §FS-check.4.1.2.1: a citation on a declaration heading is the entry of no ID,
+            // a linked section included, by the one answer (§AR-checker.2.16).
             if !cite.has_marker
                 || cite.namespace.is_some()
+                || entries.on_declaration_heading(&cite.file, cite.line)
                 || !(entries.is_index_entry(cite)
                     || cite.section.is_some()
                         && entries
@@ -221,12 +224,6 @@ pub(super) fn marked_index_entries<'a>(
             let Some(record) = findings.files.get(&cite.file) else {
                 return false;
             };
-            if record
-                .heading_at(cite.line)
-                .is_some_and(|heading| heading.kind == HeadingKind::Declaration)
-            {
-                return false;
-            }
             let lines = lines_by_file
                 .entry(&cite.file)
                 .or_insert_with(|| record.text().lines().collect::<Vec<_>>());
@@ -394,12 +391,12 @@ pub(super) fn check_kind_indexes(
     // §FS-check.3.18.8: which index files *this run* read. The entries come from the
     // scan and the form from the index's text, so an index the run never scanned
     // would otherwise look empty and report every declaration in the folder as unlisted.
-    let index_scanned: BTreeMap<&Path, &Path> = findings
+    let index_scanned: BTreeSet<&Path> = findings
         .scanned_files
         .iter()
         .filter_map(|file| {
             let relative = scanned_decl_relative_path(file, &configured_root, &physical_root)?;
-            Some((*index_keys.get(relative.as_ref())?, file.as_path()))
+            index_keys.get(relative.as_ref()).copied()
         })
         .collect();
 
@@ -409,8 +406,9 @@ pub(super) fn check_kind_indexes(
         // `is_file`, not `exists`: a path that is not a readable file is not an index
         // this run failed to read, it is an index that is not there — a missing one or
         // a directory wearing the name — which is §FS-check.3.18.7's finding, not silence.
-        let scanned_as = index_scanned.get(target.index_key.as_path());
-        if scanned_as.is_none() && sources.is_file(&target.index_file) {
+        if !index_scanned.contains(target.index_key.as_path())
+            && sources.is_file(&target.index_file)
+        {
             continue;
         }
         let Some(owed) = index_entries.entries_in(&target.index_file) else {
@@ -443,13 +441,6 @@ pub(super) fn check_kind_indexes(
             .unwrap_or_default();
         // §FS-citations.wrap: the index is the document a reference is read in.
         let links = MarkdownLinks::new(text.as_deref().unwrap_or_default());
-        // §FS-check.1.1.5.1: which of those lines may hold a heading at all.
-        let kinds = markdown_line_kinds(lines.iter().copied());
-        // §AR-scanner.2.8.5: which are declaration headings, off the record of these
-        // lines, the scan's own: both read the text a save would write.
-        let record = scanned_as
-            .and_then(|file| findings.files.get(*file))
-            .map(|record| &**record);
         // §FS-check.3.17.4: a bare citation is an entry only where `fmt --write`
         // may wrap it. A link through this index path to a target outside the
         // physical config root is readable but not writable by the formatter.
@@ -463,17 +454,10 @@ pub(super) fn check_kind_indexes(
             let Some(line) = lines.get(citation.line.saturating_sub(1)) else {
                 continue;
             };
-            // §FS-fmt.6.4: `fmt` leaves a declaration heading alone, so a citation on one
-            // is no more repairable than one in inline code. A fence records no citation
-            // and a raw-text HTML block holds no heading (§FS-check.1.1.5.1).
-            let heading_position = kinds
-                .get(citation.line.saturating_sub(1))
-                .is_some_and(|kind| kind.may_be_heading());
-            if heading_position
-                && record
-                    .and_then(|record| record.heading_at(citation.line))
-                    .is_some_and(|heading| heading.kind == HeadingKind::Declaration)
-            {
+            // §FS-fmt.6.4: `fmt` leaves a declaration heading alone, and a citation on one
+            // is the entry of no ID (§FS-check.4.1.2.1), by the answer the unused carve-out
+            // reads too (§AR-checker.2.16). A fence records no citation.
+            if index_entries.on_declaration_heading(&citation.file, citation.line) {
                 continue;
             }
             // An `Ignored` form creates no entry: a citation `fmt` will not wrap
@@ -520,7 +504,13 @@ pub(super) fn check_kind_indexes(
         let mentioned = if unentered.is_empty() {
             BTreeSet::new()
         } else {
-            index_mentions(frame, &schema.citation.marker, record, &lines, &unentered)
+            index_mentions(
+                frame,
+                &schema.citation.marker,
+                |line| index_entries.on_declaration_heading(&target.index_file, line),
+                &lines,
+                &unentered,
+            )
         };
 
         for (id, decl) in covered {

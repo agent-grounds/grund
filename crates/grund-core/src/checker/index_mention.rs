@@ -8,7 +8,7 @@ use std::collections::BTreeSet;
 
 use crate::config::Frame;
 use crate::grammar::{MarkdownBlocks, parse_id};
-use crate::model::{Declaration, FileRecord, HeadingKind, Id};
+use crate::model::{Declaration, Id};
 
 /// Whether `line` names `file_name` as a **whole** file name
 /// (§FS-check.3.18.5.1). The character on either side must be one that cannot
@@ -51,9 +51,11 @@ fn line_names_file(line: &str, file_name: &str) -> bool {
 /// true both of a citation the scan recorded and discarded (§FS-check.3.17.4) and
 /// of a markerless mention it never recorded at all.
 ///
-/// Whether a line is a declaration heading is the scan's answer, read off the
-/// index's `record` (§AR-scanner.2.8.5); an index the scan holds no record of has
-/// no line the scan read as one.
+/// Whether a 1-indexed line is a declaration heading is `declaration_heading`'s
+/// answer, the one `KindIndexEntries` gives the entry rule and the unused carve-out
+/// alike (§AR-checker.2.16), off the scan's record of the index (§AR-scanner.2.8.5).
+/// The scan records no heading in a raw-text HTML block (§FS-check.1.1.5.1), so a
+/// heading-shaped line in one declares nothing and what it names is a mention.
 ///
 /// Called once per index target, and only where that target already owes at
 /// least one finding, so an index whose declarations are all entered — every
@@ -61,7 +63,7 @@ fn line_names_file(line: &str, file_name: &str) -> bool {
 pub(super) fn index_mentions<'a>(
     frame: Frame<'_>,
     marker: &str,
-    record: Option<&FileRecord>,
+    declaration_heading: impl Fn(usize) -> bool,
     lines: &[&str],
     unentered: &[(&'a Id, &'a Declaration)],
 ) -> BTreeSet<&'a Id> {
@@ -72,13 +74,7 @@ pub(super) fn index_mentions<'a>(
         if block.in_fence() {
             continue;
         }
-        // §FS-check.1.1.5.1: a heading-shaped line in a raw-text HTML block
-        // declares nothing, so what it names is a mention like any prose.
-        if block.may_be_heading()
-            && record
-                .and_then(|record| record.heading_at(index + 1))
-                .is_some_and(|heading| heading.kind == HeadingKind::Declaration)
-        {
+        if declaration_heading(index + 1) {
             continue;
         }
         // §AR-scanner.2.8.5: the scanner's own token reader, so a longer ID containing
