@@ -93,17 +93,6 @@ impl View<'_> {
         self.variant["member"].as_str()
     }
 
-    /// A path as the run's project root reads it: below its member in a member run.
-    pub fn display(&self, file: &str) -> String {
-        match self.member() {
-            Some(member) => file
-                .strip_prefix(&format!("{member}/"))
-                .unwrap_or(file)
-                .to_string(),
-            None => file.to_string(),
-        }
-    }
-
     /// §FS-scan.projects.workspace-root: a run at the workspace root loads every
     /// member; a member run loads no workspace.
     pub fn workspace(&self) -> bool {
@@ -319,7 +308,8 @@ impl View<'_> {
         json!(self.scan_errors_in(true))
     }
 
-    /// A path relative to the report base, as a result's unnormalized field holds it.
+    /// A path relative to the report base, as a result's unnormalized field holds it
+    /// (§FS-config.3.6.1): below its member in a member run, whose base the member is.
     pub fn raw(&self, path: &str) -> String {
         if self.base.is_empty() || self.base == "." {
             return path.into();
@@ -331,6 +321,11 @@ impl View<'_> {
         ups.chain(file[common..].iter().copied())
             .collect::<Vec<_>>()
             .join("/")
+    }
+
+    /// The report site of a path a result holds relative to the report base: `raw`'s inverse.
+    pub fn reported_site(&self, reported: &str) -> String {
+        self.site(&format!("{}/{reported}", self.base))
     }
 
     /// §FS-check.2.4: only a file at or under the path makes the run incomplete.

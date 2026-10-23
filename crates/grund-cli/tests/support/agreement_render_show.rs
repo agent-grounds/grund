@@ -293,7 +293,7 @@ impl View<'_> {
             (None, Some(row)) => {
                 let mut object = self.show_object(row);
                 let site = self.site(object["path"].as_str().unwrap());
-                object["path"] = json!(self.display(object["path"].as_str().unwrap()));
+                object["path"] = json!(self.raw(object["path"].as_str().unwrap()));
                 json!({"body":object["body"],"json":object.to_string(),"line":object["line"],
                     "path":site,
                     "sections":object["sections"].as_array().unwrap().iter().map(|s|

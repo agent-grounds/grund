@@ -40,7 +40,7 @@ impl View<'_> {
             let summaries: Vec<_> = python["result"]["file_summaries"].as_array().unwrap().iter()
                 .map(|s| {
                     let lines: Vec<_> = python["result"]["hits"].as_array().unwrap().iter()
-                        .filter(|h| h["path"] == json!(self.site(s["path"].as_str().unwrap())))
+                        .filter(|h| h["path"] == json!(self.reported_site(s["path"].as_str().unwrap())))
                         .map(|h| h["line"].clone())
                         .collect();
                     json!({"project":s["project"],"path":s["path"],"count":s["sites"],"lines":lines})
