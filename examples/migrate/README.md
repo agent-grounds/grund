@@ -30,6 +30,14 @@ Version 2 always reads named sections, and it puts a folder and a file under dif
 
 The comment above `include` is listed because `include` splits into several version-2 keys, so there is no one key for the comment to follow ([§FS-config-migrate.4.3](../../docs/functional-spec/FS-config-migrate.md#43-everything-else-is-listed)). The header block and the comment above the `FS` row are not listed: they are carried.
 
+Adding `--write` here still exits `1`, prints no stdout, and leaves the config unchanged. Its report keeps the repairs and comment listing above and ends with:
+
+```text
+not written: 2 refusals (follow the repairs above); 1 comment has no single key to follow (move it, or re-run with --drop-comments); grund.toml is unchanged
+```
+
+The closing line names every blocking cause, so `--drop-comments` alone cannot clear the two setting refusals. A refused write prints no `written:` defaults or next-init Project map note, even after repairing the settings so only the comment blocks it. `--full` keeps the same refused-write report ([§FS-config-migrate.2.2](../../docs/functional-spec/FS-config-migrate.md#22-stderr-is-the-report)). The CLI regression also checks this run against [`migrate-1-refused/expected.write.stderr`](migrate-1-refused/expected.write.stderr); the preview expectation stays unchanged.
+
 ## Step 2: after the repairs, the candidate
 
 `migrate-2-repaired/repo/grund.toml` is the same file after both edits: `named_sections = true`, and `e2e` removed from `include`. Run the same preview:

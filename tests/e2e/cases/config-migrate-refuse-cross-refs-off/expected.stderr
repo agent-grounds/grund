@@ -1,4 +1,4 @@
 grund.toml: version 1 → 2, --write
 refused: grund.toml:18: [fmt.cross_refs] enabled = false has no version 2 spelling in this grund
   repair: none yet; keep version 1, or set enabled = true under version 1 if fmt may write links
-not written: grund.toml is unchanged
+not written: 1 refusal (follow the repairs above); grund.toml is unchanged

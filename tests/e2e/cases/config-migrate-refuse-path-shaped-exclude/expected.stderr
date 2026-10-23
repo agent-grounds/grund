@@ -2,4 +2,4 @@ grund.toml: version 1 → 2, --write
 refused: grund.toml:15: [scan] exclude entry `docs/drafts` contains `/`, so version 1 never matched it; as a version 2 glob it would stop reading 1 file
   would stop reading: docs/drafts/plan.md
   repair: remove `docs/drafts` from exclude under version 1, which keeps what is scanned exactly as it is
-not written: grund.toml is unchanged
+not written: 1 refusal (follow the repairs above); grund.toml is unchanged
