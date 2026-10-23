@@ -38,6 +38,7 @@
 //! reads it downward (§AR-system.4).
 
 mod agents;
+mod agents_sections; // §FS-check.3.5.3.1: preserve entry detail with section drift.
 mod armed;
 mod chapter_rules;
 mod citation_prohibitions;

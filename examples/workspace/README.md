@@ -70,6 +70,33 @@ enclosing workspace's root project, explains the member relationship, and gives
 ([§FS-workspace.5.1.1](../../docs/functional-spec/FS-workspace.md#511-verified-enclosing-workspace-guidance)). The hint requires verified membership and alias identity;
 it does not promise that a modified target exists when checked from the root.
 
+## Finding and refreshing a stale entry
+
+Run this walkthrough from the grund repository root with `grund` on `PATH`:
+
+```bash
+bash examples/workspace/stale-entry.sh
+```
+
+The script copies this fixture into a disposable directory under `~/ag/tmp`,
+initializes every project twice so all blocks start current regardless of init
+ordering, and checks that baseline from the workspace root. It then changes
+only the root block's `api` entry from its initialized `AGENTS.md` link back to
+the not-yet-initialized mark. The root check exits 1 and shows:
+
+```text
+AGENTS.md:3: error: repo maintenance: stale grund init block: workspace members differ from the workspace (expected - [`api`](packages/api/AGENTS.md); found - [`api`](packages/api/) *(not yet initialized)*) — run `grund init` to refresh (does not affect citation validity)
+```
+
+`expected` comes from the current render; `found` is the stale body line on
+disk. Both workspace sections report the first unequal pair in their existing
+order, with `<missing>` for an absent side
+([§FS-check.3.5.3.1](../../docs/functional-spec/FS-check.md#3531-first-differing-workspace-entry)).
+The script runs `grund init` at the root, as this finding requests, and checks
+again successfully. A finding in a member's block instead includes that
+member's directory in its refresh command. The copied fixture is removed when
+the script exits.
+
 The neighboring-repo form `<§>payments/FS-refunds` resolving to another
 repository is **not** implemented yet — see [[§FS-workspace.7](../../docs/functional-spec/FS-workspace.md#7-neighboring-repos)]
 (../../docs/functional-spec/FS-workspace.md#7-neighboring-repos).

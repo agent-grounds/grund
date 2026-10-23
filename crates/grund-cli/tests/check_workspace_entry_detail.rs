@@ -175,7 +175,6 @@ const BILLING_MARK: &str = "- [`billing`](packages/billing/) *(not yet initializ
 const NOTIFY: &str = "- [`notify`](packages/notify/AGENTS.md)";
 
 #[test]
-#[ignore = "red until #932 adds workspace entry detail; implement removes this"]
 fn joined_member_detail_names_notify_in_root_and_member_findings() {
     let fixture = Fixture::new(&["billing"]);
     fixture.member("notify");
@@ -210,7 +209,6 @@ fn joined_member_detail_names_notify_in_root_and_member_findings() {
 }
 
 #[test]
-#[ignore = "red until #932 explains the changed link and mark; implement removes this"]
 fn billing_mark_detail_shows_initialized_link_and_stale_mark() {
     let fixture = Fixture::new(&["billing"]);
     assert!(fixture.0.join("packages/billing/AGENTS.md").is_file());
@@ -222,7 +220,6 @@ fn billing_mark_detail_shows_initialized_link_and_stale_mark() {
 }
 
 #[test]
-#[ignore = "red until #932 adds namespace entry detail; implement removes this"]
 fn project_namespaces_detail_shows_first_changed_body_line() {
     let fixture = Fixture::new(&["billing"]);
     let original = fs::read_to_string(fixture.0.join("AGENTS.md")).unwrap();
@@ -239,7 +236,6 @@ fn project_namespaces_detail_shows_first_changed_body_line() {
 }
 
 #[test]
-#[ignore = "red until #932 identifies a missing entry; implement removes this"]
 fn missing_member_detail_has_missing_found_side() {
     let fixture = Fixture::new(&["billing"]);
     fixture.replace(&format!("{BILLING}\n"), "");
@@ -250,7 +246,6 @@ fn missing_member_detail_has_missing_found_side() {
 }
 
 #[test]
-#[ignore = "red until #932 identifies an unexpected entry; implement removes this"]
 fn unexpected_member_detail_has_missing_expected_side() {
     let fixture = Fixture::new(&["billing"]);
     let ghost = "- [`ghost`](packages/ghost/) *(not yet initialized)*";
@@ -262,7 +257,6 @@ fn unexpected_member_detail_has_missing_expected_side() {
 }
 
 #[test]
-#[ignore = "red until #932 chooses the first difference in order; implement removes this"]
 fn multiple_changed_entries_select_first_in_rendered_order() {
     let fixture = Fixture::new(&["billing", "notify"]);
     fixture.replace(BILLING, BILLING_MARK);
@@ -276,7 +270,6 @@ fn multiple_changed_entries_select_first_in_rendered_order() {
 }
 
 #[test]
-#[ignore = "red until #932 explains entry order drift; implement removes this"]
 fn reordered_members_compare_first_positional_pair() {
     let fixture = Fixture::new(&["billing", "notify"]);
     fixture.replace(
@@ -290,7 +283,6 @@ fn reordered_members_compare_first_positional_pair() {
 }
 
 #[test]
-#[ignore = "red until #932 explains drift without a differing entry; implement removes this"]
 fn blank_line_drift_keeps_finding_with_section_fallback() {
     let fixture = Fixture::new(&["billing"]);
     fixture.replace("### Workspace members\n", "### Workspace members\n\n");
