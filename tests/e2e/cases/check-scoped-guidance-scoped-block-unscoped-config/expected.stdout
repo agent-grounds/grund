@@ -1,2 +1,2 @@
-AGENTS.md:3: error: repo maintenance: stale grund init block: scoped guidance differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
-docs/fs/AGENTS.md:1: error: repo maintenance: stale grund init block: scoped guidance differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: stale grund init block: the scoped guidance section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)
+docs/fs/AGENTS.md:1: error: repo maintenance: stale grund init block: the scoped guidance section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)

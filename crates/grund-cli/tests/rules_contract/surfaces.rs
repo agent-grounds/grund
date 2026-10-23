@@ -414,8 +414,8 @@ fn valid_rules_render_exact_sentences_in_a_rule_enabled_managed_section() {
         &output,
         1,
         concat!(
-            "AGENTS.md:3: error: repo maintenance: stale grund init block: chapter rules ",
-            "differ from grund.toml \u{2014} run `grund init` to refresh ",
+            "AGENTS.md:3: error: repo maintenance: stale grund init block: the chapter rules ",
+            "section differs from grund.toml \u{2014} run `grund init` to refresh ",
             "(does not affect citation validity)\n",
         ),
         "",
@@ -455,8 +455,8 @@ fn a_path_scoped_check_compares_the_chapter_rules_against_the_whole_tree_render(
     agrees(
         1,
         concat!(
-            "AGENTS.md:3: error: repo maintenance: stale grund init block: chapter rules ",
-            "differ from grund.toml \u{2014} run `grund init` to refresh ",
+            "AGENTS.md:3: error: repo maintenance: stale grund init block: the chapter rules ",
+            "section differs from grund.toml \u{2014} run `grund init` to refresh ",
             "(does not affect citation validity)\n",
         ),
     );

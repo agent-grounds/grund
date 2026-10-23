@@ -154,8 +154,8 @@ fn config_migrate_write_then_check() {
     );
     assert!(
         stale.iter().any(|line| line.starts_with(
-            "AGENTS.md:3: error: repo maintenance: stale grund init block: citation scheme \
-             differ from grund.toml"
+            "AGENTS.md:3: error: repo maintenance: stale grund init block: the citation \
+             scheme section differs from grund.toml"
         )),
         "no citation scheme finding: {stale:?}"
     );
@@ -258,7 +258,7 @@ fn new_member_blocks_clear_after_init_in_each_named_directory() {
             stale
                 .iter()
                 .any(|line| line.starts_with(&format!("{path}:3: "))
-                    && line.contains("workspace members differ from the workspace")
+                    && line.contains("the workspace members section differs from the workspace")
                     && line.contains(&run)),
             "{path} not reported with `{run}`: {stale:?}"
         );

@@ -1,5 +1,5 @@
-AGENTS.md:3: error: repo maintenance: stale grund init block: citation scheme differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
-AGENTS.md:3: error: repo maintenance: stale grund init block: project map differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: stale grund init block: the citation scheme section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: stale grund init block: the project map section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)
 architecture.md:3: warning: declared but never cited: AR-receipt
 grund.toml:9: warning: optional workspace member `packages/secret` is absent — citations into namespace `secret` were not checked, so this run does not cover it, nor the managed blocks' workspace sections
 packages/billing/spec.md:3: warning: declared but never cited: FS-billing

@@ -309,8 +309,8 @@ fn report_gate_ignores_a_stale_block_outside_the_generated_sections() {
         line: Some(3),
         column: None,
         message: format!(
-            "repo maintenance: stale grund init block: {noun} differ from grund.toml — run \
-             `grund init` to refresh (does not affect citation validity)"
+            "repo maintenance: stale grund init block: the {noun} section differs from grund.toml \
+             — run `grund init` to refresh (does not affect citation validity)"
         ),
         sites: Vec::new(),
         authority: Vec::new(),

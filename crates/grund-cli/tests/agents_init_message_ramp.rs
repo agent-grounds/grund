@@ -134,7 +134,6 @@ fn agents_init_messages() -> Vec<String> {
 /// classification in front, and the `(does not affect citation validity)` clause
 /// behind.
 #[test]
-#[ignore = "red until #933 rewords the stale template and its goldens; implement removes this"]
 fn the_agents_init_messages_are_the_five_final_templates() {
     assert_eq!(
         agents_init_messages(),

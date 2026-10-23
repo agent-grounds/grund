@@ -1,2 +1,2 @@
-AGENTS.md:3: error: repo maintenance: stale grund init block: citation scheme differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
-AGENTS.md:3: error: repo maintenance: stale grund init block: project map differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: stale grund init block: the citation scheme section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: stale grund init block: the project map section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)
