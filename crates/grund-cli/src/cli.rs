@@ -229,8 +229,23 @@ fn restore_default_sigpipe() {}
 /// behind generic help (§FS-cli.4). The exit-code mapping (0/1/2) is fixed
 /// (§FS-cli.5).
 pub fn main_entry() -> ExitCode {
+    cli_entry(std::env::args().skip(1).collect())
+}
+
+/// `main_entry` with `argv` (program name dropped) given rather than read, for a
+/// test that re-spawns its own executable into the CLI so the workspace-load
+/// observer it reads is the one its own featured build compiled in, never an
+/// uplifted binary another build re-links (§AR-ci.3.3.1). Compiled only under
+/// that test-only feature, so no distributed library surface carries it.
+#[cfg(feature = "test-workspace-load-count")]
+#[doc(hidden)]
+pub fn main_entry_from_args(args: Vec<String>) -> ExitCode {
+    cli_entry(args)
+}
+
+/// The body of `main_entry`, over `argv` without the program name (§FS-cli).
+fn cli_entry(args: Vec<String>) -> ExitCode {
     restore_default_sigpipe();
-    let args = std::env::args().skip(1).collect::<Vec<_>>();
     if args.iter().any(|arg| arg == "--version" || arg == "-V") {
         println!("grund {}", env!("CARGO_PKG_VERSION"));
         return ExitCode::SUCCESS;
