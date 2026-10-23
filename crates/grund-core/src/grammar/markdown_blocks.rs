@@ -76,15 +76,6 @@ impl MarkdownBlocks {
     }
 }
 
-/// Each line of `lines` classified in order, for a reader that visits lines out
-/// of order (§FS-check.1.1.5.1).
-pub(crate) fn markdown_line_kinds<'a>(
-    lines: impl IntoIterator<Item = &'a str>,
-) -> Vec<MarkdownLine> {
-    let mut blocks = MarkdownBlocks::default();
-    lines.into_iter().map(|line| blocks.line(line)).collect()
-}
-
 /// The raw-text tag `line` opens a block with: at most three leading spaces,
 /// `<`, one of the tag names case-insensitively, then whitespace, `>` or the end
 /// of the line (§FS-check.1.1.5.1).

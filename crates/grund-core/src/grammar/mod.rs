@@ -152,7 +152,7 @@ pub(crate) use managed_block::{
     agents_block_heading, find_agent_guidance_block, find_agents_block, find_managed_block,
     integrations_block_markers,
 };
-pub(crate) use markdown_blocks::{MarkdownBlocks, MarkdownLine, markdown_line_kinds};
+pub(crate) use markdown_blocks::{MarkdownBlocks, MarkdownLine};
 pub(crate) use multi_line_string::MultiLineStrings;
 pub(crate) use spelling::{
     BindingSpellings, render_catalog_id, render_citation_id, render_declaration_id, render_input_id,
