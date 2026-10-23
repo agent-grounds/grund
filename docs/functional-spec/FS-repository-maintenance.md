@@ -116,7 +116,15 @@ remains a manual operation.
 Concurrent helper calls must preserve live targets and artifacts and publish
 complete ownership records atomically, so another caller never consumes a
 partially written record as permission to delete. Concurrent reclamation of
-the same dead target must not fail an otherwise valid call. This is checkout
-lifetime tracking, with no build lease: callers must keep a source checkout
-present for the duration of builds using its target. Removing that source
-while its build still runs permits a later helper call to reclaim the target.
+the same dead target must not fail an otherwise valid call. Once eligibility
+is established under [§FS-repository-maintenance.2.3](FS-repository-maintenance.md#23-conservative-deletion-boundary-and-legacy-entries), removal of that target or
+its descendants must tolerate transient Windows deletion contention within a
+bounded time. Removal counts as complete only when it succeeds or a filesystem
+lookup positively confirms that the affected path has disappeared. Persistent
+permission denial and unrelated errors must remain visible failures; an
+uncertain lookup does not establish absence.
+
+This is checkout lifetime tracking, with no build lease: callers must keep a
+source checkout present for the duration of builds using its target. Removing
+that source while its build still runs permits a later helper call to reclaim
+the target.
