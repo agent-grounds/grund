@@ -1,8 +1,9 @@
 # FS-repository-maintenance: Checkout maintenance stays discoverable
 
-The repository keeps its maintenance scripts under `scripts/` and carries the
-bindings needed to invoke them in each checkout. This makes contributor
-housekeeping easy to find and operate, serving
+The repository keeps its maintenance scripts under `scripts/`, carries the
+bindings needed to invoke them in each checkout, and keeps its acceptance
+tests tied to the checkout they exercise. This makes contributor
+housekeeping and verification reliable and easy to operate, serving
 [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
 These are repository maintenance hooks; they add no public `grund` command or
 hook to `grund check`.
@@ -128,3 +129,17 @@ This is checkout lifetime tracking, with no build lease: callers must keep a
 source checkout present for the duration of builds using its target. Removing
 that source while its build still runs permits a later helper call to reclaim
 the target.
+
+## 3. Checkout-owned terminal acceptance
+
+The terminal watch acceptance must exercise the CLI and core from its own
+checkout when no build input is supplied. Two checkouts under one home must
+not share the default build output or executable: a successful test must not
+silently exercise another checkout's core, and incompatible cores must not
+break an unrelated checkout's build. Cleaning shared build output does not
+establish checkout ownership and must not substitute for isolation.
+
+A caller may supply its own executable or Cargo target, taking responsibility
+for that input. Preparing the executable must propagate a build failure as an
+error, never skip acceptance. These are internal acceptance requirements; the
+terminal behavior remains [§FS-check.6.2.2](FS-check.md#622-owned-terminal-screen).
