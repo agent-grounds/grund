@@ -134,7 +134,6 @@ fn kind_bullet(kinds: &str) -> String {
 /// The #972 reproducer: the REQ-only block teaches `--kind REQ`, which runs, on the version-1
 /// first init and again after `config migrate --to 2 --write` and a refresh init.
 #[test]
-#[ignore = "red until #972 the block renders --kind from the project's kinds; implement removes this"]
 fn req_only_block_teaches_a_kind_recipe_that_runs() {
     let project = Fixture::new("req-only", Some(REQ_ONLY), REQ_TREE);
     for run in ["v1 first init", "v2 refresh init"] {
@@ -159,7 +158,6 @@ fn default_kinds_block_keeps_fs_ar() {
 /// A bare `grund init` writes the software-development config (FS, REQ, AR in folders), whose
 /// first other folder kind after FS is REQ.
 #[test]
-#[ignore = "red until #972 the block renders --kind from the project's kinds; implement removes this"]
 fn software_development_block_teaches_fs_req() {
     let project = Fixture::new("software-development", None, &[]);
     let bullet = project.init_discovery_bullet();
@@ -169,7 +167,6 @@ fn software_development_block_teaches_fs_req() {
 
 /// With no citable kind the bullet has no `--kind` half to refuse.
 #[test]
-#[ignore = "red until #972 the bullet drops --kind when no kind is citable; implement removes this"]
 fn no_kind_block_teaches_no_kind_recipe() {
     let project = Fixture::new("no-kinds", Some(NO_KINDS), &[]);
     let bullet = project.init_discovery_bullet();

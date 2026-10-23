@@ -3,7 +3,7 @@
 
 use std::path::Path;
 
-use crate::config::{Config, KindConfig, default_kind_folder};
+use crate::config::{Config, KindConfig, default_kind_folder, guided_kind};
 use crate::scanner::CANONICAL_AGENT_ENTRYPOINT;
 use crate::sources::path_exists;
 use crate::templates::{
@@ -129,13 +129,7 @@ impl InitAllocation {
 /// citable (§FS-init.2.2.2.2). Whether the place exists is read from `target`
 /// once, for the create step and the refresh test alike (§FS-init.2.2.2.1).
 pub(crate) fn init_allocation(config: &Config, target: &Path) -> Option<InitAllocation> {
-    let citable = || config.kinds.iter().filter(|row| row.citable);
-    let has_home = |row: &&KindConfig| row.file.is_some() || row.folder.is_some();
-    let row = citable()
-        .filter(has_home)
-        .find(|row| row.kind == "FS")
-        .or_else(|| citable().find(has_home))
-        .or_else(|| citable().next())?;
+    let row = guided_kind(&config.kinds)?;
     let home = row_home(row);
     let home_exists = home
         .as_ref()

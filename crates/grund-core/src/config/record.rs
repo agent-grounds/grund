@@ -393,6 +393,21 @@ pub(crate) fn kind_prefixes(kinds: &[KindConfig]) -> Vec<String> {
         .collect()
 }
 
+/// The row init's guidance names (§FS-init.2.2.2.3): the `FS` row when it is
+/// citable and has a home, else the first citable row with a home, else the
+/// first citable row, in configuration order; `None` where no row is citable.
+/// The `next:` block allocates in it and the managed block's discovery rung
+/// leads its `--kind` example with it (§FS-init.2.3.4.3), so both read it here.
+pub(crate) fn guided_kind(kinds: &[KindConfig]) -> Option<&KindConfig> {
+    let citable = || kinds.iter().filter(|row| row.citable);
+    let has_home = |row: &&KindConfig| row.file.is_some() || row.folder.is_some();
+    citable()
+        .filter(has_home)
+        .find(|row| row.kind == "FS")
+        .or_else(|| citable().find(has_home))
+        .or_else(|| citable().next())
+}
+
 /// Whether a `[[kinds]]` row opted its home into first-class values
 /// (§FS-values.2, §FS-config.3.4): its form is a value form (§AR-config.1.3).
 pub(crate) fn kind_uses_values(schema: &Schema, kind: &str) -> bool {

@@ -10,7 +10,7 @@ mod init_fixture;
 use init_fixture::{manifest_dir, run_grund, workdir};
 
 const KIND_BULLET: &str =
-    "- `grund list` / `grund list --kind FS,AR` — discover IDs if you get lost";
+    "- `grund list` / `grund list --kind FS,REQ` — discover IDs if you get lost";
 const UNUSED_BULLET: &str =
     "- `grund list --unused` — the declarations nothing cites yet, in one call";
 

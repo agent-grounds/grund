@@ -148,7 +148,7 @@ pub(crate) use kinds::{
 };
 pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{
-    DEFAULT_GROUNDING_LEVEL, any_kind_holds_values, kind_prefixes, kind_uses_values,
+    DEFAULT_GROUNDING_LEVEL, any_kind_holds_values, guided_kind, kind_prefixes, kind_uses_values,
     kind_value_chapter,
 };
 pub(crate) use report_paths::{display_path, published_finding, run_warning_findings};
@@ -181,6 +181,8 @@ mod tests_discovery;
 mod tests_empty_kinds;
 #[cfg(test)]
 mod tests_grounding;
+#[cfg(test)]
+mod tests_guided_kind;
 #[cfg(test)]
 mod tests_id_grammar;
 #[cfg(test)]
