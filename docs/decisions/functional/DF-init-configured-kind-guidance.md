@@ -18,7 +18,7 @@ The guidance names FS where FS has a home, otherwise the first citable row that 
 
 ### 2.2 The built-in FS folder stays the scaffold's
 
-`docs/functional-spec` is where `--scaffold` lays the FS starter when no FS row has a home, and it stays that. The guidance stops naming it, because a project that never declared it is not missing it. The configured-kind form therefore never offers `--scaffold`: the scaffold lays the FS starter and no other kind's, so offering it would promise a starter it does not write. It asks for the selected home only while that home is missing. What `--scaffold` should lay in a project without FS is a separate question, left open here.
+`docs/functional-spec` is where `--scaffold` lays the FS starter when no FS row has a home, and it stays that. The guidance stops naming it, because a project that never declared it is not missing it. The configured-kind form therefore never offers `--scaffold`: the scaffold lays grund's whole software-development starter at that starter's own places, the FS home included ([§FS-init.2.1.3](../../functional-spec/FS-init.md#213-the-software-development-starter-files)), and is no way to lay the selected kind's home, so offering it would lay a tree the project did not ask for, and for a kind or a folder the starter does not carry would leave the selected home missing still. It asks for the selected home only while that home is missing. What `--scaffold` should lay in a project without FS is a separate question, left open here.
 
 ### 2.3 The advice changes now, under the pre-1.0 licence
 

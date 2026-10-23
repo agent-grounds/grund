@@ -143,8 +143,10 @@ refresh has nothing left to teach. Allocate the first ID with
 `grund id ADR "…"`, and run `grund check` to see what the repository already
 cites. A first run whose selected home is missing asks you to create it, as
 in `create the ADR home (docs/adr)`. It never offers `--scaffold`, because
-that lays grund's own `FS` starter, not one for your kind. A kind with no home
-at all is taught as a declaration in a source doc-comment.
+that lays grund's whole software-development starter, the files listed under
+`--scaffold` above, at the starter's own places. That is a tree your project
+did not ask for, and no way to lay your kind's home: it writes no `docs/adr`.
+A kind with no home at all is taught as a declaration in a source doc-comment.
 
 `none` has no starter files, so `--template=none --scaffold` is refused, exit
 `2`, and so is a template name grund does not know:

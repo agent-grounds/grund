@@ -319,7 +319,6 @@ fn the_scaffold_lays_an_ar_home_at_the_starters_place() {
 /// configured-kind form never offers `--scaffold` says the scaffold lays the whole
 /// software-development starter, and none says it lays the FS starter alone (#974).
 #[test]
-#[ignore = "red until #974 corrects the decision, the guide and both skill copies; implement removes this"]
 fn the_scaffold_rationale_names_the_whole_starter_everywhere() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
     for place in [
