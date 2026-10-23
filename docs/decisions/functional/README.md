@@ -64,6 +64,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 
 ## What `check` reports, and how loudly
 
+- [§DF-completed-check-report-order](DF-completed-check-report-order.md#df-completed-check-report-order-completed-check-reports-share-one-order) — completed check reports share one order
 - [§DF-check-full-scope](DF-check-full-scope.md#df-check-full-scope-check---full-walks-past-scan-include-and-reports-unresolved-references-plus-orphaned-section-headings-out-there) — `check --full` walks past `[scan] include` and reports unresolved references plus orphaned section headings out there
 - [§DF-require-grounding](DF-require-grounding.md#df-require-grounding-an-opt-in-check-that-every-source-file-cites-a-spec) — an opt-in check that every source file cites a spec
 - [§DF-path-scope-resolves-project-wide](DF-path-scope-resolves-project-wide.md#df-path-scope-resolves-project-wide-a-path-scoped-check-resolves-against-the-whole-project-and-reports-only-the-path) — a path-scoped `check` resolves against the whole project and reports only the path

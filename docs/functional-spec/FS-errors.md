@@ -475,6 +475,13 @@ How `check --only` and `--ignore` keep the contract is [§FS-errors.4.2](FS-erro
 
 ### 4.1 Ordering
 
+Each completed engine check report stably sorts its `errors`, `warnings`, and
+`suggestions` channels bytewise by `(path, line, message)`, after path narrowing
+and caution insertion. An absent path sorts first; an absent line counts as zero;
+ties retain their existing order. Finding selection retains this order, with
+selection-generated `selected-check-off` advice appended afterwards
+([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)). The compatibility decision is [§DF-completed-check-report-order](../decisions/functional/DF-completed-check-report-order.md#df-completed-check-report-order-completed-check-reports-share-one-order).
+
 Text `check` findings are grouped as errors,
 warnings, then enabled suggestions and sort bytewise by `(path, line,
 message)` within each group. JSON `check` findings retain their global
