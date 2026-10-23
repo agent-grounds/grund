@@ -291,8 +291,11 @@ fn real_held_saved_snapshots_preserve_escaped_roots() {
     );
 }
 
-#[test]
-fn no_config_cli_and_editor_stay_in_the_disposable_input() {
+#[path = "agreement_control_ownership.rs"]
+mod ownership;
+
+/// Allocation extracted unchanged for ownership probes (§AR-ci.10.2, §AR-ci.10.3).
+fn no_config_tree() -> Tree {
     let parent = std::env::temp_dir().canonicalize().unwrap();
     for ancestor in parent.ancestors() {
         assert!(
@@ -304,7 +307,12 @@ fn no_config_cli_and_editor_stay_in_the_disposable_input() {
     }
     let root = parent.join(format!("grund-no-config-control-{}", std::process::id()));
     fs::create_dir_all(root.join("docs/functional-spec")).unwrap();
-    let tree = Tree(root.canonicalize().unwrap());
+    Tree(root.canonicalize().unwrap())
+}
+
+#[test]
+fn no_config_cli_and_editor_stay_in_the_disposable_input() {
+    let tree = no_config_tree();
     fs::write(
         tree.0.join("docs/functional-spec/FS-001-local.md"),
         "# FS-001-local: Local\n\nLocal input only.\n",

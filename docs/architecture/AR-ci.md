@@ -853,11 +853,15 @@ A fixture root's name is derived from what distinguishes the fixture — the pro
 
 Stated so a test can hold a fixture to it, with no control over the clock: **two roots named from one clock reading still differ.** A thread id alone does not satisfy that, because two fixtures built on one thread share it; the process-wide atomic serial of the four `crates/grund-cli/tests` fixtures does, and so does a thread id carrying one. `crates/grund-core/src/testing.rs` (`test_root`) takes a caller-supplied name beside its thread id for the same reason.
 
+This includes both `command_agreement` Tree constructors and its no-config control: repeated same-name allocations on one thread have distinct identities, even after an earlier instance is dropped. Live instances retain their own bytes and usable working directories through another instance's construction and either drop order, including construction paused before the buffer fixture's Git initialization. The agreement harness shares one root-ownership implementation across these three allocation sites.
+
 ### 10.2 The root is claimed, not adopted
 
 A fixture creates its root exclusively — `create_dir` on the root itself, so a name already taken is an `AlreadyExists` the suite reports — rather than `create_dir_all` over whatever is already there. This is the half that closes the class rather than one instance of it: a unique name makes today's collision impossible, while an exclusive claim makes any later one a named failure at the moment it happens instead of a file vanishing mid-scan in an unrelated case.
 
 Two things follow. A fixture removes only a tree it created, because a `Drop` that removes the root by name whether or not this fixture created it is what turns sharing into a deleted tree. And a refused claim leaves what it found untouched: clearing a root in order to take it moves the deletion earlier rather than removing it, so pre-clearing is not a substitute for refusing, however reasonable it looks as leftover hygiene.
+
+For the agreement fixtures, this applies before writing any files, including an ordinary Tree with an empty file list and the no-config control's nested directories. An occupied candidate's claim fails without changing its sentinel bytes; unwinding or dropping a failed claimant cannot remove that root. A caller may choose a distinct candidate, but must still claim that candidate exclusively. Tests pin the shared claim operation's refusal directly as well as the constructors' independent lifetimes.
 
 ### 10.3 A fixture root inherits no config from above it
 
@@ -866,6 +870,8 @@ Discovery climbs from the path it is given to the filesystem root, probing both 
 The helper takes its base from a short candidate list, the system temp directory first and, on unix, `/tmp` where that differs, and uses the first candidate no config covers. It asks through discovery's own probe, so the guard reads exactly the names discovery reads. When every candidate is covered, the suite fails at the helper, naming `TMPDIR`, each candidate and the config that covers it, rather than handing out a covered root and letting a zero-config case invert into a failure about the fixture. This is the version-control guard `fixture_root` in `crates/grund-cli/tests/init_refused_targets.rs` already holds, applied to config files. The check belongs to the helper and not to the cases: no case sets `TMPDIR`, because the process environment is shared by every case running beside it.
 
 Stated so a test can hold each fixture helper to it, `crates/grund-core/src/testing.rs` (`test_root`) and the base `crates/grund-lsp/tests/support/mod.rs` (`fixture_base`) gives every root grund-lsp's integration suites build, a zero-config one built by hand included: **no config under either name sits at or above a root the helper returns.** A zero-config case that does find one names the absolute path it found, so the failure says where the config came from.
+
+The agreement harness's no-config control follows the same rule while sharing root ownership with the other agreement fixtures; it cannot inherit their configured worktree location merely to reuse the allocator.
 
 ### 10.4 Git descendants stay inside the fixture lifetime
 

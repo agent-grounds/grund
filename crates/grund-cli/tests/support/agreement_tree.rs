@@ -8,6 +8,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+#[path = "agreement_fixture_checks.rs"]
+pub(super) mod fixture_checks;
+#[path = "agreement_tree_ownership.rs"]
+mod ownership;
+
 /// One invariant asked of one tree: `Err` carries the two answers that differ.
 pub type Verdict = Result<(), String>;
 
