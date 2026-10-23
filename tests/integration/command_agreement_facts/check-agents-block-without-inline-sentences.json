@@ -38,7 +38,7 @@
     ],
     "findings": [
       {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
-      {"severity":"error","code":"agents-init","path":"AGENTS.md","line":3,"message":"repo maintenance: stale grund init block: rules differ from grund.toml — run `grund init` to refresh (does not affect citation validity)","sites":[]}
+      {"severity":"error","code":"agents-init","path":"AGENTS.md","line":3,"message":"repo maintenance: stale grund init block: the rules section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)","sites":[]}
     ],
     "refusals": {},
     "fmt": {

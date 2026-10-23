@@ -44,10 +44,9 @@ fn citation_directions_drift_is_reported() {
     write(&root.join("AGENTS.md"), &format!("# demo\n\n{stale}"));
     let report = check_findings(&findings, &config);
     assert!(
-        report
-            .errors
-            .iter()
-            .any(|d| d.code == "agents-init" && d.message.contains("citation directions differ")),
+        report.errors.iter().any(|d| d.code == "agents-init"
+            && d.message
+                .contains("the citation directions section differs")),
         "stale citation directions must be reported: {:?}",
         report.errors.iter().map(|d| &d.message).collect::<Vec<_>>()
     );
@@ -69,10 +68,11 @@ fn require_grounding_flag_reports_grounding_sentence_drift() {
     write(&root.join("AGENTS.md"), &format!("# demo\n\n{fresh}"));
     let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan");
     let drift = |report: &CheckReport| {
-        report
-            .errors
-            .iter()
-            .any(|d| d.code == "agents-init" && d.message.contains("citation directions differ"))
+        report.errors.iter().any(|d| {
+            d.code == "agents-init"
+                && d.message
+                    .contains("the citation directions section differs")
+        })
     };
     assert!(
         !drift(&check_findings(&findings, &config)),
@@ -116,10 +116,9 @@ fn clickable_citations_drift_is_reported() {
     let (findings, _) = scan_tree(&config, Some(&root), true).expect("rescan");
     let report = check_findings(&findings, &config);
     assert!(
-        report
-            .errors
-            .iter()
-            .any(|d| d.code == "agents-init" && d.message.contains("clickable citations differ")),
+        report.errors.iter().any(|d| d.code == "agents-init"
+            && d.message
+                .contains("the clickable citations section differs")),
         "stale clickable citations must be reported: {:?}",
         report.errors.iter().map(|d| &d.message).collect::<Vec<_>>()
     );
@@ -191,10 +190,9 @@ fn citation_directions_drift_compares_managed_block_only() {
     let report = check_findings(&findings, &config);
 
     assert!(
-        report
-            .errors
-            .iter()
-            .any(|d| d.code == "agents-init" && d.message.contains("citation directions differ")),
+        report.errors.iter().any(|d| d.code == "agents-init"
+            && d.message
+                .contains("the citation directions section differs")),
         "matching prose outside the managed block must not mask drift: {:?}",
         report.errors.iter().map(|d| &d.message).collect::<Vec<_>>()
     );
@@ -223,10 +221,9 @@ fn citation_directions_drift_rejects_extra_managed_section_bytes() {
     let report = check_findings(&findings, &config);
 
     assert!(
-        report
-            .errors
-            .iter()
-            .any(|d| d.code == "agents-init" && d.message.contains("citation directions differ")),
+        report.errors.iter().any(|d| d.code == "agents-init"
+            && d.message
+                .contains("the citation directions section differs")),
         "extra managed-section bytes must not be masked by the current directions text: {:?}",
         report.errors.iter().map(|d| &d.message).collect::<Vec<_>>()
     );
@@ -321,7 +318,7 @@ fn agents_init_messages_cover_all_five_final_templates() {
         (
             "stale",
             stale.as_str(),
-            "repo maintenance: stale grund init block: citation directions differ from grund.toml — run `grund init` to refresh (does not affect citation validity)",
+            "repo maintenance: stale grund init block: the citation directions section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)",
         ),
         (
             "missing",

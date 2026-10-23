@@ -1,4 +1,4 @@
-AGENTS.md:3: error: repo maintenance: stale grund init block: citation directions differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
-AGENTS.md:3: error: repo maintenance: stale grund init block: scoped guidance differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
-docs/spec/CLAUDE.md:5: error: repo maintenance: stale grund init block: scoped guidance differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
-tests/CLAUDE.md:1: error: repo maintenance: stale grund init block: scoped guidance differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: stale grund init block: the citation directions section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: stale grund init block: the scoped guidance section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)
+docs/spec/CLAUDE.md:5: error: repo maintenance: stale grund init block: the scoped guidance section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)
+tests/CLAUDE.md:1: error: repo maintenance: stale grund init block: the scoped guidance section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)

@@ -223,7 +223,7 @@ fn assert_content_drift(fixture: &Fixture, cross_refs: bool) {
             error["code"] == "agents-init"
                 && error["message"]
                     .as_str()
-                    .is_some_and(|message| message.contains("chapter rules differ"))
+                    .is_some_and(|message| message.contains("the chapter rules section differs"))
         }),
         "real rule drift must carry agents-init: {}",
         report(&check)

@@ -46,7 +46,6 @@ fn expected(noun: &str, owner: Option<&str>) -> String {
 // §FS-errors.3.6.1: both stale templates name the section as one subject, and
 // the noun reads back out of either, with or without another project's directory.
 #[test]
-#[ignore = "red until #933 rewords the stale templates; implement removes this"]
 fn every_stale_noun_round_trips_through_the_section_differs_templates() {
     for owner in [None, Some("packages/billing")] {
         for noun in NOUNS {

@@ -205,8 +205,8 @@ fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {
             format!("run `grund init` in {dir} to refresh")
         };
         format!(
-            "repo maintenance: stale grund init block: workspace members differ from the \
-             workspace — {refresh} (does not affect citation validity)"
+            "repo maintenance: stale grund init block: the workspace members section differs \
+             from the workspace — {refresh} (does not affect citation validity)"
         )
     };
     assert_eq!(

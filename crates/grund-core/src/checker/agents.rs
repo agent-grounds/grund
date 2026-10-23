@@ -27,11 +27,19 @@ fn command_message(detail: String, owner: Option<&str>) -> String {
     }
 }
 
+/// The text of both stale templates ahead of the section noun, and the text
+/// after it, which [`stale_block`] writes and [`stale_section_noun`] reads back
+/// (§FS-errors.3.6.1).
+const STALE_BEFORE_NOUN: &str = "stale grund init block: the ";
+const STALE_AFTER_NOUN: &str = " section differs from ";
+
 /// The section noun a stale finding's `message` names (§FS-check.3.5.3), or
 /// `None` for any other `agents-init` variant.
 pub(crate) fn stale_section_noun(message: &str) -> Option<&str> {
-    let rest = message.strip_prefix("repo maintenance: stale grund init block: ")?;
-    rest.split_once(" differ from ").map(|(noun, _)| noun)
+    let rest = message
+        .strip_prefix("repo maintenance: ")?
+        .strip_prefix(STALE_BEFORE_NOUN)?;
+    rest.split_once(STALE_AFTER_NOUN).map(|(noun, _)| noun)
 }
 
 /// Validate the managed agent-entrypoint blocks (§FS-check.3.5): the begin/end
@@ -339,12 +347,12 @@ pub(super) fn stale_block(path: &Path, line: usize, noun: &str, owner: Option<&s
     let message = if WORKSPACE_SECTIONS.contains(&noun) {
         let dir = owner.map(|dir| format!(" in {dir}")).unwrap_or_default();
         agents_init_message(format!(
-            "stale grund init block: {noun} differ from the workspace — run `grund init`{dir} to refresh"
+            "{STALE_BEFORE_NOUN}{noun}{STALE_AFTER_NOUN}the workspace — run `grund init`{dir} to refresh"
         ))
     } else {
         command_message(
             format!(
-                "stale grund init block: {noun} differ from grund.toml — run `grund init` to refresh"
+                "{STALE_BEFORE_NOUN}{noun}{STALE_AFTER_NOUN}grund.toml — run `grund init` to refresh"
             ),
             owner,
         )
