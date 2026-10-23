@@ -304,8 +304,7 @@ fn init_run(
     let mut notes = duplicate_agent_entrypoint_notes(&target, &agent_entrypoints, reach, dry_run);
     let mut workflow_entrypoint = None;
     // Track whether any path changed (or, under --dry-run, *would* change).
-    // The `next:` block is suppressed when every reported path is `exists `,
-    // since the user already has a complete grund setup (§FS-init.2.2.2).
+    // Under `--scaffold`, an all-`exists ` run suppresses the `next:` block (§FS-init.2.2.2).
     let mut any_change = false;
     let mut events = Vec::new();
     // §FS-init.2.3.4.15.8: what each root entrypoint did with its member list.
@@ -465,7 +464,9 @@ fn init_run(
         && allocation
             .as_ref()
             .is_some_and(|allocation| !allocation.home_missing());
-    let next = (any_change && !refresh_of_complete_setup).then(|| {
+    // §FS-init.2.2.2: without `--scaffold` only that refresh suppresses the block, so an
+    // all-`exists ` re-run keeps it while the home is missing or no kind is declared.
+    let next = ((any_change || !docs) && !refresh_of_complete_setup).then(|| {
         // §FS-init.2.2.2: only no-`--scaffold` guidance asks this question. The probe
         // uses the effective config selected above and exits on its first file.
         let scan_reads_file =

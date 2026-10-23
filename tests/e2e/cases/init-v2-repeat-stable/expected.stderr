@@ -1,2 +1,8 @@
 exists AGENTS.md
 exists grund.toml
+
+next:
+  1. re-run with --scaffold to scaffold the FS home (requirements.md), docs/, and tests/ (or create them yourself)
+  2. run `grund check` — on a fresh scaffold it warns "nothing recognized" until the first declaration; this is expected (exit 0), no repair needed
+  3. allocate an ID:  ID=$(grund id FS "…")  then add it to requirements.md
+see AGENTS.md for the full workflow.
