@@ -163,9 +163,6 @@ class FeatureGatedObserverTests(unittest.TestCase):
                     )
                     self.assertIn(feature, reason, f'{path}: {fn["name"]}\'s ignore reason does not name {feature}')
 
-    @unittest.skip(
-        "red until #970 the observer tests re-spawn their own executable; implement removes this"
-    )
     def test_an_observed_run_never_spawns_an_artifact_another_build_relinks(self):
         for feature, (path, _reader, variable) in OBSERVERS.items():
             files = [REPO_ROOT / path, *_module_files(REPO_ROOT / path)]

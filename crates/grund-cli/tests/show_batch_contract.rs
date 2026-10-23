@@ -4,7 +4,9 @@
 //! The tests that count workspace loads read an observer only the
 //! `test-workspace-load-count` feature compiles in, so a build without it
 //! ignores them, naming the feature, and every other assertion of the same
-//! case sits in a test that runs in every build (§AR-ci.3.3).
+//! case sits in a test that runs in every build (§AR-ci.3.3). Those tests read
+//! their count from this test executable re-spawned into the CLI, never from
+//! `CARGO_BIN_EXE_grund`, which a featureless build can re-link (§AR-ci.3.3.1).
 
 use serde_json::Value;
 use std::fs;
@@ -12,6 +14,9 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
+
+#[path = "show_batch_contract/observed.rs"]
+mod observed;
 
 static NEXT_ROOT: AtomicUsize = AtomicUsize::new(0);
 
@@ -76,22 +81,34 @@ fn write(path: &Path, body: &str) {
     fs::write(path, body).unwrap_or_else(|error| panic!("write {}: {error}", path.display()));
 }
 
-fn run_batch(repo: &Repo, extra_args: &[&str], stdin: &str, load_log: Option<&Path>) -> Output {
-    run_batch_at(repo.path(), extra_args, stdin, load_log)
+fn run_batch(repo: &Repo, extra_args: &[&str], stdin: &str) -> Output {
+    run_batch_at(repo.path(), extra_args, stdin)
 }
 
-fn run_batch_at(repo: &Path, extra_args: &[&str], stdin: &str, load_log: Option<&Path>) -> Output {
+/// An unobserved run: its assertions are on output, which any build of the
+/// binary gives, so it may spawn the uplifted binary (§AR-ci.3.3.1).
+fn run_batch_at(repo: &Path, extra_args: &[&str], stdin: &str) -> Output {
     let mut command = Command::new(env!("CARGO_BIN_EXE_grund"));
     command
         .args(["show", "--batch", "--format=json"])
-        .args(extra_args)
-        .current_dir(repo)
+        .args(extra_args);
+    run_piped(command, repo, stdin)
+}
+
+/// An observed run: the same command, its workspace loads logged to `load_log`
+/// by a process this test's own featured build made (§AR-ci.3.3.1).
+fn run_batch_observed(repo: &Repo, extra_args: &[&str], stdin: &str, load_log: &Path) -> Output {
+    observed::run_observed(repo.path(), extra_args, stdin, load_log)
+}
+
+/// Runs `command` in `dir` with `stdin` written to it and its streams captured;
+/// the caller names the executable and what it is asked to observe.
+fn run_piped(mut command: Command, dir: &Path, stdin: &str) -> Output {
+    command
+        .current_dir(dir)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
-    if let Some(path) = load_log {
-        command.env("GRUND_TEST_WORKSPACE_LOAD_LOG", path);
-    }
     let mut child = command.spawn().expect("run grund show --batch");
     let write_result = child
         .stdin
@@ -141,7 +158,6 @@ fn show_batch_ambiguous_shorthand_is_a_query_failure_and_continues() {
         &repo,
         &[],
         concat!("{\"id\":\"FS-042\"}\n", "{\"id\":\"FS-042-user-login\"}\n",),
-        None,
     );
 
     assert_eq!(output.status.code(), Some(1));
@@ -179,7 +195,7 @@ fn show_batch_all_four_modes_use_single_show_rendering() {
 
     for (flag, body, has_sections) in cases {
         let args = flag.into_iter().collect::<Vec<_>>();
-        let output = run_batch(&repo, &args, input, None);
+        let output = run_batch(&repo, &args, input);
         assert_eq!(
             output.status.code(),
             Some(0),
@@ -240,7 +256,7 @@ fn assert_many_queries_succeeded(explicit: &Output, all: &Output) {
 #[test]
 fn show_batch_rejects_the_whole_malformed_stream() {
     let repo = Repo::new("malformed");
-    assert_malformed_rejected(&run_batch(&repo, &[], MALFORMED_INPUT, None));
+    assert_malformed_rejected(&run_batch(&repo, &[], MALFORMED_INPUT));
 }
 
 /// The same malformed stream is rejected before any workspace is loaded; the
@@ -254,7 +270,7 @@ fn show_batch_rejects_the_whole_malformed_stream() {
 fn show_batch_rejects_the_whole_malformed_stream_before_scanning() {
     let repo = Repo::new("malformed-loads");
     let log = repo.load_log("malformed");
-    assert_malformed_rejected(&run_batch(&repo, &[], MALFORMED_INPUT, Some(&log)));
+    assert_malformed_rejected(&run_batch_observed(&repo, &[], MALFORMED_INPUT, &log));
     assert_eq!(loads(&log), 0, "malformed input must be rejected pre-scan");
 }
 
@@ -263,7 +279,7 @@ fn show_batch_rejects_the_whole_malformed_stream_before_scanning() {
 #[test]
 fn show_batch_empty_input_is_a_successful_noop() {
     let repo = Repo::new("empty");
-    assert_empty_succeeded(&run_batch(&repo, &[], "", None));
+    assert_empty_succeeded(&run_batch(&repo, &[], ""));
 }
 
 /// The same empty stream loads no workspace; the load count is the test-only
@@ -277,7 +293,7 @@ fn show_batch_empty_input_is_a_successful_noop() {
 fn show_batch_empty_input_is_a_successful_no_scan_noop() {
     let repo = Repo::new("empty-loads");
     let log = repo.load_log("empty");
-    assert_empty_succeeded(&run_batch(&repo, &[], "", Some(&log)));
+    assert_empty_succeeded(&run_batch_observed(&repo, &[], "", &log));
     assert_eq!(loads(&log), 0);
 }
 
@@ -287,8 +303,8 @@ fn show_batch_empty_input_is_a_successful_no_scan_noop() {
 #[test]
 fn show_batch_succeeds_for_many_queries_and_for_all() {
     let repo = Repo::new("many");
-    let explicit = run_batch(&repo, &[], MANY_QUERIES_INPUT, None);
-    let all = run_batch(&repo, &["--all"], "", None);
+    let explicit = run_batch(&repo, &[], MANY_QUERIES_INPUT);
+    let all = run_batch(&repo, &["--all"], "");
     assert_many_queries_succeeded(&explicit, &all);
 }
 
@@ -305,8 +321,8 @@ fn show_batch_loads_one_workspace_for_many_queries_and_for_all() {
     let repo = Repo::new("load-count");
     let explicit_log = repo.load_log("explicit");
     let all_log = repo.load_log("all");
-    let explicit = run_batch(&repo, &[], MANY_QUERIES_INPUT, Some(&explicit_log));
-    let all = run_batch(&repo, &["--all"], "", Some(&all_log));
+    let explicit = run_batch_observed(&repo, &[], MANY_QUERIES_INPUT, &explicit_log);
+    let all = run_batch_observed(&repo, &["--all"], "", &all_log);
 
     assert_eq!(
         (loads(&explicit_log), loads(&all_log)),
@@ -410,7 +426,7 @@ fn show_batch_results_equal_single_reads_and_carry_the_heading_anchor() {
         .collect();
     for flag in [None, Some("--brief"), Some("--toc"), Some("--full")] {
         let args = flag.into_iter().collect::<Vec<_>>();
-        let batch = run_batch(&repo, &args, &input, None);
+        let batch = run_batch(&repo, &args, &input);
         assert_eq!(batch.status.code(), Some(0), "{flag:?}: {}", stderr(&batch));
         let batch_out = stdout(&batch);
         let envelopes: Vec<&str> = batch_out.lines().collect();
@@ -452,7 +468,7 @@ fn show_batch_results_equal_single_reads_and_carry_the_heading_anchor() {
         ])
     );
 
-    let all = run_batch(&repo, &["--all"], "", None);
+    let all = run_batch(&repo, &["--all"], "");
     assert_eq!(all.status.code(), Some(0), "--all: {}", stderr(&all));
     let all_out = stdout(&all);
     for envelope in all_out.lines() {
