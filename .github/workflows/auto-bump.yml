@@ -7,7 +7,8 @@ name: Auto bump
 # and a release dry run pass on them, and dispatch release.yml to publish
 # crates + binaries. A GITHUB_TOKEN push does not trigger other workflows, so
 # release.yml is invoked explicitly via `gh workflow run` rather than relying
-# on the tag-push trigger.
+# on the tag-push trigger. scripts/release_candidates.py does everything from
+# the candidates on, following a main the merge queue moves.
 # Nothing is written for the release before it runs.
 
 on:
@@ -26,6 +27,8 @@ env:
 jobs:
   patch-release:
     runs-on: ubuntu-latest
+    # §FS-distribution.4.4.1.2: six rounds within five hours.
+    timeout-minutes: 300
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -134,127 +137,13 @@ jobs:
         if: steps.gate_substantive.outputs.ok == 'true'
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Bump workspace version and refresh lockfile
+      # §FS-distribution.4.4.1.1: the controller builds and runs both candidates in rounds
+      # that follow main, pushes them, dispatches the publisher and advances to -dev.
+      # §FS-distribution.4.1: a quiet run opens no -dev version.
+      - name: Build, run and publish the candidates
         if: steps.gate_substantive.outputs.ok == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          # §FS-distribution.4.5: write package versions and both checked CLI version inputs.
-          python3 scripts/distribution/candidate.py set-version "${{ steps.versions.outputs.next }}"
-          cargo update --workspace
-          # The release section lists the pull requests merged since the tag, read
-          # from the forge with GH_TOKEN (§FS-distribution.4.6.1); nothing is written first.
-          python3 scripts/prepare_changelog_release.py prepare "${{ steps.versions.outputs.next }}"
-
-      - name: Commit and push release candidate
-        id: candidate
-        if: steps.gate_substantive.outputs.ok == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          next="${{ steps.versions.outputs.next }}"
-          branch="release-candidate/v${next}-${GITHUB_RUN_ID}"
-          base_sha="$(git rev-parse HEAD)"
-
-          git switch -c "$branch"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-
-          # §FS-distribution.4.5: the release index includes the authored version input too.
-          git add Cargo.toml crates/grund-core/Cargo.toml crates/grund-cli/Cargo.toml crates/grund-lsp/Cargo.toml Cargo.lock crates/grund-py/pyproject.toml tests/e2e/cases/cli-version/expected.stdout tests/integration/command_agreement_facts/cli-version.json docs/changelog.md docs/changelog
-          git commit -m "Release v${next}"
-          git push -u origin "$branch"
-
-          sha="$(git rev-parse HEAD)"
-          echo "branch=$branch" >> "$GITHUB_OUTPUT"
-          echo "base_sha=$base_sha" >> "$GITHUB_OUTPUT"
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-
-      # §FS-distribution.4.4.1: the -dev advance is built here, over the release
-      # commit, so CI runs on the commit main will hold rather than on one made
-      # after the release. §FS-distribution.4.1: it is pushed only after a release.
-      - name: Commit and push the dev candidate
-        id: dev_candidate
-        if: steps.gate_substantive.outputs.ok == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          released="${{ steps.versions.outputs.next }}"
-          IFS=. read -r major minor patch <<< "$released"
-          dev="${major}.${minor}.$((patch + 1))-dev"
-          branch="${{ steps.candidate.outputs.branch }}-dev"
-          # Without this main keeps the version it just released until the next
-          # bump, so a binary built from main is indistinguishable from the tag it
-          # is ahead of. The suffix is what makes `--version` say which side of
-          # the tag a build came from.
-          git switch -c "$branch"
-          # §FS-distribution.4.5: write and stage both version inputs in this dev candidate.
-          python3 scripts/distribution/candidate.py set-version "$dev"
-          git add -A
-          git commit -m "Open ${dev} for development"
-          git push -u origin "$branch"
-
-          echo "dev=$dev" >> "$GITHUB_OUTPUT"
-          echo "branch=$branch" >> "$GITHUB_OUTPUT"
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      # §FS-distribution.4.4.1: main moves only to commits these runs passed - the
-      # dry run on the release commit, and CI on it and on the -dev advance.
-      - name: Dry-run the release and run CI on both candidates
-        if: steps.gate_substantive.outputs.ok == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          next="${{ steps.versions.outputs.next }}"
-          branch="${{ steps.candidate.outputs.branch }}"
-          sha="${{ steps.candidate.outputs.sha }}"
-          dev_branch="${{ steps.dev_candidate.outputs.branch }}"
-          dev_sha="${{ steps.dev_candidate.outputs.sha }}"
-
-          dry_run="$(python3 scripts/candidate_runs.py dispatch release.yml "$branch" "$sha" \
-            version="$next" publish_crates=false create_github_release=false)"
-          release_ci="$(python3 scripts/candidate_runs.py dispatch ci.yml "$branch" "$sha")"
-          dev_ci="$(python3 scripts/candidate_runs.py dispatch ci.yml "$dev_branch" "$dev_sha")"
-          python3 scripts/candidate_runs.py watch "$dry_run" "$release_ci" "$dev_ci"
-
-      - name: Publish release commit and dispatch release
-        if: steps.gate_substantive.outputs.ok == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          next="${{ steps.versions.outputs.next }}"
-          branch="${{ steps.candidate.outputs.branch }}"
-          base_sha="${{ steps.candidate.outputs.base_sha }}"
-          sha="${{ steps.candidate.outputs.sha }}"
-
-          git fetch origin main
-          current_main="$(git rev-parse refs/remotes/origin/main)"
-          if [ "$current_main" != "$base_sha" ]; then
-            echo "error: main moved from $base_sha to $current_main while the candidate runs were running" >&2
-            echo "       leaving $branch in place; rerun the patch release from the new main tip" >&2
-            exit 1
-          fi
-
-          git push origin "${sha}:refs/heads/main"
-
-          # GITHUB_TOKEN pushes do not fan out to other workflows, so the
-          # tag-push trigger on release.yml will not fire. Dispatch it directly
-          # from main after the verified version bump lands.
-          gh workflow run release.yml \
-            --ref main \
-            -f version="$next" \
-            -f publish_crates=true \
-            -f create_github_release=true
-          git push origin --delete "$branch" || true
-
-      - name: Advance main to the next dev version
-        if: steps.gate_substantive.outputs.ok == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          released="${{ steps.versions.outputs.next }}"
-          dev="${{ steps.dev_candidate.outputs.dev }}"
-          branch="${{ steps.dev_candidate.outputs.branch }}"
-          sha="${{ steps.dev_candidate.outputs.sha }}"
-          # §FS-distribution.4.4.1: the commit CI passed, retried onto an unmoved main.
-          bash scripts/advance_dev.sh "$released" "$dev" "$branch" "$sha"
+          python3 scripts/release_candidates.py --helper auto-bump.yml \
+            --next "${{ steps.versions.outputs.next }}"

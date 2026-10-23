@@ -34,6 +34,21 @@ HOLD = "gate_changelog"
 HOLD_CONDITION = f"steps.{HOLD}.outputs.ok == 'true'"
 
 
+# The controller both helpers hand their candidates to, and the round it builds
+# them with (§FS-distribution.4.4): the helpers' preparation lives there.
+CONTROLLER = REPO_ROOT / "scripts" / "release_candidates.py"
+ROUND = REPO_ROOT / "scripts" / "release_round.sh"
+
+
+def preparation(name):
+    """A helper's text with the round its controller builds, so a check reads both."""
+    text = (WORKFLOWS / name).read_text(encoding="utf-8")
+    if "python3 scripts/release_candidates.py" not in text:
+        return text
+    assert '"scripts/release_round.sh"' in CONTROLLER.read_text(encoding="utf-8"), "the controller builds no round"
+    return text + "\n" + ROUND.read_text(encoding="utf-8")
+
+
 def squash(text):
     return re.sub(r"\s+", " ", text).strip()
 
@@ -145,7 +160,7 @@ class NoChangelogHoldTests(unittest.TestCase):
     HELPERS = ("auto-bump.yml", "release-minor.yml")
 
     def text(self, name):
-        return (WORKFLOWS / name).read_text(encoding="utf-8")
+        return preparation(name)
 
     def test_the_scheduled_helper_has_no_hold(self):
         text = self.text("auto-bump.yml")
@@ -163,8 +178,8 @@ class NoChangelogHoldTests(unittest.TestCase):
     def test_the_dev_advance_runs_only_after_a_release(self):
         """§FS-distribution.4.1: the advance is the release's last act, so a quiet
         run must not open a `-dev` version nothing was released before."""
-        text = self.text("auto-bump.yml")
-        advance = text.split("name: Advance main to the next dev version", 1)[1].split("shell:", 1)[0]
+        text = (WORKFLOWS / "auto-bump.yml").read_text(encoding="utf-8")
+        advance = text.split("name: Build, run and publish the candidates", 1)[1].split("shell:", 1)[0]
         self.assertIn("steps.gate_substantive.outputs.ok == 'true'", advance)
 
     def test_both_helpers_still_prepare_the_release(self):
@@ -189,12 +204,12 @@ class VersionBumpTests(unittest.TestCase):
     def test_both_helpers_write_every_version_source(self):
         for name in NoChangelogHoldTests.HELPERS:
             with self.subTest(workflow=name):
-                text = (WORKFLOWS / name).read_text(encoding="utf-8")
+                text = preparation(name)
                 self.assertNotIn("cargo set-version", text)
-                self.assertIn('scripts/distribution/candidate.py set-version '
-                              '"${{ steps.versions.outputs.next }}"', text)
+                self.assertIn('--next "${{ steps.versions.outputs.next }}"', text)
+                self.assertIn('scripts/distribution/candidate.py set-version "$next"', text)
                 self.assertIn('scripts/distribution/candidate.py set-version "$dev"', text)
-                staged = re.search(r"(?m)^\s+git add Cargo\.toml .*$", text)
+                staged = re.search(r"(?m)^\s*git add Cargo\.toml .*$", text)
                 self.assertIsNotNone(staged, "the release commit stages no version source")
                 self.assertIn("crates/grund-py/pyproject.toml", staged.group(0).split())
 
@@ -240,7 +255,7 @@ class VerifyJobTests(unittest.TestCase):
         """The bump belongs to the helpers, and the difference is the point of
         §FS-distribution.4.3 — so the search term is shown to be a real one by
         finding it in the workflow that *does* bump."""
-        bumper = (WORKFLOWS / "auto-bump.yml").read_text(encoding="utf-8")
+        bumper = preparation("auto-bump.yml")
         self.assertIn("set-version", bumper)
         self.assertNotIn("set-version", self.text)
         self.assertNotIn("cargo-edit", self.text)

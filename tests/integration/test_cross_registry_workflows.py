@@ -12,7 +12,7 @@ Offline, so it runs in the ordinary gate (§AR-ci.6).
 import re
 import unittest
 
-from distribution_support import PUBLISH_WORKFLOW, REHEARSAL_WORKFLOW, WORKFLOWS, spec_matrix
+from distribution_support import PUBLISH_WORKFLOW, REHEARSAL_WORKFLOW, REPO, WORKFLOWS, spec_matrix
 from test_release_workflow import jobs, squash, steps
 
 EXISTING = ("release.yml", "auto-bump.yml", "release-minor.yml", "pre-release-checks.yml", "ci.yml")
@@ -172,10 +172,17 @@ class IsolationTests(unittest.TestCase):
                 self.assertIsNone(PUBLISH_COMMANDS.search(text))
 
     def test_the_helpers_dispatch_only_the_cargo_release(self):
+        """The helpers dispatch through their controller (§FS-distribution.4.4), which
+        names the Cargo release and the CI its candidates run, and nothing else."""
         for name in ("auto-bump.yml", "release-minor.yml"):
             with self.subTest(workflow=name):
-                dispatched = set(re.findall(r"gh workflow run\s+([\w.-]+\.ya?ml)\b", read(WORKFLOWS / name)))
-                self.assertEqual({"release.yml"}, dispatched)
+                text = read(WORKFLOWS / name)
+                self.assertEqual(set(), set(re.findall(r"gh workflow run\s+([\w.-]+\.ya?ml)\b", text)))
+                self.assertIn("python3 scripts/release_candidates.py", text)
+        controller = read(REPO / "scripts" / "release_candidates.py")
+        self.assertEqual({"release.yml", "ci.yml"}, set(re.findall(r'"([\w.-]+\.ya?ml)"', controller)))
+        for word in (REHEARSAL_WORKFLOW.name, PUBLISH_WORKFLOW.name, "cross-registry-publish"):
+            self.assertNotIn(word, controller)
 
     def test_nothing_triggers_the_new_lane_but_a_person(self):
         for path in (REHEARSAL_WORKFLOW, PUBLISH_WORKFLOW):

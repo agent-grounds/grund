@@ -17,6 +17,10 @@ on:
         description: "Create or update the GitHub release and upload artifacts"
         type: boolean
         default: true
+      expected_release_sha:
+        description: "Full commit the run must publish; a release helper always gives it"
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -41,6 +45,19 @@ jobs:
       create_tag: ${{ steps.mode.outputs.create_tag }}
     steps:
       - uses: actions/checkout@v6
+
+      # §FS-distribution.4.3: a helper names the commit its runs passed; any other source
+      # is refused before anything is built. A manual run without the input is unchanged.
+      - name: Check the source is the commit the helper tested
+        shell: bash
+        env:
+          EXPECTED_RELEASE_SHA: ${{ inputs.expected_release_sha }}
+        run: |
+          source_sha="$(git rev-parse HEAD)"
+          if [ -n "$EXPECTED_RELEASE_SHA" ] && [ "$source_sha" != "$EXPECTED_RELEASE_SHA" ]; then
+            echo "error: the release source is $source_sha, but expected_release_sha is $EXPECTED_RELEASE_SHA" >&2
+            exit 1
+          fi
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -675,3 +692,12 @@ jobs:
               --title "grund ${version}" \
               --notes-file release-notes.md
           fi
+
+      # §FS-distribution.4.3: published, the release-candidate branch a helper dispatched
+      # this run from has served; the dry run on the same branch never gets here.
+      - name: Remove the release-candidate branch this run was dispatched from
+        shell: bash
+        run: |
+          case "$GITHUB_REF" in refs/heads/release-candidate/*)
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/$GITHUB_REF" || echo "warning: could not remove $GITHUB_REF" >&2 ;;
+          esac

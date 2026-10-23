@@ -1,14 +1,17 @@
 """§FS-distribution.4.4.1 — nothing reaches `main` that CI has not passed.
 
-Both release helpers build the release commit and the `-dev` advance on
-candidate branches, run CI on each beside the release dry run, and push exactly
-those commits once every run has passed. The workflow half is read as text, the
-way `test_release_workflow.py` reads it; the half that talks to the forge,
+Both release helpers hand everything from their candidates on to one controller,
+`scripts/release_candidates.py` (§FS-distribution.4.4): it builds the release
+commit and the `-dev` advance on candidate branches, runs CI on each beside the
+release dry run, and pushes exactly those commits once every run has passed. The
+workflow half is read as text, the way `test_release_workflow.py` reads it; the
+controller runs each helper's whole job against the local origin and stub forge
+of `release_queue_fixture.py`; and the half that talks to the forge,
 `scripts/candidate_runs.py`, runs against a stub `gh` on `PATH` that answers
 from a table the case writes, so no case reaches the network."""
 
 import json
-import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -16,17 +19,16 @@ import unittest
 from pathlib import Path
 
 from changelog_gate_fixture import REPO_ROOT, environment
+from release_queue_fixture import Case
 from test_release_workflow import WORKFLOWS, jobs, squash, step_index, step_name, steps
 
 SCRIPT = REPO_ROOT / "scripts" / "candidate_runs.py"
 HELPERS = ("auto-bump.yml", "release-minor.yml")
-RUNS = "Dry-run the release and run CI on both candidates"
-DEV = "Commit and push the dev candidate"
-PUBLISH = "Publish release commit and dispatch release"
-ADVANCE = "Advance main to the next dev version"
-# The one implementation of the advance both helpers call (§AR-system.principle).
-ADVANCE_SCRIPT = REPO_ROOT / "scripts" / "advance_dev.sh"
-ADVANCE_CALL = 'bash scripts/advance_dev.sh "$released" "$dev" "$branch" "$sha"'
+CANDIDATES = "Build, run and publish the candidates"
+# The one controller both helpers call (§AR-system.principle), and the round it builds.
+CONTROLLER = REPO_ROOT / "scripts" / "release_candidates.py"
+CONTROLLER_CALL = "python3 scripts/release_candidates.py"
+ROUND = REPO_ROOT / "scripts" / "release_round.sh"
 
 
 def helper_steps(name):
@@ -35,86 +37,90 @@ def helper_steps(name):
 
 
 class CandidateWorkflowTests(unittest.TestCase):
-    """The helpers dispatch CI on both candidates and push only those commits."""
+    """The helpers hand their candidates to the controller, and push nothing beside it."""
 
     def test_ci_can_be_dispatched_on_a_candidate(self):
         text = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
         triggers = text.split("\non:\n", 1)[1].split("\nenv:", 1)[0]
         self.assertRegex(triggers, r"(?m)^  workflow_dispatch:", "ci.yml cannot be run on a candidate branch")
 
-    def test_both_helpers_wait_on_ci_for_both_candidates_and_the_dry_run(self):
+    def test_both_helpers_hand_the_candidates_to_the_one_controller(self):
         for name in HELPERS:
             with self.subTest(workflow=name):
                 found = helper_steps(name)
-                index = step_index(found, RUNS)
-                self.assertNotEqual(-1, index, f"{name} has no step named {RUNS!r}")
-                runs = squash(found[index].replace("\\\n", " "))  # one command across a continuation
-                self.assertIn('sha="${{ steps.candidate.outputs.sha }}"', runs)
-                self.assertIn('dev_sha="${{ steps.dev_candidate.outputs.sha }}"', runs)
-                self.assertIn('dispatch release.yml "$branch" "$sha" version="$next" '
-                              'publish_crates=false create_github_release=false', runs)
-                self.assertIn('release_ci="$(python3 scripts/candidate_runs.py dispatch ci.yml "$branch" "$sha")"',
-                              runs)
-                self.assertIn('dev_ci="$(python3 scripts/candidate_runs.py dispatch ci.yml '
-                              '"$dev_branch" "$dev_sha")"', runs)
-                self.assertIn('python3 scripts/candidate_runs.py watch "$dry_run" "$release_ci" "$dev_ci"', runs)
+                index = step_index(found, CANDIDATES)
+                self.assertNotEqual(-1, index, f"{name} has no step named {CANDIDATES!r}")
+                call = squash(found[index].replace("\\\n", " "))  # one command across a continuation
+                self.assertIn(f"{CONTROLLER_CALL} --helper {name}", call)
+                self.assertIn('--next "${{ steps.versions.outputs.next }}"', call)
+                self.assertEqual(len(found) - 1, index, f"{name} runs a step after the controller")
 
-    def test_the_dev_advance_is_built_before_the_runs(self):
+    def test_no_helper_commits_pushes_or_dispatches_beside_the_controller(self):
         for name in HELPERS:
             with self.subTest(workflow=name):
-                found = helper_steps(name)
-                dev, runs = step_index(found, DEV), step_index(found, RUNS)
-                self.assertNotEqual(-1, dev, f"{name} has no step named {DEV!r}")
-                self.assertLess(dev, runs, f"{name} builds the -dev advance after CI ran")
-                self.assertIn("id: dev_candidate", found[dev])
-                self.assertIn('git commit -m "Open ${dev} for development"', found[dev])
+                for step in helper_steps(name):
+                    step = "\n".join(line for line in step.splitlines() if not line.strip().startswith("#"))
+                    for made in ("git commit", "git push", "set-version", "cargo update", "gh workflow run",
+                                 "scripts/candidate_runs.py", "scripts/advance_dev.sh"):
+                        self.assertNotIn(made, step, f"{name}: {step_name(step)!r} acts beside the controller")
 
-    def test_no_commit_is_made_after_the_runs(self):
-        for name in HELPERS:
-            with self.subTest(workflow=name):
-                found = helper_steps(name)
-                for step in found[step_index(found, RUNS) + 1:]:
-                    for made in ("git commit", "set-version", "cargo update", "git checkout", "git switch"):
-                        self.assertNotIn(made, step, f"{name}: {step_name(step)!r} changes the tree after CI ran")
-
-    def test_every_push_to_main_is_a_commit_the_runs_passed(self):
-        """The release commit and then the advance, each by the sha CI ran on."""
-        expected = {PUBLISH: "steps.candidate.outputs.sha", ADVANCE: "steps.dev_candidate.outputs.sha"}
-        for name in HELPERS:
-            with self.subTest(workflow=name):
-                found = helper_steps(name)
-                runs = step_index(found, RUNS)
-                pushed, bodies = {}, {}
-                for index, step in enumerate(found):
-                    # A step that calls the advance pushes what the script pushes.
-                    text = step + ADVANCE_SCRIPT.read_text(encoding="utf-8") if ADVANCE_CALL in step else step
-                    for target in re.findall(r"git push origin ([^\s;]+)", text):
-                        bare = target.strip('"')
-                        if bare == "main" or bare.endswith((":main", ":refs/heads/main")):
-                            self.assertGreater(index, runs, f"{name} pushes to main before CI ran")
-                            pushed.setdefault(step_name(step), []).append(target)
-                            bodies[step_name(step)] = step
-                self.assertEqual(set(expected), set(pushed), f"{name} pushes to main from other steps")
-                for step, output in expected.items():
-                    self.assertEqual(['"${sha}:refs/heads/main"'], pushed[step], f"{name}: {step!r}")
-                    self.assertIn(f'sha="${{{{ {output} }}}}"', bodies[step])
-
-    def test_both_helpers_advance_main_through_the_one_script(self):
+    def test_the_controller_advances_main_through_the_one_script(self):
         """§FS-distribution.4.4.1: the retrying advance has one implementation, not a copy each."""
-        for name in HELPERS:
-            with self.subTest(workflow=name):
-                found = helper_steps(name)
-                index = step_index(found, ADVANCE)
-                self.assertNotEqual(-1, index, f"{name} has no step named {ADVANCE!r}")
-                self.assertIn(ADVANCE_CALL, found[index])
-                self.assertNotIn("git push", found[index], f"{name} pushes beside the advance script")
+        text = CONTROLLER.read_text(encoding="utf-8")
+        self.assertIn('"advance_dev.sh"', text)
+        self.assertIn('"scripts/release_round.sh"', text)
+        self.assertNotIn("git push", ROUND.read_text(encoding="utf-8"), "the round pushes beside the controller")
 
     def test_a_quiet_scheduled_run_builds_no_dev_candidate(self):
         """§FS-distribution.4.1: nothing is opened before a release."""
         found = helper_steps("auto-bump.yml")
-        for step in (DEV, RUNS):
-            with self.subTest(step=step):
-                self.assertIn("if: steps.gate_substantive.outputs.ok == 'true'", found[step_index(found, step)])
+        self.assertIn("if: steps.gate_substantive.outputs.ok == 'true'", found[step_index(found, CANDIDATES)])
+
+
+@unittest.skipIf(sys.platform == "win32", "the helpers' steps are bash scripts with shell hooks")
+@unittest.skipUnless(shutil.which("bash") and shutil.which("git") and shutil.which("jq"), "needs bash, git and jq")
+class EveryPushToMainTests(unittest.TestCase):
+    """Each helper's whole job, run against a local origin: the dry run on the release
+    commit and CI on it and on the advance built over it, and then `main` takes
+    exactly those two commits, in that order, and nothing else the job made."""
+
+    def setUp(self):
+        scratch = tempfile.TemporaryDirectory(prefix="grund-candidate-runs-")
+        self.addCleanup(scratch.cleanup)
+        self.scratch = Path(scratch.name)
+
+    def pushed_to_main(self, case):
+        lines = [line.split() for line in (case.state / "pushes").read_text().splitlines()]
+        return [new for _old, new, ref in lines if ref == "refs/heads/main"]
+
+    def check(self, workflow, scenario, round_):
+        inputs = {"version": "next-minor", "expected_main_sha": ""} if workflow == "release-minor.yml" else {}
+        case = Case(self.scratch, workflow, scenario, inputs).run()
+        report = case.report()
+        self.assertTrue(case.ok, report)
+        runs = case.runs(round_)
+        dry = [run for run in runs if run["workflow"] == "release.yml"]
+        self.assertEqual(1, len(dry), report)
+        self.assertEqual("false", dry[0]["fields"].get("publish_crates"), report)
+        release = dry[0]["sha"]
+        ci = sorted(run["sha"] for run in runs if run["workflow"] == "ci.yml")
+        (dev,) = [sha for sha in ci if sha != release]
+        self.assertEqual(sorted([release, dev]), ci, report)
+        self.assertEqual(release, case.parent(dev), "the advance is not built over the release commit")
+        self.assertEqual([release, dev], self.pushed_to_main(case), report)
+        for sha in (release, dev):
+            self.assertTrue(case.passed(sha, "ci.yml", round_), report)
+        self.assertTrue(case.passed(release, "release.yml", round_), report)
+
+    def test_every_push_to_main_is_a_commit_the_runs_passed(self):
+        for workflow in HELPERS:
+            with self.subTest(workflow=workflow):
+                self.check(workflow, None, 1)
+
+    def test_a_moved_main_pushes_only_what_the_last_round_passed(self):
+        for workflow in HELPERS:
+            with self.subTest(workflow=workflow):
+                self.check(workflow, {"move": {"1": "m1"}}, 2)
 
 
 STUB = r'''#!{python}
@@ -200,10 +206,10 @@ class CandidateRunsScriptTests(unittest.TestCase):
         result = self.run_script(answers, "dispatch", "ci.yml", branch, sha, "version=0.18.0", "dry=true")
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("12\n", result.stdout)
-        dispatched = self.calls()[0]
+        # §AR-ci.11: the runs already on the branch are listed before the dispatch.
+        listed, dispatched = self.calls()[:2]
         self.assertEqual(["workflow", "run", "ci.yml", "--ref", branch, "-f", "version=0.18.0", "-f", "dry=true"],
                          dispatched)
-        listed = self.calls()[1]
         for flag, value in (("--workflow", "ci.yml"), ("--branch", branch), ("--event", "workflow_dispatch")):
             self.assertEqual(value, listed[listed.index(flag) + 1])
 
@@ -221,7 +227,7 @@ class CandidateRunsScriptTests(unittest.TestCase):
         self.assertEqual([], self.calls(), "nothing is dispatched for a malformed field")
 
     def test_a_failed_gh_call_is_named(self):
-        result = self.run_script({"dispatch_error": "HTTP 403: Resource not accessible"},
+        result = self.run_script({"lists": {}, "dispatch_error": "HTTP 403: Resource not accessible"},
                                  "dispatch", "ci.yml", "b", "a" * 40)
         self.assertEqual(1, result.returncode)
         self.assertIn("error: `gh workflow run ci.yml --ref b` exited 1: HTTP 403: Resource not accessible",

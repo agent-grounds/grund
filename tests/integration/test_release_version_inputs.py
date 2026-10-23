@@ -112,6 +112,7 @@ class CandidateTreeTests(unittest.TestCase):
     def check_tree(self, version):
         root = copy_tree(self)
         for name in (".github/workflows/release-minor.yml", ".github/workflows/auto-bump.yml",
+                     "scripts/release_candidates.py", "scripts/release_round.sh",
                      "tests/integration/release_version_fixture.py",
                      "tests/integration/test_release_workflow.py",
                      "tests/integration/test_release_version_inputs.py"):
