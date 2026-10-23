@@ -103,6 +103,34 @@ note: no configured kind in scope starts with "fs-config"; did you mean "FS-conf
 0
 ```
 
+## What nothing cites yet: `list --unused`
+
+`grund list --unused` lists the declarations nothing cites yet, in one call and one
+scan, rather than one `grund refs` per declared ID ([§FS-list.1.3](../functional-spec/FS-list.md#13---unused)). The `grund`
+repository cites every declaration it has, so this section runs in
+[`examples/authored-citations/repo`](../../examples/authored-citations/repo/), where one decision is still uncited:
+
+```console
+$ grund list examples/authored-citations/repo --unused
+ADR-consider-memory  docs/adr/consider-memory.md:1  Consider an in-process cache
+$ grund list examples/authored-citations/repo --unused --format json
+{"id":"ADR-consider-memory","kind":"ADR","path":"docs/adr/consider-memory.md","line":1,"title":"Consider an in-process cache","stub":false,"defines":null,"refs":1,"duplicate":false}
+```
+
+With `--format json` each uncited declaration is one NDJSON object of the shape
+`--kind` lists. `--unused` leaves out `E2E` cases unless `--kind` selects them, since
+nothing is expected to cite a test. Where the project configures an `E2E` kind,
+`grund list --unused --kind E2E` lists the uncited cases on their own, for an inventory:
+
+```bash
+grund list --unused --kind E2E
+```
+
+An entry in a kind's index does not count as a use, which is why the row above still
+carries `refs: 1`: read the rows `--unused` lists rather than thresholding on `refs`.
+[Checking a repository](checking.md#when-only-an-index-cites-a-declaration) says why the
+index entry is discounted; `grund check --only unused` reports the same set as warnings.
+
 ## Expand a unit's subtree: `show --batch --glob`
 
 `grund show --batch --glob` generates the queries `--all` would and keeps the ones a

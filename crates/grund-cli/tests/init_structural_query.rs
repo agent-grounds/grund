@@ -93,7 +93,6 @@ fn querying_guide_and_skill_hold_the_query_recipes() {
 /// guide for why an index entry is not a use; both skill copies name the call, so an agent
 /// that reads them never loops `grund refs` over every ID (§FS-init.2.3.4.3.1).
 #[test]
-#[ignore = "red until #938 the guide and skill teach grund list --unused; implement removes this"]
 fn querying_guide_and_skill_teach_the_unused_recipe() {
     let root = manifest_dir();
     let guide = fs::read_to_string(root.join("docs/user-facing/querying.md"))
