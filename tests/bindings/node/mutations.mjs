@@ -71,8 +71,12 @@ assert.deepEqual(await bytes(formatted), await bytes(cases + 'fmt-shorthand-writ
 assert.equal((await api.fmt({ root: formatted, write: true })).changes.length, 0);
 const protectedConfig = await fixture('init-force-keeps-existing-config');
 const initial = await bytes(protectedConfig);
-await api.init(protectedConfig, { dryRun: true, noVcs: true });
+const { allocation } = (await api.init(protectedConfig, { dryRun: true, noVcs: true })).next;
 assert.deepEqual(await bytes(protectedConfig), initial);
+// §FS-init.2.2.2.3: the SPEC row is the guidance's selection, its folder not yet made.
+assert.equal(allocation.kind, 'SPEC');
+assert.deepEqual([allocation.home.kind, allocation.home.path], ['folder', 'specs']);
+assert.equal(allocation.homeExists, false);
 await api.init(protectedConfig, { check: true, noVcs: true });
 assert.deepEqual(await bytes(protectedConfig), initial, 'check implies dryRun');
 await api.init(protectedConfig, { force: true, noVcs: true });

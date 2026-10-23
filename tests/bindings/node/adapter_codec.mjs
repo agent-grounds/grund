@@ -5,7 +5,7 @@ const names = Object.fromEntries([
   'expectedExit', 'scanErrors', 'enclosingDeclaration', 'enclosingSection',
   'sectionSeparator', 'valueRoots', 'refusedWrites', 'e2eCaseDir',
   'fileHoldsSingleDeclaration', 'pendingChanges', 'scanReadsFile', 'declaresKinds', 'fsHome',
-  'headingName', 'headingMarker', 'configFile', 'manualSteps', 'agentOverrides',
+  'homeExists', 'headingName', 'headingMarker', 'configFile', 'manualSteps', 'agentOverrides',
   'conversationTarget', 'installKind', 'configTarget', 'resolverTarget',
   'escapedCitations', 'scannedFiles', 'walkedDirs', 'fileStructures',
   'valueBindings', 'invalidValueDeclarations', 'invalidValueBindings',

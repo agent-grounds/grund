@@ -4,7 +4,7 @@ use std::path::Path;
 use super::guidance::{Guidance, RuleGuidance};
 use super::init_block::{refuse_planned_agent_blocks, write_or_update_canonical_agent_entrypoint};
 pub(crate) use super::init_guidance::init_fs_home;
-use super::init_guidance::{InitNext, docs_scaffold_for_config};
+use super::init_guidance::{InitNext, docs_scaffold_for_config, init_allocation};
 use super::init_notes::{
     absent_optional_member_notes, duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note,
 };
@@ -21,7 +21,6 @@ use crate::model::{Catalog, Diagnostic, Finding, FindingSite, format_path};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file, scan_tree,
 };
-use crate::sources::path_exists;
 use crate::templates::{ConversationSurface, render_agents_append_block, render_grund_toml};
 use crate::workspace::{declared_member_schemas, populate_workspace_boundary};
 
@@ -451,19 +450,21 @@ fn init_run(
         diagnostic,
         events: &mut events,
     })?;
-    // §FS-init.2.2.2.2: a config with no citable kind has no FS home at all.
-    let declares_kinds = init_config.kinds.iter().any(|kind| kind.citable);
+    // §FS-init.2.2.2.3: one selection names the guidance's kind and place and
+    // answers the refresh test; none at all is a config with no citable kind.
+    let allocation = init_allocation(&init_config, &target);
 
-    // §FS-init.2.2.2.1: only `exists`/`updated` lines, no `--scaffold`, and the
-    // effective FS home on disk — the refresh `grund check` sends people down.
+    // §FS-init.2.2.2.1: only `exists`/`updated` lines, no `--scaffold`, and no
+    // selected home left to create — the refresh `grund check` sends people down.
     let refresh_of_complete_setup = !docs
-        && declares_kinds
         && events
             .iter()
             .enumerate()
             .filter(|(index, _)| !scoped_lines.contains(index))
             .all(|(_, event)| !event.is_change() || event.verb == verb_updated(dry_run))
-        && path_exists(target.join(fs_home.path()));
+        && allocation
+            .as_ref()
+            .is_some_and(|allocation| !allocation.home_missing());
     let next = (any_change && !refresh_of_complete_setup).then(|| {
         // §FS-init.2.2.2: only no-`--scaffold` guidance asks this question. The probe
         // uses the effective config selected above and exits on its first file.
@@ -471,10 +472,11 @@ fn init_run(
             !docs && effective_scope_reads_any_file(init_config.schema(), init_config.frame());
         InitNext {
             docs,
-            declares_kinds,
+            declares_kinds: allocation.is_some(),
             entrypoint: workflow_entrypoint
                 .unwrap_or_else(|| CANONICAL_AGENT_ENTRYPOINT.to_string()),
             fs_home,
+            allocation,
             scan_reads_file,
         }
     });

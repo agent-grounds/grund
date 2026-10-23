@@ -373,11 +373,19 @@ class InitFsHome:
 
 
 @dataclass(frozen=True)
+class InitAllocation:
+    kind: str
+    home: InitFsHome | None
+    home_exists: bool
+
+
+@dataclass(frozen=True)
 class InitNext:
     docs: bool
     declares_kinds: bool
     entrypoint: str
     fs_home: InitFsHome
+    allocation: InitAllocation | None
     scan_reads_file: bool
 
 

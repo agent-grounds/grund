@@ -175,7 +175,6 @@ fn assert_names_no_fs(label: &str, stderr: &str) {
 /// The #940 reproducer: a REQ-only project adopts grund, migrates to version 2,
 /// and refreshes the block `grund check` reports stale (§FS-init-fixtures.8.1).
 #[test]
-#[ignore = "red until #940 selects the guidance kind (§FS-init.2.2.2.3); implement removes this"]
 fn req_only_adoption_teaches_req_and_the_refresh_after_migrating_is_quiet() {
     let fixture = Fixture::req_only("migrate");
     let first = fixture.stderr_of(&["init"], 0);
@@ -214,7 +213,6 @@ fn req_only_adoption_teaches_req_and_the_refresh_after_migrating_is_quiet() {
 /// §FS-init-fixtures.8.2: a missing selected home is asked for, on a first run
 /// and on a refresh, and `--scaffold` is never offered for it.
 #[test]
-#[ignore = "red until #940 selects the guidance kind (§FS-init.2.2.2.3); implement removes this"]
 fn a_missing_home_is_asked_for_on_a_first_run_and_on_a_refresh() {
     let fixture = Fixture::new("missing", REQ_ONLY, &[REQ_TREE[2]], &["docs"]);
     let first = fixture.stderr_of(&["init"], 0);
@@ -238,7 +236,6 @@ fn a_missing_home_is_asked_for_on_a_first_run_and_on_a_refresh() {
 /// §FS-init-fixtures.8.3: a row with no home teaches a doc-comment declaration,
 /// names no directory, and leaves a refresh with nothing to teach.
 #[test]
-#[ignore = "red until #940 selects the guidance kind (§FS-init.2.2.2.3); implement removes this"]
 fn a_row_with_no_home_teaches_a_doc_comment_and_its_refresh_is_quiet() {
     let config = REQ_ONLY.replace("folder = \"docs/req\"\n", "");
     let fixture = Fixture::new("no-home", &config, REQ_TREE, &[]);
@@ -253,7 +250,6 @@ fn a_row_with_no_home_teaches_a_doc_comment_and_its_refresh_is_quiet() {
 /// §FS-init-fixtures.8.4: `--scaffold` writes what it wrote before, and only the
 /// allocation step names the selected kind.
 #[test]
-#[ignore = "red until #940 selects the guidance kind (§FS-init.2.2.2.3); implement removes this"]
 fn the_scaffold_form_names_the_selected_kind_and_writes_what_it_wrote() {
     let fixture = Fixture::req_only("scaffold");
     let stderr = fixture.stderr_of(&["init", "--scaffold"], 0);
@@ -304,7 +300,6 @@ fn asks_for(kind: &str, home: &str, under: &str) -> String {
 /// §FS-init.2.2.2.3: a row's first file comes before its first folder, whichever
 /// key is written first, and an existing folder does not win over a missing file.
 #[test]
-#[ignore = "red until #940 selects the guidance kind (§FS-init.2.2.2.3); implement removes this"]
 fn a_rows_first_file_comes_before_its_folder_even_when_only_the_folder_exists() {
     let rows = "\n[schema.kinds.REQ]\nfolders = [\"docs/req\"]\nfiles = [\"requirements.md\"]\n";
     assert_eq!(
@@ -316,7 +311,6 @@ fn a_rows_first_file_comes_before_its_folder_even_when_only_the_folder_exists() 
 /// §FS-init.2.2.2.3: the first place in written order is the one named, though a
 /// later one exists.
 #[test]
-#[ignore = "red until #940 selects the guidance kind (§FS-init.2.2.2.3); implement removes this"]
 fn the_first_place_wins_though_a_later_one_exists() {
     let rows = "\n[schema.kinds.REQ]\nfolders = [\"docs/a\", \"docs/b\"]\n";
     assert_eq!(
@@ -328,7 +322,6 @@ fn the_first_place_wins_though_a_later_one_exists() {
 /// §FS-init.2.2.2.3: non-citable rows never qualify, the complement `code`
 /// included, however early they are written.
 #[test]
-#[ignore = "red until #940 selects the guidance kind (§FS-init.2.2.2.3); implement removes this"]
 fn non_citable_rows_and_the_complement_are_skipped() {
     let rows = "\n[schema.kinds.code]\nfolders = [\"src\"]\n\n[schema.kinds.runbook]\n\
                 citable = false\nfolders = [\"docs/runbooks\"]\n\n[schema.kinds.ADR]\n\
@@ -344,7 +337,6 @@ fn non_citable_rows_and_the_complement_are_skipped() {
 /// §FS-init.2.2.2.3: the first citable row with a home wins over an earlier
 /// citable row without one.
 #[test]
-#[ignore = "red until #940 selects the guidance kind (§FS-init.2.2.2.3); implement removes this"]
 fn a_row_with_a_home_wins_over_an_earlier_row_without_one() {
     let rows = "\n[schema.kinds.NOTE]\n\n[schema.kinds.REQ]\nfolders = [\"docs/req\"]\n";
     assert_eq!(
@@ -357,7 +349,6 @@ fn a_row_with_a_home_wins_over_an_earlier_row_without_one() {
 /// the guidance falls through to the first citable row that has one and never
 /// names the built-in `docs/functional-spec`.
 #[test]
-#[ignore = "red until #940 selects the guidance kind (§FS-init.2.2.2.3); implement removes this"]
 fn an_fs_row_without_a_home_falls_through_to_a_row_with_one() {
     let rows = "\n[schema.kinds.FS]\n\n[schema.kinds.REQ]\nfolders = [\"docs/req\"]\n";
     let config = format!("grund_config_version = 2\nproject_name = \"demo\"\n{rows}");
@@ -370,7 +361,6 @@ fn an_fs_row_without_a_home_falls_through_to_a_row_with_one() {
 /// §FS-init.2.2.2.3: where no citable row has a home, FS included, the first
 /// citable row is selected and taught as a doc-comment declaration.
 #[test]
-#[ignore = "red until #940 selects the guidance kind (§FS-init.2.2.2.3); implement removes this"]
 fn an_fs_row_without_a_home_alone_teaches_a_doc_comment() {
     let config = "grund_config_version = 2\nproject_name = \"demo\"\n\n[schema.kinds.FS]\n";
     let fixture = Fixture::new("fs-alone", config, &[("README.md", "# Demo\n")], &[]);
