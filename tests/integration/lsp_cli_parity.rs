@@ -32,6 +32,7 @@ mod support;
 use serde_json::{Value, json};
 use std::collections::BTreeSet;
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant};
@@ -265,6 +266,7 @@ fn lsp_findings(root: &Path) -> (BTreeSet<Finding>, BTreeSet<String>) {
 
 #[test]
 fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
+    let started = Instant::now();
     let repo = binaries::repo_root();
     let grund = binaries::grund();
     let _ = support::SERVER_BINARY.set(binaries::grund_lsp());
@@ -317,6 +319,12 @@ fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
          {} with no config at the fixture root, {other_commands} not a plain check",
         refused.len(),
         no_config.len()
+    );
+    // §AR-ci.requirements.5.1: past libtest's capture, the seconds this sweep costs.
+    let _ = writeln!(
+        std::io::stderr(),
+        "gate time: lsp/cli parity {compared} plain-check case(s) on 1 worker in {:.1}s",
+        started.elapsed().as_secs_f64()
     );
     assert!(
         mismatches.is_empty(),

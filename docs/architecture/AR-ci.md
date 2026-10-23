@@ -1194,11 +1194,11 @@ A suite step is the workspace `cargo test` on all three legs, which runs the e2e
   its build has finished, so a cold dependency compile is a phase of its own, and the
   lines a test's child process writes, as each command-agreement host writes how long it
   took to be ready, how much of that was the toolchain install and the natives' build,
-  and how long it then served, and the one line the scan-determinism sweep writes itself,
-  past libtest's capture, `gate time: scan determinism <n> repository command(s) and <m>
-  fixture(s) on <w> worker(s) in <seconds>s`, because a sweep a tranche pays with drops
-  out of the three slowest the check-ins name, and the seconds it removed must still be
-  read in the same job ([§REQ-one-answer.proof.delivery.payment](../requirements/REQ-one-answer.md#proofdeliverypayment-each-tranche-pays-for-its-own-time));
+  and how long it then served, and the one line each sweep a tranche pays with writes
+  itself, past libtest's capture, `gate time: <sweep> <what it compared> on <w> worker(s)
+  in <seconds>s`, as the scan-determinism, lsp/cli parity, e2e determinism and e2e cases
+  sweeps do, because such a sweep need not be among the three slowest the check-ins name,
+  and the seconds it costs or removed must still be read in the same job ([§REQ-one-answer.proof.delivery.payment](../requirements/REQ-one-answer.md#proofdeliverypayment-each-tranche-pays-for-its-own-time));
 - each line that begins `node build: `, a build line of
   [§AR-ci.3.4.1.1](AR-ci.md#3411-one-release-build-and-every-build-on-one-line), one per build. Only the Python gate has these lines:
   when a passing or skipped test, its fixtures or its child processes write one, the gate
