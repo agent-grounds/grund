@@ -25,7 +25,7 @@ use crate::sources::{Sources, physical_path_key};
 /// sites of the recognized value bindings on each index, which are use rather
 /// than the entry even for a folder-owned ID (§FS-check.4.1.2.1). `headings`
 /// holds each index's declaration heading lines, whose citations are the entry
-/// of no ID (§FS-check.4.1.2.1, §FS-citations.recognized.title-lines).
+/// of no ID (§FS-check.4.1.2.1).
 pub(crate) struct KindIndexEntries {
     configured_root: PathBuf,
     physical_root: PathBuf,
@@ -133,9 +133,9 @@ impl KindIndexEntries {
     /// declaration itself, so a section citation, or the citation inside a
     /// recognized value binding (a root-aimed one with no section included), is use.
     /// So is a citation on a declaration heading, for either branch: it is a
-    /// citation from the declaration that heading declares
-    /// (§FS-citations.recognized.title-lines), the entry of no folder-owned ID
-    /// (§FS-check.4.1.2.1) and the enrollment of no external one (§FS-check.3.18.3).
+    /// citation from the declaration that heading declares, the entry of no
+    /// folder-owned ID (§FS-check.4.1.2.1) and the enrollment of no external one
+    /// (§FS-check.3.18.3).
     pub(crate) fn is_index_entry(&self, citation: &Citation) -> bool {
         if citation.namespace.is_some() || self.owed.is_empty() {
             return false;
