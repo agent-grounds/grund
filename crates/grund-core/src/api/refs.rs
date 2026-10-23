@@ -15,6 +15,7 @@ use crate::model::Finding;
 use crate::scanner::ApiScanError;
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct RefsOpts {
     pub path: PathBuf,
     pub path_provided: bool,
@@ -40,6 +41,7 @@ impl Default for RefsOpts {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct RefHit {
     pub project: Option<String>,
     pub path: String,
@@ -67,6 +69,7 @@ pub struct RefHit {
 /// (§FS-refs.4). This is query-result data rather than an [`anyhow::Error`], so
 /// every frontend can apply the same staged exit policy without parsing prose.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum RefsQueryFailureKind {
     InvalidId,
     Ambiguous,
@@ -84,6 +87,7 @@ impl RefsQueryFailureKind {
 /// A `refs` operand rejected after workspace context and the target grammar
 /// were selected (§FS-errors.2.3, §FS-workspace.8.7.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct RefsQueryFailure {
     pub kind: RefsQueryFailureKind,
     pub message: String,
@@ -114,6 +118,7 @@ impl RefsQueryFailure {
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct RefsOutput {
     pub output_format: String,
     pub workspace: bool,
@@ -147,6 +152,7 @@ impl std::fmt::Display for RefsOutput {
 /// rejection from as a failed query (§FS-refs.4). Keeping the carrier outside [`RefsOutput`] preserves
 /// the exhaustively constructible embedding API required by §AR-bindings.2.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct RefsOutcome {
     pub output: RefsOutput,
     pub query_failure: Option<RefsQueryFailure>,

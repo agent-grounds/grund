@@ -19,6 +19,7 @@ use crate::resolver::load_workspace_context;
 use super::report::context_run_warnings;
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct CompleteIdsOpts {
     pub path: PathBuf,
     pub path_provided: bool,

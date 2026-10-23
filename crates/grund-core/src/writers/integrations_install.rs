@@ -30,14 +30,6 @@ pub enum BlockOutcome {
     Unchanged,
 }
 
-pub(crate) fn block_outcome_verb(outcome: BlockOutcome) -> &'static str {
-    match outcome {
-        BlockOutcome::Appended => "appended",
-        BlockOutcome::Updated => "updated",
-        BlockOutcome::Unchanged => "exists",
-    }
-}
-
 /// One file, two managed keys: `exists` only when neither line moved, and an
 /// append anywhere makes the whole write an append (§FS-integrations.6.1).
 pub(crate) fn merge_outcomes(first: BlockOutcome, second: BlockOutcome) -> BlockOutcome {

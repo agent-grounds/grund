@@ -126,6 +126,7 @@ pub(crate) fn known_agent(name: &str) -> Option<&'static str> {
 /// and an override is written for (§FS-integrations.4.3.8,
 /// §FS-distribution.3.1.3).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum IntegrationAgent {
     Codex,
     Claude,
@@ -165,6 +166,7 @@ impl IntegrationAgent {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum ConversationRendering {
     Plain,
     Link,
@@ -219,6 +221,7 @@ impl ConversationRendering {
 /// §DF-conversation-link-target.2.2). A closed enum: each value names one fixed
 /// template an agent fills from the declaration's absolute path and line.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum ConversationTarget {
     /// `file://<abs>#L<line>` — the default, and the only local form that
     /// presumes nothing about the machine beyond a handler for `file:`.

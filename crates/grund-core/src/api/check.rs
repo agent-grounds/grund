@@ -19,6 +19,7 @@ use crate::scanner::scan_tree_strict;
 use crate::workspace::resolve_workspace_config;
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct CheckOpts {
     pub path: PathBuf,
     pub path_provided: bool,
@@ -50,6 +51,7 @@ impl Default for CheckOpts {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct CheckOutput {
     pub output_format: String,
     pub report: Report,

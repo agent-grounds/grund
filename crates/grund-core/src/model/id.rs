@@ -2,8 +2,9 @@
 
 /// Numeric identity under the effective grammar (§FS-config.3.2.8). Authored
 /// spelling belongs to the declaration or citation context, so the public
-/// three-field construction surface stays compatible (§FS-distribution.3.1.2).
+/// record keeps its three fields (§FS-distribution.3.1.2).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[non_exhaustive]
 pub struct Id {
     pub kind: String,
     pub num: Option<u32>,

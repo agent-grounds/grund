@@ -5,6 +5,7 @@ use crate::model::Finding;
 use std::path::PathBuf;
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct InitOpts {
     pub target: PathBuf,
     /// Explicit generated project identity. When absent, `init` uses the
@@ -52,6 +53,7 @@ impl Default for InitOpts {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct InitEvent {
     pub verb: &'static str,
     pub path: String,
@@ -69,6 +71,7 @@ impl InitEvent {
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct InitOutput {
     pub events: Vec<InitEvent>,
     /// Located validation findings discovered before any write (§FS-rules.4).
@@ -105,6 +108,7 @@ impl InitOutput {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct InitError {
     pub output: InitOutput,
     pub message: String,

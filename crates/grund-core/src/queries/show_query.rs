@@ -17,6 +17,7 @@ use crate::model::{FindingSite, ShowRenderMode};
 /// Options for programmatic declaration reads through `show`
 /// (§FS-distribution.3.0.2, §FS-distribution.3.1).
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct ShowOpts {
     pub path: PathBuf,
     pub section: Option<String>,
@@ -37,6 +38,7 @@ impl Default for ShowOpts {
 
 /// How much of a declaration body the query returns (§FS-show.2).
 #[derive(Clone, Copy, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum ShowMode {
     Brief,
     Lead,
@@ -58,6 +60,7 @@ impl ShowMode {
 /// Which shape the answer carries (§FS-show.3): the plain body, the Markdown
 /// form that keeps its cross-reference links, or the JSON object.
 #[derive(Clone, Copy, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum ShowFormat {
     Text,
     Markdown,
@@ -71,6 +74,7 @@ pub enum ShowFormat {
 /// needs a second parse of `message`.
 /// `Display` is `message` verbatim — the text form is unchanged by this type.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct ShowQueryError {
     pub code: &'static str,
     pub message: String,

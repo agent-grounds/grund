@@ -9,6 +9,7 @@ use crate::model::format_path;
 /// These config-facing types stay in this component so the general model remains
 /// reserved for scan and declaration data (§AR-system.2.2, §AR-system.2.3).
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[non_exhaustive]
 pub enum PointSizeUnit {
     Lines,
     Words,

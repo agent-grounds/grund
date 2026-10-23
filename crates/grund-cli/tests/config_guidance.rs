@@ -115,12 +115,11 @@ impl Fixture {
     }
 
     fn refs_opts(&self, id: &str) -> RefsOpts {
-        RefsOpts {
-            path: self.root.clone(),
-            path_provided: true,
-            id: id.into(),
-            ..RefsOpts::default()
-        }
+        let mut opts = RefsOpts::default();
+        opts.path = self.root.clone();
+        opts.path_provided = true;
+        opts.id = id.into();
+        opts
     }
 }
 

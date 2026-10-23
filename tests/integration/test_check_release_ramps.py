@@ -420,7 +420,6 @@ class IntegrationsTransitionRampTests(unittest.TestCase):
             self.assertTrue(ramps.report(found, cut), f"the lines must refuse a {cut} cut")
         self.assertEqual([], ramps.report(found, "0.21.0"), "the lines allow 0.21.0")
 
-    @unittest.expectedFailure  # red until #808 writes the 39 removal lines; implement removes this marker
     def test_each_retired_name_and_method_leaves_one_line_read_as_landed_in_0_21_0(self):
         removed = self._claims("was removed in", "0.21.0", ramps.LANDED, self.LIB_RS)
         self.assertEqual(self.RETIRED, len(removed), "one `was removed in 0.21.0` line per name and method")
@@ -428,7 +427,6 @@ class IntegrationsTransitionRampTests(unittest.TestCase):
         self.assertEqual(self.RETIRED, len(named), "each line names a different retired name or method")
         self._refuses_0_20_and_allows_0_21(removed)
 
-    @unittest.expectedFailure  # red until #808 deletes the 39 notices; implement removes this marker
     def test_no_integrations_notice_is_still_pending(self):
         pending = self._claims("is removed in", "0.21.0", ramps.PENDING, "crates/grund-core/src/")
         self.assertEqual([], [claim.quoted() for claim in pending])
@@ -445,7 +443,6 @@ class IntegrationsTransitionRampTests(unittest.TestCase):
         self.assertTrue(ramps.report(removed, "0.18.1"), "the removal lines refuse a 0.18.x patch")
         self.assertEqual([], ramps.report(removed, "0.19.0"), "the removal lines allow 0.19.0")
 
-    @unittest.expectedFailure  # red until #808 lands the crate-level notice; implement removes this marker
     def test_the_crate_level_literal_notice_is_read_as_landed_in_0_21_0(self):
         def crate_level(found):
             return [c for c in found if self.lib_lines[c.line - 1].lstrip().startswith("//!")]

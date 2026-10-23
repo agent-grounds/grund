@@ -123,7 +123,6 @@ class PromisedTypesAreNonExhaustiveTests(unittest.TestCase):
         kinds = [sites[0][1] for sites in self.definitions.values()]
         self.assertEqual((PROMISED_STRUCTS, PROMISED_ENUMS), (kinds.count("struct"), kinds.count("enum")))
 
-    @unittest.expectedFailure  # red until #808 marks the promised types; implement removes this marker
     def test_every_promised_struct_and_enum_is_non_exhaustive(self):
         unmarked = {
             n for n, sites in self.definitions.items() if any(NON_EXHAUSTIVE not in s[2] for s in sites)
@@ -152,7 +151,6 @@ class RemovalProbeTests(unittest.TestCase):
                 self.assertNotIn("compile_fail", twin_info)
                 self.assertTrue(one_line_apart(probe, twin), "the twin differs in more than one line")
 
-    @unittest.expectedFailure  # red until #808 removes the names and marks the types; implement removes this marker
     def test_each_probe_stops_at_its_code_and_each_twin_passes(self):
         run = run_crate_doctests()
         self.assertEqual(0, run.returncode, run.stdout[-4000:])

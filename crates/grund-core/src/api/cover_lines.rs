@@ -20,6 +20,7 @@ use super::report::context_run_warnings;
 /// caller wrote it — `<N>` or `<N>-<M>` — so a refusal can echo it
 /// (§FS-cover.6.1, §FS-cover.6.4).
 #[derive(Clone, Debug, Default)]
+#[non_exhaustive]
 pub struct CoverLinesOpts {
     pub path: PathBuf,
     pub path_provided: bool,
@@ -28,6 +29,7 @@ pub struct CoverLinesOpts {
 
 /// One requested range's answer (§FS-cover.6.3, §FS-output-shapes.5.3).
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct CoverLines {
     /// The alias of the project the file belongs to, exactly when a
     /// §FS-cover.3.2 record of the same run would carry one; `None` otherwise.
@@ -42,6 +44,7 @@ pub struct CoverLines {
 /// A maximal run of lines owned by one declaration, clipped to the range
 /// (§FS-cover.6.3).
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct CoverLineOwner {
     /// Bare, rendered as `enclosing_declaration` is (§FS-cover.6.3).
     pub declaration: String,
@@ -54,6 +57,7 @@ pub struct CoverLineOwner {
 /// A maximal run under one innermost section; `None` is the lead or lines no
 /// accepted section contains (§FS-cover.6.3).
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct CoverLineSection {
     pub section: Option<String>,
     pub start: usize,
@@ -61,6 +65,7 @@ pub struct CoverLineSection {
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct CoverLinesOutput {
     pub output_format: String,
     /// One record per requested range, in the order asked; none at all when the

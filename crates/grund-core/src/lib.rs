@@ -2,7 +2,7 @@
 //! freezes the root names §FS-distribution.3.1.2 lists, the visible ones here;
 //! a name hidden from these docs is a frontend's seam and outside the promise.
 //! An option record is built from `Default` with its fields assigned, and an output record or a refusal is read, never built.
-//! Building a promised record with a struct literal, or matching a promised enum without a wildcard arm, becomes an error in 0.21.0.
+//! Building a promised record with a struct literal, or matching a promised enum without a wildcard arm, became an error in 0.21.0.
 //!
 //! Since 0.21.0 each block below that is marked not to compile stops at the error its
 //! fence names, and the block after it, which differs in one line, is what compiles
@@ -242,6 +242,50 @@ pub use model::{ClauseBy, CodeClause, CodeEnabled, CodeSeverity};
 // `KindConfig` was removed in 0.19.0; a `Project` holds the kinds as `schema` rows.
 // `CitationRules` was removed in 0.19.0; a `Project` holds them as `rules.citations`.
 
+// §FS-distribution.3.1.3, §REQ-backwards-compatibility.2: the thirty names the CLI
+// once assembled `grund integrations --write` from, and nine methods of the kept
+// vocabularies, noticed in 0.19.0 and gone on the release their notes named.
+
+// `agent_override_table` was removed in 0.21.0; set `IntegrationsOpts::agent`.
+// `block_outcome_verb` was removed in 0.21.0; use `IntegrationOutcome::name`.
+// `BlockOutcome` was removed in 0.21.0; read `IntegrationOutcome` on `IntegrationEvent`.
+// `detect_clients` was removed in 0.21.0; read `IntegrationsOutput::detected`.
+// `expand_target` was removed in 0.21.0; read the paths on `IntegrationEvent`.
+// `GLOBAL_AGENT_INSTRUCTION_TARGETS` was removed in 0.21.0; the agents are `IntegrationAgent::ALL`.
+// `GlobalAgentTarget` was removed in 0.21.0; read `IntegrationNote::Guidance`, which names the agent.
+// `GRUND_OPEN_RESOLVER` was removed in 0.21.0; read `IntegrationArtifact::resolver`.
+// `install_agent_guidance_block` was removed in 0.21.0; call `integrations` with `write` set.
+// `install_managed_block` was removed in 0.21.0; call `integrations` with `write` set.
+// `install_reference_key` was removed in 0.21.0; set `IntegrationsOpts::conversation_target`.
+// `integration_is_current` was removed in 0.21.0; read `IntegrationClientStatus::installed`.
+// `INTEGRATIONS_BLOCK_VERSION` was removed in 0.21.0; `integrations` writes the block at its version.
+// `known_agent` was removed in 0.21.0; use `IntegrationAgent::from_name`.
+// `known_agents_list` was removed in 0.21.0; list `IntegrationAgent::ALL` by name.
+// `known_clients_line` was removed in 0.21.0; list `IntegrationClient::ALL` by name.
+// `LinkSupport` was removed in 0.21.0; `integrations` applies the gate.
+// `merge_outcomes` was removed in 0.21.0; `integrations` reports one `IntegrationEvent` per target.
+// `needs_wezterm_wiring` was removed in 0.21.0; read `IntegrationNote::UnwiredWezterm`.
+// `read_optional_text` was removed in 0.21.0; `integrations` reads the user configuration.
+// `RESOLVER_TARGET` was removed in 0.21.0; read `IntegrationArtifact::resolver_target`.
+// `scan_user_config` was removed in 0.21.0; read `IntegrationsOutput::warnings`.
+// `USER_CONFIG_TARGET` was removed in 0.21.0; `integrations` reads the user configuration.
+// `user_grund_config_path` was removed in 0.21.0; `integrations` reads the user configuration.
+// `UserConfigScan` was removed in 0.21.0; `integrations` reads the user configuration.
+// `VSCODE_EXTENSION_JS` was removed in 0.21.0; read `IntegrationArtifact::extension_js`.
+// `vscode_integration_is_current` was removed in 0.21.0; read `IntegrationClientStatus::installed`.
+// `VSCODE_PACKAGE_JSON` was removed in 0.21.0; read `IntegrationArtifact::package_json`.
+// `WEZTERM_APPLY_CALL` was removed in 0.21.0; read `IntegrationNote::UnwiredWezterm`.
+// `write_resolver_script` was removed in 0.21.0; call `integrations` with `write` set.
+// `IntegrationClient::is_terminal` was removed in 0.21.0; read `IntegrationArtifact::resolver`.
+// `IntegrationClient::install_kind` was removed in 0.21.0; read `IntegrationClientStatus::install_kind`.
+// `IntegrationClient::snippet` was removed in 0.21.0; read `IntegrationArtifact::snippet`.
+// `IntegrationClient::config_target` was removed in 0.21.0; read `IntegrationClientStatus::config_target`.
+// `IntegrationClient::install_command` was removed in 0.21.0; the install command is the frontend's own.
+// `IntegrationClient::comment_prefix` was removed in 0.21.0; call `integrations` with `write` set.
+// `IntegrationClient::prepends_block` was removed in 0.21.0; call `integrations` with `write` set.
+// `IntegrationClient::fresh_config_scaffold` was removed in 0.21.0; call `integrations` with `write` set.
+// `ConversationTarget::accepted_list` was removed in 0.21.0; list `ConversationTarget::ALL` by name.
+
 // §AR-system.2.5 scanner: the published form of what the walk raises
 // (§FS-check.2.4).
 pub use scanner::ApiScanError;
@@ -310,20 +354,6 @@ pub use writers::{
     IntegrationNote, IntegrationOutcome, IntegrationsError, IntegrationsFailure, IntegrationsOpts,
     IntegrationsOutput, integrations,
 };
-// §REQ-backwards-compatibility.2: the parts the CLI once assembled the command
-// from, each deprecated with the release that removes it.
-#[allow(deprecated)]
-pub use writers::integrations_retiring::{
-    BlockOutcome, GLOBAL_AGENT_INSTRUCTION_TARGETS, GRUND_OPEN_RESOLVER, GlobalAgentTarget,
-    INTEGRATIONS_BLOCK_VERSION, LinkSupport, RESOLVER_TARGET, USER_CONFIG_TARGET, UserConfigScan,
-    VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON, WEZTERM_APPLY_CALL, agent_override_table,
-    block_outcome_verb, detect_clients, expand_target, install_agent_guidance_block,
-    install_managed_block, install_reference_key, integration_is_current, known_agent,
-    known_agents_list, known_clients_line, merge_outcomes, needs_wezterm_wiring,
-    read_optional_text, scan_user_config, user_grund_config_path, vscode_integration_is_current,
-    write_resolver_script,
-};
-
 // §AR-system.2.9 api: the embedding surface itself — one data-returning
 // function per question, with the option and output records around it
 // (§AR-bindings.2, §FS-distribution.3).

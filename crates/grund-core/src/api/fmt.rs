@@ -16,6 +16,7 @@ use super::report::context_run_warnings;
 use crate::writers::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree, fmt_workspace_projects};
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct FmtOpts {
     pub path: PathBuf,
     pub path_provided: bool,
@@ -37,6 +38,7 @@ impl Default for FmtOpts {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct FmtChange {
     pub path: String,
     pub line: usize,
@@ -47,6 +49,7 @@ pub struct FmtChange {
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct FmtOutput {
     pub changes: Vec<FmtChange>,
     /// The paths the walk could not read (§FS-fmt.3.1) — the CLI prints these and

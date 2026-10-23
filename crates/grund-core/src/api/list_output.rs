@@ -4,6 +4,7 @@ use crate::model::Finding;
 use crate::scanner::ApiScanError;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct ListEntry {
     pub project: Option<String>,
     pub id: String,
@@ -23,12 +24,14 @@ pub struct ListEntry {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct ListValueRoot {
     pub id: String,
     pub valid: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct ListSummary {
     pub project: Option<String>,
     pub kind: String,
@@ -38,6 +41,7 @@ pub struct ListSummary {
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct ListOutput {
     pub output_format: String,
     pub workspace: bool,

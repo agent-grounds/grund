@@ -28,6 +28,7 @@ use crate::scanner::{api_scan_error, section_row_title};
 pub use super::list_output::{ListEntry, ListOutput, ListSummary, ListValueRoot};
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct ListOpts {
     pub path: PathBuf,
     pub path_provided: bool,

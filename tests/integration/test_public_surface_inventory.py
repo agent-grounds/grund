@@ -296,7 +296,6 @@ class PublicSurfaceInventoryTests(unittest.TestCase):
             self.fail(str(glob))
 
     # The 30 rows moved to Removed names with this point; the root still exports them.
-    @unittest.expectedFailure  # red until #808 removes the 30 root exports; implement removes this marker
     def test_every_public_root_name_has_an_inventory_row(self):
         missing = set(public_root_names()) - set(inventory_names())
         self.assertEqual(
@@ -391,25 +390,21 @@ class IntegrationsRetirementTests(unittest.TestCase):
     """§FS-distribution.3.1.3: the 30 names and the 9 methods noticed in 0.19.0
     are gone in 0.21.0, each leaving one `lib.rs` line and one inventory entry."""
 
-    @unittest.expectedFailure  # red until #808 removes the 30 root exports; implement removes this marker
     def test_no_retired_name_is_a_root_name(self):
         present = RETIRED_NAMES & set(public_root_names())
         self.assertEqual("", _sample(present), "retired integrations names the crate root still exports")
 
-    @unittest.expectedFailure  # red until #808 deletes writers/integrations_retiring.rs; implement removes this marker
     def test_no_retired_name_or_method_keeps_its_forwarding_notice(self):
         self.assertFalse(RETIRING_MODULE.exists(), f"{RETIRING_MODULE.relative_to(REPO_ROOT)} still exists")
         noticed = set(RETIRED) & set(one_line_deprecations())
         self.assertEqual("", _sample(noticed), "retired names still carrying their 0.19.0 notice")
 
-    @unittest.expectedFailure  # red until #808 removes the 9 methods; implement removes this marker
     def test_no_retired_method_is_defined_on_its_vocabulary(self):
         defined = [
             f"{owner}::{method}" for owner, method in RETIRED_METHODS if method in inherent_methods(owner)
         ]
         self.assertEqual("", _sample(defined), "retired methods still defined")
 
-    @unittest.expectedFailure  # red until #808 writes the 39 removal lines; implement removes this marker
     def test_each_retired_name_and_method_leaves_one_removal_line_in_lib_rs(self):
         named = REMOVAL_LINE.findall(LIB_RS.read_text(encoding="utf-8"))
         self.assertEqual(sorted(RETIRED), sorted(named), f"`{RETIRED_LINE}` lines in {LIB_RS.name}")

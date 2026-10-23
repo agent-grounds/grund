@@ -113,7 +113,6 @@ mod integrations_detect;
 mod integrations_guidance;
 mod integrations_install;
 mod integrations_output;
-pub(crate) mod integrations_retiring;
 mod integrations_user_config;
 mod migrate_guidance;
 mod scoped_files;
@@ -138,8 +137,8 @@ pub(crate) use init_workspace_members::{ListedProject, listed_projects};
 // vocabularies, options, answer and refusal, public because the CLI renders the
 // answer (§FS-integrations.1.3, §AR-bindings.3).
 
-// The names the command was once assembled from are `integrations_retiring`'s,
-// forwarding to the originals below.
+// The names the command was once assembled from are gone (§FS-distribution.3.1.3):
+// what they forwarded to stays private to the modules `integrations` reads.
 pub use integrations_agents::{ConversationRendering, ConversationTarget, IntegrationAgent};
 pub use integrations_api::integrations;
 pub use integrations_clients::{InstallKind, IntegrationClient};

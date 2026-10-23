@@ -4,6 +4,7 @@ use super::records::Id;
 
 /// One section-like heading rejected from a declaration's shared coordinate
 /// maps because it lies beyond that declaration's body (§AR-scanner.2.4.1).
+#[non_exhaustive]
 pub struct SectionHeadingOutsideDeclaration {
     pub file: PathBuf,
     pub line: usize,
@@ -13,6 +14,7 @@ pub struct SectionHeadingOutsideDeclaration {
 /// One body-owned Markdown ATX heading that does not participate in the
 /// knowledge graph, together with the scanner's deterministic repair guidance
 /// (§FS-declarations.checks.unmarked-heading, §AR-scanner.2.2.7).
+#[non_exhaustive]
 pub struct UnmarkedHeading {
     pub file: PathBuf,
     pub line: usize,
@@ -32,6 +34,7 @@ pub struct UnmarkedHeading {
 /// The clause a dotted unmarked heading's message appends: the parent's path
 /// (empty for the declaration) and the relative heading written under it
 /// (§FS-declarations.checks.unmarked-heading.2.1).
+#[non_exhaustive]
 pub struct RelativeHint {
     pub parent: String,
     pub heading: String,
@@ -43,6 +46,7 @@ pub struct RelativeHint {
 /// the nearest usable heading shallower than the parent it needed, empty for
 /// the declaration. `column` and `heading` are the authored heading, the span an
 /// editor underlines (§FS-lsp.1.1).
+#[non_exhaustive]
 pub struct RelativeSectionParent {
     pub file: PathBuf,
     pub line: usize,
@@ -70,6 +74,7 @@ pub(crate) struct UnmarkedHeadingCandidate {
 /// after it, without parsing as an ID (§FS-declarations.checks.declaration-near-miss.1). `text` is the token as
 /// written, so the finding can quote it back beside `format`, the candidate
 /// kind's effective template that it missed.
+#[non_exhaustive]
 pub struct NearMissHeading {
     pub file: PathBuf,
     pub line: usize,
