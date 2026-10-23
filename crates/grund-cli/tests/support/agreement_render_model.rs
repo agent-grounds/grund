@@ -304,6 +304,11 @@ impl Model {
                 facts: c.clone(),
             });
         }
+        // §FS-refs.2, §FS-cover.2: refs, cover and the editor read citations in
+        // (path, line, column) order, whatever order a manifest authored them in.
+        model
+            .cites
+            .sort_by(|a, b| (&a.file, a.line, a.column).cmp(&(&b.file, b.line, b.column)));
         Ok(model)
     }
 

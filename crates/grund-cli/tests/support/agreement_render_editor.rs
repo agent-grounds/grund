@@ -20,7 +20,7 @@ impl View<'_> {
     }
 
     fn located(&self, file: &str, line: usize, column: usize, text: &str, query: &str) -> Value {
-        json!({"column":column,"display_path":self.display(file),"line":line,"path":self.identity(file),
+        json!({"column":column,"display_path":self.raw(file),"line":line,"path":self.identity(file),
             "project":self.project_of(file),"query_id":query,"section_separator":".","text":text})
     }
 
@@ -95,13 +95,12 @@ impl View<'_> {
             .filter(|s| self.loaded(&s.file))
             .collect();
         sections.sort_by(|a, b| (&a.file, a.line).cmp(&(&b.file, b.line)));
-        let mut cites: Vec<_> = self
+        let cites: Vec<_> = self
             .m
             .cites
             .iter()
             .filter(|c| self.loaded(&c.file))
             .collect();
-        cites.sort_by(|a, b| (&a.file, a.line, a.column).cmp(&(&b.file, b.line, b.column)));
         let mut kind_titles = serde_json::Map::new();
         for row in self.order() {
             let coordinate = self.coordinate(row);
