@@ -540,15 +540,17 @@ fn init_dry_run_writes_no_files_and_reports_would_prefixes() {
     assert!(target.join("grund.toml").is_file());
 }
 
-/// §FS-init.2.2.2: when every reported path is `exists ` (and no would-… lines
-/// were emitted), the `next:` guidance block is suppressed — the user has
-/// a complete setup, so there is nothing to teach. This holds for both
-/// real runs and dry-runs.
+/// §FS-init.2.2.2.1: when every reported path is `exists ` (and no would-… lines
+/// were emitted) and the selected home is on disk, the `next:` guidance block is
+/// suppressed — the setup is complete, so there is nothing to teach. This holds
+/// for both real runs and dry-runs.
 #[test]
 fn init_dry_run_on_current_repo_suppresses_next_block() {
     let target = workdir("init_dry_run_on_current_repo_suppresses_next_block");
     let first = run_grund(&["init", target.to_str().unwrap()], manifest_dir());
     assert!(first.status.success());
+    // The starter's FS home; without it the re-run still teaches creating it.
+    fs::create_dir_all(target.join("docs/functional-spec")).expect("create FS home");
 
     let second = run_grund(&["init", target.to_str().unwrap()], manifest_dir());
     assert!(second.status.success());
