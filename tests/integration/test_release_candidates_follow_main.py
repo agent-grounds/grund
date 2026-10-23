@@ -94,6 +94,7 @@ class FollowsMain:
         self.assertTrue(publish["branch"].startswith("release-candidate/"), case.report())
 
     def test_a_failed_run_in_a_refreshed_round_keeps_only_that_rounds_branches(self):
+        """§FS-distribution.4.4.1.4: a failed run keeps only its own round's branches."""
         case = self.case({"move": {"1": "m1"}, "fail": {"2": "ci.yml"}})
         self.assertNothingPublished(case, case.shas["m1"])
         self.assertEqual(2, case.rounds(), case.report())
@@ -128,6 +129,7 @@ class FollowsMain:
         self.assertCancelled(case, 1)
 
     def test_a_ramp_the_queue_landed_fails_the_rebuild_before_any_run(self):
+        """§FS-distribution.4.4.1.4: a refused rebuild stops before any branch or run."""
         case = self.case({"move": {"1": "ramp"}})
         self.assertNothingPublished(case, case.shas["ramp"])
         self.assertEqual(1, case.rounds(), case.report())
@@ -157,16 +159,19 @@ class FollowsMain:
         self.assertEqual(2, case.rounds(), case.report())
 
     def test_a_push_the_queue_beat_is_movement(self):
+        """§FS-distribution.4.4.1.3: a main the read-back finds elsewhere is a move."""
         case = self.case(push=("race", "m1"))
         self.assertReleased(case, 2, case.shas["m1"])
         self.assertEqual([], [r for r in case.runs(1) if r["status"] != "completed"], case.report())
 
     def test_a_push_that_landed_though_git_reported_failure_goes_on(self):
+        """§FS-distribution.4.4.1.3: a read-back that finds the release commit goes on."""
         case = self.case(push=("land",))
         self.assertReleased(case, 1, case.shas["a"])
         self.assertEqual(1, case.rounds(), case.report())
 
     def test_a_refused_push_onto_an_unmoved_main_names_gits_error(self):
+        """§FS-distribution.4.4.1.3: a read-back that finds the round base stops with git's error."""
         case = self.case(push=("refuse",))
         self.assertNothingPublished(case, case.shas["a"])
         self.assertEqual(1, case.rounds(), case.report())
@@ -174,6 +179,7 @@ class FollowsMain:
         self.assertEqual(sorted({run["branch"] for run in case.runs(1)}), case.branches(), case.report())
 
     def test_a_failed_run_wins_over_a_move_in_the_same_poll(self):
+        """§FS-distribution.4.4.1.4: a failure wins over a move seen on the same look."""
         case = self.case({"move": {"1": "m1"}, "move_at": "dispatch", "fail": {"1": "ci.yml"}})
         self.assertNothingPublished(case, case.shas["m1"])
         self.assertEqual(1, case.rounds(), case.report())
