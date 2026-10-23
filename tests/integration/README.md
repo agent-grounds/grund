@@ -75,7 +75,9 @@ The command-agreement acceptance asks the seed and every case of each family
 `COVERED` names; every other family is a row of `WIDENING`
 ([§REQ-one-answer.proof.matrix.family](../../docs/requirements/REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all),
 [§REQ-one-answer.proof.delivery.widening](../../docs/requirements/REQ-one-answer.md#proofdeliverywidening-widening-names-exactly-the-families-not-covered)).
-Tranche 1 covers `cover`, `scan` and `stub`, and the acceptance runs in the
+Tranche 1 covers `cover`, `scan` and `stub`, tranche 2 `basic`, and tranche 3
+`agent`, `cross`, `declare`, `deterministic`, `guide`, `haskell`, `json`,
+`markdown`, `marked`, `named`, `report` and `rust`; the acceptance runs in the
 ordinary `cargo test`.
 Run `cargo test -p grund --test command_agreement agreement_acceptance::s4_executes_the_covered_families_and_the_seed -- --exact --nocapture`;
 set `GRUND_AGREEMENT_EVIDENCE` to a writable file to retain its full JSON receipts.

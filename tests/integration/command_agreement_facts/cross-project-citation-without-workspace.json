@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "case": "cross-project-citation-without-workspace",
+  "inputFiles": {
+    "expected.exit": {"bytes":[49,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,110,111,116,101,46,109,100,58,51,58,32,101,114,114,111,114,58,32,117,110,107,110,111,119,110,32,112,114,111,106,101,99,116,32,97,108,105,97,115,32,97,112,105,10,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,110,111,116,101,46,109,100,58,49,58,32,119,97,114,110,105,110,103,58,32,100,101,99,108,97,114,101,100,32,98,117,116,32,110,101,118,101,114,32,99,105,116,101,100,58,32,70,83,45,110,111,116,101,32,40,105,116,115,32,105,110,100,101,120,32,101,110,116,114,121,32,97,116,32,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,82,69,65,68,77,69,46,109,100,58,53,32,100,111,101,115,32,110,111,116,32,99,111,117,110,116,32,97,115,32,97,32,117,115,101,41,10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-note.md": {"bytes":[35,32,70,83,45,110,111,116,101,58,32,83,116,114,97,121,32,99,114,111,115,115,45,112,114,111,106,101,99,116,32,99,105,116,97,116,105,111,110,32,105,110,32,97,32,110,111,110,45,119,111,114,107,115,112,97,99,101,32,114,101,112,111,10,10,65,32,114,101,112,111,32,119,105,116,104,32,110,111,32,96,91,119,111,114,107,115,112,97,99,101,93,96,32,98,108,111,99,107,32,109,117,115,116,32,115,116,105,108,108,32,102,108,97,103,32,194,167,97,112,105,47,70,83,45,111,116,104,101,114,32,97,115,32,117,110,114,101,115,111,108,118,97,98,108,101,46,10]},
+    "repo/docs/functional-spec/README.md": {"bytes":[35,32,70,83,32,105,110,100,101,120,10,10,69,118,101,114,121,32,96,70,83,96,32,100,101,99,108,97,114,97,116,105,111,110,32,105,110,32,116,104,105,115,32,102,111,108,100,101,114,44,32,111,110,101,32,108,105,110,107,101,100,32,101,110,116,114,121,32,101,97,99,104,46,10,10,45,32,91,194,167,70,83,45,110,111,116,101,93,40,70,83,45,110,111,116,101,46,109,100,35,102,115,45,110,111,116,101,45,115,116,114,97,121,45,99,114,111,115,115,45,112,114,111,106,101,99,116,45,99,105,116,97,116,105,111,110,45,105,110,45,97,45,110,111,110,45,119,111,114,107,115,112,97,99,101,45,114,101,112,111,41,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,109,97,114,107,101,114,32,61,32,34,194,167,34,10,115,116,114,105,99,116,32,61,32,116,114,117,101,10,10,91,105,100,93,10,102,111,114,109,97,116,32,61,32,34,123,107,105,110,100,125,45,123,115,108,117,103,125,34,10,115,108,117,103,95,112,97,116,116,101,114,110,32,61,32,34,91,97,45,122,93,91,97,45,122,48,45,57,45,93,42,34,10,10,91,115,99,97,110,93,10,105,110,99,108,117,100,101,32,61,32,91,34,100,111,99,115,34,93,10]},
+    "spec.refs": {"bytes":[70,83,45,119,111,114,107,115,112,97,99,101,46,52,10,70,83,45,99,104,101,99,107,46,51,46,56,10]}
+  },
+  "facts": {
+    "point": "§FS-check.3.8",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict, marker §, `[id] format = \"{kind}-{slug}\"` with slug pattern `[a-z][a-z0-9-]*`, default kinds, `[scan] include = [\"docs\"]`) with no `[workspace]`; FS-note, its body to line 3, and the FS index's linked entry. Line 3's §api/FS-other is a qualified citation in every repository (§FS-workspace.1.3) whose cover ID keeps its alias (§FS-cover.2.1); with no workspace the alias names no project, so it is an unknown-alias error at its site (§FS-check.3.8, §FS-workspace.1.2.1), and `show` and `refs` of it exit 2 with the two stderr lines of §FS-workspace.8.1.3 before any scan. FS-note is cited only by its index entry, which is no use (§FS-check.4.1). JSON findings keep the global path, line, message order (§FS-errors.4.1); the version caution is site-less (§FS-check.2.1.1). Cross-reference emission leaves the unresolved citation (§FS-fmt.6.4) and the index entry is already the canonical link (§FS-fmt.6.3). FS-404 is no ID under this slug pattern, so FS-absent is the absent control.",
+    "scanned": ["docs/functional-spec/FS-note.md","docs/functional-spec/README.md"],
+    "declarations": [
+      {"id":"FS-note","kind":"FS","file":"docs/functional-spec/FS-note.md","heading":"FS-note: Stray cross-project citation in a non-workspace repo","title":"Stray cross-project citation in a non-workspace repo","body":[2,3],"anchor":"fs-note-stray-cross-project-citation-in-a-non-workspace-repo"}
+    ],
+    "sections": [],
+    "citations": [
+      {"file":"docs/functional-spec/FS-note.md","token":"§api/FS-other","enclosing":["FS-note",null],"id":"api/FS-other","section":null},
+      {"file":"docs/functional-spec/README.md","token":"§FS-note","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
+      {"severity":"error","code":"unknown-project","path":"docs/functional-spec/FS-note.md","line":3,"message":"unknown project alias api","sites":[],"token":"§api/FS-other"},
+      {"severity":"warning","code":"unused","path":"docs/functional-spec/FS-note.md","line":1,"message":"declared but never cited: FS-note (its index entry at docs/functional-spec/README.md:5 does not count as a use)","sites":[]}
+    ],
+    "refusals": {
+      "api/FS-other": {"code":"unknown-project","message":"unknown project alias `api`\nnote: workspace aliases are defined in the root grund.toml under [workspace]","beforeScan":true,"cli":{"exit":2,"stderr":"error: unknown project alias `api`\nnote: workspace aliases are defined in the root grund.toml under [workspace]\n"}}
+    },
+    "absentQuery": "FS-absent",
+    "fmt": {
+      "changes": [],
+      "writeChanges": [],
+      "written": {}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

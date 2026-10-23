@@ -299,7 +299,6 @@ const DEFERRED: &[(&str, &str, &str)] = &[];
 /// the comparison over it (§REQ-one-answer.proof.delivery.widening). The seed
 /// asks only a sampled project of some of them (§REQ-one-answer.proof.matrix.seed).
 const WIDENING: &[(&str, &str)] = &[
-    ("agent", "S4"),
     ("bare", "S4"),
     ("block", "S4"),
     ("check", "S4"),
@@ -308,10 +307,7 @@ const WIDENING: &[(&str, &str)] = &[
     ("completions", "S4"),
     ("config", "S4"),
     ("configured", "S4"),
-    ("cross", "S4"),
     ("declarations", "S4"),
-    ("declare", "S4"),
-    ("deterministic", "S4"),
     ("doc", "S4"),
     ("doccomment", "S4"),
     ("e2e", "S4"),
@@ -319,26 +315,18 @@ const WIDENING: &[(&str, &str)] = &[
     ("fetch", "S4"),
     ("fmt", "S4"),
     ("glob", "S4"),
-    ("guide", "S4"),
-    ("haskell", "S4"),
     ("id", "S4"),
     ("init", "S4"),
     ("inline", "S4"),
     ("integrations", "S4"),
-    ("json", "S4"),
     ("line", "S4"),
     ("list", "S4"),
-    ("markdown", "S4"),
-    ("marked", "S4"),
     ("marker", "S4"),
-    ("named", "S4"),
     ("non", "S4"),
     ("path", "S4"),
     ("refs", "S4"),
     ("relative", "S4"),
     ("remote", "S4"),
-    ("report", "S4"),
-    ("rust", "S4"),
     ("schema", "S4"),
     ("section", "S4"),
     ("show", "S4"),
@@ -350,7 +338,24 @@ const WIDENING: &[(&str, &str)] = &[
 /// The end-to-end families the comparison asks whole, every case under every
 /// applicable variant and surface (§REQ-one-answer.proof.matrix.family);
 /// `WIDENING` names every other family (§REQ-one-answer.proof.delivery.widening).
-const COVERED: &[&str] = &["basic", "cover", "scan", "stub"];
+const COVERED: &[&str] = &[
+    "agent",
+    "basic",
+    "cover",
+    "cross",
+    "declare",
+    "deterministic",
+    "guide",
+    "haskell",
+    "json",
+    "markdown",
+    "marked",
+    "named",
+    "report",
+    "rust",
+    "scan",
+    "stub",
+];
 
 /// Every divergence found, as `(tree, invariant, the answers that differ)`.
 fn divergences() -> Vec<(String, &'static str, String)> {

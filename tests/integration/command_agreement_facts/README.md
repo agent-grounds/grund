@@ -9,11 +9,20 @@ The loader and consumers are in the CLI test support modules. They follow
 
 **Construction status:** every case the acceptance asks has a manifest here:
 the seed's sampled first projects and every case of `basic`, `cover`, `scan` and
-`stub`. The basic tranche adds its dynamically discovered family whole
+`stub`, and of tranche 3's `agent`, `cross`, `declare`, `deterministic`, `guide`,
+`haskell`, `json`, `markdown`, `marked`, `named`, `report` and `rust`. The basic
+tranche and tranche 3 each add their dynamically
+discovered families whole
 ([§REQ-one-answer.proof.matrix.family](../../../docs/requirements/REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all)).
 `symlink` stays a row of `WIDENING`: its sampled project,
 `symlink-alias-read-once`, has facts, and its fourteen other cases do not yet.
-The twelve cases without input repositories keep input-pinned applicability
+`line`, `e2e`, `remote`, `relative` and `path` stay rows of `WIDENING`
+because tranche 3 did not author their facts.
+`external` stays a row because no point fixes the `details` of an invalid-id
+failure at a workspace root:
+[§FS-distribution.3.3.1](../../../docs/functional-spec/FS-distribution.md#331-typed-immutable-results)
+keeps every engine output field without naming them.
+The nineteen cases without input repositories keep input-pinned applicability
 manifests. A manifest that exists is validated whether or not its case is
 asked, and the matrix rejects every gap before native preparation. Query
 consumers require physical-fact partitions. The regression-envelope JSON

@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "case": "markdown-to-rust-inline-valid",
+  "inputFiles": {
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/architecture": {"directory":true},
+    "repo/docs/architecture/AR-001-router.md": {"bytes":[35,32,65,82,45,48,48,49,45,114,111,117,116,101,114,58,32,91,115,114,99,47,114,111,117,116,101,114,46,114,115,93,40,115,114,99,47,114,111,117,116,101,114,46,114,115,41,10]},
+    "repo/docs/architecture/README.md": {"bytes":[35,32,65,82,32,105,110,100,101,120,10,10,69,118,101,114,121,32,96,65,82,96,32,100,101,99,108,97,114,97,116,105,111,110,32,105,110,32,116,104,105,115,32,102,111,108,100,101,114,44,32,111,110,101,32,108,105,110,107,101,100,32,101,110,116,114,121,32,101,97,99,104,46,10,10,45,32,91,194,167,65,82,45,48,48,49,45,114,111,117,116,101,114,93,40,46,46,47,46,46,47,115,114,99,47,114,111,117,116,101,114,46,114,115,41,10]},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-001-entrypoint.md": {"bytes":[35,32,70,83,45,48,48,49,45,101,110,116,114,121,112,111,105,110,116,58,32,82,101,113,117,101,115,116,32,101,110,116,114,121,112,111,105,110,116,10,10,73,109,112,108,101,109,101,110,116,101,100,32,98,121,32,65,82,45,48,48,49,45,114,111,117,116,101,114,46,49,46,10,10,35,35,32,49,46,32,82,101,113,117,101,115,116,32,102,108,111,119,10,10,73,110,99,111,109,105,110,103,32,114,101,113,117,101,115,116,115,32,97,114,101,32,114,111,117,116,101,100,46,10,10]},
+    "repo/docs/functional-spec/README.md": {"bytes":[35,32,70,83,32,105,110,100,101,120,10,10,69,118,101,114,121,32,96,70,83,96,32,100,101,99,108,97,114,97,116,105,111,110,32,105,110,32,116,104,105,115,32,102,111,108,100,101,114,44,32,111,110,101,32,108,105,110,107,101,100,32,101,110,116,114,121,32,101,97,99,104,46,10,10,45,32,91,194,167,70,83,45,48,48,49,45,101,110,116,114,121,112,111,105,110,116,93,40,70,83,45,48,48,49,45,101,110,116,114,121,112,111,105,110,116,46,109,100,35,102,115,45,48,48,49,45,101,110,116,114,121,112,111,105,110,116,45,114,101,113,117,101,115,116,45,101,110,116,114,121,112,111,105,110,116,41,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,102,97,108,115,101,10]},
+    "repo/src": {"directory":true},
+    "repo/src/router.rs": {"bytes":[47,47,32,65,82,45,48,48,49,45,114,111,117,116,101,114,58,32,82,111,117,116,101,114,10,47,47,10,47,47,32,73,109,112,108,101,109,101,110,116,115,32,70,83,45,48,48,49,45,101,110,116,114,121,112,111,105,110,116,46,49,46,10,47,47,10,47,47,32,35,35,32,49,46,32,82,101,115,112,111,110,115,105,98,105,108,105,116,105,101,115,10,47,47,10,47,47,32,82,111,117,116,101,115,32,105,110,99,111,109,105,110,103,32,114,101,113,117,101,115,116,115,46,10,112,117,98,32,115,116,114,117,99,116,32,82,111,117,116,101,114,59,10,10]},
+    "spec.refs": {"bytes":[70,83,45,100,101,99,108,97,114,97,116,105,111,110,115,46,99,104,101,99,107,115,46,98,114,111,107,101,110,45,115,116,117,98,10]}
+  },
+  "facts": {
+    "point": "§FS-declarations.stubs.pairing.3",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `strict = false`, default kinds and scan); the AR stub docs/architecture/AR-001-router.md, whose link resolves to src/router.rs (§FS-declarations.stubs.target), where the line-comment block declares AR-001-router, stripped of `// `, with its numbered section 1, the block ending before the code line (§FS-declarations.stubs.pairing.3, §FS-show.3.1.3.1: a source home's anchors are null); FS-001-entrypoint with its section 1, both to the blank last line; both kinds' indexes with their linked entries. Unmarked prose IDs are citations in this compatibility mode (§FS-citations.recognized): FS-001-entrypoint's lead cites AR-001-router.1 and the Rust lead cites FS-001-entrypoint.1, both resolving. Every declaration is cited and the stub pairs, so the only finding is the site-less version caution (§FS-check.2.1.1). Fmt adds no marker without --marker (§FS-fmt.2.2); the index entries already link where the cross-reference writer would and the Rust file is not Markdown (§FS-fmt.6.1). FS-404 is the absent control.",
+    "scanned": ["docs/architecture/AR-001-router.md","docs/architecture/README.md","docs/functional-spec/FS-001-entrypoint.md","docs/functional-spec/README.md","src/router.rs"],
+    "declarations": [
+      {"id":"AR-001-router","kind":"AR","file":"src/router.rs","heading":"AR-001-router: Router","title":"Router","body":[2,7],"anchor":null,"strip":"// ","via":[{"file":"docs/architecture/AR-001-router.md","heading":"AR-001-router: [src/router.rs](src/router.rs)"}]},
+      {"id":"FS-001-entrypoint","kind":"FS","file":"docs/functional-spec/FS-001-entrypoint.md","heading":"FS-001-entrypoint: Request entrypoint","title":"Request entrypoint","body":[2,8],"anchor":"fs-001-entrypoint-request-entrypoint"}
+    ],
+    "sections": [
+      {"of":"AR-001-router","path":"1","heading":"1. Responsibilities","title":"Responsibilities","anchor":null,"end":7},
+      {"of":"FS-001-entrypoint","path":"1","heading":"1. Request flow","title":"Request flow","anchor":"1-request-flow","end":8}
+    ],
+    "citations": [
+      {"file":"docs/architecture/README.md","token":"§AR-001-router","enclosing":[null,null]},
+      {"file":"docs/functional-spec/FS-001-entrypoint.md","token":"AR-001-router.1","enclosing":["FS-001-entrypoint",null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-001-entrypoint","enclosing":[null,null]},
+      {"file":"src/router.rs","token":"FS-001-entrypoint.1","enclosing":["AR-001-router",null]}
+    ],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [],
+      "writeChanges": [],
+      "written": {}
+    },
+    "editor": {
+      "stubs": [{"column":3,"display_path":"docs/architecture/AR-001-router.md","line":1,"path":"<repo>/docs/architecture/AR-001-router.md","project":null,"query_id":"AR-001-router","section_separator":".","target_line":1,"target_path":"<repo>/src/router.rs","text":"AR-001-router: [src/router.rs](src/router.rs)"}]
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "case": "agent-setup-instructions-help-removed",
+  "inputFiles": {
+    "command.args": {"bytes":[104,101,108,112,32,97,103,101,110,116,45,115,101,116,117,112,45,105,110,115,116,114,117,99,116,105,111,110,115,10]},
+    "expected.exit": {"bytes":[50,10]},
+    "expected.stderr": {"bytes":[101,114,114,111,114,58,32,117,110,107,110,111,119,110,32,99,111,109,109,97,110,100,58,32,97,103,101,110,116,45,115,101,116,117,112,45,105,110,115,116,114,117,99,116,105,111,110,115,10,107,110,111,119,110,32,99,111,109,109,97,110,100,115,58,32,99,104,101,99,107,44,32,115,104,111,119,44,32,108,105,115,116,44,32,114,101,102,115,44,32,99,111,118,101,114,44,32,102,109,116,44,32,102,101,116,99,104,44,32,105,100,44,32,105,110,105,116,44,32,99,111,110,102,105,103,44,32,115,99,104,101,109,97,44,32,103,117,105,100,101,44,32,99,111,109,112,108,101,116,105,111,110,115,44,32,105,110,116,101,103,114,97,116,105,111,110,115,10]},
+    "expected.stdout": {"bytes":[10]},
+    "spec.refs": {"bytes":[70,83,45,105,110,105,116,46,53,46,55,10,70,83,45,99,108,105,46,49,46,51,10]}
+  },
+  "variants": {
+    "whole-tree": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "narrowed": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "path-argument": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "editor-overlay": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."}
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "case": "named-sections-show-nested",
+  "inputFiles": {
+    "command.args": {"bytes":[115,104,111,119,32,70,83,45,100,111,99,46,103,111,97,108,115,46,112,101,114,102,111,114,109,97,110,99,101,32,123,114,101,112,111,125,10]},
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[10]},
+    "expected.stdout": {"bytes":[35,35,35,32,103,111,97,108,115,46,112,101,114,102,111,114,109,97,110,99,101,58,32,80,101,114,102,111,114,109,97,110,99,101,10,10,84,104,105,115,32,110,101,115,116,101,100,32,110,97,109,101,100,32,115,101,99,116,105,111,110,32,105,115,32,116,104,101,32,100,101,99,105,115,105,118,101,32,116,97,114,103,101,116,46,10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/FS-doc.md": {"bytes":[35,32,70,83,45,100,111,99,58,32,68,111,99,117,109,101,110,116,10,10,68,101,99,108,97,114,97,116,105,111,110,32,108,101,97,100,46,10,10,35,35,32,103,111,97,108,115,58,32,71,111,97,108,115,10,10,71,111,97,108,115,32,108,101,97,100,46,10,10,35,35,35,32,103,111,97,108,115,46,112,101,114,102,111,114,109,97,110,99,101,58,32,80,101,114,102,111,114,109,97,110,99,101,10,10,84,104,105,115,32,110,101,115,116,101,100,32,110,97,109,101,100,32,115,101,99,116,105,111,110,32,105,115,32,116,104,101,32,100,101,99,105,115,105,118,101,32,116,97,114,103,101,116,46,10,10,35,35,35,32,103,111,97,108,115,46,51,58,32,79,114,100,101,114,101,100,32,99,104,105,108,100,10,10,84,104,105,115,32,111,114,100,101,114,101,100,32,99,104,105,108,100,32,112,114,111,118,101,115,32,96,110,97,109,101,46,110,117,109,98,101,114,96,32,114,101,109,97,105,110,115,32,108,101,103,97,108,46,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,102,97,108,115,101,10,10,91,105,100,93,10,102,111,114,109,97,116,32,61,32,34,123,107,105,110,100,125,45,123,115,108,117,103,125,34,10,110,97,109,101,100,95,115,101,99,116,105,111,110,115,32,61,32,116,114,117,101,10,10,91,115,99,97,110,93,10,105,110,99,108,117,100,101,32,61,32,91,34,100,111,99,115,34,93,10]},
+    "spec.refs": {"bytes":[70,83,45,99,111,110,102,105,103,46,51,46,50,10,70,83,45,99,111,110,102,105,103,46,51,46,51,10,70,83,45,115,104,111,119,46,50,46,50,10]}
+  },
+  "facts": {
+    "point": "§FS-show.2.2",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `strict = false`, `[id] format = \"{kind}-{slug}\"` with `named_sections = true`, default kinds, `[scan] include = [\"docs\"]`); docs/FS-doc.md declares FS-doc, its body to line 15, with the named chapter goals (to line 15) and under it the named goals.performance (to line 12, before the next same-level heading) and the ordered goals.3 (to line 15), each an explicit complete path (§FS-config.3.3, §FS-show.2.2). Nothing cites FS-doc, so it is unused at its heading; the FS home docs/functional-spec does not exist, so no index rule applies (§FS-check.3.18.7). The version caution is site-less (§FS-check.2.1.1). There is no citation, so `fmt` writes nothing. FS-404 is the absent control.",
+    "scanned": ["docs/FS-doc.md"],
+    "declarations": [
+      {"id":"FS-doc","kind":"FS","file":"docs/FS-doc.md","heading":"FS-doc: Document","title":"Document","body":[2,15],"anchor":"fs-doc-document"}
+    ],
+    "sections": [
+      {"of":"FS-doc","path":"goals","heading":"goals: Goals","title":"Goals","anchor":"goals-goals","end":15},
+      {"of":"FS-doc","path":"goals.performance","heading":"goals.performance: Performance","title":"Performance","anchor":"goalsperformance-performance","end":12,"parent":"goals"},
+      {"of":"FS-doc","path":"goals.3","heading":"goals.3: Ordered child","title":"Ordered child","anchor":"goals3-ordered-child","end":15,"parent":"goals"}
+    ],
+    "citations": [],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
+      {"severity":"warning","code":"unused","path":"docs/FS-doc.md","line":1,"message":"declared but never cited: FS-doc","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [],
+      "writeChanges": [],
+      "written": {}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "case": "rust-to-markdown-citation-valid",
+  "inputFiles": {
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-001-storage.md": {"bytes":[35,32,70,83,45,48,48,49,45,115,116,111,114,97,103,101,58,32,83,116,111,114,101,32,114,101,99,111,114,100,115,10,10,84,104,101,32,115,116,111,114,97,103,101,32,109,111,100,117,108,101,32,112,101,114,115,105,115,116,115,32,114,101,99,111,114,100,115,46,10,10,35,35,32,49,46,32,87,114,105,116,101,32,112,97,116,104,10,10,82,101,99,111,114,100,115,32,97,114,101,32,118,97,108,105,100,97,116,101,100,32,98,101,102,111,114,101,32,119,114,105,116,105,110,103,46,10,10]},
+    "repo/docs/functional-spec/README.md": {"bytes":[35,32,70,83,32,105,110,100,101,120,10,10,69,118,101,114,121,32,96,70,83,96,32,100,101,99,108,97,114,97,116,105,111,110,32,105,110,32,116,104,105,115,32,102,111,108,100,101,114,44,32,111,110,101,32,108,105,110,107,101,100,32,101,110,116,114,121,32,101,97,99,104,46,10,10,45,32,91,194,167,70,83,45,48,48,49,45,115,116,111,114,97,103,101,93,40,70,83,45,48,48,49,45,115,116,111,114,97,103,101,46,109,100,35,102,115,45,48,48,49,45,115,116,111,114,97,103,101,45,115,116,111,114,101,45,114,101,99,111,114,100,115,41,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,102,97,108,115,101,10]},
+    "repo/src": {"directory":true},
+    "repo/src/storage.rs": {"bytes":[47,47,32,84,104,101,32,115,116,111,114,97,103,101,32,105,109,112,108,101,109,101,110,116,97,116,105,111,110,32,102,111,108,108,111,119,115,32,70,83,45,48,48,49,45,115,116,111,114,97,103,101,46,49,46,10,112,117,98,32,115,116,114,117,99,116,32,83,116,111,114,101,59,10,10]},
+    "spec.refs": {"bytes":[70,83,45,99,104,101,99,107,46,49,46,49,10,65,82,45,48,48,49,45,115,99,97,110,110,101,114,46,50,10]}
+  },
+  "facts": {
+    "point": "§FS-check.1.1",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `strict = false`, default kinds and scan); FS-001-storage with its numbered section 1, body and section to the blank last line (§FS-show.2.1.2, §FS-list.3.4.1); the FS index's linked entry; and src/storage.rs, whose line comment cites FS-001-storage.1 unmarked, a citation in this compatibility mode (§FS-check.1.1, §FS-citations.recognized) that resolves to the section, in no declaration body. Every citation resolves and the declaration is cited, so the only finding is the site-less version caution (§FS-check.2.1.1). Fmt adds no marker without --marker (§FS-fmt.2.2); the index entry already links where the cross-reference writer would and the Rust file is not Markdown (§FS-fmt.6.1). FS-404 is the absent control.",
+    "scanned": ["docs/functional-spec/FS-001-storage.md","docs/functional-spec/README.md","src/storage.rs"],
+    "declarations": [
+      {"id":"FS-001-storage","kind":"FS","file":"docs/functional-spec/FS-001-storage.md","heading":"FS-001-storage: Store records","title":"Store records","body":[2,8],"anchor":"fs-001-storage-store-records"}
+    ],
+    "sections": [
+      {"of":"FS-001-storage","path":"1","heading":"1. Write path","title":"Write path","anchor":"1-write-path","end":8}
+    ],
+    "citations": [
+      {"file":"docs/functional-spec/README.md","token":"§FS-001-storage","enclosing":[null,null]},
+      {"file":"src/storage.rs","token":"FS-001-storage.1","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [],
+      "writeChanges": [],
+      "written": {}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}
