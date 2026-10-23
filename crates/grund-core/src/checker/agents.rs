@@ -335,7 +335,7 @@ fn missing_block(path: &Path, expected_version: u32, owner: Option<&str>) -> Dia
 /// section differs from the workspace and names its directory inside the
 /// template; every other section differs from `grund.toml`, and the held-stable
 /// template grows at its end (§FS-errors.3.6.1).
-fn stale_block(path: &Path, line: usize, noun: &str, owner: Option<&str>) -> Diagnostic {
+pub(super) fn stale_block(path: &Path, line: usize, noun: &str, owner: Option<&str>) -> Diagnostic {
     let message = if WORKSPACE_SECTIONS.contains(&noun) {
         let dir = owner.map(|dir| format!(" in {dir}")).unwrap_or_default();
         agents_init_message(format!(

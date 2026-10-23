@@ -179,6 +179,8 @@ mod tests_selected_check_off;
 #[cfg(test)]
 mod tests_shorthand;
 #[cfg(test)]
+mod tests_stale_section_noun;
+#[cfg(test)]
 mod tests_unverifiable_rule_scope;
 #[cfg(test)]
 mod tests_value_json_duplicates;
