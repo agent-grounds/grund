@@ -102,9 +102,19 @@ Without `--project` every loaded project is selected, and the same refusal lists
 
 ### 1.3 `--unused`
 
-`--unused` lists only declarations that no recognised citation points at — the same set `check` warns on ([§FS-check.4.1](FS-check.md#41-unused-declaration)) — **excluding `E2E` cases unless `E2E` is explicitly selected with `--kind`**. An e2e case is a proof artifact, exercised by being run, not a citation target, so it is uncited by construction and would only ever bury the actionable signal (uncited specs, decisions, goals) in a bare `--unused` query. `--unused --kind E2E` lists uncited cases only, while `--unused --kind FS,E2E` lists uncited `FS` declarations plus uncited `E2E` cases because `E2E` was explicitly requested.
+`--unused` lists only declarations that no recognised citation points at — the same set `check` warns on ([§FS-check.4.1](FS-check.md#41-unused-declaration)) — except the cases of a configured `E2E` kind, which it leaves out unless `--kind` selects them ([§FS-list.1.3.1](FS-list.md#131-a-configured-e2e-kind-is-left-out-unless-selected)). The default kinds declare no such kind, so there it has no case to leave out ([§FS-list.1.3.2](FS-list.md#132-the-default-kinds-have-no-e2e-kind)).
 
 A citation that is a kind's own index entry ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) is discounted here too, for the reason `check` discounts it and within the same bounds ([§FS-check.4.1.2](FS-check.md#412-an-index-entry-does-not-count)): a section citation or a value binding's citation in that index is not the entry and still counts ([§FS-check.4.1.2.1](FS-check.md#4121-a-section-citation-or-a-value-binding-in-the-index-is-not-the-entry)).
+
+#### 1.3.1 A configured `E2E` kind is left out unless selected
+
+Where a config declares an `E2E` case kind ([§FS-config.3.4.4.3](FS-config.md#3443-e2e-is-configured-not-a-default)), `--unused` leaves its cases out **unless `E2E` is explicitly selected with `--kind`**. An e2e case is a proof artifact, exercised by being run, not a citation target, so it is uncited by construction and would only ever bury the actionable signal (uncited specs, decisions, goals) in a bare `--unused` query. In such a config `--unused --kind E2E` lists uncited cases only, while `--unused --kind FS,E2E` lists uncited `FS` declarations plus uncited `E2E` cases because `E2E` was explicitly requested. The rule is the same under config version 1 and version 2: it follows the configured `E2E` kind, not the version that spells it.
+
+#### 1.3.2 The default kinds have no `E2E` kind
+
+The default kinds, which `grund init` writes, put e2e in the non-citable folder kind `e2e` at `tests/e2e` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)). Its files declare no IDs, so a bare `--unused` there has no e2e case to leave out and none to list. `--kind E2E` names no kind such a config has and is refused as an unknown kind, and `--kind e2e` as a kind that declares no IDs, both with exit `2` ([§FS-list.1.1](FS-list.md#11---kind)). An inventory of uncited cases therefore exists only where a config declares the `E2E` kind.
+
+A query taught for any repository, as the examples of `grund list --help` are ([§FS-cli.2.3](FS-cli.md#23-a-subcommands-help-page)), therefore works under the default kinds. It states the `E2E` rule as one for a configured `E2E` kind, and an example that composes `--unused` with `--kind` selects a kind the default kinds declare, such as `grund list --unused --kind FS`, never `--kind E2E`.
 
 ### 1.4 `--summary`
 

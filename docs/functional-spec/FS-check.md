@@ -1301,7 +1301,7 @@ For an ID under the index's own folder, the entry is a citation of the declarati
 
 #### 4.1.3 `E2E` declarations are exempt
 
-`E2E` declarations ([§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares)) are exempt: an end-to-end case is exercised by being run, not by being cited, so a `§E2E-<name>` that nothing cites is not a warning. Every other kind is subject to this rule, including Markdown and JSON value declarations; the citation inside a recognized value binding counts as a use ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)). `grund list --unused` ([§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id)) uses the same default signal and suppresses uncited `E2E` cases unless `E2E` is explicitly selected with `--kind` (including a multi-kind filter such as `--kind FS,E2E`).
+`E2E` declarations ([§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares)) are exempt: an end-to-end case is exercised by being run, not by being cited, so a `§E2E-<name>` that nothing cites is not a warning. Every other kind is subject to this rule, including Markdown and JSON value declarations; the citation inside a recognized value binding counts as a use ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)). `grund list --unused` reads the same signal, and what it does with a configured `E2E` kind's cases is [§FS-list.1.3.1](FS-list.md#131-a-configured-e2e-kind-is-left-out-unless-selected)'s.
 
 #### 4.1.4 A citation anywhere in the resolution scope counts
 

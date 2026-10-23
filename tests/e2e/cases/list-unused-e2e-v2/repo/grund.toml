@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "example"
+
+[schema.kinds.FS]
+folders = ["docs/functional-spec"]
+
+[schema.kinds.E2E]
+folders = ["e2e/cases"]
+index = false
