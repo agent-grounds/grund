@@ -89,6 +89,28 @@ config's version ([config explain](explain.md)).
 
 `grund` doesn't invent citations — that's the contributor's call. What `grund` does is make sure the ones you wrote *resolve*. With `require_grounding = true` — in `[reference]` for every place at once, or on one `[[kinds]]` row for that place alone, at a `grounding_level` from the whole file down to every `##` of it ([§FS-config.3.4.8](../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) — it also fails what carries no resolving citation; the stronger file-level "implementation changed with its spec and test, or bounded waivers" recipe is tracked separately in [§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits).
 
+## Finding a stale workspace entry
+
+A stale workspace section shows the first differing nonblank body line as
+`expected …; found …` ([§FS-check.3.5.3.1](../functional-spec/FS-check.md#3531-first-differing-workspace-entry)).
+For example, billing has been initialized, but the root block still marks it as
+not yet initialized:
+
+```text
+AGENTS.md:3: error: repo maintenance: stale grund init block: workspace members differ from the workspace (expected - [`billing`](packages/billing/AGENTS.md); found - [`billing`](packages/billing/) *(not yet initialized)*) — run `grund init` to refresh (does not affect citation validity)
+```
+
+`expected` is what the current render would write; `found` is the entry on disk.
+`<missing>` means that side has no corresponding entry. The comparison follows
+the entries' order, so a reordered list shows the first unequal pair. If the
+entries agree but section text or order differs, the detail says that instead.
+Run `grund init` in the directory the finding names; with no directory hint,
+run it in the project where you ran `check`. A member's finding from the root
+names that member's directory, such as `packages/billing`.
+
+Try the [workspace walkthrough](../../examples/workspace/README.md#finding-and-refreshing-a-stale-entry)
+to make one entry stale and refresh it.
+
 ## The report
 
 With `[id] named_sections = true`, a marked citation of a name under a number

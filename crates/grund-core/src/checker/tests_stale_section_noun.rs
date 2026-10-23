@@ -23,14 +23,15 @@ const NOUNS: [&str; 13] = [
 ];
 
 /// §FS-errors.3.6.1: the text a stale `noun` is reported with, for the run's own
-/// block (`owner` is `None`) or another project's.
+/// block (`owner` is `None`) or another project's. With no section bytes a
+/// workspace section carries the fallback detail (§FS-check.3.5.3.1).
 fn expected(noun: &str, owner: Option<&str>) -> String {
     let tail = "(does not affect citation validity)";
     if matches!(noun, "project namespaces" | "workspace members") {
         let dir = owner.map(|dir| format!(" in {dir}")).unwrap_or_default();
         format!(
             "repo maintenance: stale grund init block: the {noun} section differs from the \
-             workspace — run `grund init`{dir} to refresh {tail}"
+             workspace (section text or order differs) — run `grund init`{dir} to refresh {tail}"
         )
     } else {
         let run_it = owner
@@ -49,7 +50,7 @@ fn expected(noun: &str, owner: Option<&str>) -> String {
 fn every_stale_noun_round_trips_through_the_section_differs_templates() {
     for owner in [None, Some("packages/billing")] {
         for noun in NOUNS {
-            let finding = stale_block(Path::new("AGENTS.md"), 3, noun, owner);
+            let finding = stale_block(Path::new("AGENTS.md"), 3, noun, owner, None);
             assert_eq!(finding.message, expected(noun, owner), "{noun} / {owner:?}");
             assert_eq!(
                 stale_section_noun(&finding.message),
