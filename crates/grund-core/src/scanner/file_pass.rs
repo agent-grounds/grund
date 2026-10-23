@@ -338,7 +338,7 @@ pub(super) fn scan_file_text(
                 source: DeclarationSource::Text,
                 value_valid: None,
             });
-            // §FS-citations.recognized.title-lines: it declares, so its title is read below.
+            // §FS-declarations.checks.declaration-near-miss.5: its title is read below.
             declared = true;
         }
         // §AR-scanner.2.3: a declaration's heading is read for its citations below,

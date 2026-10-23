@@ -40,7 +40,7 @@ pub(super) struct CitationLine<'a> {
     /// whose lines are never headings (§FS-check.1.1.5.1).
     pub(super) may_be_heading: bool,
     /// The ID this line declares where it is a declaration's heading, a near miss's
-    /// included. A citation of it here is none (§FS-citations.recognized.title-lines).
+    /// included. A citation of it here is none (§AR-scanner.2.3).
     pub(super) declares: Option<&'a Id>,
     /// The bytes on this physical source line that the scanner's shared block
     /// walk recognizes as comment content, and the block they belong to.
