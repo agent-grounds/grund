@@ -126,9 +126,49 @@ fn render_migrate_report(
     if report.wrote {
         render_migrate_advice(report, out)?;
     } else if report.write {
-        writeln!(out, "not written: {} is unchanged", report.config)?;
+        render_migrate_refused(report, out)?;
     }
     Ok(())
+}
+
+/// §FS-config-migrate.2.2: close a refused write with each blocking cause and
+/// its own remedy, counting refusal blocks and listed comment ranges.
+fn render_migrate_refused(
+    report: &MigrateReport,
+    out: &mut impl std::io::Write,
+) -> std::io::Result<()> {
+    let mut causes = Vec::new();
+    match report.refusals.len() {
+        0 => {}
+        1 => causes.push("1 refusal (follow the repairs above)".to_string()),
+        count => causes.push(format!("{count} refusals (follow the repairs above)")),
+    }
+    if !report.drop_comments {
+        match report.comments.len() {
+            0 => {}
+            1 => causes.push(
+                "1 comment has no single key to follow (move it, or re-run with --drop-comments)"
+                    .to_string(),
+            ),
+            count => causes.push(format!(
+                "{count} comments have no single key to follow (move them, or re-run with --drop-comments)"
+            )),
+        }
+    }
+    if let Some(GateResult::Differs { gate, .. }) = &report.gates {
+        causes.push(match gate {
+            Gate::Records => "the records differ (inspect the comparison above)".to_string(),
+            Gate::Report => {
+                "grund check --suggestions differs (inspect the comparison above)".to_string()
+            }
+        });
+    }
+    writeln!(
+        out,
+        "not written: {}; {} is unchanged",
+        causes.join("; "),
+        report.config
+    )
 }
 
 /// §FS-config-migrate.2.2: the complete report's lines, in order, never wrapped.
@@ -137,6 +177,7 @@ fn render_migrate_complete(
     out: &mut impl std::io::Write,
 ) -> std::io::Result<()> {
     let config = &report.config;
+    let refused_write = report.write && report.refused();
     if report.write {
         writeln!(out, "{config}: version 1 → 2, --write")?;
     } else {
@@ -178,8 +219,10 @@ fn render_migrate_complete(
                 mapped.line, mapped.key, mapped.spelling
             )?;
         }
-        for written in &report.written {
-            writeln!(out, "written: {written}: version 1's default, written out")?;
+        if !refused_write {
+            for written in &report.written {
+                writeln!(out, "written: {written}: version 1's default, written out")?;
+            }
         }
         render_migrate_members(report, out)?;
         match &report.gates {
@@ -200,7 +243,9 @@ fn render_migrate_complete(
             }
             None => {}
         }
-        render_migrate_project_map(report, out)?;
+        if !refused_write {
+            render_migrate_project_map(report, out)?;
+        }
     }
     Ok(())
 }
