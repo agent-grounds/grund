@@ -76,10 +76,11 @@ fn project_namespaces_golden_contract() {
 fn e2e_cases_match_expected_reports() {
     let started = Instant::now();
     let manifest_dir = repo_root();
-    let outcomes = discover_e2e_cases(&manifest_dir)
-        .iter()
-        .map(|case| run_case(&manifest_dir, case, E2e))
-        .collect::<Vec<_>>();
+    // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
+    // on one worker, outcomes in corpus order (§AR-workspace.9.3).
+    let outcomes = ordered_pool::in_order(&discover_e2e_cases(&manifest_dir), |case| {
+        run_case(&manifest_dir, case, E2e)
+    });
     let compared = outcomes
         .iter()
         .filter(|outcome| matches!(outcome, CaseOutcome::Ran | CaseOutcome::Failed { .. }))
@@ -87,7 +88,8 @@ fn e2e_cases_match_expected_reports() {
     // §AR-ci.requirements.5.1: past libtest's capture, the seconds this sweep costs.
     let _ = writeln!(
         std::io::stderr(),
-        "gate time: e2e cases {compared} case(s) on 1 worker in {:.1}s",
+        "gate time: e2e cases {compared} case(s) on {} worker(s) in {:.1}s",
+        ordered_pool::workers(),
         started.elapsed().as_secs_f64()
     );
     assert_every_case_passed("e2e cases", &outcomes);
