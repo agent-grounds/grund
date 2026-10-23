@@ -134,6 +134,7 @@ fn agents_init_messages() -> Vec<String> {
 /// classification in front, and the `(does not affect citation validity)` clause
 /// behind.
 #[test]
+#[ignore = "red until #933 rewords the stale template and its goldens; implement removes this"]
 fn the_agents_init_messages_are_the_five_final_templates() {
     assert_eq!(
         agents_init_messages(),
@@ -146,7 +147,7 @@ fn the_agents_init_messages_are_the_five_final_templates() {
                 "repo maintenance: unsupported grund init block v999 — this grund supports v{} (does not affect citation validity)",
                 init_supported_max()
             ),
-            "repo maintenance: stale grund init block: clickable citations differ from grund.toml — run `grund init` to refresh (does not affect citation validity)"
+            "repo maintenance: stale grund init block: the clickable citations section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)"
                 .to_string(),
             "repo maintenance: missing grund init block v39 — run `grund init` to install it (does not affect citation validity)"
                 .to_string(),
