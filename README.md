@@ -425,7 +425,7 @@ for the affected clients.
 | [`grund.toml` reference](docs/user-facing/configuration.md) | every key of both config versions, and the JSON Schema for your editor |
 | [Config explain](docs/user-facing/explain.md) | what a key or a check code means, from the grund you run, in your config's version — [runnable example](examples/config-explain/) |
 | [Structure and IDs](docs/user-facing/structure.md) | kinds, ID schemes, citation syntax, inline declarations |
-| [Querying grund](docs/user-facing/querying.md) | selectors, batch reads, `refs`, `cover` |
+| [Querying grund](docs/user-facing/querying.md) | selectors, batch reads, `refs`, `cover` — [runnable example](examples/refs-unused/) of `refs` on what nothing cites |
 | [Reviewing code](docs/user-facing/reviewing.md) | a citation's blast radius, diff recipes |
 | [Chapter rules](docs/user-facing/rules.md) | checked rules in controlled English — [runnable example](examples/rules/) |
 | [Sources](docs/user-facing/sources.md) | which files a version-2 project reads, and which comments declare — [runnable example](examples/sources/) |

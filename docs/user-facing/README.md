@@ -27,7 +27,7 @@ command's own `--help` page links the guide and example that cover it
 | [`grund init` repository shapes](init-repo-shapes.md) | [`examples/scheme-*`](../../examples/) |
 | [Editor support via LSP](lsp.md) | — |
 | [Node Promise API](node-api.md) | [`examples/node-api`](../../examples/node-api/) |
-| [Querying grund](querying.md) | — |
+| [Querying grund](querying.md) | [`examples/refs-unused`](../../examples/refs-unused/) |
 | [Terminal feedback with watch](watch.md) | — |
 | [Writing chapter rules](rules.md) | [`examples/rules`](../../examples/rules/) |
 | [Sources: which files grund reads](sources.md) | [`examples/sources`](../../examples/sources/) |

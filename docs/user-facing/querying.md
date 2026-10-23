@@ -317,8 +317,33 @@ note: FS-api-audit is neither declared nor cited in scan path `src` — run `gru
 Here `not cited` is stdout and the note is stderr. The note describes only the
 selected scan; `grund list` can still list the declaration in `docs/`.
 From `src/`, `grund refs FS-api-audit .` names `.` in that same note.
-With no path, `grund refs FS-api-audit` is silent
-([§FS-refs.2.1](../functional-spec/FS-refs.md#21-an-id-with-no-citations)).
+
+With no path the question is about the whole project, where `FS-api-audit` is
+declared, so the note points at the one call that lists every declaration
+nothing cites ([§FS-refs.2.1.1](../functional-spec/FS-refs.md#211-a-declared-id-nothing-cites-points-at-list---unused)):
+
+```console
+$ grund refs FS-api-audit
+note: FS-api-audit is declared but nothing cites it; `grund list --unused` lists every such declaration
+```
+
+stdout stays empty, `--total` still prints `not cited`, and the exit is `0`, so a
+script that reads the answer sees no change. If you are checking IDs one at a
+time, the first empty answer tells you that `grund list --unused` answers all of
+them at once. The note names the declaration as the catalog spells it, whatever
+shorthand or digits you typed. An alias-qualified workspace query names its
+project, `grund list --project <alias> --unused`, and an `E2E` case adds
+`--kind E2E`, because `--unused` leaves cases out unless that kind is selected
+([§FS-list.1.3](../functional-spec/FS-list.md#13---unused)).
+
+The note is given only where that listing answers the question you asked. It is
+withheld under an explicit path, `.` included, which asks about part of the
+tree; for a section, inline or `--section`, since `--unused` judges whole
+declarations (a bare `--descendants` changes nothing and keeps the note); for an
+ID whose only citation is its kind's index entry, which `refs` lists as
+`(index entry)` while `--unused` lists the ID; and when the scan is incomplete,
+which exits `2`. [`examples/refs-unused`](../../examples/refs-unused/) runs both
+calls.
 
 [Reviewing code](reviewing.md) walks through using these before a move,
 rename or delete.
