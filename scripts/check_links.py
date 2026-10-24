@@ -171,8 +171,8 @@ def check_changed(
     base = diff_base(repo_root, link_base)
     if base is None:
         print(
-            "no diff base: LINK_BASE is unset or unresolvable and HEAD has no merge base with "
-            "origin/main, so no external URL is checked; the scheduled sweep checks them all"
+            "no diff base: LINK_BASE names no commit, or is unset and HEAD has no merge base "
+            "with origin/main, so no external URL is checked; the scheduled sweep checks them all"
         )
         return 0
     changed = changed_lines(repo_root, base, inputs)
