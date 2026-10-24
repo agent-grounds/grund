@@ -1,0 +1,8 @@
+openspec/specs/notices/spec.md:13: error: section not found: SPEC-loans.requirements.borrow-a-book; write <§> before it to show the shape without citing it
+src/larkspur/loans.py:31: error: section not found: SPEC-loans.requirements.borrow-a-book; write <§> before it to show the shape without citing it
+src/larkspur/loans.py:44: error: unknown reference DELTA-add-loan-holds-loans
+src/larkspur/loans.py:54: error: unknown reference DELTA-add-loan-holds-loans
+tests/test_loans.py:11: error: section not found: SPEC-loans.requirements.borrow-a-book.copy-on-shelf; write <§> before it to show the shape without citing it
+tests/test_loans.py:19: error: section not found: SPEC-loans.requirements.borrow-a-book.copy-on-loan; write <§> before it to show the shape without citing it
+tests/test_loans.py:25: error: unknown reference DELTA-add-loan-holds-loans
+tests/test_loans.py:32: error: unknown reference DELTA-add-loan-holds-loans
