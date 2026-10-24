@@ -74,6 +74,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertRegex(self.suites, r"(?m)^permissions:\n  contents: read\n\n")
         self.assertNotRegex(self.suites, r"(?m)^ +permissions:")
 
+    @unittest.skip("red until #978 macos-suites.yml runs every shard and selection; implement removes this")
     def test_one_job_runs_every_suite_once(self):
         suites = [i for i in instances(self.suites) if i["runs_on"] == "macos-latest"]
         self.assertEqual([i["name"] for i in suites], ["suites (macos-latest)"])

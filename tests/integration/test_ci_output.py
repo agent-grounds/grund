@@ -20,6 +20,8 @@ import textwrap
 import unittest
 from pathlib import Path
 
+from test_ci_language_jobs import SHARDS
+
 REPO = Path(__file__).resolve().parents[2]
 WRAPPER = REPO / "scripts" / "run_cargo_suite.py"
 CI = REPO / ".github" / "workflows" / "ci.yml"
@@ -383,13 +385,22 @@ def hook_entry(hook_id):
 class CiStepsGoThroughTheQuietFormsTests(unittest.TestCase):
     """§AR-ci.requirements.5.2 and §AR-ci.requirements.5.4, read from the files CI runs."""
 
+    @unittest.skip("red until #978 ci.yml runs the cargo suite's shards; implement removes this")
     def test_the_cargo_suite_steps_and_the_hook_call_the_wrapper(self):
         runs = dict(ci_steps())
         for step in ("native watch contract", "cargo test"):
             with self.subTest(step=step):
                 self.assertTrue(runs[step].startswith(WRAPPER_COMMAND), runs[step])
+            for name, run in ci_steps():
+                if name == step:
+                    self.assertTrue(run.startswith(WRAPPER_COMMAND), run)
         self.assertTrue(hook_entry("cargo-test").startswith(WRAPPER_COMMAND), hook_entry("cargo-test"))
-        self.assertIn(hook_entry("cargo-test"), runs.values(), "the hook and CI spell one command")
+        # §AR-ci.13.7: CI runs the hook's command as its shards, `--shard <k>/<n>` before it.
+        everything = [run for _, run in ci_steps()]
+        for index in range(1, SHARDS + 1):
+            sharded = hook_entry("cargo-test").replace(
+                WRAPPER_COMMAND, f"{WRAPPER_COMMAND}--shard {index}/{SHARDS} ", 1)
+            self.assertIn(sharded, everything, "the hook and CI spell one command")
 
     def test_no_ci_step_runs_cargo_test_bare(self):
         text = CI.read_text(encoding="utf-8")

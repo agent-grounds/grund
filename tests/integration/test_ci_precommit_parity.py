@@ -26,6 +26,7 @@ import re
 import unittest
 from pathlib import Path
 
+from test_ci_language_jobs import CARGO_SUITE, SHARDS, shard_command
 from test_release_workflow import jobs, steps
 
 
@@ -37,8 +38,8 @@ AR_CI = REPO_ROOT / "docs" / "architecture" / "AR-ci.md"
 PYTHON_GATE = REPO_ROOT / "scripts" / "run_python_gate.py"
 RUST_HOOKS = ("cargo-fmt-check", "cargo-build", "cargo-test")
 GATE = "python scripts/run_python_gate.py"
-# §AR-ci.3.4.3: CI runs the hook's command as these two selections, which together are the hook.
-SELECTIONS = ("--only-node-acceptance", "--without-node-acceptance")
+# §AR-ci.3.4.3: CI runs the hook's command as these three selections, which together are the hook.
+SELECTIONS = ("--only-node-acceptance", "--only-python-acceptance", "--without-acceptance")
 FILE_LIST_STAGES = ("pre-commit", "manual")
 ENV_PREFIX = "env RUSTFLAGS=-Dwarnings "
 # The release helper writes the release section (§FS-distribution.4.6); it gates no change.
@@ -96,7 +97,14 @@ def _run_elsewhere(hook, ci_runs):
     command = hook["entry"].removeprefix(ENV_PREFIX)
     if command == GATE:
         return all(f"{GATE} {selection}" in ci_runs for selection in SELECTIONS)
-    return command in ci_runs
+    return all(form in ci_runs for form in ci_forms(command))
+
+
+def ci_forms(command):
+    """What CI runs for a hook's command: the cargo suite as its shards (§AR-ci.13.7)."""
+    if command == CARGO_SUITE:
+        return [shard_command(k, SHARDS) for k in range(1, SHARDS + 1)]
+    return [command]
 
 
 def _section_lead(text, heading):
@@ -148,11 +156,13 @@ class CiPreCommitParityTests(unittest.TestCase):
                 self.assertTrue(installs, f"ci.yml pins no `cargo install {binary} --version`")
                 self.assertLess(installs[0], gate, f"{binary} is installed after the pre-commit step")
 
+    @unittest.skip("red until #978 ci.yml runs the cargo shards and three selections; implement removes this")
     def test_rust_hooks_spell_the_commands_ci_runs(self):
         for hook_id in RUST_HOOKS:
             with self.subTest(hook=hook_id):
                 command = self.by_id[hook_id]["entry"].removeprefix(ENV_PREFIX)
-                self.assertIn(command, self.ci_runs, f"{hook_id} runs a command no CI step runs")
+                for form in ci_forms(command):
+                    self.assertIn(form, self.ci_runs, f"{hook_id} runs a command no CI step runs")
 
     def test_ar_ci_3_spells_the_commands_the_rust_hooks_run(self):
         # §AR-ci.3 is where a reader looks up what the gate runs; a command it
@@ -176,13 +186,14 @@ class CiPreCommitParityTests(unittest.TestCase):
                          "a job other than the benchmark build and shards overrides RUSTFLAGS,"
                          " or theirs is not empty")
 
+    @unittest.skip("red until #978 ci.yml runs the cargo shards and three selections; implement removes this")
     def test_the_pre_commit_step_skips_exactly_the_hooks_another_job_runs(self):
         # §AR-ci.13.3: a hook no job runs is never skipped, and one a job runs is not run twice.
         others = [run for run in self.ci_runs if run != "pre-commit run --all-files"]
         expected = {hook["id"] for hook in self.hooks if _run_elsewhere(hook, others)}
         self.assertLessEqual({"cargo-test", "python-test"}, expected,
-                             "no job beside pre-commit runs the Rust suite, or the Python gate's two "
-                             "selections")
+                             "no job beside pre-commit runs the Rust suite's shards, or the Python "
+                             "gate's three selections")
         self.assertEqual(sorted(expected), sorted(_skipped(self.ci_text)),
                          "the pre-commit step's SKIP is not the set of hooks another job runs")
 
@@ -237,7 +248,7 @@ class CiPreCommitParityTests(unittest.TestCase):
         """Shared setup must reach this test home (§AR-ci.1.2, §FS-cochange-recipe.examples)."""
         home = Path(__file__).resolve().parent.relative_to(REPO_ROOT).as_posix()
         self.assertEqual(GATE, hook)
-        # §AR-ci.3.4.3: CI runs the hook's command as its two selections and never whole.
+        # §AR-ci.3.4.3: CI runs the hook's command as its three selections and never whole.
         ci = sorted({run for run in ci_runs if "run_python_gate.py" in run})
         self.assertEqual([f"{hook} {selection}" for selection in SELECTIONS], ci)
         tree = ast.parse(wrapper)
@@ -265,6 +276,7 @@ class CiPreCommitParityTests(unittest.TestCase):
         self.assertEqual("ROOT", keywords.get("cwd"))
         self.assertEqual("environment", keywords.get("env"))
 
+    @unittest.skip("red until #978 ci.yml runs the cargo shards and three selections; implement removes this")
     def test_python_tests_are_discovered_from_this_home_on_both_sides(self):
         self.assert_python_discovery_parity(self.by_id["python-test"]["entry"], self.ci_runs,
                                             PYTHON_GATE.read_text(encoding="utf-8"))
