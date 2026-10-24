@@ -1,0 +1,108 @@
+# A crate that designs its features in Rust-style RFCs, held to a grund schema.
+#
+# rfcs/ is the RFC repository kept in-tree: rfcs/0000-template.md is the
+# template, and rfcs/text/NNNN-feature-name.md is one accepted RFC per file,
+# NNNN being the number of the pull request that proposed it.
+grund_config_version = 2
+project_name = "skerry"
+
+# An RFC is declared as `RFC-<number>-<slug>`: the file
+# rfcs/text/0007-retry-policy.md declares RFC-0007-retry-policy.
+[schema]
+id_format = "{kind}-{number}-{slug}"
+
+[schema.sources]
+languages = ["markdown", "rust"]
+
+# One RFC per file. The book's summary is generated from text/, so the kind
+# keeps no hand-written index.
+[schema.kinds.RFC]
+folders = ["rfcs/text"]
+index = false
+closed = "must"
+
+# The template's nine sections, in the template's order, each with its title.
+[schema.kinds.RFC.fields.summary]
+title = "Summary"
+presence = "must"
+position = "first"
+
+[schema.kinds.RFC.fields.motivation]
+title = "Motivation"
+presence = "must"
+after = "summary"
+
+[schema.kinds.RFC.fields.guide-level-explanation]
+title = "Guide-level explanation"
+presence = "must"
+after = "motivation"
+
+[schema.kinds.RFC.fields.reference-level-explanation]
+title = "Reference-level explanation"
+presence = "must"
+after = "guide-level-explanation"
+
+[schema.kinds.RFC.fields.drawbacks]
+title = "Drawbacks"
+presence = "must"
+after = "reference-level-explanation"
+
+[schema.kinds.RFC.fields.rationale-and-alternatives]
+title = "Rationale and alternatives"
+presence = "must"
+after = "drawbacks"
+
+[schema.kinds.RFC.fields.prior-art]
+title = "Prior art"
+presence = "must"
+after = "rationale-and-alternatives"
+
+[schema.kinds.RFC.fields.unresolved-questions]
+title = "Unresolved questions"
+presence = "must"
+after = "prior-art"
+
+[schema.kinds.RFC.fields.future-possibilities]
+title = "Future possibilities"
+presence = "must"
+after = "unresolved-questions"
+
+# Not in the template: the note an amended RFC carries, as accepted RFCs do.
+[schema.kinds.RFC.fields.amendments]
+title = "Amendments"
+after = "future-possibilities"
+
+# The crate and its tests declare nothing; they cite the RFCs they implement.
+[schema.kinds.crate]
+folders = ["src"]
+citable = false
+
+[schema.kinds.test]
+folders = ["tests"]
+citable = false
+
+[rules.citations.crate]
+must = ["RFC"]
+
+[rules.citations.crate.grounding]
+must = "file"
+
+[rules.citations.test]
+must = ["RFC"]
+
+[rules.citations.test.grounding]
+must = "file"
+
+# Write grund's agent guidance into the root AGENTS.md: the book reads every
+# Markdown file in rfcs/text/ as an RFC.
+[presentation]
+rules = "root"
+
+[presentation.kinds.RFC]
+title = "Accepted RFCs: one design per file, numbered by its pull request"
+
+[presentation.kinds.crate]
+title = "The crate: implements the reference-level explanations"
+
+[presentation.kinds.test]
+title = "Tests: prove the reference-level explanations"
