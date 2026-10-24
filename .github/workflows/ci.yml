@@ -344,6 +344,17 @@ jobs:
           cargo install lychee --version 0.23.0 --locked --quiet
           cargo install fissile --version 0.8.3 --locked --quiet
 
+      # §AR-ci.3.1.4: a dispatch has no event base, and a fork's origin/main may be weeks
+      # stale, so measure from the merge base with the upstream's main.
+      - name: Resolve the link gate's base for a dispatch
+        id: dispatch_base
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          upstream=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.parent.clone_url // .clone_url' || true)
+          echo "base=$(python scripts/dispatch_link_base.py "$upstream")" >> "$GITHUB_OUTPUT"
+
       - name: pre-commit
         # lychee checks upwards of three thousand links, a large share of them
         # to github.com. Unauthenticated, they share a low per-IP budget with
@@ -361,8 +372,9 @@ jobs:
           # the hook's `gh api` re-check of a github.com 5xx.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # §AR-ci.3.1.4: the lychee hook requests only the external URLs on lines changed
-          # since this base, the one the commit-messages job reads; a push to main sets none.
-          LINK_BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          # since this base, the one the commit-messages job reads, or a dispatch's upstream
+          # merge base; a push to main sets none.
+          LINK_BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || steps.dispatch_base.outputs.base }}
           # §AR-ci.13.3: exactly the hooks whose command the Rust, Python and Node jobs run.
           SKIP: cargo-fmt-check,cargo-build,cargo-test,python-test
         run: pre-commit run --all-files

@@ -8,7 +8,6 @@ on a fork's dispatch. Real lychee and a loopback host that counts requests: no
 real host is reached.
 """
 
-import os
 import re
 import subprocess
 import sys
@@ -21,8 +20,6 @@ from link_gate_fixture import LYCHEE, ROOT, LinkFixture, isolated_env  # noqa: E
 
 
 DISPATCH_BASE = ROOT / "scripts" / "dispatch_link_base.py"
-RED = os.environ.get("GRUND_981_RUN_RED") == "1"
-RED_REASON = "red until #981 gives a dispatch the upstream merge base; implement removes this"
 
 
 def git(cwd: Path, *args: str) -> str:
@@ -97,7 +94,6 @@ class DispatchBaseTests(unittest.TestCase):
         self.assertNotEqual(fork.upstream_main, fork.stale_main)
         self.assertEqual(fork.stale_main, git(fork.gate.root, "merge-base", "HEAD", "origin/main"))
 
-    @unittest.skipUnless(RED, RED_REASON)
     def test_dispatch_on_a_fork_resolves_the_upstream_merge_base(self):
         fork = ForkDispatch(self)
 
@@ -109,7 +105,6 @@ class DispatchBaseTests(unittest.TestCase):
             f" not the fork's stale main {fork.stale_main[:10]}; LINK_BASE was {base!r}",
         )
 
-    @unittest.skipUnless(RED, RED_REASON)
     def test_dispatch_on_a_fork_requests_only_the_url_the_change_added(self):
         fork = ForkDispatch(self)
 
@@ -118,7 +113,6 @@ class DispatchBaseTests(unittest.TestCase):
         self.assertEqual(0, code, output)
         self.assertEqual(["/change-added"], sorted(fork.gate.requested()), output)
 
-    @unittest.skipUnless(RED, RED_REASON)
     def test_unresolvable_upstream_requests_no_external_url_and_says_so(self):
         fork = ForkDispatch(self)
         missing = fork.upstream.parent / "no-such-upstream.git"
@@ -129,7 +123,6 @@ class DispatchBaseTests(unittest.TestCase):
         self.assertEqual(0, code, output)
         self.assertEqual(1, len(re.findall(r"(?m)^no diff base:", output)), output)
 
-    @unittest.skipUnless(RED, RED_REASON)
     def test_a_link_base_naming_no_commit_is_no_diff_base(self):
         """A set LINK_BASE that resolves to nothing never falls back to `origin/main`."""
         fork = ForkDispatch(self)
@@ -144,7 +137,6 @@ class DispatchBaseTests(unittest.TestCase):
 class CiGivesADispatchItsBaseTests(unittest.TestCase):
     """§AR-ci.3.1.4 — ci.yml resolves a dispatch's base and feeds it into LINK_BASE."""
 
-    @unittest.skipUnless(RED, RED_REASON)
     def test_pre_commit_feeds_the_dispatch_base_into_link_base(self):
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         job = re.search(r"(?ms)^  pre-commit:\n(?P<body>.*?)(?=^  [a-z][a-z0-9-]*:\n)", workflow)

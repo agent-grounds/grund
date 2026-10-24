@@ -20,12 +20,14 @@ def _git(repo_root: Path, *args: str) -> subprocess.CompletedProcess[str]:
 
 
 def diff_base(repo_root: Path, link_base: str | None) -> str | None:
-    """The one diff base every invocation reads: the commit `LINK_BASE` names, else the merge
-    base of `HEAD` with `origin/main`, else None (§AR-ci.3.1.4)."""
+    """The one diff base every invocation reads: the commit `LINK_BASE` names, else, when it is
+    unset or empty, the merge base of `HEAD` with `origin/main`, else None. A set `LINK_BASE`
+    that names no commit is None, never the `origin/main` fallback (§AR-ci.3.1.4)."""
     if link_base:
         resolved = _git(repo_root, "rev-parse", "--verify", "--quiet", f"{link_base}^{{commit}}")
         if resolved.returncode == 0 and resolved.stdout.strip():
             return resolved.stdout.strip()
+        return None
     merge_base = _git(repo_root, "merge-base", "HEAD", "origin/main")
     if merge_base.returncode == 0 and merge_base.stdout.strip():
         return merge_base.stdout.strip()
