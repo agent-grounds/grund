@@ -20,6 +20,35 @@ SCRATCH.mkdir(parents=True, exist_ok=True)
 ADAPTERS = ("rust", "python")  # Node adds an adapter here when #469 lands.
 
 
+def python_target():
+    """The Cargo target every Python acceptance build shares (§AR-ci.3.4.5).
+
+    `GRUND_PYTHON_TARGET` when given, else a directory outside the checkout kept between
+    runs, so the third-party dependency tree is compiled once rather than on every install.
+    """
+    given = os.environ.get("GRUND_PYTHON_TARGET")
+    return Path(given).expanduser() if given else Path.home() / "ag/tmp/grund-python-target"
+
+
+def prune_python_target(target):
+    """Drop the workspace crates' artifacts from the shared target (§AR-ci.3.4.5).
+
+    Each clean checkout and sdist compiles them from a fresh path, so they would pile up
+    in a target kept between runs; the dependencies' artifacts, the point of sharing it,
+    stay. A prune that fails leaves the target as it is: it is a cache, never a verdict.
+    """
+    try:
+        metadata = json.loads(subprocess.run(
+            ["cargo", "metadata", "--no-deps", "--format-version", "1", "--locked"],
+            cwd=REPO, capture_output=True, text=True).stdout)
+        packages = [arg for package in metadata["packages"] for arg in ("-p", package["name"])]
+    except (OSError, ValueError, KeyError, TypeError):
+        return
+    if packages:
+        subprocess.run(["cargo", "clean", "--locked", "--quiet", "--target-dir", str(target),
+                        "--profile", "dev", *packages], cwd=REPO, capture_output=True)
+
+
 def temporary():
     return tempfile.TemporaryDirectory(prefix="grund-python-contract-", dir=SCRATCH)
 

@@ -102,14 +102,18 @@ jobs:
       - name: Prepare same-source binding oracle
         run: python scripts/prepare_binding_oracle.py
 
-      # §AR-ci.3.4.3: every Python test but the Node acceptance, which a job of its own runs.
+      # §AR-ci.14.1: the three selections of the Python gate, one after another (§AR-ci.3.4.3).
       - name: python tests
         # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
-        run: python scripts/run_python_gate.py --without-node-acceptance
+        run: python scripts/run_python_gate.py --without-acceptance
 
       # §AR-ci.3.4.3: the Node acceptance alone, the longest test of the Python gate.
       - name: node acceptance
         run: python scripts/run_python_gate.py --only-node-acceptance
+
+      # §AR-ci.3.4.3: the Python acceptance alone, every build of it in the shared target.
+      - name: python acceptance
+        run: python scripts/run_python_gate.py --only-python-acceptance
 
       - name: cargo build
         run: cargo build --quiet --workspace --all-targets --locked
@@ -152,8 +156,18 @@ jobs:
       # `cargo test` runs the full e2e suite plus the core and CLI unit tests.
 
       # §AR-ci.requirements.5.2: failures, a check-in each 5% and one summary, no line per test.
-      - name: cargo test
-        run: python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count
+      # §AR-ci.14.1: every shard ci.yml runs, in turn; the first builds, the rest reuse it.
+      - name: cargo test 1/4
+        run: python scripts/run_cargo_suite.py --shard 1/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+      - name: cargo test 2/4
+        run: python scripts/run_cargo_suite.py --shard 2/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+      - name: cargo test 3/4
+        run: python scripts/run_cargo_suite.py --shard 3/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+      - name: cargo test 4/4
+        run: python scripts/run_cargo_suite.py --shard 4/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
 
       # §AR-ci.14.1: only the scheduled call on main saves, after the work and without what every
       # run rebuilds from its own sources.
