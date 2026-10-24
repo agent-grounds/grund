@@ -307,7 +307,8 @@ Exit codes are unchanged ([§FS-refs.4](FS-refs.md#4-exit-codes)). `--total` ren
   finding object on stderr, with `code` `invalid-id` or `ambiguous` and
   `sites:null`, and emits no hint ([§FS-errors.5](FS-errors.md#5-json-format)).
   It is also exit `1` when the ID has more than one home or its section path
-  is claimed by more than one heading: `refs` refuses both as `show` does
+  is claimed by more than one heading — a stub that cannot be paired is no home
+  here ([§FS-refs.4.1.1](FS-refs.md#411-a-broken-stub-beside-a-real-home-is-set-aside-with-a-warning)): `refs` refuses both as `show` does
   ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id),
   [§FS-show.2.2.2](FS-show.md#222-ambiguous-section)), and under JSON that
   object names its `sites` ([§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal)).
@@ -379,6 +380,32 @@ however many headings of it the target holds
 so its stub refuses nothing either. The `broken stub:` refusals belong to `show`,
 which needs the target's body ([§FS-show.2.3.4](FS-show.md#234-broken-stub));
 `refs` reads no body.
+
+#### 4.1.1 A broken stub beside a real home is set aside, with a warning
+
+A stub that cannot be paired refuses nothing beside a real home either. Where the
+ID is also declared somewhere the stub does not point — the inline declaration a
+file move left behind its stale stub — the broken stub does not count towards the
+"more than one home" refusal of [§FS-refs.4](FS-refs.md#4-exit-codes): `refs` lists every citation
+of the ID and exits `0`, with the stdout, `--summary` and `--total` the repaired
+tree gives. Every one of those sites cites the ID whichever home is real, and
+`refs` reads no body to choose between them. What still refuses is what refused
+before among the homes that remain: two real declarations, or a target that
+declares the ID twice ([§FS-refs.4.1](FS-refs.md#41-a-stubs-homes-are-found-in-its-target)). `show` is not narrowed, because it
+returns a body: it keeps refusing the same tree as an ambiguous ID with its
+`broken stub:` clause ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)).
+
+The stub it set aside is not hidden. Under `--format text`, for each broken stub
+set aside beside a real home, `refs` writes one line to stderr, in show's
+deterministic order of the stubs: `warning: ` followed by the `broken stub:`
+clause the ambiguity refusal carried for that stub — for a missing target,
+`warning: broken stub: <stub path>:<line> links to missing <target>; <ID> is
+declared at <home path>:<line>; point the stub link there` — the diagnosis `check`
+makes of the same stub. Under `--format json` stderr stays empty, as stdout is
+the repaired tree's records: `refs` has no warning object, and `check` is where
+the stub is reported as a finding. A broken stub that is the ID's only home earns
+no warning: nothing was set aside, and its listing is that of any absent target
+([§FS-refs.1](FS-refs.md#1-inputs)).
 
 ## 5. Why this exists
 
