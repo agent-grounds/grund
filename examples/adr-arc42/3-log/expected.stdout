@@ -1,0 +1,5 @@
+ADR-0001.status  docs/adr/0001-record-architecture-decisions.md:5  Accepted
+ADR-0002.status  docs/adr/0002-store-bookings-in-sqlite.md:5  Superseded
+ADR-0003.status  docs/adr/0003-release-unclaimed-seats.md:5  Accepted
+ADR-0004.status  docs/adr/0004-store-bookings-in-postgresql.md:5  Accepted
+ADR-0005.status  docs/adr/0005-claim-seats-from-the-phone.md:5  Proposed
