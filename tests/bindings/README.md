@@ -1,8 +1,9 @@
 # Shared binding protocol, and each binding's acceptance
 
 Required by [§FS-distribution.3.0.3](../../docs/functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity) and [§FS-distribution.3.3](../../docs/functional-spec/FS-distribution.md#33-python-grund-pypi-package). This directory holds
-what both bindings share: the oracle side in `support.py` and the
-operation/fixture matrix in `corpus.py`. Each binding's own side is a directory
+what both bindings share: the oracle side in `support.py`, with the build target
+each checkout's acceptances build into, and the operation/fixture matrix in
+`corpus.py`. Each binding's own side is a directory
 of its own, as its source is one directory under `crates/`
 ([§AR-bindings.1](../../docs/architecture/AR-bindings.md#1-target-workspace-layout)): Python's in [`python/`](python/), Node's in [`node/`](node/).
 

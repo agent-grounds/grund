@@ -1,0 +1,376 @@
+# §AR-ci.13: one operating system's leg of ci.yml, written once and called once per system
+# with `os`. Its jobs run side by side; ci.yml's `cargo test (<os>)` judges them together.
+name: CI leg
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: The runner the leg's jobs run on, ubuntu-latest or windows-latest.
+        required: true
+        type: string
+
+# A called workflow takes none of its caller's `env:`, so ci.yml's is repeated here.
+env:
+  CARGO_TERM_COLOR: always
+  # §AR-ci.13.6: no incremental state is written, so none reaches a cargo cache.
+  CARGO_INCREMENTAL: 0
+  # Treat rustc warnings as errors for the binary itself. NOTE: this does not
+  # deny clippy lints — clippy is intentionally not part of CI here. Add a
+  # `cargo clippy --no-deps -- -D warnings` step if/when we want lint enforcement.
+  RUSTFLAGS: "-D warnings"
+  # §FS-distribution.3.0.3: corpus pipes carry UTF-8 on every host.
+  PYTHONUTF8: "1"
+
+jobs:
+  # §AR-ci.13.7: the cargo suite's shards, a matrix over `shard`; shard 1 also runs the
+  # leg's other Rust checks (§AR-ci.13.1).
+  rust:
+    name: rust ${{ matrix.shard }}/4
+    runs-on: ${{ inputs.os }}
+    strategy:
+      # Every shard reports, so one failure does not hide another's.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v6
+        # §FS-examples.5.6.1: native evidence names the actual candidate commit.
+        with:
+          ref: ${{ inputs.os == 'windows-latest' && (github.event.pull_request.head.sha || github.sha) || '' }}
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §AR-ci.13.4: the shards share one key, and one of them saves it.
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-rust-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-rust-
+            ${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        if: matrix.shard == 1
+        run: cargo fmt --all -- --check
+
+      # §FS-check.6.1.1, §AR-bindings.3: exercise actual native backends and
+      # private lifecycle boundaries on Linux, macOS and Windows.
+      - name: native watch contract
+        if: matrix.shard == 1
+        run: python scripts/run_cargo_suite.py -p grund --features test-watch --test check_watch_observer --locked
+
+      - name: cargo build
+        if: matrix.shard == 1
+        run: cargo build --quiet --workspace --all-targets --locked
+
+      - name: grund self-check
+        if: matrix.shard == 1
+        # §AR-ci.4: the same bounded full self-check, extracted to keep this file small.
+        run: python scripts/check_ci_self.py
+
+      # crates/grund-cli/tests/e2e.rs walks every fixture under tests/e2e/cases and asserts each case's
+      # exit code, stdout, and stderr against its expected.* files; tests/init.rs
+      # covers the file-content / config-validation contract for `grund init`. So
+      # `cargo test` runs the full e2e suite plus the core and CLI unit tests.
+
+      # §AR-ci.requirements.5.2: failures, a check-in each 5% and one summary, no line per test.
+      # §AR-ci.13.7: this instance's shard of the suite.
+      - name: cargo test
+        run: python scripts/run_cargo_suite.py --shard ${{ matrix.shard }}/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+      # §FS-examples.5.6.1: retain raw native ownership evidence, including skips.
+      - name: native mutable fixture ownership
+        if: matrix.shard == 1 && inputs.os == 'windows-latest'
+        shell: bash
+        run: |
+          echo "GRUND_797_NATIVE_HEAD=$(git rev-parse HEAD)"
+          cargo test --locked -p grund --test e2e case_isolation::overlapping_mutable_cases_keep_their_own_copy -- --exact --nocapture
+          echo "GRUND_797_NATIVE_COMPLETE"
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+
+      # §AR-ci.13.4: shard 2 saves, the one cargo_shards.py deals the command agreement.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true' && matrix.shard == 2
+        shell: bash
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true' && matrix.shard == 2
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-rust-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+  python:
+    name: python
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+
+      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      - name: Install binding Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      # §AR-ci.3.4.4: a new key can save oracle dependencies missing from old exact hits.
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-python-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-python-
+            ${{ runner.os }}-cargo-
+
+      # The file-size ownership regression asks `fissile measure` for each split owner
+      # (§AR-core-module-layout.1.5), so the binary is on PATH for the Python tests.
+      - name: Install fissile
+        run: cargo install fissile --version 0.8.3 --locked --quiet
+
+      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
+      # including a PR merge checkout, before the Python gate runs.
+      - name: Prepare same-source binding oracle
+        run: python scripts/prepare_binding_oracle.py
+
+      # §AR-ci.3.4.3: every Python test no `--only-` selection runs; those run in the jobs below.
+      - name: python tests
+        # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
+        run: python scripts/run_python_gate.py --rest
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-python-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+  node:
+    name: node acceptance
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+
+      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      - name: Install binding Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      # §AR-ci.3.4.4: a new key can save oracle dependencies missing from old exact hits.
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-node-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-node-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.3.4.1: a key of its own, so the Node target is saved, not lost to the
+      # cargo cache's exact hit; the builds write no incremental state into it.
+      - name: Restore the Node acceptance's build target
+        id: node-target
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-node-target
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-target-v3-1.95.0-
+
+      # §AR-ci.3.4.1.3: the pinned TypeScript compiler, under a key naming its version, so
+      # the acceptance's one registry fetch happens only on a cache miss.
+      - name: Restore the Node acceptance's TypeScript compiler
+        id: node-typescript
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-node-target/tools/typescript-5.9.3
+          key: ${{ runner.os }}-node-typescript-5.9.3
+
+      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
+      # including a PR merge checkout, before the Python gate runs.
+      - name: Prepare same-source binding oracle
+        run: python scripts/prepare_binding_oracle.py
+
+      # §AR-ci.3.4.3: the Node acceptance alone, the longest test of the Python gate.
+      - name: node acceptance
+        run: python scripts/run_python_gate.py --only-node-acceptance
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-node-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+      # §AR-ci.13.6: only a push to main saves, after the work, the key its restore missed.
+      - name: Save the Node acceptance's build target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.node-target.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-node-target
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+      # §AR-ci.3.4.1.3, §AR-ci.13.6: only a push to main saves, the key its restore missed.
+      - name: Save the Node acceptance's TypeScript compiler
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.node-typescript.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-node-target/tools/typescript-5.9.3
+          key: ${{ runner.os }}-node-typescript-5.9.3
+
+  # §AR-ci.13.1: the Python acceptance, then the slow selection, which fits in its minutes.
+  python-acceptance:
+    name: python acceptance
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      - name: Install binding Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+
+      # §AR-ci.13.4: the python job's entry, read and never saved here, so the leg keeps
+      # one cargo entry fewer under the cache limit (§AR-ci.13.6).
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-python-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-python-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.3.4.5: a key of its own, so the Python target is saved, not lost to the
+      # cargo cache's exact hit; the builds write no incremental state into it. It holds
+      # target/release too, the slow selection's release build (§AR-ci.3.4.3).
+      - name: Restore the Python acceptance's build target
+        id: python-target
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-python-target
+            target/release
+          key: ${{ runner.os }}-python-target-v2-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-python-target-v2-
+
+      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
+      # including a PR merge checkout, before the Python gate runs.
+      - name: Prepare same-source binding oracle
+        run: python scripts/prepare_binding_oracle.py
+
+      # §AR-ci.3.4.3: the Python acceptance alone, every build of it in the shared target.
+      - name: python acceptance
+        run: python scripts/run_python_gate.py --only-python-acceptance
+
+      # §AR-ci.3.4.3: the tests that build a release binary or run grund for minutes.
+      - name: slow python tests
+        run: python scripts/run_python_gate.py --only-slow
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without the workspace
+      # crates' own release artifacts; the acceptance already dropped them from its target.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.python-target.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save the Python acceptance's build target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.python-target.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-python-target
+            target/release
+          key: ${{ runner.os }}-python-target-v2-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}

@@ -7,8 +7,9 @@ too, so a check that can no longer fail is caught."""
 import re
 import unittest
 
+from ci_workflow import CI, commands, header, with_local_actions
 from test_ci_language_jobs import (BENCH, BENCH_BUILD, BENCH_ENV, BENCH_IMAGE, BENCH_RECORD,
-                                   BENCH_SHARD, CI, commands, header, job_env, with_local_actions)
+                                   BENCH_SHARD, job_env)
 from test_release_workflow import jobs, squash, steps
 
 SNAPSHOT = re.compile(r"https://snapshot\.debian\.org/archive/debian/\d{8}T\d{6}Z\b")
