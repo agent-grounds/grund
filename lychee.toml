@@ -10,4 +10,7 @@ exclude = [
   # The optional-member example is a checkout without packages/secret, whose
   # managed blocks keep listing it (§FS-init.2.3.4.15.8): the link is the lesson.
   "examples/workspace-optional-member/.*/packages/secret/?$",
+  # The RFC example's draft asks IANA to register this problem type; the entry
+  # exists only once the registration it requests is made.
+  "^https://iana\\.org/assignments/http-problem-types#stale-widget$",
 ]

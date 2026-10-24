@@ -1,0 +1,21 @@
+widget-sync · grund.toml · v2
+
+kinds and places
+  draft  kind              draft-ietf-wsync-widget-sync.md
+           field security  must
+           field iana      must
+  RFC    kind              references/
+  impl   place             src/
+  test   place             tests/
+  code   complement        every scanned file no other row claims
+
+citations                  grounded
+  draft  must      RFC
+  RFC    must not  everything else
+  impl   must      draft   must · h3
+  test   must      draft
+  code   —
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it
