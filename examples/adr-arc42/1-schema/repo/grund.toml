@@ -1,0 +1,100 @@
+# Architecture decision records (Nygard's form, as adr-tools writes it) beside
+# an arc42 architecture document (its multi-page Markdown edition), held to a
+# grund schema.
+grund_config_version = 2
+project_name = "carrel"
+
+[schema]
+# ADR-0001, QG-1, QS-1: the numbers ADRs, quality goals and quality scenarios
+# already carry. The authored digits are kept, so ADR-0001 stays ADR-0001.
+id_format = "{kind}-{number}"
+
+[schema.sources]
+languages = ["markdown", "python"]
+
+# One ADR per file in docs/adr/, numbered as adr-tools numbers them. A record is
+# closed: its status and Nygard's three sections, in adr-tools' order, and
+# nothing else. The row's place is docs/ only so that its index, which must sit
+# inside that place, can be arc42's chapter 9.
+[schema.kinds.ADR]
+folders = ["docs"]
+index = "arc42/09_architecture_decisions.md"
+closed = "must"
+
+[schema.kinds.ADR.fields.status]
+one_of = ["Proposed", "Accepted", "Deprecated", "Superseded"]
+presence = "must"
+position = "first"
+
+[schema.kinds.ADR.fields.context]
+title = "Context"
+presence = "must"
+after = "status"
+
+[schema.kinds.ADR.fields.decision]
+title = "Decision"
+presence = "must"
+after = "context"
+
+[schema.kinds.ADR.fields.consequences]
+title = "Consequences"
+presence = "must"
+after = "decision"
+
+# The arc42 chapters. They declare nothing, except where arc42 itself numbers
+# things: the quality goals of section 1.2 and the scenarios of section 10.2.
+[schema.kinds.arc42]
+citable = false
+folders = ["docs/arc42"]
+
+# A listed file outranks the folder holding it.
+[schema.kinds.QG]
+files = ["docs/arc42/01_introduction_and_goals.md"]
+
+[schema.kinds.QS]
+files = ["docs/arc42/10_quality_requirements.md"]
+
+# The documentation's own rules, one per declaration: each title is a sentence
+# grund check enforces.
+[schema.kinds.RULE]
+files = ["docs/rules.md"]
+id_format = "{kind}-{slug}"
+form = "rule"
+
+[schema.kinds.code]
+folders = ["src"]
+
+# A quality goal is where the reasoning starts: scenarios and decisions cite it,
+# and it cites nothing back.
+[rules.citations.QG]
+default = "must-not"
+
+# A scenario makes a quality goal measurable, so it names the goal.
+[rules.citations.QS]
+must = ["QG"]
+
+# Every source file names the decision it implements.
+[rules.citations.code]
+must = ["ADR"]
+
+[rules.citations.code.grounding]
+must = "file"
+
+# Keep grund's agent guidance in one root AGENTS.md, out of docs/adr/.
+[presentation]
+rules = "root"
+
+[presentation.kinds.ADR]
+title = "Architecture decision records"
+
+[presentation.kinds.arc42]
+title = "arc42 chapters"
+
+[presentation.kinds.QG]
+title = "Quality goals (arc42 section 1.2)"
+
+[presentation.kinds.QS]
+title = "Quality scenarios (arc42 section 10.2)"
+
+[presentation.kinds.RULE]
+title = "Documentation rules"
