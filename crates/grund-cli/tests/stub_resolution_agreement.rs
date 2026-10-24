@@ -7,8 +7,9 @@
 //! verdict (§FS-declarations.stubs.verdict): whether `check` reports the stub
 //! broken (§FS-declarations.stubs.target.3), and the declarations of
 //! `FS-a` once its stub is paired (§FS-declarations.stubs.pairing.1). So
-//! `show` and `refs` refuse exactly the IDs `check` reports a duplicate, at the
-//! same sites (§FS-show.2.2.1, §FS-refs.4.1); `list --size` measures every
+//! `show` refuses exactly the IDs `check` reports a duplicate, at the same sites
+//! (§FS-show.2.2.1), and `refs` those of them left with two homes once a broken
+//! stub is set aside (§FS-refs.4.1, §FS-refs.4.1.1); `list --size` measures every
 //! declaration and only those that are not broken stubs (§FS-list.3.4.6); `fmt`
 //! links only an ID with one declaration that is not a broken stub
 //! (§FS-fmt.6.4.2); and the editor snapshot reports and navigates the same

@@ -47,11 +47,17 @@ fn missing_stub_same_file_home_explains_why_linking_cannot_pair() {
         vec!["AR-cache"],
         vec!["AR-cache", "--toc"],
         vec!["AR-cache.1"],
-        vec!["refs", "AR-cache"],
     ] {
         let query = query_with_text(&repo, &args, expected_sites.clone());
         assert_eq!(message(&query), format!("{AMBIGUOUS_PREFIX}{suffix}"));
     }
+    // §FS-refs.4.1.1: `refs` sets the stub aside and warns with the same clause.
+    let refs = repo.run(&["refs", "AR-cache"], 0);
+    assert_eq!(utf8(&refs.stdout), "src/main.rs:1: \u{a7}AR-cache\n");
+    assert_eq!(
+        utf8(&refs.stderr),
+        format!("warning: {}\n", suffix.strip_prefix("; ").unwrap())
+    );
 }
 
 #[test]
@@ -111,11 +117,25 @@ fn missing_stub_mixed_files_scope_advice_to_the_separate_file_stub() {
             message(&findings[2])
         )
     );
-    let query = query_with_text(&repo, &["refs", "AR-cache"], expected_sites);
+    let query = query_with_text(&repo, &["AR-cache"], expected_sites);
     assert_eq!(
         message(&query),
         format!(
             "ambiguous ID: AR-cache (declared at {STUB}:1, {SAME_FILE}:1, {SAME_FILE}:3){suffix}"
+        )
+    );
+    // §FS-refs.4.1.1: `refs` sets both stubs aside, one warning each, each clause as
+    // the repair writes it for that stub alone beside the one real home.
+    let refs = repo.run(&["refs", "AR-cache"], 0);
+    assert_eq!(utf8(&refs.stdout), "src/main.rs:1: \u{a7}AR-cache\n");
+    assert_eq!(
+        utf8(&refs.stderr),
+        format!(
+            "warning: broken stub: {STUB}:1 links to missing src/cache.rs; \
+             AR-cache is declared at {SAME_FILE}:3; point the stub link there\n\
+             warning: broken stub: {SAME_FILE}:1 links to missing src/cache.rs; \
+             AR-cache is declared at {SAME_FILE}:3; stub {SAME_FILE}:1 \
+             shares the real home's file; {CANNOT_PAIR}\n"
         )
     );
 }

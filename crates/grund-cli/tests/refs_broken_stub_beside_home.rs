@@ -67,6 +67,16 @@ const WARNING: &str = "warning: broken stub: docs/architecture/AR-cache.md:1 lin
                        ../../src/cache.rs; AR-cache is declared at src/store/cache.rs:1; point \
                        the stub link there\n";
 
+/// A file left at the old path that declares no `AR-cache`: the stub's target exists and lacks
+/// the ID. The refusal carries no `broken stub:` clause for that verdict, so the warning is the
+/// line `show` refuses the stub alone with (§FS-show.2.3.4).
+const LEFT_AT_OLD_PATH: &str = "//! What is left at the old path re-exports the moved cache.\n\
+                                pub use crate::store::cache::Cache;\n";
+
+const LACKS_ID_WARNING: &str = "warning: broken stub: AR-cache (stub at \
+                                docs/architecture/AR-cache.md:1 points at ../../src/cache.rs, \
+                                which contains no inline declaration of AR-cache)\n";
+
 struct Fixture(PathBuf);
 
 impl Fixture {
@@ -143,14 +153,12 @@ fn control_repaired_stub_lists_the_three_sites() {
 }
 
 #[test]
-#[ignore = "red until #1006 refs sets a broken stub beside a real home aside; implement removes this"]
 fn refs_lists_past_a_broken_stub_beside_a_real_home() {
     let fixture = Fixture::new("text", BROKEN_STUB);
     assert_lists(&fixture.grund(&["refs", "AR-cache"]), SITES, WARNING);
 }
 
 #[test]
-#[ignore = "red until #1006 refs sets a broken stub beside a real home aside; implement removes this"]
 fn refs_summary_lists_past_a_broken_stub_beside_a_real_home() {
     let fixture = Fixture::new("summary", BROKEN_STUB);
     assert_lists(
@@ -161,7 +169,6 @@ fn refs_summary_lists_past_a_broken_stub_beside_a_real_home() {
 }
 
 #[test]
-#[ignore = "red until #1006 refs sets a broken stub beside a real home aside; implement removes this"]
 fn refs_total_counts_past_a_broken_stub_beside_a_real_home() {
     let fixture = Fixture::new("total", BROKEN_STUB);
     assert_lists(
@@ -172,7 +179,6 @@ fn refs_total_counts_past_a_broken_stub_beside_a_real_home() {
 }
 
 #[test]
-#[ignore = "red until #1006 refs sets a broken stub beside a real home aside; implement removes this"]
 fn refs_json_gives_the_repaired_trees_records_and_an_empty_stderr() {
     let control = Fixture::new("json-control", REPAIRED_STUB);
     let expected = control.grund(&["refs", "AR-cache", "--format", "json"]);
@@ -180,6 +186,19 @@ fn refs_json_gives_the_repaired_trees_records_and_an_empty_stderr() {
     let fixture = Fixture::new("json", BROKEN_STUB);
     let out = fixture.grund(&["refs", "AR-cache", "--format", "json"]);
     assert_lists(&out, &text(&expected.stdout), "");
+}
+
+/// Every stub that cannot be paired is set aside, not only one whose target is missing
+/// (§FS-refs.4.1.1): here the old path holds a file that declares no `AR-cache`.
+#[test]
+fn refs_lists_past_a_stub_whose_target_lacks_the_id_beside_a_real_home() {
+    let fixture = Fixture::new("lacks-id", BROKEN_STUB);
+    fixture.write("src/cache.rs", LEFT_AT_OLD_PATH);
+    assert_lists(
+        &fixture.grund(&["refs", "AR-cache"]),
+        SITES,
+        LACKS_ID_WARNING,
+    );
 }
 
 #[test]

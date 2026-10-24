@@ -211,6 +211,8 @@ pub fn refs_with_metadata_and_hint(opts: RefsOpts) -> Result<(RefsWithMetadata, 
 
 /// §FS-refs.3.1.1 / §FS-refs.3.3.1: frontend-only excluded sites alongside the
 /// unchanged records and resolver hint, derived from the same loaded context.
+/// The last element is the text of each warning a broken stub set aside beside a
+/// real home earns, which only `--format text` prints (§FS-refs.4.1.1).
 #[doc(hidden)]
 pub fn refs_with_text_annotations(
     opts: RefsOpts,
@@ -218,15 +220,18 @@ pub fn refs_with_text_annotations(
     RefsWithMetadata,
     Option<String>,
     BTreeSet<(String, usize, usize)>,
+    Vec<String>,
 )> {
     let mut hint = None;
     let mut entries = BTreeSet::new();
+    let mut set_aside = Vec::new();
     let metadata = super::refs_query::refs_impl_with_annotations(
         opts,
         &mut serde_json::json!({}),
         &mut Vec::new(),
         &mut hint,
         Some(&mut entries),
+        &mut set_aside,
     )?;
-    Ok((metadata, hint, entries))
+    Ok((metadata, hint, entries, set_aside))
 }
