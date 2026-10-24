@@ -102,10 +102,10 @@ jobs:
       - name: Prepare same-source binding oracle
         run: python scripts/prepare_binding_oracle.py
 
-      # §AR-ci.14.1: the three selections of the Python gate, one after another (§AR-ci.3.4.3).
+      # §AR-ci.14.1: the four selections of the Python gate, one after another (§AR-ci.3.4.3).
       - name: python tests
         # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
-        run: python scripts/run_python_gate.py --without-acceptance
+        run: python scripts/run_python_gate.py --rest
 
       # §AR-ci.3.4.3: the Node acceptance alone, the longest test of the Python gate.
       - name: node acceptance
@@ -114,6 +114,10 @@ jobs:
       # §AR-ci.3.4.3: the Python acceptance alone, every build of it in the shared target.
       - name: python acceptance
         run: python scripts/run_python_gate.py --only-python-acceptance
+
+      # §AR-ci.3.4.3: the tests that build a release binary or run grund for minutes.
+      - name: slow python tests
+        run: python scripts/run_python_gate.py --only-slow
 
       - name: cargo build
         run: cargo build --quiet --workspace --all-targets --locked

@@ -13,7 +13,7 @@ import re
 import unittest
 
 from test_bench_store import BRANCH, CONCLUSION, SCRIPT
-from test_ci_language_jobs import header
+from ci_workflow import header
 from test_release_workflow import REPO_ROOT, WORKFLOWS, jobs, squash, steps
 
 CI = WORKFLOWS / "ci.yml"

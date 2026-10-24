@@ -43,14 +43,14 @@ CI dependency and build caches are performance optimizations only. A cache resto
 The current pre-commit gate runs the same Rust format/build/test commands that development CI runs: `cargo fmt --all -- --check`, `cargo build --quiet --workspace --all-targets --locked` with warnings denied, and `python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count`, which runs `cargo test` with those arguments and prints what [§AR-ci.requirements.5.1](AR-ci.md#requirements51-a-suite-prints-its-failures-its-check-ins-and-one-summary) asks rather than a line per test. CI runs that last command as its shards, one job each, which together run exactly the tests it runs ([§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards)). A plain `cargo test --workspace --all-targets --locked` is green on the same tree but runs less: it reports every test that reads the workspace-load observer as `ignored`, naming the feature that test needs ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)). The test hook also runs at `pre-push`, so a contributor who commits while a test is transiently broken still gets the same local stop before sending the branch. It is the one hook `pre-push` runs: no hook asks a change for a changelog entry at any stage, because no change is gated on the changelog ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)).
 
 The local Python gate runs `python scripts/run_python_gate.py`, and CI runs that
-same command as its three selections, one job each ([§AR-ci.3.4.3](AR-ci.md#343-selecting-the-binding-acceptances)). The wrapper prepares
+same command as its four selections, in three jobs ([§AR-ci.3.4.3](AR-ci.md#343-selecting-the-binding-acceptances-and-the-slow-tests)). The wrapper prepares
 the built binary and released Grund 0.16.1 for the co-change compatibility cases
 ([§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)) and the same-source binding oracle for the
 Node parity tests ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)), and the shared build target of the Node
 acceptance, the inputs of [§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs), then runs unittest discovery of `tests/integration`
 with the pattern `test_*.py` and that environment from the repository root, timing
 each test ([§AR-ci.3.4.2](AR-ci.md#342-per-test-durations)). The parity test checks the shared wrapper invocation,
-the three selections CI passes it, and its discovery directory and pattern.
+the four selections CI passes it, and its discovery directory and pattern.
 
 ### 3.1 Citations and links
 
@@ -491,8 +491,10 @@ The root is shared, a target is not: each source checkout builds into its own
 directory under `GRUND_NODE_TARGET`, named by a short digest of the checkout's
 resolved root, so the same checkout gets the same directory on every run and
 two worktrees of the repository never get one directory between them. The
-helper derives that directory once, and every build site reaches it through the
-helper; the wrapper and CI still prepare, cache and restore only the root.
+helper derives that directory once, in `checkout_target(root)` of
+`tests/bindings/support.py`, which the Python acceptance's targets go through too
+([§AR-ci.3.4.5](AR-ci.md#345-the-python-acceptances-shared-build-target)), and every build site reaches it through the helper; the wrapper
+and CI still prepare, cache and restore only the root.
 
 The helper also owns target lifetime, implementing
 [§FS-repository-maintenance.2.1](../functional-spec/FS-repository-maintenance.md#21-ownership-and-reuse), [§FS-repository-maintenance.2.2](../functional-spec/FS-repository-maintenance.md#22-automatic-reclamation),
@@ -655,22 +657,27 @@ and returns its exit status.
 `tests/integration/test_python_gate_durations.py` runs it on a small suite of its
 own.
 
-#### 3.4.3 Selecting the binding acceptances
+#### 3.4.3 Selecting the binding acceptances and the slow tests
 
 The wrapper takes at most one argument, which selects what its discovery runs.
-`--without-acceptance` runs every test it discovers except the two binding
-acceptances, the tests of the modules `test_node_binding_acceptance` and
-`test_python_binding_acceptance`; `--only-node-acceptance` runs the first module
-alone, and `--only-python-acceptance` the second alone. No argument runs
-everything, and that is what the local `python-test` hook runs, so the local
-verdict is the one the three selections reach together, and CI runs them as three
-jobs ([§AR-ci.13.1](AR-ci.md#131-one-job-per-language)) because the two acceptances are the longest tests of the gate
-by minutes: the Python acceptance alone took five to nine minutes of a Windows run
-while it shared the Python job, and held that job past [§AR-ci.requirements.1](AR-ci.md#requirements1-every-gate-averages-at-most-fifteen-minutes--directional). Any
-other argument, `--without-node-acceptance` among them now that it is no
-selection, or two at once, exits 2 with a usage line before any input is
-prepared, so a mistyped selection costs nothing and is never silently the whole
-suite.
+Each of three `only-` selections runs named modules alone:
+`--only-node-acceptance` the module `test_node_binding_acceptance`,
+`--only-python-acceptance` the module `test_python_binding_acceptance`, and
+`--only-slow` the modules `test_rules_scaling` and `test_config_schema`, the
+slowest of the rest: the first builds a release binary and times grund on it,
+the second builds grund and runs it over every committed configuration. `--rest`
+runs every test it discovers except those modules. No argument runs everything,
+and that is what the local `python-test` hook runs, so the local verdict is the
+one the four selections reach together. CI runs them as three jobs
+([§AR-ci.13.1](AR-ci.md#131-one-job-per-language)) because these are the longest tests of the gate by minutes: the
+Python acceptance alone took five to nine minutes of a Windows run while it
+shared the Python job, and the slow selection four and a half of that job's
+nineteen once the acceptance had left, holding it past
+[§AR-ci.requirements.1](AR-ci.md#requirements1-every-gate-averages-at-most-fifteen-minutes--directional), so it runs after the Python acceptance in that job's minutes.
+Any other argument, `--without-acceptance` and `--without-node-acceptance`
+among them now that neither is a selection, or two at once, exits 2 with a
+usage line before any input is prepared, so a mistyped selection costs nothing
+and is never silently the whole suite.
 
 The cut is by module. A module that fails to import is still in the selection
 its name puts it in, so an acceptance that no longer imports fails its own job
@@ -678,9 +685,11 @@ rather than vanishing from every one. Each selection still ends with the slowest
 table and still exits 5 when it finds nothing ([§AR-ci.3.4.2](AR-ci.md#342-per-test-durations)), so an
 acceptance selection that matches no test fails rather than passing on nothing
 run. `run_python_gate.select(suite, selection)` is the one function that makes
-the cut: given a discovered `unittest` suite and `None`, `'without-acceptance'`,
-`'only-node-acceptance'` or `'only-python-acceptance'`, it returns a suite of the
-tests that selection runs. `run_python_gate.run_tests(start, environment,
+the cut: given a discovered `unittest` suite and `None`, `'rest'` or an `only-`
+selection, it returns a suite of the tests that selection runs.
+`run_python_gate.ONLY` maps each `only-` selection to its modules, and `'rest'`
+is every module none of them names, so moving a module into a selection takes it
+out of the rest in the same edit. `run_python_gate.run_tests(start, environment,
 selection=None)` hands the selection to the one timed discovery, so a selection is
 cut where the tests are found. `tests/integration/test_python_gate_selection.py`
 holds it to this without running either acceptance itself.
@@ -713,36 +722,46 @@ and executing the exported oracle checks its SHA and source behavior.
 
 #### 3.4.5 The Python acceptance's shared build target
 
-`GRUND_PYTHON_TARGET` names the root of the Cargo target that every build of the
-Python acceptance ([§AR-bindings.6.2](AR-bindings.md#62-the-python-acceptance-runs-in-the-gate)) shares: the install of `crates/grund-py`
-that `tests/integration/test_python_binding_acceptance.py` makes, and the
-clean-checkout and sdist installs `tests/bindings/python/test_build.py` makes
-inside `run.py`. Each of those builds runs with `CARGO_TARGET_DIR` at that root or
-a directory under it, never at a fresh temporary one or at the one pip makes for
-an isolated build, so a run starts with the dependency tree already compiled
-instead of compiling it cold, which is what a Windows run spent most of the
-acceptance's minutes on ([§AR-ci.requirements.1](AR-ci.md#requirements1-every-gate-averages-at-most-fifteen-minutes--directional)). Unset, the module and the helper
-both fall back to `~/ag/tmp/grund-python-target`, outside the checkout and kept
-between runs, so a local run shares it too.
+`GRUND_PYTHON_TARGET` names the root of the Cargo targets the Python acceptance
+([§AR-bindings.6.2](AR-bindings.md#62-the-python-acceptance-runs-in-the-gate)) builds into. The root is shared, a target is not: each source
+checkout builds into its own directory under the root, named, owned and reclaimed
+as [§AR-ci.3.4.1.2](AR-ci.md#3412-one-target-per-source-checkout) names the Node acceptance's, and for its reason, by the one helper
+`checkout_target(root)` in `tests/bindings/support.py` that both bindings call.
+`python_target()` returns this checkout's. Every build of the run builds there: the
+install of `crates/grund-py` that `tests/integration/test_python_binding_acceptance.py`
+makes, and the clean-checkout and sdist installs `tests/bindings/python/test_build.py`
+makes inside `run.py`, which the module hands the root so that it derives the same
+target. None builds at a fresh temporary target or at the one pip makes for an
+isolated build, so a run starts with the dependency tree already compiled instead
+of compiling it cold, which is what a Windows run spent most of the acceptance's
+minutes on ([§AR-ci.requirements.1](AR-ci.md#requirements1-every-gate-averages-at-most-fifteen-minutes--directional)). Unset, the root is `~/ag/tmp/grund-python-target`,
+outside the checkout and kept between runs, so a local run shares it too.
 
-CI restores that directory in the job that runs the Python acceptance from a cache
-step of its own, under the key `<os>-python-target-v1-<manifest and lock hash>`,
-with the key less its hash as the restore prefix, for the reason the Node target's
-cache has a key of its own ([§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target)): the cargo cache's key already hits
-whenever neither the manifest nor `Cargo.lock` has changed, so a path added to it
-would never be written. It is saved on a push to main alone ([§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)) and
-holds no incremental state, because the job sets `CARGO_INCREMENTAL: 0` as the
-workflow does.
+CI restores that root in the job that runs the Python acceptance from a cache step
+of its own, under the key `<os>-python-target-v2-<manifest and lock hash>`, with the
+key less its hash as the restore prefix, for the reason the Node target's cache has
+a key of its own ([§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target)): the cargo cache's key already hits whenever
+neither the manifest nor `Cargo.lock` has changed, so a path added to it would never
+be written. The same step keeps `target/release`, where the slow selection's
+release build lands ([§AR-ci.3.4.3](AR-ci.md#343-selecting-the-binding-acceptances-and-the-slow-tests)), and the key moved to `v2` when the root took a
+directory per checkout and the step that path. It is saved on a push to main alone
+([§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)) and holds no incremental state, because the job sets
+`CARGO_INCREMENTAL: 0` as the workflow does.
 
-Sharing a target changes what is cached, not what is proven. Every build stays at
+Sharing a root changes what is cached, not what is proven. Every build stays at
 the dev profile, from a local source, and the clean checkout and the unpacked sdist
 still compile the package's own crates from their own sources at their own paths,
 so what [§AR-bindings.6.2](AR-bindings.md#62-the-python-acceptance-runs-in-the-gate) and [§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-local-source-and-typing-handoff) prove of the install
 holds as written; a warm target no longer repeats the third-party dependency tree.
+Because those paths are fresh on every run, each would leave another copy of the
+workspace crates in a kept target, so the module removes them from its target when
+the run ends, for the size of the target and its cache alone.
 `tests/integration/test_python_shared_target.py` holds this: with the variable set,
 the module's install and the clean checkout's name a `CARGO_TARGET_DIR` under it;
-unset, they name one under `~/ag/tmp/grund-python-target`; and every job that runs
-the Python acceptance restores that directory under a key of its own.
+unset, they name one under `~/ag/tmp/grund-python-target`; two checkouts get two
+targets under one root, each the same on every call and recording its checkout;
+and every job that runs the Python acceptance restores the root under a key of its
+own.
 
 ## 4. Performance smoke guard
 
@@ -990,23 +1009,32 @@ The workflow runs on `merge_group` for the queue. The test matrix runs there as 
 A leg that runs its suites one after another takes as long as their sum, and the
 slowest leg is how long every pull request and every merge-queue group waits
 ([§AR-ci.requirements.1](AR-ci.md#requirements1-every-gate-averages-at-most-fifteen-minutes--directional)). So the suites of a leg run as jobs of their own, side by
-side, and the leg takes as long as its longest one. The jobs are written out
-rather than generated by YAML anchors, because the tests that hold this layout
-read the workflow as text: the CI Python has no YAML parser.
+side, and the leg takes as long as its longest one. The leg is written once, as the
+jobs of the reusable workflow `.github/workflows/ci-leg.yml`, which `ci.yml` calls
+once per operating system with that system as its `os` input: written out per
+system, the two legs were one text twice and took `ci.yml` past fissile's limit for
+a workflow. Nothing is generated by YAML anchors, because the tests that hold this
+layout read the workflows as text: the CI Python has no YAML parser, and a local
+call is one line such a reader can follow ([§AR-ci.13.5](AR-ci.md#135-the-layout-test)). A called job's check is
+named `<caller's name> / <job's name>`, as `windows-latest / rust 3/4`, and a
+called workflow takes none of its caller's `env:`, so the leg declares its own.
 
 ### 13.1 One job per language
 
 On `ubuntu-latest` and `windows-latest` each leg is the **Rust** jobs and three
 Python jobs. The Rust jobs are the shards of [§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards): each runs one shard
 of `python scripts/run_cargo_suite.py --workspace --all-targets --locked --features
-grund/test-workspace-load-count` ([§AR-ci.3](AR-ci.md#3-current-hooks)), and one of them also runs `cargo fmt
+grund/test-workspace-load-count` ([§AR-ci.3](AR-ci.md#3-current-hooks)), and shard 1 also runs `cargo fmt
 --all -- --check`, the native watch contract, `cargo build --quiet --workspace
 --all-targets --locked` and the grund self-check of §AR-ci.4. The **Python** job
-runs `python scripts/run_python_gate.py --without-acceptance`, the **Node** job
-runs `python scripts/run_python_gate.py --only-node-acceptance`, and the
-**Python acceptance** job runs `python scripts/run_python_gate.py
---only-python-acceptance` ([§AR-ci.3.4.3](AR-ci.md#343-selecting-the-binding-acceptances)). No job on those two runs more than one
-of those suites, and a shard counts as one.
+runs `python scripts/run_python_gate.py --rest`, the **Node** job runs `python
+scripts/run_python_gate.py --only-node-acceptance`, and the **Python acceptance**
+job runs `python scripts/run_python_gate.py --only-python-acceptance` and then
+`python scripts/run_python_gate.py --only-slow` ([§AR-ci.3.4.3](AR-ci.md#343-selecting-the-binding-acceptances-and-the-slow-tests)). No job on those two
+runs more than one of those suites, a shard counts as one, and the Python
+acceptance job's two are the one exception: the slow selection held the Python job
+past [§AR-ci.requirements.1](AR-ci.md#requirements1-every-gate-averages-at-most-fifteen-minutes--directional), and a job of its own would spend its minutes again on
+the checkout, the toolchain and the oracle the acceptance job has already prepared.
 
 `macos-latest` is not a leg of `ci.yml`: its suites run once a day, in one job
 of their own workflow ([§AR-ci.14](AR-ci.md#14-macos-runs-once-a-day)).
@@ -1014,22 +1042,24 @@ of their own workflow ([§AR-ci.14](AR-ci.md#14-macos-runs-once-a-day)).
 On every operating system each of those commands runs exactly once: none is
 dropped by the split and none repeated by it. The plain `python
 scripts/run_python_gate.py` runs in no job, because it would run both acceptances
-a second time, and the unsharded cargo command runs in no job, because it would
-run every shard a second time.
+and the slow tests a second time, and the unsharded cargo command runs in no job,
+because it would run every shard a second time.
 
 ### 13.2 The required check is an aggregate
 
 Ubuntu and Windows each keep one job named `cargo test (<os>)`, the name the
 ruleset requires and the merge queue waits for, so neither changes. It runs no
-suite of its own. It `needs:` every job that runs a command of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language) on
-its operating system, every cargo shard among them ([§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards)) — on Ubuntu, the pre-commit job too, and the three benchmark
-jobs of [§AR-ci.5](AR-ci.md#5-benchmark-job), so that the limits of [§AR-ci.5.2](AR-ci.md#52-regression-limits) hold a merge on every shard —
-and no job of another. The shard job is a matrix over shards, not operating systems:
-every leg runs on Ubuntu, so its result, all its legs together, is exactly "every
-shard passed". That is why the language jobs are a job per operating system rather
-than a matrix: a matrix job's result, as a job needing it reads it, is all its
-legs' results together, so an aggregate needing one would judge every operating
-system's suites and wait for all of them.
+suite of its own. It `needs:` its operating system's call of the leg, whose result,
+as a job needing it reads it, is every called job's together, so it judges every
+job that runs a command of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language) on its operating system, every cargo shard
+among them ([§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards)) — on Ubuntu it needs the pre-commit job too, and the
+three benchmark jobs of [§AR-ci.5](AR-ci.md#5-benchmark-job), so that the limits of [§AR-ci.5.2](AR-ci.md#52-regression-limits) hold a merge
+on every shard — and no job of another. The shard job is a matrix over shards, not
+operating systems: each of its instances runs on the leg's system, so its result,
+all of them together, is exactly "every shard passed". That is why the leg is
+called once per operating system rather than over a matrix of them: a matrix
+job's result is all its instances' together, so an aggregate needing one would
+judge every operating system's suites and wait for all of them.
 
 It passes only when every job it needs succeeded. Its `if:` is `always()`,
 because a job whose need failed is otherwise skipped, and a skipped required
@@ -1045,7 +1075,7 @@ The pre-commit step runs on Ubuntu with `SKIP` naming exactly the hooks whose
 command another job already runs: `cargo-fmt-check`, `cargo-build` and
 `cargo-test`, whose commands the Rust jobs' steps spell, the last as its shards
 ([§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards)), and `python-test`, whose command the Python, Node and Python
-acceptance jobs run between them as its three selections.
+acceptance jobs run between them as its four selections.
 Every other hook runs there and only there. So each hook's command runs once on
 Ubuntu, a skipped hook is one a named job runs, and the list in
 `.pre-commit-config.yaml` stays what is checked ([§AR-ci.1](AR-ci.md#1-pre-commit-is-the-source-of-truth));
@@ -1055,12 +1085,21 @@ from the workflow rather than from a list of its own ([§AR-ci.1.2](AR-ci.md#12-
 ### 13.4 Cache keys are per job
 
 Every job still restores the cargo cache and builds what it needs. No two jobs
-on one operating system share a cache key: an entry is never overwritten, and a
+on one operating system save one cache key: an entry is never overwritten, and a
 save to a key that already has one saves nothing, so the first job to save a
 shared key would fix what every other one restores, and theirs would never be saved. A key names its job, as
-`${{ github.job }}` or a literal does; a restore prefix may still fall back to
-another job's entries, because reading one overwrites nothing. The Node
-target's cache of [§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target) is the job's that runs the Node acceptance.
+a literal does; a restore prefix may still fall back to another job's entries,
+because reading one overwrites nothing, and a job may restore another's exact key
+when it saves none under it. The Node target's cache of [§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target) is the job's
+that runs the Node acceptance.
+
+The instances of one matrix job are one job here. The cargo shards of a leg
+build the same tree, so they share one key, every shard restores it, and one shard
+alone saves it: the one the deal of [§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards) gives the command agreement, the
+only shard that builds the agreement's 1.95.0 target under `target/agreement`, so
+its entry holds what every shard's does and that target besides. The Python
+acceptance job restores the Python job's exact key, the oracle's build among it,
+and saves only its own target cache ([§AR-ci.3.4.5](AR-ci.md#345-the-python-acceptances-shared-build-target)).
 
 #### 13.4.1 A key moves with the profile
 
@@ -1074,10 +1113,13 @@ profile alone and keeps the key of [§AR-ci.5](AR-ci.md#5-benchmark-job).
 
 ### 13.5 The layout test
 
-`tests/integration/test_ci_language_jobs.py` reads `ci.yml` as text, expands
-each `matrix.os` list, and holds the workflow to [§AR-ci.13.1](AR-ci.md#131-one-job-per-language), [§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate) and
-[§AR-ci.13.4](AR-ci.md#134-cache-keys-are-per-job); it runs its checks against fixture workflows too, so a check that
-can no longer fail is caught. `tests/integration/test_ci_shards.py` holds the shards of
+`tests/integration/ci_workflow.py` reads `ci.yml` as text, puts each job of
+`ci-leg.yml` in place of each local call to it, as `<caller>/<job>` with the call's
+`os` for `inputs.os`, and expands each `matrix.os` and `matrix.shard` list; every
+test that reads `ci.yml` reads it so, and `tests/integration/test_ci_language_jobs.py`
+holds it to [§AR-ci.13.1](AR-ci.md#131-one-job-per-language), [§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate) and [§AR-ci.13.4](AR-ci.md#134-cache-keys-are-per-job). A step whose `if:` a matrix value or the system makes
+false is not in that instance. The test runs its checks against fixture workflows
+too, so a check that can no longer fail is caught. `tests/integration/test_ci_shards.py` holds the shards of
 [§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards) and the Python acceptance job the same way, and
 `tests/integration/test_cargo_suite_shards.py` runs the wrapper's `--shard` on a
 workspace of its own. `tests/integration/test_bench_tier_ci.py` holds the
@@ -1118,7 +1160,7 @@ registry (and the git checkouts, should `Cargo.lock` ever gain a git dependency)
 and the dependencies' compiled artifacts, and not the workspace crates' own
 artifacts, which every run rebuilds from its own sources, nor incremental state: a workflow that caches cargo sets `CARGO_INCREMENTAL: 0`,
 as the Node target's builds already do ([§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target)).
-The `rust` jobs' target also holds the command agreement's 1.95.0 target, nested
+The `rust` shards' target also holds the command agreement's 1.95.0 target, nested
 under `agreement/` one per checkout, and `scripts/prune_cargo_cache.sh` prunes
 each of those the same way before the save.
 
@@ -1132,20 +1174,21 @@ The cargo suite is the longest command of a leg. One Windows job running it, wit
 the build and checks before it, took fifteen to eighteen minutes on a fast runner
 and twenty-five to thirty on a slow one, so no trimming of one test brings that
 job under [§AR-ci.requirements.1](AR-ci.md#requirements1-every-gate-averages-at-most-fifteen-minutes--directional) with room. So on `ubuntu-latest` and
-`windows-latest` it runs as `n` jobs, `n` at least two and one `n` per leg, and the
-job for shard `k` runs
+`windows-latest` it runs as `n` jobs, `n` at least two and one `n` per leg: the
+instances of the leg's `rust` job, a matrix over `shard: [1, …, n]`, where the
+instance for shard `k` runs
 
 ```text
 python scripts/run_cargo_suite.py --shard <k>/<n> --workspace --all-targets --locked --features grund/test-workspace-load-count
 ```
 
 with every `k` from 1 to `n` in exactly one job of the leg. The rest of the Rust
-commands of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language) run once per leg, in one of those jobs. Each shard job
-restores and saves the cargo cache under a key of its own ([§AR-ci.13.4](AR-ci.md#134-cache-keys-are-per-job), [§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)),
-and the leg's required check `cargo test (<os>)` keeps its name and `needs:` every
-shard ([§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate)), so the ruleset and the merge queue wait on what they did.
+commands of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language) run once per leg, on shard 1. Every shard restores the
+leg's one cargo key and one saves it ([§AR-ci.13.4](AR-ci.md#134-cache-keys-are-per-job), [§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)), and the leg's
+required check `cargo test (<os>)` keeps its name and needs every shard through
+the leg's call ([§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate)), so the ruleset and the merge queue wait on what they did.
 The `cargo-test` hook runs the unsharded command, so the local verdict is the one the
-shards reach together, as with the selections of [§AR-ci.3.4.3](AR-ci.md#343-selecting-the-binding-acceptances).
+shards reach together, as with the selections of [§AR-ci.3.4.3](AR-ci.md#343-selecting-the-binding-acceptances-and-the-slow-tests).
 
 The wrapper's `--shard <k>/<n>` comes before `cargo test`'s own arguments. It
 lists the targets the rest of the arguments select, deals them into `n` shards, and
@@ -1153,9 +1196,16 @@ runs `cargo test` on the `k`-th shard's targets with the rest of the arguments
 unchanged: the packages, `--locked`, the features and any libtest arguments after
 `--`. The deal is a function of that list alone, so every job of a leg computes the
 same cut, and every target is in exactly one shard: the shards together run exactly
-the tests the unsharded command runs, none dropped and none run twice. How the
-targets are dealt is the wrapper's choice, and it should keep the shards' minutes
-close, because a leg takes as long as its longest job. A shard that selects no
+the tests the unsharded command runs, none dropped and none run twice. The deal
+keeps the shards' minutes close, because a leg takes as long as its longest job,
+and a target's count of tests says little of its minutes. `scripts/cargo_shards.py`
+names the slowest targets with the seconds each ran on Windows, and deals those
+first, heaviest first, each to the shard least loaded so far, with shard 1 starting
+from the seconds its other Rust checks cost; the targets it does not name follow in
+order, round the shards. So the command agreement, the scan determinism test and
+the core's unit tests never share a shard, and none of the heaviest runs on
+shard 1. A target that turns slow is added to the table, not to the
+workflow. A shard that selects no
 target exits 5 rather than passing on nothing run, as an empty selection of
 [§AR-ci.3.4.2](AR-ci.md#342-per-test-durations) does. A `--shard` that is not `<k>/<n>` with `1 <= k <= n` exits 2 with
 a usage line before cargo runs, so a mistyped shard is never silently the whole

@@ -1,22 +1,25 @@
-"""§AR-ci.3.4.5 — every build of the Python acceptance shares one persistent Cargo target.
+"""§AR-ci.3.4.5 — every build of the Python acceptance shares this checkout's persistent Cargo
+target, under a root every checkout shares.
 
 The builds are recorded rather than run: a child process imports the build site with its
 `subprocess.run`, or the helper `run`, replaced by a recorder, and reports the
 `CARGO_TARGET_DIR` each `pip install` would have built into. The child's `HOME` is a
 temporary directory, so the fallback it computes lands there and nothing is written under
-the real one. `ci.yml` is read as text, as the layout test reads it (§AR-ci.13.5).
+the real one. Two checkouts are copies of the shared harness, each asked for its target in a
+child. `ci.yml` is read as text, as the layout test reads it (§AR-ci.13.5).
 """
 
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from test_ci_language_jobs import CI, instances
+from ci_workflow import ci_text, instances
 
 REPO = Path(__file__).resolve().parents[2]
 SELECTION = "python scripts/run_python_gate.py --only-python-acceptance"
@@ -71,6 +74,17 @@ except Installed:
 """
 
 
+# The target `python_target()` returns, asked of the harness at the path given.
+TARGET_OF = """
+import importlib.util, sys
+sys.dont_write_bytecode = True
+spec = importlib.util.spec_from_file_location("grund_bindings_support", sys.argv[1])
+support = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(support)
+print(support.python_target())
+"""
+
+
 def recorded(script, *args, **given):
     """The `CARGO_TARGET_DIR` of each install the child reaches, with `given` in its env."""
     home = tempfile.TemporaryDirectory()
@@ -116,9 +130,31 @@ class PythonSharedTargetTests(unittest.TestCase):
                 self.assertTrue(all(under(target, default) for target in found),
                                 f"{site} builds into {found}, not under {default}")
 
+    def test_two_checkouts_get_disjoint_targets_under_the_shared_root(self):
+        # §AR-ci.3.4.1.2: the root is shared, a target is not.
+        with tempfile.TemporaryDirectory() as work:
+            work = Path(work).resolve()
+            root = work / "targets"
+            found = {}
+            for name in ("one", "two"):
+                harness = work / name / "tests" / "bindings" / "support.py"
+                harness.parent.mkdir(parents=True)
+                shutil.copyfile(REPO / "tests" / "bindings" / "support.py", harness)
+                targets = []
+                for _ in range(2):
+                    home, result = recorded(TARGET_OF, harness, GRUND_PYTHON_TARGET=str(root))
+                    self.addCleanup(home.cleanup)
+                    self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                    targets.append(Path(result.stdout.strip().splitlines()[-1]))
+                self.assertEqual(targets[0], targets[1], f"{name} moves between calls")
+                found[name] = targets[0]
+                self.assertEqual(root, found[name].parent, f"{name} builds outside the root")
+                owner = json.loads((found[name] / "checkout.json").read_text(encoding="utf-8"))
+                self.assertEqual(str(work / name), owner["checkout"])
+            self.assertNotEqual(found["one"], found["two"], "two checkouts share one target")
+
     def test_every_python_acceptance_job_restores_the_target_under_a_key_of_its_own(self):
-        found = [i for i in instances(CI.read_text(encoding="utf-8"))
-                 if SELECTION in i["commands"]]
+        found = [i for i in instances(ci_text()) if SELECTION in i["commands"]]
         self.assertEqual(["ubuntu-latest", "windows-latest"], sorted(i["system"] for i in found),
                          "no Python acceptance job on each operating system")
         for instance in found:
@@ -127,7 +163,7 @@ class PythonSharedTargetTests(unittest.TestCase):
                             and re.search(rf"(?m)^\s*{re.escape(TARGET)}\s*$", step)]
                 self.assertEqual(1, len(restores), f"{instance['job']} restores no {TARGET}")
                 key = re.search(r"(?m)^\s*key:\s*(.+)$", restores[0]).group(1)
-                self.assertIn("python-target-v1-", key)
+                self.assertIn("python-target-v2-", key)
                 self.assertNotIn("-cargo-", key)
 
 

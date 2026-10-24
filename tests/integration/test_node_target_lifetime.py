@@ -65,6 +65,8 @@ class NodeTargetLifetimeTests(unittest.TestCase):
         harness.mkdir(parents=True)
         for module in ("support.py", "launch.py"):
             shutil.copyfile(HARNESS / module, harness / module)
+        # The shared harness derives the target for both bindings (§AR-ci.3.4.1.2).
+        shutil.copyfile(HARNESS.parent / "support.py", harness.parent / "support.py")
         return root
 
     def argv(self, checkout, mode="normal", argument=""):

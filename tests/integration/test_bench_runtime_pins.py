@@ -9,7 +9,8 @@ given to `pass_through_envs`, and held to the shard jobs' `env:`."""
 import re
 import unittest
 
-from test_ci_language_jobs import BENCH_ENV, header, job_env
+from ci_workflow import header
+from test_ci_language_jobs import BENCH_ENV, job_env
 from test_release_workflow import REPO_ROOT, WORKFLOWS, jobs
 
 HARNESS = REPO_ROOT / "crates/grund-cli/benches/instructions.rs"

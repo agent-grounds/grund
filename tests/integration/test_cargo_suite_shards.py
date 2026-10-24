@@ -5,6 +5,8 @@ each with a library and an integration test, whose four targets hold 1, 2, 4 and
 Every sum of a set of them is distinct, so shards whose totals are each above zero and add
 up to the whole suite's total hold every target exactly once: none dropped, none run twice.
 A shard that selects nothing and a malformed `--shard` are refused with their own statuses.
+The deal itself is checked in-process on listings of cargo's `Running` lines: the binaries
+`cargo_shards.WEIGHTS` names, and light ones it does not.
 """
 
 import os
@@ -18,6 +20,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 WRAPPER = REPO / "scripts" / "run_cargo_suite.py"
+sys.path.insert(0, str(REPO / "scripts"))
+import cargo_shards  # noqa: E402
 # The summary line of §AR-ci.requirements.5.1: `<total> tests: <passed> passed, …`.
 SUMMARY = re.compile(r"(?m)^(\d+) tests: (\d+) passed, (\d+) failed")
 # The four targets and their tests: a library and an integration test in each member.
@@ -26,6 +30,18 @@ TARGETS = {("alpha", "lib"): 1, ("alpha", "two"): 2, ("beta", "lib"): 4, ("beta"
 
 def tests(count, prefix):
     return "".join(f"#[test]\nfn {prefix}_{n}() {{}}\n" for n in range(count))
+
+
+def listed(name, suffix=""):
+    """The `Running` line cargo prints for the test target `name`, its executable hashed."""
+    executable = Path("target", "debug", "deps", f"{name}-0123456789abcdef{suffix}")
+    return f"Running tests/{name}.rs ({executable})"
+
+
+def placed(shards):
+    """Each target's shard, counted from 1."""
+    return {cargo_shards.target(key): index for index, keys in enumerate(shards, 1)
+            for key in keys}
 
 
 class CargoSuiteShardTests(unittest.TestCase):
@@ -109,6 +125,40 @@ class CargoSuiteShardTests(unittest.TestCase):
                 result = self.run_suite("--shard", shard, env={"PATH": empty.name})
                 self.assertEqual(2, result.returncode, result.stdout + result.stderr)
                 self.assertIn("usage", result.stderr.lower())
+
+
+class CargoShardDealTests(unittest.TestCase):
+    """§AR-ci.13.7: the deal weighs the slow binaries, so they share no shard."""
+
+    def listing(self, suffix=""):
+        names = [*cargo_shards.WEIGHTS, *(f"light_{n}" for n in range(30))]
+        return [listed(name, suffix) for name in names] + ["Doc-tests grund_core"]
+
+    def test_every_binary_lands_in_exactly_one_shard_on_every_call(self):
+        for suffix in ("", ".exe"):
+            keys = self.listing(suffix)
+            for count in (1, 2, 3, 4, 5):
+                with self.subTest(suffix=suffix, shards=count):
+                    shards = cargo_shards.deal(keys, count)
+                    self.assertEqual(sorted(keys), sorted(key for keys_ in shards for key in keys_))
+                    self.assertEqual(shards, cargo_shards.deal(list(reversed(keys)), count))
+
+    def test_the_slowest_binaries_share_no_shard_and_leave_shard_one(self):
+        heaviest = sorted(cargo_shards.WEIGHTS, key=cargo_shards.WEIGHTS.get, reverse=True)
+        for suffix in ("", ".exe"):
+            with self.subTest(suffix=suffix):
+                where = placed(cargo_shards.deal(self.listing(suffix), 4))
+                apart = ("command_agreement", "scan_determinism", "grund_core")
+                self.assertEqual(3, len({where[name] for name in apart}), where)
+                # Shard 1 runs the leg's other Rust checks first (§AR-ci.13.1).
+                self.assertNotIn(1, {where[name] for name in heaviest[:3]}, where)
+                self.assertEqual(3, len({where[name] for name in heaviest[:3]}), where)
+
+    def test_the_light_binaries_are_dealt_round_the_shards(self):
+        shards = cargo_shards.deal(self.listing(), 4)
+        light = [sum(key not in cargo_shards.WEIGHTS for key in map(cargo_shards.target, keys))
+                 for keys in shards]
+        self.assertLessEqual(max(light) - min(light), 1, light)
 
 
 if __name__ == "__main__":
