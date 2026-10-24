@@ -94,6 +94,34 @@ impl<'a> MissingStubRepair<'a> {
         suffix
     }
 
+    /// The located clause of one missing stub, `broken stub: …` with the homes and
+    /// the repair after it, as [`Self::located_suffix`] writes it when that stub is
+    /// the only missing one beside the same homes: the line `refs` warns with for a
+    /// stub it set aside (§FS-refs.4.1.1). `None` for a stub whose target is not
+    /// missing, which this guidance does not cover.
+    pub(crate) fn stub_clause(
+        &self,
+        stub: &Declaration,
+        id: &str,
+        display_path: impl Fn(&Path) -> String,
+    ) -> Option<String> {
+        let missing: Vec<_> = self
+            .missing
+            .iter()
+            .filter(|(missing, _)| std::ptr::eq(*missing, stub))
+            .copied()
+            .collect();
+        if missing.is_empty() {
+            return None;
+        }
+        let alone = Self {
+            missing,
+            homes: self.homes.clone(),
+        };
+        let suffix = alone.located_suffix(id, display_path);
+        Some(suffix.strip_prefix("; ").unwrap_or(&suffix).to_string())
+    }
+
     /// Connect a missing-target finding to its companion without naming another
     /// site or assuming selection retained it (§FS-declarations.stubs.repair).
     pub(crate) fn site_free_suffix(&self, id: &str, stub: &Declaration) -> String {

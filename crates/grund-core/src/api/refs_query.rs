@@ -77,16 +77,19 @@ pub(super) fn refs_impl_with_details(
     cautions: &mut Vec<crate::Finding>,
     hint: &mut Option<String>,
 ) -> Result<RefsWithMetadata> {
-    refs_impl_with_annotations(opts, details, cautions, hint, None)
+    refs_impl_with_annotations(opts, details, cautions, hint, None, &mut Vec::new())
 }
 
 /// §FS-refs.3.1.1: frontend annotations from this scan, outside result records.
+/// `set_aside` receives the text of each warning a broken stub set aside beside a
+/// real home earns, which a text frontend alone prints (§FS-refs.4.1.1).
 pub(super) fn refs_impl_with_annotations(
     opts: RefsOpts,
     details: &mut serde_json::Value,
     cautions: &mut Vec<crate::Finding>,
     hint: &mut Option<String>,
     index_entries: Option<&mut BTreeSet<(String, usize, usize)>>,
+    set_aside: &mut Vec<String>,
 ) -> Result<RefsWithMetadata> {
     // §AR-scanner.2.4.2: the classifying loader, not the plain one — `refs`
     // publishes each hit's enclosing declaration and section (§FS-refs.3.2), and
@@ -175,24 +178,28 @@ pub(super) fn refs_impl_with_annotations(
 
     // §FS-refs.4: only the selected project's homes and requested coordinate
     // can refuse; descendants, summary and total never union claimants.
-    if let Some(refusal) = declaration_ambiguity_refusal(
+    match declaration_ambiguity_refusal(
         render_config,
         context.render_config(),
         &target_project.findings,
         &id,
         section.as_deref(),
     ) {
-        // §FS-refs.4: keep format, warnings and partial-scan precedence beside
-        // the typed refusal, without changing the public result records.
-        return Err(anyhow::Error::msg(RefsOutput {
-            output_format: render_config.output_format.clone(),
-            workspace: context.workspace_loaded,
-            hits: Vec::new(),
-            note: None,
-            scan_errors,
-            warnings: context_run_warnings(&context),
-        })
-        .context(refusal));
+        // §FS-refs.4.1.1: a broken stub beside a real home is set aside and named.
+        Ok(warnings) => *set_aside = warnings,
+        Err(refusal) => {
+            // §FS-refs.4: keep format, warnings and partial-scan precedence beside
+            // the typed refusal, without changing the public result records.
+            return Err(anyhow::Error::msg(RefsOutput {
+                output_format: render_config.output_format.clone(),
+                workspace: context.workspace_loaded,
+                hits: Vec::new(),
+                note: None,
+                scan_errors,
+                warnings: context_run_warnings(&context),
+            })
+            .context(refusal));
+        }
     }
 
     struct Hit<'a> {

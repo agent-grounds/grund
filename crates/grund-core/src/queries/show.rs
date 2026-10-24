@@ -104,24 +104,11 @@ pub(crate) fn show_declaration_with_home<'a>(
         )?;
         return Ok((output, record));
     }
-    if let (Some(verdict), Some(target)) = (&record.stub_resolution, &record.defined_in)
-        && verdict.is_broken()
-    {
-        // §FS-show.2.3.4: the first line for a missing target, the second for the rest.
-        let rendered = render_declaration_id(&config.grammar, record);
-        let reason = match verdict {
-            StubResolution::Missing => "which does not exist".to_string(),
-            _ => format!("which contains no inline declaration of {rendered}"),
-        };
+    if let Some(message) = broken_stub_message(config, path_config, record) {
         return Err(anyhow!(crate::model::OperationDiagnostic::new(
             "query",
             "broken-stub",
-            format!(
-                "broken stub: {rendered} (stub at {}:{} points at {}, {reason})",
-                display_path(path_config, &record.file),
-                record.line,
-                format_path(target),
-            )
+            message
         )));
     }
     if let Some(section) = section
@@ -155,6 +142,35 @@ pub(crate) fn show_declaration_with_home<'a>(
         config.frame(),
     )?;
     Ok((output, record))
+}
+
+/// The `broken stub:` line `show` refuses a broken stub with when it is the ID's
+/// only home (§FS-show.2.3.4): the first line for a missing target, the second for
+/// every other broken verdict. `refs` names a stub it set aside beside a real home
+/// with the same line where the ambiguity refusal carries no clause for it
+/// (§FS-refs.4.1.1). `None` for a declaration that is not a broken stub.
+pub(super) fn broken_stub_message(
+    config: &Config,
+    path_config: &Config,
+    stub: &Declaration,
+) -> Option<String> {
+    let (Some(verdict), Some(target)) = (&stub.stub_resolution, &stub.defined_in) else {
+        return None;
+    };
+    if !verdict.is_broken() {
+        return None;
+    }
+    let rendered = render_declaration_id(&config.grammar, stub);
+    let reason = match verdict {
+        StubResolution::Missing => "which does not exist".to_string(),
+        _ => format!("which contains no inline declaration of {rendered}"),
+    };
+    Some(format!(
+        "broken stub: {rendered} (stub at {}:{} points at {}, {reason})",
+        display_path(path_config, &stub.file),
+        stub.line,
+        format_path(target),
+    ))
 }
 
 /// JSON values have source slices rather than Markdown bodies. Every show mode

@@ -165,6 +165,10 @@ action and refers to the duplicate declaration finding for the location; that
 reference remains when `--only broken-stub` hides the companion. Ambiguous ID
 queries also explain the located repair. If several real homes exist, the
 guidance lists them without choosing one.
+`grund refs AR-event-bus` does not refuse while you plan the repair: the broken stub
+is no home for it, so it lists every citation — the sites that follow the move — and
+names the stub in one `warning:` line carrying the same repair
+([§FS-refs.4.1.1](../functional-spec/FS-refs.md#411-a-broken-stub-beside-a-real-home-is-set-aside-with-a-warning)).
 If the sole real declaration is in a missing stub's own file, the guidance instead
 explains that linking to that same file will not pair the stub: it remains a duplicate
 ([§FS-declarations.stubs.repair](../functional-spec/FS-declarations.md#stubsrepair-a-missing-target-beside-another-declaration-explains-the-repair)).

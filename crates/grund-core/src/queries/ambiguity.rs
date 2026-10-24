@@ -4,11 +4,12 @@
 //! its target, scanned or not (§FS-refs.4.1), read off the verdict the scan
 //! recorded on the stub (§AR-scanner.4.6).
 
+use super::show::broken_stub_message;
 use super::show_query::ShowQueryError;
 use crate::config::{Config, display_path};
 use crate::grammar::render_declaration_id;
 use crate::model::{
-    Catalog, Declaration, FindingSite, Id, MissingStubRepair, PairedDeclarations,
+    Catalog, Declaration, FindingSite, Id, MissingStubRepair, Paired, PairedDeclarations,
     paired_declarations,
 };
 
@@ -17,20 +18,75 @@ use crate::model::{
 /// A stub's homes are those of its target, scanned or not, so a bare ID and a
 /// section coordinate are refused from the one record `show` reads; a broken
 /// stub's own record has no section to refuse (§FS-refs.4.1).
+///
+/// A broken stub is no home here: beside a real home it is set aside rather than
+/// counted, and what is returned is the text of one warning per stub set aside,
+/// in `path:line` order (§FS-refs.4.1.1). A broken stub that is the only home
+/// sets nothing aside. `show` decides on every declaration, and so does the
+/// refusal this returns: it names every claimant, as `show`'s does.
 pub(crate) fn declaration_ambiguity_refusal(
     config: &Config,
     path_config: &Config,
     findings: &Catalog,
     id: &Id,
     section: Option<&str>,
-) -> Option<ShowQueryError> {
-    let paired = paired_declarations(findings.declarations.get(id)?);
-    if let Some(refusal) = ambiguous_id_refusal(config, path_config, &paired, id) {
-        return Some(refusal);
+) -> Result<Vec<String>, ShowQueryError> {
+    let Some(decls) = findings.declarations.get(id) else {
+        return Ok(Vec::new());
+    };
+    let paired = paired_declarations(decls);
+    // §FS-refs.4.1.1: refuse among the homes that remain once broken stubs are set aside.
+    let homes: Vec<Paired<'_>> = paired
+        .iter()
+        .filter(|home| !home.is_broken_stub())
+        .collect();
+    if homes.len() > 1
+        && let Some(refusal) = ambiguous_id_refusal(config, path_config, &paired, id)
+    {
+        return Err(refusal);
     }
     // §FS-refs.4.1: refused from the record show would read, before a bare ID returns.
-    let record = paired.sole()?.record;
-    ambiguous_section_refusal(config, path_config, record, id, section?)
+    let record = match homes.as_slice() {
+        [home] => Some(home.record),
+        _ => paired.sole().map(|sole| sole.record),
+    };
+    if let (Some(record), Some(section)) = (record, section)
+        && let Some(refusal) = ambiguous_section_refusal(config, path_config, record, id, section)
+    {
+        return Err(refusal);
+    }
+    if homes.is_empty() {
+        return Ok(Vec::new());
+    }
+    Ok(set_aside_warnings(config, path_config, &paired))
+}
+
+/// §FS-refs.4.1.1: the warning each broken stub set aside beside a real home earns,
+/// in `path:line` order — the `broken stub:` clause the ambiguity refusal carries
+/// for it (§FS-declarations.stubs.repair), or, for a verdict that clause does not
+/// cover, the line `show` refuses the stub alone with (§FS-show.2.3.4).
+fn set_aside_warnings(
+    config: &Config,
+    path_config: &Config,
+    paired: &PairedDeclarations<'_>,
+) -> Vec<String> {
+    let Some(first) = paired.records().next() else {
+        return Vec::new();
+    };
+    // Spelled as the refusal spells the ID, so the clause is the refusal's own.
+    let rendered_id = render_declaration_id(&config.grammar, first);
+    let repair = MissingStubRepair::new(paired);
+    paired
+        .iter()
+        .filter(Paired::is_broken_stub)
+        .filter_map(|stub| {
+            repair
+                .stub_clause(stub.record, &rendered_id, |path| {
+                    display_path(path_config, path)
+                })
+                .or_else(|| broken_stub_message(config, path_config, stub.record))
+        })
+        .collect()
 }
 
 /// A valid stub/inline pair is one home; multiple independent homes refuse with

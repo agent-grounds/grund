@@ -121,7 +121,8 @@ fn command_refs(args: &[String]) -> ExitCode {
     opts.section = section_override;
     opts.descendants = descendants;
     // §FS-show.3.5.1: prose travels beside the unchanged public result records.
-    let (metadata, hint, index_entries) = match grund_core::refs_with_text_annotations(opts) {
+    let annotated = grund_core::refs_with_text_annotations(opts);
+    let (metadata, hint, index_entries, set_aside) = match annotated {
         Ok(output) => output,
         Err(err) => {
             // §FS-refs.4: recorded ambiguities refuse before every successful
@@ -157,6 +158,13 @@ fn command_refs(args: &[String]) -> ExitCode {
         Ok(format) => format,
         Err(code) => return code,
     };
+    // §FS-refs.4.1.1: each broken stub set aside beside a real home is named, in
+    // text only; JSON keeps stderr empty and leaves the finding to `check`.
+    if format != "json" {
+        for warning in &set_aside {
+            eprintln!("warning: {warning}");
+        }
+    }
     if let Some(failure) = &outcome.query_failure {
         if !output.scan_errors.is_empty() {
             return exit_after_scan_errors(&output.scan_errors);

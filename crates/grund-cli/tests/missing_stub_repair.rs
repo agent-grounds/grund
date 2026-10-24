@@ -62,6 +62,7 @@ fn missing_stub_check_json_keeps_located_finding_contract() {
     );
 }
 
+/// `refs` is not among them: it sets the broken stub aside and lists (§FS-refs.4.1.1).
 #[test]
 fn missing_stub_all_text_queries_explain_the_ambiguity() {
     let repo = Repo::new();
@@ -70,7 +71,6 @@ fn missing_stub_all_text_queries_explain_the_ambiguity() {
         vec!["AR-cache"],
         vec!["AR-cache", "--toc"],
         vec!["AR-cache.1"],
-        vec!["refs", "AR-cache"],
     ] {
         let output = repo.run(&args, 1);
         assert!(output.stdout.is_empty(), "{args:?}: {output:?}");
@@ -101,7 +101,8 @@ fn missing_stub_query_json_preserves_original_sites_and_prefix() {
     // A second lexical order prevents a repair helper from assuming the first site is a stub.
     repo.reverse_sites();
     let prefix = "ambiguous ID: AR-cache (declared at asrc/cache.rs:1, zdocs/cache.md:1)";
-    for args in [vec!["AR-cache.1"], vec!["refs", "AR-cache"]] {
+    // §FS-refs.4.1.1: `refs` sets the broken stub aside, so only `show` refuses here.
+    for args in [vec!["AR-cache.1"]] {
         let text = repo.run(&args, 1);
         let mut args = args;
         args.push("--format=json");
