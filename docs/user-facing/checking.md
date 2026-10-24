@@ -53,11 +53,12 @@ project's home is its own root-level `requirements.md`. If notify belongs to the
 workspace, add `"packages/notify"` to `[workspace] members` in the enclosing
 config. Membership alone fixes which homes apply; promoting `## FS-email` to
 `# FS-email` does not change ownership. If notify should stay outside the scan,
-exclude `"packages/notify/"` in that config: `[schema.sources] exclude` for v2,
-`[scan] exclude` for v1. If configured source includes or kind homes start a scan
-at or beneath that directory, remove those roots too: exclusions only prune
+use `[schema.sources] exclude = ["packages/notify/"]` in v2. In v1 use
+`[scan] exclude = ["notify"]`, which excludes every directory named `notify` at
+every depth. If configured source includes or kind homes start a scan at or
+beneath that directory, remove those roots too: exclusions only prune
 descendants. The diagnostic names report-relative locations, but suggested edit
-values are relative to the enclosing config root.
+paths and v2 exclusion patterns are relative to the enclosing config root.
 
 Run the [workspace repair walkthrough](../../examples/workspace/README.md#repairing-an-unlisted-project)
 to see the failing check and both repairs. A plain nested config with no misplaced
