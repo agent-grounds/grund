@@ -1,0 +1,5 @@
+specs/001-photo-upload/plan.md:43: §SPEC-001-photo-upload.requirements.functional.fr-003
+specs/001-photo-upload/tasks.md:44: §SPEC-001-photo-upload.requirements.functional.fr-003
+specs/001-photo-upload/tasks.md:51: §SPEC-001-photo-upload.requirements.functional.fr-003
+src/pixelbin/upload.py:27: §SPEC-001-photo-upload.requirements.functional.fr-003
+tests/test_upload.py:18: §SPEC-001-photo-upload.requirements.functional.fr-003

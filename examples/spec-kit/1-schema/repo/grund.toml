@@ -1,0 +1,158 @@
+# A GitHub Spec Kit project held to a grund schema.
+#
+# Spec Kit keeps the project constitution in `.specify/memory/constitution.md`
+# and one directory per feature, `specs/<NNN>-<feature>/`, holding `spec.md`,
+# `plan.md` and `tasks.md`. Each file of a feature gets its own row, so each
+# feature adds its three paths below.
+grund_config_version = 2
+project_name = "pixelbin"
+
+[schema]
+# `SPEC-001-photo-upload` names the spec of `specs/001-photo-upload/`.
+id_format = "{kind}-{number}-{slug}"
+
+[schema.sources]
+languages = ["markdown", "python"]
+
+# Each constitution principle is one declaration, `### ART-<slug>: I. <Name>`,
+# so a plan's Constitution Check can be held to every one of them.
+[schema.kinds.ART]
+files = [".specify/memory/constitution.md"]
+id_format = "{kind}-{slug}"
+
+# The part of the constitution's governance `grund check` enforces.
+[schema.kinds.RULE]
+files = [".specify/memory/rules.md"]
+id_format = "{kind}-{slug}"
+form = "rule"
+
+# A feature specification: the spec template's chapters, in its order, and
+# nothing else but the Clarifications chapter `/speckit.clarify` adds.
+[schema.kinds.SPEC]
+files = ["specs/001-photo-upload/spec.md", "specs/002-album-share/spec.md"]
+closed = "must"
+
+[schema.kinds.SPEC.fields.clarifications]
+title = "Clarifications"
+position = "first"
+
+[schema.kinds.SPEC.fields.user-scenarios]
+title = "User Scenarios & Testing *(mandatory)*"
+presence = "must"
+after = "clarifications"
+
+[schema.kinds.SPEC.fields.requirements]
+title = "Requirements *(mandatory)*"
+presence = "must"
+after = "user-scenarios"
+
+[schema.kinds.SPEC.fields.success-criteria]
+title = "Success Criteria *(mandatory)*"
+presence = "must"
+after = "requirements"
+
+[schema.kinds.SPEC.fields.assumptions]
+title = "Assumptions"
+after = "success-criteria"
+
+# An implementation plan: the plan template's chapters, in its order.
+[schema.kinds.PLAN]
+files = ["specs/001-photo-upload/plan.md", "specs/002-album-share/plan.md"]
+closed = "must"
+
+[schema.kinds.PLAN.fields.summary]
+title = "Summary"
+presence = "must"
+position = "first"
+
+[schema.kinds.PLAN.fields.technical-context]
+title = "Technical Context"
+presence = "must"
+after = "summary"
+
+[schema.kinds.PLAN.fields.constitution-check]
+title = "Constitution Check"
+presence = "must"
+after = "technical-context"
+
+[schema.kinds.PLAN.fields.project-structure]
+title = "Project Structure"
+presence = "must"
+after = "constitution-check"
+
+# Filled only when the Constitution Check has a violation to justify.
+[schema.kinds.PLAN.fields.complexity-tracking]
+title = "Complexity Tracking"
+after = "project-structure"
+
+# A task list declares nothing: it is a place, so its headings stay exactly
+# as the tasks template writes them.
+[schema.kinds.tasks]
+citable = false
+files = ["specs/001-photo-upload/tasks.md", "specs/002-album-share/tasks.md"]
+
+[schema.kinds.test]
+citable = false
+folders = ["tests"]
+
+# The complement, narrowed to the source tree: Spec Kit's own templates and
+# scripts under `.specify/` are not read.
+[schema.kinds.code]
+folders = ["src"]
+
+# A spec comes before its plan and names no technology, so it cites only other
+# specs and the constitution.
+[rules.citations.SPEC]
+default = "must-not"
+may = ["SPEC", "ART"]
+
+# A plan plans a spec. Its Constitution Check is held by RULE-constitution-gate.
+[rules.citations.PLAN]
+must = ["SPEC"]
+
+# The constitution cites its own principles, and the rules that enforce it.
+[rules.citations.ART]
+default = "must-not"
+may = ["ART", "RULE"]
+
+# Every phase of a task list cites what it serves: the spec, or for setup the plan.
+[rules.citations.tasks]
+must = ["SPEC|PLAN"]
+
+[rules.citations.tasks.grounding]
+must = "h3"
+
+# Principle III: every test cites the requirement it proves.
+[rules.citations.test]
+must = ["SPEC"]
+
+[rules.citations.test.grounding]
+must = "file"
+
+[rules.citations.code]
+must = ["SPEC"]
+
+[rules.citations.code.grounding]
+must = "file"
+
+# Write grund's agent guidance into the root AGENTS.md, beside Spec Kit's.
+[presentation]
+rules = "root"
+
+[presentation.kinds.ART]
+title = "Constitution principle"
+
+[presentation.kinds.RULE]
+title = "Checked governance"
+
+[presentation.kinds.SPEC]
+title = "Feature Specification"
+
+[presentation.kinds.PLAN]
+title = "Implementation Plan"
+
+[presentation.kinds.tasks]
+title = "Tasks: one checklist per feature"
+
+[presentation.kinds.test]
+title = "Tests: each proves a requirement it cites"
