@@ -1,0 +1,40 @@
+kiro-checkout · grund.toml · v2
+
+kinds and places
+  REQ     kind                  .kiro/specs/coupon-codes/requirements.md, .kiro/specs/free-shipping/requirements.md
+            closed must
+  DESIGN  kind                  .kiro/specs/coupon-codes/design.md, .kiro/specs/free-shipping/design.md
+            field overview      must · first
+            field architecture  may · after overview
+            field components    may · after architecture
+            field data-models   may · after components
+            field properties    may · after data-models
+            field errors        may · after properties
+            field testing       must · after errors
+  tasks   place                 .kiro/specs/
+  STEER   kind                  .kiro/steering/
+  RULE    kind                  .kiro/steering/traceability.md
+  test    place                 test/
+  code    complement            src/
+
+citations                       grounded
+  REQ     may       REQ (itself)
+          may       STEER
+          must not  everything else
+  DESIGN  must      REQ
+          may       DESIGN (itself)
+          may       STEER
+          must not  everything else
+  tasks   must      REQ         must · file
+          may       DESIGN
+          must not  everything else
+  STEER   may       STEER (itself)
+          may       RULE
+          must not  everything else
+  RULE    —
+  test    must      REQ         must · h3
+  code    must      REQ|DESIGN  must · h2
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it
