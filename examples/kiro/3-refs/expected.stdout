@@ -1,0 +1,7 @@
+.kiro/specs/coupon-codes/design.md:27: §REQ-coupon-codes.1.2
+.kiro/specs/coupon-codes/design.md:45: §REQ-coupon-codes.1.2
+.kiro/specs/coupon-codes/tasks.md:21: §REQ-coupon-codes.1.2
+.kiro/specs/coupon-codes/tasks.md:24: §REQ-coupon-codes.1.2
+src/coupons.ts:24: §REQ-coupon-codes.1.2
+test/coupons.test.ts:15: §REQ-coupon-codes.1.2
+test/coupons.test.ts:31: §REQ-coupon-codes.1.2
