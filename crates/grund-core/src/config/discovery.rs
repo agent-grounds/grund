@@ -22,6 +22,32 @@ use crate::model::{format_path, relative_from_base};
 /// told to write is the file that governs it.
 const CONFIG_NAMES: [&[&str]; 2] = [&["grund.toml"], &[".agents", "grund.toml"]];
 
+/// §FS-declarations.checks.misplaced-declaration.unlisted-project: an unread
+/// config's optional identity, using the same top-level/string grammar as both
+/// readers. No project load, regex compilation, or refusal for malformed input.
+pub(crate) fn unread_project_name(text: &str, path: &Path) -> Option<String> {
+    let mut name = None;
+    for (idx, raw) in text.lines().enumerate() {
+        let line = v1::strip_comment(raw).trim();
+        if line.starts_with('[') {
+            break;
+        }
+        if let Some((key, value)) = line.split_once('=')
+            && key.trim() == "project_name"
+        {
+            if name.is_some() {
+                return None;
+            }
+            let value = v1::parse_string(path, idx + 1, value.trim()).ok()?;
+            if value.is_empty() || value.chars().any(char::is_control) {
+                return None;
+            }
+            name = Some(value);
+        }
+    }
+    name
+}
+
 /// Every config name `dir` actually carries, in precedence order (§FS-config.1).
 ///
 /// `is_file()` rather than `exists()`, because with two names the test decides

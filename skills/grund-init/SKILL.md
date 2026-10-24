@@ -116,6 +116,8 @@ grund check --full .
 
 The last line checks beyond configured source scope: `grund check .` uses the ordinary scope, while `grund check --full .` widens the walk to report unresolved references and section headings outside declaration bodies there ([the full-tree scope](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#13-the-full-tree-scope---full)). Version 1 scopes with `[scan] include`; version 2 uses configured places and the `code` complement. Source exclusions still apply: `[schema.sources] exclude` in v2, `[scan] exclude` in v1. The wider walk stops only at *declared* workspace members, not at any nested `grund.toml`, so a vendored or example project inside the tree is read under this project's grammar; exclude it with the loaded version's source key, or list it in `[workspace] members` if it is one of ours.
 
+If a misplaced-declaration error names an unread nested config, repair ownership before editing declarations: add the directory to the enclosing config’s `[workspace] members`, or exclude it with that config version’s source key. A declaration heading promotion does not fix membership. Exclusions prune descendants, so remove configured scan roots at or beneath the directory too when needed ([placement context](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-declarations.md#checksmisplaced-declarationunlisted-project-explain-the-enclosing-homes-beneath-an-unlisted-project)).
+
 If custom config affects `AGENTS.md`, ensure `grund.toml` exists before `grund init` so the generated managed block reflects the selected ID grammar, marker, strict mode, kinds, and existing artifact layout.
 
 Read an unused warning's index-entry location alongside `grund refs <ID>` and

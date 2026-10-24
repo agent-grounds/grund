@@ -26,6 +26,8 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
     let mut report = CheckReport::default();
     check_declaration_homes(catalog, frame, &mut report);
     check_misplaced(catalog, schema, frame, &mut report);
+    // §FS-declarations.checks.misplaced-declaration.unlisted-project: all placement forms.
+    explain_unlisted_project_placement(schema, frame, &mut report);
     // §FS-declarations.checks.section-heading-level / §FS-declarations.checks.duplicate-section:
     // the depth a declaration's own section headings write, and whether two claim one path. One
     // file per invariant family in `sections.rs` (§AR-checker.2.15, §AR-core-module-layout.1).
@@ -172,6 +174,26 @@ fn check_misplaced(
                     authority: Vec::new(),
                 });
             }
+        }
+    }
+}
+
+/// §FS-declarations.checks.misplaced-declaration.unlisted-project: enrich all
+/// placement forms at their common boundary. Every frontend receives the same
+/// message; diagnostic locations, codes, fields and verdicts remain untouched.
+fn explain_unlisted_project_placement(schema: &Schema, frame: Frame<'_>, report: &mut CheckReport) {
+    let directories = report
+        .errors
+        .iter()
+        .filter(|error| error.code == Code::MISPLACED_DECLARATION)
+        .filter_map(|error| error.path.as_ref().and_then(|path| path.parent()));
+    let contexts = crate::workspace::unlisted_project_contexts(schema, frame, directories);
+    for error in &mut report.errors {
+        if error.code == Code::MISPLACED_DECLARATION
+            && let Some(path) = &error.path
+            && let Some(context) = path.ancestors().find_map(|dir| contexts.get(dir))
+        {
+            error.message.push_str(context);
         }
     }
 }

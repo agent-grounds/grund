@@ -39,6 +39,30 @@ an unused warning alone is no reason to invent one. Ordinary use rows stay
 unannotated; when a summary mixes entry and use sites, its annotation identifies
 only the excluded lines (and columns when they share a line).
 
+## A misplaced declaration beneath another project's config
+
+A nested `grund.toml` does not make its directory a workspace member. Until an
+enclosing `[workspace] members` entry lists it, that directory is ordinary tree
+to the enclosing scan and its declarations follow the enclosing kind homes.
+When one is misplaced, the error identifies the unread nested config and the
+enclosing config/project whose homes apply, in text and JSON
+([§FS-declarations.checks.misplaced-declaration.unlisted-project](../functional-spec/FS-declarations.md#checksmisplaced-declarationunlisted-project-explain-the-enclosing-homes-beneath-an-unlisted-project)).
+
+For example, `packages/notify/requirements.md` can be misplaced when the enclosing
+project's home is its own root-level `requirements.md`. If notify belongs to the
+workspace, add `"packages/notify"` to `[workspace] members` in the enclosing
+config. Membership alone fixes which homes apply; promoting `## FS-email` to
+`# FS-email` does not change ownership. If notify should stay outside the scan,
+exclude `"packages/notify/"` in that config: `[schema.sources] exclude` for v2,
+`[scan] exclude` for v1. If configured source includes or kind homes start a scan
+at or beneath that directory, remove those roots too: exclusions only prune
+descendants. The diagnostic names report-relative locations, but suggested edit
+values are relative to the enclosing config root.
+
+Run the [workspace repair walkthrough](../../examples/workspace/README.md#repairing-an-unlisted-project)
+to see the failing check and both repairs. A plain nested config with no misplaced
+declaration adds no standalone finding.
+
 ## What it enforces
 
 Renumber the heading `### 3.2 Missing section` in [`FS-check.md`](../functional-spec/FS-check.md) to `3.99` and `grund check` flags every site that leaned on it — code, tests, decision docs and the README alike, in one resolver:

@@ -41,6 +41,7 @@ mod optional_members;
 mod preflight;
 mod scope;
 mod unlisted;
+mod unlisted_project;
 
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
@@ -66,6 +67,7 @@ pub(crate) use scope::{
     scope_is_config_root,
 };
 pub(crate) use unlisted::{unlisted_workspace_block_errors, unlisted_workspace_block_run_warnings};
+pub(crate) use unlisted_project::unlisted_project_contexts;
 
 // The boundary-root form of an expanded member list: the scanner's parallel-scan
 // cases compare against it (§AR-core-module-layout.1.3), and migration names each
