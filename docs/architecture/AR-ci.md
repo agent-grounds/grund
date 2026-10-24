@@ -235,7 +235,8 @@ classification above.
 
 The changed-line pass judges the working tree against one **diff base**, taken
 from one place: the commit `LINK_BASE` names when that variable is set and
-non-empty, otherwise the merge base of `HEAD` with `origin/main`. A line is
+non-empty, otherwise the merge base of `HEAD` with `origin/main`; a set
+`LINK_BASE` that names no commit falls back to nothing. A line is
 **changed** when it is added or modified between that base and the working
 tree - committed, staged or not yet staged - and every line of a file that is
 new since the base counts, an untracked file that git does not ignore among
@@ -245,8 +246,9 @@ go to the network, with the tolerance of [§AR-ci.3.1.1](AR-ci.md#311-bounded-ex
 [§AR-ci.3.1.2](AR-ci.md#312-a-github-5xx-is-settled-through-the-api) and [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more). A URL on an unchanged line is not requested,
 even in a file the change edits elsewhere.
 
-When neither the variable nor the merge base resolves - no `origin/main`, a
-shallow clone that lacks the base, a directory outside git - the gate checks no
+When the variable names no commit, or it is empty and the merge base does not
+resolve - no `origin/main`, a shallow clone that lacks the base, a directory
+outside git - the gate checks no
 external URL rather than all of them, still runs the internal pass, and says so
 on one line beginning `no diff base:`. That is the right failure direction for
 a gate: the sweep checks every external URL whatever the gate skipped.
@@ -261,11 +263,28 @@ so that commit is present. A push to `main` sets nothing and measures from the
 merge base of `HEAD` with `origin/main`, which is `HEAD` itself: it checks no
 external URL, and the sweep covers `main`.
 
+A dispatched run ([§AR-ci.11](AR-ci.md#11-a-release-candidate-is-dispatched-the-same-ci)) has no event base, and on a fork's runner `origin`
+is the fork, whose `main` may lag upstream by weeks: measured from it, every
+upstream edit since would count as changed. So before the hook runs, the job
+asks the forge for the upstream repository - the repository itself, or its
+parent when it is a fork - and `scripts/dispatch_link_base.py <upstream-url>`,
+run in the checkout, fetches that repository's `main` and prints the merge base
+of `HEAD` with it, which the job hands the hook as `LINK_BASE`. A dispatch on a
+fork thus measures what a pull request from its branch would, and one on the
+upstream measures what a push does. When that base cannot be resolved - the
+upstream unreachable, a history without the merge base - the script prints
+`none` and says why on stderr, and a `LINK_BASE` that is set but names no
+commit is no diff base: the gate checks no external URL and prints its
+`no diff base:` line rather than falling back to `origin/main`.
+
 `tests/integration/test_check_links_scope.py` runs the wrapper with the real
 lychee against a git fixture and a loopback host that counts every request: an
 unchanged dead URL is never requested, an added or edited one fails the gate, a
 broken internal link in an untouched file fails it, and the variable and the
-merge-base fallback reach the same verdict on one fixture.
+merge-base fallback reach the same verdict on one fixture. `tests/integration/test_check_links_dispatch_base.py`
+builds an upstream, a fork whose `main` is stale and a runner checked out from
+the fork, and holds a dispatch to the URL its change added, an unresolvable
+upstream to no request, and `ci.yml` to wiring the dispatch base.
 
 #### 3.1.5 A scheduled sweep checks every external URL
 
