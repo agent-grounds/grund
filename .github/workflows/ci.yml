@@ -353,7 +353,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           upstream=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.parent.clone_url // .clone_url' || true)
-          echo "base=$(python scripts/dispatch_link_base.py "$upstream")" >> "$GITHUB_OUTPUT"
+          # A crash prints nothing; `none` keeps that from falling back to the stale origin/main.
+          base=$(python scripts/dispatch_link_base.py "$upstream" || true)
+          echo "base=${base:-none}" >> "$GITHUB_OUTPUT"
 
       - name: pre-commit
         # lychee checks upwards of three thousand links, a large share of them
