@@ -10,8 +10,8 @@ tests before one summary (§AR-ci.requirements.5.1, §AR-ci.3.4.2); of what a gr
 wrote it keeps only the lines that point lists, the Node acceptance's `node build:` lines
 (§AR-ci.3.4.1.1) and the `gate time:` lines. Its own builds are quiet
 (§AR-ci.requirements.5.4).
-`--without-acceptance` runs all but the two binding acceptances, `--only-node-acceptance`
-and `--only-python-acceptance` one of them alone; no argument runs everything (§AR-ci.3.4.3).
+`--only-node-acceptance`, `--only-python-acceptance` and `--only-slow` run their modules
+alone, `--rest` all the others; no argument runs everything (§AR-ci.3.4.3).
 """
 import io
 import os
@@ -31,12 +31,13 @@ SLOWEST = 10
 # the argument after it is the selection, empty for everything (§AR-ci.3.4.3).
 DISCOVER = ('import sys; sys.path.append(sys.argv.pop(1)); selection = sys.argv.pop(1) or None; '
             'import run_python_gate; sys.exit(run_python_gate.discover(sys.argv[1:], selection))')
-# §AR-ci.3.4.3: each `only-` selection and the one acceptance module it runs.
-ACCEPTANCES = {'only-node-acceptance': 'test_node_binding_acceptance',
-               'only-python-acceptance': 'test_python_binding_acceptance'}
-SELECTIONS = ('without-acceptance', *ACCEPTANCES)
-USAGE = ('usage: run_python_gate.py '
-         '[--without-acceptance | --only-node-acceptance | --only-python-acceptance]')
+# §AR-ci.3.4.3: each `only-` selection and the modules it runs; `rest` is every other module.
+ONLY = {'only-node-acceptance': ('test_node_binding_acceptance',),
+        'only-python-acceptance': ('test_python_binding_acceptance',),
+        'only-slow': ('test_rules_scaling', 'test_config_schema')}
+SELECTIONS = ('rest', *ONLY)
+USAGE = ('usage: run_python_gate.py [--rest | --only-node-acceptance | '
+         '--only-python-acceptance | --only-slow]')
 # §AR-ci.requirements.5.1: what each line a green test keeps begins with, a build line of
 # §AR-ci.3.4.1.1, whose marker the acceptance wrapper holds too, or a gate-time line.
 KEPT_LINES = ('node build: ', 'gate time: ')
@@ -271,8 +272,8 @@ def select(suite, selection):
     for item in suite:
         if isinstance(item, unittest.TestSuite):
             chosen.addTest(select(item, selection))
-        elif (ACCEPTANCES.get(selection) == module_of(item) if selection in ACCEPTANCES
-              else module_of(item) not in ACCEPTANCES.values()):
+        elif (module_of(item) in ONLY[selection] if selection in ONLY
+              else all(module_of(item) not in modules for modules in ONLY.values())):
             chosen.addTest(item)
     return chosen
 

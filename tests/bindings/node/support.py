@@ -1,12 +1,12 @@
 """Test-only local package rehearsal for §FS-distribution.3.2.3.3."""
 
 import hashlib
+import importlib.util
 import json
 import atexit
 import os
 import re
 import shutil
-import stat
 import tempfile
 import time
 from pathlib import Path
@@ -25,134 +25,32 @@ INSTALL_ATTEMPTS = 3
 _INSTALLED_CONSUMERS = {}
 
 
+def _bindings():
+    """`tests/bindings/support.py`, loaded by path: this module is `support` too."""
+    spec = importlib.util.spec_from_file_location(
+        "grund_bindings_support", Path(__file__).resolve().parents[1] / "support.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+# The per-checkout target both bindings share (§AR-ci.3.4.1.2).
+bindings = _bindings()
+
+
 def node_root():
     """The shared root every checkout's Node target lives under (§AR-ci.3.4.1)."""
     given = os.environ.get("GRUND_NODE_TARGET")
     return Path(given).expanduser() if given else SCRATCH / "grund-node-target"
 
 
-def _node_target_key(checkout):
-    """Keep the existing resolved-source digest (§FS-repository-maintenance.2.1)."""
-    return hashlib.sha256(os.fsencode(checkout)).hexdigest()[:16]
-
-
-def _replace_node_record(temporary, record):
-    """Wait out a Windows reader's open handle on the record (§FS-repository-maintenance.2.4)."""
-    deadline = time.monotonic() + 10
-    while True:
-        try:
-            temporary.replace(record)
-            return
-        except PermissionError:
-            if os.name != "nt" or time.monotonic() > deadline:
-                raise
-            time.sleep(0.01)
-
-
-def _record_node_checkout(target):
-    """Publish complete ownership atomically (§FS-repository-maintenance.2.4)."""
-    record = target / "checkout.json"
-    # Preserve nonregular ownership records (§FS-repository-maintenance.2.3).
-    try:
-        if not stat.S_ISREG(record.lstat().st_mode):
-            raise ValueError(f"Node target ownership is not a regular file: {record}")
-    except FileNotFoundError:
-        pass
-    output = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=target,
-                                        prefix=".checkout-", suffix=".json", delete=False)
-    temporary = Path(output.name)
-    try:
-        with output:
-            json.dump({"checkout": str(REPO)}, output)
-            output.write("\n")
-        _replace_node_record(temporary, record)
-    finally:
-        temporary.unlink(missing_ok=True)
-
-
-def _node_checkout_is_missing(target):
-    """Only trustworthy ownership permits deletion (§FS-repository-maintenance.2.3)."""
-    try:
-        if not stat.S_ISDIR(target.lstat().st_mode):
-            return False
-        record = target / "checkout.json"
-        if not stat.S_ISREG(record.lstat().st_mode):
-            return False
-        data = json.loads(record.read_text(encoding="utf-8"))
-        owner = data.get("checkout") if isinstance(data, dict) else None
-        if not isinstance(owner, str):
-            return False
-        checkout = Path(owner)
-        if not checkout.is_absolute() or str(checkout.resolve()) != owner:
-            return False
-        if _node_target_key(checkout) != target.name:
-            return False
-        try:
-            checkout.stat()
-        except FileNotFoundError:
-            return True
-    except (OSError, ValueError, RuntimeError):
-        # Unknown ownership or an uncertain lookup never authorizes removal.
-        pass
-    return False
-
-
-def _ignore_removed_node_output(operation, path, error):
-    """Continue concurrent traversal after removals (§FS-repository-maintenance.2.4)."""
-    if not isinstance(error[1], FileNotFoundError):
-        raise error[1]
-
-
-def _remove_node_output(target):
-    """Bound Windows deletion contention per target (§FS-repository-maintenance.2.4).
-
-    Retry the traversal, not the callback operation: shutil may report a failed
-    lookup or scan as well as an unlink or rmdir. Share a ten-second budget across
-    the target and its descendants, matching the ownership-publication wait.
-    """
-    deadline = time.monotonic() + 10
-    while True:
-        try:
-            shutil.rmtree(target, onerror=_ignore_removed_node_output)
-            return
-        except PermissionError:
-            if os.name != "nt":
-                raise
-            try:
-                target.lstat()
-            except FileNotFoundError:
-                return
-            except PermissionError:
-                # Delete-pending output may deny lookup too (§FS-repository-maintenance.2.4).
-                pass
-            if time.monotonic() >= deadline:
-                raise
-            time.sleep(0.01)
-
-
-def _reclaim_node_targets(root, current):
-    """Reclaim recorded dead siblings on every call (§FS-repository-maintenance.2.2)."""
-    for candidate in root.iterdir():
-        if candidate == current or not re.fullmatch(r"[0-9a-f]{16}", candidate.name):
-            continue
-        if _node_checkout_is_missing(candidate):
-            _remove_node_output(candidate)
-
-
 def node_target():
     """Reuse this checkout's persistent build output (§FS-repository-maintenance.2.1).
 
-    One per source checkout, keyed by a digest of its resolved root (§AR-ci.3.4.1.2).
+    One per source checkout under `node_root()`, as `tests/bindings/support.py` derives it
+    for both bindings (§AR-ci.3.4.1.2).
     """
-    root = node_root()
-    target = root / _node_target_key(REPO)
-    target.mkdir(parents=True, exist_ok=True)
-    # Never write ownership through a target symlink (§FS-repository-maintenance.2.3).
-    if not stat.S_ISDIR(target.lstat().st_mode):
-        raise ValueError(f"Node target is not a regular directory: {target}")
-    _record_node_checkout(target)
-    _reclaim_node_targets(root, target)
-    return target.resolve()
+    return bindings.checkout_target(node_root())
 
 
 def typescript_compiler():

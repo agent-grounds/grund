@@ -10,7 +10,9 @@ discovery argv is inspected as syntax, without executing its setup or tests.
 
 CI runs the hook list with `SKIP` naming exactly the hooks another job already runs,
 a set computed here from the workflow, so every hook still runs on Ubuntu once
-(§AR-ci.13.3), and it runs the Python wrapper as its two selections (§AR-ci.3.4.3).
+(§AR-ci.13.3), and it runs the Python wrapper as its four selections (§AR-ci.3.4.3).
+The workflow is read with its leg's jobs in place of their calls, each shard's own
+steps apart (§AR-ci.13.5).
 
 §AR-ci.1.2 divides the work: this test holds the *existence* of a counterpart,
 because that is the half a line-shaped read can see. The other half — that the
@@ -26,6 +28,7 @@ import re
 import unittest
 from pathlib import Path
 
+from ci_workflow import LEG, ci_text, instances
 from test_ci_language_jobs import CARGO_SUITE, SHARDS, shard_command
 from test_release_workflow import jobs, steps
 
@@ -38,8 +41,8 @@ AR_CI = REPO_ROOT / "docs" / "architecture" / "AR-ci.md"
 PYTHON_GATE = REPO_ROOT / "scripts" / "run_python_gate.py"
 RUST_HOOKS = ("cargo-fmt-check", "cargo-build", "cargo-test")
 GATE = "python scripts/run_python_gate.py"
-# §AR-ci.3.4.3: CI runs the hook's command as these three selections, which together are the hook.
-SELECTIONS = ("--only-node-acceptance", "--only-python-acceptance", "--without-acceptance")
+# §AR-ci.3.4.3: CI runs the hook's command as these four selections, which together are the hook.
+SELECTIONS = ("--only-node-acceptance", "--only-python-acceptance", "--only-slow", "--rest")
 FILE_LIST_STAGES = ("pre-commit", "manual")
 ENV_PREFIX = "env RUSTFLAGS=-Dwarnings "
 # The release helper writes the release section (§FS-distribution.4.6); it gates no change.
@@ -121,8 +124,8 @@ class CiPreCommitParityTests(unittest.TestCase):
     def setUpClass(cls):
         cls.pre_commit_text = PRE_COMMIT.read_text(encoding="utf-8")
         cls.hooks = _hooks(cls.pre_commit_text)
-        cls.ci_text = CI.read_text(encoding="utf-8")
-        cls.ci_lines = _lines(cls.ci_text)
+        cls.ci_text = ci_text()
+        cls.ci_lines = _lines("\n".join(i["text"] for i in instances(cls.ci_text)))
         cls.ci_runs = _run_lines(cls.ci_lines)
         cls.by_id = {hook["id"]: hook for hook in cls.hooks}
 
@@ -177,6 +180,9 @@ class CiPreCommitParityTests(unittest.TestCase):
         workflow_env = self.ci_text.split("\nenv:\n", 1)[1].split("\njobs:\n", 1)[0]
         rustflags = _rustflags(workflow_env)
         self.assertEqual(["-Dwarnings"], rustflags, "the workflow-level env does not deny warnings")
+        # A called workflow takes none of its caller's env, so the leg denies them itself.
+        leg_env = LEG.read_text(encoding="utf-8").split("\nenv:\n", 1)[1].split("\njobs:\n", 1)[0]
+        self.assertEqual(["-Dwarnings"], _rustflags(leg_env), "the leg's env does not deny warnings")
         # §AR-ci.5: the benchmark build job and its shards alone override it, with the pinned
         # empty flags their counts need.
         overrides = {job: _rustflags(body) for job, body in jobs(self.ci_text).items()}
@@ -191,7 +197,7 @@ class CiPreCommitParityTests(unittest.TestCase):
         expected = {hook["id"] for hook in self.hooks if _run_elsewhere(hook, others)}
         self.assertLessEqual({"cargo-test", "python-test"}, expected,
                              "no job beside pre-commit runs the Rust suite's shards, or the Python "
-                             "gate's three selections")
+                             "gate's four selections")
         self.assertEqual(sorted(expected), sorted(_skipped(self.ci_text)),
                          "the pre-commit step's SKIP is not the set of hooks another job runs")
 
@@ -246,7 +252,7 @@ class CiPreCommitParityTests(unittest.TestCase):
         """Shared setup must reach this test home (§AR-ci.1.2, §FS-cochange-recipe.examples)."""
         home = Path(__file__).resolve().parent.relative_to(REPO_ROOT).as_posix()
         self.assertEqual(GATE, hook)
-        # §AR-ci.3.4.3: CI runs the hook's command as its three selections and never whole.
+        # §AR-ci.3.4.3: CI runs the hook's command as its four selections and never whole.
         ci = sorted({run for run in ci_runs if "run_python_gate.py" in run})
         self.assertEqual([f"{hook} {selection}" for selection in SELECTIONS], ci)
         tree = ast.parse(wrapper)

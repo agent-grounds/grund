@@ -20,6 +20,16 @@ USAGE = ('usage: run_cargo_suite.py [--shard <k>/<n>] <cargo test arguments>'
          ' [-- <libtest arguments>]')
 # §AR-ci.13.7: a shard that selects no target fails, as an empty selection does (§AR-ci.3.4.2).
 NO_TARGET = 5
+# §AR-ci.13.7: the seconds the slowest test binaries ran on Windows (the run of
+# agent-grounds/grund#998 measured in agent-grounds/grund#978), by target name. A target not
+# named weighs nothing here: it is dealt round the shards after these.
+WEIGHTS = {'command_agreement': 285, 'scan_determinism': 120, 'citation_site_globs': 110,
+           'e2e': 100, 'integrations': 66, 'coordinate_globs': 50, 'grund_core': 35}
+# Shard 1's other Rust checks of §AR-ci.13.1: 184 seconds before its cargo test, less the 55
+# its cargo build saves that test's own build.
+FIRST_SHARD = 130
+# The hash cargo appends to a test executable's name.
+HASH = re.compile(r'-[0-9a-f]{16}$')
 
 
 def parse(argv):
@@ -43,16 +53,31 @@ def parse(argv):
 def deal(binaries, count):
     """The `count` shards of the listed binaries, each a set of their keys.
 
-    A function of the listing alone, so every job of a leg cuts the same: the keys in
-    order, dealt round the shards one by one, so every binary lands in exactly one shard
-    and no shard holds more than one binary more than another. A binary is the unit
-    because its start, its fixtures and its child processes cost more than its count of
-    tests says: the core's unit tests are thousands and take seconds.
+    A function of the listing alone, so every job of a leg cuts the same, and every binary
+    lands in exactly one shard. The binaries `WEIGHTS` names go first, heaviest first, each
+    to the shard least loaded so far, the lowest on a tie, with shard 1 starting from
+    `FIRST_SHARD`; the rest follow in order, dealt round the shards one by one. A binary is
+    the unit because its start, its fixtures and its child processes cost more than its
+    count of tests says: the core's unit tests are thousands and take seconds.
     """
     shards = [set() for _ in range(count)]
-    for index, key in enumerate(sorted(binaries)):
+    loads = [FIRST_SHARD if count > 1 else 0] + [0] * (count - 1)
+    weighed = sorted((key for key in binaries if target(key) in WEIGHTS),
+                     key=lambda key: (-WEIGHTS[target(key)], key))
+    for key in weighed:
+        index = min(range(count), key=lambda index: (loads[index], index))
+        shards[index].add(key)
+        loads[index] += WEIGHTS[target(key)]
+    rest = sorted(key for key in binaries if target(key) not in WEIGHTS)
+    for index, key in enumerate(rest):
         shards[index % count].add(key)
     return shards
+
+
+def target(key):
+    """The target a listed binary is: its executable's name without cargo's hash."""
+    found = EXECUTABLE.search(key)
+    return HASH.sub('', stem(found.group(1))) if found else key
 
 
 def stem(path):

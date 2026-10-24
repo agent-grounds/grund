@@ -3,7 +3,8 @@
 The module installs this checkout's `crates/grund-py` into a virtual environment of
 its own and runs `tests/bindings/python/run.py` with it, against the gate's
 same-source oracle (§AR-bindings.6, §FS-distribution.3.0.3, §FS-distribution.3.3).
-Every build of the run shares the target `GRUND_PYTHON_TARGET` names (§AR-ci.3.4.5).
+Every build of the run shares this checkout's target under `GRUND_PYTHON_TARGET`
+(§AR-ci.3.4.5).
 A build or install that fails fails the test; nothing here skips.
 """
 
@@ -43,13 +44,14 @@ class PythonAcceptanceWorkflowTests(unittest.TestCase):
             subprocess.run([sys.executable, "-m", "venv", str(environment)], check=True)
             python = interpreter(environment)
             support = bindings_support()
-            # §AR-ci.3.4.5: this install and run.py's own share one kept target.
-            target = support.python_target().resolve()
-            target.mkdir(parents=True, exist_ok=True)
+            # §AR-ci.3.4.5: this install and run.py's own share this checkout's kept target,
+            # which run.py derives again from the root it is handed.
+            target = support.python_target()
             # §AR-bindings.6.2: every build of the run, this install and run.py's own, is at
             # the dev profile - the same source as a release, without its LTO.
             build = dict(os.environ, MATURIN_PEP517_ARGS="--profile dev",
-                         GRUND_PYTHON_TARGET=str(target), CARGO_TARGET_DIR=str(target))
+                         GRUND_PYTHON_TARGET=str(support.python_root()),
+                         CARGO_TARGET_DIR=str(target))
             try:
                 install = subprocess.run([str(python), "-m", "pip", "install", "--quiet",
                                           str(SOURCE)], cwd=REPO, env=build,
@@ -62,6 +64,8 @@ class PythonAcceptanceWorkflowTests(unittest.TestCase):
                                         errors="replace")
                 self.assertEqual(0, result.returncode, result.stdout + result.stderr)
             finally:
+                # Only for the cache's size: the clean checkout and the sdist compile the
+                # workspace crates from fresh paths on every run (§AR-ci.3.4.5).
                 support.prune_python_target(target)
 
 

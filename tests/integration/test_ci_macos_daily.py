@@ -14,7 +14,8 @@ import unittest
 from pathlib import Path
 
 from test_ci_duration import RecordingGh, calls_of, labels, load_tracker
-from test_ci_language_jobs import CI, instances, leg_commands, runs
+from ci_workflow import CI, instances
+from test_ci_language_jobs import leg_commands, runs
 from test_release_workflow import WORKFLOWS, jobs, squash
 
 ROOT = Path(__file__).resolve().parents[2]

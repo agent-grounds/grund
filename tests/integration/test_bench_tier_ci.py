@@ -10,8 +10,8 @@ import json
 import re
 import unittest
 
-from test_ci_language_jobs import (BENCH_ENV, BENCH_IMAGE, bench_guard_problems, header, holds,
-                                   job_env, needs, with_local_actions)
+from ci_workflow import header, holds, needs, with_local_actions
+from test_ci_language_jobs import BENCH_ENV, BENCH_IMAGE, bench_guard_problems, job_env
 from test_release_workflow import REPO_ROOT, WORKFLOWS, jobs, squash
 
 CI = WORKFLOWS / "ci.yml"

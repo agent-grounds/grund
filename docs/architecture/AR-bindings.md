@@ -227,7 +227,7 @@ The Python binding's acceptance, `tests/bindings/python/run.py`, is a test of th
 gate ([§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs)), as the Node acceptance is ([§AR-bindings.5](AR-bindings.md#5-grund-node-the-napi-rs-binding)): the module
 `tests/integration/test_python_binding_acceptance.py` runs it, so a change that moves
 what the binding returns fails its own pull request rather than the next person who runs
-the suite by hand. The module is the `--only-python-acceptance` selection of [§AR-ci.3.4.3](AR-ci.md#343-selecting-the-binding-acceptances),
+the suite by hand. The module is the `--only-python-acceptance` selection of [§AR-ci.3.4.3](AR-ci.md#343-selecting-the-binding-acceptances-and-the-slow-tests),
 so it is still a test of the Python gate, read as the gate's jobs as the Node acceptance is:
 the Python acceptance jobs of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language), Linux and Windows, run it on every push, pull
 request and merge group, beside the Python jobs rather than inside them, and the local

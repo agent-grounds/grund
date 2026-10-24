@@ -20,7 +20,9 @@ import textwrap
 import unittest
 from pathlib import Path
 
+from ci_workflow import ci_text, instances
 from test_ci_language_jobs import SHARDS
+from test_release_workflow import step_name
 
 REPO = Path(__file__).resolve().parents[2]
 WRAPPER = REPO / "scripts" / "run_cargo_suite.py"
@@ -362,17 +364,16 @@ class SlowestListTests(SuiteShape, unittest.TestCase):
 
 
 def ci_steps():
-    """`(name, run)` for each step of `ci.yml` whose `run:` is one line."""
-    steps, name = [], None
-    for raw in CI.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if line.startswith("- name:"):
-            name = line[len("- name:"):].strip()
-        elif line.startswith("- "):  # an unnamed step, such as §AR-ci.13.6's prune
-            name = None
-        elif line.startswith("run:") and line != "run: |" and name is not None:
-            steps.append((name, line[len("run:"):].strip()))
-    return steps
+    """`(name, run)` for each named step of `ci.yml` whose `run:` is one line, the leg's
+    steps in place of its calls and each shard's apart (§AR-ci.13.5). An unnamed step, such
+    as §AR-ci.13.6's prune, is left out."""
+    found = []
+    for instance in instances(ci_text()):
+        for step in instance["steps"]:
+            run = re.search(r"(?m)^\s*(?:- )?run:\s*(.*)$", step)
+            if step_name(step) and run and run.group(1).strip() not in ("", "|", ">"):
+                found.append((step_name(step), run.group(1).strip()))
+    return found
 
 
 def hook_entry(hook_id):
@@ -402,18 +403,20 @@ class CiStepsGoThroughTheQuietFormsTests(unittest.TestCase):
             self.assertIn(sharded, everything, "the hook and CI spell one command")
 
     def test_no_ci_step_runs_cargo_test_bare(self):
-        text = CI.read_text(encoding="utf-8")
+        text = ci_text()
         self.assertEqual([], re.findall(r"^\s*run: cargo test\b.*$", text, re.M))
 
     def test_every_build_and_install_is_quiet(self):
-        text = CI.read_text(encoding="utf-8")
+        text = ci_text()
         shell = re.findall(r"^\s*(?:run:\s*)?((?:python -m )?(?:cargo|pip) (?:build|run|install|bench)\b.*)$",
                            text, re.M)
         listed = re.findall(r"\[\s*(\"cargo\",[^\]]*?\"(?:build|run)\"[^\]]*)",
                             text + ORACLE.read_text(encoding="utf-8")
                             + (REPO / "scripts/check_ci_self.py").read_text(encoding="utf-8"), re.S)
         self.assertGreaterEqual(len(shell), 4, shell)
-        self.assertGreaterEqual(len(listed), 3, listed)
+        # The oracle's build and the self-check's run: the self-check is one script both legs
+        # call since it left the workflow (§AR-ci.4), so a third copy is no longer there to find.
+        self.assertGreaterEqual(len(listed), 2, listed)
         for command in shell:
             with self.subTest(command=command):
                 self.assertRegex(command, r"(^|\s)(--quiet|-q)(\s|$)")

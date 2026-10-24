@@ -24,9 +24,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from ci_workflow import ci_text
+
 REPO = Path(__file__).resolve().parents[2]
 NODE_HARNESS = REPO / "tests" / "bindings" / "node"
 CI = REPO / ".github" / "workflows" / "ci.yml"
+MACOS = CI.with_name("macos-suites.yml")
 # The build sites outside `support.py`, which the child below exercises instead.
 BUILD_SITES = (NODE_HARNESS / "test_package.py", NODE_HARNESS / "test_parity.py",
                REPO / "tests" / "e2e" / "test_node_binding.py")
@@ -143,6 +146,8 @@ def checkout(root):
     harness.mkdir(parents=True)
     for name in ("support.py", "launch.py"):
         (harness / name).write_bytes((NODE_HARNESS / name).read_bytes())
+    # The shared harness derives the target for both bindings (§AR-ci.3.4.1.2).
+    (harness.parent / "support.py").write_bytes((NODE_HARNESS.parent / "support.py").read_bytes())
     node = root / "crates" / "grund-node"
     node.mkdir(parents=True)
     for name in ("build.mjs", "stage.mjs"):
@@ -343,8 +348,8 @@ class NodeSharedTargetTests(unittest.TestCase):
 
     def test_the_ci_key_drops_entries_saved_before_the_per_checkout_targets(self):
         # The macOS suites left ci.yml for their own workflow (§AR-ci.14) and cache the same target.
-        for workflow in (CI, CI.with_name("macos-suites.yml")):
-            steps = workflow.read_text(encoding="utf-8").split("\n      - ")
+        for workflow, text in ((CI, ci_text()), (MACOS, MACOS.read_text(encoding="utf-8"))):
+            steps = text.split("\n      - ")
             # The root's own path line: the compiler's directory beneath it has a cache of its own.
             keys = [line.strip() for step in steps for line in step.splitlines()
                     if "            ~/ag/tmp/grund-node-target\n" in step
@@ -379,7 +384,7 @@ class NodeSharedTargetTests(unittest.TestCase):
         home = Path.home().resolve()
         self.assertTrue(within(wrapper, home), wrapper)
         cached = "~/" + Path(wrapper).resolve().relative_to(home).as_posix()
-        steps = CI.read_text(encoding="utf-8").split("\n      - ")
+        steps = ci_text().split("\n      - ")
         restoring = [step for step in steps if f"            {cached}\n" in step]
         # §AR-ci.13.4: the restore and save steps of each job running the Node acceptance, one key.
         self.assertTrue(restoring, "no CI cache step restores the shared Node target")

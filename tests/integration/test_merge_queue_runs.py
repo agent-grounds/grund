@@ -11,8 +11,8 @@ ceilings, once per shard, and record nothing (§AR-ci.5.1). Read as text, the wa
 import re
 import unittest
 
-from test_ci_language_jobs import (EVENTS, aggregate_fails, commands, field, header, holds,
-                                   job_env, needs, step_if)
+from ci_workflow import aggregate_fails, commands, field, header, holds, needs, step_if
+from test_ci_language_jobs import EVENTS, job_env
 from test_release_workflow import WORKFLOWS, jobs, squash, step_name, steps
 
 CI = WORKFLOWS / "ci.yml"
