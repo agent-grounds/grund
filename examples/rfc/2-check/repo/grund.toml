@@ -1,0 +1,81 @@
+# An Internet-Draft in kramdown-rfc Markdown, held to a grund schema beside the
+# code that implements it.
+#
+# The draft is one declaration whose ID is its draft name without the revision
+# suffix, and whose numbered sections are the section numbers xml2rfc prints.
+# The published RFCs it depends on are snapshots, one file each, whose ID is the
+# citation tag kramdown-rfc and RFC 7322 use: RFC9110, as in [RFC9110].
+grund_config_version = 2
+project_name = "widget-sync"
+
+[schema.sources]
+languages = ["markdown", "python"]
+
+# The draft at the root, where the I-D template keeps it. A second draft is a
+# second entry here.
+[schema.kinds.draft]
+files = ["draft-ietf-wsync-widget-sync.md"]
+
+# RFC 7322, section 4.8: every RFC has a Security Considerations section, and
+# every Internet-Draft an IANA Considerations section, even one that says
+# "This document has no IANA actions."
+[schema.kinds.draft.fields.security]
+title = "Security Considerations"
+presence = "must"
+
+[schema.kinds.draft.fields.iana]
+title = "IANA Considerations"
+presence = "must"
+
+# One snapshot per published RFC the repository cites, written by
+# `scripts/fetch-rfc RFC9110 > references/RFC9110.md`.
+[schema.kinds.RFC]
+folders = ["references"]
+index = false
+id_format = "{kind}{number}"
+
+# The reference implementation and its tests.
+[schema.kinds.impl]
+folders = ["src"]
+citable = false
+
+[schema.kinds.test]
+folders = ["tests"]
+citable = false
+
+# A draft cites the RFCs it builds on, BCP 14 at least.
+[rules.citations.draft]
+must = ["RFC"]
+
+# A published RFC is a fixed fact: its snapshot cites nothing here.
+[rules.citations.RFC]
+default = "must-not"
+
+# Code implements the draft. It may cite an RFC section beside the draft's.
+[rules.citations.impl]
+must = ["draft"]
+
+# Every docstring in src/ names what it implements. A Python docstring sits
+# indented under its `def`, and `h2` reads only unindented ones, so `h3`.
+[rules.citations.impl.grounding]
+must = "h3"
+
+[rules.citations.test]
+must = ["draft"]
+
+# `grund fmt` leaves the draft alone: a link to references/RFC9110.md would
+# mean nothing in the draft kramdown-rfc publishes.
+[presentation.fmt]
+exclude = ["draft-*.md"]
+
+[presentation.kinds.draft]
+title = "Internet-Drafts, in kramdown-rfc Markdown"
+
+[presentation.kinds.RFC]
+title = "Published RFCs: title, abstract and section map"
+
+[presentation.kinds.impl]
+title = "Reference implementation"
+
+[presentation.kinds.test]
+title = "Tests of the reference implementation"
