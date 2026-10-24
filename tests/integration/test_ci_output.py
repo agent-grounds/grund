@@ -385,7 +385,6 @@ def hook_entry(hook_id):
 class CiStepsGoThroughTheQuietFormsTests(unittest.TestCase):
     """§AR-ci.requirements.5.2 and §AR-ci.requirements.5.4, read from the files CI runs."""
 
-    @unittest.skip("red until #978 ci.yml runs the cargo suite's shards; implement removes this")
     def test_the_cargo_suite_steps_and_the_hook_call_the_wrapper(self):
         runs = dict(ci_steps())
         for step in ("native watch contract", "cargo test"):

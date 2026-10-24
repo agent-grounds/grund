@@ -23,6 +23,11 @@ into libtest's `test <name> ... ok` line on either side, or split it in two on o
 thread. The event is looked for anywhere in the line, and a binary's counts are taken
 from its own `test result:` line, so an event lost in such a line still counts and a
 green suite's last check-in reads `<total>/<total>`.
+
+§AR-ci.13.7: `--shard <k>/<n>`, before cargo's arguments, runs the `k`-th of `n` shards.
+The build and the listing are the unsharded ones, so every shard compiles with the same
+packages and features; `cargo_shards` deals the listed binaries and is cargo's runner for
+the one run, so only the shard's binaries start (see that module).
 """
 import collections
 import os
@@ -32,6 +37,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import cargo_shards  # noqa: E402
 import suite_progress  # noqa: E402
 
 # Every CSI sequence, private ones such as a child's `\x1b[?1049l` included, an OSC, and
@@ -185,10 +191,14 @@ class Binary:
                 yield outcome
 
 
-def run(cargo, libtest, binaries, progress):
-    """Run the suite and print only its failures, its check-ins and what a red binary wrote."""
+def run(cargo, libtest, binaries, progress, config=()):
+    """Run the suite and print only its failures, its check-ins and what a red binary wrote.
+
+    `config` is cargo's `--config` for a shard's runner; a binary outside `binaries` then
+    runs nothing and prints nothing but cargo's `Running` line, which is dropped.
+    """
     slots = threads(libtest)
-    command = ['cargo', 'test', *cargo] + (['--', *libtest] if libtest else [])
+    command = ['cargo', 'test', *config, *cargo] + (['--', *libtest] if libtest else [])
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     binary, failures, held = None, False, []
 
@@ -276,6 +286,7 @@ def run(cargo, libtest, binaries, progress):
 
 def main(argv):
     started = time.perf_counter()
+    shard, argv = cargo_shards.parse(argv)
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(errors='replace')
     cargo, libtest = split(argv)
@@ -285,9 +296,22 @@ def main(argv):
     status, binaries = listing(cargo, libtest)
     if status != 0:
         return status
+    if shard is None:
+        return suite(cargo, libtest, binaries, started)
+    index, count = shard
+    keys = cargo_shards.deal(binaries, count)[index - 1]
+    if not keys:
+        print(f'shard {index}/{count} selects no target of {len(binaries)}', file=sys.stderr)
+        return cargo_shards.NO_TARGET
+    with cargo_shards.runner(keys) as config:
+        return suite(cargo, libtest, {key: binaries[key] for key in keys}, started, config)
+
+
+def suite(cargo, libtest, binaries, started, config=()):
+    """Run `binaries` and print one summary counting their tests alone."""
     total = sum(len(names) for names in binaries.values())
     progress = suite_progress.Progress(total, sys.stdout, start=started)
-    status = run(cargo, libtest, binaries, progress)
+    status = run(cargo, libtest, binaries, progress, config)
     progress.summary()
     return status
 

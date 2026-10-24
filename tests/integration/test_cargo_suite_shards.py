@@ -28,7 +28,6 @@ def tests(count, prefix):
     return "".join(f"#[test]\nfn {prefix}_{n}() {{}}\n" for n in range(count))
 
 
-@unittest.skip("red until #978 run_cargo_suite.py takes --shard; implement removes this")
 class CargoSuiteShardTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

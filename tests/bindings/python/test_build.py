@@ -15,7 +15,7 @@ import time
 import unittest
 import venv
 
-from support import REPO, checked, temporary
+from support import REPO, checked, python_target, temporary
 
 CRATE = Path("crates/grund-py")
 # What a retry can cure: pip never reached the index, or lost it (§AR-bindings.6.2.2).
@@ -70,7 +70,8 @@ class BuildTests(unittest.TestCase):
                     shutil.copy2(original, destination)
             python = environment(temp)
             crate = source / CRATE
-            env = dict(os.environ, CARGO_TARGET_DIR=str(Path(temp) / "cargo-target"),
+            # §AR-ci.3.4.5: both installs build into the shared target, from their own sources.
+            env = dict(os.environ, CARGO_TARGET_DIR=str(python_target()),
                        GRUND_ACCEPTANCE_SOURCE=str(crate))
             run([python, "-m", "pip", "install", str(crate)], source, env)
             smoke = ('import grund; r=grund.check("tests/e2e/cases/json-report/repo"); '
@@ -105,8 +106,7 @@ class BuildTests(unittest.TestCase):
             other = environment(separate)
             # Install while clean checkout is absent: no accidental workspace reach-through.
             shutil.rmtree(source)
-            other_env = dict(env, CARGO_TARGET_DIR=str(separate / "cargo-target"),
-                             GRUND_ACCEPTANCE_SOURCE=str(sdist))
+            other_env = dict(env, GRUND_ACCEPTANCE_SOURCE=str(sdist))
             run([other, "-m", "pip", "install", str(sdist)], separate, other_env)
             run([other, "-c", 'import grund, grund._native; assert grund.agent_setup_instructions()'],
                 separate, other_env)

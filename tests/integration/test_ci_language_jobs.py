@@ -429,7 +429,6 @@ class LanguageJobsTests(unittest.TestCase):
     def setUpClass(cls):
         cls.text = CI.read_text(encoding="utf-8")
 
-    @unittest.skip("red until #978 ci.yml shards cargo and splits the Python acceptance; implement removes this")
     def test_each_required_check_aggregates_its_systems_jobs(self):
         # §AR-ci.13.2
         self.assertEqual([], required_check_problems(self.text))
@@ -442,7 +441,6 @@ class LanguageJobsTests(unittest.TestCase):
         # §AR-ci.13.2, §AR-ci.12, §AR-ci.5.2
         self.assertEqual([], bench_guard_problems(self.text))
 
-    @unittest.skip("red until #978 ci.yml shards cargo and splits the Python acceptance; implement removes this")
     def test_each_suite_runs_once_in_a_job_of_its_own(self):
         # §AR-ci.13.1
         self.assertEqual([], split_problems(self.text))

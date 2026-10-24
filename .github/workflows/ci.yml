@@ -33,7 +33,7 @@ env:
 jobs:
   # §AR-ci.13.1: the ubuntu-latest leg, one job per language.
   rust-ubuntu:
-    name: rust (ubuntu-latest)
+    name: rust (ubuntu-latest) 1/4
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -74,36 +74,8 @@ jobs:
         run: cargo build --quiet --workspace --all-targets --locked
 
       - name: grund self-check
-        shell: bash
-        run: |
-          # `--full` (§FS-check.1.3) walks past `[scan] include` as well, so a citation this
-          # repository's own config forgot to cover — examples/ is deliberately outside it —
-          # fails CI instead of accumulating unseen.
-
-          # The 30s ceiling is the catastrophic-regression guard (§AR-ci.4 /
-          # §GOAL-fast-feedback); the `bench` job (§AR-benchmarks / §AR-ci.5) is the precise
-          # meter. Python, not GNU `timeout`, so the same step runs on all three platforms.
-          python - <<'PY'
-          import subprocess
-          import sys
-
-          try:
-              result = subprocess.run(
-                  ["cargo", "run", "--quiet", "--locked", "--", "check", ".", "--format", "json", "--full"],
-                  stdout=subprocess.PIPE,
-                  timeout=30,
-              )
-          except subprocess.TimeoutExpired:
-              print("grund self-check exceeded 30s", file=sys.stderr)
-              sys.exit(124)
-
-          if result.returncode != 0:
-              sys.exit(result.returncode)
-          if result.stdout:
-              print("grund self-check wrote unexpected stdout:", file=sys.stderr)
-              sys.stderr.buffer.write(result.stdout)
-              sys.exit(1)
-          PY
+        # §AR-ci.4: the same bounded full self-check, extracted to keep this file small.
+        run: python scripts/check_ci_self.py
 
       # crates/grund-cli/tests/e2e.rs walks every fixture under tests/e2e/cases and asserts each case's
       # exit code, stdout, and stderr against its expected.* files; tests/init.rs
@@ -111,8 +83,150 @@ jobs:
       # `cargo test` runs the full e2e suite plus the core and CLI unit tests.
 
       # §AR-ci.requirements.5.2: failures, a check-in each 5% and one summary, no line per test.
+      # §AR-ci.13.7: this job's shard of the suite, beside the leg's other Rust checks.
       - name: cargo test
-        run: python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count
+        run: python scripts/run_cargo_suite.py --shard 1/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+  rust-ubuntu-2:
+    name: rust (ubuntu-latest) 2/4
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with: { python-version: "3.x" }
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.13.7: one shard of the cargo suite; rust-ubuntu runs the leg's other
+      # Rust checks.
+      - name: cargo test
+        run: python scripts/run_cargo_suite.py --shard 2/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+  rust-ubuntu-3:
+    name: rust (ubuntu-latest) 3/4
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with: { python-version: "3.x" }
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.13.7: one shard of the cargo suite; rust-ubuntu runs the leg's other
+      # Rust checks.
+      - name: cargo test
+        run: python scripts/run_cargo_suite.py --shard 3/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+  rust-ubuntu-4:
+    name: rust (ubuntu-latest) 4/4
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with: { python-version: "3.x" }
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.13.7: one shard of the cargo suite; rust-ubuntu runs the leg's other
+      # Rust checks.
+      - name: cargo test
+        run: python scripts/run_cargo_suite.py --shard 4/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
 
       # §AR-ci.13.6: only a push to main saves, after the work and without what every
       # run rebuilds from its own sources.
@@ -178,10 +292,10 @@ jobs:
       - name: Prepare same-source binding oracle
         run: python scripts/prepare_binding_oracle.py
 
-      # §AR-ci.3.4.3: every Python test but the Node acceptance, which a job of its own runs.
+      # §AR-ci.3.4.3: every Python test but the two binding acceptances, each a job of its own.
       - name: python tests
         # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
-        run: python scripts/run_python_gate.py --without-node-acceptance
+        run: python scripts/run_python_gate.py --without-acceptance
 
       # §AR-ci.13.6: only a push to main saves, after the work and without what every
       # run rebuilds from its own sources.
@@ -303,6 +417,87 @@ jobs:
             ~/ag/tmp/grund-node-target/tools/typescript-5.9.3
           key: ${{ runner.os }}-node-typescript-5.9.3
 
+  python-acceptance-ubuntu:
+    name: python acceptance (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      - name: Install binding Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      # §AR-ci.3.4.4: a new key can save oracle dependencies missing from old exact hits.
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.3.4.5: a key of its own, so the Python target is saved, not lost to the
+      # cargo cache's exact hit; the builds write no incremental state into it.
+      - name: Restore the Python acceptance's build target
+        id: python-target
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-python-target
+          key: ${{ runner.os }}-python-target-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-python-target-v1-
+
+      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
+      # including a PR merge checkout, before the Python gate runs.
+      - name: Prepare same-source binding oracle
+        run: python scripts/prepare_binding_oracle.py
+
+      # §AR-ci.3.4.3: the Python acceptance alone, every build of it in the shared target.
+      - name: python acceptance
+        run: python scripts/run_python_gate.py --only-python-acceptance
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+      # §AR-ci.3.4.5, §AR-ci.13.6: only a push to main saves, the key its restore missed;
+      # the acceptance already dropped the workspace crates' own artifacts from it.
+      - name: Save the Python acceptance's build target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.python-target.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-python-target
+          key: ${{ runner.os }}-python-target-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
   # `.pre-commit-config.yaml` is the local gate; CI runs it directly so every
   # pre-commit hook remains enforced remotely (§AR-ci.1), less the hooks whose command a
   # job above already runs (§AR-ci.13.3).
@@ -397,7 +592,7 @@ jobs:
 
   # §AR-ci.13.1: the windows-latest leg, one job per language.
   rust-windows:
-    name: rust (windows-latest)
+    name: rust (windows-latest) 1/4
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
@@ -451,8 +646,9 @@ jobs:
       # `cargo test` runs the full e2e suite plus the core and CLI unit tests.
 
       # §AR-ci.requirements.5.2: failures, a check-in each 5% and one summary, no line per test.
+      # §AR-ci.13.7: this job's shard of the suite, beside the leg's other Rust checks.
       - name: cargo test
-        run: python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count
+        run: python scripts/run_cargo_suite.py --shard 1/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
 
       # §FS-examples.5.6.1: retain raw native ownership evidence, including skips.
       - name: native mutable fixture ownership
@@ -461,6 +657,162 @@ jobs:
           echo "GRUND_797_NATIVE_HEAD=$(git rev-parse HEAD)"
           cargo test --locked -p grund --test e2e case_isolation::overlapping_mutable_cases_keep_their_own_copy -- --exact --nocapture
           echo "GRUND_797_NATIVE_COMPLETE"
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+  rust-windows-2:
+    name: rust (windows-latest) 2/4
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+        # §FS-examples.5.6.1: native evidence names the actual candidate commit.
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.13.7: one shard of the cargo suite; rust-windows runs the leg's other
+      # Rust checks.
+      - name: cargo test
+        run: python scripts/run_cargo_suite.py --shard 2/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+  rust-windows-3:
+    name: rust (windows-latest) 3/4
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+        # §FS-examples.5.6.1: native evidence names the actual candidate commit.
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.13.7: one shard of the cargo suite; rust-windows runs the leg's other
+      # Rust checks.
+      - name: cargo test
+        run: python scripts/run_cargo_suite.py --shard 3/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+  rust-windows-4:
+    name: rust (windows-latest) 4/4
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+        # §FS-examples.5.6.1: native evidence names the actual candidate commit.
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.13.7: one shard of the cargo suite; rust-windows runs the leg's other
+      # Rust checks.
+      - name: cargo test
+        run: python scripts/run_cargo_suite.py --shard 4/4 --workspace --all-targets --locked --features grund/test-workspace-load-count
 
       # §AR-ci.13.6: only a push to main saves, after the work and without what every
       # run rebuilds from its own sources.
@@ -528,10 +880,10 @@ jobs:
       - name: Prepare same-source binding oracle
         run: python scripts/prepare_binding_oracle.py
 
-      # §AR-ci.3.4.3: every Python test but the Node acceptance, which a job of its own runs.
+      # §AR-ci.3.4.3: every Python test but the two binding acceptances, each a job of its own.
       - name: python tests
         # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
-        run: python scripts/run_python_gate.py --without-node-acceptance
+        run: python scripts/run_python_gate.py --without-acceptance
 
       # §AR-ci.13.6: only a push to main saves, after the work and without what every
       # run rebuilds from its own sources.
@@ -655,6 +1007,88 @@ jobs:
             ~/ag/tmp/grund-node-target/tools/typescript-5.9.3
           key: ${{ runner.os }}-node-typescript-5.9.3
 
+  python-acceptance-windows:
+    name: python acceptance (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      - name: Install binding Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      # §AR-ci.3.4.4: a new key can save oracle dependencies missing from old exact hits.
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.3.4.5: a key of its own, so the Python target is saved, not lost to the
+      # cargo cache's exact hit; the builds write no incremental state into it.
+      - name: Restore the Python acceptance's build target
+        id: python-target
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-python-target
+          key: ${{ runner.os }}-python-target-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-python-target-v1-
+
+      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
+      # including a PR merge checkout, before the Python gate runs.
+      - name: Prepare same-source binding oracle
+        run: python scripts/prepare_binding_oracle.py
+
+      # §AR-ci.3.4.3: the Python acceptance alone, every build of it in the shared target.
+      - name: python acceptance
+        run: python scripts/run_python_gate.py --only-python-acceptance
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
+      # §AR-ci.3.4.5, §AR-ci.13.6: only a push to main saves, the key its restore missed;
+      # the acceptance already dropped the workspace crates' own artifacts from it.
+      - name: Save the Python acceptance's build target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.python-target.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-python-target
+          key: ${{ runner.os }}-python-target-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+
   # §AR-ci.14.2: a release candidate is judged on macOS too; no other event runs it.
   macos:
     if: github.event_name == 'workflow_dispatch'
@@ -665,17 +1099,17 @@ jobs:
   test-ubuntu:
     name: cargo test (ubuntu-latest)
     runs-on: ubuntu-latest
-    needs: [rust-ubuntu, python-ubuntu, node-ubuntu, pre-commit, bench-build, bench, bench-record]
+    needs: [rust-ubuntu, rust-ubuntu-2, rust-ubuntu-3, rust-ubuntu-4, python-ubuntu, node-ubuntu, python-acceptance-ubuntu, pre-commit, bench-build, bench, bench-record]
     if: always()
     steps:
       - name: every job it needs succeeded
-        if: ${{ needs.rust-ubuntu.result != 'success' || needs.python-ubuntu.result != 'success' || needs.node-ubuntu.result != 'success' || needs.pre-commit.result != 'success' || needs.bench-build.result != 'success' || needs.bench.result != 'success' || needs.bench-record.result != 'success' }}
+        if: ${{ needs.rust-ubuntu.result != 'success' || needs.rust-ubuntu-2.result != 'success' || needs.rust-ubuntu-3.result != 'success' || needs.rust-ubuntu-4.result != 'success' || needs.python-ubuntu.result != 'success' || needs.node-ubuntu.result != 'success' || needs.python-acceptance-ubuntu.result != 'success' || needs.pre-commit.result != 'success' || needs.bench-build.result != 'success' || needs.bench.result != 'success' || needs.bench-record.result != 'success' }}
         run: exit 1
 
   test-windows:
     name: cargo test (windows-latest)
     runs-on: ubuntu-latest
-    needs: [rust-windows, python-windows, node-windows]
+    needs: [rust-windows, rust-windows-2, rust-windows-3, rust-windows-4, python-windows, node-windows, python-acceptance-windows]
     if: always()
     steps:
       - name: every job it needs succeeded
