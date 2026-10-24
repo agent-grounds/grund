@@ -131,7 +131,7 @@ pub use slots::{Content, Handle, Slot};
 // directory that can name any of it.
 pub(crate) use discovery::{
     config_at, config_file_in, config_file_under, discover_config, discovery_start_dir,
-    home_form_of, pending_config,
+    home_form_of, pending_config, unread_project_name,
 };
 #[cfg(test)]
 pub(crate) use discovery::{load_config, load_config_at};

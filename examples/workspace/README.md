@@ -70,6 +70,35 @@ enclosing workspace's root project, explains the member relationship, and gives
 ([§FS-workspace.5.1.1](../../docs/functional-spec/FS-workspace.md#511-verified-enclosing-workspace-guidance)). The hint requires verified membership and alias identity;
 it does not promise that a modified target exists when checked from the root.
 
+## Repairing an unlisted project
+
+Run this walkthrough from the grund repository root with the updated `grund`
+on `PATH`:
+
+```bash
+bash examples/workspace/unlisted-project.sh
+```
+
+The script builds a disposable v2 workspace under `~/ag/tmp`: `shop` lists
+`packages/billing`, while `packages/notify` has its own config but no membership
+entry. The first check exits 1 with an existing misplaced-declaration error:
+
+```text
+packages/notify/requirements.md:3: error: FS-email must be declared in requirements.md (single-file kind) — packages/notify/grund.toml (project notify) is not read: no [workspace] members entry lists packages/notify; kind homes from grund.toml (project shop) apply; add "packages/notify" to [workspace] members in grund.toml, or exclude "packages/notify/" with [schema.sources] exclude in grund.toml
+```
+
+The home in that message is shop's root-level file. The script adds only notify's
+membership and checks successfully, keeping the declaration at heading level 2.
+It then restores the unlisted configuration and demonstrates the exclusion
+alternative. A nested config alone does not change ownership, and promoting the
+declaration's heading does not repair it
+([§FS-declarations.checks.misplaced-declaration.unlisted-project](../../docs/functional-spec/FS-declarations.md#checksmisplaced-declarationunlisted-project-explain-the-enclosing-homes-beneath-an-unlisted-project)).
+In v1 the exclusion key is `[scan] exclude`; in v2 it is `[schema.sources] exclude`.
+If a source include or kind home makes notify or a descendant a scan root,
+remove that configured root too, since exclusion cannot prune a scan root.
+The script asserts the diagnostic and exit statuses and removes its fixture
+when it exits.
+
 ## Finding and refreshing a stale entry
 
 Run this walkthrough from the grund repository root with `grund` on `PATH`:

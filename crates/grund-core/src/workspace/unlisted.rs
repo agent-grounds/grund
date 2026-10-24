@@ -21,9 +21,9 @@ use crate::sources::Sources;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use super::expand::enclosing_workspace_of;
-use super::members::{AncestorWorkspaces, canonical_workspace_path};
+use super::members::canonical_workspace_path;
 use super::scope::{RootMode, derive_alias};
+use super::unlisted_project::UnlistedProjects;
 use crate::config::display_path;
 use crate::config::{Config, config_file_in, strip_comment};
 use crate::model::{Code, Diagnostic};
@@ -107,7 +107,7 @@ fn block_diagnostics(
 
     // Quiet (§FS-check.3.29.2): this climb spells no alias path, so an ancestor it
     // cannot read is this rule's silence rather than the reader's warning.
-    let mut ancestors = AncestorWorkspaces::quiet_for_run_at(&config.root);
+    let mut projects = UnlistedProjects::new(config.run());
     let mut reported = BTreeSet::new();
     let mut diagnostics = Vec::new();
     for dir in walked_dirs {
@@ -124,23 +124,16 @@ fn block_diagnostics(
         // `--full`, which makes the config root a walk root (§FS-check.1.3), reports
         // every workspace repository against itself. Canonicalizing is the dear half.
         let canonical = canonical_workspace_path(dir);
-        if is_project_root_of_run(config, &canonical) {
-            continue;
-        }
         // §FS-check.3.29.4 "one finding for one edit": one block the walk reached under
         // two spellings answers the claim test identically, so the first spelling met
         // is the one reported and a symlinked second is not another finding.
         if !reported.insert(canonical) {
             continue;
         }
-        match enclosing_workspace_of(dir, &config.cli_base, &mut ancestors) {
-            // Claimed, at any depth: inside the chain, so nothing is absorbed.
-            Ok(Some(_)) => continue,
-            // §FS-workspace.6.1.8: a claim an ancestor names but cannot answer is
-            // undecidable in both directions, so the block is left unreported and
-            // unexplained (§FS-check.3.29.2) rather than called unlisted.
-            Err(_) => continue,
-            Ok(None) => {}
+        // §FS-declarations.checks.misplaced-declaration.unlisted-project: share the
+        // quiet claim/root test with placement context, including undecidable claims.
+        if !projects.is_unlisted(dir) {
+            continue;
         }
         let located = placement == Placement::Located;
         diagnostics.push(Diagnostic {
@@ -225,18 +218,6 @@ fn absorbing_project_name(config: &Config, alias: Option<&str>) -> String {
         _ => derive_alias(config, None, RootMode::Root)
             .unwrap_or_else(|_| "the enclosing project".to_string()),
     }
-}
-
-/// §FS-check.3.29.3: whether this canonical directory is one of the project roots the
-/// run names everything else from — its own root, and each member root the walk
-/// stops at (§FS-workspace.6).
-fn is_project_root_of_run(config: &Config, canonical: &Path) -> bool {
-    canonical == canonical_workspace_path(&config.root)
-        || config
-            .workspace_project_roots
-            .iter()
-            .chain(&config.workspace_boundary_roots)
-            .any(|root| root == canonical)
 }
 
 /// The line a config's `[workspace]` table opens on, or `None` when it declares

@@ -158,7 +158,6 @@ fn assert_context(repo: &Fixture, config: &str, path: &str, original: &str) {
 }
 
 #[test]
-#[ignore = "red until #1000 explains unlisted project placement; implement removes this"]
 fn single_file_unlisted_project_explains_text_and_json() {
     assert_context(
         &Fixture::issue(),
@@ -169,7 +168,6 @@ fn single_file_unlisted_project_explains_text_and_json() {
 }
 
 #[test]
-#[ignore = "red until #1000 explains unlisted project placement; implement removes this"]
 fn other_kind_unlisted_project_explains_text_and_json() {
     let home = "[schema.kinds.FS]\nfolders = [\"docs\"]\nindex = false\n\
                 [schema.kinds.AR]\nfolders = [\"packages/notify\"]\nindex = false\n";
@@ -186,7 +184,6 @@ fn other_kind_unlisted_project_explains_text_and_json() {
 }
 
 #[test]
-#[ignore = "red until #1000 explains unlisted project placement; implement removes this"]
 fn non_citable_unlisted_project_explains_text_and_json() {
     let home = "[schema.kinds.FS]\nfolders = [\"docs\"]\nindex = false\n\
                 [schema.kinds.page]\ncitable = false\nfolders = [\"packages/notify\"]\n";
@@ -203,7 +200,6 @@ fn non_citable_unlisted_project_explains_text_and_json() {
 }
 
 #[test]
-#[ignore = "red until #1000 explains unlisted project placement; implement removes this"]
 fn deeper_declaration_gets_unlisted_project_context() {
     assert_context(
         &Fixture::new(
@@ -218,7 +214,6 @@ fn deeper_declaration_gets_unlisted_project_context() {
 }
 
 #[test]
-#[ignore = "red until #1000 explains unlisted project placement; implement removes this"]
 fn agents_config_gets_unlisted_project_context() {
     assert_context(
         &Fixture::new(
