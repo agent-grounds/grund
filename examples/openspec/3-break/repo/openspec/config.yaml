@@ -1,0 +1,11 @@
+schema: spec-driven
+
+context: |
+  Larkspur Lending runs the circulation desk of one public library branch.
+  Python 3.12, standard library only. Dates are calendar days, local time.
+
+rules:
+  specs:
+    - State every period in days
+  tasks:
+    - End each task group with the tests that prove it

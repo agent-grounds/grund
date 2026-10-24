@@ -10,4 +10,12 @@ exclude = [
   # The optional-member example is a checkout without packages/secret, whose
   # managed blocks keep listing it (§FS-init.2.3.4.15.8): the link is the lesson.
   "examples/workspace-optional-member/.*/packages/secret/?$",
+  # The OpenSpec example's archived change moved unchanged, as `openspec archive`
+  # moves it, and a living spec still links the renamed requirement: the links
+  # left dangling are the lesson of its fourth run.
+  "examples/openspec/4-archived/repo/openspec/changes/specs/loans/spec\\.md#",
+  "examples/openspec/4-archived/repo/openspec/specs/loans/spec\\.md#borrow-a-book-requirement-borrow-a-book$",
+  # GitHub draws line anchors with script, so no checker finds them; these point
+  # into a pinned tag, so the line they name cannot move.
+  "^https://github\\.com/Fission-AI/OpenSpec/blob/v1\\.14\\.3/[^#]+#L[0-9]+$",
 ]
