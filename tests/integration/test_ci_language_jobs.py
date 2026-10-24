@@ -1,34 +1,48 @@
 """§AR-ci.13 — each operating system's suites run as parallel jobs, judged by one
 required `cargo test (<os>)` aggregate per operating system.
 
-Read as text, the way `test_release_workflow.py` reads the workflows: the CI
-Python has no YAML parser. A job's `matrix.os` list is expanded into one
-instance per operating system, and each check returns the problems it finds, so
-the same check runs against `ci.yml` and against fixture workflows that show it
-can still fail (§AR-ci.13.5).
+Read as text by `ci_workflow.py`, with the leg's jobs in place of its calls and every
+matrix expanded. Each check returns the problems it finds, so the same check runs against
+`ci.yml` and against fixture workflows that show it can still fail (§AR-ci.13.5).
 
-The benchmark jobs' pinned environment (§AR-ci.5) and their one-harness comparison
-(§AR-ci.5.1, §AR-benchmarks.5) are read the same way: a build job, a shard matrix and a
-record job."""
+The benchmark jobs' pinned environment and their one-harness comparison are read the same
+way, in `test_ci_bench_jobs.py`."""
 
 import itertools
 import re
 import unittest
 
-from test_release_workflow import WORKFLOWS, jobs, squash, steps
+from ci_workflow import (CALL, CI, LEG, aggregate_fails, ci_text, holds, instances, shard_count,
+                         with_called_workflows)
+from test_release_workflow import squash
 
-CI = WORKFLOWS / "ci.yml"
 # §AR-ci.13.1: macOS is no leg of `ci.yml`; its suites run once a day (§AR-ci.14).
 SYSTEMS = ("ubuntu-latest", "windows-latest")
 RUNNER_OS = {"ubuntu-latest": "Linux", "macos-latest": "macOS", "windows-latest": "Windows"}
 GATE = "python scripts/run_python_gate.py"
+# §AR-ci.requirements.5.2: the cargo suites go through the quiet wrapper; the hook runs it whole.
+CARGO_SUITE = ("python scripts/run_cargo_suite.py --workspace --all-targets --locked"
+               " --features grund/test-workspace-load-count")
+# §AR-ci.13.7: CI runs it as `--shard <k>/<n>`, one `n` per leg and at least two.
+SHARD = re.compile(r"python scripts/run_cargo_suite\.py --shard (\d+)/(\d+) ")
+
+
+def shard_command(index, count):
+    return CARGO_SUITE.replace(".py ", f".py --shard {index}/{count} ", 1)
+
+
+SHARDS = shard_count(LEG.read_text(encoding="utf-8"))
 SUITES = {
-    # §AR-ci.requirements.5.2: the cargo suites go through the quiet wrapper.
-    "rust": ("python scripts/run_cargo_suite.py --workspace --all-targets --locked"
-             " --features grund/test-workspace-load-count"),
-    "python": f"{GATE} --without-node-acceptance",
+    **{f"rust {k}/{SHARDS}": shard_command(k, SHARDS) for k in range(1, SHARDS + 1)},
+    # §AR-ci.3.4.3: the four selections of the Python gate.
+    "python": f"{GATE} --rest",
     "node": f"{GATE} --only-node-acceptance",
+    "python acceptance": f"{GATE} --only-python-acceptance",
+    "slow": f"{GATE} --only-slow",
 }
+# §AR-ci.13.1: the one pair of suites a job may run, the slow tests after the acceptance.
+PAIRED = {"python acceptance", "slow"}
+RUST_SUITES = tuple(key for key in SUITES if key.startswith("rust "))
 # The rest of the Rust job (§AR-ci.13.1); §AR-ci.4's self-check is inline or extracted.
 RUST_CHECKS = {
     "fmt": "cargo fmt --all -- --check",
@@ -43,134 +57,12 @@ BENCH_BUILD, BENCH_SHARD, BENCH_RECORD = "bench-build", "bench", "bench-record"
 # §AR-ci.5.2: the shard job's comparing step, which the harness's `Ir` limits fail.
 BENCH = ("cargo bench -p grund --features bench --locked --quiet --bench instructions"
          " -- --baseline=main --save-summary=json")
-AGGREGATE = re.compile(r"cargo test \((.+)\)")
 # §AR-ci.5: the bench job's image, named by its digest.
 BENCH_IMAGE = re.compile(r"(?m)^\s+(?:container|image):\s*rust:[\w.-]+-bookworm@sha256:([0-9a-f]{64})\s*$")
-SNAPSHOT = re.compile(r"https://snapshot\.debian\.org/archive/debian/\d{8}T\d{6}Z\b")
 BENCH_ENV = {"LC_ALL": "C.UTF-8", "TZ": "UTC", "RAYON_NUM_THREADS": "4",
              "CARGO_INCREMENTAL": "0", "RUSTFLAGS": ""}
 # §AR-ci.12, §AR-ci.11: the events `ci.yml` runs on.
 EVENTS = ("pull_request", "push", "workflow_dispatch", "merge_group")
-
-
-def with_local_actions(text):
-    """A job's steps with each local composite action's steps in place of its `uses:`, so a
-    pin the shard takes from `.github/actions/` is read as the job's own (§AR-ci.5)."""
-    def inline(found):
-        action = (WORKFLOWS.parent / "actions" / found.group(1) / "action.yml").read_text(
-            encoding="utf-8")
-        return re.sub(r"(?m)^(?=.)", "  ", action.split("\n  steps:\n", 1)[1])
-    return re.sub(r"(?m)^      - uses: \./\.github/actions/([\w-]+)\n(?:        .*\n)*", inline, text)
-
-
-def header(body):
-    return body.split("\n    steps:", 1)[0]
-
-
-def field(head, key):
-    found = re.search(rf"(?m)^    {key}:[ \t]*(.*)$", head)
-    return found.group(1).strip() if found else None
-
-
-def needs(head):
-    value = field(head, "needs")
-    if value is None:
-        return []
-    if value.startswith("["):
-        return [item.strip() for item in value.strip("[]").split(",") if item.strip()]
-    if value:
-        return [value]
-    block = head.split("\n    needs:", 1)[1]
-    return re.findall(r"(?m)^      - ([A-Za-z0-9_-]+)\s*$", block.split("\n    ", 1)[0] + "\n")
-
-
-def matrix_os(head):
-    listed = re.search(r"(?m)^        os:\s*\[(.*)\]", head)
-    return [item.strip() for item in listed.group(1).split(",")] if listed else []
-
-
-def commands(step):
-    """The commands of a step's `run:`, one per line of a block scalar."""
-    lines = step.splitlines()
-    for index, line in enumerate(lines):
-        found = re.match(r"\s*(?:- )?run:\s*(.*)$", line)
-        if found:
-            value = found.group(1).strip()
-            if value and value[0] not in "|>":
-                return [value]
-            return [rest.strip() for rest in lines[index + 1:] if rest.strip()]
-    return []
-
-
-def step_if(step):
-    found = re.search(r"(?m)^\s*(?:- )?if:\s*(.+)$", step)
-    return found.group(1) if found else None
-
-
-def holds(condition, event, results=None):
-    """Whether an `if:` holds on `event` when the needs ended with `results` (§AR-ci.12). It
-    reads `github.event_name`, `github.ref` and `needs.<job>.result` against a literal,
-    `contains(needs.*.result, …)`, `always()`, `!`, `&&`, `||` and parentheses, and no more."""
-    # `ci.yml` runs a push on main alone; every other event runs on a ref of its own (§AR-ci.11).
-    values = {"github.event_name": event,
-              "github.ref": "refs/heads/main" if event == "push" else f"refs/{event}"}
-    def compare(found):
-        value = (results or {})[found[2]] if found[2] else values[found[1]]
-        return f" {(value == found[4]) == (found[3] == '==')} "
-    text = re.sub(r"(github\.event_name|github\.ref|needs\.([\w-]+)\.result)\s*(==|!=)\s*'([^']*)'",
-                  compare, (condition or "always()").replace("${{", "").replace("}}", ""))
-    text = re.sub(r"contains\(needs\.\*\.result,\s*'(\w+)'\)",
-                  lambda found: f" {found[1] in (results or {}).values()} ", text)
-    text = text.replace("always()", " True ").replace("&&", " and ").replace("||", " or ")
-    text = text.replace("!", " not ")
-    if re.sub(r"\b(?:True|False|and|or|not)\b|[()\s]", "", text):
-        raise ValueError(f"cannot read `if: {condition}`")
-    return eval(text, {"__builtins__": {}})  # only booleans, `and`, `or`, `not` and parentheses
-
-
-def aggregate_fails(job_steps, event, results):
-    """Whether a required check's failing step runs on `event` when its needs ended so."""
-    return any(holds(step_if(step), event, results)
-               for step in job_steps if "exit 1" in commands(step))
-
-
-def step_runs_on(step, system):
-    """False only for a step whose `if:` compares `matrix.os` against another system."""
-    text = step_if(step)
-    if not text:
-        return True
-    equal = re.search(r"matrix\.os\s*==\s*'([^']+)'", text)
-    unequal = re.search(r"matrix\.os\s*!=\s*'([^']+)'", text)
-    if equal:
-        return equal.group(1) == system
-    if unequal:
-        return unequal.group(1) != system
-    return True
-
-
-def instances(text):
-    """One record per job and operating system it runs on, matrices expanded."""
-    found = []
-    for job_id, body in jobs(text).items():
-        head = header(body)
-        name = (field(head, "name") or job_id).strip("'\"")
-        runs_on = field(head, "runs-on") or ""
-        matrix = "matrix.os" in runs_on or "matrix.os" in name
-        for system in matrix_os(head) if matrix else [runs_on]:
-            label = name.replace("${{ matrix.os }}", system)
-            aggregate = AGGREGATE.fullmatch(label)
-            job_steps = [step for step in steps(body) if step_runs_on(step, system)]
-            found.append({
-                "job": job_id, "name": label,
-                "runs_on": system if "matrix.os" in runs_on else runs_on,
-                # An aggregate judges the system its name carries, wherever it runs.
-                "system": aggregate.group(1) if aggregate else system,
-                "aggregate": bool(aggregate), "needs": needs(head), "if": field(head, "if"),
-                "steps": job_steps,
-                "commands": [command for step in job_steps for command in commands(step)],
-                "text": "\n".join(job_steps),
-            })
-    return found
 
 
 def leg_commands(system):
@@ -233,12 +125,12 @@ def required_check_problems(text):
             problems.append(f"{name!r} aggregates no jobs (no `needs:`)")
             continue
         judged = leg_jobs(found, system) + (bench_jobs(found) if system == "ubuntu-latest" else [])
-        expected = sorted({i["job"] for i in judged})
+        expected = sorted({i["need"] for i in judged})
         if sorted(aggregate["needs"]) != expected:
             problems.append(f"{name!r} needs {sorted(aggregate['needs'])}, not the jobs that run "
                             f"its leg on {system}: {expected}")
         for need in aggregate["needs"]:
-            elsewhere = sorted({i["runs_on"] for i in found if i["job"] == need} - {system})
+            elsewhere = sorted({i["runs_on"] for i in found if i["need"] == need} - {system})
             if elsewhere:
                 problems.append(f"{name!r} needs {need!r}, which also runs on {elsewhere}, so its "
                                 "result is not that of one system")
@@ -284,38 +176,48 @@ def bench_guard_problems(text):
 
 
 def split_problems(text):
-    """§AR-ci.13.1: no job runs two suites; every leg command runs once."""
+    """§AR-ci.13.1: no job runs two suites, a shard counting as one and the slow tests after
+    the Python acceptance excepted; every leg command runs once; the Rust checks run in a
+    shard job; the whole cargo suite runs nowhere."""
     found = instances(text)
     problems = []
     for instance in found:
         ran = [suite for suite, command in SUITES.items() if runs(instance, command)]
         ran += ["python gate"] if GATE in instance["commands"] else []
-        if len(ran) > 1:
+        if len(ran) > 1 and set(ran) != PAIRED:
             problems.append(f"{instance['name']!r} on {instance['system']} runs {ran} one after "
                             "another in one job")
         if GATE in instance["commands"]:
-            problems.append(f"{instance['name']!r} runs the whole Python gate, the Node acceptance "
+            problems.append(f"{instance['name']!r} runs the whole Python gate, the acceptances "
                             "included, instead of one selection")
+        if CARGO_SUITE in instance["commands"]:
+            problems.append(f"{instance['name']!r} on {instance['system']} runs the whole cargo "
+                            "suite instead of one shard (§AR-ci.13.7)")
     for system in SYSTEMS:
         on = [i for i in found if i["system"] == system]
         for key, command in leg_commands(system).items():
             count = sum(command_count(i, command) for i in on)
             if count != 1:
                 problems.append(f"{system} runs {key} {count} times, not once")
-        rust = [i for i in on if runs(i, SUITES["rust"])]
-        for instance in rust:
-            missing = [key for key, command in RUST_CHECKS.items() if not runs(instance, command)]
-            if missing:
-                problems.append(f"{instance['name']!r} runs the Rust suite without {missing}")
+        rust = [i for i in on if any(runs(i, SUITES[key]) for key in RUST_SUITES)]
+        for key, command in RUST_CHECKS.items():
+            if not any(runs(i, command) for i in rust):
+                problems.append(f"{system} runs {key} in no job that runs a cargo shard")
     return problems
 
 
+def saves(step):
+    """Whether a step writes a cache: `actions/cache/save`, or the combined `actions/cache`."""
+    return bool(re.search(r"(?m)^\s*(?:- )?uses:\s*actions/cache(?:/save)?@", step))
+
+
 def cache_problems(text):
-    """§AR-ci.13.4: no two jobs on one system share a cache key."""
+    """§AR-ci.13.4: no two jobs on one system save under one cache key, and of a job's
+    instances, its shards, one alone saves each of its keys."""
     owners = {}
     for instance in instances(text):
         for step in instance["steps"]:
-            if "actions/cache" not in step:
+            if not saves(step):
                 continue
             key = re.search(r"(?m)^\s*key:\s*(.+)$", step)
             if not key:
@@ -324,9 +226,16 @@ def cache_problems(text):
                         .replace("${{ github.job }}", instance["job"])
                         .replace("${{ matrix.os }}", instance["runs_on"])
                         .replace("${{ runner.os }}", RUNNER_OS.get(instance["runs_on"], instance["runs_on"])))
-            owners.setdefault(resolved, set()).add(instance["job"])
-    return [f"jobs {sorted(jobs_)} share the cache key {key}"
-            for key, jobs_ in sorted(owners.items()) if len(jobs_) > 1]
+            owners.setdefault(resolved, []).append((instance["job"], instance["shard"]))
+    problems = []
+    for key, saving in sorted(owners.items()):
+        jobs_ = sorted({job for job, _ in saving})
+        if len(jobs_) > 1:
+            problems.append(f"jobs {jobs_} share the cache key {key}")
+        elif len(saving) > 1:
+            problems.append(f"shards {sorted(shard for _, shard in saving)} of {jobs_[0]} all save "
+                            f"the cache key {key}, and only the first save is kept")
+    return problems
 
 
 def job_env(head):
@@ -336,165 +245,6 @@ def job_env(head):
         return {}
     pairs = re.findall(r"(?m)^      ([A-Z_]+):[ \t]*(.*)$", block.group(1))
     return {key: value.strip().strip("'\"") for key, value in pairs}
-
-
-def bench_pin_problems(text):
-    """§AR-ci.5: the build job and the shards run in one environment named by digest, and
-    only they; the shards, which run Valgrind, install it pinned."""
-    found = jobs(text)
-    missing = [f"no `{name}` job" for name in (BENCH_BUILD, BENCH_SHARD) if name not in found]
-    if missing:
-        return missing
-    problems = []
-    for name in (BENCH_BUILD, BENCH_SHARD):
-        problems += [f"{name}: {problem}" for problem in environment_problems(found[name])]
-    body = found[BENCH_SHARD]
-    if not re.search(r"\bvalgrind=\S+", body):
-        problems.append("the bench job installs Valgrind without an exact version")
-    if not re.search(r"\blibc6-dbg=\S+", body):
-        problems.append("the bench job installs libc6-dbg without an exact version")
-    if not SNAPSHOT.search(body) or re.search(r"deb\.debian\.org", body):
-        problems.append("the bench job's packages do not come from one snapshot.debian.org timestamp")
-    if "iai-callgrind-runner --version 0.16.1" not in body:
-        problems.append("the bench job does not pin iai-callgrind-runner 0.16.1")
-    return problems
-
-
-def environment_problems(body):
-    """§AR-ci.5: one job's digest-pinned image, its env, and cache keys that carry the digest."""
-    head, job_steps = header(body), steps(body)
-    problems = []
-    image = BENCH_IMAGE.search(head)
-    if not image:
-        problems.append("the job names no `rust:<release>-bookworm@sha256:<digest>` container")
-    if any("rust-toolchain" in step for step in job_steps):
-        problems.append("the job installs a toolchain instead of using the image's compiler")
-    env = job_env(head)
-    for key, value in BENCH_ENV.items():
-        if env.get(key) != value:
-            problems.append(f"the job sets {key}={env.get(key)!r}, not {value!r}")
-    if image and env.get("BENCH_IMAGE") != "sha256:" + image.group(1):
-        problems.append(f"BENCH_IMAGE {env.get('BENCH_IMAGE')!r} is not the container's digest")
-    keys = [key for step in job_steps if "actions/cache" in step
-            for key in re.findall(r"(?m)^\s*key:\s*(.+)$", step)]
-    if image and (not keys or any(image.group(1) not in key for key in keys)):
-        problems.append(f"the job's cache keys {keys} do not carry the image digest")
-    return problems
-
-
-def bench_comparison_problems(text):
-    """§AR-ci.5.1, §AR-benchmarks.5: the build job builds the base binary, one harness in
-    each shard measures both binaries, the record job merges, and main checks jitter."""
-    found = jobs(text)
-    missing = [f"no `{name}` job" for name in (BENCH_BUILD, BENCH_SHARD, BENCH_RECORD)
-               if name not in found]
-    if missing:
-        return missing
-    job_steps = steps(found[BENCH_SHARD])
-    problems = []
-    base = [step for step in steps(found[BENCH_BUILD])
-            if "github.base_ref" in step or "pull_request.base.sha" in step]
-    if not base:
-        problems.append("no step takes the base commit")
-    for step in base:
-        if "cargo bench" in step:
-            problems.append("the base commit's step runs its own harness: " + squash(step)[:120])
-        if "cargo build" not in step:
-            problems.append("the base commit's step does not build the base binary")
-    saving = [step for step in job_steps if "--save-baseline=main" in step]
-    if len(saving) != 1:
-        problems.append(f"{len(saving)} steps save the baseline, not one")
-    for step in saving:
-        if "GRUND_BENCH_BIN" not in step:
-            problems.append("the baseline run does not measure the base binary via GRUND_BENCH_BIN")
-        if "git checkout" in step or "github.base_ref" in step:
-            problems.append("the baseline run checks out the base: it is not the PR's harness")
-    for step in (step for step in job_steps if BENCH in commands(step)):
-        if "GRUND_BENCH_BIN" in step:
-            problems.append("the comparing run measures the base binary, not the PR's own")
-    if any("git checkout" in step and "base" in step for step in job_steps):
-        problems.append("a shard checks out the base: only the build job takes it")
-    flat = squash(found[BENCH_SHARD])
-    if "bench_record.py record" not in flat:
-        problems.append("the shards do not run `bench_record.py record`")
-    flat = squash(found[BENCH_RECORD])
-    for wanted in ("bench_record.py merge", "bench_record.py compare", "GITHUB_STEP_SUMMARY"):
-        if wanted not in flat:
-            problems.append(f"the record job does not run `{wanted}`")
-    jitter = [step for step in job_steps if "bench_record.py jitter" in step]
-    if not jitter:
-        problems.append("a push to main does not check the same-binary bound")
-    for step in jitter:
-        if "refs/heads/main" not in step:
-            problems.append("the jitter check is not limited to a push to main")
-    return problems
-
-
-PINNED_BENCH = """jobs:
-  bench-build:
-    if: github.event_name != 'merge_group'
-    runs-on: ubuntu-latest
-    container: rust:1.90.0-bookworm@sha256:{digest}
-    env:
-      BENCH_IMAGE: sha256:{digest}
-      LC_ALL: C.UTF-8
-      TZ: UTC
-      RAYON_NUM_THREADS: 4
-      CARGO_INCREMENTAL: 0
-      RUSTFLAGS: ""
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/cache/restore@v5
-        with:
-          key: bench-{digest}-${{{{ hashFiles('**/Cargo.lock') }}}}
-      - if: github.event_name == 'pull_request'
-        run: |
-          git checkout --force "origin/${{{{ github.base_ref }}}}"
-          cargo build --profile bench -p grund --bin grund --locked
-          git checkout --force "${{{{ github.sha }}}}"
-      - run: cargo bench -p grund --features bench --locked --quiet --bench instructions --no-run
-      - uses: actions/upload-artifact@v4
-  bench:
-    name: cargo bench (shard ${{{{ matrix.shard }}}})
-    needs: [bench-build]
-    if: github.event_name != 'merge_group'
-    runs-on: ubuntu-latest
-    container: rust:1.90.0-bookworm@sha256:{digest}
-    env:
-      BENCH_IMAGE: sha256:{digest}
-      LC_ALL: C.UTF-8
-      TZ: UTC
-      RAYON_NUM_THREADS: 4
-      CARGO_INCREMENTAL: 0
-      RUSTFLAGS: ""
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/cache/restore@v5
-        with:
-          key: bench-registry-{digest}-${{{{ hashFiles('**/Cargo.lock') }}}}
-      - run: |
-          echo "deb https://snapshot.debian.org/archive/debian/20261001T000000Z bookworm main" > /etc/apt/sources.list
-          apt-get install -y valgrind=1:3.19.0-1 libc6-dbg=2.36-9+deb12u14
-          cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet
-      - uses: actions/download-artifact@v5
-      - if: github.event_name == 'pull_request'
-        env:
-          GRUND_BENCH_BIN: ../grund-base
-        run: cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-baseline=main --save-summary=json
-      - if: github.event_name == 'pull_request'
-        run: {bench}
-      - run: python3 scripts/bench_record.py record --out head-1.json
-      - if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: python3 scripts/bench_record.py jitter first.json second.json
-  bench-record:
-    needs: [bench]
-    if: github.event_name != 'merge_group'
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          python3 scripts/bench_record.py merge --out head.json head-*.json
-          python3 scripts/bench_record.py compare base.json head.json >> "$GITHUB_STEP_SUMMARY"
-""".format(digest="0" * 64, bench=BENCH)
 
 
 def leg(job_id, system, *runs_, extra=""):
@@ -519,27 +269,41 @@ def aggregate(system, needed, guard=True, condition="always()", skipped_in_queue
             f"    needs: [{', '.join(needed)}]\n{cond}    steps:\n{check}")
 
 
-def cache(key):
-    return ("      - uses: actions/cache@v5\n        with:\n          path: target\n"
+def cache(key, action="cache", condition=None):
+    """A cache step: the combined `actions/cache`, or its `restore` or `save` half."""
+    use = "cache" if action == "cache" else f"cache/{action}"
+    head = f"      - if: {condition}\n        uses:" if condition else "      - uses:"
+    return (f"{head} actions/{use}@v5\n        with:\n          path: target\n"
             f"          key: {key}\n")
 
 
 def fixture(cache_key="${{ runner.os }}-cargo-${{ github.job }}", node_rust_merged=False,
             guard=True, condition="always()", needs_pre_commit=True, needs_bench=True,
-            bench_skip_in_queue=False):
-    """A workflow laid out as §AR-ci.13 asks, with one knob per way it can go wrong."""
-    rust = list(RUST_CHECKS.values())[:3] + [SUITES["rust"]]
+            bench_skip_in_queue=False, every_shard_saves=False):
+    """A workflow laid out as §AR-ci.13 asks, its jobs written out, with one knob per way it
+    can go wrong; the first shard alone saves the cargo cache the others restore."""
+    first, *rest = RUST_SUITES
+    rust = list(RUST_CHECKS.values())[:3] + [SUITES[first]]
     selfcheck = '      - run: |\n          python - "check", ".", "--format", "json", "--full"\n'
     text = "jobs:\n"
+    legs = {}
     for system in SYSTEMS:
         short = system.split("-")[0]
-        body_cache = cache(cache_key)
-        text += leg(f"rust-{short}", system, *rust).replace("    steps:\n", "    steps:\n" + body_cache) + selfcheck
-        python_runs = [SUITES["python"]] + ([SUITES["rust"]] if node_rust_merged else [])
-        text += leg(f"python-{short}", system, *python_runs).replace("    steps:\n", "    steps:\n" + body_cache)
-        text += leg(f"node-{short}", system, SUITES["node"]).replace("    steps:\n", "    steps:\n" + body_cache)
+        def add(job, *runs_, restored=False):
+            legs.setdefault(system, []).append(job)
+            body_cache = cache(cache_key, "restore" if restored else "cache")
+            return leg(job, system, *runs_).replace("    steps:\n", "    steps:\n" + body_cache)
+        text += add(f"rust-{short}", *rust) + selfcheck
+        shared = cache_key.replace("${{ github.job }}", f"rust-{short}")
+        for index, key in enumerate(rest, start=2):
+            text += add(f"rust-{short}-{index}", SUITES[key]).replace(
+                cache(cache_key), cache(shared, "cache" if every_shard_saves else "restore"))
+        python_runs = [SUITES["python"]] + ([SUITES[first]] if node_rust_merged else [])
+        text += add(f"python-{short}", *python_runs)
+        text += add(f"node-{short}", SUITES["node"])
+        text += add(f"python-acceptance-{short}", SUITES["python acceptance"], SUITES["slow"])
     text += leg("pre-commit", "ubuntu-latest", PRE_COMMIT)
-    ubuntu = ["rust-ubuntu", "python-ubuntu", "node-ubuntu"] + (["pre-commit"] if needs_pre_commit else [])
+    ubuntu = legs["ubuntu-latest"] + (["pre-commit"] if needs_pre_commit else [])
     bench = [BENCH_BUILD, BENCH_SHARD, BENCH_RECORD]
     text += leg(BENCH_BUILD, "ubuntu-latest", "cargo bench --no-run")
     text += leg(BENCH_SHARD, "ubuntu-latest", BENCH, extra=f"    needs: [{BENCH_BUILD}]\n")
@@ -550,16 +314,53 @@ def fixture(cache_key="${{ runner.os }}-cargo-${{ github.job }}", node_rust_merg
         text += aggregate("ubuntu-latest", ubuntu, guard, condition, skipped_in_queue=judged)
     else:
         text += aggregate("ubuntu-latest", ubuntu + judged, guard, condition)
-    text += aggregate("windows-latest", ["rust-windows", "python-windows", "node-windows"], guard, condition)
+    text += aggregate("windows-latest", legs["windows-latest"], guard, condition)
     return text
 
 
+def called_fixture(gated=True, saving=(2,), needs_leg=True):
+    """The layout `ci.yml` has: the leg written once and called per system, its shards a
+    matrix (§AR-ci.13.7), read as the layout test reads it, with one knob per way it can go
+    wrong: a shard-1 check that every shard runs, the shards that save, an unjudged call."""
+    def step(command, condition=None):
+        head = f"      - if: {condition}\n        run: " if condition else "      - run: "
+        return f"{head}{command}\n"
+    when = "matrix.shard == 1" if gated else None
+    key = "${{ runner.os }}-cargo-rust"
+    shards = ", ".join(str(k) for k in range(1, SHARDS + 1))
+    leg_text = ("jobs:\n  rust:\n    name: rust ${{ matrix.shard }}/" f"{SHARDS}\n"
+                "    runs-on: ${{ inputs.os }}\n    strategy:\n      matrix:\n"
+                f"        shard: [{shards}]\n    steps:\n" + cache(key, "restore")
+                + "".join(step(command, when) for command in list(RUST_CHECKS.values())[:3])
+                + step('|\n          python - "check", ".", "--format", "json", "--full"', when)
+                + step(CARGO_SUITE.replace(".py ", f".py --shard ${{{{ matrix.shard }}}}/{SHARDS} ", 1))
+                + "".join(cache(key, "save", f"matrix.shard == {k}") for k in saving))
+    for job, suites in (("python", ["python"]), ("node", ["node"]),
+                        ("python-acceptance", ["python acceptance", "slow"])):
+        leg_text += (f"  {job}:\n    runs-on: ${{{{ inputs.os }}}}\n    steps:\n"
+                     + cache(f"${{{{ runner.os }}}}-cargo-{job}")
+                     + "".join(step(SUITES[suite]) for suite in suites))
+    text = "jobs:\n"
+    for system in SYSTEMS:
+        text += (f"  leg-{system.split('-')[0]}:\n    name: {system}\n    uses: {CALL}\n"
+                 f"    with:\n      os: {system}\n")
+    bench = [BENCH_BUILD, BENCH_SHARD, BENCH_RECORD]
+    text += leg("pre-commit", "ubuntu-latest", PRE_COMMIT)
+    text += leg(BENCH_BUILD, "ubuntu-latest", "cargo bench --no-run")
+    text += leg(BENCH_SHARD, "ubuntu-latest", BENCH, extra=f"    needs: [{BENCH_BUILD}]\n")
+    text += leg(BENCH_RECORD, "ubuntu-latest", "python3 scripts/bench_record.py merge",
+                extra=f"    needs: [{BENCH_SHARD}]\n")
+    text += aggregate("ubuntu-latest", ["leg-ubuntu", "pre-commit", *bench])
+    text += aggregate("windows-latest", ["leg-windows" if needs_leg else "pre-commit"])
+    return with_called_workflows(text, {CALL: leg_text})
+
+
 class LanguageJobsTests(unittest.TestCase):
-    """§AR-ci.13 on `ci.yml`."""
+    """§AR-ci.13 on `ci.yml`, its calls of the leg read as the jobs they call."""
 
     @classmethod
     def setUpClass(cls):
-        cls.text = CI.read_text(encoding="utf-8")
+        cls.text = ci_text()
 
     def test_each_required_check_aggregates_its_systems_jobs(self):
         # §AR-ci.13.2
@@ -582,54 +383,6 @@ class LanguageJobsTests(unittest.TestCase):
         self.assertEqual([], cache_problems(self.text))
 
 
-class BenchJobTests(unittest.TestCase):
-    """§AR-ci.5 and §AR-ci.5.1 on `ci.yml`."""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.text = with_local_actions(CI.read_text(encoding="utf-8"))
-
-    def test_the_bench_job_runs_in_a_pinned_environment(self):
-        # §AR-ci.5
-        self.assertEqual([], bench_pin_problems(self.text))
-
-    def test_one_harness_measures_both_binaries_and_main_checks_jitter(self):
-        # §AR-ci.5.1, §AR-benchmarks.5, §AR-benchmarks.7.3
-        self.assertEqual([], bench_comparison_problems(self.text))
-
-
-class BenchJobCheckTests(unittest.TestCase):
-    """The bench checks pass the job §AR-ci.5 asks for and fail each way off it."""
-
-    def test_the_job_asked_for_passes(self):
-        self.assertEqual([], bench_pin_problems(PINNED_BENCH))
-        self.assertEqual([], bench_comparison_problems(PINNED_BENCH))
-
-    def test_a_floating_environment_is_caught(self):
-        for old, new in (("@sha256:" + "0" * 64, ""), ("valgrind=1:3.19.0-1", "valgrind"),
-                         ("      TZ: UTC\n", ""), ("bench-" + "0" * 64, "bench"),
-                         ("libc6-dbg=2.36-9+deb12u14", "libc6-dbg"),
-                         ("snapshot.debian.org/archive/debian/20261001T000000Z", "deb.debian.org/debian"),
-                         ("BENCH_IMAGE: sha256:" + "0" * 64, "BENCH_IMAGE: sha256:" + "1" * 64)):
-            with self.subTest(drop=old):
-                self.assertTrue(bench_pin_problems(PINNED_BENCH.replace(old, new)))
-        toolchain = PINNED_BENCH.replace(
-            "      - uses: actions/checkout@v6\n",
-            "      - uses: actions/checkout@v6\n      - uses: dtolnay/rust-toolchain@stable\n")
-        self.assertTrue(bench_pin_problems(toolchain))
-
-    def test_a_base_harness_is_caught(self):
-        base_harness = PINNED_BENCH.replace(
-            "cargo build --profile bench -p grund --bin grund --locked",
-            "cargo bench -p grund --features bench --bench instructions -- --save-baseline=main")
-        self.assertTrue(bench_comparison_problems(base_harness))
-        self.assertTrue(bench_comparison_problems(PINNED_BENCH.replace("GRUND_BENCH_BIN", "GRUND_BIN")))
-
-    def test_a_missing_jitter_check_is_caught(self):
-        self.assertTrue(bench_comparison_problems(
-            PINNED_BENCH.replace("bench_record.py jitter", "bench_record.py record")))
-
-
 class LanguageJobsCheckTests(unittest.TestCase):
     """§AR-ci.13.5: each check passes the layout §AR-ci.13 asks for and fails each way off it."""
 
@@ -640,8 +393,27 @@ class LanguageJobsCheckTests(unittest.TestCase):
             with self.subTest(check=check.__name__):
                 self.assertEqual([], check(text))
 
+    def test_the_called_leg_passes_every_check(self):
+        # §AR-ci.13.5: the leg's calls are read as the jobs they call, its shards one by one.
+        text = called_fixture()
+        for check in (required_check_problems, guard_problems, bench_guard_problems,
+                      split_problems, cache_problems):
+            with self.subTest(check=check.__name__):
+                self.assertEqual([], check(text))
+
+    def test_a_shard_one_check_every_shard_runs_is_caught(self):
+        self.assertTrue(split_problems(called_fixture(gated=False)))
+
+    def test_an_aggregate_not_needing_its_legs_call_is_caught(self):
+        self.assertTrue(required_check_problems(called_fixture(needs_leg=False)))
+
     def test_a_shared_cache_key_is_caught(self):
         self.assertTrue(cache_problems(fixture(cache_key="${{ runner.os }}-cargo-x")))
+
+    def test_shards_saving_one_key_twice_are_caught(self):
+        # §AR-ci.13.4: an exact hit saves nothing, so all but the first save are lost.
+        self.assertTrue(cache_problems(called_fixture(saving=(1, 2))))
+        self.assertTrue(cache_problems(fixture(every_shard_saves=True)))
 
     def test_two_suites_in_one_split_job_are_caught(self):
         self.assertTrue(split_problems(fixture(node_rust_merged=True)))
@@ -666,7 +438,7 @@ class LanguageJobsCheckTests(unittest.TestCase):
 
     def test_an_aggregate_over_matrix_jobs_is_caught(self):
         text = ("jobs:\n  rust:\n    runs-on: ${{ matrix.os }}\n    strategy:\n      matrix:\n"
-                f"        os: [{', '.join(SYSTEMS)}]\n    steps:\n      - run: {SUITES['rust']}\n"
+                f"        os: [{', '.join(SYSTEMS)}]\n    steps:\n      - run: {SUITES[RUST_SUITES[0]]}\n"
                 "  test:\n    name: cargo test (${{ matrix.os }})\n    runs-on: ubuntu-latest\n"
                 f"    strategy:\n      matrix:\n        os: [{', '.join(SYSTEMS)}]\n"
                 "    needs: [rust]\n    if: always()\n    steps:\n      - run: exit 0\n")

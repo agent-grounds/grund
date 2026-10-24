@@ -14,6 +14,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from ci_workflow import ci_text
+
 REPO = Path(__file__).resolve().parents[2]
 NODE_HARNESS = REPO / "tests" / "bindings" / "node"
 WORKFLOWS = REPO / ".github" / "workflows"
@@ -81,10 +83,11 @@ def pinned():
 
 
 def jobs(workflow):
-    """Each job of a workflow as (name, text), split at the two-space job keys."""
-    text = workflow.read_text(encoding="utf-8")
+    """Each job of a workflow, a path or its text, as (name, text), split at the two-space
+    job keys; `<caller>/<job>` is a called leg's job as the layout test reads it."""
+    text = workflow if isinstance(workflow, str) else workflow.read_text(encoding="utf-8")
     body = text.split("\njobs:\n", 1)[1]
-    parts = re.split(r"^  ([A-Za-z0-9_-]+):\s*$", body, flags=re.M)
+    parts = re.split(r"^  ([A-Za-z0-9_/-]+):\s*$", body, flags=re.M)
     return list(zip(parts[1::2], parts[2::2]))
 
 
@@ -179,12 +182,14 @@ class NodeTypescriptInputTests(unittest.TestCase):
                      for workflow in sorted(WORKFLOWS.glob("*.yml"))
                      for name, job in jobs(workflow) for step in steps(job)
                      if "actions/cache" in step for key in keys(step)]
-        for workflow in (WORKFLOWS / "ci.yml", WORKFLOWS / "macos-suites.yml"):
-            for name, job in jobs(workflow):
+        # ci.yml with its leg's jobs in place of their calls, one per system (§AR-ci.13.5).
+        for workflow, text in (("ci.yml", ci_text()),
+                               ("macos-suites.yml", WORKFLOWS / "macos-suites.yml")):
+            for name, job in jobs(text):
                 if "--only-node-acceptance" not in job:
                     continue
                 found += 1
-                where = f"{workflow.name} job {name}"
+                where = f"{workflow} job {name}"
                 listed = steps(job)
                 runs = next(index for index, step in enumerate(listed)
                             if "--only-node-acceptance" in step)

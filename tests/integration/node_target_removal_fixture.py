@@ -44,6 +44,8 @@ def scenario(work, mode, location):
     harness.mkdir(parents=True)
     for filename in ("support.py", "launch.py"):
         shutil.copyfile(REPO / "tests/bindings/node" / filename, harness / filename)
+    # The shared harness owns the target's lifetime for both bindings (§AR-ci.3.4.1.2).
+    shutil.copyfile(REPO / "tests/bindings/support.py", harness.parent / "support.py")
     sys.path.insert(0, str(harness))
     spec = importlib.util.spec_from_file_location("removal_support", harness / "support.py")
     support = importlib.util.module_from_spec(spec)
@@ -125,7 +127,7 @@ def scenario(work, mode, location):
     returned = None
     absent_at_return = False
     with patch.dict(os.environ, GRUND_NODE_TARGET=str(root)), \
-            patch.object(support, "os", WindowsOS()), \
+            patch.object(support.bindings, "os", WindowsOS()), \
             patch.object(os, "rmdir", lambda p, *a, **kw: removal(original_rmdir, p, *a, **kw)), \
             patch.object(os, "unlink", lambda p, *a, **kw: removal(original_unlink, p, *a, **kw)), \
             patch.object(os, "stat", lambda p, *a, **kw: lookup(original_stat, p, *a, **kw)), \

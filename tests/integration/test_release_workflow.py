@@ -57,13 +57,14 @@ def jobs(text):
     """The body of each job in a workflow, keyed by job id.
 
     A job id is the one key indented two spaces under `jobs:`; everything up to
-    the next such key is that job's body."""
+    the next such key is that job's body. A `/` in an id is the layout test's, which
+    names a called workflow's job `<caller>/<job>` (§AR-ci.13.5)."""
     lines = text.splitlines()
     body, current = {}, None
     for line in lines[lines.index("jobs:") + 1:]:
         if line.strip() and not line.startswith(" "):
             break
-        header = re.fullmatch(r"  ([A-Za-z0-9_-]+):", line.rstrip())
+        header = re.fullmatch(r"  ([A-Za-z0-9_/-]+):", line.rstrip())
         if header:
             current = header.group(1)
             body[current] = []
