@@ -93,7 +93,9 @@ It then restores the unlisted configuration and demonstrates the exclusion
 alternative. A nested config alone does not change ownership, and promoting the
 declaration's heading does not repair it
 ([§FS-declarations.checks.misplaced-declaration.unlisted-project](../../docs/functional-spec/FS-declarations.md#checksmisplaced-declarationunlisted-project-explain-the-enclosing-homes-beneath-an-unlisted-project)).
-In v1 the exclusion key is `[scan] exclude`; in v2 it is `[schema.sources] exclude`.
+In v1 use `[scan] exclude = ["notify"]`, excluding every directory named `notify`
+at every depth. In v2 use `[schema.sources] exclude = ["packages/notify/"]` to
+exclude this path.
 If a source include or kind home makes notify or a descendant a scan root,
 remove that configured root too, since exclusion cannot prune a scan root.
 The script asserts the diagnostic and exit statuses and removes its fixture

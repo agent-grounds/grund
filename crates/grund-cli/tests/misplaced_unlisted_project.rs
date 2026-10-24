@@ -12,6 +12,9 @@ const SINGLE_FILE: &str = "[schema.kinds.FS]\nfiles = [\"requirements.md\"]\n";
 const DECLARATION: &str = "# Requirements\n\n## FS-email: Receipts are sent by email\n";
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
+#[path = "misplaced_unlisted_project/repairs.rs"]
+mod repairs;
+
 struct Fixture(PathBuf);
 
 impl Fixture {

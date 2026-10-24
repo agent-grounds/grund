@@ -49,7 +49,7 @@ impl<'a> UnlistedProjects<'a> {
         matches!(
             enclosing_workspace_of(dir, &self.run.cli_base, &mut self.ancestors),
             Ok(None)
-        )
+        ) && !self.ancestors.has_undecidable_ancestor(dir)
     }
 }
 
@@ -117,10 +117,15 @@ fn placement_context(
         .unwrap_or_else(|| frame.root().join("grund.toml"));
     let enclosing = frame.display_path(&enclosing);
     let owner = frame.name.unwrap_or("root");
-    let setting = if frame.version == 2 {
-        "[schema.sources]"
+    let exclusion = if frame.version == 2 {
+        format!("exclude \"{entry}/\" with [schema.sources] exclude in {enclosing}")
     } else {
-        "[scan]"
+        // §FS-config.3.5.16: v1 matches directory names at every depth, never paths.
+        let component = dir.file_name().unwrap_or_default().to_string_lossy();
+        format!(
+            "exclude \"{component}\" with [scan] exclude in {enclosing} \
+             (excludes all directories named \"{component}\" at every depth)"
+        )
     };
     let canonical = canonical_workspace_path(dir);
     let root_advice = if roots
@@ -138,7 +143,7 @@ fn placement_context(
         " — {nested}{name} is not read: no [workspace] members entry lists {entry}; \
          kind homes from {enclosing} (project {owner}) apply; \
          add \"{entry}\" to [workspace] members in {enclosing}, \
-         or exclude \"{entry}/\" with {setting} exclude in {enclosing}{root_advice}",
+         or {exclusion}{root_advice}",
         nested = frame.display_path(config_path),
     )
 }

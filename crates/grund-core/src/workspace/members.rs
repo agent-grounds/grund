@@ -20,7 +20,7 @@
 
 use crate::sources::{Sources, canonical_path, is_directory, path_is_dir, path_metadata};
 use anyhow::Result;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::findings::undecidable_ancestor_claim_diagnostic;
@@ -387,6 +387,8 @@ pub(crate) struct AncestorWorkspaces {
     /// levels below any frontend and every frontend renders it its own way
     /// (§FS-distribution.3.1, §FS-lsp.1.1.3).
     warnings: Vec<Diagnostic>,
+    /// §FS-workspace.6.1.7.5: keep uncertainty even when this climb owes no warning.
+    undecidable: BTreeSet<PathBuf>,
     blocks: BTreeMap<PathBuf, Option<AncestorBlock>>,
 }
 
@@ -396,6 +398,7 @@ impl AncestorWorkspaces {
             report_base: root.to_path_buf(),
             warn_undecidable: true,
             warnings: Vec::new(),
+            undecidable: BTreeSet::new(),
             blocks: BTreeMap::new(),
         }
     }
@@ -413,6 +416,16 @@ impl AncestorWorkspaces {
             warn_undecidable: false,
             ..Self::for_run_at(root)
         }
+    }
+
+    /// §FS-workspace.6.1.7.5: after the claim climb, absence is confirmed only
+    /// when every ancestor's member text was obtainable. Warning emission is
+    /// independent: a quiet caller must not turn uncertainty into nonmembership.
+    pub(super) fn has_undecidable_ancestor(&self, child: &Path) -> bool {
+        child
+            .ancestors()
+            .skip(1)
+            .any(|dir| self.undecidable.contains(dir))
     }
 
     /// The `[workspace]` block at `dir` **when it claims `child`**, or `None`.
@@ -439,9 +452,11 @@ impl AncestorWorkspaces {
         if !self.blocks.contains_key(dir) {
             let (block, undecidable) =
                 read_ancestor_workspace_block(dir, cli_base, &self.report_base);
-            // §FS-workspace.6.1.7: only the climb that spells an alias path below
-            // this directory owes the reader the sentence; the quiet climb of
-            // §FS-check.3.29.2 has no path to warn about and drops it.
+            // §FS-workspace.6.1.7.5: retain uncertainty for quiet ownership checks.
+            if undecidable.is_some() {
+                self.undecidable.insert(dir.to_path_buf());
+            }
+            // §FS-workspace.6.1.7.6: only the alias-path climb emits the warning.
             if self.warn_undecidable {
                 self.warnings.extend(undecidable);
             }
@@ -477,14 +492,13 @@ impl AncestorWorkspaces {
 }
 
 /// The `[workspace]` block `dir` holds, as far as deciding a claim needs it.
-/// `None` when nothing here can claim this child: no config file, no
-/// `[workspace] members` entries — or a `members` value that could not be read
-/// at all, which is treated as no claim, because this walk climbs to the
-/// filesystem root and a stray broken `grund.toml` above a repository must not
-/// break every run beneath it (§FS-workspace.6.1.7, §AR-workspace.6.1.3). Whether
-/// that last case is also *said* is the caller's: only a climb that spells the
-/// tree below it owes the reader the sentence, so the diagnostic is returned
-/// beside the block rather than raised here (§FS-workspace.6.1.7).
+/// `None` when no config or member entries establish a claim. An unobtainable
+/// `members` or `optional_members` value also yields no block, but the separate
+/// diagnostic preserves that the claim is undecidable (§FS-workspace.6.1.7.5).
+/// This walk reaches the filesystem root, so a stray broken `grund.toml` above
+/// a repository must not break every run beneath it (§AR-workspace.6.1.3).
+/// Only a climb that spells an alias path owes the reader that diagnostic;
+/// a quiet climb retains uncertainty without emitting it (§FS-workspace.6.1.7.6).
 fn read_ancestor_workspace_block(
     dir: &Path,
     cli_base: &Path,
