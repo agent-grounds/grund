@@ -1,0 +1,28 @@
+skerry · grund.toml · v2
+
+kinds and places
+  RFC    kind                                 rfcs/text/
+           field summary                      must · first
+           field motivation                   must · after summary
+           field guide-level-explanation      must · after motivation
+           field reference-level-explanation  must · after guide-level-explanation
+           field drawbacks                    must · after reference-level-explanation
+           field rationale-and-alternatives   must · after drawbacks
+           field prior-art                    must · after rationale-and-alternatives
+           field unresolved-questions         must · after prior-art
+           field future-possibilities         must · after unresolved-questions
+           field amendments                   may · after future-possibilities
+           closed must
+  crate  place                                src/
+  test   place                                tests/
+  code   complement                           every scanned file no other row claims
+
+citations                                     grounded
+  RFC    —
+  crate  must  RFC                            must · file
+  test   must  RFC                            must · file
+  code   —
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it
