@@ -1,0 +1,8 @@
+openspec/specs/notices/spec.md:13: error: section not found: SPEC-loans.requirements.borrow-a-book; write <§> before it to show the shape without citing it; what .grund/sections/SPEC-loans.lock recorded for it now sits at SPEC-loans.requirements.check-out-a-book
+src/larkspur/loans.py:31: error: section not found: SPEC-loans.requirements.borrow-a-book; write <§> before it to show the shape without citing it; what .grund/sections/SPEC-loans.lock recorded for it now sits at SPEC-loans.requirements.check-out-a-book
+src/larkspur/loans.py:44: error: unknown reference DELTA-add-loan-holds-loans; no place of kind DELTA exists: openspec/changes/add-loan-holds/specs (grund.toml:39)
+src/larkspur/loans.py:54: error: unknown reference DELTA-add-loan-holds-loans; no place of kind DELTA exists: openspec/changes/add-loan-holds/specs (grund.toml:39)
+tests/test_loans.py:11: error: section not found: SPEC-loans.requirements.borrow-a-book.copy-on-shelf; write <§> before it to show the shape without citing it; what .grund/sections/SPEC-loans.lock recorded for it now sits at SPEC-loans.requirements.check-out-a-book.copy-on-shelf
+tests/test_loans.py:19: error: section not found: SPEC-loans.requirements.borrow-a-book.copy-on-loan; write <§> before it to show the shape without citing it; what .grund/sections/SPEC-loans.lock recorded for it now sits at SPEC-loans.requirements.check-out-a-book.copy-on-loan
+tests/test_loans.py:25: error: unknown reference DELTA-add-loan-holds-loans; no place of kind DELTA exists: openspec/changes/add-loan-holds/specs (grund.toml:39)
+tests/test_loans.py:32: error: unknown reference DELTA-add-loan-holds-loans; no place of kind DELTA exists: openspec/changes/add-loan-holds/specs (grund.toml:39)

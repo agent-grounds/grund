@@ -16,4 +16,12 @@ exclude = [
   # The downstream-citers run is the tree just after a listed point's file is
   # deleted, whose page `check` then refuses (§FS-examples.2): the link is the lesson.
   "examples/downstream-citers/3-deleted/repo/docs/functional-spec/security-providers\\.md",
+  # The OpenSpec example's archived change moved unchanged, as `openspec archive`
+  # moves it, and a living spec still links the renamed requirement: the links
+  # left dangling are the lesson of its fourth run.
+  "examples/openspec/4-archived/repo/openspec/changes/specs/loans/spec\\.md#",
+  "examples/openspec/4-archived/repo/openspec/specs/loans/spec\\.md#borrow-a-book-requirement-borrow-a-book$",
+  # GitHub draws line anchors with script, so no checker finds them; these point
+  # into a pinned tag, so the line they name cannot move.
+  "^https://github\\.com/Fission-AI/OpenSpec/blob/v1\\.14\\.3/[^#]+#L[0-9]+$",
 ]

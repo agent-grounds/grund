@@ -1,0 +1,118 @@
+# An OpenSpec project held to a grund schema.
+#
+# OpenSpec keeps the living specs in `openspec/specs/<capability>/spec.md` and
+# each proposed change in `openspec/changes/<change-id>/`: a proposal, a task
+# list, and one spec delta per capability it touches.
+grund_config_version = 2
+project_name = "larkspur-lending"
+
+[schema.sources]
+languages = ["markdown", "python"]
+
+# A capability's living spec. Its `## Purpose` and `## Requirements` sections,
+# which `openspec validate` requires, are the two fields; each requirement is a
+# named section under `requirements`, and each scenario one under its requirement.
+[schema.kinds.SPEC]
+folders = ["openspec/specs"]
+index = false
+closed = "must"
+
+[schema.kinds.SPEC.fields.purpose]
+title = "Purpose"
+presence = "must"
+position = "first"
+
+[schema.kinds.SPEC.fields.requirements]
+title = "Requirements"
+presence = "must"
+after = "purpose"
+
+# A change folder's proposal.md, tasks.md and design.md keep OpenSpec's own
+# headings, so the folder is a place: its files cite, and declare nothing.
+[schema.kinds.change]
+folders = ["openspec/changes"]
+citable = false
+
+# A spec delta. A place is a literal path, so each in-flight change lists its
+# `specs/` folder here; a delta's sections are the four operations OpenSpec reads.
+[schema.kinds.DELTA]
+folders = ["openspec/changes/add-loan-holds/specs"]
+index = false
+closed = "must"
+
+[schema.kinds.DELTA.fields.purpose]
+title = "Purpose"
+position = "first"
+
+[schema.kinds.DELTA.fields.added]
+title = "ADDED Requirements"
+
+[schema.kinds.DELTA.fields.modified]
+title = "MODIFIED Requirements"
+
+[schema.kinds.DELTA.fields.removed]
+title = "REMOVED Requirements"
+
+[schema.kinds.DELTA.fields.renamed]
+title = "RENAMED Requirements"
+
+# Archived changes are history. A citation into one is a citation of nothing.
+[schema.kinds.archive]
+folders = ["openspec/changes/archive"]
+citable = false
+scan = false
+
+[schema.kinds.test]
+folders = ["tests"]
+citable = false
+
+# A living spec is the source of truth: it cites other living specs and nothing
+# in flight.
+[rules.citations.SPEC]
+default = "must-not"
+may = ["SPEC"]
+
+# A delta cites the living requirements it changes, and other deltas.
+[rules.citations.DELTA]
+default = "must-not"
+may = ["SPEC", "DELTA"]
+
+# Every proposal and task list says which requirements it delivers.
+[rules.citations.change]
+must = ["SPEC|DELTA"]
+
+[rules.citations.change.grounding]
+must = "file"
+
+[rules.citations.test]
+must = ["SPEC|DELTA"]
+
+[rules.citations.test.grounding]
+must = "file"
+
+[rules.citations.code]
+must = ["SPEC|DELTA"]
+
+[rules.citations.code.grounding]
+must = "file"
+
+# Write grund's agent guidance into one root AGENTS.md. The default writes one
+# into every place, so each change's `specs/` folder would carry a copy of it
+# into the archive.
+[presentation]
+rules = "root"
+
+[presentation.kinds.SPEC]
+title = "Living specs: one per capability, the source of truth"
+
+[presentation.kinds.change]
+title = "Change folders: proposal, tasks and design of each change in flight"
+
+[presentation.kinds.DELTA]
+title = "Spec deltas: what a change adds, modifies, removes and renames"
+
+[presentation.kinds.archive]
+title = "Archived changes: history, never cited"
+
+[presentation.kinds.test]
+title = "Tests: each proves the scenarios it cites"
