@@ -4,18 +4,18 @@ The queue tests each group under the checks a pull request must pass and lands
 exactly the commit it tested, which is only true while `ci.yml` answers the
 `merge_group` event. On a group the commit-message job scans what the group puts
 on `main` (§AR-ci.8.2), and the three benchmark jobs hold its head to the absolute
-ceilings, once per shard, and record nothing (§AR-ci.5.1). Read as text, the way
-`test_release_workflow.py` reads the workflows; each `if:` is read for every event
-`ci.yml` runs on."""
+ceilings, once per shard, and record nothing (§AR-ci.5.1). Read as text by
+`ci_workflow.py`, with the leg's jobs in place of its calls (§AR-ci.13.5); each `if:` is
+read for every event `ci.yml` runs on."""
 
 import re
 import unittest
 
-from ci_workflow import aggregate_fails, commands, field, header, holds, needs, step_if
+from ci_workflow import (CALL, CI, aggregate_fails, commands, field, header, holds, needs,
+                         step_if, with_called_workflows)
 from test_ci_language_jobs import EVENTS, job_env
-from test_release_workflow import WORKFLOWS, jobs, squash, step_name, steps
+from test_release_workflow import jobs, squash, step_name, steps
 
-CI = WORKFLOWS / "ci.yml"
 # §AR-ci.5: the build job, the shard matrix and the record job.
 BENCH_JOBS = ("bench-build", "bench", "bench-record")
 # §AR-ci.5.1: the head's run, on its own binary, with no base and no baseline.
@@ -34,10 +34,60 @@ def measures_head(step):
         command.startswith("cargo bench") for command in commands(step))
 
 
+def judged_jobs(text, called=None):
+    """Each job a required `cargo test (<os>)` check judges, by id: the check, each job it
+    needs and, for a need that calls the leg, every `<call>/<job>` the call runs (§AR-ci.13.2).
+    `called` maps the leg's `uses:` path to its text, as `with_called_workflows` takes it."""
+    written, read = jobs(text), jobs(with_called_workflows(text, called))
+    judged = {}
+    for job, body in written.items():
+        if not re.search(r"(?m)^    name:\s*cargo test \(", body):
+            continue
+        judged[job] = body
+        for need in needs(header(body)):
+            judged[need] = written.get(need)
+            judged.update((found, inlined) for found, inlined in read.items()
+                          if found.startswith(f"{need}/"))
+    return judged
+
+
+def every_event_problems(text, called=None):
+    """The jobs a required check judges that some event skips (§AR-ci.12, §AR-ci.13.2). A leg's
+    job is one: a skipped job does not fail the call it runs in, so the check would pass it."""
+    judged = judged_jobs(text, called)
+    problems = [] if judged else ["no job carries a required `cargo test (<os>)` check"]
+    for job, body in sorted(judged.items()):
+        if body is None:
+            problems.append(f"a required check needs `{job}`, which is no job")
+            continue
+        condition = field(header(body), "if")
+        if condition and condition.replace("${{", "").replace("}}", "").strip() != "always()":
+            problems.append(f"`{job}` runs only `if: {condition}`; its required check must "
+                            "report on a queue group too")
+    return problems
+
+
+def leg_fixture(guarded=None, call_guarded=False):
+    """A `ci.yml` whose Windows check needs its leg's call, and the leg it calls, for
+    `every_event_problems`: `guarded` names a leg job, and `call_guarded` the call, that a
+    merge-queue group skips (§AR-ci.13.5)."""
+    skip = "    if: github.event_name != 'merge_group'\n"
+    leg = "jobs:\n" + "".join(
+        f"  {job}:\n    runs-on: ${{{{ inputs.os }}}}\n" + (skip if job == guarded else "")
+        + "    steps:\n      - run: exit 0\n" for job in ("rust", "python", "python-acceptance"))
+    text = ("jobs:\n  leg-windows:\n    name: windows-latest\n" + (skip if call_guarded else "")
+            + f"    uses: {CALL}\n    with:\n      os: windows-latest\n"
+            "  test-windows:\n    name: cargo test (windows-latest)\n    runs-on: ubuntu-latest\n"
+            "    needs: [leg-windows]\n    if: always()\n    steps:\n      - run: exit 1\n")
+    return text, {CALL: leg}
+
+
 class MergeQueueRunTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.text = CI.read_text(encoding="utf-8")
+        cls.written = CI.read_text(encoding="utf-8")
+        # §AR-ci.13.5: the leg's jobs in place of its calls, as every reader of `ci.yml` takes it.
+        cls.text = with_called_workflows(cls.written)
         cls.jobs = jobs(cls.text)
 
     def test_ci_runs_on_merge_queue_groups(self):
@@ -46,29 +96,15 @@ class MergeQueueRunTests(unittest.TestCase):
 
     def test_the_required_checks_and_the_jobs_they_judge_run_on_every_event(self):
         # §AR-ci.13.2: a required check is an aggregate, so the jobs it needs must run here too.
-        required = [job for job, body in self.jobs.items()
-                    if re.search(r"(?m)^    name:\s*cargo test \(", body)]
-        self.assertTrue(required, "no job carries a required `cargo test (<os>)` check")
-        judged = set(required)
-        for job in required:
-            listed = re.search(r"(?m)^    needs:\s*\[(.*)\]", self.jobs[job])
-            if listed:
-                judged.update(item.strip() for item in listed.group(1).split(","))
+        self.assertEqual([], every_event_problems(self.written))
         aggregate = self.jobs["test-ubuntu"]
         succeeded = dict.fromkeys(needs(header(aggregate)), "success")
-        for job in sorted(judged):
+        for job in sorted(set(BENCH_JOBS) & set(judged_jobs(self.written))):
             with self.subTest(job=job):
-                head = self.jobs[job].split("steps:", 1)[0]
-                condition = re.search(r"(?m)^    if:\s*(.+)$", head)
-                if job in BENCH_JOBS:
-                    # §AR-ci.13.2, §AR-ci.12: a group runs them too, so only their success passes.
-                    self.assertTrue(aggregate_fails(steps(aggregate), "merge_group",
-                                                    dict(succeeded, **{job: "skipped"})),
-                                    "cargo test (ubuntu-latest) accepts the group's skip")
-                if condition:
-                    self.assertEqual("always()", condition.group(1).replace("${{", "")
-                                     .replace("}}", "").strip(),
-                                     "the required checks must report on a queue group too")
+                # §AR-ci.13.2, §AR-ci.12: a group runs them too, so only their success passes.
+                self.assertTrue(aggregate_fails(steps(aggregate), "merge_group",
+                                                dict(succeeded, **{job: "skipped"})),
+                                "cargo test (ubuntu-latest) accepts the group's skip")
 
     def test_the_benchmark_jobs_run_on_merge_queue_groups(self):
         # §AR-ci.12: no job-level guard keeps a group out of the build, the shards or the record.
@@ -128,6 +164,24 @@ class MergeQueueRunTests(unittest.TestCase):
         self.assertIn("github.event_name == 'merge_group' && format('{0}..{1}', "
                       "github.event.merge_group.base_sha, github.event.merge_group.head_sha)", flat)
         self.assertIn('--range "$RANGE"', flat)
+
+
+class EveryEventCheckTests(unittest.TestCase):
+    """§AR-ci.13.5: the every-event check passes a leg every event runs, and fails each way
+    a group could skip one of its jobs."""
+
+    def test_a_leg_every_event_runs_passes(self):
+        self.assertEqual([], every_event_problems(*leg_fixture()))
+
+    def test_a_leg_job_a_group_skips_is_caught(self):
+        problems = every_event_problems(*leg_fixture(guarded="python-acceptance"))
+        self.assertEqual(1, len(problems), problems)
+        self.assertIn("`leg-windows/python-acceptance`", problems[0])
+
+    def test_a_leg_call_a_group_skips_is_caught(self):
+        problems = every_event_problems(*leg_fixture(call_guarded=True))
+        self.assertEqual(1, len(problems), problems)
+        self.assertIn("`leg-windows`", problems[0])
 
 
 if __name__ == "__main__":
