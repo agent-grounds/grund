@@ -65,6 +65,13 @@ are the review recipe of [§FS-coordinate-globs](FS-coordinate-globs.md#fs-coord
 They include the opt-in Git co-change workflow at `examples/cochange/`, specified
 by [§FS-cochange-recipe.examples](FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance), with commit-msg/CI evidence and visible waivers.
 
+They include the Open Knowledge Format walkthrough at `examples/okf/`, a multi-run
+example ([§FS-examples.5.5](FS-examples.md#55-an-example-may-pin-several-runs)) that holds an OKF bundle to a grund schema. Its runs
+`1-schema`, `2-check` and `3-break` are the schema, a clean check, and a check
+refusing three edits OKF accepts. `4-okf` runs the example's conformance script
+over both bundles through `command.external` ([§FS-examples.5.4](FS-examples.md#54-commandexternal-invokes-an-explicit-json-argv)), so its claim
+that the schema costs neither bundle its OKF conformance is pinned by a golden.
+
 ### 2.1 The values example
 
 The examples include an optional first-class-values repository showing `values = true`, Markdown and home JSON declarations, exact numeric equality, prose and scanned-comment bindings, direct runtime JSON use, and a caught mismatch. It demonstrates the deliberate unbackticked non-binding without implying interpolation or value inference ([§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)).

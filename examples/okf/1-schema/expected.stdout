@@ -1,0 +1,33 @@
+okf-finance · grund.toml · v2
+
+kinds and places
+  MET       kind                 finance/metrics/
+              field definition   must · first
+  COMP      kind                 finance/computations/
+              field computation  must · first
+              closed must
+  POL       kind                 finance/policies/
+  TBL       kind                 finance/tables/
+              field schema       must · first
+              field examples     may · after schema
+  SKILL     kind                 finance/references/skills/
+              field steps        must · first
+              field receipt      must · after steps
+  attester  place                finance/references/attesters/
+  code      complement           every scanned file no other row claims
+
+citations
+  MET       must      COMP
+  COMP      must      POL
+            must      TBL
+            must      SKILL
+  POL       may       POL (itself)
+            must not  everything else
+  TBL       —
+  SKILL     —
+  attester  must      SKILL
+  code      —
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it

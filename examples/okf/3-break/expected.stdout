@@ -1,0 +1,6 @@
+finance/computations/revenue.md:33: error: COMP-revenue has no computation field; kind COMP declares it
+finance/policies/cost-allocation.md:31: error: POL must not cite COMP (citation direction) — re-point the citation or downgrade it to a plain Markdown link
+finance/tables/orders.md:5: error: TBL-orders has no schema field; kind TBL declares it
+finance/tables/orders.md:5: error: TBL-orders is not listed in finance/tables/index.md: an entry is a `§`-marked Markdown link to the declaration; write `[§TBL-orders](orders.md#tbl-orders-orders)` in finance/tables/index.md — became an error in grund 0.13.0
+finance/tables/orders.md:9: error: unmarked heading inside TBL-orders; number it (## 1. Schema) as TBL-orders.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+finance/tables/orders.md:5: warning: declared but never cited: TBL-orders

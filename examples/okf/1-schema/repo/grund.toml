@@ -1,0 +1,116 @@
+# An Open Knowledge Format (OKF) v0.2 bundle held to a grund schema.
+#
+# The bundle is `finance/`. grund's own files stay outside it, because OKF reads
+# every `.md` in a bundle other than `index.md` and `log.md` as a concept that
+# must open with YAML frontmatter (OKF 3.1, 11).
+grund_config_version = 2
+project_name = "okf-finance"
+
+[schema.sources]
+languages = ["markdown", "python"]
+
+# One kind per OKF `type`, in the folder the bundle keeps that type in. A
+# concept's file is `<folder>/<slug>.md` and declares `<KIND>-<slug>`, so the OKF
+# concept ID `computations/revenue` and the grund ID `COMP-revenue` name one file.
+# Each folder's `index.md` is OKF's directory listing (OKF 8) and the kind's index.
+
+[schema.kinds.MET]
+folders = ["finance/metrics"]
+index = "index.md"
+
+[schema.kinds.MET.fields.definition]
+title = "Definition"
+presence = "must"
+position = "first"
+
+# An attested computation is a contract (OKF 10): the computation and nothing
+# else, inline under its `Computation` heading (OKF 10.3).
+[schema.kinds.COMP]
+folders = ["finance/computations"]
+index = "index.md"
+closed = "must"
+
+[schema.kinds.COMP.fields.computation]
+title = "Computation"
+presence = "must"
+position = "first"
+
+[schema.kinds.POL]
+folders = ["finance/policies"]
+index = "index.md"
+
+# `Schema` and `Examples` are OKF's conventional body headings (OKF 4.2).
+[schema.kinds.TBL]
+folders = ["finance/tables"]
+index = "index.md"
+
+[schema.kinds.TBL.fields.schema]
+title = "Schema"
+presence = "must"
+position = "first"
+
+[schema.kinds.TBL.fields.examples]
+title = "Examples"
+after = "schema"
+
+# An executor (OKF 10.2) says how to run a computation and what a run returns.
+[schema.kinds.SKILL]
+folders = ["finance/references/skills"]
+index = "index.md"
+
+[schema.kinds.SKILL.fields.steps]
+title = "Steps"
+presence = "must"
+position = "first"
+
+[schema.kinds.SKILL.fields.receipt]
+title = "Receipt"
+presence = "must"
+after = "steps"
+
+# An attester is code, not a concept (OKF 10.2): it cites and declares nothing.
+[schema.kinds.attester]
+folders = ["finance/references/attesters"]
+citable = false
+
+# OKF links are untyped (OKF 6.1); these rules say which links a concept owes.
+
+# A metric narrates; each figure links to its attested computation (OKF 10.4).
+[rules.citations.MET]
+must = ["COMP"]
+
+# A computation cites the policy it answers to, the table it reads, and its executor.
+[rules.citations.COMP]
+must = ["POL", "TBL", "SKILL"]
+
+# A policy is a source of truth: derived concepts cite it, and it cites only policies.
+[rules.citations.POL]
+default = "must-not"
+may = ["POL"]
+
+# An attester checks the receipt its executor declares.
+[rules.citations.attester]
+must = ["SKILL"]
+
+# Write grund's agent guidance into the root AGENTS.md, outside the bundle.
+[presentation]
+rules = "root"
+
+# Each kind's title is the OKF `type` its concepts carry.
+[presentation.kinds.MET]
+title = "Metric"
+
+[presentation.kinds.COMP]
+title = "Attested Computation"
+
+[presentation.kinds.POL]
+title = "Policy"
+
+[presentation.kinds.TBL]
+title = "BigQuery Table"
+
+[presentation.kinds.SKILL]
+title = "Skill"
+
+[presentation.kinds.attester]
+title = "Attesters: deterministic checks over a run's receipt"
