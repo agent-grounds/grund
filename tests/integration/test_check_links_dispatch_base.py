@@ -31,10 +31,11 @@ def git(cwd: Path, *args: str) -> str:
 
 
 class ForkDispatch:
-    """Upstream A -> B -> C; the fork's `main` is A; the runner is at C with `origin` = fork.
+    """Upstream `main` A -> B, C on a branch from B; the fork's `main` is A; the runner is
+    at C with `origin` = fork.
 
     B adds `/upstream-added` on upstream `main` after the fork synced; C, the dispatched
-    change, adds `/change-added` and nothing else."""
+    change, adds `/change-added` and nothing else, on a branch so upstream `main` stays B."""
 
     def __init__(self, test: unittest.TestCase):
         self.gate = LinkFixture()
@@ -54,6 +55,7 @@ class ForkDispatch:
         self._write("docs/guide.md", f"# Guide\n\nPlain text.\n\nSee <{host}/upstream-added>.\n")
         git(self.upstream, "commit", "-q", "-am", "B")
         self.upstream_main = git(self.upstream, "rev-parse", "HEAD")
+        git(self.upstream, "checkout", "-q", "-b", "measure")
         self._write("docs/notes.md", f"# Notes\n\nSee <{host}/change-added>.\n")
         git(self.upstream, "add", "-A")
         git(self.upstream, "commit", "-q", "-m", "C")
