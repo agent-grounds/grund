@@ -231,8 +231,8 @@ the suite by hand. The module is the `--only-python-acceptance` selection of [§
 so it is still a test of the Python gate, read as the gate's jobs as the Node acceptance is:
 the Python acceptance jobs of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language), Linux and Windows, run it on every push, pull
 request and merge group, beside the Python jobs rather than inside them, and the local
-`python-test` hook runs it too. Every build it makes shares one persistent Cargo target,
-`GRUND_PYTHON_TARGET` ([§AR-ci.3.4.5](AR-ci.md#345-the-python-acceptances-shared-build-target)), rather than a cold temporary one.
+`python-test` hook runs it too. Every build it makes goes into this checkout's persistent
+Cargo target under the `GRUND_PYTHON_TARGET` root ([§AR-ci.3.4.5](AR-ci.md#345-the-python-acceptances-shared-build-target)), rather than a cold temporary one.
 
 The module installs this checkout's `crates/grund-py` from its source directory into a
 virtual environment of its own under the wrapper's scratch, outside the checkout, once
