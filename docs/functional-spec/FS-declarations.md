@@ -841,6 +841,20 @@ skills/review/SKILL.md:1: FS-review must not be declared in skills/ (not a citab
 
 That is the rule working as designed, not a gap in it: `citable = false` says the directory is a place, and a place with a declaration in it is one of the two facts in conflict.
 
+#### checks.misplaced-declaration.unlisted-project: Explain the enclosing homes beneath an unlisted project
+
+When an existing misplaced-declaration error lies beneath a nested project config that is not active because no workspace member entry lists its directory, the message explains why the enclosing project's homes apply. This is context on each of the three placement forms above, not another finding: the nested directory remains ordinary tree to its enclosing scan ([§FS-check.1.3.1](FS-check.md#131-the-scan-covers-the-whole-config-root)). The explanation identifies the nested config's report-relative path, including the `.agents/grund.toml` discovery form ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), and its project name when reliably available; says that config is not read because its directory is unlisted; and names the enclosing config and project whose kind homes are being enforced. A declaration deeper below that directory gets the same context.
+
+The message gives both concrete repairs in the enclosing config: add the nested project directory to `[workspace] members` if it belongs to the workspace, or exclude it from the enclosing scan if it does not. The exclusion advice uses that config version's setting: `[schema.sources] exclude` in v2 ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)), `[scan] exclude` in v1. Exclusions prune descendants, not scan roots ([§FS-check.1.3.2](FS-check.md#132-the-wider-scan-reads-a-superset-each-file-once)); when the directory is itself a scan root, the advice must also explain removing it from the configured roots rather than promising that exclusion alone removes it. Changing a declaration's heading depth does not change which config owns the scan.
+
+For the v2 root `shop` listing `packages/billing` but not `packages/notify`, an explanation can read:
+
+```
+packages/notify/requirements.md:3: error: FS-email must be declared in requirements.md (single-file kind) — packages/notify/grund.toml (project notify) is not read: no [workspace] members entry lists packages/notify; kind homes from grund.toml (project shop) apply; add "packages/notify" to [workspace] members in grund.toml, or exclude "packages/notify/" with [schema.sources] exclude in grund.toml
+```
+
+Text and JSON carry the same enriched message. The declaration path and line, `misplaced-declaration` code, severity, structured fields, finding count and exit verdict stay the same. Placement errors without this nested-config context retain their ordinary wording. A plain nested config with no placement violation gains no standalone finding, and the standalone unlisted-workspace finding and its message remain unchanged ([§FS-check.3.29.3](FS-check.md#3293-three-neighbouring-shapes-are-not-this-finding)). This explanation uses established config discovery and workspace ownership; it does not introduce another project boundary or new refusals for malformed configs or undecidable membership.
+
 ### checks.duplicate-section: Duplicate section path
 
 Two or more citable section headings inside one declaration claiming the same dotted path ([§FS-declarations.section](FS-declarations.md#section-what-a-section-is)) — either two `## 1. …` headings or two `## goals: …` headings under one `# FS-001-login`. Reported per [§FS-check.2.1](FS-check.md#21-report-format) in [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)'s shape: one error located at the first heading in file order, with every other heading line named in the message. Named and numeric coordinates use the same `duplicate-section` code ([§FS-errors.5](FS-errors.md#5-json-format)), the same multi-site `sites` record [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) carries, and the same no-ranking rule.
