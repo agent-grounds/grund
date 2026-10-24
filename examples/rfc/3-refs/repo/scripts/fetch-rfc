@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+"""Print the snapshot of one published RFC as a grund declaration.
+
+    scripts/fetch-rfc RFC9110 > references/RFC9110.md
+
+The ID is the RFC's citation tag, as kramdown-rfc writes it in {{RFC9110}}.
+The title and abstract come from the RFC Editor's metadata. For an RFC
+published in RFCXML v3 (RFC 8650 onward) the snapshot also maps every
+numbered section and appendix, one heading each, so a citation of a section
+resolves offline. An older RFC has no such XML, so its snapshot is the title
+and abstract alone. A published RFC never changes, so one run per RFC is enough.
+"""
+
+import json
+import re
+import sys
+import textwrap
+import urllib.request
+import xml.etree.ElementTree as ET
+
+BASE = "https://www.rfc-editor.org/rfc/"
+
+
+def get(url: str) -> bytes:
+    with urllib.request.urlopen(url, timeout=30) as response:
+        return response.read()
+
+
+def words(text: str) -> str:
+    return " ".join(text.split())
+
+
+def section_map(xml: bytes) -> list[str]:
+    """One heading per numbered section: `## 13.` and `### 13.1.`, `## a:` and `### b.1:`."""
+    headings = []
+    for section in ET.fromstring(xml).iter():
+        if section.tag not in ("section", "references"):
+            continue
+        pn = section.get("pn", "")
+        name = section.find("name")
+        if section.get("numbered") == "false" or name is None:
+            continue
+        if re.fullmatch(r"section-\d+(\.\d+)*", pn):
+            path = pn[len("section-"):]
+            label = path + "."
+        elif re.fullmatch(r"section-appendix\.[a-z](\.\d+)*", pn):
+            path = pn[len("section-appendix."):]
+            label = path + ":"
+        else:
+            continue
+        depth = path.count(".") + 2
+        headings.append(f"{'#' * depth} {label} {words(''.join(name.itertext()))}")
+    return headings
+
+
+def main(tag: str) -> None:
+    number = re.fullmatch(r"RFC(\d+)", tag)
+    if number is None:
+        sys.exit(f"fetch-rfc: {tag!r} is not an RFC tag such as RFC9110")
+    meta = json.loads(get(f"{BASE}rfc{number.group(1)}.json"))
+    lines = [f"# {tag}: {words(meta['title'])}", ""]
+    for paragraph in meta.get("abstract", "").split("\n\n"):
+        if paragraph.strip():
+            lines += textwrap.wrap(words(paragraph), 72) + [""]
+    if "XML" in meta.get("format", []):
+        lines += section_map(get(f"{BASE}rfc{number.group(1)}.xml"))
+    else:
+        lines.append("Published before RFCXML v3, so this snapshot maps no sections.")
+    print("\n".join(lines))
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        sys.exit("usage: fetch-rfc RFC<number>")
+    main(sys.argv[1])

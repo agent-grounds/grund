@@ -1,0 +1,10 @@
+draft-ietf-wsync-widget-sync.md:65: §draft-ietf-wsync-widget-sync.4.1
+draft-ietf-wsync-widget-sync.md:66: §draft-ietf-wsync-widget-sync.4.2
+draft-ietf-wsync-widget-sync.md:67: §draft-ietf-wsync-widget-sync.4.3
+draft-ietf-wsync-widget-sync.md:170: §draft-ietf-wsync-widget-sync.4.3
+src/wsync.py:39: §draft-ietf-wsync-widget-sync.4.1
+src/wsync.py:51: §draft-ietf-wsync-widget-sync.4.2
+src/wsync.py:64: §draft-ietf-wsync-widget-sync.4.3
+tests/test_wsync.py:13: §draft-ietf-wsync-widget-sync.4.1
+tests/test_wsync.py:31: §draft-ietf-wsync-widget-sync.4.2
+tests/test_wsync.py:31: §draft-ietf-wsync-widget-sync.4.3

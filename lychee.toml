@@ -4,6 +4,9 @@ max_retries = 4
 retry_wait_time = 1
 
 exclude = [
+  # The RFC example's draft asks IANA to register this problem type; the entry
+  # exists only once the registration it requests is made.
+  "^https://iana\\.org/assignments/http-problem-types#stale-widget$",
   # Inline-spec stubs are resolved by grund from the repo root; Markdown link
   # checkers resolve them relative to the stub file.
   "docs/architecture/src/checker\\.rs$",
