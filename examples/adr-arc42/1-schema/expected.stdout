@@ -1,0 +1,26 @@
+carrel · grund.toml · v2
+
+kinds and places
+  ADR    kind                  docs/
+           field status        must · first · one of Proposed, Accepted, Deprecated, Superseded
+           field context       must · after status
+           field decision      must · after context
+           field consequences  must · after decision
+           closed must
+  arc42  place                 docs/arc42/
+  QG     kind                  docs/arc42/01_introduction_and_goals.md
+  QS     kind                  docs/arc42/10_quality_requirements.md
+  RULE   kind                  docs/rules.md
+  code   complement            src/
+
+citations                      grounded
+  ADR    —
+  arc42  —
+  QG     must not  everything else
+  QS     must      QG
+  RULE   —
+  code   must      ADR         must · file
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it
