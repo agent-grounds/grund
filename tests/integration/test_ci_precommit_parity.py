@@ -156,7 +156,6 @@ class CiPreCommitParityTests(unittest.TestCase):
                 self.assertTrue(installs, f"ci.yml pins no `cargo install {binary} --version`")
                 self.assertLess(installs[0], gate, f"{binary} is installed after the pre-commit step")
 
-    @unittest.skip("red until #978 ci.yml runs the cargo shards and three selections; implement removes this")
     def test_rust_hooks_spell_the_commands_ci_runs(self):
         for hook_id in RUST_HOOKS:
             with self.subTest(hook=hook_id):
@@ -186,7 +185,6 @@ class CiPreCommitParityTests(unittest.TestCase):
                          "a job other than the benchmark build and shards overrides RUSTFLAGS,"
                          " or theirs is not empty")
 
-    @unittest.skip("red until #978 ci.yml runs the cargo shards and three selections; implement removes this")
     def test_the_pre_commit_step_skips_exactly_the_hooks_another_job_runs(self):
         # §AR-ci.13.3: a hook no job runs is never skipped, and one a job runs is not run twice.
         others = [run for run in self.ci_runs if run != "pre-commit run --all-files"]
@@ -276,7 +274,6 @@ class CiPreCommitParityTests(unittest.TestCase):
         self.assertEqual("ROOT", keywords.get("cwd"))
         self.assertEqual("environment", keywords.get("env"))
 
-    @unittest.skip("red until #978 ci.yml runs the cargo shards and three selections; implement removes this")
     def test_python_tests_are_discovered_from_this_home_on_both_sides(self):
         self.assert_python_discovery_parity(self.by_id["python-test"]["entry"], self.ci_runs,
                                             PYTHON_GATE.read_text(encoding="utf-8"))

@@ -44,7 +44,6 @@ def ids(suite):
     return found
 
 
-@unittest.skip("red until #978 run_python_gate.py has three selections; implement removes this")
 class PythonGateSelectionTests(unittest.TestCase):
     def select(self):
         select = getattr(run_python_gate, "select", None)

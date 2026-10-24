@@ -72,7 +72,6 @@ def acceptance_problems(text):
     return problems
 
 
-@unittest.skip("red until #978 ci.yml shards cargo and splits the Python acceptance; implement removes this")
 class ShardTests(unittest.TestCase):
     """§AR-ci.13.7 and the Python acceptance job on `ci.yml`."""
 

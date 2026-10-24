@@ -86,7 +86,6 @@ def under(path, root):
     return path is not None and Path(path).resolve().is_relative_to(Path(root).resolve())
 
 
-@unittest.skip("red until #978 the Python acceptance builds under GRUND_PYTHON_TARGET; implement removes this")
 class PythonSharedTargetTests(unittest.TestCase):
     SITES = {"the acceptance module": (MODULE, REPO / "tests" / "integration"),
              "the clean checkout": (CLEAN_CHECKOUT, REPO / "tests" / "bindings",
