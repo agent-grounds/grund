@@ -1,0 +1,15 @@
+{"path":"design/software-design.md","line":21,"column":2,"id":"SWR-003","section":null,"marker":true,"text":"§SWR-003","enclosing_declaration":"DES-001","enclosing_section":"trace"}
+{"path":"design/software-design.md","line":50,"column":2,"id":"SWR-001","section":null,"marker":true,"text":"§SWR-001","enclosing_declaration":"DES-002","enclosing_section":"trace"}
+{"path":"design/software-design.md","line":51,"column":2,"id":"SWR-002","section":null,"marker":true,"text":"§SWR-002","enclosing_declaration":"DES-002","enclosing_section":"trace"}
+{"path":"design/software-design.md","line":52,"column":2,"id":"SWR-004","section":null,"marker":true,"text":"§SWR-004","enclosing_declaration":"DES-002","enclosing_section":"trace"}
+{"path":"design/software-design.md","line":53,"column":2,"id":"SWR-005","section":null,"marker":true,"text":"§SWR-005","enclosing_declaration":"DES-002","enclosing_section":"trace"}
+{"path":"design/software-design.md","line":54,"column":2,"id":"SWR-006","section":null,"marker":true,"text":"§SWR-006","enclosing_declaration":"DES-002","enclosing_section":"trace"}
+{"path":"design/software-design.md","line":64,"column":2,"id":"SWR-007","section":null,"marker":true,"text":"§SWR-007","enclosing_declaration":"DES-003","enclosing_section":"trace"}
+{"path":"tests/test_charge_control.c","line":27,"column":13,"id":"SWR-001","section":null,"marker":true,"text":"§SWR-001","enclosing_declaration":"TC-001","enclosing_section":null}
+{"path":"tests/test_charge_control.c","line":43,"column":13,"id":"SWR-006","section":null,"marker":true,"text":"§SWR-006","enclosing_declaration":"TC-002","enclosing_section":null}
+{"path":"tests/test_charge_control.c","line":56,"column":13,"id":"SWR-004","section":null,"marker":true,"text":"§SWR-004","enclosing_declaration":"TC-003","enclosing_section":null}
+{"path":"tests/test_charge_control.c","line":56,"column":28,"id":"SWR-006","section":null,"marker":true,"text":"§SWR-006","enclosing_declaration":"TC-003","enclosing_section":null}
+{"path":"tests/test_charge_control.c","line":70,"column":13,"id":"SWR-005","section":null,"marker":true,"text":"§SWR-005","enclosing_declaration":"TC-004","enclosing_section":null}
+{"path":"tests/test_charge_control.c","line":86,"column":13,"id":"SWR-007","section":null,"marker":true,"text":"§SWR-007","enclosing_declaration":"TC-005","enclosing_section":null}
+{"path":"tests/test_temp_monitor.c","line":8,"column":13,"id":"SWR-003","section":null,"marker":true,"text":"§SWR-003","enclosing_declaration":"TC-006","enclosing_section":null}
+{"path":"verification/analyses.md","line":17,"column":2,"id":"SWR-002","section":null,"marker":true,"text":"§SWR-002","enclosing_declaration":"ANA-001","enclosing_section":"trace"}

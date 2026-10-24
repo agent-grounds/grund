@@ -1,0 +1,1 @@
+refs --glob 'SWR-*' {repo} --format json
