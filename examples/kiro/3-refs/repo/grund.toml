@@ -1,0 +1,149 @@
+# Kiro specs held to a grund schema.
+#
+# Kiro keeps one folder per feature under `.kiro/specs/`, each holding
+# `requirements.md`, `design.md` and `tasks.md`, and project-wide context in
+# `.kiro/steering/`. A spec's acceptance criteria are numbered `1.1`, `1.2`, ...
+# within that spec, and its tasks name them as `_Requirements: 1.1_`. Here each
+# of those numbers is a citation grund resolves and checks.
+grund_config_version = 2
+project_name = "kiro-checkout"
+
+[schema.sources]
+languages = ["markdown", "typescript"]
+
+# A spec's requirements: one REQ per feature, its slug the feature's folder. A
+# version-2 place is a path, not a pattern, so every new spec lists its file here.
+# Closed: a requirements block holds numbered requirements and nothing else.
+[schema.kinds.REQ]
+files = [
+  ".kiro/specs/coupon-codes/requirements.md",
+  ".kiro/specs/free-shipping/requirements.md",
+]
+closed = "must"
+
+# A spec's design, its chapters the ones Kiro writes, in Kiro's order.
+[schema.kinds.DESIGN]
+files = [
+  ".kiro/specs/coupon-codes/design.md",
+  ".kiro/specs/free-shipping/design.md",
+]
+
+[schema.kinds.DESIGN.fields.overview]
+title = "Overview"
+presence = "must"
+position = "first"
+
+[schema.kinds.DESIGN.fields.architecture]
+title = "Architecture"
+after = "overview"
+
+[schema.kinds.DESIGN.fields.components]
+title = "Components and Interfaces"
+after = "architecture"
+
+[schema.kinds.DESIGN.fields.data-models]
+title = "Data Models"
+after = "components"
+
+[schema.kinds.DESIGN.fields.properties]
+title = "Correctness Properties"
+after = "data-models"
+
+[schema.kinds.DESIGN.fields.errors]
+title = "Error Handling"
+after = "properties"
+
+[schema.kinds.DESIGN.fields.testing]
+title = "Testing Strategy"
+presence = "must"
+after = "errors"
+
+# Every other file under `.kiro/specs/` is a spec's `tasks.md`: a listed file
+# outranks the folder holding it. A task list declares nothing, so it stays the
+# checkbox list Kiro runs; its headings are Kiro's own.
+[schema.kinds.tasks]
+citable = false
+folders = [".kiro/specs"]
+
+# Steering: one declaration per file, so a design can cite the convention it
+# follows. Kiro loads every Markdown file here, so the folder keeps no index.
+[schema.kinds.STEER]
+folders = [".kiro/steering"]
+index = false
+
+# The rules grund holds the specs to beyond their citations. Kiro loads this
+# file as steering too, so its agent reads each rule as a sentence. A listed
+# file outranks the steering folder that holds it.
+[schema.kinds.RULE]
+files = [".kiro/steering/traceability.md"]
+form = "rule"
+
+[schema.kinds.test]
+citable = false
+folders = ["test"]
+
+# The complement: with a place, it narrows the scan to the places above and `src`.
+[schema.kinds.code]
+folders = ["src"]
+
+# Requirements are the contract: everything cites them, and they cite only
+# another spec's requirements or the product context.
+[rules.citations.REQ]
+default = "must-not"
+may = ["REQ", "STEER"]
+
+[rules.citations.DESIGN]
+default = "must-not"
+must = ["REQ"]
+may = ["DESIGN", "STEER"]
+
+# A task list names the criteria its tasks serve, and the properties its
+# property tests check.
+[rules.citations.tasks]
+default = "must-not"
+must = ["REQ"]
+may = ["DESIGN"]
+
+[rules.citations.tasks.grounding]
+must = "file"
+
+# Steering outlives every spec, so it never cites one.
+[rules.citations.STEER]
+default = "must-not"
+may = ["STEER", "RULE"]
+
+# Every top-level doc comment in the code names the criterion or the design
+# point it implements.
+[rules.citations.code]
+must = ["REQ|DESIGN"]
+
+[rules.citations.code.grounding]
+must = "h2"
+
+# Every doc comment in a test, nested ones included, names what it proves.
+[rules.citations.test]
+must = ["REQ"]
+
+[rules.citations.test.grounding]
+must = "h3"
+
+[presentation.kinds.REQ]
+title = "Requirements: user stories and their EARS acceptance criteria"
+
+[presentation.kinds.DESIGN]
+title = "Design: how a spec's requirements are met"
+
+[presentation.kinds.tasks]
+title = "Implementation plans: each spec's tasks.md"
+
+[presentation.kinds.STEER]
+title = "Steering: the project context Kiro loads"
+
+[presentation.kinds.RULE]
+title = "Rules: what grund holds the specs to"
+
+[presentation.kinds.test]
+title = "Tests: each names the criterion it proves"
+
+[presentation.kinds.code]
+title = "Implementation"
