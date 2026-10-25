@@ -9,7 +9,7 @@ Usage:  grund config <show | validate> [PATH]
   explain    say what a table, a key or a check code is, in the version the file is read as; with no target, list
              the tables. It reads the file's version and nothing else, so a config other commands refuse is answered.
   migrate    preview the version-2 file that means what this version-1 config means, and report where each key went;
-             writes nothing unless --write is given; successful writes use a compact report.
+             writes nothing unless --write is given; successful writes and refused previews use a compact report.
 
 Options:
   --codes              explain: every check code the version can report, one line each.
@@ -22,7 +22,7 @@ Options:
                        e.g. grund config migrate --to 2
   --write              migrate: replace the config with the candidate, once both comparisons pass.
                        e.g. grund config migrate --to 2 --write
-  --full               migrate: restore the candidate on stdout and complete report on stderr after a successful write.
+  --full               migrate: restore the candidate and complete report after a successful write, or a preview only comments refuse.
                        e.g. grund config migrate --to 2 --write --full
   --drop-comments      migrate: let --write drop the comments the preview lists, and name them again.
                        e.g. grund config migrate --to 2 --write --drop-comments

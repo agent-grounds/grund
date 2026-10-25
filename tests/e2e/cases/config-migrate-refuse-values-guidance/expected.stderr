@@ -3,3 +3,4 @@ refused: grund.toml:16: [[kinds]] `TERM` values = true adds a "Declaration shape
   would write: - **TERM**
   would write:   - field <number> may · values
   repair: none keeps the generated guidance; remove values under version 1 only if that section may change
+would not write: 1 refusal (follow the repairs above)

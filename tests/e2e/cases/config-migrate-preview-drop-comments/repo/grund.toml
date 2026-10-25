@@ -1,0 +1,15 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+named_sections = true
+
+[[kinds]]
+kind = "FS"
+folder = "docs"
+
+[scan]
+# Everything the walk reads besides the homes.
+include = ["docs", "src"]
