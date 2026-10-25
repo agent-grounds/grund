@@ -475,17 +475,17 @@ whole ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-firs
 change takes the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather
 than replacing the message outright (#1008).
 
-In `0.20.1` the complete legacy message stays a verbatim contiguous prefix: the
+In `0.21.0` the complete legacy message stays a verbatim contiguous prefix: the
 component's canonical text, with its component-aimed [§FS-values.5.2.1](FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind) clause
 when the pair differs in kind. It is followed by ` — whole binding: `, the
 final message of [§FS-errors.3.9.1](FS-errors.md#391-the-final-templates), and the suffix `; this wording changes in
-grund 0.21.0`. For the site above:
+grund 0.22.0`. For the site above:
 
 ```text
-docs/operations.md:3: error: value mismatch for FS-session.1.1: bound `30`, declared `45` at requirements.md:11 — whole binding: value mismatch for FS-session.1 (component 1.1): bound `30 minutes`, declared `45 minutes` at requirements.md:11; this wording changes in grund 0.21.0
+docs/operations.md:3: error: value mismatch for FS-session.1.1: bound `30`, declared `45` at requirements.md:11 — whole binding: value mismatch for FS-session.1 (component 1.1): bound `30 minutes`, declared `45 minutes` at requirements.md:11; this wording changes in grund 0.22.0
 ```
 
-In `0.21.0` the prefix and the suffix go, and the message is
+In `0.22.0` the prefix and the suffix go, and the message is
 [§FS-errors.3.9.1](FS-errors.md#391-the-final-templates)'s template alone. Two messages are never reworded, before,
 through or after the window: a component-aimed mismatch, and a root-aimed one
 whose part count differs from the component count, which already names the root
@@ -493,14 +493,14 @@ and the literal as authored ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-m
 
 Exact-line consumers migrate during the window to the stable
 `code == "value-mismatch"`; one that matches the legacy prefix reads what it read
-until `0.21.0`. The code, the error severity, the primary location, the one
+until `0.22.0`. The code, the error severity, the primary location, the one
 `sites` entry, the selectors and the exit verdict do not move, and the
 `--format json` `message` and the editor's diagnostic carry the bytes the text
 line carries ([§FS-errors.5.4](FS-errors.md#54-value-findings), [§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)).
 
 #### 3.9.1 The final templates
 
-From `0.21.0`, with the legacy prefix and the suffix gone, a root-aimed
+From `0.22.0`, with the legacy prefix and the suffix gone, a root-aimed
 mismatch whose part count equals the component count is exactly the first line
 below, and the second where its one pair differs in kind:
 

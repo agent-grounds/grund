@@ -140,12 +140,12 @@ fn the_walk_stops_at_the_first_unequal_component() {
     let _ = std::fs::remove_dir_all(root);
 }
 
-/// What an equal-count root-aimed mismatch prints until 0.21.0: the legacy
+/// What an equal-count root-aimed mismatch prints until 0.22.0: the legacy
 /// component text whole, then the root's message (§FS-errors.3.9).
 fn staged(legacy: &str, root: &str) -> String {
     format!(
         "value-mismatch: {legacy} \u{2014} whole binding: {root}; \
-         this wording changes in grund 0.21.0"
+         this wording changes in grund 0.22.0"
     )
 }
 

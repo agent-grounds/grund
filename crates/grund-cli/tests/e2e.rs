@@ -511,7 +511,7 @@ fn the_values_example_shows_what_it_is_the_example_of() {
 
     // And the caught mismatch beside the version 1 caution its config earns
     // (§FS-check.checks.config-version-1). The prose binds the root, so the legacy
-    // line is followed by the root's until 0.21.0 (§FS-values.5.2.2, §FS-errors.3.9).
+    // line is followed by the root's until 0.22.0 (§FS-values.5.2.2, §FS-errors.3.9).
     assert_eq!(read("expected.exit").trim(), "1");
     assert_eq!(read("expected.stderr"), VERSION_1_CAUTION);
     assert_eq!(
@@ -519,6 +519,6 @@ fn the_values_example_shows_what_it_is_the_example_of() {
         "docs/solver.md:7: error: value mismatch for CONST-time-step.1: \
          bound `0.002`, declared `0.001` at values/time-step.md:2 \u{2014} whole binding: \
          value mismatch for CONST-time-step (component 1): bound `0.002 s`, \
-         declared `0.001 s` at values/time-step.md:2; this wording changes in grund 0.21.0\n"
+         declared `0.001 s` at values/time-step.md:2; this wording changes in grund 0.22.0\n"
     );
 }
