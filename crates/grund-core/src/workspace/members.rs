@@ -418,9 +418,10 @@ impl AncestorWorkspaces {
         }
     }
 
-    /// §FS-workspace.6.1.7.5: after the claim climb, absence is confirmed only
-    /// when every ancestor's member text was obtainable. Warning emission is
-    /// independent: a quiet caller must not turn uncertainty into nonmembership.
+    /// §FS-workspace.6.1.7.5: cached unreadable-text uncertainty, independent of
+    /// warning emission. Placement context needs its absence
+    /// (§FS-declarations.checks.misplaced-declaration.unlisted-project); the
+    /// standalone finding retains its claim-text floor (§FS-check.3.29.2).
     pub(super) fn has_undecidable_ancestor(&self, child: &Path) -> bool {
         child
             .ancestors()

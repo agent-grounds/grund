@@ -1,6 +1,6 @@
 //! Applied version-specific repairs and quiet claim uncertainty for #1000.
 //! §FS-declarations.checks.misplaced-declaration.unlisted-project;
-//! §FS-config.3.5.16; §FS-workspace.6.1.7.5.
+//! §FS-config.3.5.16; §FS-workspace.6.1.7.5; §FS-check.3.29.2; §FS-check.3.29.15.
 
 use super::*;
 
@@ -9,6 +9,12 @@ const V1: &str = "grund_config_version = 1\nproject_name = \"shop\"\n\
     [[kinds]]\nkind = \"FS\"\nfile = \"requirements.md\"\n\
     [scan]\ninclude = [\".\"]\n";
 const ORIGINAL: &str = "FS-email must be declared in requirements.md (single-file kind)";
+const UNLISTED: &str = concat!(
+    "this [workspace] is listed by no enclosing workspace — the projects under it are ",
+    "absorbed into `shop` instead of named under their own alias path; add ",
+    "\"packages/notify\" to [workspace] members in grund.toml, or keep it out of that ",
+    "project's [scan] — an unlisted [workspace] became an error in grund 0.15.0"
+);
 
 fn v1_check(repo: &Fixture, json: bool, exit: i32) -> Output {
     let mut command = Command::new(env!("CARGO_BIN_EXE_grund"));
@@ -142,10 +148,12 @@ fn under_ancestor(workspace: &str) -> (Fixture, Fixture) {
     (outer, project)
 }
 
-fn assert_quiet_uncertain_claim(workspace: &str) {
+fn assert_quiet_placement_context(workspace: &str, standalone_for_workspace: bool) {
     let (_outer, repo) = under_ancestor(workspace);
-    // Both consumers of the shared predicate must leave an undecidable candidate quiet.
+    // §FS-check.3.29.2: unreadable text preserves the standalone floor, while
+    // a readable named claim that cannot expand keeps both consumers quiet.
     for nested_workspace in [false, true] {
+        repo.write("packages/notify/requirements.md", DECLARATION);
         if nested_workspace {
             repo.write(
                 "packages/notify/grund.toml",
@@ -155,48 +163,102 @@ fn assert_quiet_uncertain_claim(workspace: &str) {
                 ),
             );
         }
+        let standalone = nested_workspace && standalone_for_workspace;
+        let mut expected_errors = Vec::new();
+        if standalone {
+            expected_errors.push(json!({"severity": "error",
+                "path": "packages/notify/grund.toml", "line": 6,
+                "code": "unlisted-workspace-block", "message": UNLISTED,
+                "sites": null, "authority": null}));
+        }
+        expected_errors.push(json!({"severity": "error",
+            "path": "packages/notify/requirements.md", "line": 3,
+            "code": "misplaced-declaration", "message": ORIGINAL,
+            "sites": null, "authority": null}));
         let rows = repo.rows(1);
         assert_eq!(
             rows.len(),
-            3,
-            "only the placement error and two unused warnings: {rows:?}"
+            expected_errors.len() + 2,
+            "only the expected errors and two unused warnings: {rows:?}"
         );
-        assert_eq!(
-            errors(&rows),
-            [&json!({"severity": "error",
-            "path": "packages/notify/requirements.md", "line": 3,
-            "code": "misplaced-declaration", "message": ORIGINAL,
-            "sites": null, "authority": null})]
-        );
+        assert_eq!(errors(&rows), expected_errors.iter().collect::<Vec<_>>());
         let text = String::from_utf8(repo.check(false, 1).stdout).unwrap();
         let text_errors: Vec<_> = text
             .lines()
             .filter(|line| line.contains(": error:"))
             .collect();
-        assert_eq!(
-            text_errors,
-            [format!(
-                "packages/notify/requirements.md:3: error: {ORIGINAL}"
-            )]
-        );
-        assert!(
-            !text.contains("is not read:") && !text.contains("unlisted-workspace"),
-            "{text}"
-        );
+        let expected_text: Vec<_> = expected_errors
+            .iter()
+            .map(|row| {
+                format!(
+                    "{}:{}: error: {}",
+                    row["path"].as_str().unwrap(),
+                    row["line"],
+                    row["message"].as_str().unwrap()
+                )
+            })
+            .collect();
+        assert_eq!(text_errors, expected_text);
+        assert!(!text.contains("is not read:"), "{text}");
+
+        // §FS-check.3.29.15: the scanning surface retains the same standalone
+        // finding as a located-in-text warning, without an alias-path warning.
+        let listed = Command::new(env!("CARGO_BIN_EXE_grund"))
+            .arg("list")
+            .current_dir(&repo.0)
+            .output()
+            .unwrap();
+        assert_eq!(listed.status.code(), Some(0), "{listed:?}");
+        let expected_warning = if standalone {
+            format!("warning: packages/notify/grund.toml:6: {UNLISTED}\n")
+        } else {
+            String::new()
+        };
+        assert_eq!(String::from_utf8(listed.stderr).unwrap(), expected_warning);
+
+        // §FS-check.3.29.13: the standalone error alone still fails check, even
+        // after the declaration causing the placement error has been removed.
+        fs::remove_file(repo.0.join("packages/notify/requirements.md")).unwrap();
+        expected_errors.pop();
+        let exit = if standalone { 1 } else { 0 };
+        let rows = repo.rows(exit);
+        assert_eq!(errors(&rows), expected_errors.iter().collect::<Vec<_>>());
+        let text = String::from_utf8(repo.check(false, exit).stdout).unwrap();
+        let text_errors: Vec<_> = text
+            .lines()
+            .filter(|line| line.contains(": error:"))
+            .collect();
+        assert_eq!(text_errors, &expected_text[..expected_errors.len()]);
     }
 }
 
 #[test]
 fn unreadable_ancestor_members_keeps_placement_context_quiet() {
-    assert_quiet_uncertain_claim("members = [\"project/packages/notify\"");
+    assert_quiet_placement_context("members = [\"project/packages/notify\"", true);
 }
 
 #[test]
 fn unreadable_ancestor_optional_members_keeps_placement_context_quiet() {
-    assert_quiet_uncertain_claim("members = []\noptional_members = [\"project/packages/notify\"");
+    assert_quiet_placement_context(
+        "members = []\noptional_members = [\"project/packages/notify\"",
+        true,
+    );
+}
+
+#[test]
+fn non_list_ancestor_members_keeps_placement_context_quiet() {
+    assert_quiet_placement_context("members = \"not-a-list\"", true);
+}
+
+#[test]
+fn non_list_ancestor_optional_members_keeps_placement_context_quiet() {
+    assert_quiet_placement_context("members = []\noptional_members = \"not-a-list\"", true);
 }
 
 #[test]
 fn readable_but_unexpandable_ancestor_claim_keeps_placement_context_quiet() {
-    assert_quiet_uncertain_claim("members = [\"project/packages/notify\", \"missing\"]");
+    assert_quiet_placement_context(
+        "members = [\"project/packages/notify\", \"missing\"]",
+        false,
+    );
 }
