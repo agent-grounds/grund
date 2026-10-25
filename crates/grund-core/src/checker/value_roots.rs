@@ -2,7 +2,9 @@
 //! against, the space rule that keeps the join one-to-one, and what a
 //! disagreement reports (§FS-values.3.1.2, §FS-values.5.2.2).
 
-use super::value_mismatch::{rendered_value_path, value_mismatch, value_mismatch_text};
+use super::value_mismatch::{
+    RootComponent, rendered_value_path, root_value_mismatch, value_mismatch_text,
+};
 use crate::config::{Display, Frame, Schema};
 use crate::model::{
     Code, Declaration, Diagnostic, Site, ValueBinding, ValueComponent, first_unequal_component,
@@ -15,7 +17,9 @@ type RunComponent<'a> = (String, usize, &'a ValueComponent);
 
 /// The finding a root-aimed binding over a valid root earns, if any
 /// (§FS-values.3.1.2). The space refusal precedes comparison, so a root it
-/// refuses is never also a mismatch (§FS-values.5.1).
+/// refuses is never also a mismatch (§FS-values.5.1). A mismatch names the root
+/// as cited and the literal whole, with the first unequal component beside them
+/// when the part count matches (§FS-values.5.2.2).
 pub(super) fn root_binding_finding(
     binding: &ValueBinding,
     schema: &Schema,
@@ -48,6 +52,7 @@ pub(super) fn root_binding_finding(
         .map(|(_, _, component)| *component)
         .collect::<Vec<_>>();
     let parts = root_literal_parts(&binding.authored);
+    let joined = joined_value_components(&declared);
     if parts.len() != declared.len() {
         // §FS-values.5.2.2: no component is at fault, so the finding names the
         // root, at component 1's site, which every valid root has.
@@ -55,19 +60,28 @@ pub(super) fn root_binding_finding(
             binding,
             &root,
             &binding.authored.decoded,
-            &joined_value_components(&declared),
+            &joined,
             "",
             site(run[0].1),
             frame.display,
         ));
     }
+    // §FS-values.5.2.2: the first unequal component, named by its section path
+    // beside the root as cited and the literal whole.
     let index = first_unequal_component(&parts, &declared)?;
-    let (coordinate, line, component) = &run[index];
-    Some(value_mismatch(
+    let (section_path, line, component) = &run[index];
+    let coordinate = rendered_value_path(schema, binding, spelling, Some(section_path));
+    let at = RootComponent {
+        root: &root,
+        section_path,
+        coordinate: &coordinate,
+    };
+    Some(root_value_mismatch(
         binding,
-        &rendered_value_path(schema, binding, spelling, Some(coordinate)),
+        at,
         &parts[index],
         component,
+        &joined,
         site(*line),
         frame.display,
     ))

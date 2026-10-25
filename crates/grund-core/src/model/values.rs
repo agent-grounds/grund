@@ -176,7 +176,8 @@ pub(crate) fn root_literal_parts(literal: &ValueComponent) -> Vec<ValueComponent
 }
 
 /// A root's components `.1` through `.N` joined by one ASCII space, each as a
-/// declared component prints (§FS-values.3.1.2, §FS-values.5.2.2).
+/// declared component prints: the declared side of every root-aimed mismatch
+/// (§FS-values.3.1.2, §FS-values.5.2.2).
 pub(crate) fn joined_value_components(components: &[&ValueComponent]) -> String {
     components
         .iter()
@@ -186,8 +187,9 @@ pub(crate) fn joined_value_components(components: &[&ValueComponent]) -> String 
 }
 
 /// The index of the first part that is unequal to its component, comparing in
-/// declared order under §FS-values.4 and stopping there, so only that component
-/// is reported (§FS-values.5.2.2). The caller has already matched the counts.
+/// declared order under §FS-values.4 and stopping there, so the finding names
+/// only that component beside the whole literal, and carries only its site
+/// (§FS-values.5.2.2). The caller has already matched the counts.
 pub(crate) fn first_unequal_component(
     parts: &[ValueComponent],
     components: &[&ValueComponent],
