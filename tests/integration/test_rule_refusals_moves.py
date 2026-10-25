@@ -54,7 +54,7 @@ MOVES = (
     ("3.5.4.1", "Only the failed part is replaced", "sentences.rewrite.replaced",
      ("only the production that failed is spelled canonically",)),
     ("3.5.4.2", "Only what can be recovered is supplied", "sentences.rewrite.recovered",
-     ("An object kind is never guessed. A chapter name is never invented",)),
+     ("An object kind is never guessed.", "A chapter name is never invented")),
     ("3.5.4.3", "A form is parsed before it is offered", "sentences.rewrite.reparsed",
      ("A form is offered only once the parser accepts it.",)),
     ("3.5.4.4", "Where no form is offered", "sentences.rewrite.no-form",
