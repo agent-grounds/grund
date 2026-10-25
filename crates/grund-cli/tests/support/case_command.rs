@@ -76,6 +76,7 @@ struct CaseExecution {
     copy: Option<CaseCopy>,
     args: Vec<String>,
     cwd: PathBuf,
+    is_external: bool,
 }
 
 impl CaseExecution {
@@ -119,7 +120,12 @@ fn prepare_case(manifest_dir: &Path, case: &Path, name: &str) -> CaseExecution {
         "{repo_copy}" => copy.as_ref().expect("copy selected by cwd").repo.clone(),
         _ => manifest_dir.to_path_buf(),
     };
-    CaseExecution { copy, args, cwd }
+    CaseExecution {
+        copy,
+        args,
+        cwd,
+        is_external,
+    }
 }
 
 /// Expand whole and suffix arguments from the invocation's copy (§FS-examples.5.6.1).

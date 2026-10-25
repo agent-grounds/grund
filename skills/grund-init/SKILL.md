@@ -133,7 +133,7 @@ Splitting off a member (`grund guide members`), then validate from the workspace
 
 For an existing version-1 config, `grund config migrate --to 2` previews the
 translation. Read each listed comment's local reason and destination guidance:
-moving a comment from `include` to the `[scan]` header still leaves it on a split
+moving a comment from the version-1 `include` key to the `[scan]` header still leaves it on a split
 attachment. To keep its prose, save it, explicitly authorize the listed drops
 with `--write --drop-comments`, and re-add it at the named version-2 destination
 after a successful write. Choose placement manually for a dropped setting or a

@@ -1,8 +1,6 @@
-// The stderr-conciseness half of the case runner: judging a non-zero case's
-// `expected.stderr` against the shape the JSON format promises rather than
-// against its serialized length. Split out of `case_runner.rs` along the same
-// seam as `case_symlinks.rs` — included into the same module, so both halves
-// share `case_name` and the manifest readers.
+// The stderr-conciseness half of case_runner.rs judges ordinary diagnostics,
+// JSON shapes and unwrapped migration entries (§FS-config-migrate.2.2).
+// It shares case_name and the manifest readers with the runner.
 
 /// Whether a case's command selects `--format json`. Decided from the
 /// expanded argument vector rather than the raw `command.args` text, because
@@ -20,11 +18,100 @@ fn command_selects_json(args: &[String]) -> bool {
 /// case's `expected.exit` — a clean case has nothing to judge — then hands the
 /// judgement itself to [`assert_stderr_is_concise`], which touches no file and
 /// is what the self-tests at the bottom of this file drive directly.
-fn assert_expected_errors_are_concise(case: &Path, name: &str, args: &[String], stderr: &str) {
+fn assert_expected_errors_are_concise(
+    case: &Path,
+    name: &str,
+    execution: &CaseExecution,
+    stderr: &str,
+) {
     if read_to_string(case.join("expected.exit")).trim() == "0" {
         return;
     }
-    assert_stderr_is_concise(name, command_selects_json(args), stderr);
+    assert_stderr_is_concise(
+        name,
+        command_selects_json(&execution.args),
+        command_is_config_migrate(&execution.args, execution.is_external),
+        stderr,
+    );
+}
+
+/// §FS-config-migrate.2.2: only Grund's migration report owns these records.
+/// Match the dispatched command, never tokens in an external or unrelated argv.
+/// `config` removes `--path-base` before dispatching its action (§FS-cli.3.4).
+fn command_is_config_migrate(args: &[String], is_external: bool) -> bool {
+    if is_external || args.first().map(String::as_str) != Some("config") {
+        return false;
+    }
+    let mut words = args[1..].iter().map(String::as_str);
+    while let Some(word) = words.next() {
+        match word {
+            "--path-base" => {
+                if !matches!(words.next(), Some("project" | "invocation")) {
+                    return false;
+                }
+            }
+            "--path-base=project" | "--path-base=invocation" => {}
+            action => return action == "migrate",
+        }
+    }
+    false
+}
+
+/// §FS-config-migrate.2.2: eligibility starts at this exact block heading and
+/// ends at the first line that is not a well-formed listed-comment record.
+const MIGRATION_COMMENT_HEADING: &str =
+    "comments with no single key to follow (--write refuses; --drop-comments drops exactly these):";
+
+fn is_migration_comment_record(line: &str) -> bool {
+    let Some((location, entry)) = line.strip_prefix("  ").and_then(|s| s.split_once("  ")) else {
+        return false;
+    };
+    let Some((path, range)) = location.rsplit_once(':') else {
+        return false;
+    };
+    let positive_line = |s: &str| {
+        (!s.is_empty() && s.bytes().all(|b| b.is_ascii_digit()))
+            .then(|| s.parse::<usize>().ok())
+            .flatten()
+            .filter(|n| *n > 0)
+    };
+    let valid_range = if let Some((first, last)) = range.split_once('-') {
+        matches!((positive_line(first), positive_line(last)), (Some(a), Some(b)) if a <= b)
+    } else {
+        positive_line(range).is_some()
+    };
+    let Some((attachment, guidance)) = entry.split_once(": ") else {
+        return false;
+    };
+    let attached_key = attachment
+        .strip_prefix("above ")
+        .or_else(|| attachment.strip_prefix("inside "));
+    !path.trim().is_empty()
+        && path.trim() == path
+        && valid_range
+        && (attachment == "standing alone" || attached_key.is_some_and(is_migration_v1_key))
+        && !guidance.trim().is_empty()
+        && guidance.trim() == guidance
+}
+
+/// The v1 attachment spelling: a root key, a table, or a table and key.
+fn is_migration_v1_key(key: &str) -> bool {
+    let identifier = |s: &str| {
+        !s.is_empty()
+            && s.bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+    };
+    if !key.starts_with('[') {
+        return identifier(key);
+    }
+    let (header, key) = key
+        .split_once(' ')
+        .map_or((key, None), |(h, k)| (h, Some(k)));
+    let table = header
+        .strip_prefix("[[")
+        .and_then(|s| s.strip_suffix("]]"))
+        .or_else(|| header.strip_prefix('[').and_then(|s| s.strip_suffix(']')));
+    table.is_some_and(|s| s.split('.').all(identifier)) && key.is_none_or(identifier)
 }
 
 /// The absorbed-scan config error opens with this, after its `members`-line
@@ -46,13 +133,21 @@ const PROMOTED_LOAD_WARNING_SUFFIX: &str = "; this became an error in grund 0.19
 /// judged by its `message` field instead of its serialized length — the
 /// scaffolding around it (§FS-distribution.3.0.1's `severity`, `path`,
 /// `line`, `code`, `sites`, `authority`) is fixed cost the conciseness policy
-/// was never about.
-fn assert_stderr_is_concise(name: &str, json_case: bool, stderr: &str) {
+/// was never about. Within Grund's exact migration comment-list block, only
+/// well-formed entries keep their unwrapped guidance (§FS-config-migrate.2.2).
+/// All other lines retain their limits; aggregate summaries remain forbidden.
+fn assert_stderr_is_concise(name: &str, json_case: bool, migration_case: bool, stderr: &str) {
     assert!(
         !stderr.contains("error(s)") && !stderr.contains("warning(s)"),
         "{name}: stderr should not include aggregate summaries"
     );
-    for line in stderr.lines().filter(|line| !line.trim().is_empty()) {
+    let mut in_comment_list = false;
+    for line in stderr.lines() {
+        let comment_record = migration_case && in_comment_list && is_migration_comment_record(line);
+        in_comment_list = migration_case && (line == MIGRATION_COMMENT_HEADING || comment_record);
+        if line.trim().is_empty() || comment_record {
+            continue;
+        }
         if line.starts_with("warning: ")
             || (line.starts_with("error: ") && line.contains(ABSORBED_SCAN_SENTENCE))
             || (line.starts_with("error: ") && line.ends_with(PROMOTED_LOAD_WARNING_SUFFIX))
@@ -201,7 +296,7 @@ mod stderr_concise_tests {
     /// the stderr under test was wrongly accepted.
     fn rejects(json_case: bool, stderr: &str) -> String {
         match panic::catch_unwind(AssertUnwindSafe(|| {
-            assert_stderr_is_concise("case", json_case, stderr)
+            assert_stderr_is_concise("case", json_case, false, stderr)
         })) {
             Ok(()) => panic!("expected stderr to be rejected, but it passed: {stderr}"),
             Err(payload) => payload
@@ -224,7 +319,7 @@ mod stderr_concise_tests {
               \"authority\":null}}"
         );
         assert!(line.len() > 180, "fixture line no longer exceeds the cap");
-        assert_stderr_is_concise("case", true, &line);
+        assert_stderr_is_concise("case", true, false, &line);
     }
 
     #[test]
@@ -272,8 +367,8 @@ mod stderr_concise_tests {
     fn nonzero_case_preserves_a_carried_text_warning() {
         let warning = format!("warning: {}", "x".repeat(220));
         let stderr = format!("{warning}\nerror: concise refusal\n");
-        assert_stderr_is_concise("case", false, &stderr);
-        assert_stderr_is_concise("case", true, &stderr);
+        assert_stderr_is_concise("case", false, false, &stderr);
+        assert_stderr_is_concise("case", true, false, &stderr);
     }
 
     #[test]
@@ -282,9 +377,12 @@ mod stderr_concise_tests {
             "error: grund.toml:16: [workspace] members swallows this project's whole scan — {}",
             "x".repeat(220)
         );
-        assert_stderr_is_concise("case", false, &error);
-        assert_stderr_is_concise("case", true, &error);
-        let other = format!("error: grund.toml:16: [workspace] members {}", "x".repeat(220));
+        assert_stderr_is_concise("case", false, false, &error);
+        assert_stderr_is_concise("case", true, false, &error);
+        let other = format!(
+            "error: grund.toml:16: [workspace] members {}",
+            "x".repeat(220)
+        );
         let panic_message = rejects(false, &other);
         assert!(panic_message.contains("too long"), "{panic_message}");
     }
@@ -296,8 +394,11 @@ mod stderr_concise_tests {
              the workspace root; this became an error in grund 0.19.0",
             "x".repeat(180)
         );
-        assert_stderr_is_concise("case", false, &error);
-        let other = format!("error: grund.toml: [citations.API] should names {}", "x".repeat(180));
+        assert_stderr_is_concise("case", false, false, &error);
+        let other = format!(
+            "error: grund.toml: [citations.API] should names {}",
+            "x".repeat(180)
+        );
         let panic_message = rejects(false, &other);
         assert!(panic_message.contains("too long"), "{panic_message}");
     }
@@ -309,3 +410,7 @@ mod stderr_concise_tests {
         assert!(panic_message.contains("too long"), "{panic_message}");
     }
 }
+
+#[cfg(test)]
+#[path = "case_migrate_stderr_tests.rs"]
+mod stderr_migration_tests;
