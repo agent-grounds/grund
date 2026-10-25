@@ -418,10 +418,11 @@ impl AncestorWorkspaces {
         }
     }
 
-    /// §FS-workspace.6.1.7.5: cached unreadable-text uncertainty, independent of
-    /// warning emission. Placement context needs its absence
-    /// (§FS-declarations.checks.misplaced-declaration.unlisted-project); the
-    /// standalone finding retains its claim-text floor (§FS-check.3.29.2).
+    /// §FS-workspace.6.1.7.5: the cached uncertainty about ancestor member text
+    /// that could not be obtained, kept whether or not this climb emits the
+    /// warning. Both quiet consumers honour it, through one predicate: the
+    /// standalone unlisted-workspace finding (§FS-check.3.29.2) and the placement
+    /// context (§FS-declarations.checks.misplaced-declaration.unlisted-project).
     pub(super) fn has_undecidable_ancestor(&self, child: &Path) -> bool {
         child
             .ancestors()

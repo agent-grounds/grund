@@ -213,7 +213,6 @@ fn genuinely_unknown_alias_does_not_claim_to_be_the_enclosing_project() {
 /// (§FS-workspace.6.1.7.5) — then `shop` names a member, not the root, so the
 /// remedy is withheld. A readable ancestor that names nothing here verifies it.
 #[test]
-#[ignore = "red until #1010 the root remedy is withheld under an undecidable ancestor; implement removes this"]
 fn an_undecidable_ancestor_above_the_root_withholds_the_root_remedy() {
     let fixture = Fixture::new();
     let outer = |members: &str| {

@@ -525,7 +525,6 @@ fn a_claim_the_ancestor_cannot_answer_leaves_the_block_unreported() {
 /// stands on entry text that was read, and this ancestor has none, so whether it
 /// names `b` cannot be said; reporting it as listed by nobody claims an answer.
 #[test]
-#[ignore = "red until #1010 the quiet climb keeps an unreadable ancestor claim undecidable; implement removes this"]
 fn an_ancestor_members_list_that_will_not_parse_leaves_the_block_unreported() {
     let root = repo_under_an_ancestor_workspace(
         "an_ancestor_members_list_that_will_not_parse_leaves_the_block_unreported",
@@ -538,7 +537,6 @@ fn an_ancestor_members_list_that_will_not_parse_leaves_the_block_unreported() {
 /// nothing here does not decide the claim while `optional_members` (§FS-workspace.2.2.9),
 /// which claims by the same entry-text rule, cannot be read (§FS-check.3.29.2).
 #[test]
-#[ignore = "red until #1010 the quiet climb keeps an unreadable ancestor claim undecidable; implement removes this"]
 fn an_ancestor_optional_members_that_will_not_parse_leaves_the_block_unreported() {
     let root = repo_under_an_ancestor_workspace(
         "an_ancestor_optional_members_that_will_not_parse_leaves_the_block_unreported",
@@ -551,7 +549,6 @@ fn an_ancestor_optional_members_that_will_not_parse_leaves_the_block_unreported(
 /// parses and is not a list has no entries to read a claim off, so the claim is
 /// as undecidable as an unparsable one, and as unreported (§FS-check.3.29.2).
 #[test]
-#[ignore = "red until #1010 the quiet climb keeps an unreadable ancestor claim undecidable; implement removes this"]
 fn an_ancestor_members_value_that_is_not_a_list_leaves_the_block_unreported() {
     let root = repo_under_an_ancestor_workspace(
         "an_ancestor_members_value_that_is_not_a_list_leaves_the_block_unreported",

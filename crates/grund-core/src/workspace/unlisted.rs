@@ -105,8 +105,8 @@ fn block_diagnostics(
     // `enclosing_alias_prefix` shares one per climb — every candidate walks the same
     // ancestors, and without it each ancestor's config is re-read per candidate.
 
-    // §FS-check.3.29.2: this quiet climb emits no alias-path warning and preserves
-    // the standalone finding's floor when ancestor member text is unobtainable.
+    // §FS-check.3.29.2: this quiet climb emits no alias-path warning; an ancestor
+    // whose member text it cannot obtain leaves the block unreported.
     let mut projects = UnlistedProjects::new(config.run());
     let mut reported = BTreeSet::new();
     let mut diagnostics = Vec::new();
@@ -130,9 +130,10 @@ fn block_diagnostics(
         if !reported.insert(canonical) {
             continue;
         }
-        // §FS-check.3.29.2: use the shared root/claim answer; unreadable ancestor
-        // text vetoes placement context alone, not this standalone finding.
-        if !projects.status(dir).is_unlisted {
+        // §FS-check.3.29.2: no answer is not the answer that nothing claims it, so a
+        // claim an ancestor cannot answer, or whose member text it cannot give, stays
+        // unreported. Placement context asks this same predicate.
+        if !projects.is_unlisted(dir) {
             continue;
         }
         let located = placement == Placement::Located;
