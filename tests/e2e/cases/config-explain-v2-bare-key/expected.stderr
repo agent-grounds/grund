@@ -1,0 +1,1 @@
+version 2 has no top-level key or check code `exclude`; for a key of a table, ask grund config explain '[schema.sources] exclude' or '[presentation.fmt] exclude'

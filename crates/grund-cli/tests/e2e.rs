@@ -110,6 +110,28 @@ fn word_character_marker_cli_contract() {
     assert_every_case_passed("configured marker graph", &outcomes);
 }
 
+/// §FS-config-explain.1.1, §FS-config-explain.5: issue #1005's cases, run alone. Every
+/// one is also in the full pass: a path with one reading answered, and the failures
+/// that name every reading of a bare name or of a path with two.
+#[test]
+#[ignore = "red until #1005 answers a path with one reading and lists every reading; implement removes this"]
+fn config_explain_readings_contract() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let outcomes = [
+        "config-explain-v2-dotted-table",
+        "config-explain-v1-dotted-key",
+        "config-explain-v2-dotted-placeholder",
+        "config-explain-v2-dotted-placeholder-key",
+        "config-explain-v2-bare-key",
+        "config-explain-v2-placeholder-key",
+    ]
+    .iter()
+    .map(|name| run_case(&root, &cases.join(name), E2e))
+    .collect::<Vec<_>>();
+    assert_every_case_passed("config explain readings", &outcomes);
+}
+
 /// §FS-config-v2: the version-2 reader's contract, run alone. Every case is also
 /// in the full pass; the two `config-v1-*` cases are the v1 halves that must not move.
 #[test]

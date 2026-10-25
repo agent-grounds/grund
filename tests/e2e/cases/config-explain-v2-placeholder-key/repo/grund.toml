@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "orders-api"
+
+[schema.kinds.FS]
+files = ["requirements.md"]
+[schema.kinds.AR]
+folders = ["docs/architecture"]
+
+[presentation.kinds.FS]
+title = "What: behavior, requirements, and constraints"
+[presentation.kinds.AR]
+title = "How: high-level implementation, structure, and design"

@@ -1,1 +1,5 @@
+grund.toml is read as version 1.
 
+[reference] strict
+Values: boolean
+`true` reads only marked citations; `false` reads bare IDs too.

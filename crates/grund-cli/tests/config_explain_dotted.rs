@@ -1,7 +1,9 @@
-//! §FS-config-explain.5: the built binary refuses a dotted path to a table or a
-//! key the version admits with a line naming the bracketed spelling that
-//! answers, and `grund config --help` teaches that spelling with a table and a
-//! key example (§FS-config-explain.1.1). Reported as agent-grounds/grund#904.
+//! §FS-config-explain.1.1: the built binary answers a path with exactly one
+//! reading as its bracketed spelling, byte for byte, and §FS-config-explain.5:
+//! a path with two readings and a bare name that tables hold fail naming every
+//! spelling that answers. `grund config --help` teaches the bracketed spelling
+//! with a table and a key example. Reported as agent-grounds/grund#904 and
+//! agent-grounds/grund#1005.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -15,6 +17,20 @@ struct Project(PathBuf);
 
 impl Project {
     fn new(version: u32) -> Self {
+        let table = if version == 1 {
+            "[reference]\nstrict = false\n"
+        } else {
+            "[schema.kinds.FS]\nfiles = [\"requirements.md\"]\n"
+        };
+        let project = Self::without_config();
+        let config =
+            format!("grund_config_version = {version}\nproject_name = \"demo\"\n\n{table}");
+        fs::write(project.0.join("grund.toml"), config).unwrap();
+        project
+    }
+
+    /// A directory no `grund.toml` encloses, so both versions answer.
+    fn without_config() -> Self {
         let root = std::env::temp_dir().join(format!(
             "grund-explain-dotted-{}-{}",
             std::process::id(),
@@ -22,14 +38,6 @@ impl Project {
         ));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).unwrap();
-        let table = if version == 1 {
-            "[reference]\nstrict = false\n"
-        } else {
-            "[schema.kinds.FS]\nfiles = [\"requirements.md\"]\n"
-        };
-        let config =
-            format!("grund_config_version = {version}\nproject_name = \"demo\"\n\n{table}");
-        fs::write(root.join("grund.toml"), config).unwrap();
         Self(root)
     }
 
@@ -52,56 +60,133 @@ fn run(dir: &Path, args: &[&str]) -> Output {
         .expect("run grund")
 }
 
-/// Stdout empty, exit 1, and stderr exactly `line`.
-fn assert_refused(project: &Project, target: &str, line: &str) {
+/// Stdout empty, exit 1, and stderr exactly `lines`, each ending in a newline.
+fn assert_refused(project: &Project, target: &str, lines: &[&str]) {
     let out = project.explain(target);
     let stderr = String::from_utf8_lossy(&out.stderr);
-    assert_eq!(stderr, format!("{line}\n"), "{target}");
+    let expected: String = lines.iter().map(|line| format!("{line}\n")).collect();
+    assert_eq!(stderr, expected, "{target}");
     assert!(out.stdout.is_empty(), "{target}: stdout {:?}", out.stdout);
     assert_eq!(out.status.code(), Some(1), "{target}");
 }
 
-/// §FS-config-explain.5: a dotted path to a table or a key names the bracketed
-/// spelling, in version 2 and in version 1, and is still not answered.
+/// `target` prints exactly what `bracketed` prints, on both streams, and both
+/// exit 0.
+fn assert_answered_as(project: &Project, target: &str, bracketed: &str) {
+    let expected = project.explain(bracketed);
+    assert_eq!(
+        expected.status.code(),
+        Some(0),
+        "{bracketed} does not answer"
+    );
+    let out = project.explain(target);
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&expected.stdout),
+        "{target} vs {bracketed}"
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&out.stderr),
+        String::from_utf8_lossy(&expected.stderr),
+        "{target} vs {bracketed}"
+    );
+    assert_eq!(out.status.code(), Some(0), "{target}");
+}
+
+/// §FS-config-explain.1.1: every dotted example the spec gives prints the same
+/// bytes as its bracketed spelling and exits 0, in version 2 and in version 1.
 #[test]
-fn a_dotted_path_is_refused_with_its_bracketed_spelling() {
+#[ignore = "red until #1005 answers a path with one reading; implement removes this"]
+fn a_path_with_one_reading_is_answered_as_its_bracketed_spelling() {
     let v2 = Project::new(2);
-    assert_refused(
-        &v2,
-        "schema.sources",
-        "version 2 has no top-level key or check code `schema.sources`; for the table, ask grund config explain '[schema.sources]'",
-    );
-    assert_refused(
-        &v2,
-        "schema.sources.exclude",
-        "version 2 has no top-level key or check code `schema.sources.exclude`; for the key, ask grund config explain '[schema.sources] exclude'",
-    );
-    assert_refused(
-        &v2,
-        "schema.kinds.FS",
-        "version 2 has no top-level key or check code `schema.kinds.FS`; for the table, ask grund config explain '[schema.kinds.FS]'",
-    );
+    for (target, bracketed) in [
+        ("schema", "[schema]"),
+        ("schema.sources", "[schema.sources]"),
+        ("schema.sources.exclude", "[schema.sources] exclude"),
+        ("schema.kinds.FS", "[schema.kinds.FS]"),
+        ("schema.kinds.ADR", "[schema.kinds.ADR]"),
+        ("schema.kinds.FS.id_format", "[schema.kinds.FS] id_format"),
+        ("rules.citations.grounding", "[rules.citations.grounding]"),
+    ] {
+        assert_answered_as(&v2, target, bracketed);
+    }
     let v1 = Project::new(1);
-    assert_refused(
-        &v1,
-        "reference",
-        "version 1 has no top-level key or check code `reference`; for the table, ask grund config explain '[reference]'",
-    );
-    assert_refused(
-        &v1,
-        "reference.strict",
-        "version 1 has no top-level key or check code `reference.strict`; for the key, ask grund config explain '[reference] strict'",
+    for (target, bracketed) in [
+        ("reference", "[reference]"),
+        ("reference.strict", "[reference] strict"),
+        (
+            "reference.lead_size_warning.max",
+            "[reference] lead_size_warning.max",
+        ),
+        ("fmt.cross_refs", "[fmt.cross_refs]"),
+    ] {
+        assert_answered_as(&v1, target, bracketed);
+    }
+}
+
+/// §FS-config-explain.2: with no config both versions answer, so a path that
+/// version 2 answers is exit 0, as its bracketed spelling is.
+#[test]
+#[ignore = "red until #1005 answers a path with one reading; implement removes this"]
+fn a_path_one_version_answers_is_answered_with_no_config() {
+    assert_answered_as(
+        &Project::without_config(),
+        "schema.sources",
+        "[schema.sources]",
     );
 }
 
-/// §FS-config-explain.5: a name that is no path from the top keeps the catch-all.
+/// §FS-config-explain.5: a path with two readings names the one with the name
+/// left out on the line and the other on a `hint:` line, and is not answered.
 #[test]
-fn a_bare_leaf_keeps_the_catch_all() {
+#[ignore = "red until #1005 reads a filled placeholder with the name left out; implement removes this"]
+fn a_path_with_two_readings_names_both() {
     assert_refused(
         &Project::new(2),
-        "sources",
-        "version 2 knows no table, key or check code `sources`; grund config explain lists the tables, grund config explain --codes the codes",
+        "schema.kinds.id_format",
+        &[
+            "version 2 has no top-level key or check code `schema.kinds.id_format`; for the key, ask grund config explain '[schema.kinds.<NAME>] id_format'",
+            "hint: for a kind named id_format, ask grund config explain '[schema.kinds.id_format]'",
+        ],
     );
+}
+
+/// §FS-config-explain.5: a bare name names every table that holds it, as a key
+/// or as the end of its header, and is not answered even where one table does.
+#[test]
+#[ignore = "red until #1005 lists the tables that hold a bare name; implement removes this"]
+fn a_bare_name_names_every_table_that_holds_it() {
+    let v2 = Project::new(2);
+    assert_refused(
+        &v2,
+        "exclude",
+        &[
+            "version 2 has no top-level key or check code `exclude`; for a key of a table, ask grund config explain '[schema.sources] exclude' or '[presentation.fmt] exclude'",
+        ],
+    );
+    assert_refused(
+        &v2,
+        "sources",
+        &[
+            "version 2 has no top-level key or check code `sources`; for a table, ask grund config explain '[schema.sources]'",
+        ],
+    );
+}
+
+/// §FS-config-explain.5: a misspelt code and a path whose rest is no key of its
+/// table keep the catch-all, byte for byte.
+#[test]
+fn a_misspelt_code_and_an_unknown_key_keep_the_catch_all() {
+    let v2 = Project::new(2);
+    for target in ["oversized-leed", "schema.sources.nope"] {
+        assert_refused(
+            &v2,
+            target,
+            &[&format!(
+                "version 2 knows no table, key or check code `{target}`; grund config explain lists the tables, grund config explain --codes the codes"
+            )],
+        );
+    }
 }
 
 /// §FS-config-explain.1.1: the help page's explain examples include a target

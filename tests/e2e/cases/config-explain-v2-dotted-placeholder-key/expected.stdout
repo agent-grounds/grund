@@ -1,0 +1,5 @@
+grund.toml is read as version 2.
+
+[schema.kinds.<NAME>] id_format
+Values: string
+This kind's ID template, overriding `[schema] id_format`.

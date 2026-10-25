@@ -1,1 +1,13 @@
+grund.toml is read as version 2.
 
+[schema.sources]
+The sources a version-2 project is read from.
+
+  languages (array of strings): The languages a version-2 project reads: built-in names from the v2 epoch, or names defined under `[schema.sources.definitions]`. Omitted, the epoch's default set; `[]` reads nothing.
+  declarations ("doc-comments" | "any-comment"): Which comment blocks of a source file may declare an ID: only those the language's doc profile calls documentation, or every comment as in version 1. Citations are read in every comment either way.
+  exclude (array of strings): Gitignore-style patterns, resolved against the config root, for paths the scan never reads. A stub whose target a pattern matches is broken, and the pattern is named as the reason its target is not read. Unlike version 1 there are no built-in names.
+  respect_gitignore (boolean): Skip what `.gitignore` and other ignore files exclude, stub targets included: a stub whose target they exclude is broken, because a target the scan does not read declares nothing.
+
+Tables under it: [schema.sources.extensions], [schema.sources.definitions]
+
+Next: grund config explain '[schema.sources] languages'
