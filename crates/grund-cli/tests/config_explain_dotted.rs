@@ -96,7 +96,6 @@ fn assert_answered_as(project: &Project, target: &str, bracketed: &str) {
 /// §FS-config-explain.1.1: every dotted example the spec gives prints the same
 /// bytes as its bracketed spelling and exits 0, in version 2 and in version 1.
 #[test]
-#[ignore = "red until #1005 answers a path with one reading; implement removes this"]
 fn a_path_with_one_reading_is_answered_as_its_bracketed_spelling() {
     let v2 = Project::new(2);
     for (target, bracketed) in [
@@ -127,7 +126,6 @@ fn a_path_with_one_reading_is_answered_as_its_bracketed_spelling() {
 /// §FS-config-explain.2: with no config both versions answer, so a path that
 /// version 2 answers is exit 0, as its bracketed spelling is.
 #[test]
-#[ignore = "red until #1005 answers a path with one reading; implement removes this"]
 fn a_path_one_version_answers_is_answered_with_no_config() {
     assert_answered_as(
         &Project::without_config(),
@@ -139,7 +137,6 @@ fn a_path_one_version_answers_is_answered_with_no_config() {
 /// §FS-config-explain.5: a path with two readings names the one with the name
 /// left out on the line and the other on a `hint:` line, and is not answered.
 #[test]
-#[ignore = "red until #1005 reads a filled placeholder with the name left out; implement removes this"]
 fn a_path_with_two_readings_names_both() {
     assert_refused(
         &Project::new(2),
@@ -154,7 +151,6 @@ fn a_path_with_two_readings_names_both() {
 /// §FS-config-explain.5: a bare name names every table that holds it, as a key
 /// or as the end of its header, and is not answered even where one table does.
 #[test]
-#[ignore = "red until #1005 lists the tables that hold a bare name; implement removes this"]
 fn a_bare_name_names_every_table_that_holds_it() {
     let v2 = Project::new(2);
     assert_refused(

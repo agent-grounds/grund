@@ -224,7 +224,8 @@ pub use api::{MigrateOpts, config_migrate};
 pub use api::{config_explain, explain_vocabulary};
 #[doc(hidden)]
 pub use config::explain::{
-    ExplainAnswer, ExplainAsk, ExplainCode, ExplainKey, ExplainTable, ExplainUnknown, Explained,
+    ExplainAnswer, ExplainAsk, ExplainCode, ExplainKey, ExplainName, ExplainReading, ExplainTable,
+    ExplainUnknown, Explained,
 };
 #[doc(hidden)]
 pub use config::migrate::{

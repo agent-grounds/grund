@@ -127,7 +127,6 @@ fn assert_same_answer(project: &Project, target: &str, bracketed: &str) {
 /// both versions admit is the version's own, so its path is answered there
 /// (§FS-config-explain.1.1).
 #[test]
-#[ignore = "red until #1005 answers a path with one reading; implement removes this"]
 fn own_tables_come_first() {
     assert_same_answer(&Project::new(1), "workspace.members", "[workspace] members");
     assert_same_answer(&Project::new(2), "workspace", "[workspace]");

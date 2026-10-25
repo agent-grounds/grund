@@ -8,6 +8,7 @@ Usage:  grund config <show | validate> [PATH]
   validate   parse the discovered config and report the first error; exit 0 if it's well-formed.
   explain    say what a table, a key or a check code is, in the version the file is read as; with no target, list
              the tables. It reads the file's version and nothing else, so a config other commands refuse is answered.
+             A dotted path with one reading, such as schema.sources, is answered as '[schema.sources]' is.
   migrate    preview the version-2 file that means what this version-1 config means, and report where each key went;
              writes nothing unless --write is given; successful writes and refused previews use a compact report.
 

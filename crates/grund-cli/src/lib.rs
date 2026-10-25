@@ -45,7 +45,7 @@ use grund_core::{
 // crate prints (§AR-config.9).
 use grund_core::{
     ClauseBy, CodeEnabled, CodeSeverity, ExplainAnswer, ExplainAsk, ExplainCode, ExplainKey,
-    ExplainTable, ExplainUnknown, config_explain,
+    ExplainReading, ExplainTable, ExplainUnknown, config_explain,
 };
 
 // §FS-integrations.1.3: `grund integrations` is one engine operation
