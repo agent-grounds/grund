@@ -145,7 +145,6 @@ fn with<'a>(head: &[&'a str], mode: &[&'a str]) -> Vec<&'a str> {
 /// Every text mode of `FS-billing.retry.2` opens with `### retry.2: Ceiling`, and so does the
 /// twin's, whose body then tells the two apart (§FS-declarations.section.relative.shown.selected).
 #[test]
-#[ignore = "red until #1009 prints a selected relative section's own heading with its canonical path; implement removes this"]
 fn every_text_mode_names_the_selected_section() {
     let fx = Fixture::new();
     let expected = format!("### retry.2: Ceiling\n{CEILING_BODY}");
@@ -162,7 +161,6 @@ fn every_text_mode_names_the_selected_section() {
 
 /// `--section` selects the same slice the direct coordinate does, first line included.
 #[test]
-#[ignore = "red until #1009 prints a selected relative section's own heading with its canonical path; implement removes this"]
 fn section_flag_agrees_with_the_direct_coordinate() {
     let fx = Fixture::new();
     for mode in MODES {
@@ -182,7 +180,6 @@ fn section_flag_agrees_with_the_direct_coordinate() {
 
 /// `md` prefixes the declaration heading, except in brief mode, and then prints `text`'s slice.
 #[test]
-#[ignore = "red until #1009 prints a selected relative section's own heading with its canonical path; implement removes this"]
 fn md_adds_the_declaration_heading_before_the_same_slice() {
     let fx = Fixture::new();
     let slice = format!("### retry.2: Ceiling\n{CEILING_BODY}");
@@ -200,7 +197,6 @@ fn md_adds_the_declaration_heading_before_the_same_slice() {
 /// The JSON `body` is the text body; `anchor` still follows the heading as written, and the
 /// coordinate fields do not move (§FS-show.3.1.3, §FS-fmt.6.2.2).
 #[test]
-#[ignore = "red until #1009 prints a selected relative section's own heading with its canonical path; implement removes this"]
 fn json_body_names_the_section_and_the_anchor_stays_as_written() {
     let fx = Fixture::new();
     for mode in MODES {
@@ -220,7 +216,6 @@ fn json_body_names_the_section_and_the_anchor_stays_as_written() {
 
 /// A source doc-comment section opens the same way, and its anchor stays null.
 #[test]
-#[ignore = "red until #1009 prints a selected relative section's own heading with its canonical path; implement removes this"]
 fn a_doc_comment_section_names_its_path_too() {
     let fx = Fixture::new();
     for mode in MODES {
@@ -238,7 +233,6 @@ fn a_doc_comment_section_names_its_path_too() {
 /// Only the selected section's own first line changes: a relative heading inside the slice
 /// prints as written, and the default read stops before it.
 #[test]
-#[ignore = "red until #1009 prints a selected relative section's own heading with its canonical path; implement removes this"]
 fn an_interior_relative_heading_stays_as_written() {
     let fx = Fixture::new();
     assert_eq!(

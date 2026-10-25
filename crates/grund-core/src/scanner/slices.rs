@@ -36,20 +36,19 @@ impl SliceSink {
         }
     }
 
-    /// This sink, printing a relative heading at its canonical path, as `--toc`
+    /// This sink, printing a relative map heading at its canonical path, as `--toc`
     /// does (§FS-declarations.section.relative.shown, §FS-show.2.1.2).
     pub(crate) fn canonical(mut self) -> Self {
         self.canonical = true;
         self
     }
 
-    /// `line`, a section heading the slice takes, as this sink prints it.
+    /// `line`, a section map heading the slice takes, as this sink prints it.
     fn heading_line(&self, line: String, heading: &RecordedHeading) -> String {
-        match heading.path.as_deref() {
-            Some(path) if self.canonical && heading.relative => {
-                expand_relative_heading(&line, path)
-            }
-            _ => line,
+        if self.canonical {
+            canonical_heading_line(line, heading)
+        } else {
+            line
         }
     }
 
@@ -130,9 +129,10 @@ pub(crate) fn record_slices(
         if sink.include_heading {
             sink.lines.push(body_line(record, decl_heading.line));
         }
-        // §FS-show.2.1.1: a selected section always opens on its own heading, outside the map.
+        // §FS-show.2.1.1: a selected section always opens on its own heading, outside the map,
+        // at its canonical path in every view (§FS-declarations.section.relative.shown.selected).
         if section.is_some() && sink.view != ShowRenderMode::Outline {
-            let line = sink.heading_line(body_line(record, top.line), top);
+            let line = canonical_heading_line(body_line(record, top.line), top);
             sink.lines.push(line);
         }
         match sink.view {
@@ -160,6 +160,17 @@ pub(crate) fn record_slices(
         }
     }
     Ok(top.line)
+}
+
+/// `line`, the heading line the record holds as `heading`, with a relative path
+/// replaced by the canonical one the scan recorded for it, never inferred again
+/// (§FS-declarations.section.relative.shown): `### .2: Ceiling` at `retry.2` is
+/// `### retry.2: Ceiling`. A heading written with its complete path comes back as is.
+fn canonical_heading_line(line: String, heading: &RecordedHeading) -> String {
+    match heading.path.as_deref() {
+        Some(path) if heading.relative => expand_relative_heading(&line, path),
+        _ => line,
+    }
 }
 
 /// Line `lineno` as `show` prints it (§FS-languages.comment-wrapper): a Markdown line
