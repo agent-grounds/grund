@@ -28,7 +28,9 @@ impl MemberRootGuidance {
 
 /// §FS-workspace.5.1.1: reuse the canonical membership verifier and alias
 /// derivation without expanding or scanning the enclosing project's declarations.
-/// An undecidable claim withholds the hint rather than changing the check's verdict.
+/// An undecidable claim withholds the hint rather than changing the check's verdict:
+/// one named and not answered, and one above the root whose `members` text cannot
+/// be obtained (§FS-workspace.6.1.7.5), which may list that root under another.
 pub(crate) fn member_root_guidance(run: &Run) -> Option<MemberRootGuidance> {
     let mut ancestors = AncestorWorkspaces::quiet_for_run_at(&run.root);
     let mut child = run.root.clone();
@@ -36,6 +38,11 @@ pub(crate) fn member_root_guidance(run: &Run) -> Option<MemberRootGuidance> {
     while let Some(parent) = enclosing_workspace_of(&child, &run.cli_base, &mut ancestors).ok()? {
         child = parent.root.clone();
         enclosing = Some(parent);
+    }
+    // §FS-workspace.5.1.1: the top of the chain is the root only when nothing above
+    // it could still claim it.
+    if ancestors.has_undecidable_ancestor(&child) {
+        return None;
     }
     let root = enclosing?;
     if !root.workspace_include_root {

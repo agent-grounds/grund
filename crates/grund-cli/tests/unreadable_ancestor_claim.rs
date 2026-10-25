@@ -101,7 +101,6 @@ fn outcome(output: &Output) -> (Option<i32>, String, String) {
 /// ahead exactly as it does once the bracket is closed — exit 0, the one warning,
 /// and no `unlisted-workspace-block` naming `packages/hub` as listed by nobody.
 #[test]
-#[ignore = "red until #1010 the quiet climb keeps an unreadable ancestor claim undecidable; implement removes this"]
 fn an_ancestor_members_list_that_will_not_parse_leaves_the_block_unreported() {
     let unreadable = Outer::listing("[\"project/packages/hub\"");
     assert_eq!(

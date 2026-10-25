@@ -19,15 +19,6 @@ pub(super) struct UnlistedProjects<'a> {
     ancestors: AncestorWorkspaces,
 }
 
-/// Shared claim facts with distinct diagnostic decisions (§FS-check.3.29.2,
-/// §FS-declarations.checks.misplaced-declaration.unlisted-project).
-pub(super) struct UnlistedStatus {
-    /// The standalone rule's active-root exclusion and quiet claim answer.
-    pub(super) is_unlisted: bool,
-    /// Placement context also needs obtainable ancestor member text.
-    pub(super) has_undecidable_ancestor: bool,
-}
-
 impl<'a> UnlistedProjects<'a> {
     /// §FS-declarations.checks.misplaced-declaration.unlisted-project: reuse ancestor
     /// answers throughout a run rather than loading every candidate as a project.
@@ -39,29 +30,31 @@ impl<'a> UnlistedProjects<'a> {
         }
     }
 
-    /// §FS-check.3.29.2: a named claim that cannot answer stays unreported, while
-    /// ancestor breakage cannot silence a candidate no ancestor names. Return
-    /// unreadable-text uncertainty separately for the stricter placement context
-    /// (§FS-declarations.checks.misplaced-declaration.unlisted-project).
-    pub(super) fn status(&mut self, dir: &Path) -> UnlistedStatus {
+    /// Whether `dir` holds a config no enclosing workspace lists: not a project root of
+    /// this run, and claimed by no ancestor. Absence holds only where every ancestor's
+    /// member text was obtained (§FS-workspace.6.1.7.5): a named claim that cannot
+    /// expand, or an ancestor whose `members` or `optional_members` cannot be read,
+    /// leaves the claim undecidable, and undecidable is not unlisted. The standalone
+    /// unlisted-workspace finding (§FS-check.3.29.2) and the placement context
+    /// (§FS-declarations.checks.misplaced-declaration.unlisted-project) ask this one
+    /// question.
+    pub(super) fn is_unlisted(&mut self, dir: &Path) -> bool {
         let canonical = canonical_workspace_path(dir);
-        let active_root = canonical == self.root
+        if canonical == self.root
             || self
                 .run
                 .workspace
                 .project_roots
                 .iter()
                 .chain(&self.run.workspace.boundary_roots)
-                .any(|root| root == &canonical);
-        let is_unlisted = !active_root
-            && matches!(
-                enclosing_workspace_of(dir, &self.run.cli_base, &mut self.ancestors),
-                Ok(None)
-            );
-        UnlistedStatus {
-            is_unlisted,
-            has_undecidable_ancestor: self.ancestors.has_undecidable_ancestor(dir),
+                .any(|root| root == &canonical)
+        {
+            return false;
         }
+        matches!(
+            enclosing_workspace_of(dir, &self.run.cli_base, &mut self.ancestors),
+            Ok(None)
+        ) && !self.ancestors.has_undecidable_ancestor(dir)
     }
 }
 
@@ -92,8 +85,7 @@ pub(crate) fn unlisted_project_contexts<'a>(
         let Some(config_path) = config_file_in(dir) else {
             continue;
         };
-        let status = projects.status(dir);
-        if !status.is_unlisted || status.has_undecidable_ancestor {
+        if !projects.is_unlisted(dir) {
             continue;
         }
         // An unreadable candidate adds no new refusal or claim about its contents.
