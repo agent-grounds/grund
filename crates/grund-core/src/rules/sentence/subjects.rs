@@ -13,7 +13,9 @@
 
 use super::forms::{Form, Refusal, refuse};
 use super::literal::DeclarationSelector;
-use super::recovery::{Recovered, Suggestion, as_if_enabled, recover, repair_every};
+use super::recovery::{
+    Recovered, Suggestion, as_if_enabled_subject, recover_subject, repair_every,
+};
 use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary};
 use crate::grammar::{named_section_component, parse_id_arg, render_input_id, unnamed_component};
 
@@ -175,32 +177,32 @@ impl SubjectRefusal {
     /// that failed (§FS-rule-refusals.sentences.chapter-path), then a form whose subject is rebuilt from
     /// what can be recovered (§FS-rule-refusals.sentences.rewrite.recovered), or, where it needs named
     /// sections, the subject §FS-rule-refusals.sentences.named-sections suggests, read with them on. Where
-    /// no configured kind is recovered there is no form, and what is missing is
-    /// a kind.
+    /// no faithful subject is recovered there is no form; a missing kind is
+    /// distinguished from scope that cannot safely be rewritten.
     pub(super) fn rule_refusal(&self, vocabulary: &RuleVocabulary) -> Refusal {
         // §FS-rule-refusals.sentences.every: replace only the quantifier; the offer is reparsed.
         if let Some(text) = repair_every(self) {
             return refuse(self.reason(vocabulary), Form::One(text));
         }
         let suggested = if self.fault == SubjectFault::NamedSectionsOff {
-            as_if_enabled(
+            as_if_enabled_subject(
                 &self.text,
                 vocabulary,
                 parse_subject,
                 Recovered::rule_subject,
             )
         } else {
-            recover(self, vocabulary).map(|recovered| Suggestion {
+            recover_subject(self, vocabulary).map(|recovered| Suggestion {
                 text: recovered.rule_subject(),
                 after_enabling: false,
             })
         };
         let reason = self.reason(vocabulary);
         match suggested {
-            Some(suggested) => {
+            Ok(suggested) => {
                 refuse(reason, Form::One(suggested.text)).enabling(suggested.after_enabling)
             }
-            None => refuse(reason, Form::None { kind: true }),
+            Err(kind) => refuse(reason, Form::None { kind }),
         }
     }
 }

@@ -12,6 +12,7 @@
 use super::subjects::{Spelling, SubjectFault, SubjectRefusal, parse_subject, validate_named_path};
 use super::{RuleSubject, RuleVocabulary};
 use crate::grammar::{Grammar, named_section_component, split_alias_path};
+use std::collections::BTreeSet;
 
 /// What §FS-rule-refusals.selectors's four steps recovered from a refused subject.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -64,21 +65,113 @@ impl Recovered {
     }
 }
 
-/// §FS-rule-refusals.selectors's four steps over a refusal, or `None` where no configured
-/// kind can be recovered.
+/// §FS-rule-refusals.selectors: recover a faithful selector, or offer nothing
+/// where either its kind or its typed scope cannot be supplied.
 pub(super) fn recover(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> Option<Recovered> {
+    recover_subject(refusal, vocabulary).ok()
+}
+
+/// §FS-rule-refusals.sentences.rewrite.recovered: derive scope once for both
+/// surfaces. An error says whether a kind is missing, so a rule with a known
+/// kind but no faithful subject gets no misleading known-kinds footer.
+pub(super) fn recover_subject(
+    refusal: &SubjectRefusal,
+    vocabulary: &RuleVocabulary,
+) -> Result<Recovered, bool> {
     // §FS-workspace.1: recovery of refused text, which no grammar admits, so the lenient split.
     let (_, head) = split_alias_path(&refusal.head);
-    let kind = recovered_kind(head, vocabulary)?;
+    let kind = recovered_kind(head, vocabulary).ok_or(true)?;
+    if refusal.fault == SubjectFault::ChapterQuantified {
+        return Err(false);
+    }
+    // §FS-rule-refusals.sentences.rewrite.recovered: a chapter left in the head is scope,
+    // not extra text to discard after recognizing the kind.
+    if head.contains(char::is_whitespace)
+        || (refusal.spelling == Spelling::Each
+            && vocabulary.section_separators.iter().any(|separator| {
+                head.strip_prefix(kind)
+                    .is_some_and(|tail| tail.starts_with(separator.as_str()))
+            }))
+    {
+        return reordered_scope(refusal, kind, vocabulary).ok_or(false);
+    }
     let declaration = (refusal.spelling == Spelling::Literal && is_declaration(head, vocabulary))
         .then(|| head.to_string());
-    Some(Recovered {
+    Ok(Recovered {
         spelling: refusal.spelling,
         kind: kind.into(),
         declaration,
         names: named_prefix(refusal.path.as_deref(), kind, vocabulary),
         separator: refusal.separator.clone(),
     })
+}
+
+/// §FS-rule-refusals.sentences.rewrite.recovered: recognize only typed, complete
+/// named paths in alternative subject word orders. The ordinary refused-path
+/// prefix policy remains in `named_prefix`; an ambiguous word order cannot
+/// borrow its whole-declaration fallback.
+fn reordered_scope(
+    refusal: &SubjectRefusal,
+    kind: &str,
+    vocabulary: &RuleVocabulary,
+) -> Option<Recovered> {
+    let text = match refusal.spelling {
+        Spelling::Each => refusal.text.strip_prefix("Each ")?,
+        Spelling::Literal => &refusal.text,
+        _ => return None,
+    };
+    let (_, text) = split_alias_path(text);
+    let (base, names) = match text.split_once(' ') {
+        Some((base, tail)) => (base, tail.strip_suffix(" chapter").unwrap_or(tail)),
+        None if refusal.spelling == Spelling::Each => {
+            let tail = text.strip_prefix(kind)?;
+            let names = vocabulary
+                .section_separators
+                .iter()
+                .find_map(|separator| tail.strip_prefix(separator.as_str()))?;
+            (kind, names)
+        }
+        None => return None,
+    };
+    validate_named_path(names, kind, vocabulary).ok()?;
+    if base == kind {
+        return Some(Recovered {
+            spelling: Spelling::ChapterOfEach,
+            kind: kind.into(),
+            declaration: None,
+            names: names.into(),
+            separator: String::new(),
+        });
+    }
+    if refusal.spelling != Spelling::Literal || !is_declaration(base, vocabulary) {
+        return None;
+    }
+    // §FS-rule-refusals.sentences.rewrite.recovered: the configured grammar must accept
+    // exactly one literal chapter spelling; no declaration or separator is guessed.
+    let separators: BTreeSet<_> = vocabulary
+        .section_separators
+        .iter()
+        .map(String::as_str)
+        .chain(vocabulary.section_separators.is_empty().then_some("."))
+        .collect();
+    let mut candidates = separators.into_iter().filter_map(|separator| {
+        match parse_subject(&format!("{base}{separator}{names}"), vocabulary).ok()? {
+            RuleSubject::ExactChapter {
+                declaration,
+                path,
+                separator,
+            } => Some(Recovered {
+                spelling: Spelling::Literal,
+                kind: kind.into(),
+                declaration: Some(declaration.to_string()),
+                names: path,
+                separator,
+            }),
+            _ => None,
+        }
+    });
+    let recovered = candidates.next()?;
+    candidates.next().is_none().then_some(recovered)
 }
 
 /// A suggestion for a subject refused for needing named sections, and whether
@@ -119,12 +212,23 @@ pub(super) fn as_if_enabled<T>(
     parse: impl Fn(&str, &RuleVocabulary) -> Result<T, SubjectRefusal>,
     render: impl Fn(&Recovered) -> String,
 ) -> Option<Suggestion> {
-    let enabled = enabled(vocabulary)?;
+    as_if_enabled_subject(text, vocabulary, parse, render).ok()
+}
+
+/// §FS-rule-refusals.sentences.rewrite.recovered: preserve the shared recovery's
+/// missing-kind distinction when a rule retries with named sections enabled.
+pub(super) fn as_if_enabled_subject<T>(
+    text: &str,
+    vocabulary: &RuleVocabulary,
+    parse: impl Fn(&str, &RuleVocabulary) -> Result<T, SubjectRefusal>,
+    render: impl Fn(&Recovered) -> String,
+) -> Result<Suggestion, bool> {
+    let enabled = enabled(vocabulary).ok_or(true)?;
     let text = match parse(text, &enabled) {
         Ok(_) => text.to_string(),
-        Err(own) => render(&recover(&own, &enabled)?),
+        Err(own) => render(&recover_subject(&own, &enabled)?),
     };
-    Some(Suggestion {
+    Ok(Suggestion {
         after_enabling: parse(&text, vocabulary).is_err(),
         text,
     })
