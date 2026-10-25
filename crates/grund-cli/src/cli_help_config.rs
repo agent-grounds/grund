@@ -20,6 +20,10 @@ fn print_config_help() {
     println!(
         "             the tables. It reads the file's version and nothing else, so a config other commands refuse is answered."
     );
+    // §FS-config-explain.1.1: a path with one reading is answered.
+    println!(
+        "             A dotted path with one reading, such as schema.sources, is answered as '[schema.sources]' is."
+    );
     println!(
         "  migrate    preview the version-2 file that means what this version-1 config means, and report where each key went;"
     );

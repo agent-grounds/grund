@@ -32,7 +32,6 @@ fn spellings(unknown: &ExplainUnknown) -> Vec<String> {
 /// bracketed spelling answers, a single segment from the top included, a name
 /// kept for its placeholder and the longest table prefix taken.
 #[test]
-#[ignore = "red until #1005 answers a path with one reading; implement removes this"]
 fn a_path_with_one_reading_is_answered_as_its_bracketed_spelling() {
     for (version, target, bracketed) in [
         (2, "schema", "[schema]"),
@@ -81,7 +80,6 @@ fn a_path_with_one_reading_is_answered_as_its_bracketed_spelling() {
 /// header, the path also reads with the name left out, and that reading is
 /// named first; neither is answered.
 #[test]
-#[ignore = "red until #1005 reads a filled placeholder with the name left out; implement removes this"]
 fn a_path_with_two_readings_names_both_the_name_left_out_first() {
     for (version, target, named) in [
         (
@@ -129,7 +127,6 @@ fn a_path_with_two_readings_names_both_the_name_left_out_first() {
 /// name and each table whose header ends in it, in index order, and is not
 /// answered even where only one table holds it.
 #[test]
-#[ignore = "red until #1005 lists the tables that hold a bare name; implement removes this"]
 fn a_bare_name_names_every_table_that_holds_it_in_index_order() {
     for (version, target, named) in [
         (
@@ -173,7 +170,6 @@ fn a_bare_name_names_every_table_that_holds_it_in_index_order() {
 /// §FS-config-explain.5: a path with an empty segment or one holding a bracket
 /// has no reading, so it reaches the catch-all rather than a spelling.
 #[test]
-#[ignore = "red until #1005 refuses a malformed path a reading; implement removes this"]
 fn a_malformed_path_has_no_reading() {
     for target in ["schema.sources]", "schema.kinds."] {
         let other = ExplainUnknown::Other {

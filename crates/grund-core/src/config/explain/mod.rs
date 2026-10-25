@@ -5,6 +5,7 @@
 //! Like migration it renders nothing: it returns one typed answer, which the
 //! frontend prints as it prints `config show` (§AR-system.4).
 
+mod readings;
 mod schema;
 mod target;
 #[cfg(test)]
@@ -137,15 +138,38 @@ pub enum ExplainUnknown {
         key: String,
         admitted: Vec<String>,
     },
-    /// A dotted path to a table, or a key of one when `key`, and the
-    /// bracketed spelling that answers it, without shell quotes.
-    Bracketed {
+    /// A path with more than one reading, each named, the readings with a name
+    /// left out first.
+    Readings {
         target: String,
-        spelling: String,
-        key: bool,
+        readings: Vec<ExplainReading>,
+    },
+    /// A bare name no own table reads, and each table that holds a key of that
+    /// name or whose header ends in it, in index order.
+    BareName {
+        target: String,
+        spellings: Vec<ExplainReading>,
     },
     /// Anything else, a misspelt or a planned code included.
     Other { target: String },
+}
+
+/// §FS-config-explain.5: one bracketed spelling that answers, without shell
+/// quotes: a table, or a key of one when `key`, and where the reading takes a
+/// path segment as a name, what that name names.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ExplainReading {
+    pub spelling: String,
+    pub key: bool,
+    pub named: Option<ExplainName>,
+}
+
+/// §FS-config-explain.5: a name in a placeholder's place, and what it names:
+/// `kind`, `language` or `field`.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ExplainName {
+    pub what: &'static str,
+    pub name: String,
 }
 
 /// §FS-config-explain.2: discover the config as `config show` does, read its

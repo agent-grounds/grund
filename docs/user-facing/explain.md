@@ -113,12 +113,24 @@ hint: version 2 writes its settings in [schema.sources], [schema.sources.extensi
 A version-2 table asked in a version-1 project names
 `grund config migrate --to 2`; a key the table does not have lists the keys it
 does. A target written the way TOML writes a nested key, such as
-`schema.sources` or `schema.sources.exclude`, is not answered: the brackets are
-part of a table's target. Where the dotted path names a table or a key the
-version has, the line gives the spelling that answers:
+`schema.sources` or `schema.sources.exclude`, is read against your version's
+tables. Where it reads one way only, it is answered exactly as its bracketed
+spelling is, exit `0`: `schema.sources` prints what `'[schema.sources]'`
+prints, and `schema.kinds.FS.id_format` what `'[schema.kinds.FS] id_format'`
+prints. Where a segment could be a kind's name or a key of the kind's table,
+the path reads two ways, so it is not answered, and the failure names both, the
+key first:
 
 ```text
-version 2 has no top-level key or check code `schema.sources.exclude`; for the key, ask grund config explain '[schema.sources] exclude'
+version 2 has no top-level key or check code `schema.kinds.id_format`; for the key, ask grund config explain '[schema.kinds.<NAME>] id_format'
+hint: for a kind named id_format, ask grund config explain '[schema.kinds.id_format]'
+```
+
+A bare name, such as `exclude`, is not answered either, but the failure names
+every table that holds a key of that name, or whose header ends in it:
+
+```text
+version 2 has no top-level key or check code `exclude`; for a key of a table, ask grund config explain '[schema.sources] exclude' or '[presentation.fmt] exclude'
 ```
 
 A dotted path copied from a guide for the other version, such as

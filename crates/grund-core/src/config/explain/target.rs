@@ -1,6 +1,7 @@
 //! §FS-config-explain.1.1: what a target names in one version, read against
 //! the tables and keys that version's reader admits, and the code catalog.
 
+use super::readings::{bare_name, readings};
 use super::{ExplainUnknown, is_member_of};
 use crate::config::v2::v1_homes;
 use crate::config::vocabulary::admitted;
@@ -31,13 +32,7 @@ pub(super) fn resolve<'a>(
         }
         return match Code::named(asked) {
             Some(code) => Resolved::Code(code),
-            None => Resolved::Unknown(
-                dotted(tables, asked)
-                    .or_else(|| other_dotted(version, tables, asked))
-                    .unwrap_or(ExplainUnknown::Other {
-                        target: asked.to_string(),
-                    }),
-            ),
+            None => path(version, tables, asked),
         };
     };
     let Some(at) = find_table(tables, header) else {
@@ -56,23 +51,38 @@ pub(super) fn resolve<'a>(
     }
 }
 
-/// §FS-config-explain.5: `asked` read as a dotted TOML key, the bracketed
-/// spelling that answers it: the longest leading run of its segments that
-/// spells an admitted table is the table, and the rest is a key of it.
-fn dotted(tables: &[(String, Vec<String>)], asked: &str) -> Option<ExplainUnknown> {
-    let (header, at, rest) = leading_tables(asked)
-        .find_map(|(header, rest)| find_table(tables, &header).map(|at| (header, at, rest)))?;
-    let spelling = if rest.is_empty() {
-        header
-    } else {
-        find_key(&tables[at].1, &rest)?;
-        format!("{header} {rest}")
-    };
-    Some(ExplainUnknown::Bracketed {
+/// §FS-config-explain.1.1, §FS-config-explain.5: `asked` read as a path. Its
+/// own tables come first: exactly one reading is answered by resolving its
+/// bracketed spelling, so the answer is that spelling's by construction, and
+/// more are all named. Then a table of the other version, then a bare name's
+/// tables, and otherwise the catch-all.
+fn path<'a>(version: u32, tables: &'a [(String, Vec<String>)], asked: &str) -> Resolved<'a> {
+    let segments: Vec<&str> = asked.split('.').collect();
+    let other = || ExplainUnknown::Other {
         target: asked.to_string(),
-        spelling,
-        key: !rest.is_empty(),
-    })
+    };
+    // §FS-config-explain.5: an empty or bracketed segment leaves no reading.
+    if segments
+        .iter()
+        .any(|segment| segment.is_empty() || segment.contains(['[', ']']))
+    {
+        return Resolved::Unknown(other());
+    }
+    let mut found = readings(tables, &segments);
+    if found.len() == 1 {
+        return resolve(version, tables, &found.remove(0).spelling);
+    }
+    let unknown = if found.is_empty() {
+        other_dotted(version, tables, &segments)
+            .or_else(|| bare_name(tables, &segments))
+            .unwrap_or_else(other)
+    } else {
+        ExplainUnknown::Readings {
+            target: asked.to_string(),
+            readings: found,
+        }
+    };
+    Resolved::Unknown(unknown)
 }
 
 /// §FS-config-explain.5: `asked` read as a dotted TOML key whose own tables
@@ -81,17 +91,18 @@ fn dotted(tables: &[(String, Vec<String>)], asked: &str) -> Option<ExplainUnknow
 fn other_dotted(
     version: u32,
     tables: &[(String, Vec<String>)],
-    asked: &str,
+    segments: &[&str],
 ) -> Option<ExplainUnknown> {
-    leading_tables(asked)
+    leading_tables(segments)
         .filter(|(header, _)| !admits(tables, header))
         .find_map(|(header, _)| other_version_table(version, &header))
 }
 
-/// Each bracketed spelling of a leading run of `asked`'s segments, longest run
+/// Each bracketed spelling of a leading run of a path's segments, longest run
 /// first and the table before the array of tables, with the rest of the path.
-fn leading_tables(asked: &str) -> impl Iterator<Item = (String, String)> + '_ {
-    let segments: Vec<&str> = asked.split('.').collect();
+pub(super) fn leading_tables<'s>(
+    segments: &'s [&str],
+) -> impl Iterator<Item = (String, String)> + 's {
     (1..=segments.len()).rev().flat_map(move |run| {
         let (path, rest) = (segments[..run].join("."), segments[run..].join("."));
         [
@@ -123,7 +134,7 @@ fn split(asked: &str) -> Option<(&str, &str)> {
 
 /// The first admitted table `header` spells, in the order the reader tries
 /// them: a name stands for any placeholder, and a placeholder only for one.
-fn find_table(tables: &[(String, Vec<String>)], header: &str) -> Option<usize> {
+pub(super) fn find_table(tables: &[(String, Vec<String>)], header: &str) -> Option<usize> {
     tables
         .iter()
         .position(|(admitted, _)| !admitted.is_empty() && spells(header, admitted))
@@ -153,7 +164,7 @@ fn spells(spelled: &str, admitted: &str) -> bool {
 
 /// The key of a table's gate that `asked` names: itself, or for a table of
 /// names its placeholder, which a single name stands for.
-fn find_key<'a>(keys: &'a [String], asked: &str) -> Option<&'a str> {
+pub(super) fn find_key<'a>(keys: &'a [String], asked: &str) -> Option<&'a str> {
     let named = keys.iter().find(|key| *key == asked);
     let any = || {
         let single = !asked.is_empty() && !asked.contains('.');

@@ -114,7 +114,6 @@ fn word_character_marker_cli_contract() {
 /// one is also in the full pass: a path with one reading answered, and the failures
 /// that name every reading of a bare name or of a path with two.
 #[test]
-#[ignore = "red until #1005 answers a path with one reading and lists every reading; implement removes this"]
 fn config_explain_readings_contract() {
     let root = repo_root();
     let cases = root.join("tests/e2e/cases");

@@ -299,12 +299,56 @@ fn explain_unknown(version: u32, unknown: &ExplainUnknown) -> String {
             "version {version} `{table}` has no key `{key}` (expected one of: {})",
             admitted.join(", ")
         ),
-        ExplainUnknown::Bracketed { target, spelling, key } => format!(
-            "version {version} has no top-level key or check code `{target}`; for the {}, ask grund config explain '{spelling}'",
-            if *key { "key" } else { "table" }
+        // §FS-config-explain.5: the first reading on the line, each other on a
+        // `hint:` line of its own (§FS-errors.2.3.1).
+        ExplainUnknown::Readings { target, readings } => {
+            let mut lines = readings.iter().map(|reading| {
+                let lead = match &reading.named {
+                    Some(named) => format!("a {} named {}", named.what, named.name),
+                    None if reading.key => "the key".to_string(),
+                    None => "the table".to_string(),
+                };
+                format!("for {lead}, ask grund config explain '{}'", reading.spelling)
+            });
+            let first = lines.next().unwrap_or_default();
+            let hints: String = lines.map(|line| format!("\nhint: {line}")).collect();
+            format!(
+                "version {version} has no top-level key or check code `{target}`; {first}{hints}"
+            )
+        }
+        ExplainUnknown::BareName { target, spellings } => format!(
+            "version {version} has no top-level key or check code `{target}`; for {}, ask grund config explain {}",
+            bare_lead(spellings),
+            either(spellings)
         ),
         ExplainUnknown::Other { target } => format!(
             "version {version} knows no table, key or check code `{target}`; grund config explain lists the tables, grund config explain --codes the codes"
         ),
+    }
+}
+
+/// §FS-config-explain.5: what a bare name's spellings are, all keys, all
+/// tables, or both.
+fn bare_lead(spellings: &[ExplainReading]) -> &'static str {
+    if spellings.iter().all(|reading| reading.key) {
+        "a key of a table"
+    } else if spellings.iter().any(|reading| reading.key) {
+        "a table or a key of one"
+    } else {
+        "a table"
+    }
+}
+
+/// §FS-config-explain.5: each spelling quoted for the shell, joined by `, `
+/// with ` or ` before the last.
+fn either(spellings: &[ExplainReading]) -> String {
+    let quoted: Vec<String> = spellings
+        .iter()
+        .map(|reading| format!("'{}'", reading.spelling))
+        .collect();
+    match quoted.split_last() {
+        Some((last, [])) => last.clone(),
+        Some((last, rest)) => format!("{} or {last}", rest.join(", ")),
+        None => String::new(),
     }
 }
