@@ -1,0 +1,62 @@
+# DF-ancestor-claim-read-by-its-version: an ancestor's `[workspace]` claim is read as its own config version reads it, and one that cannot be read answers nothing
+
+**Date:** 2026-10-25
+
+Decides how a run reads the `members` and `optional_members` of a config above its root, and what it says when it cannot. The read is [§FS-workspace.6.1.7.5](../../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable), what a version-2 array is comes from [§FS-config-v2.reader.5](../../functional-spec/FS-config-v2.md#reader5-an-array-may-span-lines), and the quiet climb's silence is [§FS-workspace.6.1.7.2](../../functional-spec/FS-workspace.md#6172-the-quiet-climb-asks-the-same-ancestors) and [§FS-check.3.29.2](../../functional-spec/FS-check.md#3292-an-unanswered-claim-is-not-reported-and-is-asked-quietly). Serves [§GOAL-no-silent-breakage](../../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path): a stray config above a repository does not fail that repository, and the one verdict this reading tightens is named rather than moved quietly. Reported as [grund#1010](https://github.com/agent-grounds/grund/issues/1010).
+
+## status: Accepted
+
+## 1. Context
+
+Two climbs ask the configs above a run's root whether they claim a directory ([§FS-workspace.6.1.7](../../functional-spec/FS-workspace.md#617-a-claiming-block-that-cannot-answer-fails-the-run)). The one that spells an alias path warns when it cannot read a claim, and goes on. The quiet one asks only whether a nested `[workspace]` is listed ([§FS-check.3.29](../../functional-spec/FS-check.md#329-unlisted-workspace-block)), or whether the member root remedy applies ([§FS-workspace.5.1.1](../../functional-spec/FS-workspace.md#511-verified-enclosing-workspace-guidance)). Both read the claim off the entry text alone, never off a loaded config ([§FS-workspace.6.1.7.4](../../functional-spec/FS-workspace.md#6174-the-claim-is-read-from-members-entries-alone)).
+
+Through grund 0.20.0 that read went wrong in two ways:
+
+- The quiet climb took a claim it could not read as no claim. In the issue's tree, an ancestor whose `members = ["project/packages/hub"` never closes its bracket turned a clean repository's `check` into exit `1`. The error said that nothing lists `packages/hub`, and it pointed at the repository's own `grund.toml`. The spec already called that case undecidable and unreported ([§FS-workspace.6.1.7.5](../../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable), [§FS-workspace.6.1.7.2](../../functional-spec/FS-workspace.md#6172-the-quiet-climb-asks-the-same-ancestors)).
+- Every value was read one line at a time, whatever the config's version. A version-2 `members` written across lines, or ending in the trailing comma TOML allows, loads ([§FS-config-v2.reader.5](../../functional-spec/FS-config-v2.md#reader5-an-array-may-span-lines)), and the climb read it as not a list. Fixing the first defect alone would have turned that misreading into silence: every unlisted block below a version-2 workspace written that way, the run's own root included, would have gone unreported.
+
+## 2. Decision
+
+### 2.1 A claim that cannot be read is no answer, on both climbs
+
+An ancestor whose `members` or `optional_members` text cannot be obtained leaves the claim undecidable in both directions ([§FS-workspace.6.1.7.5](../../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable)). The alias-path climb keeps its warning. The quiet climb now records that ancestor instead of dropping it, so a nested `[workspace]` the ancestor may list stays unreported ([§FS-check.3.29.2](../../functional-spec/FS-check.md#3292-an-unanswered-claim-is-not-reported-and-is-asked-quietly)). A member run likewise gives no root remedy for a root that ancestor may list under another alias ([§FS-workspace.5.1.1](../../functional-spec/FS-workspace.md#511-verified-enclosing-workspace-guidance)). The floor of [§FS-check.3.29.2](../../functional-spec/FS-check.md#3292-an-unanswered-claim-is-not-reported-and-is-asked-quietly) stands: a readable ancestor that names nothing here still confirms the absence, and the block is reported.
+
+### 2.2 Each value is read as its own version reads it
+
+A version-2 value is read as the version-2 reader reads an array ([§FS-config-v2.reader.5](../../functional-spec/FS-config-v2.md#reader5-an-array-may-span-lines)), so a list that config loads is a list to the climb too. A version-1 value stays on its key's line, as the version-1 reader reads every value ([§FS-config.3](../../functional-spec/FS-config.md#3-keys-version-1)). The one reading of `grund_config_version` that picks a reader for every load picks it here as well ([§FS-config.5](../../functional-spec/FS-config.md#5-schema-versioning)). Joining a version-1 list written across lines made it a claim, and the version-1 reader's load error then failed the run below it with exit `2`, where 0.20.0 had warned and continued.
+
+### 2.3 Only an unclosed claim is unobtainable
+
+A version-2 `members` or `optional_members` still open at the end of the file is not a list. Another key's array is passed over whole when it closes. When it never closes, it holds no claim, so the read goes on at the line after its key, and the entries read before and after it decide the claim ([§FS-workspace.6.1.7.5](../../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable)). Counting every unclosed array as an unreadable claim silenced blocks that no ancestor names, even below a config that writes no `[workspace]` at all, which is exactly what the floor of [§FS-check.3.29.2](../../functional-spec/FS-check.md#3292-an-unanswered-claim-is-not-reported-and-is-asked-quietly) forbids.
+
+### 2.4 The alias-path tightening ships without a ramp
+
+Both climbs read through one reader, so the alias-path climb now reads a version-2 `members` it used to misread. A run narrowed to a workspace that a version-2 outer workspace lists across lines, or with a trailing comma, now spells alias paths the way the outer root does ([§FS-workspace.6.1.5](../../functional-spec/FS-workspace.md#615-alias-paths-do-not-change-with-scope)). A citation spelled from the narrowed root then fails, just as it fails at the outer root, and that run's verdict moves from exit `0` to exit `1`. It takes no deprecation ramp, for three reasons:
+
+- At 0.20.0 the old verdict rested on a read that the run itself reported as failed, and the report named this very consequence: `alias paths below it may be missing a segment`.
+- The run at the outer workspace root refuses the same citation in both versions, so no tree that passed when checked whole starts failing.
+- A ramp ([§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)) would need the alias-path climb to keep misreading a valid version-2 array for one more release while the quiet climb reads it correctly. That is two readings of one fact. The other way to avoid the tightening is to go back to reading one line at a time on both climbs, which brings back the silence [§DF-ancestor-claim-read-by-its-version.2.2](DF-ancestor-claim-read-by-its-version.md#22-each-value-is-read-as-its-own-version-reads-it) removes.
+
+So the record names the change in its release note, because an upgrade never changes a verdict quietly ([§REQ-backwards-compatibility](../../requirements/REQ-backwards-compatibility.md#req-backwards-compatibility-an-upgrade-never-changes-a-verdict-quietly)). It does not take the correction route that the requirement's section 5 sets out. That route needs a prior requirement the old verdict broke, and none is claimed here.
+
+## 3. Alternatives considered
+
+- **Silence the quiet climb and keep the one-line read.** Every unlisted block below a version-2 workspace whose `members` spans lines would have gone unreported ([§DF-ancestor-claim-read-by-its-version.1](DF-ancestor-claim-read-by-its-version.md#1-context)).
+- **Join arrays whatever the version.** That reads a version-1 value its own reader refuses, and it turns a stray version-1 config above a repository into a failed run, which [§FS-workspace.6.1.7.5](../../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable) calls "not that repository's problem".
+- **Count every unclosed array as an unreadable claim.** That silences blocks no ancestor names ([§DF-ancestor-claim-read-by-its-version.2.3](DF-ancestor-claim-read-by-its-version.md#23-only-an-unclosed-claim-is-unobtainable)).
+- **Count another key's unclosed array as unreadable only when the lines it swallowed hold a claim.** That needs a second reading of those lines. Going on at the next line leaves every such config answering exactly as it did before arrays were joined.
+- **Ramp the alias-path tightening.** That needs two readers ([§DF-ancestor-claim-read-by-its-version.2.4](DF-ancestor-claim-read-by-its-version.md#24-the-alias-path-tightening-ships-without-a-ramp)).
+
+## 4. Consequences
+
+- The issue's tree goes from exit `1` to exit `0`. So do the two e2e cases whose ancestor writes `members = "not-a-list"`: `check-unlisted-block-under-a-broken-ancestor` and `check-unlisted-block-in-a-workspace-under-a-broken-ancestor`.
+- A member run below such an ancestor no longer offers the root remedy. The remedy is a hint, not a verdict, so the member run's exit code is unchanged.
+- A version-2 outer workspace whose `members` spans lines no longer earns the `cannot read [workspace] members` warning. `grund list` below it names declarations with the outer segment (`shop/hub/FS-hub` rather than `hub/FS-hub`), as the outer root does. A member run there reads as it does under the one-line spelling, and that spelling gives no root remedy either.
+- A version-1 ancestor's value is read exactly as in 0.20.0. What changes below one is [§DF-ancestor-claim-read-by-its-version.2.1](DF-ancestor-claim-read-by-its-version.md#21-a-claim-that-cannot-be-read-is-no-answer-on-both-climbs), which holds for every version: a nested `[workspace]` below a version-1 claim that cannot be read is no longer reported.
+
+## release-note: Release note
+
+- [§FS-workspace.6.1.7.5](../../functional-spec/FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable), [§FS-check.3.29.2](../../functional-spec/FS-check.md#3292-an-unanswered-claim-is-not-reported-and-is-asked-quietly), [§FS-workspace.6.1.5](../../functional-spec/FS-workspace.md#615-alias-paths-do-not-change-with-scope), [§FS-config-v2.reader.5](../../functional-spec/FS-config-v2.md#reader5-an-array-may-span-lines): **a `[workspace]` claim above a repository that cannot be read no longer fails the repository's `check`, and a version-2 `members` written across lines is now read.**
+  **What goes quiet:** a nested `[workspace]` below an ancestor whose `members` or `optional_members` cannot be obtained, because the list never closes its bracket or the value is not a list, is no longer reported as ``this [workspace] is listed by no enclosing workspace``, since that ancestor may list it. Such a run exits `0` where it exited `1`, and a member run below such an ancestor no longer offers the ``run `grund check` from the workspace root`` remedy. The e2e cases `check-unlisted-block-under-a-broken-ancestor` and `check-unlisted-block-in-a-workspace-under-a-broken-ancestor` move from exit `1` to exit `0`.
+  **What tightens:** a version-2 `members` written across lines, or ending in a trailing comma, is the list the config loads. So a run narrowed to a workspace that such an outer workspace lists now spells alias paths the way the outer root does. That run exited `0` with ``warning: ../grund.toml: cannot read [workspace] members (`members` is not a list of strings); alias paths below it may be missing a segment``. A citation spelled from the narrowed root now fails with an ``unknown project alias hub`` error at exit `1`, as the run at the outer root already did. The fix is to spell the citation as the workspace root does: `shop/hub/FS-hub` where it wrote `hub/FS-hub`.
+  **What does not move:** a version-1 ancestor's value is still read on its key's line, so one written across lines or with a trailing comma still warns and is never taken as a claim. An unclosed array of any other key leaves the claim answered. Closes [issue #1010](https://github.com/agent-grounds/grund/issues/1010). (PR #1011)
