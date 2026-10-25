@@ -25,6 +25,9 @@ pub struct UnmarkedHeading {
     pub heading_level: usize,
     pub title: String,
     pub owner: Id,
+    /// The concrete owner's heading line, so field guidance uses that site's
+    /// depth even for duplicate IDs (§FS-declarations.checks.unmarked-heading.2.2).
+    pub(crate) owner_line: usize,
     pub suggested_path: String,
     /// For a dotted heading whose suggested coordinate has a usable parent, the
     /// relative heading that declares it (§FS-declarations.checks.unmarked-heading.2.1).

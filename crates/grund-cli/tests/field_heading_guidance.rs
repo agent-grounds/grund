@@ -105,27 +105,23 @@ fn repair_contract(name: &str, fields: &str, bare: &str, title: &str) {
 }
 
 #[test]
-#[ignore = "red until #999 appends the field repair hint; implement removes this"]
 fn field_heading_exact_title_and_repairs() {
     repair_contract("title", SCHEMA, "Schema", "Schema");
 }
 
 #[test]
-#[ignore = "red until #999 appends the field repair hint; implement removes this"]
 fn field_heading_exact_name_uses_configured_title_and_repairs() {
     let fields = SCHEMA.replace("Schema", "Table layout");
     repair_contract("name", &fields, "schema", "Table layout");
 }
 
 #[test]
-#[ignore = "red until #999 appends the field repair hint; implement removes this"]
 fn field_heading_name_without_configured_title_and_repairs() {
     let fields = SCHEMA.replace("title = \"Schema\"\n", "");
     repair_contract("no-title", &fields, "schema", "schema");
 }
 
 #[test]
-#[ignore = "red until #999 appends the field repair hint; implement removes this"]
 fn field_heading_exact_scope_uses_actual_duplicate_declaration_site() {
     let fixture = Fixture::new("scope", SCHEMA);
     fixture.doc(concat!(
@@ -169,7 +165,6 @@ fn field_heading_exact_scope_uses_actual_duplicate_declaration_site() {
 }
 
 #[test]
-#[ignore = "red until #999 appends the field repair hint; implement removes this"]
 fn field_heading_collision_uses_configuration_header_order() {
     let fixture = Fixture::new("order", "");
     for (first_title, second_name, second_title, bare) in [
@@ -197,7 +192,6 @@ fn field_heading_collision_uses_configuration_header_order() {
 }
 
 #[test]
-#[ignore = "red until #999 appends the field repair hint; implement removes this"]
 fn field_heading_preserves_v1_value_chapter_and_relative_suffix() {
     let fixture = Fixture::new("compatibility", "");
     fixture.config(concat!(
