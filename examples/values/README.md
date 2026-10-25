@@ -27,14 +27,25 @@ at its root: the split could no longer tell its components apart, so that form i
 refused and each component is bound by its coordinate instead.
 
 The stability analysis deliberately still assumes `0.002 s`, the step before it was
-tuned, producing the golden `value-mismatch` below. Change it to `0.001 s` and the
-repository passes; its config is on version 1, so the run prints that caution
-where `success` would stand ([§FS-check.checks.config-version-1](../../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)).
+tuned, producing the golden `value-mismatch` in [`expected.stdout`](expected.stdout):
+
+```text
+docs/solver.md:7: error: value mismatch for CONST-time-step.1: bound `0.002`, declared `0.001` at values/time-step.md:2 — whole binding: value mismatch for CONST-time-step (component 1): bound `0.002 s`, declared `0.001 s` at values/time-step.md:2; this wording changes in grund 0.22.0
+```
+
+The part after ` — whole binding: ` names what the line wrote: the root it cites,
+the literal whole, and component 1 as the one that differs
+([§FS-values.5.2.2](../../docs/functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). The citation is right, so keep it and correct the literal:
+change it to `0.001 s` and the repository passes; its config is on version 1, so
+the run prints that caution where `success` would stand
+([§FS-check.checks.config-version-1](../../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)). The part before it is the message
+earlier releases printed, kept whole until grund 0.22.0 drops it
+([§FS-errors.3.9](../../docs/functional-spec/FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)).
 
 `DOC-solver.1` is the second authority form: an ordinary section inside the solver
 document, outside any `values = true` kind, owns the strict component
 `DOC-solver.1.1` because its heading carries the exact marker
-([§FS-values.2.4](../../docs/functional-spec/FS-values.md#24-embedded-section-value-roots)). A root of one component binds the same either way,
+([§FS-values.2.4](../../docs/functional-spec/FS-values.md#24-embedded-section-value-roots)). A root of one component gives the same verdict either way,
 so the Courant limit `0.50` agrees at `DOC-solver.1.1` and at `DOC-solver.1` alike.
 
 `DOC-solver.values.gravity` is the third: no marker anywhere, because the

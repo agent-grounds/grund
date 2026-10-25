@@ -128,6 +128,8 @@ and the [runnable example](https://github.com/agent-grounds/grund/blob/main/exam
 
 `grund refs` on an uncited ID notes `grund list --unused`: run that once, not `refs` per ID.
 
+`value mismatch for <ID> (component <path>)`: keep the root citation, fix the whole literal ([values guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/values.md#equality-and-diagnostics)).
+
 If a project needs its own grammar or independent check, follow
 Splitting off a member (`grund guide members`), then validate from the workspace root.
 
