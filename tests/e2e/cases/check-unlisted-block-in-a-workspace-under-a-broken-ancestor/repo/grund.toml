@@ -1,6 +1,6 @@
 # The stray, broken config above the workspace root: the alias-path climb reads it
-# and says so once, against the root the run was launched at. Nothing under `ws` is
-# a member of it.
+# and says so once, against the root the run was launched at. Whether it lists
+# anything under `ws` cannot be said, so the block under it stays unreported.
 grund_config_version = 1
 project_name = "stray"
 
