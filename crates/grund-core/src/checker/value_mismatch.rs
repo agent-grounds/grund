@@ -1,9 +1,15 @@
 //! What a `value-mismatch` says: the coordinate or root it names, the canonical
 //! text, and the kind clause a mixed-kind pair appends (§FS-values.5.2,
-//! §FS-values.5.2.1, §FS-values.5.2.2).
+//! §FS-values.5.2.1, §FS-values.5.2.2), and the staged form a root-aimed one
+//! takes until its window closes (§FS-errors.3.9).
 
 use crate::config::{Display, Schema};
 use crate::model::{Code, Diagnostic, Site, ValueBinding, ValueComponent, ValueComponentKind};
+
+/// §FS-errors.3.9: the suffix a staged root-aimed mismatch ends with, naming the
+/// release that drops the legacy prefix, on one line so the release guard reads
+/// it (§FS-distribution.4.2.2).
+const ROOT_WORDING_CLAUSE: &str = "; this wording changes in grund 0.22.0";
 
 /// A root or one coordinate as a finding names it: the qualified ID, then the
 /// separator and the section path when there is one (§FS-values.3.1.2,
@@ -33,7 +39,7 @@ pub(super) fn value_mismatch(
     site: Site,
     display: Display<'_>,
 ) -> Diagnostic {
-    let kinds = mixed_kind_clause(bound.kind, declared.kind);
+    let kinds = mixed_kind_clause(None, bound.kind, declared.kind);
     value_mismatch_text(
         binding,
         coordinate,
@@ -56,30 +62,101 @@ pub(super) fn value_mismatch_text(
     site: Site,
     display: Display<'_>,
 ) -> Diagnostic {
-    let declared_site = format!("{}:{}", display.path(&site.path), site.line);
     Diagnostic {
         code: Code::VALUE_MISMATCH,
         path: Some(binding.file.clone()),
         line: Some(binding.line),
         column: Some(binding.column),
-        message: format!(
-            "value mismatch for {coordinate}: bound `{bound}`, declared `{declared}` at {declared_site}{kinds}"
-        ),
+        message: mismatch_message(coordinate, bound, declared, &site, kinds, display),
         sites: vec![site],
         authority: Vec::new(),
     }
 }
 
+/// The root a root-aimed mismatch names and the one component it reports,
+/// each already rendered as a finding names it (§FS-values.5.2.2).
+pub(super) struct RootComponent<'a> {
+    /// The root as cited, rendered as the part-count branch renders it.
+    pub(super) root: &'a str,
+    /// The first unequal component's section path after the ID.
+    pub(super) section_path: &'a str,
+    /// That component by its own coordinate, as a component-aimed binding names it.
+    pub(super) coordinate: &'a str,
+}
+
+/// One `value-mismatch` at a root-aimed binding whose literal splits into as
+/// many parts as the root has components: the root as cited and the literal
+/// whole against the joined components, naming the first unequal component by
+/// its section path and carrying that component's one declaration site
+/// (§FS-values.5.2.2). Its kind clause names that component, since the whole
+/// literal and the joined components can print the same bytes either way
+/// (§FS-values.5.2.1). Until 0.22.0 the component's canonical text stays whole
+/// in front of it, a verbatim prefix for a consumer that matches it
+/// (§FS-errors.3.9).
+pub(super) fn root_value_mismatch(
+    binding: &ValueBinding,
+    at: RootComponent<'_>,
+    bound: &ValueComponent,
+    declared: &ValueComponent,
+    joined: &str,
+    site: Site,
+    display: Display<'_>,
+) -> Diagnostic {
+    let legacy = value_mismatch(binding, at.coordinate, bound, declared, site, display);
+    let kinds = mixed_kind_clause(Some(at.section_path), bound.kind, declared.kind);
+    let whole = mismatch_message(
+        &format!("{} (component {})", at.root, at.section_path),
+        &binding.authored.decoded,
+        joined,
+        &legacy.sites[0],
+        &kinds,
+        display,
+    );
+    Diagnostic {
+        message: format!(
+            "{} \u{2014} whole binding: {whole}{ROOT_WORDING_CLAUSE}",
+            legacy.message
+        ),
+        ..legacy
+    }
+}
+
+/// The one shape every `value-mismatch` message takes: what it names, both
+/// sides in backticks, and the declaration site, then any kind clause
+/// (§FS-values.5.2, §FS-values.5.2.2).
+fn mismatch_message(
+    subject: &str,
+    bound: &str,
+    declared: &str,
+    site: &Site,
+    kinds: &str,
+    display: Display<'_>,
+) -> String {
+    let declared_site = format!("{}:{}", display.path(&site.path), site.line);
+    format!(
+        "value mismatch for {subject}: bound `{bound}`, declared `{declared}` at {declared_site}{kinds}"
+    )
+}
+
 /// What a mismatch of two different kinds appends to the canonical text
 /// (§FS-values.5.2.1). Identical-looking sides are the whole of the inequality
 /// there, so the kinds are named in the order the line already named its sides;
-/// a same-kind mismatch appends nothing and keeps that text to the byte.
-fn mixed_kind_clause(bound: ValueComponentKind, declared: ValueComponentKind) -> String {
+/// a same-kind mismatch appends nothing and keeps that text to the byte. A
+/// root-aimed message passes the component's section path, so the clause says
+/// which pair the kinds belong to.
+fn mixed_kind_clause(
+    component: Option<&str>,
+    bound: ValueComponentKind,
+    declared: ValueComponentKind,
+) -> String {
     if bound == declared {
         return String::new();
     }
+    let pair = component
+        .map(|path| format!("component {path}: "))
+        .unwrap_or_default();
     format!(
-        " \u{2014} bound is a {}, declared is a {}; a number and a string are never equal",
+        " \u{2014} {pair}bound is a {}, declared is a {}; a number and a string are never equal",
         kind_word(bound),
         kind_word(declared)
     )
