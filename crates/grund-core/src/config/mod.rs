@@ -160,7 +160,7 @@ pub(crate) use v1::{
     DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR, default_kind_folder, parse_string_list,
     strip_comment,
 };
-pub(crate) use v2::joined_value;
+pub(crate) use v2::{joined_value, selects as selects_v2};
 pub(crate) use validate::{citations_table, reject_unaccepted_citation_targets};
 pub(crate) use vocabulary::admitted;
 pub(crate) use workspace_block::{

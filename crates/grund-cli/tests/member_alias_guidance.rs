@@ -250,6 +250,39 @@ fn an_ancestor_members_list_written_across_lines_still_verifies_the_root() {
     member_text(&fixture, &fixture.member(), &["check"], "../..");
 }
 
+/// §FS-workspace.6.1.7.5: a version-1 value is read on its key's line, as the v1
+/// reader reads every value (§FS-config.3), so a v1 ancestor's `members` naming
+/// `repo` across lines or with a trailing comma is not a list. The root's run warns
+/// that it cannot read it and goes on, as grund 0.20.0 did, rather than taking it
+/// as a claim whose v1 load error then fails the run.
+#[test]
+fn a_v1_ancestor_members_list_written_across_lines_stays_unreadable() {
+    let fixture = Fixture::new();
+    for members in ["[\n  \"repo\",\n]", "[\"repo\",]"] {
+        fs::write(
+            fixture.0.join("grund.toml"),
+            format!("grund_config_version = 1\n\n[workspace]\nmembers = {members}\n"),
+        )
+        .unwrap();
+        let output = run(&fixture.root(), &["check"]);
+        assert_eq!(
+            (
+                output.status.code(),
+                String::from_utf8_lossy(&output.stdout).into_owned(),
+                String::from_utf8_lossy(&output.stderr).into_owned()
+            ),
+            (
+                Some(0),
+                String::new(),
+                "warning: ../grund.toml: cannot read [workspace] members (`members` is not a \
+                 list of strings); alias paths below it may be missing a segment\n"
+                    .to_string()
+            ),
+            "{members}"
+        );
+    }
+}
+
 #[test]
 fn standalone_and_unlisted_projects_do_not_claim_workspace_membership() {
     let fixture = Fixture::new();
