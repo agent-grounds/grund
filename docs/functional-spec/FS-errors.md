@@ -30,7 +30,7 @@ A consumer never parses `message` to act on a finding. What it is, is its `code`
 
 ### requirements.prefix-windows: A wording change keeps the old message whole until its window closes — realized, directional for the next change
 
-Every wording change this file records, but the one exception named below, kept the text a consumer matched as a verbatim contiguous prefix through its window, appended whatever it added after that prefix, named the release the window ends in, and said what an exact-line consumer moves to meanwhile; the code, the severity and the exit verdict did not move ([§FS-errors.3.3](FS-errors.md#33-the-narrowed-run-unknown-project-wording-migration), [§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages), [§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-wording-migration), [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration)). Bytes appended after a surviving prefix are no change at all and ship in one release ([§FS-errors.3](FS-errors.md#3-message-text)). One change is the named exception: the stale-block template of [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates) kept only `repo maintenance: stale grund init block: ` when it was corrected in place in 0.20.0, under the pre-1.0 licence, with no window, because a window would have shown the ungrammatical sentence on purpose to every project migrating that release while its consumers already match `code == "agents-init"` ([§DF-stale-section-differs-in-0-20](../decisions/functional/DF-stale-section-differs-in-0-20.md#df-stale-section-differs-in-0-20-the-stale-block-finding-names-its-section-as-one-subject-corrected-in-place-in-0200)). Apart from it, a wording change from here on takes the same route — prefix kept, last release named, migration named, verdict unmoved — which is what the new form beside the old of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) means for the bytes of a message. Serves [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path).
+Every wording change this file records, but the one exception named below, kept the text a consumer matched as a verbatim contiguous prefix through its window, appended whatever it added after that prefix, named the release the window ends in, and said what an exact-line consumer moves to meanwhile; the code, the severity and the exit verdict did not move ([§FS-errors.3.3](FS-errors.md#33-the-narrowed-run-unknown-project-wording-migration), [§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages), [§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-wording-migration), [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration), [§FS-errors.3.9](FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)). Bytes appended after a surviving prefix are no change at all and ship in one release ([§FS-errors.3](FS-errors.md#3-message-text)). One change is the named exception: the stale-block template of [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates) kept only `repo maintenance: stale grund init block: ` when it was corrected in place in 0.20.0, under the pre-1.0 licence, with no window, because a window would have shown the ungrammatical sentence on purpose to every project migrating that release while its consumers already match `code == "agents-init"` ([§DF-stale-section-differs-in-0-20](../decisions/functional/DF-stale-section-differs-in-0-20.md#df-stale-section-differs-in-0-20-the-stale-block-finding-names-its-section-as-one-subject-corrected-in-place-in-0200)). Apart from it, a wording change from here on takes the same route — prefix kept, last release named, migration named, verdict unmoved — which is what the new form beside the old of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) means for the bytes of a message. Serves [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path).
 
 ## 1. Streams
 
@@ -259,7 +259,7 @@ The shape is structural; the text is human-readable. Style rules apply to every 
 - **Quoted user input** appears in double quotes when the input could be confused with surrounding prose: `"<original title>"`, not `<original title>`.
 - **One base for every path in the line** — [§FS-errors.3.1](FS-errors.md#31-one-base-for-every-path-in-the-line).
 
-[§FS-errors.3.2](FS-errors.md#32-the-unknown-project-recovery-shape) to [§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-wording-migration) pin particular messages: the unknown-project recovery shape and its wording migration, `check`'s channel prefix, a missing fetch-backed declaration, `agents-init`, and the rule-site unknown alias.
+[§FS-errors.3.2](FS-errors.md#32-the-unknown-project-recovery-shape) to [§FS-errors.3.9](FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration) pin particular messages: the unknown-project recovery shape and its wording migration, `check`'s channel prefix, a missing fetch-backed declaration, `agents-init`, the rule-site unknown alias, the one-grammar refusals, and the root-aimed value mismatch.
 
 ### 3.1 One base for every path in the line
 
@@ -461,6 +461,60 @@ The wildcard reason is then followed by the accepted form
 [§FS-rule-refusals.sentences.rewrite](FS-rule-refusals.md#sentencesrewrite-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced) builds, where it builds one; for a
 sentence that is still a conjunction once its subject is rebuilt it builds
 none ([§FS-rule-refusals.sentences.rewrite.reparsed](FS-rule-refusals.md#sentencesrewritereparsed-a-form-is-parsed-before-it-is-offered)).
+
+### 3.9 The root-aimed value-mismatch wording migration
+
+A `value-mismatch` at a binding aimed at a whole value root, whose literal
+splits into as many parts as the root has components, named only the first
+unequal component, by that component's own coordinate, and quoted only the part
+bound to it. A site binding `30 minutes` to the root `FS-session.1`, whose
+components are `45` and `minutes`, read exactly as a site binding `30` to the
+component `FS-session.1.1` does, so its author was sent to re-cite a citation
+that was right. The final message names the cited root and quotes the literal
+whole ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). Those are bytes a consumer may match, so the
+change takes the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather
+than replacing the message outright (#1008).
+
+In `0.20.1` the complete legacy message stays a verbatim contiguous prefix: the
+component's canonical text, with its component-aimed [§FS-values.5.2.1](FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind) clause
+when the pair differs in kind. It is followed by ` — whole binding: `, the
+final message of [§FS-errors.3.9.1](FS-errors.md#391-the-final-templates), and the suffix `; this wording changes in
+grund 0.21.0`. For the site above:
+
+```text
+docs/operations.md:3: error: value mismatch for FS-session.1.1: bound `30`, declared `45` at requirements.md:11 — whole binding: value mismatch for FS-session.1 (component 1.1): bound `30 minutes`, declared `45 minutes` at requirements.md:11; this wording changes in grund 0.21.0
+```
+
+In `0.21.0` the prefix and the suffix go, and the message is
+[§FS-errors.3.9.1](FS-errors.md#391-the-final-templates)'s template alone. Two messages are never reworded, before,
+through or after the window: a component-aimed mismatch, and a root-aimed one
+whose part count differs from the component count, which already names the root
+and the literal as authored ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)).
+
+Exact-line consumers migrate during the window to the stable
+`code == "value-mismatch"`; one that matches the legacy prefix reads what it read
+until `0.21.0`. The code, the error severity, the primary location, the one
+`sites` entry, the selectors and the exit verdict do not move, and the
+`--format json` `message` and the editor's diagnostic carry the bytes the text
+line carries ([§FS-errors.5.4](FS-errors.md#54-value-findings), [§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)).
+
+#### 3.9.1 The final templates
+
+From `0.21.0`, with the legacy prefix and the suffix gone, a root-aimed
+mismatch whose part count equals the component count is exactly the first line
+below, and the second where its one pair differs in kind:
+
+```text
+value mismatch for <root> (component <section-path>): bound `<literal>`, declared `<joined>` at <site>
+value mismatch for <root> (component <section-path>): bound `<literal>`, declared `<joined>` at <site> — component <section-path>: bound is a <kind>, declared is a <kind>; a number and a string are never equal
+```
+
+[§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component) defines each slot and [§FS-values.5.2.1](FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind) the clause. For the site
+above:
+
+```text
+docs/operations.md:3: error: value mismatch for FS-session.1 (component 1.1): bound `30 minutes`, declared `45 minutes` at requirements.md:11
+```
 
 ## 4. Determinism
 

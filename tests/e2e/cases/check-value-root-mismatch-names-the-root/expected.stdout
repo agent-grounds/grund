@@ -1,0 +1,2 @@
+docs/operations.md:3: error: value mismatch for FS-session.1.1: bound `30`, declared `45` at requirements.md:11 — whole binding: value mismatch for FS-session.1 (component 1.1): bound `30 minutes`, declared `45 minutes` at requirements.md:11; this wording changes in grund 0.21.0
+src/sessions/limits.py:3: error: value mismatch for FS-session.1.1: bound `30`, declared `45` at requirements.md:11
