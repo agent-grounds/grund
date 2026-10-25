@@ -49,7 +49,19 @@ fn a_second_trailing_comment_on_one_v2_line_is_listed() {
         .iter()
         .map(|c| (c.first, c.last, c.place.as_str()))
         .collect();
-    assert_eq!(listed, [(5, 5, "inside [[kinds]] kind")]);
+    assert_eq!(
+        listed,
+        [(
+            5,
+            5,
+            concat!(
+                "inside [[kinds]] kind: trailing comments collide at the shared destination ",
+                "[schema.kinds.FS]; retain the prose and choose its placement manually; ",
+                "authorize the listed drops with --write --drop-comments, then re-add it at ",
+                "that chosen place after a successful write (subject to all other refusals and gates)"
+            )
+        )]
+    );
 }
 
 /// §FS-config-migrate.4.1.1: values' boolean-to-form translation carries a
@@ -80,7 +92,16 @@ fn value_form_carried_comment_reports_translated_vocabulary() {
         if !enabled {
             assert!(!candidate.contains("true | false"), "{candidate}");
             assert_eq!(report.comments.len(), 1);
-            assert_eq!(report.comments[0].place, "inside [[kinds]] values");
+            assert_eq!(
+                report.comments[0].place,
+                concat!(
+                    "inside [[kinds]] values: the destination key [schema.kinds.FS] form ",
+                    "is omitted from the candidate; retain the prose and choose its placement ",
+                    "manually; authorize the listed drops with --write --drop-comments, then ",
+                    "re-add it at that chosen place after a successful write ",
+                    "(subject to all other refusals and gates)"
+                )
+            );
             assert!(
                 !report
                     .notices

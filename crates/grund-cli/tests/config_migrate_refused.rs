@@ -6,8 +6,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-const COMMENT: &str =
-    "1 comment has no single key to follow (move it, or re-run with --drop-comments)";
+const COMMENT: &str = "1 comment has no single key to follow (follow the comment guidance above)";
 
 struct Fixture(PathBuf);
 

@@ -1,6 +1,6 @@
 grund.toml: version 1 → 2, preview, nothing written
 comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
-  grund.toml:28  above [scan] include
+  grund.toml:28  above [scan] include: setting splits or merges into version-2 settings: [schema.kinds.code] folders, docs and src; requirements.md is a place of [schema.kinds.FS] already; retain the prose, authorize the listed drops with --write --drop-comments, then re-add it at one of these named destinations after a successful write (subject to all other refusals and gates)
 changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
 mapped: grund.toml:4: grund_config_version → grund_config_version = 2
 mapped: grund.toml:5: project_name → project_name
