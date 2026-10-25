@@ -20,7 +20,7 @@ const OUTCOME: &str = "wrote grund.toml: version 1 (24 lines) replaced by versio
 const DROPS: &str = "dropped the comments at grund.toml:6-7, grund.toml:12 and grund.toml:22-23 (version 1 lines)\n";
 const ADVICE: &str = "to get version 1 back: it is in version control, e.g. git restore grund.toml\nto see this candidate again: restore version 1 and run grund config migrate --to 2\nnote: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them\n";
 const REFUSALS: &str = "not written: 3 refusals (follow the repairs above); grund.toml is unchanged\n";
-const COMMENT_REFUSAL: &str = "not written: 3 comments have no single key to follow (move them, or re-run with --drop-comments); grund.toml is unchanged\n";
+const COMMENT_REFUSAL: &str = "not written: 3 comments have no single key to follow (follow the comment guidance above); grund.toml is unchanged\n";
 
 fn successful_report() -> MigrateReport {
     MigrateReport {

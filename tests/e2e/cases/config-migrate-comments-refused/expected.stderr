@@ -1,6 +1,6 @@
 grund.toml: version 1 → 2, --write
 comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
-  grund.toml:14  above [scan] include
+  grund.toml:14  above [scan] include: setting splits or merges into version-2 settings: nothing, requirements.md is a place of [schema.kinds.FS] already; retain the prose, authorize the listed drops with --write --drop-comments, then re-add it at one of these named destinations after a successful write (subject to all other refusals and gates)
 mapped: grund.toml:1: grund_config_version → grund_config_version = 2
 mapped: grund.toml:2: project_name → project_name
 mapped: grund.toml:5: [id] format → [schema] id_format
@@ -11,4 +11,4 @@ mapped: grund.toml:11: [[kinds]] file → [schema.kinds.FS] files
 mapped: grund.toml:15: [scan] include → nothing, requirements.md is a place of [schema.kinds.FS] already
 mapped: grund.toml:16: [scan] extensions → [schema.sources] languages and extensions, definition v1_markdown
 compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
-not written: 1 comment has no single key to follow (move it, or re-run with --drop-comments); grund.toml is unchanged
+not written: 1 comment has no single key to follow (follow the comment guidance above); grund.toml is unchanged

@@ -257,8 +257,32 @@ fn grunds_own_config_passes_both_gates() {
         .filter(|line| line.starts_with("  grund.toml:"))
         .collect::<Vec<_>>();
     assert_eq!(listed.len(), 2, "listed comments: {listed:?}");
-    assert!(listed[0].ends_with("above [scan] include"), "{listed:?}");
-    assert!(listed[1].ends_with("above [scan] extensions"), "{listed:?}");
+    assert_eq!(
+        listed[0],
+        concat!(
+            "  grund.toml:172-176  above [scan] include: setting splits or merges into ",
+            "version-2 settings: [schema.kinds.code] folders, docs, crates and tests/bindings; ",
+            "files, AGENTS.md; README.md is a place of [schema.kinds.readme] already; ",
+            "retain the prose, authorize the listed drops with --write --drop-comments, ",
+            "then re-add it at one of these named destinations after a successful write ",
+            "(subject to all other refusals and gates)"
+        )
+    );
+    assert_eq!(
+        listed[1],
+        concat!(
+            "  grund.toml:184-186  above [scan] extensions: setting splits or merges into ",
+            "version-2 settings: [schema.sources] languages and extensions, definitions ",
+            "[schema.sources.definitions.v1_markdown], [schema.sources.definitions.v1_c_family], ",
+            "[schema.sources.definitions.v1_go], [schema.sources.definitions.v1_python], ",
+            "[schema.sources.definitions.v1_ruby], [schema.sources.definitions.v1_lisp], ",
+            "[schema.sources.definitions.v1_sql], [schema.sources.definitions.v1_haddock], ",
+            "[schema.sources.definitions.v1_ldoc], [schema.sources.definitions.v1_plain] and ",
+            "[schema.sources.definitions.v1_shell]; retain the prose, authorize the listed ",
+            "drops with --write --drop-comments, then re-add it at one of these named ",
+            "destinations after a successful write (subject to all other refusals and gates)"
+        )
+    );
     assert!(
         stderr.contains("\ncompared: the records are equal"),
         "stderr: {stderr}"
