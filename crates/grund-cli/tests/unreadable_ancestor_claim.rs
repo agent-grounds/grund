@@ -68,8 +68,12 @@ impl Outer {
     }
 
     fn check(&self) -> Output {
+        self.check_in(&self.project())
+    }
+
+    fn check_in(&self, dir: &Path) -> Output {
         Command::new(env!("CARGO_BIN_EXE_grund"))
-            .current_dir(self.project())
+            .current_dir(dir)
             .arg("check")
             .output()
             .expect("run grund check")
@@ -131,4 +135,60 @@ fn a_readable_ancestor_answers_the_claim_both_ways() {
         ),
         "{stdout}"
     );
+}
+
+/// The two spellings of a list the config reader loads and a one-line read does
+/// not: written across lines, and ending in the trailing comma TOML allows.
+const LOADABLE: [&str; 2] = ["[\n  \"{}\",\n]", "[\"{}\",]"];
+
+/// `members` naming `entry` in each [`LOADABLE`] spelling.
+fn loadable(entry: &str) -> impl Iterator<Item = String> + '_ {
+    LOADABLE
+        .into_iter()
+        .map(move |shape| shape.replace("{}", entry))
+}
+
+/// §FS-workspace.6.1.7.5: a value the config reader loads is a list the climb reads
+/// too, so the run's own workspace root written that way confirms that it lists
+/// `project` and not `project/packages/hub`, and §FS-check.3.29.2 reports the block
+/// as it does under the one-line spelling. Read one line at a time, the root
+/// counted as unreadable and silenced every unlisted block below it.
+#[test]
+fn a_run_root_whose_members_list_the_config_loads_still_reports_the_block() {
+    for members in loadable("project") {
+        let outer = Outer::listing(&members);
+        let (code, stdout, _) = outcome(&outer.check_in(&outer.0));
+        assert_eq!(code, Some(1), "{members}: {stdout}");
+        assert!(
+            stdout.contains(
+                "project/packages/hub/grund.toml:7: error: this [workspace] is listed by no \
+                 enclosing workspace"
+            ),
+            "{members}: {stdout}"
+        );
+    }
+}
+
+/// The same spellings above the run's root answer the claim both ways, as the
+/// one-line controls do: naming elsewhere confirms the absence and the block is
+/// reported (§FS-check.3.29.2), and naming `packages/hub` lists it, so it is not.
+#[test]
+fn an_ancestor_members_list_the_config_loads_answers_the_claim_both_ways() {
+    for members in loadable("elsewhere") {
+        let (code, stdout, _) = outcome(&Outer::listing(&members).check());
+        assert_eq!(code, Some(1), "{members}: {stdout}");
+        assert!(
+            stdout.starts_with(
+                "packages/hub/grund.toml:7: error: this [workspace] is listed by no enclosing workspace"
+            ),
+            "{members}: {stdout}"
+        );
+    }
+    for members in loadable("project/packages/hub") {
+        assert_eq!(
+            outcome(&Outer::listing(&members).check()),
+            (Some(0), QUIET.to_string(), String::new()),
+            "{members}: an ancestor that lists packages/hub leaves the block unreported"
+        );
+    }
 }

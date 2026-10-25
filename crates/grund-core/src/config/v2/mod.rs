@@ -33,6 +33,7 @@ mod walk;
 #[cfg(test)]
 pub(super) use tables::V1_TABLES;
 pub(super) use tables::{admitted, v1_homes};
+pub(crate) use walk::joined_value;
 
 use anyhow::Result;
 use std::path::Path;

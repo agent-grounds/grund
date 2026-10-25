@@ -234,6 +234,22 @@ fn an_undecidable_ancestor_above_the_root_withholds_the_root_remedy() {
     );
 }
 
+/// §FS-workspace.6.1.7.5: an ancestor whose `members` spans lines and ends in the
+/// trailing comma TOML allows is the list its config loads, not an unreadable
+/// value, so naming elsewhere it still verifies `shop` as the root and the remedy
+/// is given, exactly as under the one-line spelling (§FS-workspace.5.1.1).
+#[test]
+fn an_ancestor_members_list_written_across_lines_still_verifies_the_root() {
+    let fixture = Fixture::new();
+    fs::write(
+        fixture.0.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"outer\"\n\n\
+         [workspace]\nmembers = [\n  \"elsewhere\",\n]\n",
+    )
+    .unwrap();
+    member_text(&fixture, &fixture.member(), &["check"], "../..");
+}
+
 #[test]
 fn standalone_and_unlisted_projects_do_not_claim_workspace_membership() {
     let fixture = Fixture::new();
