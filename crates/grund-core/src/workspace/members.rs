@@ -308,13 +308,16 @@ fn member_claims(root: &Path, entries: &[String]) -> Vec<MemberClaim> {
 /// A value is read as the config's own version reads it (§FS-workspace.6.1.7.5).
 /// A version-2 config's goes through its reader's own `joined_value`: one written
 /// across lines, or ending in the trailing comma TOML allows, is the list the
-/// config loads, and an array of any key still open at the end of the file leaves
-/// no key after its `[` to read, so it is residue too. Read one line at a time,
-/// such a list was "not a list", and a workspace written that way silenced every
-/// unlisted block below it. A version-1 value stays on its key's line, as the v1
-/// reader reads every value (§FS-config.3), so a v1 list written across lines is
-/// not a list here either: joining it made it a claim, and the v1 reader's load
-/// error then failed a run below a stray config that is not that run's problem.
+/// config loads, and one still open at the end of the file is residue. Read one
+/// line at a time, such a list was "not a list", and a workspace written that way
+/// silenced every unlisted block below it. Another key's array is joined only to
+/// be passed over; one that never closes swallows lines a claim may stand on, and
+/// taking it as residue silenced blocks no ancestor names, so the read goes on at
+/// the next line instead, as it did before arrays were joined. A version-1 value
+/// stays on its key's line, as the v1 reader reads every value (§FS-config.3), so
+/// a v1 list written across lines is not a list here either: joining it made it a
+/// claim, and the v1 reader's load error then failed a run below a stray config
+/// that is not that run's problem.
 pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>, String> {
     // §FS-check.6.1.1: cover this effective input before its shared read.
     let text = Sources::on_disk()
@@ -342,24 +345,30 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
         let Some((key, value)) = line.split_once('=') else {
             continue;
         };
-        let key = key.trim();
-        // A version-2 config's every array is joined, so no line inside one reads as
-        // a header or a key; one still open at the end leaves no key after its `[`.
+        // Last assignment wins, exactly as it does in a full parse. Each key names
+        // itself in the residue, because the sentence that reports one is what tells
+        // the reader which line to open (§FS-check.3.29).
+        let (slot, name) = match key.trim() {
+            "members" if in_workspace => (&mut entries, "members"),
+            "optional_members" if in_workspace => (&mut optional, "optional_members"),
+            _ => {
+                // Another key's array that closes is passed over whole, so no line in
+                // it reads as a header or a key; one that never closes holds no claim,
+                // so the read goes on at the next line (§FS-workspace.6.1.7.5).
+                if spans_lines {
+                    let mut ahead = lines.clone();
+                    if joined_value(value, &mut ahead).is_some() {
+                        lines = ahead;
+                    }
+                }
+                continue;
+            }
+        };
+        // A version-2 claim still open at the end of the file is not a list.
         let value = if spans_lines {
             joined_value(value, &mut lines)
         } else {
             Some(value.trim().to_string())
-        };
-        // Last assignment wins, exactly as it does in a full parse. Each key names
-        // itself in the residue, because the sentence that reports one is what tells
-        // the reader which line to open (§FS-check.3.29).
-        let (slot, name) = match key {
-            "members" if in_workspace => (&mut entries, "members"),
-            "optional_members" if in_workspace => (&mut optional, "optional_members"),
-            _ if value.is_none() => {
-                return Err(format!("`{key}` opens an array that never closes"));
-            }
-            _ => continue,
         };
         *slot = value
             .and_then(|value| parse_string_list(config_path, idx + 1, &value).ok())

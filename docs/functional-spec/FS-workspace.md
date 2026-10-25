@@ -883,8 +883,10 @@ undecidable in both directions. Each value is read as its config's own version r
 value is read as that reader reads an array ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)): written across lines, or ending in
 the trailing comma TOML allows, it is a list. A version-1 value is read on its key's line, as the
 version-1 reader reads every value ([§FS-config.3](FS-config.md#3-keys-version-1)), so one written across lines or with a trailing comma
-is not a list. An array of any key still open at the end of a version-2 file
-leaves both values unobtainable, because no line after its `[` can be read as a key. The run continues, because a stray unreadable `grund.toml` above a
+is not a list. A `members` or `optional_members` array still open at the end of a version-2 file
+is not a list either, while another key's array there is passed over whole, so no line inside it is
+read as a header or a key, and one that never closes holds no claim: it makes neither value unobtainable, the
+read goes on at the line after its key, and the entries read before and after it decide the claim. The run continues, because a stray unreadable `grund.toml` above a
 repository is not that repository's problem, and whether it says so depends on
 which climb asked: the one spelling an alias path never continues silently — it
 prints a run-level `warning:` naming that config and saying alias paths below it

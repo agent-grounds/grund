@@ -250,6 +250,22 @@ fn an_ancestor_members_list_written_across_lines_still_verifies_the_root() {
     member_text(&fixture, &fixture.member(), &["check"], "../..");
 }
 
+/// §FS-workspace.6.1.7.5: an ancestor that writes no `[workspace]` claims nothing,
+/// even with another key's array left open to the end of the file, which holds no
+/// claim. So `shop` is still verified as the root and the remedy is given
+/// (§FS-workspace.5.1.1), exactly as with that array closed.
+#[test]
+fn an_unclosed_array_of_another_key_above_the_root_keeps_the_root_remedy() {
+    let fixture = Fixture::new();
+    fs::write(
+        fixture.0.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"outer\"\n\n\
+         [schema.sources]\nexclude = [\"a\"\n",
+    )
+    .unwrap();
+    member_text(&fixture, &fixture.member(), &["check"], "../..");
+}
+
 /// §FS-workspace.6.1.7.5: a version-1 value is read on its key's line, as the v1
 /// reader reads every value (§FS-config.3), so a v1 ancestor's `members` naming
 /// `repo` across lines or with a trailing comma is not a list. The root's run warns
