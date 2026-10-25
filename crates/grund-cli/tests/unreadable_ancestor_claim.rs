@@ -21,6 +21,14 @@ struct Outer(PathBuf);
 impl Outer {
     /// The issue's tree, with `members` written as the ancestor's whole value.
     fn listing(members: &str) -> Self {
+        Self::under(&format!(
+            "grund_config_version = 2\nproject_name = \"outer\"\n\n\
+             [workspace]\nmembers = {members}\n"
+        ))
+    }
+
+    /// The issue's tree, under an ancestor config written as `ancestor`.
+    fn under(ancestor: &str) -> Self {
         static NEXT: AtomicU64 = AtomicU64::new(0);
         let base = std::env::temp_dir();
         // The climb reaches `/`, so a config above the scratch would answer too.
@@ -38,14 +46,7 @@ impl Outer {
             std::process::id(),
             NEXT.fetch_add(1, Ordering::Relaxed)
         )));
-        write(
-            &outer.0,
-            "grund.toml",
-            &format!(
-                "grund_config_version = 2\nproject_name = \"outer\"\n\n\
-                 [workspace]\nmembers = {members}\n"
-            ),
-        );
+        write(&outer.0, "grund.toml", ancestor);
         write(
             &outer.project(),
             "grund.toml",
@@ -189,6 +190,35 @@ fn an_ancestor_members_list_the_config_loads_answers_the_claim_both_ways() {
             outcome(&Outer::listing(&members).check()),
             (Some(0), QUIET.to_string(), String::new()),
             "{members}: an ancestor that lists packages/hub leaves the block unreported"
+        );
+    }
+}
+
+/// §FS-workspace.6.1.7.5: another key's array that never closes holds no claim, so
+/// it makes neither value unobtainable, and §FS-check.3.29.2's floor holds. An
+/// ancestor that names elsewhere before it, and one that writes no `[workspace]`
+/// at all, in either version, still confirm the absence: the block is reported,
+/// as it is with that array closed.
+#[test]
+fn an_unclosed_array_of_another_key_leaves_the_claim_answered() {
+    for ancestor in [
+        "grund_config_version = 2\nproject_name = \"outer\"\n\n\
+         [workspace]\nmembers = [\"elsewhere\"]\n\n[schema.kinds.FS]\nfiles = [\"a\"\n",
+        "grund_config_version = 2\nproject_name = \"outer\"\n\n\
+         [schema.sources]\nexclude = [\"a\"\n",
+        "grund_config_version = 1\n\n[scan]\nexclude = [\"a\"\n",
+    ] {
+        let (code, stdout, stderr) = outcome(&Outer::under(ancestor).check());
+        assert_eq!(
+            (code, stderr.as_str()),
+            (Some(1), ""),
+            "{ancestor}: {stdout}"
+        );
+        assert!(
+            stdout.starts_with(
+                "packages/hub/grund.toml:7: error: this [workspace] is listed by no enclosing workspace"
+            ),
+            "{ancestor}: {stdout}"
         );
     }
 }
