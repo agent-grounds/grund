@@ -60,7 +60,7 @@ pub(crate) fn extract_declaration_body(
         // `--toc` = the default lead, then a blank line, then the nested section
         // headings (§FS-show.2.1.2), both out of the one walk.
         ShowRenderMode::Toc => vec![
-            SliceSink::new(ShowRenderMode::Default, include_heading).canonical(),
+            SliceSink::new(ShowRenderMode::Default, include_heading),
             SliceSink::new(ShowRenderMode::Outline, false).canonical(),
         ],
         // `--brief` = heading + first paragraph (§FS-show.2.1.1); the H1 is
