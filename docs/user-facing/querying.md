@@ -192,6 +192,12 @@ $ grund show --batch --all --brief --format json | head -1 | cut -c1-120
 
 Prefer `--glob` to `--all` filtered with `jq`: it prints only the units you asked for.
 
+Each body names the unit it holds, so bodies read in bulk stay apart when they are
+concatenated. A selected section's body opens with its own heading at the full path,
+even where the file writes it relative: `### .2: Ceiling` under `## retry:` reads as
+`### retry.2: Ceiling`, and the heading lines below it stay as written
+([§FS-declarations.section.relative.shown.selected](../functional-spec/FS-declarations.md#sectionrelativeshownselected-a-selected-sections-own-heading-names-its-path)).
+
 ## Review a checklist: count, read, then map the diff
 
 A checklist is a set of points, and a review reads it in three rungs

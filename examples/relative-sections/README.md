@@ -19,7 +19,16 @@ The section map on stdout is the golden below; stderr is empty:
 ### parse.1: Tokens
 ```
 
-A relative heading takes its path from the heading one level up. `### .1:` under `## format:` is `FS-login.format.1`, and `### .1:` under `## parse:` is `FS-login.parse.1`. So the citation `<§>FS-login.format.1` in `docs/use.md` resolves to the Username section, and the map prints that full path for you to copy. Every place that shows a coordinate prints the full path. The default read and `--full` print the heading as it was written.
+A relative heading takes its path from the heading one level up. `### .1:` under `## format:` is `FS-login.format.1`, and `### .1:` under `## parse:` is `FS-login.parse.1`. So the citation `<§>FS-login.format.1` in `docs/use.md` resolves to the Username section, and the map prints that full path for you to copy. Every place that shows a coordinate prints the full path, and a read of one section opens with its own heading at that path, so the output says which section it is:
+
+```console
+$ grund FS-login.format.1 examples/relative-sections/repo
+### format.1: Username
+
+Trim surrounding whitespace.
+```
+
+The headings below the one you read, and every heading of a whole-declaration read such as `grund FS-login --full`, print as written.
 
 A relative address has a cost: move the block under another parent and the same words answer to a different address. So a cited relative section is locked to its text ([§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)). `repo/.grund/sections/FS-login.lock` holds one line per cited address with a fingerprint of the section's text, and `grund check examples/relative-sections/repo` prints `success`. Only `grund fmt --write`, run from the root, writes that file, and the file is committed. The sibling example [`relative-sections-lock/`](../relative-sections-lock/) shows the lock catching a citation it does not record.
 

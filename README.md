@@ -174,9 +174,10 @@ They are cited as [§REQ-readme.1.1](docs/requirements/REQ-readme.md#11-the-loop
 
 A section heading may write only the component it adds: under `## format: Formatting`,
 `### .1: Username` declares `FS-login.format.1`, and every citation, `refs` line and
-`--toc` shows that full path. Moving the block under another parent changes its address,
-so after citing a relative section run `grund fmt --write` with no path at the workspace
-root, or at the project root outside a workspace, and commit the section lock it writes,
+`--toc` shows that full path, as does the first line of a read of the section itself.
+Moving the block under another parent changes its address, so after citing a relative
+section run `grund fmt --write` with no path at the workspace root, or at the project
+root outside a workspace, and commit the section lock it writes,
 `.grund/sections/FS-login.lock`; `check` then says where a cited text went. See
 [section headings](docs/user-facing/structure.md#section-headings) and
 [`examples/relative-sections/`](examples/relative-sections/). For declaration renames,
