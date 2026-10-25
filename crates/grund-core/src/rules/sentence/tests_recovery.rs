@@ -63,9 +63,11 @@ fn offer_scope_keeps_recoverable_chapters_and_literals_or_offers_nothing() {
             "The requirements chapter of each FS",
         ),
         ("FS-store requirements chapter", "FS-store.requirements"),
+        ("Each FS-store.requirements", "FS-store.requirements"),
+        ("Each FS-store", "FS-store"),
     ] {
         if let Some((selector, rule)) = spelled(subject, &vocabulary) {
-            let selectors = if canonical == "FS-store.requirements" {
+            let selectors = if canonical.starts_with("FS-store") {
                 vec![canonical]
             } else {
                 vec![canonical, "FS.requirements"]
@@ -79,6 +81,30 @@ fn offer_scope_keeps_recoverable_chapters_and_literals_or_offers_nothing() {
         }
     }
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+}
+
+/// §FS-rule-refusals.sentences.rewrite.recovered: the invalid-component policy
+/// still applies when `Each` left the refused path in the subject head.
+#[test]
+fn each_path_recovery_keeps_the_valid_prefix_on_both_surfaces() {
+    let vocabulary = named_off(&["FS"]);
+    for (subject, canonical) in [
+        ("Each FS.*", "Each FS"),
+        (
+            "Each FS.requirements.*",
+            "The requirements chapter of each FS",
+        ),
+        (
+            "Each FS.requirements.1",
+            "The requirements chapter of each FS",
+        ),
+    ] {
+        assert_eq!(
+            spelled(subject, &vocabulary),
+            Some((canonical.into(), canonical.into())),
+            "{subject}"
+        );
+    }
 }
 
 /// §FS-rule-refusals.sentences.rewrite.recovered: knowing a kind supplies no
