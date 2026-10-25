@@ -397,14 +397,17 @@ returns a body: it keeps refusing the same tree as an ambiguous ID with its
 
 The stub it set aside is not hidden. Under `--format text`, for each broken stub
 set aside beside a real home, `refs` writes one line to stderr, in show's
-deterministic order of the stubs: `warning: ` followed by the `broken stub:`
-clause the ambiguity refusal carried for that stub — for a missing target,
+deterministic order of the stubs: `warning: ` followed by the stub's `broken stub:`
+line. For a missing target that is the clause the ambiguity refusal carried,
 `warning: broken stub: <stub path>:<line> links to missing <target>; <ID> is
 declared at <home path>:<line>; point the stub link there` — the diagnosis `check`
-makes of the same stub. Under `--format json` stderr stays empty, as stdout is
-the repaired tree's records: `refs` has no warning object, and `check` is where
-the stub is reported as a finding. A broken stub that is the ID's only home earns
-no warning: nothing was set aside, and its listing is that of any absent target
+makes of the same stub. For a target that exists but cannot pair — it lacks the
+ID, or the scan never reads it — the refusal carried no such clause, and the line
+is the one `show` refuses that stub alone with ([§FS-show.2.3.4](FS-show.md#234-broken-stub)). Under
+`--format json` stderr stays empty, as stdout is the repaired tree's records:
+`refs` has no warning object, and `check` is where the stub is reported as a
+finding. A broken stub, or several, with no real home beside them earns no
+warning: nothing was set aside, and the listing is that of any absent target
 ([§FS-refs.1](FS-refs.md#1-inputs)).
 
 ## 5. Why this exists

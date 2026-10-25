@@ -201,6 +201,19 @@ fn refs_lists_past_a_stub_whose_target_lacks_the_id_beside_a_real_home() {
     );
 }
 
+/// Several broken stubs with no real home beside them set nothing aside: `refs` lists the sites
+/// and warns of none (§FS-refs.4.1.1).
+#[test]
+fn refs_lists_past_two_broken_stubs_with_no_real_home_and_warns_of_none() {
+    let fixture = Fixture::new("two-broken", BROKEN_STUB);
+    fs::remove_file(fixture.0.join("src/store/cache.rs")).unwrap();
+    fixture.write(
+        "docs/architecture/AR-cache-old.md",
+        "# AR-cache: [`../../src/old.rs`](../../src/old.rs)\n",
+    );
+    assert_lists(&fixture.grund(&["refs", "AR-cache"]), SITES, "");
+}
+
 #[test]
 fn show_still_refuses_the_broken_stub_beside_a_real_home() {
     let fixture = Fixture::new("show", BROKEN_STUB);
