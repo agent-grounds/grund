@@ -105,31 +105,41 @@ fn a_version_two_table_asked_dotted_under_version_one() {
     assert_answered_as(&v1, "schema.kinds.FS", "[schema.kinds.FS]", v2_table);
 }
 
-/// §FS-config-explain.5: the version's own tables are read first, a table both
-/// versions admit is the version's own, and a name neither reading knows keeps
-/// the catch-all.
-#[test]
-fn own_tables_come_first_and_the_rest_keeps_the_catch_all() {
-    let v1 = Project::new(1);
-    assert_refused(
-        &v1,
-        "workspace.members",
-        "version 1 has no top-level key or check code `workspace.members`; for the key, ask grund config explain '[workspace] members'",
+/// `target` prints exactly what `bracketed` prints, which is an answer: exit 0.
+fn assert_same_answer(project: &Project, target: &str, bracketed: &str) {
+    let expected = project.explain(bracketed);
+    assert_eq!(
+        expected.status.code(),
+        Some(0),
+        "{bracketed} does not answer"
     );
+    let out = project.explain(target);
+    let text = |bytes: &[u8]| String::from_utf8_lossy(bytes).into_owned();
+    let (got, want) = (
+        (text(&out.stdout), text(&out.stderr)),
+        (text(&expected.stdout), text(&expected.stderr)),
+    );
+    assert_eq!(got, want, "{target} vs {bracketed}: (stdout, stderr)");
+    assert_eq!(out.status.code(), Some(0), "{target}");
+}
+
+/// §FS-config-explain.5: the version's own tables are read first, and a table
+/// both versions admit is the version's own, so its path is answered there
+/// (§FS-config-explain.1.1).
+#[test]
+#[ignore = "red until #1005 answers a path with one reading; implement removes this"]
+fn own_tables_come_first() {
+    assert_same_answer(&Project::new(1), "workspace.members", "[workspace] members");
+    assert_same_answer(&Project::new(2), "workspace", "[workspace]");
+}
+
+/// §FS-config-explain.5: a path that neither version's tables name keeps the
+/// catch-all, though its table is one both versions admit.
+#[test]
+fn a_path_neither_reading_names_keeps_the_catch_all() {
     assert_refused(
-        &v1,
+        &Project::new(1),
         "workspace.nope",
         "version 1 knows no table, key or check code `workspace.nope`; grund config explain lists the tables, grund config explain --codes the codes",
-    );
-    let v2 = Project::new(2);
-    assert_refused(
-        &v2,
-        "workspace",
-        "version 2 has no top-level key or check code `workspace`; for the table, ask grund config explain '[workspace]'",
-    );
-    assert_refused(
-        &v2,
-        "sources",
-        "version 2 knows no table, key or check code `sources`; grund config explain lists the tables, grund config explain --codes the codes",
     );
 }

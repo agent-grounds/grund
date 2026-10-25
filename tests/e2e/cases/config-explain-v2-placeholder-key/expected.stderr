@@ -1,0 +1,2 @@
+version 2 has no top-level key or check code `schema.kinds.id_format`; for the key, ask grund config explain '[schema.kinds.<NAME>] id_format'
+hint: for a kind named id_format, ask grund config explain '[schema.kinds.id_format]'
