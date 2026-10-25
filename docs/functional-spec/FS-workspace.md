@@ -879,7 +879,8 @@ a projection climbs only to learn that it is mounted and under which alias ([§F
 
 A config whose `members` or `optional_members` text cannot be obtained at all —
 the file cannot be read, or either value is not a list — leaves the claim
-undecidable in both directions. Each value is read as its config's own version reads it. A version-2
+undecidable in both directions. Each value is read as its config's own version reads it
+([§DF-ancestor-claim-read-by-its-version](../decisions/functional/DF-ancestor-claim-read-by-its-version.md#df-ancestor-claim-read-by-its-version-an-ancestors-workspace-claim-is-read-as-its-own-config-version-reads-it-and-one-that-cannot-be-read-answers-nothing)). A version-2
 value is read as that reader reads an array ([§FS-config-v2.reader.5](FS-config-v2.md#reader5-an-array-may-span-lines)), so a list that config loads is a
 list here. A version-1 value is read on its key's line, as the
 version-1 reader reads every value ([§FS-config.3](FS-config.md#3-keys-version-1)), so one written across lines or with a trailing comma
