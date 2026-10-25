@@ -131,6 +131,17 @@ and the [runnable example](https://github.com/agent-grounds/grund/blob/main/exam
 If a project needs its own grammar or independent check, follow
 Splitting off a member (`grund guide members`), then validate from the workspace root.
 
+For an existing version-1 config, `grund config migrate --to 2` previews the
+translation. Read each listed comment's local reason and destination guidance:
+moving a comment from `include` to the `[scan]` header still leaves it on a split
+attachment. To keep its prose, save it, explicitly authorize the listed drops
+with `--write --drop-comments`, and re-add it at the named version-2 destination
+after a successful write. Choose placement manually for a dropped setting or a
+comment without a destination. When destinations are unavailable, repair and
+preview again first; comment consent clears no setting refusal or comparison
+gate. See the [migration report contract](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config-migrate.md#22-stderr-is-the-report)
+and [runnable recovery walkthrough](https://github.com/agent-grounds/grund/blob/main/examples/migrate/README.md).
+
 ## Maintaining Declarations
 
 Before a declaration rename or file move, run `grund refs <ID>` to find affected

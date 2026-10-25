@@ -147,11 +147,11 @@ fn render_migrate_refused(
         match report.comments.len() {
             0 => {}
             1 => causes.push(
-                "1 comment has no single key to follow (move it, or re-run with --drop-comments)"
+                "1 comment has no single key to follow (follow the comment guidance above)"
                     .to_string(),
             ),
             count => causes.push(format!(
-                "{count} comments have no single key to follow (move them, or re-run with --drop-comments)"
+                "{count} comments have no single key to follow (follow the comment guidance above)"
             )),
         }
     }

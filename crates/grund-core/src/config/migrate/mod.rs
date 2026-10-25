@@ -10,6 +10,7 @@
 //! (§AR-system.4).
 
 mod candidate;
+mod comment_guidance;
 mod comments;
 mod keymap;
 mod keys;
@@ -167,15 +168,21 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
         .expect("migration renders a version 2 project");
     let (_, notices) = keymap::map(&keys, &records, &include);
     report.notices = notices;
+    // §FS-config-migrate.2.2: no promised destinations before a candidate loads.
+    let unavailable = comment_guidance::Guidance {
+        lines: &lines,
+        mapped: &[],
+        available: false,
+    };
     if !report.refusals.is_empty() {
-        comments::carry(&body, &lines, &keys, &mut report);
+        comments::carry(&body, &lines, &keys, &unavailable, &mut report);
         return Ok(translated(report, text, project));
     }
     let invocation = Invocation::new(root, false, Selection::Project);
     let loaded = match pending_config(&body, root, &invocation) {
         Ok(config) => config.project().clone(),
         Err(error) => {
-            comments::carry(&body, &lines, &keys, &mut report);
+            comments::carry(&body, &lines, &keys, &unavailable, &mut report);
             report.gates = Some(GateResult::Differs {
                 gate: Gate::Records,
                 lines: vec![format!("+ the candidate does not load: {error:#}")],
@@ -192,7 +199,13 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
         .retain(|_, resolution| *resolution != KindResolution::Must);
     let body = shown.v2_toml().expect("a version 2 project renders");
     // §FS-config-migrate.4.1.1: the rendered destinations decide which comments need review.
-    let carried = comments::carry(&body, &lines, &keys, &mut report);
+    let comment_map = keymap::comment_map(&keys, &shown, &include);
+    let guidance = comment_guidance::Guidance {
+        lines: &lines,
+        mapped: &comment_map,
+        available: true,
+    };
+    let carried = comments::carry(&body, &lines, &keys, &guidance, &mut report);
     report.mapped = keymap::map(&keys, &shown, &include).0;
     report.written = keymap::written(&keys, &project, &body);
     report.code_row_note = !include.places().is_empty();
