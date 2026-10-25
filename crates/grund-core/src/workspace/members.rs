@@ -28,7 +28,7 @@ use super::optional_members::expand_optional_members;
 use super::scope::{config_location_error, workspace_members_error};
 use crate::config::{
     AbsentOptionalNamespace, Config, ConfigLocation, Invocation, Selection, config_at,
-    config_file_in, joined_value, parse_string_list, strip_comment,
+    config_file_in, joined_value, parse_string_list, selects_v2, strip_comment,
 };
 use crate::model::{Diagnostic, OperationDiagnostic, is_hidden, sort_path_key};
 
@@ -305,17 +305,23 @@ fn member_claims(root: &Path, entries: &[String]) -> Vec<MemberClaim> {
 /// cannot be read, or the value is not a list — and carries the reason the
 /// warning that says so has to name.
 ///
-/// A value is read as the config reader reads an array, through its own
-/// `joined_value` (§FS-workspace.6.1.7.5): one written across lines, or ending in
-/// the trailing comma TOML allows, is the list the config loads, and an array of
-/// any key still open at the end of the file leaves no key after its `[` to read,
-/// so it is residue too. Read one line at a time, such a list was "not a list",
-/// and a workspace written that way silenced every unlisted block below it.
+/// A value is read as the config's own version reads it (§FS-workspace.6.1.7.5).
+/// A version-2 config's goes through its reader's own `joined_value`: one written
+/// across lines, or ending in the trailing comma TOML allows, is the list the
+/// config loads, and an array of any key still open at the end of the file leaves
+/// no key after its `[` to read, so it is residue too. Read one line at a time,
+/// such a list was "not a list", and a workspace written that way silenced every
+/// unlisted block below it. A version-1 value stays on its key's line, as the v1
+/// reader reads every value (§FS-config.3), so a v1 list written across lines is
+/// not a list here either: joining it made it a claim, and the v1 reader's load
+/// error then failed a run below a stray config that is not that run's problem.
 pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>, String> {
     // §FS-check.6.1.1: cover this effective input before its shared read.
     let text = Sources::on_disk()
         .text(config_path)
         .map_err(|err| err.to_string())?;
+    // §FS-config.3: only the version-2 reader reads an array across lines.
+    let spans_lines = selects_v2(&text);
     let mut in_workspace = false;
     let mut entries = Vec::new();
     let mut optional = Vec::new();
@@ -337,9 +343,13 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
             continue;
         };
         let key = key.trim();
-        // Every key's array is joined, so no line inside one reads as a header or a
-        // key; one still open at the end leaves no key after its `[` to read.
-        let value = joined_value(value, &mut lines);
+        // A version-2 config's every array is joined, so no line inside one reads as
+        // a header or a key; one still open at the end leaves no key after its `[`.
+        let value = if spans_lines {
+            joined_value(value, &mut lines)
+        } else {
+            Some(value.trim().to_string())
+        };
         // Last assignment wins, exactly as it does in a full parse. Each key names
         // itself in the residue, because the sentence that reports one is what tells
         // the reader which line to open (§FS-check.3.29).

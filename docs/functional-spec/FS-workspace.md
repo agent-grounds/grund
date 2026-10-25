@@ -879,9 +879,11 @@ a projection climbs only to learn that it is mounted and under which alias ([§F
 
 A config whose `members` or `optional_members` text cannot be obtained at all —
 the file cannot be read, or either value is not a list — leaves the claim
-undecidable in both directions. Each value is read as the version-2 config reader reads an array
-([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)), whichever version the config writes: written across lines, or ending in
-the trailing comma TOML allows, it is a list. An array of any key still open at the end of the file
+undecidable in both directions. Each value is read as its config's own version reads it. A version-2
+value is read as that reader reads an array ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)): written across lines, or ending in
+the trailing comma TOML allows, it is a list. A version-1 value is read on its key's line, as the
+version-1 reader reads every value ([§FS-config.3](FS-config.md#3-keys-version-1)), so one written across lines or with a trailing comma
+is not a list. An array of any key still open at the end of a version-2 file
 leaves both values unobtainable, because no line after its `[` can be read as a key. The run continues, because a stray unreadable `grund.toml` above a
 repository is not that repository's problem, and whether it says so depends on
 which climb asked: the one spelling an alias path never continues silently — it
