@@ -1,4 +1,5 @@
-//! Refused-write cause summaries and combined causes (§FS-config-migrate.2.2).
+//! Refused-run cause summaries and combined causes (§FS-config-migrate.2.2):
+//! a refused write and a refused preview close on the same cause list.
 
 use super::*;
 
@@ -17,14 +18,32 @@ fn refused_report() -> MigrateReport {
     report
 }
 
+/// §FS-config-migrate.2.2 items 5 and 6: the write closes with `expected`, and
+/// the same report as a preview closes with `would not write:` and the same
+/// causes. Neither narrates defaults, except a `--full` preview that prints its
+/// candidate (§FS-config-migrate.1.3).
 fn assert_closing(report: &MigrateReport, expected: &str) {
-    assert!(report.refused());
-    for full in [false, true] {
-        let actual = render(report, full);
-        assert_eq!(actual.lines().last(), Some(expected), "{actual}");
-        assert!(!actual.lines().any(|l| l.starts_with("written:")), "{actual}");
-        assert!(!actual.contains(PROJECT_MAP), "{actual}");
-        assert!(!actual.contains(ADVICE), "{actual}");
+    assert!(report.write && report.refused());
+    let causes = expected
+        .strip_prefix("not written: ")
+        .and_then(|rest| rest.strip_suffix(&format!("; {} is unchanged", report.config)))
+        .unwrap();
+    let mut preview = report.clone();
+    preview.write = false;
+    let preview_closing = format!("would not write: {causes}");
+    for (run, closing) in [(report, expected), (&preview, preview_closing.as_str())] {
+        for full in [false, true] {
+            let actual = render(run, full);
+            assert_eq!(actual.lines().last(), Some(closing), "{actual}");
+            let narrated = full && run.stdout().is_some();
+            assert_eq!(
+                actual.lines().any(|l| l.starts_with("written:")),
+                narrated,
+                "{actual}"
+            );
+            assert_eq!(actual.contains(PROJECT_MAP), narrated, "{actual}");
+            assert!(!actual.contains(ADVICE), "{actual}");
+        }
     }
 }
 

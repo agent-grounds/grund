@@ -21,14 +21,28 @@ grund config migrate --to 2 --write --drop-comments  # and drop the listed comme
 
 ## 1. Preview first
 
-Run it without `--write`. Stdout is the candidate, exactly the bytes `--write`
-would write, so `grund config migrate --to 2 > candidate.toml` keeps it to read
+Run it without `--write`. When `--write` would pass, stdout is the candidate,
+exactly the bytes `--write` would write, so
+`grund config migrate --to 2 > candidate.toml` keeps it to read, and captures
+one only when the run exits `0`
 ([§FS-config-migrate.2.1](../functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate)).
 Stderr is the report: what was refused, the comments with nowhere to go, what
 was dropped or changed, carried comments to check after a value-vocabulary
 translation, where each version-1 key went, the defaults written out, and
 whether the two gates passed
 ([§FS-config-migrate.2.2](../functional-spec/FS-config-migrate.md#22-stderr-is-the-report)).
+
+A preview that refuses prints no candidate and no `written:` defaults, and ends
+with what would block the write, in the words a refused `--write` uses:
+
+```text
+would not write: 1 comment has no single key to follow (move it, or re-run with --drop-comments)
+```
+
+When only listed comments refuse, the candidate still exists: `--drop-comments`
+previews it with exit `0`, and `--full` prints it with the complete report
+before that closing line, still exiting `1`
+([§FS-config-migrate.1.3](../functional-spec/FS-config-migrate.md#13-the-other-flags)).
 The exit is `0` when `--write` would succeed, `1` when it would refuse, and `2`
 when there is no config or the command was used wrongly
 ([§FS-config-migrate.2.3](../functional-spec/FS-config-migrate.md#23-exits)).
@@ -47,7 +61,9 @@ changes, and commit it on its own. That commit is the change of meaning, and it
 is yours to review; the migration that follows changes none.
 
 [`examples/migrate/migrate-2-repaired`](../../examples/migrate/migrate-2-repaired/)
-is the same repository after both repairs. Its preview prints the candidate.
+is the same repository after both repairs. Only its listed comment still
+refuses, so its preview ends with `would not write:` and `--drop-comments` or
+`--full` shows the candidate.
 
 ## 3. Check carried comments and read the listed comments
 
@@ -159,8 +175,10 @@ runs omit it. A second migration run says the config is already version 2.
 To capture the candidate and complete mapping/default/gate report while
 applying, use `grund config migrate --to 2 --write --full`. Stdout then contains
 exactly the bytes written, and stderr retains the preview's complete report
-before the write outcome and advice. `--full` changes no preview, refusal,
-failure or already-version-2 output, and can be combined with PATH,
+before the write outcome and advice. On a preview only listed comments refuse,
+`--full` restores the candidate and complete report, as section 1 says; it
+changes no other preview, no refused write, and no failure or
+already-version-2 output. It can be combined with PATH,
 `--drop-comments` and either `--path-base`
 ([§FS-config-migrate.1.3](../functional-spec/FS-config-migrate.md#13-the-other-flags)).
 

@@ -246,7 +246,15 @@ fn grunds_own_config_passes_both_gates() {
     fs::copy(&frozen, &config).expect("copy grund's v1 config");
     let before = fs::read(&config).unwrap();
 
-    let out = grund(&["config", "migrate", "--to", "2", root.to_str().unwrap()]);
+    // §FS-config-migrate.2.1: only comments refuse, so --full shows the candidate.
+    let out = grund(&[
+        "config",
+        "migrate",
+        "--to",
+        "2",
+        "--full",
+        root.to_str().unwrap(),
+    ]);
     let stderr = text(&out.stderr);
     assert_eq!(out.status.code(), Some(1), "stderr: {stderr}");
     assert!(text(&out.stdout).contains("grund_config_version = 2\n"));

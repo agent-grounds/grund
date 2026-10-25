@@ -347,6 +347,10 @@ fn carried_comment_warning_keeps_split_comment_drop_policy() {
                 .args(["config", "migrate", "--to", "2"]);
             if write {
                 cmd.arg("--write");
+            } else {
+                // §FS-config-migrate.2.1: a comment-refused preview prints its
+                // candidate only under --full; a passing one is the same either way.
+                cmd.arg("--full");
             }
             if drop_comments {
                 cmd.arg("--drop-comments");

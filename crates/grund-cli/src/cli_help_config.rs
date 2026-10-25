@@ -23,8 +23,8 @@ fn print_config_help() {
     println!(
         "  migrate    preview the version-2 file that means what this version-1 config means, and report where each key went;"
     );
-    // §FS-config-migrate.6.5: successful writes use the compact presentation.
-    println!("             writes nothing unless --write is given; successful writes use a compact report.");
+    // §FS-config-migrate.6.5, §FS-config-migrate.2.2: compact success and refusal.
+    println!("             writes nothing unless --write is given; successful writes and refused previews use a compact report.");
     println!();
     println!("Options:");
     println!("  --codes              explain: every check code the version can report, one line each.");
@@ -45,7 +45,7 @@ fn print_config_help() {
     println!("                       e.g. grund config migrate --to 2 --write");
     // §FS-config-migrate.1.3: expansion belongs only to migration presentation.
     println!(
-        "  --full               migrate: restore the candidate on stdout and complete report on stderr after a successful write."
+        "  --full               migrate: restore the candidate and complete report after a successful write, or a preview only comments refuse."
     );
     println!("                       e.g. grund config migrate --to 2 --write --full");
     println!(
