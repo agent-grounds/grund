@@ -36,7 +36,7 @@ A preview that refuses prints no candidate and no `written:` defaults, and ends
 with what would block the write, in the words a refused `--write` uses:
 
 ```text
-would not write: 1 comment has no single key to follow (move it, or re-run with --drop-comments)
+would not write: 1 comment has no single key to follow (follow the comment guidance above)
 ```
 
 When only listed comments refuse, the candidate still exists: `--drop-comments`

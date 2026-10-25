@@ -5,7 +5,7 @@
 use super::*;
 
 const COMMENT_CAUSE: &str =
-    "1 comment has no single key to follow (move it, or re-run with --drop-comments)";
+    "1 comment has no single key to follow (follow the comment guidance above)";
 
 /// The `<causes>` of a closing line, or `None` when no line closes that way.
 fn causes<'a>(stderr: &'a str, prefix: &str, suffix: &str) -> Option<&'a str> {

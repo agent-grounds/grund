@@ -98,11 +98,12 @@ fn contains_all(line: &str, expected: &[&str], failures: &mut Vec<String>) {
 
 /// Exercise the four report-producing modes; compact success is already pinned
 /// by config_migrate_comments::carried_comment_warning_keeps_split_comment_drop_policy.
+/// The refused preview passes `--full`, which alone keeps its candidate (§FS-config-migrate.2.1).
 fn guidance_failures(input: &str, place: &str, reason: &str, destinations: &[&str]) -> Vec<String> {
     let mut failures = Vec::new();
     let mut candidate = None;
     for args in [
-        vec![],
+        vec!["--full"],
         vec!["--write"],
         vec!["--drop-comments"],
         vec!["--write", "--drop-comments", "--full"],
