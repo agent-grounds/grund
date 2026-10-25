@@ -354,9 +354,10 @@ fn a_path_outside_every_member_reports_the_entries_of_the_members_under_it() {
         &summary_args,
         (Some(0), summary, Some("")),
     );
+    // The relative `format.1` is measured at its canonical heading (§FS-list.3.4.1).
     let size = "api/FS-api           apps/api/docs/FS-api.md:1  lines=0/3 words=0/9 bytes=0/50\n\
                 api/FS-api.format    apps/api/docs/FS-api.md:3  lines=1/3 words=3/9 bytes=22/50\n\
-                api/FS-api.format.1  apps/api/docs/FS-api.md:5  lines=2/2 words=6/6 bytes=27/27\n\
+                api/FS-api.format.1  apps/api/docs/FS-api.md:5  lines=2/2 words=6/6 bytes=33/33\n\
                 api/FS-api-audit     apps/api/docs/FS-api-audit.md:1  \
                 lines=1/1 words=2/2 bytes=25/25\n";
     ws.expect(

@@ -163,10 +163,3 @@ entry: write the link beside it, or the ID is reported missing
 [example](https://github.com/agent-grounds/grund/blob/main/examples/authored-citations/README.md)).
 Use the [maintenance guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#maintaining-declarations)
 and its [copy-based rename example](https://github.com/agent-grounds/grund/blob/main/examples/relative-sections-lock/README.md).
-
-A relative heading, `### .1: Username` under `## format: Formatting`, saves
-writing the parent's path; a reader still sees it, because `grund FS-login.format.1`
-opens with `### format.1: Username` in every mode. Only that first line is
-rewritten: headings below it, and a whole-declaration read, print as written
-([selected section](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#section-headings),
-[example](https://github.com/agent-grounds/grund/blob/main/examples/relative-sections/README.md)).
