@@ -86,26 +86,37 @@ fn command_config_migrate(args: &[String]) -> ExitCode {
 }
 
 /// §FS-config-migrate.6.5, §FS-config-migrate.2.1: one presentation decision
-/// controls both streams; only an actual write can omit preview detail.
+/// controls both streams; only an actual write can omit preview detail, and
+/// only a refused run can omit the candidate and its narration.
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum MigratePresentation {
     CompactWrite,
     Complete,
+    Refused,
 }
 
 impl MigratePresentation {
-    /// §FS-config-migrate.1.3: `--full` restores complete successful-write output.
+    /// §FS-config-migrate.1.3: `--full` restores complete successful-write
+    /// output, and a preview only listed comments refuse, the one refused run
+    /// that still has a candidate (§FS-config-migrate.2.1).
     fn for_report(report: &MigrateReport, full: bool) -> Self {
-        if report.wrote && !full {
-            Self::CompactWrite
-        } else {
+        if report.wrote {
+            if full {
+                Self::Complete
+            } else {
+                Self::CompactWrite
+            }
+        } else if !report.refused() || (full && report.stdout().is_some()) {
             Self::Complete
+        } else {
+            Self::Refused
         }
     }
 }
 
 /// §FS-config-migrate.6.5: retained fields move ahead of advice on compact
-/// success; §FS-config-migrate.2.2 keeps complete output in its legacy order.
+/// success; §FS-config-migrate.2.2 keeps complete output in its legacy order,
+/// and every refused run closes with its causes (item 6).
 /// The local sink lets callers inspect lines without redirecting global stderr.
 fn render_migrate_report(
     report: &MigrateReport,
@@ -118,25 +129,29 @@ fn render_migrate_report(
         render_migrate_members(report, out)?;
         render_migrate_project_map(report, out)?;
     } else {
-        render_migrate_complete(report, out)?;
+        render_migrate_complete(report, presentation, out)?;
         if report.wrote {
             render_migrate_outcome(report, out)?;
         }
     }
     if report.wrote {
         render_migrate_advice(report, out)?;
-    } else if report.write {
-        render_migrate_refused(report, out)?;
+    } else if report.refused() {
+        let causes = migrate_refusal_causes(report);
+        if report.write {
+            writeln!(out, "not written: {causes}; {} is unchanged", report.config)?;
+        } else {
+            writeln!(out, "would not write: {causes}")?;
+        }
     }
     Ok(())
 }
 
-/// §FS-config-migrate.2.2: close a refused write with each blocking cause and
-/// its own remedy, counting refusal blocks and listed comment ranges.
-fn render_migrate_refused(
-    report: &MigrateReport,
-    out: &mut impl std::io::Write,
-) -> std::io::Result<()> {
+/// §FS-config-migrate.2.2 item 6: the one `<causes>` list both a refused
+/// write's `not written:` and a refused preview's `would not write:` read:
+/// each blocking cause with its own remedy, counting refusal blocks and listed
+/// comment ranges.
+fn migrate_refusal_causes(report: &MigrateReport) -> String {
     let mut causes = Vec::new();
     match report.refusals.len() {
         0 => {}
@@ -163,21 +178,18 @@ fn render_migrate_refused(
             }
         });
     }
-    writeln!(
-        out,
-        "not written: {}; {} is unchanged",
-        causes.join("; "),
-        report.config
-    )
+    causes.join("; ")
 }
 
-/// §FS-config-migrate.2.2: the complete report's lines, in order, never wrapped.
+/// §FS-config-migrate.2.2: the complete report's lines, in order, never wrapped;
+/// a refused run omits the narration of a candidate it does not print (item 5).
 fn render_migrate_complete(
     report: &MigrateReport,
+    presentation: MigratePresentation,
     out: &mut impl std::io::Write,
 ) -> std::io::Result<()> {
     let config = &report.config;
-    let refused_write = report.write && report.refused();
+    let narrated = presentation == MigratePresentation::Complete;
     if report.write {
         writeln!(out, "{config}: version 1 → 2, --write")?;
     } else {
@@ -219,7 +231,7 @@ fn render_migrate_complete(
                 mapped.line, mapped.key, mapped.spelling
             )?;
         }
-        if !refused_write {
+        if narrated {
             for written in &report.written {
                 writeln!(out, "written: {written}: version 1's default, written out")?;
             }
@@ -243,7 +255,7 @@ fn render_migrate_complete(
             }
             None => {}
         }
-        if !refused_write {
+        if narrated {
             render_migrate_project_map(report, out)?;
         }
     }

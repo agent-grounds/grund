@@ -18,7 +18,6 @@ fn causes<'a>(stderr: &'a str, prefix: &str, suffix: &str) -> Option<&'a str> {
 /// candidate only under full, as --drop-comments previews it, plus the
 /// closing line. PATH and both path-base values included.
 #[test]
-#[ignore = "red until #1002 renders refused previews compactly; implement removes this"]
 fn full_previews_preserve_both_streams_and_tree() {
     for base in ["project", "invocation"] {
         let fixture = Fixture::new(&format!("{V1}\n# standalone\n"));
@@ -67,7 +66,6 @@ fn full_previews_preserve_both_streams_and_tree() {
 /// either. No black-box fixture reaches a differing gate; the renderer's unit
 /// tests cover that cause.
 #[test]
-#[ignore = "red until #1002 shares the cause list with refused previews; implement removes this"]
 fn refused_previews_close_with_the_writes_causes() {
     let refusal = V1.replace("named_sections = true", "named_sections = false");
     let guidance = V1.replace(

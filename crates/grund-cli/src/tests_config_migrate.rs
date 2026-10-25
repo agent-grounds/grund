@@ -19,8 +19,9 @@ const PROJECT_MAP: &str = "note: the next grund init adds a `code` row to the AG
 const OUTCOME: &str = "wrote grund.toml: version 1 (24 lines) replaced by version 2\n";
 const DROPS: &str = "dropped the comments at grund.toml:6-7, grund.toml:12 and grund.toml:22-23 (version 1 lines)\n";
 const ADVICE: &str = "to get version 1 back: it is in version control, e.g. git restore grund.toml\nto see this candidate again: restore version 1 and run grund config migrate --to 2\nnote: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them\n";
-const REFUSALS: &str = "not written: 3 refusals (follow the repairs above); grund.toml is unchanged\n";
-const COMMENT_REFUSAL: &str = "not written: 3 comments have no single key to follow (follow the comment guidance above); grund.toml is unchanged\n";
+const REFUSALS: &str = "3 refusals (follow the repairs above)";
+const COMMENT_REFUSAL: &str =
+    "3 comments have no single key to follow (follow the comment guidance above)";
 
 fn successful_report() -> MigrateReport {
     MigrateReport {
@@ -85,6 +86,16 @@ fn successful_report() -> MigrateReport {
         v1_lines: 24,
         wrote: true,
         ..Default::default()
+    }
+}
+
+/// §FS-config-migrate.2.2 item 6: the closing line a refused run reads from
+/// its one cause list, worded for a write or a preview.
+fn closing(write: bool, causes: &str) -> String {
+    if write {
+        format!("not written: {causes}; grund.toml is unchanged\n")
+    } else {
+        format!("would not write: {causes}\n")
     }
 }
 
@@ -195,7 +206,7 @@ fn full_report_preserves_legacy_order() {
 }
 
 /// §FS-config-migrate.2.2: setting refusals retain every anchor, detail and repair,
-/// then comment listings and notices, even when a write was requested.
+/// then comment listings and notices, and close with their causes, preview or write.
 #[test]
 fn refused_report_keeps_complete_diagnostics() {
     let mut report = successful_report();
@@ -236,7 +247,7 @@ fn refused_report_keeps_complete_diagnostics() {
             assert!(report.refused());
             assert_eq!(report.stdout(), None);
             assert!(
-                MigratePresentation::for_report(&report, full) == MigratePresentation::Complete
+                MigratePresentation::for_report(&report, full) == MigratePresentation::Refused
             );
             assert_eq!(
                 render(&report, full),
@@ -245,7 +256,7 @@ fn refused_report_keeps_complete_diagnostics() {
                     refusals,
                     COMMENTS,
                     NOTICES,
-                    if write { REFUSALS } else { "" }
+                    closing(write, REFUSALS).as_str(),
                 ]
                 .concat()
             );
@@ -253,8 +264,9 @@ fn refused_report_keeps_complete_diagnostics() {
     }
 }
 
-/// §FS-config-migrate.4.4, §FS-config-migrate.2.2: unauthorized comment loss
-/// keeps the complete listing; only previews may still show the candidate.
+/// §FS-config-migrate.4.4, §FS-config-migrate.2.2, §FS-config-migrate.1.3:
+/// unauthorized comment loss keeps the complete listing and closes with its
+/// cause; only a `--full` preview shows the candidate and narrates its defaults.
 #[test]
 fn comment_refusal_keeps_complete_diagnostics() {
     let mut report = successful_report();
@@ -272,8 +284,14 @@ fn comment_refusal_keeps_complete_diagnostics() {
                     report.candidate.as_deref()
                 }
             );
+            let narrated = full && !write;
             assert!(
-                MigratePresentation::for_report(&report, full) == MigratePresentation::Complete
+                MigratePresentation::for_report(&report, full)
+                    == if narrated {
+                        MigratePresentation::Complete
+                    } else {
+                        MigratePresentation::Refused
+                    }
             );
             assert_eq!(
                 render(&report, full),
@@ -282,11 +300,11 @@ fn comment_refusal_keeps_complete_diagnostics() {
                     COMMENTS,
                     NOTICES,
                     MAPPINGS,
-                    if write { "" } else { DEFAULTS },
+                    if narrated { DEFAULTS } else { "" },
                     MEMBERS,
                     EQUAL,
-                    if write { "" } else { PROJECT_MAP },
-                    if write { COMMENT_REFUSAL } else { "" }
+                    if narrated { PROJECT_MAP } else { "" },
+                    closing(write, COMMENT_REFUSAL).as_str(),
                 ]
                 .concat()
             );
@@ -294,7 +312,10 @@ fn comment_refusal_keeps_complete_diagnostics() {
     }
 }
 
-fn assert_gate_difference(gate: Gate, difference: &str, closing: &str) {
+/// §FS-config-migrate.2.2 items 5 and 6, §FS-config-migrate.1.3: a gate
+/// difference has no candidate, so neither a preview nor a write narrates
+/// defaults, with or without `--full`, and both close with the same cause.
+fn assert_gate_difference(gate: Gate, difference: &str, cause: &str) {
     let mut report = successful_report();
     report.wrote = false;
     report.gates = Some(GateResult::Differs {
@@ -307,7 +328,7 @@ fn assert_gate_difference(gate: Gate, difference: &str, closing: &str) {
             assert!(report.refused());
             assert_eq!(report.stdout(), None);
             assert!(
-                MigratePresentation::for_report(&report, full) == MigratePresentation::Complete
+                MigratePresentation::for_report(&report, full) == MigratePresentation::Refused
             );
             assert_eq!(
                 render(&report, full),
@@ -316,12 +337,10 @@ fn assert_gate_difference(gate: Gate, difference: &str, closing: &str) {
                     COMMENTS,
                     NOTICES,
                     MAPPINGS,
-                    if write { "" } else { DEFAULTS },
                     MEMBERS,
                     difference,
                     "- before\n+ after\n",
-                    if write { "" } else { PROJECT_MAP },
-                    if write { closing } else { "" }
+                    closing(write, cause).as_str(),
                 ]
                 .concat()
             );
@@ -329,22 +348,22 @@ fn assert_gate_difference(gate: Gate, difference: &str, closing: &str) {
     }
 }
 
-/// §FS-config-migrate.5.4: record differences remain complete in both modes.
+/// §FS-config-migrate.5.4: record differences remain complete, preview or write.
 #[test]
 fn records_gate_difference_keeps_complete_diagnostics() {
     assert_gate_difference(
         Gate::Records,
         "differs: the records\n",
-        "not written: the records differ (inspect the comparison above); grund.toml is unchanged\n",
+        "the records differ (inspect the comparison above)",
     );
 }
 
-/// §FS-config-migrate.5.4: check-report differences remain complete in both modes.
+/// §FS-config-migrate.5.4: check-report differences remain complete, preview or write.
 #[test]
 fn report_gate_difference_keeps_complete_diagnostics() {
     assert_gate_difference(
         Gate::Report,
         "differs: grund check --suggestions on this tree\n",
-        "not written: grund check --suggestions differs (inspect the comparison above); grund.toml is unchanged\n",
+        "grund check --suggestions differs (inspect the comparison above)",
     );
 }

@@ -24,21 +24,22 @@ refused: grund.toml:29: [scan] include names `e2e`, which does not exist, and ve
 comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
   grund.toml:28  above [scan] include: destinations are unavailable; retain the prose, repair the settings or candidate loading problem above and preview again before choosing its placement
 changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
+would not write: 2 refusals (follow the repairs above); 1 comment has no single key to follow (move it, or re-run with --drop-comments)
 ```
 
-Version 2 always reads named sections, and it puts a folder and a file under different keys, so it cannot carry either setting with the same meaning. Migration does not guess. Each repair is a version-1 edit: make it, run `grund check` to see its effect while the file is still version 1, and commit it. That commit is the change of meaning, made and reviewed by you.
+The last line is what would block the write, in the words step 1's `--write` uses below ([§FS-config-migrate.2.2](../../docs/functional-spec/FS-config-migrate.md#22-stderr-is-the-report)). Version 2 always reads named sections, and it puts a folder and a file under different keys, so it cannot carry either setting with the same meaning. Migration does not guess. Each repair is a version-1 edit: make it, run `grund check` to see its effect while the file is still version 1, and commit it. That commit is the change of meaning, made and reviewed by you.
 
 The comment above `include` is listed because `include` splits into several version-2 keys, so there is no one key for the comment to follow ([§FS-config-migrate.4.3](../../docs/functional-spec/FS-config-migrate.md#43-everything-else-is-listed)). Here its destinations are unavailable until the missing path is repaired; save the prose and preview again after the repairs. The header block and the comment above the `FS` row are not listed: they are carried.
 
-Adding `--write` here still exits `1`, prints no stdout, and leaves the config unchanged. Its report keeps the repairs and comment listing above and ends with:
+Adding `--write` here still exits `1`, prints no stdout, and leaves the config unchanged. Its report keeps the repairs and comment listing above and ends with the same causes:
 
 ```text
 not written: 2 refusals (follow the repairs above); 1 comment has no single key to follow (follow the comment guidance above); grund.toml is unchanged
 ```
 
-The closing line names every blocking cause, so `--drop-comments` alone cannot clear the two setting refusals. A refused write prints no `written:` defaults or next-init Project map note, even after repairing the settings so only the comment blocks it. `--full` keeps the same refused-write report ([§FS-config-migrate.2.2](../../docs/functional-spec/FS-config-migrate.md#22-stderr-is-the-report)). The CLI regression also checks this run against [`migrate-1-refused/expected.write.stderr`](migrate-1-refused/expected.write.stderr); the preview expectation stays unchanged.
+The closing line names every blocking cause, so `--drop-comments` alone cannot clear the two setting refusals. A refused write prints no `written:` defaults or next-init Project map note, even after repairing the settings so only the comment blocks it. `--full` keeps the same refused-write report ([§FS-config-migrate.2.2](../../docs/functional-spec/FS-config-migrate.md#22-stderr-is-the-report)). The CLI regression also checks this run against [`migrate-1-refused/expected.write.stderr`](migrate-1-refused/expected.write.stderr).
 
-## Step 2: after the repairs, the candidate
+## Step 2: after the repairs, only the comment refuses
 
 `migrate-2-repaired/repo/grund.toml` is the same file after both edits: `named_sections = true`, and `e2e` removed from `include`. Run the same preview:
 
@@ -47,9 +48,7 @@ grund config migrate --to 2 examples/migrate/migrate-2-repaired/repo
 echo $?    # 1
 ```
 
-Stdout is now the version-2 file, exactly the bytes `--write` would write ([§FS-config-migrate.2.1](../../docs/functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate)); `migrate-2-repaired/expected.stdout` holds it. The header block is still at the top, and the comment above the `FS` row is above `[schema.kinds.FS]`. Every version-1 default that differs from version 2's is written out, so the file keeps its meaning after later edits.
-
-Stderr names the comment that would be lost, warns about the carried comment on the translated exclusion values, then maps each version-1 key to where it went and lists the defaults written out:
+The settings no longer refuse, so stderr maps each version-1 key to where it went and runs the two gates. The comment above `include` still has no single key to follow, and `--write` would refuse while it would be lost, so the preview still exits `1`, prints no candidate, and ends with that one cause ([§FS-config-migrate.2.1](../../docs/functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate)):
 
 ```text
 grund.toml: version 1 → 2, preview, nothing written
@@ -58,10 +57,12 @@ comments with no single key to follow (--write refuses; --drop-comments drops ex
 changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
 …
 compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
-note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then
+would not write: 1 comment has no single key to follow (move it, or re-run with --drop-comments)
 ```
 
-The `compared:` line is the two checks every write must pass: the records both files lower into are equal, and `grund check` on this tree gives the same findings with either ([§FS-config-migrate.5](../../docs/functional-spec/FS-config-migrate.md#5-equivalence-two-gates)). It still exits 1, because `--write` would refuse while the listed comment would be lost.
+The `compared:` line is the two checks every write must pass: the records both files lower into are equal, and `grund check` on this tree gives the same findings with either ([§FS-config-migrate.5](../../docs/functional-spec/FS-config-migrate.md#5-equivalence-two-gates)).
+
+The candidate exists all the same; only the comment refuses. Add `--drop-comments` to preview it with exit `0`, or `--full` to print it with the complete report, the `written:` defaults and the next-init note, before the same closing line ([§FS-config-migrate.1.3](../../docs/functional-spec/FS-config-migrate.md#13-the-other-flags)). It is the version-2 file, exactly the bytes `--write` would write; step 4 pins it as [`migrate-4-full/expected.stdout`](migrate-4-full/expected.stdout). The header block is still at the top, and the comment above the `FS` row is above `[schema.kinds.FS]`. Every version-1 default that differs from version 2's is written out, so the file keeps its meaning after later edits.
 
 The exclusion comment is retained: the candidate contains `exclude = ["target/", "node_modules/", ".git/", "dist/", "build/", ".venv/"] # directory names`. Version 1's directory names became glob patterns. Check that the comment still explains the setting as intended; the warning identifies the translation without judging its prose ([§FS-config-migrate.4.1.1](../../docs/functional-spec/FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes)). It appears in preview and write, including with `--drop-comments`, which drops only the listed `include` comment.
 
@@ -96,7 +97,7 @@ to see this candidate again: restore version 1 and run grund config migrate --to
 note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
 ```
 
-Run `grund init` in the migrated project to refresh managed instructions that may still describe version 1 ([§FS-config-migrate.6.5](../../docs/functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)). The reminder appears even though this fixture has no `AGENTS.md`; migration does not create one. `migrate-3-write/expected.repo/` records the complete final tree: only `grund.toml` changes, and it equals the candidate in `migrate-2-repaired/expected.stdout`. The harness uses a disposable copy for the write and checks that tree; the follow-up `grund init` is a separate action.
+Run `grund init` in the migrated project to refresh managed instructions that may still describe version 1 ([§FS-config-migrate.6.5](../../docs/functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)). The reminder appears even though this fixture has no `AGENTS.md`; migration does not create one. `migrate-3-write/expected.repo/` records the complete final tree: only `grund.toml` changes, and it equals the candidate step 4 prints in `migrate-4-full/expected.stdout`. The harness uses a disposable copy for the write and checks that tree; the follow-up `grund init` is a separate action.
 
 To try the optional manual recovery after the successful write above, re-add
 the saved comment with this command from the repository root:
@@ -133,12 +134,13 @@ echo $?    # 0
 
 `--full` restores the candidate on stdout and the complete report on stderr
 ([§FS-config-migrate.1.3](../../docs/functional-spec/FS-config-migrate.md#13-the-other-flags)).
-`migrate-4-full/expected.stdout` is byte-identical to the preview candidate and
-the written `expected.repo/grund.toml`. Stderr preserves the preview's comments,
+`migrate-4-full/expected.stdout` is byte-identical to the candidate step 2's
+`--drop-comments` preview prints and to the written `expected.repo/grund.toml`. Stderr preserves the preview's comments,
 notices, key mappings, defaults, gate result and Project map note in their
 original order, then adds the write outcome, dropped ranges and advice. The
-refresh reminder still appears once and last. `--full` leaves preview and
-refusal output unchanged, and both write modes make the same config-only change.
+refresh reminder still appears once and last. `--full` changes no refused
+write, and no preview except one only listed comments refuse, and both write
+modes make the same config-only change.
 
 ## Trade-offs
 
