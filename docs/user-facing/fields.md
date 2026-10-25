@@ -37,6 +37,16 @@ the same title, and never one nested deeper. So a citation of
 compare with the display name byte for byte; there is no case folding
 ([§FS-fields.identity](../functional-spec/FS-fields.md#identity-identity)).
 
+## Repair a bare field heading
+
+With the required `terms` field above, a bare `## Terms` produces both
+`unmarked-heading` and `missing-field`. The heading error appends the field
+form: `kind FS declares the field terms, written ## terms: Terms`
+([§FS-declarations.checks.unmarked-heading.2.2](../functional-spec/FS-declarations.md#checksunmarked-heading22-a-direct-field-title-or-name-is-also-shown-the-field-form)).
+Change the heading to `## terms: Terms` to clear both errors. Following the
+generic numbered suggestion, `## 1. Terms`, clears the heading error but
+leaves the required field missing: a field needs its section name.
+
 ## The FS opens with its Terms
 
 ```toml
