@@ -1,1 +1,1 @@
-{"id":"FS-login","section":"format.1","body":"### .1: Username\n\nTrim surrounding whitespace.\n","anchor":"1-username","path":"docs/functional-spec/FS-login.md","line":5}
+{"id":"FS-login","section":"format.1","body":"### format.1: Username\n\nTrim surrounding whitespace.\n","anchor":"1-username","path":"docs/functional-spec/FS-login.md","line":5}
