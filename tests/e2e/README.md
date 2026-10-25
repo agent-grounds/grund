@@ -55,7 +55,16 @@ Error output is part of the contract. Located text `check` findings in
 or opt-in `suggestion:` channel next, and group errors before warnings before
 suggestions; compare bytewise `(path, line, message)` inside each group. JSON
 cases deliberately retain global location order, so never regenerate their
-goldens by copying the text order ([§FS-errors.4](../../docs/functional-spec/FS-errors.md#4-determinism)). Non-zero cases should keep `expected.stderr` concise: one actionable diagnostic per line, no aggregate footer, and no long explanatory prose that makes editor and agent consumption harder. For a case whose command selects `--format json`, a stderr line that opens a JSON object is one complete diagnostic in the [§FS-errors.5](../../docs/functional-spec/FS-errors.md#5-json-format) / [§FS-distribution.3.0](../../docs/functional-spec/FS-distribution.md#30-language-neutral-data-shapes) shape, and the conciseness cap applies to its `message` field rather than to the serialized line — the surrounding `severity`, `path`, `line`, `code`, and `sites` are fixed scaffolding the cap was never about. A text error or hint on the same case's stderr keeps the plain cap. A launch-time text warning carried beside a later refusal keeps the existing bytes its own specification fixes ([§FS-check.3.30](../../docs/functional-spec/FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan)); the refusal does not rewrite an already earned warning to satisfy the error-line policy.
+goldens by copying the text order ([§FS-errors.4](../../docs/functional-spec/FS-errors.md#4-determinism)). Non-zero cases should keep ordinary diagnostics in `expected.stderr` concise: one actionable diagnostic per line, no aggregate footer, and no long explanatory prose that makes editor and agent consumption harder. For a case whose command selects `--format json`, a stderr line that opens a JSON object is one complete diagnostic in the [§FS-errors.5](../../docs/functional-spec/FS-errors.md#5-json-format) / [§FS-distribution.3.0](../../docs/functional-spec/FS-distribution.md#30-language-neutral-data-shapes) shape, and the conciseness cap applies to its `message` field rather than to the serialized line — the surrounding `severity`, `path`, `line`, `code`, and `sites` are fixed scaffolding the cap was never about. A text error or hint on the same case's stderr keeps the plain cap. A launch-time text warning carried beside a later refusal keeps the existing bytes its own specification fixes ([§FS-check.3.30](../../docs/functional-spec/FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan)); the refusal does not rewrite an already earned warning to satisfy the error-line policy.
+
+The listed-comment entries in a `grund config migrate` report are structured
+records whose reason, destinations and preservation guidance stay on one
+unwrapped line ([§FS-config-migrate.2.2](../../docs/functional-spec/FS-config-migrate.md#22-stderr-is-the-report)).
+The harness exempts only valid location/range, attachment and guidance records
+under that command's exact comment-list heading from the ordinary 180-byte line
+cap; the first other line ends the block. Ordinary errors and hints retain the
+cap before, beside and after the listing, and aggregate summaries remain
+forbidden throughout. Output and final-tree goldens still compare byte-for-byte.
 
 ### Refreshing the goldens
 

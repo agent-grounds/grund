@@ -301,7 +301,7 @@ fn run_prepared_case(
         .unwrap_or_else(|err| panic!("{name}: parse expected.exit: {err}"));
     let expected_stdout = read_expected_output(case.join("expected.stdout"));
     let expected_stderr = read_expected_output(case.join("expected.stderr"));
-    assert_expected_errors_are_concise(case, name, &execution.args, &expected_stderr);
+    assert_expected_errors_are_concise(case, name, execution, &expected_stderr);
 
     // Every surface is compared, in this fixed order, before deciding: a
     // mismatch is pushed rather than panicked, so it cannot hide a later one
