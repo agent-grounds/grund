@@ -154,6 +154,14 @@ precedence.
 
 ## Refusal inventory
 
+Offers keep recoverable chapter and literal scope
+([§FS-rule-refusals.sentences.rewrite.recovered](../../docs/functional-spec/FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied)).
+`Each FS requirements chapter must cite at least one REQ.` can be repaired to
+`The requirements chapter of each FS must cite at least one REQ.`, and
+`FS-good requirements chapter` to `FS-good.requirements`. When the scope cannot
+be reconstructed, grund offers no form; an unnamed chapter quantifier below
+therefore has no rewrite.
+
 Each left-hand sentence is refused; the right-hand text describes the refusal
 and any accepted rewrite grund reports. Some refusals offer no rewrite
 ([§FS-rules.10.1](../../docs/functional-spec/FS-rules.md#101-example-refusal-inventory)):
@@ -177,7 +185,7 @@ and any accepted rewrite grund reports. Some refusals offer no rewrite
   then `known kinds: GOAL, REQ, FS, AR, RULE`; no rewrite is offered.
 - `Each */FS must cite at least one GOAL.` → `Each FS must cite at least one GOAL.`
 - `FS-demo.* must cite at least one REQ.` → `FS-demo.requirements must cite at least one REQ.`
-- `Each chapter of each FS must cite at least one REQ.` → `The requirements chapter of each FS must cite at least one REQ.`
+- `Each chapter of each FS must cite at least one REQ.` → `chapter-quantified subjects are not accepted in phase 1` (no rewrite)
 - `FS-demo.2 must cite at least one REQ.` → `FS-demo.requirements must cite at least one REQ.`
 - With named sections disabled, enable them before writing `FS-demo.requirements must cite at least one REQ.`
 - `Each POLICY must cite at least one GOAL.` → use a configured kind, as in `Each FS must cite at least one GOAL.`

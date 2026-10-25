@@ -264,7 +264,7 @@ fn a_refused_subject_is_rebuilt_as_the_selector_rebuilds_it() {
         ),
         (
             "Each chapter of each FS must be cited by at least one FS.",
-            "chapter-quantified subjects are not accepted in phase 1; accepted form: Each FS must be cited by at least one FS.",
+            "chapter-quantified subjects are not accepted in phase 1",
             false,
         ),
         (

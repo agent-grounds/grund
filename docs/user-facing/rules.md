@@ -184,11 +184,21 @@ Common refusals are intentional. A sentence is refused for the first stage it fa
 - `Each file in vendor/ must cite at least one FS.` → `path subjects are not accepted in phase 1`, then `known kinds: GOAL, REQ, FS, AR, RULE`
 - `Each */FS must cite at least one GOAL.` → `subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one GOAL.`
 - `FS-login.* must cite at least one REQ.` → `section-component wildcards are not accepted in phase 1; accepted form: FS-login must cite at least one REQ.`
-- `Each chapter of each FS must cite at least one REQ.` → `chapter-quantified subjects are not accepted in phase 1; accepted form: Each FS must cite at least one REQ.`
+- `Each chapter of each FS must cite at least one REQ.` → `chapter-quantified subjects are not accepted in phase 1` (no rewrite)
 - `FS-login.2 must cite at least one REQ.` → `numbered chapter subjects can detach when headings move; accepted form: FS-login must cite at least one REQ.`
 - With named sections off, `FS-login.requirements must cite at least one REQ.` → `named chapter subjects require [id] named_sections = true; accepted form after enabling it: FS-login.requirements must cite at least one REQ.`
 - `Each POLICY must cite at least one GOAL.` → `unknown kind "POLICY"`, then `known kinds: GOAL, REQ, FS, AR, RULE`
 <!-- END chapter-rules-refused -->
+
+A refused subject's offer keeps its recoverable chapter and declaration scope.
+For example, `Each FS requirements chapter must cite at least one REQ.`
+can be repaired to `The requirements chapter of each FS must cite at least one REQ.`;
+the dotted `Each FS.requirements` and the shorter `Each FS requirements`
+name that same scope. `FS-store requirements chapter` can be repaired to
+`FS-store.requirements`, preserving the one declaration. If grund cannot
+recover that scope unambiguously, it offers no form. An unnamed
+`Each chapter of each FS` therefore gets no rewrite; choose the chapter
+explicitly. See [scope-preserving recovery](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied).
 
 Use `Each` for a declaration subject and `each` after `chapter of` or `cite`.
 The unsupported quantifier `every` stays refused; grund offers the `each`

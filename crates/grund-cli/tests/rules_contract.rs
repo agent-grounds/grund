@@ -16,6 +16,8 @@ mod documentation;
 mod every_quantifier;
 #[path = "rules_contract/modal_chapter.rs"]
 mod modal_chapter;
+#[path = "rules_contract/offer_scope.rs"]
+mod offer_scope;
 #[path = "rules_contract/paste_back.rs"]
 mod paste_back;
 #[path = "rules_contract/refusal_forms.rs"]

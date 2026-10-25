@@ -90,7 +90,7 @@ fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
         ),
         (
             "Each chapter of each FS must cite at least one REQ.",
-            "chapter-quantified subjects are not accepted in phase 1; accepted form: Each FS must cite at least one REQ.",
+            "chapter-quantified subjects are not accepted in phase 1",
         ),
         (
             "FS-demo.2 must cite at least one REQ.",

@@ -100,7 +100,7 @@ and then the line
 | `Each file in vendor/ must cite at least one FS.` | `path subjects are not accepted in phase 1`, and no rewrite |
 | `Each */FS must cite at least one GOAL.` | `subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one GOAL.` |
 | `FS-login.* must cite at least one REQ.` | `section-component wildcards are not accepted in phase 1; accepted form: FS-login must cite at least one REQ.` |
-| `Each chapter of each FS must cite at least one REQ.` | `chapter-quantified subjects are not accepted in phase 1; accepted form: Each FS must cite at least one REQ.` |
+| `Each chapter of each FS must cite at least one REQ.` | `chapter-quantified subjects are not accepted in phase 1`, and no rewrite |
 | `FS-login.2 must cite at least one REQ.` | `numbered chapter subjects can detach when headings move; accepted form: FS-login must cite at least one REQ.` |
 | `FS-login.requirements must cite at least one REQ.` with named sections off | `named chapter subjects require [id] named_sections = true; accepted form after enabling it: FS-login.requirements must cite at least one REQ.` |
 | `Each POLICY must cite at least one GOAL.` | `unknown kind "POLICY"`, and no rewrite |
@@ -441,10 +441,23 @@ A refused subject is rebuilt with [§FS-rule-refusals.selectors](FS-rule-refusal
 subject, the way [§FS-rule-refusals.sentences.named-sections](FS-rule-refusals.md#sentencesnamed-sections-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) step 2 writes one: where a selector would get
 `KIND.NAME[.NAME…]` the rule gets `The NAME[.NAME…] chapter of each KIND`, and
 where a selector would get a bare `KIND` the rule gets `Each KIND`. An object
-kind is never guessed. A chapter name is never invented: the front end reads
-the configuration and not the scan, so a subject keeps the named components
-typed before the refused one, and where none was typed it falls back to its
-declaration or to `Each KIND`. So an empty component keeps what was typed
+kind is never guessed. A refused subject that supplies recoverable chapter or
+literal declaration scope keeps that scope in a canonical offer. Thus
+`Each FS requirements chapter`, `Each FS requirements` and `Each FS.requirements`
+can be offered `The requirements chapter of each FS`, and
+`FS-store requirements chapter` can be offered `FS-store.requirements`.
+These remain refused spellings, not new grammar. The predicate, including its
+modality, citation direction, count and object, is kept. Where the typed scope
+cannot be reconstructed unambiguously, no form is offered: never replace a
+chapter obligation with a whole-declaration obligation or a literal with
+`Each KIND` merely to produce an accepted sentence. In particular,
+`Each chapter of each FS` supplies no chapter name and gets no form.
+
+A chapter name is never invented: the front end reads the configuration and
+not the scan. This scope-preservation rule does not change the longest-valid-
+prefix policy for a refused path component: a subject keeps the named components
+typed before that component, falling back to its declaration or `Each KIND`
+when that prefix is empty. So an empty component keeps what was typed
 before it and nothing after it, as `list --selector` does: `FS-login..requirements`
 is offered `FS-login` and `FS-login.requirements.` is offered
 `FS-login.requirements`. A refused subject that holds a modality followed
@@ -540,7 +553,7 @@ spellings, rather than changing the shared kind reason on other surfaces.
 | a presence noun of the wrong number | `chapter` or `chapters`, as the count takes | — |
 | a presence `NAME` with whitespace ([§FS-rule-refusals.sentences.whitespace](FS-rule-refusals.md#sentenceswhitespace-presence-name-whitespace-refusal)) | the `NAME` trimmed of its surrounding whitespace | the `NAME` is empty or has whitespace inside |
 | a chapter subject in a presence rule | the subject's declaration, or `Each KIND` | — |
-| a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says | no configured kind is recovered, or the subject holds a clause; `known kinds:` follows |
+| a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says | scope cannot be reconstructed, no configured kind is recovered, or the subject holds a clause; `known kinds:` follows only for the latter two |
 | the ID grammar for a subject `The` cut short at a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | — | always; `known kinds:` follows |
 | a path subject, `Each file in …` | — | always; `known kinds:` follows |
 | an unknown or malformed object kind | — | always; `known kinds:` follows |
@@ -596,7 +609,7 @@ configured rule declaration's finding carries the same text after
 | `FS-*.requirements must cite at least one FS.` | `literal subject "FS-*.requirements" does not match the configured ID grammar; accepted form: The requirements chapter of each FS must cite at least one FS.` | none |
 | `FS.* must cite at least one FS.` | `section-component wildcards are not accepted in phase 1; accepted form: Each FS must cite at least one FS.` | none |
 | `FS-login.2 should cite at most 2 FS.` | `numbered chapter subjects can detach when headings move; accepted form: FS-login should cite at most 2 FS.` | none |
-| `Each chapter of each FS must be cited by at least one FS.` | `chapter-quantified subjects are not accepted in phase 1; accepted form: Each FS must be cited by at least one FS.` | none |
+| `Each chapter of each FS must be cited by at least one FS.` | `chapter-quantified subjects are not accepted in phase 1` | none |
 | `Each */FS must cite at least one FS.` | `subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one FS.` | none |
 | `Each POLICY must cite at least one FS.` | `unknown kind "POLICY"` | `known kinds: FS` |
 | `Each file in vendor/ must cite at least one FS.` | `path subjects are not accepted in phase 1` | `known kinds: FS` |
@@ -718,8 +731,8 @@ window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration), 
 Every `list` mode that takes `--selector`, `--size` included, refuses a
 selector it cannot accept. Its `error:` line is the refused-input shape of
 [§FS-errors.2.5](FS-errors.md#25-refused-input): it names the
-production that failed and ends in exactly one accepted selector, which a
-reader can paste back into `--selector`.
+production that failed and, where recovery can supply one, ends in exactly one
+accepted selector, which a reader can paste back into `--selector`.
 
 The reason is the one [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) gives for the same subject wherever that
 reason is true, so a rule and a selector never disagree about what failed.
@@ -743,7 +756,11 @@ follows it. The append moves no verdict, so no release is named
 ([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), G06).
 
 The suggestion is built from what was typed and from the configured kinds,
-never from a fixed template:
+never from a fixed template. The scope-preservation and safe-suppression
+constraint of [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied)
+also applies to selector offers. An unnamed `Each chapter of each KIND` gets
+no selector offer. The following steps retain their longest-valid-prefix policy
+for refused path components:
 
 1. Its kind is the configured kind the text names or starts with: `FS-*` and
    `FS-login` both give `FS`.
@@ -818,7 +835,7 @@ refusals. A line marked *hint* is the breadcrumb above.
 | `The requirements.1 chapter of each FS` | `numbered chapter subjects can detach when headings move; accepted selector: The requirements chapter of each FS` | hint |
 | `FS.*` | `section-component wildcards are not accepted in phase 1; accepted selector: FS` | hint |
 | `FS-login.*` | `section-component wildcards are not accepted in phase 1; accepted selector: FS-login` | hint |
-| `Each chapter of each FS` | `chapter-quantified subjects are not accepted in phase 1; accepted selector: Each FS` | hint |
+| `Each chapter of each FS` | `chapter-quantified subjects are not accepted in phase 1` | `known kinds: FS`, then hint |
 | `*/FS` | `subject namespaces must be local in phase 1; accepted selector: FS` | none |
 | `Each */FS` | `subject namespaces must be local in phase 1; accepted selector: Each FS` | none |
 | `Every FS` | `quantifier "every" is not accepted; accepted selector: Each FS` | none |
