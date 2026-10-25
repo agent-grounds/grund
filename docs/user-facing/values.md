@@ -238,8 +238,9 @@ separator, so a value with an ASCII space inside any component — a street
 address, say — cannot be bound at its root. That spelling is refused with
 `invalid-value-binding`; bind each component by its coordinate instead. The
 refusal belongs to the spelling, never to the value. For a value of one
-component the two spellings are equivalent: they give the same verdict, and
-the same bytes when the literal has no space.
+component the two spellings give the same verdict, but each finding names what
+its own site wrote: a mismatch at the root names the root, as
+`CONST-floor (component 1)`, where the `.1` spelling's names `CONST-floor.1`.
 
 It is recognized in Markdown outside fences and wholly within scanned source
 comment or doc-comment lines:
@@ -314,14 +315,37 @@ a mismatch of different kinds names each side's kind after its canonical text
 docs/record.md:5: error: value mismatch for QTY-mach-001-year.1: bound `2022`, declared `2022` at values/machines.json:2 — bound is a number, declared is a string; a number and a string are never equal
 ```
 
-A binding aimed at a root is compared part by part in declared order, and only
-the first unequal component is reported, by its own coordinate and declaration
-site, in the same text; the kind clause follows exactly when that one pair
-differs in kind ([§FS-values.5.2.2](../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)):
+A binding aimed at a root is compared part by part in declared order. A
+disagreement names what the site wrote — the root it cites and the literal
+whole, against the components joined by one ASCII space — and, in parentheses,
+the first unequal component by its section path, at that component's one
+declaration site ([§FS-values.5.2.2](../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)):
 
 ```text
-docs/offer.md:3: error: value mismatch for CONST-field-price.2: bound `EUR`, declared `USD` at values/field-price.md:3
+docs/offer.md:3: error: value mismatch for CONST-field-price (component 2): bound `1200 EUR`, declared `1200 USD` at values/field-price.md:3
 ```
+
+Read on its own, that line says the citation is right and the literal is
+stale. Fix it by correcting the whole literal, `1200 EUR` to `1200 USD`, and
+keep the root citation: re-citing the site to `CONST-field-price.2` would bind
+`1200 USD` to `USD` alone, which never agrees. When that one pair differs in
+kind, the kind clause names the component it is about, as
+` — component 2: bound is a number, declared is a string; a number and a string are never equal`
+([§FS-values.5.2.1](../functional-spec/FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind)).
+
+That line is the whole message from grund 0.22.0. In 0.21.0 the message earlier
+releases printed, which names the first unequal component by its own coordinate
+and quotes only its part, stays whole in front of it, followed by
+` — whole binding: `, and the line ends with
+`; this wording changes in grund 0.22.0` ([§FS-errors.3.9](../functional-spec/FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)):
+
+```text
+docs/offer.md:3: error: value mismatch for CONST-field-price.2: bound `EUR`, declared `USD` at values/field-price.md:3 — whole binding: value mismatch for CONST-field-price (component 2): bound `1200 EUR`, declared `1200 USD` at values/field-price.md:3; this wording changes in grund 0.22.0
+```
+
+A script that matches a root-aimed line whole, or by the part before
+` — whole binding: `, should match `code == "value-mismatch"` instead, which
+does not move. A binding aimed at one component keeps the shorter message.
 
 When the literal splits into a different number of parts than the root has
 components, no component is at fault, so the finding names the root, quotes the

@@ -300,12 +300,17 @@ beside a citation must equal them. From the [values example](examples/values/), 
 Each solver step advances time by `1.0e-3 s` (§CONST-time-step).
 ```
 
-A use that still quotes the step from before it was tuned fails the check:
+A use that still quotes the step from before it was tuned fails the check, naming the
+root the line cites and the literal it wrote:
 
 ```console
 $ grund check
-… value mismatch for CONST-time-step.1: bound `0.002`, declared `0.001` …
+… whole binding: value mismatch for CONST-time-step (component 1): bound `0.002 s`, declared `0.001 s` …
 ```
+
+The citation is right and the literal is stale, so the fix is `0.001 s`, cited as before.
+Until grund 0.22.0 the line opens with the older component-only message, and from then
+it is the root's alone.
 
 The [values guide](docs/user-facing/values.md) covers JSON declarations, values inside
 prose specs, and bindings in code comments.
