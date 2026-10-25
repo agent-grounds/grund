@@ -24,7 +24,7 @@ refused: grund.toml:29: [scan] include names `e2e`, which does not exist, and ve
 comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
   grund.toml:28  above [scan] include: destinations are unavailable; retain the prose, repair the settings or candidate loading problem above and preview again before choosing its placement
 changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
-would not write: 2 refusals (follow the repairs above); 1 comment has no single key to follow (move it, or re-run with --drop-comments)
+would not write: 2 refusals (follow the repairs above); 1 comment has no single key to follow (follow the comment guidance above)
 ```
 
 The last line is what would block the write, in the words step 1's `--write` uses below ([§FS-config-migrate.2.2](../../docs/functional-spec/FS-config-migrate.md#22-stderr-is-the-report)). Version 2 always reads named sections, and it puts a folder and a file under different keys, so it cannot carry either setting with the same meaning. Migration does not guess. Each repair is a version-1 edit: make it, run `grund check` to see its effect while the file is still version 1, and commit it. That commit is the change of meaning, made and reviewed by you.
@@ -57,7 +57,7 @@ comments with no single key to follow (--write refuses; --drop-comments drops ex
 changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
 …
 compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
-would not write: 1 comment has no single key to follow (move it, or re-run with --drop-comments)
+would not write: 1 comment has no single key to follow (follow the comment guidance above)
 ```
 
 The `compared:` line is the two checks every write must pass: the records both files lower into are equal, and `grund check` on this tree gives the same findings with either ([§FS-config-migrate.5](../../docs/functional-spec/FS-config-migrate.md#5-equivalence-two-gates)).

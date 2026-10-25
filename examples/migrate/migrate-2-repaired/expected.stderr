@@ -21,4 +21,4 @@ mapped: grund.toml:31: [scan] extensions → [schema.sources] languages and exte
 mapped: grund.toml:32: [scan] comment_prefixes → comment_prefixes of definitions v1_markdown and v1_c_family
 mapped: grund.toml:35: [citations.FS] must → [rules.citations.FS] must
 compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
-would not write: 1 comment has no single key to follow (move it, or re-run with --drop-comments)
+would not write: 1 comment has no single key to follow (follow the comment guidance above)
