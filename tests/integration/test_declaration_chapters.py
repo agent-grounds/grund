@@ -127,7 +127,11 @@ CITED = (
 
 # FS-show.md grew 118 bytes in §FS-show.3.2.1 and FS-fmt.md 345 in §FS-fmt.6.4, citing
 # §FS-citations.wrap.enclosing.scope and .images rather than restating them (grund#839).
-BASELINES = {"FS-show.md": 68511, "FS-fmt.md": 99471}
+
+# FS-show.md grew by 1498 bytes in §FS-show.requirements.authored-bytes, .2.2, .3.1.1,
+# .3.1.2 and .3.2.2, each citing §FS-declarations.section.relative.shown.selected for a
+# selected section's canonical heading rather than restating it (grund#1009).
+BASELINES = {"FS-show.md": 70009, "FS-fmt.md": 99471}
 
 
 def _flat(text):
