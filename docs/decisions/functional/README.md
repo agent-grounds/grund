@@ -211,5 +211,6 @@ The rulings the one-answer work is built from, one record per step family, each 
 - [§DF-global-excludes-literal-tilde](DF-global-excludes-literal-tilde.md#df-global-excludes-literal-tilde-preserve-literal-tildes-in-the-global-excludes-pathname) — preserve literal tildes in the global excludes pathname
 - [§DF-release-candidates-follow-main](DF-release-candidates-follow-main.md#df-release-candidates-follow-main-a-release-helper-follows-a-main-the-merge-queue-moves-rebuilding-and-re-running-its-candidates) — a release helper follows a main the merge queue moves, rebuilding and re-running its candidates
 - [§DF-managed-block-revision-label](DF-managed-block-revision-label.md#df-managed-block-revision-label-the-managed-block-heading-labels-its-number-as-the-blocks-revision) — the managed block heading labels its number as the block's revision
+- [§DF-show-selected-relative-heading](DF-show-selected-relative-heading.md#df-show-selected-relative-heading-a-read-of-a-selected-section-names-the-section-it-read) — a read of a selected section names the section it read
 
 This index is navigational — citations should target the decision ID directly, never this file.

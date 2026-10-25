@@ -38,6 +38,8 @@ The form is recognised only where today's verdict on it is already an error: ins
 
 `--toc` and the title hover print the canonical path in place of the relative one and keep the title ([§FS-declarations.section.relative.shown](../../functional-spec/FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown), [§FS-lsp.1.2.4](../../functional-spec/FS-lsp.md#124-the-title-hovers-text)), because those are where a reader copies a coordinate from. Every read of the text prints the file's bytes, and no command rewrites a heading between the two forms ([§FS-fmt.2.3](../../functional-spec/FS-fmt.md#23-what-is-never-rewritten)).
 
+For one line that choice was replaced: a read of a selected section prints its own heading, the slice's first line, with the canonical path as well ([§DF-show-selected-relative-heading](DF-show-selected-relative-heading.md#df-show-selected-relative-heading-a-read-of-a-selected-section-names-the-section-it-read)). Every other heading of a body read, the map and the hover stand as decided here.
+
 ## lock: A cited relative address is locked to its text
 
 A complete-path heading carries its address, so it moves with its text. A relative heading does not: swap two `### .1` blocks under different parents and every citation of the old address reads other text, with no error. That is the silent retarget the ticket rules out. The ruling chose a generated, committed lock over an identity tag on every heading ([§FS-section-lock](../../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)), under three conditions, each met there:
