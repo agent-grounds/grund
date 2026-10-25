@@ -95,7 +95,7 @@ fn fs_only_sentences() -> Vec<(&'static str, Answer)> {
         ("FS-login.2 should cite at most 2 FS.", Form),
         (
             "Each chapter of each FS must be cited by at least one FS.",
-            Form,
+            NoForm,
         ),
         ("Each */FS must cite at least one FS.", Form),
         ("FSbogus must cite at least one FS.", NoFormKinds),
@@ -127,7 +127,7 @@ fn named_on_sentences() -> Vec<(&'static str, Answer)> {
         ("FS-login.* must cite at least one REQ.", Form),
         (
             "Each chapter of each REQ must cite at least one GOAL.",
-            Form,
+            NoForm,
         ),
         ("REQ-password.2 must cite at least one GOAL.", Form),
         ("Each REQ must have exactly 02 requirements chapters.", Form),
