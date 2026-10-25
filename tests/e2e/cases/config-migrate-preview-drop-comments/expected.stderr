@@ -1,0 +1,31 @@
+grund.toml: version 1 → 2, preview, nothing written
+comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
+  grund.toml:14  above [scan] include
+mapped: grund.toml:1: grund_config_version → grund_config_version = 2
+mapped: grund.toml:4: [reference] strict → nothing, version 2 always means it
+mapped: grund.toml:7: [id] named_sections → nothing, version 2 always means it
+mapped: grund.toml:10: [[kinds]] kind → [schema.kinds.FS]
+mapped: grund.toml:11: [[kinds]] folder → [schema.kinds.FS] folders
+mapped: grund.toml:15: [scan] include → [schema.kinds.code] folders, src; docs is a place of [schema.kinds.FS] already
+written: [schema] id_format = "{kind}-{number}-{slug}": version 1's default, written out
+written: [schema] slug_pattern = "[a-z0-9][a-z0-9-]*": version 1's default, written out
+written: [schema.sources] languages = ["v1_markdown", "v1_c_family", "v1_go", "v1_python", "v1_ruby", "v1_lisp", "v1_sql", "v1_haddock", "v1_ldoc", "v1_plain", "v1_roxygen", "v1_shell"]: version 1's default, written out
+written: [schema.sources] declarations = "any-comment": version 1's default, written out
+written: [schema.sources] exclude = ["target/", "node_modules/", ".git/", "dist/", "build/", ".venv/"]: version 1's default, written out
+written: [schema.sources.definitions.v1_markdown] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.sources.definitions.v1_c_family] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.sources.definitions.v1_go] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.sources.definitions.v1_python] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.sources.definitions.v1_python] docstrings = "python": version 1's default, written out
+written: [schema.sources.definitions.v1_ruby] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.sources.definitions.v1_lisp] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.sources.definitions.v1_sql] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.sources.definitions.v1_haddock] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.sources.definitions.v1_ldoc] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.sources.definitions.v1_plain] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.sources.definitions.v1_roxygen] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.sources.definitions.v1_shell] comment_prefixes = ["//", "#", ";", "--", "*", "/*"]: version 1's default, written out
+written: [schema.notes.lines] may = 1: version 1's default, written out
+written: [presentation] rules = "root": version 1's default, written out
+compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
+note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then

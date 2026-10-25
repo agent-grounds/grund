@@ -6,3 +6,4 @@ refused: grund.toml:29: [scan] include names `e2e`, which does not exist, and ve
 comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
   grund.toml:28  above [scan] include: destinations are unavailable; retain the prose, repair the settings or candidate loading problem above and preview again before choosing its placement
 changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
+would not write: 2 refusals (follow the repairs above); 1 comment has no single key to follow (move it, or re-run with --drop-comments)

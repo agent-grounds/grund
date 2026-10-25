@@ -1,0 +1,29 @@
+# DF-config-migrate-refused-preview: a refused migration preview closes with its causes, and keeps its candidate behind --full
+
+## status: Accepted
+
+## 1. Context
+
+Issue #1002 shows a version-1 config whose only obstacle to version 2 is one comment with no single key to follow. Its preview exits `1` and prints 7,032 bytes over 196 lines: the 165-line candidate on stdout, twenty `written: … version 1's default, written out` lines, and advice about the next `grund init`. The two lines that say what blocks the write and how to clear it are 2 of 196, and a capture cut short can lose them. A refused `--write` on the same tree already prints about a kilobyte ([§DF-config-migrate-output.4](DF-config-migrate-output.md#4-refused-writes-close-with-their-causes-and-remedies)). That decision left previews alone on purpose, so the preview still pays the cost the write no longer does ([§GOAL-token-economy](../../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)).
+
+## 2. Decision
+
+A preview that refuses, whatever the cause, prints what a refused write prints, and closes with the same causes: no candidate on stdout, the complete report without the `written:` defaults and the next-init note, and a last line `would not write: <causes>` ([§FS-config-migrate.2.1](../../functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate), [§FS-config-migrate.2.2](../../functional-spec/FS-config-migrate.md#22-stderr-is-the-report)). The causes are one list, read by both `not written:` and `would not write:`, so the preview and the write cannot word the same refusal two ways.
+
+`--full` brings the old output back wherever there was a candidate to bring back: on a preview that only listed comments refuse, it prints the candidate and the complete report, `written:` lines and note included, and then the closing line ([§FS-config-migrate.1.3](../../functional-spec/FS-config-migrate.md#13-the-other-flags)). The `written:` lines describe the candidate, so they print only beside it ([§FS-config-migrate.3.3](../../functional-spec/FS-config-migrate.md#33-defaults-are-written-out)); a preview refused by a setting or at a gate has no candidate, and prints none of them with or without `--full`, as a refused write already does not. The remedy on a preview names `--drop-comments`, as the write's does: on a preview it shows the file `--write` would write without those comments.
+
+A preview that passes, `--drop-comments` included, is unchanged byte for byte. The engine's report, the exit codes, the refusals, the comment list, the gates and the config are all untouched; only the renderer's choice of what to print changes.
+
+## 3. Compatibility and alternatives
+
+The refused preview's bytes on both streams are covered user-visible promises under [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered), and this changes them: a script running `grund config migrate --to 2 > new.toml` on a tree that only comments refuse used to receive a candidate beside exit `1`, and now receives an empty file. It adds `--full` or `--drop-comments` to get it back. A script reading the `written:` lines or the note of a refused preview adds `--full`; on a preview that differs at a gate those lines are gone, as they already are on a refused write. A script reading the last stderr line of a refused preview now reads `would not write:`.
+
+No verdict moves: the same inputs refuse, with the same exit, the same causes, the same eligibility of a candidate and an untouched config. The verdict-correction route, section 5 of the backwards-compatibility requirement, therefore does not apply. Apply the argued pre-1.0 licence of [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise), as [§DF-config-migrate-output.3](DF-config-migrate-output.md#3-compatibility-and-alternatives) did: wherever the preview had a candidate, one flag brings the former output back, so no caller loses anything it cannot recover. The deprecation path of [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) was considered and rejected: it would keep about 7 KB on every refused preview for a release, which is the cost being removed. This argument applies before 1.0 and grants no general exemption.
+
+Two narrower `--full` rules were rejected. Restoring only the candidate would give the same candidate different notes under `--full` and under `--drop-comments`, and leave the old output with no way back. Restoring today's output on every preview would bring back `written:` lines with no candidate to point at on a preview that differs at a gate, which is what [§DF-config-migrate-output.4](DF-config-migrate-output.md#4-refused-writes-close-with-their-causes-and-remedies) removed from the write. Narrowing the change to previews refused only by comments was rejected too: the rule follows the same refusal that sets exit `1`, and the reason the write dropped those lines holds whatever the cause. The author approved this design on 2026-10-25.
+
+This is a record of its own rather than a section of [§DF-config-migrate-output](DF-config-migrate-output.md#df-config-migrate-output-successful-migration-writes-report-the-outcome-the-candidate-and-mapping-report-are-opt-in) because that record's release note shipped in 0.20.0, and a note already present at the last tag is not published again ([§FS-distribution.4.6.4](../../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)).
+
+## release-note: Release note
+
+- A refused `grund config migrate --to 2` preview no longer prints the candidate, the `written:` defaults or next-init advice, and ends with `would not write: <causes>`; its exit is unchanged. `--full` brings the candidate and complete report back when only listed comments refuse, and `--drop-comments` previews that candidate with exit `0`.

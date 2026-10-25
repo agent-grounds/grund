@@ -125,6 +125,12 @@ const ABSORBED_SCAN_SENTENCE: &str = ": [workspace] members swallows this projec
 /// clause and keeps the bytes that point fixes rather than the cap.
 const PROMOTED_LOAD_WARNING_SUFFIX: &str = "; this became an error in grund 0.19.0";
 
+/// A migration preview that only listed comments refuse prints its complete
+/// report under `--full` and still exits `1` (§FS-config-migrate.1.3). Its
+/// `written:` lines spell a whole default, never wrapped (§FS-config-migrate.2.2),
+/// so they keep the bytes the candidate fixes rather than the cap.
+const MIGRATE_DEFAULT_WRITTEN_SUFFIX: &str = ": version 1's default, written out";
+
 /// The judgement, isolated from the filesystem. A `--format json` case's
 /// stderr is not uniformly JSON (§FS-errors.5.2.2): a launch-time `error: …`
 /// line stays text and keeps the plain 180-byte cap, while a carried text
@@ -151,6 +157,7 @@ fn assert_stderr_is_concise(name: &str, json_case: bool, migration_case: bool, s
         if line.starts_with("warning: ")
             || (line.starts_with("error: ") && line.contains(ABSORBED_SCAN_SENTENCE))
             || (line.starts_with("error: ") && line.ends_with(PROMOTED_LOAD_WARNING_SUFFIX))
+            || (line.starts_with("written: ") && line.ends_with(MIGRATE_DEFAULT_WRITTEN_SUFFIX))
         {
             continue;
         } else if json_case && line.starts_with('{') {

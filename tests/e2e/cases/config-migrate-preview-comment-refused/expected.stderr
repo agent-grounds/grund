@@ -1,0 +1,11 @@
+grund.toml: version 1 → 2, preview, nothing written
+comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
+  grund.toml:14  above [scan] include
+mapped: grund.toml:1: grund_config_version → grund_config_version = 2
+mapped: grund.toml:4: [reference] strict → nothing, version 2 always means it
+mapped: grund.toml:7: [id] named_sections → nothing, version 2 always means it
+mapped: grund.toml:10: [[kinds]] kind → [schema.kinds.FS]
+mapped: grund.toml:11: [[kinds]] folder → [schema.kinds.FS] folders
+mapped: grund.toml:15: [scan] include → [schema.kinds.code] folders, src; docs is a place of [schema.kinds.FS] already
+compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
+would not write: 1 comment has no single key to follow (move it, or re-run with --drop-comments)

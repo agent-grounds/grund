@@ -10,6 +10,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[path = "config_migrate_output/outcomes.rs"]
 mod outcomes;
+#[path = "config_migrate_output/refused_previews.rs"]
+mod refused_previews;
 
 const V1: &str = "grund_config_version = 1
 project_name = \"demo\"
@@ -348,31 +350,6 @@ fn full_write_restores_candidate_and_complete_report_with_path_and_comments() {
         let mut after = before;
         after.insert("grund.toml".into(), preview.stdout);
         assert_eq!(snapshot(&fixture.0), after);
-    }
-}
-
-/// §FS-config-migrate.1.3: full is inert on successful and comment-refused
-/// previews, including PATH, --drop-comments and both path-base values.
-#[test]
-fn full_previews_preserve_both_streams_and_tree() {
-    for base in ["project", "invocation"] {
-        for drop in [false, true] {
-            let fixture = Fixture::new(&format!("{V1}\n# standalone\n"));
-            let before = snapshot(&fixture.0);
-            let mut flags = vec!["src", "--path-base", base];
-            if drop {
-                flags.push("--drop-comments");
-            }
-            let preview = fixture.migrate(&flags);
-            status(&preview, if drop { 0 } else { 1 });
-            flags.push("--full");
-            let full = fixture.migrate(&flags);
-            status(&full, if drop { 0 } else { 1 });
-            assert_eq!(full.stdout, preview.stdout);
-            assert_eq!(full.stderr, preview.stderr);
-            assert!(!text(&full.stderr).contains(REMINDER));
-            assert_eq!(snapshot(&fixture.0), before);
-        }
     }
 }
 
