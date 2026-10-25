@@ -67,10 +67,23 @@ appears for neutral prose, since migration does not judge what comments mean.
 Check these comments in the candidate, in preview or after `--write`;
 `--drop-comments` retains them and does not silence their warnings.
 
-`--write` refuses while any comment is listed. Read them; move what still
-matters into the version-1 file next to a key that maps one-to-one, or accept
-that they go. Only then add `--drop-comments`, which drops exactly the comments
-the preview listed
+Each listed entry explains why the comment cannot follow one key, names the
+actual destinations when known, and tells you how to preserve its prose
+([§FS-config-migrate.2.2](../functional-spec/FS-config-migrate.md#22-stderr-is-the-report)).
+For example, an `include` of `requirements.md`, `docs` and `src` names the
+`[schema.kinds.code]` folders for `docs` and `src`, and the existing
+`requirements.md` place in `[schema.kinds.FS]`. Moving the comment above
+`[scan]` still leaves it on a split attachment.
+
+`--write` refuses while any comment is listed without drop consent. To keep
+one, save its prose, run `--write --drop-comments` to authorize dropping exactly
+the listed comments, then re-add it at the named destination after a successful
+write. For the example above, place it above `[schema.kinds.code]`. A dropped
+setting, standalone comment or omitted destination needs a manual placement;
+a trailing collision names its shared destination. When destinations are
+unavailable, repair the reported settings or candidate loading problem and
+preview again first. Drop consent clears only the comment refusal, so every
+other refusal and both gates must still pass
 ([§FS-config-migrate.4.4](../functional-spec/FS-config-migrate.md#44-listed-comments-and---drop-comments)).
 
 ## 4. The two gates
@@ -112,7 +125,7 @@ ends with the blocking causes and their remedies. For example, with only one
 listed comment left, the final line is:
 
 ```text
-not written: 1 comment has no single key to follow (move it, or re-run with --drop-comments); grund.toml is unchanged
+not written: 1 comment has no single key to follow (follow the comment guidance above); grund.toml is unchanged
 ```
 
 Setting or file refusals direct you to their repairs above; a differing gate

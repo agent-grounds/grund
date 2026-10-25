@@ -101,7 +101,8 @@ pub struct MigrateRefusal {
 pub struct ListedComment {
     pub first: usize,
     pub last: usize,
-    /// `above <v1 key>`, `inside <v1 key>` or `standing alone`.
+    /// Attachment (`above <v1 key>`, `inside <v1 key>` or `standing alone`)
+    /// followed by its local recovery guidance (§FS-config-migrate.2.2).
     pub place: String,
 }
 

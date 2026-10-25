@@ -165,7 +165,6 @@ fn assert_guidance(input: &str, place: &str, reason: &str, destinations: &[&str]
 }
 
 #[test]
-#[ignore = "red until #1004 listed comments explain destinations and preservation; implement removes this"]
 fn include_comment_names_mixed_destinations_and_preservation() {
     assert_guidance(
         &above("include ="),
@@ -183,7 +182,6 @@ fn include_comment_names_mixed_destinations_and_preservation() {
 }
 
 #[test]
-#[ignore = "red until #1004 split headers explain actual destinations; implement removes this"]
 fn scan_header_comment_names_actual_destinations_and_preservation() {
     assert_guidance(
         &above("[scan]"),
@@ -204,7 +202,6 @@ fn scan_header_comment_names_actual_destinations_and_preservation() {
 }
 
 #[test]
-#[ignore = "red until #1004 split source keys explain destinations; implement removes this"]
 fn source_key_comments_name_their_actual_definitions() {
     let mut failures = Vec::new();
     for (key, targets) in [
@@ -238,7 +235,6 @@ fn source_key_comments_name_their_actual_definitions() {
 }
 
 #[test]
-#[ignore = "red until #1004 reference and id headers explain destinations; implement removes this"]
 fn other_split_headers_name_only_actual_destinations() {
     let mut failures = Vec::new();
     for (header, targets, absent) in [
@@ -275,7 +271,6 @@ fn other_split_headers_name_only_actual_destinations() {
 }
 
 #[test]
-#[ignore = "red until #1004 merged keys explain their shared destination; implement removes this"]
 fn merged_note_keys_name_the_shared_destination() {
     let mut failures = Vec::new();
     for key in ["inline_note_suggested_lines", "warn_on_suggested"] {
@@ -290,7 +285,6 @@ fn merged_note_keys_name_the_shared_destination() {
 }
 
 #[test]
-#[ignore = "red until #1004 no-destination comments explain manual preservation; implement removes this"]
 fn no_destination_comments_get_truthful_manual_guidance() {
     let cases = [
         (format!("{V1}\n{COMMENT}\n\n"), "standing alone", "attach"),
@@ -338,7 +332,6 @@ fn no_destination_comments_get_truthful_manual_guidance() {
 }
 
 #[test]
-#[ignore = "red until #1004 unavailable destinations direct repair before migration; implement removes this"]
 fn unavailable_candidate_does_not_invent_a_destination() {
     let input = above("include =").replace("\"docs\", \"src\"", "\"missing\"");
     let fixture = Fixture::new(&input);
@@ -362,7 +355,6 @@ fn unavailable_candidate_does_not_invent_a_destination() {
 }
 
 #[test]
-#[ignore = "red until #1004 refusal footer points to comment guidance; implement removes this"]
 fn singular_and_plural_refusals_point_to_guidance() {
     let mut failures = Vec::new();
     for plural in [false, true] {

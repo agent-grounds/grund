@@ -4,6 +4,7 @@
 //! and every other comment is listed with its lines. The lines come from the v1
 //! reader's own line pass (§FS-config-migrate.4.3).
 
+use super::comment_guidance::Guidance;
 use super::keys::Keys;
 use super::record::{ListedComment, MigrateNotice, MigrateReport};
 use crate::config::v1::{LineKind, LineRecord};
@@ -13,6 +14,17 @@ use crate::config::v1::{LineKind, LineRecord};
 enum Target {
     Header(String),
     Key(String, String),
+}
+
+impl Target {
+    /// §FS-config-migrate.2.2: name the actual omitted or shared carrier.
+    fn description(&self) -> String {
+        match self {
+            Self::Header(table) => format!("[{table}]"),
+            Self::Key(table, key) if table.is_empty() => key.clone(),
+            Self::Key(table, key) => format!("[{table}] {key}"),
+        }
+    }
 }
 
 /// §FS-config-migrate.4.1: the v2 header or key a v1 key maps one-to-one to,
@@ -111,10 +123,12 @@ fn translated_comment(record: &LineRecord, keys: &Keys) -> Option<MigrateNotice>
 
 /// §FS-config-migrate.4: place `lines`' comments into `body`, the rendered candidate.
 /// Report only successful carries onto translated values (§FS-config-migrate.4.1.1).
+/// Listed entries retain local recovery guidance (§FS-config-migrate.2.2).
 pub(super) fn carry(
     body: &str,
     lines: &[LineRecord],
     keys: &Keys,
+    guidance: &Guidance<'_>,
     report: &mut MigrateReport,
 ) -> String {
     let index = TableIndex::of(body);
@@ -142,9 +156,11 @@ pub(super) fn carry(
                 _ => None,
             };
             if let Some(comment) = comment {
+                let target = target_of(record);
+                let at = target.as_ref().and_then(|t| index.find(t));
                 // Two v1 lines can land on one v2 line, which keeps one trailing
                 // comment: a later one is listed, never overwritten (§FS-config-migrate.4.4).
-                match target_of(record).and_then(|t| index.find(&t)) {
+                match at {
                     Some(at) if trailing[at].is_none() => {
                         trailing[at] = Some(comment);
                         commented[i] = true;
@@ -152,7 +168,15 @@ pub(super) fn carry(
                     _ => listed.push(ListedComment {
                         first: record.line,
                         last: record.line,
-                        place: format!("inside {}", v1_key(record)),
+                        place: format!(
+                            "inside {}: {}",
+                            v1_key(record),
+                            guidance.attached(
+                                record,
+                                target.map(|t| t.description()),
+                                at.is_some()
+                            )
+                        ),
                     }),
                 }
             }
@@ -177,11 +201,12 @@ pub(super) fn carry(
             listed.push(ListedComment {
                 first,
                 last,
-                place: "standing alone".into(),
+                place: format!("standing alone: {}", guidance.standalone()),
             });
             continue;
         };
-        match target_of(next).and_then(|t| index.find(&t)) {
+        let target = target_of(next);
+        match target.as_ref().and_then(|t| index.find(t)) {
             Some(at) => {
                 above[at].extend(run);
                 commented[i] = true;
@@ -189,7 +214,11 @@ pub(super) fn carry(
             None => listed.push(ListedComment {
                 first,
                 last,
-                place: format!("above {}", v1_key(next)),
+                place: format!(
+                    "above {}: {}",
+                    v1_key(next),
+                    guidance.attached(next, target.map(|t| t.description()), false)
+                ),
             }),
         }
     }

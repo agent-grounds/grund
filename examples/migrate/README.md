@@ -22,18 +22,18 @@ refused: grund.toml:13: [id] named_sections = false turns named sections off, an
 refused: grund.toml:29: [scan] include names `e2e`, which does not exist, and version 2 must know whether it is a folder or a file
   repair: create e2e, or remove it from include; grund check under version 1 shows the effect
 comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
-  grund.toml:28  above [scan] include
+  grund.toml:28  above [scan] include: destinations are unavailable; retain the prose, repair the settings or candidate loading problem above and preview again before choosing its placement
 changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
 ```
 
 Version 2 always reads named sections, and it puts a folder and a file under different keys, so it cannot carry either setting with the same meaning. Migration does not guess. Each repair is a version-1 edit: make it, run `grund check` to see its effect while the file is still version 1, and commit it. That commit is the change of meaning, made and reviewed by you.
 
-The comment above `include` is listed because `include` splits into several version-2 keys, so there is no one key for the comment to follow ([§FS-config-migrate.4.3](../../docs/functional-spec/FS-config-migrate.md#43-everything-else-is-listed)). The header block and the comment above the `FS` row are not listed: they are carried.
+The comment above `include` is listed because `include` splits into several version-2 keys, so there is no one key for the comment to follow ([§FS-config-migrate.4.3](../../docs/functional-spec/FS-config-migrate.md#43-everything-else-is-listed)). Here its destinations are unavailable until the missing path is repaired; save the prose and preview again after the repairs. The header block and the comment above the `FS` row are not listed: they are carried.
 
 Adding `--write` here still exits `1`, prints no stdout, and leaves the config unchanged. Its report keeps the repairs and comment listing above and ends with:
 
 ```text
-not written: 2 refusals (follow the repairs above); 1 comment has no single key to follow (move it, or re-run with --drop-comments); grund.toml is unchanged
+not written: 2 refusals (follow the repairs above); 1 comment has no single key to follow (follow the comment guidance above); grund.toml is unchanged
 ```
 
 The closing line names every blocking cause, so `--drop-comments` alone cannot clear the two setting refusals. A refused write prints no `written:` defaults or next-init Project map note, even after repairing the settings so only the comment blocks it. `--full` keeps the same refused-write report ([§FS-config-migrate.2.2](../../docs/functional-spec/FS-config-migrate.md#22-stderr-is-the-report)). The CLI regression also checks this run against [`migrate-1-refused/expected.write.stderr`](migrate-1-refused/expected.write.stderr); the preview expectation stays unchanged.
@@ -54,7 +54,7 @@ Stderr names the comment that would be lost, warns about the carried comment on 
 ```text
 grund.toml: version 1 → 2, preview, nothing written
 comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
-  grund.toml:28  above [scan] include
+  grund.toml:28  above [scan] include: setting splits or merges into version-2 settings: [schema.kinds.code] folders, docs and src; requirements.md is a place of [schema.kinds.FS] already; retain the prose, authorize the listed drops with --write --drop-comments, then re-add it at one of these named destinations after a successful write (subject to all other refusals and gates)
 changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
 …
 compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
@@ -65,9 +65,17 @@ The `compared:` line is the two checks every write must pass: the records both f
 
 The exclusion comment is retained: the candidate contains `exclude = ["target/", "node_modules/", ".git/", "dist/", "build/", ".venv/"] # directory names`. Version 1's directory names became glob patterns. Check that the comment still explains the setting as intended; the warning identifies the translation without judging its prose ([§FS-config-migrate.4.1.1](../../docs/functional-spec/FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes)). It appears in preview and write, including with `--drop-comments`, which drops only the listed `include` comment.
 
+The listed entry itself names the destinations: `docs` and `src` become
+`[schema.kinds.code]` folders, while `requirements.md` is already a place of
+`[schema.kinds.FS]`. Moving the comment one line up above `[scan]` still leaves
+it on a split header. To preserve it, save `# What the walk reads besides the
+homes.`, authorize the listed drops in step 3, then re-add the saved prose above
+`[schema.kinds.code]` after the write succeeds
+([§FS-config-migrate.2.2](../../docs/functional-spec/FS-config-migrate.md#22-stderr-is-the-report)).
+
 ## Step 3: write, then refresh managed instructions
 
-`migrate-3-write/repo/` starts with the repaired version-1 repository. Read the listed comment, then write:
+`migrate-3-write/repo/` starts with the repaired version-1 repository. Save the listed comment's prose somewhere outside the config, then write:
 
 ```bash
 grund config migrate --to 2 --write --drop-comments examples/migrate/migrate-3-write/repo
@@ -89,6 +97,29 @@ note: existing AGENTS.md managed instructions may still describe version 1; run 
 ```
 
 Run `grund init` in the migrated project to refresh managed instructions that may still describe version 1 ([§FS-config-migrate.6.5](../../docs/functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)). The reminder appears even though this fixture has no `AGENTS.md`; migration does not create one. `migrate-3-write/expected.repo/` records the complete final tree: only `grund.toml` changes, and it equals the candidate in `migrate-2-repaired/expected.stdout`. The harness uses a disposable copy for the write and checks that tree; the follow-up `grund init` is a separate action.
+
+To try the optional manual recovery after the successful write above, re-add
+the saved comment with this command from the repository root:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+
+config = Path("examples/migrate/migrate-3-write/repo/grund.toml")
+text = config.read_text()
+assert "grund_config_version = 2" in text
+config.write_text(text.replace(
+    "[schema.kinds.code]",
+    "# What the walk reads besides the homes.\n[schema.kinds.code]",
+    1,
+))
+PY
+```
+
+This follow-up edit preserves the comment at the named destination. It is
+separate from the migration's recorded final tree. Drop consent still requires
+every setting refusal to be repaired and both comparison gates to pass
+([§FS-config-migrate.4.4](../../docs/functional-spec/FS-config-migrate.md#44-listed-comments-and---drop-comments)).
 
 ## Step 4: request complete output when writing
 

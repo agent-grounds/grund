@@ -21,13 +21,22 @@ pub(super) fn joined(items: &[String]) -> String {
     }
 }
 
-fn definitions(v2: &Project) -> String {
+/// §FS-config-migrate.2.2: both reports name the same source definitions;
+/// comment guidance spells their full table addresses for manual placement.
+fn definitions(v2: &Project, full_addresses: bool) -> String {
     let names: Vec<String> = v2
         .schema
         .sources
         .model
         .iter()
-        .flat_map(|model| model.definitions.iter().map(|def| def.name.clone()))
+        .flat_map(|model| model.definitions.iter())
+        .map(|def| {
+            if full_addresses {
+                format!("[schema.sources.definitions.{}]", def.name)
+            } else {
+                def.name.clone()
+            }
+        })
         .collect();
     let word = if names.len() == 1 {
         "definition"
@@ -65,7 +74,7 @@ fn include(plan: &Include) -> String {
 
 /// `[scan] docstring_python`'s spelling: the definition `.py` maps to, which
 /// reads docstrings only when the key was on, or nothing when `.py` is not read.
-fn python_docstrings(v2: &Project) -> String {
+fn python_docstrings(v2: &Project, full_addresses: bool) -> String {
     let Some(model) = &v2.schema.sources.model else {
         return ALWAYS.into();
     };
@@ -75,14 +84,30 @@ fn python_docstrings(v2: &Project) -> String {
         .find(|(suffix, _)| suffix == "py")
         .and_then(|(_, name)| model.definitions.iter().find(|def| def.name == *name));
     match definition {
-        Some(def) if def.docstrings => format!("docstrings of definition {}", def.name),
-        Some(def) => format!("docstrings of definition {} (off)", def.name),
+        Some(def) => {
+            let name = if full_addresses {
+                format!("[schema.sources.definitions.{}]", def.name)
+            } else {
+                def.name.clone()
+            };
+            let state = if def.docstrings { "" } else { " (off)" };
+            format!("docstrings of definition {name}{state}")
+        }
+        None if full_addresses => ALWAYS.into(),
         None => "nothing, [scan] extensions does not read `py`".into(),
     }
 }
 
 /// The v2 spelling of one authored v1 key (§FS-config-migrate.mapping).
-fn spelling(section: &str, key: &str, row: &str, v2: &Project, plan: &Include) -> String {
+/// §FS-config-migrate.2.2: shared mapping facts for mapped lines and comments.
+fn spelling(
+    section: &str,
+    key: &str,
+    row: &str,
+    v2: &Project,
+    plan: &Include,
+    full_addresses: bool,
+) -> String {
     let notes = &v2.schema.notes;
     let guidance = if notes.warn_on_suggested {
         "warn"
@@ -139,10 +164,12 @@ fn spelling(section: &str, key: &str, row: &str, v2: &Project, plan: &Include) -
         ("scan", "include") => include(plan),
         ("scan", "extensions") => format!(
             "[schema.sources] languages and extensions, {}",
-            definitions(v2)
+            definitions(v2, full_addresses)
         ),
-        ("scan", "comment_prefixes") => format!("comment_prefixes of {}", definitions(v2)),
-        ("scan", "docstring_python") => python_docstrings(v2),
+        ("scan", "comment_prefixes") => {
+            format!("comment_prefixes of {}", definitions(v2, full_addresses))
+        }
+        ("scan", "docstring_python") => python_docstrings(v2, full_addresses),
         ("scan", "exclude" | "respect_gitignore") => format!("[schema.sources] {key}"),
         ("fmt.cross_refs", "anchor_format") => "[presentation.fmt] anchors".into(),
         ("fmt.cross_refs", "enabled") => "[presentation.fmt] links".into(),
@@ -159,6 +186,21 @@ pub(super) fn map(
     keys: &Keys,
     v2: &Project,
     plan: &Include,
+) -> (Vec<MappedKey>, Vec<MigrateNotice>) {
+    map_with_addresses(keys, v2, plan, false)
+}
+
+/// §FS-config-migrate.2.2: reuse the key map with fully addressed definitions.
+pub(super) fn comment_map(keys: &Keys, v2: &Project, plan: &Include) -> Vec<MappedKey> {
+    map_with_addresses(keys, v2, plan, true).0
+}
+
+/// §FS-config-migrate.2.2: one authored-key mapping supplies both presentations.
+fn map_with_addresses(
+    keys: &Keys,
+    v2: &Project,
+    plan: &Include,
+    full_addresses: bool,
 ) -> (Vec<MappedKey>, Vec<MigrateNotice>) {
     let mut mapped = Vec::new();
     let mut notices = Vec::new();
@@ -198,7 +240,7 @@ pub(super) fn map(
         mapped.push(MappedKey {
             line,
             key: shown,
-            spelling: spelling(section, key, row, v2, plan),
+            spelling: spelling(section, key, row, v2, plan, full_addresses),
         });
     }
     (mapped, notices)
