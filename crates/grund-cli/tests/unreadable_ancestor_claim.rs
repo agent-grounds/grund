@@ -139,7 +139,8 @@ fn a_readable_ancestor_answers_the_claim_both_ways() {
 }
 
 /// The two spellings of a list the config reader loads and a one-line read does
-/// not: written across lines, and ending in the trailing comma TOML allows.
+/// not: written across lines, and ending in the trailing comma TOML allows
+/// (§FS-config-v2.reader.5).
 const LOADABLE: [&str; 2] = ["[\n  \"{}\",\n]", "[\"{}\",]"];
 
 /// `members` naming `entry` in each [`LOADABLE`] spelling.
