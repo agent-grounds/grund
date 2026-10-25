@@ -4,7 +4,7 @@
 //! `The NAME[.NAME…] chapter of each KIND`, and a selector's bare `KIND` is a
 //! rule's `Each KIND`.
 
-use super::{Recovered, as_if_enabled, enabled, recover};
+use super::{Recovered, as_if_enabled, enabled, recover, recover_subject};
 use crate::config::{Config, KindTable};
 use crate::rules::sentence::RuleVocabulary;
 use crate::rules::sentence::subjects::parse_subject;
@@ -104,6 +104,53 @@ fn each_path_recovery_keeps_the_valid_prefix_on_both_surfaces() {
             Some((canonical.into(), canonical.into())),
             "{subject}"
         );
+    }
+}
+
+/// §FS-rule-refusals.sentences.rewrite.recovered: removing `Each` also keeps a
+/// literal and its valid named prefix when a later chapter component is refused.
+#[test]
+fn each_literal_path_recovery_keeps_the_literal_and_valid_prefix() {
+    for (separator, format, literal) in [
+        (".", "{kind}-{slug}", "FS-store"),
+        ("#", "{kind}_{slug}", "FS_store"),
+    ] {
+        let mut config = Config::default_for(PathBuf::from("recovery-vocabulary"));
+        config.id_format = format.into();
+        config.section_separator = separator.into();
+        config.slug_pattern = "[a-z][a-z0-9-]*".into();
+        config.named_sections = false;
+        config
+            .rebuild_grammar()
+            .expect("configured literal grammar");
+        let mut off = named_off(&["FS"]);
+        off.id_grammars = vec![config.grammar];
+        off.section_separators = vec![separator.into()];
+        for (path, prefix) in [
+            ("requirements.1", "requirements"),
+            ("requirements.*", "requirements"),
+            ("requirements.", "requirements"),
+            (".requirements", ""),
+            ("*", ""),
+        ] {
+            let subject = format!("Each {literal}{separator}{path}");
+            let canonical = if prefix.is_empty() {
+                literal.to_string()
+            } else {
+                format!("{literal}{separator}{prefix}")
+            };
+            assert_eq!(
+                spelled(&subject, &off),
+                Some((canonical.clone(), canonical)),
+                "{subject}"
+            );
+            let refusal = parse_subject(&subject, &off).expect_err("Each literal is refused");
+            assert_eq!(
+                recover_subject(&refusal, &off),
+                Err(false),
+                "{subject}: disabled named sections must not produce a broader offer"
+            );
+        }
     }
 }
 
