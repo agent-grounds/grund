@@ -95,6 +95,8 @@ pub(super) fn assign_unmarked_heading_owners(
             heading_level: candidate.heading_level,
             title: candidate.title,
             owner: owner.clone(),
+            // §FS-declarations.checks.unmarked-heading.2.2: retain the concrete owner site.
+            owner_line: body_start,
             suggested_path,
             relative_hint,
         });

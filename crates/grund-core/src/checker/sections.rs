@@ -23,7 +23,7 @@ use crate::config::{Frame, Schema};
 use crate::grammar::render_catalog_id;
 use crate::model::{
     Catalog, CheckReport, Code, Diagnostic, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
-    Switch, named_section_path, paired_declarations,
+    Switch, UnmarkedHeading, named_section_path, paired_declarations,
 };
 use crate::resolver::WorkspaceProject;
 use crate::scanner::section_path_is_numeric;
@@ -88,13 +88,15 @@ pub(super) fn check_section_headings(
                 hint.heading
             )
         });
+        // §FS-declarations.checks.unmarked-heading.2.2: append after the whole existing message.
+        let field = field_heading_hint(heading, findings, schema, frame.version).unwrap_or_default();
         Diagnostic {
             code: Code::UNMARKED_HEADING,
             path: Some(heading.file.clone()),
             line: Some(heading.line),
             column: None,
             message: format!(
-                "unmarked heading inside {rendered_owner}; number it ({suggested_heading}) as {rendered_owner}{}{path}, declare an ID, or use a bold label{LANDED_CLAUSE}{relative}",
+                "unmarked heading inside {rendered_owner}; number it ({suggested_heading}) as {rendered_owner}{}{path}, declare an ID, or use a bold label{LANDED_CLAUSE}{relative}{field}",
                 schema.ids.section_separator,
                 path = heading.suggested_path,
             ),
@@ -270,6 +272,41 @@ fn section_outside_declaration_diagnostic(
         sites: Vec::new(),
         authority: Vec::new(),
     }
+}
+
+/// §FS-declarations.checks.unmarked-heading.2.2: exact direct field-title/name
+/// matches in v2 suggest the named field form, in configuration header order.
+/// The scanner's concrete owner site supplies the depth; another declaration
+/// of the same ID must not change the guidance.
+fn field_heading_hint(
+    heading: &UnmarkedHeading,
+    findings: &Catalog,
+    schema: &Schema,
+    version: u32,
+) -> Option<String> {
+    if version != 2 {
+        return None;
+    }
+    let declaration = findings
+        .declarations
+        .get(&heading.owner)?
+        .iter()
+        .find(|decl| decl.file == heading.file && decl.line == heading.owner_line)?;
+    if heading.heading_level != declaration.heading_level + 1 {
+        return None;
+    }
+    let (kind_name, kind) = schema
+        .kinds()
+        .find(|(name, _)| *name == declaration.id.kind)?;
+    let field = kind.fields.iter().find(|field| {
+        field.name == heading.title || field.title.as_deref() == Some(heading.title.as_str())
+    })?;
+    Some(format!(
+        "; kind {kind_name} declares the field {name}, written {} {name}: {}",
+        heading_marks(heading.heading_level),
+        field.title.as_deref().unwrap_or(&heading.title),
+        name = field.name,
+    ))
 }
 
 /// `<ID>` for the declaration, `<ID><sep><path>` for a section of it.
