@@ -96,6 +96,10 @@ A setting has one form. Where the format spells a constraint as a table whose ke
 
 The reader keeps the line every value was written at, so the one validation pass after reading anchors an error where the value was written ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). It keeps the authored order of the explicit headers too: rows are listed, rendered and reported in the order the file writes them, as `[[kinds]]` rows are in v1.
 
+### reader.5: An array may span lines
+
+An array value may be written across lines. It opens on its key's line, and every line after it, with its `#` comment taken off, belongs to it until its `[` closes outside a string, so no line inside it is read as a header or a key. It is one value, read and located at its key's line ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)), and it may end in the trailing comma TOML allows before its `]`. One still open at the end of the file is refused at its key's line as `unclosed array`.
+
 ## defaults: The v2 epoch
 
 ### defaults.1: What v2 fixes

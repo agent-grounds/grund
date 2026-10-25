@@ -220,7 +220,7 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
         let Some((key, value)) = line.split_once('=') else {
             return reader.fail(line_no, "expected `key = value`".to_string());
         };
-        // §FS-config-v2.reader.4: an array written across lines is one value, read
+        // §FS-config-v2.reader.5: an array written across lines is one value, read
         // at the line of its key.
         let Some(value) = joined_value(value, &mut lines) else {
             return reader.fail(line_no, "unclosed array".to_string());
@@ -231,7 +231,7 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
 }
 
 /// The value a `key = value` line starts, read as the reader reads it
-/// (§FS-config-v2.reader.4): an array written across lines takes the lines it
+/// (§FS-config-v2.reader.5): an array written across lines takes the lines it
 /// spans from `lines`, joined into one, and loses the trailing comma TOML allows
 /// before its `]`. `None` when the array is still open at the end of the text.
 /// The ancestor climb reads `[workspace] members` through this too, so a value the

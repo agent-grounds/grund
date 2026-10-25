@@ -880,8 +880,8 @@ a projection climbs only to learn that it is mounted and under which alias ([§F
 A config whose `members` or `optional_members` text cannot be obtained at all —
 the file cannot be read, or either value is not a list — leaves the claim
 undecidable in both directions. Each value is read as its config's own version reads it. A version-2
-value is read as that reader reads an array ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)): written across lines, or ending in
-the trailing comma TOML allows, it is a list. A version-1 value is read on its key's line, as the
+value is read as that reader reads an array ([§FS-config-v2.reader.5](FS-config-v2.md#reader5-an-array-may-span-lines)), so a list that config loads is a
+list here. A version-1 value is read on its key's line, as the
 version-1 reader reads every value ([§FS-config.3](FS-config.md#3-keys-version-1)), so one written across lines or with a trailing comma
 is not a list. A `members` or `optional_members` array still open at the end of a version-2 file
 is not a list either, while another key's array there is passed over whole, so no line inside it is
