@@ -28,7 +28,7 @@ use super::optional_members::expand_optional_members;
 use super::scope::{config_location_error, workspace_members_error};
 use crate::config::{
     AbsentOptionalNamespace, Config, ConfigLocation, Invocation, Selection, config_at,
-    config_file_in, parse_string_list, strip_comment,
+    config_file_in, joined_value, parse_string_list, strip_comment,
 };
 use crate::model::{Diagnostic, OperationDiagnostic, is_hidden, sort_path_key};
 
@@ -304,6 +304,13 @@ fn member_claims(root: &Path, entries: &[String]) -> Vec<MemberClaim> {
 /// collapsed. `Err` is the residue where even this read cannot answer — the file
 /// cannot be read, or the value is not a list — and carries the reason the
 /// warning that says so has to name.
+///
+/// A value is read as the config reader reads an array, through its own
+/// `joined_value` (§FS-workspace.6.1.7.5): one written across lines, or ending in
+/// the trailing comma TOML allows, is the list the config loads, and an array of
+/// any key still open at the end of the file leaves no key after its `[` to read,
+/// so it is residue too. Read one line at a time, such a list was "not a list",
+/// and a workspace written that way silenced every unlisted block below it.
 pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>, String> {
     // §FS-check.6.1.1: cover this effective input before its shared read.
     let text = Sources::on_disk()
@@ -312,7 +319,8 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
     let mut in_workspace = false;
     let mut entries = Vec::new();
     let mut optional = Vec::new();
-    for (idx, raw_line) in text.lines().enumerate() {
+    let mut lines = text.lines().enumerate();
+    while let Some((idx, raw_line)) = lines.next() {
         let line = strip_comment(raw_line).trim();
         if line.is_empty() {
             continue;
@@ -328,19 +336,24 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
         let Some((key, value)) = line.split_once('=') else {
             continue;
         };
-        if !in_workspace {
-            continue;
-        }
+        let key = key.trim();
+        // Every key's array is joined, so no line inside one reads as a header or a
+        // key; one still open at the end leaves no key after its `[` to read.
+        let value = joined_value(value, &mut lines);
         // Last assignment wins, exactly as it does in a full parse. Each key names
         // itself in the residue, because the sentence that reports one is what tells
         // the reader which line to open (§FS-check.3.29).
-        let (slot, name) = match key.trim() {
-            "members" => (&mut entries, "members"),
-            "optional_members" => (&mut optional, "optional_members"),
+        let (slot, name) = match key {
+            "members" if in_workspace => (&mut entries, "members"),
+            "optional_members" if in_workspace => (&mut optional, "optional_members"),
+            _ if value.is_none() => {
+                return Err(format!("`{key}` opens an array that never closes"));
+            }
             _ => continue,
         };
-        *slot = parse_string_list(config_path, idx + 1, value.trim())
-            .map_err(|_| format!("`{name}` is not a list of strings"))?;
+        *slot = value
+            .and_then(|value| parse_string_list(config_path, idx + 1, &value).ok())
+            .ok_or_else(|| format!("`{name}` is not a list of strings"))?;
     }
     entries.extend(optional);
     Ok(entries)

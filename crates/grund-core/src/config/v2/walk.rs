@@ -222,17 +222,31 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
         };
         // §FS-config-v2.reader.4: an array written across lines is one value, read
         // at the line of its key.
-        let mut value = value.trim().to_string();
-        while value.starts_with('[') && open_brackets(&value) > 0 {
-            let Some((_, next)) = lines.next() else {
-                return reader.fail(line_no, "unclosed array".to_string());
-            };
-            value.push(' ');
-            value.push_str(strip_comment(next).trim());
-        }
-        reader.entry(key.trim(), &array_value(&value), line_no)?;
+        let Some(value) = joined_value(value, &mut lines) else {
+            return reader.fail(line_no, "unclosed array".to_string());
+        };
+        reader.entry(key.trim(), &value, line_no)?;
     }
     reader.close()
+}
+
+/// The value a `key = value` line starts, read as the reader reads it
+/// (§FS-config-v2.reader.4): an array written across lines takes the lines it
+/// spans from `lines`, joined into one, and loses the trailing comma TOML allows
+/// before its `]`. `None` when the array is still open at the end of the text.
+/// The ancestor climb reads `[workspace] members` through this too, so a value the
+/// config loads is never one the climb cannot read (§FS-workspace.6.1.7.5).
+pub(crate) fn joined_value<'a>(
+    value: &str,
+    lines: &mut impl Iterator<Item = (usize, &'a str)>,
+) -> Option<String> {
+    let mut value = value.trim().to_string();
+    while value.starts_with('[') && open_brackets(&value) > 0 {
+        let (_, next) = lines.next()?;
+        value.push(' ');
+        value.push_str(strip_comment(next).trim());
+    }
+    Some(array_value(&value))
 }
 
 /// How many `[` of `value` are still open, outside its strings.
