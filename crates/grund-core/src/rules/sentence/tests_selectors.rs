@@ -90,7 +90,6 @@ fn the_typed_spelling_is_kept_and_falls_back_only_where_nothing_survives() {
             "The requirements.1 chapter of each FS",
             "The requirements chapter of each FS",
         ),
-        ("Each chapter of each FS", "Each FS"),
         // An ID whose declaration is not a valid ID becomes `KIND[.NAME…]`.
         ("FS-*.requirements", "FS.requirements"),
         ("FS-Login.1", "FS"),
@@ -104,6 +103,7 @@ fn the_typed_spelling_is_kept_and_falls_back_only_where_nothing_survives() {
             "{selector}"
         );
     }
+    assert_eq!(suggestion("Each chapter of each FS"), None);
 }
 
 #[test]

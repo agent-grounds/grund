@@ -86,14 +86,56 @@ pub(super) fn recover_subject(
     }
     // §FS-rule-refusals.sentences.rewrite.recovered: a chapter left in the head is scope,
     // not extra text to discard after recognizing the kind.
-    if head.contains(char::is_whitespace)
-        || (refusal.spelling == Spelling::Each
-            && vocabulary.section_separators.iter().any(|separator| {
-                head.strip_prefix(kind)
-                    .is_some_and(|tail| tail.starts_with(separator.as_str()))
-            }))
-    {
+    if head.contains(char::is_whitespace) {
         return reordered_scope(refusal, kind, vocabulary).ok_or(false);
+    }
+    if refusal.spelling == Spelling::Each {
+        // §FS-rule-refusals.sentences.rewrite.recovered: removing the refused `Each`
+        // must keep a valid literal's identity, including its configured chapter separator.
+        let literal = match parse_subject(head, vocabulary) {
+            Ok(RuleSubject::ExactDeclaration(declaration)) => {
+                Some((declaration, String::new(), String::new()))
+            }
+            Ok(RuleSubject::ExactChapter {
+                declaration,
+                path,
+                separator,
+            }) => Some((declaration, path, separator)),
+            Err(own)
+                if own.fault == SubjectFault::NamedSectionsOff
+                    && !vocabulary.named_sections_for(kind) =>
+            {
+                return Err(false);
+            }
+            _ => None,
+        };
+        if let Some((declaration, names, separator)) = literal {
+            return Ok(Recovered {
+                spelling: Spelling::Literal,
+                kind: kind.into(),
+                declaration: Some(declaration.to_string()),
+                names,
+                separator,
+            });
+        }
+        // §FS-rule-refusals.sentences.rewrite.recovered: a refused component keeps its
+        // valid prefix, even when `Each` left the path inside the head.
+        if let Some(path) = vocabulary
+            .section_separators
+            .iter()
+            .find_map(|separator| head.strip_prefix(kind)?.strip_prefix(separator.as_str()))
+        {
+            if !vocabulary.named_sections_for(kind) {
+                return Err(false);
+            }
+            return Ok(Recovered {
+                spelling: Spelling::ChapterOfEach,
+                kind: kind.into(),
+                declaration: None,
+                names: named_prefix(Some(path), kind, vocabulary),
+                separator: String::new(),
+            });
+        }
     }
     let declaration = (refusal.spelling == Spelling::Literal && is_declaration(head, vocabulary))
         .then(|| head.to_string());
@@ -121,18 +163,8 @@ fn reordered_scope(
         _ => return None,
     };
     let (_, text) = split_alias_path(text);
-    let (base, names) = match text.split_once(' ') {
-        Some((base, tail)) => (base, tail.strip_suffix(" chapter").unwrap_or(tail)),
-        None if refusal.spelling == Spelling::Each => {
-            let tail = text.strip_prefix(kind)?;
-            let names = vocabulary
-                .section_separators
-                .iter()
-                .find_map(|separator| tail.strip_prefix(separator.as_str()))?;
-            (kind, names)
-        }
-        None => return None,
-    };
+    let (base, tail) = text.split_once(' ')?;
+    let names = tail.strip_suffix(" chapter").unwrap_or(tail);
     validate_named_path(names, kind, vocabulary).ok()?;
     if base == kind {
         return Some(Recovered {

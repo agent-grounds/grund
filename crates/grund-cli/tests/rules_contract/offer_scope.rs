@@ -37,6 +37,16 @@ fn rows() -> Vec<(&'static str, Option<&'static str>, &'static str)> {
             Some("FS-store.requirements"),
             "literal subject \"FS-store requirements chapter\" does not match the configured ID grammar",
         ),
+        (
+            "Each FS-store.requirements",
+            Some("FS-store.requirements"),
+            "unknown kind \"FS-store.requirements\"",
+        ),
+        (
+            "Each FS-store",
+            Some("FS-store"),
+            "unknown kind \"FS-store\"",
+        ),
         ("Each chapter of each FS", None, QUANTIFIED),
     ]
 }
@@ -117,12 +127,14 @@ fn canonical_chapter_and_literal_controls_keep_their_verdicts() {
             "FS-audit"
         ]
     );
-    assert_run(
-        &check(&root, "FS-store.requirements must cite at least one REQ."),
-        0,
-        "success\n",
-        "",
-    );
+    for literal in ["FS-store", "FS-store.requirements"] {
+        assert_run(
+            &check(&root, &format!("{literal} must cite at least one REQ.")),
+            0,
+            "success\n",
+            "",
+        );
+    }
     assert_eq!(
         identities(&check(&root, "Each FS must cite at least one REQ.")),
         ["FS-rotate"]
@@ -300,4 +312,53 @@ fn refused_components_still_keep_their_valid_prefix() {
     let output = run(&repo(), &["list", ".", "--selector", "FS.requirements.1"]);
     assert_eq!(output.status.code(), Some(2));
     assert!(text(&output.stderr).contains("; accepted selector: FS.requirements\n"));
+}
+
+/// §FS-rule-refusals.sentences.rewrite.recovered: a refused path component in
+/// an `Each` head keeps the established prefix repair on both shared surfaces.
+#[test]
+fn each_refused_components_keep_their_valid_prefix() {
+    let root = repo();
+    for (subject, canonical) in [
+        ("Each FS.*", "Each FS"),
+        ("Each FS.requirements.*", CHAPTER),
+        ("Each FS.requirements.1", CHAPTER),
+    ] {
+        let sentence = format!("{subject} must cite at least one REQ.");
+        let canonical_sentence = format!("{canonical} must cite at least one REQ.");
+        let refused = check(&root, &sentence);
+        assert_eq!(refused.status.code(), Some(2));
+        let message = text(&refused.stderr);
+        assert!(message.starts_with(&format!(
+            "error: unknown kind \"{}\";",
+            subject.strip_prefix("Each ").unwrap()
+        )));
+        assert_eq!(
+            offer(&message, "; accepted form: ").as_deref(),
+            Some(canonical_sentence.as_str()),
+            "{subject}: {message}"
+        );
+        let mut wrong = Vec::new();
+        check_offer(
+            &root,
+            &message,
+            Some(&canonical_sentence),
+            &sentence,
+            &mut wrong,
+        );
+        assert!(wrong.is_empty(), "{}", wrong.join("\n\n"));
+
+        let refused = run(&root, &["list", ".", "--selector", subject]);
+        assert_eq!(refused.status.code(), Some(2));
+        let message = text(&refused.stderr);
+        let offered = offer(&message, "; accepted selector: ").expect("safe prefix offer");
+        assert_eq!(offered, canonical);
+        let pasted = run(&root, &["list", ".", "--selector", &offered]);
+        let control = run(&root, &["list", ".", "--selector", canonical]);
+        assert_eq!(control.status.code(), Some(0));
+        assert!(!control.stdout.is_empty());
+        assert_eq!(pasted.status.code(), control.status.code());
+        assert_eq!(pasted.stdout, control.stdout, "{subject}");
+        assert_eq!(pasted.stderr, control.stderr, "{subject}");
+    }
 }
