@@ -2,6 +2,7 @@
 
 **Date:** 2026-10-01
 **Supersedes:** The binding-grammar clause of [§DA-explicit-value-bindings.2](DA-explicit-value-bindings.md#2-decision) — that `grund` compares only the binding grammar of [§FS-values.3.1](../../functional-spec/FS-values.md#31-the-only-binding-grammar) as it then stood, one component coordinate per binding. Its authority model, its JSON runtime surface and its current-tree-only check stand, and so does that record.
+**Superseded in part by:** [§DF-root-value-mismatch-wording](../functional/DF-root-value-mismatch-wording.md#df-root-value-mismatch-wording-a-root-aimed-value-mismatch-names-the-cited-root-and-the-literal-as-written-after-one-release-that-appends-it), for how an equal-count root-aimed mismatch is reported (section 2's third paragraph and section 3's third). The binding decided here stands.
 
 ## status: Accepted
 

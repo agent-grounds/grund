@@ -40,21 +40,43 @@ fn whole_value_bindings_navigate_to_the_declaration_and_match_the_cli() {
         .iter()
         .find(|error| error.code == "value-mismatch")
         .expect("CLI mismatch");
+    // The root and the literal whole, after the legacy text until 0.21.0, at the
+    // one component site (§FS-values.5.2.2, §FS-errors.3.9).
+    let sites = cli_mismatch
+        .sites
+        .iter()
+        .map(|site| (site.path.as_str(), site.line))
+        .collect::<Vec<_>>();
+    assert_eq!(sites, [("values/price.md", 3)]);
+    assert_eq!(
+        cli_mismatch.message,
+        "value mismatch for CONST-price.2: bound `EUR`, declared `USD` at values/price.md:3 \
+         \u{2014} whole binding: value mismatch for CONST-price (component 2): \
+         bound `1200.0 EUR`, declared `1200 USD` at values/price.md:3; \
+         this wording changes in grund 0.21.0"
+    );
 
     let (mut child, mut stdin, receiver) = start_server_with_capabilities(
         &root,
         json!({ "textDocument": { "definition": { "linkSupport": true } } }),
     );
     let diagnostics = recv_diagnostics(&receiver, &mut child, "offer.md");
-    let mismatch = diagnostics
+    let mismatches = diagnostics
         .iter()
-        .find(|diagnostic| diagnostic["code"].as_str() == Some("value-mismatch"))
-        .expect("LSP mismatch");
+        .filter(|diagnostic| diagnostic["code"].as_str() == Some("value-mismatch"))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        mismatches.len(),
+        1,
+        "one finding, one span: {diagnostics:?}"
+    );
+    let mismatch = mismatches[0];
     assert_eq!(
         mismatch["message"].as_str(),
         Some(cli_mismatch.message.as_str())
     );
     assert_eq!(mismatch["range"]["start"]["line"].as_u64(), Some(4));
+    assert_eq!(mismatch["range"]["end"]["line"].as_u64(), Some(4));
 
     let uri = file_uri(&document);
     for (id, line, character, target, target_line) in

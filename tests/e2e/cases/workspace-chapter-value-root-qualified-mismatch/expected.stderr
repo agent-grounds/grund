@@ -1,0 +1,3 @@
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
+warning: power/grund.toml is version 1; migrate it with grund config migrate --to 2 power
+warning: shop/grund.toml is version 1; migrate it with grund config migrate --to 2 shop

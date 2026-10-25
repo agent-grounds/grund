@@ -323,12 +323,13 @@ fn the_binding_shape_admits_a_root_path_and_keeps_its_refusals() {
     }
 }
 
-/// A one-component value bound at its root is its `.1` spelling in effect: an
-/// agreeing literal is silent, a one-part disagreement prints the `.1`
-/// spelling's bytes, and a two-part literal names the root because its part
-/// count differs (§FS-values.3.1.2, §FS-values.5.2.2).
+/// A one-component value bound at its root is its `.1` spelling in verdict
+/// only: an agreeing literal is silent, a one-part disagreement names the root
+/// and its component apart — after the `.1` spelling's bytes until 0.21.0 — and
+/// a two-part literal names the root because its part count differs
+/// (§FS-values.3.1.2, §FS-values.5.2.2, §FS-errors.3.9).
 #[test]
-fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling() {
+fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling_in_verdict() {
     let agrees = check_run(
         &value_repo(
             "value_root_one_component_agrees",
@@ -350,8 +351,22 @@ fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling() {
         "value_root_one_component_at_coordinate",
         "`1250` (§CONST-field-price.1)\n",
     ));
-    assert_eq!(at_root, at_coordinate);
-    assert_eq!(at_root.len(), 1);
+    assert_eq!(
+        at_coordinate,
+        vec![
+            "value mismatch for CONST-field-price.1: bound `1250`, declared `1200` \
+             at values/field-price.md:2"
+        ]
+    );
+    assert_eq!(
+        at_root,
+        vec![format!(
+            "{} \u{2014} whole binding: value mismatch for CONST-field-price (component 1): \
+             bound `1250`, declared `1200` at values/field-price.md:2; \
+             this wording changes in grund 0.21.0",
+            at_coordinate[0]
+        )]
+    );
 
     assert_eq!(
         mismatch_messages(&value_repo(

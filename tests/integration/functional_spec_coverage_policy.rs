@@ -274,6 +274,7 @@ pub(super) const TEMPORARY_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-config-v2.requirements.ahead", reason: "specified ahead of its release; each refused clause's owner proves it, and config-v2-unsupported-clause-refused pins the refusal meanwhile" },
     Exception { id: "FS-distribution.requirements.ecosystems", reason: "npm and PyPI publication is owed to RM-distribution; the cargo half is the release workflow, which no e2e case runs" },
     Exception { id: "FS-distribution.requirements.versions", reason: "the proof is split: cli-version shows the -dev half, test_check_release_ramps.py the release gate, and the shared tag version is the release workflow's" },
+    Exception { id: "FS-errors.3.9.1", reason: "specified ahead of its release; the 0.21.0 change that retires the legacy prefix proves it, and check-value-root-mismatch-names-the-root pins the same template after that prefix meanwhile" },
     Exception { id: "FS-examples.3", reason: "example explanation proof spans the runner and docs" },
     Exception { id: "FS-examples.4", reason: "example maintenance proof spans the runner and docs" },
     Exception { id: "FS-fetch.remote.all", reason: "specified ahead of its release; the Drift piece of remote projects proves it" },
