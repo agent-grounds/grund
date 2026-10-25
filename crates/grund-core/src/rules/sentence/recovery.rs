@@ -107,6 +107,18 @@ pub(super) fn recover_subject(
             {
                 return Err(false);
             }
+            Err(own)
+                if own.spelling == Spelling::Literal
+                    && own.path.is_some()
+                    && is_declaration(&own.head, vocabulary) =>
+            {
+                // §FS-rule-refusals.sentences.rewrite.recovered: reuse the literal's parsed
+                // head and path so a refused suffix cannot discard its declaration or named prefix.
+                if !vocabulary.named_sections_for(kind) {
+                    return Err(false);
+                }
+                return recover_subject(&own, vocabulary);
+            }
             _ => None,
         };
         if let Some((declaration, names, separator)) = literal {

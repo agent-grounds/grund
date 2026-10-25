@@ -7,6 +7,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Output;
 
+#[path = "offer_literal_prefix.rs"]
+mod literal_prefix;
+
 const CHAPTER: &str = "The requirements chapter of each FS";
 const QUANTIFIED: &str = "chapter-quantified subjects are not accepted in phase 1";
 
