@@ -170,7 +170,7 @@ fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
         ),
         (
             "Each chapter of each FS must be cited by at least one FS.",
-            "chapter-quantified subjects are not accepted in phase 1; accepted form: Each FS must be cited by at least one FS.",
+            "chapter-quantified subjects are not accepted in phase 1",
             "",
         ),
         (

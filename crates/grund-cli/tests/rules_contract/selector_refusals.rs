@@ -72,7 +72,7 @@ fn rows() -> Vec<(&'static str, String)> {
         (
             "Each chapter of each FS",
             format!(
-                "error: chapter-quantified subjects are not accepted in phase 1; accepted selector: Each FS\n{HINT}"
+                "error: chapter-quantified subjects are not accepted in phase 1\nknown kinds: FS\n{HINT}"
             ),
         ),
         (
@@ -308,8 +308,9 @@ fn as_rule_subject(selector: &str) -> String {
 
 /// §FS-rule-refusals.selectors, §FS-rule-refusals.sentences.rewrite.recovered: a rule sentence over a refused subject is
 /// answered with the subject `list --selector` gives it, written as a rule
-/// subject under the typed predicate, and with no form and `known kinds:` where
-/// the selector has none. Only what follows the reason is compared, because the
+/// subject under the typed predicate. Safe suppression with a recovered kind
+/// prints no `known kinds:` on the rule surface. Only what follows the reason
+/// is compared, because the
 /// reasons are agent-grounds/grund#507's to correct.
 #[test]
 fn the_rule_side_answers_a_refused_subject_as_the_selector_does() {
@@ -333,6 +334,7 @@ fn the_rule_side_answers_a_refused_subject_as_the_selector_does() {
         let listed = text(&run(&repo(), &["list", ".", "--selector", subject]).stderr);
         let first = listed.lines().next().unwrap_or_default();
         let expected = match first.split_once("; accepted selector: ") {
+            _ if subject == "Each chapter of each FS" => "\n".into(),
             Some((_, selector)) => {
                 format!(
                     "; accepted form: {} {predicate}\n",

@@ -43,6 +43,55 @@ fn spelled(subject: &str, off: &RuleVocabulary) -> Option<(String, String)> {
     recover(&refusal, &on).map(|recovered| (recovered.selector(), recovered.rule_subject()))
 }
 
+/// §FS-rule-refusals.sentences.rewrite.recovered: recovery uses typed scope and
+/// configured grammar alone, without consulting a scan for chapter names.
+#[test]
+fn offer_scope_keeps_recoverable_chapters_and_literals_or_offers_nothing() {
+    let vocabulary = named_off(&["FS", "REQ"]);
+    let mut wrong = Vec::new();
+    for (subject, canonical) in [
+        (
+            "Each FS requirements chapter",
+            "The requirements chapter of each FS",
+        ),
+        (
+            "Each FS requirements",
+            "The requirements chapter of each FS",
+        ),
+        (
+            "Each FS.requirements",
+            "The requirements chapter of each FS",
+        ),
+        ("FS-store requirements chapter", "FS-store.requirements"),
+    ] {
+        if let Some((selector, rule)) = spelled(subject, &vocabulary) {
+            let selectors = if canonical == "FS-store.requirements" {
+                vec![canonical]
+            } else {
+                vec![canonical, "FS.requirements"]
+            };
+            if rule != canonical || !selectors.contains(&selector.as_str()) {
+                wrong.push(format!(
+                    "{subject}: recovered selector {selector:?}, rule subject {rule:?}; \
+                     expected scope {canonical:?} or no offer"
+                ));
+            }
+        }
+    }
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+}
+
+/// §FS-rule-refusals.sentences.rewrite.recovered: knowing a kind supplies no
+/// chapter name for an unnamed quantified chapter subject.
+#[test]
+fn offer_scope_suppresses_unnamed_chapter_quantifiers() {
+    assert_eq!(
+        spelled("Each chapter of each FS", &named_off(&["FS", "REQ"])),
+        None,
+        "a whole-declaration offer would change the typed chapter scope"
+    );
+}
+
 /// §FS-rule-refusals.sentences.named-sections step 2: every rebuilt row of the table, and the rewrites the
 /// point states beyond it, from one set of recovered parts.
 #[test]

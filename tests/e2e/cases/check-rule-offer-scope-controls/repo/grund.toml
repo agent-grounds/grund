@@ -1,0 +1,7 @@
+grund_config_version = 2
+project_name = "vault"
+
+[schema.kinds.FS]
+files = ["requirements.md"]
+[schema.kinds.REQ]
+folders = ["docs/requirements"]
