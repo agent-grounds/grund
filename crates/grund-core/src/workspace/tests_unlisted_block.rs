@@ -9,7 +9,7 @@
 //! the run's root (§DF-unlisted-workspace-block.2.3) — except the one case that is
 //! about what an ancestor above that root can and cannot answer.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::api::CheckRun;
 use crate::api::{ListOpts, list_with_run_warnings};
@@ -468,16 +468,32 @@ fn a_repo_with_no_project_name_is_named_root() {
 /// `members` the caller writes — the only fixture here with a config *above* the
 /// run's root, because the claim it tests is one only an ancestor can make.
 fn repo_under_an_ancestor_listing(name: &str, members: &str) -> PathBuf {
+    repo_under_an_ancestor_workspace(name, &format!("members = {members}\n"))
+}
+
+/// The same tree under an ancestor whose `[workspace]` table body the caller
+/// writes verbatim, for the cases whose claim value cannot be read at all.
+fn repo_under_an_ancestor_workspace(name: &str, workspace: &str) -> PathBuf {
     let outer = test_root(name);
     let root = unlisted_block_repo_at(outer.join("repo"));
     write(
         &outer.join("grund.toml"),
         &format!(
             "grund_config_version = 1\nproject_name = \"outer\"\n\n\
-                 [workspace]\nmembers = {members}\n"
+                 [workspace]\n{workspace}"
         ),
     );
     root
+}
+
+/// A check run under such an ancestor, asserting the block is left unreported.
+fn assert_block_unreported(root: &Path, why: &str) {
+    let run = check_run(root, false);
+    assert!(
+        block_findings(&run).is_empty(),
+        "{why}: {:?}",
+        block_findings(&run)
+    );
 }
 
 /// §FS-check.3.29.2: a claim an ancestor *names* and then cannot answer — here
@@ -500,6 +516,48 @@ fn a_claim_the_ancestor_cannot_answer_leaves_the_block_unreported() {
         "the ancestor names `repo/b` and cannot say what it is: {:?}",
         codes(&run)
     );
+}
+
+/// §FS-workspace.6.1.7.5: an ancestor whose `members` text cannot be obtained —
+/// grund#1010's typo, a list naming `repo/b` that never closes its bracket —
+/// leaves the claim undecidable in both directions, and the quiet climb leaves
+/// the block unreported (§FS-workspace.6.1.7.2). §FS-check.3.29.2: the floor below
+/// stands on entry text that was read, and this ancestor has none, so whether it
+/// names `b` cannot be said; reporting it as listed by nobody claims an answer.
+#[test]
+#[ignore = "red until #1010 the quiet climb keeps an unreadable ancestor claim undecidable; implement removes this"]
+fn an_ancestor_members_list_that_will_not_parse_leaves_the_block_unreported() {
+    let root = repo_under_an_ancestor_workspace(
+        "an_ancestor_members_list_that_will_not_parse_leaves_the_block_unreported",
+        "members = [\"repo/b\"\n",
+    );
+    assert_block_unreported(&root, "the ancestor's `members` cannot be read");
+}
+
+/// §FS-workspace.6.1.7.5 names both values: a readable `members` that names
+/// nothing here does not decide the claim while `optional_members` (§FS-workspace.2.2.9),
+/// which claims by the same entry-text rule, cannot be read (§FS-check.3.29.2).
+#[test]
+#[ignore = "red until #1010 the quiet climb keeps an unreadable ancestor claim undecidable; implement removes this"]
+fn an_ancestor_optional_members_that_will_not_parse_leaves_the_block_unreported() {
+    let root = repo_under_an_ancestor_workspace(
+        "an_ancestor_optional_members_that_will_not_parse_leaves_the_block_unreported",
+        "members = [\"other\"]\noptional_members = [\"repo/b\"\n",
+    );
+    assert_block_unreported(&root, "the ancestor's `optional_members` cannot be read");
+}
+
+/// §FS-workspace.6.1.7.5's other unobtainable shape: a `members` value that
+/// parses and is not a list has no entries to read a claim off, so the claim is
+/// as undecidable as an unparsable one, and as unreported (§FS-check.3.29.2).
+#[test]
+#[ignore = "red until #1010 the quiet climb keeps an unreadable ancestor claim undecidable; implement removes this"]
+fn an_ancestor_members_value_that_is_not_a_list_leaves_the_block_unreported() {
+    let root = repo_under_an_ancestor_workspace(
+        "an_ancestor_members_value_that_is_not_a_list_leaves_the_block_unreported",
+        "members = \"repo/b\"\n",
+    );
+    assert_block_unreported(&root, "the ancestor's `members` is not a list");
 }
 
 /// The floor under that silence: the claim is read off the entry text before

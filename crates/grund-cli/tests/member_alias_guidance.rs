@@ -208,6 +208,33 @@ fn genuinely_unknown_alias_does_not_claim_to_be_the_enclosing_project() {
     );
 }
 
+/// §FS-workspace.5.1.1 needs the root project's actual alias, and an ancestor
+/// above `repo` whose `members` text cannot be obtained may list it
+/// (§FS-workspace.6.1.7.5) — then `shop` names a member, not the root, so the
+/// remedy is withheld. A readable ancestor that names nothing here verifies it.
+#[test]
+#[ignore = "red until #1010 the root remedy is withheld under an undecidable ancestor; implement removes this"]
+fn an_undecidable_ancestor_above_the_root_withholds_the_root_remedy() {
+    let fixture = Fixture::new();
+    let outer = |members: &str| {
+        fs::write(
+            fixture.0.join("grund.toml"),
+            format!(
+                "grund_config_version = 2\nproject_name = \"outer\"\n\n\
+                 [workspace]\nmembers = {members}\n"
+            ),
+        )
+        .unwrap();
+    };
+    outer("[\"elsewhere\"]");
+    member_text(&fixture, &fixture.member(), &["check"], "../..");
+    outer("[\"repo\"");
+    assert_eq!(
+        text(&run(&fixture.member(), &["check"]), 1),
+        "requirements.md:5: error: unknown project alias shop\n"
+    );
+}
+
 #[test]
 fn standalone_and_unlisted_projects_do_not_claim_workspace_membership() {
     let fixture = Fixture::new();
