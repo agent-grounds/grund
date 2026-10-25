@@ -471,7 +471,7 @@ impl AncestorWorkspaces {
             if undecidable.is_some() {
                 self.undecidable.insert(dir.to_path_buf());
             }
-            // §FS-workspace.6.1.7.6: only the alias-path climb emits the warning.
+            // §FS-workspace.6.1.7.5: only the alias-path climb emits the warning.
             if self.warn_undecidable {
                 self.warnings.extend(undecidable);
             }
@@ -513,7 +513,7 @@ impl AncestorWorkspaces {
 /// This walk reaches the filesystem root, so a stray broken `grund.toml` above
 /// a repository must not break every run beneath it (§AR-workspace.6.1.3).
 /// Only a climb that spells an alias path owes the reader that diagnostic;
-/// a quiet climb retains uncertainty without emitting it (§FS-workspace.6.1.7.6).
+/// a quiet climb retains uncertainty without emitting it (§FS-workspace.6.1.7.5).
 fn read_ancestor_workspace_block(
     dir: &Path,
     cli_base: &Path,
