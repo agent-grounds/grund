@@ -131,7 +131,10 @@ CITED = (
 # FS-show.md grew by 1498 bytes in §FS-show.requirements.authored-bytes, .2.2, .3.1.1,
 # .3.1.2 and .3.2.2, each citing §FS-declarations.section.relative.shown.selected for a
 # selected section's canonical heading rather than restating it (grund#1009).
-BASELINES = {"FS-show.md": 70009, "FS-fmt.md": 99471}
+
+# FS-show.md grew by 119 bytes in §FS-show.3.1.1, saying a selected section's text read opens
+# with its heading line by citing §FS-show.2.2 rather than restating it (grund#1026).
+BASELINES = {"FS-show.md": 70128, "FS-fmt.md": 99471}
 
 
 def _flat(text):
