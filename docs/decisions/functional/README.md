@@ -192,6 +192,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-init-keeps-the-member-list](DF-init-keeps-the-member-list.md#df-init-keeps-the-member-list-grund-init-keeps-a-blocks-member-list-while-an-optional-member-is-absent) — `grund init` keeps a block's member list while an optional member is absent
 - [§DF-member-link-names-the-directory](DF-member-link-names-the-directory.md#df-member-link-names-the-directory-a-workspace-member-link-names-the-members-directory) — A workspace member link names the member's directory
 - [§DF-block-teaches-unused](DF-block-teaches-unused.md#df-block-teaches-unused-the-managed-block-teaches-grund-list---unused) — the managed block teaches `grund list --unused`
+- [§DF-block-names-section-heading](DF-block-names-section-heading.md#df-block-names-section-heading-the-blocks-first-rung-says-a-section-read-opens-with-its-heading-line) — the block's first rung says a section read opens with its heading line
 - [§DF-init-configured-kind-guidance](DF-init-configured-kind-guidance.md#df-init-configured-kind-guidance-grund-inits-guidance-names-a-kind-and-a-home-the-project-declares) — `grund init`'s guidance names a kind and a home the project declares
 
 ## The one-answer rulings
