@@ -48,7 +48,9 @@ CASES = " ‖ "
 LABEL = re.compile(r"^([a-z][a-z0-9]*(?:-[a-z0-9]+)*): (.*)$")
 BRACE = re.compile(r"\{([^{}]*)\}")
 SLOT = re.compile(r"^[a-z]+(?: [a-z]+)*$")
-REFERENCE = re.compile(r"^fix of `([a-z][a-z0-9-]*)`$")
+REFERENCE = re.compile(r"^fix of `([a-z][a-z0-9-]*)`"
+                       r"(?:, case `([a-z][a-z0-9]*(?:-[a-z0-9]+)*)`)?$")
+WHOLE = re.compile(r"^\{fix of `([a-z][a-z0-9-]*)`\}$")
 KEYWORDS = {"as", "type", "match", "ref", "mod", "use", "where", "in", "fn", "impl", "move",
             "self", "loop", "for", "if", "else", "const", "static", "struct", "enum", "trait"}
 OUT_OF_SCOPE = "out-of-scope-"
@@ -149,14 +151,15 @@ def verbatim(text, code, column):
 
 def template_parts(template, code):
     """A template's text and braces in order: `("text", words)`, `("slot", name)` and
-    `("fix", code)`, refusing a brace without its partner or that is neither."""
+    `("fix", (code, label))`, the label `None` for a reference to a whole template,
+    refusing a brace without its partner or that is neither."""
     parts, at = [], 0
     for match in BRACE.finditer(template):
         parts.append(("text", template[at:match.start()]))
         inside = match.group(1)
         reference = REFERENCE.match(inside)
         if reference:
-            parts.append(("fix", reference.group(1)))
+            parts.append(("fix", reference.groups()))
         elif SLOT.match(inside):
             parts.append(("slot", inside))
         else:
@@ -175,6 +178,9 @@ def fix_side(side, version, code):
         raise CatalogError(f"`{code}`: its Fix cell is blank")
     if absent(side, version, code, "Fix"):
         return {"kind": "absent", "text": side}
+    whole = WHOLE.match(side)
+    if whole:
+        return {"kind": "whole", "code": whole.group(1)}
     if side.startswith(NONE):
         why = verbatim(side.removeprefix(NONE), code, "Fix")
         if not why.strip():
@@ -196,35 +202,61 @@ def fix_side(side, version, code):
     return {"kind": "template", "text": side}
 
 
+def referred(value, version, code, fixes, seen):
+    """The side of `value`'s *Fix* a reference from `code` names: the same version's,
+    or the other where that one is absent, refusing a code the catalog lacks or a
+    reference back to one already being expanded."""
+    if value not in fixes:
+        raise CatalogError(f"`{code}`: its Fix refers to `{value}`, which the catalog lacks")
+    if value in seen or value == code:
+        raise CatalogError(f"`{code}`: its Fix refers to itself through `{value}`")
+    target = fixes[value][version]
+    if target["kind"] == "absent":
+        target = fixes[value]["1" if version == "2" else "2"]
+    return target
+
+
 def expand(template, version, code, fixes, seen=()):
     """§FS-errors.5.5.1: a template with each `{fix of `<code>`}` replaced by that
-    row's template on the same side, or its other side where that one is absent."""
+    row's template on the same side, or its other side where that one is absent, and
+    each `{fix of `<code>`, case `<label>`}` by that side's case so labelled."""
     out = []
     for kind, value in template_parts(template, code):
         if kind != "fix":
             out.append(value if kind == "text" else "{" + value + "}")
             continue
-        if value not in fixes:
-            raise CatalogError(f"`{code}`: its Fix refers to `{value}`, which the catalog lacks")
-        if value in seen or value == code:
-            raise CatalogError(f"`{code}`: its Fix refers to itself through `{value}`")
-        target = fixes[value][version]
-        if target["kind"] == "absent":
-            target = fixes[value]["1" if version == "2" else "2"]
-        if target["kind"] != "template":
-            raise CatalogError(f"`{code}`: its Fix refers to `{value}`, whose Fix is "
+        other, label = value
+        target = expanded(referred(other, version, code, fixes, seen), version, other,
+                          fixes, seen + (code,))
+        if label is None and target["kind"] != "template":
+            raise CatalogError(f"`{code}`: its Fix refers to `{other}`, whose Fix is "
                                f"{target['kind']}, not one template")
-        out.append(expand(target["text"], version, value, fixes, seen + (code,)))
+        if label is not None:
+            case = next((case for case in target.get("cases", []) if case["label"] == label),
+                        None)
+            if case is None:
+                raise CatalogError(f"`{code}`: its Fix refers to `{other}`'s case `{label}`, "
+                                   f"which that Fix does not name")
+            out.append(case["text"])
+        else:
+            out.append(target["text"])
     return "".join(out)
 
 
-def expanded(fix, version, code, fixes):
-    """A read *Fix* side with every reference in it expanded."""
+def expanded(fix, version, code, fixes, seen=()):
+    """A read *Fix* side with every reference in it expanded, a whole-side reference
+    taking the side it names, cases and all."""
+    if fix["kind"] == "whole":
+        target = referred(fix["code"], version, code, fixes, seen)
+        if target["kind"] not in ("template", "cases", "whole"):
+            raise CatalogError(f"`{code}`: its Fix refers to `{fix['code']}`, whose Fix is "
+                               f"{target['kind']}, not a remedy")
+        return expanded(target, version, fix["code"], fixes, seen + (code,))
     if fix["kind"] == "template":
-        return {"kind": "template", "text": expand(fix["text"], version, code, fixes)}
+        return {"kind": "template", "text": expand(fix["text"], version, code, fixes, seen)}
     if fix["kind"] == "cases":
         return {"kind": "cases", "cases": [
-            {"label": case["label"], "text": expand(case["text"], version, code, fixes)}
+            {"label": case["label"], "text": expand(case["text"], version, code, fixes, seen)}
             for case in fix["cases"]]}
     return fix
 

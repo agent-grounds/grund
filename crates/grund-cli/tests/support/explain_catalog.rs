@@ -201,7 +201,7 @@ pub fn foreign_settings(stdout: &str, tables: &[(String, Vec<String>)]) -> Vec<S
 /// as written; and `none — not in version N` for an absent side. `None` for a
 /// row whose *Fix* cell is blank, which no answer can be held to.
 pub fn remedy_lines(rows: &[Row], row: &Row, version: u32) -> Option<Vec<String>> {
-    let fix = side(&row.fix, version);
+    let fix = whole(rows, side(&row.fix, version), version)?;
     if fix.is_empty() {
         return None;
     }
@@ -228,22 +228,55 @@ pub fn remedy_lines(rows: &[Row], row: &Row, version: u32) -> Option<Vec<String>
     Some(lines)
 }
 
+/// A *Fix* side that is nothing but `` {fix of `<code>`} `` read as that row's side,
+/// cases and all; any other side as written.
+fn whole(rows: &[Row], fix: String, version: u32) -> Option<String> {
+    match fix
+        .strip_prefix("{fix of `")
+        .and_then(|rest| rest.strip_suffix("`}"))
+        .filter(|code| !code.contains('`'))
+    {
+        Some(code) => whole(rows, referred(rows, code, version)?, version),
+        None => Some(fix),
+    }
+}
+
+/// The side of `code`'s *Fix* a reference names: the same version's, or the other
+/// where that one is absent.
+fn referred(rows: &[Row], code: &str, version: u32) -> Option<String> {
+    let target = rows.iter().find(|row| row.code == code)?;
+    let words = side(&target.fix, version);
+    Some(if words.starts_with("not in version") {
+        side(&target.fix, 3 - version)
+    } else {
+        words
+    })
+}
+
 /// A template with each `` {fix of `<code>`} `` replaced by that row's template on
-/// the same side, or its other side where that one is absent.
+/// the same side, or its other side where that one is absent, and each
+/// `` {fix of `<code>`, case `<label>`} `` by that side's case so labelled.
 fn expand(rows: &[Row], template: &str, version: u32) -> Option<String> {
     let mut out = String::new();
     let mut rest = template;
     while let Some(start) = rest.find("{fix of `") {
         out.push_str(&rest[..start]);
         let after = &rest[start + "{fix of `".len()..];
-        let end = after.find("`}")?;
-        let target = rows.iter().find(|row| row.code == after[..end])?;
-        let mut words = side(&target.fix, version);
-        if words.starts_with("not in version") {
-            words = side(&target.fix, 3 - version);
-        }
+        let end = after.find('}')?;
+        let (code, label) = match after[..end].split_once("`, case `") {
+            Some((code, label)) => (code, Some(label.strip_suffix('`')?)),
+            None => (after[..end].strip_suffix('`')?, None),
+        };
+        let words = whole(rows, referred(rows, code, version)?, version)?;
+        let words = match label {
+            Some(label) => words
+                .split(" ‖ ")
+                .find_map(|case| case.strip_prefix(&format!("{label}: ")))?
+                .to_string(),
+            None => words,
+        };
         out.push_str(&expand(rows, &words, version)?);
-        rest = &after[end + 2..];
+        rest = &after[end + 1..];
     }
     out.push_str(rest);
     Some(out)

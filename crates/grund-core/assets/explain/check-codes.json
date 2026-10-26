@@ -238,7 +238,7 @@
    },
    "fix": {
     "kind": "template",
-    "text": "migrate it with grund config migrate --to 2"
+    "text": "migrate {files} with grund config migrate --to 2"
    },
    "note": null
   },
@@ -258,7 +258,7 @@
    },
    "fix": {
     "kind": "template",
-    "text": "migrate it with grund config migrate --to 2"
+    "text": "migrate {files} with grund config migrate --to 2"
    },
    "note": null
   }
@@ -2455,12 +2455,8 @@
       "text": "the check is off until {switches}"
      },
      {
-      "label": "one-version",
-      "text": "migrate it with grund config migrate --to 2"
-     },
-     {
-      "label": "mixed-versions",
-      "text": "migrate the version-1 ones with grund config migrate --to 2"
+      "label": "migrate",
+      "text": "migrate {files} with grund config migrate --to 2"
      }
     ]
    },
@@ -2488,12 +2484,8 @@
       "text": "the check is off until {switches}"
      },
      {
-      "label": "one-version",
-      "text": "migrate it with grund config migrate --to 2"
-     },
-     {
-      "label": "mixed-versions",
-      "text": "migrate the version-1 ones with grund config migrate --to 2"
+      "label": "migrate",
+      "text": "migrate {files} with grund config migrate --to 2"
      }
     ]
    },

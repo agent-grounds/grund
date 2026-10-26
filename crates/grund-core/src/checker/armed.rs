@@ -85,15 +85,15 @@ impl ArmedChecks {
         // A switch a version read cannot hold, or two versions spell apart, is
         // answered by the migration alone.
         let Some(parts) = lacking.into_iter().collect::<Option<Vec<_>>>() else {
-            // §FS-errors.5.5.1: the cases of the row's Fix, the one taking
-            // config-version-1's words by reference.
+            // §FS-errors.5.5.1: the migrate case takes config-version-1's words by
+            // reference, its slot naming the files the migration is for.
             return Some(if self.versions.len() > 1 {
                 format!(
                     "{MIGRATE_MIXED}; {}",
-                    remedies::selected_check_off_mixed_versions()
+                    remedies::selected_check_off_migrate("the version-1 ones")
                 )
             } else {
-                format!("{MIGRATE}; {}", remedies::selected_check_off_one_version())
+                format!("{MIGRATE}; {}", remedies::selected_check_off_migrate("it"))
             });
         };
         Some(remedies::selected_check_off_off(parts.join(" and ")))
