@@ -1,0 +1,39 @@
+pixelbin · grund.toml · v2
+
+kinds and places
+  ART    kind                         .specify/memory/constitution.md
+  RULE   kind                         .specify/memory/rules.md
+  SPEC   kind                         specs/001-photo-upload/spec.md, specs/002-album-share/spec.md
+           field clarifications       may · first
+           field user-scenarios       must · after clarifications
+           field requirements         must · after user-scenarios
+           field success-criteria     must · after requirements
+           field assumptions          may · after success-criteria
+           closed must
+  PLAN   kind                         specs/001-photo-upload/plan.md, specs/002-album-share/plan.md
+           field summary              must · first
+           field technical-context    must · after summary
+           field constitution-check   must · after technical-context
+           field project-structure    must · after constitution-check
+           field complexity-tracking  may · after project-structure
+           closed must
+  tasks  place                        specs/001-photo-upload/tasks.md, specs/002-album-share/tasks.md
+  test   place                        tests/
+  code   complement                   src/
+
+citations                             grounded
+  ART    may       ART (itself)
+         may       RULE
+         must not  everything else
+  RULE   —
+  SPEC   may       SPEC (itself)
+         may       ART
+         must not  everything else
+  PLAN   must      SPEC
+  tasks  must      SPEC|PLAN          must · h3
+  test   must      SPEC               must · file
+  code   must      SPEC               must · file
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it
