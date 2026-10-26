@@ -143,6 +143,8 @@ mod tests_e2e_manifest_args;
 #[cfg(test)]
 mod tests_embedding;
 #[cfg(test)]
+mod tests_embedding_scan_errors;
+#[cfg(test)]
 mod tests_embedding_sources;
 #[cfg(test)]
 mod tests_enclosing_unit;
