@@ -779,7 +779,8 @@ pub(crate) fn over_the_column_cap(
     vec![(
         line,
         format!(
-            "inline note is {columns} column{}, over the 100-column maximum: line {line} cites {citations}",
+            "inline note is {columns} column{}, over the 100-column maximum: line {line} cites {citations}; over-limit lines: line {line}: {columns} column{}",
+            if columns == 1 { "" } else { "s" },
             if columns == 1 { "" } else { "s" }
         ),
     )]

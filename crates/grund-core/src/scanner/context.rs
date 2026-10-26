@@ -301,16 +301,15 @@ pub(super) fn inline_citation_sites(
                 lexical,
                 &alias_grammars,
             );
+            // §AR-scanner.3.1: retain each width once, deriving the maximum from
+            // the same Unicode scalar counts (§FS-inline-citation-style.2.3.2).
+            let line_columns: std::sync::Arc<[usize]> =
+                block.iter().map(|line| line.chars().count()).collect();
             let site = InlineCitationSite {
                 first_line: start + 1,
                 last_line: end + 1,
-                // §FS-inline-citation-style.2.3.2: a column is one character, not one
-                // byte — `é` and `§` cost one each (§DF-note-columns-are-characters).
-                max_columns: block
-                    .iter()
-                    .map(|line| line.chars().count())
-                    .max()
-                    .unwrap_or(0),
+                max_columns: line_columns.iter().copied().max().unwrap_or(0),
+                line_columns,
                 has_note,
                 layout_violations,
             };

@@ -272,6 +272,11 @@ pub struct InlineCitationSite {
     /// byte-addressed start column a `Citation` records (§AR-scanner.3); the
     /// two agree only on a line of pure ASCII.
     pub max_columns: usize,
+    /// Each physical line's width by §FS-inline-citation-style.2.3.2, in source
+    /// order: entry `i` belongs to `first_line + i` (§AR-scanner.3.1).
+    /// Shared across the block's sites and citations so retaining the complete
+    /// measurements for §FS-inline-citation-style.4.1.1.1 costs one allocation.
+    pub line_columns: std::sync::Arc<[usize]>,
     pub has_note: bool,
     /// The site's judged lines that deviate from
     /// `[reference] inline_note_layout` (§FS-inline-citation-style.3.3.1), 1-based

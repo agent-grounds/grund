@@ -112,7 +112,7 @@ fn inline_note_hard_caps_can_report_multiple_errors() {
         );
     assert!(
         messages.contains(
-            &"inline note is 64 columns, over the 40-column maximum: lines 1-2 cite §FS-001-login"
+            &"inline note is 64 columns, over the 40-column maximum: lines 1-2 cite §FS-001-login; over-limit lines: line 1: 64 columns"
         ),
         "column cap should be reported: {messages:?}"
     );
@@ -240,9 +240,10 @@ fn inline_note_column_cap_is_exact_in_non_ascii_prose() {
         vec![(
             Some(4),
             format!(
-                "inline note is {} columns, over the {}-column maximum: line 4 cites §FS-001-login",
+                "inline note is {} columns, over the {}-column maximum: line 4 cites §FS-001-login; over-limit lines: line 4: {} columns",
                 at_cap.chars().count() + 1,
-                at_cap.chars().count()
+                at_cap.chars().count(),
+                at_cap.chars().count() + 1,
             )
         )],
         "only the line one character over the cap is reported, anchored at itself"
