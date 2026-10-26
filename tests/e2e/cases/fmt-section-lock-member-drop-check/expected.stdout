@@ -1,1 +1,1 @@
-packages/api/.grund/sections/FS-login.lock:1: section lock: drop FS-login.format.1
+packages/api/.grund/sections/FS-login.lock:1: section lock: drop FS-login.format.1; deletes the file

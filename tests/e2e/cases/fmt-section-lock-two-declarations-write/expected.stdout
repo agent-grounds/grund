@@ -1,3 +1,3 @@
-rewrote 2 lines:
-  .grund/sections/FS-login.lock (1)
-  .grund/sections/FS-session.lock (1)
+rewrote 2 lines: 2 section-lock entries
+  .grund/sections/FS-login.lock (1) created
+  .grund/sections/FS-session.lock (1) created
