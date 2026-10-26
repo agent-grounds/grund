@@ -116,11 +116,11 @@ config's version ([config explain](explain.md)).
 
 ## Fixing every wide line in a note
 
-A column finding ends with every line over its selected limit, in source order
+A column finding lists every line over its selected limit, in source order, before its remedy
 ([§FS-inline-citation-style.4.1.1.1](../functional-spec/FS-inline-citation-style.md#4111-every-over-limit-line)). For example:
 
 ```text
-src/ingest/parse.py:5: error: inline note is 105 columns, over the 100-column maximum: lines 5-7 cite §AR-ingest.1.1; over-limit lines: line 5: 103 columns, line 6: 105 columns
+src/ingest/parse.py:5: error: inline note is 105 columns, over the 100-column maximum: lines 5-7 cite §AR-ingest.1.1; over-limit lines: line 5: 103 columns, line 6: 105 columns; shorten or rewrap its widest line
 ```
 
 Wrap both line 5 and line 6 before checking again. Shortening only line 6 leaves

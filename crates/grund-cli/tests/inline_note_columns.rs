@@ -90,7 +90,10 @@ fn prefix(max: usize, limit: usize) -> String {
 }
 
 fn message(max: usize, limit: usize, widths: &str) -> String {
-    format!("{}; over-limit lines: {widths}", prefix(max, limit))
+    format!(
+        "{}; over-limit lines: {widths}; shorten or rewrap its widest line",
+        prefix(max, limit)
+    )
 }
 
 /// Check legacy identity before checking the new detail, so fixture failures
