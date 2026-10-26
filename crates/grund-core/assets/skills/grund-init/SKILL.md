@@ -148,29 +148,21 @@ and [runnable recovery walkthrough](https://github.com/agent-grounds/grund/blob/
 
 Before a declaration rename or file move, run `grund refs <ID>` to find affected
 citations. Edit the declaration and affected authored citation IDs, then run
-`grund fmt --write` from the config/project root or workspace root. When
+`grund fmt --write` from the config, project or workspace root. When
 cross-reference emission applies, fmt re-derives generated Markdown link
 destinations and anchors; the root-scoped write also updates eligible section
-locks. Run `grund check` and `grund fmt --check`, and commit the lock changes.
-Keep ID-keyed lock names unchanged for file-only moves. Do not hand-edit locks or
-expect fmt to replace authored IDs, repair arbitrary URLs, or silently approve a
+locks. Run `grund check` and `grund fmt --check`; commit the lock changes.
+File-only moves keep ID-keyed lock names. Do not hand-edit locks or expect
+fmt to replace authored IDs, repair arbitrary URLs, or silently approve a
 protected section move; fix citations or leave a pointer at the old address first.
-A link the author wrote around a citation is theirs in every Markdown form: an
-inline link, one whose text runs onto the next line, a reference with its key, a
-definition, an autolink and an HTML `<a>`. fmt leaves it and does not follow a
-move for it, so repair such a destination by hand; the citation inside is still
-checked. A citation-only image in a kind's index, `![§<ID>](x.png)`, is no
-entry: write the link beside it, or the ID is reported missing
-([authored links](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#linking-what-grund-does),
+A link the author wrote around a citation is theirs in every Markdown form:
+inline, wrapped, a reference, a definition, an autolink or HTML `<a>`. fmt
+neither rewrites nor follows it, so repair it by hand; its citation is still
+checked. A citation-only image in a kind's index,
+`![§<ID>](x.png)`, is no entry: write the link beside it, or the ID is reported
+missing ([authored links](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#linking-what-grund-does),
 [example](https://github.com/agent-grounds/grund/blob/main/examples/authored-citations/README.md)).
-
-Describe a write from fmt's own report rather than from the flag you passed. A
-preview row names every kind of rewrite its line gets, so `bare → marker,
-markdown link` means the line is marked and then linked. The `--write` summary
-totals occurrences by kind, as in `rewrote 7 lines: 6 citations marked, 6 links
-written`. After a rename, a lock file's row ends `; deletes the file` or
-`; creates the file`, and its write line ends ` deleted` or ` created`
-([reading fmt's report](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#reading-fmts-report),
-[example](https://github.com/agent-grounds/grund/blob/main/examples/fmt-reporting/README.md)).
-Use the [maintenance guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#maintaining-declarations)
+Describe a write by fmt's report, which names each rewrite on a line, counts
+kinds and marks lock files deleted or created. Use the
+[maintenance guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#maintaining-declarations)
 and its [copy-based rename example](https://github.com/agent-grounds/grund/blob/main/examples/relative-sections-lock/README.md).
