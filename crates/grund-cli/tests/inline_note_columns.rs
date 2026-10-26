@@ -154,7 +154,6 @@ fn source_with_widths(widths: [usize; 3]) -> String {
 }
 
 #[test]
-#[ignore = "red until #1024 reports all over-limit lines; implement removes this"]
 fn issue_1024_hard_text_lists_both_lines_and_suppresses_soft_findings() {
     let fixture = Fixture::new(
         "[schema.notes.columns]\nmust = 100\nwarn = 90\nshould = 80\n",
@@ -179,7 +178,6 @@ fn issue_1024_hard_text_lists_both_lines_and_suppresses_soft_findings() {
 }
 
 #[test]
-#[ignore = "red until #1024 reports all over-limit lines; implement removes this"]
 fn issue_1024_hard_json_keeps_identity_and_complete_message() {
     let fixture = Fixture::new("", SOURCE);
     assert_json(
@@ -192,7 +190,6 @@ fn issue_1024_hard_json_keeps_identity_and_complete_message() {
 }
 
 #[test]
-#[ignore = "red until #1024 reports all over-limit lines; implement removes this"]
 fn issue_1024_edit_cycle_keeps_the_other_line_identified() {
     let fixture = Fixture::new("", SOURCE);
     let lines: Vec<&str> = SOURCE.lines().collect();
@@ -209,7 +206,6 @@ fn issue_1024_edit_cycle_keeps_the_other_line_identified() {
 }
 
 #[test]
-#[ignore = "red until #1024 reports all over-limit lines; implement removes this"]
 fn issue_1024_soft_warning_text_uses_selected_threshold() {
     let fixture = Fixture::new(
         "[schema.notes.columns]\nmust = 120\nwarn = 100\nshould = 90\n",
@@ -225,7 +221,6 @@ fn issue_1024_soft_warning_text_uses_selected_threshold() {
 }
 
 #[test]
-#[ignore = "red until #1024 reports all over-limit lines; implement removes this"]
 fn issue_1024_soft_warning_json_omits_lines_below_selected_threshold() {
     let fixture = Fixture::new(
         "[schema.notes.columns]\nmust = 120\nwarn = 104\nshould = 100\n",
@@ -241,7 +236,6 @@ fn issue_1024_soft_warning_json_omits_lines_below_selected_threshold() {
 }
 
 #[test]
-#[ignore = "red until #1024 reports all over-limit lines; implement removes this"]
 fn issue_1024_soft_suggestion_keeps_gating_and_uses_its_own_limit() {
     let fixture = Fixture::new(
         "[schema.notes.columns]\nmust = 120\nwarn = 104\nshould = 100\n",
@@ -258,7 +252,6 @@ fn issue_1024_soft_suggestion_keeps_gating_and_uses_its_own_limit() {
 }
 
 #[test]
-#[ignore = "red until #1024 reports all over-limit lines; implement removes this"]
 fn issue_1024_single_over_limit_line_counts_unicode_and_excludes_boundary() {
     let fixture = Fixture::new("", &source_with_widths([100, 101, 100]));
     let expected = message(101, 100, "line 6: 101 columns");

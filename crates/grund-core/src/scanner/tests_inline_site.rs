@@ -62,6 +62,7 @@ fn an_inline_note_records_its_own_block_span_and_width() {
             first_line: 1,
             last_line: 1,
             max_columns: 46,
+            line_columns: vec![46].into(),
             has_note: true,
             layout_violations: Vec::new(),
         })]
@@ -88,6 +89,7 @@ fn two_citations_in_one_block_carry_one_span() {
         first_line: 1,
         last_line: 3,
         max_columns: 51,
+        line_columns: vec![29, 51, 50].into(),
         has_note: true,
         layout_violations: Vec::new(),
     });
@@ -128,6 +130,7 @@ fn a_block_of_bare_citations_records_no_note() {
             first_line: 1,
             last_line: 1,
             max_columns: 16,
+            line_columns: vec![16].into(),
             has_note: false,
             layout_violations: Vec::new(),
         })]
@@ -158,5 +161,98 @@ fn the_recorded_layout_violations_are_ascending_and_shared_by_the_block() {
             .iter()
             .all(|site| site.as_ref().expect("a site").first_line == 1),
         "one span for the whole block: {found:?}"
+    );
+}
+
+/// §AR-scanner.3.1, §FS-inline-citation-style.4.1.1.1: every block form retains
+/// all physical lines, including uncited lines, blank interiors and delimiters.
+/// Widths count Unicode scalars, tabs and indentation (§FS-inline-citation-style.2.3.2).
+/// A custom source with no doc profile lets a docstring be an inline site;
+/// Python's own docstrings remain excluded by their existing classification.
+#[test]
+fn every_block_form_retains_widths_with_physical_line_association() {
+    use crate::config::load_config;
+
+    let root = test_root("every_block_form_retains_widths_with_physical_line_association");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\n\
+         [schema.kinds.FS]\nfolders = [\"docs\"]\n\
+         [schema.sources]\nlanguages = [\"markdown\", \"python\", \"notes\"]\n\
+         [schema.sources.extensions]\nnote = \"notes\"\n\
+         [schema.sources.definitions.notes]\nclass = \"source\"\n\
+         comment_prefixes = [\"//\", \"#\", \"/*\", \"*\"]\n\
+         docstrings = \"python\"\ndoc_comments = \"none\"\n",
+    );
+    write(
+        &root.join("docs/FS-001-login.md"),
+        "# FS-001-login: Login\n",
+    );
+    let cases: &[(&str, &str, &[usize])] = &[
+        (
+            "hash",
+            "\t# é界e\u{301}\n\t#\n\t# §FS-001-login\n",
+            &[7, 2, 16],
+        ),
+        (
+            "slash",
+            "\t// é界e\u{301}\n\t//\n\t// §FS-001-login\n",
+            &[8, 3, 17],
+        ),
+        (
+            "closed",
+            "  /* é界e\u{301}\n\n * §FS-001-login\n */\n",
+            &[9, 0, 16, 3],
+        ),
+        (
+            "bare",
+            "  /* é界e\u{301}\n\n§FS-001-login\n */\n",
+            &[9, 0, 13, 3],
+        ),
+        (
+            "unclosed",
+            "  /* é界e\u{301}\n\n * §FS-001-login\n",
+            &[9, 0, 16],
+        ),
+        (
+            "docstring",
+            "  \"\"\"é界e\u{301}\n\n§FS-001-login\n  \"\"\"\n",
+            &[9, 0, 13, 5],
+        ),
+    ];
+    for (name, block, _) in cases {
+        write(
+            &root.join(format!("src/{name}.note")),
+            &format!("code\n\n{block}"),
+        );
+    }
+    write(
+        &root.join("src/doc.py"),
+        "\"\"\"§FS-001-login\nDocumentation.\n\"\"\"\n",
+    );
+    let config = load_config(&root).expect("custom source config");
+    let findings = scan_findings(&config, &root);
+    for (name, _, widths) in cases {
+        let citations = findings
+            .citations
+            .iter()
+            .filter(|citation| citation.file == root.join(format!("src/{name}.note")))
+            .collect::<Vec<_>>();
+        assert_eq!(citations.len(), 1, "one citation in {name}");
+        let site = citations[0].inline_site.as_ref().expect("an inline site");
+        assert_eq!(site.first_line, 3, "{name}");
+        assert_eq!(site.last_line, 2 + widths.len(), "{name}");
+        assert_eq!(site.line_columns.as_ref(), *widths, "{name}");
+        assert_eq!(site.max_columns, *widths.iter().max().unwrap(), "{name}");
+    }
+    let docs = findings
+        .citations
+        .iter()
+        .filter(|citation| citation.file.ends_with("doc.py"))
+        .collect::<Vec<_>>();
+    assert_eq!(docs.len(), 1);
+    assert!(
+        docs[0].inline_site.is_none(),
+        "Python documentation is not a note"
     );
 }

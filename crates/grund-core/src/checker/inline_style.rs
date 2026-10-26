@@ -55,6 +55,32 @@ fn site_clause(first_line: usize, last_line: usize, citations: &str) -> String {
     }
 }
 
+/// §FS-inline-citation-style.4.1.1.1: every column channel preserves the old
+/// message prefix and lists all physical lines above its selected threshold,
+/// using only the scanner's retained measurements (§AR-scanner.3.1).
+fn column_message(site: &InlineCitationSite, limit: usize, citations: &str) -> String {
+    let over_limit = site
+        .line_columns
+        .iter()
+        .enumerate()
+        .filter(|(_, width)| **width > limit)
+        .map(|(offset, &width)| {
+            format!(
+                "line {}: {width} column{}",
+                site.first_line + offset,
+                plural(width),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        "inline note is {} column{}, over the {limit}-column maximum: {}; over-limit lines: {over_limit}",
+        site.max_columns,
+        plural(site.max_columns),
+        site_clause(site.first_line, site.last_line, citations),
+    )
+}
+
 /// §FS-inline-citation-style.4.1.3: the fix-it clause a line-count finding
 /// carries — the block-splitting rule (§FS-inline-citation-style.1) the author needs to act on the site
 /// clause above. The column cap omits it: a wide line is fixed by wrapping,
@@ -139,15 +165,8 @@ pub(super) fn check_inline_citation_style(
                         path: Some(cite.file.clone()),
                         line: Some(site.first_line),
                         column: None,
-                        // §FS-inline-citation-style.4.1: names the measured size
-                        // and the site
-                        message: format!(
-                            "inline note is {} column{}, over the {}-column maximum: {}",
-                            site.max_columns,
-                            plural(site.max_columns),
-                            schema.notes.max_columns,
-                            site_clause(site.first_line, site.last_line, citations),
-                        ),
+                        // §FS-inline-citation-style.4.1.1.1: all over-cap lines.
+                        message: column_message(site, schema.notes.max_columns, citations),
                         sites: Vec::new(),
                         authority: Vec::new(),
                     });
@@ -181,12 +200,8 @@ pub(super) fn check_inline_citation_style(
                         path: Some(cite.file.clone()),
                         line: Some(site.first_line),
                         column: None,
-                        message: format!(
-                            "inline note is {} column{}, over the {limit}-column maximum: {}",
-                            site.max_columns,
-                            plural(site.max_columns),
-                            site_clause(site.first_line, site.last_line, citations),
-                        ),
+                        // §FS-inline-citation-style.4.1.1.1: use this channel's limit.
+                        message: column_message(site, limit, citations),
                         sites: Vec::new(),
                         authority: Vec::new(),
                     });
