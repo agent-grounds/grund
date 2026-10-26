@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-"""Refuse a release the tree's own messages contradict. §FS-distribution.4.2.2
+"""Check that the tree's messages permit a release. §FS-distribution.4.2.5
 
 A ramp is a promise written into a message. A warning names the release it
 becomes an error in, and once the ramp lands the error names the release the
 change was made in. Both halves are claims about a version, and a release that
 disagrees with one publishes a message the binary it ships in is not.
 
-Given the version about to be cut, this reads the release each message names out
-of the tree's own message text, the shared minimum publishable release
-(§FS-distribution.release-floor), and the deprecation ledger's notice statuses.
-It exits 1 when any of these disagrees.
+With no positional release, check that the message bounds and shared minimum
+publishable release (§FS-distribution.release-floor) leave a nonempty window.
+Exit 1 if no release is possible, without choosing a candidate version.
+
+Given the version about to be cut, also check the deprecation ledger's notice
+statuses (§FS-distribution.4.2.2). Exit 1 when a message, the shared floor or a
+notice disagrees with that release.
+
+Usage: check_release_ramps.py [release] [--root <tree>]
 """
 
 from __future__ import annotations
@@ -125,7 +130,7 @@ def read_release_floor(root: Path) -> str | None:
 def release_window(
     claims: Sequence[Claim], shared_floor: str | None = None,
 ) -> tuple[str | None, str | None]:
-    """Combine floor and message bounds. §FS-distribution.release-floor"""
+    """Combine the inclusive floor and exclusive message ceiling. §FS-distribution.4.2.5"""
     landed = [claim.release for claim in claims if claim.direction == LANDED]
     if shared_floor is not None:
         landed.append(shared_floor)
@@ -142,21 +147,33 @@ def violations(claims: Sequence[Claim], release: str) -> tuple[list[Claim], list
     return behind, ahead
 
 
-def report(claims: Sequence[Claim], release: str, shared_floor: str | None = None) -> list[str]:
+def report(claims: Sequence[Claim], release: str | None, shared_floor: str | None = None) -> list[str]:
     """Name every conflicting bound and the window left. §FS-distribution.4.2.5"""
-    behind, ahead = violations(claims, release)
-    below_floor = shared_floor is not None and version(release) < version(shared_floor)
-    if not behind and not ahead and not below_floor:
-        return []
+    floor, ceiling = release_window(claims, shared_floor)
+    empty = floor is not None and ceiling is not None and version(floor) >= version(ceiling)
+    if release is None:
+        if not empty:
+            return []
+        behind = [c for c in claims if c.direction == LANDED and c.release == floor]
+        ahead = []
+        lines = ["error: this tree cannot be released"]
+    else:
+        behind, ahead = violations(claims, release)
+        below_floor = shared_floor is not None and version(release) < version(shared_floor)
+        if not behind and not ahead and not below_floor:
+            return []
+        lines = [f"error: this tree cannot be released as {release}"]
 
-    lines = [f"error: this tree cannot be released as {release}"]
     if shared_floor is not None:
         lines.append("")
         lines.append(f"  {FLOOR_PATH}:1: minimum publishable release is {shared_floor}.")
     if behind:
         lines.append("")
-        lines.append("  these lines say a change has already been made in a later release,")
-        lines.append("  so cutting this version would ship it under a version that denies it:")
+        if release is None:
+            lines.append("  these lines set the earliest release for changes already made:")
+        else:
+            lines.append("  these lines say a change has already been made in a later release,")
+            lines.append("  so cutting this version would ship it under a version that denies it:")
         lines.extend(f"    {claim.quoted()}" for claim in behind)
     if ahead:
         lines.append("")
@@ -164,9 +181,8 @@ def report(claims: Sequence[Claim], release: str, shared_floor: str | None = Non
         lines.append("  so cutting this version would break the promise rather than keep it:")
         lines.extend(f"    {claim.quoted()}" for claim in ahead)
 
-    floor, ceiling = release_window(claims, shared_floor)
     lines.append("")
-    if floor and ceiling and version(floor) >= version(ceiling):
+    if empty:
         basis = "landed changes and its shared floor" if shared_floor else "the changes it has already made"
         lines.append(
             f"  this tree can be cut as no release at all: at or above {floor} for {basis}, "
@@ -188,20 +204,24 @@ def report(claims: Sequence[Claim], release: str, shared_floor: str | None = Non
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Check a candidate, or just that some release exists. §FS-distribution.4.2.5"""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("release", help="the version about to be cut, without the leading v")
+    parser.add_argument(
+        "release", nargs="?",
+        help="the version about to be cut, without the leading v; omit to check that some release exists",
+    )
     parser.add_argument("--root", type=Path, default=REPO_ROOT, help="repository root to scan")
     args = parser.parse_args(argv)
 
-    if not RELEASE_RE.match(args.release):
+    if args.release is not None and not RELEASE_RE.match(args.release):
         print(f"error: release must look like 0.13.0, got '{args.release}'", file=sys.stderr)
         return 2
 
     # §FS-distribution.release-floor: manifest rewrites cannot lower the tree's floor.
     try:
         shared_floor = read_release_floor(args.root)
-        # §FS-distribution.4.2.2: candidate CI's due-notice refusal runs before construction.
-        ledger_problems = notice_problems(args.root, args.release)
+        # §FS-distribution.4.2.2: only an explicit candidate has ledger notice deadlines.
+        ledger_problems = notice_problems(args.root, args.release) if args.release is not None else []
     except (OSError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -210,7 +230,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if lines:
         print("\n".join(lines), file=sys.stderr)
         return 1
-    print(f"no message in this tree contradicts a release of {args.release}.")
+    if args.release is None:
+        print("the messages and shared floor permit at least one release.")
+    else:
+        print(f"no message in this tree contradicts a release of {args.release}.")
     return 0
 
 
