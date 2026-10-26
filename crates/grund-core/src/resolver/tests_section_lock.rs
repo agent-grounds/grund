@@ -108,14 +108,9 @@ fn text_that_left_for_another_address_is_a_move_and_an_edit_a_refresh() {
         "See \u{a7}FS-login.format.1.",
         "FS-login.format.1 8f332b6fe87bb346\n",
     );
-    assert_eq!(
-        moved,
-        [(
-            "format.1".to_string(),
-            EntryVerdict::Moved {
-                to: "parse.1".to_string()
-            }
-        )]
+    assert!(
+        matches!(&moved[..], [(section, EntryVerdict::Moved { to, .. })]
+            if section == "format.1" && to == "parse.1")
     );
     let (edited, _) = judge(
         "section_lock_edit_in_place",
@@ -125,6 +120,37 @@ fn text_that_left_for_another_address_is_a_move_and_an_edit_a_refresh() {
         "FS-login.format.1 8f332b6fe87bb346\n",
     );
     assert!(matches!(edited[..], [(_, EntryVerdict::Refresh(Some(_)))]));
+}
+
+/// §FS-section-lock.checks.section-address-changed: a move carries the lines that
+/// still cite the recorded address, one per line, sorted by path then line.
+#[test]
+fn a_move_carries_the_lines_still_citing_the_old_address() {
+    let (moved, _) = judge_in(
+        "section_lock_swap_sites",
+        ["Split on commas.", "Trim surrounding whitespace."],
+        "See \u{a7}FS-login.format.1 and \u{a7}FS-login.format.1.\n\nAgain \u{a7}FS-login.format.1.",
+        "FS-login.format.1 8f332b6fe87bb346\n",
+        &[("docs/a.md", "# A\n\nSee \u{a7}FS-login.format.1.\n")],
+    );
+    let [(_, EntryVerdict::Moved { sites, .. })] = &moved[..] else {
+        panic!("expected one move, got {moved:?}");
+    };
+    let sites = sites
+        .iter()
+        .map(|(path, line)| {
+            let name = path.file_name().expect("a file").to_string_lossy();
+            (name.into_owned(), *line)
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        sites,
+        [
+            ("a.md".to_string(), 3),
+            ("use.md".to_string(), 3),
+            ("use.md".to_string(), 5)
+        ]
+    );
 }
 
 #[test]

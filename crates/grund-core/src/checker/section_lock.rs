@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 use crate::config::{Frame, Schema};
 use crate::model::remedies;
-use crate::model::{CheckReport, Code, Diagnostic};
+use crate::model::{CheckReport, Code, Diagnostic, Site};
 use crate::resolver::{EntryVerdict, WorkspaceCheckTarget, judge_section_locks};
 
 /// §FS-section-lock.checks: a lock line grund cannot read, a cited locked
@@ -61,13 +61,13 @@ pub(super) fn check_section_locks<'a>(
             continue;
         };
         for (entry, verdict) in &judgement.verdicts {
-            let (EntryVerdict::Moved { to }, Some(info)) =
+            let (EntryVerdict::Moved { to, sites }, Some(info)) =
                 (verdict, decl.sections.get(&entry.section))
             else {
                 continue;
             };
             let (at, to) = (coordinate(&entry.section), coordinate(to));
-            report.errors.push(located(
+            let mut finding = located(
                 Code::SECTION_ADDRESS_CHANGED,
                 decl.file.clone(),
                 info.line,
@@ -75,7 +75,26 @@ pub(super) fn check_section_locks<'a>(
                     "{at} is cited, and what {lock} recorded for it now sits at {to}; {}",
                     remedies::section_address_changed(&to, &at)
                 ),
-            ));
+            );
+            // §FS-section-lock.checks.section-address-changed: the finding's own words
+            // after the remedy name each line still citing `at`; `sites` holds the same.
+            if !sites.is_empty() {
+                let named = sites
+                    .iter()
+                    .map(|(path, line)| format!("{}:{line}", frame.display_path(path)))
+                    .collect::<Vec<_>>();
+                finding
+                    .message
+                    .push_str(&format!("; {at} is cited at {}", named.join(", ")));
+                finding.sites = sites
+                    .iter()
+                    .map(|(path, line)| Site {
+                        path: path.clone(),
+                        line: *line,
+                    })
+                    .collect();
+            }
+            report.errors.push(finding);
         }
     }
 }

@@ -111,7 +111,6 @@ impl Drop for Tree {
 /// §FS-section-lock.checks.section-address-changed: the 0.20 message, remedy
 /// and all, is a verbatim prefix, and what follows it names the citing line.
 #[test]
-#[ignore = "red until #1022 names the citing sites after the remedy; implement removes this"]
 fn the_moved_email_check_message_keeps_its_bytes_as_a_prefix() {
     let tree = Tree::moved();
     let message = tree.run(&["check", "--only", "section-address-changed"], 1);
@@ -127,7 +126,6 @@ fn the_moved_email_check_message_keeps_its_bytes_as_a_prefix() {
 /// message, so the two agree by construction rather than by matching words
 /// (§FS-errors.5.5.1).
 #[test]
-#[ignore = "red until #1022 names the citing sites after the remedy; implement removes this"]
 fn explain_gives_the_moved_email_errors_own_remedy_and_the_lock_note() {
     let tree = Tree::moved();
     let answer = tree.run(&["config", "explain", "section-address-changed"], 0);

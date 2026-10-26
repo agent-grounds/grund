@@ -1,1 +1,1 @@
-docs/FS-x.md:5: error: FS-x.1.1 is cited, and what .grund/sections/FS-x.lock recorded for it now sits at FS-x.2.1; move it back, cite FS-x.2.1 instead, or leave a pointer to it at FS-x.1.1; if FS-x.2.1 is a copy, edit the copy or cite it from FS-x.1.1
+docs/FS-x.md:5: error: FS-x.1.1 is cited, and what .grund/sections/FS-x.lock recorded for it now sits at FS-x.2.1; move it back, cite FS-x.2.1 instead, or leave a pointer to it at FS-x.1.1; if FS-x.2.1 is a copy, edit the copy or cite it from FS-x.1.1; FS-x.1.1 is cited at docs/use.md:3

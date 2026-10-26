@@ -87,7 +87,7 @@ Exit `1` is a query that found nothing, as with `grund show` for an unknown ID; 
 
 ## Step 5: what clears a finding
 
-A check's message ends in what clears it, and the code's answer prints those
+A check's message carries what clears it, and the code's answer prints those
 words once, with the slots the message fills left as `{names}`, followed by a
 note on what the check compares
 ([§FS-errors.5.5.1](../../docs/functional-spec/FS-errors.md#551-how-a-row-is-read)):
@@ -111,6 +111,9 @@ Note: check compares the text at a cited address with the fingerprint .grund/sec
 
 The `Fix:` line is the same three ways out every `section-address-changed`
 error names: undo the move, follow it, or acknowledge it with a pointer. The
+error itself goes on past them to name each line that still cites the old
+address, the lines that following the move means editing; those are the
+finding's own, so the answer leaves them out. The
 `Note:` line is the rule that keeps you from a fourth way that only silences
 the error: the lock is written by `grund fmt --write` and never by hand.
 [`relative-sections-lock/`](../relative-sections-lock/) is a tree to try it on.
