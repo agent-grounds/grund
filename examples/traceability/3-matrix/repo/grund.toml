@@ -1,0 +1,175 @@
+# A V-model trace for a battery-charging controller, held to a grund schema.
+#
+# Each level of the V is a kind, numbered the way regulated teams number
+# requirements (`SYS-002`). A level cites the level it was derived from; the
+# trace policy in plans/ says which levels must be cited by which.
+grund_config_version = 2
+project_name = "charger-trace"
+
+[schema]
+id_format = "{kind}-{number}"
+
+[schema.sources]
+languages = ["markdown", "c"]
+
+# C headers are C.
+[schema.sources.extensions]
+h = "c"
+
+# Left side of the V: needs, then system and software requirements, one
+# document per level, one requirement per heading.
+[schema.kinds.STK]
+files = ["requirements/stakeholder-needs.md"]
+
+# A requirement is its statement (the lead, in EARS wording) and three
+# attributes, and nothing else.
+[schema.kinds.SYS]
+files = ["requirements/system.md"]
+closed = "must"
+
+[schema.kinds.SYS.fields.verification]
+one_of = ["Inspection", "Analysis", "Demonstration", "Test"]
+presence = "must"
+position = "first"
+
+[schema.kinds.SYS.fields.rationale]
+title = "Rationale"
+presence = "must"
+after = "verification"
+
+[schema.kinds.SYS.fields.trace]
+title = "Traces to"
+presence = "must"
+after = "rationale"
+
+[schema.kinds.SWR]
+files = ["requirements/software.md"]
+closed = "must"
+
+[schema.kinds.SWR.fields.verification]
+one_of = ["Inspection", "Analysis", "Demonstration", "Test"]
+presence = "must"
+position = "first"
+
+[schema.kinds.SWR.fields.rationale]
+title = "Rationale"
+presence = "must"
+after = "verification"
+
+[schema.kinds.SWR.fields.trace]
+title = "Traces to"
+presence = "must"
+after = "rationale"
+
+# Every limit is declared once, here, and bound wherever it is used.
+[schema.kinds.PAR]
+files = ["requirements/parameters.md"]
+form = "value"
+
+# Bottom of the V: the design (low-level requirements) and the code.
+[schema.kinds.DES]
+files = ["design/software-design.md"]
+
+[schema.kinds.DES.fields.trace]
+title = "Traces to"
+presence = "must"
+position = "last"
+
+[schema.kinds.src]
+folders = ["src"]
+citable = false
+
+# Right side of the V: test cases, declared in the test code, and the
+# verification records for what a test cannot show.
+[schema.kinds.TC]
+folders = ["tests"]
+index = false
+
+[schema.kinds.ANA]
+files = ["verification/analyses.md"]
+closed = "must"
+
+[schema.kinds.ANA.fields.verdict]
+one_of = ["Pass", "Fail"]
+presence = "must"
+position = "first"
+
+[schema.kinds.ANA.fields.trace]
+title = "Traces to"
+presence = "must"
+after = "verdict"
+
+[schema.kinds.results]
+folders = ["verification/results"]
+citable = false
+
+# The trace policy: the downward half of the trace, as checked sentences.
+[schema.kinds.RULE]
+files = ["plans/verification-plan.md"]
+form = "rule"
+
+# Upward: each level cites the level it was derived from. A requirement
+# never cites down the V: who realizes and verifies it is `grund refs`.
+[rules.citations.SYS]
+must = ["STK"]
+may = ["SYS", "PAR"]
+default = "must-not"
+
+[rules.citations.SWR]
+must = ["SYS"]
+may = ["SWR", "PAR"]
+default = "must-not"
+
+[rules.citations.DES]
+must = ["SWR"]
+
+[rules.citations.src]
+must = ["DES"]
+
+[rules.citations.TC]
+must = ["SWR"]
+
+[rules.citations.ANA]
+must = ["SWR"]
+
+[rules.citations.results]
+must = ["TC"]
+
+# Every function the code documents traces to the design.
+[rules.citations.src.grounding]
+must = "h2"
+
+# A test record that cites nothing is a finding too, not only one that cites
+# the wrong kind.
+[rules.citations.results.grounding]
+must = "file"
+
+[presentation.kinds.STK]
+title = "Stakeholder needs"
+
+[presentation.kinds.SYS]
+title = "System requirements, in EARS wording"
+
+[presentation.kinds.SWR]
+title = "Software requirements, in EARS wording"
+
+[presentation.kinds.PAR]
+title = "Parameters: each shared limit, declared once"
+
+[presentation.kinds.DES]
+title = "Software design: the low-level requirements"
+
+[presentation.kinds.src]
+title = "Source code"
+
+[presentation.kinds.TC]
+title = "Test cases, declared on the test functions"
+
+[presentation.kinds.ANA]
+title = "Verification by analysis"
+
+[presentation.kinds.results]
+title = "Verification results, one record per build"
+
+[presentation.kinds.RULE]
+title = "Trace criteria: who must cite each level"

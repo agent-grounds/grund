@@ -1,0 +1,50 @@
+charger-trace · grund.toml · v2
+
+kinds and places
+  STK      kind                  requirements/stakeholder-needs.md
+  SYS      kind                  requirements/system.md
+             field verification  must · first · one of Inspection, Analysis, Demonstration, Test
+             field rationale     must · after verification
+             field trace         must · after rationale
+             closed must
+  SWR      kind                  requirements/software.md
+             field verification  must · first · one of Inspection, Analysis, Demonstration, Test
+             field rationale     must · after verification
+             field trace         must · after rationale
+             closed must
+  PAR      kind                  requirements/parameters.md
+             field <number>      may · values
+  DES      kind                  design/software-design.md
+             field trace         must · last
+  src      place                 src/
+  TC       kind                  tests/
+  ANA      kind                  verification/analyses.md
+             field verdict       must · first · one of Pass, Fail
+             field trace         must · after verdict
+             closed must
+  results  place                 verification/results/
+  RULE     kind                  plans/verification-plan.md
+  code     complement            every scanned file no other row claims
+
+citations                        grounded
+  STK      —
+  SYS      must      STK
+           may       SYS (itself)
+           may       PAR
+           must not  everything else
+  SWR      must      SYS
+           may       SWR (itself)
+           may       PAR
+           must not  everything else
+  PAR      —
+  DES      must      SWR
+  src      must      DES         must · h2
+  TC       must      SWR
+  ANA      must      SWR
+  results  must      TC          must · file
+  RULE     —
+  code     —
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it
