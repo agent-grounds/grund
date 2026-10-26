@@ -163,5 +163,14 @@ checked. A citation-only image in a kind's index, `![§<ID>](x.png)`, is no
 entry: write the link beside it, or the ID is reported missing
 ([authored links](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#linking-what-grund-does),
 [example](https://github.com/agent-grounds/grund/blob/main/examples/authored-citations/README.md)).
+
+Describe a write from fmt's own report rather than from the flag you passed. A
+preview row names every kind of rewrite its line gets, so `bare → marker,
+markdown link` means the line is marked and then linked. The `--write` summary
+totals occurrences by kind, as in `rewrote 7 lines: 6 citations marked, 6 links
+written`. After a rename, a lock file's row ends `; deletes the file` or
+`; creates the file`, and its write line ends ` deleted` or ` created`
+([reading fmt's report](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#reading-fmts-report),
+[example](https://github.com/agent-grounds/grund/blob/main/examples/fmt-reporting/README.md)).
 Use the [maintenance guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#maintaining-declarations)
 and its [copy-based rename example](https://github.com/agent-grounds/grund/blob/main/examples/relative-sections-lock/README.md).

@@ -239,6 +239,44 @@ at the old address first ([§FS-section-lock.write](../functional-spec/FS-sectio
 fmt does not replace authored IDs or repair arbitrary URLs. Try the rename on a
 copy with [`examples/relative-sections-lock/`](../../examples/relative-sections-lock/).
 
+### Reading fmt's report
+
+Read the preview before you write, and describe the change from the write's
+report. A preview row names every kind of rewrite its line gets: the first kind
+leads, with the text an expansion writes, and the others follow
+([§FS-fmt.3.5.1](../functional-spec/FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)). Under `--marker` a Markdown line is marked and then linked:
+
+```text
+$ grund fmt --marker
+docs/runbook.md:3: bare → marker, markdown link
+src/inventory/reserve.py:3: bare → marker
+$ grund fmt --marker --write
+rewrote 2 lines: 2 citations marked, 1 link written
+  docs/runbook.md (1)
+  src/inventory/reserve.py (1)
+```
+
+The totals count every occurrence, so a citation marked and then linked counts
+once in each, and a link counts only when it is new or points somewhere new
+([§FS-fmt.3.7](../functional-spec/FS-fmt.md#37-the---write-report)). After a rename, the lock file of the old ID is deleted and
+the lock file of the new one is created, and the report says so instead of
+counting lines in each
+([§FS-section-lock.write.report](../functional-spec/FS-section-lock.md#writereport-what-fmt-reports)):
+
+```text
+$ grund fmt
+docs/notes.md:1: markdown link
+.grund/sections/FS-login.lock:1: section lock: drop FS-login.code.1; deletes the file
+.grund/sections/FS-sign-in.lock:1: section lock: add FS-sign-in.code.1; creates the file
+$ grund fmt --write
+rewrote 3 lines: 1 link written, 2 section-lock entries
+  .grund/sections/FS-login.lock (1) deleted
+  .grund/sections/FS-sign-in.lock (1) created
+  docs/notes.md (1)
+```
+
+Run both on a copy with [`examples/fmt-reporting/`](../../examples/fmt-reporting/).
+
 ## Schema and links: the rules a repository is held to
 
 `grund` reads a repository as a graph. Every scan turns the tree into one

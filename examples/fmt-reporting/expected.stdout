@@ -1,0 +1,4 @@
+docs/notes.md:1: markdown link
+docs/runbook.md:1: bare → marker, markdown link
+.grund/sections/FS-login.lock:1: section lock: drop FS-login.code.1; deletes the file
+.grund/sections/FS-sign-in.lock:1: section lock: add FS-sign-in.code.1; creates the file

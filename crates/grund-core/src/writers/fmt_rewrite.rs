@@ -286,10 +286,8 @@ fn fmt_line_at(
         rewrite.anchor_detail = anchor_detail(&wrapped.repointed);
         final_line = wrapped.line;
     }
-    // §FS-fmt.3.6: whichever label leads, a line that expanded a shorthand also
-    // names the text it will write — the one rewrite no later pass can question
-    // (§DF-shorthand-numeric-run.2.7). §FS-fmt.3.6.1: local and shorthand details
-    // share the row, in source order.
+    // §FS-fmt.3.6: whichever label leads, an expansion names the text it writes
+    // (§DF-shorthand-numeric-run.2.7); local and shorthand share it (§FS-fmt.3.6.1).
     expansions.sort_by_key(|(start, _, _)| *start);
     rewrite.expansions = expansions
         .iter()
