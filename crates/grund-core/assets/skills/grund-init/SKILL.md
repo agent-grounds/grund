@@ -162,7 +162,7 @@ checked. A citation-only image in a kind's index,
 `![§<ID>](x.png)`, is no entry: write the link beside it, or the ID is reported
 missing ([authored links](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#linking-what-grund-does),
 [example](https://github.com/agent-grounds/grund/blob/main/examples/authored-citations/README.md)).
-Describe a write by fmt's report, which names each rewrite on a line, counts
+Describe a write by fmt's report, which names each rewrite, counts
 kinds and marks lock files deleted or created. Use the
 [maintenance guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#maintaining-declarations)
 and its [copy-based rename example](https://github.com/agent-grounds/grund/blob/main/examples/relative-sections-lock/README.md).
