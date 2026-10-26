@@ -44,8 +44,8 @@
     "refusals": {},
     "absentQuery": "FS-absent",
     "fmt": {
-      "changes": [{"path":"docs/functional-spec/README.md","line":3,"label":"markdown link"}],
-      "writeChanges": [{"path":"docs/functional-spec/README.md","line":3,"label":"markdown link"}],
+      "changes": [{"path":"docs/functional-spec/README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/functional-spec/README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/functional-spec/README.md":{"3":"- [§FS-entry](FS-entry.md#fs-entry-entrypoint)"}}
     }
   },

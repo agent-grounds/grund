@@ -36,8 +36,8 @@
       "stubs": [{"column":3,"display_path":"docs/second.md","line":1,"path":"<repo>/docs/second.md","project":null,"query_id":"FS-second","section_separator":".","target_line":11,"target_path":"<repo>/target.md","text":"FS-second: [../target.md](../target.md)"}]
     },
     "fmt": {
-      "changes": [{"path":"docs/uses.md","line":1,"label":"markdown link"}],
-      "writeChanges": [{"path":"docs/uses.md","line":1,"label":"markdown link"}],
+      "changes": [{"path":"docs/uses.md","line":1,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/uses.md","line":1,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/uses.md":{"1":"Uses [§FS-second](../target.md#fs-second-second)."}}
     }
   },

@@ -47,8 +47,8 @@
       "FS-001-alpha.1": {"code":"ambiguous-section","message":"ambiguous section: FS-001-alpha.1 (declared at docs/functional-spec/FS-001-alpha.md:5, docs/functional-spec/FS-001-alpha.md:9)","sites":[{"path":"docs/functional-spec/FS-001-alpha.md","line":5},{"path":"docs/functional-spec/FS-001-alpha.md","line":9}]}
     },
     "fmt": {
-      "changes": [{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":5,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":7,"label":"markdown link"}],
-      "writeChanges": [{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":5,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":7,"label":"markdown link"}],
+      "changes": [{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-beta.md","line":5,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-beta.md","line":7,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-beta.md","line":5,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-beta.md","line":7,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/functional-spec/FS-002-beta.md":{"3":"Beta cites [§FS-001-alpha.1](FS-001-alpha.md#1-first-claim) here.","5":"Clean cites [§FS-001-alpha.2](FS-001-alpha.md#2-clean-section) here.","7":"Bare cites [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha) here."}}
     }
   },

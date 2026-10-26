@@ -91,7 +91,7 @@ impl View<'_> {
             let head = if changes.is_empty() {
                 "rewrote 0 lines\n".to_string()
             } else {
-                format!("rewrote {} {plural}:\n", changes.len())
+                format!("rewrote {} {plural}:{}\n", changes.len(), totals(changes))
             };
             let body: String = files
                 .iter()
@@ -121,7 +121,14 @@ impl View<'_> {
             .into_iter()
             .flatten()
             .filter(|c| !within || self.within(c["path"].as_str().unwrap()))
-            .map(|c| json!({"path":self.raw(c["path"].as_str().unwrap()),"line":c["line"],"label":c["label"]}))
+            .map(|c| {
+                let mut counts = serde_json::Map::new();
+                for (kind, ..) in KINDS {
+                    counts.insert(kind.into(), json!(c["counts"][kind].as_u64().unwrap_or(0)));
+                }
+                json!({"path":self.raw(c["path"].as_str().unwrap()),"line":c["line"],
+                    "label":c["label"],"counts":counts,"lock_file":null})
+            })
             .collect()
     }
 
@@ -249,5 +256,46 @@ impl View<'_> {
         let mut node = node(&python, "refs")?;
         self.refs_summaries(&mut node, &python);
         Ok(json!({"cli":self.cli_refs(coordinate, &python),"python":python,"node":node}))
+    }
+}
+
+/// §FS-fmt.3.7: each kind's count, in the report's order, with its singular and plural.
+const KINDS: [(&str, &str, &str); 6] = [
+    ("triggers_marked", "trigger marked", "triggers marked"),
+    ("citations_marked", "citation marked", "citations marked"),
+    (
+        "local_sections_expanded",
+        "local section expanded",
+        "local sections expanded",
+    ),
+    (
+        "shorthands_expanded",
+        "shorthand expanded",
+        "shorthands expanded",
+    ),
+    ("links_written", "link written", "links written"),
+    (
+        "section_lock_entries",
+        "section-lock entry",
+        "section-lock entries",
+    ),
+];
+
+/// §FS-fmt.3.7: the write summary's totals, a zero left out, or nothing at all.
+fn totals(changes: &[Value]) -> String {
+    let named: Vec<String> = KINDS
+        .iter()
+        .filter_map(|(kind, one, many)| {
+            let n: u64 = changes
+                .iter()
+                .map(|c| c["counts"][kind].as_u64().unwrap())
+                .sum();
+            (n > 0).then(|| format!("{n} {}", if n == 1 { one } else { many }))
+        })
+        .collect();
+    if named.is_empty() {
+        String::new()
+    } else {
+        format!(" {}", named.join(", "))
     }
 }

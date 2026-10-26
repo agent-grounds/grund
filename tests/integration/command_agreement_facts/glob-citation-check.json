@@ -47,7 +47,7 @@
     "refusals": {},
     "fmt": {
       "changes": [],
-      "writeChanges": [{"path":"docs/cites.md","line":8,"label":"markdown link"},{"path":"docs/cites.md","line":9,"label":"markdown link"},{"path":"docs/cites.md","line":10,"label":"markdown link"},{"path":"docs/cites.md","line":11,"label":"markdown link"},{"path":"docs/cites.md","line":12,"label":"markdown link"}],
+      "writeChanges": [{"path":"docs/cites.md","line":8,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/cites.md","line":9,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/cites.md","line":10,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/cites.md","line":11,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/cites.md","line":12,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/cites.md":{"8":"Emphasis *[§FS-login](FS-login.md#fs-login-login)* here.","9":"Question [§FS-login](FS-login.md#fs-login-login)? here.","10":"Footnote [§FS-login](FS-login.md#fs-login-login)[^1] here.","11":"Trailing [§FS-c](FS-c.md#fs-c-c)* here.","12":"Bold **[§FS-login](FS-login.md#fs-login-login)**."}}
     },
     "editor": {

@@ -36,8 +36,8 @@
     ],
     "refusals": {},
     "fmt": {
-      "changes": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link"}],
-      "writeChanges": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link"}],
+      "changes": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/functional-spec/FS-001-alpha.md":{"3":"References [§FS-002-beta](FS-002-beta.md#fs-002-beta-beta)."},"docs/functional-spec/FS-002-beta.md":{"3":"References [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha)."}}
     }
   },

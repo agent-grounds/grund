@@ -41,8 +41,8 @@
     ],
     "refusals": {},
     "fmt": {
-      "changes": [{"path":"docs/functional-spec/FS-001-entrypoint.md","line":3,"label":"markdown link"}],
-      "writeChanges": [{"path":"docs/functional-spec/FS-001-entrypoint.md","line":3,"label":"markdown link"}],
+      "changes": [{"path":"docs/functional-spec/FS-001-entrypoint.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/functional-spec/FS-001-entrypoint.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/functional-spec/FS-001-entrypoint.md":{"3":"Implemented by [§AR-001-router.1](../../src/router.go)."}}
     },
     "editor": {

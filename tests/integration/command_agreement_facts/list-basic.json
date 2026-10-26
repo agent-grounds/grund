@@ -40,8 +40,8 @@
     ],
     "refusals": {},
     "fmt": {
-      "changes": [{"path":"docs/architecture/AR-001-auth.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-session.md","line":3,"label":"markdown link"}],
-      "writeChanges": [{"path":"docs/architecture/AR-001-auth.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-session.md","line":3,"label":"markdown link"}],
+      "changes": [{"path":"docs/architecture/AR-001-auth.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-session.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/architecture/AR-001-auth.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-session.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/architecture/AR-001-auth.md":{"3":"Implements [§FS-001-login](../functional-spec/FS-001-login.md#fs-001-login-user-can-log-in)."},"docs/functional-spec/FS-002-session.md":{"3":"After [§FS-001-login](FS-001-login.md#fs-001-login-user-can-log-in) succeeds, a session starts."}}
     }
   },

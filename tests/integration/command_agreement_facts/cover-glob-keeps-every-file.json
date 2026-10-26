@@ -51,8 +51,8 @@
     ],
     "refusals": {},
     "fmt": {
-      "changes": [{"path":"docs/fs/FS-ledger.md","line":3,"label":"markdown link"},{"path":"docs/fs/FS-ledger.md","line":7,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":3,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":7,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":11,"label":"markdown link"}],
-      "writeChanges": [{"path":"docs/fs/FS-ledger.md","line":3,"label":"markdown link"},{"path":"docs/fs/FS-ledger.md","line":7,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":3,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":7,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":11,"label":"markdown link"}],
+      "changes": [{"path":"docs/fs/FS-ledger.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/fs/FS-ledger.md","line":7,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/fs/FS-login.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/fs/FS-login.md","line":7,"label":"markdown link","counts":{"links_written":2}},{"path":"docs/fs/FS-login.md","line":11,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/fs/FS-ledger.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/fs/FS-ledger.md","line":7,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/fs/FS-login.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/fs/FS-login.md","line":7,"label":"markdown link","counts":{"links_written":2}},{"path":"docs/fs/FS-login.md","line":11,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/fs/FS-ledger.md":{"3":"Ledger lead, kept with [§FS-audit](FS-audit.md#fs-audit-audit).","7":"Rows follow [§FS-audit.entries](FS-audit.md#entries-entries)."},"docs/fs/FS-login.md":{"3":"Login lead, relying on [§FS-audit](FS-audit.md#fs-audit-audit).","7":"Sessions cite [§FS-ledger.2](FS-ledger.md#2-totals) and [§FS-audit.entries](FS-audit.md#entries-entries).","11":"Expiry cites [§FS-ledger.1](FS-ledger.md#1-rows)."}}
     }
   },
