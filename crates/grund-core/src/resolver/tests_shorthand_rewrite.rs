@@ -247,7 +247,8 @@ fn fmt_expands_a_typed_trigger_shorthand_in_one_pass() {
     assert_eq!(line, "Typed §FS-042-user-login here.");
     assert_eq!(
         label,
-        "trigger \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login"
+        "trigger \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; \
+         shorthand \u{2192} canonical"
     );
 
     let (line, label) = fmt_line(

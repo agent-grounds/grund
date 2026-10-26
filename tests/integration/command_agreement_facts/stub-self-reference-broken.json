@@ -40,8 +40,8 @@
       "AR-001-router": {"code":"broken-stub","message":"broken stub: AR-001-router (stub at docs/architecture/AR-001-router.md:1 points at docs/architecture/AR-001-router.md, which contains no inline declaration of AR-001-router)","questions":["show"]}
     },
     "fmt": {
-      "changes": [{"path":"docs/functional-spec/FS-001-entrypoint.md","line":3,"label":"markdown link"}],
-      "writeChanges": [{"path":"docs/functional-spec/FS-001-entrypoint.md","line":3,"label":"markdown link"}],
+      "changes": [{"path":"docs/functional-spec/FS-001-entrypoint.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/functional-spec/FS-001-entrypoint.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/functional-spec/FS-001-entrypoint.md":{"3":"This cites §AR-001-router and keeps [§FS-001-entrypoint](FS-001-entrypoint.md#fs-001-entrypoint-entrypoint) used."}}
     }
   },

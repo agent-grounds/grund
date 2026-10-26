@@ -40,8 +40,8 @@
     ],
     "refusals": {},
     "fmt": {
-      "changes": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-001-alpha.md","line":7,"label":"markdown link"},{"path":"docs/functional-spec/FS-001-alpha.md","line":11,"label":"markdown link"},{"path":"docs/functional-spec/FS-001-alpha.md","line":15,"label":"markdown link"}],
-      "writeChanges": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-001-alpha.md","line":7,"label":"markdown link"},{"path":"docs/functional-spec/FS-001-alpha.md","line":11,"label":"markdown link"},{"path":"docs/functional-spec/FS-001-alpha.md","line":15,"label":"markdown link"}],
+      "changes": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-001-alpha.md","line":7,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-001-alpha.md","line":11,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-001-alpha.md","line":15,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-001-alpha.md","line":7,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-001-alpha.md","line":11,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-001-alpha.md","line":15,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/functional-spec/FS-001-alpha.md":{"3":"A preamble above every declaration cites [§FS-002-beta](FS-002-beta.md#fs-002-beta-beta).","7":"The lead of the body, above every section, cites [§FS-002-beta](FS-002-beta.md#fs-002-beta-beta).","11":"A named section cites [§FS-002-beta](FS-002-beta.md#fs-002-beta-beta).","15":"A numbered section cites [§FS-002-beta](FS-002-beta.md#fs-002-beta-beta)."}}
     }
   },

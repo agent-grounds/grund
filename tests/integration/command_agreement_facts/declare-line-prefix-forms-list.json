@@ -87,8 +87,8 @@
     "refusals": {},
     "absentQuery": "FS-absent",
     "fmt": {
-      "changes": [{"path":"docs/functional-spec/FS-entry.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/README.md","line":3,"label":"markdown link"}],
-      "writeChanges": [{"path":"docs/functional-spec/FS-entry.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/README.md","line":3,"label":"markdown link"}],
+      "changes": [{"path":"docs/functional-spec/FS-entry.md","line":3,"label":"markdown link","counts":{"links_written":8}},{"path":"docs/functional-spec/README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/functional-spec/FS-entry.md","line":3,"label":"markdown link","counts":{"links_written":8}},{"path":"docs/functional-spec/README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/functional-spec/FS-entry.md":{"3":"Hosts: [§AR-lua](../../src/lua/router.lua), [§AR-haskell](../../src/haskell/Router.hs), [§AR-haskell-caret](../../src/haskell/Router.hs), [§AR-clojure](../../src/clojure/router.clj), [§AR-elisp](../../src/elisp/router.el), [§AR-lisp](../../src/lisp/router.lisp), [§AR-sql](../../src/sql/router.sql), [§AR-rust](../../src/rust/router.rs)."},"docs/functional-spec/README.md":{"3":"- [§FS-entry](FS-entry.md#fs-entry-entrypoint)"}}
     }
   },

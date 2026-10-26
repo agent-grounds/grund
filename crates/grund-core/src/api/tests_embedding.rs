@@ -84,7 +84,10 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     })
     .expect("public fmt api");
     assert_eq!(fmt_output.changes.len(), 1);
-    assert_eq!(fmt_output.changes[0].label, "trigger → marker");
+    assert_eq!(
+        fmt_output.changes[0].label,
+        "trigger → marker, markdown link"
+    );
 
     let proposed = propose_id(
         "FS",

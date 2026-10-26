@@ -37,8 +37,8 @@
     },
     "absentQuery": "FS-absent",
     "fmt": {
-      "changes": [{"path":"docs/notes.md","line":9,"label":"markdown link"}],
-      "writeChanges": [{"path":"docs/notes.md","line":9,"label":"markdown link"}],
+      "changes": [{"path":"docs/notes.md","line":9,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/notes.md","line":9,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/notes.md":{"9":"The local declaration itself is cited as [§FS-login](functional-spec/FS-login.md#fs-login-the-customer-signs-in)."}}
     }
   },
