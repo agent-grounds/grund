@@ -1,2 +1,2 @@
 docs/fs.md:3: error: unknown project alias org
-docs/fs.md:1: warning: declared but never cited: FS-a; cite it, or remove the declaration if nothing needs it
+docs/fs.md:1: warning: declared but never cited: FS-a; cite it

@@ -1,6 +1,6 @@
 src/A.hs:3: error: `FS-BadHaskell` resolves for compatibility but does not match [id] format = "{kind}-{number}-{slug}" — rename it or change the effective format; this became an error in grund 0.16.0
 src/a.lisp:1: error: `FS-BadLisp` resolves for compatibility but does not match [id] format = "{kind}-{number}-{slug}" — rename it or change the effective format; this became an error in grund 0.16.0
 src/a.lua:1: error: `FS-BadLua` resolves for compatibility but does not match [id] format = "{kind}-{number}-{slug}" — rename it or change the effective format; this became an error in grund 0.16.0
-src/A.hs:3: warning: declared but never cited: FS-BadHaskell; cite it, or remove the declaration if nothing needs it
-src/a.lisp:1: warning: declared but never cited: FS-BadLisp; cite it, or remove the declaration if nothing needs it
-src/a.lua:1: warning: declared but never cited: FS-BadLua; cite it, or remove the declaration if nothing needs it
+src/A.hs:3: warning: declared but never cited: FS-BadHaskell; cite it
+src/a.lisp:1: warning: declared but never cited: FS-BadLisp; cite it
+src/a.lua:1: warning: declared but never cited: FS-BadLua; cite it

@@ -1,3 +1,3 @@
-{"severity":"warning","path":"docs/goals.md","line":3,"code":"unused","message":"declared but never cited: GOAL-purpose; cite it, or remove the declaration if nothing needs it","sites":null,"authority":null}
+{"severity":"warning","path":"docs/goals.md","line":3,"code":"unused","message":"declared but never cited: GOAL-purpose; cite it","sites":null,"authority":null}
 {"severity":"warning","path":"requirements.md","line":3,"code":"missing-citation","message":"FS-example must cite GOAL (citation direction); add such a citation within it","sites":null,"authority":null}
-{"severity":"warning","path":"requirements.md","line":3,"code":"unused","message":"declared but never cited: FS-example; cite it, or remove the declaration if nothing needs it","sites":null,"authority":null}
+{"severity":"warning","path":"requirements.md","line":3,"code":"unused","message":"declared but never cited: FS-example; cite it","sites":null,"authority":null}

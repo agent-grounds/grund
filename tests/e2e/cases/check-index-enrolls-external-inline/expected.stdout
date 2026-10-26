@@ -1,1 +1,1 @@
-src/bus.rs:1: warning: declared but never cited: AR-001-bus (its index entry at docs/architecture/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it
+src/bus.rs:1: warning: declared but never cited: AR-001-bus (its index entry at docs/architecture/README.md:5 does not count as a use); cite it

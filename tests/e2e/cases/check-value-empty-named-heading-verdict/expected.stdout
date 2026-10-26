@@ -6,4 +6,4 @@ values/named-after-numeric.md:3: error: invalid value declaration for CONST-name
 values/named-after-numeric.md:3: error: unmarked heading inside CONST-named-after-numeric; number it (## 2. 2.values:) as CONST-named-after-numeric.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
 values/well-formed.md:3: error: invalid value declaration for CONST-well-formed: value component heading must contain a nonempty component; correct what the reason names
 values/well-formed.md:3: error: unmarked heading inside CONST-well-formed; number it (## 2. extra:) as CONST-well-formed.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
-docs/use.md:1: warning: declared but never cited: DOC-use; cite it, or remove the declaration if nothing needs it
+docs/use.md:1: warning: declared but never cited: DOC-use; cite it

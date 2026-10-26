@@ -132,7 +132,7 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
             String::from_utf8_lossy(&check.stdout),
             concat!(
                 "external-link.md:3: error: unknown reference FS-missing\n",
-                "external-link.md:1: warning: declared but never cited: FS-external; cite it, or remove the declaration if nothing needs it\n",
+                "external-link.md:1: warning: declared but never cited: FS-external; cite it\n",
             )
         );
         assert_eq!(String::from_utf8_lossy(&check.stderr), "");

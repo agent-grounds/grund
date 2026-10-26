@@ -1,2 +1,2 @@
-requirements.md:3: warning: declared but never cited: FS-example; cite it, or remove the declaration if nothing needs it
+requirements.md:3: warning: declared but never cited: FS-example; cite it
 requirements.md:5: warning: no snapshot for TICKET-1234 in docs/tickets.md — run grund fetch TICKET-1234

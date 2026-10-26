@@ -1,2 +1,2 @@
 docs/other.md:1: error: duplicate declaration of FS-second (also declared at source.rs:6)
-docs/other.md:1: warning: declared but never cited: FS-second; cite it, or remove the declaration if nothing needs it
+docs/other.md:1: warning: declared but never cited: FS-second; cite it

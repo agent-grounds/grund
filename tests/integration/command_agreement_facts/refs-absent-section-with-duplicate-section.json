@@ -41,7 +41,7 @@
       {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
       {"severity":"error","code":"dangling","path":"docs/functional-spec/FS-002-beta.md","line":9,"token":"§FS-999-missing.7","message":"unknown reference FS-999-missing","sites":[]},
       {"severity":"error","code":"missing-section","path":"docs/functional-spec/FS-002-beta.md","line":11,"token":"§FS-001-alpha.99","message":"missing section FS-001-alpha.99","sites":[]},
-      {"severity":"warning","code":"unused","path":"docs/functional-spec/FS-002-beta.md","line":1,"message":"declared but never cited: FS-002-beta; cite it, or remove the declaration if nothing needs it","sites":[]}
+      {"severity":"warning","code":"unused","path":"docs/functional-spec/FS-002-beta.md","line":1,"message":"declared but never cited: FS-002-beta; cite it","sites":[]}
     ],
     "refusals": {
       "FS-001-alpha.1": {"code":"ambiguous-section","message":"ambiguous section: FS-001-alpha.1 (declared at docs/functional-spec/FS-001-alpha.md:5, docs/functional-spec/FS-001-alpha.md:9)","sites":[{"path":"docs/functional-spec/FS-001-alpha.md","line":5},{"path":"docs/functional-spec/FS-001-alpha.md","line":9}]}

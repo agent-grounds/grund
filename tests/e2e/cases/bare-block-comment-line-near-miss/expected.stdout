@@ -1,2 +1,2 @@
 src/lib.rs:2: error: `FS-Bad` resolves for compatibility but does not match [id] format = "{kind}-{slug}" — rename it or change the effective format; this became an error in grund 0.16.0
-src/lib.rs:2: warning: declared but never cited: FS-Bad; cite it, or remove the declaration if nothing needs it
+src/lib.rs:2: warning: declared but never cited: FS-Bad; cite it

@@ -188,7 +188,7 @@ fn issue_49_warnings_and_enabled_suggestions_are_selectable_but_do_not_fail() {
     assert_run(
         &run(&warning_root, &["--only=unused"]),
         0,
-        "docs/functional-spec/FS-unused.md:1: warning: declared but never cited: FS-unused; cite it, or remove the declaration if nothing needs it\n",
+        "docs/functional-spec/FS-unused.md:1: warning: declared but never cited: FS-unused; cite it\n",
         "",
     );
     assert_run(
@@ -392,6 +392,6 @@ fn issue_49_selector_cannot_hide_an_incomplete_scan() {
     assert_eq!(text(&output).0, "");
     assert_eq!(
         text(&output).1,
-        "error: docs/functional-spec/FS-gone.md: broken symlink: the target does not exist\n"
+        "error: docs/functional-spec/FS-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan\n"
     );
 }

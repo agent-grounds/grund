@@ -27,7 +27,7 @@
     "citations": [],
     "findings": [
       {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
-      {"severity":"warning","code":"unused","path":"docs/FS-doc.md","line":1,"message":"declared but never cited: FS-doc; cite it, or remove the declaration if nothing needs it","sites":[]}
+      {"severity":"warning","code":"unused","path":"docs/FS-doc.md","line":1,"message":"declared but never cited: FS-doc; cite it","sites":[]}
     ],
     "refusals": {},
     "fmt": {

@@ -1,3 +1,3 @@
 docs/fs.md:5: error: `FS-beta` resolves for compatibility but does not match [id] format = "{kind}-{number}-{slug}" — rename it or change the effective format; this became an error in grund 0.16.0
-docs/fs.md:1: warning: declared but never cited: FS-001-alpha; cite it, or remove the declaration if nothing needs it
-docs/fs.md:5: warning: declared but never cited: FS-beta; cite it, or remove the declaration if nothing needs it
+docs/fs.md:1: warning: declared but never cited: FS-001-alpha; cite it
+docs/fs.md:5: warning: declared but never cited: FS-beta; cite it

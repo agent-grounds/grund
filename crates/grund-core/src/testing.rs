@@ -760,8 +760,9 @@ pub(crate) fn over_the_line_cap(
     vec![(
         line,
         format!(
-            "inline note is {lines} line{}, over the 3-line maximum: {site}; a blank line splits a note, an empty comment line does not",
-            if lines == 1 { "" } else { "s" }
+            "inline note is {lines} line{}, over the 3-line maximum: {site}; a blank line splits a note, an empty comment line does not; {}",
+            if lines == 1 { "" } else { "s" },
+            crate::model::remedies::inline_citation_style_lines()
         ),
     )]
 }
@@ -779,9 +780,10 @@ pub(crate) fn over_the_column_cap(
     vec![(
         line,
         format!(
-            "inline note is {columns} column{}, over the 100-column maximum: line {line} cites {citations}; over-limit lines: line {line}: {columns} column{}",
+            "inline note is {columns} column{}, over the 100-column maximum: line {line} cites {citations}; over-limit lines: line {line}: {columns} column{}; {}",
             if columns == 1 { "" } else { "s" },
-            if columns == 1 { "" } else { "s" }
+            if columns == 1 { "" } else { "s" },
+            crate::model::remedies::inline_citation_style_columns()
         ),
     )]
 }

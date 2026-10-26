@@ -483,7 +483,7 @@ Plain `list` prints one row for each declaration of the ID the target holds, wit
 target's title, once for all its stubs as [§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once) says:
 `FS-x  src/x.rs:1  X`. A target that declares the ID twice prints two rows, each marked as
 [§FS-list.2.6](FS-list.md#26-duplicate-declarations) marks a duplicate. `check` reports a finding about the declaration at the
-declaration's line in the target: `src/x.rs:1: warning: declared but never cited: FS-x; cite it, or remove the declaration if nothing needs it`.
+declaration's line in the target: `src/x.rs:1: warning: declared but never cited: FS-x; cite it`.
 
 Before grund 0.19.0 plain `list` printed `FS-x  docs/fs/x.md:1  → ../../src/x.rs` and `check`
 placed those findings at the stub; [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) moved both.
