@@ -236,6 +236,9 @@ with the declaration and citations. Locks are keyed by declaration ID, so moving
 only the file leaves its lock name alone. Do not hand-edit locks: fmt does not
 silently approve a protected section move. Fix the citations or leave a pointer
 at the old address first ([§FS-section-lock.write](../functional-spec/FS-section-lock.md#write-who-writes-the-lock)).
+When `check` reports a moved section, `grund config explain section-address-changed`
+prints the three ways out and why a lock edit is not one
+([§FS-config-explain.4](../functional-spec/FS-config-explain.md#4-a-codes-answer)).
 fmt does not replace authored IDs or repair arbitrary URLs. Try the rename on a
 copy with [`examples/relative-sections-lock/`](../../examples/relative-sections-lock/).
 

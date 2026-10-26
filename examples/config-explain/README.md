@@ -2,7 +2,7 @@
 
 This runnable walkthrough asks `grund config explain` about a version-2 project ([§FS-config-explain](../../docs/functional-spec/FS-config-explain.md#fs-config-explain-grund-config-explain-answers-from-the-installed-binary-and-in-the-version-the-projects-config-is-read-as-what-any-key-accepts-and-means-and-what-any-check-code-means-and-what-turns-it-on)). It is for anyone who meets a check code or a config key they do not know, an agent above all: the answer comes from the grund that is running, in the version the project's `grund.toml` is read as, with no network and no other checkout. Open `explain-1-index/repo/grund.toml` first. It is version 2, declares one kind, and sets one lead limit, `[schema.leads.words] warn = 120`.
 
-The example pins four runs, one per step, each against the same config ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). Every run reads the config and writes nothing.
+The example pins five runs, one per step, each against the same config ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). Every run reads the config and writes nothing.
 
 ## Step 1: the index
 
@@ -84,6 +84,36 @@ hint: version 2 writes its settings in [schema.sources], [schema.sources.extensi
 ```
 
 Exit `1` is a query that found nothing, as with `grund show` for an unknown ID; exit `2` is kept for a usage mistake or a file whose version cannot be read. A misspelt target says how to list what there is: `grund config explain` for the tables, `grund config explain --codes` for the codes.
+
+## Step 5: what clears a finding
+
+A check's message ends in what clears it, and the code's answer prints those
+words once, with the slots the message fills left as `{names}`, followed by a
+note on what the check compares
+([§FS-errors.5.5.1](../../docs/functional-spec/FS-errors.md#551-how-a-row-is-read)):
+
+```bash
+grund config explain section-address-changed examples/config-explain/explain-5-fix/repo
+echo $?    # 0
+```
+
+```text
+grund.toml is read as version 2.
+
+section-address-changed
+A cited section's text has moved to another address, and the cited address now holds something else.
+
+Severity: error, fixed.
+On: when a citation names a relative heading's address (a condition of the tree)
+Fix: move it back, cite {new address} instead, or leave a pointer to it at {cited address}; if {new address} is a copy, edit the copy or cite it from {cited address}
+Note: check compares the text at a cited address with the fingerprint .grund/sections/<ID>.lock recorded for it, and finds that fingerprint at another address of the declaration. Only grund fmt --write writes a lock (grund config explain unrecorded-section-citation says where to run it). It never approves a move: the one thing it records at the old address is a pointer to the new one. Do not edit a lock by hand.
+```
+
+The `Fix:` line is the same three ways out every `section-address-changed`
+error names: undo the move, follow it, or acknowledge it with a pointer. The
+`Note:` line is the rule that keeps you from a fourth way that only silences
+the error: the lock is written by `grund fmt --write` and never by hand.
+[`relative-sections-lock/`](../relative-sections-lock/) is a tree to try it on.
 
 ## What to take from it
 
