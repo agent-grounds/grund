@@ -159,6 +159,23 @@ and `fmt` never silently approves a protected section move
 ([§FS-section-lock.write.never-a-move](FS-section-lock.md#writenever-a-move-fmt-never-approves-a-move)).
 The preview/write contract remains [§FS-fmt.3](FS-fmt.md#3-outputs)'s.
 
+#### 2.3.4 `show` says a section read opens with its heading
+
+The `show` page's `--format` row describes what each format prints for a section read as well
+as for a whole declaration, because an agent writes its checks against that row before it runs
+the command. `text`, the default, is the body, which opens with a selected section's own heading
+line ([§FS-show.2.2](FS-show.md#22-section), [§FS-show.3.1.1](FS-show.md#311-text)); `md` adds the declaration heading above it
+([§FS-show.3.1.2](FS-show.md#312-md)); `json` wraps the text body ([§FS-show.3.1.3](FS-show.md#313-json)). The row reads exactly:
+
+```text
+  --format text|md|json  text (default) is the body, opening with a selected section's
+                         own heading line; md adds the declaration heading above it;
+                         json wraps the text body
+```
+
+A row that called `text` the body and `md` the format that keeps the heading said that a text
+section read is heading-less, which no format is.
+
 ## 3. Cross-subcommand flags
 
 - `--format text|json` — accepted by the subcommands with a machine-readable result or finding surface ([§FS-errors.5](FS-errors.md#5-json-format) lists them, [§FS-integrations.5](FS-integrations.md#5-json-format)). `text` is the default; `json` opts into the stable machine shapes, on the streams of [§FS-cli.3.1](FS-cli.md#31-the---format-json-streams). It is not a global flag: the operational commands [§FS-errors.5](FS-errors.md#5-json-format) lists, whose output is human text or generated files, reject `--format`.
