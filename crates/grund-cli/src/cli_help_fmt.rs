@@ -1,4 +1,5 @@
-/// The `grund fmt --help` page (§FS-cli.2.3.3, §FS-fmt): the rewrite modes, their report,
+/// The `grund fmt --help` page (§FS-cli.2.3.3, §FS-fmt): the rewrite modes, their report
+/// (§FS-fmt.3.5.1, §FS-fmt.3.7, §FS-section-lock.write.report),
 /// the exit codes, and examples of each mode.
 fn print_fmt_help() {
     println!(
@@ -43,7 +44,17 @@ fn print_fmt_help() {
         "With neither --check nor --write, fmt previews every change --write would apply and exits 1 if any."
     );
     println!(
-        "--write prints `rewrote N lines:` then one `  <path> (count)` line per file touched."
+        "Each preview row names every kind of rewrite its line gets: `bare → marker, markdown link`."
+    );
+    println!(
+        "--write prints `rewrote N lines:` and its totals, e.g. `rewrote 7 lines: 6 citations marked, 6 links written`,"
+    );
+    println!("then one `  <path> (count)` line per file touched.");
+    println!(
+        "After a rename, a lock file fmt deletes or creates says so: its first preview row ends"
+    );
+    println!(
+        "`; deletes the file` or `; creates the file`, and its --write line ends ` deleted` or ` created`."
     );
     println!(
         "The report goes to stdout (like `grund check`); CLI-level `error:` lines go to stderr."

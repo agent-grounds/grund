@@ -27,7 +27,11 @@ Options:
                        --path-base=invocation replaces a version-1 `[output] relative_paths = false`.
 
 With neither --check nor --write, fmt previews every change --write would apply and exits 1 if any.
---write prints `rewrote N lines:` then one `  <path> (count)` line per file touched.
+Each preview row names every kind of rewrite its line gets: `bare → marker, markdown link`.
+--write prints `rewrote N lines:` and its totals, e.g. `rewrote 7 lines: 6 citations marked, 6 links written`,
+then one `  <path> (count)` line per file touched.
+After a rename, a lock file fmt deletes or creates says so: its first preview row ends
+`; deletes the file` or `; creates the file`, and its --write line ends ` deleted` or ` created`.
 The report goes to stdout (like `grund check`); CLI-level `error:` lines go to stderr.
 
 Exit:  0 nothing to do, or --write succeeded · 1 changes pending (dry run / --check) · 2 unreadable tree or CLI error.
