@@ -10,4 +10,7 @@ exclude = [
   # The optional-member example is a checkout without packages/secret, whose
   # managed blocks keep listing it (§FS-init.2.3.4.15.8): the link is the lesson.
   "examples/workspace-optional-member/.*/packages/secret/?$",
+  # The fmt-reporting example is the tree just after a rename, whose stale link
+  # is what its `fmt` run re-derives (§FS-fmt.3.7): the link is the lesson.
+  "examples/fmt-reporting/repo/docs/functional-spec/FS-login\\.md",
 ]
