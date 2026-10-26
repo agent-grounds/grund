@@ -19,8 +19,8 @@ impl MemberRootGuidance {
     pub(crate) fn message(&self, namespace: &str) -> Option<String> {
         (namespace == self.alias).then(|| {
             format!(
-                "unknown project alias {namespace}; {namespace} names the enclosing workspace's root project, and this project is a member of that workspace — run `grund check` from the workspace root at `{}` to validate cross-project citations",
-                self.location
+                "unknown project alias {namespace}; {namespace} names the enclosing workspace's root project, and this project is a member of that workspace — {}",
+                crate::model::remedies::unknown_project_root(&self.location)
             )
         })
     }

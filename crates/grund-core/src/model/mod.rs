@@ -47,6 +47,9 @@ mod missing_stub_repair;
 mod paths;
 mod patterns;
 mod records;
+// §AR-config.9.1: the rendered *Fix* fillers, the one place a message's remedy is built.
+#[rustfmt::skip]
+pub(crate) mod remedies;
 mod report;
 mod section_lock;
 mod stub_resolution;
@@ -55,7 +58,7 @@ mod unread_roots;
 mod values;
 
 pub use armed::{Armed, Switch};
-pub use catalog::{ClauseBy, CodeClause, CodeEnabled, CodeSeverity};
+pub use catalog::{ClauseBy, CodeCase, CodeClause, CodeEnabled, CodeFix, CodeSeverity};
 pub use codes::Code;
 pub use e2e::{E2eCase, E2eSpecRef};
 pub(crate) use expected::GENERATED_SECTIONS;
@@ -103,7 +106,7 @@ pub(crate) use section_lock::{
 pub(crate) use stub_resolution::{
     Paired, PairedDeclarations, StubResolution, paired_declarations, section_resolves,
 };
-pub(crate) use text::{CITATION_DIRECTION_REPAIR, format_list, json_escape, plural};
+pub(crate) use text::{citation_direction_repair, format_list, json_escape, plural};
 pub(crate) use unread_roots::{Refused, RootOrigin, RootRow};
 pub(crate) use values::{
     JSON_NUMBER_RE, authored_component, component_text_is_valid, first_unequal_component,

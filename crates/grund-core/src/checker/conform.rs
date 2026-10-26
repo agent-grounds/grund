@@ -12,6 +12,7 @@ use super::sections::check_section_headings;
 use super::sizes::check_oversized_leads;
 use crate::config::{Extent, Frame, Schema};
 use crate::grammar::render_catalog_id;
+use crate::model::remedies;
 use crate::model::{
     Catalog, CheckReport, Code, Declaration, Diagnostic, ExcludingRule, Id, MissingStubRepair,
     Site, StubResolution, Switch, format_path, paired_declarations, sort_path_key,
@@ -256,20 +257,18 @@ fn check_broken_stubs(
 /// (§FS-declarations.stubs.target.3, §AR-checker.2.5).
 fn excluded_target_message(target: &std::path::Path, rule: &ExcludingRule) -> String {
     let (reason, remedy) = match rule {
+        // §FS-errors.5.5.1: `[scan] exclude` is version 1's, the pattern version 2's.
         ExcludingRule::Exclude(entry) => (
             format!("[scan] exclude names {entry}"),
-            format!("move the target out of {entry}, or take {entry} out of [scan] exclude"),
+            remedies::broken_stub_excluded_entry(1, entry),
         ),
         ExcludingRule::Pattern(pattern) => (
             format!("[schema.sources] exclude matches it by {pattern}"),
-            format!(
-                "move the target out of what {pattern} matches, or take {pattern} out of \
-                 [schema.sources] exclude"
-            ),
+            remedies::broken_stub_excluded_pattern(2, pattern),
         ),
         ExcludingRule::IgnoreFile { file, pattern } => (
             format!("{file} ignores it by {pattern}"),
-            format!("move the target out of what {file} ignores, or stop ignoring it there"),
+            remedies::broken_stub_ignored(2, file),
         ),
     };
     format!(

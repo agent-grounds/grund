@@ -5,6 +5,7 @@
 //! constructors of `fmt` refuse with (§FS-fmt.7.4), so the two name one block alike.
 
 use crate::config::Frame;
+use crate::model::remedies;
 use std::collections::BTreeMap;
 
 use crate::grammar::{Grammar, render_catalog_id};
@@ -52,7 +53,10 @@ pub(crate) fn conflict_marker_finding(
         path: Some(block.file.clone()),
         line: Some(block.first),
         column: None,
-        message: format!("unresolved merge conflict {named}, {lines}: resolve it by hand"),
+        message: format!(
+            "unresolved merge conflict {named}, {lines}: {}",
+            remedies::conflict_marker()
+        ),
         sites: sites
             .into_iter()
             .map(|line| Site {

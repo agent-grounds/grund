@@ -6,6 +6,7 @@
 //! sits in, and whether it matches a rule's target. `report.rs` keeps the
 //! declaration-shape rules and the diagnostic helpers they share.
 
+use crate::model::remedies;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -329,11 +330,11 @@ pub(super) fn empty_citation_obligation_warning(
         "should"
     };
     // §FS-config-v2.rules.citations: v2 names the table, and the row key, its own way.
-    let v2 = frame.version == 2;
     let table = citations_table(frame.version);
     let message = if row.kind.is_some() {
         format!(
-            "[{table}.{citing_kind}] {level} applies to nothing — {place} declares no {citing_kind} ID; did you mean `citable = false`?"
+            "[{table}.{citing_kind}] {level} applies to nothing — {place} declares no {citing_kind} ID; {}",
+            remedies::empty_citation_obligation_citable(frame.version)
         )
     } else {
         // §FS-check.2.2.1.2: the row-key half is advice, so it is given only where it is
@@ -341,12 +342,12 @@ pub(super) fn empty_citation_obligation_warning(
         // setting, and this run is already reporting what it caught (§FS-check.3.6).
         let tail = if row_grounding(rules, frame.run, &row.name).0 {
             String::new()
-        } else if v2 {
-            format!(
-                "; set `must = \"file\"` in [rules.citations.{citing_kind}.grounding] to make that an error"
-            )
         } else {
-            format!("; set require_grounding = true on the {place} row to make that an error")
+            // §FS-errors.5.5.1: the version's side of the row's grounding case.
+            format!(
+                "; {}",
+                remedies::empty_citation_obligation_grounding(frame.version, citing_kind, &place)
+            )
         };
         format!(
             "[{table}.{citing_kind}] {level} applies to nothing — no scanned file in {place} carries a citation{tail}"

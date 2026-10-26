@@ -1,6 +1,7 @@
 //! Sentence-specific configuration guidance, separate from shared kind errors
 //! (§FS-rule-refusals.sentences.rewrite.no-form.place).
 
+use crate::model::remedies;
 use std::collections::BTreeMap;
 
 use super::RuleVocabulary;
@@ -94,17 +95,15 @@ impl SubjectKinds {
         }
         let target = escape_toml_basic(target);
         // §FS-init.2.3.5.2.2: the entry alone never judges a file that cites nothing.
-        let grounding = self
-            .ungrounded
-            .get(&place.name)
-            .map_or_else(String::new, |setting| {
-                format!(
-                    ", and {setting}, without which a file there that cites nothing is not checked"
-                )
-            });
+        // §FS-errors.5.5.1: invalid-rule's place case, with its grounding where the entry
+        // alone never judges a file that cites nothing.
+        let express = match self.ungrounded.get(&place.name) {
+            Some(setting) => remedies::invalid_rule_place_grounding(&place.table, &target, setting),
+            None => remedies::invalid_rule_place(&place.table, &target),
+        };
         Some(format!(
-            "; for configured place \"{}\", express this obligation in grund.toml: [{}] with must = [\"{target}\"]{grounding}",
-            place.name, place.table
+            "; for configured place \"{}\", {express}",
+            place.name
         ))
     }
 }

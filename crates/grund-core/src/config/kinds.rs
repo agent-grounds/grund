@@ -427,7 +427,10 @@ pub(crate) fn unverifiable_reason(alias: Option<&str>, kind: &str) -> String {
             format!("no workspace is in scope here, so no namespace can be searched for {kind}")
         }
     };
-    format!("{reason} — check from the workspace root")
+    format!(
+        "{reason} — {}",
+        crate::model::remedies::invalid_rule_workspace()
+    )
 }
 
 #[cfg(test)]

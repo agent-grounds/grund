@@ -1,8 +1,11 @@
 //! The rendered §FS-errors.5.5 catalog, embedded: what each code means, the
-//! severity it carries and what turns it on, in each config version, read by the
-//! grammar of §FS-errors.5.5.1 when `scripts/render_check_codes.py` rendered it.
-//! `grund config explain` prints it (§FS-config-explain.4) and the off line of
-//! §FS-check.1.4.1 is built from it, so the two read one copy (§AR-config.9.1).
+//! severity it carries, what turns it on and what clears its finding, in each
+//! config version, read by the grammar of §FS-errors.5.5.1 when
+//! `scripts/render_check_codes.py` rendered it. `grund config explain` prints it
+//! (§FS-config-explain.4), the off line of §FS-check.1.4.1 is built from it and a
+//! message's remedy is filled from it, so they all read one copy (§AR-config.9.1).
+
+use std::fmt::{Display, Write as _};
 
 use once_cell::sync::Lazy;
 use serde::Deserialize;
@@ -31,6 +34,30 @@ pub(crate) struct Row {
 pub(crate) struct Side {
     pub(crate) severity: CodeSeverity,
     pub(crate) enabled: CodeEnabled,
+    pub(crate) fix: CodeFix,
+    pub(crate) note: Option<String>,
+}
+
+/// A *Fix* cell's side, read and its references expanded, backticks kept
+/// (§FS-errors.5.5.1).
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum CodeFix {
+    /// One template, its `{slot}`s unfilled.
+    Template { text: String },
+    /// One template per remedy, in the cell's order.
+    Cases { cases: Vec<CodeCase> },
+    /// `none — <why>`: the words after `none — `.
+    None { text: String },
+    /// `not in version N`.
+    Absent { text: String },
+}
+
+/// One labelled case of a *Fix* cell.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+pub struct CodeCase {
+    pub label: String,
+    pub text: String,
 }
 
 /// A *Severity* cell's side, read (§FS-errors.5.5.1).
@@ -100,6 +127,50 @@ impl CodeEnabled {
             CodeEnabled::Always | CodeEnabled::Absent { .. } => &[],
         }
     }
+}
+
+/// The template `code`'s row gives in `version`, or its case `case`: the side of
+/// that version, or the other where that one holds none. A side that is one
+/// template answers every case the other side names.
+fn template(code: Code, version: u32, case: Option<&str>) -> &'static str {
+    let row = row(code);
+    let pick = |fix: &'static CodeFix| match (fix, case) {
+        (CodeFix::Template { text }, _) => Some(text.as_str()),
+        (CodeFix::Cases { cases }, Some(label)) => cases
+            .iter()
+            .find(|known| known.label == label)
+            .map(|known| known.text.as_str()),
+        _ => None,
+    };
+    pick(&row.side(version).fix)
+        .or_else(|| pick(&row.side(if version >= 2 { 1 } else { 2 }).fix))
+        .expect("a rendered filler names a template its row has")
+}
+
+/// §FS-errors.5.5.1: `code`'s *Fix* template for `version`, or its case `case`,
+/// with each `{slot}` filled from `slots`: the one way a message's remedy is
+/// worded, which `remedies.rs` calls (§AR-config.9.1).
+pub(crate) fn fill(
+    code: Code,
+    version: u32,
+    case: Option<&str>,
+    slots: &[(&str, &dyn Display)],
+) -> String {
+    let mut out = String::new();
+    let mut rest = template(code, version, case);
+    while let Some(open) = rest.find('{') {
+        out.push_str(&rest[..open]);
+        let close = open + rest[open..].find('}').expect("a rendered slot closes");
+        let name = &rest[open + 1..close];
+        let (_, value) = slots
+            .iter()
+            .find(|(slot, _)| *slot == name)
+            .expect("a rendered filler passes every slot of its template");
+        let _ = write!(out, "{value}");
+        rest = &rest[close + 1..];
+    }
+    out.push_str(rest);
+    out
 }
 
 /// A rendered catalog's rows, in code order.

@@ -2,6 +2,7 @@ use crate::config::{Frame, Schema};
 #[cfg(test)]
 use crate::grammar::render_id;
 use crate::grammar::{is_inside_inline_code, render_catalog_id};
+use crate::model::remedies;
 use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
 
 /// §FS-check.3.1: the dangling message. A near same-kind ID is a likely typo; a
@@ -43,13 +44,23 @@ pub(super) fn dangling_message_spelled(
     let unknown = qualify(namespace, spelling);
     let near = nearest_declared_id(frame, namespace, findings, missing, spelling);
     let escape = in_inline_code.then(|| format!("<{}>{unknown}", schema.citation.marker));
+    // §FS-errors.5.5.1: the case of dangling's Fix the search and the site pick.
     match (near, escape) {
         (Some(near), Some(escape)) => format!(
-            "unknown reference {unknown}; did you mean {near}? (or write {escape} if this is an illustration)"
+            "unknown reference {unknown}; {}",
+            remedies::dangling_near_escape(near, escape)
         ),
-        (Some(near), None) => format!("unknown reference {unknown}; did you mean {near}?"),
+        (Some(near), None) => {
+            format!(
+                "unknown reference {unknown}; {}",
+                remedies::dangling_near(near)
+            )
+        }
         (None, Some(escape)) => {
-            format!("unknown reference {unknown}; write {escape} if this is an illustration")
+            format!(
+                "unknown reference {unknown}; {}",
+                remedies::dangling_escape(escape)
+            )
         }
         (None, None) => format!("unknown reference {unknown}"),
     }
@@ -77,14 +88,21 @@ pub(super) fn missing_snapshot_message(
     };
     let near = nearest_declared_id(frame, namespace, findings, missing, spelling);
     let escape = in_inline_code.then(|| format!("<{}>{rendered}", schema.citation.marker));
-    match (near, escape) {
-        (Some(near), Some(escape)) => {
-            format!("{base}; did you mean {near}? (or write {escape} if this is an illustration)")
+    // §FS-errors.5.5.1: `must` reports dangling, otherwise missing-snapshot, and each
+    // message carries its own code's case.
+    let remedy = match (near, escape, must) {
+        (Some(near), Some(escape), true) => remedies::dangling_near_escape(near, escape),
+        (Some(near), Some(escape), false) => remedies::missing_snapshot_near_escape(near, escape),
+        (Some(near), None, true) => remedies::dangling_near(near),
+        (Some(near), None, false) => remedies::missing_snapshot_near(near),
+        (None, Some(escape), true) => remedies::dangling_escape(escape),
+        (None, Some(escape), false) => remedies::missing_snapshot_escape(escape),
+        (None, None, true) => return format!("{base} — {}", remedies::dangling_fetch(rendered)),
+        (None, None, false) => {
+            return format!("{base} — {}", remedies::missing_snapshot_fetch(rendered));
         }
-        (Some(near), None) => format!("{base}; did you mean {near}?"),
-        (None, Some(escape)) => format!("{base}; write {escape} if this is an illustration"),
-        (None, None) => format!("{base} — run grund fetch {rendered}"),
-    }
+    };
+    format!("{base}; {remedy}")
 }
 
 /// §FS-check.3.1.2: whether a citation site sits inside a Markdown inline-code

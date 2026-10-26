@@ -65,5 +65,8 @@ pub(crate) fn plural(value: usize) -> &'static str {
 /// citation-direction pass is the checker's and the rule sentence is the rules',
 /// and the rules sit below the checker, so the spelling goes all the way down
 /// (§AR-system.4).
-pub(crate) const CITATION_DIRECTION_REPAIR: &str =
-    " — re-point the citation or downgrade it to a plain Markdown link";
+/// The words are forbidden-citation's *Fix* case, filled from its catalog row
+/// (§FS-errors.5.5.1).
+pub(crate) fn citation_direction_repair() -> String {
+    format!(" — {}", super::remedies::forbidden_citation_re_point())
+}

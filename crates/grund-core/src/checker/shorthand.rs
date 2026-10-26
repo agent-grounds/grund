@@ -10,6 +10,7 @@
 //! verdict is taken here, beside `references.rs`, the only caller
 //! (§AR-core-module-layout.1).
 
+use crate::model::remedies;
 use std::collections::BTreeMap;
 
 use super::references::ReferenceTier;
@@ -86,12 +87,17 @@ fn shorthand_diagnostic(
                     line: Some(cite.line),
                     column: Some(cite.column),
                     message: format!(
-                        "shorthand {written} sits in a numeric run and was not rewritten; \
-                         write {canonical}, or <{}>{} if these are old numbers",
-                        schema.citation.marker,
-                        written
-                            .strip_prefix(schema.citation.marker.as_str())
-                            .unwrap_or(written),
+                        "shorthand {written} sits in a numeric run and was not rewritten; {}",
+                        remedies::shorthand_numeric_run(
+                            &canonical,
+                            format!(
+                                "<{}>{}",
+                                schema.citation.marker,
+                                written
+                                    .strip_prefix(schema.citation.marker.as_str())
+                                    .unwrap_or(written)
+                            )
+                        ),
                     ),
                     sites: Vec::new(),
                     authority: Vec::new(),
@@ -103,7 +109,10 @@ fn shorthand_diagnostic(
             if target.schema.citation.shorthand == ShorthandPolicy::Accepted {
                 return None;
             }
-            format!("shorthand citation {written}; write {canonical}")
+            format!(
+                "shorthand citation {written}; {}",
+                remedies::shorthand_citation(canonical)
+            )
         }
         many => format!(
             "shorthand citation {written} is ambiguous: {}",

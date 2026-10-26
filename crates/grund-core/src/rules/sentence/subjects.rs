@@ -18,6 +18,7 @@ use super::recovery::{
 };
 use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary};
 use crate::grammar::{named_section_component, parse_id_arg, render_input_id, unnamed_component};
+use crate::model::remedies;
 
 /// The reason a subject opening with the fixed word in the wrong case is
 /// refused for: the rule's own (§FS-rule-refusals.sentences), which a
@@ -151,8 +152,8 @@ impl SubjectRefusal {
         // §FS-rule-refusals.sentences.modal-chapter: the released reason stays its prefix.
         match self.modal_chapter {
             Some(name) => format!(
-                "{reason} — chapter name \"{name}\" is read as the rule's modality, so rename \
-                 the chapter"
+                "{reason} — chapter name \"{name}\" is read as the rule's modality, so {}",
+                remedies::invalid_rule_rename()
             ),
             None => reason,
         }

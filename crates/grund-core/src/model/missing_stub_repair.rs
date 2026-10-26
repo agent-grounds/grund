@@ -1,6 +1,7 @@
 //! Shared missing-target repair guidance from recorded independent homes
 //! (§FS-declarations.stubs.repair). No target is read or paired here.
 
+use super::remedies;
 use std::path::Path;
 
 use super::{Declaration, PairedDeclarations, StubResolution, format_path};
@@ -77,13 +78,11 @@ impl<'a> MissingStubRepair<'a> {
                                  linking to the same file will not pair it"
                             ));
                         } else {
-                            suffix.push_str(&format!(
-                                "; point the stub link at {site} to that real home"
-                            ));
+                            suffix.push_str(&format!("; {}", remedies::duplicate_home(site)));
                         }
                     }
                 } else {
-                    suffix.push_str("; point the stub link there");
+                    suffix.push_str(&format!("; {}", remedies::duplicate_there()));
                 }
             }
             _ => suffix.push_str(&format!(
@@ -133,9 +132,11 @@ impl<'a> MissingStubRepair<'a> {
                  linking to the same file will not pair it \
                  (see the duplicate declaration finding for its location)"
             ),
+            // §FS-errors.5.5.1: both versions give broken-stub's case alike.
             1 => format!(
-                "; {id} has one real declaration home; point the stub link there \
-                 (see the duplicate declaration finding for its location)"
+                "; {id} has one real declaration home; {} \
+                 (see the duplicate declaration finding for its location)",
+                remedies::broken_stub_one_home(2)
             ),
             _ => format!(
                 "; {id} has several real declaration homes \

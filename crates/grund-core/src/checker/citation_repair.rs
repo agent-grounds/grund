@@ -7,7 +7,8 @@ use std::collections::BTreeMap;
 use super::citation_prohibitions::citation_site_level;
 use super::index::marked_index_entries;
 use crate::config::{Frame, Rules, Schema};
-use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, CheckReport, Code, Expected};
+use crate::model::remedies;
+use crate::model::{Catalog, CheckReport, Code, Expected, citation_direction_repair};
 
 /// §FS-check.3.12.2: replace only the ordinary repair at actual entry sites,
 /// retaining any trailing compatibility clause for either direction producer.
@@ -45,14 +46,13 @@ pub(crate) fn repair_index_citations(
         let Some(cite) = entries.get(&(path, line, column)) else {
             continue;
         };
-        let Some((prefix, trailing)) = finding.message.split_once(CITATION_DIRECTION_REPAIR) else {
+        let Some((prefix, trailing)) = finding.message.split_once(&citation_direction_repair())
+        else {
             continue;
         };
+        // §FS-errors.5.5.1: each repair is a case of forbidden-citation's Fix.
         let repair = if !finding.authority.is_empty() {
-            format!(
-                "change the prohibition in rule {}",
-                finding.authority.join(", ")
-            )
+            remedies::forbidden_citation_index_rule(finding.authority.join(", "))
         } else {
             let Some((level, matched)) = citation_site_level(rules, cite) else {
                 continue;
@@ -64,18 +64,11 @@ pub(crate) fn repair_index_citations(
             };
             let table = format!("[{table}.{}]", cite.source_kind);
             if matched.is_empty() {
-                format!(
-                    "add {} to the may list in {table}, preserving existing permissions",
-                    cite.id.kind
-                )
+                remedies::forbidden_citation_index_may(&cite.id.kind, &table)
             } else {
-                format!(
-                    "change the matching {} prohibition in {table}",
-                    level.as_str()
-                )
+                remedies::forbidden_citation_index_prohibition(level.as_str(), &table)
             }
         };
-        finding.message =
-            format!("{prefix} — retain the marked index entry and {repair}{trailing}");
+        finding.message = format!("{prefix} — {repair}{trailing}");
     }
 }

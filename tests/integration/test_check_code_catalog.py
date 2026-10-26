@@ -54,9 +54,6 @@ class CheckCodeCatalogTests(unittest.TestCase):
         self.assertEqual(render_check_codes.sides("—"), ("—", "—"))
 
 
-# red until #1027 renders the Fix and Note cells; implement removes each marker below.
-RED = unittest.expectedFailure
-
 # A run of words: a maximal stretch of a Fix template between its slots and references,
 # its case label dropped, of at least this many words once trimmed of edge punctuation.
 RUN_WORDS = 4
@@ -144,30 +141,25 @@ class CheckCodeRemedyTests(unittest.TestCase):
 
     maxDiff = None
 
-    @RED
     def test_every_row_names_its_fix(self):
         blank = [row["Code"] for row in render_check_codes.rows() if not row.get("Fix")]
         self.assertEqual(blank, [], "rows whose Fix cell is blank")
 
-    @RED
     def test_the_rendered_remedy_fillers_are_written_beside_the_handles(self):
         remedies = REPO_ROOT / "crates" / "grund-core" / "src" / "model" / "remedies.rs"
         self.assertIn(remedies, render_check_codes.render())
 
-    @RED
     def test_a_blank_fix_is_refused(self):
         with with_fix({"dangling": ("", "—")}):
             with self.assertRaisesRegex(render_check_codes.CatalogError, "`dangling`"):
                 render_check_codes.catalog()
 
-    @RED
     def test_an_unbalanced_slot_is_refused(self):
         for fix in ("cite {new address instead", "cite new address} instead"):
             with self.subTest(fix=fix), with_fix({"dangling": (fix, "—")}):
                 with self.assertRaisesRegex(render_check_codes.CatalogError, "`dangling`"):
                     render_check_codes.catalog()
 
-    @RED
     def test_an_unknown_or_unusable_reference_is_refused(self):
         for fix, other in (("then {fix of `no-such-code`}", None),
                            ("then {fix of `duplicate`}", "none — nothing clears it"),
@@ -179,7 +171,6 @@ class CheckCodeRemedyTests(unittest.TestCase):
                 with self.assertRaisesRegex(render_check_codes.CatalogError, "`dangling`"):
                     render_check_codes.catalog()
 
-    @RED
     def test_an_id_or_a_link_in_a_fix_or_a_note_is_refused(self):
         for cells in (("see §FS-check.3.1", "—"), ("see [the spec](FS-check.md)", "—"),
                       ("run grund check again", "see §FS-check.3.1")):
@@ -187,7 +178,6 @@ class CheckCodeRemedyTests(unittest.TestCase):
                 with self.assertRaisesRegex(render_check_codes.CatalogError, "`dangling`"):
                     render_check_codes.catalog()
 
-    @RED
     def test_a_reference_is_expanded_and_backticks_are_kept(self):
         with with_fix({"dangling": ("to rebuild it, {fix of `duplicate`}", "—"),
                        "duplicate": ("run `grund init` in its root", "—")}):
@@ -197,7 +187,6 @@ class CheckCodeRemedyTests(unittest.TestCase):
             self.assertIn("to rebuild it, run `grund init` in its root",
                           json.dumps(read[version]["fix"], ensure_ascii=False))
 
-    @RED
     def test_a_split_fix_and_note_read_each_side(self):
         with with_fix({"dangling": ("v2: run the first edit · v1: run the second edit",
                                     "v2: first note · v1: second note")}):
@@ -209,7 +198,6 @@ class CheckCodeRemedyTests(unittest.TestCase):
             self.assertIn(f"{own} note", said)
             self.assertNotIn(other, said)
 
-    @RED
     def test_cases_and_none_are_read(self):
         with with_fix({"dangling": ("outdated: run the first edit ‖ missing: run the second edit", "—"),
                        "duplicate": ("none — nothing the user does clears it", "—")}):
@@ -220,7 +208,6 @@ class CheckCodeRemedyTests(unittest.TestCase):
             self.assertIn(word, said)
         self.assertIn("nothing the user does clears it", json.dumps(none["2"]["fix"]))
 
-    @RED
     def test_no_fix_wording_is_written_twice(self):
         """§AR-config.9.1: no run of words a Fix cell holds is also a string literal's
         in a non-test source under `crates/`, so a remedy is reworded in one cell."""

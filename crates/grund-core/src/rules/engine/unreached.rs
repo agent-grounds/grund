@@ -8,6 +8,7 @@ use super::super::{RuleLevel, RulePolarity, RuleRelation, RuleSubject};
 use super::authority::Authority;
 use super::index::FactIndex;
 use super::{SemanticRule, label, push_node};
+use crate::model::remedies;
 use crate::model::{Code, Diagnostic, LANDED_CLAUSE};
 
 /// §FS-rules.checks.unreached-declaration: one finding per semantic rule group
@@ -48,9 +49,9 @@ pub(super) fn report_unreached(
     };
     for declaration in unreached_declarations(kind, selected, index) {
         let message = format!(
-            "{} has no {name} chapter, so {authority} cannot reach it; add the chapter, \
-             or narrow the rule to the declarations that have one{landed}",
-            label(facts, &declaration)
+            "{} has no {name} chapter, so {authority} cannot reach it; {}{landed}",
+            label(facts, &declaration),
+            remedies::unreached_declaration()
         );
         push_node(
             out,

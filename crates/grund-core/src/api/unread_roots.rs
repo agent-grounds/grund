@@ -4,6 +4,7 @@
 //! question of its own (§AR-scanner.1.13). `grund check` and the LSP snapshot both build it here, so an
 //! editor and a terminal over one tree say the same thing (§FS-lsp.4.1).
 
+use crate::model::remedies;
 use std::path::Path;
 
 use crate::config::Config;
@@ -51,6 +52,7 @@ pub(super) fn unread_root_message(row: &RootRow, v2: bool) -> String {
             format!("[schema.kinds.{kind}] file `{}`", row.written)
         }
     };
+    let version = if v2 { 2 } else { 1 };
     let list = if v2 {
         "[schema.sources] languages"
     } else {
@@ -63,7 +65,7 @@ pub(super) fn unread_root_message(row: &RootRow, v2: bool) -> String {
     };
     // §FS-config.3.4.7: a non-citable row may name the file only as a place.
     if matches!(row.origin, RootOrigin::Home { citable: false, .. }) {
-        fixes.push("set `scan = false` on the row if it only lists a place".to_string());
+        fixes.push(remedies::unread_scan_root_place(version));
     }
     format!(
         "{label} is not read — {reason}, so nothing in it is checked. {}.",
@@ -84,24 +86,23 @@ fn extension_reason_and_fixes(
         (Some(ext), true) => format!("no language in {list} reads `.{ext}`"),
         (None, _) => format!("it has no extension, and {list} reads a file only by its extension"),
     };
-    // Listing the extension is offered only where there is one to list.
+    // Listing the extension is offered only where there is one to list. Each fix is a
+    // case of the row's Fix, on the version's side (§FS-errors.5.5.1).
     let fixes: Vec<String> = match (&row.origin, ext, v2) {
-        (_, _, true) => vec!["Give the file an extension a listed language reads".to_string()],
+        (_, _, true) => vec![remedies::unread_scan_root_language(2)],
         (RootOrigin::Include, Some(ext), false) => vec![
-            format!("Add \"{ext}\" to [scan] extensions"),
-            "drop the entry".to_string(),
+            remedies::unread_scan_root_add(1, ext),
+            remedies::unread_scan_root_drop(1),
         ],
         (RootOrigin::Include, None, false) => vec![
-            "Rename the file to an extension the list holds".to_string(),
-            "drop the entry".to_string(),
+            remedies::unread_scan_root_rename(1),
+            remedies::unread_scan_root_drop(1),
         ],
         (RootOrigin::Home { .. }, Some(ext), false) => vec![
-            format!("Add \"{ext}\" to [scan] extensions"),
-            "give the file an extension the list holds".to_string(),
+            remedies::unread_scan_root_add(1, ext),
+            remedies::unread_scan_root_give(1),
         ],
-        (RootOrigin::Home { .. }, None, false) => {
-            vec!["Rename the file to an extension the list holds".to_string()]
-        }
+        (RootOrigin::Home { .. }, None, false) => vec![remedies::unread_scan_root_rename(1)],
     };
     (reason, fixes)
 }
@@ -123,18 +124,15 @@ fn hidden_reason_and_fixes(
         (true, None, _) => "it has no extension".to_string(),
     };
     let reason = format!("its name begins with `.`, and {rule}");
+    let version = if v2 { 2 } else { 1 };
     let rename = match (row.refused.extension, v2) {
-        (false, _) => "Rename the file to a name that is not hidden",
-        (true, false) => {
-            "Rename the file to a name that is not hidden and an extension the list holds"
-        }
-        (true, true) => {
-            "Rename the file to a name that is not hidden and an extension a listed language reads"
-        }
+        (false, _) => remedies::unread_scan_root_hidden(version),
+        (true, false) => remedies::unread_scan_root_hidden_list(1),
+        (true, true) => remedies::unread_scan_root_hidden_language(2),
     };
-    let mut fixes = vec![rename.to_string()];
+    let mut fixes = vec![rename];
     if row.origin == RootOrigin::Include {
-        fixes.push("drop the entry".to_string());
+        fixes.push(remedies::unread_scan_root_drop(version));
     }
     (reason, fixes)
 }

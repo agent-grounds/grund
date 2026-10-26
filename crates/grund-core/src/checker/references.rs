@@ -19,6 +19,7 @@ use super::support::{
 };
 use crate::config::{Frame, Schema};
 use crate::grammar::{render_catalog_id, render_citation_id};
+use crate::model::remedies;
 use crate::model::{Catalog, CheckReport, Code, Diagnostic, section_resolves};
 use crate::resolver::{WorkspaceCheckTarget, join_alternatives, target_for_citation};
 use crate::workspace::{member_root_guidance, namespace_is_unverified};
@@ -63,7 +64,7 @@ fn local_section_release_attribution() -> String {
 fn full_citation_or_escape(schema: &Schema, written: &str) -> String {
     let marker = &schema.citation.marker;
     let tail = written.strip_prefix(marker).unwrap_or(written);
-    format!("write a full citation or <{marker}>{tail} to show the shape without citing it")
+    remedies::local_section_citation_escape(format!("<{marker}>{tail}"))
 }
 
 /// §AR-checker.2.3, §AR-checker.2.4, §AR-checker.2.12: resolve every citation and
@@ -106,10 +107,10 @@ pub(super) fn check_citation_resolution(
         // escape instead.
         let resolves = section_resolves(findings, &cite.id, section);
         let remedy = if resolves {
-            format!(
-                "write {}{owner}{}{section}",
+            remedies::local_section_citation_write(format!(
+                "{}{owner}{}{section}",
                 schema.citation.marker, schema.ids.section_separator
-            )
+            ))
         } else {
             format!(
                 "{owner} has no section {section}, so {}",
@@ -119,14 +120,16 @@ pub(super) fn check_citation_resolution(
         // §FS-check.3.24.1: offered exactly where the next formatter pass would
         // write this site — the test §FS-check.3.14.4 makes for the sibling rule,
         // so no finding names a command that would answer `rewrote 0 lines`.
+
+        // §FS-errors.5.5.1: its own case, after the release clause rather than a slot in it.
         let command = if cite.shorthand_rewritable
             && tier == ReferenceTier::Configured
             // §FS-check.3.24.1: an absent target section is a site fmt declines.
             && resolves
         {
-            "; run `grund fmt --write`"
+            format!("; {}", remedies::local_section_citation_fmt())
         } else {
-            ""
+            String::new()
         };
         report.errors.push(Diagnostic {
             code: Code::LOCAL_SECTION_CITATION,
@@ -335,8 +338,8 @@ pub(super) fn check_citation_resolution(
                     && cite.has_marker
                 {
                     format!(
-                        "section not found: {coordinate}; write <{}> before it to show the shape without citing it",
-                        target.schema.citation.marker
+                        "section not found: {coordinate}; {}",
+                        remedies::missing_section(format!("<{}>", target.schema.citation.marker))
                     )
                 } else {
                     format!("missing section {coordinate}")
@@ -381,7 +384,8 @@ pub(crate) fn unknown_project_message<'a>(
     if !scope_path.is_empty() && !alias_strictly_extends_scope(namespace, scope_path) {
         // §FS-check.3.8.4: the final wording §FS-errors.3.3's migration reached in 0.16.0.
         return format!(
-            "unknown project alias {namespace}; the {scope_path} project and its descendants are in scope here — check from the workspace root for a path outside that subtree"
+            "unknown project alias {namespace}; the {scope_path} project and its descendants are in scope here — {}",
+            remedies::unknown_project_subtree()
         );
     }
     let candidates = nearest_project_aliases(namespace, known);
@@ -389,8 +393,8 @@ pub(crate) fn unknown_project_message<'a>(
         return format!("unknown project alias {namespace}");
     }
     format!(
-        "unknown project alias {namespace}; did you mean {}?",
-        join_alternatives(&candidates)
+        "unknown project alias {namespace}; {}",
+        remedies::unknown_project_near(join_alternatives(&candidates))
     )
 }
 

@@ -233,7 +233,7 @@ pub use config::migrate::{
     MigrateRefusal, MigrateReport, RefusalAnchor,
 };
 #[doc(hidden)]
-pub use model::{ClauseBy, CodeClause, CodeEnabled, CodeSeverity};
+pub use model::{ClauseBy, CodeCase, CodeClause, CodeEnabled, CodeFix, CodeSeverity};
 
 // §FS-distribution.3.1, §REQ-backwards-compatibility.2: the four root aliases
 // noticed in 0.17.0, each gone on the release its note named.

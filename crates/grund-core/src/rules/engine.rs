@@ -12,7 +12,7 @@ use super::facts::{Completeness, NodeKey, RuleFacts, SiteKey};
 use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
 };
-use crate::model::{CITATION_DIRECTION_REPAIR, Code, Diagnostic};
+use crate::model::{Code, Diagnostic, citation_direction_repair};
 use std::collections::{BTreeMap, BTreeSet};
 
 use authority::Authority;
@@ -232,9 +232,9 @@ fn evaluate_one(
                         // repair with `(<RULE-ID>)` authority; recommendations omit it.
                         // §FS-check.3.12.2 finalizes required index-entry repairs.
                         let (code, repair) = if rule.level == RuleLevel::Required {
-                            (Code::FORBIDDEN_CITATION, CITATION_DIRECTION_REPAIR)
+                            (Code::FORBIDDEN_CITATION, citation_direction_repair())
                         } else {
-                            (Code::DISCOURAGED_CITATION, "")
+                            (Code::DISCOURAGED_CITATION, String::new())
                         };
                         let message = format!(
                             "{} {} not cite {} ({authority}){repair}",

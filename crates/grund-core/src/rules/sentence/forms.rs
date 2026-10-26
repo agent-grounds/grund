@@ -12,6 +12,7 @@
 use super::recovery::enabled;
 use super::{RuleParseError, RuleVocabulary};
 use crate::model::format_list;
+use crate::model::remedies;
 
 /// What a refusing production offers in place of the text it read.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -133,18 +134,24 @@ impl Refusal {
         if after && !enabling {
             return alone(false);
         }
-        let (plural, forms) = match forms.as_slice() {
-            [only] => ("", only.clone()),
-            many => {
+        // §FS-errors.5.5.1: one case of invalid-rule's Fix per count and label.
+        let offered = match (forms.as_slice(), after) {
+            ([only], false) => remedies::invalid_rule_form(only),
+            ([only], true) => remedies::invalid_rule_form_enabled(only),
+            (many, after) => {
                 let quoted: Vec<String> = many.iter().map(|form| format!("\"{form}\"")).collect();
                 let quoted: Vec<&str> = quoted.iter().map(String::as_str).collect();
-                ("s", format_list(&quoted, joiner))
+                let listed = format_list(&quoted, joiner);
+                if after {
+                    remedies::invalid_rule_forms_enabled(listed)
+                } else {
+                    remedies::invalid_rule_forms(listed)
+                }
             }
         };
-        let after = if after { " after enabling it" } else { "" };
         let trailer = trailer.map_or(String::new(), |trailer| format!(" {trailer}"));
         RuleParseError {
-            message: format!("{reason}; accepted form{plural}{after}: {forms}{trailer}"),
+            message: format!("{reason}; {offered}{trailer}"),
             unrecovered: false,
         }
     }

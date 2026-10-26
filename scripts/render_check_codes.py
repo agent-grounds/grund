@@ -13,7 +13,10 @@ is typed in Rust (§DF-config-explain.2.3). Each cell is read by the grammar of
 - `crates/grund-core/src/model/codes.rs`: one typed handle per selectable code,
   citing its section, the sorted list of them and the `out-of-scope-` pairing
   of §FS-check.3.14, so a finding is built only from a code the catalog has
-  (§AR-system.2.2).
+  (§AR-system.2.2);
+- `crates/grund-core/src/model/remedies.rs`: one typed filler per *Fix* template
+  or case, taking its slots, so a message's remedy is built only from its row
+  and worded nowhere in the checker (§AR-config.9.1).
 
 A row marked `planned — ` is specified ahead of its release and is in neither.
 Edit the catalog, then run the script:
@@ -31,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "docs" / "functional-spec" / "FS-errors.md"
 ASSET = ROOT / "crates" / "grund-core" / "assets" / "explain" / "check-codes.json"
 HANDLES = ROOT / "crates" / "grund-core" / "src" / "model" / "codes.rs"
+REMEDIES = ROOT / "crates" / "grund-core" / "src" / "model" / "remedies.rs"
 
 HEADING = re.compile(r"^### 5\.5 ")
 COLUMNS = ("Code", "Meaning", "Severity", "Ramp", "Enabled by", "Fix", "Note", "Check")
@@ -39,6 +43,14 @@ SPLIT = re.compile(r"^v2: (.*) · v1: (.*)$")
 ABSENT = re.compile(r"^not in version ([12])$")
 CHECK = re.compile(r"^\[§([A-Za-z0-9.-]+)\]\([^)]*\)$")
 PLANNED = "planned — "
+NONE = "none — "
+CASES = " ‖ "
+LABEL = re.compile(r"^([a-z][a-z0-9]*(?:-[a-z0-9]+)*): (.*)$")
+BRACE = re.compile(r"\{([^{}]*)\}")
+SLOT = re.compile(r"^[a-z]+(?: [a-z]+)*$")
+REFERENCE = re.compile(r"^fix of `([a-z][a-z0-9-]*)`$")
+KEYWORDS = {"as", "type", "match", "ref", "mod", "use", "where", "in", "fn", "impl", "move",
+            "self", "loop", "for", "if", "else", "const", "static", "struct", "enum", "trait"}
 OUT_OF_SCOPE = "out-of-scope-"
 
 
@@ -127,6 +139,106 @@ def enabled(side, version, code):
     return read
 
 
+def verbatim(text, code, column):
+    """§FS-errors.5.5.1: a *Fix* side keeps its backticks, which are the message's
+    own bytes, and still names no ID and holds no link."""
+    if "§" in text or "](" in text:
+        raise CatalogError(f"`{code}`: its {column} cell names an ID or holds a link: {text}")
+    return text
+
+
+def template_parts(template, code):
+    """A template's text and braces in order: `("text", words)`, `("slot", name)` and
+    `("fix", code)`, refusing a brace without its partner or that is neither."""
+    parts, at = [], 0
+    for match in BRACE.finditer(template):
+        parts.append(("text", template[at:match.start()]))
+        inside = match.group(1)
+        reference = REFERENCE.match(inside)
+        if reference:
+            parts.append(("fix", reference.group(1)))
+        elif SLOT.match(inside):
+            parts.append(("slot", inside))
+        else:
+            raise CatalogError(f"`{code}`: its Fix holds a brace that is neither a slot nor a "
+                               f"reference: {{{inside}}}")
+        at = match.end()
+    parts.append(("text", template[at:]))
+    if any("{" in text or "}" in text for kind, text in parts if kind == "text"):
+        raise CatalogError(f"`{code}`: its Fix holds a brace without its partner: {template}")
+    return parts
+
+
+def fix_side(side, version, code):
+    """One side of a *Fix* cell, read and its references left in place."""
+    if not side:
+        raise CatalogError(f"`{code}`: its Fix cell is blank")
+    if absent(side, version, code, "Fix"):
+        return {"kind": "absent", "text": side}
+    if side.startswith(NONE):
+        why = verbatim(side.removeprefix(NONE), code, "Fix")
+        if not why.strip():
+            raise CatalogError(f"`{code}`: its Fix is none and says no why")
+        return {"kind": "none", "text": why}
+    if CASES in side:
+        cases = []
+        for case in side.split(CASES):
+            match = LABEL.match(case)
+            if not match:
+                raise CatalogError(f"`{code}`: a Fix case has no `<label>: `: {case}")
+            label, template = match.groups()
+            if any(label == known["label"] for known in cases):
+                raise CatalogError(f"`{code}`: its Fix names the case `{label}` twice")
+            template_parts(verbatim(template, code, "Fix"), code)
+            cases.append({"label": label, "text": template})
+        return {"kind": "cases", "cases": cases}
+    template_parts(verbatim(side, code, "Fix"), code)
+    return {"kind": "template", "text": side}
+
+
+def expand(template, version, code, fixes, seen=()):
+    """§FS-errors.5.5.1: a template with each `{fix of `<code>`}` replaced by that
+    row's template on the same side, or its other side where that one is absent."""
+    out = []
+    for kind, value in template_parts(template, code):
+        if kind != "fix":
+            out.append(value if kind == "text" else "{" + value + "}")
+            continue
+        if value not in fixes:
+            raise CatalogError(f"`{code}`: its Fix refers to `{value}`, which the catalog lacks")
+        if value in seen or value == code:
+            raise CatalogError(f"`{code}`: its Fix refers to itself through `{value}`")
+        target = fixes[value][version]
+        if target["kind"] == "absent":
+            target = fixes[value]["1" if version == "2" else "2"]
+        if target["kind"] != "template":
+            raise CatalogError(f"`{code}`: its Fix refers to `{value}`, whose Fix is "
+                               f"{target['kind']}, not one template")
+        out.append(expand(target["text"], version, value, fixes, seen + (code,)))
+    return "".join(out)
+
+
+def expanded(fix, version, code, fixes):
+    """A read *Fix* side with every reference in it expanded."""
+    if fix["kind"] == "template":
+        return {"kind": "template", "text": expand(fix["text"], version, code, fixes)}
+    if fix["kind"] == "cases":
+        return {"kind": "cases", "cases": [
+            {"label": case["label"], "text": expand(case["text"], version, code, fixes)}
+            for case in fix["cases"]]}
+    return fix
+
+
+def note_side(side, version, code):
+    """One side of a *Note* cell: `None` for `—` or `not in version N`, else its
+    sentences as printed."""
+    if side == "—" or absent(side, version, code, "Note"):
+        return None
+    if not side:
+        raise CatalogError(f"`{code}`: its Note cell is blank, not `—`")
+    return printed(side, code, "Note")
+
+
 def check_section(cell, code):
     """The section a row's Check cell links, which its handle cites."""
     match = CHECK.match(cell)
@@ -137,12 +249,16 @@ def check_section(cell, code):
 
 def catalog():
     """Every selectable row, read, in code order."""
-    read = []
+    read, fixes = [], {}
     for row in rows():
         match = CODE.match(row["Code"])
         if not match:
             raise CatalogError(f"a Code cell is not one code: {row['Code']}")
-        code = match.group(1)
+        fixed = sides(row["Fix"])
+        fixes[match.group(1)] = {version: fix_side(fixed[index], int(version), match.group(1))
+                                 for version, index in (("2", 0), ("1", 1))}
+    for row in rows():
+        code = CODE.match(row["Code"]).group(1)
         if row["Enabled by"].startswith(PLANNED):
             continue
         meaning = printed(row["Meaning"], code, "Meaning")
@@ -153,10 +269,13 @@ def catalog():
         entry["ramp"] = None if ramp == "—" else printed(ramp, code, "Ramp")
         severities = sides(row["Severity"])
         enablements = sides(row["Enabled by"])
+        notes = sides(row["Note"])
         for version, index in (("2", 0), ("1", 1)):
             entry[version] = {
                 "severity": severity(severities[index], int(version), code),
                 "enabled": enabled(enablements[index], int(version), code),
+                "fix": expanded(fixes[code][version], version, code, fixes),
+                "note": note_side(notes[index], int(version), code),
             }
         counts = {len(entry[v]["enabled"].get("clauses", [])) for v in "21"
                   if entry[v]["enabled"]["kind"] == "clauses"}
@@ -249,9 +368,87 @@ def render_handles(read):
     return "\n".join(out) + "\n"
 
 
+def slots(fix):
+    """The slots of a read, expanded *Fix* side's templates, by case: `{label: [slot]}`,
+    the label `None` for a single template."""
+    templates = ([(None, fix["text"])] if fix["kind"] == "template" else
+                 [(case["label"], case["text"]) for case in fix.get("cases", [])])
+    return {label: [name for kind, name in template_parts(text, "") if kind == "slot"]
+            for label, text in templates}
+
+
+def fillers(entry, codes):
+    """What `remedies.rs` renders for one code: `(name, label, version, slots)` per
+    template or case its sides hold, the version `None` where both sides say one thing.
+    An `out-of-scope-` code has none: its message is its in-scope code's, filled by
+    that code's filler and then reported under the other code (§FS-check.3.14)."""
+    code = entry["code"]
+    if code.startswith(OUT_OF_SCOPE) and code.removeprefix(OUT_OF_SCOPE) in codes:
+        return []
+    present = [v for v in "21" if entry[v]["fix"]["kind"] in ("template", "cases")]
+    if not present:
+        return []
+    kinds = {entry[v]["fix"]["kind"] for v in present}
+    if len(kinds) > 1:
+        # One version's template and the other's cases: the cases are what a message
+        # picks from, and the side with one template answers each of them.
+        present = [v for v in present if entry[v]["fix"]["kind"] == "cases"]
+    by_side = [slots(entry[v]["fix"]) for v in present]
+    versioned = len(kinds) > 1 or len(present) > 1 and entry["2"]["fix"] != entry["1"]["fix"]
+    labels = []
+    for side in by_side:
+        labels.extend(label for label in side if label not in labels)
+    out = []
+    for label in labels:
+        names = []
+        for side in by_side:
+            names.extend(name for name in side.get(label, []) if name not in names)
+        name = code.replace("-", "_") + ("" if label is None else "_" + label.replace("-", "_"))
+        out.append((name, label, None if versioned else int(present[0]), names))
+    return out
+
+
+def argument(slot):
+    name = slot.replace(" ", "_")
+    return name + "_" if name in KEYWORDS else name
+
+
+def render_remedies(read):
+    out = [
+        "//! The *Fix* fillers, rendered from the §FS-errors.5.5 catalog by",
+        "//! `scripts/render_check_codes.py`: edit the catalog, then run the script.",
+        "//!",
+        "//! A message's remedy is built only by its code's filler below, which fills the",
+        "//! row's template from the embedded catalog, so no remedy is worded in the",
+        "//! checker and a misspelt slot or case does not compile (§AR-config.9.1).",
+        "",
+        "use std::fmt::Display;",
+        "",
+        "use super::catalog::fill;",
+        "use super::codes::Code;",
+    ]
+    codes = {entry["code"] for entry in read}
+    for entry in read:
+        for name, label, version, names in fillers(entry, codes):
+            case = "None" if label is None else f'Some("{label}")'
+            params = ([] if version is not None else ["version: u32"]) + [
+                f"{argument(slot)}: impl Display" for slot in names]
+            pairs = ", ".join(f'("{slot}", &{argument(slot)})' for slot in names)
+            which = f"`{entry['code']}`'s *Fix*" + ("" if label is None else f", case `{label}`")
+            out.append("")
+            out.append(f"/// {which} (§{entry['check']}).")
+            out.append(f"pub(crate) fn {name}({', '.join(params)}) -> String {{")
+            out.append(f"    let slots: &[(&str, &dyn Display)] = &[{pairs}];")
+            at = "version" if version is None else str(version)
+            out.append(f"    fill(Code::{constant(entry['code'])}, {at}, {case}, slots)")
+            out.append("}")
+    return "\n".join(out) + "\n"
+
+
 def render():
     read = catalog()
-    return {ASSET: render_asset(read), HANDLES: render_handles(read)}
+    return {ASSET: render_asset(read), HANDLES: render_handles(read),
+            REMEDIES: render_remedies(read)}
 
 
 def main(argv):
