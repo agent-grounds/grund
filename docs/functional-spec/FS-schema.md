@@ -288,6 +288,30 @@ may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
 ```
 
+### 8.2 With no grund.toml, a note names what `grund init --scaffold` writes
+
+Where no config file was found, the line directly after the header, before the
+blank line, is one note:
+
+```text
+note: these are the built-in defaults a tree with no grund.toml is held to; grund init --scaffold writes a version-<n> grund.toml that also declares <KIND> in <places>
+```
+
+`<n>` is the config version of the template `grund init --scaffold` writes, and
+each `<KIND> in <places>` is a kind that template declares and the defaults do not,
+its places spelled as the `kinds and places` section spells them, in the
+template's order and joined by `, `. Today that is `REQ in docs/requirements/`,
+which has no built-in default ([§DF-fs-home-moves-from-0-19.2.3](../decisions/functional/DF-fs-home-moves-from-0-19.md#23-req-goes-into-the-template-now-with-no-built-in-default)). Both are read from
+the template init writes, never written down a second time, so the note follows
+the template when it changes; where the template declares no kind the defaults
+lack, the note ends at `grund.toml` and drops the `that also declares` clause.
+
+The note is not part of the view: no node, row or direction comes from the
+template, so what the view shows is still the effective configuration alone
+([§FS-schema.3](FS-schema.md#3-what-the-view-reads)). A tree whose config file was read prints no note. The Mermaid
+and DOT sources carry the header comment and no note: they are source for a
+renderer, and stay byte for byte what they were.
+
 ## 9. The Mermaid source
 
 `--format mermaid` prints a `flowchart LR`, ready to paste into a fenced
