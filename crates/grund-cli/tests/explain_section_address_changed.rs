@@ -43,6 +43,10 @@ const REMEDY: &str = "move it back, cite FS-login.input.1 instead, or leave a po
                       at FS-login.format.1; if FS-login.input.1 is a copy, edit the copy or \
                       cite it from FS-login.format.1";
 
+/// grund#1022: what the message appends after its remedy, the line that still
+/// cites the old address (§FS-section-lock.checks.section-address-changed).
+const CITED: &str = "; FS-login.format.1 is cited at src/auth/normalize.py:5";
+
 const FIX: &str = "Fix: move it back, cite {new address} instead, or leave a pointer to it \
                    at {cited address}; if {new address} is a copy, edit the copy or cite it \
                    from {cited address}";
@@ -104,15 +108,18 @@ impl Drop for Tree {
     }
 }
 
-/// §FS-section-lock.checks.section-address-changed: the check message keeps
-/// its bytes, remedy and all.
+/// §FS-section-lock.checks.section-address-changed: the 0.20 message, remedy
+/// and all, is a verbatim prefix, and what follows it names the citing line.
 #[test]
-fn the_moved_email_check_message_keeps_its_bytes() {
+#[ignore = "red until #1022 names the citing sites after the remedy; implement removes this"]
+fn the_moved_email_check_message_keeps_its_bytes_as_a_prefix() {
     let tree = Tree::moved();
-    assert_eq!(
-        tree.run(&["check", "--only", "section-address-changed"], 1),
-        format!("{FINDING}{REMEDY}\n")
+    let message = tree.run(&["check", "--only", "section-address-changed"], 1);
+    assert!(
+        message.starts_with(&format!("{FINDING}{REMEDY}")),
+        "the 0.20 message is no longer a prefix of:\n{message}"
     );
+    assert_eq!(message, format!("{FINDING}{REMEDY}{CITED}\n"));
 }
 
 /// §FS-config-explain.4: the answer gives the code's *Fix* and *Note*, and the
@@ -120,6 +127,7 @@ fn the_moved_email_check_message_keeps_its_bytes() {
 /// message, so the two agree by construction rather than by matching words
 /// (§FS-errors.5.5.1).
 #[test]
+#[ignore = "red until #1022 names the citing sites after the remedy; implement removes this"]
 fn explain_gives_the_moved_email_errors_own_remedy_and_the_lock_note() {
     let tree = Tree::moved();
     let answer = tree.run(&["config", "explain", "section-address-changed"], 0);
@@ -131,5 +139,5 @@ fn explain_gives_the_moved_email_errors_own_remedy_and_the_lock_note() {
         .replace("{new address}", "FS-login.input.1")
         .replace("{cited address}", "FS-login.format.1");
     let message = tree.run(&["check", "--only", "section-address-changed"], 1);
-    assert_eq!(message, format!("{FINDING}{filled}\n"));
+    assert_eq!(message, format!("{FINDING}{filled}{CITED}\n"));
 }
