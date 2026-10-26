@@ -5,8 +5,8 @@
 //! verbatim prefix of the line printed now, so each expectation below is today's
 //! line with text appended.
 //!
-//! The `marker` fixture is the report's first case: a version-1 project whose
-//! `--marker` run also links what it marks. The `rename` fixture is its second:
+//! The `fmt-report-kinds-marker-check` case is the report's first case: a version-1 project whose
+//! `--marker` run also links what it marks. `fmt-report-kinds-rename-check` is its second:
 //! a project whose lock was written for `FS-login`, after the declaration was
 //! renamed `FS-sign-in` and its authored citations followed, so one link is
 //! stale and the lock's entries move to a file of the new name.
@@ -105,12 +105,15 @@ src/inventory/reserve.py:7: bare \u{2192} marker
 #[test]
 fn a_marker_line_the_link_pass_also_wraps_names_both_kinds() {
     // §FS-fmt.3.5.1: the list follows a detail-free leading label with `, `.
-    assert_eq!(fmt(&["--marker"], &fixture("marker"), 1), MARKER_DRY_RUN);
+    assert_eq!(
+        fmt(&["--marker"], &e2e_case("fmt-report-kinds-marker-check"), 1),
+        MARKER_DRY_RUN
+    );
 }
 
 #[test]
 fn the_marker_write_totals_what_it_marked_and_what_it_linked() {
-    let repo = copy_of(&fixture("marker"), "marker-write");
+    let repo = copy_of(&e2e_case("fmt-report-kinds-marker-check"), "marker-write");
     // §FS-fmt.3.7: six bare citations marked (AR-ledger 1, runbook 1,
     // requirements 2, reserve.py 2) and six links new or re-derived (AR-ledger 2,
     // README 1, runbook 1, requirements 2), on seven changed lines.
@@ -133,14 +136,14 @@ fn a_rename_says_which_lock_file_it_deletes_and_which_it_creates() {
     // §FS-section-lock.write.report: the suffix goes on the file's first row,
     // after the lock rows are sorted and after every source row.
     assert_eq!(
-        fmt(&[], &fixture("rename"), 1),
+        fmt(&[], &e2e_case("fmt-report-kinds-rename-check"), 1),
         "\
 docs/notes.md:1: markdown link
 .grund/sections/FS-login.lock:1: section lock: drop FS-login.code.1; deletes the file
 .grund/sections/FS-sign-in.lock:1: section lock: add FS-sign-in.code.1; creates the file
 "
     );
-    let repo = copy_of(&fixture("rename"), "rename-write");
+    let repo = copy_of(&e2e_case("fmt-report-kinds-rename-check"), "rename-write");
     assert_eq!(
         fmt(&["--write"], &repo, 0),
         "\
@@ -281,7 +284,7 @@ fn a_trailing_markdown_link_keeps_its_repeated_anchor_detail() {
 fn the_api_label_is_the_cli_row_after_its_location() {
     // §FS-distribution.3.2.2.2: `label` carries what the CLI row appends.
     let mut opts = FmtOpts::default();
-    opts.path = fixture("marker");
+    opts.path = e2e_case("fmt-report-kinds-marker-check");
     opts.add_marker = true;
     let output = format_references(opts).expect("format the marker fixture");
     let rows = output

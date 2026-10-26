@@ -1,0 +1,25 @@
+grund_config_version = 1
+project_name = "inventory"
+
+[reference]
+marker = "§"
+strict = false
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+file = "requirements.md"
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+
+[[kinds]]
+kind = "AR"
+folder = "docs/architecture"
+
+[scan]
+include = ["requirements.md", "docs", "src"]
+extensions = ["md", "py"]
