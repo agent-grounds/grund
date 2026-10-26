@@ -64,11 +64,11 @@ fn public_fmt_api_aggregates_strict_workspace_scan_errors() {
         vec![
             ApiScanError {
                 path: "docs/FS-gone.md".to_string(),
-                message: "broken symlink: the target does not exist".to_string(),
+                message: "broken symlink: the target does not exist; make the path readable, or keep it out of the scan".to_string(),
             },
             ApiScanError {
                 path: "packages/sub/docs/FS-gone.md".to_string(),
-                message: "broken symlink: the target does not exist".to_string(),
+                message: "broken symlink: the target does not exist; make the path readable, or keep it out of the scan".to_string(),
             },
         ]
     );

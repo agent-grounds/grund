@@ -180,7 +180,8 @@ fn withheld_for_an_incomplete_scan() {
         )
         .unwrap();
         let error = "error: docs/functional-spec/FS-gone.md: broken symlink: \
-                     the target does not exist\n";
+                     the target does not exist; make the path readable, or keep it out of \
+                     the scan\n";
         for (flags, stdout) in RENDERINGS {
             let mut args = vec!["refs", "FS-api-audit"];
             args.extend(flags);

@@ -21,6 +21,7 @@ use crate::checker::{
 use crate::config::Config;
 use crate::model::{CheckReport, Code, Diagnostic};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext};
+use crate::scanner::scan_error_message;
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, unlisted_workspace_block_errors,
 };
@@ -315,7 +316,7 @@ fn append_lsp_scan_errors(
             path: Some(file),
             line: None,
             column: None,
-            message,
+            message: scan_error_message(&message),
             sites: Vec::new(),
             authority: Vec::new(),
         });

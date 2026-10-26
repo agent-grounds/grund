@@ -380,7 +380,7 @@ fn an_incomplete_run_survives_the_authority_axis() {
         &output,
         2,
         "",
-        "error: docs/fs/FS-gone.md: broken symlink: the target does not exist\n",
+        "error: docs/fs/FS-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan\n",
     );
 }
 

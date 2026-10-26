@@ -79,8 +79,11 @@ pub(crate) fn show_batch_data(
         cautions = run_warning_findings(context.render_config(), context.run_warnings.clone());
         let selection = selection(&context, &globs)?;
         if let Some((file, message)) = context.projects.iter().find_map(|p| p.scan_errors.first()) {
-            let mut diagnostic =
-                crate::model::OperationDiagnostic::new("filesystem", "io", message);
+            let mut diagnostic = crate::model::OperationDiagnostic::new(
+                "filesystem",
+                "io",
+                crate::scanner::scan_error_message(message),
+            );
             diagnostic.path = Some(display_path(context.render_config(), file));
             return Err(diagnostic.into());
         }
@@ -221,7 +224,7 @@ fn show_batch_run(
         return Err(anyhow!(
             "{}: {}",
             display_path(context.render_config(), file),
-            message
+            crate::scanner::scan_error_message(message)
         ));
     }
     let queries = match queries {

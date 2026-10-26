@@ -316,6 +316,12 @@ pub(crate) fn invalid_value_declaration() -> String {
     fill(Code::INVALID_VALUE_DECLARATION, 2, None, slots)
 }
 
+/// `io`'s *Fix* (§FS-check.2.4).
+pub(crate) fn io() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::IO, 2, None, slots)
+}
+
 /// `local-section-citation`'s *Fix*, case `write` (§FS-check.3.24).
 pub(crate) fn local_section_citation_write(citation: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("citation", &citation)];

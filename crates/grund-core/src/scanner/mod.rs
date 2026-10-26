@@ -118,7 +118,7 @@ pub(crate) use legacy::{
     match_legacy_tail, promote_legacy_candidate, resolve_id_arg, sort_citations,
 };
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
-pub(crate) use scan_error::api_scan_error;
+pub(crate) use scan_error::{api_scan_error, scan_error_message};
 pub(crate) use scope_probe::{
     effective_scope_reads_any_file, pruning_pattern, walk_reads_any_file,
 };

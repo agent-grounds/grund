@@ -18,7 +18,9 @@ fn a_broken_link_is_reported_only_where_the_walk_would_have_read_it() {
 
     assert_eq!(
         scan_errors(&run),
-        vec!["docs/functional-spec/FS-002-gone.md: broken symlink: the target does not exist"],
+        vec![
+            "docs/functional-spec/FS-002-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan"
+        ],
         "§FS-config.3.5: a name `[scan] extensions` covers is a hole worth reporting; `logo.png` was never going to be read"
     );
     assert!(
@@ -68,7 +70,9 @@ fn a_broken_link_an_ignore_file_covers_is_not_reported() {
 
     assert_eq!(
         scan_errors(&run),
-        vec!["docs/functional-spec/FS-002-gone.md: broken symlink: the target does not exist"],
+        vec![
+            "docs/functional-spec/FS-002-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan"
+        ],
         "§FS-config.3.5: the walk was never going to read an ignored path, so its broken link is not a hole it has to report"
     );
 }
@@ -86,7 +90,9 @@ fn a_symlink_loop_is_reported_and_the_walk_carries_on() {
 
     assert_eq!(
         scan_errors(&run),
-        vec!["docs/self: symlink loop: the target is the ancestor directory docs"],
+        vec![
+            "docs/self: symlink loop: the target is the ancestor directory docs; make the path readable, or keep it out of the scan"
+        ],
         "§FS-config.3.5: a loop is reported at the link's own path, once"
     );
     assert!(
@@ -113,7 +119,7 @@ fn a_looping_link_an_ignore_file_covers_is_not_reported() {
     assert_eq!(
         scan_errors(&run),
         vec![
-            "docs/functional-spec/loop: symlink loop: the target is the ancestor directory docs/functional-spec"
+            "docs/functional-spec/loop: symlink loop: the target is the ancestor directory docs/functional-spec; make the path readable, or keep it out of the scan"
         ],
         "§FS-config.3.5: the walk was never going to descend an ignored path, so its loop is not a hole it has to report"
     );
@@ -130,7 +136,9 @@ fn a_scan_error_is_reported_once_under_full_scope() {
 
     assert_eq!(
         scan_errors(&full),
-        vec!["docs/functional-spec/FS-002-gone.md: broken symlink: the target does not exist"],
+        vec![
+            "docs/functional-spec/FS-002-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan"
+        ],
         "§FS-check.1.3.2: overlapping roots meet one broken link once each, and the report names it once"
     );
 }
@@ -147,7 +155,9 @@ fn a_loop_that_escapes_the_walk_root_is_reported_at_the_link() {
 
     assert_eq!(
         scan_errors(&run),
-        vec!["docs/up: symlink loop: the target contains the link"],
+        vec![
+            "docs/up: symlink loop: the target contains the link; make the path readable, or keep it out of the scan"
+        ],
         "§FS-config.3.5: the finding names the link, and says what is wrong with it rather than naming the reader's own directory"
     );
 }
@@ -170,7 +180,9 @@ fn a_loop_above_the_walk_root_is_not_descended_into() {
 
     assert_eq!(
         scan_errors(&run),
-        vec!["docs/up: symlink loop: the target contains the link"],
+        vec![
+            "docs/up: symlink loop: the target contains the link; make the path readable, or keep it out of the scan"
+        ],
         "§FS-config.3.5.5: the link is still reported, without the descent"
     );
     assert!(
@@ -197,8 +209,8 @@ fn a_two_hop_loop_is_reported_at_the_links_that_form_it() {
     assert_eq!(
         scan_errors(&run),
         vec![
-            "docs/a/link: symlink loop: the target is the ancestor directory docs/b",
-            "docs/b/link: symlink loop: the target is the ancestor directory docs/a",
+            "docs/a/link: symlink loop: the target is the ancestor directory docs/b; make the path readable, or keep it out of the scan",
+            "docs/b/link: symlink loop: the target is the ancestor directory docs/a; make the path readable, or keep it out of the scan",
         ],
         "§FS-config.3.5.2: the report names the links, not the spelling the descent produced"
     );

@@ -1316,10 +1316,10 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "the line is the one every command prints for the path, so it names the reason alone"
+    "kind": "template",
+    "text": "make the path readable, or keep it out of the scan"
    },
-   "note": "make the path readable, or keep it out of the scan"
+   "note": null
   },
   "1": {
    "severity": {
@@ -1330,10 +1330,10 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "the line is the one every command prints for the path, so it names the reason alone"
+    "kind": "template",
+    "text": "make the path readable, or keep it out of the scan"
    },
-   "note": "make the path readable, or keep it out of the scan"
+   "note": null
   }
  },
  {

@@ -39,19 +39,19 @@ fn public_fmt_api_preserves_every_strict_scan_error() {
         vec![
             ApiScanError {
                 path: "docs/FS-002-gone.md".to_string(),
-                message: "broken symlink: the target does not exist".to_string(),
+                message: "broken symlink: the target does not exist; make the path readable, or keep it out of the scan".to_string(),
             },
             ApiScanError {
                 path: "docs/FS-003-also-gone.md".to_string(),
-                message: "broken symlink: the target does not exist".to_string(),
+                message: "broken symlink: the target does not exist; make the path readable, or keep it out of the scan".to_string(),
             },
         ]
     );
     assert_eq!(
         abort.to_string(),
         concat!(
-            "nothing was rewritten: docs/FS-002-gone.md: broken symlink: the target does not exist\n",
-            "nothing was rewritten: docs/FS-003-also-gone.md: broken symlink: the target does not exist",
+            "nothing was rewritten: docs/FS-002-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan\n",
+            "nothing was rewritten: docs/FS-003-also-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan",
         )
     );
 }
