@@ -10,10 +10,13 @@ use std::path::Path;
 use super::config_findings::config_diagnostics;
 use super::report::public_run_warnings;
 use crate::config::explain::{ExplainAsk, Explained};
-use crate::config::{Config, Invocation, Project, SchemaView, Selection};
+use crate::config::{
+    Config, Invocation, Project, ScaffoldNote, SchemaView, Selection, config_file_read,
+};
 use crate::model::Finding;
 use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, open, resolve_workspace_config};
+use crate::writers::scaffold_project;
 
 /// The run's `[workspace]` warnings off a `Config` a caller already holds
 /// (§FS-check.4.10, §FS-workspace.6.1.7.6): what the workspace pass
@@ -45,8 +48,16 @@ pub fn effective_project(path: &Path) -> Result<Project> {
 /// tree whose citations are broken shows the same view (§FS-schema.3). The
 /// header's config path is spelled from the config root, whatever the run's
 /// `--path-base` (§FS-schema.1), and a nameless project is named by its root.
+/// Where no config file was found, the view carries what `grund init --scaffold`
+/// would write there beside it (§FS-schema.8.2).
 pub fn schema_view(path: &Path) -> Result<SchemaView> {
-    Ok(SchemaView::of_config(&effective_config(path)?))
+    let config = effective_config(path)?;
+    let mut view = SchemaView::of_config(&config);
+    if config_file_read(&config).is_none() {
+        let scaffold = scaffold_project(&config.root, &view.project)?;
+        view.scaffold = Some(ScaffoldNote::of(&view, &scaffold));
+    }
+    Ok(view)
 }
 
 /// Validate config discovery/parsing for a path without printing CLI output

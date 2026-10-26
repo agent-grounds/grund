@@ -127,7 +127,6 @@ fn assert_no_config(fresh: &Fresh, header: &str) {
 /// §FS-schema.8.2: the line after the no-config header names `grund init
 /// --scaffold`, its version, and each kind it adds with its places.
 #[test]
-#[ignore = "red until #1041 prints the no-config note under the schema header; implement removes this"]
 fn no_config_table_names_what_the_scaffold_adds() {
     let fresh = Fresh::new("schema");
     let table = fresh.run(&["schema"]);

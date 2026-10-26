@@ -22,6 +22,12 @@ root the view is of the root project, and its last line names the members to run
 `grund schema <member>` on. `grund config show` stays the effective TOML, every
 value filled in.
 
+With no `grund.toml` at or above `PATH`, the header reads `defaults, no grund.toml`
+and the view is the built-in defaults a config-less tree is held to. The line
+under it says so, and names the version and the kinds the config
+`grund init --scaffold` would write adds to them, so a schema read before `init`
+does not look like a preview of what `init` lays down ([§FS-schema.8.2](../functional-spec/FS-schema.md#82-with-no-grundtoml-a-note-names-what-grund-init---scaffold-writes)).
+
 ## The table
 
 ```text

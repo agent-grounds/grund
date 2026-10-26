@@ -133,6 +133,7 @@ pub(crate) use expected::{WorkspaceBlocks, expected};
 pub(crate) use fmt_tree::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};
 pub(crate) use fmt_workspace::fmt_workspace_projects;
 pub(crate) use id::{format_id, slugify_title};
+pub(crate) use init_render::scaffold_project;
 pub(crate) use init_workspace_members::{ListedProject, listed_projects};
 
 // `grund integrations` as one operation (§FS-distribution.3.1.3): its closed
