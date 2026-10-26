@@ -53,7 +53,7 @@ The full inventory implements
 | `list_ids(*, kinds=(), projects=(), unused=False, selector=None, globs=())` | `ListResult`: entries, kind summaries, scan errors, note, cautions |
 | `list_sizes(*, kinds=(), projects=(), unused=False, selector=None, globs=(), units=("lines","words","bytes"), top=None)` | `SizesResult`: ordered lead/full measurements, scan errors, note, cautions |
 | `cover(*, text=False, lines=(), globs=())` | `CoverResult` or `CoverTextResult`: file-grouped coverage, scan errors, note, cautions; with non-empty `lines`, `CoverLinesResult`: one ownership record per range, scan errors, cautions |
-| `fmt(*, write=False, marker=False, cross_refs=False)` | `FmtResult`: changes, scan errors, refused writes, cautions |
+| `fmt(*, write=False, marker=False, cross_refs=False)` | `FmtResult`: changes (each with its `counts` per kind and a lock row's `lock_file`), scan errors, refused writes, cautions |
 | `propose_id(kind, title, *, width=3)` | `IdProposal`: ID, kind, nullable number/home hints, slug, cautions |
 | `init(target=None, *, name=None, description=None, docs=False, force=False, write=False, check=False, no_vcs=False, agents=None)` | `InitResult`: events, errors, notes, nullable next guidance, pending-change status, cautions |
 | `effective_config()` / `validate_config()` | `ConfigResult`: effective schema mapping, config warnings, cautions |
@@ -135,7 +135,10 @@ unsupported ([§FS-distribution.3.3.4](../functional-spec/FS-distribution.md#334
 ## Writes and integrations
 
 `fmt()` previews. `fmt(write=True)` applies managed rewrites; config-enabled
-cross-reference formatting still applies when cross_refs=False. `init()`
+cross-reference formatting still applies when cross_refs=False. Each change's
+`label` is the CLI row, so compare its `counts` and `lock_file` rather than the
+text, which grows as fmt names more of what it does
+([§FS-distribution.3.2.2.2](../functional-spec/FS-distribution.md#3222-result-fields)). `init()`
 previews, `init(write=True)` scaffolds, and `init(check=True)` suppresses writes
 even if write=True. Force never replaces existing config. Fetch has no preview:
 `fetch(id, write=True)` explicitly authorizes materialization; omission refuses

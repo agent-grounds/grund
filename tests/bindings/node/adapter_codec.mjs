@@ -17,7 +17,8 @@ const names = Object.fromEntries([
   'bindingNamespace', 'bindingSection', 'startLine', 'endLine',
   'isDocComment', 'isDocstring', 'lineCount', 'canonicalRelativePath',
   'firstLine', 'lastLine', 'maxColumns', 'hasNote', 'layoutViolations',
-  'docComments', 'totalLines',
+  'docComments', 'totalLines', 'lockFile', 'triggersMarked', 'citationsMarked',
+  'localSectionsExpanded', 'shorthandsExpanded', 'linksWritten', 'sectionLockEntries',
 ].map(name => [name, name.replace(/[A-Z]/g, c => '_' + c.toLowerCase())]));
 export function lower(value, opaque = false) {
   if (Array.isArray(value)) return value.map(item => lower(item, opaque));
