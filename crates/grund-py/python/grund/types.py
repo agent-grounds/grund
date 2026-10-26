@@ -333,10 +333,24 @@ class CoverLinesResult(Cautioned):
 
 
 @dataclass(frozen=True)
+class FmtCounts:
+    """How many rewrites of each kind one change made (§FS-distribution.3.2.2.2)."""
+    triggers_marked: int
+    citations_marked: int
+    local_sections_expanded: int
+    shorthands_expanded: int
+    links_written: int
+    section_lock_entries: int
+
+
+@dataclass(frozen=True)
 class FmtChange:
     path: str
     line: int
     label: str
+    counts: FmtCounts
+    # "created" or "deleted" on a lock row whose write creates or deletes the file.
+    lock_file: str | None
 
 
 @dataclass(frozen=True)

@@ -13,6 +13,8 @@ const fields=[
   'sourceKind','suggestedPath','sourceSlice','valueRoot','bindingNamespace','bindingSection',
   'startLine','endLine','isDocComment','isDocstring','lineCount','canonicalRelativePath',
   'firstLine','lastLine','maxColumns','hasNote','layoutViolations','docComments','totalLines',
+  'lockFile','triggersMarked','citationsMarked','localSectionsExpanded','shorthandsExpanded',
+  'linksWritten','sectionLockEntries',
 ];
 const names=Object.fromEntries(fields.map(k=>[k.replace(/[A-Z]/g,c=>'_'+c.toLowerCase()),k]));
 exports.convert=function convert(v,opaque=false) {

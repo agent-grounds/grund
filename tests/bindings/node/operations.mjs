@@ -106,6 +106,9 @@ assert.ok(cover.entries.some(e => e.citations.length > 0));
 const preview = await invoke('fmt', [{ root }]);
 assert.ok(Array.isArray(preview.changes));
 assert.ok(Array.isArray(preview.refusedWrites));
+// §FS-distribution.3.2.2.2: each change carries its per-kind counts and its lock-file flag.
+assert.ok(preview.changes.every(c => typeof c.counts.linksWritten === 'number'
+  && Object.hasOwn(c, 'lockFile')));
 const proposed = await invoke('proposeId', ['FS', 'Fresh snow', { root }]);
 assert.equal(typeof proposed.id, 'string');
 assert.equal(proposed.slug, 'fresh-snow');

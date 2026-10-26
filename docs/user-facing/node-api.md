@@ -57,7 +57,7 @@ relative to that captured cwd. Output paths and byte columns follow core rules.
 | `list(options?)` | root, kinds, projects, unused, selector, globs; entries, summaries and note |
 | `listSizes(options?)` | list options, units (lines/words/bytes), positive top; ordered nullable measurements and note |
 | `cover(options?)` | root, globs; files including empty files and full citing-side coordinates, and note |
-| `fmt(options?)` | root, write=false, marker=false, crossRefs=false; changes, scanErrors, refusedWrites |
+| `fmt(options?)` | root, write=false, marker=false, crossRefs=false; changes (each with its `counts` per kind and a lock row's `lockFile`), scanErrors, refusedWrites |
 | `proposeId(kind, title, options?)` | root, width=3; proposed ID and authoring hints, no writes |
 | `init(target?, options?)` | name, description, docs, force, dryRun, check, noVcs, agents; events, errors, notes, next, pendingChanges |
 | `completeIds(options?)` | root, prefix, sections; sorted deduplicated ids |
