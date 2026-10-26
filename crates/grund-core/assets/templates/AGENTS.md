@@ -7,7 +7,7 @@ This project uses [`grund`](https://github.com/agent-grounds/grund): every spec,
 
 A `{MARKER}<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and climb only as far as needed:
 
-- `grund <ID>` — the lead (heading-less, cut at the first child section). The cheap first read for a bare `{MARKER}<ID>` citation.
+- `grund <ID>` — the lead, cut at the first child section: heading-less for a whole declaration, while `grund <ID>.<section>` opens with that section's heading line. The cheap first read for a bare `{MARKER}<ID>` citation.
 - `grund <ID> --toc` — the lead plus the nested section map. Use to choose which subsection to fetch next.
 - `grund <ID> --full` — the entire body. Escalate to this when narrower reads aren't enough.
 - `grund <ID> --brief` — heading + first paragraph only.

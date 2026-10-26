@@ -12,7 +12,9 @@ Modes form an ordered ladder (each adds to the previous):
 
 Other options:
   --section S            show only that section path  e.g. grund FS-login --section 3.1
-  --format text|md|json  text (default) is the body; md keeps the heading; json wraps it
+  --format text|md|json  text (default) is the body, opening with a selected section's
+                         own heading line; md adds the declaration heading above it;
+                         json wraps the text body
   --path PATH            repo or subtree to resolve the ID in (no PATH answers as `.`);
                          narrows --batch --all and --glob, whose queries with no PATH
                          cover the whole project or workspace discovered from the

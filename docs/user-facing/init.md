@@ -58,8 +58,8 @@ The managed block opens with a heading such as `## Grounding with grund (block v
 That number is the revision of the block's text, not a grund release: `grund -V`
 prints the release you are running
 ([§FS-init.2.3.9.3](../functional-spec/FS-init.md#2393-the-headings-two-spellings)). A
-config selects one of four current revisions: v39, v40 once a kind declares rules,
-and v41 or v42 when its guidance lands in a scoped `AGENTS.md` or a declaration
+config selects one of four current revisions: v43, v44 once a kind declares rules,
+and v45 or v46 when its guidance lands in a scoped `AGENTS.md` or a declaration
 shape renders ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)).
 `grund check` reports an older block as outdated, and one `grund init` re-renders
 it. A current block whose text no longer matches what `init` would write — after a

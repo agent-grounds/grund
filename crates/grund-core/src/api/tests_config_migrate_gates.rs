@@ -328,7 +328,7 @@ fn report_gate_ignores_a_stale_block_outside_the_generated_sections() {
     }
     let mut outdated = stale("rules");
     outdated.message = "repo maintenance: outdated grund init block v35 — run `grund init` to \
-                        update to v39 (does not affect citation validity)"
+                        update to v43 (does not affect citation validity)"
         .into();
     assert!(!describes_config(&outdated));
 }

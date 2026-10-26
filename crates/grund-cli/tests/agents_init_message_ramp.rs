@@ -140,7 +140,7 @@ fn the_agents_init_messages_are_the_five_final_templates() {
         vec![
             "repo maintenance: malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->` (does not affect citation validity)"
                 .to_string(),
-            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v39 (does not affect citation validity)"
+            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v43 (does not affect citation validity)"
                 .to_string(),
             format!(
                 "repo maintenance: unsupported grund init block v999 — this grund supports v{} (does not affect citation validity)",
@@ -148,7 +148,7 @@ fn the_agents_init_messages_are_the_five_final_templates() {
             ),
             "repo maintenance: stale grund init block: the clickable citations section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)"
                 .to_string(),
-            "repo maintenance: missing grund init block v39 — run `grund init` to install it (does not affect citation validity)"
+            "repo maintenance: missing grund init block v43 — run `grund init` to install it (does not affect citation validity)"
                 .to_string(),
         ]
     );

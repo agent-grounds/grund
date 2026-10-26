@@ -136,11 +136,13 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// v39 to v42 (§FS-init.2.3.5.2.2, §FS-init.2.3.7.1): each pair four higher again,
 /// a non-citable home whose row grounds nothing narrowing its bullet, and the
 /// grounding sentence reading each row's effective grounding.
+/// v43 to v46 (§FS-init.2.3.4.3, §FS-init.2.3.7.1): each pair four higher again, the
+/// first rung saying a section read opens with its heading line (§FS-show.2.2).
 pub(crate) const AGENTS_BLOCK_VERSION: u32 = AGENTS_BLOCK_BASE_VERSION + 3;
 
 /// The revision the base config selects (§FS-init.2.3.7.1): a rule kind adds one,
 /// and a scoped file or a declaration shape adds two, up to [`AGENTS_BLOCK_VERSION`].
-pub(crate) const AGENTS_BLOCK_BASE_VERSION: u32 = 39;
+pub(crate) const AGENTS_BLOCK_BASE_VERSION: u32 = 43;
 
 /// Which member of the current pairs a managed-block revision is (§FS-init.2.3.7.1):
 /// the scoped pair sits two above the unscoped one, and a pair's rule-kind member

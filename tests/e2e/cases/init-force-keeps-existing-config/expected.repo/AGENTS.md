@@ -1,7 +1,7 @@
 # Existing Project — agent instructions
 
 <!-- BEGIN GRUND MANAGED BLOCK -->
-## Grounding with grund (block v39)
+## Grounding with grund (block v43)
 
 This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<slug>[.<section>]` (`KIND ∈ {SPEC}`), cited with the marker `§` — e.g. `<§>FS-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `grund.toml`, so only `§`-prefixed citations are checked.
 
@@ -9,7 +9,7 @@ This project uses [`grund`](https://github.com/agent-grounds/grund): every spec,
 
 A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and climb only as far as needed:
 
-- `grund <ID>` — the lead (heading-less, cut at the first child section). The cheap first read for a bare `§<ID>` citation.
+- `grund <ID>` — the lead, cut at the first child section: heading-less for a whole declaration, while `grund <ID>.<section>` opens with that section's heading line. The cheap first read for a bare `§<ID>` citation.
 - `grund <ID> --toc` — the lead plus the nested section map. Use to choose which subsection to fetch next.
 - `grund <ID> --full` — the entire body. Escalate to this when narrower reads aren't enough.
 - `grund <ID> --brief` — heading + first paragraph only.
