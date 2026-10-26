@@ -136,7 +136,7 @@ fn a_narrowed_fmt_leaves_the_lock_and_the_named_run_writes_it() {
     }
     assert_eq!(
         repo.run("", &["fmt", "--write"], 0),
-        format!("rewrote 1 line:\n  {LOCK} (1)\n")
+        format!("rewrote 1 line: 1 section-lock entry\n  {LOCK} (1) created\n")
     );
     assert_eq!(repo.run("", &["check"], 0), "success\n");
 }
@@ -148,7 +148,7 @@ fn a_bare_fmt_from_a_subdirectory_is_the_root_scoped_run() {
     let repo = Repo::standalone();
     assert_eq!(
         repo.run("src", &["fmt", "--write"], 0),
-        format!("rewrote 1 line:\n  {LOCK} (1)\n")
+        format!("rewrote 1 line: 1 section-lock entry\n  {LOCK} (1) created\n")
     );
     assert_eq!(repo.run("", &["check"], 0), "success\n");
 }
@@ -180,7 +180,9 @@ fn a_member_lock_names_the_same_run_and_the_workspace_root_writes_it() {
     assert!(!repo.has(alias) && !repo.has(member));
     assert_eq!(
         repo.run("", &["fmt", "--write"], 0),
-        format!("rewrote 2 lines:\n  {alias} (1)\n  {member} (1)\n")
+        format!(
+            "rewrote 2 lines: 2 section-lock entries\n  {alias} (1) created\n  {member} (1) created\n"
+        )
     );
     // The fixture's version 1 configs earn warnings, so a clean run prints no `success`.
     repo.run("", &["check"], 0);
@@ -269,14 +271,16 @@ fn a_member_lock_of_a_sibling_citation_is_written_only_at_the_workspace_root() {
     // A member run writes the member's own lock, and still not the sibling entry.
     assert_eq!(
         repo.run("", &["fmt", "packages/api", "--write"], 0),
-        "rewrote 1 line:\n  .grund/sections/FS-login.lock (1)\n"
+        "rewrote 1 line: 1 section-lock entry\n  .grund/sections/FS-login.lock (1) created\n"
     );
     assert!(repo.has(member) && !repo.has(sibling));
     assert_eq!(repo.run("", &["check"], 1), report(&[web, at_root]));
     // The run the remedy names writes every entry left.
     assert_eq!(
         repo.run("", &["fmt", "--write"], 0),
-        format!("rewrote 2 lines:\n  {root} (1)\n  {sibling} (1)\n")
+        format!(
+            "rewrote 2 lines: 2 section-lock entries\n  {root} (1) created\n  {sibling} (1) created\n"
+        )
     );
     assert_eq!(repo.run("", &["check"], 0), "success\n");
 }

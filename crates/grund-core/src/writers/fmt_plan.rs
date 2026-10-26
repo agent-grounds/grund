@@ -11,9 +11,10 @@ use std::ops::Range;
 use std::path::{Path, PathBuf};
 
 use super::fmt_complete_findings::CompleteScan;
+use super::fmt_row::{FmtLockFile, FmtRow};
 use super::fmt_section_lock::{JudgedTree, LockChange};
 use super::fmt_tree::FmtTreeOutcome;
-use crate::config::{Config, display_path};
+use crate::config::Config;
 use crate::model::{Catalog, SECTION_LOCK_DIR};
 use crate::scanner::{ApiScanError, section_locks_present};
 
@@ -132,11 +133,9 @@ impl TreePlan<'_> {
                     &refused_writes,
                 ));
             }
-            changes.extend(
-                lock.rows
-                    .into_iter()
-                    .map(|(line, row)| (lock.path.clone(), line, row)),
-            );
+            // §FS-section-lock.write.report: the same test `write_lock` acts on.
+            let lock_file = FmtLockFile::of(lock.exists, &lock.text);
+            changes.extend(FmtRow::lock_rows(&lock.path, lock.rows, lock_file));
         }
         Ok(FmtTreeOutcome {
             changes,
@@ -179,7 +178,7 @@ pub(super) fn partial_io_error(
     path: &Path,
     verb: &str,
     error: std::io::Error,
-    changes: &[(PathBuf, usize, String)],
+    changes: &[FmtRow],
     scan_errors: &[ApiScanError],
     refused_writes: &[String],
 ) -> anyhow::Error {
@@ -188,8 +187,8 @@ pub(super) fn partial_io_error(
         &error,
         format!("{verb} {}", path.display()),
     );
-    diagnostic.partial_output = serde_json::json!({"changes":changes.iter().map(|(path,line,label)|
-            serde_json::json!({"path":display_path(render,path),"line":line,"label":label})).collect::<Vec<_>>(),
+    diagnostic.partial_output = serde_json::json!({"changes":changes.iter().map(|row|
+            row.partial_json(render)).collect::<Vec<_>>(),
             "scan_errors":scan_errors.iter().map(|e|serde_json::json!({"path":e.path,"message":e.message})).collect::<Vec<_>>(),
             "refused_writes":refused_writes});
     anyhow::Error::new(error).context(diagnostic)

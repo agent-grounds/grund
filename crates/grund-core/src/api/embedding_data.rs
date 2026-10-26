@@ -70,7 +70,15 @@ record!(CoverTextEntry; path, citations);
 record!(CoverLineSection; section, start, end);
 record!(CoverLineOwner; declaration, start, end, sections);
 record!(CoverLines; project, path, start, end, owners);
-record!(FmtChange; path, line, label);
+record!(FmtChange; path, line, label, counts, lock_file);
+// §FS-distribution.3.2.2.2: the per-kind occurrences behind the `--write` totals.
+record!(FmtCounts; triggers_marked, citations_marked, local_sections_expanded,
+    shorthands_expanded, links_written, section_lock_entries);
+impl Data for FmtLockFile {
+    fn data(&self) -> Value {
+        self.as_str().data()
+    }
+}
 record!(IdProposal; id, kind, number, slug, folder, file, e2e_case_dir,
     file_holds_single_declaration);
 record!(ListSizeEntry; project, id, section, section_separator, kind, path, line,

@@ -3,11 +3,12 @@
 //! per-line rewriting remains in `fmt_rewrite.rs`.
 
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::fmt_complete_findings::{CompleteFindings, CompleteScan};
 use super::fmt_plan::{PlannedFile, TreePlan, WalkRead, partial_io_error};
 use super::fmt_rewrite::{FmtLineOpts, rewrite_file};
+use super::fmt_row::FmtRow;
 use super::fmt_section_lock::{lock_targets, section_lock_changes};
 use super::fmt_settle::settle_headings;
 use crate::checker::{KindIndexEntries, KindIndexFiles};
@@ -50,8 +51,9 @@ fn scope_contains_markdown(
 /// against the run's config, because that is where the config naming it is at
 /// hand; the command surface prints them and maps the exit code.
 pub(crate) struct FmtTreeOutcome {
-    /// The lines it rewrote — or, in a dry run, would have.
-    pub(crate) changes: Vec<(PathBuf, usize, String)>,
+    /// The lines it rewrote — or, in a dry run, would have — each with what it
+    /// did there (§FS-fmt.3.5.1, §FS-fmt.3.7).
+    pub(crate) changes: Vec<FmtRow>,
     /// The paths it could not read at all (§FS-check.2.4).
     pub(crate) scan_errors: Vec<ApiScanError>,
     /// The files it read and would not rewrite, because a link reaches them from

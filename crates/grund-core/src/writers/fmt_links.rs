@@ -63,6 +63,23 @@ pub(crate) fn wrap_markdown_links(
         &targets,
         &settled,
     )
+    .line
+}
+
+/// One line after the link pass, and what the pass wrote on it (§FS-fmt.3.7): the
+/// wraps it made fresh, and the `(old, new)` destination of each wrap it
+/// re-pointed. A wrap whose destination was already right is in neither.
+pub(super) struct WrappedLine {
+    pub(super) line: String,
+    pub(super) fresh: usize,
+    pub(super) repointed: Vec<(String, String)>,
+}
+
+impl WrappedLine {
+    /// The links this line counts as written (§FS-fmt.3.7).
+    pub(super) fn written(&self) -> usize {
+        self.fresh + self.repointed.len()
+    }
 }
 
 /// The production §FS-fmt.6 wrapper pass, sharing §FS-fmt.2.4.5's already-built
@@ -81,10 +98,12 @@ pub(super) fn wrap_markdown_links_with_targets(
     only_ids: Option<&BTreeSet<Id>>,
     shorthand_targets: &ShorthandTargets<'_>,
     settled: &SettledHeadings,
-) -> String {
+) -> WrappedLine {
     let mut output = String::new();
     let mut cursor = 0;
     let mut binding_end = 0;
+    let mut fresh = 0;
+    let mut repointed = Vec::new();
     for citation in
         markdown_link_citations(line, links, config, findings, workspace, shorthand_targets)
     {
@@ -153,10 +172,16 @@ pub(super) fn wrap_markdown_links_with_targets(
         // to the `)` that balances its `(`; one that never closes is wrapped fresh.
         if let CitationLink::Wrap(wrap) = reading {
             output.push_str(&line[cursor..wrap.url_start]);
+            // §FS-fmt.3.7: a re-derived destination is a link written only if it moved.
+            let old = &line[wrap.url_start..wrap.close];
+            if old != target {
+                repointed.push((old.to_string(), target.clone()));
+            }
             output.push_str(&target);
             cursor = wrap.close;
             continue;
         }
+        fresh += 1;
         output.push_str(&line[cursor..marker_start]);
         let citation = &line[marker_start..marked_end];
         output.push('[');
@@ -167,7 +192,11 @@ pub(super) fn wrap_markdown_links_with_targets(
         cursor = marked_end;
     }
     output.push_str(&line[cursor..]);
-    output
+    WrappedLine {
+        line: output,
+        fresh,
+        repointed,
+    }
 }
 
 fn markdown_link_citations(

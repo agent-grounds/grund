@@ -15,11 +15,12 @@
 //! cohesive `fmt_tree.rs` sibling (§AR-core-module-layout.1.5).
 
 use std::collections::BTreeSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use super::fmt_anchor_row::link_row as link_row_of;
+use super::fmt_anchor_row::anchor_detail;
 use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_local_sections::expand_local_section_citations;
+use super::fmt_row::{FmtRow, LineRewrite};
 use super::fmt_suppressed::suppressed_line;
 use crate::config::{Config, FileReading};
 use crate::grammar::{
@@ -53,7 +54,7 @@ pub(super) fn rewrite_file(
     config: &Config,
     reading: FileReading<'_>,
     opts: &FmtLineOpts<'_>,
-    changes: &mut Vec<(PathBuf, usize, String)>,
+    changes: &mut Vec<FmtRow>,
 ) -> RewrittenFile {
     // §FS-config-v2.schema.sources: the file is rewritten as the scan reads it.
     let (is_md, is_py) = (reading.markdown, reading.python);
@@ -113,7 +114,7 @@ pub(super) fn rewrite_file(
         // §FS-fmt.2.5: the file's own `[fmt] exclude` verdict, or the region the
         // directives above have opened. Either one leaves only the index carve-out.
         let suppressed = opts.excluded || !directives.rewriting();
-        let (new_line, label) = fmt_line_at(
+        let (new_line, rewrite) = fmt_line_at(
             line,
             links.line(idx),
             entry,
@@ -127,7 +128,13 @@ pub(super) fn rewrite_file(
         );
         // §FS-fmt.3.6.1: one row per changed line, however many rewrites it holds.
         if new_line != line {
-            changes.push((path.to_path_buf(), idx + 1, label));
+            changes.push(FmtRow {
+                path: path.to_path_buf(),
+                line: idx + 1,
+                label: rewrite.label(),
+                counts: rewrite.counts,
+                lock_file: None,
+            });
             changed = true;
         }
         lines.push(new_line);
@@ -171,8 +178,9 @@ pub(crate) struct FmtLineOpts<'a> {
 /// Apply the `fmt` rewrites to one line, in order: trigger→marker (§FS-fmt.2.1),
 /// then optionally bare→marker (§FS-fmt.2.2), then shorthand→canonical
 /// (§FS-fmt.2.4), then optionally Markdown-link wrapping (§FS-fmt.6) —
-/// returning the new line plus a label naming the most significant rewrite that
-/// fired.
+/// returning the new line plus the account of what each pass did to it, which
+/// its row and its share of the `--write` totals are read from (§FS-fmt.3.5.1,
+/// §FS-fmt.3.7).
 ///
 /// The shorthand pass runs after the trigger pass and reads its output, so a
 /// typed `$$FS-042` is marked and then expanded within the one call — which is
@@ -204,26 +212,28 @@ fn fmt_line_at(
     opts: &FmtLineOpts<'_>,
     suppressed: bool,
     saw_shorthand_candidate: &mut bool,
-) -> (String, String) {
+) -> (String, LineRewrite) {
     if suppressed {
         return suppressed_line(line, links, path, config, is_md, opts);
     }
+    let mut rewrite = LineRewrite::default();
     let triggered = replace_trigger(line, docstrings.peek(line), links, config, is_md);
-    let trigger_changed = triggered.line != line;
     let mut trigger_marker_starts = triggered.marker_starts;
+    rewrite.counts.triggers_marked = trigger_marker_starts.len();
     let marked = if opts.add_marker {
-        add_markers(
+        let (marked, inserted) = add_markers(
             &triggered.line,
             docstrings.peek(&triggered.line),
             links,
             config,
             is_md,
             &mut trigger_marker_starts,
-        )
+        );
+        rewrite.counts.citations_marked = inserted;
+        marked
     } else {
         triggered.line
     };
-    let marker_changed = opts.add_marker && marked != line && !trigger_changed;
     let mut expansions = Vec::new();
     let local_expansion = expand_local_section_citations(
         &marked,
@@ -235,7 +245,7 @@ fn fmt_line_at(
         saw_shorthand_candidate,
         &mut expansions,
     );
-    let local_changed = local_expansion.is_some();
+    rewrite.counts.local_sections_expanded = expansions.len();
     let marked = local_expansion.unwrap_or(marked);
     // Each stage below takes ownership of the previous stage's line rather than
     // cloning it: `fmt` touches every line of every scanned file, so one avoidable
@@ -252,9 +262,8 @@ fn fmt_line_at(
         saw_shorthand_candidate,
         &mut expansions,
     );
-    let shorthand_changed = expansion.is_some();
+    rewrite.counts.shorthands_expanded = expansions.len() - rewrite.counts.local_sections_expanded;
     let mut final_line = expansion.unwrap_or(marked);
-    let mut link_row = None;
     // §FS-fmt.6.1.2: the carve-out narrows the pass to the index's own entries only
     // where the ordinary pass is off; where it runs, it already wraps the page.
     let entry_ids = opts.index_entry_ids.filter(|_| !opts.cross_refs);
@@ -273,41 +282,20 @@ fn fmt_line_at(
             opts.shorthand_targets,
             opts.settled,
         );
-        link_row = link_row_of(&final_line, &wrapped);
-        final_line = wrapped;
+        rewrite.counts.links_written = wrapped.written();
+        rewrite.anchor_detail = anchor_detail(&wrapped.repointed);
+        final_line = wrapped.line;
     }
-    // §FS-fmt.3.5.1: the first rewrite that fired on the line names its one row.
-    let label = if trigger_changed {
-        "trigger \u{2192} marker"
-    } else if marker_changed {
-        "bare \u{2192} marker"
-    } else if local_changed {
-        "local section \u{2192} canonical"
-    } else if shorthand_changed {
-        "shorthand \u{2192} canonical"
-    } else if let Some(row) = link_row.as_deref() {
-        row
-    } else {
-        ""
-    };
-    // §FS-fmt.3.6: whichever label won, a line that expanded a shorthand also names
-    // the text it will write — the one rewrite no later pass can question
-    // (§DF-shorthand-numeric-run.2.7).
-    let label = if expansions.is_empty() {
-        label.to_string()
-    } else {
-        // §FS-fmt.3.6.1: local and shorthand details share the row, in source order.
-        expansions.sort_by_key(|(start, _, _)| *start);
-        format!(
-            "{label}: {}",
-            expansions
-                .iter()
-                .map(|(_, written, canonical)| format!("{written} \u{2192} {canonical}"))
-                .collect::<Vec<_>>()
-                .join(", ")
-        )
-    };
-    (final_line, label)
+    // §FS-fmt.3.6: whichever label leads, a line that expanded a shorthand also
+    // names the text it will write — the one rewrite no later pass can question
+    // (§DF-shorthand-numeric-run.2.7). §FS-fmt.3.6.1: local and shorthand details
+    // share the row, in source order.
+    expansions.sort_by_key(|(start, _, _)| *start);
+    rewrite.expansions = expansions
+        .iter()
+        .map(|(_, written, canonical)| format!("{written} \u{2192} {canonical}"))
+        .collect();
+    (final_line, rewrite)
 }
 
 /// Test/editor-facing single-line entry point. A standalone line has no scan
@@ -324,7 +312,7 @@ pub(crate) fn fmt_line(
     suppressed: bool,
     saw_shorthand_candidate: &mut bool,
 ) -> (String, String) {
-    fmt_line_at(
+    let (line, rewrite) = fmt_line_at(
         line,
         LineLinks::default(),
         docstrings,
@@ -335,7 +323,8 @@ pub(crate) fn fmt_line(
         opts,
         suppressed,
         saw_shorthand_candidate,
-    )
+    );
+    (line, rewrite.label())
 }
 
 /// Rewrite each `$$<ID>` trigger to `§<ID>` — but only where `$$` is immediately
@@ -386,7 +375,8 @@ fn replace_trigger(
 /// Prefix `§` onto bare ID-shaped tokens that lack it — the `--marker` upgrade
 /// (§FS-fmt.2.2) — skipping tokens already marked, Markdown inline-code examples,
 /// Markdown link destinations and the other never-rewrite zones, and source-code
-/// string literals (§FS-fmt.2.3).
+/// string literals (§FS-fmt.2.3). Returns the line and how many citations it
+/// marked (§FS-fmt.3.7).
 pub(super) fn add_markers(
     line: &str,
     docstring: DocstringContent<'_>,
@@ -394,7 +384,7 @@ pub(super) fn add_markers(
     config: &Config,
     is_md: bool,
     trigger_marker_starts: &mut [usize],
-) -> String {
+) -> (String, usize) {
     let mut output = String::new();
     let mut cursor = 0;
     let mut inserted_at = Vec::new();
@@ -451,5 +441,5 @@ pub(super) fn add_markers(
             .count()
             * config.marker.len();
     }
-    output
+    (output, inserted_at.len())
 }

@@ -13,6 +13,7 @@ use crate::scanner::ApiScanError;
 use crate::workspace::scope_is_config_root;
 
 use super::report::context_run_warnings;
+pub use crate::writers::{FmtCounts, FmtLockFile};
 use crate::writers::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree, fmt_workspace_projects};
 
 #[derive(Clone)]
@@ -51,6 +52,12 @@ pub struct FmtChange {
     /// an exact-line script does; read the per-kind counts and the lock-file flag
     /// instead (§FS-distribution.3.2.2.2).
     pub label: String,
+    /// How many rewrites of each kind the change made — the numbers the
+    /// `--write` totals sum (§FS-fmt.3.7, §FS-distribution.3.2.2.2).
+    pub counts: FmtCounts,
+    /// On a lock row, whether the write creates or deletes the lock file;
+    /// `None` elsewhere (§FS-section-lock.write.report).
+    pub lock_file: Option<FmtLockFile>,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -155,10 +162,12 @@ fn format_references_run(opts: FmtOpts, cautions: &mut Vec<Finding>) -> Result<F
     Ok(FmtOutput {
         changes: changes
             .into_iter()
-            .map(|(path, line, label)| FmtChange {
-                path: display_path(&config, &path),
-                line,
-                label,
+            .map(|row| FmtChange {
+                path: display_path(&config, &row.path),
+                line: row.line,
+                label: row.label,
+                counts: row.counts,
+                lock_file: row.lock_file,
             })
             .collect(),
         scan_errors,

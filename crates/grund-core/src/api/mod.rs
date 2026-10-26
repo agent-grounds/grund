@@ -94,7 +94,8 @@ pub use cover_lines::{
 pub use embedding::{EmbeddingRequest, embedding_call};
 pub use embedding_node::{node_embedding_call, node_request};
 pub use fmt::{
-    FmtChange, FmtOpts, FmtOutput, format_references, format_references_with_run_warnings,
+    FmtChange, FmtCounts, FmtLockFile, FmtOpts, FmtOutput, format_references,
+    format_references_with_run_warnings,
 };
 pub use guidance::query_format_hint;
 pub use id::{IdOpts, IdProposal, IdProposalOutcome, propose_id, propose_id_with_run_warnings};

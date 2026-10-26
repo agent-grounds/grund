@@ -108,7 +108,9 @@ fn with_path<'a>(args: &[&'a str], path: &'a str) -> Vec<&'a str> {
 fn a_bare_fmt_write_from_a_subdirectory_writes_the_lock_and_dot_does_not() {
     let written = (
         Some(0),
-        format!("rewrote 2 lines:\n  {LOCK} (1)\n  docs/functional-spec/FS-audit.md (1)\n"),
+        format!(
+            "rewrote 2 lines: 1 link written, 1 section-lock entry\n  {LOCK} (1) created\n  docs/functional-spec/FS-audit.md (1)\n"
+        ),
         String::new(),
     );
 

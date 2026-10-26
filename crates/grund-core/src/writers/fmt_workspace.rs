@@ -147,9 +147,8 @@ pub(crate) fn fmt_workspace_projects(
                     let partial = &mut diagnostic.partial_output;
                     if partial.is_object() {
                         let preceding = serde_json::json!({
-                            "changes":outcome.changes.iter().map(|(path,line,label)|
-                                serde_json::json!({"path":crate::config::display_path(render,path),
-                                    "line":line,"label":label})).collect::<Vec<_>>(),
+                            "changes":outcome.changes.iter().map(|row|
+                                row.partial_json(render)).collect::<Vec<_>>(),
                             "scan_errors":outcome.scan_errors.iter().map(|e|
                                 serde_json::json!({"path":e.path,"message":e.message})).collect::<Vec<_>>(),
                             "refused_writes":outcome.refused_writes});

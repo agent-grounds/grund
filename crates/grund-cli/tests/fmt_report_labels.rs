@@ -88,14 +88,21 @@ fn report(root: &Path, flag: &str) -> Vec<String> {
         .collect()
 }
 
-/// `path:line: <kind>[: <from> → <to>]` → `(line, kind)` (§FS-fmt.3.5, §FS-fmt.3.6).
+/// `path:line: <kind>[: <from> → <to>][; |, ]<kind>, …` → `(line, kind)` for
+/// every kind the row names, the leading one first (§FS-fmt.3.5.1, §FS-fmt.3.6).
+/// An expansion's detail begins with the marker, which no kind does.
 fn reported_labels(root: &Path) -> Vec<(usize, String)> {
     let mut labels = Vec::new();
     for flag in ["--marker", "--cross-refs"] {
         for rest in report(root, flag) {
-            let (line, kind) = rest.split_once(": ").expect("path:line: <kind>");
-            let kind = kind.split(": ").next().expect("kind").to_string();
-            labels.push((line.parse().expect("line number"), kind));
+            let (line, row) = rest.split_once(": ").expect("path:line: <kind>");
+            let line: usize = line.parse().expect("line number");
+            for part in row.split("; ").flat_map(|part| part.split(", ")) {
+                let kind = part.split(": ").next().expect("kind");
+                if !kind.starts_with('\u{a7}') {
+                    labels.push((line, kind.to_string()));
+                }
+            }
         }
     }
     labels
@@ -182,25 +189,26 @@ fn a_line_with_several_rewrites_is_one_row_under_the_first_label() {
     assert_eq!(
         report(&root, "--cross-refs"),
         [
-            // §FS-fmt.3.5.1: marked then expanded reads as the trigger, expanded
-            // then wrapped as the shorthand; both still name what they write.
-            "3: trigger \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login",
-            "5: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login",
-            // §FS-fmt.3.5.2: one row however many local tokens, under the local label
+            // §FS-fmt.3.5.1: marked then expanded leads with the trigger, expanded
+            // then wrapped with the shorthand; both still name what they write, and
+            // every other kind follows the detail after `; `.
+            "3: trigger \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; shorthand \u{2192} canonical, markdown link",
+            "5: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link",
+            // §FS-fmt.3.5.2: one row however many local tokens, led by the local label
             // unless an earlier rewrite fired; a withheld token (§FS-fmt.2.4.6) has no detail.
-            "7: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1, \u{a7}2 \u{2192} \u{a7}FS-004-quick-actions.2",
-            "9: trigger \u{2192} marker: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1",
-            "11: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1",
-            // §FS-fmt.3.5.1: wrapping never outranks an expansion.
-            "13: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login",
+            "7: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1, \u{a7}2 \u{2192} \u{a7}FS-004-quick-actions.2; markdown link",
+            "9: trigger \u{2192} marker: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; local section \u{2192} canonical, markdown link",
+            "11: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; markdown link",
+            // §FS-fmt.3.5.1: wrapping never leads an expansion; it follows it.
+            "13: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link",
         ]
     );
     // §FS-fmt.3.6: a bare citation marked on a line that expanded a shorthand
-    // still names what the expansion writes.
+    // still names what the expansion writes, and the kinds after it.
     let marked = report(&root, "--marker");
     assert!(
         marked.contains(
-            &"13: bare \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login".to_string()
+            &"13: bare \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; shorthand \u{2192} canonical, markdown link".to_string()
         ),
         "fmt --check --marker rows: {marked:?}"
     );

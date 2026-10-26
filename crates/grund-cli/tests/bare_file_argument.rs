@@ -157,7 +157,7 @@ fn bare_file_fmt_write_writes_the_link_dotted_spelling_writes() {
     );
     assert_eq!(
         runs[0],
-        "exit Some(0)\n--- stdout\nrewrote 1 line:\n  NOTES.md (1)\n--- stderr\n"
+        "exit Some(0)\n--- stdout\nrewrote 1 line: 1 link written\n  NOTES.md (1)\n--- stderr\n"
     );
 }
 

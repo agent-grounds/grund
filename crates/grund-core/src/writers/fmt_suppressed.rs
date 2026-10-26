@@ -4,8 +4,10 @@
 
 use std::path::Path;
 
+use super::fmt_anchor_row::anchor_detail;
 use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_rewrite::FmtLineOpts;
+use super::fmt_row::LineRewrite;
 use crate::config::Config;
 use crate::grammar::LineLinks;
 
@@ -28,8 +30,8 @@ pub(super) fn suppressed_line(
     config: &Config,
     is_md: bool,
     opts: &FmtLineOpts<'_>,
-) -> (String, String) {
-    let unchanged = || (line.to_string(), String::new());
+) -> (String, LineRewrite) {
+    let unchanged = || (line.to_string(), LineRewrite::default());
     if !is_md {
         return unchanged();
     }
@@ -47,8 +49,12 @@ pub(super) fn suppressed_line(
         opts.shorthand_targets,
         opts.settled,
     );
-    if wrapped == line {
+    if wrapped.line == line {
         return unchanged();
     }
-    (wrapped, "markdown link".to_string())
+    // §FS-fmt.3.5.1: the index link is accounted for like any other.
+    let mut rewrite = LineRewrite::default();
+    rewrite.counts.links_written = wrapped.written();
+    rewrite.anchor_detail = anchor_detail(&wrapped.repointed);
+    (wrapped.line, rewrite)
 }

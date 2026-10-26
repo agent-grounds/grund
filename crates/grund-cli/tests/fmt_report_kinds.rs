@@ -103,14 +103,12 @@ src/inventory/reserve.py:7: bare \u{2192} marker
 ";
 
 #[test]
-#[ignore = "red until #1021 names every rewrite kind on a row; implement removes this"]
 fn a_marker_line_the_link_pass_also_wraps_names_both_kinds() {
     // §FS-fmt.3.5.1: the list follows a detail-free leading label with `, `.
     assert_eq!(fmt(&["--marker"], &fixture("marker"), 1), MARKER_DRY_RUN);
 }
 
 #[test]
-#[ignore = "red until #1021 totals the write summary by kind; implement removes this"]
 fn the_marker_write_totals_what_it_marked_and_what_it_linked() {
     let repo = copy_of(&fixture("marker"), "marker-write");
     // §FS-fmt.3.7: six bare citations marked (AR-ledger 1, runbook 1,
@@ -131,7 +129,6 @@ rewrote 7 lines: 6 citations marked, 6 links written
 }
 
 #[test]
-#[ignore = "red until #1021 says which lock file a rename deletes and creates; implement removes this"]
 fn a_rename_says_which_lock_file_it_deletes_and_which_it_creates() {
     // §FS-section-lock.write.report: the suffix goes on the file's first row,
     // after the lock rows are sorted and after every source row.
@@ -167,7 +164,6 @@ rewrote 3 lines: 1 link written, 2 section-lock entries
 }
 
 #[test]
-#[ignore = "red until #1021 totals section-lock entries and names a created lock file; implement removes this"]
 fn a_lock_only_write_totals_its_entries_and_names_the_file_it_creates() {
     let repo = copy_of(&e2e_case("fmt-section-lock-login-write"), "login-write");
     assert_eq!(
@@ -178,7 +174,6 @@ fn a_lock_only_write_totals_its_entries_and_names_the_file_it_creates() {
 }
 
 #[test]
-#[ignore = "red until #1021 totals the write summary by kind; implement removes this"]
 fn a_lock_file_that_exists_before_and_after_carries_no_suffix() {
     // §FS-section-lock.write.report: one entry dropped and another added in the
     // same file is neither a creation nor a deletion.
@@ -219,7 +214,6 @@ rewrote 2 lines: 1 trigger marked, 1 section-lock entry
 const SEVERAL: &str = "docs/functional-spec/FS-004-quick-actions.md";
 
 #[test]
-#[ignore = "red until #1021 names every rewrite kind on a row; implement removes this"]
 fn the_kinds_after_an_expansion_follow_its_detail_after_a_semicolon() {
     let rows = |flag: &str| -> Vec<String> {
         fmt(&["--check", flag], &fixture("several"), 1)
@@ -268,7 +262,6 @@ fn the_kinds_after_an_expansion_follow_its_detail_after_a_semicolon() {
 }
 
 #[test]
-#[ignore = "red until #1021 keeps a trailing link's repeated-anchor detail; implement removes this"]
 fn a_trailing_markdown_link_keeps_its_repeated_anchor_detail() {
     // §FS-fmt.3.6, §DF-repeated-heading-anchor.decision.row: the detail ends the
     // row. The first link is already right, so it is no link written.
@@ -285,7 +278,6 @@ fn a_trailing_markdown_link_keeps_its_repeated_anchor_detail() {
 }
 
 #[test]
-#[ignore = "red until #1021 appends the same kinds to FmtChange.label; implement removes this"]
 fn the_api_label_is_the_cli_row_after_its_location() {
     // §FS-distribution.3.2.2.2: `label` carries what the CLI row appends.
     let mut opts = FmtOpts::default();

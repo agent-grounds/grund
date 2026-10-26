@@ -84,6 +84,7 @@ mod fmt_links;
 mod fmt_local_sections;
 mod fmt_plan;
 mod fmt_rewrite;
+mod fmt_row;
 mod fmt_section_lock;
 mod fmt_settle;
 mod fmt_shorthand_links;
@@ -119,6 +120,7 @@ mod scoped_files;
 
 pub use fetch::{FetchFailure, FetchFailureKind, fetch_snapshot, fetch_snapshot_with_run_warnings};
 pub use fmt_error::{FmtConflictAbort, FmtScanAbort};
+pub use fmt_row::{FmtCounts, FmtLockFile};
 pub use init::{InitError, InitEvent, InitOpts, InitOutput, init};
 pub use init_guidance::{InitAllocation, InitAllocationHome, InitFsHome, InitNext};
 pub use init_plan::InitAgentEntrypointSelection;
