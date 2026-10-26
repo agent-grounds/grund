@@ -1,0 +1,5 @@
+SPEC-loans.requirements.borrow-a-book 601fa37ebac02171
+SPEC-loans.requirements.borrow-a-book.copy-on-loan f9e127297ad00fd5
+SPEC-loans.requirements.borrow-a-book.copy-on-shelf ed911c274c3e9c47
+SPEC-loans.requirements.loan-limit e45b0acfe472798c
+SPEC-loans.requirements.renew-a-loan cfd2d945f4533b04
