@@ -2,4 +2,4 @@ docs/FS-log.md:3: error: unknown project alias root; root names the enclosing wo
 docs/FS-m.md:3: error: unknown project alias root; root names the enclosing workspace's root project, and this project is a member of that workspace — run `grund check` from the workspace root at `tests/e2e/cases/glob-citation-workspace-member/repo` to validate cross-project citations
 docs/FS-m.md:5: error: unknown project alias root; root names the enclosing workspace's root project, and this project is a member of that workspace — run `grund check` from the workspace root at `tests/e2e/cases/glob-citation-workspace-member/repo` to validate cross-project citations
 docs/FS-m.md:7: error: unknown project alias root; root names the enclosing workspace's root project, and this project is a member of that workspace — run `grund check` from the workspace root at `tests/e2e/cases/glob-citation-workspace-member/repo` to validate cross-project citations
-docs/FS-m.md:1: warning: declared but never cited: FS-m
+docs/FS-m.md:1: warning: declared but never cited: FS-m; cite it, or remove the declaration if nothing needs it

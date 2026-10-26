@@ -1,1 +1,1 @@
-{"severity":"error","path":"docs/functional-spec/FS-001-body-scope.md","line":9,"code":"section-outside-declaration","message":"numbered section outside any declaration","sites":null,"authority":null}
+{"severity":"error","path":"docs/functional-spec/FS-001-body-scope.md","line":9,"code":"section-outside-declaration","message":"numbered section outside any declaration; move it inside a declaration's body, or drop its section path","sites":null,"authority":null}

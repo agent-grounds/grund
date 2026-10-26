@@ -69,7 +69,7 @@ fn a_row_grounds_its_own_home_with_the_global_off() {
     assert_eq!(
         ungrounded(&run),
         vec![
-            "skills/review/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID"
+            "skills/review/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID; cite a declared ID within it"
         ],
     );
 }
@@ -90,7 +90,9 @@ fn a_row_false_exempts_its_home_under_a_global_true() {
     );
     assert_eq!(
         ungrounded(&run),
-        vec!["src/main.rs:1: ungrounded source file: no § citation to a declared ID"],
+        vec![
+            "src/main.rs:1: ungrounded source file: no § citation to a declared ID; cite a declared ID within it"
+        ],
     );
 }
 
@@ -111,7 +113,9 @@ fn the_flag_does_not_override_an_explicit_row_false() {
     let run = run_check(&root, true, true, false, None).expect("check run");
     assert_eq!(
         ungrounded(&run),
-        vec!["src/main.rs:1: ungrounded source file: no § citation to a declared ID"],
+        vec![
+            "src/main.rs:1: ungrounded source file: no § citation to a declared ID; cite a declared ID within it"
+        ],
         "the flag reaches the complement it always did, and not the exempt row",
     );
 }
@@ -137,7 +141,7 @@ fn level_two_asks_each_section_of_a_markdown_home() {
     assert_eq!(
         ungrounded(&run),
         vec![
-            "skills/review/SKILL.md:5: ungrounded section `## Steps` in kind home skills/: no § citation to a declared ID"
+            "skills/review/SKILL.md:5: ungrounded section `## Steps` in kind home skills/: no § citation to a declared ID; cite a declared ID within it"
         ],
     );
 }
@@ -177,7 +181,7 @@ fn a_file_with_no_section_at_the_level_is_one_unit() {
     assert_eq!(
         ungrounded(&run),
         vec![
-            "skills/review/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID"
+            "skills/review/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID; cite a declared ID within it"
         ],
     );
 }
@@ -217,7 +221,9 @@ fn level_two_reaches_only_unindented_doc_comments() {
     );
     assert_eq!(
         ungrounded(&run),
-        vec!["src/main.rs:3: ungrounded doc-comment: no § citation to a declared ID"],
+        vec![
+            "src/main.rs:3: ungrounded doc-comment: no § citation to a declared ID; cite a declared ID within it"
+        ],
     );
 }
 
@@ -231,8 +237,8 @@ fn level_three_reaches_every_doc_comment() {
     assert_eq!(
         ungrounded(&run),
         vec![
-            "src/main.rs:3: ungrounded doc-comment: no § citation to a declared ID",
-            "src/main.rs:5: ungrounded doc-comment: no § citation to a declared ID",
+            "src/main.rs:3: ungrounded doc-comment: no § citation to a declared ID; cite a declared ID within it",
+            "src/main.rs:5: ungrounded doc-comment: no § citation to a declared ID; cite a declared ID within it",
         ],
     );
 }
@@ -261,7 +267,9 @@ fn an_obligation_fires_per_section_at_level_two() {
             .into_iter()
             .filter(|line| line.contains("must cite"))
             .collect::<Vec<_>>(),
-        vec!["skills/review/SKILL.md:5: skills/ must cite FS (citation direction)"],
+        vec![
+            "skills/review/SKILL.md:5: skills/ must cite FS (citation direction); add such a citation within it"
+        ],
     );
 }
 
@@ -291,8 +299,8 @@ fn an_unmet_obligation_reports_on_the_file_and_the_section() {
             .filter(|line| line.contains("must cite"))
             .collect::<Vec<_>>(),
         vec![
-            "skills/review/SKILL.md:1: skills/ must cite FS (citation direction)",
-            "skills/review/SKILL.md:3: skills/ must cite FS (citation direction)",
+            "skills/review/SKILL.md:1: skills/ must cite FS (citation direction); add such a citation within it",
+            "skills/review/SKILL.md:3: skills/ must cite FS (citation direction); add such a citation within it",
         ],
     );
 }
@@ -403,8 +411,8 @@ fn a_non_citable_file_home_is_governed_and_cut_by_its_level() {
     assert_eq!(
         ungrounded(&run),
         vec![
-            "RUNBOOK.md:1: ungrounded file in kind home RUNBOOK.md: no § citation to a declared ID",
-            "RUNBOOK.md:5: ungrounded section `## Restart` in kind home RUNBOOK.md: no § citation to a declared ID",
+            "RUNBOOK.md:1: ungrounded file in kind home RUNBOOK.md: no § citation to a declared ID; cite a declared ID within it",
+            "RUNBOOK.md:5: ungrounded section `## Restart` in kind home RUNBOOK.md: no § citation to a declared ID; cite a declared ID within it",
         ],
     );
 }
@@ -442,9 +450,9 @@ fn an_uncited_file_earns_the_file_finding_and_one_per_section() {
     assert_eq!(
         ungrounded(&run),
         vec![
-            "skills/review/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID",
-            "skills/review/SKILL.md:5: ungrounded section `## Steps` in kind home skills/: no § citation to a declared ID",
-            "skills/review/SKILL.md:9: ungrounded section `## Notes` in kind home skills/: no § citation to a declared ID",
+            "skills/review/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID; cite a declared ID within it",
+            "skills/review/SKILL.md:5: ungrounded section `## Steps` in kind home skills/: no § citation to a declared ID; cite a declared ID within it",
+            "skills/review/SKILL.md:9: ungrounded section `## Notes` in kind home skills/: no § citation to a declared ID; cite a declared ID within it",
         ],
     );
 }
@@ -491,8 +499,8 @@ fn a_global_only_config_grounds_every_place_at_the_file() {
     assert_eq!(
         ungrounded(&run),
         vec![
-            "skills/review/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID",
-            "src/main.rs:1: ungrounded source file: no § citation to a declared ID",
+            "skills/review/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID; cite a declared ID within it",
+            "src/main.rs:1: ungrounded source file: no § citation to a declared ID; cite a declared ID within it",
         ],
     );
 }
@@ -535,7 +543,7 @@ fn a_global_level_loads_when_a_row_turns_grounding_on() {
     assert_eq!(
         ungrounded(&run),
         vec![
-            "skills/review/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID"
+            "skills/review/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID; cite a declared ID within it"
         ],
     );
 }

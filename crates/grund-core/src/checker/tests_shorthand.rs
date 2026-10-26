@@ -105,8 +105,8 @@ fn unknown_and_ambiguous_shorthands_are_named_not_guessed() {
     assert_eq!(
         errors,
         vec![
-            "shorthand citation §FS-042 is ambiguous: FS-042-user-login, FS-042-user-logout",
-            "shorthand citation §FS-999 matches no declaration",
+            "shorthand citation §FS-042 is ambiguous: FS-042-user-login, FS-042-user-logout; write the full ID it means",
+            "shorthand citation §FS-999 matches no declaration; write the full ID it means",
         ]
     );
     // §FS-check.3.1 is suppressed at a shorthand site, so `unknown reference
@@ -261,7 +261,7 @@ fn a_shorthand_fmt_cannot_rewrite_is_counted_but_not_reported() {
     // Three resolving shorthands, none of them reported…
     assert_eq!(
         messages(&report),
-        vec!["shorthand citation §FS-999 matches no declaration"],
+        vec!["shorthand citation §FS-999 matches no declaration; write the full ID it means"],
         "only the genuinely dangling one is reported"
     );
     // …but all of them are real citations, so the declaration is not unused.

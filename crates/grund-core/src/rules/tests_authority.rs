@@ -106,14 +106,14 @@ fn the_message_tail_is_the_authority_joined() {
     assert_eq!(
         diagnostics[0].message,
         format!(
-            "FS-demo must cite GOAL ({})",
+            "FS-demo must cite GOAL ({}); add such a citation within it",
             diagnostics[0].authority.join(", ")
         )
     );
     // And those bytes are the ones the tail has always had.
     assert_eq!(
         diagnostics[0].message,
-        "FS-demo must cite GOAL (--rule, RULE-second)"
+        "FS-demo must cite GOAL (--rule, RULE-second); add such a citation within it"
     );
 }
 

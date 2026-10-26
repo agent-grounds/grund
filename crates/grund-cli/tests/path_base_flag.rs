@@ -169,7 +169,7 @@ fn invocation_flag_from_a_subdirectory_spells_paths_from_there() {
             Some(1),
             concat!(
                 "../../docs/fs/FS-a.md:1: error: duplicate declaration of FS-a ",
-                "(also declared at ../../docs/fs/FS-dup.md:1)\n",
+                "(also declared at ../../docs/fs/FS-dup.md:1); renumber or rename all but one of the headings\n",
                 "../../member/src/m.rs:1: error: unknown reference FS-nope\n",
                 "lib.rs:1: error: unknown reference FS-missing\n",
             )
@@ -187,7 +187,7 @@ fn invocation_flag_from_a_subdirectory_spells_paths_from_there() {
             concat!(
                 "{\"severity\":\"error\",\"path\":\"../../docs/fs/FS-a.md\",\"line\":1,",
                 "\"code\":\"duplicate\",\"message\":\"duplicate declaration of FS-a ",
-                "(also declared at ../../docs/fs/FS-dup.md:1)\",\"sites\":[",
+                "(also declared at ../../docs/fs/FS-dup.md:1); renumber or rename all but one of the headings\",\"sites\":[",
                 "{\"path\":\"../../docs/fs/FS-a.md\",\"line\":1},",
                 "{\"path\":\"../../docs/fs/FS-dup.md\",\"line\":1}],\"authority\":null}\n",
                 "{\"severity\":\"error\",\"path\":\"../../member/src/m.rs\",\"line\":1,",

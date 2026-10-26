@@ -164,7 +164,7 @@ fn guidance_contract(version: u8, subject: &str) {
     assert_eq!(check.status.code(), Some(1), "{check:?}");
     assert!(
         report.contains(
-            "tests/e2e/uncited.rs:1: error: tests/e2e/ must cite FS (citation direction)"
+            "tests/e2e/uncited.rs:1: error: tests/e2e/ must cite FS (citation direction); add such a citation within it"
         ),
         "{check:?}"
     );

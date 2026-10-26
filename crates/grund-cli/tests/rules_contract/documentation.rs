@@ -319,7 +319,7 @@ fn a_chapter_rule_reports_the_declaration_without_the_chapter() {
         1,
         "{\"severity\":\"error\",\"path\":\"docs/fs/FS-demo.md\",\"line\":6,\
          \"code\":\"missing-citation\",\
-         \"message\":\"FS-demo.requirements must cite REQ (--rule)\",\"sites\":null,\
+         \"message\":\"FS-demo.requirements must cite REQ (--rule); add such a citation within it\",\"sites\":null,\
          \"authority\":[\"--rule\"]}\n",
         "",
     );

@@ -152,8 +152,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add, remove or retitle chapters until the count fits"
    },
    "note": null
   },
@@ -172,8 +172,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add, remove or retitle chapters until the count fits"
    },
    "note": null
   }
@@ -197,8 +197,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add or remove those citations until the count fits"
    },
    "note": null
   },
@@ -217,8 +217,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add or remove those citations until the count fits"
    },
    "note": null
   }
@@ -452,8 +452,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "re-point the citation or downgrade it to a plain Markdown link"
    },
    "note": null
   },
@@ -476,8 +476,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "re-point the citation or downgrade it to a plain Markdown link"
    },
    "note": null
   }
@@ -546,8 +546,8 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "renumber or rename all but one of the headings"
    },
    "note": null
   },
@@ -560,8 +560,8 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "renumber or rename all but one of the headings"
    },
    "note": null
   }
@@ -853,8 +853,8 @@
     "remark": "with an explicit path"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "drop --full, or drop the path to check the whole project"
    },
    "note": null
   },
@@ -874,8 +874,8 @@
     "remark": "with an explicit path"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "drop --full, or drop the path to check the whole project"
    },
    "note": null
   }
@@ -959,8 +959,25 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "prose",
+      "text": "move the prose into a comment block of its own"
+     },
+     {
+      "label": "lines",
+      "text": "shorten the note, or move its detail into a doc-comment"
+     },
+     {
+      "label": "columns",
+      "text": "shorten or rewrap its widest line"
+     },
+     {
+      "label": "layout",
+      "text": "rewrite the line in that form"
+     }
+    ]
    },
    "note": null
   },
@@ -973,8 +990,25 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "prose",
+      "text": "move the prose into a comment block of its own"
+     },
+     {
+      "label": "lines",
+      "text": "shorten the note, or move its detail into a doc-comment"
+     },
+     {
+      "label": "columns",
+      "text": "shorten or rewrap its widest line"
+     },
+     {
+      "label": "layout",
+      "text": "rewrite the line in that form"
+     }
+    ]
    },
    "note": null
   }
@@ -998,8 +1032,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "retitle the heading to one of them"
    },
    "note": null
   },
@@ -1013,8 +1047,8 @@
     "text": "not in version 1"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "retitle the heading to one of them"
    },
    "note": null
   }
@@ -1242,8 +1276,8 @@
     "remark": "a value tag the scan finds turns it on too"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "correct what the reason names"
    },
    "note": null
   },
@@ -1263,8 +1297,8 @@
     "remark": "a value tag the scan finds turns it on too"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "correct what the reason names"
    },
    "note": null
   }
@@ -1283,9 +1317,9 @@
    },
    "fix": {
     "kind": "none",
-    "text": "its message names no remedy yet"
+    "text": "the line is the one every command prints for the path, so it names the reason alone"
    },
-   "note": null
+   "note": "make the path readable, or keep it out of the scan"
   },
   "1": {
    "severity": {
@@ -1297,9 +1331,9 @@
    },
    "fix": {
     "kind": "none",
-    "text": "its message names no remedy yet"
+    "text": "the line is the one every command prints for the path, so it names the reason alone"
    },
-   "note": null
+   "note": "make the path readable, or keep it out of the scan"
   }
  },
  {
@@ -1443,8 +1477,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "move the section there"
    },
    "note": null
   },
@@ -1458,8 +1492,8 @@
     "text": "not in version 1"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "move the section there"
    },
    "note": null
   }
@@ -1484,8 +1518,8 @@
     "remark": "a warn entry turns it on too, as a warning"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add such a citation within it"
    },
    "note": null
   },
@@ -1504,8 +1538,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add such a citation within it"
    },
    "note": null
   }
@@ -1530,8 +1564,8 @@
     "remark": "a warn or should presence turns it on too, at that strength"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add its {field} section"
    },
    "note": null
   },
@@ -1545,8 +1579,8 @@
     "text": "not in version 1"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add its {field} section"
    },
    "note": null
   }
@@ -1715,8 +1749,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "retitle the heading to match"
    },
    "note": null
   },
@@ -1730,8 +1764,8 @@
     "text": "not in version 1"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "retitle the heading to match"
    },
    "note": null
   }
@@ -1829,8 +1863,8 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "declare the prefix as a heading above it"
    },
    "note": null
   },
@@ -1849,8 +1883,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "declare the prefix as a heading above it"
    },
    "note": null
   }
@@ -2061,8 +2095,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "write the full ID it means"
    },
    "note": null
   },
@@ -2081,8 +2115,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "write the full ID it means"
    },
    "note": null
   }
@@ -2250,8 +2284,8 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "give the heading the parent it needs, or write its complete path"
    },
    "note": null
   },
@@ -2264,8 +2298,8 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "give the heading the parent it needs, or write its complete path"
    },
    "note": null
   }
@@ -2335,8 +2369,8 @@
     "remark": "it is the default, and warn or should turns it on too, at that strength"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "re-level the heading, or change its path to match its depth"
    },
    "note": null
   },
@@ -2356,8 +2390,8 @@
     "remark": "it is the default, and \"warn\" turns it on too"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "re-level the heading, or change its path to match its depth"
    },
    "note": null
   }
@@ -2375,8 +2409,8 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "move it inside a declaration's body, or drop its section path"
    },
    "note": null
   },
@@ -2389,8 +2423,8 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "move it inside a declaration's body, or drop its section path"
    },
    "note": null
   }
@@ -2479,8 +2513,17 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "write {citation}"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "write",
+      "text": "write {citation}"
+     },
+     {
+      "label": "full",
+      "text": "write the full ID it means"
+     }
+    ]
    },
    "note": null
   },
@@ -2493,8 +2536,17 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "write {citation}"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "write",
+      "text": "write {citation}"
+     },
+     {
+      "label": "full",
+      "text": "write the full ID it means"
+     }
+    ]
    },
    "note": null
   }
@@ -2588,8 +2640,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add such a citation within it"
    },
    "note": null
   },
@@ -2612,8 +2664,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add such a citation within it"
    },
    "note": null
   }
@@ -2637,8 +2689,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add or remove the citations of it until the count fits"
    },
    "note": null
   },
@@ -2657,8 +2709,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "add or remove the citations of it until the count fits"
    },
    "note": null
   }
@@ -2683,8 +2735,8 @@
     "remark": "a warn or should closed turns it on too, at that strength"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "rename it to one of them, number it, or add it to the kind's fields"
    },
    "note": null
   },
@@ -2698,8 +2750,8 @@
     "text": "not in version 1"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "rename it to one of them, number it, or add it to the kind's fields"
    },
    "note": null
   }
@@ -2724,8 +2776,8 @@
     "remark": "a warn or should rung turns it on too, at that strength"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "cite a declared ID within it"
    },
    "note": null
   },
@@ -2744,8 +2796,8 @@
     ]
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "cite a declared ID within it"
    },
    "note": null
   }
@@ -3106,8 +3158,8 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "cite it, or remove the declaration if nothing needs it"
    },
    "note": null
   },
@@ -3120,8 +3172,8 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "cite it, or remove the declaration if nothing needs it"
    },
    "note": null
   }
@@ -3146,8 +3198,8 @@
     "remark": "a value tag the scan finds turns it on too"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "change the literal to the declared value, or the declaration to the bound one"
    },
    "note": null
   },
@@ -3167,8 +3219,8 @@
     "remark": "a value tag the scan finds turns it on too"
    },
    "fix": {
-    "kind": "none",
-    "text": "its message names no remedy yet"
+    "kind": "template",
+    "text": "change the literal to the declared value, or the declaration to the bound one"
    },
    "note": null
   }

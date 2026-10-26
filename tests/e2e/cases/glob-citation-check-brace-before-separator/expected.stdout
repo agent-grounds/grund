@@ -1,2 +1,2 @@
 docs/cites.md:3: error: glob citation §FS-gate{.1,.2}: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-gate{.1,.2}; this became an error in grund 0.19.0
-docs/FS-gate.md:1: warning: declared but never cited: FS-gate
+docs/FS-gate.md:1: warning: declared but never cited: FS-gate; cite it, or remove the declaration if nothing needs it

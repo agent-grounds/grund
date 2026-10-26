@@ -53,7 +53,7 @@ fn whole_value_bindings_navigate_to_the_declaration_and_match_the_cli() {
         "value mismatch for CONST-price.2: bound `EUR`, declared `USD` at values/price.md:3 \
          \u{2014} whole binding: value mismatch for CONST-price (component 2): \
          bound `1200.0 EUR`, declared `1200 USD` at values/price.md:3; \
-         this wording changes in grund 0.22.0"
+         this wording changes in grund 0.22.0; change the literal to the declared value, or the declaration to the bound one"
     );
 
     let (mut child, mut stdin, receiver) = start_server_with_capabilities(

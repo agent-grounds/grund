@@ -8,6 +8,7 @@ use super::authority::Authority;
 use super::index::FactIndex;
 use super::selectors::{citation_matches_targets, label, target_nodes, target_wording};
 use super::{SemanticRule, push_node};
+use crate::model::remedies;
 use crate::model::{Code, Diagnostic};
 use std::collections::BTreeMap;
 
@@ -38,10 +39,11 @@ pub(super) fn evaluate_cites(
                 let count = counts.get(target).copied().unwrap_or_default();
                 if !rule.cardinality.contains(count) {
                     let message = format!(
-                        "{} cites {} {count} times; {authority} requires {}",
+                        "{} cites {} {count} times; {authority} requires {}; {}",
                         label(facts, subject),
                         label(facts, target),
-                        rule.cardinality.times_wording()
+                        rule.cardinality.times_wording(),
+                        remedies::citation_cardinality()
                     );
                     push_node(
                         out,
@@ -72,21 +74,27 @@ pub(super) fn evaluate_cites(
                 };
                 let message = if ordinary {
                     format!(
-                        "{} {} cite {} ({authority})",
+                        "{} {} cite {} ({authority}); {}",
                         label(facts, subject),
                         if rule.level == RuleLevel::Required {
                             "must"
                         } else {
                             "should"
                         },
-                        target_wording(&rule.targets)
+                        target_wording(&rule.targets),
+                        if rule.level == RuleLevel::Required {
+                            remedies::missing_citation()
+                        } else {
+                            remedies::suggested_citation()
+                        }
                     )
                 } else {
                     format!(
-                        "{} cites {} {count} times; {authority} requires {}",
+                        "{} cites {} {count} times; {authority} requires {}; {}",
                         label(facts, subject),
                         target_wording(&rule.targets),
-                        rule.cardinality.wording()
+                        rule.cardinality.wording(),
+                        remedies::citation_cardinality()
                     )
                 };
                 push_node(out, facts, subject, code, message, authority);

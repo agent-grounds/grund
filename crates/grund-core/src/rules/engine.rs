@@ -12,6 +12,7 @@ use super::facts::{Completeness, NodeKey, RuleFacts, SiteKey};
 use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
 };
+use crate::model::remedies;
 use crate::model::{Code, Diagnostic, citation_direction_repair};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -208,9 +209,10 @@ fn evaluate_one(
                             .join(", ")
                     };
                     let message = format!(
-                        "{} has {count} {name} chapters; {authority} requires {}; expected display name \"{name}\" (case-insensitive, not section handle); observed direct chapters: {observed}",
+                        "{} has {count} {name} chapters; {authority} requires {}; expected display name \"{name}\" (case-insensitive, not section handle); observed direct chapters: {observed}; {}",
                         label(facts, &subject),
-                        rule.cardinality.wording()
+                        rule.cardinality.wording(),
+                        remedies::chapter_cardinality()
                     );
                     push_node(
                         out,
@@ -234,7 +236,10 @@ fn evaluate_one(
                         let (code, repair) = if rule.level == RuleLevel::Required {
                             (Code::FORBIDDEN_CITATION, citation_direction_repair())
                         } else {
-                            (Code::DISCOURAGED_CITATION, String::new())
+                            (
+                                Code::DISCOURAGED_CITATION,
+                                format!(" — {}", remedies::discouraged_citation()),
+                            )
                         };
                         let message = format!(
                             "{} {} not cite {} ({authority}){repair}",
@@ -273,10 +278,11 @@ fn evaluate_one(
                     .count();
                 if !rule.cardinality.contains(count) {
                     let message = format!(
-                        "{} is cited by {} {count} times; {authority} requires {}",
+                        "{} is cited by {} {count} times; {authority} requires {}; {}",
                         label(facts, &subject),
                         target_wording(&rule.targets),
-                        rule.cardinality.wording()
+                        rule.cardinality.wording(),
+                        remedies::uncited_unit()
                     );
                     push_node(out, facts, &subject, Code::UNCITED_UNIT, message, authority);
                 }

@@ -719,7 +719,7 @@ Keep the complete message above as a verbatim contiguous prefix
 ([§FS-errors.3](FS-errors.md#3-message-text)) and append:
 
 ```text
-; expected display name "<name>" (case-insensitive, not section handle); observed direct chapters: <observed>
+; expected display name "<name>" (case-insensitive, not section handle); observed direct chapters: <observed>; add, remove or retitle chapters until the count fits
 ```
 
 `<observed>` lists every accepted direct chapter in source order, each quoted
@@ -741,14 +741,14 @@ An ordinary hard `at least one` rule with zero matches reuses
 `missing-citation`:
 
 ```text
-<subject> must cite <target-set> (<RULE-ID>)
+<subject> must cite <target-set> (<RULE-ID>); add such a citation within it
 ```
 
 Other ordinary counts and every per-target `cite each` miss use
 `citation-cardinality`, located at the subject declaration or chapter title:
 
 ```text
-<subject> cites <target-set> <actual> times; <RULE-ID> requires <count>
+<subject> cites <target-set> <actual> times; <RULE-ID> requires <count>; add or remove those citations until the count fits
 ```
 
 For `cite each`, `<target-set>` is the one canonical target ID and one row
@@ -765,7 +765,7 @@ chapter title there is none of
 `uncited-unit` is located at the subject declaration or chapter title:
 
 ```text
-<subject> is cited by <source-set> <actual> times; <RULE-ID> requires <count>
+<subject> is cited by <source-set> <actual> times; <RULE-ID> requires <count>; add or remove the citations of it until the count fits
 ```
 
 The code covers zero, surplus, and other off-count inbound cardinalities. A
@@ -909,7 +909,7 @@ chapter count at the declaration's line there ([§FS-declarations.stubs.pairing.
 
 ```text
 src/x.rs:3: error: FS must not cite GOAL (--rule) — re-point the citation or downgrade it to a plain Markdown link
-src/x.rs:1: error: FS-x has 2 Terms chapters; --rule requires at most 1; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: "terms: Terms", "more: Terms"
+src/x.rs:1: error: FS-x has 2 Terms chapters; --rule requires at most 1; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: "terms: Terms", "more: Terms"; add, remove or retitle chapters until the count fits
 ```
 
 The same holds for the `[citations]` findings the lent citations produce ([§FS-check.3.11](FS-check.md#311-missing-required-citation),

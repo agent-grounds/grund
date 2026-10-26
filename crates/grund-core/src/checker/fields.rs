@@ -4,6 +4,7 @@
 //! pairing of a field with the chapter-presence rule it expresses, run where the
 //! rule findings join the report (§FS-rules.6).
 
+use crate::model::remedies;
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
@@ -194,8 +195,11 @@ impl<'a> Shape<'a> {
             return;
         };
         let message = format!(
-            "{} has no {} field; kind {} declares it",
-            self.id, field.name, self.kind
+            "{} has no {} field; kind {} declares it; {}",
+            self.id,
+            field.name,
+            self.kind,
+            remedies::missing_field(&field.name)
         );
         let line = self.declaration.line;
         out.push(self.finding(Some(field), channel, Code::MISSING_FIELD, line, message));
@@ -213,8 +217,9 @@ impl<'a> Shape<'a> {
             && display != title
         {
             let message = format!(
-                "{section} is titled \"{display}\"; kind {} titles it \"{title}\"",
-                self.kind
+                "{section} is titled \"{display}\"; kind {} titles it \"{title}\"; {}",
+                self.kind,
+                remedies::mistitled_field()
             );
             out.push(self.finding(Some(field), channel, Code::MISTITLED_FIELD, line, message));
         }
@@ -222,9 +227,10 @@ impl<'a> Shape<'a> {
             && !values.iter().any(|value| value == display)
         {
             let message = format!(
-                "{section} is \"{display}\"; kind {} admits {}",
+                "{section} is \"{display}\"; kind {} admits {}; {}",
                 self.kind,
-                values.join(", ")
+                values.join(", "),
+                remedies::invalid_field_value()
             );
             out.push(self.finding(
                 Some(field),
@@ -272,12 +278,13 @@ impl<'a> Shape<'a> {
                     && place != at
                 {
                     let message = format!(
-                        "{}{}{} is section {} of {count}; kind {} places it {wording}",
+                        "{}{}{} is section {} of {count}; kind {} places it {wording}; {}",
                         self.id,
                         self.separator,
                         field.name,
                         at + 1,
-                        self.kind
+                        self.kind,
+                        remedies::misplaced_field()
                     );
                     let line = self.direct[at].1;
                     out.push(self.finding(
@@ -310,7 +317,7 @@ impl<'a> Shape<'a> {
                 continue;
             }
             let message = format!(
-                "{}{}{section} is not a field of kind {}, which is closed; its fields: {}",
+                "{}{}{section} is not a field of kind {}, which is closed; its fields: {}; {}",
                 self.id,
                 self.separator,
                 self.kind,
@@ -318,7 +325,8 @@ impl<'a> Shape<'a> {
                     "none".to_string()
                 } else {
                     names.join(", ")
-                }
+                },
+                remedies::undeclared_chapter()
             );
             out.push(self.finding(None, channel, Code::UNDECLARED_CHAPTER, *line, message));
         }

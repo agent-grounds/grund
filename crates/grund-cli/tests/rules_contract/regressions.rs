@@ -26,7 +26,7 @@ fn chapter_handles_and_display_names_have_distinct_meanings() {
     assert_run(
         &output,
         1,
-        "docs/fs/FS-demo.md:1: error: FS-demo has 0 requirements chapters; --rule requires exactly one; expected display name \"requirements\" (case-insensitive, not section handle); observed direct chapters: \"requirements: Acceptance criteria\"\n",
+        "docs/fs/FS-demo.md:1: error: FS-demo has 0 requirements chapters; --rule requires exactly one; expected display name \"requirements\" (case-insensitive, not section handle); observed direct chapters: \"requirements: Acceptance criteria\"; add, remove or retitle chapters until the count fits\n",
         "",
     );
     let output = run(&root, &["list", ".", "--selector", "FS.requirements"]);
@@ -108,7 +108,7 @@ fn resolved_section_citations_count_by_kind_but_missing_sections_make_no_edge() 
     assert_run(
         &output,
         1,
-        "docs/fs/FS-demo.md:3: error: FS-demo.requirements must cite REQ (RULE-requirements)\n",
+        "docs/fs/FS-demo.md:3: error: FS-demo.requirements must cite REQ (RULE-requirements); add such a citation within it\n",
         "",
     );
 }
@@ -177,7 +177,10 @@ fn configured_separator_is_used_by_rules_and_normal_list_rows() {
             "missing-citation",
         ],
     );
-    assert!(text(&output.stdout).contains("FS-demo#needs must cite REQ (--rule)"));
+    assert!(
+        text(&output.stdout)
+            .contains("FS-demo#needs must cite REQ (--rule); add such a citation within it")
+    );
     let output = run(
         &root,
         &[

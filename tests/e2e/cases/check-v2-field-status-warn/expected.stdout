@@ -1,2 +1,2 @@
-docs/df/DF-maybe.md:3: warning: DF-maybe.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded
-docs/df/DF-none.md:1: warning: DF-none has no status field; kind DF declares it
+docs/df/DF-maybe.md:3: warning: DF-maybe.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded; retitle the heading to one of them
+docs/df/DF-none.md:1: warning: DF-none has no status field; kind DF declares it; add its status section

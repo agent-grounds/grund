@@ -1,5 +1,5 @@
-{"severity":"error","path":"docs/df/DF-session.md","line":3,"code":"invalid-field-value","message":"DF-session.status is \"Maybe\"; kind DF admits Proposed, Accepted, Superseded","sites":null,"authority":null}
-{"severity":"error","path":"docs/df/DF-session.md","line":7,"code":"undeclared-chapter","message":"DF-session.surprise is not a field of kind DF, which is closed; its fields: status","sites":null,"authority":null}
-{"severity":"error","path":"docs/fs/FS-login.md","line":9,"code":"misplaced-field","message":"FS-login.terms is section 2 of 2; kind FS places it first","sites":null,"authority":null}
-{"severity":"error","path":"docs/fs/FS-logout.md","line":1,"code":"missing-field","message":"FS-logout has no terms field; kind FS declares it","sites":null,"authority":null}
-{"severity":"error","path":"docs/fs/FS-reset.md","line":5,"code":"mistitled-field","message":"FS-reset.terms is titled \"Glossary\"; kind FS titles it \"Terms\"","sites":null,"authority":null}
+{"severity":"error","path":"docs/df/DF-session.md","line":3,"code":"invalid-field-value","message":"DF-session.status is \"Maybe\"; kind DF admits Proposed, Accepted, Superseded; retitle the heading to one of them","sites":null,"authority":null}
+{"severity":"error","path":"docs/df/DF-session.md","line":7,"code":"undeclared-chapter","message":"DF-session.surprise is not a field of kind DF, which is closed; its fields: status; rename it to one of them, number it, or add it to the kind's fields","sites":null,"authority":null}
+{"severity":"error","path":"docs/fs/FS-login.md","line":9,"code":"misplaced-field","message":"FS-login.terms is section 2 of 2; kind FS places it first; move the section there","sites":null,"authority":null}
+{"severity":"error","path":"docs/fs/FS-logout.md","line":1,"code":"missing-field","message":"FS-logout has no terms field; kind FS declares it; add its terms section","sites":null,"authority":null}
+{"severity":"error","path":"docs/fs/FS-reset.md","line":5,"code":"mistitled-field","message":"FS-reset.terms is titled \"Glossary\"; kind FS titles it \"Terms\"; retitle the heading to match","sites":null,"authority":null}

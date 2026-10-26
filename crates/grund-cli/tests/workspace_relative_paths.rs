@@ -132,7 +132,7 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
             String::from_utf8_lossy(&check.stdout),
             concat!(
                 "external-link.md:3: error: unknown reference FS-missing\n",
-                "external-link.md:1: warning: declared but never cited: FS-external\n",
+                "external-link.md:1: warning: declared but never cited: FS-external; cite it, or remove the declaration if nothing needs it\n",
             )
         );
         assert_eq!(String::from_utf8_lossy(&check.stderr), "");
@@ -148,7 +148,7 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
         );
         assert_eq!(
             String::from_utf8_lossy(&full_check.stderr),
-            "warning: --full has no effect with an explicit PATH — external-link.md already resolves against [scan] include, and the report is the path either way\n"
+            "warning: --full has no effect with an explicit PATH — external-link.md already resolves against [scan] include, and the report is the path either way; drop --full, or drop the path to check the whole project\n"
         );
 
         let full_check_json = run_grund(
@@ -170,7 +170,7 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
                 "{\"severity\":\"warning\",\"path\":null,\"line\":null,",
                 "\"code\":\"full-scope-ignored\",",
                 "\"message\":\"--full has no effect with an explicit PATH — external-link.md ",
-                "already resolves against [scan] include, and the report is the path either way\",",
+                "already resolves against [scan] include, and the report is the path either way; drop --full, or drop the path to check the whole project\",",
                 "\"sites\":null,\"authority\":null}\n",
             )
         );

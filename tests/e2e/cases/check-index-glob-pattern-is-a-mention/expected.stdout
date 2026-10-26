@@ -1,5 +1,5 @@
 docs/fs/FS-002-session.md:1: error: FS-002-session appears in docs/fs/README.md but not as an entry: an entry is a `§`-marked Markdown link to the declaration — became an error in grund 0.13.0
 docs/fs/README.md:5: error: glob citation §FS-002-*: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-002-*; this became an error in grund 0.19.0
 docs/fs/README.md:5: error: glob citation §FS-002-session.*: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-002-session.*; this became an error in grund 0.19.0
-docs/fs/FS-001-login.md:1: warning: declared but never cited: FS-001-login (its index entry at docs/fs/README.md:3 does not count as a use)
-docs/fs/FS-002-session.md:1: warning: declared but never cited: FS-002-session
+docs/fs/FS-001-login.md:1: warning: declared but never cited: FS-001-login (its index entry at docs/fs/README.md:3 does not count as a use); cite it, or remove the declaration if nothing needs it
+docs/fs/FS-002-session.md:1: warning: declared but never cited: FS-002-session; cite it, or remove the declaration if nothing needs it

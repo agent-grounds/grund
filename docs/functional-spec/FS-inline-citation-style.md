@@ -278,9 +278,9 @@ Each of the following is an error and contributes to a non-zero exit code, per [
 
 | condition                                               | result                                                                                                             |
 |---------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| `inline_style = "citation-only"` and a note is present  | error: `inline citation must carry no prose`                                                                        |
-| `lines > inline_note_max_lines`                         | error: `inline note is M lines, over the N-line maximum: lines A-B cite <citations>; a blank line splits a note, an empty comment line does not` |
-| `max(columns) > inline_note_max_columns`                | error: `inline note is M columns, over the N-column maximum: line(s) A[-B] cite(s) <citations>; over-limit lines: <line widths>` |
+| `inline_style = "citation-only"` and a note is present  | error: `inline citation must carry no prose; move the prose into a comment block of its own`                                                                        |
+| `lines > inline_note_max_lines`                         | error: `inline note is M lines, over the N-line maximum: lines A-B cite <citations>; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment` |
+| `max(columns) > inline_note_max_columns`                | error: `inline note is M columns, over the N-column maximum: line(s) A[-B] cite(s) <citations>; over-limit lines: <line widths>; shorten or rewrap its widest line`                     |
 
 A single note that violates more than one cap produces one finding per violated cap (so the author sees every reason in a single pass). [§FS-inline-citation-style.4.1.1](FS-inline-citation-style.md#411-the-measured-size)–[§FS-inline-citation-style.4.1.3](FS-inline-citation-style.md#413-the-splitting-clause) define `M` and `N`, the site clause, and the splitting clause.
 
@@ -290,7 +290,7 @@ A single note that violates more than one cap produces one finding per violated 
 
 ##### 4.1.1.1 Every over-limit line
 
-Every column-budget finding appends `; over-limit lines: <line widths>` after its complete existing message, including the site clause of [§FS-inline-citation-style.4.1.2](FS-inline-citation-style.md#412-the-site-clause). `<line widths>` lists **every** constituent line whose width is strictly greater than that finding's selected threshold `N`, in ascending source order, separated by `, `. Each entry is `line L: W columns`: `L` is the 1-based physical source line and `W` uses the character measurement of [§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns), including indentation and comment delimiters. A line exactly at the threshold is omitted. The label is always `over-limit lines`, even for one entry; each entry uses `column` only when `W = 1`, otherwise `columns`.
+Every column-budget finding appends `; over-limit lines: <line widths>` after its complete existing message, including the site clause of [§FS-inline-citation-style.4.1.2](FS-inline-citation-style.md#412-the-site-clause), and before the remedy its catalog row words ([§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read)), which stays last. `<line widths>` lists **every** constituent line whose width is strictly greater than that finding's selected threshold `N`, in ascending source order, separated by `, `. Each entry is `line L: W columns`: `L` is the 1-based physical source line and `W` uses the character measurement of [§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns), including indentation and comment delimiters. A line exactly at the threshold is omitted. The label is always `over-limit lines`, even for one entry; each entry uses `column` only when `W = 1`, otherwise `columns`.
 
 This suffix applies to hard caps and v2 softer column budgets alike ([§FS-config-v2.schema.measures](FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys)), using the threshold selected for the emitted finding. It changes only the message suffix: one finding per existing budget, code, first-line location, channel, gating, exit verdict, and JSON fields remain unchanged. Text and JSON carry the same complete message. The old message remains a verbatim contiguous prefix ([§FS-errors.3](FS-errors.md#3-message-text)); the whole-block span still describes the note, not just its over-limit lines. A hard column-cap finding continues to suppress softer column findings for that note.
 
@@ -306,7 +306,7 @@ The line-count finding carries a further clause, `a blank line splits a note, an
 
 `warn_on_suggested = false` (default): soft-cap overruns are **silent** at `check` time. The soft cap is purely guidance for the agent-facing surface ([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)); humans get the same guidance through the same rendered copy.
 
-`warn_on_suggested = true`: a note whose line count exceeds `inline_note_suggested_lines` but stays within `inline_note_max_lines` is reported as a **warning**: `inline note is M lines, over the N-line preferred limit: lines A-B cite <citations>; a blank line splits a note, an empty comment line does not`, with `M`, `N`, the site clause, and the splitting clause following the same rules as [§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps)'s line-count finding ([§FS-inline-citation-style.4.1.1](FS-inline-citation-style.md#411-the-measured-size)–[§FS-inline-citation-style.4.1.3](FS-inline-citation-style.md#413-the-splitting-clause)). Warnings never affect the exit code, per [§FS-check.4](FS-check.md#4-warnings).
+`warn_on_suggested = true`: a note whose line count exceeds `inline_note_suggested_lines` but stays within `inline_note_max_lines` is reported as a **warning**: `inline note is M lines, over the N-line preferred limit: lines A-B cite <citations>; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment`, with `M`, `N`, the site clause, and the splitting clause following the same rules as [§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps)'s line-count finding ([§FS-inline-citation-style.4.1.1](FS-inline-citation-style.md#411-the-measured-size)–[§FS-inline-citation-style.4.1.3](FS-inline-citation-style.md#413-the-splitting-clause)). Warnings never affect the exit code, per [§FS-check.4](FS-check.md#4-warnings).
 
 The soft cap counts lines only: there is no `suggested_columns` knob, and column width is a single hard cap ([§FS-inline-citation-style.6.3](FS-inline-citation-style.md#63-no-second-column-measure)).
 
@@ -334,7 +334,7 @@ Each finding is located at its nonconforming line, not at the note's opener. A l
 
 #### 4.4.2 One message at both severities
 
-The message is the same at `warn` and at `error`, so moving a project from `warn` to `error` changes the exit code and nothing a reader has to re-learn. It names the canonical shape with the configured marker, e.g. ``inline note must open with its citations and a colon (§<ID>: note)``.
+The message is the same at `warn` and at `error`, so moving a project from `warn` to `error` changes the exit code and nothing a reader has to re-learn. It names the canonical shape with the configured marker, e.g. ``inline note must open with its citations and a colon (§<ID>: note); rewrite the line in that form``.
 
 #### 4.4.3 Report order
 

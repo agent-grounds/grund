@@ -1,3 +1,3 @@
 docs/functional-spec/FS-root.md:3: error: unknown reference api/FS-missing; write <§>api/FS-missing if this is an illustration
-apps/api/docs/functional-spec/FS-session.md:1: warning: declared but never cited: FS-session (its index entry at apps/api/docs/functional-spec/README.md:5 does not count as a use)
-docs/functional-spec/FS-root.md:1: warning: declared but never cited: FS-root (its index entry at docs/functional-spec/README.md:5 does not count as a use)
+apps/api/docs/functional-spec/FS-session.md:1: warning: declared but never cited: FS-session (its index entry at apps/api/docs/functional-spec/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it
+docs/functional-spec/FS-root.md:1: warning: declared but never cited: FS-root (its index entry at docs/functional-spec/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it

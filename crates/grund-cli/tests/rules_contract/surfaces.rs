@@ -9,10 +9,10 @@ use std::fs;
 
 const TEXT_FINDINGS: &str = concat!(
     "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one 2 times; ",
-    "RULE-overview requires exactly once\n",
+    "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
     "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one-more 0 times; ",
-    "RULE-overview requires exactly once\n",
-    "docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ (RULE-requirements)\n",
+    "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
+    "docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ (RULE-requirements); add such a citation within it\n",
 );
 
 /// §FS-check.3.27: each off-count target of a `cite each` sentence is one
@@ -31,15 +31,15 @@ fn rule_findings_have_exact_ndjson_codes_and_bytes() {
     let expected = concat!(
         "{\"severity\":\"error\",\"path\":\"docs/ar/AR-overview.md\",\"line\":3,",
         "\"code\":\"citation-cardinality\",\"message\":\"AR-overview.system-overview cites ",
-        "AR-one 2 times; RULE-overview requires exactly once\",\"sites\":null,",
+        "AR-one 2 times; RULE-overview requires exactly once; add or remove those citations until the count fits\",\"sites\":null,",
         "\"authority\":[\"RULE-overview\"]}\n",
         "{\"severity\":\"error\",\"path\":\"docs/ar/AR-overview.md\",\"line\":3,",
         "\"code\":\"citation-cardinality\",\"message\":\"AR-overview.system-overview cites ",
-        "AR-one-more 0 times; RULE-overview requires exactly once\",\"sites\":null,",
+        "AR-one-more 0 times; RULE-overview requires exactly once; add or remove those citations until the count fits\",\"sites\":null,",
         "\"authority\":[\"RULE-overview\"]}\n",
         "{\"severity\":\"error\",\"path\":\"docs/fs/FS-demo.md\",\"line\":6,",
         "\"code\":\"missing-citation\",\"message\":\"FS-demo.requirements must cite REQ ",
-        "(RULE-requirements)\",\"sites\":null,\"authority\":[\"RULE-requirements\"]}\n",
+        "(RULE-requirements); add such a citation within it\",\"sites\":null,\"authority\":[\"RULE-requirements\"]}\n",
     );
     assert_v1_run(&output, 1, expected, "");
 }
@@ -55,7 +55,7 @@ fn ad_hoc_rule_is_additive_and_suggestions_do_not_change_the_exit() {
         &["check", ".", "--rule", sentence, "--suggestions"],
     );
     let expected = format!(
-        "{TEXT_FINDINGS}docs/fs/FS-demo.md:1: suggestion: FS-demo has 0 security chapters; --rule requires exactly one; expected display name \"security\" (case-insensitive, not section handle); observed direct chapters: \"goals: Goals\", \"requirements: Requirements\"\n"
+        "{TEXT_FINDINGS}docs/fs/FS-demo.md:1: suggestion: FS-demo has 0 security chapters; --rule requires exactly one; expected display name \"security\" (case-insensitive, not section handle); observed direct chapters: \"goals: Goals\", \"requirements: Requirements\"; add, remove or retitle chapters until the count fits\n"
     );
     assert_v1_run(&output, 1, &expected, "");
 }
@@ -169,7 +169,7 @@ fn every_markdown_sibling_heading_closes_the_accepted_chapter() {
     assert_run(
         &output,
         1,
-        "docs/fs/FS-demo.md:3: error: FS-demo.requirements must cite REQ (RULE-requirements)\n",
+        "docs/fs/FS-demo.md:3: error: FS-demo.requirements must cite REQ (RULE-requirements); add such a citation within it\n",
         "",
     );
 }
@@ -231,7 +231,7 @@ fn semantic_duplicates_collapse_in_both_directions() {
     assert_run(
         &output,
         1,
-        "docs/fs/FS-demo.md:1: error: FS-demo must cite GOAL (citation direction)\n",
+        "docs/fs/FS-demo.md:1: error: FS-demo must cite GOAL (citation direction); add such a citation within it\n",
         "",
     );
 
@@ -245,7 +245,7 @@ fn semantic_duplicates_collapse_in_both_directions() {
     assert_run(
         &output,
         1,
-        "docs/fs/FS-demo.md:1: error: FS-demo must cite GOAL (RULE-a, RULE-b)\n",
+        "docs/fs/FS-demo.md:1: error: FS-demo must cite GOAL (RULE-a, RULE-b); add such a citation within it\n",
         "",
     );
 }
@@ -287,7 +287,7 @@ fn inbound_and_prohibition_families_reach_their_released_findings() {
         1,
         concat!(
             "docs/fs/FS-demo.md:6: error: FS-demo.requirements is cited by AR 0 times; ",
-            "RULE-inbound requires at least one\n",
+            "RULE-inbound requires at least one; add or remove the citations of it until the count fits\n",
             "docs/fs/FS-demo.md:8: error: FS must not cite AR (RULE-prohibition) — re-point the citation or downgrade it to a plain Markdown link\n",
         ),
         "",
@@ -330,8 +330,8 @@ fn positive_and_negative_citation_recommendations_reuse_suggestion_codes() {
         &output,
         0,
         concat!(
-            "docs/fs/FS-demo.md:1: suggestion: FS-demo should cite GOAL (RULE-positive)\n",
-            "docs/fs/FS-demo.md:5: suggestion: FS should not cite AR (RULE-negative)\n",
+            "docs/fs/FS-demo.md:1: suggestion: FS-demo should cite GOAL (RULE-positive); add such a citation within it\n",
+            "docs/fs/FS-demo.md:5: suggestion: FS should not cite AR (RULE-negative) — re-point the citation or downgrade it to a plain Markdown link\n",
         ),
         "",
     );

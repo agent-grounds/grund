@@ -209,11 +209,13 @@ path = "docs/functional-spec/FS-declarations.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 772, unit = "lines" }
+max_accepted = { value = 782, unit = "lines" }
 until = "the stubs and checks chapters of the declarations specification move into their own declarations with existing FS-declarations section citations migrated"
 issue = "agent-grounds/grund#650"
 reason = """
 Missing boundary: what a stub is (§FS-declarations.stubs) and the finding catalog (§FS-declarations.checks) still share one declaration with the declaration grammar. Splitting them requires a mapped migration of their stable section IDs, which dozens of files cite; that migration is outside issue #650, which ends the 0.18.0 stub windows in the points that already hold them. The file was 781 non-blank lines before #650 and #650 leaves it at 772, so the ceiling accepts the measured size and permits no growth.
+
+Issue #1027 appends each check's remedy to its message, so the exact messages of the declaration-shape findings in §FS-declarations.checks are rewritten in place and the relative-section-parent template gains its remedy clause. The declaration grammar and the finding catalog still share one declaration; the mapped migration above retires that debt and is outside a message change. The ceiling accepts exactly the measured 782 non-blank lines, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-distribution.md"
@@ -268,7 +270,7 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["large-file-default"]
 kind = "deferred"
-max_accepted = { value = 289812, unit = "bytes" }
+max_accepted = { value = 290404, unit = "bytes" }
 until = "the finding catalog moves into independently declared child specifications and existing FS-check section citations are migrated"
 reason = """
 The check specification still combines recognition, reporting, its finding catalog and watch behavior in one declaration. Issue #823 adds only a cross-reference to the defining member diagnostic point in FS-workspace.5.1.1. Missing boundary: independent finding specifications with a stable mapping for current FS-check section citations; moving that catalog is outside this specification-only diagnostic change. This byte ceiling accepts only the current measured file size, separately from the existing line-budget exception.
@@ -286,6 +288,8 @@ Issue #921 rewrites the last clause of §FS-check.3.5.5's fourth case to cite th
 Issue #932 adds §FS-check.3.5.3.1 beneath the existing agents-init message point to define first-differing-entry detail once for both workspace sections. The missing boundary and retirement condition above remain: splitting the finding catalog requires a mapped migration of stable section citations, outside this specification/test step. The ceiling accepts exactly the measured 288320 bytes, with no growth allowance.
 
 Issue #1023 adds version-correct offline help to the existing no-kinds message point, FS-check.4.5.2. The file already measured 289297 bytes on arrival; this specification adds 515 bytes. The same mapped migration of the finding catalog retires the debt, and remains outside this human-help correction. The byte ceiling accepts exactly the measured 289812 bytes, with no growth allowance.
+
+Issue #1027 appends each check's remedy to its message, so the message examples of §FS-check.1.3.7, §FS-check.3.6.3, §FS-check.3.11 and §FS-check.3.13 gain their remedy clauses in place. The same mapped migration of the finding catalog retires the debt and remains outside a message change. The byte ceiling accepts exactly the measured 290404 bytes, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-init.md"

@@ -312,7 +312,7 @@ a mismatch of different kinds names each side's kind after its canonical text
 ([§FS-values.5.2.1](../functional-spec/FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind)):
 
 ```text
-docs/record.md:5: error: value mismatch for QTY-mach-001-year.1: bound `2022`, declared `2022` at values/machines.json:2 — bound is a number, declared is a string; a number and a string are never equal
+docs/record.md:5: error: value mismatch for QTY-mach-001-year.1: bound `2022`, declared `2022` at values/machines.json:2 — bound is a number, declared is a string; a number and a string are never equal; change the literal to the declared value, or the declaration to the bound one
 ```
 
 A binding aimed at a root is compared part by part in declared order. A
@@ -322,7 +322,7 @@ the first unequal component by its section path, at that component's one
 declaration site ([§FS-values.5.2.2](../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)):
 
 ```text
-docs/offer.md:3: error: value mismatch for CONST-field-price (component 2): bound `1200 EUR`, declared `1200 USD` at values/field-price.md:3
+docs/offer.md:3: error: value mismatch for CONST-field-price (component 2): bound `1200 EUR`, declared `1200 USD` at values/field-price.md:3; change the literal to the declared value, or the declaration to the bound one
 ```
 
 Read on its own, that line says the citation is right and the literal is
@@ -340,7 +340,7 @@ and quotes only its part, stays whole in front of it, followed by
 `; this wording changes in grund 0.22.0` ([§FS-errors.3.9](../functional-spec/FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)):
 
 ```text
-docs/offer.md:3: error: value mismatch for CONST-field-price.2: bound `EUR`, declared `USD` at values/field-price.md:3 — whole binding: value mismatch for CONST-field-price (component 2): bound `1200 EUR`, declared `1200 USD` at values/field-price.md:3; this wording changes in grund 0.22.0
+docs/offer.md:3: error: value mismatch for CONST-field-price.2: bound `EUR`, declared `USD` at values/field-price.md:3 — whole binding: value mismatch for CONST-field-price (component 2): bound `1200 EUR`, declared `1200 USD` at values/field-price.md:3; this wording changes in grund 0.22.0; change the literal to the declared value, or the declaration to the bound one
 ```
 
 A script that matches a root-aimed line whole, or by the part before
@@ -353,7 +353,7 @@ literal as authored and the components joined by one ASCII space, carries
 component 1's declaration site, and appends no kind clause:
 
 ```text
-docs/offer.md:3: error: value mismatch for CONST-field-price: bound `1200`, declared `1200 USD` at values/field-price.md:2
+docs/offer.md:3: error: value mismatch for CONST-field-price: bound `1200`, declared `1200 USD` at values/field-price.md:2; change the literal to the declared value, or the declaration to the bound one
 ```
 
 A root-aimed binding of a value with a space inside a component is refused at

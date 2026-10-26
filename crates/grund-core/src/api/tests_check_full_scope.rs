@@ -112,7 +112,7 @@ fn full_scope_warns_when_an_explicit_path_leaves_it_nothing_to_cancel() {
         .expect("§FS-check.1.3.7: the redundant flag earns a caution");
     assert_eq!(
         caution.message,
-        "--full has no effect with an explicit PATH — sim already resolves against [scan] include, and the report is the path either way"
+        "--full has no effect with an explicit PATH — sim already resolves against [scan] include, and the report is the path either way; drop --full, or drop the path to check the whole project"
     );
     assert!(
         caution.line.is_none(),

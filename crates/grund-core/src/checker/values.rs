@@ -4,6 +4,7 @@ use super::value_mismatch::{rendered_value_path, value_mismatch};
 use super::value_roots::root_binding_finding;
 use crate::config::{Frame, Schema, any_kind_holds_values, kind_uses_values, kind_value_chapter};
 use crate::grammar::{BindingSpellings, render_catalog_id};
+use crate::model::remedies;
 use crate::model::{
     Catalog, CheckReport, Code, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, Switch,
     ValueBinding, paired_declarations, value_binding_section_ends_in_coordinate,
@@ -43,11 +44,16 @@ pub(super) fn check_values(
             column: site.column,
             message: match &site.id {
                 Some(id) => format!(
-                    "invalid value declaration for {}: {}",
+                    "invalid value declaration for {}: {}; {}",
                     render_catalog_id(frame.grammar(), &findings.declarations, id),
-                    site.message
+                    site.message,
+                    remedies::invalid_value_declaration()
                 ),
-                None => format!("invalid value declaration: {}", site.message),
+                None => format!(
+                    "invalid value declaration: {}; {}",
+                    site.message,
+                    remedies::invalid_value_declaration()
+                ),
             },
             sites: Vec::new(),
             authority: Vec::new(),

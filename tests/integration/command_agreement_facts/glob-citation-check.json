@@ -42,7 +42,7 @@
       {"severity":"error","code":"glob-citation","path":"docs/cites.md","line":5,"token":"§FS-log*in.requirements","message":"glob citation §FS-log*in.requirements: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-log*in.requirements; this became an error in grund 0.19.0","sites":[]},
       {"severity":"error","code":"glob-citation","path":"docs/cites.md","line":6,"token":"§FS-*.requirements","message":"glob citation §FS-*.requirements: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-*.requirements; this became an error in grund 0.19.0","sites":[]},
       {"severity":"error","code":"glob-citation","path":"docs/cites.md","line":7,"token":"§FS-[a,b]","message":"glob citation §FS-[a,b]: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-[a,b]; this became an error in grund 0.19.0","sites":[]},
-      {"severity":"warning","code":"unused","path":"docs/FS-log.md","line":1,"message":"declared but never cited: FS-log","sites":[]}
+      {"severity":"warning","code":"unused","path":"docs/FS-log.md","line":1,"message":"declared but never cited: FS-log; cite it, or remove the declaration if nothing needs it","sites":[]}
     ],
     "refusals": {},
     "fmt": {

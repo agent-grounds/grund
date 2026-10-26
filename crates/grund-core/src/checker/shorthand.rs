@@ -47,7 +47,10 @@ fn shorthand_diagnostic(
 ) -> Option<Diagnostic> {
     let written = cite.text.trim();
     let message = match candidates {
-        [] => format!("shorthand citation {written} matches no declaration"),
+        [] => format!(
+            "shorthand citation {written} matches no declaration; {}",
+            remedies::shorthand_citation_full()
+        ),
         [unique] => {
             // An exact persisted spelling is already canonical for compatibility;
             // there is no different text for `fmt` to write (§FS-config.3.2).
@@ -111,11 +114,11 @@ fn shorthand_diagnostic(
             }
             format!(
                 "shorthand citation {written}; {}",
-                remedies::shorthand_citation(canonical)
+                remedies::shorthand_citation_write(canonical)
             )
         }
         many => format!(
-            "shorthand citation {written} is ambiguous: {}",
+            "shorthand citation {written} is ambiguous: {}; {}",
             many.iter()
                 .map(|id| render_catalog_id(
                     &target.compiled.grammar,
@@ -123,7 +126,8 @@ fn shorthand_diagnostic(
                     id
                 ))
                 .collect::<Vec<_>>()
-                .join(", ")
+                .join(", "),
+            remedies::shorthand_citation_full()
         ),
     };
     Some(Diagnostic {

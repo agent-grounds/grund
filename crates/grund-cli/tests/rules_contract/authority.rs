@@ -20,18 +20,18 @@ const TRIAL: &str = "FS-demo.requirements must cite exactly 3 REQ.";
 
 /// The one line that sentence authors.
 const TRIAL_FINDING: &str = "docs/fs/FS-demo.md:6: error: FS-demo.requirements cites REQ 0 times; \
-                             --rule requires exactly 3\n";
+                             --rule requires exactly 3; add or remove those citations until the count fits\n";
 
 /// What a bare `--rule` run prints: the trial line sorted into the tree's own
 /// three findings. This is the report the ticket says a trial run cannot escape.
 const UNSCOPED: &str = concat!(
     "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one 2 times; ",
-    "RULE-overview requires exactly once\n",
+    "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
     "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one-more 0 times; ",
-    "RULE-overview requires exactly once\n",
+    "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
     "docs/fs/FS-demo.md:6: error: FS-demo.requirements cites REQ 0 times; ",
-    "--rule requires exactly 3\n",
-    "docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ (RULE-requirements)\n",
+    "--rule requires exactly 3; add or remove those citations until the count fits\n",
+    "docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ (RULE-requirements); add such a citation within it\n",
 );
 
 /// §FS-rules.8: the ticket, restated as an assertion — a scoped report is the
@@ -96,11 +96,11 @@ fn the_code_axis_and_the_authority_axis_intersect() {
     );
     let expected = concat!(
         "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one 2 times; ",
-        "RULE-overview requires exactly once\n",
+        "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
         "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one-more 0 times; ",
-        "RULE-overview requires exactly once\n",
+        "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
         "docs/fs/FS-demo.md:6: error: FS-demo.requirements cites REQ 0 times; ",
-        "--rule requires exactly 3\n",
+        "--rule requires exactly 3; add or remove those citations until the count fits\n",
     );
     assert_run(&by_code, 1, expected, "");
 
@@ -145,7 +145,7 @@ fn ignore_wins_over_the_authority_axis() {
 fn a_jointly_authored_finding_is_retained_with_its_tail_unchanged() {
     let sentence = "The requirements chapter of each FS must cite at least one REQ.";
     let joint = "docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ \
-                 (--rule, RULE-requirements)\n";
+                 (--rule, RULE-requirements); add such a citation within it\n";
     let root = fixture();
 
     // The merge itself already happens: one finding, both origins in the tail.
@@ -176,7 +176,7 @@ fn a_sentence_duplicating_a_citation_direction_yields_an_empty_scoped_report() {
         &format!("{config}\n[citations.FS]\nmust = [\"GOAL\"]\n"),
     );
     let sentence = "Each FS must cite at least one GOAL.";
-    let direction = "docs/fs/FS-demo.md:1: error: FS-demo must cite GOAL (citation direction)\n";
+    let direction = "docs/fs/FS-demo.md:1: error: FS-demo must cite GOAL (citation direction); add such a citation within it\n";
 
     // The config finding wins byte-for-byte: no `--rule` reaches the tail.
     let unscoped = run(&root, &["check", ".", "--rule", sentence]);
@@ -218,7 +218,7 @@ fn a_should_level_sentence_needs_suggestions_to_be_seen() {
         ),
         0,
         "docs/fs/FS-demo.md:1: suggestion: FS-demo has 0 security chapters; \
-         --rule requires exactly one; expected display name \"security\" (case-insensitive, not section handle); observed direct chapters: \"goals: Goals\", \"requirements: Requirements\"\n",
+         --rule requires exactly one; expected display name \"security\" (case-insensitive, not section handle); observed direct chapters: \"goals: Goals\", \"requirements: Requirements\"; add, remove or retitle chapters until the count fits\n",
         "",
     );
 }
@@ -289,18 +289,18 @@ fn every_finding_record_carries_the_authority_that_produced_it() {
     let expected = concat!(
         "{\"severity\":\"error\",\"path\":\"docs/ar/AR-overview.md\",\"line\":3,",
         "\"code\":\"citation-cardinality\",\"message\":\"AR-overview.system-overview cites ",
-        "AR-one 2 times; RULE-overview requires exactly once\",\"sites\":null,",
+        "AR-one 2 times; RULE-overview requires exactly once; add or remove those citations until the count fits\",\"sites\":null,",
         "\"authority\":[\"RULE-overview\"]}\n",
         "{\"severity\":\"error\",\"path\":\"docs/ar/AR-overview.md\",\"line\":3,",
         "\"code\":\"citation-cardinality\",\"message\":\"AR-overview.system-overview cites ",
-        "AR-one-more 0 times; RULE-overview requires exactly once\",\"sites\":null,",
+        "AR-one-more 0 times; RULE-overview requires exactly once; add or remove those citations until the count fits\",\"sites\":null,",
         "\"authority\":[\"RULE-overview\"]}\n",
         "{\"severity\":\"error\",\"path\":\"docs/fs/FS-demo.md\",\"line\":6,",
         "\"code\":\"citation-cardinality\",\"message\":\"FS-demo.requirements cites REQ 0 times; ",
-        "--rule requires exactly 3\",\"sites\":null,\"authority\":[\"--rule\"]}\n",
+        "--rule requires exactly 3; add or remove those citations until the count fits\",\"sites\":null,\"authority\":[\"--rule\"]}\n",
         "{\"severity\":\"error\",\"path\":\"docs/fs/FS-demo.md\",\"line\":6,",
         "\"code\":\"missing-citation\",\"message\":\"FS-demo.requirements must cite REQ ",
-        "(RULE-requirements)\",\"sites\":null,\"authority\":[\"RULE-requirements\"]}\n",
+        "(RULE-requirements); add such a citation within it\",\"sites\":null,\"authority\":[\"RULE-requirements\"]}\n",
     );
     assert_v1_run(&output, 1, expected, "");
 }
@@ -326,7 +326,7 @@ fn a_jointly_authored_record_names_both_origins_in_bytewise_order() {
     let expected = concat!(
         "{\"severity\":\"error\",\"path\":\"docs/fs/FS-demo.md\",\"line\":6,",
         "\"code\":\"missing-citation\",\"message\":\"FS-demo.requirements must cite REQ ",
-        "(--rule, RULE-requirements)\",\"sites\":null,",
+        "(--rule, RULE-requirements); add such a citation within it\",\"sites\":null,",
         "\"authority\":[\"--rule\",\"RULE-requirements\"]}\n",
     );
     assert_run(&output, 1, expected, "");

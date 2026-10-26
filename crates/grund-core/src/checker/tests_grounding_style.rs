@@ -76,7 +76,7 @@ fn inline_citation_only_rejects_prose_once_per_site() {
     assert_eq!(style_errors[0].line, Some(1));
     assert_eq!(
         style_errors[0].message,
-        "inline citation must carry no prose"
+        "inline citation must carry no prose; move the prose into a comment block of its own"
     );
 }
 
@@ -106,13 +106,13 @@ fn inline_note_hard_caps_can_report_multiple_errors() {
 
     assert!(
             messages.contains(
-                &"inline note is 2 lines, over the 1-line maximum: lines 1-2 cite §FS-001-login; a blank line splits a note, an empty comment line does not"
+                &"inline note is 2 lines, over the 1-line maximum: lines 1-2 cite §FS-001-login; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment"
             ),
             "line cap should be reported: {messages:?}"
         );
     assert!(
         messages.contains(
-            &"inline note is 64 columns, over the 40-column maximum: lines 1-2 cite §FS-001-login; over-limit lines: line 1: 64 columns"
+            &"inline note is 64 columns, over the 40-column maximum: lines 1-2 cite §FS-001-login; over-limit lines: line 1: 64 columns; shorten or rewrap its widest line"
         ),
         "column cap should be reported: {messages:?}"
     );
@@ -147,7 +147,7 @@ fn inline_note_line_cap_names_citations_in_source_order_deduplicated() {
 
     assert!(
             messages.contains(
-                &"inline note is 2 lines, over the 1-line maximum: lines 1-2 cite §FS-001-login.1, §FS-001-login; a blank line splits a note, an empty comment line does not"
+                &"inline note is 2 lines, over the 1-line maximum: lines 1-2 cite §FS-001-login.1, §FS-001-login; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment"
             ),
             "citations are named as written, in source order, deduplicated: {messages:?}"
         );
@@ -240,7 +240,7 @@ fn inline_note_column_cap_is_exact_in_non_ascii_prose() {
         vec![(
             Some(4),
             format!(
-                "inline note is {} columns, over the {}-column maximum: line 4 cites §FS-001-login; over-limit lines: line 4: {} columns",
+                "inline note is {} columns, over the {}-column maximum: line 4 cites §FS-001-login; over-limit lines: line 4: {} columns; shorten or rewrap its widest line",
                 at_cap.chars().count() + 1,
                 at_cap.chars().count(),
                 at_cap.chars().count() + 1,
@@ -272,7 +272,7 @@ fn inline_note_soft_cap_is_warning_only_when_enabled() {
                 .warnings
                 .iter()
                 .any(|warning| warning.code == "inline-citation-style"
-                    && warning.message == "inline note is 2 lines, over the 1-line preferred limit: lines 1-2 cite §FS-001-login; a blank line splits a note, an empty comment line does not"),
+                    && warning.message == "inline note is 2 lines, over the 1-line preferred limit: lines 1-2 cite §FS-001-login; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment"),
             "soft-cap overrun should be a warning when enabled"
         );
     assert!(

@@ -1,1 +1,1 @@
-src/lib.rs:5: error: relative heading #### .1 needs an H3 parent under FS-thing.format, and there is none
+src/lib.rs:5: error: relative heading #### .1 needs an H3 parent under FS-thing.format, and there is none; give the heading the parent it needs, or write its complete path

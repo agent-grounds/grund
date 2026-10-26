@@ -133,7 +133,8 @@ fn the_walk_stops_at_the_first_unequal_component() {
                  declared `1200 USD per\u{a0}year` at values/quota.md:3",
             ),
             "value-mismatch: value mismatch for CONST-quota: bound `1200\u{a0}USD per\u{a0}year`, \
-             declared `1200 USD per\u{a0}year` at values/quota.md:2"
+             declared `1200 USD per\u{a0}year` at values/quota.md:2; change the literal \
+             to the declared value, or the declaration to the bound one"
                 .to_string(),
         ]
     );
@@ -145,7 +146,8 @@ fn the_walk_stops_at_the_first_unequal_component() {
 fn staged(legacy: &str, root: &str) -> String {
     format!(
         "value-mismatch: {legacy} \u{2014} whole binding: {root}; \
-         this wording changes in grund 0.22.0"
+         this wording changes in grund 0.22.0; change the literal to the declared value, \
+         or the declaration to the bound one"
     )
 }
 

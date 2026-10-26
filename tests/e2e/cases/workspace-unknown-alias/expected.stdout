@@ -1,2 +1,2 @@
 docs/functional-spec/FS-root.md:3: error: unknown project alias payments
-apps/api/docs/functional-spec/FS-session.md:1: warning: declared but never cited: FS-session (its index entry at apps/api/docs/functional-spec/README.md:5 does not count as a use)
+apps/api/docs/functional-spec/FS-session.md:1: warning: declared but never cited: FS-session (its index entry at apps/api/docs/functional-spec/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it

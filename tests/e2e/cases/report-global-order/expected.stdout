@@ -1,2 +1,2 @@
 docs/functional-spec/FS-001-alpha.md:3: error: unknown reference FS-999-missing
-docs/functional-spec/FS-002-beta.md:1: warning: declared but never cited: FS-002-beta (its index entry at docs/functional-spec/README.md:6 does not count as a use)
+docs/functional-spec/FS-002-beta.md:1: warning: declared but never cited: FS-002-beta (its index entry at docs/functional-spec/README.md:6 does not count as a use); cite it, or remove the declaration if nothing needs it

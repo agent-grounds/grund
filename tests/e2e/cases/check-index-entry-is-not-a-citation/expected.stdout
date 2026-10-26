@@ -1,1 +1,1 @@
-docs/functional-spec/FS-001-login.md:1: warning: declared but never cited: FS-001-login (its index entry at docs/functional-spec/README.md:3 does not count as a use)
+docs/functional-spec/FS-001-login.md:1: warning: declared but never cited: FS-001-login (its index entry at docs/functional-spec/README.md:3 does not count as a use); cite it, or remove the declaration if nothing needs it

@@ -73,7 +73,7 @@ must-not = ["AR"]"#,
                 "missing-citation",
                 path.clone(),
                 Some(1),
-                "FS-001-subject must cite GOAL (citation direction)".into()
+                "FS-001-subject must cite GOAL (citation direction); add such a citation within it".into()
             ),
             (
                 "forbidden-citation",
@@ -90,13 +90,13 @@ must-not = ["AR"]"#,
                 "suggested-citation",
                 path.clone(),
                 Some(1),
-                "FS-001-subject should cite GRUND (citation direction)".into()
+                "FS-001-subject should cite GRUND (citation direction); add such a citation within it".into()
             ),
             (
                 "discouraged-citation",
                 path,
                 Some(5),
-                "FS should not cite DF (citation direction)".into()
+                "FS should not cite DF (citation direction) — re-point the citation or downgrade it to a plain Markdown link".into()
             ),
         ]
     );

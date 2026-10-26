@@ -1,2 +1,2 @@
 AGENTS.md:3: error: repo maintenance: outdated grund init block v35 — run `grund init` to update to v43 (does not affect citation validity)
-spec.md:3: warning: declared but never cited: FS-billing
+spec.md:3: warning: declared but never cited: FS-billing; cite it, or remove the declaration if nothing needs it

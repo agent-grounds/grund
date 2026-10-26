@@ -1,2 +1,2 @@
 docs/evaluation/BENCH-001-arrival-model-validation.md:7: error: BENCH must not cite GOAL (RULE-022-bench-goal-free) — re-point the citation or downgrade it to a plain Markdown link
-docs/evaluation/BENCH-001-arrival-model-validation.md:9: error: BENCH-001-arrival-model-validation.scope cites GOAL 2 times; RULE-023-bench-scope-bound requires at most 1
+docs/evaluation/BENCH-001-arrival-model-validation.md:9: error: BENCH-001-arrival-model-validation.scope cites GOAL 2 times; RULE-023-bench-scope-bound requires at most 1; add or remove those citations until the count fits

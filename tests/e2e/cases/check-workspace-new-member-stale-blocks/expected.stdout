@@ -2,6 +2,6 @@ AGENTS.md:3: error: repo maintenance: stale grund init block: the workspace memb
 packages/billing/AGENTS.md:3: error: repo maintenance: stale grund init block: the workspace members section differs from the workspace (expected - [`notify`](../notify/); found - [`shop`](../../)) — run `grund init` in packages/billing to refresh (does not affect citation validity)
 packages/notify/AGENTS.md:3: error: repo maintenance: stale grund init block: the project namespaces section differs from the workspace (expected A namespace is a project boundary, not a docs folder. The current project is the local namespace: cite its IDs as `§<ID>`.; found <missing>) — run `grund init` in packages/notify to refresh (does not affect citation validity)
 packages/notify/AGENTS.md:3: error: repo maintenance: stale grund init block: the workspace members section differs from the workspace (expected Cross-project citations use §alias/<ID>, one alias segment per workspace level.; found <missing>) — run `grund init` in packages/notify to refresh (does not affect citation validity)
-packages/billing/spec.md:3: warning: declared but never cited: FS-billing
-packages/notify/spec.md:3: warning: declared but never cited: FS-notify
-requirements.md:3: warning: declared but never cited: FS-receipt
+packages/billing/spec.md:3: warning: declared but never cited: FS-billing; cite it, or remove the declaration if nothing needs it
+packages/notify/spec.md:3: warning: declared but never cited: FS-notify; cite it, or remove the declaration if nothing needs it
+requirements.md:3: warning: declared but never cited: FS-receipt; cite it, or remove the declaration if nothing needs it

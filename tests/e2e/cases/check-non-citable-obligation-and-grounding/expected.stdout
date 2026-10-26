@@ -1,2 +1,2 @@
-skills/review.md:1: error: skills/ must cite FS (citation direction)
-skills/triage.md:1: error: ungrounded file in kind home skills/: no § citation to a declared ID
+skills/review.md:1: error: skills/ must cite FS (citation direction); add such a citation within it
+skills/triage.md:1: error: ungrounded file in kind home skills/: no § citation to a declared ID; cite a declared ID within it

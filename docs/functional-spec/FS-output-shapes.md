@@ -60,7 +60,7 @@ warning sorts first by path:
 
 ```text
 src/z-last.rs:1: error: unknown reference FS-999-missing
-docs/functional-spec/FS-001-alpha.md:3: warning: declared but never cited: FS-001-alpha
+docs/functional-spec/FS-001-alpha.md:3: warning: declared but never cited: FS-001-alpha; cite it, or remove the declaration if nothing needs it
 ```
 
 stderr is empty for ordinary graph findings.
@@ -72,7 +72,7 @@ existing global bytewise location order, and every object retains its existing
 bytes and shape:
 
 ```json
-{"severity":"warning","path":"docs/functional-spec/FS-001-alpha.md","line":3,"code":"unused","message":"declared but never cited: FS-001-alpha","sites":null,"authority":null}
+{"severity":"warning","path":"docs/functional-spec/FS-001-alpha.md","line":3,"code":"unused","message":"declared but never cited: FS-001-alpha; cite it, or remove the declaration if nothing needs it","sites":null,"authority":null}
 {"severity":"error","path":"src/z-last.rs","line":1,"code":"dangling","message":"unknown reference FS-999-missing","sites":null,"authority":null}
 ```
 

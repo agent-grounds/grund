@@ -12,6 +12,7 @@
 //! here reads a file: the span, the widest column, the note verdict and the
 //! deviating lines all arrive on the site (§AR-scanner.3.1).
 
+use crate::model::remedies;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
@@ -74,10 +75,11 @@ fn column_message(site: &InlineCitationSite, limit: usize, citations: &str) -> S
         .collect::<Vec<_>>()
         .join(", ");
     format!(
-        "inline note is {} column{}, over the {limit}-column maximum: {}; over-limit lines: {over_limit}",
+        "inline note is {} column{}, over the {limit}-column maximum: {}; over-limit lines: {over_limit}; {}",
         site.max_columns,
         plural(site.max_columns),
         site_clause(site.first_line, site.last_line, citations),
+        remedies::inline_citation_style_columns(),
     )
 }
 
@@ -133,7 +135,10 @@ pub(super) fn check_inline_citation_style(
                         path: Some(cite.file.clone()),
                         line: Some(site.first_line),
                         column: None,
-                        message: "inline citation must carry no prose".to_string(),
+                        message: format!(
+                            "inline citation must carry no prose; {}",
+                            remedies::inline_citation_style_prose()
+                        ),
                         sites: Vec::new(),
                         authority: Vec::new(),
                     });
@@ -150,10 +155,11 @@ pub(super) fn check_inline_citation_style(
                         // §FS-inline-citation-style.4.1: names the measured size,
                         // the site, and the block-splitting rule
                         message: format!(
-                            "inline note is {lines} line{}, over the {}-line maximum: {}{BLOCK_SPLIT_CLAUSE}",
+                            "inline note is {lines} line{}, over the {}-line maximum: {}{BLOCK_SPLIT_CLAUSE}; {}",
                             plural(lines),
                             schema.notes.max_lines,
                             site_clause(site.first_line, site.last_line, citations),
+                            remedies::inline_citation_style_lines(),
                         ),
                         sites: Vec::new(),
                     authority: Vec::new(),});
@@ -182,9 +188,10 @@ pub(super) fn check_inline_citation_style(
                         // §FS-inline-citation-style.4.2: names the measured size,
                         // the site, and the block-splitting rule
                         message: format!(
-                            "inline note is {lines} line{}, over the {limit}-line preferred limit: {}{BLOCK_SPLIT_CLAUSE}",
+                            "inline note is {lines} line{}, over the {limit}-line preferred limit: {}{BLOCK_SPLIT_CLAUSE}; {}",
                             plural(lines),
                             site_clause(site.first_line, site.last_line, citations),
+                            remedies::inline_citation_style_lines(),
                         ),
                         sites: Vec::new(),
                     authority: Vec::new(),});
@@ -282,7 +289,8 @@ fn report_layout_deviations(
 /// it names is the form the project writes (§FS-inline-citation-style.4.4.2).
 fn layout_violation_message(schema: &Schema) -> String {
     format!(
-        "inline note must open with its citations and a colon ({}<ID>: note)",
-        schema.citation.marker
+        "inline note must open with its citations and a colon ({}<ID>: note); {}",
+        schema.citation.marker,
+        remedies::inline_citation_style_layout()
     )
 }

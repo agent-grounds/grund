@@ -302,9 +302,10 @@ pub(super) fn full_scope_ignored_warning(
         column: None,
         message: format!(
             "--full has no effect with an explicit PATH — {} already resolves against \
-             {}, and the report is the path either way",
+             {}, and the report is the path either way; {}",
             display_scope(config.display(), &lexical_scope),
-            source_scope_name(config.frame().version)
+            source_scope_name(config.frame().version),
+            remedies::full_scope_ignored()
         ),
         sites: Vec::new(),
         authority: Vec::new(),

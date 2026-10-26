@@ -210,7 +210,10 @@ fn equivalent_numeric_chapter_rules_merge_authority_and_keep_distinct_subjects()
                     assert_eq!(row["authority"], serde_json::json!(authority));
                     assert_eq!(
                         row["message"],
-                        format!("{id}.{chapter} must cite ADR ({})", authority.join(", "))
+                        format!(
+                            "{id}.{chapter} must cite ADR ({}); add such a citation within it",
+                            authority.join(", ")
+                        )
                     );
                 }
             }

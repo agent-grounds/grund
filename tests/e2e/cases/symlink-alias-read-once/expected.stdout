@@ -1,2 +1,2 @@
 docs/functional-spec/FS-000-alias.md:3: error: unknown reference FS-999-ghost
-docs/functional-spec/FS-000-alias.md:1: warning: declared but never cited: FS-001-alpha (its index entry at docs/functional-spec/README.md:5 does not count as a use)
+docs/functional-spec/FS-000-alias.md:1: warning: declared but never cited: FS-001-alpha (its index entry at docs/functional-spec/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it

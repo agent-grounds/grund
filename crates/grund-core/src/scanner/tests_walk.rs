@@ -30,7 +30,7 @@ fn a_symlinked_file_is_read_at_the_path_the_link_occupies() {
     assert_eq!(
         findings(&run),
         vec![
-            "docs/functional-spec/FS-002-beta.md:1: declared but never cited: FS-002-beta",
+            "docs/functional-spec/FS-002-beta.md:1: declared but never cited: FS-002-beta; cite it, or remove the declaration if nothing needs it",
             "docs/functional-spec/FS-002-beta.md:3: unknown reference FS-999-ghost",
         ],
         "§FS-config.3.5: the linked file's citations are checked, and every finding names the link, not the target"
@@ -60,7 +60,7 @@ fn an_aliased_file_is_read_once_under_the_first_of_its_names() {
     assert_eq!(
         findings(&run),
         vec![
-            "docs/functional-spec/FS-000-alias.md:1: declared but never cited: FS-001-alpha",
+            "docs/functional-spec/FS-000-alias.md:1: declared but never cited: FS-001-alpha; cite it, or remove the declaration if nothing needs it",
             "docs/functional-spec/FS-000-alias.md:3: unknown reference FS-999-ghost",
         ],
         "§FS-config.3.5: one physical file, one read — under the lexicographically first of its two names, never a duplicate of itself"
@@ -84,7 +84,7 @@ fn an_alias_that_sorts_last_leaves_the_real_name_reported() {
     assert_eq!(
         findings(&run),
         vec![
-            "docs/functional-spec/FS-001-alpha.md:1: declared but never cited: FS-001-alpha",
+            "docs/functional-spec/FS-001-alpha.md:1: declared but never cited: FS-001-alpha; cite it, or remove the declaration if nothing needs it",
             "docs/functional-spec/FS-001-alpha.md:3: unknown reference FS-999-ghost",
         ],
         "§FS-errors.4.1: the surviving spelling is the lexicographically first path, not whichever one readdir happened to yield first"
@@ -227,7 +227,9 @@ fn a_plain_run_collapses_an_aliased_root() {
 
     assert_eq!(
         findings(&run),
-        vec!["docs/functional-spec/FS-001-alpha.md:1: declared but never cited: FS-001-alpha"],
+        vec![
+            "docs/functional-spec/FS-001-alpha.md:1: declared but never cited: FS-001-alpha; cite it, or remove the declaration if nothing needs it"
+        ],
         "§FS-check.1.3.2: one physical file read once, under the earlier root's spelling — no duplicate of itself"
     );
 }

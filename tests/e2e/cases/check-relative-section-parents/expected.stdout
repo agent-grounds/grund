@@ -1,13 +1,13 @@
-docs/functional-spec/FS-parents.md:5: error: relative heading #### .1 needs an H3 parent under FS-skip.format, and there is none
-docs/functional-spec/FS-parents.md:13: error: orphan section FS-orphan.missing.x: missing prefix FS-orphan.missing
-docs/functional-spec/FS-parents.md:15: error: relative heading #### .1 needs an H3 parent under FS-orphan.format, and there is none
-docs/functional-spec/FS-parents.md:23: error: duplicate section FS-dup-before.format.1 (also declared at docs/functional-spec/FS-parents.md:25)
-docs/functional-spec/FS-parents.md:27: error: relative heading #### .1 needs an H3 parent under FS-dup-before.format, and there is none
-docs/functional-spec/FS-parents.md:35: error: duplicate section FS-dup-after.format.1 (also declared at docs/functional-spec/FS-parents.md:41)
-docs/functional-spec/FS-parents.md:37: error: relative heading #### .1 needs an H3 parent under FS-dup-after.format, and there is none
-docs/functional-spec/FS-parents.md:51: error: relative heading #### .1 needs an H3 parent under FS-fence.format, and there is none
+docs/functional-spec/FS-parents.md:5: error: relative heading #### .1 needs an H3 parent under FS-skip.format, and there is none; give the heading the parent it needs, or write its complete path
+docs/functional-spec/FS-parents.md:13: error: orphan section FS-orphan.missing.x: missing prefix FS-orphan.missing; declare the prefix as a heading above it
+docs/functional-spec/FS-parents.md:15: error: relative heading #### .1 needs an H3 parent under FS-orphan.format, and there is none; give the heading the parent it needs, or write its complete path
+docs/functional-spec/FS-parents.md:23: error: duplicate section FS-dup-before.format.1 (also declared at docs/functional-spec/FS-parents.md:25); renumber or rename all but one of the headings
+docs/functional-spec/FS-parents.md:27: error: relative heading #### .1 needs an H3 parent under FS-dup-before.format, and there is none; give the heading the parent it needs, or write its complete path
+docs/functional-spec/FS-parents.md:35: error: duplicate section FS-dup-after.format.1 (also declared at docs/functional-spec/FS-parents.md:41); renumber or rename all but one of the headings
+docs/functional-spec/FS-parents.md:37: error: relative heading #### .1 needs an H3 parent under FS-dup-after.format, and there is none; give the heading the parent it needs, or write its complete path
+docs/functional-spec/FS-parents.md:51: error: relative heading #### .1 needs an H3 parent under FS-fence.format, and there is none; give the heading the parent it needs, or write its complete path
 docs/functional-spec/FS-parents.md:59: error: unmarked heading inside FS-plain; number it (### format.1: Plain) as FS-plain.format.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
-docs/functional-spec/FS-parents.md:61: error: relative heading #### .1 needs an H3 parent under FS-plain.format, and there is none
-docs/functional-spec/FS-parents.md:69: error: relative heading #### .1 needs an H3 parent under FS-chain.format, and there is none
-docs/functional-spec/FS-parents.md:71: error: relative heading ##### .2 needs an H4 parent under FS-chain.format, and there is none
-docs/functional-spec/FS-parents.md:79: error: section FS-mismatch.format.1 heading level mismatch: expected ### (level 3), found #### (level 4)
+docs/functional-spec/FS-parents.md:61: error: relative heading #### .1 needs an H3 parent under FS-plain.format, and there is none; give the heading the parent it needs, or write its complete path
+docs/functional-spec/FS-parents.md:69: error: relative heading #### .1 needs an H3 parent under FS-chain.format, and there is none; give the heading the parent it needs, or write its complete path
+docs/functional-spec/FS-parents.md:71: error: relative heading ##### .2 needs an H4 parent under FS-chain.format, and there is none; give the heading the parent it needs, or write its complete path
+docs/functional-spec/FS-parents.md:79: error: section FS-mismatch.format.1 heading level mismatch: expected ### (level 3), found #### (level 4); re-level the heading, or change its path to match its depth

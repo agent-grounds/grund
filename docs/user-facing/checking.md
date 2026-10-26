@@ -25,7 +25,7 @@ For example, from the [authored-citations mini-repository](../../examples/author
 
 ```text
 $ grund check examples/authored-citations/repo --only unused
-docs/adr/consider-memory.md:1: warning: declared but never cited: ADR-consider-memory (its index entry at docs/adr/README.md:5 does not count as a use)
+docs/adr/consider-memory.md:1: warning: declared but never cited: ADR-consider-memory (its index entry at docs/adr/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it
 $ grund refs ADR-consider-memory examples/authored-citations/repo
 docs/adr/README.md:5: §ADR-consider-memory (index entry)
 $ grund refs ADR-consider-memory examples/authored-citations/repo --summary

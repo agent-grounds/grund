@@ -93,7 +93,10 @@ fn an_obligation_fires_per_file_on_markdown_in_the_home() {
         false,
     );
     let finding = only(&run, "missing-citation");
-    assert_eq!(finding.message, "skills/ must cite FS (citation direction)");
+    assert_eq!(
+        finding.message,
+        "skills/ must cite FS (citation direction); add such a citation within it"
+    );
     assert!(
         finding
             .path
@@ -162,7 +165,7 @@ fn require_grounding_reaches_markdown_in_a_non_citable_home() {
     let finding = only(&run, "ungrounded");
     assert_eq!(
         finding.message,
-        "ungrounded file in kind home skills/: no § citation to a declared ID",
+        "ungrounded file in kind home skills/: no § citation to a declared ID; cite a declared ID within it",
     );
     assert!(
         !run.report.errors.iter().any(|diagnostic| {

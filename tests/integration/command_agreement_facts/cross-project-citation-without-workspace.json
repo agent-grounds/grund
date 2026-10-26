@@ -28,7 +28,7 @@
     "findings": [
       {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
       {"severity":"error","code":"unknown-project","path":"docs/functional-spec/FS-note.md","line":3,"message":"unknown project alias api","sites":[],"token":"§api/FS-other"},
-      {"severity":"warning","code":"unused","path":"docs/functional-spec/FS-note.md","line":1,"message":"declared but never cited: FS-note (its index entry at docs/functional-spec/README.md:5 does not count as a use)","sites":[]}
+      {"severity":"warning","code":"unused","path":"docs/functional-spec/FS-note.md","line":1,"message":"declared but never cited: FS-note (its index entry at docs/functional-spec/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it","sites":[]}
     ],
     "refusals": {
       "api/FS-other": {"code":"unknown-project","message":"unknown project alias `api`\nnote: workspace aliases are defined in the root grund.toml under [workspace]","beforeScan":true,"cli":{"exit":2,"stderr":"error: unknown project alias `api`\nnote: workspace aliases are defined in the root grund.toml under [workspace]\n"}}

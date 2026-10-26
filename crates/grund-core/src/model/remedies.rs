@@ -64,6 +64,18 @@ pub(crate) fn broken_stub_excluded_entry(version: u32, entry: impl Display) -> S
     fill(Code::BROKEN_STUB, version, Some("excluded-entry"), slots)
 }
 
+/// `chapter-cardinality`'s *Fix* (§FS-check.3.26).
+pub(crate) fn chapter_cardinality() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::CHAPTER_CARDINALITY, 2, None, slots)
+}
+
+/// `citation-cardinality`'s *Fix* (§FS-check.3.27).
+pub(crate) fn citation_cardinality() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::CITATION_CARDINALITY, 2, None, slots)
+}
+
 /// `config-version-1`'s *Fix* (§FS-check.checks.config-version-1).
 pub(crate) fn config_version_1() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
@@ -112,6 +124,12 @@ pub(crate) fn deprecated_config_location(home: impl Display) -> String {
     fill(Code::DEPRECATED_CONFIG_LOCATION, 2, None, slots)
 }
 
+/// `discouraged-citation`'s *Fix* (§FS-check.2.3).
+pub(crate) fn discouraged_citation() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::DISCOURAGED_CITATION, 2, None, slots)
+}
+
 /// `duplicate`'s *Fix*, case `home` (§FS-declarations.checks.duplicate).
 pub(crate) fn duplicate_home(site: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("site", &site)];
@@ -122,6 +140,12 @@ pub(crate) fn duplicate_home(site: impl Display) -> String {
 pub(crate) fn duplicate_there() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
     fill(Code::DUPLICATE, 2, Some("there"), slots)
+}
+
+/// `duplicate-section`'s *Fix* (§FS-declarations.checks.duplicate-section).
+pub(crate) fn duplicate_section() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::DUPLICATE_SECTION, 2, None, slots)
 }
 
 /// `empty-citation-obligation`'s *Fix*, case `citable` (§FS-check.2.2.1).
@@ -184,10 +208,46 @@ pub(crate) fn forbidden_citation_index_prohibition(level: impl Display, table: i
     fill(Code::FORBIDDEN_CITATION, 2, Some("index-prohibition"), slots)
 }
 
+/// `full-scope-ignored`'s *Fix* (§FS-check.1.3.7).
+pub(crate) fn full_scope_ignored() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::FULL_SCOPE_IGNORED, 2, None, slots)
+}
+
 /// `glob-citation`'s *Fix* (§FS-check.checks.glob-citation).
 pub(crate) fn glob_citation(escape: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("escape", &escape)];
     fill(Code::GLOB_CITATION, 2, None, slots)
+}
+
+/// `inline-citation-style`'s *Fix*, case `prose` (§FS-check.3.10).
+pub(crate) fn inline_citation_style_prose() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::INLINE_CITATION_STYLE, 2, Some("prose"), slots)
+}
+
+/// `inline-citation-style`'s *Fix*, case `lines` (§FS-check.3.10).
+pub(crate) fn inline_citation_style_lines() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::INLINE_CITATION_STYLE, 2, Some("lines"), slots)
+}
+
+/// `inline-citation-style`'s *Fix*, case `columns` (§FS-check.3.10).
+pub(crate) fn inline_citation_style_columns() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::INLINE_CITATION_STYLE, 2, Some("columns"), slots)
+}
+
+/// `inline-citation-style`'s *Fix*, case `layout` (§FS-check.3.10).
+pub(crate) fn inline_citation_style_layout() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::INLINE_CITATION_STYLE, 2, Some("layout"), slots)
+}
+
+/// `invalid-field-value`'s *Fix* (§FS-fields.checks.invalid-field-value).
+pub(crate) fn invalid_field_value() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::INVALID_FIELD_VALUE, 2, None, slots)
 }
 
 /// `invalid-rule`'s *Fix*, case `form` (§FS-check.3.25).
@@ -250,6 +310,12 @@ pub(crate) fn invalid_value_binding() -> String {
     fill(Code::INVALID_VALUE_BINDING, 2, None, slots)
 }
 
+/// `invalid-value-declaration`'s *Fix* (§FS-check.3.20).
+pub(crate) fn invalid_value_declaration() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::INVALID_VALUE_DECLARATION, 2, None, slots)
+}
+
 /// `local-section-citation`'s *Fix*, case `write` (§FS-check.3.24).
 pub(crate) fn local_section_citation_write(citation: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("citation", &citation)];
@@ -278,6 +344,24 @@ pub(crate) fn misplaced_declaration_unlisted(version: u32, entry: impl Display, 
 pub(crate) fn misplaced_declaration_roots(version: u32, entry: impl Display, enclosing: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("entry", &entry), ("enclosing", &enclosing)];
     fill(Code::MISPLACED_DECLARATION, version, Some("roots"), slots)
+}
+
+/// `misplaced-field`'s *Fix* (§FS-fields.checks.misplaced-field).
+pub(crate) fn misplaced_field() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::MISPLACED_FIELD, 2, None, slots)
+}
+
+/// `missing-citation`'s *Fix* (§FS-check.3.11).
+pub(crate) fn missing_citation() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::MISSING_CITATION, 2, None, slots)
+}
+
+/// `missing-field`'s *Fix* (§FS-fields.checks.missing-field).
+pub(crate) fn missing_field(field: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("field", &field)];
+    fill(Code::MISSING_FIELD, 2, None, slots)
 }
 
 /// `missing-index-entry`'s *Fix* (§FS-check.3.18).
@@ -316,10 +400,22 @@ pub(crate) fn missing_snapshot_fetch(id: impl Display) -> String {
     fill(Code::MISSING_SNAPSHOT, 2, Some("fetch"), slots)
 }
 
+/// `mistitled-field`'s *Fix* (§FS-fields.checks.mistitled-field).
+pub(crate) fn mistitled_field() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::MISTITLED_FIELD, 2, None, slots)
+}
+
 /// `nothing-recognized`'s *Fix* (§FS-check.4.5).
 pub(crate) fn nothing_recognized() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
     fill(Code::NOTHING_RECOGNIZED, 2, None, slots)
+}
+
+/// `orphan-section`'s *Fix* (§FS-declarations.checks.orphan-section).
+pub(crate) fn orphan_section() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::ORPHAN_SECTION, 2, None, slots)
 }
 
 /// `oversized-lead`'s *Fix* (§FS-declarations.checks.oversized-lead).
@@ -334,10 +430,28 @@ pub(crate) fn redundant_config() -> String {
     fill(Code::REDUNDANT_CONFIG, 2, None, slots)
 }
 
+/// `relative-section-parent`'s *Fix* (§FS-declarations.checks.relative-section-parent).
+pub(crate) fn relative_section_parent() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::RELATIVE_SECTION_PARENT, 2, None, slots)
+}
+
 /// `section-address-changed`'s *Fix* (§FS-section-lock.checks.section-address-changed).
 pub(crate) fn section_address_changed(new_address: impl Display, cited_address: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("new address", &new_address), ("cited address", &cited_address)];
     fill(Code::SECTION_ADDRESS_CHANGED, 2, None, slots)
+}
+
+/// `section-heading-level`'s *Fix* (§FS-declarations.checks.section-heading-level).
+pub(crate) fn section_heading_level() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::SECTION_HEADING_LEVEL, 2, None, slots)
+}
+
+/// `section-outside-declaration`'s *Fix* (§FS-declarations.checks.section-outside-declaration).
+pub(crate) fn section_outside_declaration() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::SECTION_OUTSIDE_DECLARATION, 2, None, slots)
 }
 
 /// `selected-check-off`'s *Fix*, case `off` (§FS-check.1.4.1).
@@ -358,16 +472,46 @@ pub(crate) fn selected_check_off_mixed_versions() -> String {
     fill(Code::SELECTED_CHECK_OFF, 2, Some("mixed-versions"), slots)
 }
 
-/// `shorthand-citation`'s *Fix* (§FS-check.3.13).
-pub(crate) fn shorthand_citation(citation: impl Display) -> String {
+/// `shorthand-citation`'s *Fix*, case `write` (§FS-check.3.13).
+pub(crate) fn shorthand_citation_write(citation: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("citation", &citation)];
-    fill(Code::SHORTHAND_CITATION, 2, None, slots)
+    fill(Code::SHORTHAND_CITATION, 2, Some("write"), slots)
+}
+
+/// `shorthand-citation`'s *Fix*, case `full` (§FS-check.3.13).
+pub(crate) fn shorthand_citation_full() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::SHORTHAND_CITATION, 2, Some("full"), slots)
 }
 
 /// `shorthand-numeric-run`'s *Fix* (§FS-check.3.15).
 pub(crate) fn shorthand_numeric_run(citation: impl Display, escape: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("citation", &citation), ("escape", &escape)];
     fill(Code::SHORTHAND_NUMERIC_RUN, 2, None, slots)
+}
+
+/// `suggested-citation`'s *Fix* (§FS-check.2.3).
+pub(crate) fn suggested_citation() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::SUGGESTED_CITATION, 2, None, slots)
+}
+
+/// `uncited-unit`'s *Fix* (§FS-check.3.28).
+pub(crate) fn uncited_unit() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNCITED_UNIT, 2, None, slots)
+}
+
+/// `undeclared-chapter`'s *Fix* (§FS-fields.checks.undeclared-chapter).
+pub(crate) fn undeclared_chapter() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNDECLARED_CHAPTER, 2, None, slots)
+}
+
+/// `ungrounded`'s *Fix* (§FS-check.3.6).
+pub(crate) fn ungrounded() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNGROUNDED, 2, None, slots)
 }
 
 /// `unknown-project`'s *Fix*, case `root` (§FS-check.3.8).
@@ -470,4 +614,16 @@ pub(crate) fn unread_scan_root_hidden_list(version: u32) -> String {
 pub(crate) fn unrecorded_section_citation() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
     fill(Code::UNRECORDED_SECTION_CITATION, 2, None, slots)
+}
+
+/// `unused`'s *Fix* (§FS-check.4.1).
+pub(crate) fn unused() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNUSED, 2, None, slots)
+}
+
+/// `value-mismatch`'s *Fix* (§FS-check.3.22).
+pub(crate) fn value_mismatch() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::VALUE_MISMATCH, 2, None, slots)
 }

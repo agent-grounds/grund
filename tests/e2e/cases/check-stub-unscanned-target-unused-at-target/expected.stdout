@@ -1,1 +1,1 @@
-src/x.rs:1: warning: declared but never cited: FS-x
+src/x.rs:1: warning: declared but never cited: FS-x; cite it, or remove the declaration if nothing needs it

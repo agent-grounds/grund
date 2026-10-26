@@ -30,7 +30,7 @@ The stability analysis deliberately still assumes `0.002 s`, the step before it 
 tuned, producing the golden `value-mismatch` in [`expected.stdout`](expected.stdout):
 
 ```text
-docs/solver.md:7: error: value mismatch for CONST-time-step.1: bound `0.002`, declared `0.001` at values/time-step.md:2 — whole binding: value mismatch for CONST-time-step (component 1): bound `0.002 s`, declared `0.001 s` at values/time-step.md:2; this wording changes in grund 0.22.0
+docs/solver.md:7: error: value mismatch for CONST-time-step.1: bound `0.002`, declared `0.001` at values/time-step.md:2 — whole binding: value mismatch for CONST-time-step (component 1): bound `0.002 s`, declared `0.001 s` at values/time-step.md:2; this wording changes in grund 0.22.0; change the literal to the declared value, or the declaration to the bound one
 ```
 
 The part after ` — whole binding: ` names what the line wrote: the root it cites,

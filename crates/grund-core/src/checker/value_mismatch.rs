@@ -4,6 +4,7 @@
 //! takes until its window closes (§FS-errors.3.9).
 
 use crate::config::{Display, Schema};
+use crate::model::remedies;
 use crate::model::{Code, Diagnostic, Site, ValueBinding, ValueComponent, ValueComponentKind};
 
 /// §FS-errors.3.9: the suffix a staged root-aimed mismatch ends with, naming the
@@ -67,7 +68,11 @@ pub(super) fn value_mismatch_text(
         path: Some(binding.file.clone()),
         line: Some(binding.line),
         column: Some(binding.column),
-        message: mismatch_message(coordinate, bound, declared, &site, kinds, display),
+        message: format!(
+            "{}; {}",
+            mismatch_message(coordinate, bound, declared, &site, kinds, display),
+            remedies::value_mismatch()
+        ),
         sites: vec![site],
         authority: Vec::new(),
     }
@@ -112,10 +117,15 @@ pub(super) fn root_value_mismatch(
         &kinds,
         display,
     );
+    // §FS-errors.5.5.1: the remedy closes the whole message, after the wording clause.
+    let remedy = format!("; {}", remedies::value_mismatch());
+    let component = legacy
+        .message
+        .strip_suffix(&remedy)
+        .unwrap_or(&legacy.message);
     Diagnostic {
         message: format!(
-            "{} \u{2014} whole binding: {whole}{ROOT_WORDING_CLAUSE}",
-            legacy.message
+            "{component} \u{2014} whole binding: {whole}{ROOT_WORDING_CLAUSE}{remedy}"
         ),
         ..legacy
     }

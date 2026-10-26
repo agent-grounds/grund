@@ -1,1 +1,1 @@
-docs/functional-spec/FS-001-body-scope.md:9: error: numbered section outside any declaration
+docs/functional-spec/FS-001-body-scope.md:9: error: numbered section outside any declaration; move it inside a declaration's body, or drop its section path

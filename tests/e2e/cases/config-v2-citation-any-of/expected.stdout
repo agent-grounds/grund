@@ -1,1 +1,1 @@
-requirements.md:3: warning: declared but never cited: FS-example
+requirements.md:3: warning: declared but never cited: FS-example; cite it, or remove the declaration if nothing needs it
