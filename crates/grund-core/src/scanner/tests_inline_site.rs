@@ -10,7 +10,8 @@
 
 use crate::model::InlineCitationSite;
 use crate::testing::{
-    checked_layout_config, legacy_fs_folder_config, scan_findings, test_root, write,
+    canonical_test_path, checked_layout_config, legacy_fs_folder_config, scan_findings, test_root,
+    write,
 };
 
 /// Two declarations plus one source file, and the citations the scan found in
@@ -233,10 +234,11 @@ fn every_block_form_retains_widths_with_physical_line_association() {
     let config = load_config(&root).expect("custom source config");
     let findings = scan_findings(&config, &root);
     for (name, _, widths) in cases {
+        let path = canonical_test_path(&root.join(format!("src/{name}.note")));
         let citations = findings
             .citations
             .iter()
-            .filter(|citation| citation.file == root.join(format!("src/{name}.note")))
+            .filter(|citation| citation.file == path)
             .collect::<Vec<_>>();
         assert_eq!(citations.len(), 1, "one citation in {name}");
         let site = citations[0].inline_site.as_ref().expect("an inline site");
