@@ -13,6 +13,7 @@ use super::grounding::{configured_row_grounding, grounding_unit, soft_grounding_
 use super::project::{Project, Strength};
 use super::record::Config;
 use super::rows::{Extent, Row};
+use super::schema_scaffold_note::ScaffoldNote;
 use super::slots::{Content, Handle};
 
 /// §AR-config.6.3: one project's schema view.
@@ -35,6 +36,10 @@ pub struct SchemaView {
     pub default: Option<CitationLevel>,
     /// The root's `[workspace] members`, as written (§FS-schema.2.1).
     pub members: Vec<String>,
+    /// What `grund init --scaffold` would write, where no config file was read
+    /// (§FS-schema.8.2). Beside the header and not part of the view: no node,
+    /// row or edge comes from it (§FS-schema.3).
+    pub scaffold: Option<ScaffoldNote>,
 }
 
 /// §FS-schema.4: what a node's row is, always printed as a word.
@@ -259,6 +264,7 @@ impl SchemaView {
                 .global_default
                 .filter(|l| *l != CitationLevel::May),
             members,
+            scaffold: None,
         }
     }
 }
@@ -269,13 +275,7 @@ impl SchemaView {
     /// (§FS-schema.1), and a project with no `project_name` named by its root.
     pub(crate) fn of_config(config: &Config) -> Self {
         let mut view = Self::of(config.project());
-        // §FS-schema.8: the file the run read, never one beside a fallback root.
-        let read = config
-            .run()
-            .config_file
-            .as_ref()
-            .and(config_file_in(&config.root));
-        view.config_file = match read {
+        view.config_file = match config_file_read(config) {
             Some(file) => {
                 let relative = file.strip_prefix(&config.root).unwrap_or(&file);
                 relative.to_string_lossy().replace('\\', "/")
@@ -292,6 +292,16 @@ impl SchemaView {
         }
         view
     }
+}
+
+/// §FS-schema.8: the file the run read, never one beside a fallback root; `None`
+/// where no config file was found and the defaults govern (§FS-schema.8.2).
+pub(crate) fn config_file_read(config: &Config) -> Option<std::path::PathBuf> {
+    config
+        .run()
+        .config_file
+        .as_ref()
+        .and(config_file_in(&config.root))
 }
 
 /// §FS-schema.5.1: the junction for an any-of entry at `level`, shared by every

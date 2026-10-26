@@ -150,6 +150,10 @@ fn schema_table(view: &SchemaView) -> String {
         + 2;
     let mut out = String::new();
     out.push_str(&text(&schema_header(view)));
+    if let Some(note) = &view.scaffold {
+        out.push('\n');
+        out.push_str(&text(&schema_scaffold_note(note)));
+    }
     out.push_str("\n\nkinds and places\n");
     for line in kinds.iter() {
         out.push_str(&line.render(last_at));
@@ -171,6 +175,27 @@ fn schema_table(view: &SchemaView) -> String {
         out.push('\n');
     }
     out
+}
+
+/// §FS-schema.8.2: the no-config note — what the defaults are, and the version
+/// and added kinds of the config `grund init --scaffold` writes, each kind's places
+/// spelled as the `kinds and places` section spells them.
+fn schema_scaffold_note(note: &ScaffoldNote) -> String {
+    let mut line = format!(
+        "note: these are the built-in defaults a tree with no grund.toml is held to; \
+         grund init --scaffold writes a version-{} grund.toml",
+        note.version
+    );
+    if !note.added.is_empty() {
+        let added: Vec<String> = note
+            .added
+            .iter()
+            .map(|node| format!("{} in {}", node.name, schema_places(node)))
+            .collect();
+        line.push_str(" that also declares ");
+        line.push_str(&added.join(", "));
+    }
+    line
 }
 
 /// §FS-schema.5.1, §FS-schema.5.3: a direction's target as written — an any-of

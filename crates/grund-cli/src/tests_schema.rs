@@ -46,6 +46,7 @@ mod tests_schema {
             edges,
             default: None,
             members: Vec::new(),
+            scaffold: None,
         }
     }
 

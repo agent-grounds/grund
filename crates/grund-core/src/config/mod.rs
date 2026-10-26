@@ -72,6 +72,7 @@ mod report_paths;
 mod rows;
 mod run;
 mod run_warnings;
+mod schema_scaffold_note;
 mod schema_view;
 mod scope_roots;
 mod slots;
@@ -120,6 +121,8 @@ pub use rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
 pub(crate) use run::{Invocation, Selection, scope_is_config_root};
 #[allow(unused_imports)]
 pub use run::{Run, RunScope, RunWorkspace};
+pub use schema_scaffold_note::ScaffoldNote;
+pub(crate) use schema_view::config_file_read;
 pub use schema_view::{
     BadgeRung, EdgeTarget, Junction, NodeClass, SchemaEdge, SchemaNode, SchemaSlot, SchemaView,
 };

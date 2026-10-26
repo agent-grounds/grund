@@ -13,7 +13,7 @@ use std::path::Path;
 use super::init_target::derive_default_name;
 use super::init_workspace_members::render_workspace_guidance_with_run_warnings;
 use crate::config::{
-    AbsentOptionalNamespace, Config, Invocation, Selection, config_file_in, pending_config,
+    AbsentOptionalNamespace, Config, Invocation, Project, Selection, config_file_in, pending_config,
 };
 use crate::model::Finding;
 #[cfg(test)]
@@ -98,6 +98,16 @@ pub(super) fn init_pending_effective_config(
     let text = render_grund_toml(template, &name, description);
     let invocation = Invocation::new(target, true, Selection::Discovery);
     Ok((pending_config(&text, target, &invocation)?, name))
+}
+
+/// The project `grund init --scaffold` would leave at `root`, where no config
+/// file is: the default template's `grund.toml`, read as init reads it before
+/// writing it (§FS-init.2.4.10). The no-config schema note is derived from it
+/// (§FS-schema.8.2), so the note follows the template and names nothing of its own.
+pub(crate) fn scaffold_project(root: &Path, name: &str) -> Result<Project> {
+    let text = render_grund_toml(Template::default(), name, None);
+    let invocation = Invocation::new(root, true, Selection::Discovery);
+    Ok(pending_config(&text, root, &invocation)?.project().clone())
 }
 
 /// `templates::render_agents_append_block` with the §FS-init.2.3.4.16 discovery

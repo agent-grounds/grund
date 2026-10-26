@@ -212,8 +212,8 @@ pub use config::{PathBase, with_report_path_base};
 pub use api::schema_view;
 #[doc(hidden)]
 pub use config::{
-    BadgeRung, EdgeTarget, Extent, FieldContent, Junction, NodeClass, Placement, SchemaEdge,
-    SchemaNode, SchemaSlot, SchemaView, Strength,
+    BadgeRung, EdgeTarget, Extent, FieldContent, Junction, NodeClass, Placement, ScaffoldNote,
+    SchemaEdge, SchemaNode, SchemaSlot, SchemaView, Strength,
 };
 // §FS-config-migrate: `grund config migrate --to 2` and the one record it returns.
 #[doc(hidden)]
