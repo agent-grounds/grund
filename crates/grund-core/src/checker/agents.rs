@@ -4,6 +4,7 @@ use crate::grammar::{
     AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, AgentsBlockMember,
     WORKSPACE_SECTIONS, agents_block_heading, find_agents_block,
 };
+use crate::model::remedies;
 use crate::model::{
     CheckReport, Code, Diagnostic, Expected, ExpectedEntrypoint, ScopedExpectation,
 };
@@ -23,7 +24,7 @@ fn agents_init_message(detail: String) -> String {
 fn command_message(detail: String, owner: Option<&str>) -> String {
     let message = agents_init_message(detail);
     match owner {
-        Some(dir) => format!("{message}; run it in {dir}"),
+        Some(dir) => format!("{message}; {}", remedies::agents_init_elsewhere(dir)),
         None => message,
     }
 }
@@ -186,8 +187,9 @@ pub(crate) fn check_agent_block_path(
                 column: None,
                 message: command_message(
                     format!(
-                        "outdated grund init block v{} — run `grund init` to update to v{}",
-                        block.version, expected_version
+                        "outdated grund init block v{} — {}",
+                        block.version,
+                        remedies::agents_init_outdated(expected_version)
                     ),
                     owner,
                 ),
@@ -300,7 +302,8 @@ fn missing_block(path: &Path, expected_version: u32, owner: Option<&str>) -> Dia
         column: None,
         message: command_message(
             format!(
-                "missing grund init block v{expected_version} — run `grund init` to install it"
+                "missing grund init block v{expected_version} — {}",
+                remedies::agents_init_missing()
             ),
             owner,
         ),
@@ -322,16 +325,19 @@ pub(super) fn stale_block(
     bytes: Option<(&str, &str)>,
 ) -> Diagnostic {
     let message = if WORKSPACE_SECTIONS.contains(&noun) {
-        let dir = owner.map(|dir| format!(" in {dir}")).unwrap_or_default();
+        let refresh = owner.map_or_else(remedies::agents_init_refresh, |dir| {
+            remedies::agents_init_refresh_in(dir)
+        });
         let (expected, current) = bytes.unwrap_or(("", ""));
         let detail = workspace_entry_detail(expected, current);
         agents_init_message(format!(
-            "{STALE_BEFORE_NOUN}{noun}{STALE_AFTER_NOUN}the workspace ({detail}) — run `grund init`{dir} to refresh"
+            "{STALE_BEFORE_NOUN}{noun}{STALE_AFTER_NOUN}the workspace ({detail}) — {refresh}"
         ))
     } else {
         command_message(
             format!(
-                "{STALE_BEFORE_NOUN}{noun}{STALE_AFTER_NOUN}grund.toml — run `grund init` to refresh"
+                "{STALE_BEFORE_NOUN}{noun}{STALE_AFTER_NOUN}grund.toml — {}",
+                remedies::agents_init_refresh()
             ),
             owner,
         )

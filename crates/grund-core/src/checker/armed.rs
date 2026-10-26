@@ -5,6 +5,7 @@
 //! read one copy (§AR-config.9.1). It sits beside the selection in
 //! `selection.rs`, which reads it to say a selected check was off.
 
+use crate::model::remedies;
 use std::collections::BTreeSet;
 
 use crate::model::catalog::{self, ClauseBy, CodeSeverity};
@@ -37,12 +38,13 @@ const SWITCH_CLAUSES: &[(Switch, Code, usize)] = &[
     (Switch::KindHome, Code::MISPLACED_DECLARATION, 0),
 ];
 
-const MIGRATE: &str =
-    "a version-1 config cannot turn the check on; migrate it with grund config migrate --to 2";
+/// Why a version-1 config is answered by the migration alone (§FS-check.1.4.1).
+const MIGRATE: &str = "a version-1 config cannot turn the check on";
 
-/// The migration a workspace whose projects read both versions names in place of
-/// a key one of them cannot carry (§FS-check.1.4.1).
-const MIGRATE_MIXED: &str = "the run's projects read config versions 1 and 2, which do not turn it on alike; migrate the version-1 ones with grund config migrate --to 2";
+/// Why a workspace whose projects read both versions is answered by the migration
+/// in place of a key one of them cannot carry (§FS-check.1.4.1).
+const MIGRATE_MIXED: &str =
+    "the run's projects read config versions 1 and 2, which do not turn it on alike";
 
 /// What one run armed, and the config versions its advice is spelled in: the
 /// record the hidden check path hands the CLI's selection (§FS-check.1.4.1).
@@ -83,14 +85,18 @@ impl ArmedChecks {
         // A switch a version read cannot hold, or two versions spell apart, is
         // answered by the migration alone.
         let Some(parts) = lacking.into_iter().collect::<Option<Vec<_>>>() else {
-            let migrate = if self.versions.len() > 1 {
-                MIGRATE_MIXED
+            // §FS-errors.5.5.1: the cases of the row's Fix, the one taking
+            // config-version-1's words by reference.
+            return Some(if self.versions.len() > 1 {
+                format!(
+                    "{MIGRATE_MIXED}; {}",
+                    remedies::selected_check_off_mixed_versions()
+                )
             } else {
-                MIGRATE
-            };
-            return Some(migrate.into());
+                format!("{MIGRATE}; {}", remedies::selected_check_off_one_version())
+            });
         };
-        Some(format!("the check is off until {}", parts.join(" and ")))
+        Some(remedies::selected_check_off_off(parts.join(" and ")))
     }
 }
 

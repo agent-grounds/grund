@@ -7,14 +7,9 @@
 use std::collections::BTreeMap;
 
 use crate::config::{Frame, Schema};
+use crate::model::remedies;
 use crate::model::{CheckReport, Code, Diagnostic};
 use crate::resolver::{EntryVerdict, WorkspaceCheckTarget, judge_section_locks};
-
-/// §FS-section-lock.checks.remedy: the run that writes a lock, named with its scope,
-/// because `fmt` given a file writes none, and a member's own run writes none of its
-/// entries for a sibling, which only the workspace root's run writes.
-const REMEDY: &str = "run grund fmt --write with no path at the workspace root, or at the project \
-                      root outside a workspace";
 
 /// §FS-section-lock.checks: a lock line grund cannot read, a cited locked
 /// address the lock does not hold, and a cited section whose recorded text now
@@ -38,9 +33,10 @@ pub(super) fn check_section_locks<'a>(
                 Code::INVALID_SECTION_LOCK,
                 judgement.path.clone(),
                 *line,
+                // §FS-section-lock.checks.remedy: the row's Fix, which takes the run by reference.
                 format!(
-                    "section lock line is not <coordinate> <fingerprint>; to rebuild the file, \
-                     {REMEDY}"
+                    "section lock line is not <coordinate> <fingerprint>; {}",
+                    remedies::invalid_section_lock()
                 ),
             ));
         }
@@ -51,9 +47,11 @@ pub(super) fn check_section_locks<'a>(
                     Code::UNRECORDED_SECTION_CITATION,
                     citation.file.clone(),
                     citation.line,
+                    // §FS-section-lock.checks.remedy: the run that writes a lock, with its scope.
                     format!(
-                        "{} is cited but has no entry in {lock}; {REMEDY}",
-                        coordinate(section)
+                        "{} is cited but has no entry in {lock}; {}",
+                        coordinate(section),
+                        remedies::unrecorded_section_citation()
                     ),
                 ));
             }
@@ -74,9 +72,8 @@ pub(super) fn check_section_locks<'a>(
                 decl.file.clone(),
                 info.line,
                 format!(
-                    "{at} is cited, and what {lock} recorded for it now sits at {to}; move it \
-                     back, cite {to} instead, or leave a pointer to it at {at}; if {to} is a \
-                     copy, edit the copy or cite it from {at}"
+                    "{at} is cited, and what {lock} recorded for it now sits at {to}; {}",
+                    remedies::section_address_changed(&to, &at)
                 ),
             ));
         }

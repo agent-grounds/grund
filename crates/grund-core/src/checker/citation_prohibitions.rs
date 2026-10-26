@@ -10,7 +10,7 @@ use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Frame, NamespaceMatch, Owners, Rules,
     Schema, render_citation_target,
 };
-use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, Citation, Code, Diagnostic, Switch};
+use crate::model::{Catalog, Citation, Code, Diagnostic, Switch, citation_direction_repair};
 
 /// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
 /// its target is a `forbidden-citation` error (`must-not`) or a
@@ -41,7 +41,7 @@ pub(super) fn check_citation_prohibitions(
                     &owners,
                     cite,
                     "must not",
-                    CITATION_DIRECTION_REPAIR,
+                    &citation_direction_repair(),
                 ),
             ),
             // §FS-config-v2.rules.strengths: the `must-not` finding, code, message
@@ -53,7 +53,7 @@ pub(super) fn check_citation_prohibitions(
                     &owners,
                     cite,
                     "must not",
-                    CITATION_DIRECTION_REPAIR,
+                    &citation_direction_repair(),
                 ),
             ),
             CitationLevel::ShouldNot => (

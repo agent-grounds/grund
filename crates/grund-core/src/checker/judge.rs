@@ -3,6 +3,7 @@
 //! vocabulary, and where a verdict depends on bytes presentation decides it
 //! compares `Expected` and renders nothing (§AR-checker.1.3).
 
+use crate::model::remedies;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agents::check_agents_block_version;
@@ -121,17 +122,20 @@ pub(crate) fn judge(
             line: Some(esc.line),
             column: Some(esc.column),
             message: format!(
-                "escaped citation {} resolves to a declaration; write {}{}{section} for a live citation, or leave it escaped if it is only an illustration",
+                "escaped citation {} resolves to a declaration; {}",
                 esc.text.trim(),
-                schema.citation.marker,
-                super::support::qualify(
-                    esc.namespace.as_deref(),
-                    &render_catalog_id(
-                        target.frame().grammar(),
-                        &target.catalog.declarations,
-                        &esc.id
+                remedies::escaped_citation_resolves(format!(
+                    "{}{}{section}",
+                    schema.citation.marker,
+                    super::support::qualify(
+                        esc.namespace.as_deref(),
+                        &render_catalog_id(
+                            target.frame().grammar(),
+                            &target.catalog.declarations,
+                            &esc.id
+                        )
                     )
-                )
+                ))
             ),
             sites: Vec::new(),
             authority: Vec::new(),

@@ -15,6 +15,7 @@
 //! `duplicate_sections` list the scanner keeps beside it (§AR-scanner.2.2,
 //! §AR-core-module-layout.1).
 
+use crate::model::remedies;
 use std::collections::BTreeMap;
 
 use super::reference_scope::ScanScope;
@@ -62,47 +63,60 @@ pub(super) fn check_section_headings(
 
     // §FS-declarations.checks.unmarked-heading.5 / §AR-checker.2.20: scanner-owned Markdown
     // candidates are errors since 0.16.0, independent of the marked-section heading-level mode.
-    report.errors.extend(findings.unmarked_headings.iter().map(|heading| {
-        let rendered_owner = render_catalog_id(frame.grammar(), &findings.declarations, &heading.owner);
-        let separator = if named_section_path(&heading.suggested_path) {
-            ":"
-        } else {
-            "."
-        };
-        let suggested_heading = format!(
-            "{} {}{} {}",
-            heading_marks(heading.heading_level),
-            heading.suggested_path,
-            separator,
-            if heading.title.is_empty() {
-                "Untitled"
+    report
+        .errors
+        .extend(findings.unmarked_headings.iter().map(|heading| {
+            let rendered_owner =
+                render_catalog_id(frame.grammar(), &findings.declarations, &heading.owner);
+            let separator = if named_section_path(&heading.suggested_path) {
+                ":"
             } else {
-                heading.title.as_str()
+                "."
+            };
+            let suggested_heading = format!(
+                "{} {}{} {}",
+                heading_marks(heading.heading_level),
+                heading.suggested_path,
+                separator,
+                if heading.title.is_empty() {
+                    "Untitled"
+                } else {
+                    heading.title.as_str()
+                }
+            );
+            // §FS-declarations.checks.unmarked-heading.2.1: appended; the prefix reads as before.
+            let relative = heading
+                .relative_hint
+                .as_ref()
+                .map_or(String::new(), |hint| {
+                    format!(
+                        "; under {} a relative heading is written {}",
+                        coordinate(&rendered_owner, &schema.ids.section_separator, &hint.parent),
+                        hint.heading
+                    )
+                });
+            // §FS-declarations.checks.unmarked-heading.2.2: append after the whole message.
+            let field =
+                field_heading_hint(heading, findings, schema, frame.version).unwrap_or_default();
+            Diagnostic {
+                code: Code::UNMARKED_HEADING,
+                path: Some(heading.file.clone()),
+                line: Some(heading.line),
+                column: None,
+                message: format!(
+                    "unmarked heading inside {rendered_owner}; {}{LANDED_CLAUSE}{relative}{field}",
+                    remedies::unmarked_heading(
+                        &suggested_heading,
+                        format!(
+                            "{rendered_owner}{}{}",
+                            schema.ids.section_separator, heading.suggested_path
+                        )
+                    ),
+                ),
+                sites: Vec::new(),
+                authority: Vec::new(),
             }
-        );
-        // §FS-declarations.checks.unmarked-heading.2.1: appended, so the prefix reads as before.
-        let relative = heading.relative_hint.as_ref().map_or(String::new(), |hint| {
-            format!(
-                "; under {} a relative heading is written {}",
-                coordinate(&rendered_owner, &schema.ids.section_separator, &hint.parent),
-                hint.heading
-            )
-        });
-        // §FS-declarations.checks.unmarked-heading.2.2: append after the whole existing message.
-        let field = field_heading_hint(heading, findings, schema, frame.version).unwrap_or_default();
-        Diagnostic {
-            code: Code::UNMARKED_HEADING,
-            path: Some(heading.file.clone()),
-            line: Some(heading.line),
-            column: None,
-            message: format!(
-                "unmarked heading inside {rendered_owner}; number it ({suggested_heading}) as {rendered_owner}{}{path}, declare an ID, or use a bold label{LANDED_CLAUSE}{relative}{field}",
-                schema.ids.section_separator,
-                path = heading.suggested_path,
-            ),
-            sites: Vec::new(),
-        authority: Vec::new(),}
-    }));
+        }));
 
     // §FS-declarations.checks.relative-section-parent: a relative heading with no usable parent.
     report

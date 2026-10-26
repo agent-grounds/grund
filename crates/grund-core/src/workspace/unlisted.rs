@@ -17,6 +17,7 @@
 //! not parse must not fail the run, and a full load rebuilds the grammar regex set
 //! per candidate.
 
+use crate::model::remedies;
 use crate::sources::Sources;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -199,11 +200,16 @@ fn unlisted_workspace_block_message(
     format!(
         "{location}this [workspace] is listed by no enclosing workspace \
          — the projects under it are absorbed into `{absorbing}` instead of named under \
-         their own alias path; add \"{entry}\" to [workspace] members in {enclosing}, \
-         or keep it out of that project's [scan] \
+         their own alias path; {} \
          — an unlisted [workspace] became an error in grund 0.15.0",
+        // §FS-errors.5.5.1: the table is a slot, so neither version's answer names
+        // another version's table; the message names `[scan]` as it always has.
+        remedies::unlisted_workspace_block(
+            &entry,
+            display_path(render, &enclosing_config),
+            "[scan]"
+        ),
         absorbing = absorbing_project_name(config, alias),
-        enclosing = display_path(render, &enclosing_config),
     )
 }
 

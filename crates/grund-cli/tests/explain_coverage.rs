@@ -228,7 +228,6 @@ fn every_table_key_and_code_is_answered_in_each_version() {
 /// remedy or `none — <why>`, and exactly the lines its row's *Fix* and *Note*
 /// cells give for that version.
 #[test]
-#[ignore = "red until #1027 prints each code's Fix and Note; implement removes this"]
 fn every_code_answer_carries_its_fix_in_each_version() {
     let shipped: Value = serde_json::from_str(&repo_file(
         "crates/grund-core/assets/explain/check-codes.json",

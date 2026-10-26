@@ -6,5 +6,6 @@ A declaration's lead is longer than the configured word limit.
 Severity: by strength: [schema.leads.words]. A strength gives: must an error, warn a warning, should a suggestion, may not checked.
 On: when [schema.leads.words] warn = <N> is set (a setting)
     a must or should limit turns it on too, at that strength
+Fix: move detail into citable child sections, or promote a child section to its own ID after running grund refs {coordinate} --summary
 
 Next: grund config explain '[schema.leads.words]' examples/config-explain/explain-3-code/repo

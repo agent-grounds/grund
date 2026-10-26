@@ -44,8 +44,8 @@ use grund_core::{
 // §FS-config-explain: the one answer `grund config explain` returns, which this
 // crate prints (§AR-config.9).
 use grund_core::{
-    ClauseBy, CodeEnabled, CodeSeverity, ExplainAnswer, ExplainAsk, ExplainCode, ExplainKey,
-    ExplainReading, ExplainTable, ExplainUnknown, config_explain,
+    ClauseBy, CodeEnabled, CodeFix, CodeSeverity, ExplainAnswer, ExplainAsk, ExplainCode,
+    ExplainKey, ExplainReading, ExplainTable, ExplainUnknown, config_explain,
 };
 
 // §FS-integrations.1.3: `grund integrations` is one engine operation

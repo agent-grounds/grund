@@ -4,6 +4,7 @@
 //! the pattern leaves in a run.
 
 use crate::config::Schema;
+use crate::model::remedies;
 use crate::model::{Catalog, CheckReport, Code, Diagnostic};
 
 /// §FS-check.checks.glob-citation.1: an error since grund 0.19.0, and the
@@ -25,7 +26,8 @@ pub(super) fn check_glob_citations(findings: &Catalog, schema: &Schema, report: 
             column: Some(pattern.column),
             message: format!(
                 "glob citation {marker}{token}: a citation names one exact point, not a \
-                 pattern; cite the point, or escape it as <{marker}>{token}{LANDED_CLAUSE}",
+                 pattern; {}{LANDED_CLAUSE}",
+                remedies::glob_citation(format!("<{marker}>{}", pattern.token)),
                 token = pattern.token,
             ),
             sites: Vec::new(),

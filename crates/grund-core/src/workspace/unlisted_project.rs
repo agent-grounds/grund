@@ -3,6 +3,7 @@
 //! the quiet workspace claim test are shared with the standalone workspace rule;
 //! neither a candidate nor this explanation establishes a new scan boundary.
 
+use crate::model::remedies;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -122,33 +123,26 @@ fn placement_context(
         .unwrap_or_else(|| frame.root().join("grund.toml"));
     let enclosing = frame.display_path(&enclosing);
     let owner = frame.name.unwrap_or("root");
-    let exclusion = if frame.version == 2 {
-        format!("exclude \"{entry}/\" with [schema.sources] exclude in {enclosing}")
-    } else {
-        // §FS-config.3.5.16: v1 matches directory names at every depth, never paths.
-        let component = dir.file_name().unwrap_or_default().to_string_lossy();
-        format!(
-            "exclude \"{component}\" with [scan] exclude in {enclosing} \
-             (excludes all directories named \"{component}\" at every depth)"
-        )
-    };
+    // §FS-config.3.5.16: v1 matches directory names at every depth, never paths, so
+    // the version's side of the row's Fix excludes the component there.
+    let component = dir.file_name().unwrap_or_default().to_string_lossy();
+    let unlisted =
+        remedies::misplaced_declaration_unlisted(frame.version, &entry, &enclosing, &component);
     let canonical = canonical_workspace_path(dir);
     let root_advice = if roots
         .iter()
         .any(|root| canonical_workspace_path(root).starts_with(&canonical))
     {
         format!(
-            "; also remove configured scan roots at or beneath \"{entry}\" in {enclosing} \
-             (source includes or kind homes), because exclude does not prune scan roots"
+            "; {}",
+            remedies::misplaced_declaration_roots(frame.version, &entry, &enclosing)
         )
     } else {
         String::new()
     };
     format!(
         " — {nested}{name} is not read: no [workspace] members entry lists {entry}; \
-         kind homes from {enclosing} (project {owner}) apply; \
-         add \"{entry}\" to [workspace] members in {enclosing}, \
-         or {exclusion}{root_advice}",
+         kind homes from {enclosing} (project {owner}) apply; {unlisted}{root_advice}",
         nested = frame.display_path(config_path),
     )
 }

@@ -120,7 +120,6 @@ fn the_moved_email_check_message_keeps_its_bytes() {
 /// message, so the two agree by construction rather than by matching words
 /// (§FS-errors.5.5.1).
 #[test]
-#[ignore = "red until #1027 prints the code's Fix and Note; implement removes this"]
 fn explain_gives_the_moved_email_errors_own_remedy_and_the_lock_note() {
     let tree = Tree::moved();
     let answer = tree.run(&["config", "explain", "section-address-changed"], 0);

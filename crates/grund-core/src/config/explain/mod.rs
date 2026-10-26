@@ -25,7 +25,7 @@ use super::discovery::{config_file_in, discovery_start_dir};
 use super::v1::{is_header, read_sections, strip_comment};
 use super::v2;
 use super::vocabulary::admitted;
-use crate::model::catalog::{self, CodeEnabled, CodeSeverity};
+use crate::model::catalog::{self, CodeEnabled, CodeFix, CodeSeverity};
 use crate::model::{Code, OperationDiagnostic, format_path};
 use target::Resolved;
 
@@ -111,8 +111,9 @@ pub struct ExplainKey {
     pub members: Vec<String>,
 }
 
-/// §FS-config-explain.4: a code's row of the catalog, read for one version,
-/// and the tables its clauses name, which the answer's `Next:` line asks for.
+/// §FS-config-explain.4: a code's row of the catalog, read for one version, with
+/// what clears its finding and what to know first, and the tables its clauses
+/// name, which the answer's `Next:` line asks for.
 #[derive(Clone, Debug)]
 pub struct ExplainCode {
     pub code: String,
@@ -120,6 +121,8 @@ pub struct ExplainCode {
     pub severity: CodeSeverity,
     pub enabled: CodeEnabled,
     pub ramp: Option<String>,
+    pub fix: CodeFix,
+    pub note: Option<String>,
     pub tables: Vec<String>,
 }
 
@@ -357,6 +360,8 @@ fn code(found: Code, version: u32, admitted: &[(String, Vec<String>)]) -> Explai
         severity: side.severity.clone(),
         enabled: side.enabled.clone(),
         ramp: row.ramp.clone(),
+        fix: side.fix.clone(),
+        note: side.note.clone(),
         tables,
     }
 }

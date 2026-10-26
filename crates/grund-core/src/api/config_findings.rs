@@ -9,11 +9,12 @@
 //! `warning:` line a process frontend puts them on belongs to `grund-cli`
 //! (§AR-system.2.9.1, §AR-bindings.2).
 
+use crate::config::{Config, Display, config_file_under, home_form_of};
 /// §FS-check.4.3: the warning for a config root holding both discovery names —
 /// the bare `grund.toml` won, and the `.agents/grund.toml` beside it is read by
 /// nothing (§FS-config.1.1). `line`-less, so it prints as a CLI-level `warning:`
 /// on stderr: it says which file the run read, not what is wrong at a site.
-use crate::config::{Config, Display, config_file_under, home_form_of};
+use crate::model::remedies;
 use crate::model::{Code, Diagnostic, format_path};
 
 fn redundant_config_warning(config: &Config) -> Option<Diagnostic> {
@@ -25,9 +26,10 @@ fn redundant_config_warning(config: &Config) -> Option<Diagnostic> {
         line: None,
         column: None,
         message: format!(
-            "{} is ignored — {} takes precedence; delete one",
+            "{} is ignored — {} takes precedence; {}",
             format_path(ignored),
-            format_path(winner)
+            format_path(winner),
+            remedies::redundant_config()
         ),
         sites: Vec::new(),
         authority: Vec::new(),
@@ -53,9 +55,9 @@ fn deprecated_config_location_warning(config: &Config) -> Option<Diagnostic> {
         line: None,
         column: None,
         message: format!(
-            "{} is a deprecated config location — move it to {}",
+            "{} is a deprecated config location — {}",
             format_path(found),
-            format_path(&home)
+            remedies::deprecated_config_location(format_path(&home))
         ),
         sites: Vec::new(),
         authority: Vec::new(),
@@ -72,7 +74,7 @@ pub(super) const CONFIG_VERSION_1: Code = Code::CONFIG_VERSION_1;
 /// it for a member (§FS-config-migrate.8) and the caution below prints it for
 /// any config, so the two cannot drift apart.
 pub(super) fn version_1_caution(file: &str, dir: Option<&str>) -> String {
-    let mut line = format!("{file} is version 1; migrate it with grund config migrate --to 2");
+    let mut line = format!("{file} is version 1; {}", remedies::config_version_1());
     if let Some(dir) = dir.filter(|dir| !dir.is_empty()) {
         line.push(' ');
         line.push_str(dir);

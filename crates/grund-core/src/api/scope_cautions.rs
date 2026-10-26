@@ -12,6 +12,7 @@
 /// *recognized*, not *declared* — a project that only cites another project's
 /// specs (§FS-workspace.1) declares nothing and is working as intended, so one
 /// citation anywhere answers the question and the caution stays quiet.
+use crate::model::remedies;
 use crate::sources::{canonical_path, path_is_file};
 use std::path::Path;
 
@@ -140,6 +141,7 @@ pub(super) fn empty_scan_warning(
     display: Display<'_>,
 ) -> Diagnostic {
     let shown = display_scope(display, path);
+    let version = config.frame().version;
     // `grund`, `grund check .`, and `grund check <repo-root>` all walk `[scan] include`
     // relative to the config root — so the "looked under include" message is the
     // accurate one whenever the requested path *is* that root, not just when the
@@ -154,25 +156,22 @@ pub(super) fn empty_scan_warning(
         // rather than the `include` list or the extensions that never got to answer.
         _ if handed_a_hidden_file(config, path, path_provided) => format!(
             "nothing to scan — `{}` is a hidden file. grund reads no file whose own name \
-             begins with `.`, whatever `[scan] extensions` says. Rename it, or move what \
-             needs checking into a file that is not hidden.",
-            shown
+             begins with `.`, whatever `[scan] extensions` says. {}.",
+            shown,
+            remedies::empty_scan_hidden(version)
         ),
         // §FS-check.2.2.2.1: a project with no kinds has no starter file to
         // scaffold, so the first remedy it is offered is its first kind.
         (Some(dirs), true) if kind_prefixes(&config.kinds).is_empty() => format!(
             "nothing to scan — grund looked under [scan] include = [{}] and found no files. This \
-             project declares no kinds yet: replace `kinds = []` in `grund.toml` with a \
-             `[[kinds]]` table for its first kind, point `[scan] include` at your sources, or \
-             pass a path explicitly (`grund check <dir>`).",
-            quoted_list(dirs)
+             project declares no kinds yet: {}.",
+            quoted_list(dirs),
+            remedies::empty_scan_no_kinds(version)
         ),
         (Some(dirs), true) => format!(
-            "nothing to scan — grund looked under [scan] include = [{}] and found no files. Run \
-             `grund init --scaffold` to scaffold the canonical docs/ and e2e/ trees, \
-             point `[scan] include` in `grund.toml` at your sources, or pass a \
-             path explicitly (`grund check <dir>`).",
-            quoted_list(dirs)
+            "nothing to scan — grund looked under [scan] include = [{}] and found no files. {}.",
+            quoted_list(dirs),
+            remedies::empty_scan_root(version)
         ),
         // §FS-check.2.2.2.2: under v2 a pattern can prune what the extensions admit.
         _ => match pruning_pattern(config.schema(), config.frame(), path) {
@@ -239,9 +238,9 @@ fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnost
         };
         format!(
             "nothing recognized — grund read {scanned_files} {files}, and this project declares \
-             no kinds, so no heading in them is a declaration and no token a citation. Declare \
-             its first kind in grund.toml to start. See `grund config explain '{target}'` \
-             for every key a kind takes."
+             no kinds, so no heading in them is a declaration and no token a citation. {}. See \
+             `grund config explain '{target}'` for every key a kind takes.",
+            remedies::nothing_recognized()
         )
     } else {
         format!(

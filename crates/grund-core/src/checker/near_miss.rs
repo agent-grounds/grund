@@ -9,6 +9,7 @@
 //! which would be an opinion about what the author meant (§FS-non-goals.3).
 
 use crate::config::{Frame, Schema, format_guidance};
+use crate::model::remedies;
 use crate::model::{Catalog, CheckReport, Code, Diagnostic, LANDED_CLAUSE};
 
 /// §FS-declarations.checks.declaration-near-miss: one error per heading that came close, since
@@ -47,8 +48,9 @@ pub(super) fn check_declaration_near_misses(
 fn near_miss_message(schema: &Schema, frame: Frame<'_>, text: &str) -> String {
     let guidance = format_guidance(schema, frame, Some(text));
     format!(
-        "`{text}` resolves for compatibility but does not match {} = \
-         \"{}\" — rename it or change the effective format{LANDED_CLAUSE}",
-        guidance.key, guidance.template,
+        "`{text}` resolves for compatibility but does not match {} = \"{}\" — {}{LANDED_CLAUSE}",
+        guidance.key,
+        guidance.template,
+        remedies::declaration_near_miss(),
     )
 }

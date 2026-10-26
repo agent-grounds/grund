@@ -10,7 +10,33 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "outdated",
+      "text": "run `grund init` to update to v{version}"
+     },
+     {
+      "label": "missing",
+      "text": "run `grund init` to install it"
+     },
+     {
+      "label": "refresh",
+      "text": "run `grund init` to refresh"
+     },
+     {
+      "label": "refresh-in",
+      "text": "run `grund init` in {dir} to refresh"
+     },
+     {
+      "label": "elsewhere",
+      "text": "run it in {dir}"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -19,7 +45,33 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "outdated",
+      "text": "run `grund init` to update to v{version}"
+     },
+     {
+      "label": "missing",
+      "text": "run `grund init` to install it"
+     },
+     {
+      "label": "refresh",
+      "text": "run `grund init` to refresh"
+     },
+     {
+      "label": "refresh-in",
+      "text": "run `grund init` in {dir} to refresh"
+     },
+     {
+      "label": "elsewhere",
+      "text": "run it in {dir}"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -33,7 +85,25 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "one-home",
+      "text": "point the stub link there"
+     },
+     {
+      "label": "excluded-pattern",
+      "text": "move the target out of what {pattern} matches, or take {pattern} out of [schema.sources] exclude"
+     },
+     {
+      "label": "ignored",
+      "text": "move the target out of what {file} ignores, or stop ignoring it there"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -42,7 +112,25 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "one-home",
+      "text": "point the stub link there"
+     },
+     {
+      "label": "excluded-entry",
+      "text": "move the target out of {entry}, or take {entry} out of [scan] exclude"
+     },
+     {
+      "label": "ignored",
+      "text": "move the target out of what {file} ignores, or stop ignoring it there"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -62,7 +150,12 @@
       "by": "either"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -77,7 +170,12 @@
       "by": "either"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -97,7 +195,12 @@
       "by": "either"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -112,7 +215,12 @@
       "by": "either"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -127,7 +235,12 @@
    "enabled": {
     "kind": "absent",
     "text": "not in version 2"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "migrate it with grund config migrate --to 2"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -142,7 +255,12 @@
       "by": "condition"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "migrate it with grund config migrate --to 2"
+   },
+   "note": null
   }
  },
  {
@@ -156,7 +274,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "resolve it by hand"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -165,7 +288,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "resolve it by hand"
+   },
+   "note": null
   }
  },
  {
@@ -179,7 +307,29 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "near",
+      "text": "did you mean {near}?"
+     },
+     {
+      "label": "near-escape",
+      "text": "did you mean {near}? (or write {escape} if this is an illustration)"
+     },
+     {
+      "label": "escape",
+      "text": "write {escape} if this is an illustration"
+     },
+     {
+      "label": "fetch",
+      "text": "run grund fetch {id}"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -188,7 +338,29 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "near",
+      "text": "did you mean {near}?"
+     },
+     {
+      "label": "near-escape",
+      "text": "did you mean {near}? (or write {escape} if this is an illustration)"
+     },
+     {
+      "label": "escape",
+      "text": "write {escape} if this is an illustration"
+     },
+     {
+      "label": "fetch",
+      "text": "run grund fetch {id}"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -202,7 +374,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "rename it or change the effective format"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -211,7 +388,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "rename it or change the effective format"
+   },
+   "note": null
   }
  },
  {
@@ -225,7 +407,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "move it to {home}"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -234,7 +421,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "move it to {home}"
+   },
+   "note": null
   }
  },
  {
@@ -258,7 +450,12 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -277,7 +474,12 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -291,7 +493,21 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "home",
+      "text": "point the stub link at {site} to that real home"
+     },
+     {
+      "label": "there",
+      "text": "point the stub link there"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -300,7 +516,21 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "home",
+      "text": "point the stub link at {site} to that real home"
+     },
+     {
+      "label": "there",
+      "text": "point the stub link there"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -314,7 +544,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -323,7 +558,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -343,7 +583,21 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "citable",
+      "text": "did you mean `citable = false`?"
+     },
+     {
+      "label": "grounding",
+      "text": "set `must = \"file\"` in [rules.citations.{kind}.grounding] to make that an error"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -358,7 +612,21 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "citable",
+      "text": "did you mean `citable = false`?"
+     },
+     {
+      "label": "grounding",
+      "text": "set require_grounding = true on the {place} row to make that an error"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -372,7 +640,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "Rename it, or move what needs checking into a file that is not hidden"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -381,7 +654,25 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "hidden",
+      "text": "Rename it, or move what needs checking into a file that is not hidden"
+     },
+     {
+      "label": "no-kinds",
+      "text": "replace `kinds = []` in `grund.toml` with a `[[kinds]]` table for its first kind, point `[scan] include` at your sources, or pass a path explicitly (`grund check <dir>`)"
+     },
+     {
+      "label": "root",
+      "text": "Run `grund init --scaffold` to scaffold the canonical docs/ and e2e/ trees, point `[scan] include` in `grund.toml` at your sources, or pass a path explicitly (`grund check <dir>`)"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -401,7 +692,12 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write {citation} for a live citation, or leave it escaped if it is only an illustration"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -416,7 +712,12 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write {citation} for a live citation, or leave it escaped if it is only an illustration"
+   },
+   "note": null
   }
  },
  {
@@ -430,7 +731,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "it never fires"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -439,7 +745,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "it never fires"
+   },
+   "note": null
   }
  },
  {
@@ -460,7 +771,29 @@
      }
     ],
     "remark": "a warn-not entry turns it on too, as a warning"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "re-point",
+      "text": "re-point the citation or downgrade it to a plain Markdown link"
+     },
+     {
+      "label": "index-rule",
+      "text": "retain the marked index entry and change the prohibition in rule {rules}"
+     },
+     {
+      "label": "index-may",
+      "text": "retain the marked index entry and add {kind} to the may list in {table}, preserving existing permissions"
+     },
+     {
+      "label": "index-prohibition",
+      "text": "retain the marked index entry and change the matching {level} prohibition in {table}"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -475,7 +808,29 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "re-point",
+      "text": "re-point the citation or downgrade it to a plain Markdown link"
+     },
+     {
+      "label": "index-rule",
+      "text": "retain the marked index entry and change the prohibition in rule {rules}"
+     },
+     {
+      "label": "index-may",
+      "text": "retain the marked index entry and add {kind} to the may list in {table}, preserving existing permissions"
+     },
+     {
+      "label": "index-prohibition",
+      "text": "retain the marked index entry and change the matching {level} prohibition in {table}"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -496,7 +851,12 @@
      }
     ],
     "remark": "with an explicit path"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -512,7 +872,12 @@
      }
     ],
     "remark": "with an explicit path"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -526,7 +891,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "cite the point, or escape it as {escape}"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -535,7 +905,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "cite the point, or escape it as {escape}"
+   },
+   "note": null
   }
  },
  {
@@ -549,7 +924,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "it never fires"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -558,7 +938,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "it never fires"
+   },
+   "note": null
   }
  },
  {
@@ -572,7 +957,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -581,7 +971,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -601,7 +996,12 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -611,7 +1011,12 @@
    "enabled": {
     "kind": "absent",
     "text": "not in version 1"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -631,7 +1036,45 @@
       "by": "either"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "form",
+      "text": "accepted form: {form}"
+     },
+     {
+      "label": "forms",
+      "text": "accepted forms: {forms}"
+     },
+     {
+      "label": "form-enabled",
+      "text": "accepted form after enabling it: {form}"
+     },
+     {
+      "label": "forms-enabled",
+      "text": "accepted forms after enabling it: {forms}"
+     },
+     {
+      "label": "place",
+      "text": "express this obligation in grund.toml: [{table}] with must = [\"{target}\"]"
+     },
+     {
+      "label": "place-grounding",
+      "text": "express this obligation in grund.toml: [{table}] with must = [\"{target}\"], and {setting}, without which a file there that cites nothing is not checked"
+     },
+     {
+      "label": "rename",
+      "text": "rename the chapter"
+     },
+     {
+      "label": "workspace",
+      "text": "check from the workspace root"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -646,7 +1089,45 @@
       "by": "either"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "form",
+      "text": "accepted form: {form}"
+     },
+     {
+      "label": "forms",
+      "text": "accepted forms: {forms}"
+     },
+     {
+      "label": "form-enabled",
+      "text": "accepted form after enabling it: {form}"
+     },
+     {
+      "label": "forms-enabled",
+      "text": "accepted forms after enabling it: {forms}"
+     },
+     {
+      "label": "place",
+      "text": "express this obligation in grund.toml: [{table}] with must = [\"{target}\"]"
+     },
+     {
+      "label": "place-grounding",
+      "text": "express this obligation in grund.toml: [{table}] with must = [\"{target}\"], and {setting}, without which a file there that cites nothing is not checked"
+     },
+     {
+      "label": "rename",
+      "text": "rename the chapter"
+     },
+     {
+      "label": "workspace",
+      "text": "check from the workspace root"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -666,7 +1147,12 @@
       "by": "condition"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "to rebuild the file, run grund fmt --write with no path at the workspace root, or at the project root outside a workspace"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -681,7 +1167,12 @@
       "by": "condition"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "to rebuild the file, run grund fmt --write with no path at the workspace root, or at the project root outside a workspace"
+   },
+   "note": null
   }
  },
  {
@@ -702,7 +1193,12 @@
      }
     ],
     "remark": "a value tag the scan finds turns it on too"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "join the literal and its citation"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -718,7 +1214,12 @@
      }
     ],
     "remark": "a value tag the scan finds turns it on too"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "join the literal and its citation"
+   },
+   "note": null
   }
  },
  {
@@ -739,7 +1240,12 @@
      }
     ],
     "remark": "a value tag the scan finds turns it on too"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -755,7 +1261,12 @@
      }
     ],
     "remark": "a value tag the scan finds turns it on too"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -769,7 +1280,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -778,7 +1294,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -792,7 +1313,25 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "write",
+      "text": "write {citation}"
+     },
+     {
+      "label": "escape",
+      "text": "write a full citation or {escape} to show the shape without citing it"
+     },
+     {
+      "label": "fmt",
+      "text": "run `grund fmt --write`"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -801,7 +1340,25 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "write",
+      "text": "write {citation}"
+     },
+     {
+      "label": "escape",
+      "text": "write a full citation or {escape} to show the shape without citing it"
+     },
+     {
+      "label": "fmt",
+      "text": "run `grund fmt --write`"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -821,7 +1378,21 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "unlisted",
+      "text": "add \"{entry}\" to [workspace] members in {enclosing}, or exclude \"{entry}/\" with [schema.sources] exclude in {enclosing}"
+     },
+     {
+      "label": "roots",
+      "text": "also remove configured scan roots at or beneath \"{entry}\" in {enclosing} (source includes or kind homes), because exclude does not prune scan roots"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -836,7 +1407,21 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "unlisted",
+      "text": "add \"{entry}\" to [workspace] members in {enclosing}, or exclude \"{component}\" with [scan] exclude in {enclosing} (excludes all directories named \"{component}\" at every depth)"
+     },
+     {
+      "label": "roots",
+      "text": "also remove configured scan roots at or beneath \"{entry}\" in {enclosing} (source includes or kind homes), because exclude does not prune scan roots"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -856,7 +1441,12 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -866,7 +1456,12 @@
    "enabled": {
     "kind": "absent",
     "text": "not in version 1"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -887,7 +1482,12 @@
      }
     ],
     "remark": "a warn entry turns it on too, as a warning"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -902,7 +1502,12 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -923,7 +1528,12 @@
      }
     ],
     "remark": "a warn or should presence turns it on too, at that strength"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -933,7 +1543,12 @@
    "enabled": {
     "kind": "absent",
     "text": "not in version 1"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -947,7 +1562,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write `{entry}` in {index}"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -956,7 +1576,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write `{entry}` in {index}"
+   },
+   "note": null
   }
  },
  {
@@ -970,7 +1595,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write {escape} before it to show the shape without citing it"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -979,7 +1609,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write {escape} before it to show the shape without citing it"
+   },
+   "note": null
   }
  },
  {
@@ -999,7 +1634,29 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "near",
+      "text": "did you mean {near}?"
+     },
+     {
+      "label": "near-escape",
+      "text": "did you mean {near}? (or write {escape} if this is an illustration)"
+     },
+     {
+      "label": "escape",
+      "text": "write {escape} if this is an illustration"
+     },
+     {
+      "label": "fetch",
+      "text": "run grund fetch {id}"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1014,7 +1671,29 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "near",
+      "text": "did you mean {near}?"
+     },
+     {
+      "label": "near-escape",
+      "text": "did you mean {near}? (or write {escape} if this is an illustration)"
+     },
+     {
+      "label": "escape",
+      "text": "write {escape} if this is an illustration"
+     },
+     {
+      "label": "fetch",
+      "text": "run grund fetch {id}"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -1034,7 +1713,12 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1044,7 +1728,12 @@
    "enabled": {
     "kind": "absent",
     "text": "not in version 1"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -1058,7 +1747,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "Declare its first kind in grund.toml to start"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1067,7 +1761,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "Declare its first kind in grund.toml to start"
+   },
+   "note": null
   }
  },
  {
@@ -1088,7 +1787,12 @@
      }
     ],
     "remark": "in any [workspace] block the run expands, a nested one included"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "nothing here is broken: the member is optional, and only a checkout that holds it can check the citations into it"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1104,7 +1808,12 @@
      }
     ],
     "remark": "in any [workspace] block the run expands, a nested one included"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "nothing here is broken: the member is optional, and only a checkout that holds it can check the citations into it"
+   },
+   "note": null
   }
  },
  {
@@ -1118,7 +1827,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1133,7 +1847,12 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -1153,7 +1872,29 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "near",
+      "text": "did you mean {near}?"
+     },
+     {
+      "label": "near-escape",
+      "text": "did you mean {near}? (or write {escape} if this is an illustration)"
+     },
+     {
+      "label": "escape",
+      "text": "write {escape} if this is an illustration"
+     },
+     {
+      "label": "fetch",
+      "text": "run grund fetch {id}"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1168,7 +1909,29 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "near",
+      "text": "did you mean {near}?"
+     },
+     {
+      "label": "near-escape",
+      "text": "did you mean {near}? (or write {escape} if this is an illustration)"
+     },
+     {
+      "label": "escape",
+      "text": "write {escape} if this is an illustration"
+     },
+     {
+      "label": "fetch",
+      "text": "run grund fetch {id}"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -1188,7 +1951,21 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "write",
+      "text": "write {citation}"
+     },
+     {
+      "label": "escape",
+      "text": "write a full citation or {escape} to show the shape without citing it"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1203,7 +1980,21 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "write",
+      "text": "write {citation}"
+     },
+     {
+      "label": "escape",
+      "text": "write a full citation or {escape} to show the shape without citing it"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -1223,7 +2014,12 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write {escape} before it to show the shape without citing it"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1238,7 +2034,12 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write {escape} before it to show the shape without citing it"
+   },
+   "note": null
   }
  },
  {
@@ -1258,7 +2059,12 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1273,7 +2079,12 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -1293,7 +2104,25 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "root",
+      "text": "run `grund check` from the workspace root at `{root}` to validate cross-project citations"
+     },
+     {
+      "label": "subtree",
+      "text": "check from the workspace root for a path outside that subtree"
+     },
+     {
+      "label": "near",
+      "text": "did you mean {near}?"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1308,7 +2137,25 @@
       "by": "flag"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "root",
+      "text": "run `grund check` from the workspace root at `{root}` to validate cross-project citations"
+     },
+     {
+      "label": "subtree",
+      "text": "check from the workspace root for a path outside that subtree"
+     },
+     {
+      "label": "near",
+      "text": "did you mean {near}?"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -1329,7 +2176,12 @@
      }
     ],
     "remark": "a must or should limit turns it on too, at that strength"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "move detail into citable child sections, or promote a child section to its own ID after running grund refs {coordinate} --summary"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1344,7 +2196,12 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "move detail into citable child sections, or promote a child section to its own ID after running grund refs {coordinate} --summary"
+   },
+   "note": null
   }
  },
  {
@@ -1358,7 +2215,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "delete one"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1367,7 +2229,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "delete one"
+   },
+   "note": null
   }
  },
  {
@@ -1381,7 +2248,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1390,7 +2262,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -1410,7 +2287,12 @@
       "by": "condition"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "move it back, cite {new address} instead, or leave a pointer to it at {cited address}; if {new address} is a copy, edit the copy or cite it from {cited address}"
+   },
+   "note": "check compares the text at a cited address with the fingerprint .grund/sections/<ID>.lock recorded for it, and finds that fingerprint at another address of the declaration. Only grund fmt --write writes a lock (grund config explain unrecorded-section-citation says where to run it). It never approves a move: the one thing it records at the old address is a pointer to the new one. Do not edit a lock by hand."
   },
   "1": {
    "severity": {
@@ -1425,7 +2307,12 @@
       "by": "condition"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "move it back, cite {new address} instead, or leave a pointer to it at {cited address}; if {new address} is a copy, edit the copy or cite it from {cited address}"
+   },
+   "note": "check compares the text at a cited address with the fingerprint .grund/sections/<ID>.lock recorded for it, and finds that fingerprint at another address of the declaration. Only grund fmt --write writes a lock (grund config explain unrecorded-section-citation says where to run it). It never approves a move: the one thing it records at the old address is a pointer to the new one. Do not edit a lock by hand."
   }
  },
  {
@@ -1446,7 +2333,12 @@
      }
     ],
     "remark": "it is the default, and warn or should turns it on too, at that strength"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1462,7 +2354,12 @@
      }
     ],
     "remark": "it is the default, and \"warn\" turns it on too"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -1476,7 +2373,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1485,7 +2387,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -1505,7 +2412,25 @@
       "by": "condition"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "off",
+      "text": "the check is off until {switches}"
+     },
+     {
+      "label": "one-version",
+      "text": "migrate it with grund config migrate --to 2"
+     },
+     {
+      "label": "mixed-versions",
+      "text": "migrate the version-1 ones with grund config migrate --to 2"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1520,7 +2445,25 @@
       "by": "condition"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "off",
+      "text": "the check is off until {switches}"
+     },
+     {
+      "label": "one-version",
+      "text": "migrate it with grund config migrate --to 2"
+     },
+     {
+      "label": "mixed-versions",
+      "text": "migrate the version-1 ones with grund config migrate --to 2"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -1534,7 +2477,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write {citation}"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1543,7 +2491,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write {citation}"
+   },
+   "note": null
   }
  },
  {
@@ -1557,7 +2510,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write {citation}, or {escape} if these are old numbers"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1566,7 +2524,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write {citation}, or {escape} if these are old numbers"
+   },
+   "note": null
   }
  },
  {
@@ -1580,7 +2543,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "it never fires"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1589,7 +2557,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "it never fires"
+   },
+   "note": null
   }
  },
  {
@@ -1613,7 +2586,12 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1632,7 +2610,12 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -1652,7 +2635,12 @@
       "by": "either"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1667,7 +2655,12 @@
       "by": "either"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -1688,7 +2681,12 @@
      }
     ],
     "remark": "a warn or should closed turns it on too, at that strength"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1698,7 +2696,12 @@
    "enabled": {
     "kind": "absent",
     "text": "not in version 1"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -1719,7 +2722,12 @@
      }
     ],
     "remark": "a warn or should rung turns it on too, at that strength"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1734,7 +2742,12 @@
       "by": "setting"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -1748,7 +2761,25 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "root",
+      "text": "run `grund check` from the workspace root at `{root}` to validate cross-project citations"
+     },
+     {
+      "label": "subtree",
+      "text": "check from the workspace root for a path outside that subtree"
+     },
+     {
+      "label": "near",
+      "text": "did you mean {near}?"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1757,7 +2788,25 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "root",
+      "text": "run `grund check` from the workspace root at `{root}` to validate cross-project citations"
+     },
+     {
+      "label": "subtree",
+      "text": "check from the workspace root for a path outside that subtree"
+     },
+     {
+      "label": "near",
+      "text": "did you mean {near}?"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -1771,7 +2820,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "run `grund fmt --write`"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1780,7 +2834,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "run `grund fmt --write`"
+   },
+   "note": null
   }
  },
  {
@@ -1794,7 +2853,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "add \"{entry}\" to [workspace] members in {enclosing}, or keep it out of that project's {scan}"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1803,7 +2867,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "add \"{entry}\" to [workspace] members in {enclosing}, or keep it out of that project's {scan}"
+   },
+   "note": null
   }
  },
  {
@@ -1817,7 +2886,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "number it ({heading}) as {address}, declare an ID, or use a bold label"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1826,7 +2900,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "number it ({heading}) as {address}, declare an ID, or use a bold label"
+   },
+   "note": null
   }
  },
  {
@@ -1846,7 +2925,12 @@
       "by": "either"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "add the chapter, or narrow the rule to the declarations that have one"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1861,7 +2945,12 @@
       "by": "either"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "add the chapter, or narrow the rule to the declarations that have one"
+   },
+   "note": null
   }
  },
  {
@@ -1881,7 +2970,33 @@
       "by": "condition"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "language",
+      "text": "Give the file an extension a listed language reads"
+     },
+     {
+      "label": "hidden",
+      "text": "Rename the file to a name that is not hidden"
+     },
+     {
+      "label": "hidden-language",
+      "text": "Rename the file to a name that is not hidden and an extension a listed language reads"
+     },
+     {
+      "label": "drop",
+      "text": "drop the entry"
+     },
+     {
+      "label": "place",
+      "text": "set `scan = false` on the row if it only lists a place"
+     }
+    ]
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1896,7 +3011,41 @@
       "by": "condition"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "add",
+      "text": "Add \"{ext}\" to [scan] extensions"
+     },
+     {
+      "label": "drop",
+      "text": "drop the entry"
+     },
+     {
+      "label": "rename",
+      "text": "Rename the file to an extension the list holds"
+     },
+     {
+      "label": "give",
+      "text": "give the file an extension the list holds"
+     },
+     {
+      "label": "hidden",
+      "text": "Rename the file to a name that is not hidden"
+     },
+     {
+      "label": "hidden-list",
+      "text": "Rename the file to a name that is not hidden and an extension the list holds"
+     },
+     {
+      "label": "place",
+      "text": "set `scan = false` on the row if it only lists a place"
+     }
+    ]
+   },
+   "note": null
   }
  },
  {
@@ -1916,7 +3065,12 @@
       "by": "condition"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "run grund fmt --write with no path at the workspace root, or at the project root outside a workspace"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1931,7 +3085,12 @@
       "by": "condition"
      }
     ]
-   }
+   },
+   "fix": {
+    "kind": "template",
+    "text": "run grund fmt --write with no path at the workspace root, or at the project root outside a workspace"
+   },
+   "note": null
   }
  },
  {
@@ -1945,7 +3104,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1954,7 +3118,12 @@
    },
    "enabled": {
     "kind": "always"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  },
  {
@@ -1975,7 +3144,12 @@
      }
     ],
     "remark": "a value tag the scan finds turns it on too"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   },
   "1": {
    "severity": {
@@ -1991,7 +3165,12 @@
      }
     ],
     "remark": "a value tag the scan finds turns it on too"
-   }
+   },
+   "fix": {
+    "kind": "none",
+    "text": "its message names no remedy yet"
+   },
+   "note": null
   }
  }
 ]

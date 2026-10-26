@@ -92,8 +92,10 @@ pub(super) fn split_value_binding_site(
         file: path.to_path_buf(),
         line,
         column: Some(column),
-        message: "value binding must be on one physical line; join the literal and its citation"
-            .to_string(),
+        message: format!(
+            "value binding must be on one physical line; {}",
+            crate::model::remedies::invalid_value_binding()
+        ),
         source: DeclarationSource::Text,
         binding_namespace: target.namespace,
         binding_section: target.section,

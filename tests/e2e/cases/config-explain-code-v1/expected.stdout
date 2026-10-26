@@ -5,5 +5,6 @@ A declaration's lead is longer than the configured word limit.
 
 Severity: warning, fixed.
 On: when [reference] lead_size_warning = { max = <N>, unit = "words" } is set (a setting)
+Fix: move detail into citable child sections, or promote a child section to its own ID after running grund refs {coordinate} --summary
 
 Next: grund config explain '[reference]'

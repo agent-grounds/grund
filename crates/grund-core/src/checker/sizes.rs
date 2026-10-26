@@ -1,5 +1,6 @@
 use crate::config::{Frame, LeadSizeWarning, PointSizeUnit, Schema, Strength, measure_point_text};
 use crate::grammar::render_declaration_id;
+use crate::model::remedies;
 use crate::model::{
     Catalog, CheckReport, Code, Declaration, Diagnostic, Id, SectionInfo, Switch,
     paired_declarations,
@@ -163,10 +164,12 @@ fn check_oversized_lead_site(
         ),
         column: None,
         message: format!(
-            "{coordinate} lead is {actual} {}, over the configured maximum of {}; move detail into citable child sections, or promote a child section to its own ID after running grund refs {coordinate} --summary",
+            "{coordinate} lead is {actual} {}, over the configured maximum of {}; {}",
             warning.unit.as_str(),
             warning.max,
+            remedies::oversized_lead(&coordinate),
         ),
         sites: Vec::new(),
-    authority: Vec::new(),});
+        authority: Vec::new(),
+    });
 }

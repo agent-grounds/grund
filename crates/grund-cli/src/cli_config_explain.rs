@@ -266,8 +266,9 @@ fn explain_key_target(table: &str, key: &str) -> String {
     }
 }
 
-/// §FS-config-explain.4: what a code means, its severity, what turns it on,
-/// and its ramp, read from its row for `version`.
+/// §FS-config-explain.4: what a code means, its severity, what turns it on, its
+/// ramp, and what clears its finding and what to know first, read from its row
+/// for `version`.
 fn print_explain_code(version: u32, code: &ExplainCode) {
     println!("{}", code.code);
     println!("{}", code.meaning);
@@ -294,6 +295,19 @@ fn print_explain_code(version: u32, code: &ExplainCode) {
     }
     if let Some(ramp) = &code.ramp {
         println!("Ramp: {ramp}");
+    }
+    // §FS-config-explain.4: the cell as written, slots unfilled and backticks kept.
+    match &code.fix {
+        CodeFix::Template { text } => println!("Fix: {text}"),
+        CodeFix::Cases { cases } => {
+            for case in cases {
+                println!("Fix, {}: {}", case.label, case.text);
+            }
+        }
+        CodeFix::None { text } | CodeFix::Absent { text } => println!("Fix: none — {text}"),
+    }
+    if let Some(note) = &code.note {
+        println!("Note: {note}");
     }
 }
 
