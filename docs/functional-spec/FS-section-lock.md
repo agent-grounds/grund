@@ -76,7 +76,7 @@ its addresses.
 
 ### write.report: What `fmt` reports
 
-The dry run, `fmt --check`, lists one row per entry `--write` would add, refresh or drop, in the [§FS-fmt.3.5](FS-fmt.md#35-the-dry-run-report) shape, ordered by path, then line, then the row's text:
+The dry run, `fmt --check`, lists one row per entry `--write` would add, refresh or drop, in the [§FS-fmt.3.5](FS-fmt.md#35-the-dry-run-report) shape, after every source row, ordered by path, then line, then the row's text:
 
 ```text
 .grund/sections/FS-login.lock:1: section lock: add FS-login.format.1
@@ -84,7 +84,25 @@ The dry run, `fmt --check`, lists one row per entry `--write` would add, refresh
 .grund/sections/FS-login.lock:3: section lock: drop FS-login.parse.2
 ```
 
-An add is reported at the line the entry will occupy after the write, a refresh or drop at the line it occupies now. A pending row makes `fmt --check` exit `1` as any pending rewrite does ([§FS-fmt.3](FS-fmt.md#3-outputs)). `--write` lists each lock file it changed in its report like any other file ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)), its count being the number of rows the dry run lists for it, so a move that drops one entry and adds another is `(2)`. Like the cross-reference pass, the lock pass needs the whole declaration set, so an unreadable path refuses it ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)).
+An add is reported at the line the entry will occupy after the write, a refresh or drop at the line it occupies now. A pending row makes `fmt --check` exit `1` as any pending rewrite does ([§FS-fmt.3](FS-fmt.md#3-outputs)). `--write` lists each lock file it changed in its report like any other file ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)), its count being the number of rows the dry run lists for it, so a move that drops one entry and adds another is `(2)`, and the lock's rows are its `section-lock entries` among the summary's totals.
+
+A write can create a lock file, where the file does not exist and the write leaves entries in it, and it can delete one, where the file exists and the write leaves no entry in it ([§FS-section-lock.file.shard](FS-section-lock.md#fileshard-one-file-per-cited-declaration)). Both are said. The lock file's first dry-run row ends `; creates the file` or `; deletes the file`, appended once the rows are in the order above and without moving any of them, and its `--write` line ends ` created` or ` deleted` after the count. A rename that moves a declaration's entries to a lock file of the new name reads:
+
+```text
+$ grund fmt
+docs/notes.md:1: markdown link
+.grund/sections/FS-login.lock:1: section lock: drop FS-login.code.1; deletes the file
+.grund/sections/FS-sign-in.lock:1: section lock: add FS-sign-in.code.1; creates the file
+$ grund fmt --write
+rewrote 3 lines: 1 link written, 2 section-lock entries
+  .grund/sections/FS-login.lock (1) deleted
+  .grund/sections/FS-sign-in.lock (1) created
+  docs/notes.md (1)
+```
+
+A lock file that exists before the write and after it — refreshed, rebuilt ([§FS-section-lock.write.rebuild](FS-section-lock.md#writerebuild-a-lock-grund-cannot-read-is-rebuilt)), or given one entry and relieved of another — carries neither suffix. The deleted file and the created one are not paired as a move: that each happened is certain, and which deletion goes with which creation is a guess the report does not make.
+
+Like the cross-reference pass, the lock pass needs the whole declaration set, so an unreadable path refuses it ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)).
 
 ### write.rebuild: A lock grund cannot read is rebuilt
 
