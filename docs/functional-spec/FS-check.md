@@ -1359,7 +1359,7 @@ The usual causes are a tree nobody has declared in yet and a docs tree whose hea
 
 #### 4.5.2 The message
 
-Name the file count, global declaration/citation shapes and configured kinds. Labels follow [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects): `[id] format` under v1, `[schema] id_format` under v2. Kind overrides may differ. With no kinds ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)), say: ``nothing recognized — grund read 3 files, and this project declares no kinds, so no heading in them is a declaration and no token a citation. Declare its first kind in grund.toml to start.``
+Name the file count, global declaration/citation shapes and configured kinds. Labels follow [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects): `[id] format` under v1, `[schema] id_format` under v2. Kind overrides may differ. With no kinds ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)), say: ``nothing recognized — grund read 3 files, and this project declares no kinds, so no heading in them is a declaration and no token a citation. Declare its first kind in grund.toml to start.`` Follow that instruction with the shell-ready command that explains a kind's keys in the project's configuration version: `grund config explain '[schema.kinds.<NAME>]'` under v2, `grund config explain '[[kinds]]'` under v1. The named command answers even when no kind is declared and teaches the keys for its declaration places ([§FS-config-explain.1.2](FS-config-explain.md#12-rungs)). This adds help to the same `nothing-recognized` warning; its conditions, severity, structured fields and exit remain unchanged.
 
 Otherwise the v1 text is:
 
