@@ -32,10 +32,10 @@ The quotes are the shell's: a target holding a space or a bracket is one argumen
 ### 1.2 Rungs
 
 - **No target** prints the index: one line per table the version admits, with what the table is for, a line for the top-level keys, and the number of check codes.
-- **A table** prints what the table is for and one line per key it admits, each with its values and its meaning ([§FS-config-explain.3](FS-config-explain.md#3-a-keys-answer)). A table that holds only tables names the tables under it.
+- **A table** prints what the table is for and one line per key it admits, each with its values and its meaning ([§FS-config-explain.3](FS-config-explain.md#3-a-keys-answer)). A table that holds only tables names the tables under it. In version 2, the answer for `[schema.kinds]` also prints every key row of `[schema.kinds.<NAME>]` inline, visibly labelled as that child's keys, with the same values, meanings and order as the direct child answer. Both `schema.kinds` and `'[schema.kinds]'` give this answer even with no kind declared. These remain the child's admitted keys, not settings admitted on the parent. Other table answers keep their own rung; this does not recursively expand descendant tables.
 - **A key, a member or a code** prints that one answer ([§FS-config-explain.3](FS-config-explain.md#3-a-keys-answer), [§FS-config-explain.4](FS-config-explain.md#4-a-codes-answer)).
 - **`--codes`** prints every code the version can report, one line each with its meaning, in catalog order.
-- **`--all`** prints every table with its keys and then every code, as their own rungs print them.
+- **`--all`** prints every table with its keys and then every code, as their own rungs print them, but does not repeat the per-kind key rows under `[schema.kinds]`: they appear once under their owning `[schema.kinds.<NAME>]` table. The index still gives only its one-line table entries, without expanded key rows.
 
 Every rung but `--all` ends in one `Next:` line that names the call for the rung below it, where there is one. Every list an answer prints is in a fixed order, so the same binary and the same file give the same bytes ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)).
 
