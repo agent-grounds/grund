@@ -109,12 +109,13 @@ fn accounting_controls(repo: &Repo) -> String {
     );
     assert!(
         check
-            .contains("docs/architecture/AR-auth.md:1: warning: declared but never cited: AR-auth; cite it, or remove the declaration if nothing needs it")
+            .contains("docs/architecture/AR-auth.md:1: warning: declared but never cited: AR-auth")
     );
     assert!(
         check
             .lines()
-            .any(|row| row == "docs/note.md:1: warning: declared but never cited: NOTE-alone; cite it, or remove the declaration if nothing needs it")
+            .any(|row| row
+                == "docs/note.md:1: warning: declared but never cited: NOTE-alone; cite it")
     );
     assert!(!check.contains("declared but never cited: AR-cache"));
     check
@@ -126,7 +127,7 @@ fn accounting_controls(repo: &Repo) -> String {
 fn index_only_warning_locates_the_discounted_site() {
     let repo = triage_repo("warning");
     let check = accounting_controls(&repo);
-    let prefix = "docs/architecture/AR-auth.md:1: warning: declared but never cited: AR-auth; cite it, or remove the declaration if nothing needs it";
+    let prefix = "docs/architecture/AR-auth.md:1: warning: declared but never cited: AR-auth";
     let suffix = annotated_row(&check, prefix);
     assert!(
         suffix.contains(&format!("{INDEX}:5")),
@@ -200,7 +201,7 @@ fn warning_accounts_for_multiple_index_sites() {
     repo.run(&["fmt", "--write"]);
     let check = accounting_controls(&repo);
     assert_eq!(check, repo.run(&["check"]));
-    let prefix = "docs/architecture/AR-auth.md:1: warning: declared but never cited: AR-auth; cite it, or remove the declaration if nothing needs it";
+    let prefix = "docs/architecture/AR-auth.md:1: warning: declared but never cited: AR-auth";
     let suffix = annotated_row(&check, prefix);
     let first = suffix
         .find(&format!("{INDEX}:5"))
@@ -231,7 +232,7 @@ fn warning_uses_the_invocation_report_base() {
     ]);
     let suffix = annotated_row(
         &check,
-        "AR-auth.md:1: warning: declared but never cited: AR-auth; cite it, or remove the declaration if nothing needs it",
+        "AR-auth.md:1: warning: declared but never cited: AR-auth",
     );
     assert!(
         suffix.contains("README.md:5") && !suffix.contains("docs/architecture/README.md"),
@@ -286,7 +287,7 @@ fn external_enrollment_summary_distinguishes_sites_on_the_same_line() {
         "# Architecture\n\n- [\u{a7}AR-bus](../../src/bus.rs)\n",
     );
     let check = repo.run(&["check"]);
-    assert!(check.starts_with("src/bus.rs:1: warning: declared but never cited: AR-bus; cite it, or remove the declaration if nothing needs it"));
+    assert!(check.starts_with("src/bus.rs:1: warning: declared but never cited: AR-bus"));
     // An ordinary unwrapped mention does not enroll an external declaration.
     // Keep the sites on one line so a line-only annotation cannot claim both.
     repo.write(
@@ -354,9 +355,7 @@ fn json_records_and_totals_keep_index_citations_unchanged() {
             .split_once("warning: ")
             .unwrap()
             .1;
-        assert!(message.starts_with(&format!(
-            "declared but never cited: {id}; cite it, or remove the declaration if nothing needs it"
-        )));
+        assert!(message.starts_with(&format!("declared but never cited: {id}")));
         assert_eq!(
             record,
             &json!({"severity": "warning", "path": path, "line": 1,

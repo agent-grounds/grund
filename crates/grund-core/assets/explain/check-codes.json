@@ -3151,7 +3151,7 @@
    },
    "fix": {
     "kind": "template",
-    "text": "cite it, or remove the declaration if nothing needs it"
+    "text": "cite it"
    },
    "note": null
   },
@@ -3165,7 +3165,7 @@
    },
    "fix": {
     "kind": "template",
-    "text": "cite it, or remove the declaration if nothing needs it"
+    "text": "cite it"
    },
    "note": null
   }

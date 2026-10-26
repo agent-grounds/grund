@@ -194,7 +194,7 @@ fn a_collision_inside_one_doc_comment_is_reported() {
         vec![
             "src/core.rs:3: duplicate section AR-001-core.1 (also declared at src/core.rs:7); renumber or rename all but one of the headings",
             "src/router.py:4: duplicate section AR-002-router.1 \
-                 (also declared at src/router.py:8)",
+                 (also declared at src/router.py:8); renumber or rename all but one of the headings",
         ]
     );
 }

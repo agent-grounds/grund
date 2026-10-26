@@ -4,7 +4,7 @@
   "inputFiles": {
     "expected.exit": {"bytes":[49,10]},
     "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
-    "expected.stdout": {"bytes":[100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,110,111,116,101,46,109,100,58,51,58,32,101,114,114,111,114,58,32,117,110,107,110,111,119,110,32,112,114,111,106,101,99,116,32,97,108,105,97,115,32,97,112,105,10,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,110,111,116,101,46,109,100,58,49,58,32,119,97,114,110,105,110,103,58,32,100,101,99,108,97,114,101,100,32,98,117,116,32,110,101,118,101,114,32,99,105,116,101,100,58,32,70,83,45,110,111,116,101,32,40,105,116,115,32,105,110,100,101,120,32,101,110,116,114,121,32,97,116,32,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,82,69,65,68,77,69,46,109,100,58,53,32,100,111,101,115,32,110,111,116,32,99,111,117,110,116,32,97,115,32,97,32,117,115,101,41,10]},
+    "expected.stdout": {"bytes":[100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,110,111,116,101,46,109,100,58,51,58,32,101,114,114,111,114,58,32,117,110,107,110,111,119,110,32,112,114,111,106,101,99,116,32,97,108,105,97,115,32,97,112,105,10,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,110,111,116,101,46,109,100,58,49,58,32,119,97,114,110,105,110,103,58,32,100,101,99,108,97,114,101,100,32,98,117,116,32,110,101,118,101,114,32,99,105,116,101,100,58,32,70,83,45,110,111,116,101,32,40,105,116,115,32,105,110,100,101,120,32,101,110,116,114,121,32,97,116,32,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,82,69,65,68,77,69,46,109,100,58,53,32,100,111,101,115,32,110,111,116,32,99,111,117,110,116,32,97,115,32,97,32,117,115,101,41,59,32,99,105,116,101,32,105,116,10]},
     "repo": {"directory":true},
     "repo/docs": {"directory":true},
     "repo/docs/functional-spec": {"directory":true},
@@ -28,7 +28,7 @@
     "findings": [
       {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
       {"severity":"error","code":"unknown-project","path":"docs/functional-spec/FS-note.md","line":3,"message":"unknown project alias api","sites":[],"token":"§api/FS-other"},
-      {"severity":"warning","code":"unused","path":"docs/functional-spec/FS-note.md","line":1,"message":"declared but never cited: FS-note (its index entry at docs/functional-spec/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it","sites":[]}
+      {"severity":"warning","code":"unused","path":"docs/functional-spec/FS-note.md","line":1,"message":"declared but never cited: FS-note (its index entry at docs/functional-spec/README.md:5 does not count as a use); cite it","sites":[]}
     ],
     "refusals": {
       "api/FS-other": {"code":"unknown-project","message":"unknown project alias `api`\nnote: workspace aliases are defined in the root grund.toml under [workspace]","beforeScan":true,"cli":{"exit":2,"stderr":"error: unknown project alias `api`\nnote: workspace aliases are defined in the root grund.toml under [workspace]\n"}}

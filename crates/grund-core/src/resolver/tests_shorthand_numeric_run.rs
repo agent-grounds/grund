@@ -324,8 +324,8 @@ fn a_numeric_run_changes_only_the_message_that_names_the_rewrite() {
             .map(|finding| finding.message.as_str())
             .collect::<Vec<_>>(),
         vec![
-            "declared but never cited: FS-007-a; cite it, or remove the declaration if nothing needs it",
-            "declared but never cited: FS-007-b; cite it, or remove the declaration if nothing needs it",
+            "declared but never cited: FS-007-a; cite it",
+            "declared but never cited: FS-007-b; cite it",
         ]
     );
 }

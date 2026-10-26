@@ -462,13 +462,8 @@ fn run_unused_ids(root: &Path) -> Vec<String> {
         .map(|diagnostic| {
             diagnostic
                 .message
-                .strip_prefix("declared but never cited: ; cite it, or remove the declaration if nothing needs it")
-                .map(|tail| {
-                    tail.split(" (its index entry at ")
-                        .next()
-                        .unwrap()
-                        .to_string()
-                })
+                .strip_prefix("declared but never cited: ")
+                .map(|tail| tail.split([' ', ';']).next().unwrap().to_string())
                 .unwrap_or_default()
         })
         .collect()

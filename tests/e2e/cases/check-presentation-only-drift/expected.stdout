@@ -3,5 +3,5 @@ CLAUDE.md:3: error: repo maintenance: stale grund init block: the chapter rules 
 docs/functional-spec/FS-signin.md:3: error: unknown reference GOAL-missing
 docs/functional-spec/FS-signout.md:1: error: FS-signout has 0 Terms chapters; RULE-glossary-chapter requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: none; add, remove or retitle chapters until the count fits
 src/parse.rs:1: error: FS-token-parse has 0 Terms chapters; RULE-glossary-chapter requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: none; add, remove or retitle chapters until the count fits
-docs/functional-spec/FS-signout.md:1: warning: declared but never cited: FS-signout; cite it, or remove the declaration if nothing needs it
-docs/rules/RULE-glossary-chapter.md:1: warning: declared but never cited: RULE-glossary-chapter; cite it, or remove the declaration if nothing needs it
+docs/functional-spec/FS-signout.md:1: warning: declared but never cited: FS-signout; cite it
+docs/rules/RULE-glossary-chapter.md:1: warning: declared but never cited: RULE-glossary-chapter; cite it

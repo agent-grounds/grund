@@ -1,2 +1,2 @@
 apps/api/src/orphan.rs:1: error: ungrounded source file: no § citation to a declared ID; cite a declared ID within it
-apps/api/docs/functional-spec/FS-session.md:1: warning: declared but never cited: FS-session (its index entry at apps/api/docs/functional-spec/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it
+apps/api/docs/functional-spec/FS-session.md:1: warning: declared but never cited: FS-session (its index entry at apps/api/docs/functional-spec/README.md:5 does not count as a use); cite it

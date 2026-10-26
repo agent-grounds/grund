@@ -1,2 +1,2 @@
-docs/fs/FS-login.md:1: warning: declared but never cited: FS-login; cite it, or remove the declaration if nothing needs it
-docs/rules/RULE-e2e.md:1: warning: declared but never cited: RULE-e2e; cite it, or remove the declaration if nothing needs it
+docs/fs/FS-login.md:1: warning: declared but never cited: FS-login; cite it
+docs/rules/RULE-e2e.md:1: warning: declared but never cited: RULE-e2e; cite it

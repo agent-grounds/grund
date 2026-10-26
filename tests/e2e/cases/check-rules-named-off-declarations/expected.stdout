@@ -3,8 +3,8 @@ docs/functional-spec/FS-login.md:7: error: unmarked heading inside FS-login; num
 docs/functional-spec/FS-login.md:9: error: unmarked heading inside FS-login; number it (### 1.2. requirements.2: A lockout follows five failures) as FS-login.1.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
 docs/rules/RULE-rebuilt.md:1: error: RULE-rebuilt is not a valid rule: named chapter subjects require [id] named_sections = true; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.
 docs/rules/RULE-unrecovered.md:1: error: RULE-unrecovered is not a valid rule: named chapter subjects require [id] named_sections = true
-docs/functional-spec/FS-login.md:1: warning: declared but never cited: FS-login (its index entry at docs/functional-spec/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it
-docs/goals/GOAL-access.md:1: warning: declared but never cited: GOAL-access (its index entry at docs/goals/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it
-docs/requirements/REQ-password.md:1: warning: declared but never cited: REQ-password (its index entry at docs/requirements/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it
-docs/rules/RULE-rebuilt.md:1: warning: declared but never cited: RULE-rebuilt; cite it, or remove the declaration if nothing needs it
-docs/rules/RULE-unrecovered.md:1: warning: declared but never cited: RULE-unrecovered; cite it, or remove the declaration if nothing needs it
+docs/functional-spec/FS-login.md:1: warning: declared but never cited: FS-login (its index entry at docs/functional-spec/README.md:5 does not count as a use); cite it
+docs/goals/GOAL-access.md:1: warning: declared but never cited: GOAL-access (its index entry at docs/goals/README.md:5 does not count as a use); cite it
+docs/requirements/REQ-password.md:1: warning: declared but never cited: REQ-password (its index entry at docs/requirements/README.md:5 does not count as a use); cite it
+docs/rules/RULE-rebuilt.md:1: warning: declared but never cited: RULE-rebuilt; cite it
+docs/rules/RULE-unrecovered.md:1: warning: declared but never cited: RULE-unrecovered; cite it

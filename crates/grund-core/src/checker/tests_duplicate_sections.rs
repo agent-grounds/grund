@@ -88,7 +88,7 @@ fn check_reports_the_collision_anchored_at_the_first_heading() {
         located_diagnostics(&config, errors.clone()),
         vec![
             "docs/functional-spec/FS-001-alpha.md:5: duplicate section FS-001-alpha.1 \
-                 (also declared at docs/functional-spec/FS-001-alpha.md:9)"
+                 (also declared at docs/functional-spec/FS-001-alpha.md:9); renumber or rename all but one of the headings"
         ]
     );
     assert_eq!(
@@ -138,7 +138,7 @@ fn a_third_heading_joins_the_same_finding() {
         vec![
             "docs/functional-spec/FS-001-alpha.md:5: duplicate section FS-001-alpha.1 \
                  (also declared at docs/functional-spec/FS-001-alpha.md:9, \
-                 docs/functional-spec/FS-001-alpha.md:13)"
+                 docs/functional-spec/FS-001-alpha.md:13); renumber or rename all but one of the headings"
         ]
     );
 }
@@ -196,7 +196,7 @@ fn loose_heading_levels_do_not_excuse_the_collision() {
         ),
         vec![
             "docs/functional-spec/FS-001-alpha.md:3: duplicate section FS-001-alpha.1 \
-                 (also declared at docs/functional-spec/FS-001-alpha.md:7)"
+                 (also declared at docs/functional-spec/FS-001-alpha.md:7); renumber or rename all but one of the headings"
         ]
     );
 }
@@ -347,7 +347,7 @@ fn a_workspace_names_the_other_heading_from_the_workspace_root() {
         vec![
             "apps/api/docs/functional-spec/FS-001-alpha.md:3: duplicate section \
                  FS-001-alpha.1 (also declared at \
-                 apps/api/docs/functional-spec/FS-001-alpha.md:7)"
+                 apps/api/docs/functional-spec/FS-001-alpha.md:7); renumber or rename all but one of the headings"
         ]
     );
 

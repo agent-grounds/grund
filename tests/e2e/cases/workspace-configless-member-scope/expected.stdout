@@ -1,5 +1,5 @@
 docs/functional-spec/FS-001-session.md:1: error: FS-001-session is not listed in docs/functional-spec/README.md (the index file does not exist): an entry is a `§`-marked Markdown link to the declaration; write `[§FS-001-session](FS-001-session.md#fs-001-session-api-session)` in docs/functional-spec/README.md — became an error in grund 0.13.0
 docs/functional-spec/FS-001-session.md:3: error: unknown project alias root; root names the enclosing workspace's root project, and this project is a member of that workspace — run `grund check` from the workspace root at `tests/e2e/cases/workspace-configless-member-scope/repo` to validate cross-project citations
 docs/notes.md:3: error: GOAL-001-sessions must be declared in docs/goals.md (single-file kind)
-docs/functional-spec/FS-001-session.md:1: warning: declared but never cited: FS-001-session; cite it, or remove the declaration if nothing needs it
-docs/notes.md:3: warning: declared but never cited: GOAL-001-sessions; cite it, or remove the declaration if nothing needs it
+docs/functional-spec/FS-001-session.md:1: warning: declared but never cited: FS-001-session; cite it
+docs/notes.md:3: warning: declared but never cited: GOAL-001-sessions; cite it

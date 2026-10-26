@@ -374,7 +374,7 @@ fn the_rule_side_keeps_its_reading_of_a_sentence_with_a_modality_named_chapter()
         &output,
         1,
         "docs/functional-spec/FS-login.md:11: error: FS-login.should must cite FS (--rule); add such a citation within it\n\
-         docs/functional-spec/FS-login.md:1: warning: declared but never cited: FS-login (its index entry at docs/functional-spec/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it\n",
+         docs/functional-spec/FS-login.md:1: warning: declared but never cited: FS-login (its index entry at docs/functional-spec/README.md:5 does not count as a use); cite it\n",
         "",
     );
 }

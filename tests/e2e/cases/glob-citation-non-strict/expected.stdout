@@ -1,2 +1,2 @@
 docs/cites.md:4: error: glob citation §FS-log*in.requirements: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-log*in.requirements; this became an error in grund 0.19.0
-docs/FS-log.md:1: warning: declared but never cited: FS-log; cite it, or remove the declaration if nothing needs it
+docs/FS-log.md:1: warning: declared but never cited: FS-log; cite it
