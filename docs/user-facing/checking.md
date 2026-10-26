@@ -114,6 +114,22 @@ config's version ([config explain](explain.md)).
 
 `grund` doesn't invent citations — that's the contributor's call. What `grund` does is make sure the ones you wrote *resolve*. With `require_grounding = true` — in `[reference]` for every place at once, or on one `[[kinds]]` row for that place alone, at a `grounding_level` from the whole file down to every `##` of it ([§FS-config.3.4.8](../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) — it also fails what carries no resolving citation; the stronger file-level "implementation changed with its spec and test, or bounded waivers" recipe is tracked separately in [§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits).
 
+## Fixing every wide line in a note
+
+A column finding ends with every line over its selected limit, in source order
+([§FS-inline-citation-style.4.1.1.1](../functional-spec/FS-inline-citation-style.md#4111-every-over-limit-line)). For example:
+
+```text
+src/ingest/parse.py:5: error: inline note is 105 columns, over the 100-column maximum: lines 5-7 cite §AR-ingest.1.1; over-limit lines: line 5: 103 columns, line 6: 105 columns
+```
+
+Wrap both line 5 and line 6 before checking again. Shortening only line 6 leaves
+`over-limit lines: line 5: 103 columns`; shortening both to at most 100 characters
+clears this column finding. Line 7 belongs to the note's span but needs no width
+edit. Width includes indentation and comment delimiters and counts Unicode
+characters, so an accented letter counts once. JSON messages and v2 softer
+column-budget findings carry the same list, measured against their own limit.
+
 ## Finding a stale workspace entry
 
 A stale workspace section shows the first differing nonblank body line as
