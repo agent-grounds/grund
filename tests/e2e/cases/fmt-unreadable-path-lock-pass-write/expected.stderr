@@ -1,1 +1,1 @@
-error: nothing was rewritten: docs/broken.md: broken symlink: the target does not exist
+error: nothing was rewritten: docs/broken.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan

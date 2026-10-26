@@ -212,11 +212,11 @@ impl<'c, 'a> ShowSource<'c, 'a> {
             let mut failure = crate::model::OperationDiagnostic::new(
                 "filesystem",
                 "io",
-                format!("{path}: {message}"),
+                format!("{path}: {}", crate::scanner::scan_error_message(message)),
             );
             failure.path = Some(path);
             failure.details = serde_json::json!({"scan_errors": project.scan_errors.iter()
-                .map(|(path,message)| serde_json::json!({"path": display_path(context.render_config(),path),"message":message}))
+                .map(|(path,message)| serde_json::json!({"path": display_path(context.render_config(),path),"message":crate::scanner::scan_error_message(message)}))
                 .collect::<Vec<_>>()});
             return Err(failure.into());
         }

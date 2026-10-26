@@ -83,8 +83,7 @@ fn error_lines(output: &Output) -> BTreeSet<String> {
 #[test]
 fn every_query_command_and_strict_fmt_name_a_member_scan_error_the_same_way() {
     let root = build_fixture("query_equivalence");
-    const EXPECTED_ERROR: &str =
-        "error: packages/sub/docs/FS-gone.md: broken symlink: the target does not exist";
+    const EXPECTED_ERROR: &str = "error: packages/sub/docs/FS-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan";
 
     let commands: &[&[&str]] = &[
         &["check", "."],
@@ -120,7 +119,7 @@ fn every_query_command_and_strict_fmt_name_a_member_scan_error_the_same_way() {
     assert_eq!(String::from_utf8_lossy(&fmt.stdout), "");
     assert_eq!(
         String::from_utf8_lossy(&fmt.stderr),
-        "error: nothing was rewritten: packages/sub/docs/FS-gone.md: broken symlink: the target does not exist\n"
+        "error: nothing was rewritten: packages/sub/docs/FS-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan\n"
     );
 }
 
@@ -143,8 +142,8 @@ fn automatic_and_explicit_cross_refs_report_workspace_errors_in_scan_order() {
     assert_eq!(
         String::from_utf8_lossy(&automatic.stderr),
         concat!(
-            "error: nothing was rewritten: docs/FS-gone.md: broken symlink: the target does not exist\n",
-            "error: nothing was rewritten: packages/sub/docs/FS-gone.md: broken symlink: the target does not exist\n",
+            "error: nothing was rewritten: docs/FS-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan\n",
+            "error: nothing was rewritten: packages/sub/docs/FS-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan\n",
         )
     );
 }
@@ -163,7 +162,7 @@ fn strict_workspace_write_does_not_mutate_root_before_member_abort() {
     assert_eq!(String::from_utf8_lossy(&output.stdout), "");
     assert_eq!(
         String::from_utf8_lossy(&output.stderr),
-        "error: nothing was rewritten: packages/sub/docs/FS-gone.md: broken symlink: the target does not exist\n"
+        "error: nothing was rewritten: packages/sub/docs/FS-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan\n"
     );
     assert_eq!(
         fs::read(path).expect("read root document after fmt"),

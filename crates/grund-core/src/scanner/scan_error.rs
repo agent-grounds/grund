@@ -12,6 +12,7 @@
 use std::path::Path;
 
 use crate::config::Frame;
+use crate::model::remedies;
 
 /// One file the walk could not read, as a caller of the embedding API sees it:
 /// the path rendered against the run's report base (§FS-config.3.6) and the
@@ -29,6 +30,13 @@ pub struct ApiScanError {
 pub(crate) fn api_scan_error(frame: Frame<'_>, path: &Path, message: &str) -> ApiScanError {
     ApiScanError {
         path: frame.display_path(path),
-        message: message.to_string(),
+        message: scan_error_message(message),
     }
+}
+
+/// The text after `error: <path>: ` for a path the walk could not read: the reason,
+/// then `io`'s *Fix*, built here once so every command that prints the line, and
+/// `check`'s own report, print the same bytes (§FS-check.2.4, §FS-workspace.8.7.3).
+pub(crate) fn scan_error_message(reason: &str) -> String {
+    format!("{reason}; {}", remedies::io())
 }

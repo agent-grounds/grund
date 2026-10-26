@@ -1,1 +1,1 @@
-error: src/gone.rs: broken symlink: the target does not exist
+error: src/gone.rs: broken symlink: the target does not exist; make the path readable, or keep it out of the scan

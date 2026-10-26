@@ -1,2 +1,2 @@
-error: docs/functional-spec/FS-002-gone.md: broken symlink: the target does not exist
+error: docs/functional-spec/FS-002-gone.md: broken symlink: the target does not exist; make the path readable, or keep it out of the scan
 warning: grund.toml is version 1; migrate it with grund config migrate --to 2

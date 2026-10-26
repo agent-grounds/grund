@@ -26,7 +26,7 @@ use crate::model::{CheckReport, Code, Diagnostic, Finding, Switch};
 use crate::resolver::{
     WorkspaceCheckTarget, WorkspaceProject, load_workspace_projects, settled_run_warnings,
 };
-use crate::scanner::scan_tree;
+use crate::scanner::{scan_error_message, scan_tree};
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, absent_optional_members,
     arm_optional_members, open, unlisted_workspace_block_errors,
@@ -541,14 +541,14 @@ fn append_scan_errors(
     for (file, message) in scan_errors {
         had_scan_errors = true;
         // A file that could not be read mid-walk is reported as a CLI-shaped
-        // `error: <path>: <reason>` finding (§FS-check.2.4): the walk continued,
+        // `error: <path>: <reason>; <fix>` finding (§FS-check.2.4): the walk continued,
         // the findings below are real, but the view of the tree was incomplete.
         report.errors.push(Diagnostic {
             code: Code::IO,
             path: Some(file),
             line: None,
             column: None,
-            message,
+            message: scan_error_message(&message),
             sites: Vec::new(),
             authority: Vec::new(),
         });
