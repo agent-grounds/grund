@@ -54,10 +54,11 @@ class CheckCodeCatalogTests(unittest.TestCase):
         self.assertEqual(render_check_codes.sides("—"), ("—", "—"))
 
 
-# Runs two cells hold that are a setting's spelling inside two different remedies, not
-# one remedy restated: a reference names a whole template or case, and neither cell's
-# template is the other's. misplaced-declaration and unlisted-workspace-block both
-# offer the `[workspace] members` entry, each with its own other way out.
+# Runs two cells hold that the grammar cannot yet share. The exempt run is one remedy
+# clause both cells word: `add "{entry}" to [workspace] members in {enclosing}`, in
+# misplaced-declaration's `unlisted` case and in unlisted-workspace-block's Fix. Each
+# follows it with a different other way out, and a reference names a whole template or
+# case, so neither cell can take the clause from the other until that Fix is split.
 SHARED_SPELLINGS = {'" to [workspace] members in'}
 
 # A run of words: a maximal stretch of a Fix template between its slots and references,

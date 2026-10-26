@@ -16,7 +16,7 @@ use crate::model::remedies;
 
 /// One file the walk could not read, as a caller of the embedding API sees it:
 /// the path rendered against the run's report base (§FS-config.3.6) and the
-/// reason verbatim (§FS-check.2.4, §AR-bindings.2).
+/// reason followed by `; ` and `io`'s *Fix* (§FS-check.2.4, §AR-bindings.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub struct ApiScanError {
