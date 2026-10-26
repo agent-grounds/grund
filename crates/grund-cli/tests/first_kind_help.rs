@@ -147,13 +147,11 @@ fn warning_teaches_kind(version: u32, target: &str, place_keys: &[&str]) {
 }
 
 #[test]
-#[ignore = "red until #1023 adds v2 no-kinds explain command; implement removes this"]
 fn v2_no_kinds_warning_names_usable_kind_help() {
     warning_teaches_kind(2, CHILD, &["files", "folders"]);
 }
 
 #[test]
-#[ignore = "red until #1023 adds v1 no-kinds explain command; implement removes this"]
 fn v1_no_kinds_warning_names_usable_kind_help() {
     warning_teaches_kind(1, "[[kinds]]", &["file", "folder"]);
 }
@@ -215,13 +213,11 @@ fn parent_teaches_kind(target: &str) {
 }
 
 #[test]
-#[ignore = "red until #1023 inlines child keys in dotted parent help; implement removes this"]
 fn dotted_parent_lists_complete_kind_keys_inline() {
     parent_teaches_kind("schema.kinds");
 }
 
 #[test]
-#[ignore = "red until #1023 inlines child keys in bracketed parent help; implement removes this"]
 fn bracketed_parent_lists_complete_kind_keys_inline() {
     parent_teaches_kind("[schema.kinds]");
 }

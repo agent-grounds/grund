@@ -232,10 +232,16 @@ fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnost
     let kinds = kind_prefixes(&config.kinds);
     // §FS-check.4.5.2: with no kind, no token is a citation; say so, not `{}`.
     let message = if kinds.is_empty() {
+        let target = if config.frame().version == 2 {
+            "[schema.kinds.<NAME>]"
+        } else {
+            "[[kinds]]"
+        };
         format!(
             "nothing recognized — grund read {scanned_files} {files}, and this project declares \
              no kinds, so no heading in them is a declaration and no token a citation. Declare \
-             its first kind in grund.toml to start."
+             its first kind in grund.toml to start. See `grund config explain '{target}'` \
+             for every key a kind takes."
         )
     } else {
         format!(

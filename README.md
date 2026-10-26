@@ -146,6 +146,9 @@ confirms each one with you, then writes `grund.toml`, runs `grund init` and vali
 The command prints the core of the guide; the agent fetches each further section
 it needs with `--section`.
 To set up by hand instead, see [setup](docs/user-facing/setup.md).
+The runnable [existing-structure adoption example](examples/init-template-none/)
+starts with `grund init --template=none`, asks for the first kind's offline help,
+then declares the repository's own kinds.
 
 Then:
 

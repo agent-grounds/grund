@@ -1,0 +1,19 @@
+grund.toml is read as version 2.
+
+[schema.kinds]
+The kinds, one `[schema.kinds.<NAME>]` table each.
+
+Tables under it: [schema.kinds.<NAME>]
+
+Keys of [schema.kinds.<NAME>]:
+  files (array of strings): Files from the config root, in written order. A listed file belongs to this row even inside another row's folder. On a citable row with no folders, every declaration is a heading in one of these documents. A place is normalized (`./a/` is `a`), must stay inside the config root, and belongs to one row.
+  folders (array of strings): Folders from the config root, in written order. Each declaration is the H1 of its own file under one of them; a file in nested folders belongs to the deepest. A place is normalized, must stay inside the config root and outside every workspace member, belongs to one row, and a folder may not link out of the project root.
+  citable (boolean): `false` makes this a place: it cites, but declares no IDs. A non-citable row must list a place unless it is `code`, which is non-citable by name; `citable = true` on `code` is refused.
+  scan (boolean): `false` lists the kind in the Project map without walking any of its places; a scanned place nested under it is still walked. Refused on `code`: narrow its places or use `[schema.sources] exclude`.
+  index (string or false): The index file each folder keeps, which must list every declaration that folder owns; `false` opts out.
+  id_format (string): This kind's ID template, overriding `[schema] id_format`.
+  fetch (string): The executable `grund fetch` runs to save a missing external snapshot.
+  form ("prose" | "value" | "rule"): What a declaration is: ordinary `prose`, a first-class `value`, or an executable `rule`.
+  closed ("must" | "warn" | "should" | "may"): How strongly a chapter that is neither a declared field nor a numbered section is reported.
+
+Next: grund config explain '[schema.kinds.<NAME>]' examples/init-template-none/1b-kind-help/repo
