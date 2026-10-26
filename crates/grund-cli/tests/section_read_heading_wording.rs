@@ -21,7 +21,6 @@ first read for a bare `§<ID>` citation.";
 
 /// The `--format` row reads exactly as §FS-cli.2.3.4 fixes it and no longer calls text heading-less.
 #[test]
-#[ignore = "red until #1026 rewrites the show page's --format row; implement removes this"]
 fn show_help_format_row_names_the_section_heading() {
     let output = run_grund(&["show", "--help"], manifest_dir());
     assert!(output.status.success(), "show --help failed");
@@ -38,7 +37,6 @@ fn show_help_format_row_names_the_section_heading() {
 
 /// The block's first rung reads exactly as §FS-init.2.3.4.3 fixes it, once.
 #[test]
-#[ignore = "red until #1026 rewrites the block's `grund <ID>` rung; implement removes this"]
 fn init_block_lead_rung_names_the_section_heading() {
     let target = workdir("init_block_lead_rung_names_the_section_heading");
     let output = run_grund(

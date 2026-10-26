@@ -19,9 +19,10 @@ fn print_show_help() {
     println!();
     println!("Other options:");
     println!("  --section S            show only that section path  e.g. grund FS-login --section 3.1");
-    println!(
-        "  --format text|md|json  text (default) is the body; md keeps the heading; json wraps it"
-    );
+    // §FS-cli.2.3.4: a section read opens with its own heading line in text too (§FS-show.2.2).
+    println!("  --format text|md|json  text (default) is the body, opening with a selected section's");
+    println!("                         own heading line; md adds the declaration heading above it;");
+    println!("                         json wraps the text body");
     // §FS-cli.2.3.2: a default per form, as PATH narrows a generated batch but not one ID.
     println!("  --path PATH            repo or subtree to resolve the ID in (no PATH answers as `.`);");
     println!("                         narrows --batch --all and --glob, whose queries with no PATH");

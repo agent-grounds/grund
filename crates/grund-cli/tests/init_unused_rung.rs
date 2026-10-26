@@ -1,5 +1,5 @@
 //! The managed block's cheap-grounding list teaches `grund list --unused` as one bullet directly
-//! after the `grund list --kind` one (§FS-init.2.3.4.3), in every v39–v42 block
+//! after the `grund list --kind` one (§FS-init.2.3.4.3), in every v43–v46 block
 //! (§FS-init.2.3.7.1).
 
 use std::fs;
@@ -32,8 +32,8 @@ fn init_agents(target: &std::path::Path) -> String {
 fn init_block_teaches_the_unused_rung() {
     let agents = init_agents(&workdir("init_block_teaches_the_unused_rung"));
     assert!(
-        agents.contains("## Grounding with grund (block v39)"),
-        "the current base block, v39, teaches the rung"
+        agents.contains("## Grounding with grund (block v43)"),
+        "the current base block, v43, teaches the rung"
     );
     let lines: Vec<&str> = agents.lines().collect();
     let kind = lines

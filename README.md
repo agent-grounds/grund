@@ -89,7 +89,7 @@ says how the two differ). For example, grund's own
 
 > A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and climb only as far as needed:
 >
-> - `grund <ID>` — the lead (heading-less, cut at the first child section). The cheap first read for a bare `§<ID>` citation.
+> - `grund <ID>` — the lead, cut at the first child section: heading-less for a whole declaration, while `grund <ID>.<section>` opens with that section's heading line. The cheap first read for a bare `§<ID>` citation.
 > - `grund <ID> --toc` — the lead plus the nested section map. Use to choose which subsection to fetch next.
 > - `grund <ID> --full` — the entire body. Escalate to this when narrower reads aren't enough.
 

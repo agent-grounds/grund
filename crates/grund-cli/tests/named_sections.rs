@@ -424,7 +424,7 @@ fn init_writes_no_switch_and_the_disabled_gate_is_an_operational_guard() {
         "In a declaration body, Markdown or doc-comment, a heading may instead write only \
          the component it adds"
     ));
-    assert!(enabled_guidance.contains("## Grounding with grund (block v39)"));
+    assert!(enabled_guidance.contains("## Grounding with grund (block v43)"));
     assert!(!enabled_guidance.contains("`number.name` is reserved"));
 }
 

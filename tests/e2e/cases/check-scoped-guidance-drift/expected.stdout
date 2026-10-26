@@ -1,4 +1,4 @@
 AGENTS.md:3: error: repo maintenance: stale grund init block: the scoped guidance section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)
-docs/spec/AGENTS.md:1: error: repo maintenance: missing grund init block v41 — run `grund init` to install it (does not affect citation validity)
+docs/spec/AGENTS.md:1: error: repo maintenance: missing grund init block v45 — run `grund init` to install it (does not affect citation validity)
 old/AGENTS.md:1: error: repo maintenance: stale grund init block: the scoped guidance section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)
 tests/AGENTS.md:1: error: repo maintenance: stale grund init block: the citation directions section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)

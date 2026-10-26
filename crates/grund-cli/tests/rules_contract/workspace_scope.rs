@@ -63,7 +63,7 @@ fn a_member_writes_the_block_the_workspace_root_then_accepts() {
     let agents = fs::read_to_string(member.join("AGENTS.md")).expect("managed block");
     assert_eq!(
         version_marker(&agents),
-        "## Grounding with grund (block v40)",
+        "## Grounding with grund (block v44)",
         "the write is what stops being withheld, so the aged block is rewritten"
     );
     assert!(
