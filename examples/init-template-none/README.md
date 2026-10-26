@@ -8,7 +8,8 @@ nine default kinds: the existing-structure adoption model
 
 Open `1-template-none/repo/` first. It holds an architecture decision under
 `docs/adr/` and a runbook under `docs/runbooks/`, and no grund config. The
-example pins two runs, one per step ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)).
+example pins four runs: init, the no-kinds warning, kind help and the adoption
+refresh ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)).
 
 ## Step 1: `grund init --template=none`
 
@@ -34,6 +35,23 @@ The run writes two files and touches nothing under `docs/`
 On stderr it reports those two paths, then a `next:` block whose first step is
 to declare a first kind ([§FS-init.2.2.2.2](../../docs/functional-spec/FS-init.md#2222-a-project-with-no-kinds)). Stdout is empty.
 
+Before declaring that kind, ask what the current config recognizes:
+
+```bash
+grund check /tmp/adopt
+grund config explain '[schema.kinds.<NAME>]' /tmp/adopt
+grund config explain schema.kinds /tmp/adopt
+```
+
+The check exits `0` with a `nothing recognized` warning naming the quoted
+per-kind help command ([§FS-check.4.5.2](../../docs/functional-spec/FS-check.md#452-the-message)).
+Both explain calls teach the kind's nine keys, including `files` and `folders`.
+The parent answer labels the rows `Keys of [schema.kinds.<NAME>]:`, so you can
+learn them without another lookup ([§FS-config-explain.1.2](../../docs/functional-spec/FS-config-explain.md#12-rungs)).
+`1a-no-kinds-check/` and `1b-kind-help/` pin the warning and parent answer against
+the no-kinds config and the same source documents. They omit the generated
+entrypoint to isolate the warning from managed-block version checks.
+
 ## Step 2: declare the kinds, then `grund init` again
 
 Add the repository's own kinds to `/tmp/adopt/grund.toml`, then run `grund init`
@@ -52,6 +70,11 @@ title = "Architecture decisions"
 [presentation.kinds.runbook]
 title = "Operational runbooks"
 ```
+
+For ADRs whose headings use the configured ID format, keep an index at
+`docs/adr/README.md` linking each declaration. This fixture's existing numeric
+heading remains ordinary text until you give it an ID; the example preserves
+it while teaching the kind setup and entrypoint refresh.
 
 ```bash
 grund init /tmp/adopt

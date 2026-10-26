@@ -117,6 +117,18 @@ passes and says why it found nothing, `grund id` answers `known kinds: none`,
 and the managed block's Project map tells the agent how to add the first kind
 instead of listing an empty one.
 
+When sources exist but no kind is declared, the warning names the offline help
+for a kind's keys ([§FS-check.4.5.2](../functional-spec/FS-check.md#452-the-message)):
+
+```bash
+grund config explain '[schema.kinds.<NAME>]'
+```
+
+It teaches `folders`, `files` and every other kind key. You can also ask
+`grund config explain schema.kinds`: that parent answer includes the same rows,
+labelled as `[schema.kinds.<NAME>]` keys
+([§FS-config-explain.1.2](../functional-spec/FS-config-explain.md#12-rungs)).
+
 To declare the repository's kinds, add one `[schema.kinds.<KIND>]` table per
 kind, and a `[presentation.kinds.<KIND>]` title for the Project map:
 
@@ -127,6 +139,11 @@ folders = ["docs/adr"]
 [presentation.kinds.ADR]
 title = "Architecture decisions"
 ```
+
+The first two lines are enough to declare `ADR`; the presentation table gives
+it a readable title. Keep a `docs/adr/README.md` index linking each declaration,
+such as `[ADR-use-postgres](use-postgres.md)` for a document headed
+`# ADR-use-postgres: Use Postgres`.
 
 Then run `grund init` again, so the entrypoint's Project map lists `ADR`. That
 run refreshes the managed block and prints no `next:` block:

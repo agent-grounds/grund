@@ -60,6 +60,15 @@ A table keyed by names, such as `[schema.kinds.FS]`, is answered as its
 placeholder `[schema.kinds.<NAME>]`, so the answer is the same whatever kinds
 the project declares.
 
+To learn how to declare the first kind, ask `grund config explain schema.kinds`
+or `grund config explain '[schema.kinds]'`. Alongside the child table name, the
+answer prints `Keys of [schema.kinds.<NAME>]:` and all of that child's key rows,
+with their values and meanings, even when no kind is declared
+([§FS-config-explain.1.2](../functional-spec/FS-config-explain.md#12-rungs)). These
+keys belong in a table such as `[schema.kinds.ADR]`. Other parent tables name
+their children without expanding their keys; the index stays one line per
+table, and `--all` prints the kind keys once under their owning child.
+
 ## A check code
 
 A code's answer says what it means, how severe it is, and what turns it on, read

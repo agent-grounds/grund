@@ -30,12 +30,39 @@ fn command_config_explain(args: &[String]) -> ExitCode {
         }
         return ExitCode::FAILURE;
     }
+    // §FS-config-explain.1.2: only the kind-parent answer inlines child keys.
+    // Ask the same typed child answer as a direct lookup, preserving own-key semantics.
+    let kind_help = if explained.answers.iter().any(|(_, answer)| {
+        matches!(answer, ExplainAnswer::Table(table) if table.header == "[schema.kinds]")
+    }) {
+        match config_explain(
+            path.as_deref().unwrap_or(Path::new(".")),
+            &ExplainAsk::Target("[schema.kinds.<NAME>]".to_string()),
+        ) {
+            Ok(help) => Some(help),
+            Err(err) => {
+                eprintln!("error: {err:#}");
+                return ExitCode::from(2);
+            }
+        }
+    } else {
+        None
+    };
+    let print = |version, answer| {
+        let kind_table = kind_help.as_ref().and_then(|help| {
+            help.answers.iter().find_map(|(v, answer)| match answer {
+                ExplainAnswer::Table(table) if *v == version => Some(table),
+                _ => None,
+            })
+        });
+        print_explain_answer(version, answer, &next, kind_table);
+    };
     match &explained.file {
         Some(file) => {
             let (version, answer) = &explained.answers[0];
             println!("{file} is read as version {version}.");
             println!();
-            print_explain_answer(*version, answer, &next);
+            print(*version, answer);
         }
         // §FS-config-explain.2: both versions, version 2 first.
         None => {
@@ -46,7 +73,7 @@ fn command_config_explain(args: &[String]) -> ExitCode {
                 println!();
                 println!("Version {version}:");
                 println!();
-                print_explain_answer(*version, answer, &next);
+                print(*version, answer);
             }
         }
     }
@@ -118,7 +145,12 @@ fn explain_call(target: &str, path: Option<&str>) -> String {
 
 /// One version's answer, by rung (§FS-config-explain.1.2), each but `--all`'s
 /// ending in the `Next:` line that asks for the rung below it.
-fn print_explain_answer(version: u32, answer: &ExplainAnswer, next: &dyn Fn(&str) -> String) {
+fn print_explain_answer(
+    version: u32,
+    answer: &ExplainAnswer,
+    next: &dyn Fn(&str) -> String,
+    kind_table: Option<&ExplainTable>,
+) {
     let follow = match answer {
         ExplainAnswer::Index { tables, codes } => {
             for table in tables {
@@ -129,6 +161,12 @@ fn print_explain_answer(version: u32, answer: &ExplainAnswer, next: &dyn Fn(&str
         }
         ExplainAnswer::Table(table) => {
             print_explain_table(table);
+            // §FS-config-explain.1.2: label these as child keys, never parent settings.
+            if let Some(child) = kind_table {
+                println!();
+                println!("Keys of {}:", child.header);
+                print_explain_key_rows(&child.keys);
+            }
             let first = table.keys.first();
             first.map(|key| explain_key_target(&key.table, &key.key)).or_else(|| table.tables.first().cloned())
         }
@@ -197,13 +235,18 @@ fn print_explain_table(table: &ExplainTable) {
     }
     if !table.keys.is_empty() {
         println!();
-        for key in &table.keys {
-            println!("  {} ({}): {}", key.key, key.values, key.meaning);
-        }
+        print_explain_key_rows(&table.keys);
     }
     if !table.tables.is_empty() {
         println!();
         println!("Tables under it: {}", table.tables.join(", "));
+    }
+}
+
+/// §FS-config-explain.1.2: direct and inlined child rows share values, meanings and order.
+fn print_explain_key_rows(keys: &[ExplainKey]) {
+    for key in keys {
+        println!("  {} ({}): {}", key.key, key.values, key.meaning);
     }
 }
 
