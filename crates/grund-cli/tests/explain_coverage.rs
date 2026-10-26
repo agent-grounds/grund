@@ -18,8 +18,8 @@ mod explain_catalog;
 mod explain_schema;
 
 use explain_catalog::{
-    catalog, code_expectations, foreign_settings, printed, repo_file, same_table, side,
-    spelled_tables,
+    catalog, code_expectations, foreign_settings, printed, remedy_lines, repo_file, same_table,
+    side, spelled_tables,
 };
 use explain_schema::{description_words, key_schema, value_words};
 
@@ -217,6 +217,70 @@ fn every_table_key_and_code_is_answered_in_each_version() {
         }
         if project.marker.exists() {
             failures.push(format!("{}: the fetcher ran", place(&project)));
+        }
+    }
+    report(&failures);
+}
+
+/// §FS-config-explain.4, §FS-errors.5.5.1: every code the rendered catalog ships
+/// is answered, in version 1, in version 2 and with no config, outside any
+/// checkout, with what clears its finding: at least one `Fix` line that is a
+/// remedy or `none — <why>`, and exactly the lines its row's *Fix* and *Note*
+/// cells give for that version.
+#[test]
+#[ignore = "red until #1027 prints each code's Fix and Note; implement removes this"]
+fn every_code_answer_carries_its_fix_in_each_version() {
+    let shipped: Value = serde_json::from_str(&repo_file(
+        "crates/grund-core/assets/explain/check-codes.json",
+    ))
+    .unwrap();
+    let codes: Vec<String> = shipped
+        .as_array()
+        .expect("the rendered catalog is a list of rows")
+        .iter()
+        .map(|row| row["code"].as_str().unwrap().to_string())
+        .collect();
+    assert!(!codes.is_empty(), "the rendered catalog ships no code");
+    let rows = catalog();
+    let mut failures = Vec::new();
+    for version in [Some(1), Some(2), None] {
+        let project = Project::new(version);
+        for code in &codes {
+            let output = project.explain(code);
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let at = format!("{} `{code}`", place(&project));
+            if output.status.code() != Some(0) {
+                failures.push(format!("{at}: exit {:?}", output.status.code()));
+                continue;
+            }
+            let fixes: Vec<&str> = stdout
+                .lines()
+                .filter(|line| line.starts_with("Fix: ") || line.starts_with("Fix, "))
+                .collect();
+            let remedies = project.versions().len();
+            if fixes.len() < remedies
+                || fixes.iter().any(|line| {
+                    let words = line.split_once(": ").map_or("", |(_, words)| words);
+                    words.trim().is_empty() || words.trim() == "none —" || words == "none"
+                })
+            {
+                failures.push(format!("{at}: no Fix line for each version, in {fixes:?}"));
+            }
+            let Some(row) = rows.iter().find(|row| &row.code == code) else {
+                failures.push(format!("{at}: no catalog row"));
+                continue;
+            };
+            for answering in project.versions() {
+                let Some(expected) = remedy_lines(&rows, row, answering) else {
+                    failures.push(format!("{at}: the catalog row has no Fix cell"));
+                    continue;
+                };
+                for line in expected {
+                    if !stdout.lines().any(|printed| printed == line) {
+                        failures.push(format!("{at}: version {answering} lacks {line:?}"));
+                    }
+                }
+            }
         }
     }
     report(&failures);

@@ -535,6 +535,18 @@ built ([§AR-system.2.2](README.md#22-model)). The line `check` prints for a sel
 that was off reads its switch spellings from the same rendered rows
 ([§FS-check.1.4.1](../functional-spec/FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)).
 
+A code's remedy is read the same way. The renderer reads each row's *Fix* and
+*Note* cells by the grammar of [§FS-errors.5.5.1](../functional-spec/FS-errors.md#551-how-a-row-is-read), refusing a blank *Fix*, an
+unbalanced slot, an unknown reference, an ID or a link, expands each
+reference, and writes each version's side into `check-codes.json`. It also
+renders `model/remedies.rs`: one typed filler per template or case, taking its
+slots, such as `section_address_changed(new_address, cited_address)`, whose
+body reads the row and fills the cell. An emission site builds its message's
+remedy only by calling its filler, so no remedy is worded in a string literal
+of the checker, a misspelt slot or case does not compile, and the message and
+the `config explain` answer that prints the same cell unfilled cannot drift
+apart ([§AR-system.principle](README.md#principle-one-fact-one-point-one-implementation)).
+
 ### 9.2 Why it is in config
 
 Only config reads a version (section 2), and every answer is in one. The gates

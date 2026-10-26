@@ -80,14 +80,16 @@ One rule puts a key's type into words, and the rendered configuration page uses 
 
 ## 4. A code's answer
 
-A code's answer gives what the code means, its severity, and what turns it on, in each version that answers, read from the code's row of the catalog by [§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read):
+A code's answer gives what the code means, its severity, what turns it on, and what clears its finding, in each version that answers, read from the code's row of the catalog by [§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read):
 
 - **What it means** is the row's *Meaning*, as written.
 - **Its severity** says which of these the cell is: fixed, with the severity; a suggestion, shown with `--suggestions`; spent, with what became of it; or chosen by a setting, with the setting and, for a strength, what each strength gives (`must` an error, `warn` a warning, `should` a suggestion, `may` not checked).
 - **What turns it on** is `always` for `—`; for `not in version N`, that a file read as version N never turns it on, and, in version 1, that `grund config migrate --to 2` gets to a version that can; and otherwise each clause, saying whether a setting, a flag, either or a condition of the tree meets it, with its remark.
 - **A ramp**, where the row's *Ramp* names one, says the release and the severity it moves to.
+- **Its fix** follows, the version's side of the row's *Fix* cell with its slots left unfilled and its backticks kept, so it reads as the error's own remedy: `Fix: <template>` for a template, one `Fix, <label>: <template>` line per case in the cell's order, and `Fix: none — <why>` as written. A reference is printed as the template it stands for, and a side that is `not in version N` prints `Fix: none — not in version N`. No line of it is wrapped or given a closing period.
+- **Its note**, where the version's side of *Note* is not `—`, is one `Note:` line after the fix.
 
-Every setting a version's clause names is one that version's reader admits, so a version-2 answer never names a version-1 spelling, and the reverse. Where a clause names a table, the answer's `Next:` line asks for it. A row marked `planned` has no answer: its code is unknown ([§FS-config-explain.5](FS-config-explain.md#5-a-target-the-version-does-not-know)). The severity the answer states is the one `check` reports by, because both read the one row ([§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree)).
+Every setting a version's clause names is one that version's reader admits, so a version-2 answer never names a version-1 spelling, and the reverse. Where a clause names a table, the answer's `Next:` line asks for it. A row marked `planned` has no answer: its code is unknown ([§FS-config-explain.5](FS-config-explain.md#5-a-target-the-version-does-not-know)). The severity the answer states is the one `check` reports by, and its fix, filled from a finding, is the remedy that finding's message carries, because both read the one row ([§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree)).
 
 ## 5. A target the version does not know
 

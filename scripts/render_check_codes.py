@@ -33,7 +33,7 @@ ASSET = ROOT / "crates" / "grund-core" / "assets" / "explain" / "check-codes.jso
 HANDLES = ROOT / "crates" / "grund-core" / "src" / "model" / "codes.rs"
 
 HEADING = re.compile(r"^### 5\.5 ")
-COLUMNS = ("Code", "Meaning", "Severity", "Ramp", "Enabled by", "Check")
+COLUMNS = ("Code", "Meaning", "Severity", "Ramp", "Enabled by", "Fix", "Note", "Check")
 CODE = re.compile(r"^`([a-z][a-z0-9-]*)`$")
 SPLIT = re.compile(r"^v2: (.*) · v1: (.*)$")
 ABSENT = re.compile(r"^not in version ([12])$")

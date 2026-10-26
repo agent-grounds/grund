@@ -162,7 +162,9 @@ When an entry's recorded address is cited and is a locked address, the section t
 FS-login.format.1 is cited, and what .grund/sections/FS-login.lock recorded for it now sits at FS-login.parse.1; move it back, cite FS-login.parse.1 instead, or leave a pointer to it at FS-login.format.1; if FS-login.parse.1 is a copy, edit the copy or cite it from FS-login.format.1
 ```
 
-The three fixes are the move undone, [§FS-section-lock.move.citations](FS-section-lock.md#movecitations-update-every-citation) and [§FS-section-lock.move.pointer](FS-section-lock.md#movepointer-leave-a-pointer); the last clause is the way out of [§FS-section-lock.move.copy](FS-section-lock.md#movecopy-copy-then-edit-the-original). When the fingerprint sits at more than one other address, the first in document order is named. It is reported for a swap of two sections with or without the same title, for a parent rename after which a sibling takes the old address, and for a section moved under another parent whose old address another section took. It is not reported when the section at the recorded address cites the address it names, nor for an entry written `-`.
+The remedy is the *Fix* cell of the code's row in the check code catalog ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)), which the message carries filled in and `grund config explain section-address-changed` prints with its slots unfilled. Its three fixes are the move undone, [§FS-section-lock.move.citations](FS-section-lock.md#movecitations-update-every-citation) and [§FS-section-lock.move.pointer](FS-section-lock.md#movepointer-leave-a-pointer); the last clause is the way out of [§FS-section-lock.move.copy](FS-section-lock.md#movecopy-copy-then-edit-the-original). When the fingerprint sits at more than one other address, the first in document order is named. It is reported for a swap of two sections with or without the same title, for a parent rename after which a sibling takes the old address, and for a section moved under another parent whose old address another section took. It is not reported when the section at the recorded address cites the address it names, nor for an entry written `-`.
+
+The row's *Note* says what the check compares and what writes the lock, from [§FS-section-lock.write.never-a-move](FS-section-lock.md#writenever-a-move-fmt-never-approves-a-move): only `fmt --write` writes a lock, it never approves a move, and a lock is not edited by hand, because an edit that records the new text at the old address, or a citation dropped and restored around a `fmt --write`, silences this report without undoing, following or acknowledging the move.
 
 ### checks.unrecorded-section-citation: A locked address the lock does not hold
 
@@ -192,11 +194,7 @@ The entries `check` can read are still judged. `fmt --write` rebuilds the file (
 
 ### checks.remedy: The run that writes the lock
 
-The two errors a `fmt --write` clears, [§FS-section-lock.checks.unrecorded-section-citation](FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold) and [§FS-section-lock.checks.invalid-section-lock](FS-section-lock.md#checksinvalid-section-lock-a-lock-line-grund-cannot-read), end in one remedy, worded once:
-
-```text
-run grund fmt --write with no path at the workspace root, or at the project root outside a workspace
-```
+The two errors a `fmt --write` clears, [§FS-section-lock.checks.unrecorded-section-citation](FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold) and [§FS-section-lock.checks.invalid-section-lock](FS-section-lock.md#checksinvalid-section-lock-a-lock-line-grund-cannot-read), end in one remedy, worded once: the *Fix* cell of `unrecorded-section-citation`'s row in the check code catalog ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)), which `invalid-section-lock`'s row takes by reference ([§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read)), so both messages and both `grund config explain` answers print the one cell.
 
 It says where to run the command, and with no path, because only a run whose scope is a project's config root or the workspace root writes a lock ([§FS-section-lock.write.rules](FS-section-lock.md#writerules-add-refresh-drop)). Outside a workspace, `grund fmt --write` with no path, from anywhere in the project, is that run, and so is one given the root as its path ([§FS-fmt.7.1](FS-fmt.md#71-scope-equivalence)). Given a file, or a directory that is no project's config root, the same command exits `0`, reports `rewrote 0 lines` ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)) and leaves every lock as it was: a remedy that named the command alone would read as satisfied by a run that wrote nothing.
 
