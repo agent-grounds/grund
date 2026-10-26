@@ -153,8 +153,8 @@ applies, fmt re-derives generated link destinations and anchors; the
 root-scoped write also updates eligible section locks. Run `grund check` and
 `grund fmt --check`; commit lock changes. File-only moves keep ID-keyed lock
 names. Do not hand-edit locks or expect fmt to replace authored IDs, repair
-URLs, or approve a protected section move. Its error names each line still
-citing the old address; `grund config explain section-address-changed` names
+arbitrary URLs, or silently approve a protected section move. Its error names
+every stale citation; `grund config explain section-address-changed` names
 the fixes.
 A link the author wrote around a citation is theirs in every Markdown form:
 inline, wrapped, a reference, a definition, an autolink or HTML `<a>`. fmt
