@@ -186,7 +186,10 @@ root outside a workspace, and commit the section lock it writes,
 [`examples/relative-sections/`](examples/relative-sections/). For declaration renames,
 follow the [maintenance workflow](docs/user-facing/structure.md#maintaining-declarations)
 and try the copy-based exercise in
-[`examples/relative-sections-lock/`](examples/relative-sections-lock/).
+[`examples/relative-sections-lock/`](examples/relative-sections-lock/). `fmt`'s preview
+names every kind of rewrite a line gets, its `--write` summary totals them, and a lock
+file the rename deletes or creates says so; read both in
+[`examples/fmt-reporting/`](examples/fmt-reporting/).
 
 A declaration can also live in code: a doc-comment that opens with the ID declares it,
 and a link from the kind's index enrolls it with no stub file. Grund's own `AR-checker` is declared only on the
