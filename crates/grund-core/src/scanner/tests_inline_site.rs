@@ -89,7 +89,7 @@ fn two_citations_in_one_block_carry_one_span() {
         first_line: 1,
         last_line: 3,
         max_columns: 51,
-        line_columns: vec![29, 51, 50].into(),
+        line_columns: vec![30, 51, 50].into(),
         has_note: true,
         layout_violations: Vec::new(),
     });
