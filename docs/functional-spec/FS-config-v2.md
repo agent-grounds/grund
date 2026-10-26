@@ -394,6 +394,8 @@ A measured constraint is written as a table named for its measure, whose keys ar
 
 A stronger strength takes the looser threshold. `must = 1` beside `should = 3` is refused, at the stronger key: ``threshold ordering: `must` (1) is stricter than `should` (3); a stronger strength takes the looser threshold``. The note measures are those of [§FS-inline-citation-style.2](FS-inline-citation-style.md#2-configuration) and the lead measure is [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)'s. Only the channel moves with the strength.
 
+Column findings use [§FS-inline-citation-style.4.1.1.1](FS-inline-citation-style.md#4111-every-over-limit-line)'s over-limit line suffix on every reporting channel, filtered against the threshold selected for that finding.
+
 ### schema.fields: Fields and forms
 
 `[schema.kinds.<NAME>.fields.<field>]`, with its keys `title`, `presence`, `position`, `after`, `content` and `one_of`, and a row's `form` and `closed`, are specified by [§FS-fields](FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it): what each key means, what the loader refuses, and the findings `grund check` reports. They are executed ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)).

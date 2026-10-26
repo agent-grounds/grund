@@ -280,13 +280,19 @@ Each of the following is an error and contributes to a non-zero exit code, per [
 |---------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
 | `inline_style = "citation-only"` and a note is present  | error: `inline citation must carry no prose`                                                                        |
 | `lines > inline_note_max_lines`                         | error: `inline note is M lines, over the N-line maximum: lines A-B cite <citations>; a blank line splits a note, an empty comment line does not` |
-| `max(columns) > inline_note_max_columns`                | error: `inline note is M columns, over the N-column maximum: line(s) A[-B] cite(s) <citations>`                     |
+| `max(columns) > inline_note_max_columns`                | error: `inline note is M columns, over the N-column maximum: line(s) A[-B] cite(s) <citations>; over-limit lines: <line widths>` |
 
 A single note that violates more than one cap produces one finding per violated cap (so the author sees every reason in a single pass). [§FS-inline-citation-style.4.1.1](FS-inline-citation-style.md#411-the-measured-size)–[§FS-inline-citation-style.4.1.3](FS-inline-citation-style.md#413-the-splitting-clause) define `M` and `N`, the site clause, and the splitting clause.
 
 #### 4.1.1 The measured size
 
 `M` is the measured size — physical lines ([§FS-inline-citation-style.2.3.1](FS-inline-citation-style.md#231-lines)), or characters ([§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns)) of the note's longest line — placed next to the cap `N` so the finding is actionable without re-measuring, in keeping with [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible). `M` pluralises by its own value (`1 line`, `2 lines`, `1 column`, `2 columns`); `N-line` and `N-column` are adjectival and never pluralise.
+
+##### 4.1.1.1 Every over-limit line
+
+Every column-budget finding appends `; over-limit lines: <line widths>` after its complete existing message, including the site clause of [§FS-inline-citation-style.4.1.2](FS-inline-citation-style.md#412-the-site-clause). `<line widths>` lists **every** constituent line whose width is strictly greater than that finding's selected threshold `N`, in ascending source order, separated by `, `. Each entry is `line L: W columns`: `L` is the 1-based physical source line and `W` uses the character measurement of [§FS-inline-citation-style.2.3.2](FS-inline-citation-style.md#232-columns), including indentation and comment delimiters. A line exactly at the threshold is omitted. The label is always `over-limit lines`, even for one entry; each entry uses `column` only when `W = 1`, otherwise `columns`.
+
+This suffix applies to hard caps and v2 softer column budgets alike ([§FS-config-v2.schema.measures](FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys)), using the threshold selected for the emitted finding. It changes only the message suffix: one finding per existing budget, code, first-line location, channel, gating, exit verdict, and JSON fields remain unchanged. Text and JSON carry the same complete message. The old message remains a verbatim contiguous prefix ([§FS-errors.3](FS-errors.md#3-message-text)); the whole-block span still describes the note, not just its over-limit lines. A hard column-cap finding continues to suppress softer column findings for that note.
 
 #### 4.1.2 The site clause
 
