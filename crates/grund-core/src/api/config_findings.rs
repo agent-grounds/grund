@@ -74,7 +74,7 @@ pub(super) const CONFIG_VERSION_1: Code = Code::CONFIG_VERSION_1;
 /// it for a member (§FS-config-migrate.8) and the caution below prints it for
 /// any config, so the two cannot drift apart.
 pub(super) fn version_1_caution(file: &str, dir: Option<&str>) -> String {
-    let mut line = format!("{file} is version 1; {}", remedies::config_version_1());
+    let mut line = format!("{file} is version 1; {}", remedies::config_version_1("it"));
     if let Some(dir) = dir.filter(|dir| !dir.is_empty()) {
         line.push(' ');
         line.push_str(dir);

@@ -54,6 +54,12 @@ class CheckCodeCatalogTests(unittest.TestCase):
         self.assertEqual(render_check_codes.sides("—"), ("—", "—"))
 
 
+# Runs two cells hold that are a setting's spelling inside two different remedies, not
+# one remedy restated: a reference names a whole template or case, and neither cell's
+# template is the other's. misplaced-declaration and unlisted-workspace-block both
+# offer the `[workspace] members` entry, each with its own other way out.
+SHARED_SPELLINGS = {'" to [workspace] members in'}
+
 # A run of words: a maximal stretch of a Fix template between its slots and references,
 # its case label dropped, of at least this many words once trimmed of edge punctuation.
 RUN_WORDS = 4
@@ -111,11 +117,26 @@ def string_literals(source):
     return [" ".join(literal.split()) for literal in literals]
 
 
+# Sources whose literals are another command's own wording rather than a finding's
+# remedy: the managed block's teaching, `config explain`'s answer and `help config`.
+OWN_WORDING = {
+    "crates/grund-core/src/templates/agents_block.rs",
+    "crates/grund-cli/src/cli_config_explain.rs",
+    "crates/grund-cli/src/cli_help_config.rs",
+}
+
+
 def checker_sources():
-    """Every non-test Rust source under `crates/`: a `src/` file, cut at its first
-    `#[cfg(test)]`, outside any `tests` directory or `tests.rs` module."""
+    """Every non-test Rust source under `crates/` that words a finding: a `src/` file,
+    cut at its first `#[cfg(test)]`, outside any `tests` directory and any `tests.rs`,
+    `tests_*.rs` or `*_tests.rs` unit module, whose literals are the messages a test
+    expects rather than a second wording. The files of `OWN_WORDING` are skipped too:
+    what they print is the wording of the command they belong to, not a remedy."""
     for path in sorted((REPO_ROOT / "crates").glob("*/src/**/*.rs")):
-        if "tests" in path.parts or path.stem == "tests" or path.stem.endswith("_tests"):
+        if ("tests" in path.parts or path.stem == "tests" or path.stem.startswith("tests_")
+                or path.stem.endswith("_tests")):
+            continue
+        if path.relative_to(REPO_ROOT).as_posix() in OWN_WORDING:
             continue
         text = path.read_text(encoding="utf-8")
         yield path, text.split("#[cfg(test)]", 1)[0]
@@ -171,6 +192,48 @@ class CheckCodeRemedyTests(unittest.TestCase):
                 with self.assertRaisesRegex(render_check_codes.CatalogError, "`dangling`"):
                     render_check_codes.catalog()
 
+    def test_a_reference_to_a_case_it_does_not_name_or_a_whole_none_is_refused(self):
+        for fix, other in (("then {fix of `duplicate`, case `c`}", "a: run one ‖ b: run two"),
+                           ("then {fix of `duplicate`, case `a`}", "run one"),
+                           ("{fix of `duplicate`}", "none — nothing clears it")):
+            with self.subTest(fix=fix, other=other), \
+                    with_fix({"dangling": (fix, "—"), "duplicate": (other, "—")}):
+                with self.assertRaisesRegex(render_check_codes.CatalogError, "`dangling`"):
+                    render_check_codes.catalog()
+
+    def test_a_case_reference_takes_that_case_and_a_whole_one_takes_every_case(self):
+        with with_fix({"duplicate": ("a: run `one` {x} ‖ b: run two", "—"),
+                       "dangling": ("then {fix of `duplicate`, case `b`}", "—"),
+                       "unused": ("{fix of `duplicate`}", "—")}):
+            one, whole = entry("dangling"), entry("unused")
+        for version in "21":
+            self.assertEqual(one[version]["fix"], {"kind": "template", "text": "then run two"})
+            self.assertEqual(whole[version]["fix"], {"kind": "cases", "cases": [
+                {"label": "a", "text": "run `one` {x}"}, {"label": "b", "text": "run two"}]})
+
+    def test_an_out_of_scope_code_and_discouraged_citation_name_their_fix_by_reference(self):
+        """The approved proposal: an out-of-scope code reuses its in-scope code's fix,
+        and a discouraged citation forbidden-citation's re-point, by reference."""
+        cells = {row["Code"].strip("`"): row["Fix"] for row in render_check_codes.rows()}
+        named = {code: f"`{code.removeprefix('out-of-scope-')}`" for code in cells
+                 if code.startswith("out-of-scope-")}
+        named["discouraged-citation"] = "`forbidden-citation`"
+        for code, other in named.items():
+            with self.subTest(code=code):
+                self.assertEqual(fixed_runs(cells[code]), set())
+                self.assertIn("{fix of " + other, cells[code])
+
+    def test_selected_check_off_migrates_in_config_version_1s_words(self):
+        """Author addition 2: each migrate the advice gives is config-version-1's
+        template, its slot naming what is migrated."""
+        cells = {row["Code"].strip("`"): row["Fix"] for row in render_check_codes.rows()}
+        cases = dict(case.split(": ", 1) for case in cells["selected-check-off"].split(" ‖ "))
+        self.assertEqual(cases["migrate"], "{fix of `config-version-1`}")
+        self.assertNotIn("migrate", " ".join(text for label, text in cases.items()
+                                             if label != "migrate"))
+        self.assertEqual(entry("config-version-1")["1"]["fix"]["text"],
+                         "migrate {files} with grund config migrate --to 2")
+
     def test_an_id_or_a_link_in_a_fix_or_a_note_is_refused(self):
         for cells in (("see §FS-check.3.1", "—"), ("see [the spec](FS-check.md)", "—"),
                       ("run grund check again", "see §FS-check.3.1")):
@@ -219,6 +282,18 @@ class CheckCodeRemedyTests(unittest.TestCase):
                   for literal in string_literals(source)
                   for run, code in runs.items() if run in literal]
         self.assertEqual(copies, [], "a remedy is worded outside its Fix cell")
+
+
+    def test_no_fix_wording_is_written_in_two_cells(self):
+        """§AR-system.principle: a run of words two rows' Fix cells would both hold is
+        written once and named by `{fix of ...}` from the other."""
+        cells = {}
+        for row in render_check_codes.rows():
+            for run in fixed_runs(row.get("Fix", "")):
+                cells.setdefault(run, []).append(row["Code"])
+        twice = {run: codes for run, codes in cells.items()
+                 if len(set(codes)) > 1 and run not in SHARED_SPELLINGS}
+        self.assertEqual(twice, {}, "a remedy is worded in more than one Fix cell")
 
 
 class FixedRunTests(unittest.TestCase):

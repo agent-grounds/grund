@@ -77,8 +77,8 @@ pub(crate) fn citation_cardinality() -> String {
 }
 
 /// `config-version-1`'s *Fix* (§FS-check.checks.config-version-1).
-pub(crate) fn config_version_1() -> String {
-    let slots: &[(&str, &dyn Display)] = &[];
+pub(crate) fn config_version_1(files: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("files", &files)];
     fill(Code::CONFIG_VERSION_1, 2, None, slots)
 }
 
@@ -460,16 +460,10 @@ pub(crate) fn selected_check_off_off(switches: impl Display) -> String {
     fill(Code::SELECTED_CHECK_OFF, 2, Some("off"), slots)
 }
 
-/// `selected-check-off`'s *Fix*, case `one-version` (§FS-check.1.4.1).
-pub(crate) fn selected_check_off_one_version() -> String {
-    let slots: &[(&str, &dyn Display)] = &[];
-    fill(Code::SELECTED_CHECK_OFF, 2, Some("one-version"), slots)
-}
-
-/// `selected-check-off`'s *Fix*, case `mixed-versions` (§FS-check.1.4.1).
-pub(crate) fn selected_check_off_mixed_versions() -> String {
-    let slots: &[(&str, &dyn Display)] = &[];
-    fill(Code::SELECTED_CHECK_OFF, 2, Some("mixed-versions"), slots)
+/// `selected-check-off`'s *Fix*, case `migrate` (§FS-check.1.4.1).
+pub(crate) fn selected_check_off_migrate(files: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("files", &files)];
+    fill(Code::SELECTED_CHECK_OFF, 2, Some("migrate"), slots)
 }
 
 /// `shorthand-citation`'s *Fix*, case `write` (§FS-check.3.13).
