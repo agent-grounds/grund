@@ -85,6 +85,23 @@ over: dispatch `release.yml` on the branch it names, with the version and the
 
 ## The candidate
 
+Before merging a ramp change, check that the tree still permits some release:
+
+```bash
+python3 scripts/check_release_ramps.py
+# To check another tree:
+python3 scripts/check_release_ramps.py --root /path/to/checkout
+```
+
+The Python pull-request gate runs this version-free check on the actual
+repository with every scanned ramp included ([§FS-distribution.4.2.6](../functional-spec/FS-distribution.md#426-every-publication-path-runs-the-release-guard)). It
+refuses an empty release window with `no release at all` and the conflicting
+landed/shared-floor and pending locations ([§FS-distribution.4.2.5](../functional-spec/FS-distribution.md#425-the-refusal-names-the-window-left)). Land or
+revert the conflicting ramps together, or in an order that keeps a release
+possible at every merge. A nonempty window passes even if it excludes the
+next patch. This check chooses no release and evaluates no version-specific
+ledger notice deadline.
+
 Before preparing a release, check the version against the checked-out tree:
 
 ```bash
@@ -98,8 +115,8 @@ does not lower that floor. After this transition merges, a `0.18.x` patch can
 only be cut from a branch made before it. Independent warning windows that
 still promise a change at `0.19.0` can leave no publishable version: the floor
 requires at least `0.19.0`, while those promises require less than `0.19.0`.
-Land the remaining transitions before publication; every publication path
-runs this guard ([§FS-distribution.4.2.6](../functional-spec/FS-distribution.md#426-every-publication-path-runs-the-release-guard)).
+The pull-request check refuses that conflict before merging; every publication
+path also runs the guard against its selected version ([§FS-distribution.4.2.6](../functional-spec/FS-distribution.md#426-every-publication-path-runs-the-release-guard)).
 
 A candidate is a directory built from one commit at one version
 ([§FS-distribution-candidate.6.1](../functional-spec/FS-distribution-candidate.md#61-one-commit-produces-one-manifest)):
