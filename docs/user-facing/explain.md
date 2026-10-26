@@ -94,6 +94,17 @@ tree meets each clause, and every setting it names is spelled in your file's
 version. A code that version never reports says so, and in version 1 it names
 `grund config migrate --to 2`, the way to a version that can.
 
+The `Fix:` line is what clears the finding, worded once in the code's catalog
+row and carried by every message of that code with its `{slots}` filled in
+([§FS-errors.5.5.1](../functional-spec/FS-errors.md#551-how-a-row-is-read),
+[§FS-config-explain.4](../functional-spec/FS-config-explain.md#4-a-codes-answer)).
+A code with more than one way out prints one `Fix, <case>:` line per way, and a
+code nothing you edit can clear prints `Fix: none —` and why. A `Note:` line,
+when there is one, says what the check compares or what not to do instead:
+`grund config explain section-address-changed` names the three fixes for a moved
+section and says that a lock is never edited by hand, because only
+`grund fmt --write` writes one and it never approves a move.
+
 ## Which version answers
 
 The config is found as `config show` finds it, by walking up from the path, and
