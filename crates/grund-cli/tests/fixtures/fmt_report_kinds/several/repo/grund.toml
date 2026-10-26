@@ -1,0 +1,20 @@
+grund_config_version = 1
+project_name = "fmt-labels"
+
+[reference]
+marker = "§"
+strict = true
+shorthand = "canonical"
+
+[id]
+format = "{kind}-{number}-{slug}"
+section_separator = "."
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+title = "What"
+
+[scan]
+include = ["docs"]
+extensions = ["md"]

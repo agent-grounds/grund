@@ -134,7 +134,11 @@ CITED = (
 
 # FS-show.md grew by 119 bytes in §FS-show.3.1.1, saying a selected section's text read opens
 # with its heading line by citing §FS-show.2.2 rather than restating it (grund#1026).
-BASELINES = {"FS-show.md": 70128, "FS-fmt.md": 99471}
+
+# FS-fmt.md grew by 3697 bytes in §FS-fmt.3.5, .3.5.1, .3.5.2, .3.6, .3.7, .7.3 and
+# .requirements.next-class: a dry-run row now names every kind its line receives and the
+# write summary totals them, new behaviour no other point states (grund#1021).
+BASELINES = {"FS-show.md": 70128, "FS-fmt.md": 103168}
 
 
 def _flat(text):

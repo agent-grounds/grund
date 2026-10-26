@@ -44,7 +44,12 @@ pub struct FmtChange {
     pub line: usize,
     /// The rewrite class, and — for a line that expanded a number-only shorthand
     /// — the text it wrote (§FS-fmt.3). A `String` rather than one of four fixed
-    /// labels because that detail is per-site.
+    /// labels because that detail is per-site. It carries the same text the CLI
+    /// row appends — every other kind that fired on the line (§FS-fmt.3.5.1) and
+    /// a lock file's `; creates the file` or `; deletes the file`
+    /// (§FS-section-lock.write.report) — so a caller comparing it exactly breaks as
+    /// an exact-line script does; read the per-kind counts and the lock-file flag
+    /// instead (§FS-distribution.3.2.2.2).
     pub label: String,
 }
 

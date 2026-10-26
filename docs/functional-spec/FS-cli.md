@@ -150,7 +150,12 @@ generated Markdown link destinations and anchors when the link pass applies
 maintenance and says to run from the project's config root or workspace root for
 eligible lock updates ([§FS-section-lock.write.rules](FS-section-lock.md#writerules-add-refresh-drop)).
 Its examples include a root-scoped `grund fmt --write` invocation whose explanation
-connects it to this rename or move workflow.
+connects it to this rename or move workflow, and the page says how that run's
+report reads: a dry-run row names every kind of rewrite its line receives
+([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)), the `--write` summary is followed by its totals
+([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)), and a lock file the rename deletes or creates is said to be
+deleted or created, on its dry-run row and on its `--write` line
+([§FS-section-lock.write.report](FS-section-lock.md#writereport-what-fmt-reports)).
 
 This teaching preserves the boundaries: `fmt` does not rename authored citation
 IDs or repair arbitrary URLs, a file move alone leaves an ID-keyed lock's name

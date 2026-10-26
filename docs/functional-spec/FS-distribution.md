@@ -490,9 +490,17 @@ not permission to return a string in place of typed data.
   measurements:{unit:'lines'|'words'|'bytes',lead:number|null,full:number|null}[].
 - CoverResult: outputFormat/scanErrors/note:string|null/entries:{project,path,citations:RefHit[]}[];
   no loss of empty files or citing-side membership.
-- FmtData: changes:{path,line,label}[]/scanErrors/refusedWrites:string[].
+- FmtData: changes:{path,line,label,counts,lockFile}[]/scanErrors/refusedWrites:string[].
   Completed partial run carries changes and scan errors; refusal partial may
   contain no changes. No made-up rollback or atomic-all-files guarantee.
+  `label` is the CLI row after `path:line: `, with the same kinds appended
+  ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)) and the same `; creates the file` or `; deletes the file`
+  ([§FS-section-lock.write.report](FS-section-lock.md#writereport-what-fmt-reports)), so a caller comparing `label` exactly breaks
+  as an exact-line script does; it should read `counts` and `lockFile` instead.
+  `counts:{triggersMarked,citationsMarked,localSectionsExpanded,shorthandsExpanded,
+  linksWritten,sectionLockEntries}` are the change's occurrences of each kind, the
+  numbers the `--write` totals sum ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)); `lockFile:'created'|'deleted'|null`
+  is set on a lock row whose write creates or deletes its file, and null elsewhere.
 - IdResult: id/kind/number:number|null/slug/folder:string|null/file:string|null/
   e2eCaseDir:string|null/fileHoldsSingleDeclaration:boolean.
 - InitData: events:{verb,path}[]/errors:Finding[]/notes:string[]/
