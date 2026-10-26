@@ -146,15 +146,16 @@ and [runnable recovery walkthrough](https://github.com/agent-grounds/grund/blob/
 
 ## Maintaining Declarations
 
-Before a declaration rename or file move, run `grund refs <ID>` to find affected
-citations. Edit the declaration and affected authored citation IDs, then run
-`grund fmt --write` from the config, project or workspace root. When
-cross-reference emission applies, fmt re-derives generated Markdown link
-destinations and anchors; the root-scoped write also updates eligible section
-locks. Run `grund check` and `grund fmt --check`; commit the lock changes.
-File-only moves keep ID-keyed lock names. Do not hand-edit locks or expect
-fmt to replace authored IDs, repair arbitrary URLs, or silently approve a
-protected section move; `grund config explain section-address-changed` names the fixes.
+Before a rename or file move, run `grund refs <ID>` to find its citations.
+Edit the declaration and authored citation IDs, then run `grund fmt --write`
+from the config, project or workspace root. When cross-reference emission
+applies, fmt re-derives generated link destinations and anchors; the
+root-scoped write also updates eligible section locks. Run `grund check` and
+`grund fmt --check`; commit lock changes. File-only moves keep ID-keyed lock
+names. Do not hand-edit locks or expect fmt to replace authored IDs, repair
+URLs, or approve a protected section move. Its error names each line still
+citing the old address; `grund config explain section-address-changed` names
+the fixes.
 A link the author wrote around a citation is theirs in every Markdown form:
 inline, wrapped, a reference, a definition, an autolink or HTML `<a>`. fmt
 neither rewrites nor follows it, so repair it by hand; its citation is still

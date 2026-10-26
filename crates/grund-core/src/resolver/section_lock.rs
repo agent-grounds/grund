@@ -15,7 +15,7 @@ use crate::config::{Frame, Schema};
 use crate::grammar::{parse_id_arg, render_catalog_id, render_id};
 use crate::model::{
     Catalog, Citation, Declaration, Id, LockEntry, LockLines, locked, paired_declarations,
-    read_lock_lines, section_lock_path,
+    read_lock_lines, section_lock_path, sort_path_key,
 };
 use crate::sources::sha256_hex;
 
@@ -50,8 +50,13 @@ pub(crate) enum EntryVerdict {
     /// line enters the same coordinate.
     Drop,
     /// Its recorded text sits at `to`, another section of the declaration, and
-    /// nothing acknowledged the move (§FS-section-lock.checks.section-address-changed).
-    Moved { to: String },
+    /// nothing acknowledged the move; `sites` are the lines that cite the recorded
+    /// address, one per line, sorted by path then line
+    /// (§FS-section-lock.checks.section-address-changed).
+    Moved {
+        to: String,
+        sites: Vec<(PathBuf, usize)>,
+    },
 }
 
 /// One lock file judged against the tree: the one that exists, the one a locked
@@ -329,14 +334,14 @@ fn judge_entries<'a>(
     }
     // Read before the loop takes entries out of `cited`: a second line of one
     // coordinate is still a line of a cited one.
-    let was_cited: BTreeSet<&str> = cited.keys().copied().collect();
+    let was_cited: BTreeMap<&str, Vec<&Citation>> = cited.clone();
     let mut verdicts = Vec::new();
     for (index, entry) in lines.entries.iter().enumerate() {
         let section = entry.section.as_str();
         let held = decl
             .and_then(|decl| decl.sections.get(section))
             .is_some_and(|info| locked(section, info));
-        let verdict = match (current(section), held && was_cited.contains(section)) {
+        let verdict = match (current(section), held && was_cited.contains_key(section)) {
             _ if chosen.get(section) != Some(&index) => EntryVerdict::Drop,
             // A text no slice could read is no evidence of an edit or a move.
             (None, true) => EntryVerdict::Keep,
@@ -353,7 +358,10 @@ fn judge_entries<'a>(
                         .map(|(path, _, _)| path.clone());
                     match moved_to {
                         Some(to) if !points_at(findings, decl, section, &to) => {
-                            EntryVerdict::Moved { to }
+                            EntryVerdict::Moved {
+                                to,
+                                sites: citing_sites(&was_cited[section]),
+                            }
                         }
                         // Edited in place, or a move a pointer acknowledged.
                         _ => EntryVerdict::Refresh(written(now)),
@@ -373,6 +381,19 @@ fn judge_entries<'a>(
         })
         .collect();
     (verdicts, unrecorded)
+}
+
+/// The lines `citations` sit on, two citations on one line being one site, sorted
+/// by path then line as the duplicate check sorts its sites
+/// (§FS-section-lock.checks.section-address-changed).
+fn citing_sites(citations: &[&Citation]) -> Vec<(PathBuf, usize)> {
+    let mut sites = citations
+        .iter()
+        .map(|citation| (citation.file.clone(), citation.line))
+        .collect::<Vec<_>>();
+    sites.sort_by(|a, b| (sort_path_key(&a.0), a.1).cmp(&(sort_path_key(&b.0), b.1)));
+    sites.dedup();
+    sites
 }
 
 /// Whether the section at `section` cites `to`: a pointer that acknowledges the

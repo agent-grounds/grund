@@ -95,26 +95,6 @@ fn e2e_cases_match_expected_reports() {
     assert_every_case_passed("e2e cases", &outcomes);
 }
 
-/// §FS-section-lock.checks.section-address-changed: grund#1022's cases, staged
-/// outside `cases/` while red. `implement` moves the two new cases into
-/// `tests/e2e/cases/`, replaces `check-section-lock-swap` with the staged copy,
-/// and deletes `tests/e2e/red-1022/` and this test.
-#[test]
-#[ignore = "red until #1022 names the citing sites after the remedy; implement removes this"]
-fn section_address_changed_names_citations_red_1022() {
-    let root = repo_root();
-    let staged = root.join("tests/e2e/red-1022");
-    let outcomes: Vec<_> = [
-        "check-section-lock-moved-names-citations",
-        "check-section-lock-moved-names-citations-json",
-        "check-section-lock-swap",
-    ]
-    .iter()
-    .map(|name| run_case(&root, &staged.join(name), E2e))
-    .collect();
-    assert_every_case_passed("grund#1022 staged cases", &outcomes);
-}
-
 /// §FS-check.1.1.10 (§FS-citations.recognized.marker-start): port the control/subject reproducer across all graph consumers.
 #[test]
 fn word_character_marker_cli_contract() {
