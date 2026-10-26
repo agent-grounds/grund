@@ -36,6 +36,8 @@ pub struct Row {
     pub severity: String,
     pub ramp: String,
     pub enabled: String,
+    pub fix: String,
+    pub note: String,
 }
 
 /// The catalog's rows, each cell found by its column's header.
@@ -53,11 +55,13 @@ pub fn catalog() -> Vec<Row> {
         .skip_while(|line| !line.starts_with("| Code | Meaning |"));
     let header = cells(lines.next().expect("the catalog's header row"));
     let column = |name: &str| header.iter().position(|cell| cell == name).unwrap();
-    let (meaning, severity, ramp, enabled) = (
+    let (meaning, severity, ramp, enabled, fix, note) = (
         column("Meaning"),
         column("Severity"),
         column("Ramp"),
         column("Enabled by"),
+        column("Fix"),
+        column("Note"),
     );
     lines
         .skip(1)
@@ -70,6 +74,8 @@ pub fn catalog() -> Vec<Row> {
                 severity: row[severity].clone(),
                 ramp: row[ramp].clone(),
                 enabled: row[enabled].clone(),
+                fix: row[fix].clone(),
+                note: row[note].clone(),
             }
         })
         .collect()
@@ -187,4 +193,58 @@ pub fn foreign_settings(stdout: &str, tables: &[(String, Vec<String>)]) -> Vec<S
         .flat_map(spelled_tables)
         .filter(|spelled| !tables.iter().any(|(table, _)| same_table(spelled, table)))
         .collect()
+}
+
+/// §FS-errors.5.5.1, §FS-config-explain.4: the `Fix:` and `Note:` lines a code's
+/// answer in `version` prints, from its row: a template as written, backticks
+/// kept and references expanded; one `Fix, <label>:` line per case; `none — <why>`
+/// as written; and `none — not in version N` for an absent side. `None` for a
+/// row whose *Fix* cell is blank, which no answer can be held to.
+pub fn remedy_lines(rows: &[Row], row: &Row, version: u32) -> Option<Vec<String>> {
+    let fix = side(&row.fix, version);
+    if fix.is_empty() {
+        return None;
+    }
+    let mut lines = Vec::new();
+    if fix.starts_with("none — ") {
+        lines.push(format!("Fix: {fix}"));
+    } else if fix.starts_with("not in version") {
+        lines.push(format!("Fix: none — {fix}"));
+    } else if fix.contains(" ‖ ") {
+        for case in fix.split(" ‖ ") {
+            let (label, template) = case.split_once(": ")?;
+            lines.push(format!(
+                "Fix, {label}: {}",
+                expand(rows, template, version)?
+            ));
+        }
+    } else {
+        lines.push(format!("Fix: {}", expand(rows, &fix, version)?));
+    }
+    let note = side(&row.note, version);
+    if !note.is_empty() && note != "—" && !note.starts_with("not in version") {
+        lines.push(format!("Note: {}", printed(&note)));
+    }
+    Some(lines)
+}
+
+/// A template with each `` {fix of `<code>`} `` replaced by that row's template on
+/// the same side, or its other side where that one is absent.
+fn expand(rows: &[Row], template: &str, version: u32) -> Option<String> {
+    let mut out = String::new();
+    let mut rest = template;
+    while let Some(start) = rest.find("{fix of `") {
+        out.push_str(&rest[..start]);
+        let after = &rest[start + "{fix of `".len()..];
+        let end = after.find("`}")?;
+        let target = rows.iter().find(|row| row.code == after[..end])?;
+        let mut words = side(&target.fix, version);
+        if words.starts_with("not in version") {
+            words = side(&target.fix, 3 - version);
+        }
+        out.push_str(&expand(rows, &words, version)?);
+        rest = &after[end + 2..];
+    }
+    out.push_str(rest);
+    Some(out)
 }

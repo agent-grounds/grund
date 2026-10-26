@@ -2,11 +2,15 @@
 table of §FS-errors.5.5 rendered. `check-codes.json` and the handles in
 `model/codes.rs` are what `scripts/render_check_codes.py` writes from the page
 today, and the renderer refuses a cell the grammar of §FS-errors.5.5.1 cannot
-read rather than guess at it."""
+read rather than guess at it. A code's remedy is its row's *Fix* cell, worded
+there once and nowhere else in the checker (§FS-errors.5.5.1, §AR-config.9.1)."""
 
+import json
+import re
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
@@ -48,6 +52,205 @@ class CheckCodeCatalogTests(unittest.TestCase):
         })
         self.assertEqual(render_check_codes.sides("v2: a · v1: b"), ("a", "b"))
         self.assertEqual(render_check_codes.sides("—"), ("—", "—"))
+
+
+# red until #1027 renders the Fix and Note cells; implement removes each marker below.
+RED = unittest.expectedFailure
+
+# A run of words: a maximal stretch of a Fix template between its slots and references,
+# its case label dropped, of at least this many words once trimmed of edge punctuation.
+RUN_WORDS = 4
+BRACED = re.compile(r"\{[^{}]*\}")
+LABEL = re.compile(r"^[a-z][a-z0-9-]*: ")
+
+
+def fixed_runs(cell):
+    """§FS-errors.5.5.1: the runs of words a Fix cell words once, on each version side."""
+    runs = set()
+    for side in render_check_codes.sides(cell):
+        if side.startswith("none — ") or render_check_codes.ABSENT.match(side):
+            continue
+        cases = side.split(" ‖ ")
+        for case in cases:
+            if len(cases) > 1:
+                case = LABEL.sub("", case, count=1)
+            for run in BRACED.split(case):
+                words = run.strip(" ,;:.").split()
+                if len(words) >= RUN_WORDS:
+                    runs.add(" ".join(words))
+    return runs
+
+
+def string_literals(source):
+    """The text of each string literal of Rust `source`, escapes and line continuations
+    read and whitespace collapsed; comments and char literals are skipped."""
+    literals, index, end = [], 0, len(source)
+    while index < end:
+        char = source[index]
+        if source.startswith("//", index):
+            index = source.find("\n", index)
+            index = end if index < 0 else index
+        elif source.startswith("/*", index):
+            index = source.find("*/", index) + 2 if "*/" in source[index:] else end
+        elif (opening := re.match(r"b?r(#*)\"", source[index:])) and not (
+                index and (source[index - 1].isalnum() or source[index - 1] == "_")):
+            close = '"' + opening.group(1)
+            start = index + opening.end()
+            stop = source.find(close, start)
+            literals.append(source[start:stop])
+            index = stop + len(close)
+        elif char == '"':
+            stop = index + 1
+            while source[stop] != '"':
+                stop += 2 if source[stop] == "\\" else 1
+            raw = source[index + 1:stop]
+            raw = re.sub(r"\\\n\s*", "", raw)
+            literals.append(raw.replace("\\n", " ").replace('\\"', '"'))
+            index = stop + 1
+        elif char == "'" and re.match(r"'(?:[^'\\]|\\.[^']*)'", source[index:]):
+            index += re.match(r"'(?:[^'\\]|\\.[^']*)'", source[index:]).end()
+        else:
+            index += 1
+    return [" ".join(literal.split()) for literal in literals]
+
+
+def checker_sources():
+    """Every non-test Rust source under `crates/`: a `src/` file, cut at its first
+    `#[cfg(test)]`, outside any `tests` directory or `tests.rs` module."""
+    for path in sorted((REPO_ROOT / "crates").glob("*/src/**/*.rs")):
+        if "tests" in path.parts or path.stem == "tests" or path.stem.endswith("_tests"):
+            continue
+        text = path.read_text(encoding="utf-8")
+        yield path, text.split("#[cfg(test)]", 1)[0]
+
+
+def with_fix(overrides):
+    """The page's rows with every Fix a plain template and every Note `—`, and the
+    cells `overrides` names, as `{code: (fix, note)}`, in place."""
+    rows = []
+    for row in render_check_codes.rows():
+        code = row["Code"].strip("`")
+        fix, note = overrides.get(code, ("run grund check again after the edit", "—"))
+        rows.append({**row, "Fix": fix, "Note": note})
+    return mock.patch.object(render_check_codes, "rows", lambda: rows)
+
+
+def entry(code):
+    return next(read for read in render_check_codes.catalog() if read["code"] == code)
+
+
+class CheckCodeRemedyTests(unittest.TestCase):
+    """§FS-errors.5.5.1: the Fix and Note cells and what the renderer makes of them."""
+
+    maxDiff = None
+
+    @RED
+    def test_every_row_names_its_fix(self):
+        blank = [row["Code"] for row in render_check_codes.rows() if not row.get("Fix")]
+        self.assertEqual(blank, [], "rows whose Fix cell is blank")
+
+    @RED
+    def test_the_rendered_remedy_fillers_are_written_beside_the_handles(self):
+        remedies = REPO_ROOT / "crates" / "grund-core" / "src" / "model" / "remedies.rs"
+        self.assertIn(remedies, render_check_codes.render())
+
+    @RED
+    def test_a_blank_fix_is_refused(self):
+        with with_fix({"dangling": ("", "—")}):
+            with self.assertRaisesRegex(render_check_codes.CatalogError, "`dangling`"):
+                render_check_codes.catalog()
+
+    @RED
+    def test_an_unbalanced_slot_is_refused(self):
+        for fix in ("cite {new address instead", "cite new address} instead"):
+            with self.subTest(fix=fix), with_fix({"dangling": (fix, "—")}):
+                with self.assertRaisesRegex(render_check_codes.CatalogError, "`dangling`"):
+                    render_check_codes.catalog()
+
+    @RED
+    def test_an_unknown_or_unusable_reference_is_refused(self):
+        for fix, other in (("then {fix of `no-such-code`}", None),
+                           ("then {fix of `duplicate`}", "none — nothing clears it"),
+                           ("then {fix of `duplicate`}", "a: run one ‖ b: run two")):
+            overrides = {"dangling": (fix, "—")}
+            if other:
+                overrides["duplicate"] = (other, "—")
+            with self.subTest(fix=fix, other=other), with_fix(overrides):
+                with self.assertRaisesRegex(render_check_codes.CatalogError, "`dangling`"):
+                    render_check_codes.catalog()
+
+    @RED
+    def test_an_id_or_a_link_in_a_fix_or_a_note_is_refused(self):
+        for cells in (("see §FS-check.3.1", "—"), ("see [the spec](FS-check.md)", "—"),
+                      ("run grund check again", "see §FS-check.3.1")):
+            with self.subTest(cells=cells), with_fix({"dangling": cells}):
+                with self.assertRaisesRegex(render_check_codes.CatalogError, "`dangling`"):
+                    render_check_codes.catalog()
+
+    @RED
+    def test_a_reference_is_expanded_and_backticks_are_kept(self):
+        with with_fix({"dangling": ("to rebuild it, {fix of `duplicate`}", "—"),
+                       "duplicate": ("run `grund init` in its root", "—")}):
+            read = entry("dangling")
+        for version in "21":
+            self.assertIn("fix", read[version], f"version {version} carries no fix")
+            self.assertIn("to rebuild it, run `grund init` in its root",
+                          json.dumps(read[version]["fix"], ensure_ascii=False))
+
+    @RED
+    def test_a_split_fix_and_note_read_each_side(self):
+        with with_fix({"dangling": ("v2: run the first edit · v1: run the second edit",
+                                    "v2: first note · v1: second note")}):
+            read = entry("dangling")
+        for version, own, other in (("2", "first", "second"), ("1", "second", "first")):
+            self.assertIn("fix", read[version], f"version {version} carries no fix")
+            said = json.dumps([read[version]["fix"], read[version].get("note")])
+            self.assertIn(f"run the {own} edit", said)
+            self.assertIn(f"{own} note", said)
+            self.assertNotIn(other, said)
+
+    @RED
+    def test_cases_and_none_are_read(self):
+        with with_fix({"dangling": ("outdated: run the first edit ‖ missing: run the second edit", "—"),
+                       "duplicate": ("none — nothing the user does clears it", "—")}):
+            cases, none = entry("dangling"), entry("duplicate")
+        self.assertIn("fix", cases["2"], "version 2 carries no fix")
+        said = json.dumps(cases["2"]["fix"])
+        for word in ("outdated", "run the first edit", "missing", "run the second edit"):
+            self.assertIn(word, said)
+        self.assertIn("nothing the user does clears it", json.dumps(none["2"]["fix"]))
+
+    @RED
+    def test_no_fix_wording_is_written_twice(self):
+        """§AR-config.9.1: no run of words a Fix cell holds is also a string literal's
+        in a non-test source under `crates/`, so a remedy is reworded in one cell."""
+        runs = {run: row["Code"] for row in render_check_codes.rows()
+                for run in fixed_runs(row.get("Fix", ""))}
+        self.assertTrue(runs, "no Fix cell holds a run of words")
+        copies = [f"{path.relative_to(REPO_ROOT)}: {run!r}, from {code}'s Fix"
+                  for path, source in checker_sources()
+                  for literal in string_literals(source)
+                  for run, code in runs.items() if run in literal]
+        self.assertEqual(copies, [], "a remedy is worded outside its Fix cell")
+
+
+class FixedRunTests(unittest.TestCase):
+    """The controls the no-second-copy test leans on."""
+
+    def test_runs_split_at_slots_references_labels_and_versions(self):
+        self.assertEqual(
+            fixed_runs("v2: a: move the text back here ‖ b: cite {new address} instead "
+                       "of the old one · v1: none — it is not in version 1"),
+            {"move the text back here", "instead of the old one"})
+        # Three words: too short a run to be a remedy's own wording.
+        self.assertEqual(fixed_runs("to rebuild it, {fix of `unrecorded-section-citation`}"), set())
+
+    def test_literals_join_continuations_and_skip_comments_and_chars(self):
+        source = ('// "not a literal"\nlet c = \'"\';\n'
+                  'let s = "move it \\\n        back, cite {to} instead";\n'
+                  'let r = r#"raw "text" here"#;\n')
+        self.assertEqual(string_literals(source),
+                         ["move it back, cite {to} instead", 'raw "text" here'])
 
 
 if __name__ == "__main__":
