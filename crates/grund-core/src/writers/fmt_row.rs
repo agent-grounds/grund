@@ -37,6 +37,7 @@ impl AddAssign for FmtCounts {
 /// lines (§FS-section-lock.write.report): the file is not there and the write
 /// leaves entries in it, or it is there and the write leaves none.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum FmtLockFile {
     Created,
     Deleted,
