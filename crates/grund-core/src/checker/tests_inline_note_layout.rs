@@ -106,7 +106,7 @@ fn layout_message_names_the_form_with_the_configured_marker() {
         .collect::<Vec<_>>();
     assert_eq!(
         messages,
-        vec!["inline note must open with its citations and a colon (§<ID>: note)".to_string(); 2]
+        vec!["inline note must open with its citations and a colon (§<ID>: note); rewrite the line in that form".to_string(); 2]
     );
 }
 

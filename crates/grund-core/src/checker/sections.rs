@@ -130,14 +130,15 @@ pub(super) fn check_section_headings(
                 line: Some(heading.line),
                 column: None,
                 message: format!(
-                    "relative heading {} needs an H{} parent under {}, and there is none",
+                    "relative heading {} needs an H{} parent under {}, and there is none; {}",
                     heading.written,
                     heading.needed_level,
                     coordinate(
                         &rendered_owner,
                         &schema.ids.section_separator,
                         &heading.under
-                    )
+                    ),
+                    remedies::relative_section_parent()
                 ),
                 sites: Vec::new(),
                 authority: Vec::new(),
@@ -174,14 +175,15 @@ pub(super) fn check_section_headings(
                             line: Some(section.line),
                             column: None,
                             message: format!(
-                                "section {}{}{} heading level mismatch: expected {} (level {}), found {} (level {})",
+                                "section {}{}{} heading level mismatch: expected {} (level {}), found {} (level {}); {}",
                                 render_catalog_id(frame.grammar(), &findings.declarations, id),
                                 schema.ids.section_separator,
                                 section_path,
                                 heading_marks(expected_level),
                                 expected_level,
                                 heading_marks(section.heading_level),
-                                section.heading_level
+                                section.heading_level,
+                                remedies::section_heading_level()
                             ),
                             sites: Vec::new(),
                         authority: Vec::new(),});
@@ -204,13 +206,14 @@ pub(super) fn check_section_headings(
                             line: Some(info.line),
                             column: None,
                             message: format!(
-                                "orphan section {}{}{}: missing prefix {}{}{}",
+                                "orphan section {}{}{}: missing prefix {}{}{}; {}",
                                 render_catalog_id(frame.grammar(), &findings.declarations, id),
                                 schema.ids.section_separator,
                                 path,
                                 render_catalog_id(frame.grammar(), &findings.declarations, id),
                                 schema.ids.section_separator,
-                                prefix
+                                prefix,
+                                remedies::orphan_section()
                             ),
                             sites: Vec::new(),
                             authority: Vec::new(),
@@ -256,10 +259,11 @@ pub(super) fn check_section_headings(
                     line: Some(lines[0]),
                     column: None,
                     message: format!(
-                        "duplicate section {}{}{} (also declared at {others})",
+                        "duplicate section {}{}{} (also declared at {others}); {}",
                         render_catalog_id(frame.grammar(), &findings.declarations, id),
                         schema.ids.section_separator,
-                        path
+                        path,
+                        remedies::duplicate_section()
                     ),
                     sites,
                     authority: Vec::new(),
@@ -277,12 +281,15 @@ fn section_outside_declaration_diagnostic(
         path: Some(heading.file.clone()),
         line: Some(heading.line),
         column: None,
-        message: if section_path_is_numeric(&heading.path) {
-            "numbered section outside any declaration"
-        } else {
-            "named section outside any declaration"
-        }
-        .to_string(),
+        message: format!(
+            "{}; {}",
+            if section_path_is_numeric(&heading.path) {
+                "numbered section outside any declaration"
+            } else {
+                "named section outside any declaration"
+            },
+            remedies::section_outside_declaration()
+        ),
         sites: Vec::new(),
         authority: Vec::new(),
     }

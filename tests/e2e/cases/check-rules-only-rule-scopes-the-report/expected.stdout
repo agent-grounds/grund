@@ -1,1 +1,1 @@
-docs/fs/FS-demo.md:6: error: FS-demo.requirements cites REQ 0 times; --rule requires exactly 3
+docs/fs/FS-demo.md:6: error: FS-demo.requirements cites REQ 0 times; --rule requires exactly 3; add or remove those citations until the count fits

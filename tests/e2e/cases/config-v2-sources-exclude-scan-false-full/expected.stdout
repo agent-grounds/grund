@@ -1,2 +1,2 @@
 archive/old.md:1: error: outside configured places and source scope: unknown reference FS-missing
-docs/FS-a.md:1: warning: declared but never cited: FS-a
+docs/FS-a.md:1: warning: declared but never cited: FS-a; cite it, or remove the declaration if nothing needs it

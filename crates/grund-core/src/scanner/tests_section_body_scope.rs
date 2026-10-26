@@ -129,7 +129,9 @@ fn a_heading_in_a_later_doc_comment_is_not_this_declarations_section() {
                 .iter()
                 .filter(|finding| finding.code == "section-outside-declaration")
         ),
-        ["src/core.rs:8: numbered section outside any declaration"],
+        [
+            "src/core.rs:8: numbered section outside any declaration; move it inside a declaration's body, or drop its section path"
+        ],
         "line 8 is outside the declaration's body and reported once"
     );
     assert!(
@@ -190,7 +192,7 @@ fn a_collision_inside_one_doc_comment_is_reported() {
                 .filter(|e| e.code == "duplicate-section")
         ),
         vec![
-            "src/core.rs:3: duplicate section AR-001-core.1 (also declared at src/core.rs:7)",
+            "src/core.rs:3: duplicate section AR-001-core.1 (also declared at src/core.rs:7); renumber or rename all but one of the headings",
             "src/router.py:4: duplicate section AR-002-router.1 \
                  (also declared at src/router.py:8)",
         ]
@@ -237,8 +239,8 @@ fn a_stubs_own_prose_declares_no_sections() {
                 .filter(|finding| finding.code == "section-outside-declaration")
         ),
         [
-            "docs/architecture/AR-001-core.md:3: numbered section outside any declaration",
-            "docs/architecture/AR-001-core.md:7: numbered section outside any declaration",
+            "docs/architecture/AR-001-core.md:3: numbered section outside any declaration; move it inside a declaration's body, or drop its section path",
+            "docs/architecture/AR-001-core.md:7: numbered section outside any declaration; move it inside a declaration's body, or drop its section path",
         ],
         "a stub's prose headings are outside findings, not coordinates"
     );
@@ -292,7 +294,9 @@ fn a_collision_in_the_inline_home_refuses_through_the_stub() {
                 .iter()
                 .filter(|e| e.code == "duplicate-section")
         ),
-        vec!["src/core.rs:3: duplicate section AR-001-core.1 (also declared at src/core.rs:7)"]
+        vec![
+            "src/core.rs:3: duplicate section AR-001-core.1 (also declared at src/core.rs:7); renumber or rename all but one of the headings"
+        ]
     );
     let Err(err) = show_declaration(
         &config,

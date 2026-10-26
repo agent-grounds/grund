@@ -1,2 +1,2 @@
 src/lib.rs:3: error: `FS_real` resolves for compatibility but does not match [schema] id_format = "{kind}-{slug}" — rename it or change the effective format; this became an error in grund 0.16.0
-src/lib.rs:3: warning: declared but never cited: FS_real
+src/lib.rs:3: warning: declared but never cited: FS_real; cite it, or remove the declaration if nothing needs it

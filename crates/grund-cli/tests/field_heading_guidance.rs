@@ -83,7 +83,7 @@ fn repair_contract(name: &str, fields: &str, bare: &str, title: &str) {
     fixture.doc(&body(&format!("## {bare}")));
     let original = fixture.check(&[], 1);
     let rows = fixture.json();
-    let missing = "TBL-orders has no schema field; kind TBL declares it";
+    let missing = "TBL-orders has no schema field; kind TBL declares it; add its schema section";
     let old = prefix("##", bare, "1");
     assert_eq!(rows.len(), 2, "{rows:?}");
     assert_eq!(rows[0], finding("missing-field", 1, missing));

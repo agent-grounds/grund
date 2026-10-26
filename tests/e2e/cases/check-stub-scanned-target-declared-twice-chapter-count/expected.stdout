@@ -1,1 +1,1 @@
-src/x.md:9: error: FS-x has 0 Terms chapters; --rule requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: none
+src/x.md:9: error: FS-x has 0 Terms chapters; --rule requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: none; add, remove or retitle chapters until the count fits

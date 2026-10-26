@@ -1,2 +1,2 @@
 src/x.rs:1: error: FS-x is not listed in docs/fs/README.md: an entry is a `§`-marked Markdown link to the declaration; write `[§FS-x](../../src/x.rs)` in docs/fs/README.md — became an error in grund 0.13.0
-src/x.rs:1: warning: declared but never cited: FS-x
+src/x.rs:1: warning: declared but never cited: FS-x; cite it, or remove the declaration if nothing needs it

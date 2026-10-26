@@ -83,7 +83,7 @@ findings, run from the project root:
 
 ```bash
 grund check examples/rules/place-obligations/repo/tests/e2e/
-# tests/e2e/missing-fs.md:1: error: tests/e2e/ must cite FS (citation direction)
+# tests/e2e/missing-fs.md:1: error: tests/e2e/ must cite FS (citation direction); add such a citation within it
 # Exit 1: the file cites AR-one but lacks FS evidence.
 ```
 

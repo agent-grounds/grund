@@ -1,1 +1,1 @@
-docs/df/DF-extra.md:11: warning: DF-extra.surprise is not a field of kind DF, which is closed; its fields: status
+docs/df/DF-extra.md:11: warning: DF-extra.surprise is not a field of kind DF, which is closed; its fields: status; rename it to one of them, number it, or add it to the kind's fields

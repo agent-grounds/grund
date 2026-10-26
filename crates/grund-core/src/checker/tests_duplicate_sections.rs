@@ -403,6 +403,8 @@ fn two_stubs_to_one_scanned_target_report_its_collision_once() {
                 .iter()
                 .filter(|e| e.code == "duplicate-section")
         ),
-        vec!["src/core.rs:3: duplicate section AR-001-core.1 (also declared at src/core.rs:7)"]
+        vec![
+            "src/core.rs:3: duplicate section AR-001-core.1 (also declared at src/core.rs:7); renumber or rename all but one of the headings"
+        ]
     );
 }

@@ -1,4 +1,4 @@
 docs/fs/FS-session.md:1: error: FS-session is not listed in docs/fs/README.md: an entry is a `§`-marked Markdown link to the declaration; write `[§FS-session](FS-session.md#fs-session-user-session)` in docs/fs/README.md — became an error in grund 0.13.0
 docs/fs/FS-token.md:1: error: FS-token is not listed in docs/fs/README.md: an entry is a `§`-marked Markdown link to the declaration; write `[§FS-token](FS-token.md#fs-token-user-token)` in docs/fs/README.md — became an error in grund 0.13.0
-docs/fs/FS-login.md:1: warning: declared but never cited: FS-login (its index entry at docs/fs/README.md:4 does not count as a use)
-docs/fs/README.md:1: warning: declared but never cited: FS-index (its index entry at docs/fs/README.md:3 does not count as a use)
+docs/fs/FS-login.md:1: warning: declared but never cited: FS-login (its index entry at docs/fs/README.md:4 does not count as a use); cite it, or remove the declaration if nothing needs it
+docs/fs/README.md:1: warning: declared but never cited: FS-index (its index entry at docs/fs/README.md:3 does not count as a use); cite it, or remove the declaration if nothing needs it

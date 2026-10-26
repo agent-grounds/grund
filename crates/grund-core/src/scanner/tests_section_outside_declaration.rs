@@ -70,8 +70,8 @@ fn markdown_section_map_stops_at_the_declaration_body() {
                 .filter(|finding| finding.code == "section-outside-declaration")
         ),
         [
-            "docs/functional-spec/FS-001-alpha.md:21: numbered section outside any declaration",
-            "docs/functional-spec/FS-001-alpha.md:25: named section outside any declaration",
+            "docs/functional-spec/FS-001-alpha.md:21: numbered section outside any declaration; move it inside a declaration's body, or drop its section path",
+            "docs/functional-spec/FS-001-alpha.md:25: named section outside any declaration; move it inside a declaration's body, or drop its section path",
         ]
     );
 
@@ -174,9 +174,9 @@ fn source_docstring_stub_and_shared_block_boundaries_own_sections_once() {
                 .filter(|finding| finding.code == "section-outside-declaration")
         ),
         [
-            "docs/architecture/AR-003-stubbed.md:3: numbered section outside any declaration",
-            "src/core.rs:8: numbered section outside any declaration",
-            "src/router.py:10: numbered section outside any declaration",
+            "docs/architecture/AR-003-stubbed.md:3: numbered section outside any declaration; move it inside a declaration's body, or drop its section path",
+            "src/core.rs:8: numbered section outside any declaration; move it inside a declaration's body, or drop its section path",
+            "src/router.py:10: numbered section outside any declaration; move it inside a declaration's body, or drop its section path",
         ],
         "each unowned source-shaped heading is reported once"
     );

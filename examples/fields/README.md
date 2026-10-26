@@ -28,11 +28,11 @@ The config states three shapes:
   `surprise` chapter its kind does not declare.
 
 ```text
-docs/ar/AR-session.md:1: error: AR-session has no placement field; kind AR declares it
-docs/df/DF-hashing.md:3: error: DF-hashing.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded
-docs/df/DF-hashing.md:7: error: DF-hashing.surprise is not a field of kind DF, which is closed; its fields: status
-docs/fs/FS-login.md:9: error: FS-login.terms is section 2 of 2; kind FS places it first
-docs/ar/AR-audit.md:13: warning: AR-audit.terms is section 3 of 3; kind AR places it directly after placement
+docs/ar/AR-session.md:1: error: AR-session has no placement field; kind AR declares it; add its placement section
+docs/df/DF-hashing.md:3: error: DF-hashing.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded; retitle the heading to one of them
+docs/df/DF-hashing.md:7: error: DF-hashing.surprise is not a field of kind DF, which is closed; its fields: status; rename it to one of them, number it, or add it to the kind's fields
+docs/fs/FS-login.md:9: error: FS-login.terms is section 2 of 2; kind FS places it first; move the section there
+docs/ar/AR-audit.md:13: warning: AR-audit.terms is section 3 of 3; kind AR places it directly after placement; move the section there
 ```
 
 A field is found by its section name, never by its title, so

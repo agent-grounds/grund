@@ -1,1 +1,1 @@
-{"severity":"error","path":"docs/fs/FS-a.md","line":1,"code":"missing-citation","message":"FS-a must cite REQ (citation direction)","sites":null,"authority":null}
+{"severity":"error","path":"docs/fs/FS-a.md","line":1,"code":"missing-citation","message":"FS-a must cite REQ (citation direction); add such a citation within it","sites":null,"authority":null}

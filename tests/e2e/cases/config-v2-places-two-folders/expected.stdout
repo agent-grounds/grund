@@ -1,3 +1,3 @@
-tests/e2e/login.md:1: error: tests/e2e/ must cite FS (citation direction)
-tests/integration/login.md:1: error: tests/integration/ must cite FS (citation direction)
-docs/fs/login.md:1: warning: declared but never cited: FS-login
+tests/e2e/login.md:1: error: tests/e2e/ must cite FS (citation direction); add such a citation within it
+tests/integration/login.md:1: error: tests/integration/ must cite FS (citation direction); add such a citation within it
+docs/fs/login.md:1: warning: declared but never cited: FS-login; cite it, or remove the declaration if nothing needs it

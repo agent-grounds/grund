@@ -1,3 +1,3 @@
-requirements.md:15: error: FS-rotate.requirements must cite REQ (--rule)
-requirements.md:21: error: FS-search.requirements must cite REQ (--rule)
+requirements.md:15: error: FS-rotate.requirements must cite REQ (--rule); add such a citation within it
+requirements.md:21: error: FS-search.requirements must cite REQ (--rule); add such a citation within it
 requirements.md:29: error: FS-audit has no requirements chapter, so --rule cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this became an error in grund 0.16.0

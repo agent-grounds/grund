@@ -82,9 +82,15 @@ fn watch_completed_run_option_matrix() {
                 let output = String::from_utf8_lossy(&expected.stdout);
                 let (channel, message) = if option == "trial" {
                     assert_eq!(expected.status, 1);
-                    ("error", "FS-live must cite FS (--rule)")
+                    (
+                        "error",
+                        "FS-live must cite FS (--rule); add such a citation within it",
+                    )
                 } else {
-                    ("suggestion", "FS-live should cite GOAL (--rule)")
+                    (
+                        "suggestion",
+                        "FS-live should cite GOAL (--rule); add such a citation within it",
+                    )
                 };
                 assert!(output.contains(message), "{option}: {output}");
                 if format == "text" {
@@ -148,7 +154,10 @@ fn watch_config_dependent_trial_refusal_repairs() {
     assert_eq!(initial.stdout, ordinary.stdout);
     assert_eq!(initial.stderr, ordinary.stderr);
     assert_eq!(initial.status, ordinary.status);
-    assert!(String::from_utf8_lossy(&initial.stdout).contains("FS-live must cite FS (--rule)"));
+    assert!(
+        String::from_utf8_lossy(&initial.stdout)
+            .contains("FS-live must cite FS (--rule); add such a citation within it")
+    );
     f.write(
         "grund.toml",
         &format!("{CONFIG}\n[[kinds]]\nkind = \"CUSTOM\"\nfolder = \"docs\"\n"),

@@ -139,7 +139,7 @@ fn full_scope_withholds_the_mechanical_shorthand_rewrite() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         vec![
-            "sim/world.py:2: outside [scan] include: shorthand citation §FS-777 matches no declaration"
+            "sim/world.py:2: outside [scan] include: shorthand citation §FS-777 matches no declaration; write the full ID it means"
         ],
         "§FS-check.3.14.4: the mechanical rewrite is withheld because `fmt` scopes by `include` too; a shorthand matching nothing is still a resolution failure"
     );
@@ -187,7 +187,7 @@ fn full_scope_withholds_the_shorthand_numeric_run_finding() {
         located_diagnostics(&full.config, &full.report.errors),
         vec![
             "docs/notes.md:3: shorthand §FS-042 sits in a numeric run and was not rewritten; write §FS-042-user-login, or <§>FS-042 if these are old numbers",
-            "sim/world.py:2: outside [scan] include: shorthand citation §FS-777 matches no declaration",
+            "sim/world.py:2: outside [scan] include: shorthand citation §FS-777 matches no declaration; write the full ID it means",
         ],
         "§FS-check.3.15.5: the same numeric run is an error under `include` and silent past it, while a shorthand matching nothing out there is still a resolution failure"
     );
@@ -227,7 +227,9 @@ fn full_scope_does_not_resolve_an_in_scope_shorthand_against_the_wider_walk() {
     assert!(
         located_diagnostics(&scoped.config, &scoped.report.errors)
             .iter()
-            .any(|line| line.contains("shorthand citation §FS-042 matches no declaration"))
+            .any(|line| line.contains(
+                "shorthand citation §FS-042 matches no declaration; write the full ID it means"
+            ))
     );
 }
 
@@ -289,6 +291,8 @@ fn full_scope_reports_a_qualified_shorthand_once() {
     assert!(
         located_diagnostics(&scoped.config, &scoped.report.errors)
             .iter()
-            .any(|line| line.contains("shorthand citation §api/AR-900 matches no declaration"))
+            .any(|line| line.contains(
+                "shorthand citation §api/AR-900 matches no declaration; write the full ID it means"
+            ))
     );
 }

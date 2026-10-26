@@ -1,1 +1,1 @@
-source.rs:1: error: AR-second has 2 Goals chapters; --rule requires at most 1; expected display name "Goals" (case-insensitive, not section handle); observed direct chapters: "goals: Goals", "aims: Goals"
+source.rs:1: error: AR-second has 2 Goals chapters; --rule requires at most 1; expected display name "Goals" (case-insensitive, not section handle); observed direct chapters: "goals: Goals", "aims: Goals"; add, remove or retitle chapters until the count fits

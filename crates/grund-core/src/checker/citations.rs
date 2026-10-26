@@ -397,9 +397,14 @@ fn obligation_diagnostic(
         line: Some(unit.line),
         column: None,
         message: format!(
-            "{} {verb_level} cite {} (citation direction)",
+            "{} {verb_level} cite {} (citation direction); {}",
             unit.subject(frame.grammar()),
-            render_target_phrase(entry)
+            render_target_phrase(entry),
+            if code == Code::MISSING_CITATION {
+                remedies::missing_citation()
+            } else {
+                remedies::suggested_citation()
+            }
         ),
         sites: Vec::new(),
         authority: Vec::new(),

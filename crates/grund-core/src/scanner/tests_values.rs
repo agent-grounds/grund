@@ -282,7 +282,7 @@ fn a_mixed_kind_mismatch_names_each_sides_kind() {
         vec![
             "value mismatch for CONST-field-price.1: bound `1,200`, declared `1200` \
              at values/field-price.md:2 \u{2014} bound is a string, declared is a number; \
-             a number and a string are never equal"
+             a number and a string are never equal; change the literal to the declared value, or the declaration to the bound one"
         ]
     );
 }
@@ -298,7 +298,7 @@ fn a_same_kind_mismatch_keeps_the_canonical_text() {
         )),
         vec![
             "value mismatch for CONST-field-price.1: bound `1250`, declared `1200` \
-             at values/field-price.md:2"
+             at values/field-price.md:2; change the literal to the declared value, or the declaration to the bound one"
         ]
     );
 }
@@ -322,6 +322,10 @@ fn the_binding_shape_admits_a_root_path_and_keeps_its_refusals() {
         );
     }
 }
+
+/// `value-mismatch`'s remedy, which closes the whole message (§FS-errors.5.5.1).
+const REMEDY: &str =
+    "; change the literal to the declared value, or the declaration to the bound one";
 
 /// A one-component value bound at its root is its `.1` spelling in verdict
 /// only: an agreeing literal is silent, a one-part disagreement names the root
@@ -355,7 +359,7 @@ fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling_in_verdict
         at_coordinate,
         vec![
             "value mismatch for CONST-field-price.1: bound `1250`, declared `1200` \
-             at values/field-price.md:2"
+             at values/field-price.md:2; change the literal to the declared value, or the declaration to the bound one"
         ]
     );
     assert_eq!(
@@ -363,8 +367,8 @@ fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling_in_verdict
         vec![format!(
             "{} \u{2014} whole binding: value mismatch for CONST-field-price (component 1): \
              bound `1250`, declared `1200` at values/field-price.md:2; \
-             this wording changes in grund 0.22.0",
-            at_coordinate[0]
+             this wording changes in grund 0.22.0{REMEDY}",
+            at_coordinate[0].strip_suffix(REMEDY).unwrap()
         )]
     );
 
@@ -375,7 +379,7 @@ fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling_in_verdict
         )),
         vec![
             "value mismatch for CONST-field-price: bound `1200 USD`, declared `1200` \
-             at values/field-price.md:2"
+             at values/field-price.md:2; change the literal to the declared value, or the declaration to the bound one"
         ]
     );
 }

@@ -3,4 +3,4 @@ docs/cites.md:4: error: glob citation §FS-login.requirements.**: a citation nam
 docs/cites.md:5: error: glob citation §FS-log*in.requirements: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-log*in.requirements; this became an error in grund 0.19.0
 docs/cites.md:6: error: glob citation §FS-*.requirements: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-*.requirements; this became an error in grund 0.19.0
 docs/cites.md:7: error: glob citation §FS-[a,b]: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-[a,b]; this became an error in grund 0.19.0
-docs/FS-log.md:1: warning: declared but never cited: FS-log
+docs/FS-log.md:1: warning: declared but never cited: FS-log; cite it, or remove the declaration if nothing needs it

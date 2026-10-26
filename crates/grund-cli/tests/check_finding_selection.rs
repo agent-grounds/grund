@@ -188,7 +188,7 @@ fn issue_49_warnings_and_enabled_suggestions_are_selectable_but_do_not_fail() {
     assert_run(
         &run(&warning_root, &["--only=unused"]),
         0,
-        "docs/functional-spec/FS-unused.md:1: warning: declared but never cited: FS-unused\n",
+        "docs/functional-spec/FS-unused.md:1: warning: declared but never cited: FS-unused; cite it, or remove the declaration if nothing needs it\n",
         "",
     );
     assert_run(

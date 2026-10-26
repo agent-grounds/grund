@@ -296,7 +296,11 @@ fn citation_only_does_not_reach_a_javadoc() {
     );
     assert_eq!(
         findings,
-        vec![(6, "inline citation must carry no prose".to_string())]
+        vec![(
+            6,
+            "inline citation must carry no prose; move the prose into a comment block of its own"
+                .to_string()
+        )]
     );
 }
 
@@ -332,7 +336,7 @@ fn the_note_layout_check_does_not_reach_a_doc_comment() {
         findings,
         vec![(
             6,
-            "inline note must open with its citations and a colon (§<ID>: note)".to_string()
+            "inline note must open with its citations and a colon (§<ID>: note); rewrite the line in that form".to_string()
         )]
     );
 }

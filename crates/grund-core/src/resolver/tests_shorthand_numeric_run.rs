@@ -311,8 +311,8 @@ fn a_numeric_run_changes_only_the_message_that_names_the_rewrite() {
             .map(|finding| finding.message.as_str())
             .collect::<Vec<_>>(),
         vec![
-            "shorthand citation §FS-999 matches no declaration",
-            "shorthand citation §FS-007 is ambiguous: FS-007-a, FS-007-b",
+            "shorthand citation §FS-999 matches no declaration; write the full ID it means",
+            "shorthand citation §FS-007 is ambiguous: FS-007-a, FS-007-b; write the full ID it means",
         ]
     );
     // The inline-code site earns nothing at all, and the ambiguous one
@@ -324,8 +324,8 @@ fn a_numeric_run_changes_only_the_message_that_names_the_rewrite() {
             .map(|finding| finding.message.as_str())
             .collect::<Vec<_>>(),
         vec![
-            "declared but never cited: FS-007-a",
-            "declared but never cited: FS-007-b",
+            "declared but never cited: FS-007-a; cite it, or remove the declaration if nothing needs it",
+            "declared but never cited: FS-007-b; cite it, or remove the declaration if nothing needs it",
         ]
     );
 }

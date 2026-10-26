@@ -1,2 +1,2 @@
-src/x.rs:1: error: FS-x must cite GOAL (citation direction)
-docs/goals/g.md:1: warning: declared but never cited: GOAL-g
+src/x.rs:1: error: FS-x must cite GOAL (citation direction); add such a citation within it
+docs/goals/g.md:1: warning: declared but never cited: GOAL-g; cite it, or remove the declaration if nothing needs it

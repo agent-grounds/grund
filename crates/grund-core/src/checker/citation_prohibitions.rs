@@ -10,6 +10,7 @@ use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Frame, NamespaceMatch, Owners, Rules,
     Schema, render_citation_target,
 };
+use crate::model::remedies;
 use crate::model::{Catalog, Citation, Code, Diagnostic, Switch, citation_direction_repair};
 
 /// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
@@ -58,7 +59,13 @@ pub(super) fn check_citation_prohibitions(
             ),
             CitationLevel::ShouldNot => (
                 DirectionChannel::Suggestions,
-                prohibition_diagnostic(Code::DISCOURAGED_CITATION, &owners, cite, "should not", ""),
+                prohibition_diagnostic(
+                    Code::DISCOURAGED_CITATION,
+                    &owners,
+                    cite,
+                    "should not",
+                    &format!(" — {}", remedies::discouraged_citation()),
+                ),
             ),
             _ => continue,
         };

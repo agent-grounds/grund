@@ -54,7 +54,7 @@ fn per_target_once_accepted_word_judges_physical_sites_on_both_surfaces() {
                             let exit = i32::from(shown && modality == "must");
                             let authority = if configured { "RULE-once" } else { "--rule" };
                             let message = format!(
-                                "SYS-overview.components cites AR-target 2 times; {authority} requires at most 1"
+                                "SYS-overview.components cites AR-target 2 times; {authority} requires at most 1; add or remove those citations until the count fits"
                             );
                             let expected = if !shown {
                                 if json {
@@ -311,7 +311,7 @@ fn per_target_once_existing_count_controls_keep_their_verdicts() {
         assert_eq!(
             text(&output.stdout),
             format!(
-                "docs/sys.md:3: error: SYS-overview.components cites AR-target 0 times; --rule requires {required}\n"
+                "docs/sys.md:3: error: SYS-overview.components cites AR-target 0 times; --rule requires {required}; add or remove those citations until the count fits\n"
             )
         );
         let invalid = sentence("must", &format!("{bound} 1 times"));

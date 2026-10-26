@@ -1,2 +1,2 @@
-docs/fs/FS-a.md:1: error: FS-a must cite REQ (--rule)
+docs/fs/FS-a.md:1: error: FS-a must cite REQ (--rule); add such a citation within it
 docs/fs/FS-a.md:3: error: unknown reference REQ-missing

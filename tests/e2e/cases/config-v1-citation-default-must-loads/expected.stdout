@@ -1,2 +1,2 @@
-docs/goals.md:3: warning: declared but never cited: GOAL-purpose
-requirements.md:3: warning: declared but never cited: FS-example
+docs/goals.md:3: warning: declared but never cited: GOAL-purpose; cite it, or remove the declaration if nothing needs it
+requirements.md:3: warning: declared but never cited: FS-example; cite it, or remove the declaration if nothing needs it

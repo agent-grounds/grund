@@ -271,7 +271,7 @@ fn an_external_inline_enrollment_keeps_the_source_as_the_cli_home() {
     let check_stdout = stdout(&check);
     assert_eq!(check.status.code(), Some(0));
     assert!(
-        check_stdout.contains("declared but never cited: AR-001-bus"),
+        check_stdout.contains("declared but never cited: AR-001-bus; cite it, or remove the declaration if nothing needs it"),
         "the enrollment is navigation, not use: {check_stdout}"
     );
     assert!(

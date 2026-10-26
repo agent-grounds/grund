@@ -268,6 +268,7 @@ fn check_unused(
                             first.line
                         ));
                     }
+                    message.push_str(&format!("; {}", remedies::unused()));
                     message
                 },
                 sites: Vec::new(),

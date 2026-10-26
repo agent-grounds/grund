@@ -1,2 +1,2 @@
-docs/fs.md:1: suggestion: FS-001-subject should cite GOAL (citation direction)
-docs/fs.md:3: suggestion: FS should not cite AR (citation direction)
+docs/fs.md:1: suggestion: FS-001-subject should cite GOAL (citation direction); add such a citation within it
+docs/fs.md:3: suggestion: FS should not cite AR (citation direction) — re-point the citation or downgrade it to a plain Markdown link

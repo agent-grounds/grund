@@ -1,2 +1,2 @@
-docs/fs/FS-a.md:1: error: FS-a has 0 Terms chapters; RULE-glossary requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: none
-docs/fs/FS-a.md:1: warning: FS-a has no terms field; kind FS declares it
+docs/fs/FS-a.md:1: error: FS-a has 0 Terms chapters; RULE-glossary requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: none; add, remove or retitle chapters until the count fits
+docs/fs/FS-a.md:1: warning: FS-a has no terms field; kind FS declares it; add its terms section

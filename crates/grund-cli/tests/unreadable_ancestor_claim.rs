@@ -13,7 +13,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 /// What `check` prints in `project/` once nothing reports the block: the issue's
 /// closed-bracket run, the one finding the tree earns on its own.
-const QUIET: &str = "requirements.md:1: warning: declared but never cited: FS-shop\n";
+const QUIET: &str = "requirements.md:1: warning: declared but never cited: FS-shop; cite it, or remove the declaration if nothing needs it\n";
 
 /// The scratch directory above `project/`, which holds the ancestor config.
 struct Outer(PathBuf);

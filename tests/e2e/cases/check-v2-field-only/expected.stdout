@@ -1,1 +1,1 @@
-docs/fs/FS-login.md:9: error: FS-login.terms is section 2 of 2; kind FS places it first
+docs/fs/FS-login.md:9: error: FS-login.terms is section 2 of 2; kind FS places it first; move the section there

@@ -1,3 +1,3 @@
-docs/ar/AR-late.md:9: error: AR-late.placement is section 2 of 3; kind AR places it first
-docs/ar/AR-mis.md:13: error: AR-mis.terms is section 3 of 3; kind AR places it directly after placement
-docs/ar/AR-noplace.md:1: error: AR-noplace has no placement field; kind AR declares it
+docs/ar/AR-late.md:9: error: AR-late.placement is section 2 of 3; kind AR places it first; move the section there
+docs/ar/AR-mis.md:13: error: AR-mis.terms is section 3 of 3; kind AR places it directly after placement; move the section there
+docs/ar/AR-noplace.md:1: error: AR-noplace has no placement field; kind AR declares it; add its placement section

@@ -211,7 +211,7 @@ fn uncited_declaration_title_hover_reads_not_cited() {
             .warnings
             .iter()
             .any(|warning| warning.code == "unused"
-                && warning.message == "declared but never cited: FS-003-gamma"),
+                && warning.message == "declared but never cited: FS-003-gamma; cite it, or remove the declaration if nothing needs it"),
         "the uncited declaration keeps its own diagnostic: {:?}",
         snapshot.report.warnings
     );

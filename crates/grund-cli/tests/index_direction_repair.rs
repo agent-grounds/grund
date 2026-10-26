@@ -307,7 +307,7 @@ fn suggestion_default_keeps_its_existing_index_message() {
     assert_eq!(suggestion["line"], 3);
     assert_eq!(
         suggestion["message"],
-        "REQ should not cite REQ (citation direction)"
+        "REQ should not cite REQ (citation direction) — re-point the citation or downgrade it to a plain Markdown link"
     );
 }
 

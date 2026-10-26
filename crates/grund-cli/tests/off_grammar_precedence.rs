@@ -102,7 +102,9 @@ fn off_grammar_local_configured_full_citation_keeps_precedence_and_accounting() 
     assert_code(&check, 1, "check");
     let checked = stdout(&check);
     assert!(
-        checked.contains("declared but never cited: FS.1"),
+        checked.contains(
+            "declared but never cited: FS.1; cite it, or remove the declaration if nothing needs it"
+        ),
         "{checked}"
     );
     assert!(
@@ -142,7 +144,9 @@ fn off_grammar_qualified_configured_full_citation_keeps_precedence_and_accountin
     assert_code(&check, 1, "workspace check");
     let checked = stdout(&check);
     assert!(
-        checked.contains("declared but never cited: FS.1"),
+        checked.contains(
+            "declared but never cited: FS.1; cite it, or remove the declaration if nothing needs it"
+        ),
         "{checked}"
     );
     assert!(
@@ -168,16 +172,16 @@ fn assert_ambiguous_check(output: &Output, written: &str) {
     let checked = stdout(output);
     assert!(
         checked.contains(&format!(
-            "shorthand citation {written} is ambiguous: FS-042, FS-042-canonical"
+            "shorthand citation {written} is ambiguous: FS-042, FS-042-canonical; write the full ID it means"
         )),
         "{checked}"
     );
     assert!(
-        checked.contains("declared but never cited: FS-042"),
+        checked.contains("declared but never cited: FS-042; cite it, or remove the declaration if nothing needs it"),
         "{checked}"
     );
     assert!(
-        checked.contains("declared but never cited: FS-042-canonical"),
+        checked.contains("declared but never cited: FS-042-canonical; cite it, or remove the declaration if nothing needs it"),
         "{checked}"
     );
 }

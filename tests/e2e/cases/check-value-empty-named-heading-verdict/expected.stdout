@@ -1,9 +1,9 @@
-values/digit-led.md:3: error: invalid value declaration for CONST-digit-led: value component heading must contain a nonempty component
+values/digit-led.md:3: error: invalid value declaration for CONST-digit-led: value component heading must contain a nonempty component; correct what the reason names
 values/digit-led.md:3: error: unmarked heading inside CONST-digit-led; number it (## 2. 3a:) as CONST-digit-led.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
-values/hyphen-led.md:3: error: invalid value declaration for CONST-hyphen-led: value component heading must contain a nonempty component
+values/hyphen-led.md:3: error: invalid value declaration for CONST-hyphen-led: value component heading must contain a nonempty component; correct what the reason names
 values/hyphen-led.md:3: error: unmarked heading inside CONST-hyphen-led; number it (## 2. -x:) as CONST-hyphen-led.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
-values/named-after-numeric.md:3: error: invalid value declaration for CONST-named-after-numeric: value component heading must contain a nonempty component
+values/named-after-numeric.md:3: error: invalid value declaration for CONST-named-after-numeric: value component heading must contain a nonempty component; correct what the reason names
 values/named-after-numeric.md:3: error: unmarked heading inside CONST-named-after-numeric; number it (## 2. 2.values:) as CONST-named-after-numeric.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
-values/well-formed.md:3: error: invalid value declaration for CONST-well-formed: value component heading must contain a nonempty component
+values/well-formed.md:3: error: invalid value declaration for CONST-well-formed: value component heading must contain a nonempty component; correct what the reason names
 values/well-formed.md:3: error: unmarked heading inside CONST-well-formed; number it (## 2. extra:) as CONST-well-formed.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
-docs/use.md:1: warning: declared but never cited: DOC-use
+docs/use.md:1: warning: declared but never cited: DOC-use; cite it, or remove the declaration if nothing needs it

@@ -224,7 +224,7 @@ The cost is that a path-scoped run walks what the whole-project run walks. That 
 With `--full` and an explicit non-root path, emit one CLI-level `warning:` on **stderr**, retaining the unflagged findings, streams and exit code. V1 says:
 
 ```
-warning: --full has no effect with an explicit PATH — sim already resolves against [scan] include, and the report is the path either way
+warning: --full has no effect with an explicit PATH — sim already resolves against [scan] include, and the report is the path either way; drop --full, or drop the path to check the whole project
 ```
 
 For v2, describe the configured resolution scope ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)), without calling it `[scan] include`. The two-scope rule ([§FS-check.1.3.6.1](FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)) already resolves project-wide. Warn; neither ignore the flag nor refuse the run. Replace `success` on a clean run; JSON emits one stderr finding, leaving stdout empty ([§FS-check.2.1](FS-check.md#21-report-format)).
@@ -613,7 +613,7 @@ Level `L` makes a unit of the whole file and of every heading subtree whose dept
 
 ##### 3.6.2.2 In a source file
 
-There are two ranks, and they are read by indentation rather than by syntax ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)): at level `2` every **unindented** doc-comment block is a unit — a parse-free stand-in for a top-level item, which holds across Rust, Python, Java, Go, and Kotlin — and at any higher level every doc-comment block is. What counts as a doc-comment is the per-language rule of [§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites), already read once per file by the scanner. The file is a unit at every level, as in Markdown. A Lisp doc-comment, which the Lisp row of [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages) made one in the release that added it, is a unit like any other. Through 0.18.x an ungrounded one was reported on the `warning:` channel, with the release in which it became an error appended to the message: `src/router.lisp:3: warning: ungrounded doc-comment: no § citation to a declared ID; this warning becomes an error in grund 0.19.0`. Since 0.19.0 it is the error every other ungrounded doc-comment is, `src/router.lisp:3: error: ungrounded doc-comment: no § citation to a declared ID`, with no clause appended ([§DF-line-prefix-forms-declare.grounding](../decisions/functional/DF-line-prefix-forms-declare.md#grounding-a-lisp-doc-block-that-cites-nothing-warns-first), [§DF-lisp-doc-grounding-lands-in-0-19](../decisions/functional/DF-lisp-doc-grounding-lands-in-0-19.md#df-lisp-doc-grounding-lands-in-0-19-an-ungrounded-lisp-doc-comment-is-the-ordinary-error-from-0190)).
+There are two ranks, and they are read by indentation rather than by syntax ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)): at level `2` every **unindented** doc-comment block is a unit — a parse-free stand-in for a top-level item, which holds across Rust, Python, Java, Go, and Kotlin — and at any higher level every doc-comment block is. What counts as a doc-comment is the per-language rule of [§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites), already read once per file by the scanner. The file is a unit at every level, as in Markdown. A Lisp doc-comment, which the Lisp row of [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages) made one in the release that added it, is a unit like any other. Through 0.18.x an ungrounded one was reported on the `warning:` channel, with the release in which it became an error appended to the message: `src/router.lisp:3: warning: ungrounded doc-comment: no § citation to a declared ID; this warning becomes an error in grund 0.19.0`. Since 0.19.0 it is the error every other ungrounded doc-comment is, `src/router.lisp:3: error: ungrounded doc-comment: no § citation to a declared ID; cite a declared ID within it`, with no release clause appended ([§DF-line-prefix-forms-declare.grounding](../decisions/functional/DF-line-prefix-forms-declare.md#grounding-a-lisp-doc-block-that-cites-nothing-warns-first), [§DF-lisp-doc-grounding-lands-in-0-19](../decisions/functional/DF-lisp-doc-grounding-lands-in-0-19.md#df-lisp-doc-grounding-lands-in-0-19-an-ungrounded-lisp-doc-comment-is-the-ordinary-error-from-0190)).
 
 ##### 3.6.2.3 The inline-declaration escape
 
@@ -624,10 +624,10 @@ The inline-declaration escape of [§FS-check.3.6](FS-check.md#36-ungrounded-unit
 A finding is located at its unit — line 1 for a file, the heading line for a section, the block's first line for a doc-comment — and names the unit and, when the unit sits in a non-citable home, the home:
 
 ```
-src/foo.rs:1: ungrounded source file: no § citation to a declared ID
-skills/triage/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID
-skills/review/SKILL.md:14: ungrounded section `## Steps` in kind home skills/: no § citation to a declared ID
-src/walk.rs:41: ungrounded doc-comment: no § citation to a declared ID
+src/foo.rs:1: ungrounded source file: no § citation to a declared ID; cite a declared ID within it
+skills/triage/SKILL.md:1: ungrounded file in kind home skills/: no § citation to a declared ID; cite a declared ID within it
+skills/review/SKILL.md:14: ungrounded section `## Steps` in kind home skills/: no § citation to a declared ID; cite a declared ID within it
+src/walk.rs:41: ungrounded doc-comment: no § citation to a declared ID; cite a declared ID within it
 ```
 
 The marker in the message is the configured one ([§FS-config.3.1](FS-config.md#31-reference--citation-form)). Section units arise only inside a non-citable home, since that is the only place Markdown is governed, so a section finding always names one. Every failing unit is reported ([§FS-check.3.6.3.1](FS-check.md#3631-every-failing-unit-is-reported)).
@@ -704,7 +704,7 @@ With `[reference] inline_note_layout` set to a layout and `inline_note_layout_ch
 When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) sets a `must` obligation for a citing kind, every top-level declaration of that kind must carry at least one citation satisfying each `must` entry, anywhere in its body. A declaration that does not is an error located at the declaration line, naming the unmet target:
 
 ```
-docs/architecture/AR-router.md:1: AR-router must cite FS or GOAL (citation direction)
+docs/architecture/AR-router.md:1: AR-router must cite FS or GOAL (citation direction); add such a citation within it
 ```
 
 The body extent and the citing-side classification come from the scanner ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)); the obligation pass is [AR-checker.2.9](../../crates/grund-core/src/checker/report.rs). The homeless kind ([§FS-check.3.11.1](FS-check.md#3111-the-homeless-kind)) and a non-citable kind ([§FS-check.3.11.2](FS-check.md#3112-a-non-citable-kind)) are asked per file instead, at the row's `grounding_level` ([§FS-check.3.11.3](FS-check.md#3113-the-unit-follows-grounding_level)); every failing unit is reported ([§FS-check.3.11.4](FS-check.md#3114-every-failing-unit-is-reported)), a file with no citation is no unit ([§FS-check.3.11.5](FS-check.md#3115-a-file-with-no-citation-is-no-unit)), and an `E2E` case has its own unit ([§FS-check.3.11.6](FS-check.md#3116-an-e2e-case)). The parallel `should` obligation is not an error; it is a suggestion ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). A declaration a stub pairs with is the unit wherever its target is: an outside target lends it its citations ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), so the obligation is met by what the target cites, a unit only that target supplies keeps the obligation from applying to nothing ([§FS-check.2.2.1.1](FS-check.md#2211-when-it-fires)), and the finding of one that cites nothing is an error at the declaration's line in the target ([§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target), [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
@@ -723,7 +723,7 @@ A **homeless-kind** obligation ([§FS-config.3.9.2](FS-config.md#392-the-homeles
 **A non-citable kind's obligation is per file too** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)), and its unit is every scanned file in the kind's home that carries at least one citation — **`.md` included**, unlike `code`. Obligations attach to declarations, and a kind that declares nothing would otherwise yield no units at all and let `must` pass vacuously; inheriting `code`'s Markdown exemption would do the same thing a second time, since such a home is usually all Markdown. The finding names the **home**, because the unit has no ID to print:
 
 ```
-skills/review/SKILL.md:1: skills/ must cite FS (citation direction)
+skills/review/SKILL.md:1: skills/ must cite FS (citation direction); add such a citation within it
 ```
 
 #### 3.11.3 The unit follows `grounding_level`
@@ -792,8 +792,8 @@ At most one *shorthand* finding per site, in one of three forms. Other rules jud
 
 ```
 docs/notes.md:5: shorthand citation §FS-042; write §FS-042-user-login
-docs/notes.md:6: shorthand citation §FS-999 matches no declaration
-docs/notes.md:7: shorthand citation §FS-042 is ambiguous: FS-042-user-login, FS-042-user-logout
+docs/notes.md:6: shorthand citation §FS-999 matches no declaration; write the full ID it means
+docs/notes.md:7: shorthand citation §FS-042 is ambiguous: FS-042-user-login, FS-042-user-logout; write the full ID it means
 ```
 
 The candidate list in the ambiguous form is sorted and complete — `grund` names every match and resolves none, because choosing one would be a guess and `check` reports facts about the tree ([§FS-check.5](FS-check.md#5-what-grund-does-not-check), [§GOAL-agent-grounding.3](../goals.md#3-what-this-rules-out), [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)). Duplicate *numbers* are not otherwise an error: [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) catches duplicate full IDs, and a repo may legitimately hold `FS-042-user-login` alongside `FS-042-user-logout` as long as nothing abbreviates them. The marker rendered in the message is the configured one ([§FS-config.3.1](FS-config.md#31-reference--citation-form)), and the qualified form names its alias (`<§>api/FS-042`, escaped here because this repo has no `api` member) so the replacement can be pasted as written.

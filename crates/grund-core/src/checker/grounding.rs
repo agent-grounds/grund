@@ -9,6 +9,7 @@
 //! per-file test became a per-unit one over structure the scanner records
 //! (§AR-scanner.2.7.2), with a row lookup in front of it.
 
+use crate::model::remedies;
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -137,9 +138,10 @@ pub(super) fn check_grounding(
                     line: Some(unit.start),
                     column: None,
                     message: format!(
-                        "{}: no {} citation to a declared ID",
+                        "{}: no {} citation to a declared ID; {}",
                         ungrounded_subject(&unit, place.as_deref()),
                         schema.citation.marker,
+                        remedies::ungrounded(),
                     ),
                     sites: Vec::new(),
                     authority: Vec::new(),

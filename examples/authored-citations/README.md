@@ -13,7 +13,7 @@ stdout is the golden below; stderr is empty:
 
 ```text
 docs/adr/use-redis.md:1: error: ADR-use-redis appears in docs/adr/README.md but not as an entry: an entry is a `§`-marked Markdown link to the declaration — became an error in grund 0.13.0
-docs/adr/consider-memory.md:1: warning: declared but never cited: ADR-consider-memory (its index entry at docs/adr/README.md:5 does not count as a use)
+docs/adr/consider-memory.md:1: warning: declared but never cited: ADR-consider-memory (its index entry at docs/adr/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it
 ```
 
 `docs/notes.md` cites `ADR-use-postgres` once in each form a link is written in: an inline link, an inline link whose text runs onto the next line, a reference link, a collapsed and a shortcut reference, an autolink and a raw HTML `<a>`. `grund fmt --write --marker --cross-refs examples/authored-citations/repo` writes nothing to it. A wrap there would put a link inside your link, which Markdown does not allow, and `fmt` does not touch your destination either. Each of those citations is still resolved and checked: rename the declaration and every one of them is reported dangling. Only the first, a citation alone in its link, is `fmt`'s own wrap, which it keeps pointing at the declaration's heading.

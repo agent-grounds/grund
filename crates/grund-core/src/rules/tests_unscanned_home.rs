@@ -28,7 +28,7 @@ const SOURCE: &str = concat!(
 );
 
 /// What the rule reports of `AR-second` when no citation counts for the declaration.
-const UNCITED: &str = "AR-second is cited by FS 0 times; RULE-ar-cited requires at least one";
+const UNCITED: &str = "AR-second is cited by FS 0 times; RULE-ar-cited requires at least one; add or remove the citations of it until the count fits";
 
 /// A stub of `AR-second` in `docs/` pointing at `source.rs`, which `[scan] include`
 /// leaves out, `FS-uses` citing `uses`, and a rule that every AR is cited.

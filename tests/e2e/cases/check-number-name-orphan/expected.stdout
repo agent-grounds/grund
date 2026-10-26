@@ -1,1 +1,1 @@
-docs/FS-x.md:7: error: orphan section FS-x.1.goals: missing prefix FS-x.1
+docs/FS-x.md:7: error: orphan section FS-x.1.goals: missing prefix FS-x.1; declare the prefix as a heading above it

@@ -157,8 +157,8 @@ fn per_target_counts_owners_and_keeps_zero_citation_targets() {
     assert_eq!(
         messages,
         vec![
-            "FS-one cites REQ-b 0 times; RULE-count requires exactly once",
-            "FS-one cites REQ-a 2 times; RULE-count requires exactly once",
+            "FS-one cites REQ-b 0 times; RULE-count requires exactly once; add or remove those citations until the count fits",
+            "FS-one cites REQ-a 2 times; RULE-count requires exactly once; add or remove those citations until the count fits",
         ]
     );
     assert!(
@@ -224,7 +224,7 @@ fn inbound_recovers_source_kind_without_promoting_target() {
     assert_eq!(diagnostics[0].line, Some(10));
     assert_eq!(
         diagnostics[0].message,
-        "REQ-a is cited by FS 0 times; RULE-count requires exactly 2"
+        "REQ-a is cited by FS 0 times; RULE-count requires exactly 2; add or remove the citations of it until the count fits"
     );
 }
 

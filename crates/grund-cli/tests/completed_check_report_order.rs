@@ -85,7 +85,7 @@ fn completed_report_order_single_project_matches_empty_workspace() {
     let expected = json!({"errors":[], "suggestions":[], "warnings":[
         warning("config-version-1", Value::Null, Value::Null,
             "grund.toml is version 1; migrate it with grund config migrate --to 2"),
-        warning("unused", json!("docs/fs.md"), json!(1), "declared but never cited: FS-a")
+        warning("unused", json!("docs/fs.md"), json!(1), "declared but never cited: FS-a; cite it, or remove the declaration if nothing needs it")
     ]});
     // Check complete contents before asserting raw order: setup drift is a different failure.
     for (arm, report) in [("single", &single), ("workspace", &workspace)] {

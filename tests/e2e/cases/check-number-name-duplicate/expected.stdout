@@ -1,1 +1,1 @@
-docs/FS-x.md:7: error: duplicate section FS-x.1.goals (also declared at docs/FS-x.md:11)
+docs/FS-x.md:7: error: duplicate section FS-x.1.goals (also declared at docs/FS-x.md:11); renumber or rename all but one of the headings

@@ -173,7 +173,10 @@ fn logic_engine_evaluates_hand_built_rule_and_facts_without_parser_or_scanner() 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, "missing-citation");
     assert_eq!(diagnostics[0].line, Some(2));
-    assert_eq!(diagnostics[0].message, "FS-demo must cite GOAL (RULE-fs)");
+    assert_eq!(
+        diagnostics[0].message,
+        "FS-demo must cite GOAL (RULE-fs); add such a citation within it"
+    );
 }
 
 /// §FS-rules.6: a direction absorbs its duplicate's finding only at a unit it
@@ -384,6 +387,6 @@ fn zero_citations_under_a_floor_above_one_is_a_cardinality_finding() {
     assert_eq!(diagnostics[0].code, "citation-cardinality");
     assert_eq!(
         diagnostics[0].message,
-        "FS-demo cites GOAL 0 times; RULE-fs requires at least 2"
+        "FS-demo cites GOAL 0 times; RULE-fs requires at least 2; add or remove those citations until the count fits"
     );
 }

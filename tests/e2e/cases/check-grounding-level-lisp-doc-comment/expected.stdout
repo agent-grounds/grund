@@ -1,2 +1,2 @@
-src/main.rs:3: error: ungrounded doc-comment: no § citation to a declared ID
-src/router.lisp:3: error: ungrounded doc-comment: no § citation to a declared ID
+src/main.rs:3: error: ungrounded doc-comment: no § citation to a declared ID; cite a declared ID within it
+src/router.lisp:3: error: ungrounded doc-comment: no § citation to a declared ID; cite a declared ID within it

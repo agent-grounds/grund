@@ -64,9 +64,9 @@ does not count. An FS that writes `## 1. Behaviour` before its Terms, one with
 no `terms` chapter, and one that titles it `Glossary` get:
 
 ```text
-docs/fs/FS-login.md:9: error: FS-login.terms is section 2 of 2; kind FS places it first
-docs/fs/FS-logout.md:1: error: FS-logout has no terms field; kind FS declares it
-docs/fs/FS-reset.md:5: error: FS-reset.terms is titled "Glossary"; kind FS titles it "Terms"
+docs/fs/FS-login.md:9: error: FS-login.terms is section 2 of 2; kind FS places it first; move the section there
+docs/fs/FS-logout.md:1: error: FS-logout has no terms field; kind FS declares it; add its terms section
+docs/fs/FS-reset.md:5: error: FS-reset.terms is titled "Glossary"; kind FS titles it "Terms"; retitle the heading to match
 ```
 
 A missing field is reported at the declaration's title line; every other
@@ -101,9 +101,9 @@ one finding:
   head is absent, the next field is unconstrained.
 
 ```text
-docs/ar/AR-late.md:9: error: AR-late.placement is section 2 of 3; kind AR places it first
-docs/ar/AR-mis.md:13: error: AR-mis.terms is section 3 of 3; kind AR places it directly after placement
-docs/ar/AR-noplace.md:1: error: AR-noplace has no placement field; kind AR declares it
+docs/ar/AR-late.md:9: error: AR-late.placement is section 2 of 3; kind AR places it first; move the section there
+docs/ar/AR-mis.md:13: error: AR-mis.terms is section 3 of 3; kind AR places it directly after placement; move the section there
+docs/ar/AR-noplace.md:1: error: AR-noplace has no placement field; kind AR declares it; add its placement section
 ```
 
 ## A decision has a status, and nothing it does not declare
@@ -127,8 +127,8 @@ numbered sections and nothing else, on the channel its strength names. The same
 shape fits a DA.
 
 ```text
-docs/df/DF-session.md:3: error: DF-session.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded
-docs/df/DF-session.md:7: error: DF-session.surprise is not a field of kind DF, which is closed; its fields: status
+docs/df/DF-session.md:3: error: DF-session.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded; retitle the heading to one of them
+docs/df/DF-session.md:7: error: DF-session.surprise is not a field of kind DF, which is closed; its fields: status; rename it to one of them, number it, or add it to the kind's fields
 ```
 
 A scalar takes no `title`, because its title is its value, and no `content`,

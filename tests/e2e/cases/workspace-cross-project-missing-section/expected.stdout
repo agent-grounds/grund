@@ -1,2 +1,2 @@
 docs/functional-spec/FS-root.md:3: error: missing section api/FS-session.99
-docs/functional-spec/FS-root.md:1: warning: declared but never cited: FS-root (its index entry at docs/functional-spec/README.md:5 does not count as a use)
+docs/functional-spec/FS-root.md:1: warning: declared but never cited: FS-root (its index entry at docs/functional-spec/README.md:5 does not count as a use); cite it, or remove the declaration if nothing needs it

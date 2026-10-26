@@ -1,2 +1,2 @@
-pkg/requirements.md:3: warning: declared but never cited: FS-001-login
-requirements.md:3: warning: declared but never cited: FS-example
+pkg/requirements.md:3: warning: declared but never cited: FS-001-login; cite it, or remove the declaration if nothing needs it
+requirements.md:3: warning: declared but never cited: FS-example; cite it, or remove the declaration if nothing needs it

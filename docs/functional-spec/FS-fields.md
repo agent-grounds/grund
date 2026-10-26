@@ -27,9 +27,9 @@ position = "first"
 With that config, an FS whose `## terms: Terms` chapter comes after `## 1. Behaviour`, and a DF that writes `## status: Maybe` and a `## surprise: …` chapter, are reported as:
 
 ```text
-docs/df/DF-session.md:3: error: DF-session.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded
-docs/df/DF-session.md:7: error: DF-session.surprise is not a field of kind DF, which is closed; its fields: status
-docs/fs/FS-login.md:7: error: FS-login.terms is section 2 of 2; kind FS places it first
+docs/df/DF-session.md:3: error: DF-session.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded; retitle the heading to one of them
+docs/df/DF-session.md:7: error: DF-session.surprise is not a field of kind DF, which is closed; its fields: status; rename it to one of them, number it, or add it to the kind's fields
+docs/fs/FS-login.md:7: error: FS-login.terms is section 2 of 2; kind FS places it first; move the section there
 ```
 
 and the run exits `1`.
@@ -207,20 +207,20 @@ Each section below is one finding `grund check` reports about a declaration's sh
 
 ### checks.missing-field: Missing field
 
-A declaration with no direct section of a field's name, reported at the declaration's title line: `FS-logout has no terms field; kind FS declares it`.
+A declaration with no direct section of a field's name, reported at the declaration's title line: `FS-logout has no terms field; kind FS declares it; add its terms section`.
 
 ### checks.misplaced-field: Misplaced field
 
-A present field that does not stand where its placement puts it ([§FS-fields.order](FS-fields.md#order-order)), reported at the field's heading: `FS-login.terms is section 2 of 2; kind FS places it first`. The counts are of direct sections. The placement reads `first`, `last`, or `directly after <name>`, naming the nearest present predecessor; it reads `first` when every predecessor of a chain whose head is `first` is absent.
+A present field that does not stand where its placement puts it ([§FS-fields.order](FS-fields.md#order-order)), reported at the field's heading: `FS-login.terms is section 2 of 2; kind FS places it first; move the section there`. The counts are of direct sections. The placement reads `first`, `last`, or `directly after <name>`, naming the nearest present predecessor; it reads `first` when every predecessor of a chain whose head is `first` is absent.
 
 ### checks.mistitled-field: Mistitled field
 
-A present field with a `title` whose display name differs from it, reported at the field's heading: `FS-reset.terms is titled "Glossary"; kind FS titles it "Terms"`.
+A present field with a `title` whose display name differs from it, reported at the field's heading: `FS-reset.terms is titled "Glossary"; kind FS titles it "Terms"; retitle the heading to match`.
 
 ### checks.invalid-field-value: Invalid field value
 
-A present scalar field whose display name is not in its `one_of`, reported at the field's heading, the values listed in their configured order: `DF-session.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded`.
+A present scalar field whose display name is not in its `one_of`, reported at the field's heading, the values listed in their configured order: `DF-session.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded; retitle the heading to one of them`.
 
 ### checks.undeclared-chapter: Undeclared chapter
 
-A direct named section of a declaration of a closed kind that no field of the kind declares, reported at the section's heading, the fields listed in header order: `DF-session.surprise is not a field of kind DF, which is closed; its fields: status`. A closed kind with no field reads `its fields: none`. Numbered sections are always admitted.
+A direct named section of a declaration of a closed kind that no field of the kind declares, reported at the section's heading, the fields listed in header order: `DF-session.surprise is not a field of kind DF, which is closed; its fields: status; rename it to one of them, number it, or add it to the kind's fields`. A closed kind with no field reads `its fields: none`. Numbered sections are always admitted.
