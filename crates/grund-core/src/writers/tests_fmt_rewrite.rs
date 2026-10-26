@@ -18,6 +18,7 @@ fn marked(line: &str, is_md: bool) -> String {
         is_md,
         &mut [],
     )
+    .0
 }
 
 /// §FS-fmt.2.3: in Markdown prose the pass promotes the bare citation and leaves

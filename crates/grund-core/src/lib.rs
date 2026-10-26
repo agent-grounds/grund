@@ -377,11 +377,11 @@ pub use api::{
 pub use api::{
     CheckOpts, CheckOutput, CompleteIdsOpts, CoverCitation, CoverEntry, CoverLineOwner,
     CoverLineSection, CoverLines, CoverLinesOpts, CoverLinesOutput, CoverOpts, CoverOutput,
-    CoverTextCitation, CoverTextEntry, CoverTextOutput, FmtChange, FmtOpts, FmtOutput, IdOpts,
-    IdProposal, IdProposalOutcome, ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot,
-    RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsQueryFailureKind, check,
-    check_with_opts, complete_ids, cover, cover_lines, cover_text, format_references, list,
-    propose_id, refs, refs_outcome, scan, show,
+    CoverTextCitation, CoverTextEntry, CoverTextOutput, FmtChange, FmtCounts, FmtLockFile, FmtOpts,
+    FmtOutput, IdOpts, IdProposal, IdProposalOutcome, ListEntry, ListOpts, ListOutput, ListSummary,
+    ListValueRoot, RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure,
+    RefsQueryFailureKind, check, check_with_opts, complete_ids, cover, cover_lines, cover_text,
+    format_references, list, propose_id, refs, refs_outcome, scan, show,
 };
 // The `test-binding-writes` hooks, outside the promise with their feature.
 #[cfg(feature = "test-binding-writes")]

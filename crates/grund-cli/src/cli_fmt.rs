@@ -81,19 +81,25 @@ fn command_fmt(args: &[String]) -> ExitCode {
             .collect::<Vec<_>>();
         files.sort();
         files.dedup();
+        // §FS-fmt.3.7: the totals sum what each change says it did.
+        let mut counts = grund_core::FmtCounts::default();
+        for change in &output.changes {
+            counts += change.counts;
+        }
+        let totals = fmt_write_totals(&counts);
         println!(
-            "rewrote {} line{}{}",
+            "rewrote {} line{}{}{}",
             output.changes.len(),
             if output.changes.len() == 1 { "" } else { "s" },
-            if files.is_empty() { "" } else { ":" }
+            if files.is_empty() { "" } else { ":" },
+            if totals.is_empty() { String::new() } else { format!(" {totals}") }
         );
         for path in &files {
-            let count = output
-                .changes
-                .iter()
-                .filter(|change| &change.path == path)
-                .count();
-            println!("  {path} ({count})");
+            let in_file = || output.changes.iter().filter(|change| &change.path == path);
+            // §FS-section-lock.write.report: a lock file created or deleted says so.
+            let lock_file = in_file().find_map(|change| change.lock_file);
+            let suffix = lock_file.map_or(String::new(), |it| format!(" {}", it.as_str()));
+            println!("  {path} ({}){suffix}", in_file().count());
         }
     } else {
         for change in &output.changes {
@@ -114,4 +120,22 @@ fn command_fmt(args: &[String]) -> ExitCode {
     } else {
         ExitCode::FAILURE
     }
+}
+
+/// The `--write` summary's totals (§FS-fmt.3.7): one term per kind, in
+/// §FS-fmt.3.5.1's label order with the lock last, a zero left out and a one
+/// singular, joined by `, `. A class added later takes a unit here too
+/// (§FS-fmt.requirements.next-class).
+fn fmt_write_totals(counts: &grund_core::FmtCounts) -> String {
+    let terms = [
+        (counts.triggers_marked, "trigger marked", "triggers marked"),
+        (counts.citations_marked, "citation marked", "citations marked"),
+        (counts.local_sections_expanded, "local section expanded", "local sections expanded"),
+        (counts.shorthands_expanded, "shorthand expanded", "shorthands expanded"),
+        (counts.links_written, "link written", "links written"),
+        (counts.section_lock_entries, "section-lock entry", "section-lock entries"),
+    ];
+    let terms = terms.iter().filter(|(count, _, _)| *count > 0);
+    let terms = terms.map(|(count, one, many)| format!("{count} {}", if *count == 1 { one } else { many }));
+    terms.collect::<Vec<_>>().join(", ")
 }
