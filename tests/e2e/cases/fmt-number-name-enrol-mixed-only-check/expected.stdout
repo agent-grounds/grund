@@ -1,2 +1,2 @@
-.grund/sections/FS-x.lock:1: section lock: add FS-x.1.goals
+.grund/sections/FS-x.lock:1: section lock: add FS-x.1.goals; creates the file
 .grund/sections/FS-x.lock:2: section lock: add FS-x.goals.4
