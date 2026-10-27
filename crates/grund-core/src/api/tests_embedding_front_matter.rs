@@ -11,7 +11,9 @@ fn snapshot_sections(root: &std::path::Path) -> Vec<Value> {
     let request = node_request("scan", vec![json!(root.to_string_lossy())], root);
     let data = node_embedding_call(request);
     assert_eq!(data["failure"], Value::Null, "{data}");
-    let declarations = data["result"]["snapshot"]["declarations"].as_array().unwrap();
+    let declarations = data["result"]["snapshot"]["declarations"]
+        .as_array()
+        .unwrap();
     assert_eq!(declarations.len(), 1, "{data}");
     declarations[0]["sections"].as_array().unwrap().clone()
 }

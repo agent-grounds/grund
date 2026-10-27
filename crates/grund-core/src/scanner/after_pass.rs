@@ -50,9 +50,9 @@ impl AfterPass {
             front_matter: holds_front_matter(findings, schema),
         }
     }
-    /// Settle each declaration's section map: narrow it to the body
-    /// (§FS-declarations.section.map), then enter the front-matter coordinates,
-    /// which lie above every body (§FS-fields.front-matter.coordinates).
+    /// Settle each declaration's section map: narrow it to the body, then enter
+    /// the front-matter coordinates, which lie above every body
+    /// (§FS-fields.front-matter.coordinates).
     /// `front_matter` is the block's last line, as the record keeps it.
     pub(super) fn settle_sections(
         &self,
