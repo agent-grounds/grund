@@ -96,7 +96,7 @@ impl<'a> Reader<'a> {
                 Table::FrontMatter(fields::open_field(self, &row, FRONT_MATTER, line)?)
             }
             Opened::Key(row, key) => {
-                let (field, key) = front_matter::open_key(self, &row, &key, line)?;
+                let (field, key) = front_matter::open_key_table(self, &row, &key, line)?;
                 Table::FrontMatterKey(field, key)
             }
             Opened::Definition(name) => {
@@ -168,7 +168,9 @@ impl<'a> Reader<'a> {
             Table::Definition(index) => sources::definition_key(self, *index, key, value, line),
             Table::Row(index) => schema::row_key(self, *index, key, value, line),
             Table::Field(index) => fields::field_key(self, *index, key, value, line),
-            Table::FrontMatter(index) => front_matter::field_key(self, *index, key, value, line),
+            Table::FrontMatter(index) => {
+                front_matter::front_matter_key(self, *index, key, value, line)
+            }
             Table::FrontMatterKey(field, index) => {
                 front_matter::key_key(self, *field, *index, key, value, line)
             }
