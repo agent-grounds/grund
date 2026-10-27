@@ -262,11 +262,15 @@ fn a_slice_ending_in_a_multi_byte_character_keeps_its_last_line() {
 
 /// §FS-fields.front-matter.coordinates: a value-less key with no colon of its own,
 /// in a flow mapping or written `? key`, ends at the key and never at the next
-/// key's colon, nor at a colon in a comment after it.
+/// key's colon, nor at a colon in a comment after it or in the next key's tag.
 #[test]
 fn a_key_with_no_colon_of_its_own_ends_at_the_key() {
     assert_eq!(
         slices("---\n{status, date: x}\n---\n"),
+        vec![slice("status", "status", 2), slice("date", "date: x", 2)]
+    );
+    assert_eq!(
+        slices("---\r\n{status, date: x}\r\n---\r\n"),
         vec![slice("status", "status", 2), slice("date", "date: x", 2)]
     );
     assert_eq!(
@@ -277,6 +281,78 @@ fn a_key_with_no_colon_of_its_own_ends_at_the_key() {
         slices("---\ndate: x\n? status\n# note: y\n---\n"),
         vec![slice("date", "date: x", 2), slice("status", "status", 3)]
     );
+    assert_eq!(
+        slices("---\n? \"status\"\n---\n"),
+        vec![slice("status", "\"status\"", 2)]
+    );
+    assert_eq!(
+        slices("---\n{\"status\", date: x}\n---\n"),
+        vec![
+            slice("status", "\"status\"", 2),
+            slice("date", "date: x", 2)
+        ]
+    );
+    for text in [
+        "---\n{date: x, status}\n# c: d\n---\n",
+        "---\n{date: x, status} # c: d\n---\n",
+    ] {
+        assert_eq!(
+            slices(text),
+            vec![slice("date", "date: x", 2), slice("status", "status", 2)]
+        );
+    }
+    assert_eq!(
+        slices("---\n{date: \"a#b\", status}\n---\n"),
+        vec![
+            slice("date", "date: \"a#b\"", 2),
+            slice("status", "status", 2)
+        ]
+    );
+    assert_eq!(
+        slices("---\n? status\n&a date: x\n---\n"),
+        vec![slice("status", "status", 2), slice("date", "date: x", 3)]
+    );
+    // A colon in the next key's tag is no colon of this key's own.
+    assert_eq!(
+        slices("---\n? status\n!<tag:yaml.org,2002:str> date: x\n---\n"),
+        vec![slice("status", "status", 2), slice("date", "date: x", 3)]
+    );
+    assert_eq!(
+        slices("---\n{status, !<tag:x> date: y}\n---\n"),
+        vec![slice("status", "status", 2), slice("date", "date: y", 2)]
+    );
+}
+
+/// §FS-fields.front-matter.coordinates: a value-less key that writes its colon
+/// ends at it, wherever it is written after the key, and a colon in a comment or
+/// in a quoted key never ends another entry.
+#[test]
+fn a_key_with_a_colon_of_its_own_ends_at_it() {
+    assert_eq!(
+        slices("---\n\"status\" :\n---\n"),
+        vec![slice("status", "\"status\" :", 2)]
+    );
+    assert_eq!(
+        slices("---\nstatus: # note: y\n---\n"),
+        vec![slice("status", "status:", 2)]
+    );
+    assert_eq!(
+        slices("---\n? status # x: y\n:\n---\n"),
+        vec![slice("status", "status # x: y\n:", 3)]
+    );
+    assert_eq!(
+        slices("---\nstatus:\nnote: \"a #b: c\"\n---\n"),
+        vec![
+            slice("status", "status:", 2),
+            slice("note", "note: \"a #b: c\"", 3)
+        ]
+    );
+    for text in [
+        "---\n? \"a:b\"\nstatus: x\n---\n",
+        "---\n\"a:b\":\nstatus: x\n---\n",
+    ] {
+        assert_eq!(slices(text), vec![slice("status", "status: x", 3)]);
+    }
 }
 
 /// §FS-fields.front-matter.reading: a CRLF file reads as its LF form does, and
