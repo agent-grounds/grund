@@ -8,7 +8,7 @@ example is for a repository whose documents already carry front matter, in the O
 Knowledge Format's shape or a static-site generator's, and that wants the relationships it
 writes there checked without repeating each one in the body.
 
-The fixture is the same in both runs: a version-2 `grund.toml` with a `METRIC` kind and a
+The first two runs share one fixture: a version-2 `grund.toml` with a `METRIC` kind and a
 `POL` kind, the policy [`POL-revenue-recognition`](1-refs-from/repo/bundle/policies/revenue-recognition.md), and the metric
 [`METRIC-net-revenue`](1-refs-from/repo/bundle/metrics/net-revenue.md), whose front matter names the policy as a source:
 
@@ -26,8 +26,9 @@ sources:
 ```
 
 The line `# METRIC-gross: …` is a YAML comment. It declares nothing, so `grund list` shows
-`METRIC-net-revenue` and `POL-revenue-recognition` and no `METRIC-gross`. The example pins
-two runs ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). Neither writes anything.
+`METRIC-net-revenue` and `POL-revenue-recognition` and no `METRIC-gross`. The last two runs
+declare the front matter as a field of the `METRIC` kind, so grund reads its keys too. The
+example pins four runs ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). None writes anything.
 
 ## Step 1: what the metric cites
 
@@ -62,6 +63,73 @@ success
 The metric satisfies the rule through its front matter alone, and citation directions read
 the citation the same way.
 
+## Step 3: hold the front matter to a shape
+
+A kind that declares the `front-matter` field reads its first declaration's YAML block, and
+the block's top-level keys become the field's sections ([§FS-fields.front-matter](../../docs/functional-spec/FS-fields.md#front-matter-front-matter-is-a-field)). The third
+run's `grund.toml` declares it on `METRIC`, closed, with three keys, and holds `type` to one
+value:
+
+```toml
+[schema.kinds.METRIC.fields.front-matter]
+presence = "must"
+closed = "must"
+
+[schema.kinds.METRIC.fields.front-matter.keys.type]
+presence = "must"
+one_of = ["Metric"]
+
+[schema.kinds.METRIC.fields.front-matter.keys.title]
+
+[schema.kinds.METRIC.fields.front-matter.keys.sources]
+```
+
+Beside the net-revenue metric sits a second one,
+[`METRIC-gross-bookings`](3-fields/repo/bundle/metrics/gross-bookings.md), whose block calls it
+a `Measure` and carries an `owner` key the field does not declare:
+
+```markdown
+---
+type: Measure
+title: Gross bookings, monthly
+owner: finance
+sources:
+  - id: rev-policy
+    resource: §POL-revenue-recognition
+---
+```
+
+```bash
+grund check examples/front-matter/3-fields/repo
+```
+
+```text
+bundle/metrics/gross-bookings.md:2: error: METRIC-gross-bookings.front-matter.type is "Measure"; kind METRIC admits Metric; change the value to one of them
+bundle/metrics/gross-bookings.md:4: error: METRIC-gross-bookings.front-matter.owner is not a key of kind METRIC's front matter, which is closed; its keys: type, title, sources; rename it to one of them, remove it, or add it to the field's keys
+```
+
+Each finding is at its key's line. The net-revenue metric passes: its `type` is `Metric`,
+and the YAML comment between its keys is no key. A metric with no front matter at all would
+be reported too, because the field's `presence` is `must`.
+
+## Step 4: a rule over one key
+
+The keys are sections, so a chapter rule can name one by its whole path ([§FS-rules.2.1](../../docs/functional-spec/FS-rules.md#21-a-chapters-name-is-its-whole-path)):
+
+```bash
+grund check examples/front-matter/4-key-rule/repo \
+  --rule "The front-matter.sources chapter of each METRIC must cite at least one POL." --only-rule
+```
+
+```text
+success
+```
+
+Step 2's rule counts a citation anywhere in the metric. This one reads only the citations
+inside the `sources` key, so a policy cited in the body alone would fail it.
+`grund show METRIC-net-revenue.front-matter.sources` prints that key as written, and
+`grund list --glob 'METRIC-*.front-matter.*'` lists every key of every metric.
+
 ## Trade-offs
 
 - **Only the first declaration.** Every front-matter format keeps one document per file, so
@@ -70,8 +138,12 @@ the citation the same way.
 - **Never rewritten.** `grund fmt` leaves the block byte for byte, because a Markdown link is
   not a valid YAML or TOML value. `fmt --check` reports nothing there, and a `$$` typed in
   the block stays as typed.
-- **No values read.** grund parses no YAML or TOML. A citation is found in the text as it is
-  anywhere else, so a value that is not a citation is just text.
+- **Values read only where a kind asks.** A kind that declares no `front-matter` field parses
+  no YAML or TOML: a citation is found in the block as it is anywhere else, and a value
+  that is not a citation is just text. A kind that declares it parses the YAML, and a
+  key's value is the text it decodes to, never a typed value, so `one_of` compares
+  `2026-02-03` and `no` as written. A TOML block is not read as a field yet; it is
+  reported as `unreadable-front-matter`.
 - **The extent is exact.** Line 1 must be exactly `---` or `+++`, closed by the same line or
   by `...` for `---`. A block that never closes is not front matter, and the file reads as
   it would without it.

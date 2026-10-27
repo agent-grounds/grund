@@ -442,7 +442,7 @@ for the affected clients.
 | [Reviewing code](docs/user-facing/reviewing.md) | a citation's blast radius, diff recipes |
 | [Chapter rules](docs/user-facing/rules.md) | checked rules in controlled English — [runnable example](examples/rules/) |
 | [Sources](docs/user-facing/sources.md) | which files a version-2 project reads, and which comments declare — [runnable example](examples/sources/) |
-| [Fields](docs/user-facing/fields.md) | a version-2 kind's chapters as fields, their order, titles and values checked — [runnable example](examples/fields/) |
+| [Fields](docs/user-facing/fields.md) | a version-2 kind's chapters as fields, their order, titles and values checked, and front matter as a field — [runnable example](examples/fields/), [front matter](examples/front-matter/) |
 | [Values](docs/user-facing/values.md) | one value, declared once, checked wherever it is quoted |
 | [External facts](docs/user-facing/external-facts.md) | cite tickets as committed offline snapshots |
 | [Workspaces](docs/user-facing/repository-options.md#workspaces-and-sub-projects) | citations across sub-projects |

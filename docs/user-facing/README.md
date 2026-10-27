@@ -31,7 +31,7 @@ command's own `--help` page links the guide and example that cover it
 | [Terminal feedback with watch](watch.md) | — |
 | [Writing chapter rules](rules.md) | [`examples/rules`](../../examples/rules/) |
 | [Sources: which files grund reads](sources.md) | [`examples/sources`](../../examples/sources/) |
-| [Kind fields](fields.md) | [`examples/fields`](../../examples/fields/) |
+| [Kind fields](fields.md) | [`examples/fields`](../../examples/fields/), [`examples/front-matter`](../../examples/front-matter/) |
 | [First-class values](values.md) | [`examples/values`](../../examples/values/) |
 | — | [`examples/workspace`](../../examples/workspace/) |
 

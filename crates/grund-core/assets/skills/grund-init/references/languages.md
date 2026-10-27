@@ -131,6 +131,27 @@ Cons: can be noisy; recommend narrowing after the first `grund check`, then `gru
 
 Evidence: Markdown files that open with a `---` or `+++` block (Jekyll, Hugo, Zola, Pandoc, Docusaurus). A repository whose Markdown opens with YAML or TOML front matter can keep its relationships there as `§` citations: they count for the file's first declaration, a `#` comment in the block declares nothing, and `grund fmt` leaves the block as written.
 
+When existing records keep facts that define their kind in YAML front matter — a MADR `status`, an OKF `type` — declare those facts as the kind's `front-matter` field and its keys, not as chapters that mirror them. Version 2 only; the block's top-level keys become the field's sections, `check` holds each key, and a `+++` (TOML) block is not read as a field yet ([fields guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/fields.md#front-matter-is-a-field)):
+
+```toml
+[schema.kinds.ADR.fields.front-matter]
+presence = "must"
+closed = "must"
+
+[schema.kinds.ADR.fields.front-matter.keys.status]
+presence = "must"
+one_of = ["proposed", "accepted", "rejected", "deprecated", "superseded"]
+
+[schema.kinds.ADR.fields.front-matter.keys.date]
+presence = "must"
+
+[schema.kinds.ADR.fields.front-matter.keys.decision-makers]
+
+[schema.kinds.ADR.fields.front-matter.keys.consulted]
+
+[schema.kinds.ADR.fields.front-matter.keys.informed]
+```
+
 ### Version 2: `[schema.sources]`
 
 With `grund_config_version = 2` there is no `[scan]`: name the languages the evidence shows, map each suffix the v2 epoch lacks, and write generated paths as gitignore-style globs, which have no built-in defaults ([sources guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/sources.md)). For C with headers:
