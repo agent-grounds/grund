@@ -221,16 +221,9 @@ impl<'a> Content<'a> {
         else {
             return Ok(Vec::new());
         };
-        // §FS-fields.front-matter.coordinates: an entry ends where the next key starts.
-        let bounds = entries
-            .iter()
-            .skip(1)
-            .map(|(key, _)| key.span.start)
-            .chain([self.text.len()]);
         Ok(entries
             .iter()
-            .zip(bounds)
-            .map(|((key, value), bound)| self.key(key, value, bound))
+            .map(|(key, value)| self.key(key, value))
             .collect())
     }
 
@@ -263,8 +256,8 @@ impl<'a> Content<'a> {
     }
 
     /// §FS-fields.front-matter.keys, §FS-fields.front-matter.values: one entry
-    /// of the top-level mapping, which ends before `bound`.
-    fn key(&self, key: &YamlNode, value: &YamlNode, bound: usize) -> Key<'a> {
+    /// of the top-level mapping.
+    fn key(&self, key: &YamlNode, value: &YamlNode) -> Key<'a> {
         let written = &self.text[key.span.start..key.span.end];
         let (name, section) = match &key.kind {
             YamlKind::Scalar { value, .. } => (value.clone(), named_section_component(value)),
@@ -283,7 +276,7 @@ impl<'a> Content<'a> {
         // §FS-fields.front-matter.coordinates: from the key to its value's end, or
         // to its colon where it has no value, no line ending at the end.
         let end = if empty(value) {
-            self.colon_end(key.span.end, bound).unwrap_or(key.span.end)
+            self.colon_end(key.span.end).unwrap_or(key.span.end)
         } else {
             value.span.end.max(key.span.end)
         };
@@ -306,17 +299,21 @@ impl<'a> Content<'a> {
         }
     }
 
-    /// Just past the colon a value-less key writes between `from` and `bound`, its
-    /// entry's end, skipping comments; `None` for a key that writes none (`? k`, `{k}`).
-    fn colon_end(&self, from: usize, bound: usize) -> Option<usize> {
+    /// Just past the colon a value-less key writes after it, at `from`, its
+    /// entry's end: the colon is the first thing written after the key, past
+    /// whitespace, line breaks and comments. `None` for a key that writes none
+    /// (`? k`, `{k}`), where anything else comes first: a `,`, a `}`, or the
+    /// next key with its tag or anchor.
+    fn colon_end(&self, from: usize) -> Option<usize> {
         let mut comment = false;
-        for (at, ch) in self.text[from..bound].char_indices() {
+        for (at, ch) in self.text[from..].char_indices() {
             match ch {
                 '\n' => comment = false,
                 _ if comment => {}
                 '#' => comment = true,
                 ':' => return Some(from + at + 1),
-                _ => {}
+                ' ' | '\t' | '\r' => {}
+                _ => return None,
             }
         }
         None
