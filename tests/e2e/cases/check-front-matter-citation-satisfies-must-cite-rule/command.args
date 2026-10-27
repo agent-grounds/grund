@@ -1,0 +1,1 @@
+check {repo} --rule "Each METRIC must cite at least one POL." --only-rule
