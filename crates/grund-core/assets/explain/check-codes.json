@@ -1668,7 +1668,7 @@
      },
      {
       "label": "byte-order-mark",
-      "text": "remove the byte-order mark before the --- on line 1"
+      "text": "remove the byte-order mark before the {delimiter} on line 1"
      },
      {
       "label": "key",
@@ -1708,7 +1708,7 @@
      },
      {
       "label": "byte-order-mark",
-      "text": "remove the byte-order mark before the --- on line 1"
+      "text": "remove the byte-order mark before the {delimiter} on line 1"
      },
      {
       "label": "key",

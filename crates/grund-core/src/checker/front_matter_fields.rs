@@ -73,7 +73,9 @@ impl<'a> Shape<'a> {
         };
         let remedy = match absence {
             FrontMatterAbsence::NoBlock => remedies::missing_field_block(),
-            FrontMatterAbsence::ByteOrderMark => remedies::missing_field_byte_order_mark(),
+            FrontMatterAbsence::ByteOrderMark(delimiter) => {
+                remedies::missing_field_byte_order_mark(delimiter)
+            }
             FrontMatterAbsence::NotFirst => remedies::missing_field_not_first(),
             FrontMatterAbsence::DocComment => remedies::missing_field_doc_comment(),
         };
