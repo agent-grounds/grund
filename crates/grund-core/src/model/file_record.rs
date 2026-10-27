@@ -131,6 +131,9 @@ pub(crate) struct FileRecord {
     /// The source lines inside a fence of their comment block, delimiters
     /// included, in line order; empty for Markdown (§FS-languages.fence.comment-block).
     pub(crate) fenced: Vec<usize>,
+    /// The last line of a Markdown file's front matter, `None` where it has none
+    /// (§FS-check.1.1.5.2).
+    pub(crate) front_matter: Option<usize>,
     line_starts: OnceLock<Vec<usize>>,
 }
 
@@ -144,8 +147,17 @@ impl FileRecord {
             blocks: Vec::new(),
             zones: Vec::new(),
             fenced: Vec::new(),
+            front_matter: None,
             line_starts: OnceLock::new(),
         }
+    }
+
+    /// Whether line `line` (1-indexed) sits in the file's front matter, the
+    /// region whose citations its first declaration owns and `fmt` never
+    /// rewrites (§FS-check.1.1.5.2, §FS-check.1.1.5.2.1).
+    pub(crate) fn in_front_matter(&self, line: usize) -> bool {
+        self.front_matter
+            .is_some_and(|last| line >= 1 && line <= last)
     }
 
     pub(crate) fn text(&self) -> &str {

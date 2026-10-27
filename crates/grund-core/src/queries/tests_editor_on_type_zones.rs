@@ -49,3 +49,35 @@ fn on_type_leaves_a_trigger_in_a_reference_key_as_written() {
         "the visible text of a full reference is no key"
     );
 }
+
+/// §FS-check.1.1.5.2: front matter is never rewritten, so neither a trigger nor a
+/// shorthand typed in it is converted, while the same text below the block is.
+#[test]
+fn on_type_leaves_front_matter_as_written() {
+    let f = Fixture::new();
+    let text = "---\nsee: $$FS-login x\n---\n\nSee $$FS-login x.\n";
+    let path = f.0.join("docs/notes.md");
+    let declarations = vec![DeclaredId {
+        path: &f.0,
+        id: "FS-login",
+    }];
+    let edits = |line_index: usize| {
+        let line = text.lines().nth(line_index).expect("the line");
+        let cursor = line.find("$$FS-login").expect("the trigger") + "$$FS-login".len();
+        on_type_line_edits(&path, text, line_index, cursor, &declarations)
+            .expect("on-type edits")
+            .len()
+    };
+    assert_eq!(edits(1), 0, "a trigger in front matter stays a trigger");
+    assert_eq!(edits(4), 1, "below the block it converts");
+    let config = crate::workspace::resolve_workspace_config(&path).expect("config");
+    assert!(!super::editor_on_type::line_is_rewritable(
+        &config, &path, text, 1
+    ));
+    assert!(!super::editor_on_type::line_is_rewritable(
+        &config, &path, text, 0
+    ));
+    assert!(super::editor_on_type::line_is_rewritable(
+        &config, &path, text, 4
+    ));
+}

@@ -78,12 +78,19 @@ impl DocReading {
             defined: false,
             reading: &mut reading,
         };
-        let mut blocks = MarkdownBlocks::default();
+        // §FS-check.1.1.5.2: a whole file's front matter is a block of its own, so
+        // a `[` opened in it never pairs with a `]` below it.
+        let mut blocks = MarkdownBlocks::lines(lines.iter().copied());
+        let front_matter = blocks.front_matter().unwrap_or(0);
         let mut paragraphs = Paragraphs::default();
         let mut state = WalkState::default();
         for (index, line) in lines.iter().enumerate() {
             builder.line = index;
             builder.reading.first.push(builder.reading.shapes.len());
+            if index > 0 && index == front_matter {
+                paragraphs.fenced();
+                builder.finish(&mut state);
+            }
             if blocks.line(line).in_fence() {
                 paragraphs.fenced();
                 builder.finish(&mut state);

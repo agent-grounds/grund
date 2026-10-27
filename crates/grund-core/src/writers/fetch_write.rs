@@ -72,14 +72,16 @@ fn declarations_at_depth(
         .map_err(|_| fetch_operational("snapshot home is not UTF-8 Markdown"))?;
     let mut headings = Vec::<(usize, Option<Id>)>::new();
     let mut offset = 0usize;
-    let mut blocks = MarkdownBlocks::default();
+    // §FS-check.1.1.5.2: the whole snapshot home, so its front matter holds no heading.
+    let mut blocks = MarkdownBlocks::file(text);
     for line in text.split_inclusive('\n') {
         let without_newline = line.strip_suffix('\n').unwrap_or(line);
         let content = without_newline
             .strip_suffix('\r')
             .unwrap_or(without_newline);
         let trimmed = content.trim_start();
-        // §FS-check.1.1.5.1: neither a fence nor a raw-text HTML block holds a heading.
+        // §FS-check.1.1.5.1, §FS-check.1.1.5.2: neither a fence, a raw-text HTML block
+        // nor front matter holds a heading.
         if !blocks.line(content).may_be_heading() {
             offset += line.len();
             continue;

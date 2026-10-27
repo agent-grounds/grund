@@ -1,6 +1,7 @@
 // The one answer to "is this Markdown line structure". A fence is one context
-// that answers no; a raw-text HTML block is the other, and keeping both in one
-// state machine is what stops a reader from knowing one and not the other.
+// that answers no; a raw-text HTML block is another, and a file's front matter is
+// the third. Keeping all three in one state machine is what stops a reader from
+// knowing one and not the others.
 
 use super::fence::{MarkdownFence, markdown_fence_delimiter};
 
@@ -17,6 +18,10 @@ pub(crate) enum MarkdownLine {
     /// A line of a raw-text HTML block, its opener and closer included: never
     /// structure, but its citations stay live (§FS-check.1.1.5.1).
     RawHtml,
+    /// A line of the file's front matter, its delimiter lines included: never
+    /// structure and never rewritten, but its citations stay live
+    /// (§FS-check.1.1.5.2).
+    FrontMatter,
 }
 
 impl MarkdownLine {
@@ -30,28 +35,84 @@ impl MarkdownLine {
     pub(crate) fn may_be_heading(self) -> bool {
         self == Self::Text
     }
+
+    /// Whether `fmt` may rewrite a citation on this line: never in a fence, and
+    /// never in front matter, where a link is no valid YAML or TOML value
+    /// (§FS-check.1.1.5.2, §FS-citations.zones).
+    pub(crate) fn rewritable(self) -> bool {
+        matches!(self, Self::Text | Self::RawHtml)
+    }
+}
+
+/// The last line, 1-based, of the front matter that `lines` — a Markdown file's
+/// lines as `str::lines` yields them — opens with, or `None` where it opens with
+/// none (§FS-check.1.1.5.2). Line 1 must be exactly `---` or `+++`, a trailing
+/// `\r` being the line ending; the block closes at the next line exactly the same,
+/// or exactly `...` for `---`. A block that never closes is no front matter,
+/// which is why the extent needs the whole file rather than a line at a time.
+pub(crate) fn front_matter_extent<'a>(lines: impl IntoIterator<Item = &'a str>) -> Option<usize> {
+    let exact = |line: &'a str| line.strip_suffix('\r').unwrap_or(line);
+    let mut lines = lines.into_iter().map(exact);
+    let opener = lines.next()?;
+    if opener != "---" && opener != "+++" {
+        return None;
+    }
+    let closes = |line: &str| line == opener || opener == "---" && line == "...";
+    lines.position(closes).map(|index| index + 2)
 }
 
 /// The tag names that open a CommonMark raw-text HTML block, its type 1
 /// (§FS-check.1.1.5.1). Other HTML blocks keep the existing reading.
 const RAW_TEXT_TAGS: [&str; 4] = ["pre", "script", "style", "textarea"];
 
-/// The fence and raw-text HTML block state of a Markdown file read line by line
-/// (§FS-check.1.1.5, §FS-check.1.1.5.1). Every reader that asks whether a Markdown
-/// line is a heading walks the file through this one machine, so the two
-/// contexts never nest differently on two surfaces.
+/// The front matter, fence and raw-text HTML block state of a Markdown file read
+/// line by line (§FS-check.1.1.5, §FS-check.1.1.5.1, §FS-check.1.1.5.2). Every
+/// reader that asks whether a Markdown line is a heading walks the file through
+/// this one machine, so the contexts never nest differently on two surfaces. A
+/// reader of a whole file starts it with [`MarkdownBlocks::file`]; a reader of a
+/// declaration body, which starts at its heading and so below any front matter,
+/// starts it with `default()`.
 #[derive(Clone, Copy, Default)]
 pub(crate) struct MarkdownBlocks {
     fence: Option<MarkdownFence>,
     /// The tag of the open raw-text block, which only its own end tag closes.
     raw: Option<&'static str>,
+    /// The last line of the front matter, 0 where there is none.
+    front_matter: usize,
+    /// How many lines have been read.
+    read: usize,
 }
 
 impl MarkdownBlocks {
+    /// The machine for a whole Markdown file, its front matter found once
+    /// (§FS-check.1.1.5.2).
+    pub(crate) fn file(text: &str) -> Self {
+        Self::lines(text.lines())
+    }
+
+    /// [`MarkdownBlocks::file`] for a file already split into its lines.
+    pub(crate) fn lines<'a>(lines: impl IntoIterator<Item = &'a str>) -> Self {
+        Self {
+            front_matter: front_matter_extent(lines).unwrap_or(0),
+            ..Self::default()
+        }
+    }
+
+    /// The last line, 1-based, of the file's front matter (§FS-check.1.1.5.2).
+    pub(crate) fn front_matter(&self) -> Option<usize> {
+        (self.front_matter > 0).then_some(self.front_matter)
+    }
+
     /// Classify `line` and advance past it. Whichever context is open owns the
     /// line: inside a fence an HTML opener is fence content, and inside a
-    /// raw-text block a fence opener is block content (§FS-check.1.1.5.1).
+    /// raw-text block a fence opener is block content (§FS-check.1.1.5.1). Front
+    /// matter is decided first, from line 1, so inside it neither opens
+    /// (§FS-check.1.1.5.2).
     pub(crate) fn line(&mut self, line: &str) -> MarkdownLine {
+        self.read += 1;
+        if self.read <= self.front_matter {
+            return MarkdownLine::FrontMatter;
+        }
         if let Some(tag) = self.raw {
             if contains_end_tag(line, tag) {
                 self.raw = None;

@@ -58,7 +58,8 @@ pub(super) fn rewrite_file(
 ) -> RewrittenFile {
     // §FS-config-v2.schema.sources: the file is rewritten as the scan reads it.
     let (is_md, is_py) = (reading.markdown, reading.python);
-    let mut markdown_blocks = MarkdownBlocks::default();
+    // §FS-check.1.1.5.2: the whole file, so its front matter is known.
+    let mut markdown_blocks = MarkdownBlocks::file(original);
     let mut lines = Vec::new();
     let mut changed = false;
     let mut saw_shorthand_candidate = false;
@@ -98,6 +99,12 @@ pub(super) fn rewrite_file(
             continue;
         }
         if directives.consume(line, docstring) {
+            lines.push(line.to_string());
+            continue;
+        }
+        // §FS-check.1.1.5.2: front matter is never rewritten, but a directive in it
+        // toggled above, because its citations are live.
+        if !block.rewritable() {
             lines.push(line.to_string());
             continue;
         }

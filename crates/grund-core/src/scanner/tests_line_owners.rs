@@ -148,3 +148,57 @@ fn every_citation_is_owned_as_its_line_is() {
     assert!(owned_sites >= 9, "the fixture cites inside every unit");
     assert!(unowned_sites >= 3, "and outside every body");
 }
+
+/// §FS-check.1.1.5.2.1: every front-matter line, delimiters included, belongs to the
+/// file's first declaration under no section, though its body still starts at its
+/// heading; the blank line below the block stays unowned.
+#[test]
+fn a_front_matter_line_belongs_to_the_first_declaration() {
+    let root = test_root("line_owners_front_matter");
+    let markdown = Path::new("docs/functional-spec/FS-001-alpha.md");
+    let lines = [
+        "---",
+        "# FS-009-ghost: a YAML comment",
+        "see: \u{a7}FS-001-alpha",
+        "---",
+        "",
+        "# Preamble",
+        "",
+        "## FS-001-alpha: Alpha",
+        "",
+        "### 1. First",
+        "",
+        "# FS-002-beta: Beta",
+    ];
+    write(&root.join(markdown), &(lines.join("\n") + "\n"));
+    let mut config = legacy_fs_folder_config(root.clone());
+    config.owner_lines = vec![(1, usize::MAX)];
+    let findings = scan_findings(&config, &root);
+    let owned = ownership_of(&findings, markdown);
+    let alpha = Id {
+        kind: "FS".to_string(),
+        num: Some(1),
+        slug: Some("alpha".to_string()),
+    };
+    for line in 1..=4 {
+        assert_eq!(
+            answered_owner(owned, line),
+            Some((alpha.clone(), None)),
+            "line {line}"
+        );
+    }
+    assert_eq!(answered_owner(owned, 5), None);
+    let cite = findings
+        .citations
+        .iter()
+        .find(|cite| cite.file.ends_with(markdown) && cite.line == 3)
+        .expect("the front-matter citation is live");
+    assert_eq!(cite.enclosing_declaration, Some(alpha.clone()));
+    assert_eq!(cite.enclosing_section, None);
+    let decl = &findings.declarations[&alpha][0];
+    assert_eq!(decl.body_start, 8, "the body still starts at its heading");
+    assert!(
+        !findings.declarations.keys().any(|id| id.num == Some(9)),
+        "a YAML comment declares nothing"
+    );
+}
