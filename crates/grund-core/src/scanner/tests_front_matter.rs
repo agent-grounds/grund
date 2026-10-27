@@ -195,6 +195,34 @@ fn a_slice_runs_to_its_values_end_or_its_colon() {
     );
 }
 
+/// §FS-fields.front-matter.coordinates: a value-less key with no colon of its own,
+/// in a flow mapping or written `? key`, ends at the key and never at the next
+/// key's colon, nor at a colon in a comment after it.
+#[test]
+fn a_key_with_no_colon_of_its_own_ends_at_the_key() {
+    let slices = |text: &str| -> Vec<(String, String, usize)> {
+        coordinates(text)
+            .into_iter()
+            .skip(1)
+            .map(|(path, _, _, slice, end)| (path, slice, end))
+            .collect()
+    };
+    let slice =
+        |path: &str, slice: &str, end| (format!("front-matter.{path}"), slice.to_string(), end);
+    assert_eq!(
+        slices("---\n{status, date: x}\n---\n"),
+        vec![slice("status", "status", 2), slice("date", "date: x", 2)]
+    );
+    assert_eq!(
+        slices("---\n? status\ndate: x\n---\n"),
+        vec![slice("status", "status", 2), slice("date", "date: x", 3)]
+    );
+    assert_eq!(
+        slices("---\ndate: x\n? status\n# note: y\n---\n"),
+        vec![slice("date", "date: x", 2), slice("status", "status", 3)]
+    );
+}
+
 /// §FS-fields.front-matter.reading: a CRLF file reads as its LF form does, and
 /// no value or slice ends in a carriage return.
 #[test]
