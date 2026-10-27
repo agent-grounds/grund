@@ -17,6 +17,10 @@ The grammar is: entries in one array are all required, while `|` inside one
 entry means any one of its alternatives. Therefore `must = ["FS|GOAL"]`
 requires a citation to either `FS` or `GOAL`, whereas `must = ["FS", "GOAL"]`
 requires citations to both. Nearly every real rule is one entry with `|`.
+A prohibition is the exception: each of its targets is banned on its own, so
+`must-not = ["FS", "AR"]` forbids a citation to either, exactly as
+`must-not = ["FS|AR"]` does, and the generated entrypoint says `must not cite FS
+or AR`.
 `grund schema` draws a repository's directions, each `|` entry as one
 obligation.
 

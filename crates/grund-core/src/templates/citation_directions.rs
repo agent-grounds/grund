@@ -294,7 +294,10 @@ fn citation_direction_clauses(project: &Project, rules: &KindCitationRules) -> O
         } else {
             "never cite"
         };
-        clauses.push(format!("{verb} {}", citation_rule_targets(&rules.must_not)));
+        clauses.push(format!(
+            "{verb} {}",
+            citation_prohibition_targets(&rules.must_not)
+        ));
     }
     if !rules.warn_not.is_empty() {
         let verb = if clauses.is_empty() {
@@ -304,7 +307,7 @@ fn citation_direction_clauses(project: &Project, rules: &KindCitationRules) -> O
         };
         clauses.push(format!(
             "{verb} {} (a warning)",
-            citation_rule_targets(&rules.warn_not)
+            citation_prohibition_targets(&rules.warn_not)
         ));
     }
     if !rules.should_not.is_empty() {
@@ -315,7 +318,7 @@ fn citation_direction_clauses(project: &Project, rules: &KindCitationRules) -> O
         };
         clauses.push(format!(
             "{verb} {}",
-            citation_rule_targets(&rules.should_not)
+            citation_prohibition_targets(&rules.should_not)
         ));
     }
     if !folded && let Some(clause) = citation_default_clause(project, rules, clauses.is_empty()) {
@@ -393,8 +396,9 @@ fn citation_default_is_closed(level: Option<CitationLevel>) -> bool {
     )
 }
 
-/// Render a rule array as a target phrase (§FS-init.2.3.5.4): alternatives inside
-/// one entry are joined with "or", conjunctive entries with "and". When there is
+/// Render an obligation's or a permission's rule array as a target phrase
+/// (§FS-init.2.3.5.4): alternatives inside one entry are joined with "or",
+/// conjunctive entries with "and". When there is
 /// more than one entry, an entry that has alternatives of its own is
 /// parenthesised — `must = ["FS|GOAL", "AR"]` is *(FS or GOAL) and AR*, and the
 /// ungrouped prose said the opposite.
@@ -417,6 +421,18 @@ fn citation_rule_targets(disjunctions: &[CitationDisjunction]) -> String {
         })
         .collect::<Vec<_>>();
     join_english_list(&entries, "and")
+}
+
+/// Render a prohibition's rule array as a target phrase (§FS-init.2.3.5.4,
+/// §DF-directions-render.7): each target is banned on its own, so every entry's
+/// alternatives join one "or" list, unparenthesised — `must-not = ["FS", "AR"]`
+/// is `FS or AR`, as `["FS|AR"]` is, where "and" read as banning only the pair.
+fn citation_prohibition_targets(disjunctions: &[CitationDisjunction]) -> String {
+    let targets = disjunctions
+        .iter()
+        .flat_map(|disjunction| disjunction.targets.iter().map(citation_target_phrase))
+        .collect::<Vec<_>>();
+    join_english_list(&targets, "or")
 }
 
 /// One rule target as prose (§FS-init.2.3.5.4). A pinned alias stays exactly as

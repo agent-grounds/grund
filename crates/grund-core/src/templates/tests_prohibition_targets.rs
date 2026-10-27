@@ -52,7 +52,6 @@ fn render(name: &str, rules: &str) -> String {
 /// The single-file subject of this repository's `README.md` row:
 /// `must-not = ["FS", "AR"]` forbids a citation to either.
 #[test]
-#[ignore = "red until #151 a prohibition joins its targets with \"or\"; implement removes this"]
 fn a_single_file_prohibition_joins_its_targets_with_or() {
     let section = render(
         "prohibition_single_file",
@@ -68,7 +67,6 @@ fn a_single_file_prohibition_joins_its_targets_with_or() {
 /// The folder subject, at both prohibition strengths, with the Oxford comma
 /// from three targets on.
 #[test]
-#[ignore = "red until #151 a prohibition joins its targets with \"or\"; implement removes this"]
 fn a_folder_prohibition_joins_its_targets_with_or() {
     let section = render(
         "prohibition_folder",
@@ -86,7 +84,6 @@ fn a_folder_prohibition_joins_its_targets_with_or() {
 /// join as alternatives while the obligation's still conjoin; an entry's own
 /// alternatives join the same list, unparenthesised.
 #[test]
-#[ignore = "red until #151 a prohibition joins its targets with \"or\"; implement removes this"]
 fn a_following_prohibition_joins_its_entries_as_alternatives() {
     let section = render(
         "prohibition_following",
