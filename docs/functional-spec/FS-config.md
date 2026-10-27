@@ -713,11 +713,11 @@ Five combinations are config errors, reported per [§FS-config.4.3](FS-config.md
 
 ##### 3.4.9.1 The value suffix is a separate authority
 
-The exact `<!-- grund:value -->` section suffix is a separate in-document authority ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)). It works in any supported scanned declaration independently of this key and its home, and it neither opts the enclosing declaration in nor changes JSON discovery. No new config key, scan input, or migration accompanies it. Chapter authority is the third and last one, taken per kind rather than per document: `value_chapter` makes every named child of one named chapter a root without any mark ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)).
+The exact `<!-- grund:value -->` section suffix is a separate in-document authority ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)). It works in any supported scanned declaration independently of this key and its home, and it neither opts the enclosing declaration in nor changes value-source discovery. No new config key, scan input, or migration accompanies it. Chapter authority is the third and last one, taken per kind rather than per document: `value_chapter` makes every named child of one named chapter a root without any mark ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)).
 
-##### 3.4.9.2 The home is the JSON source boundary
+##### 3.4.9.2 The home is the boundary of its value sources
 
-The home is also the complete JSON source boundary: a `.json` `file` is the one source, while a `folder` contributes its normalized, bytewise-ordered direct `.json` children. Nested or outside JSON is never a value source. Generic scan extensions and filters, explicit path narrowing, and `--full` neither add nor suppress those home inputs ([§FS-values.2.2](FS-values.md#22-json-declarations-from-the-kind-home)).
+The home is also the complete boundary of its value sources ([§FS-values.terms](FS-values.md#terms-terms)): a `file` home is the one source when its extension is `.json`, `.yaml` or `.yml`, while a `folder` contributes its normalized, bytewise-ordered direct children with those extensions. Nested or outside files are never value sources. Generic scan extensions and filters, explicit path narrowing, and `--full` neither add nor suppress those home inputs ([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources)).
 
 #### 3.4.10 `format`, `resolve`, and `fetch` — external snapshot kinds
 
@@ -781,7 +781,7 @@ may enable it.
 
 The key requires a citable kind and a `file` or `folder` home whose declarations
 are Markdown. It is invalid on a non-citable, homeless, unscanned, external-
-snapshot, or JSON-value kind: each either declares no IDs, supplies no scanned
+snapshot, or value-source kind: each either declares no IDs, supplies no scanned
 rule catalog, or gives its title another source contract. These relationships
 are config validation; sentence titles are scanned declaration data and are
 validated later as located findings ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
@@ -847,7 +847,7 @@ Which files these keys make a run read is [§FS-scan.scope](FS-scan.md#scope-whi
 
 The `include` default keeps `requirements.md` although no built-in kind homes there any more ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)): dropping it would stop reading a file in a project that changed nothing, a verdict no release warned about ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
 
-An opted-in kind's home JSON is catalog input rather than part of this scan. The exact discovery and independence from every key in this table are fixed by [§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations) and [§FS-values.2.2](FS-values.md#22-json-declarations-from-the-kind-home).
+An opted-in kind's value sources ([§FS-values.terms](FS-values.md#terms-terms)) are catalog input rather than part of this scan. The one way this table touches them is the YAML claim: a `.yaml` or `.yml` file whose extension is in the effective `extensions` — the list written here, or the default where none is — is scan input and so not a value source, while a JSON one never is. The exact discovery and independence from every other key in this table are fixed by [§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations) and [§FS-values.2.2](FS-values.md#22-declarations-from-value-sources).
 
 #### 3.5.1 A symlink in the tree is followed
 

@@ -1,0 +1,1 @@
+values/limits.yaml:2: warning: invalid value declaration for CONST-room-limit: a YAML value source refuses an anchor — a YAML value source's findings are warnings until grund 0.22.0; correct what the reason names, or move values/limits.yaml out of the value home

@@ -288,7 +288,7 @@ A report on **stdout** — `check` is a linter and its findings are its output (
 - `1` — at least one retained error.
 - `2` — scan or CLI failure (I/O, malformed file, invalid `grund.toml`, or invalid invocation).
 
-The three value findings are ordinary fixed-severity errors and exit `1`; home JSON input that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete leaves the scan incomplete and exits `2`. What `--only` and `--ignore` may select is [§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report), and what an incomplete run prints is [§FS-check.2.4](FS-check.md#24-an-incomplete-run). For verbose text and JSON report examples, including empty JSON scans and global finding ordering, see [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes).
+The three value findings are ordinary fixed-severity errors and exit `1`; a value source ([§FS-values.terms](FS-values.md#terms-terms)) that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete leaves the scan incomplete and exits `2` — a JSON one as it always has, a YAML one from grund 0.22.0, before which [§FS-values.2.2.4](FS-values.md#224-yaml-findings-are-warnings-until-grund-0220) reports it as a warning. What `--only` and `--ignore` may select is [§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report), and what an incomplete run prints is [§FS-check.2.4](FS-check.md#24-an-incomplete-run). For verbose text and JSON report examples, including empty JSON scans and global finding ordering, see [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes).
 
 ### 2.1 Report format
 
@@ -1005,7 +1005,7 @@ Moved to [§FS-declarations.checks.orphan-section](FS-declarations.md#checksorph
 
 ### 3.20 Invalid value declaration
 
-In a kind opted into whole values, a readable Markdown or JSON declaration that violates [§FS-values.2](FS-values.md#2-value-declarations) is an error at the exact invalid heading, key, or element. An exact embedded tag in an invalid location or a marked root with an invalid shape is the same error, located at the tag for the root/authority failures and at the offending line for content/shape failures ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)). Inside a declared value chapter the same error covers content the chapter may not hold and a root whose run is invalid, located at the offending line, or at the root heading for a root-level failure a chapter root has no tag to carry ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)). The code is `invalid-value-declaration`. Duplicate declarations retain [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) instead; a duplicate section may independently carry this finding, and home JSON input that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete retains exit `2` ([§FS-check.2](FS-check.md#2-outputs)).
+In a kind opted into whole values, a readable Markdown or value-source declaration ([§FS-values.terms](FS-values.md#terms-terms)) that violates [§FS-values.2](FS-values.md#2-value-declarations) is an error at the exact invalid heading, key, or element. An exact embedded tag in an invalid location or a marked root with an invalid shape is the same error, located at the tag for the root/authority failures and at the offending line for content/shape failures ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)). Inside a declared value chapter the same error covers content the chapter may not hold and a root whose run is invalid, located at the offending line, or at the root heading for a root-level failure a chapter root has no tag to carry ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)). The code is `invalid-value-declaration`. Duplicate declarations retain [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) instead; a duplicate section may independently carry this finding, and a value source that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete retains exit `2` ([§FS-check.2](FS-check.md#2-outputs)).
 
 ### 3.21 Invalid value binding
 
@@ -1326,7 +1326,7 @@ For an ID under the index's own folder, the entry is a citation of the declarati
 
 #### 4.1.3 `E2E` declarations are exempt
 
-`E2E` declarations ([§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares)) are exempt: an end-to-end case is exercised by being run, not by being cited, so a `§E2E-<name>` that nothing cites is not a warning. Every other kind is subject to this rule, including Markdown and JSON value declarations; the citation inside a recognized value binding counts as a use ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)). `grund list --unused` reads the same signal, and what it does with a configured `E2E` kind's cases is [§FS-list.1.3.1](FS-list.md#131-a-configured-e2e-kind-is-left-out-unless-selected)'s.
+`E2E` declarations ([§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares)) are exempt: an end-to-end case is exercised by being run, not by being cited, so a `§E2E-<name>` that nothing cites is not a warning. Every other kind is subject to this rule, including Markdown and value-source declarations ([§FS-values.terms](FS-values.md#terms-terms)); the citation inside a recognized value binding counts as a use ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)). `grund list --unused` reads the same signal, and what it does with a configured `E2E` kind's cases is [§FS-list.1.3.1](FS-list.md#131-a-configured-e2e-kind-is-left-out-unless-selected)'s.
 
 #### 4.1.4 A citation anywhere in the resolution scope counts
 
@@ -1623,7 +1623,7 @@ Observe every effective local input that can change the equivalent one-shot resu
 
 - Both `grund.toml` and `.agents/grund.toml` at upward discovery and ancestor-claim candidates, including absent candidates and config precedence changes.
 - Workspace roots, nested members, member-glob parents and absent member candidates; resolution-wide source roots and kind homes.
-- Catalog JSON, agent entrypoints, indexes, stub targets and other checker probes, and followed file-link targets outside source roots.
+- Value sources ([§FS-values.terms](FS-values.md#terms-terms)), agent entrypoints, indexes, stub targets and other checker probes, and followed file-link targets outside source roots.
 - Effective ancestor and nested `.gitignore`/`.ignore`, `.git/info/exclude`, global Git excludes, and the `.gitconfig`/XDG inputs through which those exclusions are discovered.
 
 This is the shared discovery/checker's inventory, not a second set of resolution semantics. Re-resolve config, membership, ignores, catalogs and output defaults on each run. Narrowed checks retain resolution-wide coverage. Hidden discovery inputs such as `.agents/grund.toml` remain observed when hidden source directories are excluded.

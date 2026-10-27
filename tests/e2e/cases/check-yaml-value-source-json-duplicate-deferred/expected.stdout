@@ -1,0 +1,1 @@
+values/prices.yaml:2: warning: duplicate declaration of CONST-field-price (also declared at values/prices.json:2) — a YAML value source's findings are warnings until grund 0.22.0; move values/prices.yaml out of the value home

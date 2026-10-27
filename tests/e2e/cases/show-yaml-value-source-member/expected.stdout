@@ -1,0 +1,4 @@
+CONST-room-limit:
+  - 40  # signed in October
+  # the unit
+  - "rooms"

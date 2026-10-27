@@ -67,7 +67,7 @@ by [§FS-cochange-recipe.examples](FS-cochange-recipe.md#examples-maintained-wal
 
 ### 2.1 The values example
 
-The examples include an optional first-class-values repository showing `values = true`, Markdown and home JSON declarations, exact numeric equality, prose and scanned-comment bindings, direct runtime JSON use, and a caught mismatch. It demonstrates the deliberate unbackticked non-binding without implying interpolation or value inference ([§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)).
+The examples include an optional first-class-values repository showing `values = true`, Markdown declarations and value sources ([§FS-values.terms](FS-values.md#terms-terms)) — a JSON one and, beside it, a YAML one whose comments say where its numbers came from — exact numeric equality, prose and scanned-comment bindings, direct runtime JSON use, and a caught mismatch. It demonstrates the deliberate unbackticked non-binding without implying interpolation or value inference ([§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)).
 
 ## 3. Required explanation
 
