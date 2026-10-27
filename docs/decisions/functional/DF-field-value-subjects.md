@@ -64,7 +64,9 @@ failed, never as an unknown kind, in the order
 [§FS-rule-refusals.sentences.whose](../../functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) fixes. Those reasons replace bytes users
 already see, so D10 of [§DF-one-answer-rulings-grammar](DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary) sends them through the warning
 release of [§FS-errors.3.10](../../functional-spec/FS-errors.md#310-the-whose-clause-wording-migration): `0.21.0` keeps the old reason as a prefix, and
-`0.22.0` drops it. The exact-ID and object refusals only append, so they need no window.
+`0.22.0` drops it. The same holds for any later refusal of a sentence whose clause is
+accepted, such as its quantifier or an object kind, because that sentence too was an unknown
+kind before. The exact-ID and object refusals only append, so they need no window.
 
 ## 3. Rejected alternatives
 
@@ -106,8 +108,9 @@ release of [§FS-errors.3.10](../../functional-spec/FS-errors.md#310-the-whose-c
   scalar field's value.** `Each SWR whose verification is Test must be cited by at least one
   TC.` holds only the requirements verified by test, and `list --selector` lists the same
   declarations. A declaration whose field holds another value is outside the rule. A whose
-  clause that is still refused is answered for the field or value that failed; through
-  `0.21.0` that reason follows the old `unknown kind "…"` text as a prefix, which goes in
-  `0.22.0`. **Who this breaks:** an exact-line consumer of a refused whose clause's message;
-  match the reason after ` — `. Closes
+  clause that is still refused is answered for the field or value that failed, and a
+  sentence whose clause is accepted but whose quantifier, object or predicate is refused is
+  answered for that; through `0.21.0` either reason follows the old `unknown kind "…"` text
+  as a prefix, which goes in `0.22.0`. **Who this breaks:** an exact-line consumer of the
+  refusal of a sentence whose subject carries a whose clause; match the reason after ` — `. Closes
   [#1047](https://github.com/agent-grounds/grund/issues/1047).

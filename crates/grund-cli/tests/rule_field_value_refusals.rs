@@ -305,3 +305,69 @@ fn a_conjunction_is_refused_before_the_clause() {
     );
     assert_eq!(run.stderr, "error: conjunctions are not accepted\n");
 }
+
+/// Refusals a later production raises after an accepted clause: `(sentence, final reason,
+/// what follows on `check --rule`)`. Before clauses existed each was an unknown kind.
+const LATER: &[(&str, &str, &str)] = &[
+    (
+        "Each SWR whose verification is Test must cite every TC.",
+        "quantifier \"every\" is not accepted",
+        "",
+    ),
+    (
+        "Each SWR whose verification is Test must cite at least one FOO.",
+        "unknown kind \"FOO\"",
+        KNOWN,
+    ),
+    (
+        "The evidence chapter of each SWR whose verification is Test must have at least one \
+         notes chapter.",
+        "chapter subjects cannot have chapters; accepted form: Each SWR whose verification is \
+         Test must have at least one notes chapter.",
+        "",
+    ),
+];
+
+/// A sentence whose clause is accepted is still windowed when a later production refuses it,
+/// on `check --rule` and as a declared rule, the suffix ending the whole reason (§FS-errors.3.10).
+#[test]
+fn a_later_refusal_after_an_accepted_clause_is_windowed() {
+    let fx = Fixture::table();
+    let legacy = "SWR whose verification is Test";
+    for (sentence, reason, after) in LATER {
+        let run = fx.expect(2, &["check", "--rule", sentence]);
+        assert_eq!(
+            run.stderr,
+            format!("error: {}\n{after}", windowed(legacy, reason)),
+            "{sentence}"
+        );
+    }
+    let files: Vec<String> = (0..LATER.len())
+        .map(|n| format!("\"rules/RULE-r{n}.md\""))
+        .collect();
+    let config = format!(
+        "{TABLE_CONFIG}\n[schema.kinds.RULE]\nfiles = [{}]\nform = \"rule\"\n",
+        files.join(", ")
+    );
+    fs::write(fx.0.join("grund.toml"), config).unwrap();
+    fs::create_dir_all(fx.0.join("rules")).unwrap();
+    for (n, (sentence, _, _)) in LATER.iter().enumerate() {
+        fs::write(
+            fx.0.join(format!("rules/RULE-r{n}.md")),
+            format!("# RULE-r{n}: {sentence}\n\nWhy.\n"),
+        )
+        .unwrap();
+    }
+    let run = fx.expect(1, &["check", "--only", "invalid-rule"]);
+    for (n, (sentence, reason, _)) in LATER.iter().enumerate() {
+        let line = format!(
+            "rules/RULE-r{n}.md:1: error: RULE-r{n} is not a valid rule: {}\n",
+            windowed(legacy, reason)
+        );
+        assert!(
+            run.stdout.contains(&line),
+            "{sentence}: missing {line}in:\n{}",
+            run.stdout
+        );
+    }
+}
