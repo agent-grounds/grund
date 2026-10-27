@@ -66,5 +66,6 @@ unread-scan-root: A file the config names as a scan root is not read, because it
 unrecorded-section-citation: A citation names a locked section address that has no entry in the section lock.
 unused: A declared ID is never cited.
 value-mismatch: A value binding's written value differs from the value its target declares.
+yaml-value-source-deferred: A finding that is an error at a YAML value source, or a YAML value source a fetched kind's home skips, is a warning for one release.
 
 Next: grund config explain agents-init

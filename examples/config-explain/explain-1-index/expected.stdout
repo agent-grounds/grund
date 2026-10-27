@@ -28,6 +28,6 @@ Top-level keys: grund_config_version, project_name
 [presentation.kinds.<NAME>]  One kind's display title.
 [presentation.fmt]  What `grund fmt` writes and leaves alone.
 [workspace]  The sub-projects a workspace root checks, each in its own namespace.
-66 check codes: grund config explain --codes
+67 check codes: grund config explain --codes
 
 Next: grund config explain '[schema]' examples/config-explain/explain-1-index/repo
