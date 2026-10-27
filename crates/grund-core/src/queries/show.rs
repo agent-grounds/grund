@@ -130,6 +130,19 @@ pub(crate) fn show_declaration_with_home<'a>(
             )
         )));
     }
+    // §FS-fields.front-matter.surfaces: a front-matter coordinate prints its slice in every mode.
+    if let Some(info) = section.and_then(|section| record.sections.get(section))
+        && let Some(slice) = &info.front_matter
+    {
+        let output = ShowOutput {
+            body: slice.text.clone(),
+            path: record.file.clone(),
+            line: info.line,
+            json: None,
+            sections: Vec::new(),
+        };
+        return Ok((output, record));
+    }
     // §FS-show.2.3.7: a stub reads its target's declaration, found by the ID.
     let output = extract_declaration_body(
         &findings.files,

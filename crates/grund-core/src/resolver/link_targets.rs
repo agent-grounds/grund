@@ -251,7 +251,11 @@ pub(crate) fn markdown_link_target_with_root(
         .files
         .get(&record.file)
         .is_some_and(|file| file.markdown);
-    if !takes_heading_anchor(markdown, presentation) {
+    // §FS-fields.front-matter.surfaces: a front-matter coordinate links to its file.
+    let front_matter = section
+        .and_then(|sec| record.sections.get(sec))
+        .is_some_and(|info| info.front_matter.is_some());
+    if !takes_heading_anchor(markdown, presentation) || front_matter {
         return Some(rel);
     }
     // §FS-fmt.6.2.1.1: a bare ID's heading is the scan's record too.
@@ -300,7 +304,8 @@ pub(crate) fn heading_anchor(
 ) -> Option<String> {
     let heading = match section {
         Some(sec) => {
-            let info = decl.sections.get(sec)?;
+            // §FS-fields.front-matter.surfaces: a front-matter coordinate has no heading.
+            let info = decl.sections.get(sec).filter(|info| info.front_matter.is_none())?;
             settled
                 .section_title(&decl.file, sec, info)
                 .unwrap_or_else(|| info.title.clone())
