@@ -98,6 +98,12 @@ pub(crate) fn parse_yaml(text: &str) -> Result<YamlStream, YamlError> {
 /// which recurses once per collection, refuses one (§REQ-never-crashes.1).
 pub(crate) const MAX_NESTING: usize = 128;
 
+/// The reason a collection nested past [`MAX_NESTING`] is refused, the one every
+/// span tree gives (§FS-fields.front-matter.reading, §DA-toml-front-matter-reader.2.4).
+pub(crate) fn nesting_reason() -> String {
+    format!("collections are nested more than {MAX_NESTING} deep")
+}
+
 struct Tree<'a> {
     parser: Parser<Chars<'a>>,
     text: YamlText<'a>,
@@ -145,7 +151,7 @@ impl<'a> Tree<'a> {
         Err(YamlError {
             line,
             column: self.text.body[start..at].chars().count() + 1,
-            message: format!("collections are nested more than {MAX_NESTING} deep"),
+            message: nesting_reason(),
         })
     }
 

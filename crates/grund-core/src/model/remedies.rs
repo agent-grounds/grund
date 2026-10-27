@@ -683,8 +683,8 @@ pub(crate) fn unreadable_front_matter_yaml() -> String {
 }
 
 /// `unreadable-front-matter`'s *Fix*, case `toml` (§FS-fields.checks.unreadable-front-matter).
-pub(crate) fn unreadable_front_matter_toml(kind: impl Display) -> String {
-    let slots: &[(&str, &dyn Display)] = &[("kind", &kind)];
+pub(crate) fn unreadable_front_matter_toml() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
     fill(Code::UNREADABLE_FRONT_MATTER, 2, Some("toml"), slots)
 }
 

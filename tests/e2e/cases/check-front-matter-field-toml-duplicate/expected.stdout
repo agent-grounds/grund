@@ -8,8 +8,8 @@ docs/adr/name.md:2: error: duplicate section ADR-name.front-matter.status (also 
 docs/adr/quoted.md:2: error: duplicate section ADR-quoted.front-matter.status (also declared at docs/adr/quoted.md:3); remove all but one of the keys
 docs/adr/sub-tables.md:5: error: duplicate section ADR-sub-tables.front-matter.meta (also declared at docs/adr/sub-tables.md:8); remove all but one of the keys
 docs/adr/table-tables.md:5: error: duplicate section ADR-table-tables.front-matter.meta (also declared at docs/adr/table-tables.md:8); remove all but one of the keys
-docs/adr/tables.md:5: error: duplicate section ADR-tables.front-matter.meta (also declared at docs/adr/tables.md:8); remove all but one of the keys
 docs/adr/tables-table.md:5: error: duplicate section ADR-tables-table.front-matter.meta (also declared at docs/adr/tables-table.md:11); remove all but one of the keys
+docs/adr/tables.md:5: error: duplicate section ADR-tables.front-matter.meta (also declared at docs/adr/tables.md:8); remove all but one of the keys
 docs/adr/thrice.md:2: error: duplicate section ADR-thrice.front-matter.status (also declared at docs/adr/thrice.md:4, docs/adr/thrice.md:5); remove all but one of the keys
 docs/adr/value-dotted.md:4: error: duplicate section ADR-value-dotted.front-matter.meta (also declared at docs/adr/value-dotted.md:5); remove all but one of the keys
 docs/adr/value-table.md:4: error: duplicate section ADR-value-table.front-matter.meta (also declared at docs/adr/value-table.md:6); remove all but one of the keys

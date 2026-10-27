@@ -95,17 +95,20 @@ impl<'a> Shape<'a> {
         reason: &FrontMatterUnreadable,
         out: &mut Vec<FieldFinding<'a>>,
     ) {
-        let section = self.section(FRONT_MATTER);
-        let message = match reason {
-            FrontMatterUnreadable::Yaml { reason, line } => format!(
-                "{section} does not parse as YAML: {reason} at line {line}; {}",
-                remedies::unreadable_front_matter_yaml()
-            ),
-            FrontMatterUnreadable::Toml => format!(
-                "{section} is TOML, which grund does not read yet; {}",
-                remedies::unreadable_front_matter_toml(self.kind)
-            ),
+        let (language, remedy) = match reason {
+            FrontMatterUnreadable::Yaml { .. } => {
+                ("YAML", remedies::unreadable_front_matter_yaml())
+            }
+            FrontMatterUnreadable::Toml { .. } => {
+                ("TOML", remedies::unreadable_front_matter_toml())
+            }
         };
+        let (FrontMatterUnreadable::Yaml { reason, line }
+        | FrontMatterUnreadable::Toml { reason, line }) = reason;
+        let message = format!(
+            "{} does not parse as {language}: {reason} at line {line}; {remedy}",
+            self.section(FRONT_MATTER)
+        );
         let code = Code::UNREADABLE_FRONT_MATTER;
         out.push(self.finding(Some(field), Channel::Error, code, 1, message));
     }

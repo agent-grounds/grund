@@ -3254,7 +3254,7 @@
  },
  {
   "code": "unreadable-front-matter",
-  "meaning": "The front matter of a declaration whose kind declares a front-matter field cannot be read as YAML keys, or is TOML.",
+  "meaning": "The front matter of a declaration whose kind declares a front-matter field cannot be read as YAML or TOML keys.",
   "ramp": null,
   "2": {
    "severity": {
@@ -3279,7 +3279,7 @@
      },
      {
       "label": "toml",
-      "text": "write it as YAML between --- lines, or remove kind {kind}'s front-matter field"
+      "text": "fix the TOML"
      }
     ]
    },
@@ -3303,7 +3303,7 @@
      },
      {
       "label": "toml",
-      "text": "write it as YAML between --- lines, or remove kind {kind}'s front-matter field"
+      "text": "fix the TOML"
      }
     ]
    },

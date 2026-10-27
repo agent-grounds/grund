@@ -83,6 +83,7 @@ mod section_locks;
 mod section_record;
 mod slices;
 mod stub_homes;
+mod toml;
 mod tree;
 mod units;
 mod unmarked_headings;
@@ -186,6 +187,8 @@ mod tests_section_outside_declaration;
 mod tests_source_section_titles;
 #[cfg(test)]
 mod tests_stub_homes;
+#[cfg(test)]
+mod tests_toml;
 #[cfg(test)]
 mod tests_unmarked_headings;
 #[cfg(test)]
