@@ -356,3 +356,11 @@ A chapter rule such as `Each FS must have exactly one Terms chapter.` stays
 valid beside a `terms` field, and where both see the same absence the field's
 finding is the one reported. The [chapter-rules guide](rules.md#fields-and-chapter-rules)
 says when to reach for which.
+
+A scalar field can also narrow a rule's subject: `Each SWR whose verification
+is Test must be cited by at least one TC.` reaches only the SWR whose
+`verification` field holds `Test`, and a declaration whose field is absent or
+holds another value is outside the rule, reported by the field's own finding
+rather than by the rule ([§FS-fields.rules](../functional-spec/FS-fields.md#rules-fields-beside-chapter-rules), [§FS-rules.2.2](../functional-spec/FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)). The
+[chapter-rules guide](rules.md#narrowing-a-subject-by-a-fields-value) has the
+clause and its refusals.

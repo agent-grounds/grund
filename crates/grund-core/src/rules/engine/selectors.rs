@@ -19,7 +19,7 @@ pub(super) fn select_subjects(
     index: &FactIndex<'_>,
 ) -> Vec<NodeKey> {
     match subject {
-        // §FS-rules.2.2: a whose clause keeps the declarations whose field holds its value.
+        // §FS-rules.5.2: a whose clause keeps the declarations whose field holds its value.
         RuleSubject::Kind(kind, whose) => index
             .declarations_of_kind(kind)
             .iter()

@@ -138,7 +138,7 @@ fn for_each_finding<'a>(
 /// twice counts once, at its first heading (§FS-fields.identity.name); the front
 /// matter is no chapter (§FS-fields.front-matter.findings).
 fn direct_sections(declaration: &Declaration) -> Vec<(&str, usize, Cow<'_, str>)> {
-    // §FS-rules.2.2: the one reader of a field's value, which a whose clause reads too.
+    // §FS-fields.content.one-of: the one value reader, which a whose clause reads too.
     let mut direct: Vec<(&str, usize, Cow<'_, str>)> = declaration
         .sections
         .iter()

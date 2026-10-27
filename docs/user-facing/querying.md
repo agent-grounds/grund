@@ -56,6 +56,18 @@ With `--format json` each row is one NDJSON object. `id` and `section` name the
 unit — `section` is present only for a selected section — and the rest say
 where it is declared, its title, and how often it is cited.
 
+A subject may end in a whose clause that keeps only the declarations whose
+scalar field holds one value ([§FS-rules.2.2](../functional-spec/FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)), so the listing shows what a
+filtered rule would reach before you write it:
+
+```console
+$ grund list --selector "Each SWR whose verification is Test"
+SWR-brake-latency  req/SWR-brake-latency.md:1  The brake command reaches the actuator within 10 ms
+```
+
+A refused clause offers no selector, because a field or a value is the author's
+to choose; the reason names the field or the value that failed.
+
 A selector names chapters only, so a numbered section is refused, and every
 refusal offers a selector to paste back, or lists the configured kinds where it
 names none of them

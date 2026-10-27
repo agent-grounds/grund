@@ -65,7 +65,7 @@ pub(super) fn report_unreached(
 }
 
 /// §FS-rules.5.2's `unreached(d, N)`: the declarations the subject selects
-/// (§FS-rules.2.2) that own none of the chapters it selected; one a whose
+/// (§FS-rules.5.2's `selected(d)`) that own none of the chapters it selected; one a whose
 /// clause leaves out is outside the rule, never unreached.
 ///
 /// It is read as the complement of the selection rather than as a second join

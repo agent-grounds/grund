@@ -112,6 +112,17 @@ names requires evidence in every file ([§FS-config.3.9.2.4](../../docs/function
 The hint names the supported configuration route and offers no accepted
 sentence rewrite. The unrelated `vendor/` refusal below still has no hint.
 
+## Rules over a field's value
+
+A subject may end in one whose clause, `Each KIND whose FIELD is VALUE`, that
+narrows it to the declarations whose scalar field holds that value
+([§FS-rules.2.2](../../docs/functional-spec/FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)). This repository is version 1 and declares no
+scalar field, so the clause is shown in its own runnable example,
+[`rule-field-value/`](../rule-field-value/): the #1047 requirement kind whose
+`verification` field says how each requirement is verified, the rule
+`Each SWR whose verification is Test must be cited by at least one TC.` as a
+trial sentence, a declared rule and a selector, and a refused value.
+
 ## Complete sentence inventory
 
 These are the accepted spellings exercised by the parser contract; substitute
