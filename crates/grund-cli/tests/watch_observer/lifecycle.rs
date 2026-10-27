@@ -36,16 +36,22 @@ fn watch_sigint_during_scan_discards_unpublished() {
     );
 }
 
+/// §FS-check.6.3.3: an interrupt while a run publishes lets it finish both streams. The run
+/// is held at `scanning` until every write has landed, so whether they coalesce is moot
+/// (§AR-bindings.3.1).
 #[test]
 fn watch_sigint_during_publication_finishes_both_streams() {
     let _serial = crate::support::serial();
     let f = Fixture::new();
     let mut h = Harness::start(&f, None, None);
     h.completed();
-    h.pause("stdout-flushed");
+    let scan = h.pause("scanning");
     f.write(".agents/grund.toml", CONFIG);
     f.write("src/main.rs", BAD);
     f.write("src/broken.rs", "// \u{a7}FS-another-missing\n");
+    h.stage("scanning");
+    h.pause("stdout-flushed");
+    scan.send(()).unwrap();
     h.stage("stdout-flushed");
     h.control.interrupt();
     h.release();
