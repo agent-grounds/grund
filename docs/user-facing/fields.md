@@ -212,7 +212,8 @@ to the file, and a chapter rule can name one by its whole path
 heading, so no lead, fingerprint or section lock moves.
 
 **TOML is not read yet.** A `+++` block in a kind that declares the field is
-`unreadable-front-matter`; write it as YAML between `---` lines. A kind that
+`unreadable-front-matter`; write it as YAML between `---` lines. Reading it is
+[#1057](https://github.com/agent-grounds/grund/issues/1057). A kind that
 declares no `front-matter` field parses no block, YAML or TOML, and reads
 exactly as before.
 
