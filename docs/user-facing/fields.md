@@ -134,6 +134,92 @@ docs/df/DF-session.md:7: error: DF-session.surprise is not a field of kind DF, w
 A scalar takes no `title`, because its title is its value, and no `content`,
 because its content is its title; the loader refuses either beside `one_of`.
 
+## Front matter is a field
+
+A MADR record keeps its status in the YAML block at the top of its file, not
+in a chapter:
+
+```markdown
+---
+status: accepted
+date: 2026-02-03
+decision-makers: [platform team]
+---
+
+# ADR-cache: Use Redis for the session cache
+```
+
+Declare the field named `front-matter`, and grund reads that block as the
+field, with its top-level keys as the field's sections
+([§FS-fields.front-matter](../functional-spec/FS-fields.md#front-matter-front-matter-is-a-field)):
+
+```toml
+[schema.kinds.ADR.fields.front-matter]
+presence = "must"
+closed = "must"
+
+[schema.kinds.ADR.fields.front-matter.keys.status]
+presence = "must"
+one_of = ["proposed", "accepted", "rejected", "deprecated", "superseded"]
+
+[schema.kinds.ADR.fields.front-matter.keys.date]
+presence = "must"
+
+[schema.kinds.ADR.fields.front-matter.keys.decision-makers]
+
+[schema.kinds.ADR.fields.front-matter.keys.consulted]
+
+[schema.kinds.ADR.fields.front-matter.keys.informed]
+```
+
+The block has no heading, so the field takes `presence` and `closed` and
+nothing else: the loader refuses `title`, `position`, `after`, `content` and
+`one_of` at their key. Each `keys.<key>` table declares one top-level key,
+with its own `presence` and an optional `one_of`. A missing block takes the
+field's `presence`, a missing key its own, and a key no table declares the
+field's `closed`, as a kind's `closed` takes a chapter
+([§FS-fields.front-matter.config](../functional-spec/FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys)). `grund schema` and the managed block list
+the keys under the field.
+
+The findings are the field codes, each at its key's line:
+
+```text
+docs/adr/cache.md:2: error: ADR-cache.front-matter.status is "acepted"; kind ADR admits proposed, accepted, rejected, deprecated, superseded; change the value to one of them
+docs/adr/cache.md:5: error: ADR-cache.front-matter.reviewer is not a key of kind ADR's front matter, which is closed; its keys: status, date, decision-makers, consulted, informed; rename it to one of them, remove it, or add it to the field's keys
+docs/adr/queue.md:1: error: ADR-queue has no front-matter field; kind ADR declares it; add front matter at the top of its file
+```
+
+Only a Markdown file's first declaration has front matter. A later
+declaration in the same file, or one in a doc-comment, gets `missing-field`
+with that reason ([§FS-fields.front-matter.placement](../functional-spec/FS-fields.md#front-matterplacement-which-declaration-has-it)). A block that does not
+parse as YAML is `unreadable-front-matter`, and none of its keys is judged. A
+`## front-matter:` heading in such a kind is `front-matter-heading`: the block
+holds that coordinate, so the heading declares nothing
+([§FS-fields.checks.front-matter-heading](../functional-spec/FS-fields.md#checksfront-matter-heading-front-matter-heading)).
+
+**Values are text.** A key's value is the text its scalar decodes to, never a
+YAML type, so `2026-02-03`, `1.10` and `no` stay as written, and `'accepted'`
+is `accepted`. `one_of` takes a one-line value on the key's line; a block
+scalar, a list or a mapping under a key with `one_of` is `invalid-field-value`
+([§FS-fields.front-matter.values](../functional-spec/FS-fields.md#front-mattervalues-a-keys-value-is-its-decoded-text)).
+
+**The keys are coordinates.** `ADR-cache.front-matter` and
+`ADR-cache.front-matter.status` resolve like any section. `grund show` prints
+the slice as written, `grund list --glob 'ADR-*.front-matter.*'` lists every
+key with its one-line value as the title, `grund fmt` links a citation of one
+to the file, and a chapter rule can name one by its whole path
+([§FS-fields.front-matter.surfaces](../functional-spec/FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)). The body still starts at the declaration's
+heading, so no lead, fingerprint or section lock moves.
+
+**TOML is not read yet.** A `+++` block in a kind that declares the field is
+`unreadable-front-matter`; write it as YAML between `---` lines. A kind that
+declares no `front-matter` field parses no block, YAML or TOML, and reads
+exactly as before.
+
+The runnable [`examples/front-matter/`](../../examples/front-matter/) holds a
+closed field to its keys in its third step and runs a rule over one key in its
+fourth.
+
 ## A values chapter
 
 ```toml

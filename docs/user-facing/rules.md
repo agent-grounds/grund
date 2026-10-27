@@ -71,6 +71,8 @@ Subjects select local units only:
 - `FS-login` selects one declaration.
 - `The requirements chapter of each FS` selects that named chapter in every FS.
 - `FS-login.requirements` selects one exact named chapter.
+- `The front-matter.sources chapter of each METRIC` selects one front-matter key, in a kind
+  that declares the [front-matter field](fields.md#front-matter-is-a-field) ([§FS-rules.2.1](../functional-spec/FS-rules.md#21-a-chapters-name-is-its-whole-path)).
 
 Named chapter subjects select handles: `The goal chapter of each FS` reaches `## goal: Goal and hypothesis` by `goal` ([chapter subjects](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#2-subject-selectors)). Presence rules compare direct chapter display names case-insensitively: `Each FS must have exactly one goal chapter.` counts zero for that heading and one for `## goal: Goal` ([presence matching](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#31-chapter-presence)). The finding appends the expected display name and observed pairs such as `"goal: Goal and hypothesis"`, or `none` ([comparison context](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#721-display-name-comparison-context)). Presence `NAME` must be one non-empty token: `Goal and hypothesis` is refused with `NAME forbids whitespace anywhere.` appended to the existing guidance; authored display titles may still contain spaces ([whitespace refusal](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#351-presence-name-whitespace-refusal)).
 
