@@ -282,6 +282,7 @@ fn check_uses_scanned_symlink_path_for_kind_home() {
             body_has_content: false,
             source: DeclarationSource::Text,
             value_valid: None,
+            front_matter: None,
         }],
     );
     let report = check_findings(&findings, &config);

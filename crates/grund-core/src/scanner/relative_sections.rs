@@ -232,6 +232,7 @@ fn resolve_relative_sections(
                 value: None,
                 value_root,
                 relative: true,
+                front_matter: None,
             };
             // §FS-values.2.4.3: a duplicated root's marker is reported where it lies.
             if let Some((line, Some(column))) = claim(decl, canonical.clone(), info) {

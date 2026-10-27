@@ -6,6 +6,7 @@
 
 use std::path::Path;
 
+use crate::config::FRONT_MATTER;
 use crate::model::{
     Catalog, FileLineOwnership, FileRecord, HeadingKind, Id, OwnerRun, RangeOwnership, SectionRun,
 };
@@ -22,6 +23,10 @@ pub(super) struct LineOwners {
     /// The last line of the file's front matter, `None` where it has none
     /// (§FS-check.1.1.5.2).
     front_matter: Option<usize>,
+    /// Where the block is a front-matter field, its key coordinates as
+    /// `(path, first line, last line)`, `None` where it is not
+    /// (§FS-fields.front-matter.surfaces).
+    front_matter_keys: Option<Vec<(String, usize, usize)>>,
 }
 
 impl LineOwners {
@@ -48,9 +53,23 @@ impl LineOwners {
                 (decl.body_start, decl.body_end, decl.id.clone(), sections)
             })
             .collect();
+        // §FS-fields.front-matter.coordinates: the entries with a slice, never headings.
+        let mut field = None;
+        for decl in findings.declarations.values().flatten() {
+            let slices = decl.sections.iter().filter_map(|(path, info)| {
+                let slice = info.front_matter.as_ref()?;
+                Some((path.clone(), info.line, slice.end_line))
+            });
+            let mut slices: Vec<_> = slices.collect();
+            if slices.iter().any(|(path, _, _)| path == FRONT_MATTER) {
+                slices.retain(|(path, _, _)| path != FRONT_MATTER);
+                field = Some(slices);
+            }
+        }
         Self {
             bodies,
             front_matter: record.front_matter,
+            front_matter_keys: field,
         }
     }
 
@@ -60,11 +79,18 @@ impl LineOwners {
     /// §AR-scanner.2.4.4, §FS-cover.6.2). A line of the file's front matter
     /// belongs to the file's first declaration, the one whose body starts
     /// earliest, under no section, though no body range covers it
-    /// (§FS-check.1.1.5.2.1).
+    /// (§FS-check.1.1.5.2.1). Where the block is that declaration's front-matter
+    /// field, the line is in the key whose slice holds it, and in `front-matter`
+    /// outside every key (§FS-fields.front-matter.surfaces).
     pub(super) fn owner_at(&self, line: usize) -> Option<(&Id, Option<String>)> {
         if self.front_matter.is_some_and(|last| line <= last) {
             let (_, _, id, _) = self.bodies.iter().min_by_key(|(start, _, _, _)| *start)?;
-            return Some((id, None));
+            let section = self.front_matter_keys.as_ref().map(|keys| {
+                keys.iter()
+                    .find(|(_, start, end)| *start <= line && line <= *end)
+                    .map_or_else(|| FRONT_MATTER.to_string(), |(path, _, _)| path.clone())
+            });
+            return Some((id, section));
         }
         let (_, _, id, sections) = self
             .bodies

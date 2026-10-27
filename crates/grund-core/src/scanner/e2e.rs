@@ -133,6 +133,7 @@ pub(super) fn scan_e2e_cases(
                 body_has_content: false,
                 source: DeclarationSource::Text,
                 value_valid: None,
+                front_matter: None,
             });
     }
     Ok(())

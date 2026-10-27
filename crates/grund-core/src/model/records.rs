@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use super::conflict_block::ConflictBlock;
 use super::e2e::E2eCase;
 use super::file_record::FileRecords;
+use super::front_matter::{FrontMatterField, FrontMatterSlice};
 use super::headings::{
     NearMissHeading, RelativeSectionParent, SectionHeadingOutsideDeclaration, UnmarkedHeading,
 };
@@ -82,6 +83,9 @@ pub struct Declaration {
     /// a readable declaration with invalid value grammar, and `None` for an
     /// ordinary declaration (§FS-values.2, §FS-values.5.1).
     pub value_valid: Option<bool>,
+    /// The front-matter field, on a declaration whose kind declares it and that
+    /// is no stub (§FS-fields.front-matter); `None` everywhere else.
+    pub(crate) front_matter: Option<FrontMatterField>,
 }
 
 impl Declaration {
@@ -121,6 +125,9 @@ pub struct SectionInfo {
     /// Written as a relative heading, `.<component>` under its parent, so its
     /// path is the canonical one the parent supplied (§FS-terms.terms.1).
     pub relative: bool,
+    /// Its slice where the entry lies in the front matter rather than under a
+    /// heading, `heading_level` then 0 (§FS-fields.front-matter.coordinates).
+    pub(crate) front_matter: Option<FrontMatterSlice>,
 }
 
 impl SectionInfo {

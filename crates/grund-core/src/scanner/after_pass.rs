@@ -6,7 +6,9 @@
 use std::path::Path;
 
 use super::chapter_values::validate_declared_value_chapters;
+use super::context::retain_in_body_sections;
 use super::embedded_values::validate_embedded_value_roots;
+use super::front_matter::{holds_front_matter, read_front_matter};
 use super::value_context::SourceValueLineContext;
 use super::values::validate_markdown_value_declarations;
 use crate::config::{FileReading, Frame, Schema, kind_uses_values, kind_value_chapter};
@@ -22,6 +24,8 @@ pub(super) struct AfterPass {
     pub(super) declared_chapters: bool,
     /// A declaration in the file is of a `values = true` kind (§FS-values.2.1).
     pub(super) value_declarations: bool,
+    /// A declaration in the file is held to a front-matter field (§FS-fields.front-matter).
+    pub(super) front_matter: bool,
 }
 
 impl AfterPass {
@@ -43,8 +47,29 @@ impl AfterPass {
                 .any(|decl| kind_value_chapter(schema, &decl.id.kind).is_some()),
             value_declarations: scan_values
                 && declarations().any(|decl| kind_uses_values(schema, &decl.id.kind)),
+            front_matter: holds_front_matter(findings, schema),
         }
     }
+    /// Settle each declaration's section map: narrow it to the body
+    /// (§FS-declarations.section.map), then enter the front-matter coordinates,
+    /// which lie above every body (§FS-fields.front-matter.coordinates).
+    /// `front_matter` is the block's last line, as the record keeps it.
+    pub(super) fn settle_sections(
+        &self,
+        findings: &mut Catalog,
+        schema: &Schema,
+        text: &str,
+        is_md: bool,
+        front_matter: Option<usize>,
+    ) {
+        if self.text_sections {
+            retain_in_body_sections(findings);
+        }
+        if self.front_matter {
+            read_front_matter(findings, schema, text, is_md, front_matter);
+        }
+    }
+
     /// Run the value validations this file is due: declared value kinds
     /// (§FS-values.2.1), declared value chapters (§FS-values.2.5) and embedded
     /// value roots (§FS-values.2.4.3).
