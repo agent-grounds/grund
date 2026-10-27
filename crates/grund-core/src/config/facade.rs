@@ -256,7 +256,10 @@ impl Config {
     pub(crate) fn kind_table(&self) -> Arc<KindTable> {
         match &self.records.run.workspace.kinds {
             Some(table) => Arc::clone(table),
-            None => Arc::new(KindTable::standalone(self.schema())),
+            None => Arc::new(KindTable::standalone(
+                self.schema(),
+                self.records().project.version,
+            )),
         }
     }
 

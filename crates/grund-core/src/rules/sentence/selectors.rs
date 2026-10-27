@@ -8,12 +8,12 @@
 //! sections are off, it asks the same parser again with them on, for the
 //! suggestion alone.
 
+use super::chapter_paths::validate_named_path;
 use super::forms::{Form, refuse, settle};
+use super::modality::split_modality;
 use super::recovery::{Recovered, as_if_enabled, recover, repair_every};
-use super::subjects::{
-    Spelling, SubjectFault, SubjectRefusal, parse_subject, refused, split_modality,
-    validate_named_path,
-};
+use super::subjects::{Spelling, SubjectFault, SubjectRefusal, parse_subject, refused};
+use super::whose::windowed;
 use super::{RulePolarity, RuleSubject, RuleVocabulary};
 
 /// §FS-rule-refusals.selectors: the breadcrumb a numbered, wildcard or quantified refusal adds.
@@ -85,7 +85,7 @@ pub(crate) fn parse_selector(
 
 fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, SubjectRefusal> {
     if vocabulary.kinds.contains(text) {
-        return Ok(RuleSubject::Kind(text.into()));
+        return Ok(RuleSubject::Kind(text.into(), None));
     }
     for separator in &vocabulary.section_separators {
         // §FS-rules.2: `KIND.NAME` means `The NAME chapter of each KIND`.
@@ -99,6 +99,7 @@ fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, Subjec
             return Ok(RuleSubject::ChapterOfKind {
                 kind: kind.into(),
                 name: name.into(),
+                whose: None,
             });
         }
     }
@@ -114,6 +115,16 @@ fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, Subjec
 
 /// Render a refused subject as a selector refusal (§FS-rule-refusals.selectors).
 fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefusal {
+    // §FS-rule-refusals.selectors: a subject with a whose clause is offered no selector, and
+    // its reason is windowed, `known kinds:` after it (§FS-errors.3.10).
+    if let Some(legacy) = &refusal.legacy {
+        return SelectorRefusal {
+            reason: windowed(legacy, &refusal.reason(vocabulary)),
+            suggestion: None,
+            after_enabling: false,
+            hint: false,
+        };
+    }
     // §FS-rule-refusals.sentences.every: reparse the token-only repair on this same surface.
     if let Some(text) = repair_every(refusal) {
         return SelectorRefusal {

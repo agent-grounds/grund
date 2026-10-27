@@ -15,6 +15,7 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
+use super::fields::FieldContent;
 use super::project::Schema;
 use super::record::{CODE_SOURCE_KIND, Config};
 use super::validate::reject_unaccepted_citation_targets;
@@ -44,6 +45,18 @@ pub(crate) struct KindEntry {
     pub(crate) citable: bool,
     /// `<folder>/` or the file, `None` for a kind with no place (§FS-check.3.11).
     pub(crate) home: Option<String>,
+    /// The kind's declared fields, in header order, as a whose clause reads them
+    /// (§FS-rules.2.2).
+    pub(crate) fields: Vec<KindField>,
+}
+
+/// One declared field of a kind, as a whose clause judges it (§FS-rules.2.2):
+/// its name, and its `one_of` values where it is a scalar
+/// (§FS-fields.content.one-of).
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct KindField {
+    pub(crate) name: String,
+    pub(crate) one_of: Option<Vec<String>>,
 }
 
 impl KindEntry {
@@ -70,6 +83,9 @@ pub(crate) struct KindProject {
     pub(crate) kinds: Vec<KindEntry>,
     /// `[id] named_sections` of this project's own config.
     pub(crate) named_sections: bool,
+    /// The format version that spelled this project's config: a version-1
+    /// config declares no scalar field (§FS-rules.2.2, §FS-fields.v1).
+    pub(crate) version: u32,
     /// `code`, where the config writes no complement of its own
     /// (§FS-config.3.9.2): a kind with no row, which only
     /// [`KindTable::config_verdict`] reads.
@@ -78,8 +94,8 @@ pub(crate) struct KindProject {
 
 impl KindProject {
     /// The one reader of a schema's kinds: every row, whether it declares IDs,
-    /// and its home (§FS-config.3.4, §FS-config.3.4.1).
-    pub(crate) fn of(alias: impl Into<String>, schema: &Schema) -> Self {
+    /// its home and its fields (§FS-config.3.4, §FS-config.3.4.1, §FS-rules.2.2).
+    pub(crate) fn of(alias: impl Into<String>, schema: &Schema, version: u32) -> Self {
         Self {
             alias: alias.into(),
             kinds: schema
@@ -90,14 +106,30 @@ impl KindProject {
                     citable: row.kind.is_some(),
                     // §FS-config-v2.schema.places: every place, and none for the complement.
                     home: row.place_labels().filter(|_| !row.is_complement()),
+                    fields: row
+                        .kind
+                        .iter()
+                        .flat_map(|kind| &kind.fields)
+                        .map(|field| KindField {
+                            name: field.name.clone(),
+                            one_of: match &field.content {
+                                FieldContent::OneOf(values) => Some(values.clone()),
+                                FieldContent::Prose
+                                | FieldContent::Values
+                                | FieldContent::FrontMatter(_) => None,
+                            },
+                        })
+                        .collect(),
                 })
                 .collect(),
             named_sections: schema.ids.named_sections,
+            version,
             implicit_complement: (!schema.rows.iter().any(|row| row.is_complement())).then(|| {
                 KindEntry {
                     name: CODE_SOURCE_KIND.to_string(),
                     citable: false,
                     home: None,
+                    fields: Vec::new(),
                 }
             }),
         }
@@ -163,21 +195,24 @@ pub(crate) struct KindTable {
 
 impl KindTable {
     /// The table of a run that expanded a workspace: every project it loaded,
-    /// by alias, read once (§FS-scan.projects.kinds).
-    pub(crate) fn build<'a>(projects: impl IntoIterator<Item = (&'a str, &'a Schema)>) -> Self {
+    /// by alias, with the version its config was spelled in, read once
+    /// (§FS-scan.projects.kinds).
+    pub(crate) fn build<'a>(
+        projects: impl IntoIterator<Item = (&'a str, &'a Schema, u32)>,
+    ) -> Self {
         Self {
             projects: projects
                 .into_iter()
-                .map(|(alias, schema)| KindProject::of(alias, schema))
+                .map(|(alias, schema, version)| KindProject::of(alias, schema, version))
                 .collect(),
             workspace: true,
         }
     }
 
     /// The table of a run that holds no workspace: its one project.
-    pub(crate) fn standalone(schema: &Schema) -> Self {
+    pub(crate) fn standalone(schema: &Schema, version: u32) -> Self {
         Self {
-            projects: vec![KindProject::of("", schema)],
+            projects: vec![KindProject::of("", schema, version)],
             workspace: false,
         }
     }
@@ -195,9 +230,11 @@ impl KindTable {
                         name: name.clone(),
                         citable: true,
                         home: None,
+                        fields: Vec::new(),
                     })
                     .collect(),
                 named_sections: false,
+                version: 2,
                 implicit_complement: None,
             }],
             workspace: false,
@@ -209,13 +246,13 @@ impl KindTable {
     /// lets a pinned or `*/` object be judged rather than found unverifiable.
     pub(crate) fn add_projects<'a>(
         &mut self,
-        projects: impl IntoIterator<Item = (&'a str, &'a Schema)>,
+        projects: impl IntoIterator<Item = (&'a str, &'a Schema, u32)>,
     ) {
         let before = self.projects.len();
         self.projects.extend(
             projects
                 .into_iter()
-                .map(|(alias, schema)| KindProject::of(alias, schema)),
+                .map(|(alias, schema, version)| KindProject::of(alias, schema, version)),
         );
         self.workspace |= self.projects.len() > before;
     }
@@ -362,6 +399,26 @@ impl KindTable {
             .flat_map(KindProject::citable)
             .collect()
     }
+
+    /// Each citable kind of `scope` with the fields a whose clause is judged
+    /// against, read under the first project in load order that configures it
+    /// citable, as its named-sections setting is (§FS-rules.2.2,
+    /// §AR-config.1.5): `None` where that project's config is version 1, which
+    /// declares no scalar field (§FS-fields.v1).
+    pub(crate) fn subject_fields(
+        &self,
+        scope: KindScope<'_>,
+    ) -> BTreeMap<String, Option<Vec<KindField>>> {
+        let mut fields = BTreeMap::new();
+        for project in self.in_scope(scope) {
+            for entry in project.kinds.iter().filter(|kind| kind.citable) {
+                fields
+                    .entry(entry.name.clone())
+                    .or_insert_with(|| (project.version >= 2).then(|| entry.fields.clone()));
+            }
+        }
+        fields
+    }
 }
 
 /// §AR-config.1.5: the one call a run that reads a workspace makes. Builds the
@@ -379,11 +436,10 @@ pub(crate) fn install_kind_table<'a>(
     whole: bool,
 ) -> Result<()> {
     let mut projects = projects.into_iter().collect::<Vec<_>>();
-    let table = Arc::new(KindTable::build(
-        projects
-            .iter()
-            .map(|(alias, config)| (*alias, config.schema())),
-    ));
+    let table =
+        Arc::new(KindTable::build(projects.iter().map(|(alias, config)| {
+            (*alias, config.schema(), config.project().version)
+        })));
     if whole {
         for (_, config) in &projects {
             reject_unaccepted_citation_targets(config, &table)?;

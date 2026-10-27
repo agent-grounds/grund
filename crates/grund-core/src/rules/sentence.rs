@@ -1,9 +1,11 @@
 //! The controlled-English sentence front end (§FS-rules.2–4, §AR-rules.2).
 
+mod chapter_paths;
 mod conjunction;
 mod count;
 mod forms;
 mod literal;
+mod modality;
 mod places;
 mod predicate;
 mod recovery;
@@ -11,13 +13,14 @@ mod selectors;
 mod stages;
 mod subjects;
 mod targets;
+mod whose;
 
 use super::RuleAnchor;
-use crate::config::{KindTable, Quote};
+use crate::config::{KindField, KindTable, Quote};
 use crate::grammar::Grammar;
 use literal::DeclarationSelector;
 use stages::read;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) use places::SubjectKinds;
 
@@ -25,13 +28,38 @@ pub(crate) use selectors::parse_selector;
 #[cfg(test)]
 pub(super) use subjects::lower_case_each;
 
+/// A whose clause (§FS-rules.2.2): the declarations whose scalar field at
+/// `field`, a whole section path, has `value` as its display name. It is part of
+/// the subject, so of a rule's semantic equality (§AR-rules.2, §FS-rules.6).
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub(crate) struct Whose {
+    pub(crate) field: String,
+    pub(crate) value: String,
+}
+
+impl Whose {
+    /// Whether a declaration whose field reads `value` is selected: `None` is a
+    /// declaration with no section at the field, which is outside the rule.
+    pub(crate) fn admits(&self, value: Option<&str>) -> bool {
+        value == Some(self.value.as_str())
+    }
+}
+
+impl std::fmt::Display for Whose {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, " whose {} is {}", self.field, self.value)
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) enum RuleSubject {
-    Kind(String),
+    /// `Each KIND`, with the whose clause it may end in (§FS-rules.2.2).
+    Kind(String, Option<Whose>),
     ExactDeclaration(DeclarationSelector),
     ChapterOfKind {
         kind: String,
         name: String,
+        whose: Option<Whose>,
     },
     ExactChapter {
         declaration: DeclarationSelector,
@@ -48,14 +76,41 @@ impl RuleSubject {
     /// selects one set of units wherever it is read.
     /// Numeric components compare by value while report labels keep their
     /// authored digits (§FS-config.3.2.8).
-    pub(crate) fn selects(&self, kind: &str, declaration: &str, section: Option<&str>) -> bool {
+    ///
+    /// `value` is the display name of the declaration's field at
+    /// [`Self::whose_field`], read by the caller with the one field reader
+    /// (§FS-rules.2.2): the matcher reads scalar inputs, never scanner records
+    /// (§AR-rules.1).
+    pub(crate) fn selects(
+        &self,
+        kind: &str,
+        declaration: &str,
+        section: Option<&str>,
+        value: Option<&str>,
+    ) -> bool {
         match section {
             None => match self {
-                Self::Kind(wanted) => wanted == kind,
+                Self::Kind(wanted, whose) => {
+                    wanted == kind && whose.as_ref().is_none_or(|whose| whose.admits(value))
+                }
                 Self::ExactDeclaration(wanted) => wanted.matches(declaration),
                 _ => false,
             },
-            Some(section) => self.chapter_path(kind, declaration) == Some(section),
+            Some(section) => self.chapter_path(kind, declaration, value) == Some(section),
+        }
+    }
+
+    /// The field a whose clause reads (§FS-rules.2.2), whose display name a
+    /// caller passes to [`Self::selects`] and [`Self::chapter_path`].
+    pub(crate) fn whose_field(&self) -> Option<&str> {
+        self.whose().map(|whose| whose.field.as_str())
+    }
+
+    /// The whose clause a quantified subject ends in (§FS-rules.2.2).
+    pub(crate) fn whose(&self) -> Option<&Whose> {
+        match self {
+            Self::Kind(_, whose) | Self::ChapterOfKind { whose, .. } => whose.as_ref(),
+            Self::ExactDeclaration(_) | Self::ExactChapter { .. } => None,
         }
     }
 
@@ -69,7 +124,7 @@ impl RuleSubject {
                 path,
                 separator,
             } => Some(format!("{declaration}{separator}{path}")),
-            Self::Kind(_) | Self::ChapterOfKind { .. } => None,
+            Self::Kind(..) | Self::ChapterOfKind { .. } => None,
         }
     }
 
@@ -78,9 +133,22 @@ impl RuleSubject {
     /// A chapter-of-kind `NAME` is the whole path, never its last component
     /// (§FS-rules.2.1), so it is looked up exactly as an exact coordinate's path
     /// is, and `list` and `list --size` read a subject the same way (§FS-rules.8).
-    pub(crate) fn chapter_path(&self, kind: &str, declaration: &str) -> Option<&str> {
+    /// A declaration whose field at the whose clause, read as `value`, does not
+    /// hold its value is outside the rule and has none (§FS-rules.2.2).
+    pub(crate) fn chapter_path(
+        &self,
+        kind: &str,
+        declaration: &str,
+        value: Option<&str>,
+    ) -> Option<&str> {
         match self {
-            Self::ChapterOfKind { kind: wanted, name } if wanted == kind => Some(name),
+            Self::ChapterOfKind {
+                kind: wanted,
+                name,
+                whose,
+            } if wanted == kind && whose.as_ref().is_none_or(|whose| whose.admits(value)) => {
+                Some(name)
+            }
             Self::ExactChapter {
                 declaration: wanted,
                 path,
@@ -163,6 +231,10 @@ pub(crate) struct RuleVocabulary {
     /// The sentence front end sees syntax, never scan facts (§AR-rules.1).
     pub(crate) id_grammars: Vec<Grammar>,
     pub(crate) section_separators: Vec<String>,
+    /// Each subject kind's declared fields, read from the kind table under the
+    /// project that configures it (§FS-rules.2.2, §AR-config.1.5); `None` for a
+    /// kind of a version-1 config, which declares no scalar field.
+    pub(crate) fields: BTreeMap<String, Option<Vec<KindField>>>,
 }
 
 impl RuleVocabulary {

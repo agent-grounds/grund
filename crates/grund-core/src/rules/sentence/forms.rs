@@ -10,6 +10,7 @@
 //! it, and renders the one message both rule surfaces print.
 
 use super::recovery::enabled;
+use super::whose::windowed;
 use super::{RuleParseError, RuleVocabulary};
 use crate::model::format_list;
 use crate::model::remedies;
@@ -36,6 +37,9 @@ pub(super) struct Refusal {
     enabling: bool,
     /// Guidance that ends the message, form or not (§FS-rule-refusals.sentences.whitespace).
     trailer: Option<&'static str>,
+    /// The legacy unknown kind the whole message is windowed after
+    /// (§FS-errors.3.10).
+    window: Option<String>,
 }
 
 pub(super) fn refuse(reason: impl Into<String>, form: Form) -> Refusal {
@@ -44,6 +48,7 @@ pub(super) fn refuse(reason: impl Into<String>, form: Form) -> Refusal {
         form,
         enabling: false,
         trailer: None,
+        window: None,
     }
 }
 
@@ -73,6 +78,13 @@ impl Refusal {
         self
     }
 
+    /// The same refusal, its whole message, forms included, wrapped in the
+    /// window of §FS-errors.3.10 after `legacy`.
+    pub(super) fn windowed(mut self, legacy: &str) -> Self {
+        self.window = Some(legacy.into());
+        self
+    }
+
     /// The same refusal, ending in `trailer` whether it offers a form or not.
     pub(super) fn trailing(mut self, trailer: &'static str) -> Self {
         self.trailer = Some(trailer);
@@ -87,6 +99,19 @@ impl Refusal {
         vocabulary: &RuleVocabulary,
         read: impl Fn(&str, &RuleVocabulary) -> Option<Refusal>,
     ) -> RuleParseError {
+        let window = self.window.clone();
+        let mut error = self.offer_unwindowed(vocabulary, read);
+        if let Some(legacy) = window {
+            error.message = windowed(&legacy, &error.message);
+        }
+        error
+    }
+
+    fn offer_unwindowed(
+        self,
+        vocabulary: &RuleVocabulary,
+        read: impl Fn(&str, &RuleVocabulary) -> Option<Refusal>,
+    ) -> RuleParseError {
         let sections_on = enabled(vocabulary);
         let mut reread = |form: &str, enabled: bool| match (enabled, &sections_on) {
             (true, Some(sections_on)) => read(form, sections_on),
@@ -97,6 +122,7 @@ impl Refusal {
             form,
             enabling,
             trailer,
+            window: _,
         } = self;
         let offered = match form {
             Form::One(form) => {

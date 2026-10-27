@@ -83,7 +83,7 @@ pub(super) fn lists(path: &Path, project: &Project) -> Result<()> {
         citations_table(project.version),
         &project.kind_configs(),
         &project.rules.citations,
-        &KindTable::standalone(&project.schema),
+        &KindTable::standalone(&project.schema, project.version),
     )
 }
 

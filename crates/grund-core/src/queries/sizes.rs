@@ -7,7 +7,7 @@ use super::list_scope::{check_list_scope, unused_leaves_out};
 use super::report_scope::{reported_scope, reports};
 use super::selector_refusal::require_unique_literal;
 use crate::config::{Config, display_path, measure_point_text, run_warning_findings};
-use crate::grammar::render_declaration_id;
+use crate::grammar::{field_value, render_declaration_id};
 use crate::model::{
     Declaration, FileRecords, Finding, Id, SectionInfo, format_path, paired_declarations,
     sort_path_key,
@@ -172,10 +172,15 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
         // selector keeps, read as `list` reads it, and a literal counts the same.
         let selected = |row: &Pending<'_>| {
             let label = render_declaration_id(&row.project_config.grammar, row.declaration);
+            // §FS-rules.2.2: a whose clause is matched against the field's display name.
+            let value = subject
+                .whose_field()
+                .and_then(|field| field_value(row.declaration, field));
             subject.selects(
                 &row.id.kind,
                 &label,
                 row.section.map(|(section, _)| section),
+                value.as_deref(),
             )
         };
         if let Some(literal) = subject.literal() {

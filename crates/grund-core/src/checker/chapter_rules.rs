@@ -2,7 +2,7 @@
 //! §AR-checker.1). Grammar, facts, evaluation, and deduplication stay owned by
 //! the rules component; this module only sequences and merges their results.
 
-use crate::config::{Form, Frame, KindScope, KindTable, Rules, Schema};
+use crate::config::{Form, Frame, KindScope, KindTable, Rules, Schema, known_kinds_line};
 use crate::grammar::render_catalog_id;
 use crate::model::{
     Catalog, CheckReport, Code, Declaration, Diagnostic, Switch, paired_declarations,
@@ -104,7 +104,7 @@ fn rule_declarations<'a>(
 /// bare object in that project's scope (§AR-config.1.5), named
 /// sections as that project sets them.
 pub(crate) fn vocabulary(schema: &Schema, rules: &Rules, frame: Frame<'_>) -> RuleVocabulary {
-    let table = KindTable::standalone(schema);
+    let table = KindTable::standalone(schema, frame.version);
     let scope = KindScope::Project("");
     let kinds: BTreeSet<String> = table
         .citable(scope)
@@ -115,6 +115,7 @@ pub(crate) fn vocabulary(schema: &Schema, rules: &Rules, frame: Frame<'_>) -> Ru
         kinds,
         named_sections: table.named_sections(scope),
         named_kinds: BTreeSet::new(),
+        fields: table.subject_fields(scope),
         // §AR-rules.1, §AR-config.1.5: wire both rule surfaces to the same
         // project-local vocabulary and configured place routes.
         non_citable: crate::rules::sentence::SubjectKinds::for_rules(
@@ -136,7 +137,7 @@ pub(crate) fn parse_ad_hoc(
     frame: Frame<'_>,
     sentence: &str,
 ) -> anyhow::Result<ParsedRule> {
-    parse_ad_hoc_with_vocabulary(schema, sentence, vocabulary(schema, rules, frame))
+    parse_ad_hoc_with_vocabulary(sentence, vocabulary(schema, rules, frame))
 }
 
 pub(crate) fn parse_ad_hoc_with_workspace(
@@ -148,13 +149,13 @@ pub(crate) fn parse_ad_hoc_with_workspace(
 ) -> anyhow::Result<ParsedRule> {
     let mut vocab = vocabulary(schema, rules, frame);
     add_workspace_targets(&mut vocab, projects);
-    parse_ad_hoc_with_vocabulary(schema, sentence, vocab)
+    parse_ad_hoc_with_vocabulary(sentence, vocab)
 }
 
-/// `schema` is the one whose kinds the subject is read against, so it is the
-/// one whose kinds a refusal that offers no form lists (§AR-rules.1).
+/// The project whose kinds the subject is read against, the first of the
+/// vocabulary's object table, is the one whose kinds a refusal that offers no
+/// form lists (§AR-rules.1).
 fn parse_ad_hoc_with_vocabulary(
-    schema: &Schema,
     sentence: &str,
     vocabulary: RuleVocabulary,
 ) -> anyhow::Result<ParsedRule> {
@@ -175,7 +176,7 @@ fn parse_ad_hoc_with_vocabulary(
             anyhow::anyhow!(
                 "{}\n{}",
                 error.message,
-                KindTable::standalone(schema).known_kinds_line(KindScope::Project(""))
+                known_kinds_line(vocabulary.objects.projects[0].citable())
             )
         } else {
             anyhow::anyhow!(error.message)
@@ -200,7 +201,7 @@ fn add_workspace_targets(
     vocabulary.objects.add_projects(
         projects
             .iter()
-            .map(|(alias, project)| (alias.as_str(), project.schema)),
+            .map(|(alias, project)| (alias.as_str(), project.schema, project.version)),
     );
 }
 
@@ -237,13 +238,13 @@ pub(crate) fn declared_workspace_vocabulary(
     schema: &Schema,
     rules: &Rules,
     frame: Frame<'_>,
-    declared: &[(String, Schema)],
+    declared: &[(String, Schema, u32)],
 ) -> RuleVocabulary {
     let mut vocab = vocabulary(schema, rules, frame);
     vocab.objects.add_projects(
         declared
             .iter()
-            .map(|(alias, schema)| (alias.as_str(), schema)),
+            .map(|(alias, schema, version)| (alias.as_str(), schema, *version)),
     );
     vocab
 }
@@ -438,7 +439,7 @@ fn invalid_rule(origin: &str, path: &str, line: usize, message: &str) -> Diagnos
 /// the kind whose prefix names the declaration an exact subject selects.
 fn subject_kind(subject: &RuleSubject, schema: &Schema) -> Option<String> {
     let named = match subject {
-        RuleSubject::Kind(kind) | RuleSubject::ChapterOfKind { kind, .. } => {
+        RuleSubject::Kind(kind, _) | RuleSubject::ChapterOfKind { kind, .. } => {
             return (!kind.contains('/')).then(|| kind.clone());
         }
         RuleSubject::ExactDeclaration(declaration)

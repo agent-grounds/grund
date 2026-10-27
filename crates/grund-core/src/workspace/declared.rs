@@ -21,11 +21,14 @@ use crate::config::{Config, Invocation, Schema, install_kind_table};
 /// `[workspace]` keeps at least its own namespace — the entry an empty `members`
 /// yields, recovered by expanding the same tree with the member list emptied
 /// (§FS-rules.4.1.1).
-pub(crate) fn declared_member_schemas(config: &Config) -> Vec<(String, Schema)> {
+pub(crate) fn declared_member_schemas(config: &Config) -> Vec<(String, Schema, u32)> {
     declared_projects(config)
         .0
         .into_iter()
-        .map(|entry| (entry.alias, entry.config.schema().clone()))
+        .map(|entry| {
+            let version = entry.config.project().version;
+            (entry.alias, entry.config.schema().clone(), version)
+        })
         .collect()
 }
 

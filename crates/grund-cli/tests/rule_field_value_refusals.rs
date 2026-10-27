@@ -81,7 +81,6 @@ const WINDOWED: &[(&str, &str, &str)] = &[
 /// On `check --rule` each windowed refusal prints its legacy reason, the new one and the
 /// suffix, and nothing after it (§FS-errors.3.10).
 #[test]
-#[ignore = "red until #1047 refuses a whose clause for the part that failed; implement removes this"]
 fn check_rule_refuses_a_clause_for_the_part_that_failed() {
     let fx = Fixture::table();
     for (sentence, legacy, reason) in WINDOWED {
@@ -98,7 +97,6 @@ fn check_rule_refuses_a_clause_for_the_part_that_failed() {
 /// A configured rule declaration's `invalid-rule` carries the same reason (§FS-rules.7.1).
 /// The whitespace rows are left to `check --rule`: a heading's own spacing is not theirs.
 #[test]
-#[ignore = "red until #1047 refuses a whose clause for the part that failed; implement removes this"]
 fn a_declared_rule_carries_the_same_reason() {
     let rows: Vec<_> = WINDOWED
         .iter()
@@ -138,7 +136,6 @@ fn a_declared_rule_carries_the_same_reason() {
 /// On `list --selector` the reason is the rule's, no selector is offered, and the window
 /// keeps the `known kinds:` line (§FS-rule-refusals.selectors).
 #[test]
-#[ignore = "red until #1047 refuses a whose clause for the part that failed; implement removes this"]
 fn the_selector_refuses_a_clause_for_the_part_that_failed() {
     let fx = Fixture::table();
     for (selector, legacy, reason) in [
@@ -175,7 +172,6 @@ fn the_selector_refuses_a_clause_for_the_part_that_failed() {
 /// An unknown kind is refused before its clause, naming the kind alone (§FS-rule-refusals
 /// .sentences.order stage 5).
 #[test]
-#[ignore = "red until #1047 reads the kind before a whose clause; implement removes this"]
 fn an_unknown_kind_is_refused_before_its_clause() {
     let fx = Fixture::table();
     let run = fx.expect(
@@ -197,7 +193,6 @@ fn an_unknown_kind_is_refused_before_its_clause() {
 
 /// A version-1 config declares no scalar field, so any whose clause is refused for that.
 #[test]
-#[ignore = "red until #1047 refuses a whose clause for the part that failed; implement removes this"]
 fn a_version_one_config_refuses_every_clause() {
     let fx = Fixture::with(&[
         (
@@ -234,7 +229,6 @@ fn a_version_one_config_refuses_every_clause() {
 /// An exact ID or an object kind followed by a clause keeps its released reason and appends
 /// why, with no window (§FS-rule-refusals.sentences.whose).
 #[test]
-#[ignore = "red until #1047 appends the whose-clause reason; implement removes this"]
 fn an_exact_id_or_an_object_with_a_clause_appends_why() {
     let fx = Fixture::table();
     let id = "literal subject \"SWR-brake-latency whose verification is Test\" does not match \

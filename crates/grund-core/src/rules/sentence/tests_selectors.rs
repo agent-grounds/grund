@@ -27,6 +27,7 @@ fn vocabulary(kinds: &[&str]) -> RuleVocabulary {
         .map(|kind| kind.to_string())
         .collect::<BTreeSet<_>>();
     RuleVocabulary {
+        fields: Default::default(),
         objects: KindTable::of_citable(&kinds),
         kinds,
         named_sections: true,
@@ -190,6 +191,7 @@ fn a_pasted_rule_sentence_is_answered_with_its_subject() {
         Ok(RuleSubject::ChapterOfKind {
             kind: "FS".into(),
             name: "must".into(),
+            whose: None,
         })
     );
 }

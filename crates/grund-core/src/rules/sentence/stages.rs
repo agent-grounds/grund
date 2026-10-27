@@ -4,10 +4,11 @@
 
 use super::conjunction::{conjunction_forms, first_clause};
 use super::forms::{Form, Refusal, refuse};
+use super::modality::split_modality;
 use super::predicate::parse_predicate;
 use super::subjects::{
     EACH_IS_CASE_SENSITIVE, Spelling, SubjectFault, SubjectRefusal, lower_case_each, parse_subject,
-    refused, split_modality,
+    refused,
 };
 use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
@@ -242,9 +243,13 @@ fn predicate(reading: &mut Reading<'_>) -> Result<(), Refusal> {
         // §FS-rule-refusals.sentences.rewrite.by-refusal: a chapter subject becomes its
         // declaration, or `Each KIND`.
         let declaration = match subject {
-            RuleSubject::ChapterOfKind { kind, .. } => Some(format!("Each {kind}")),
+            RuleSubject::ChapterOfKind { kind, whose, .. } => Some(match whose {
+                // §FS-rules.2.2: the whose clause belongs to the subject, so it stays.
+                Some(whose) => format!("Each {kind}{whose}"),
+                None => format!("Each {kind}"),
+            }),
             RuleSubject::ExactChapter { declaration, .. } => Some(declaration.to_string()),
-            RuleSubject::Kind(_) | RuleSubject::ExactDeclaration(_) => None,
+            RuleSubject::Kind(..) | RuleSubject::ExactDeclaration(_) => None,
         };
         if let Some(declaration) = declaration {
             return Err(refuse(

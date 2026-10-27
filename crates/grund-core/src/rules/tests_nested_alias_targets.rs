@@ -104,7 +104,7 @@ pub(super) fn cites(targets: &[&str], cardinality: Cardinality) -> ParsedRule {
     ParsedRule {
         origin: "RULE-x".into(),
         anchor: anchor(40),
-        subject: RuleSubject::Kind("API".into()),
+        subject: RuleSubject::Kind("API".into(), None),
         level: RuleLevel::Required,
         polarity: RulePolarity::Positive,
         relation: RuleRelation::Cite,
@@ -127,7 +127,7 @@ fn bans(targets: &[&str]) -> ParsedRule {
 /// `Each AR must be cited by …` over `targets`, with the given count.
 fn cited_by(targets: &[&str], cardinality: Cardinality) -> ParsedRule {
     ParsedRule {
-        subject: RuleSubject::Kind("AR".into()),
+        subject: RuleSubject::Kind("AR".into(), None),
         relation: RuleRelation::BeCitedBy,
         ..cites(targets, cardinality)
     }

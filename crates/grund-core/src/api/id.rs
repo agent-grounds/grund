@@ -118,7 +118,7 @@ fn propose_id_run(
     let config = open(&Invocation::new(&opts.path, true, Selection::Check))?;
     *run_warnings = config_run_warnings(&config);
     // §AR-config.1.5: `grund id` asks in the project the run loads.
-    let table = KindTable::standalone(config.schema());
+    let table = KindTable::standalone(config.schema(), config.project().version);
     let scope = KindScope::Project("");
     let headline = match table.verdict(scope, kind) {
         KindVerdict::Citable => None,

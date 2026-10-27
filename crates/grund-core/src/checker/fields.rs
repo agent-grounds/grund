@@ -10,7 +10,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use crate::config::{Field, FieldContent, Frame, Kind, Placement, Schema, Strength};
-use crate::grammar::{render_declaration_id, section_display_name};
+use crate::grammar::{direct_section_value, render_declaration_id};
 use crate::model::{Armed, Catalog, CheckReport, Code, Declaration, Diagnostic, Switch};
 
 /// The channel a strength names (§FS-config-v2.rules.strengths); `None` is unchecked.
@@ -138,13 +138,12 @@ fn for_each_finding<'a>(
 /// twice counts once, at its first heading (§FS-fields.identity.name); the front
 /// matter is no chapter (§FS-fields.front-matter.findings).
 fn direct_sections(declaration: &Declaration) -> Vec<(&str, usize, Cow<'_, str>)> {
+    // §FS-rules.2.2: the one reader of a field's value, which a whose clause reads too.
     let mut direct: Vec<(&str, usize, Cow<'_, str>)> = declaration
         .sections
         .iter()
-        .filter(|(path, info)| !path.contains('.') && !info.in_front_matter())
-        .map(|(path, info)| {
-            let display = section_display_name(&info.title, path, info.relative);
-            (path.as_str(), info.line, display)
+        .filter_map(|(path, info)| {
+            direct_section_value(path, info).map(|display| (path.as_str(), info.line, display))
         })
         .collect();
     direct.sort_by_key(|(_, line, _)| *line);
@@ -412,3 +411,7 @@ fn absent_chapter(diagnostic: &Diagnostic) -> Option<&str> {
     let (_, rest) = diagnostic.message.split_once(" has 0 ")?;
     rest.split_once(" chapters; ").map(|(name, _)| name)
 }
+
+#[cfg(test)]
+#[path = "tests_field_reader.rs"]
+mod tests_field_reader;

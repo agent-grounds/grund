@@ -4,6 +4,7 @@
 //! Ordered maps use the keys' existing ordering without changing RuleFacts;
 //! lookups cost logarithmic time instead of scanning whole relations.
 
+use super::super::Whose;
 use super::super::facts::{NodeKey, RuleFacts, SiteKey};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -129,6 +130,26 @@ impl<'a> FactIndex<'a> {
             .get(kind)
             .map(Vec::as_slice)
             .unwrap_or(&[])
+    }
+
+    /// §FS-rules.5.2's `selected(d)`: the declaration has no whose clause to
+    /// meet, or `contains(d, f), chapter(f, FIELD, VALUE)` holds, over the
+    /// direct chapter rows the field check reads too (§FS-rules.2.2). A
+    /// front-matter unit has no display name, so it holds no value
+    /// (§FS-fields.front-matter.surfaces).
+    pub(super) fn selected(
+        &self,
+        declaration: &NodeKey,
+        whose: Option<&Whose>,
+        facts: &RuleFacts,
+    ) -> bool {
+        let Some(whose) = whose else {
+            return true;
+        };
+        self.chapters_of(declaration).iter().any(|row| {
+            let (_, path, display) = &facts.chapter[*row];
+            *path == whose.field && whose.admits(display.as_deref())
+        })
     }
 
     /// Direct chapter rows only; descendants do not count as children (§FS-rules.3.1).

@@ -146,8 +146,8 @@ pub(crate) use grounding::{
 };
 pub(crate) use kind::escape_toml_basic;
 pub(crate) use kinds::{
-    KindEntry, KindScope, KindTable, KindVerdict, Quote, install_kind_table, known_kinds_line,
-    unverifiable_reason,
+    KindEntry, KindField, KindScope, KindTable, KindVerdict, Quote, install_kind_table,
+    known_kinds_line, unverifiable_reason,
 };
 pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{

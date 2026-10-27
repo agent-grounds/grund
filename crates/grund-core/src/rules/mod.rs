@@ -23,7 +23,7 @@ pub(crate) struct RuleAnchor {
 // §AR-rules.4).
 pub(crate) use sentence::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
-    TargetMode,
+    TargetMode, Whose,
 };
 
 #[cfg(test)]
@@ -54,3 +54,5 @@ mod tests_section_targets;
 mod tests_unreached;
 #[cfg(test)]
 mod tests_unscanned_home;
+#[cfg(test)]
+mod tests_whose_selection;

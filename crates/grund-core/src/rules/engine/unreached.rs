@@ -4,7 +4,7 @@
 //! channel (§FS-rules.7).
 
 use super::super::facts::{NodeKey, RuleFacts};
-use super::super::{RuleLevel, RulePolarity, RuleRelation, RuleSubject};
+use super::super::{RuleLevel, RulePolarity, RuleRelation, RuleSubject, Whose};
 use super::authority::Authority;
 use super::index::FactIndex;
 use super::{SemanticRule, label, push_node};
@@ -36,7 +36,7 @@ pub(super) fn report_unreached(
     {
         return;
     }
-    let RuleSubject::ChapterOfKind { kind, name } = &rule.subject else {
+    let RuleSubject::ChapterOfKind { kind, name, whose } = &rule.subject else {
         return;
     };
     // §FS-rules.checks.unreached-declaration: the recommended level drops the
@@ -47,7 +47,7 @@ pub(super) fn report_unreached(
     } else {
         ""
     };
-    for declaration in unreached_declarations(kind, selected, index) {
+    for declaration in unreached_declarations(kind, whose.as_ref(), selected, facts, index) {
         let message = format!(
             "{} has no {name} chapter, so {authority} cannot reach it; {}{landed}",
             label(facts, &declaration),
@@ -64,8 +64,9 @@ pub(super) fn report_unreached(
     }
 }
 
-/// §FS-rules.5.2's `unreached(d, N)`: the local declarations of the kind that
-/// own none of the chapters the subject selected.
+/// §FS-rules.5.2's `unreached(d, N)`: the declarations the subject selects
+/// (§FS-rules.2.2) that own none of the chapters it selected; one a whose
+/// clause leaves out is outside the rule, never unreached.
 ///
 /// It is read as the complement of the selection rather than as a second join
 /// over `chapter`, which is what §FS-rules.5.2's `chapter_of` says as well: that
@@ -79,7 +80,13 @@ pub(super) fn report_unreached(
 /// formed from the selected chapters' cached owners rather than from each
 /// declaration's direct chapter bucket, sharing selector data rather than
 /// joining global relations again (§FS-rules.5.3).
-fn unreached_declarations(kind: &str, selected: &[NodeKey], index: &FactIndex<'_>) -> Vec<NodeKey> {
+fn unreached_declarations(
+    kind: &str,
+    whose: Option<&Whose>,
+    selected: &[NodeKey],
+    facts: &RuleFacts,
+    index: &FactIndex<'_>,
+) -> Vec<NodeKey> {
     let reached = selected
         .iter()
         .filter_map(|chapter| index.owner(chapter))
@@ -87,7 +94,7 @@ fn unreached_declarations(kind: &str, selected: &[NodeKey], index: &FactIndex<'_
     index
         .declarations_of_kind(kind)
         .iter()
-        .filter(|node| !reached.contains(**node))
+        .filter(|node| index.selected(node, whose, facts) && !reached.contains(**node))
         .map(|node| (*node).clone())
         .collect()
 }

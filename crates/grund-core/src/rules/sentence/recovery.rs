@@ -9,7 +9,8 @@
 //! subject, so what can be recovered is decided once. Where named sections are
 //! off, both surfaces ask their own parser again with them on.
 
-use super::subjects::{Spelling, SubjectFault, SubjectRefusal, parse_subject, validate_named_path};
+use super::chapter_paths::validate_named_path;
+use super::subjects::{Spelling, SubjectFault, SubjectRefusal, parse_subject};
 use super::{RuleSubject, RuleVocabulary};
 use crate::grammar::{Grammar, named_section_component, split_alias_path};
 use std::collections::BTreeSet;
