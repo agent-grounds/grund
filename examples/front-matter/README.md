@@ -143,7 +143,8 @@ inside the `sources` key, so a policy cited in the body alone would fail it.
   that is not a citation is just text. A kind that declares it parses the YAML, and a
   key's value is the text it decodes to, never a typed value, so `one_of` compares
   `2026-02-03` and `no` as written. A TOML block is not read as a field yet; it is
-  reported as `unreadable-front-matter`.
+  reported as `unreadable-front-matter` until
+  [#1057](https://github.com/agent-grounds/grund/issues/1057) reads it.
 - **The extent is exact.** Line 1 must be exactly `---` or `+++`, closed by the same line or
   by `...` for `---`. A block that never closes is not front matter, and the file reads as
   it would without it.
