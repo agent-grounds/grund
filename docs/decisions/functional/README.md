@@ -194,6 +194,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-block-teaches-unused](DF-block-teaches-unused.md#df-block-teaches-unused-the-managed-block-teaches-grund-list---unused) — the managed block teaches `grund list --unused`
 - [§DF-block-names-section-heading](DF-block-names-section-heading.md#df-block-names-section-heading-the-blocks-first-rung-says-a-section-read-opens-with-its-heading-line) — the block's first rung says a section read opens with its heading line
 - [§DF-init-configured-kind-guidance](DF-init-configured-kind-guidance.md#df-init-configured-kind-guidance-grund-inits-guidance-names-a-kind-and-a-home-the-project-declares) — `grund init`'s guidance names a kind and a home the project declares
+- [§DF-prohibition-targets-join-with-or](DF-prohibition-targets-join-with-or.md#df-prohibition-targets-join-with-or-a-prohibitions-targets-join-with-or) — a prohibition's targets join with "or"
 
 ## The one-answer rulings
 

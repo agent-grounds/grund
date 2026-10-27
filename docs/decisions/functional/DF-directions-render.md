@@ -55,7 +55,7 @@ The legend is fixed text and renders whenever `[citations]` is declared, includi
 | 2 alternatives | `FS or GOAL` |
 | ≥3 alternatives | `FS, AR, or RM` |
 | ≥2 obligation entries | joined with ` and `; an entry with ≥2 alternatives is parenthesised |
-| ≥2 prohibition entries | one list of alternatives: `FS or AR`, `FS, AR, or RM` ([§DF-directions-render.7](DF-directions-render.md#7-a-prohibitions-targets-join-with-or)) |
+| ≥2 prohibition entries | one list of alternatives: `FS or AR`, `FS, AR, or RM` ([§DF-prohibition-targets-join-with-or](DF-prohibition-targets-join-with-or.md#df-prohibition-targets-join-with-or-a-prohibitions-targets-join-with-or)) |
 | `*/K` | `K in any project` |
 | `alias/K` | as spelled — that is how a citation is written |
 | citable subject | `Each **K** declaration` |
@@ -197,24 +197,6 @@ The subject is unnarrowed exactly when the row grounds. A row that grounds nothi
 | Make `check` fail an uncited file in a home with a `must` rule and no grounding | Moves a verdict every repository with such a row would meet at once, and makes a direction rule decide *whether* a file cites, which grounding is for ([§FS-config.3.4.8.1](../../functional-spec/FS-config.md#3481-why-grounding-is-asked-per-place)). |
 | Keep the bullet and only add the grounding key to the legend | The bullet would still claim an obligation no check enforces, and the legend would have to name every home. |
 
-## 7. A prohibition's targets join with "or"
-
-**Date:** 2026-10-27
-
-[§DF-directions-render.2.2](DF-directions-render.md#22-the-rules-the-render-follows) joined every list's entries with "and", which is right for an obligation and wrong for a prohibition. `must = ["FS", "AR"]` asks for a citation to each, but `must-not = ["FS", "AR"]` bans each on its own: `grund check` reports a citation site to either one ([§FS-check.3.12](../../functional-spec/FS-check.md#312-forbidden-citation)), so a file that cites only FS fails. The block rendered `The file **README.md** must not cite FS and AR.`, which reads as forbidding the pair, and this repository's own entrypoint carried that line (agent-grounds/grund#151, 2026-10-12).
-
-### 7.1 Decision
-
-A prohibition clause's targets join as one list of alternatives: every entry's alternatives in written order, "or" between two, the Oxford comma from three, and no parentheses, since nothing is grouped ([§FS-init.2.3.5.4](../../functional-spec/FS-init.md#2354-targets)). `must-not = ["FS", "AR"]` and `must-not = ["FS|AR"]` forbid the same citations, so they render the same `must not cite FS or AR`. An obligation keeps the grouping of [§DF-directions-render.2.2](DF-directions-render.md#22-the-rules-the-render-follows). No `grund check` verdict moves: only the text an agent reads, under one block-version bump ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)).
-
-### 7.2 Alternatives considered
-
-| Option | Why rejected |
-|---|---|
-| `must not cite FS and must not cite AR` | Says the same thing at twice the length, and the clause order of [§FS-init.2.3.5.3](../../functional-spec/FS-init.md#2353-the-clauses) has no slot for a repeated modal. |
-| `must not cite FS nor AR` | "nor" after "not" is archaic in English and reads as a double negative to a reader for whom English is a second language. |
-| `must not cite any of FS and AR` | Keeps the "and" that misled, and adds a quantifier no other clause has. |
-
 ## release-note: Release note
 
-- A non-citable home whose row grounds nothing now renders its Citation directions bullet as `Each file in **tests/e2e/** that cites anything must cite FS.`, followed by a sentence saying a file there that cites nothing is not checked and naming the setting that makes it a finding. A home whose own row turns grounding on is now named in the grounding sentence. The managed block's versions advance from v35/v36 to v39/v40 and from v37/v38 to v41/v42. Existing blocks are reported outdated by `grund check` and `grund init --check`; run `grund init` to refresh them, preserving unmanaged text. No verdict over the repository's own files changes. A prohibition with more than one target now renders its targets joined with "or": `must-not = ["FS", "AR"]` reads `must not cite FS or AR`, where it read `must not cite FS and AR`, which said only the pair was forbidden. The managed block's versions advance from v39/v40 to v43/v44 and from v41/v42 to v45/v46. Existing blocks are reported outdated by `grund check` and `grund init --check`; run `grund init` to refresh them, preserving unmanaged text. No verdict over the repository's own files changes.
+- A non-citable home whose row grounds nothing now renders its Citation directions bullet as `Each file in **tests/e2e/** that cites anything must cite FS.`, followed by a sentence saying a file there that cites nothing is not checked and naming the setting that makes it a finding. A home whose own row turns grounding on is now named in the grounding sentence. The managed block's versions advance from v35/v36 to v39/v40 and from v37/v38 to v41/v42. Existing blocks are reported outdated by `grund check` and `grund init --check`; run `grund init` to refresh them, preserving unmanaged text. No verdict over the repository's own files changes.
