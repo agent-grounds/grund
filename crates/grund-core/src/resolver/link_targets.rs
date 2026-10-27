@@ -305,7 +305,10 @@ pub(crate) fn heading_anchor(
     let heading = match section {
         Some(sec) => {
             // §FS-fields.front-matter.surfaces: a front-matter coordinate has no heading.
-            let info = decl.sections.get(sec).filter(|info| info.front_matter.is_none())?;
+            let info = decl
+                .sections
+                .get(sec)
+                .filter(|info| info.front_matter.is_none())?;
             settled
                 .section_title(&decl.file, sec, info)
                 .unwrap_or_else(|| info.title.clone())
