@@ -66,7 +66,9 @@ In a Markdown file, the parallel carve-out is the link destination: a **bare** I
 
 Two contexts are read as neither prose nor code, so nothing inside them is a citation. A **fenced code block** in Markdown is skipped entirely: this is what makes an example ID safe to write in documentation without the `<§>` escape, and it is why the illustrations throughout these specs resolve to nothing. What opens and closes a fence is [§FS-languages.fence](FS-languages.md#fence-fences). In **source files only**, the qualified form `§<alias>/<ID>` is additionally skipped inside an inline-code span or a string literal, a literal that spans lines included ([§FS-languages.multi-line-string](FS-languages.md#multi-line-string-a-string-literal-that-spans-lines)), because `alias/ID` is shaped like a path, module reference, or URL ([AR-scanner.2.3](../architecture/AR-scanner.md#23-citation-detection)); the unqualified form stays live there, and neither skip applies in Markdown. Every other skip is a property of the *scan* rather than of the text — a file the scan skips, for any of the reasons [§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded) lists, is never read at all ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)).
 
-A CommonMark raw-text HTML block ([§FS-check.1.1.5.1](FS-check.md#1151-a-raw-html-block-holds-no-heading)) is read as raw text for structure but as prose for citations. Citations inside the block stay live, unlike a fence's: the diagrams of [§FS-fmt.2.5.4](FS-fmt.md#254-the-case-this-exists-for) are written in `<pre>` precisely because a citation there still resolves, still counts as a use, and is still reported when it dangles.
+A CommonMark raw-text HTML block ([§FS-check.1.1.5.1](FS-check.md#1151-a-raw-html-block-holds-no-heading)) is read as raw text for structure but as prose for citations. Citations inside the block stay live, unlike a fence's: the diagrams of [§FS-fmt.2.5.4](FS-fmt.md#254-the-case-this-exists-for) are written in `<pre>` precisely because a citation there still resolves, still counts as a use, and is still reported when it dangles. A Markdown file's front matter
+([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)) is read the same way: no line of it is a heading, and every citation in it is
+live, belonging to the file's first declaration ([§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)).
 
 In supported source comments, a prose apostrophe does not open a string literal, nor does
 a Rust lifetime or Haskell identifier prime before a trailing comment. A qualified citation
@@ -199,6 +201,7 @@ Some spans hold text that is legitimate exactly as it stands, so no pass of `gru
 - Citations inside a Markdown **fenced code block**, in every pass ([§FS-fmt.2.3.3](FS-fmt.md#233-a-fenced-code-block-is-an-illustration)).
 - Citations inside Markdown inline code spans (where rewriting would change a literal command, path, or example), a span ending where [§FS-citations.zones.inline-code](FS-citations.md#zonesinline-code-an-inline-code-span-closes-on-a-run-of-its-own-length) says it does.
 - ID-shaped text inside Markdown link destinations, in each of their four spellings, except a destination `fmt` itself maintains ([§FS-citations.zones.link-destination](FS-citations.md#zoneslink-destination-a-link-destination-is-the-url)).
+- Citations inside a Markdown file's **front matter**, in every pass, because a Markdown link is not a valid YAML or TOML value ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)).
 - A reference key, and the bytes of a raw HTML tag outside an `href` value ([§FS-citations.zones.authored-markup](FS-citations.md#zonesauthored-markup-a-reference-key-and-an-html-tag-keep-their-bytes)).
 - ID-shaped text in an escape position ([§FS-citations.recognized.escapes](FS-citations.md#recognizedescapes-an-id-in-an-escape-position)). `--marker` would splice a marker inside the escape brackets and turn an illustration into a live citation; every later pass, the cross-reference wrap included, follows the marker and stops with it.
 
@@ -335,7 +338,8 @@ Every citation site has exactly one **citing kind**, the kind a `[citations.<kin
 names it by ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)), and it is decided in this order:
 
 1. **The enclosing declaration's kind.** The nearest preceding declaration whose body contains
-   the site ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)) gives its kind. A site later in the file than that body
+   the site ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)) gives its kind; a site in front matter is enclosed by the file's first declaration
+   ([§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)). A site later in the file than that body
    does not inherit it and falls through.
 2. **The kind of the file's home.** Where no declaration encloses the site, the kind whose
    `folder` or `file` contains the site's file gives its kind — but only when exactly one
