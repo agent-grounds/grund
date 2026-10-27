@@ -1,0 +1,1 @@
+src/cache.rs:1: error: ADR-inline has no front-matter field; kind ADR declares it; only a Markdown file's first declaration has front matter; move it to a Markdown file of its own

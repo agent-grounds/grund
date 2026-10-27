@@ -142,6 +142,8 @@ mod tests_cover_workspace;
 mod tests_e2e_manifest_args;
 #[cfg(test)]
 mod tests_embedding;
+#[cfg(test)]
+mod tests_embedding_front_matter;
 #[cfg(all(test, unix))]
 mod tests_embedding_scan_errors;
 #[cfg(test)]
