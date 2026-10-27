@@ -282,6 +282,21 @@ fn fields(out: &mut String, name: &str, kind: &Kind) {
             FieldContent::OneOf(values) => {
                 let _ = writeln!(out, "one_of = {}", list(values));
             }
+            // §FS-fields.front-matter.config: its `closed`, then a table per key.
+            FieldContent::FrontMatter(shape) => {
+                let _ = writeln!(out, "closed = \"{}\"", shape.closed.as_str());
+                for key in &shape.keys {
+                    let _ = writeln!(
+                        out,
+                        "\n[schema.kinds.{name}.fields.{}.keys.{}]",
+                        field.name, key.name
+                    );
+                    let _ = writeln!(out, "presence = \"{}\"", key.presence.as_str());
+                    if let Some(values) = &key.one_of {
+                        let _ = writeln!(out, "one_of = {}", list(values));
+                    }
+                }
+            }
         }
     }
 }

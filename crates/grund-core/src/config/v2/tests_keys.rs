@@ -27,6 +27,9 @@ const HEADERS: &[&str] = &[
     "schema.kinds.FS",
     "schema.kinds.FS.fields",
     "schema.kinds.FS.fields.terms",
+    "schema.kinds.FS.fields.front-matter",
+    "schema.kinds.FS.fields.front-matter.keys",
+    "schema.kinds.FS.fields.front-matter.keys.status",
     "rules",
     "rules.citations",
     "rules.citations.FS",
@@ -50,6 +53,8 @@ fn table(header: &str) -> Table {
         Opened::Table(table) => table,
         Opened::Row(_) => Table::Row(0),
         Opened::Field(..) => Table::Field(0),
+        Opened::FrontMatter(_) => Table::FrontMatter(0),
+        Opened::Key(..) => Table::FrontMatterKey(0, 0),
         Opened::Definition(_) => Table::Definition(0),
         Opened::Refused(message) => panic!("[{header}] is refused: {message}"),
     }
@@ -62,6 +67,10 @@ fn walked(header: &str, key: &str) -> Option<String> {
         // A field table names a row written above it (§FS-fields.declare.field).
         if header.starts_with("schema.kinds.FS.") {
             text.push_str("[schema.kinds.FS]\nfiles = [\"requirements.md\"]\n");
+        }
+        // A key table names its field written above it (§FS-fields.front-matter.config).
+        if header.starts_with("schema.kinds.FS.fields.front-matter.keys.") {
+            text.push_str("[schema.kinds.FS.fields.front-matter]\n");
         }
         text.push_str(&format!("[{header}]\n"));
     }

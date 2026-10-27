@@ -54,6 +54,10 @@ fn schema_graph_label(graph: SchemaGraph, node: &SchemaNode) -> String {
     for slot in &node.slots {
         let (name, facts) = schema_slot(slot);
         lines.push(format!("field {name}: {facts}"));
+        // §FS-fields.front-matter.record: its keys follow their field's line.
+        for (key, facts) in slot.key_lines() {
+            lines.push(format!("key {key}: {facts}"));
+        }
     }
     if let Some(closed) = node.closed {
         lines.push(format!("closed {}", closed.as_str()));

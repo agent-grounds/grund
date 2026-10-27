@@ -37,6 +37,34 @@ pub enum FieldContent {
     Values,
     /// A scalar: its display name is one of these (§FS-fields.content.one-of).
     OneOf(Vec<String>),
+    /// The file's front matter rather than a chapter, its keys the field's
+    /// sections (§FS-fields.front-matter, §FS-fields.front-matter.record).
+    FrontMatter(FrontMatterShape),
+}
+
+/// §FS-fields.front-matter: the one field name with a meaning of its own, on a
+/// kind that declares it (§FS-fields.declare.field).
+pub const FRONT_MATTER: &str = "front-matter";
+
+/// §FS-fields.front-matter.record: what the front-matter slot carries besides
+/// its presence: its own `closed`, and its keys in header order.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FrontMatterShape {
+    /// Whether a key the field does not declare is reported (§FS-fields.front-matter.config).
+    pub closed: Strength,
+    pub keys: Vec<FrontMatterKey>,
+}
+
+/// §FS-fields.front-matter.config: one `[…fields.front-matter.keys.<key>]`.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FrontMatterKey {
+    /// The top-level key it declares, a section name (§FS-fields.front-matter.keys).
+    pub name: String,
+    /// Whether the block must have the key (§FS-fields.front-matter.findings).
+    pub presence: Strength,
+    /// The values its one-line value may take, `None` for any value
+    /// (§FS-fields.front-matter.values).
+    pub one_of: Option<Vec<String>>,
 }
 
 impl Field {
@@ -49,6 +77,15 @@ impl Field {
             presence: Strength::May,
             placement: None,
             content: FieldContent::Values,
+        }
+    }
+
+    /// §FS-fields.front-matter: the field's front-matter shape, where it is the
+    /// front-matter field.
+    pub fn front_matter(&self) -> Option<&FrontMatterShape> {
+        match &self.content {
+            FieldContent::FrontMatter(shape) => Some(shape),
+            _ => None,
         }
     }
 

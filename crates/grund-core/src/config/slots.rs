@@ -3,7 +3,7 @@
 //! hand-maintained model of what a declaration of the kind holds
 //! (§FS-fields.record).
 
-use super::fields::{FieldContent, Placement};
+use super::fields::{FieldContent, FrontMatterShape, Placement};
 use super::project::Strength;
 use super::rows::{Form, Kind};
 
@@ -35,6 +35,8 @@ pub enum Content<'a> {
     Prose,
     Values,
     OneOf(&'a [String]),
+    /// The file's front matter, its keys the slot's sections (§FS-fields.front-matter.record).
+    FrontMatter(&'a FrontMatterShape),
 }
 
 impl Kind {
@@ -58,6 +60,7 @@ impl Kind {
                 FieldContent::Prose => Content::Prose,
                 FieldContent::Values => Content::Values,
                 FieldContent::OneOf(values) => Content::OneOf(values),
+                FieldContent::FrontMatter(shape) => Content::FrontMatter(shape),
             },
         });
         numbered.into_iter().chain(fields)

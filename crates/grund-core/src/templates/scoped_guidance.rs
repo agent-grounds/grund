@@ -251,8 +251,10 @@ pub(crate) fn declaration_shapes_section(
             continue;
         }
         bullets.push_str(&format!("- **{}**\n", node.name));
-        for line in lines {
-            bullets.push_str(&format!("  - {line}\n"));
+        // §FS-fields.front-matter.record: a key's bullet nests under its field's.
+        for (depth, line) in lines {
+            let indent = "  ".repeat(depth + 1);
+            bullets.push_str(&format!("{indent}- {line}\n"));
         }
     }
     (!bullets.is_empty()).then(|| {

@@ -157,7 +157,7 @@ def sample(node):
 
 
 PLACEHOLDERS = {"<KIND>": "FS", "<NAME>": "FS", "<field>": "summary", "<suffix>": "mdx",
-                "<name>": "notes"}
+                "<name>": "notes", "<key>": "status"}
 
 
 def leaf_keys(node, path=()):
@@ -215,6 +215,14 @@ def config_naming(version, path, value):
         else:
             node = node.setdefault(part, {})
     node[path[-1]] = value
+    # A key table follows its field's header (§FS-fields.front-matter.config),
+    # which a table holding no key of its own would not write.
+    for i, part in enumerate(path[:-1]):
+        if part == "keys" and path[i - 1:i] == ("front-matter",):
+            holder = config
+            for step in path[:i]:
+                holder = holder[step]
+            holder.setdefault("presence", "may")
     # A key is named in a table that otherwise holds only what the table requires.
     table = table_schema(version, path)
     for key in table.get("required", []):

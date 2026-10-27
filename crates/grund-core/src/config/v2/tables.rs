@@ -33,6 +33,12 @@ pub(super) enum Table {
     Row(usize),
     /// `[schema.kinds.<NAME>.fields.<field>]`: the index of its draft field.
     Field(usize),
+    /// `[schema.kinds.<NAME>.fields.front-matter]`: the index of its draft field
+    /// (§FS-fields.front-matter.config).
+    FrontMatter(usize),
+    /// `[schema.kinds.<NAME>.fields.front-matter.keys.<key>]`: its field's draft
+    /// and the key's index in it (§FS-fields.front-matter.config).
+    FrontMatterKey(usize, usize),
     /// `[rules.citations]`.
     Citations,
     /// `[rules.citations.<KIND>]` and the lists read so far, each at its line.
@@ -156,6 +162,9 @@ impl Table {
             Table::Field(_) => Keys::Closed(&[
                 "title", "presence", "position", "after", "content", "one_of",
             ]),
+            // §FS-fields.front-matter.config: the block has no heading to title or place.
+            Table::FrontMatter(_) => Keys::Closed(&["presence", "closed"]),
+            Table::FrontMatterKey(..) => Keys::Closed(&["presence", "one_of"]),
             Table::Citations => Keys::Closed(&["default"]),
             Table::CitationKind(..) => Keys::Closed(CITATION_KIND_KEYS),
             Table::Resolution => Keys::Names("a kind name"),
@@ -273,9 +282,22 @@ const HEADERS: &[Header] = &[
     ("schema.kinds.<NAME>.fields", None, |_| {
         Opened::Table(Table::Parent)
     }),
+    // §FS-fields.front-matter.config: the one field name with keys of its own,
+    // tried before any field name.
+    ("schema.kinds.<NAME>.fields.front-matter", None, |names| {
+        Opened::FrontMatter(names[0].to_string())
+    }),
     ("schema.kinds.<NAME>.fields.<field>", None, |names| {
         Opened::Field(names[0].to_string(), names[1].to_string())
     }),
+    ("schema.kinds.<NAME>.fields.front-matter.keys", None, |_| {
+        Opened::Table(Table::Parent)
+    }),
+    (
+        "schema.kinds.<NAME>.fields.front-matter.keys.<key>",
+        None,
+        |names| Opened::Key(names[0].to_string(), names[1].to_string()),
+    ),
     ("rules", None, |_| Opened::Table(Table::Parent)),
     ("rules.citations", None, |_| Opened::Table(Table::Citations)),
     ("rules.citations.grounding", None, |_| {
@@ -311,6 +333,8 @@ pub(in crate::config) fn admitted() -> Vec<(String, Vec<String>)> {
             Opened::Table(table) => table,
             Opened::Row(_) => Table::Row(0),
             Opened::Field(..) => Table::Field(0),
+            Opened::FrontMatter(_) => Table::FrontMatter(0),
+            Opened::Key(..) => Table::FrontMatterKey(0, 0),
             Opened::Definition(_) => Table::Definition(0),
             Opened::Refused(why) => unreachable!("[{header}] is refused: {why}"),
         };
@@ -335,6 +359,10 @@ pub(super) enum Opened {
     Row(String),
     /// A field header, its kind and its name; the reader makes its draft.
     Field(String, String),
+    /// The front-matter field's header and its kind (§FS-fields.front-matter.config).
+    FrontMatter(String),
+    /// A front-matter key's header, its kind and the key (§FS-fields.front-matter.config).
+    Key(String, String),
     /// A language definition's header and its name; the reader makes its draft.
     Definition(String),
     Refused(String),
