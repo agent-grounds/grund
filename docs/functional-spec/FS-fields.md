@@ -203,7 +203,7 @@ A kind whose declarations have no authored body to hold a field takes no fields 
 
 ## rules: Fields beside chapter rules
 
-A chapter-presence rule ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)) stays valid, rendered, citable and evaluated in both versions, whether its subject is a kind or one exact declaration, and fields do not replace it. Where a field expresses a presence rule and both see the same absence in one declaration, the field's finding is the one reported ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)). A defect only one of them sees is still reported by that one, so adding a field never weakens a rule.
+A chapter-presence rule ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)) stays valid, rendered, citable and evaluated in both versions, whether its subject is a kind or one exact declaration, and fields do not replace it. Where a field expresses a presence rule and both see the same absence in one declaration, the field's finding is the one reported ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)). A defect only one of them sees is still reported by that one, so adding a field never weakens a rule. A scalar field can also narrow a rule's subject: `Each SWR whose verification is Test` selects the declarations whose `verification` field holds `Test`, read by the same display name `invalid-field-value` checks ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)).
 
 ## record: The record
 

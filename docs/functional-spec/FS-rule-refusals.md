@@ -413,6 +413,98 @@ because the modality it takes first is the rule's own:
 the selector `The must chapter of each FS`, which is a subject and is never
 split.
 
+### sentences.whose: A whose clause is refused for the part that failed
+
+A whose clause ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)) the grammar does not accept is refused in
+stage 5 of [§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails), after the kind and the chapter path,
+and its reason names the clause, the field or the value that failed, never part
+of the clause as a kind. The checks run in this order, and the first that fails
+gives the reason:
+
+1. a version-1 config, which declares no scalar field, whatever the clause says;
+2. the clause's shape: no ` is `, then an empty `FIELD`, then an empty `VALUE`;
+3. `FIELD` is not a field of the kind, then it is a field but not a scalar;
+4. `VALUE` has surrounding whitespace, which no `one_of` entry can hold
+   ([§FS-fields.identity.match](FS-fields.md#identitymatch-titles-and-values-match-byte-for-byte));
+5. `VALUE` is not one of the field's `one_of` entries.
+
+A kind that is not configured fails before its clause is read, so
+`Each POLICY whose status is Open` is refused with `unknown kind "POLICY"`,
+naming the kind alone, and `known kinds:` follows as it does for every unknown
+kind.
+
+The value reason lists the entries in their configured order, as
+`invalid-field-value` does. Where a `one_of` entry of the field starts at
+`VALUE`'s first byte and runs past the modality the split of
+[§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends) took, the reason for the cut value — empty, or not a value — is
+followed by ` — value "<entry>" holds the modal word "<modality>", which ends
+the subject, so a rule cannot name it`, as
+[§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name) answers a chapter named `must`. A kind
+that declares no scalar field ends the field and scalar reasons with
+`; kind <KIND> declares no scalar field` in place of `; its scalar fields: …`.
+
+Only a value joined by ` or ` is offered a form: one sentence per value, built,
+read again and offered as a conjunction's forms are
+([§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction)), and only where every one is
+accepted. Every other row offers none, because an offer never picks a field or
+a value for the author ([§FS-rule-refusals.requirements.typed](FS-rule-refusals.md#requirementstyped-an-offer-is-built-from-what-was-typed-and-what-is-configured-and-nothing-else--realized)), and a selector
+is offered none for any row. Since the kind was recognised, none of them adds
+a `known kinds:` line once the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) closes.
+
+Three spellings put a whose clause where no clause belongs, and each keeps the
+reason it printed before clauses existed as a verbatim contiguous prefix
+([§FS-errors.3](FS-errors.md#3-message-text)). Two append to it after ` — `, which moves no verdict, so
+no release is named:
+
+- an exact ID followed by a clause appends ` — a whose clause narrows only
+  Each KIND and The NAME chapter of each KIND` to the ID-grammar reason;
+- an object kind followed by a clause appends ` — a whose clause narrows only
+  a rule's subject` to its `unknown kind` reason, and `known kinds:` still
+  follows on `check --rule`.
+
+The third, the selector-only `KIND.NAME` followed by a clause, keeps its
+section-grammar reason and its accepted selector unchanged: the clause makes
+the last component malformed, and that is what the reason says.
+
+In a repository whose kinds are `SWR`, `TC` and `AN`, where `SWR` declares the
+scalar `verification` with `one_of = ["Test", "Analysis", "Inspection",
+"Demonstration"]` and the prose field `rationale`, `AN` declares the scalar
+`status` with `one_of = ["Draft", "Must fix", "fix and retest", "fix must wait"]`, and `TC`
+declares no field, these are the exact final reasons. Every rule row reads the
+same with `The evidence chapter of each SWR` for `Each SWR`. A configured rule
+declaration's finding carries the reason after `is not a valid rule: `
+([§FS-rules.7.1](FS-rules.md#71-invalid-rule)):
+
+| Refused input | Exact reason | Line after it |
+|---|---|---|
+| `check --rule 'Each SWR whose verfication is Test must be cited by at least one TC.'` | `"verfication" is not a field of kind SWR; its scalar fields: verification` | none |
+| `check --rule 'Each SWR whose rationale is Test must be cited by at least one TC.'` | `field "rationale" of kind SWR is not a scalar: it sets no one_of; its scalar fields: verification` | none |
+| `check --rule 'Each TC whose verification is Test must cite at least one SWR.'` | `"verification" is not a field of kind TC; kind TC declares no scalar field` | none |
+| `check --rule 'Each SWR whose verification is Tset must be cited by at least one TC.'` | `"Tset" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration` | none |
+| `check --rule 'Each SWR whose verification is Test or Demonstration must be cited by at least one TC.'` | `"Test or Demonstration" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration; accepted forms: "Each SWR whose verification is Test must be cited by at least one TC." and "Each SWR whose verification is Demonstration must be cited by at least one TC."` | none |
+| `check --rule 'Each AN whose status is fix must wait must cite at least one SWR.'` | `"fix" is not a value of AN.status; kind AN admits Draft, Must fix, fix and retest, fix must wait — value "fix must wait" holds the modal word "must", which ends the subject, so a rule cannot name it` | none |
+| `check --rule 'Each SWR whose verification must be cited by at least one TC.'` | `whose clause "whose verification" has no " is "; write whose FIELD is VALUE` | none |
+| `check --rule 'Each SWR whose  is Test must be cited by at least one TC.'` (two spaces) | `whose clause "whose  is Test" names no field; write whose FIELD is VALUE` | none |
+| `check --rule 'Each SWR whose verification is  must be cited by at least one TC.'` (two spaces) | `whose clause "whose verification is " names no value; write whose FIELD is VALUE` | none |
+| `check --rule 'Each SWR whose verification is Test  must be cited by at least one TC.'` (two spaces) | `value "Test " of SWR.verification has surrounding whitespace, which no one_of value can hold` | none |
+| `check --rule 'SWR-brake-latency whose verification is Test must be cited by at least one TC.'` | `literal subject "SWR-brake-latency whose verification is Test" does not match the configured ID grammar — a whose clause narrows only Each KIND and The NAME chapter of each KIND` | none |
+| `check --rule 'Each AN must cite at least one SWR whose verification is Test.'` | `unknown kind "SWR whose verification is Test" — a whose clause narrows only a rule's subject` | `known kinds: SWR, TC, AN` |
+| `check --rule 'Each POLICY whose status is Open must cite at least one SWR.'` | `unknown kind "POLICY"` | `known kinds: SWR, TC, AN` |
+| `list --selector 'Each SWR whose verfication is Test'` | `"verfication" is not a field of kind SWR; its scalar fields: verification` | none |
+| `list --selector 'Each SWR whose verification is Test or Demonstration'` | `"Test or Demonstration" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration` | none |
+| `list --selector 'SWR-brake-latency whose verification is Test'` | `literal subject "SWR-brake-latency whose verification is Test" does not match the configured ID grammar — a whose clause narrows only Each KIND and The NAME chapter of each KIND` | `known kinds: SWR, TC, AN` |
+| `list --selector 'SWR.evidence whose verification is Test'` | `named chapter subject "SWR.evidence whose verification is Test" does not match the configured section grammar; accepted selector: SWR` | none |
+
+In the same repository written as a version-1 config, any whose clause, on
+every surface, is refused with `whose clauses require grund_config_version = 2`.
+
+`Each SWR whose verification is Must fix` is not refused for a modal word,
+because the split looks for a lowercase ` must `, and a value with spaces, a
+value holding ` and ` or ` or `, and the `.` that ends the sentence after a
+value all leave the value whole. The last row of the table and the two
+appended rows print the same bytes before, through and after the window; every
+other reason in the table is the one [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) moves to.
+
 ### sentences.rewrite: An accepted form is the typed sentence with the failed part replaced
 
 Every sentence a rule surface offers after `accepted form:`, `accepted forms:`
@@ -556,6 +648,11 @@ spellings, rather than changing the shared kind reason on other surfaces.
 | a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says | scope cannot be reconstructed, no configured kind is recovered, or the subject holds a clause; `known kinds:` follows only for the latter two |
 | the ID grammar for a subject `The` cut short at a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | — | always; `known kinds:` follows |
 | a path subject, `Each file in …` | — | always; `known kinds:` follows |
+| a whose clause in a version-1 config, with no ` is `, an empty `FIELD` or `VALUE`, a `FIELD` that is no field or no scalar of the kind, a `VALUE` with surrounding whitespace, or a `VALUE` outside `one_of` ([§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)) | — | always; `known kinds:` follows only through the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration), and only on `list --selector` |
+| a `VALUE` joined by ` or ` | one form per value, as a conjunction's are | any form is refused, and always on a selector |
+| a `VALUE` cut by the modality split | — | always |
+| an exact ID followed by a whose clause | — | always; `known kinds:` follows on `list --selector`, as before |
+| an object kind followed by a whose clause | — | always; `known kinds:` follows on `check --rule`, as before |
 | an unknown or malformed object kind | — | always; `known kinds:` follows |
 | no modality, an unknown verb, a count that is not accepted, a count with no object | — | always |
 
@@ -638,7 +735,10 @@ followed by a modality word, `must ` or `should `. Every such ` and ` ends one
 clause and starts the next, which begins with its own modality. No accepted
 sentence contains one: a chapter `NAME` is a single token and an object joins
 its kinds with ` or `, so `The and chapter of each FS must cite at least one
-FS.` stays a sentence.
+FS.` stays a sentence. A whose clause's `VALUE` may hold ` and `
+([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)), and that leaves it whole; only a `VALUE` whose last word is
+`and`, so that the sentence reads ` and must ` or ` and should ` there, is read
+as a conjunction, because this stage runs before the subject is read.
 
 The reason is `conjunctions are not accepted`. Its forms are one sentence per
 clause: the first is the first clause, and each later one is the first clause's
@@ -693,8 +793,8 @@ as one table so it does not depend on how one phrase of another point is read:
 | 2. fixed word and phase-1 subject | `each` for `Each`, and the deliberate phase-1 absences of [§FS-rules.12](FS-rules.md#12-deliberate-phase-1-absences): a path subject (`Each file in`), `Each */KIND`, `Each chapter of each KIND`, and a section-component wildcard in the first clause's subject, in any spelling | `FS-x.* must cite at least one FS and must not cite any FS.` | `section-component wildcards are not accepted in phase 1` |
 | 3. conjunction | clauses joined by `and` ([§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction)) | `Each FS may not cite any FS and must cite at least one FS.` | `conjunctions are not accepted` |
 | 4. modality | no accepted modality, `may not` included | `Each POLICY may not cite any FS.` | `modality "may not" is not accepted` |
-| 5. the rest of the subject | unsupported `Every KIND` or `The NAME chapter of every KIND`, an unknown or non-citable kind, named sections off, the section grammar, a numbered chapter, the ID grammar, a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | `Each POLICY must cite no FS.` | `unknown kind "POLICY"` |
-| 6. the predicate | the verb, quantifier (including `cite every`), count (including per-target numeric `at most 1 times`) and object kind, and a chapter subject that would have chapters | `Each FS must cite no FS.` | `"cite no" is not accepted` |
+| 5. the rest of the subject | unsupported `Every KIND` or `The NAME chapter of every KIND`, an unknown or non-citable kind, named sections off, the section grammar, a numbered chapter, the ID grammar, a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)), then a whose clause, in the order of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) | `Each POLICY must cite no FS.` | `unknown kind "POLICY"` |
+| 6. the predicate | the verb, quantifier (including `cite every`), count (including per-target numeric `at most 1 times`) and object kind, an object kind followed by a whose clause included, and a chapter subject that would have chapters | `Each FS must cite no FS.` | `"cite no" is not accepted` |
 
 The examples are read in a repository whose one kind is `FS`, with named
 sections on. Two sentences the table of [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) gives whole,
@@ -716,7 +816,10 @@ refused for its modality, as before. Stage 2 decides a wildcard with the
 subject parser's own test, so a sentence with no conjunction is refused exactly
 as before, and a subject that reaches a wildcard only through a component that
 fails earlier in stage 5 — `The * chapter of each FS` with named sections off —
-keeps that component's reason. A numbered chapter, named sections off and every
+keeps that component's reason. A whose clause is read last in stage 5, so
+`Each POLICY whose status is Open` is refused for its unknown kind before its
+clause, and `Each SWR whose verification is Tset must cite at least one TC and
+must not cite any AN.` for its conjunction. A numbered chapter, named sections off and every
 kind refusal stay in stage 5, after the conjunction, so a refusal never names a
 fragment of a sentence as a kind.
 
@@ -747,6 +850,24 @@ not a number in any spelling, so it gets the section-grammar reason and no
 breadcrumb ([§FS-rule-refusals.sentences.chapter-path](FS-rule-refusals.md#sentenceschapter-path-a-chapter-path-is-refused-for-the-component-that-failed)).
 `Every KIND` and `The NAME chapter of every KIND` get the unsupported-quantifier
 reason and token-only repair of [§FS-rule-refusals.sentences.every](FS-rule-refusals.md#sentencesevery-unsupported-every-is-refused-as-a-quantifier-with-an-each-repair), rather than a literal-ID mismatch.
+
+A subject with a whose clause gets the reason [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)
+gives the same subject in a rule, and no accepted selector: the clause's field
+and value are the author's to choose, and a value joined by ` or ` has no one
+selector to offer. Through the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) the
+`known kinds:` line that followed the legacy reason still follows it. An exact
+ID followed by a clause keeps its literal-subject reason and appends the
+clause's, and `KIND.NAME` followed by a clause keeps its section-grammar reason
+and accepted selector, both with the line they had before. In the repository
+of that point these are the exact selector refusals once the window closes:
+
+| Refused selector | Exact reason and accepted selector | Lines after it |
+|---|---|---|
+| `Each SWR whose verfication is Test` | `"verfication" is not a field of kind SWR; its scalar fields: verification` | none |
+| `The evidence chapter of each SWR whose verification is Tset` | `"Tset" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration` | none |
+| `Each SWR whose verification is Test or Demonstration` | `"Test or Demonstration" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration` | none |
+| `SWR-brake-latency whose verification is Test` | `literal subject "SWR-brake-latency whose verification is Test" does not match the configured ID grammar — a whose clause narrows only Each KIND and The NAME chapter of each KIND` | `known kinds: SWR, TC, AN` |
+| `SWR.evidence whose verification is Test` | `named chapter subject "SWR.evidence whose verification is Test" does not match the configured section grammar; accepted selector: SWR` | none |
 
 A fixed word in the wrong case, as in `each FS`, keeps the reason the selector
 has always printed and adds the rule's. The literal-subject reason stays a

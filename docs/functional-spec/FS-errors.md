@@ -259,7 +259,7 @@ The shape is structural; the text is human-readable. Style rules apply to every 
 - **Quoted user input** appears in double quotes when the input could be confused with surrounding prose: `"<original title>"`, not `<original title>`.
 - **One base for every path in the line** — [§FS-errors.3.1](FS-errors.md#31-one-base-for-every-path-in-the-line).
 
-[§FS-errors.3.2](FS-errors.md#32-the-unknown-project-recovery-shape) to [§FS-errors.3.9](FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration) pin particular messages: the unknown-project recovery shape and its wording migration, `check`'s channel prefix, a missing fetch-backed declaration, `agents-init`, the rule-site unknown alias, the one-grammar refusals, and the root-aimed value mismatch.
+[§FS-errors.3.2](FS-errors.md#32-the-unknown-project-recovery-shape) to [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) pin particular messages: the unknown-project recovery shape and its wording migration, `check`'s channel prefix, a missing fetch-backed declaration, `agents-init`, the rule-site unknown alias, the one-grammar refusals, the root-aimed value mismatch, and the whose-clause refusals.
 
 ### 3.1 One base for every path in the line
 
@@ -515,6 +515,47 @@ above:
 ```text
 docs/operations.md:3: error: value mismatch for FS-session.1 (component 1.1): bound `30 minutes`, declared `45 minutes` at requirements.md:11; change the literal to the declared value, or the declaration to the bound one
 ```
+
+### 3.10 The whose-clause wording migration
+
+Before a rule subject could carry a whose clause
+([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)), every subject spelled with one was refused as an unknown
+kind: `Each SWR whose verfication is Test` printed `unknown kind "SWR whose
+verfication is Test"`, the whole text after `Each ` or `of each ` up to the
+modality read as one kind name. The refusals that stay are now answered for the
+part that failed ([§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)). Those are bytes a
+consumer may match, so the change takes the warning release of
+[§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather than replacing the reason outright
+([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), D10).
+
+In `0.21.0` the complete legacy reason stays a verbatim contiguous prefix,
+followed by ` — `, the reason of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) with any
+append and accepted forms it carries, and the suffix `; this wording changes in
+grund 0.22.0`. It holds on `check --rule`, on a configured rule declaration's
+`invalid-rule` finding, and on every `list --selector` mode. Whatever followed
+the legacy reason on the next line still follows it for the whole window: on
+`list --selector` that is `known kinds:` and the configured kinds, and on
+`check --rule` nothing, save after an unknown kind, where `known kinds:` followed
+and still follows. In the repository of
+[§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed):
+
+```text
+$ grund check --rule 'Each SWR whose verfication is Test must be cited by at least one TC.'
+error: unknown kind "SWR whose verfication is Test" — "verfication" is not a field of kind SWR; its scalar fields: verification; this wording changes in grund 0.22.0
+$ grund list --selector 'Each SWR whose verification is Tset'
+error: unknown kind "SWR whose verification is Tset" — "Tset" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration; this wording changes in grund 0.22.0
+known kinds: SWR, TC, AN
+```
+
+In `0.22.0` the prefix, the suffix and the `known kinds:` line go, and each
+refusal prints the final reason of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)
+alone. The issue that closes the window is opened when the change that opens it
+merges, and is named here then. Three refusals never take the window, because
+they only append or do not move: an exact ID followed by a clause, an object
+kind followed by one, and `KIND.NAME` followed by one. The exit code `2`, the
+`invalid-rule` code and its severity, and what is refused do not move; only the
+reason's text does. Exact-line consumers migrate during the window to the
+reason after the ` — `.
 
 ## 4. Determinism
 
