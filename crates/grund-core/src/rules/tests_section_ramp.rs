@@ -83,7 +83,7 @@ fn at_most(maximum: usize, mode: TargetMode) -> ParsedRule {
     ParsedRule {
         origin: "RULE-bound".into(),
         anchor: anchor(30),
-        subject: RuleSubject::Kind("BENCH".into()),
+        subject: RuleSubject::Kind("BENCH".into(), None),
         level: RuleLevel::Required,
         polarity: RulePolarity::Positive,
         relation: RuleRelation::Cite,
@@ -130,7 +130,7 @@ fn a_count_broken_without_the_numbered_section_site_stays_an_error() {
 #[test]
 fn an_inbound_count_only_the_numbered_section_site_breaks_is_an_error() {
     let inbound = ParsedRule {
-        subject: RuleSubject::Kind("GOAL".into()),
+        subject: RuleSubject::Kind("GOAL".into(), None),
         relation: RuleRelation::BeCitedBy,
         targets: RuleTargets::Kinds {
             values: vec!["BENCH".into()],

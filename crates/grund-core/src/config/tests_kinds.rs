@@ -47,7 +47,7 @@ fn workspace() -> (Config, Config) {
 #[test]
 fn a_kind_has_one_verdict_per_scope() {
     let (api, web) = workspace();
-    let table = KindTable::build([("api", api.schema()), ("web", web.schema())]);
+    let table = KindTable::build([("api", api.schema(), 1), ("web", web.schema(), 1)]);
     let api_only = BTreeSet::from(["api".to_string()]);
 
     assert_eq!(
@@ -111,7 +111,7 @@ fn a_run_without_a_workspace_cannot_judge_other_projects() {
         &(row("FS", "docs/specs", true) + &row("skill", "skills", false)),
         false,
     );
-    let table = KindTable::standalone(api.schema());
+    let table = KindTable::standalone(api.schema(), 1);
 
     assert_eq!(
         table.verdict(KindScope::Project("anything"), "FS"),
@@ -141,7 +141,7 @@ fn a_run_without_a_workspace_cannot_judge_other_projects() {
 #[test]
 fn named_sections_follow_the_configuring_project() {
     let (api, web) = workspace();
-    let table = KindTable::build([("api", api.schema()), ("web", web.schema())]);
+    let table = KindTable::build([("api", api.schema(), 1), ("web", web.schema(), 1)]);
 
     assert!(!table.named_sections(KindScope::Any));
     assert!(table.named_sections(KindScope::Project("web")));
@@ -165,6 +165,7 @@ fn the_non_citable_reason_renders_in_both_quotings() {
         name: "skill".to_string(),
         citable: false,
         home: Some("skills/".to_string()),
+        fields: Vec::new(),
     };
     assert_eq!(
         entry.non_citable_reason(Quote::Backtick),

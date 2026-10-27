@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use crate::config::{Config, KindConfig, display_path};
-use crate::grammar::render_declaration_id;
+use crate::grammar::{field_value, render_declaration_id};
 use crate::model::{
     Declaration, FileRecords, Finding, Id, format_path, paired_declarations, sort_path_key,
 };
@@ -203,8 +203,9 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             .map(|entry| {
                 let label = render_declaration_id(&entry.project_config.grammar, entry.home);
                 let kind = &entry.id.kind;
-                usize::from(subject.selects(kind, &label, None))
-                    + subject.chapter_path(kind, &label).map_or(0, |path| {
+                // A literal carries no whose clause, so it reads no field.
+                usize::from(subject.selects(kind, &label, None, None))
+                    + subject.chapter_path(kind, &label, None).map_or(0, |path| {
                         usize::from(entry.home.sections.contains_key(path))
                             + entry
                                 .home
@@ -271,16 +272,23 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                     .collect(),
             };
             let label = render_declaration_id(&entry.project_config.grammar, entry.home);
+            // §FS-rules.2.2: a whose clause is matched against the field's display name.
+            let value = selector
+                .as_ref()
+                .and_then(|subject| subject.whose_field())
+                .and_then(|field| field_value(entry.home, field));
+            let value = value.as_deref();
+
             // §FS-rules.8: the one subject matcher (§AR-rules.2) says what a row is, and a
             // chapter subject names one whole path, so each declaration contributes the
             // declaration or at most the one chapter at it.
             let declaration_selected = selector
                 .as_ref()
-                .is_none_or(|subject| subject.selects(&entry.id.kind, &label, None));
+                .is_none_or(|subject| subject.selects(&entry.id.kind, &label, None, value));
             let chapter = selector
                 .as_ref()
                 .filter(|_| !declaration_selected)
-                .and_then(|subject| subject.chapter_path(&entry.id.kind, &label));
+                .and_then(|subject| subject.chapter_path(&entry.id.kind, &label, value));
             let section_row = |(section, info): (&String, &crate::model::SectionInfo)| {
                 let mut row = base();
                 row.section = Some(section.clone());

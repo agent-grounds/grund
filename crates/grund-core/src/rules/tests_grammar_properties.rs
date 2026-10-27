@@ -83,6 +83,7 @@ fn vocabulary() -> RuleVocabulary {
         .expect("{kind}-{slug} grammar with named sections");
     let kinds = BTreeSet::from(["FS".to_string(), "GOAL".to_string()]);
     RuleVocabulary {
+        fields: Default::default(),
         objects: KindTable::of_citable(&kinds),
         kinds,
         named_sections: true,

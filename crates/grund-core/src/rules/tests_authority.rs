@@ -55,7 +55,7 @@ fn rule(origin: &str) -> ParsedRule {
     ParsedRule {
         origin: origin.into(),
         anchor: anchor("docs/rules.md", 1),
-        subject: RuleSubject::Kind("FS".into()),
+        subject: RuleSubject::Kind("FS".into(), None),
         level: RuleLevel::Required,
         polarity: RulePolarity::Positive,
         relation: RuleRelation::Cite,

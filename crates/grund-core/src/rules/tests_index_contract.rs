@@ -101,7 +101,7 @@ fn rule(mode: TargetMode, count: usize) -> ParsedRule {
     ParsedRule {
         origin: "RULE-count".into(),
         anchor: anchor(30),
-        subject: RuleSubject::Kind("FS".into()),
+        subject: RuleSubject::Kind("FS".into(), None),
         level: RuleLevel::Required,
         polarity: RulePolarity::Positive,
         relation: RuleRelation::Cite,
@@ -121,10 +121,11 @@ fn rule(mode: TargetMode, count: usize) -> ParsedRule {
 #[test]
 fn aggregate_counts_physical_sites_in_nested_units_once_each() {
     for subject in [
-        RuleSubject::Kind("FS".into()),
+        RuleSubject::Kind("FS".into(), None),
         RuleSubject::ChapterOfKind {
             kind: "FS".into(),
             name: "needs".into(),
+            whose: None,
         },
         RuleSubject::ExactChapter {
             declaration: "FS-one".into(),
@@ -187,6 +188,7 @@ fn presence_uses_direct_children_and_display_names() {
         subject: RuleSubject::ChapterOfKind {
             kind: "FS".into(),
             name: "detail".into(),
+            whose: None,
         },
         ..rule(TargetMode::Aggregate, 1)
     };
@@ -310,6 +312,7 @@ fn empty_universes_are_not_inferred_from_citations() {
         subject: RuleSubject::ChapterOfKind {
             kind: "FS".into(),
             name: "needs".into(),
+            whose: None,
         },
         ..rule(TargetMode::Aggregate, 1)
     };

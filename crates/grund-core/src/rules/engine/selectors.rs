@@ -19,9 +19,11 @@ pub(super) fn select_subjects(
     index: &FactIndex<'_>,
 ) -> Vec<NodeKey> {
     match subject {
-        RuleSubject::Kind(kind) => index
+        // §FS-rules.2.2: a whose clause keeps the declarations whose field holds its value.
+        RuleSubject::Kind(kind, whose) => index
             .declarations_of_kind(kind)
             .iter()
+            .filter(|node| index.selected(node, whose.as_ref(), facts))
             .map(|node| (*node).clone())
             .collect(),
         RuleSubject::ExactDeclaration(wanted) => index
@@ -35,12 +37,17 @@ pub(super) fn select_subjects(
         // §AR-rules.2, §FS-rules.5.2: `chapter_handle` joins the whole path, and
         // `owns` keeps a chapter at any depth under a declaration of the kind.
         // The path bucket is already in chapter-fact order.
-        RuleSubject::ChapterOfKind { kind, name } => index
+        RuleSubject::ChapterOfKind { kind, name, whose } => index
             .paths
             .get(name.as_str())
             .into_iter()
             .flatten()
             .filter(|node| index.declaration_kind(node) == Some(kind.as_str()))
+            .filter(|node| {
+                index
+                    .owner(node)
+                    .is_some_and(|owner| index.selected(owner, whose.as_ref(), facts))
+            })
             .map(|node| (*node).clone())
             .collect(),
         RuleSubject::ExactChapter {

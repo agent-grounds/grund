@@ -77,6 +77,7 @@ mod coordinate_glob_match;
 mod coordinate_glob_read;
 mod coordinate_glob_tokens;
 mod fence;
+mod field_values;
 mod fmt_cross_refs;
 mod fmt_suppress;
 mod glob_candidate;
@@ -118,6 +119,7 @@ pub(crate) use comment_line::{comment_envelope, comment_strip_prefixes, strip_bl
 pub(crate) use compiled::{
     QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, is_valid_project_alias, section_path,
 };
+pub(crate) use field_values::{direct_section_value, field_value};
 pub(crate) use language_table::{DocProfile, classified_extensions, extension_rule};
 // The bare fence reader serves the record's doc-comment headings and the template
 // tests, which look for a fenced example rather than for a heading (§FS-check.1.1.5).

@@ -20,6 +20,7 @@ fn vocabulary() -> RuleVocabulary {
     config.rebuild_grammar().expect("{kind}-{slug} grammar");
     let kinds = BTreeSet::from(["FS".to_string()]);
     RuleVocabulary {
+        fields: Default::default(),
         objects: KindTable::of_citable(&kinds),
         kinds,
         named_sections: true,

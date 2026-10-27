@@ -14,7 +14,6 @@ use support::*;
 
 /// The issue's own run: the filtered rule reports only the requirement verified by test.
 #[test]
-#[ignore = "red until #1047 parses a whose clause; implement removes this"]
 fn the_issue_rule_reports_only_the_test_requirement() {
     let fx = Fixture::issue(CONFIG);
     let run = fx.expect(1, &["check", "--rule", RULE, "--only-rule"]);
@@ -24,7 +23,6 @@ fn the_issue_rule_reports_only_the_test_requirement() {
 
 /// The same sentence as a declared version-2 rule selects the same declarations (§FS-rules.1).
 #[test]
-#[ignore = "red until #1047 parses a whose clause; implement removes this"]
 fn a_declared_rule_selects_what_the_trial_sentence_selects() {
     let config = format!(
         "{CONFIG}\n[schema.kinds.RULE]\nfiles = [\"rules/RULE-tested.md\"]\nform = \"rule\"\n"
@@ -45,7 +43,6 @@ fn a_declared_rule_selects_what_the_trial_sentence_selects() {
 
 /// `list --selector` and `list --size --selector` list only the selected declaration.
 #[test]
-#[ignore = "red until #1047 parses a whose clause; implement removes this"]
 fn the_selector_lists_only_the_selected_declaration() {
     let fx = Fixture::issue(CONFIG);
     let selector = "Each SWR whose verification is Test";
@@ -64,7 +61,6 @@ fn the_selector_lists_only_the_selected_declaration() {
 /// The chapter form: a selected declaration without the chapter is unreached, and one the
 /// clause leaves out is silent (§FS-rules.checks.unreached-declaration).
 #[test]
-#[ignore = "red until #1047 parses a whose clause; implement removes this"]
 fn the_chapter_form_reports_only_selected_declarations_as_unreached() {
     let fx = Fixture::with(&[
         (
@@ -112,7 +108,6 @@ fn the_chapter_form_reports_only_selected_declarations_as_unreached() {
 
 /// An absent `may` field puts a declaration outside the rule, and nothing reports it.
 #[test]
-#[ignore = "red until #1047 parses a whose clause; implement removes this"]
 fn an_absent_optional_field_is_outside_the_rule() {
     let fx = Fixture::with(&[
         (
@@ -134,7 +129,6 @@ fn an_absent_optional_field_is_outside_the_rule() {
 /// A value outside `one_of` is `invalid-field-value` unscoped, and outside the rule, so a
 /// run scoped to the sentence shows nothing for it (§FS-rules.8).
 #[test]
-#[ignore = "red until #1047 parses a whose clause; implement removes this"]
 fn an_invalid_value_is_reported_by_the_field_and_not_by_the_rule() {
     let fx = Fixture::with(&[
         ("grund.toml", CONFIG),
@@ -167,7 +161,6 @@ fn an_invalid_value_is_reported_by_the_field_and_not_by_the_rule() {
 /// A filtered subject is never kind-wide, so it never folds into a direction: both report,
 /// as an exact-ID subject does today (§FS-rules.6).
 #[test]
-#[ignore = "red until #1047 parses a whose clause; implement removes this"]
 fn a_filtered_rule_beside_a_direction_reports_both() {
     let fx = Fixture::issue(&format!(
         "{CONFIG}\n[rules.citations.SWR]\nmust = [\"TC\"]\n"
@@ -204,7 +197,6 @@ fn a_filtered_rule_beside_a_direction_reports_both() {
 /// The modality split leaves a capitalised `Must fix` and a value holding ` and ` whole
 /// (§FS-rules.3.6).
 #[test]
-#[ignore = "red until #1047 parses a whose clause; implement removes this"]
 fn values_with_spaces_and_capitalised_modal_words_parse_whole() {
     let fx = Fixture::table();
     let run = fx.expect(

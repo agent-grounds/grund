@@ -26,7 +26,7 @@ fn rule() -> ParsedRule {
     ParsedRule {
         origin: "RULE-fs".into(),
         anchor: anchor("docs/rules.md", 1),
-        subject: RuleSubject::Kind("FS".into()),
+        subject: RuleSubject::Kind("FS".into(), None),
         level: RuleLevel::Required,
         polarity: RulePolarity::Positive,
         relation: RuleRelation::Cite,
@@ -45,6 +45,7 @@ fn rule() -> ParsedRule {
 #[test]
 fn chapter_diagnostic_parser_refuses_whitespace_anywhere_in_presence_name() {
     let vocabulary = RuleVocabulary {
+        fields: Default::default(),
         kinds: BTreeSet::from(["FS".into()]),
         objects: KindTable::of_citable(&BTreeSet::from(["FS".into()])),
         named_sections: true,
@@ -124,6 +125,7 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
         "RULE-one".into(),
         anchor("docs/rules.md", 7),
         &RuleVocabulary {
+            fields: Default::default(),
             kinds: BTreeSet::from(["FS".into(), "REQ".into()]),
             objects: KindTable::of_citable(&BTreeSet::from(["FS".into(), "REQ".into()])),
             named_sections: true,
@@ -143,7 +145,8 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
         parsed.subject,
         RuleSubject::ChapterOfKind {
             kind: "FS".into(),
-            name: "requirements".into()
+            name: "requirements".into(),
+            whose: None,
         }
     );
     assert_eq!(parsed.level, RuleLevel::Recommended);
@@ -336,6 +339,7 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
         subject: RuleSubject::ChapterOfKind {
             kind: "FS".into(),
             name: "requirements".into(),
+            whose: None,
         },
         ..rule()
     };

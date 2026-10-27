@@ -108,6 +108,7 @@ fn chapter_rule(origin: &str) -> ParsedRule {
         subject: RuleSubject::ChapterOfKind {
             kind: "FS".into(),
             name: "requirements".into(),
+            whose: None,
         },
         level: RuleLevel::Required,
         polarity: RulePolarity::Positive,
@@ -266,7 +267,7 @@ fn a_chapter_displayed_under_another_name_is_reached_by_its_handle() {
 #[test]
 fn a_kind_or_exact_subject_reports_no_absence() {
     let kind = ParsedRule {
-        subject: RuleSubject::Kind("FS".into()),
+        subject: RuleSubject::Kind("FS".into(), None),
         ..chapter_rule("RULE-kind")
     };
     let exact = ParsedRule {

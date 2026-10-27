@@ -57,7 +57,7 @@ pub(crate) fn direction_rule(
             line: 0,
             column: None,
         },
-        subject: RuleSubject::Kind(subject.to_string()),
+        subject: RuleSubject::Kind(subject.to_string(), None),
         level,
         polarity,
         relation: RuleRelation::Cite,

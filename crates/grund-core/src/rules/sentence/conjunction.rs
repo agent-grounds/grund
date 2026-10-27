@@ -1,6 +1,6 @@
 //! The conjunction refusal of §FS-rule-refusals.sentences.conjunction.
 
-use super::subjects::split_modality;
+use super::modality::split_modality;
 
 /// §FS-rule-refusals.sentences.conjunction: a sentence whose ` and ` is followed by `must ` or
 /// `should ` joins clauses, and is answered with one sentence per clause, each

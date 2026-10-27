@@ -11,13 +11,18 @@
 //! one parser decided it and `SubjectFault::failed` names it for both, and on
 //! what a suggestion recovers because only `recovery.rs` builds it.
 
+use super::chapter_paths::{named_literal, split_section, validate_named_path};
 use super::forms::{Form, Refusal, refuse};
 use super::literal::DeclarationSelector;
+use super::modality::{MODALITIES, Split};
 use super::recovery::{
     Recovered, Suggestion, as_if_enabled_subject, recover_subject, repair_every,
 };
-use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary};
-use crate::grammar::{named_section_component, parse_id_arg, render_input_id, unnamed_component};
+use super::whose::{
+    WhoseFault, exact_with_clause, modal_value_append, parse_whose, split_whose, with_clause,
+};
+use super::{RuleSubject, RuleVocabulary};
+use crate::grammar::{parse_id_arg, render_input_id, unnamed_component};
 use crate::model::remedies;
 
 /// The reason a subject opening with the fixed word in the wrong case is
@@ -50,6 +55,8 @@ pub(super) enum SubjectFault {
     SectionGrammar(Component),
     IdGrammar,
     ChapterQuantified,
+    /// A whose clause the grammar does not accept (§FS-rule-refusals.sentences.whose).
+    Whose(WhoseFault),
 }
 
 /// The shape of the first chapter-path component that is not a named one.
@@ -85,6 +92,14 @@ pub(super) struct SubjectRefusal {
     /// The modal word the split took as a chapter's name, where it cut one
     /// short (§FS-rule-refusals.sentences.modal-chapter).
     pub(super) modal_chapter: Option<&'static str>,
+    /// What followed `Each ` or `of each ` where a quantified subject carried a
+    /// whose clause: the text the window of §FS-errors.3.10 names as the legacy
+    /// unknown kind. A refusal holding it offers no recovered subject, because
+    /// an offer never picks a field or a value (§FS-rule-refusals.sentences.whose).
+    pub(super) legacy: Option<String>,
+    /// The modal-word append of a value the split cut
+    /// (§FS-rule-refusals.sentences.whose).
+    pub(super) modal_value: Option<String>,
 }
 
 impl SubjectFault {
@@ -124,6 +139,7 @@ impl SubjectFault {
             Self::ChapterQuantified => {
                 "chapter-quantified subjects are not accepted in phase 1".into()
             }
+            Self::Whose(fault) => fault.reason(),
         }
     }
 }
@@ -144,10 +160,20 @@ impl SubjectRefusal {
                 // §FS-rule-refusals.selectors: `each FS` adds the rule's reason; nothing moves.
                 match lower_case_each(&self.text) {
                     Some(_) => format!("{reason} — {EACH_IS_CASE_SENSITIVE}"),
+                    // §FS-rule-refusals.sentences.whose: an exact ID with a clause appends why.
+                    None if exact_with_clause(&self.text, vocabulary) => format!(
+                        "{reason} — a whose clause narrows only Each KIND and The NAME chapter \
+                         of each KIND"
+                    ),
                     None => reason,
                 }
             }
             _ => legacy,
+        };
+        // §FS-rule-refusals.sentences.whose: a value the split cut names the modal word.
+        let reason = match &self.modal_value {
+            Some(append) => format!("{reason}{append}"),
+            None => reason,
         };
         // §FS-rule-refusals.sentences.modal-chapter: the released reason stays its prefix.
         match self.modal_chapter {
@@ -163,13 +189,23 @@ impl SubjectRefusal {
     /// split took where that word was a chapter subject's name: the subject is
     /// exactly `The` and what follows the modality opens `chapter of each `
     /// (§FS-rule-refusals.sentences.modal-chapter).
+    ///
+    /// A whose clause's value the split cut short is named the same way, where a
+    /// `one_of` entry of its field runs past the modality
+    /// (§FS-rule-refusals.sentences.whose).
     pub(super) fn cut_at(mut self, split: Split<'_>) -> Self {
         let (subject, level, polarity, predicate) = split;
+        let modality = MODALITIES
+            .iter()
+            .find(|(_, l, p)| (*l, *p) == (level, polarity))
+            .map(|(modality, ..)| *modality);
         if subject == "The" && predicate.starts_with("chapter of each ") {
-            self.modal_chapter = MODALITIES
-                .iter()
-                .find(|(_, l, p)| (*l, *p) == (level, polarity))
-                .map(|(modality, ..)| modality.trim());
+            self.modal_chapter = modality.map(str::trim);
+        }
+        if let (SubjectFault::Whose(fault), Some(modality)) = (&self.fault, modality)
+            && let Some((value, one_of)) = fault.cut_value()
+        {
+            self.modal_value = modal_value_append(value, one_of, modality);
         }
         self
     }
@@ -181,6 +217,18 @@ impl SubjectRefusal {
     /// no faithful subject is recovered there is no form; a missing kind is
     /// distinguished from scope that cannot safely be rewritten.
     pub(super) fn rule_refusal(&self, vocabulary: &RuleVocabulary) -> Refusal {
+        // §FS-rule-refusals.sentences.whose: only a value joined by ` or ` is offered forms,
+        // one subject per value; a kind that is missing is the one thing a form cannot supply.
+        if let Some(legacy) = &self.legacy {
+            let form = match &self.fault {
+                SubjectFault::Whose(fault) => fault
+                    .or_forms(&self.text)
+                    .map_or(Form::None { kind: false }, |forms| Form::Many(forms, "and")),
+                SubjectFault::UnknownKind(_) => Form::None { kind: true },
+                _ => Form::None { kind: false },
+            };
+            return refuse(self.reason(vocabulary), form).windowed(legacy);
+        }
         // §FS-rule-refusals.sentences.every: replace only the quantifier; the offer is reparsed.
         if let Some(text) = repair_every(self) {
             return refuse(self.reason(vocabulary), Form::One(text));
@@ -225,35 +273,9 @@ pub(super) fn refused(
         path: path.map(Into::into),
         separator: separator.into(),
         modal_chapter: None,
+        legacy: None,
+        modal_value: None,
     }
-}
-
-/// A sentence split at its modality: the subject, the modality, the predicate.
-pub(super) type Split<'a> = (&'a str, RuleLevel, RulePolarity, &'a str);
-
-/// The accepted modalities, in the order the split looks for them (§FS-rules.3.6).
-const MODALITIES: [(&str, RuleLevel, RulePolarity); 4] = [
-    (" must not ", RuleLevel::Required, RulePolarity::Prohibiting),
-    (
-        " should not ",
-        RuleLevel::Recommended,
-        RulePolarity::Prohibiting,
-    ),
-    (" must ", RuleLevel::Required, RulePolarity::Positive),
-    (" should ", RuleLevel::Recommended, RulePolarity::Positive),
-];
-
-/// Split a sentence into its subject, its modality and its predicate. The
-/// modality is found in a fixed order rather than at the earliest position
-/// (§FS-rules.3.6), and a rule and a pasted selector both split here, so they
-/// read the same subject from the same sentence (§FS-rule-refusals.selectors).
-pub(super) fn split_modality(sentence: &str) -> Option<Split<'_>> {
-    MODALITIES
-        .into_iter()
-        .find_map(|(modality, level, polarity)| {
-            let (subject, predicate) = sentence.split_once(modality)?;
-            Some((subject, level, polarity, predicate))
-        })
 }
 
 pub(super) fn parse_subject(
@@ -283,27 +305,45 @@ pub(super) fn parse_subject(
             "",
         ));
     }
-    if let Some(kind) = text.strip_prefix("Each ") {
-        let each = |fault, head| refused(fault, Spelling::Each, text, head, None, "");
+    if let Some(after_each) = text.strip_prefix("Each ") {
         // §FS-rule-refusals.selectors: refused for its quantifier; `parse_rule` refuses it first.
-        if let Some(kind) = kind.strip_prefix("chapter of each ") {
-            return Err(each(SubjectFault::ChapterQuantified, kind));
+        if let Some(kind) = after_each.strip_prefix("chapter of each ") {
+            let fault = SubjectFault::ChapterQuantified;
+            return Err(refused(fault, Spelling::Each, text, kind, None, ""));
         }
-        known_subject(kind, vocab).map_err(|fault| each(fault, kind))?;
-        return Ok(RuleSubject::Kind(kind.into()));
+        let (kind, clause) = split_whose(after_each, vocab);
+        let each = |fault| {
+            let refusal = refused(fault, Spelling::Each, text, kind, None, "");
+            with_clause(refusal, after_each, clause)
+        };
+        known_subject(kind, vocab).map_err(each)?;
+        let whose = clause
+            .map(|clause| parse_whose(kind, clause, vocab))
+            .transpose()
+            .map_err(|fault| each(SubjectFault::Whose(fault)))?;
+        return Ok(RuleSubject::Kind(kind.into(), whose));
     }
     if let Some(rest) = text.strip_prefix("The ")
-        && let Some((name, kind)) = rest.split_once(" chapter of each ")
+        && let Some((name, after_each)) = rest.split_once(" chapter of each ")
     {
-        let chapter = |fault| refused(fault, Spelling::ChapterOfEach, text, kind, Some(name), "");
+        let (kind, clause) = split_whose(after_each, vocab);
+        let chapter = |fault| {
+            let refusal = refused(fault, Spelling::ChapterOfEach, text, kind, Some(name), "");
+            with_clause(refusal, after_each, clause)
+        };
         known_subject(kind, vocab).map_err(chapter)?;
         if !vocab.named_sections_for(kind) {
             return Err(chapter(SubjectFault::NamedSectionsOff));
         }
         validate_named_path(name, kind, vocab).map_err(chapter)?;
+        let whose = clause
+            .map(|clause| parse_whose(kind, clause, vocab))
+            .transpose()
+            .map_err(|fault| chapter(SubjectFault::Whose(fault)))?;
         return Ok(RuleSubject::ChapterOfKind {
             kind: kind.into(),
             name: name.into(),
+            whose,
         });
     }
     let split = split_section(text, vocab);
@@ -374,72 +414,6 @@ pub(super) fn parse_subject(
         });
     }
     Err(literal(SubjectFault::IdGrammar))
-}
-
-/// The declaration, the separator, and the section path of a literal subject.
-fn split_section<'a>(
-    text: &'a str,
-    vocab: &'a RuleVocabulary,
-) -> Option<(&'a str, &'a str, &'a str)> {
-    vocab
-        .section_separators
-        .iter()
-        .find_map(|separator| {
-            // coordinate-lexer: rule vocabulary, every separator
-            text.split_once(separator.as_str())
-                .map(|(declaration, section)| (declaration, separator.as_str(), section))
-        })
-        .or_else(|| {
-            vocab
-                .section_separators
-                .is_empty()
-                .then(|| text.split_once('.'))
-                .flatten()
-                .map(|(declaration, section)| (declaration, ".", section))
-        })
-}
-
-/// Whether a literal subject's chapter path may be named: named sections are
-/// on for the vocabulary, or for the kind of the declaration a configured
-/// grammar reads it as (§AR-config.1.5).
-fn named_literal(text: &str, vocab: &RuleVocabulary) -> bool {
-    vocab.named_sections
-        || vocab.id_grammars.iter().any(|grammar| {
-            parse_id_arg(text, grammar).is_ok_and(|(id, _)| vocab.named_kinds.contains(&id.kind))
-        })
-}
-
-/// Accept a chapter path of named components only (§FS-rules.2), read under
-/// `kind`'s own project (§AR-config.1.5); a refusal says how its first
-/// refused component failed.
-pub(super) fn validate_named_path(
-    path: &str,
-    kind: &str,
-    vocab: &RuleVocabulary,
-) -> Result<(), SubjectFault> {
-    if !vocab.named_sections_for(kind) {
-        return Err(SubjectFault::NamedSectionsOff);
-    }
-    if let Some(component) = path.split('.').find(|part| !named_section_component(part)) {
-        let shape = if !component.is_empty() && component.bytes().all(|b| b.is_ascii_digit()) {
-            Component::Numbered
-        } else if component.contains('*') {
-            Component::Wildcard
-        } else {
-            Component::Malformed
-        };
-        return Err(SubjectFault::SectionGrammar(shape));
-    }
-    let grammar_valid = vocab.id_grammars.is_empty()
-        || vocab
-            .id_grammars
-            .iter()
-            .any(|grammar| grammar.is_section_path(path));
-    if grammar_valid {
-        Ok(())
-    } else {
-        Err(SubjectFault::SectionGrammar(Component::Malformed))
-    }
 }
 
 fn known_subject(kind: &str, vocab: &RuleVocabulary) -> Result<(), SubjectFault> {

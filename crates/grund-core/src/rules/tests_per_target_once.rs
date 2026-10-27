@@ -18,6 +18,7 @@ fn vocabulary() -> RuleVocabulary {
     config.rebuild_grammar().unwrap();
     let kinds = BTreeSet::from(["FS".into()]);
     RuleVocabulary {
+        fields: Default::default(),
         objects: KindTable::of_citable(&kinds),
         kinds,
         named_sections: true,

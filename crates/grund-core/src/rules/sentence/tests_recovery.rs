@@ -25,6 +25,7 @@ fn named_off(kinds: &[&str]) -> RuleVocabulary {
         .map(|kind| kind.to_string())
         .collect::<BTreeSet<_>>();
     RuleVocabulary {
+        fields: Default::default(),
         objects: KindTable::of_citable(&kinds),
         kinds,
         named_sections: false,

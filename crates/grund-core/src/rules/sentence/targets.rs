@@ -3,6 +3,7 @@
 //! facts and performs no evaluation.
 
 use super::forms::{Form, Refusal, refuse};
+use super::whose::WHOSE;
 use super::{RuleTargets, RuleVocabulary, TargetMode};
 use crate::config::{
     KindScope, KindVerdict, NamespaceMatch, Quote, parse_citation_target_entry,
@@ -60,6 +61,13 @@ fn known_target(
                 .unknown_or_complement(scope, kind, legacy, Quote::Double)
         }
         KindVerdict::UnknownAlias => legacy,
+    };
+    // §FS-rule-refusals.sentences.whose: an object kind followed by a clause appends why.
+    let reason = match kind.split_once(WHOSE) {
+        Some((head, _)) if vocab.objects.verdict(scope, head) == KindVerdict::Citable => {
+            format!("{reason} — a whose clause narrows only a rule's subject")
+        }
+        _ => reason,
     };
     Err(refuse(reason, missing))
 }

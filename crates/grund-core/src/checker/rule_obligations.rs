@@ -94,7 +94,7 @@ fn obligation_subject(rule: &ParsedRule) -> Option<&str> {
         return None;
     }
     match &rule.subject {
-        RuleSubject::Kind(kind) | RuleSubject::ChapterOfKind { kind, .. } => {
+        RuleSubject::Kind(kind, _) | RuleSubject::ChapterOfKind { kind, .. } => {
             (!kind.contains('/')).then_some(kind.as_str())
         }
         RuleSubject::ExactDeclaration(_) | RuleSubject::ExactChapter { .. } => None,
