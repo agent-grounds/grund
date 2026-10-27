@@ -169,6 +169,10 @@ fn schema_table(view: &SchemaView) -> String {
         out.push_str(line);
         out.push('\n');
     }
+    if let Some(line) = schema_uncited_line(view) {
+        out.push_str(&line);
+        out.push('\n');
+    }
     if let Some(members) = schema_members_line(view) {
         out.push('\n');
         out.push_str(&text(&members));

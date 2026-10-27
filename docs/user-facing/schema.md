@@ -85,6 +85,20 @@ A|B = one obligation, met by citing either · — = no direction rule names it
 | `may` | allowed |
 | `must not`, `warn not`, `should not` | forbidden, at that strength |
 
+A place's or the complement's `must`, `warn` and `should` judge only its files
+that cite something: a file that cites nothing passes them, and only grounding
+makes it a finding. Where some scanned place or the complement carries one of
+them and has no `grounded` badge, the legend says so in a fourth line:
+
+```text
+must/warn/should skip an uncited file of a place or the complement · [rules.citations.<ROW>.grounding] makes it a finding
+```
+
+A version-1 config reads `require_grounding` in its place. The example above
+grounds both its place and the complement, so it has no such line;
+[`examples/places/`](../../examples/places/) shows one
+([§FS-schema.8.3](../functional-spec/FS-schema.md#83-the-legend-says-an-obligation-skips-an-uncited-file)).
+
 ## Mermaid and DOT
 
 `--format mermaid` and `--format dot` print the same facts as graph source on

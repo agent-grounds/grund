@@ -840,7 +840,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Kinds each declaration (or file, for a place) must cite; a miss is an error.",
+          "description": "Kinds each declaration (or file, for a place) must cite; a miss is an error. A file of a place or the complement that cites nothing is not checked by this key; `require_grounding` makes it a finding.",
           "default": [],
           "x-grund-spec": {
             "id": "FS-config.3.9.1",
@@ -852,7 +852,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Kinds it should cite; a miss is a suggestion.",
+          "description": "Kinds it should cite; a miss is a suggestion. A file of a place or the complement that cites nothing is not checked by this key; `require_grounding` makes it a finding.",
           "default": [],
           "x-grund-spec": {
             "id": "FS-config.3.9.1",
@@ -1876,7 +1876,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Kinds this one must cite; a miss is an error.",
+          "description": "Kinds this one must cite; a miss is an error. A file of a place or the complement that cites nothing is not checked by this key; `[rules.citations.<ROW>.grounding]` makes it a finding.",
           "default": [],
           "x-grund-spec": {
             "id": "FS-config-v2.rules.citations",
@@ -1888,7 +1888,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Kinds this one must cite; a miss is a warning.",
+          "description": "Kinds this one must cite; a miss is a warning. A file of a place or the complement that cites nothing is not checked by this key; `[rules.citations.<ROW>.grounding]` makes it a finding.",
           "default": [],
           "x-grund-spec": {
             "id": "FS-config-v2.rules.citations",
@@ -1900,7 +1900,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Kinds this one should cite; a miss is a suggestion.",
+          "description": "Kinds this one should cite; a miss is a suggestion. A file of a place or the complement that cites nothing is not checked by this key; `[rules.citations.<ROW>.grounding]` makes it a finding.",
           "default": [],
           "x-grund-spec": {
             "id": "FS-config-v2.rules.citations",

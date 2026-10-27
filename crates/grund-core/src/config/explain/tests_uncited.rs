@@ -19,7 +19,6 @@ const V2_UNCITED: &str = " A file of a place or the complement that cites nothin
 const V1_UNCITED: &str = " A file of a place or the complement that cites nothing is not checked by this key; `require_grounding` makes it a finding.";
 
 #[test]
-#[ignore = "red until #151 the obligation keys name the uncited file; implement removes this"]
 fn a_v2_obligation_key_says_an_uncited_file_is_not_checked() {
     for (key, first) in [
         ("must", "Kinds this one must cite; a miss is an error."),
@@ -38,7 +37,6 @@ fn a_v2_obligation_key_says_an_uncited_file_is_not_checked() {
 }
 
 #[test]
-#[ignore = "red until #151 the obligation keys name the uncited file; implement removes this"]
 fn a_v1_obligation_key_says_an_uncited_file_is_not_checked() {
     for (key, first) in [
         (

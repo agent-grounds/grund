@@ -76,6 +76,31 @@ const SCHEMA_LEGEND: [&str; 3] = [
     "A|B = one obligation, met by citing either · — = no direction rule names it",
 ];
 
+/// §FS-schema.8.3: the table legend's fourth line, where some scanned place or
+/// the complement has an obligation and no `grounded` badge — an obligation
+/// never judges a file there that cites nothing, and grounding is what does
+/// (§FS-config-v2.rules.citations.uncited, §FS-config.3.9.1.4). The graph
+/// formats never print it.
+fn schema_uncited_line(view: &SchemaView) -> Option<String> {
+    let obligation = |level: CitationLevel| {
+        matches!(level, CitationLevel::Must | CitationLevel::Warn | CitationLevel::Should)
+    };
+    let skipping = view.nodes.iter().enumerate().any(|(index, node)| {
+        matches!(node.class, NodeClass::Place | NodeClass::Complement)
+            && node.grounding.is_empty()
+            && view.edges.iter().any(|e| e.subject == index && obligation(e.level))
+    });
+    let remedy = match view.version {
+        1 => "require_grounding",
+        _ => "[rules.citations.<ROW>.grounding]",
+    };
+    skipping.then(|| {
+        format!(
+            "must/warn/should skip an uncited file of a place or the complement · {remedy} makes it a finding"
+        )
+    })
+}
+
 /// §FS-schema.9: the third comment line of the graph formats.
 const SCHEMA_GRAPH_ANY_OF: &str = "any of = one obligation, met by citing any one of its arrows";
 

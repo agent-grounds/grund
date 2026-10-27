@@ -56,6 +56,7 @@ citations
 must = check error · warn = check warning · should = suggestion (check --suggestions)
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
+must/warn/should skip an uncited file of a place or the complement · [rules.citations.<ROW>.grounding] makes it a finding
 ```
 
 **The ownership rule, in one line:** a file listed in a row's `files` belongs to that row; otherwise the deepest folder holding it decides; and a file in no place belongs to `code` ([§FS-config-v2.schema.places.ownership](../../docs/functional-spec/FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder)).
