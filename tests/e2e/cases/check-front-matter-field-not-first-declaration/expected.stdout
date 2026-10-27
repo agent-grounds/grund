@@ -1,0 +1,1 @@
+docs/adr/cache.md:10: error: ADR-later has no front-matter field; kind ADR declares it; only a file's first declaration has front matter; move it to a file of its own

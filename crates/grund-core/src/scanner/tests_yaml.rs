@@ -267,6 +267,45 @@ fn a_member_slice_keeps_comments_between_its_elements() {
     );
 }
 
+/// The tree's one nesting bound (§DA-yaml-value-reader.2.2): 128 nested collections
+/// read, whatever holds them.
+#[test]
+fn collections_nested_128_deep_read() {
+    let text = format!("{}x\n", "- ".repeat(128));
+    assert!(
+        parse_yaml(&text).is_ok(),
+        "128 nested sequences are readable"
+    );
+}
+
+/// A mapping and the 128 sequences under it are 129 collections, refused at the
+/// line of the one that crosses the bound, before the tree recurses into it.
+#[test]
+fn a_collection_nested_129_deep_is_refused_at_its_line() {
+    let text = format!("k: v\nnested:\n  {}x\n", "- ".repeat(128));
+    let error = parse_yaml(&text)
+        .err()
+        .expect("a collection nested 129 deep is refused");
+    assert_eq!(
+        (error.line, error.message.as_str()),
+        (3, "collections are nested more than 128 deep")
+    );
+}
+
+/// The author's reproducer: 10000 levels ran the tree out of stack (§REQ-never-crashes.1).
+#[test]
+#[ignore = "red until #1048 bounds the span tree's nesting; implement removes this"]
+fn ten_thousand_nested_collections_are_refused_not_a_stack_overflow() {
+    let text = format!("CONST-deep:\n  {}x\n", "- ".repeat(10_000));
+    let error = parse_yaml(&text)
+        .err()
+        .expect("a collection nested past the bound is refused");
+    assert_eq!(
+        (error.line, error.message.as_str()),
+        (2, "collections are nested more than 128 deep")
+    );
+}
+
 impl YamlNode {
     fn kind_style(&self) -> ScalarStyle {
         let YamlKind::Scalar { style, .. } = &self.kind else {

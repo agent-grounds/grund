@@ -46,7 +46,7 @@ Completion is invoked on every tab press, so config and scan failures are quiet:
 
 ### 2.2 What the catalog offers
 
-The shared declaration catalog ([§FS-completions.3](FS-completions.md#3-determinism)) includes value-source IDs ([§FS-values.terms](FS-values.md#terms-terms)) and their numbered components, so ID and section completion offers them under the same ordering and prefix rules as Markdown declarations ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
+The shared declaration catalog ([§FS-completions.3](FS-completions.md#3-determinism)) includes value-source IDs ([§FS-values.terms](FS-values.md#terms-terms)) and their numbered components, so ID and section completion offers them under the same ordering and prefix rules as Markdown declarations ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)). It holds the front-matter coordinates of a declaration whose kind declares a `front-matter` field among that declaration's sections, so `--sections` offers `front-matter` and each `front-matter.<key>` ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
 
 It also includes exact off-grammar declarations retained for read compatibility ([§FS-config.3.2](FS-config.md#32-id--id-grammar)), so their raw IDs and section candidates are offered exactly as written. Completion does not promote an unmatched candidate or mint a nonconforming form; authoring remains governed by the effective format.
 

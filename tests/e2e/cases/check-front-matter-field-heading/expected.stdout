@@ -1,0 +1,1 @@
+docs/adr/cache.md:10: error: ADR-cache.front-matter is a heading, but kind ADR reads front-matter from the file's front matter; rename the section

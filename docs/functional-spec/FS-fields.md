@@ -45,6 +45,8 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 - **Scalar field**: a field with `one_of`. Its display name is its value.
 - **Closed kind**: a kind whose `closed` strength is not `may`. Its declarations admit only their declared fields and numbered sections as direct sections.
 - **Expresses**: a field expresses a chapter-presence rule when the field's `title`, or its name where it has no title, equals the rule's chapter `NAME`, compared case-insensitively ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)).
+- **Front-matter field**: the field named `front-matter` on a kind that declares it. It is its declaration's front matter ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)) and never a chapter ([§FS-fields.front-matter](FS-fields.md#front-matter-front-matter-is-a-field)).
+- **Key**: a top-level key of a front-matter field's block, which is a section of the field when its name is a section name. A **declared key** is one the field lists under `keys`.
 
 ## requirements: What every declared shape holds to
 
@@ -77,11 +79,15 @@ A kind's shape is one record, and the checks, `grund schema` ([§FS-schema.4.1](
 | `content` | `prose` or `values` | `prose` |
 | `one_of` | a non-empty list of display names | none |
 
+`front-matter` is the one field name with a meaning of its own. On a kind that declares it, the field is its declarations' front matter ([§FS-fields.front-matter](FS-fields.md#front-matter-front-matter-is-a-field)) and not a chapter, and it admits its own keys and its `keys` tables ([§FS-fields.front-matter.config](FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys)). A kind that does not declare it reads `## front-matter:` as any other named section.
+
 Fields are listed, rendered and reported in the order their headers are written ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)). Header order is not placement: only `position` and `after` place a field. An unknown key is ``unknown key `<key>` in [schema.kinds.<KIND>.fields.<name>] (expected title, presence, position, after, content, or one_of)``, which names the keys above in their order ([§FS-config-v2.reader.1.keys](FS-config-v2.md#reader1keys-an-unknown-key-names-the-keys-its-table-admits)). A value outside its set is refused at its line in the reader's shape, ``unknown [schema.kinds.FS.fields.terms] presence `maybe` (expected must, warn, should, or may)``, and the same for `position` (`expected first or last`) and `content` (`expected prose or values`).
 
 ### declare.closed: `closed` is a strength on the row
 
 `closed` on `[schema.kinds.<KIND>]` takes a strength and defaults to `may`, an open kind. Any other value is ``unknown [schema.kinds.<KIND>] closed `<value>` (expected must, warn, should, or may)``. A closed kind admits, as direct sections of its declarations, its declared fields and numbered sections, and nothing else. The strength is the channel of [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter).
+
+`closed` is also a key of the front-matter field, and there it governs that field's keys, never the kind's chapters ([§FS-fields.front-matter.config](FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys)). The kind's `closed` judges direct sections, and the front-matter field is none, so the kind's `closed` never reaches a key.
 
 ### declare.form: `form` is a row key
 
@@ -91,7 +97,7 @@ Fields are listed, rendered and reported in the order their headers are written 
 
 ### identity.name: A field is the direct section of its name
 
-A field is the declaration's **direct** section whose section name equals the field's name: `status` in `## status: Accepted`. It is never matched by its display name, and never by a same-named section nested deeper, so `<§>DF-session.status` resolves whatever the status says and the coordinate never moves ([§REQ-spec-section-names](../requirements/REQ-spec-section-names.md#req-spec-section-names-a-section-name-says-what-the-thing-is-and-never-moves)). This is the identity [§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots) already gives a value chapter. The heading is today's named section, in Markdown or in a doc-comment declaration body, so no new heading syntax is parsed; a heading with no section name, `## Status`, is an `unmarked-heading` finding as before and is never a field ([§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)). A one-line stub pointing at a doc-comment declaration has no body and is held to no field.
+A field is the declaration's **direct** section whose section name equals the field's name: `status` in `## status: Accepted`. It is never matched by its display name, and never by a same-named section nested deeper, so `<§>DF-session.status` resolves whatever the status says and the coordinate never moves ([§REQ-spec-section-names](../requirements/REQ-spec-section-names.md#req-spec-section-names-a-section-name-says-what-the-thing-is-and-never-moves)). This is the identity [§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots) already gives a value chapter. The heading is today's named section, in Markdown or in a doc-comment declaration body, so no new heading syntax is parsed; a heading with no section name, `## Status`, is an `unmarked-heading` finding as before and is never a field ([§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)). A one-line stub pointing at a doc-comment declaration has no body and is held to no field. The one field that is not a direct section is `front-matter`, on a kind that declares it: that field is the block at the top of its declaration's file, and its sections are the block's top-level keys ([§FS-fields.front-matter.keys](FS-fields.md#front-matterkeys-its-keys-are-its-sections)).
 
 A field written twice is the existing `duplicate-section` error ([§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)), and every field check reads the first occurrence. A field heading at the wrong depth keeps its heading-depth finding ([§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch)); the field reads the section path, as a value chapter does.
 
@@ -99,11 +105,13 @@ A field written twice is the existing `duplicate-section` error ([§FS-declarati
 
 `title` and every `one_of` entry are compared with the display name byte for byte, with no case folding and no whitespace trimming beyond what the heading parser already removes. A configured `title` or `one_of` entry that is empty or has leading or trailing whitespace is refused at its line: `field FS.terms has title " Terms", which is empty or has surrounding whitespace`, and `field DF.status has one_of entry " Accepted", which is empty or has surrounding whitespace`.
 
+A front-matter key's `one_of` entries are compared the same way, byte for byte, with the key's value, which is its decoded scalar text and never a type YAML would resolve it to ([§FS-fields.front-matter.values](FS-fields.md#front-mattervalues-a-keys-value-is-its-decoded-text)).
+
 ## order: Order
 
 ### order.ends: `first` and `last`
 
-`position = "first"` makes the field the declaration's first direct section, and `last` its last. Numbered and named direct sections both count; the lead does not.
+`position = "first"` makes the field the declaration's first direct section, and `last` its last. Numbered and named direct sections both count; the lead does not, and neither does the front matter, which stands above the body ([§FS-fields.front-matter](FS-fields.md#front-matter-front-matter-is-a-field)).
 
 ### order.after: `after` means directly after
 
@@ -131,6 +139,7 @@ Each of these is a located config error at the offending key, and the run exits 
 | `after` naming the field itself | `after` | `AR.a comes after itself` |
 | a cycle of two fields | the later field's `after` | `AR.a and AR.b each come after the other; one of them needs position or no after` |
 | a longer cycle, its fields in header order | the latest field's `after` | `AR.a, AR.b and AR.c come after one another in a cycle; one of them needs position or no after` |
+| `after` naming `front-matter` on a kind that declares it | `after` | `ADR.context comes after front-matter, which is the file's front matter and has no place among the chapters` |
 
 The list of fields in the `after` refusal is in header order.
 
@@ -169,6 +178,8 @@ The first four codes take the field's `presence`; `undeclared-chapter` takes the
 | a field is written twice | `duplicate-section` | as today | error at every strength | | | |
 | a values chapter is filled wrongly | `invalid-value-declaration` | as today | error at every strength | | | |
 
+The front-matter field's findings reuse these codes at sites of their own, and [§FS-fields.front-matter.findings](FS-fields.md#front-matterfindings-what-it-reports) says where each is reported and which strength it takes: the field's `presence` for an absent block, a key's `presence` for an absent key or a value outside its `one_of`, and the field's own `closed` for an undeclared key.
+
 An error exits `1`. A warning is a standing warning, and a run with only warnings exits `0`. A suggestion is reported only under `--suggestions` ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). A finding keeps its code and message whatever its strength ([§FS-config-v2.rules.strengths](FS-config-v2.md#rulesstrengths-one-strength-vocabulary-two-severities)).
 
 ### strengths.may: A present optional field is still held to its shape
@@ -177,7 +188,7 @@ An error exits `1`. A warning is a standing warning, and a run with only warning
 
 ### strengths.surfaces: The codes are ordinary check codes
 
-All five codes are in the check code catalog ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)), are selectable with `--only` and `--ignore` ([§FS-check.1](FS-check.md#1-inputs)), sort with every other finding ([§FS-errors.4](FS-errors.md#4-determinism)), and reach the language server through the same report. In JSON they have the shape every finding has, with `sites` and `authority` both `null`, as a config-authored finding's are.
+All five codes, and the front-matter field's two codes `unreadable-front-matter` and `front-matter-heading`, are in the check code catalog ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)), are selectable with `--only` and `--ignore` ([§FS-check.1](FS-check.md#1-inputs)), sort with every other finding ([§FS-errors.4](FS-errors.md#4-determinism)), and reach the language server through the same report. In JSON they have the shape every finding has, with `sites` and `authority` both `null`, as a config-authored finding's are.
 
 ## forms: `form` lowers to the version-1 contracts
 
@@ -195,7 +206,214 @@ A chapter-presence rule ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)) stay
 
 ## record: The record
 
-A kind's shape is one record, its slots, and every consumer reads that record: the checks above, the schema view ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)), and the agent guidance's `### Declaration shapes` ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)). Each slot carries its name, title, presence, placement and content (prose, values, or the scalar's values), and the kind carries `closed`. Slots stay in header order, and placement is data on each slot rather than a reordering. A config that declares fields renders the shapes, and with them the v21/v22 block ([§FS-init.2.3.7.1](FS-init.md#2371-the-current-version)).
+A kind's shape is one record, its slots, and every consumer reads that record: the checks above, the schema view ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)), and the agent guidance's `### Declaration shapes` ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)). Each slot carries its name, title, presence, placement and content (prose, values, or the scalar's values), and the kind carries `closed`. The front-matter slot carries its presence, its own `closed`, and its keys in header order, each with its presence and its values ([§FS-fields.front-matter.record](FS-fields.md#front-matterrecord-the-record-and-what-renders-it)). Slots stay in header order, and placement is data on each slot rather than a reordering. A config that declares fields renders the shapes, and with them the v21/v22 block ([§FS-init.2.3.7.1](FS-init.md#2371-the-current-version)).
+
+## front-matter: Front matter is a field
+
+On a kind that declares `[schema.kinds.<KIND>.fields.front-matter]`, that field is not a chapter. It is the front matter of its declaration's file, the block [§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading) delimits and [§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration) gives to the file's first declaration, and the block's top-level keys are the field's sections. A MADR record keeps its `status` there, an OKF concept its `type`, and a requirement its verification method. A format like these can state those facts once, on the kind, and `grund check`, `grund schema` and the agent guidance then hold them, rather than only a copy of each in a body chapter ([§GOAL-configurable.1](../goals.md#1-what-is-configurable), [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work)). A kind that does not declare the field parses no block, and every byte it reports stays as it is. Decided in [§DF-front-matter-field](../decisions/functional/DF-front-matter-field.md#df-front-matter-field-a-kinds-front-matter-field-holds-its-files-yaml-front-matter-with-the-blocks-top-level-keys-as-its-sections).
+
+```toml
+[schema.kinds.ADR]
+files = ["docs/adr/0004-cache-availability.md"]
+id_format = "{kind}-{number}-{slug}"
+closed = "must"
+[schema.kinds.ADR.fields.front-matter]
+presence = "must"
+closed = "must"
+[schema.kinds.ADR.fields.front-matter.keys.status]
+presence = "must"
+one_of = ["proposed", "accepted", "rejected", "deprecated"]
+[schema.kinds.ADR.fields.front-matter.keys.date]
+presence = "must"
+[schema.kinds.ADR.fields.front-matter.keys.decision-makers]
+[schema.kinds.ADR.fields.context]
+presence = "must"
+[schema.kinds.ADR.fields.decision]
+presence = "must"
+```
+
+With that config, a MADR 4.0 record whose front matter misspells its status and carries a key MADR does not have,
+
+```markdown
+---
+status: acepted
+date: 2026-02-03
+decision-makers: [Bo Lind]
+reviewer: Ana Ruiz
+---
+
+# ADR-0004-cache-availability: Cache room availability in Redis
+```
+
+is reported as
+
+```text
+docs/adr/0004-cache-availability.md:2: error: ADR-0004-cache-availability.front-matter.status is "acepted"; kind ADR admits proposed, accepted, rejected, deprecated; change the value to one of them
+docs/adr/0004-cache-availability.md:5: error: ADR-0004-cache-availability.front-matter.reviewer is not a key of kind ADR's front matter, which is closed; its keys: status, date, decision-makers; rename it to one of them, remove it, or add it to the field's keys
+```
+
+and the run exits `1`.
+
+### front-matter.config: Declaring the field and its keys
+
+`[schema.kinds.<KIND>.fields.front-matter]` admits two keys:
+
+| Key | Value | Default |
+|---|---|---|
+| `presence` | a strength: whether the declaration must have front matter | `may` |
+| `closed` | a strength: whether a key the field does not declare is reported | `may`, an open field |
+
+Any other key is refused at its line with the reader's unknown-key message, ``unknown key `position` in [schema.kinds.ADR.fields.front-matter] (expected presence or closed)`` ([§FS-config-v2.reader.1.keys](FS-config-v2.md#reader1keys-an-unknown-key-names-the-keys-its-table-admits)). `title`, `position`, `after`, `content` and `one_of` are refused this way, because the block has no heading to title, no place among the chapters, and no display name. A value outside its set is refused as on any field, ``unknown [schema.kinds.ADR.fields.front-matter] closed `yes` (expected must, warn, should, or may)``. `closed` stays an unknown key on every other field.
+
+`[schema.kinds.<KIND>.fields.front-matter.keys.<key>]` declares one key, a top-level key of the block. `<key>` is a section name in the field-name grammar `[a-z][a-z0-9-]*`. Any other name is refused at its header in the field's words: ``` `[schema.kinds.ADR.fields.front-matter.keys.Status]`: a key name is a section name matching `[a-z][a-z0-9-]*` ```. A key table follows its field's header, as a field table follows its row ([§FS-fields.declare.field](FS-fields.md#declarefield-a-field-is-a-table-under-its-kind)). Written above `[schema.kinds.<KIND>.fields.front-matter]`, it is refused at its line: ``` `[schema.kinds.ADR.fields.front-matter.keys.status]` names no field: write [schema.kinds.ADR.fields.front-matter] above it ```. The table admits two keys:
+
+| Key | Value | Default |
+|---|---|---|
+| `presence` | a strength: whether the block must have the key | `may` |
+| `one_of` | a non-empty list of values | none: any value |
+
+Any other key is ``unknown key `title` in [schema.kinds.ADR.fields.front-matter.keys.status] (expected presence or one_of)``. `one_of` keeps the refusals of [§FS-fields.content.one-of](FS-fields.md#contentone-of-a-scalars-value-is-its-display-name) and [§FS-fields.identity.match](FS-fields.md#identitymatch-titles-and-values-match-byte-for-byte), each naming the key: `key ADR.front-matter.status has an empty one_of; a scalar needs at least one value`, `key ADR.front-matter.status lists "accepted" twice in one_of`, and `key ADR.front-matter.status has one_of entry " accepted", which is empty or has surrounding whitespace`. Keys are listed, rendered and reported in the order their headers are written.
+
+`[schema.kinds.<KIND>.fields.front-matter.keys]` holds only tables. Written as a header of its own, with a key in it, it is ``unknown key `status` in [schema.kinds.ADR.fields.front-matter.keys] (it holds only tables)``, as `[schema.kinds.<KIND>.fields]` is ([§FS-config-v2.reader.2](FS-config-v2.md#reader2-every-row-and-field-is-written-under-its-own-header)). A `keys` table under any other field stays an unknown config section, ``unknown config section `schema.kinds.ADR.fields.context.keys.status` ``. Another field's `after = "front-matter"` is refused ([§FS-fields.order.refusals](FS-fields.md#orderrefusals-what-the-loader-refuses)). The field is refused on a value, non-citable or fetched kind in the words of [§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts). `config show` prints the tables back as written, and version 1 has no fields to read them into ([§FS-fields.v1](FS-fields.md#v1-version-1-is-unchanged)).
+
+### front-matter.reading: Reading the block
+
+A block is parsed only when its owner's kind declares the field, and its owner is the file's first declaration ([§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)). Every other block parses as nothing and reads exactly as [§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading) says. That covers a block whose first declaration is of a kind that does not declare the field, and a block in a file that declares nothing.
+
+The block's content is read by the one YAML span tree, `scanner/yaml.rs` ([§DA-yaml-value-reader](../decisions/architectural/DA-yaml-value-reader.md#da-yaml-value-reader-one-yaml-event-parser-builds-one-span-tree-and-value-rules-are-a-pass-over-it)). The content runs from the line after the opening `---` to the line before the closing `---` or `...`, so the delimiter lines are not YAML. Every line and byte the tree reports is counted in the file, so a finding names the file's line. A line ends at LF or CRLF, so a CRLF file reads as its LF form does: the same keys and values, at the same lines and columns, and no value or slice ends in a carriage return.
+
+The content is one YAML document whose top level is a mapping. Content that is empty, or only comments and blank lines, is a present field with no keys. Each of these is `unreadable-front-matter` at the opening delimiter ([§FS-fields.checks.unreadable-front-matter](FS-fields.md#checksunreadable-front-matter-unreadable-front-matter)):
+
+- content the YAML parser rejects, a tab in indentation included, named by the parser's message and its line;
+- content whose top level is a sequence or a scalar, `its top level is not a mapping`;
+- content that holds a second document, `a second document starts`. A line such as `--- # x` is not exactly a delimiter, so it does not close the block ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)), but in YAML it starts a document;
+- collections nested more than 128 deep, `collections are nested more than 128 deep`. This is the span tree's one nesting bound, shared with value sources ([§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output)), so no block makes the reader recurse past it ([§REQ-never-crashes.1](../requirements/REQ-never-crashes.md#1-every-failure-is-a-diagnostic));
+- a `+++` block. That block is TOML, which grund does not read yet: reading it is [#1057](https://github.com/agent-grounds/grund/issues/1057).
+
+An unreadable block is still a present field, so `missing-field` is not also reported for it. None of its keys is read, so none is judged, and it gives no key a coordinate.
+
+A file whose line 1 begins with a byte-order mark has no front matter ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)), however the rest of the line reads. Where the mark is followed by exactly `---` or `+++`, the author can see a block that grund does not, so the declaration's `missing-field` names the mark ([§FS-fields.front-matter.findings](FS-fields.md#front-matterfindings-what-it-reports)).
+
+### front-matter.keys: Its keys are its sections
+
+The field's keys are the top-level keys of the block's mapping, in source order. A key nested inside a value is no key of the field; it is part of that value. A key is named by its decoded scalar, so `status`, `'status'` and `"status"` are one key. A key whose name is a section name, `[a-z][a-z0-9-]*`, is a section of the field, `<ID>.front-matter.<key>`, whether or not the field declares it. Any other key is still a key but has no coordinate, and a closed field reports it with the shorter remedy `rename it to one of them or remove it`, because it cannot be declared. That covers:
+
+- a scalar key outside the grammar, such as `Reviewer`, `review_date` or `<<`, named in a finding by its decoded text;
+- a key that is not a scalar, a collection written as a key (`? [a, b]`) or an alias (`*k`), named in a finding by the text it is written as on its line, `ADR-cache.front-matter.*k`.
+
+A merge key `<<` is a plain key outside the grammar, and nothing is merged. The keys it would merge are not keys of the field, because no YAML resolution is applied ([§DA-yaml-value-reader.2.1](../decisions/architectural/DA-yaml-value-reader.md#21-one-event-parser)), so a `status` that only a merge supplies is absent.
+
+A key that is a section written twice, compared decoded, is `duplicate-section` at its first occurrence, naming the others ([§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)): `duplicate section ADR-cache.front-matter.status (also declared at docs/adr/cache.md:4); remove all but one of the keys`. Every check reads the first occurrence, as for a field written twice ([§FS-fields.identity.name](FS-fields.md#identityname-a-field-is-the-direct-section-of-its-name)), and a read of the coordinate is refused as ambiguous ([§FS-show.2.2.2](FS-show.md#222-ambiguous-section)). A key with no coordinate that is written twice is not a duplicate: it names no citation target.
+
+### front-matter.values: A key's value is its decoded text
+
+A key's value is its scalar as the parser decodes it, with quotes and escapes resolved and no YAML type ever applied. So `1.10`, `no` and `2026-02-03` stay the text they are written as, and `'accepted'`, `"accepted"` and `accepted` are all `accepted`. A tag or an anchor on the value is ignored, so `!!str accepted` and `&s accepted` are `accepted` too. The value is compared byte for byte with `one_of` ([§FS-fields.identity.match](FS-fields.md#identitymatch-titles-and-values-match-byte-for-byte)). A key with nothing after its colon, `status:`, is present and its value is `""`.
+
+`one_of` takes a one-line value: a plain or quoted scalar that starts on the key's line and ends on it. A block scalar (`|`, `>`) is not one, because YAML keeps its trailing newline and the comparison would read `accepted\n`. Nor is a scalar folded onto later lines, a sequence, a mapping, or an alias. Each of these is `invalid-field-value`, `ADR-cache.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line`. A key without `one_of` holds any value, nested or not, and nothing in it is judged.
+
+### front-matter.constructs: What each YAML construct gets
+
+How each construct of YAML reads in the front matter of a kind that declares the field, as [§FS-values.2.2.3](FS-values.md#223-how-a-yaml-source-is-read) says for a value source:
+
+| Construct | In front matter |
+|---|---|
+| a comment | read by no key; a `§` citation in it is live ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)) |
+| a quoted key | its decoded name, the same key as the plain one |
+| a key outside the grammar, a merge key `<<` included | a key with no coordinate; a closed field reports it |
+| a non-scalar key, an alias key | a key with no coordinate, named by its text; a closed field reports it |
+| a key written twice | `duplicate-section` when it is a section, the first occurrence read |
+| a nested key | part of its top-level key's value |
+| a tag or an anchor on a value | ignored |
+| an alias, a block scalar, a multi-line scalar, a sequence or a mapping as a value | held, and `not a one-line value` under `one_of` |
+| an empty value | present, `""` |
+| a second document | `unreadable-front-matter` |
+| a top level that is not a mapping | `unreadable-front-matter` |
+| collections nested more than 128 deep | `unreadable-front-matter` |
+| a parse error, a tab in indentation | `unreadable-front-matter` |
+| a `+++` block | `unreadable-front-matter` until #1057 |
+| a byte-order mark before the opening delimiter | no front matter, and a `missing-field` that names the mark |
+| a CRLF line ending | read as LF |
+
+### front-matter.coordinates: Its coordinates
+
+The first declaration of a file whose kind declares the field gains two kinds of coordinate:
+
+- `<ID>.front-matter`, at the opening delimiter's line;
+- `<ID>.front-matter.<key>`, at the line of each key that is a section.
+
+Both are entries of the declaration's one section map, marked as lying in the front matter ([§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span)), so every surface that reads the map answers for them alike ([§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)). Neither is a heading, and neither is inside the body. The body still starts at the declaration's heading ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)), so no lead, fingerprint or section lock moves. They are never enrolled in a section lock, because their paths are named and have no heading ([§FS-section-lock.holds.entry](FS-section-lock.md#holdsentry-one-line-per-locked-address)). A declaration with no front matter has neither. One with an unreadable block has `<ID>.front-matter` and no key coordinate.
+
+A coordinate's **slice** is its text in the file:
+
+- for `<ID>.front-matter`, from the first byte of the opening delimiter to the last byte of the closing one, its line ending excluded;
+- for `<ID>.front-matter.<key>`, from the key's first byte to the last byte of its value, as [§FS-values.2.2.2](FS-values.md#222-reader-fidelity) cuts a member. Comments between the key and the end of its value are inside, and comments before the key or after its value are not. A key with no value ends at its colon, and no slice ends in a carriage return.
+
+A key's **title** is its value where that is a one-line scalar on the key's line, and it has none otherwise. `<ID>.front-matter` has none.
+
+### front-matter.surfaces: What each surface does with them
+
+| Surface | What it does with `ADR-x.front-matter` and `ADR-x.front-matter.status` |
+|---|---|
+| `grund show` of one of them | prints its slice, as a value-source member's slice is printed, with nothing added ([§FS-output-shapes.4.3](FS-output-shapes.md#43-value-source-declarations)). The default read, `--brief`, `--toc` and `--full` all print it, since a slice has no lead of its own. In JSON, `body` is the slice, `path` and `line` are its start, and `anchor` is `null` ([§FS-show.3.1.3.1](FS-show.md#3131-the-heading-anchor)) |
+| a read of the whole declaration, in any mode | unchanged: the block is above the body, so the read neither prints it nor lists its coordinates, and a whole-declaration `--toc` lists headings only |
+| `show --batch --all` | generates one query for each, among the declaration's section paths in their byte order ([§FS-show.2.6.2](FS-show.md#262-exhaustive-generation)) |
+| `list --glob` | lists them as catalog coordinates ([§FS-coordinate-globs.matching.catalog](FS-coordinate-globs.md#matchingcatalog-a-glob-selects-catalog-coordinates)). `ADR-*.front-matter.*` lists the keys, with a key's title in the title column |
+| `list --size` | one row for each, where lead and full both measure the slice ([§FS-output-shapes.5.2](FS-output-shapes.md#52-list---size---formatjson)). The lead-size check measures the same rows, so an oversized slice is warned at its coordinate's line ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)) |
+| `grund complete ids --sections` | offers them as sections of their declaration ([§FS-completions.2.2](FS-completions.md#22-what-the-catalog-offers)) |
+| `refs`, `cover --glob`, and the language server's resolution and navigation | resolve them and go to the coordinate's line. `fmt` links a Markdown citation of one to the file with no fragment, as it does for a source-file home |
+| `cover --lines` | a line inside a key's slice is in `front-matter.<key>`; the delimiter lines, comments and blank lines between keys, and the lines of a key with no coordinate are in `front-matter` ([§FS-cover.6.2](FS-cover.md#62-ownership-rules)) |
+| `enclosing_section` of a citation in the block | `front-matter.<key>`, or `front-matter` outside every key's slice ([§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)) |
+| rule subjects | `front-matter` and `front-matter.<key>` are chapter units selected by their whole path ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so `The front-matter.sources chapter of each METRIC must cite at least one POL.` reads the citations in the `sources` key. A chapter-presence rule counts direct chapters by display name ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)), so it never counts them |
+| section lock | never enrolled |
+| the snapshot's `Section` record | an entry of `sections` like any other: its `path`, `line` and `title` as above, `title` the empty string where it has none, `headingLevel` `0` because it has no heading, and `value` and `valueRoot` `null`. The record gains no field: `headingLevel` `0` is the front-matter mark, and every other entry keeps its bytes ([§FS-distribution.3.2.2.3](FS-distribution.md#3223-scan-snapshot)) |
+
+### front-matter.findings: What it reports
+
+| What is wrong | Code | Reported at | Strength from | Message |
+|---|---|---|---|---|
+| the declaration has no front matter | `missing-field` | the title line | the field's `presence` | `ADR-cache has no front-matter field; kind ADR declares it; add front matter at the top of its file` |
+| …because it is not its Markdown file's first declaration | `missing-field` | the title line | the field's `presence` | `ADR-later has no front-matter field; kind ADR declares it; only a file's first declaration has front matter; move it to a file of its own` |
+| …because it is a doc-comment declaration | `missing-field` | the title line | the field's `presence` | `ADR-code has no front-matter field; kind ADR declares it; only a Markdown file's first declaration has front matter; move it to a Markdown file of its own` |
+| …because line 1 is a byte-order mark and a delimiter | `missing-field` | the title line | the field's `presence` | `ADR-cache has no front-matter field; kind ADR declares it; remove the byte-order mark before the --- on line 1` |
+| a declared key is absent | `missing-field` | the opening delimiter | the key's `presence` | `ADR-cache.front-matter has no date key; kind ADR declares it; add the key to the front matter` |
+| a value is not in `one_of` | `invalid-field-value` | the key's line | the key's `presence` | `ADR-cache.front-matter.status is "acepted"; kind ADR admits proposed, accepted; change the value to one of them` |
+| a value under `one_of` is not one line | `invalid-field-value` | the key's line | the key's `presence` | `ADR-cache.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line` |
+| a key the field does not declare, in a closed field | `undeclared-chapter` | the key's line | the field's `closed` | as [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter) |
+| a key written twice | `duplicate-section` | its first occurrence | always an error | as [§FS-fields.front-matter.keys](FS-fields.md#front-matterkeys-its-keys-are-its-sections) |
+| the block cannot be read | `unreadable-front-matter` | the opening delimiter | always an error | as [§FS-fields.checks.unreadable-front-matter](FS-fields.md#checksunreadable-front-matter-unreadable-front-matter) |
+| a heading claims the field's coordinate | `front-matter-heading` | the heading | always an error | as [§FS-fields.checks.front-matter-heading](FS-fields.md#checksfront-matter-heading-front-matter-heading) |
+
+Each strength reaches its channel as [§FS-fields.strengths.table](FS-fields.md#strengthstable-which-strength-each-finding-takes) says, and a `may` key whose value is present and outside its `one_of` is an error ([§FS-fields.strengths.may](FS-fields.md#strengthsmay-a-present-optional-field-is-still-held-to-its-shape)). One defect is one finding ([§FS-fields.requirements.one-finding](FS-fields.md#requirementsone-finding-one-defect-in-a-declarations-shape-is-one-finding--realized)). No key is judged when the block is absent or unreadable. A key written twice is judged once, at its first occurrence. A `## front-matter:` heading is `front-matter-heading` and nothing else. `misplaced-field` counts direct sections only, never the block ([§FS-fields.order.ends](FS-fields.md#orderends-first-and-last)).
+
+### front-matter.record: The record, and what renders it
+
+The front-matter slot carries its presence, its own `closed`, and its keys in header order, each key with its presence and its `one_of` values ([§FS-fields.record](FS-fields.md#record-the-record)). Every view prints its keys nested under its field line, in the view's own words for a field line:
+
+- `grund schema` ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)) prints the field line, `field front-matter`, with its presence and, where it is not `may`, `closed <strength>`, joined by ` · `. Each key follows as a line of its own, `key <name>`, two columns deeper than the field line, its facts in the facts column: its presence, then `one of …` where it has values;
+- Mermaid and DOT ([§FS-schema.9](FS-schema.md#9-the-mermaid-source), [§FS-schema.10](FS-schema.md#10-the-dot-source)) print the label lines `field front-matter: must · closed must` and `key status: must · one of proposed, accepted`;
+- the managed block's `### Declaration shapes` ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)) prints `  - field front-matter must · closed must`, then `    - key status must · one of proposed, accepted`.
+
+So the ticket's kind renders in `grund schema` as:
+
+```text
+  ADR   kind                     docs/adr/0004-cache-availability.md
+          field front-matter     must · closed must
+            key status           must · one of proposed, accepted, rejected, deprecated
+            key date             must
+            key decision-makers  may
+          field context          must
+          field decision         must
+          closed must
+  code  complement               every scanned file no other row claims
+```
+
+The managed block's version pair does not move for this ([§FS-init.2.3.7.1](FS-init.md#2371-the-current-version)). Every released grund refuses `closed` on a field and refuses a `keys` table, so every config that loads today renders the same bytes, `[fields.front-matter]` with only `presence` set included. The config JSON schema gives the field a definition of its own, which admits `presence`, `closed` and `keys`, and gives a key one that admits `presence` and `one_of`. `grund config explain` answers for both tables and both new codes ([§REQ-discoverable-offline](../requirements/REQ-discoverable-offline.md#req-discoverable-offline-the-installed-grund-answers-for-every-setting-and-every-check-code)).
+
+### front-matter.placement: Which declaration has it
+
+Only a Markdown file's first declaration has front matter. A later declaration of a kind that declares the field, in the same file, has none, and neither does a doc-comment declaration. Under `presence` other than `may`, each gets the `missing-field` that says why. The same holds when the file's first declaration is of a kind that does not declare the field: its block is not parsed, and a later declaration of an opted-in kind has no front matter. A stub is held to no field, as today ([§FS-fields.identity.name](FS-fields.md#identityname-a-field-is-the-direct-section-of-its-name)).
+
+On a kind that declares the field, a body `## status:` chapter and a front-matter `status` key are two different things, with two coordinates, `ADR-x.status` and `ADR-x.front-matter.status`. How a field and a chapter-presence rule share one absence ([§FS-fields.rules](FS-fields.md#rules-fields-beside-chapter-rules)) is unchanged.
 
 ## v1: Version 1 is unchanged
 
@@ -207,7 +425,7 @@ Each section below is one finding `grund check` reports about a declaration's sh
 
 ### checks.missing-field: Missing field
 
-A declaration with no direct section of a field's name, reported at the declaration's title line: `FS-logout has no terms field; kind FS declares it; add its terms section`.
+A declaration with no direct section of a field's name, reported at the declaration's title line: `FS-logout has no terms field; kind FS declares it; add its terms section`. The front-matter field is missing when its declaration has no front matter, and a declared key when the block has no key of its name. Each is reported with a remedy of its own ([§FS-fields.front-matter.findings](FS-fields.md#front-matterfindings-what-it-reports)): `ADR-cache has no front-matter field; kind ADR declares it; add front matter at the top of its file`, and, at the block's opening `---`, `ADR-cache.front-matter has no date key; kind ADR declares it; add the key to the front matter`.
 
 ### checks.misplaced-field: Misplaced field
 
@@ -219,8 +437,25 @@ A present field with a `title` whose display name differs from it, reported at t
 
 ### checks.invalid-field-value: Invalid field value
 
-A present scalar field whose display name is not in its `one_of`, reported at the field's heading, the values listed in their configured order: `DF-session.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded; retitle the heading to one of them`.
+A present scalar field whose display name is not in its `one_of`, reported at the field's heading, the values listed in their configured order: `DF-session.status is "Maybe"; kind DF admits Proposed, Accepted, Superseded; retitle the heading to one of them`. A front-matter key with `one_of` is reported at the key's line, its value in place of the display name: `ADR-0004-cache-availability.front-matter.status is "acepted"; kind ADR admits proposed, accepted, rejected, deprecated; change the value to one of them`. A value that is not a one-line scalar on the key's line reads `ADR-cache.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line` ([§FS-fields.front-matter.values](FS-fields.md#front-mattervalues-a-keys-value-is-its-decoded-text)).
 
 ### checks.undeclared-chapter: Undeclared chapter
 
 A direct named section of a declaration of a closed kind that no field of the kind declares, reported at the section's heading, the fields listed in header order: `DF-session.surprise is not a field of kind DF, which is closed; its fields: status; rename it to one of them, number it, or add it to the kind's fields`. A closed kind with no field reads `its fields: none`. Numbered sections are always admitted.
+
+A front-matter field whose `closed` is not `may` admits only its declared keys. Any other key is reported at its line, the declared keys listed in header order, `its keys: none` where there are none: `ADR-0004-cache-availability.front-matter.reviewer is not a key of kind ADR's front matter, which is closed; its keys: status, date, decision-makers; rename it to one of them, remove it, or add it to the field's keys`. A key that cannot be declared, because its name is not a section name or it is not a scalar, ends in `rename it to one of them or remove it` ([§FS-fields.front-matter.keys](FS-fields.md#front-matterkeys-its-keys-are-its-sections)). Neither the kind's `closed` nor this finding reports a `## front-matter:` heading in a kind that declares the field; that heading is [§FS-fields.checks.front-matter-heading](FS-fields.md#checksfront-matter-heading-front-matter-heading) alone.
+
+### checks.unreadable-front-matter: Unreadable front matter
+
+The front matter of a declaration whose kind declares the front-matter field, when grund cannot read its keys ([§FS-fields.front-matter.reading](FS-fields.md#front-matterreading-reading-the-block)). It is reported at the opening delimiter and is always an error. The message names the reason and, for YAML, the line of the file the reason is at:
+
+```text
+docs/adr/cache.md:1: error: ADR-cache.front-matter does not parse as YAML: <reason> at line 3; fix the YAML
+docs/adr/cache.md:1: error: ADR-cache.front-matter is TOML, which grund does not read yet; write it as YAML between --- lines, or remove kind ADR's front-matter field
+```
+
+The `<reason>` is the parser's message, `its top level is not a mapping`, `a second document starts`, or `collections are nested more than 128 deep`. The field is present, so `missing-field` is not also reported, and no key of the block is judged.
+
+### checks.front-matter-heading: Front-matter heading
+
+A heading in a declaration whose kind declares the front-matter field, where the heading's section path is `front-matter` or begins with `front-matter.`. It is reported at the heading and is always an error: `ADR-cache.front-matter is a heading, but kind ADR reads front-matter from the file's front matter; rename the section`. The heading declares nothing, as a rejected section heading declares nothing ([§FS-cover.6.2](FS-cover.md#62-ownership-rules)), so it is not a section, not a rule unit and not also `undeclared-chapter`. In a kind that does not declare the field, `## front-matter:` is an ordinary named section.

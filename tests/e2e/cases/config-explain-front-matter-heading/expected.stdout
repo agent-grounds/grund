@@ -1,0 +1,11 @@
+grund.toml is read as version 2.
+
+front-matter-heading
+A heading claims the front-matter field's coordinate in a declaration whose kind reads that field from the file's front matter.
+
+Severity: error, fixed.
+On: when [schema.kinds.<kind>.fields.front-matter] is set (a setting)
+Fix: rename the section
+Note: The heading declares nothing, so it is no section and no rule unit.
+
+Next: grund config explain '[schema.kinds.<kind>.fields.front-matter]'

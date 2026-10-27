@@ -96,7 +96,8 @@ reference, and in a coordinate glob a negated class.
 
 On `list` and `show` a glob selects from the catalog `list` prints and `show` resolves: every
 declaration and every recorded numbered, named or mixed section of it, `1.goals` included
-([§FS-config.3.3.1](FS-config.md#331-named-components), [§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)). There it selects no citation, and never an ID that is
+([§FS-config.3.3.1](FS-config.md#331-named-components), [§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)). A front-matter coordinate is one of those
+sections ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)). There it selects no citation, and never an ID that is
 cited but not declared; on `refs` and `cover` it selects citation sites instead
 ([§FS-coordinate-globs.matching.citations](FS-coordinate-globs.md#matchingcitations-on-refs-and-cover-a-glob-selects-citation-sites)). A healthy stub and its inline home are one coordinate, at
 the home ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)).

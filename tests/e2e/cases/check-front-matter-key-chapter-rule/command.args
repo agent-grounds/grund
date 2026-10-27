@@ -1,0 +1,1 @@
+check {repo} --rule "The front-matter.sources chapter of each METRIC must cite at least one POL." --only-rule

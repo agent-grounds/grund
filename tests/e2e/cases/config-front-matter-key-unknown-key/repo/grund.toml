@@ -1,0 +1,17 @@
+grund_config_version = 2
+project_name = "madr"
+
+[schema.kinds.ADR]
+folders = ["docs/adr"]
+index = false
+
+[schema.kinds.ADR.fields.front-matter]
+presence = "must"
+closed = "must"
+
+[schema.kinds.ADR.fields.front-matter.keys.status]
+title = "Status"
+
+[schema.kinds.page]
+citable = false
+files = ["README.md"]

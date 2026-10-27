@@ -529,7 +529,9 @@ declaration, owns the coordinate: a same-or-higher Markdown heading, the end of 
 source doc-comment or docstring, the next declaration in a shared comment block, and a
 stub's single declaration line each end ownership. The one line the span does not reach that
 a declaration still owns is the file's front matter, which belongs to its first declaration
-without growing its body ([§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)).
+without growing its body ([§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)). In a kind that declares a `front-matter`
+field, that block is also the declaration's front-matter sections, which lie outside the body
+([§FS-fields.front-matter.coordinates](FS-fields.md#front-mattercoordinates-its-coordinates)); the body still starts at the heading.
 
 ### body.conflict: A body still in the middle of a merge
 
@@ -569,7 +571,10 @@ one where named sections are enabled, whose path is written in the grammar of
 ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)). A plain heading is not a section; it remains prose. A section's extent is
 its heading and everything down to the next sibling-or-shallower heading; nested deeper
 headings included. Which sections a declaration has is its section map
-([§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span)).
+([§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span)). In a kind that declares a `front-matter` field, a
+declaration's front matter is a section of it, `<ID>.front-matter`, and so is each top-level
+key whose name is a section name, `<ID>.front-matter.<key>`. These sections have no heading
+and lie outside the body ([§FS-fields.front-matter.coordinates](FS-fields.md#front-mattercoordinates-its-coordinates)).
 
 ### section.map: The section map is the declaration's body span
 
@@ -580,7 +585,10 @@ reported by [§FS-declarations.checks.section-outside-declaration](FS-declaratio
 pseudo-headings, in Markdown or in a comment block, remain content under [§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example). This boundary does not make an
 otherwise legal plain heading inside a body an error; that separate policy is outside this
 contract. Every surface reads this map ([§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)), so none answers for
-a heading it rejects.
+a heading it rejects. The map holds one more kind of entry, besides those headings: the
+front-matter coordinates of a declaration whose kind declares a `front-matter` field. Those
+entries lie above the body span, have no heading, and are marked as lying in the front matter
+([§FS-fields.front-matter.coordinates](FS-fields.md#front-mattercoordinates-its-coordinates)). No heading outside the body enters the map that way.
 
 ### section.relative: A heading may write only the component it adds
 
@@ -872,6 +880,8 @@ Two or more citable section headings inside one declaration claiming the same do
 docs/functional-spec/FS-001-login.md:5: duplicate section FS-001-login.1 (also declared at docs/functional-spec/FS-001-login.md:9); renumber or rename all but one of the headings
 ```
 
+A front-matter key written twice in a kind that declares a `front-matter` field is the same finding, compared on the key's decoded name: one error at the first key, naming the others, with the remedy `remove all but one of the keys` ([§FS-fields.front-matter.keys](FS-fields.md#front-matterkeys-its-keys-are-its-sections)).
+
 This is [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) one level down. A section path is a citation target, so two headings claiming it give `§FS-001-login.1` two destinations, and picking one silently is the guess [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution) forbids by name. Decided in [§DF-duplicate-section-path](../decisions/functional/DF-duplicate-section-path.md#df-duplicate-section-path-a-section-coordinate-names-one-heading-or-the-run-says-so). The collision is scoped to one declaration ([§FS-declarations.checks.duplicate-section.1](FS-declarations.md#checksduplicate-section1-scoped-to-one-declaration)) and its body ([§FS-declarations.checks.duplicate-section.2](FS-declarations.md#checksduplicate-section2-scoped-to-that-declarations-body)), independent of the heading-level mode ([§FS-declarations.checks.duplicate-section.3](FS-declarations.md#checksduplicate-section3-independent-of-id-section_heading_levels)), and read from the record `show` reads ([§FS-declarations.checks.duplicate-section.4](FS-declarations.md#checksduplicate-section4-the-same-record-show-reads)).
 
 #### checks.duplicate-section.1: Scoped to one declaration
@@ -880,7 +890,7 @@ Section paths are addressed as `<ID>.<path>`, so the same `1.` under two differe
 
 #### checks.duplicate-section.2: Scoped to that declaration's body
 
-The headings judged are the ones inside the body [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends) delimits. A `## 1.` further down the file — in the *next* item's doc-comment, or under a later unrelated heading — is not one of this declaration's sections: `grund <ID>.1` never reaches it, and reporting it would ask for a renumbering that changes what nothing points at. A stub ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)) is one link line whose tail is a path rather than a body, so it declares no sections of its own and is never reported here. The headings that count for its ID are those of each declaration it pairs with ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), which is also the file `grund <ID>.<path>` reads: they are judged in that declaration's body and reported at their own lines in the target, whether or not `[scan] include` reaches it ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), exactly as the same tree with the target scanned reports them. A scanned target's declaration is one record however many stubs point at it, so its duplicate is reported once.
+The headings judged are the ones inside the body [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends) delimits. The one claimant from outside that body is a key of the declaration's own front matter, in a kind that declares a `front-matter` field ([§FS-fields.front-matter.keys](FS-fields.md#front-matterkeys-its-keys-are-its-sections)). A `## 1.` further down the file — in the *next* item's doc-comment, or under a later unrelated heading — is not one of this declaration's sections: `grund <ID>.1` never reaches it, and reporting it would ask for a renumbering that changes what nothing points at. A stub ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)) is one link line whose tail is a path rather than a body, so it declares no sections of its own and is never reported here. The headings that count for its ID are those of each declaration it pairs with ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), which is also the file `grund <ID>.<path>` reads: they are judged in that declaration's body and reported at their own lines in the target, whether or not `[scan] include` reaches it ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), exactly as the same tree with the target scanned reports them. A scanned target's declaration is one record however many stubs point at it, so its duplicate is reported once.
 
 #### checks.duplicate-section.3: Independent of `[id] section_heading_levels`
 

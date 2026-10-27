@@ -56,12 +56,14 @@ non-citable kind is refused for that reason everywhere ([§FS-errors.2.5.1](../f
 
 ### sections.map: Every surface reads one section map
 
-Every coordinate-bearing surface reads the same body-local map ([§FS-declarations.section.map](../functional-spec/FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span)):
+Every coordinate-bearing surface reads the same section map ([§FS-declarations.section.map](../functional-spec/FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span)):
 direct and batch `show`, exhaustive batch generation, citation and value resolution,
 `refs`, completion, list/size output, duplicate detection, and editor navigation, citation
 lookups, highlights, and hover counts. A heading the map rejects can therefore neither
 resolve nor be suggested, listed, measured, navigated to, validated as an embedded-value
-root, or treated as a duplicate claimant.
+root, or treated as a duplicate claimant. A front-matter coordinate is in that map
+once, as a marked entry outside the body ([§FS-fields.front-matter.coordinates](../functional-spec/FS-fields.md#front-mattercoordinates-its-coordinates)), so every surface
+listed answers for it, and none answers for it differently.
 
 ### sections.ambiguity: `check` and `show` judge a section path from one record
 

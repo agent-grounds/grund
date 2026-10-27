@@ -128,7 +128,9 @@ scalar field, `values` for a value chapter), joined by ` · `. A value kind's
 numbered children are one line, `field <number>`. A kind whose
 `closed` strength is not `may` adds the line `closed <strength>` after its fields.
 These are the slots the checks read ([§FS-fields.record](FS-fields.md#record-the-record)), so the view and
-`grund check` cannot describe two shapes.
+`grund check` cannot describe two shapes. A `front-matter` field adds `closed <strength>`
+to its own line where that is not `may`, and each of its keys follows as `key <name>`, two
+columns deeper, with its presence and its `one of A, B` ([§FS-fields.front-matter.record](FS-fields.md#front-matterrecord-the-record-and-what-renders-it)).
 
 ### 4.2 A node no direction rule names is set apart
 
@@ -373,7 +375,8 @@ the project (`alias/KIND`, `*/KIND`), `x<i>["…"]` labelled as written; the
 `no direction rule names these` subgraph holding the unruled nodes; one
 `class <ids> place` and one `class <ids> unscanned` line where such nodes exist;
 then the edges. A node's label lines are its name, its class word, its places, its
-field lines as `field <name>: <facts>`, and its badge. Node identifiers are
+field lines as `field <name>: <facts>`, and its badge. A `front-matter` field's keys follow
+its field line as `key <name>: <facts>` ([§FS-fields.front-matter.record](FS-fields.md#front-matterrecord-the-record-and-what-renders-it)). Node identifiers are
 generated, `n` with the row's position, `j` with the junction's, and `x` with the
 order a target outside the project is first named, and never come from user text.
 
@@ -381,7 +384,8 @@ order a target outside the project is first named, and never come from user text
 
 `--format dot` prints one `digraph schema` with `rankdir=LR` and
 `node [shape=box]`, ready for `dot -Tsvg`. The comments come first inside it, as
-`//` lines, the same as Mermaid's. Then every ruled node, `n<i> [label="…"]` with
+`//` lines, the same as Mermaid's. A node's label lines are Mermaid's, a `front-matter`
+field's key lines included. Then every ruled node, `n<i> [label="…"]` with
 its label lines joined by `\n` and its style where its class has one; every
 junction, `j<i> [label="any of", shape=circle]`; every target outside the project
 (`alias/KIND`, `*/KIND`), `x<i> [label="…"]`, numbered as in Mermaid; the unruled nodes inside

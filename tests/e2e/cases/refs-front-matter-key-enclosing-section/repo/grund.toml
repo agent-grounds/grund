@@ -1,0 +1,14 @@
+grund_config_version = 2
+project_name = "fm"
+
+[schema.kinds.METRIC]
+files = ["bundle/metrics/net-revenue.md"]
+
+[schema.kinds.METRIC.fields.front-matter]
+
+[schema.kinds.POL]
+files = ["bundle/policies/revenue-recognition.md"]
+
+[schema.kinds.page]
+citable = false
+files = ["README.md"]

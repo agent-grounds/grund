@@ -1,0 +1,13 @@
+digraph schema {
+  // madr · grund.toml · v2
+  // must = check error · warn = check warning · should = suggestion (check --suggestions)
+  // may = allowed · must not / warn not / should not = forbidden at that strength
+  // any of = one obligation, met by citing any one of its arrows
+  rankdir=LR;
+  node [shape=box];
+  subgraph cluster_unruled {
+    label="no direction rule names these";
+    n0 [label="ADR\nkind\ndocs/adr/0004-cache-availability.md\nfield front-matter: must · closed must\nkey status: must · one of proposed, accepted, rejected, deprecated\nkey date: must\nkey decision-makers: may\nfield context: must\nfield decision: must\nclosed must"];
+    n1 [label="code\ncomplement\nevery scanned file no other row claims"];
+  }
+}

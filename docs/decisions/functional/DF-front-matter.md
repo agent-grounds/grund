@@ -62,6 +62,8 @@ the author can always write it by hand; front matter is not added to
 - **Parsing the YAML or TOML.** Reading the values, holding them to the kind, and making the
   block a field of its declaration are a larger question, kept in
   [#1042](https://github.com/agent-grounds/grund/issues/1042). The extent needs none of it.
+  That question was decided later, for YAML and on a kind that asks for it, in
+  [§DF-front-matter-field](DF-front-matter-field.md#df-front-matter-field-a-kinds-front-matter-field-holds-its-files-yaml-front-matter-with-the-blocks-top-level-keys-as-its-sections).
 - **Front matter only for YAML.** `+++` is Hugo's and Zola's, and its `#` comments raise the
   same false declaration.
 - **Treating front matter as a fence.** Its citations would go dead, and the relationship

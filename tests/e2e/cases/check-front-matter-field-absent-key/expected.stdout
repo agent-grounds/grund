@@ -1,0 +1,1 @@
+docs/adr/cache.md:1: error: ADR-cache.front-matter has no date key; kind ADR declares it; add the key to the front matter

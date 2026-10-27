@@ -1,0 +1,3 @@
+docs/adr/0004-cache-availability.md:2: error: ADR-0004-cache-availability.front-matter.status is "acepted"; kind ADR admits proposed, accepted, rejected, deprecated; change the value to one of them
+docs/adr/0004-cache-availability.md:5: error: ADR-0004-cache-availability.front-matter.reviewer is not a key of kind ADR's front matter, which is closed; its keys: status, date, decision-makers; rename it to one of them, remove it, or add it to the field's keys
+docs/adr/0004-cache-availability.md:8: warning: declared but never cited: ADR-0004-cache-availability; cite it
