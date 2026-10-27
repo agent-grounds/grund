@@ -15,13 +15,13 @@ use crate::model::{Armed, Catalog, CheckReport, Code, Declaration, Diagnostic, S
 
 /// The channel a strength names (§FS-config-v2.rules.strengths); `None` is unchecked.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
-enum Channel {
+pub(super) enum Channel {
     Error,
     Warning,
     Suggestion,
 }
 
-fn channel(strength: Strength) -> Option<Channel> {
+pub(super) fn channel(strength: Strength) -> Option<Channel> {
     match strength {
         Strength::Must => Some(Channel::Error),
         Strength::Warn => Some(Channel::Warning),
@@ -38,7 +38,7 @@ fn shape_channel(field: &Field) -> Channel {
 }
 
 /// One finding about one declaration's shape, with the field it is about.
-struct FieldFinding<'a> {
+pub(super) struct FieldFinding<'a> {
     field: Option<&'a Field>,
     channel: Channel,
     diagnostic: Diagnostic,
@@ -81,6 +81,19 @@ fn arm_fields(schema: &Schema, armed: &mut Armed) {
             if field.title.is_some() {
                 armed.arm(Switch::FieldTitle);
             }
+            // §FS-fields.front-matter.findings: its keys turn on the codes a field does.
+            if let Some(shape) = field.front_matter() {
+                armed.arm(Switch::FrontMatterField);
+                if shape.keys.iter().any(|key| key.presence != Strength::May) {
+                    armed.arm(Switch::Field);
+                }
+                if shape.keys.iter().any(|key| key.one_of.is_some()) {
+                    armed.arm(Switch::FieldOneOf);
+                }
+                if shape.closed != Strength::May {
+                    armed.arm(Switch::ClosedKind);
+                }
+            }
         }
         if kind.closed != Strength::May {
             armed.arm(Switch::ClosedKind);
@@ -122,12 +135,13 @@ fn for_each_finding<'a>(
 
 /// §FS-fields.terms: a declaration's direct sections, `(name, line, display name)`
 /// in the order they are written. The lead is not a section; a section written
-/// twice counts once, at its first heading (§FS-fields.identity.name).
+/// twice counts once, at its first heading (§FS-fields.identity.name); the front
+/// matter is no chapter (§FS-fields.front-matter.findings).
 fn direct_sections(declaration: &Declaration) -> Vec<(&str, usize, Cow<'_, str>)> {
     let mut direct: Vec<(&str, usize, Cow<'_, str>)> = declaration
         .sections
         .iter()
-        .filter(|(path, _)| !path.contains('.'))
+        .filter(|(path, info)| !path.contains('.') && info.front_matter.is_none())
         .map(|(path, info)| {
             let display = section_display_name(&info.title, path, info.relative);
             (path.as_str(), info.line, display)
@@ -138,11 +152,11 @@ fn direct_sections(declaration: &Declaration) -> Vec<(&str, usize, Cow<'_, str>)
 }
 
 /// One declaration and the facts every field check reads of it.
-struct Shape<'a> {
-    kind: &'a str,
-    id: String,
-    separator: &'a str,
-    declaration: &'a Declaration,
+pub(super) struct Shape<'a> {
+    pub(super) kind: &'a str,
+    pub(super) id: String,
+    pub(super) separator: &'a str,
+    pub(super) declaration: &'a Declaration,
     direct: Vec<(&'a str, usize, Cow<'a, str>)>,
 }
 
@@ -150,6 +164,11 @@ impl<'a> Shape<'a> {
     fn findings(&self, kind: &'a Kind) -> Vec<FieldFinding<'a>> {
         let mut out = Vec::new();
         for field in &kind.fields {
+            // §FS-fields.front-matter: the block, judged from what the scan read of it.
+            if let Some(shape) = field.front_matter() {
+                self.front_matter(field, shape, &mut out);
+                continue;
+            }
             match self.position(&field.name) {
                 None => self.missing(field, &mut out),
                 Some(at) => self.content(field, at, &mut out),
@@ -166,7 +185,7 @@ impl<'a> Shape<'a> {
             .position(|(section, _, _)| *section == name)
     }
 
-    fn finding(
+    pub(super) fn finding(
         &self,
         field: Option<&'a Field>,
         channel: Channel,
@@ -199,7 +218,7 @@ impl<'a> Shape<'a> {
             self.id,
             field.name,
             self.kind,
-            remedies::missing_field(&field.name)
+            remedies::missing_field_chapter(&field.name)
         );
         let line = self.declaration.line;
         out.push(self.finding(Some(field), channel, Code::MISSING_FIELD, line, message));
@@ -230,7 +249,7 @@ impl<'a> Shape<'a> {
                 "{section} is \"{display}\"; kind {} admits {}; {}",
                 self.kind,
                 values.join(", "),
-                remedies::invalid_field_value()
+                remedies::invalid_field_value_heading()
             );
             out.push(self.finding(
                 Some(field),
@@ -326,7 +345,7 @@ impl<'a> Shape<'a> {
                 } else {
                     names.join(", ")
                 },
-                remedies::undeclared_chapter()
+                remedies::undeclared_chapter_chapter()
             );
             out.push(self.finding(None, channel, Code::UNDECLARED_CHAPTER, *line, message));
         }

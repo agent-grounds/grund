@@ -42,6 +42,8 @@ pub enum Switch {
     FieldTitle,
     /// `closed` on a v2 kind.
     ClosedKind,
+    /// A v2 kind's front-matter field (§FS-fields.front-matter).
+    FrontMatterField,
     /// Named sections.
     NamedSections,
     /// A heading-depth mode that checks.

@@ -48,6 +48,7 @@ mod conflict_marker;
 mod conform;
 mod direction_findings;
 mod fields;
+mod front_matter_fields;
 mod glob_citations;
 mod grounding;
 mod homes;
