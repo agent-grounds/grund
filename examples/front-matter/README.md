@@ -65,8 +65,9 @@ the citation the same way.
 
 ## Step 3: hold the front matter to a shape
 
-A kind that declares the `front-matter` field reads its first declaration's YAML block, and
-the block's top-level keys become the field's sections ([§FS-fields.front-matter](../../docs/functional-spec/FS-fields.md#front-matter-front-matter-is-a-field)). The third
+A kind that declares the `front-matter` field reads its first declaration's block, YAML
+between `---` lines or TOML between `+++` lines, and the block's top-level keys become the
+field's sections ([§FS-fields.front-matter](../../docs/functional-spec/FS-fields.md#front-matter-front-matter-is-a-field)). The third
 run's `grund.toml` declares it on `METRIC`, closed, with three keys, and holds `type` to one
 value:
 
@@ -99,6 +100,22 @@ sources:
 ---
 ```
 
+A third metric, [`METRIC-refunds`](3-fields/repo/bundle/metrics/refunds.md), writes its block
+in TOML, which the field reads the same way ([§FS-fields.front-matter.reading](../../docs/functional-spec/FS-fields.md#front-matterreading-reading-the-block)). Its `[[sources]]` table is
+the `sources` key, and it too carries a key the field does not declare, `unit`:
+
+```markdown
++++
+type = "Metric"
+title = "Refunds, monthly"
+unit = "EUR"
+
+[[sources]]
+id = "rev-policy"
+resource = "§POL-revenue-recognition"
++++
+```
+
 ```bash
 grund check examples/front-matter/3-fields/repo
 ```
@@ -106,11 +123,12 @@ grund check examples/front-matter/3-fields/repo
 ```text
 bundle/metrics/gross-bookings.md:2: error: METRIC-gross-bookings.front-matter.type is "Measure"; kind METRIC admits Metric; change the value to one of them
 bundle/metrics/gross-bookings.md:4: error: METRIC-gross-bookings.front-matter.owner is not a key of kind METRIC's front matter, which is closed; its keys: type, title, sources; rename it to one of them, remove it, or add it to the field's keys
+bundle/metrics/refunds.md:4: error: METRIC-refunds.front-matter.unit is not a key of kind METRIC's front matter, which is closed; its keys: type, title, sources; rename it to one of them, remove it, or add it to the field's keys
 ```
 
-Each finding is at its key's line. The net-revenue metric passes: its `type` is `Metric`,
-and the YAML comment between its keys is no key. A metric with no front matter at all would
-be reported too, because the field's `presence` is `must`.
+Each finding is at its key's line, in either language. The net-revenue metric passes: its
+`type` is `Metric`, and the YAML comment between its keys is no key. A metric with no front
+matter at all would be reported too, because the field's `presence` is `must`.
 
 ## Step 4: a rule over one key
 
@@ -140,11 +158,9 @@ inside the `sources` key, so a policy cited in the body alone would fail it.
   the block stays as typed.
 - **Values read only where a kind asks.** A kind that declares no `front-matter` field parses
   no YAML or TOML: a citation is found in the block as it is anywhere else, and a value
-  that is not a citation is just text. A kind that declares it parses the YAML, and a
-  key's value is the text it decodes to, never a typed value, so `one_of` compares
-  `2026-02-03` and `no` as written. A TOML block is not read as a field yet; it is
-  reported as `unreadable-front-matter` until
-  [#1057](https://github.com/agent-grounds/grund/issues/1057) reads it.
+  that is not a citation is just text. A kind that declares it parses the YAML or the TOML,
+  and a key's value is the text it decodes to, never a typed value, so `one_of` compares
+  `2026-02-03` and `no` as written, and a TOML `1_000` is never `1000`.
 - **The extent is exact.** Line 1 must be exactly `---` or `+++`, closed by the same line or
   by `...` for `---`. A block that never closes is not front matter, and the file reads as
   it would without it.
