@@ -136,7 +136,9 @@ impl<'a> FactIndex<'a> {
     /// meet, or `contains(d, f), chapter(f, FIELD, VALUE)` holds, over the
     /// direct chapter rows the field check reads too (§FS-fields.content.one-of).
     /// A front-matter unit has no display name, so it holds no value
-    /// (§FS-fields.front-matter.surfaces).
+    /// (§FS-fields.front-matter.surfaces). Directness is decided here and in
+    /// `grammar::direct_section_value`, so a change to what counts as a field
+    /// lands in both (§AR-rules.2).
     pub(super) fn selected(
         &self,
         declaration: &NodeKey,

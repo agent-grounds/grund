@@ -114,8 +114,9 @@ Presence rules compare the other field ([§FS-rules.3.1](FS-rules.md#31-chapter-
 path's last component ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)).
 
 A token exactly equal to a configured citable kind name is the quantified kind
-selector, and so is such a token followed by a whose clause
-([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)); any longer token must parse as a full ID under that kind's effective
+selector. After `Each ` or `of each `, and only there, such a token may be
+followed by a whose clause ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)); the selector shorthand takes
+none, so `SWR whose verification is Test` is a longer token. Any longer token must parse as a full ID under that kind's effective
 grammar. Named components require `[id] named_sections = true` and obey the
 configured named-section grammar. An exact literal subject must resolve to one
 unit; zero matches or ambiguity produces `invalid-rule` ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)). A quantified

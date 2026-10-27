@@ -536,12 +536,24 @@ grund 0.22.0`. It holds on `check --rule`, on a configured rule declaration's
 the legacy reason on the next line still follows it for the whole window: on
 `list --selector` that is `known kinds:` and the configured kinds, and on
 `check --rule` nothing, save after an unknown kind, where `known kinds:` followed
-and still follows. In the repository of
+and still follows.
+
+The window covers every refusal of a sentence whose subject carried a whose
+clause from the subject on, not only the clause's own. A sentence whose clause
+is now accepted but which a later production refuses, for its quantifier, a
+prohibition, an object kind or a chapter subject that would have chapters, was
+refused before as the same unknown kind, so it prints the same prefix, ` — `,
+the later production's reason with any append and accepted form it carries, and
+the suffix, which ends the whole message. A refusal raised before the subject is
+read, such as a missing terminal period, printed its own reason before as well,
+and keeps it without the window. In the repository of
 [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed):
 
 ```text
 $ grund check --rule 'Each SWR whose verfication is Test must be cited by at least one TC.'
 error: unknown kind "SWR whose verfication is Test" — "verfication" is not a field of kind SWR; its scalar fields: verification; this wording changes in grund 0.22.0
+$ grund check --rule 'Each SWR whose verification is Test must cite every TC.'
+error: unknown kind "SWR whose verification is Test" — quantifier "every" is not accepted; this wording changes in grund 0.22.0
 $ grund list --selector 'Each SWR whose verification is Tset'
 error: unknown kind "SWR whose verification is Tset" — "Tset" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration; this wording changes in grund 0.22.0
 known kinds: SWR, TC, AN
@@ -552,7 +564,8 @@ refusal prints the final reason of [§FS-rule-refusals.sentences.whose](FS-rule-
 alone. The issue that closes the window is opened when the change that opens it
 merges, and is named here then. Three refusals never take the window, because
 they only append or do not move: an exact ID followed by a clause, an object
-kind followed by one, and `KIND.NAME` followed by one. The exit code `2`, the
+kind followed by one under a subject that carries none, and `KIND.NAME`
+followed by one. The exit code `2`, the
 `invalid-rule` code and its severity, and what is refused do not move; only the
 reason's text does. Exact-line consumers migrate during the window to the
 reason after the ` — `.

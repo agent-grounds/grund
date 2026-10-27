@@ -3,7 +3,10 @@
 //! `list --size` share, so a whose clause selects in a listing exactly the
 //! declarations the field check reads as holding its value (§FS-rules.5.2,
 //! §AR-system.principle). The rule engine reads the same display name off the
-//! `chapter` fact, which `section_display_name` fills too (§FS-rules.5.1.1).
+//! `chapter` fact, which `section_display_name` fills too (§FS-rules.5.1.1), but
+//! decides directness itself in `rules::engine::index`'s `selected`: it is the
+//! second consumer a change to what counts as a field, such as keeping
+//! front-matter units out, must reach (§AR-rules.2).
 
 use std::borrow::Cow;
 

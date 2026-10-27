@@ -503,7 +503,12 @@ because the split looks for a lowercase ` must `, and a value with spaces, a
 value holding ` and ` or ` or `, and the `.` that ends the sentence after a
 value all leave the value whole. The last row of the table and the two
 appended rows print the same bytes before, through and after the window; every
-other reason in the table is the one [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) moves to.
+other reason in the table is the one [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) moves to. The window is not the
+table's alone: a sentence whose clause is accepted and which a later production
+of [§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails) refuses takes it too, so `Each SWR whose
+verification is Test must cite at least one FOO.` prints `unknown kind "SWR whose
+verification is Test" — unknown kind "FOO"; this wording changes in grund 0.22.0`
+on `check --rule`, followed by `known kinds:` as an unknown object kind is.
 
 ### sentences.rewrite: An accepted form is the typed sentence with the failed part replaced
 

@@ -10,6 +10,7 @@ use super::subjects::{
     EACH_IS_CASE_SENSITIVE, Spelling, SubjectFault, SubjectRefusal, lower_case_each, parse_subject,
     refused,
 };
+use super::whose::legacy_kind;
 use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
     RuleVocabulary,
@@ -59,6 +60,9 @@ pub(super) struct Reading<'t> {
     subject: Option<RuleSubject>,
     predicate: Option<(RuleRelation, RuleTargets, Cardinality)>,
     unverifiable: Option<String>,
+    /// What followed `Each ` or `of each ` in a subject read with a whose
+    /// clause: every later refusal is windowed after it (§FS-errors.3.10).
+    window: Option<&'t str>,
 }
 
 /// Read a sentence, or refuse it with what its refusing production offers in
@@ -85,9 +89,14 @@ pub(super) fn read(
         subject: None,
         predicate: None,
         unverifiable: None,
+        window: None,
     };
     for (_, stage) in STAGES {
-        stage(&mut reading)?;
+        // §FS-errors.3.10: a sentence whose subject carried a whose clause was an unknown kind.
+        stage(&mut reading).map_err(|refusal| match reading.window {
+            Some(legacy) => refusal.windowed(legacy),
+            None => refusal,
+        })?;
     }
     let (Some((_, level, polarity, _)), Some(subject), Some((relation, targets, cardinality))) =
         (reading.split, reading.subject, reading.predicate)
@@ -200,6 +209,9 @@ fn rest_of_subject(reading: &mut Reading<'_>) -> Result<(), Refusal> {
         let refusal = refusal.cut_at(split);
         subject_refusal(refusal, subject, reading.title, reading.vocabulary)
     })?;
+    if parsed.whose().is_some() {
+        reading.window = legacy_kind(subject);
+    }
     reading.subject = Some(parsed);
     Ok(())
 }

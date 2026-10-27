@@ -91,7 +91,12 @@ rules with the same filter fold and a filtered and an unfiltered rule do not.
 The parser reads each kind's scalar fields and their values from its config
 vocabulary; the matcher that `list` and `list --size` share with the rules,
 `RuleSubject::selects`, is handed a declaration's field display name as a
-string its caller read, never a scanner record. A subject or target never contains a path, file, folder,
+string its caller read, never a scanner record. Which section is a declaration's
+field is decided in two places: `grammar::direct_section_value`, which the field
+check, `list` and `list --size` read through, and the engine's `selected`, which
+reads the direct `chapter` facts. Both take the display name from
+`section_display_name`, so they agree; a change to what counts as a field, such
+as keeping front-matter units out, lands in both. A subject or target never contains a path, file, folder,
 wildcard, symbol, definition, or derived term in phase 1
 ([§FS-rules.12](../functional-spec/FS-rules.md#12-deliberate-phase-1-absences)).
 

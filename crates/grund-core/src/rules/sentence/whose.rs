@@ -277,6 +277,18 @@ pub(super) fn with_clause(
     refusal
 }
 
+/// What followed `Each ` or `of each ` in a quantified subject: the text a
+/// sentence whose subject carried a whose clause was refused for as an unknown
+/// kind before clauses existed, which every refusal of it is windowed after
+/// (§FS-errors.3.10).
+pub(super) fn legacy_kind(subject: &str) -> Option<&str> {
+    subject.strip_prefix("Each ").or_else(|| {
+        let rest = subject.strip_prefix("The ")?;
+        rest.split_once(" chapter of each ")
+            .map(|(_, after_each)| after_each)
+    })
+}
+
 /// Whether `text` is an exact ID followed by a whose clause
 /// (§FS-rule-refusals.sentences.whose).
 pub(super) fn exact_with_clause(text: &str, vocab: &RuleVocabulary) -> bool {

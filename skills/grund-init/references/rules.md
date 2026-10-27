@@ -238,9 +238,11 @@ retest", "fix must wait"]`, and whose `TC` declares no field, the reasons are:
 Only a value joined by ` or ` is offered a form, one sentence per value; a
 selector is offered none. Every rule row reads the same with
 `The evidence chapter of each SWR` for `Each SWR`, and `list --selector` gives
-the same reasons for the same subjects. Until grund 0.22.0, a refused subject
-that carries a clause prints the reason it printed before clauses existed as a
-prefix, then the reason above and the release it changes in. `list
+the same reasons for the same subjects. Until grund 0.22.0, a refused sentence
+whose subject carries a clause prints the reason it printed before clauses
+existed as a prefix, then its own reason and the release it changes in. That
+holds for the rows above and for a sentence whose clause is accepted but whose
+quantifier, object kind or predicate is refused. `list
 --selector` follows every refusal with `known kinds:`
 ([the window](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-errors.md#310-the-whose-clause-wording-migration)):
 
