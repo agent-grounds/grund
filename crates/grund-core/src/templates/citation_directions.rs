@@ -424,7 +424,7 @@ fn citation_rule_targets(disjunctions: &[CitationDisjunction]) -> String {
 }
 
 /// Render a prohibition's rule array as a target phrase (§FS-init.2.3.5.4,
-/// §DF-directions-render.7): each target is banned on its own, so every entry's
+/// §DF-prohibition-targets-join-with-or): each target is banned on its own, so every entry's
 /// alternatives join one "or" list, unparenthesised — `must-not = ["FS", "AR"]`
 /// is `FS or AR`, as `["FS|AR"]` is, where "and" read as banning only the pair.
 fn citation_prohibition_targets(disjunctions: &[CitationDisjunction]) -> String {
