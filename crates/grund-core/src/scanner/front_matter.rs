@@ -117,13 +117,14 @@ pub(super) fn read_block(
     let opener = lines.first().map_or("", |line| bare(line));
     let Some(last) = front_matter else {
         // §FS-fields.front-matter.reading: a mark before a delimiter hides a block.
-        let marked = opener
-            .strip_prefix('\u{feff}')
-            .is_some_and(|rest| rest == "---" || rest == "+++");
-        let absence = if marked {
-            FrontMatterAbsence::ByteOrderMark
-        } else {
-            FrontMatterAbsence::NoBlock
+        let marked = opener.strip_prefix('\u{feff}').and_then(|rest| {
+            ["---", "+++"]
+                .into_iter()
+                .find(|delimiter| *delimiter == rest)
+        });
+        let absence = match marked {
+            Some(delimiter) => FrontMatterAbsence::ByteOrderMark(delimiter),
+            None => FrontMatterAbsence::NoBlock,
         };
         return (FrontMatterBlock::Absent(absence), Vec::new());
     };

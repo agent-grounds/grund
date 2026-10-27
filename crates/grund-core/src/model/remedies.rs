@@ -413,8 +413,8 @@ pub(crate) fn missing_field_doc_comment() -> String {
 }
 
 /// `missing-field`'s *Fix*, case `byte-order-mark` (§FS-fields.checks.missing-field).
-pub(crate) fn missing_field_byte_order_mark() -> String {
-    let slots: &[(&str, &dyn Display)] = &[];
+pub(crate) fn missing_field_byte_order_mark(delimiter: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("delimiter", &delimiter)];
     fill(Code::MISSING_FIELD, 2, Some("byte-order-mark"), slots)
 }
 

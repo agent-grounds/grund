@@ -41,8 +41,9 @@ pub(crate) enum FrontMatterBlock {
 pub(crate) enum FrontMatterAbsence {
     /// Its file opens with no block.
     NoBlock,
-    /// Line 1 is a byte-order mark and then exactly `---` or `+++`.
-    ByteOrderMark,
+    /// Line 1 is a byte-order mark and then exactly `---` or `+++`, the
+    /// delimiter the remedy names.
+    ByteOrderMark(&'static str),
     /// A later declaration of its Markdown file.
     NotFirst,
     /// A doc-comment declaration.
