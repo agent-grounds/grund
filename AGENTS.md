@@ -72,7 +72,7 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 - Each file in **examples/** must cite FS; never cite AR.
 - Each file in **.github/workflows/** should cite FS or AR.
 - Each file in **scripts/** should cite FS or AR.
-- The file **README.md** must not cite FS and AR.
+- The file **README.md** must not cite FS or AR.
 - Each source file outside the Project map (**code**: The engine, CLI and bindings, and every scanned file no other row claims) that cites anything should cite FS or AR.
 Anything not listed above is allowed.
 
