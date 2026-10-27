@@ -9,6 +9,9 @@ use super::records::Id;
 /// arbitrary-size decimal exponent strings; no binary float or exponent
 /// expansion is involved.
 
+/// Where a declaration's bytes come from: scanned text, or a member of a value
+/// source (§FS-values.terms). `Json` names the structured reading of either
+/// format, and `format` says which (§FS-distribution.3.2.2.3).
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum DeclarationSource {
@@ -17,7 +20,68 @@ pub enum DeclarationSource {
         member_slice: String,
         key_column: usize,
         key_text: String,
+        format: ValueFormat,
     },
+}
+
+/// A value source's format, which picks its reader (§FS-values.terms,
+/// §FS-values.2.2): `.json` and a version-2 `data` mapping are JSON, `.yaml` and
+/// `.yml` are YAML.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+#[non_exhaustive]
+pub enum ValueFormat {
+    Json,
+    Yaml,
+}
+
+impl ValueFormat {
+    /// The format's name in a finding's reason (§FS-values.2.2.3).
+    pub(crate) fn name(self) -> &'static str {
+        match self {
+            Self::Json => "JSON",
+            Self::Yaml => "YAML",
+        }
+    }
+
+    /// The name the bindings' snapshot carries (§FS-distribution.3.2.2.3).
+    pub(crate) fn key(self) -> &'static str {
+        match self {
+            Self::Json => "json",
+            Self::Yaml => "yaml",
+        }
+    }
+
+    /// The format's words for a source's root and a member's value
+    /// (§FS-values.2.2.1).
+    pub(crate) fn collections(self) -> (&'static str, &'static str) {
+        match self {
+            Self::Json => ("object", "array"),
+            Self::Yaml => ("mapping", "sequence"),
+        }
+    }
+}
+
+/// A finding at a YAML value source the scan holds back as data, for the checker
+/// to report as a `yaml-value-source-deferred` warning until grund 0.22.0
+/// (§FS-values.2.2.4). Each keeps the source from being enrolled.
+#[derive(Debug, Clone)]
+pub(crate) enum YamlDeferred {
+    /// The file could not be read, or the parser rejected the stream: the
+    /// incomplete input of §FS-values.5.3.
+    Unread {
+        file: PathBuf,
+        line: usize,
+        column: Option<usize>,
+        message: String,
+    },
+    /// An ID the source declares is also declared elsewhere: at `sites[0]`, the
+    /// source's own first one, naming every other (§FS-values.2.3).
+    Duplicate {
+        id: Id,
+        sites: Vec<(PathBuf, usize)>,
+    },
+    /// The source is in the home of a kind that sets `fetch`, and is not read.
+    Fetched { file: PathBuf, kind: String },
 }
 
 /// One authoritative component shared by Markdown and JSON value declarations

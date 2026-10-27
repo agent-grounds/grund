@@ -3216,5 +3216,76 @@
    },
    "note": null
   }
+ },
+ {
+  "code": "yaml-value-source-deferred",
+  "meaning": "A finding that is an error at a YAML value source, or a YAML value source a fetched kind's home skips, is a warning for one release.",
+  "ramp": "grund 0.22.0, where each wrapped finding takes its own code and severity and a fetched kind's YAML source is read",
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "form = \"value\" is set on a [schema.kinds] table",
+      "by": "setting"
+     },
+     {
+      "text": "a YAML value source is in its home",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "wrapped",
+      "text": "{fix}, or move {file} out of the value home"
+     },
+     {
+      "label": "move",
+      "text": "move {file} out of the value home"
+     }
+    ]
+   },
+   "note": "The wrapped finding's own words stand before the release clause; a source the wrapped finding keeps from being enrolled declares nothing until it is fixed."
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "values = true is set on a [[kinds]] row",
+      "by": "setting"
+     },
+     {
+      "text": "a YAML value source is in its home",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "wrapped",
+      "text": "{fix}, or move {file} out of the value home"
+     },
+     {
+      "label": "move",
+      "text": "move {file} out of the value home"
+     }
+    ]
+   },
+   "note": "The wrapped finding's own words stand before the release clause; a source the wrapped finding keeps from being enrolled declares nothing until it is fixed."
+  }
  }
 ]

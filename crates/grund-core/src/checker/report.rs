@@ -1,6 +1,7 @@
 use super::conform::conform;
 use super::judge::{CheckWorkspace, judge};
 use super::support::{diagnostic_cmp, sort_diagnostics};
+use super::yaml_window::defer_yaml_findings;
 use crate::config::{Frame, Rules, Schema};
 use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 
@@ -528,6 +529,8 @@ pub(crate) fn check_project(
     let conformed = conform(schema, catalog, frame);
     let judged = judge(rules, schema, catalog, expected, frame, workspace);
     let mut report = merge(conformed, judged);
+    // §FS-values.2.2.4: last, so every error located at a YAML value source is seen.
+    defer_yaml_findings(catalog, schema, frame, &mut report);
     // §FS-check.1.4.1: the advice is spelled in the versions the run's projects read.
     report.armed.read(frame.version);
     report

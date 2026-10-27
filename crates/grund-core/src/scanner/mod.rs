@@ -90,12 +90,16 @@ mod value_binding_split;
 mod value_context;
 mod value_json;
 mod value_json_enrollment;
+mod value_yaml;
+mod value_yaml_subset;
 mod values;
 mod walk;
 mod walk_boundaries;
 mod walk_errors;
 mod walk_order;
 mod walk_reporting;
+mod yaml;
+mod yaml_text;
 
 pub use scan_error::ApiScanError;
 

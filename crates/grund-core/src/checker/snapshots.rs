@@ -6,19 +6,12 @@
 
 use std::collections::BTreeMap;
 
-use crate::config::{KindResolution, Origin, Row, Schema};
+use crate::config::{KindResolution, Schema};
 use crate::model::{Armed, Switch};
 use crate::resolver::WorkspaceCheckTarget;
 
 /// A kind's `resolve` policy, asked by the citation's namespace (§FS-check.4.12).
 pub(super) type Resolve<'a> = dyn Fn(Option<&str>, &str) -> Option<KindResolution> + 'a;
-
-/// §FS-check.3.1.3: a kind that keeps fetched snapshots.
-pub(super) fn fetches(row: &Row) -> bool {
-    row.kind
-        .as_ref()
-        .is_some_and(|kind| matches!(kind.origin, Origin::External { .. }))
-}
 
 /// §FS-config.3.4.10.3: a fetched `kind`'s missing snapshot is the
 /// `missing-snapshot` warning where its resolution in the rules of the project
@@ -47,7 +40,7 @@ pub(super) fn arm_missing_snapshot(
         schema
             .rows
             .iter()
-            .any(|row| fetches(row) && snapshot_warns(resolve, namespace, &row.name))
+            .any(|row| row.fetches() && snapshot_warns(resolve, namespace, &row.name))
     }) {
         armed.arm(Switch::SnapshotWarning);
     }

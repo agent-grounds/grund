@@ -136,6 +136,15 @@ impl Schema {
 }
 
 impl Row {
+    /// Whether this row's kind keeps fetched snapshots (§FS-check.3.1.3): what
+    /// a missing snapshot and a value home's YAML source both ask
+    /// (§FS-values.2.2.4).
+    pub(crate) fn fetches(&self) -> bool {
+        self.kind
+            .as_ref()
+            .is_some_and(|kind| matches!(kind.origin, Origin::External { .. }))
+    }
+
     /// Whether this row is the complement (§FS-config.3.9.2.1). A v2 `code` row
     /// carries the complement place first and its extent's places after it
     /// (§FS-config-v2.schema.places.complement).

@@ -147,6 +147,8 @@ impl Code {
     pub const UNUSED: Code = Code("unused");
     /// §FS-check.3.22
     pub const VALUE_MISMATCH: Code = Code("value-mismatch");
+    /// §FS-values.2.2.4
+    pub const YAML_VALUE_SOURCE_DEFERRED: Code = Code("yaml-value-source-deferred");
 
     /// Every selectable code, sorted: the selector vocabulary of §FS-check.1.
     pub const ALL: &'static [Code] = &[
@@ -217,6 +219,7 @@ impl Code {
         Code::UNRECORDED_SECTION_CITATION,
         Code::UNUSED,
         Code::VALUE_MISMATCH,
+        Code::YAML_VALUE_SOURCE_DEFERRED,
     ];
 
     pub const fn as_str(self) -> &'static str {

@@ -77,7 +77,7 @@ pub use records::{
 pub use report::{Finding, FindingSite, Report};
 pub use values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
-    ValueComponentKind, ValueRootOrigin,
+    ValueComponentKind, ValueFormat, ValueRootOrigin,
 };
 
 // What the other components read, each by this module's path (§AR-system.4):
@@ -109,7 +109,7 @@ pub(crate) use stub_resolution::{
 pub(crate) use text::{citation_direction_repair, format_list, json_escape, plural};
 pub(crate) use unread_roots::{Refused, RootOrigin, RootRow};
 pub(crate) use values::{
-    JSON_NUMBER_RE, authored_component, component_text_is_valid, first_unequal_component,
-    joined_value_components, positive_numeric_component, root_literal_parts,
-    value_binding_section_ends_in_coordinate, value_components_equal,
+    JSON_NUMBER_RE, YamlDeferred, authored_component, component_text_is_valid,
+    first_unequal_component, joined_value_components, positive_numeric_component,
+    root_literal_parts, value_binding_section_ends_in_coordinate, value_components_equal,
 };

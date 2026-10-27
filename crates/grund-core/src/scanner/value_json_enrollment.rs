@@ -1,5 +1,6 @@
-//! Enrollment helpers for JSON value members discovered by the value scanner
-//! (§FS-values.2.2.1, §AR-scanner.2.1.3, §AR-scanner.3).
+//! Enrollment helpers for the members of a value source, read by either reader
+//! (§FS-values.2.2.1, §AR-scanner.2.1.3, §AR-scanner.3): duplicates, ownership
+//! and component validity are written here once for both formats.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -9,7 +10,7 @@ use crate::config::Frame;
 use crate::grammar::parse_id_arg;
 use crate::model::{
     Catalog, Declaration, DeclarationSource, Id, InvalidValueSite, SectionInfo, ValueComponent,
-    ValueComponentKind, component_text_is_valid,
+    ValueComponentKind, ValueFormat, component_text_is_valid,
 };
 
 pub(super) fn enroll_json_member(
@@ -18,9 +19,19 @@ pub(super) fn enroll_json_member(
     owners: &[&str],
     text: &str,
     member: JsonMember,
+    format: ValueFormat,
     findings: &mut Catalog,
 ) {
+    let (name, (_, array)) = (format.name(), format.collections());
     let parsed = parse_id_arg(&member.key.decoded, frame.grammar());
+    if let JsonNode::Refused(span, reason) = &member.value {
+        // §FS-values.2.2.3: refused at its own site, named by the key it is under.
+        let id = parsed
+            .ok()
+            .and_then(|(id, section)| section.is_none().then_some(id));
+        push_json_invalid(findings, id, path, text, *span, reason, format);
+        return;
+    }
     let Ok((id, None)) = parsed else {
         push_json_invalid(
             findings,
@@ -28,7 +39,8 @@ pub(super) fn enroll_json_member(
             path,
             text,
             member.key.span,
-            "JSON value key must be a full unqualified local ID",
+            &format!("{name} value key must be a full unqualified local ID"),
+            format,
         );
         return;
     };
@@ -44,7 +56,8 @@ pub(super) fn enroll_json_member(
             path,
             text,
             member.key.span,
-            &format!("JSON value key must belong to owning kind {expected}"),
+            &format!("{name} value key must belong to owning kind {expected}"),
+            format,
         );
         return;
     }
@@ -71,6 +84,7 @@ pub(super) fn enroll_json_member(
             member_slice,
             key_column,
             key_text: text[member.key.span.start..member.key.span.end].to_string(),
+            format,
         },
         value_valid: Some(true),
     };
@@ -82,7 +96,8 @@ pub(super) fn enroll_json_member(
             path,
             text,
             member.value.span(),
-            "JSON value member must be a nonempty array",
+            &format!("{name} value member must be a nonempty {array}"),
+            format,
         );
         findings
             .declarations
@@ -99,9 +114,11 @@ pub(super) fn enroll_json_member(
             path,
             text,
             member.span,
-            "JSON value array must not be empty",
+            &format!("{name} value {array} must not be empty"),
+            format,
         );
     }
+    let mut refusal = None;
     for (index, element) in elements.into_iter().enumerate() {
         let span = element.span();
         let (line, column) = json_line_column(text, span.start);
@@ -121,17 +138,26 @@ pub(super) fn enroll_json_member(
                     column,
                 })
             }
+            JsonNode::Refused(_, reason) => {
+                refusal = Some(reason);
+                None
+            }
             _ => None,
         };
         if value.is_none() {
             declaration.value_valid = Some(false);
+            let generic = format!(
+                "{name} value component must be a number or a nonempty edge-unspaced string without backticks or control characters"
+            );
+            let reason = refusal.take().unwrap_or(generic);
             push_json_invalid(
                 findings,
                 Some(id.clone()),
                 path,
                 text,
                 span,
-                "JSON value component must be a number or a nonempty edge-unspaced string without backticks or control characters",
+                &reason,
+                format,
             );
         }
         declaration.sections.insert(
@@ -163,6 +189,7 @@ pub(super) fn push_json_invalid(
     text: &str,
     span: JsonSpan,
     message: &str,
+    format: ValueFormat,
 ) {
     let (line, column) = json_line_column(text, span.start);
     findings.invalid_value_declarations.push(InvalidValueSite {
@@ -175,6 +202,7 @@ pub(super) fn push_json_invalid(
             member_slice: text[span.start..span.end].to_string(),
             key_column: column,
             key_text: text[span.start..span.end].to_string(),
+            format,
         },
         binding_namespace: None,
         binding_section: None,

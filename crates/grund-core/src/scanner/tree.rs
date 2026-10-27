@@ -9,7 +9,7 @@ use super::merge::merge_findings;
 use super::read_predicate::unread;
 use super::section_locks::read_section_locks;
 use super::stub_homes::resolve_stubs;
-use super::value_json::{scan_value_json_sources, value_json_sources};
+use super::value_json::{scan_value_sources, value_sources};
 use super::walk::{scan_roots, walk_scannable_files_reporting};
 use crate::config::{Frame, Schema};
 use crate::grammar::resolve_shorthand_citations;
@@ -172,19 +172,20 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     };
     let (mut files, mut errors) = (walked.files, walked.errors);
     add_overlay_scan_files(schema, frame, scope, explicit_scope, &mut files)?;
-    // §FS-values.2.2: home JSON is a declaration input, never a general text
-    // scan input even when a repository adds `json` to `[scan].extensions`.
+    // §FS-values.2.2: a value source is a declaration input, never a general text
+    // scan input even when a repository adds `json` to `[scan].extensions`; a
+    // YAML file those extensions claim is no value source.
     if schema.value_rows().next().is_some() {
-        let home_json = value_json_sources(schema, frame)
+        let home_values = value_sources(schema, frame)
             .map(|sources| {
                 sources
                     .into_iter()
-                    .map(|(path, _)| path)
+                    .map(|(path, _, _)| path)
                     .collect::<Vec<_>>()
             })
             .unwrap_or_default();
         files.retain(|file| {
-            !home_json
+            !home_values
                 .iter()
                 .any(|source| paths_same_location(source, file))
         });
@@ -215,7 +216,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     if let Err(err) = scan_e2e_cases(schema, frame, scope, explicit_scope, &mut findings) {
         errors.push((frame.root().join("e2e/cases"), format!("{err:#}")));
     }
-    scan_value_json_sources(schema, frame, &mut findings, &mut errors);
+    scan_value_sources(schema, frame, &mut findings, &mut errors);
     read_section_locks(frame, &mut findings, &mut errors);
     // §FS-workspace.1.2: when the citing-grammar pass and the target-grammar pass both
     // fire on the same line they emit in source order *per pass*; one sort at the end

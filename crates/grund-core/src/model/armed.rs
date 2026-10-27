@@ -56,6 +56,9 @@ pub enum Switch {
     SnapshotWarning,
     /// A configured kind home.
     KindHome,
+    /// A whole-value kind, whose home may hold YAML value sources
+    /// (§FS-values.2.2.4).
+    ValueHome,
 }
 
 /// The switches one run armed, in a workspace the union of every project's,

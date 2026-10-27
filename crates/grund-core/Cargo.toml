@@ -29,6 +29,11 @@ serde = { version = "1", features = ["derive"] }
 # grund's one SHA-256 (§FS-section-lock.holds.fingerprint), the digest
 # §FS-remote-projects.bytes.digest names.
 sha2 = "0.10"
+# The YAML event parser behind a value source's YAML reader and the span tree
+# front matter will share (§DA-yaml-value-reader.2.1). MIT OR Apache-2.0, pure
+# Rust; without its `encoding` feature it adds `arraydeque` (MIT OR Apache-2.0),
+# `hashlink` (MIT OR Apache-2.0) and `foldhash` (Zlib).
+yaml-rust2 = { version = "0.13", default-features = false }
 
 [[example]]
 name = "grund-binding-oracle"
