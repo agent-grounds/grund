@@ -188,6 +188,22 @@ fn a_value_kind_arms_the_value_codes() {
     pinned(Switch::Values, "value-mismatch", off, on);
 }
 
+/// §FS-values.2.2.4: a whole-value kind arms the YAML window, whether or not its
+/// home holds a YAML source yet.
+#[test]
+fn a_value_kind_arms_the_yaml_window() {
+    pinned(
+        Switch::ValueHome,
+        "yaml-value-source-deferred",
+        armed(v2("armed_value_home_off", "", "")),
+        armed(v2(
+            "armed_value_home_on",
+            "",
+            "[schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\nindex = false\n",
+        )),
+    );
+}
+
 #[test]
 fn a_kind_home_arms_misplaced_declaration() {
     let root = test_root("armed_home_off");

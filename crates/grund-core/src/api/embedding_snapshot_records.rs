@@ -7,12 +7,16 @@ impl Data for DeclarationSource {
     fn data(&self) -> Value {
         match self {
             Self::Text => json!({"kind":"text"}),
+            // §FS-distribution.3.2.2.3: `kind` stays `json` for a member of either
+            // format, and `format` says which.
             Self::Json {
                 member_slice,
                 key_column,
                 key_text,
+                format,
             } => {
-                json!({"kind":"json","member_slice":member_slice,"key_column":key_column,"key_text":key_text})
+                json!({"kind":"json","member_slice":member_slice,"key_column":key_column,
+                    "key_text":key_text,"format":format.key()})
             }
         }
     }

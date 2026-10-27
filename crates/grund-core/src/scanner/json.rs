@@ -34,6 +34,9 @@ pub(super) enum JsonNode {
     InvalidScalar(JsonSpan),
     Bool(JsonSpan),
     Null(JsonSpan),
+    /// A construct the YAML value subset refuses, with its reason
+    /// (§FS-values.2.2.3); the JSON reader never builds one.
+    Refused(JsonSpan, String),
 }
 
 impl JsonNode {
@@ -44,7 +47,8 @@ impl JsonNode {
             | Self::Number(_, span)
             | Self::InvalidScalar(span)
             | Self::Bool(span)
-            | Self::Null(span) => *span,
+            | Self::Null(span)
+            | Self::Refused(span, _) => *span,
             Self::String(value) => value.span,
         }
     }
@@ -343,6 +347,17 @@ impl<'a> JsonReader<'a> {
         let (line, column) = json_line_column(self.text, self.pos);
         format!("{line}:{column}: {message}")
     }
+}
+
+/// Decode `raw`, one JSON string literal quotes included, with the JSON
+/// reader's own escapes (§FS-values.2.2.3).
+pub(super) fn decode_json_string(raw: &str) -> std::result::Result<String, String> {
+    let mut reader = JsonReader { text: raw, pos: 0 };
+    let value = reader.string()?;
+    if reader.pos != raw.len() {
+        return Err(reader.error("unexpected content after JSON string"));
+    }
+    Ok(value.decoded)
 }
 
 pub(super) fn json_line_column(text: &str, byte: usize) -> (usize, usize) {

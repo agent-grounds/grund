@@ -14,6 +14,7 @@ use super::stub_resolution::StubResolution;
 use super::unread_roots::RootRow;
 use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
+    YamlDeferred,
 };
 
 pub use super::id::Id;
@@ -331,6 +332,11 @@ pub struct Catalog {
     pub(crate) local_section_citation_candidates: Vec<LocalSectionCitationCandidate>,
     pub value_bindings: Vec<ValueBinding>,
     pub invalid_value_declarations: Vec<InvalidValueSite>,
+    /// Every YAML value source the value pass found, enrolled or not: where a
+    /// finding is located decides whether it is deferred (§FS-values.2.2.4).
+    pub(crate) yaml_value_sources: Vec<PathBuf>,
+    /// The YAML sources' findings the scan holds back (§FS-values.2.2.4).
+    pub(crate) yaml_deferred: Vec<YamlDeferred>,
     pub invalid_value_bindings: Vec<InvalidValueSite>,
     /// Every file the walk read successfully (§AR-scanner.1) — the universe the
     /// `[reference] require_grounding` check iterates over (§FS-check.3.6,

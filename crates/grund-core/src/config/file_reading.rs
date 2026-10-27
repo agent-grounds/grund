@@ -14,6 +14,7 @@ use super::compiled::Compiled;
 use super::project::Schema;
 use super::sources::{DeclarationMode, Language, LanguageClass};
 use crate::grammar::{DocCommentRule, LexicalSettings, MultiLineStrings, extension_rule};
+use crate::model::ValueFormat;
 
 /// How the text scan, the value homes, the formatter, the editor, the checker and
 /// `show` read one file (§FS-config-v2.schema.sources).
@@ -30,6 +31,9 @@ pub(crate) struct FileReading<'a> {
     declarations: Option<DeclarationMode>,
     /// The final extension, which keys a v1 file's recognizer and string forms.
     extension: Option<&'a str>,
+    /// The effective `[scan] extensions`, whose claim on a YAML file comes before
+    /// a value home's (§FS-values.2.2).
+    scanned_extensions: &'a [String],
     /// The marker, the hosts, the docstring reading and the grammar built over
     /// those hosts: a v2 file's are its language's, never another's
     /// (§FS-languages.prefixes).
@@ -52,6 +56,7 @@ impl<'a> FileReading<'a> {
                     language: Some(language),
                     declarations: Some(model.declarations),
                     extension,
+                    scanned_extensions: &schema.sources.extensions,
                     lexical,
                 }
             }
@@ -61,18 +66,30 @@ impl<'a> FileReading<'a> {
                 language: None,
                 declarations: None,
                 extension,
+                scanned_extensions: &schema.sources.extensions,
                 lexical,
             },
         }
     }
 
-    /// Whether a value home reads this file with the JSON value-file reader
-    /// (§FS-config-v2.schema.sources.values): a v2 file whose language is a `data`
-    /// one, and a v1 file, or one no admitted language claims, named `.json`.
-    pub(crate) fn values(&self) -> bool {
-        match self.language {
-            Some(language) => language.class == LanguageClass::Data,
-            None => self.extension == Some("json"),
+    /// The format a value home reads this file in, `None` where the file is no
+    /// value source (§FS-values.terms, §FS-config-v2.schema.sources.values): a v2
+    /// file whose language is a `data` one is JSON whatever its name; a v1 file,
+    /// or one no admitted language claims, is JSON by `.json` and YAML by `.yaml`
+    /// or `.yml`, unless the effective `[scan] extensions` claim it as scan input
+    /// (§FS-values.2.2).
+    pub(crate) fn value_format(&self) -> Option<ValueFormat> {
+        match (self.language, self.extension) {
+            (Some(language), _) => {
+                (language.class == LanguageClass::Data).then_some(ValueFormat::Json)
+            }
+            (None, Some("json")) => Some(ValueFormat::Json),
+            (None, Some(extension @ ("yaml" | "yml"))) => (!self
+                .scanned_extensions
+                .iter()
+                .any(|listed| listed == extension))
+            .then_some(ValueFormat::Yaml),
+            (None, _) => None,
         }
     }
 

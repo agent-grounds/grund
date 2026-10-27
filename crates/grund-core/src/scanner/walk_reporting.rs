@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use super::read_predicate::{Unread, extension_refusal, name_refusal};
 use super::tree::ScanError;
-use super::value_json::value_json_sources;
+use super::value_json::value_sources;
 use super::walk::{scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{symlink_loop_report, walk_error_report};
@@ -194,12 +194,13 @@ pub(crate) fn walk_scannable_files_with_sources(
                     };
                     let rows =
                         file_rows.get_or_insert_with(|| file_root_rows(schema, frame.root()));
-                    // §FS-scan.checks.unread-scan-root.silent: a value row's JSON home is
-                    // read by the value pass; when that pass cannot list them, record none.
+                    // §FS-scan.checks.unread-scan-root.silent: a value row's value-source
+                    // home is read by the value pass; when that pass cannot list them,
+                    // record none.
                     let value_homes = value_homes.get_or_insert_with(|| {
-                        value_json_sources(schema, frame)
+                        value_sources(schema, frame)
                             .ok()
-                            .map(|sources| sources.into_iter().map(|(path, _)| path).collect())
+                            .map(|sources| sources.into_iter().map(|(path, _, _)| path).collect())
                     });
                     if let Some(value_homes) = value_homes
                         && !value_homes

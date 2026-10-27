@@ -164,7 +164,7 @@ pub use model::{
     EmbeddedValueRoot, FileHeading, FileStructure, Finding, FindingSite, Id, InlineCitationSite,
     InvalidValueSite, NearMissHeading, RelativeHint, RelativeSectionParent, Report,
     SectionHeadingOutsideDeclaration, SectionInfo, ShowOutput, ShowSection, UnmarkedHeading,
-    ValueBinding, ValueComponent, ValueComponentKind, ValueRootOrigin,
+    ValueBinding, ValueComponent, ValueComponentKind, ValueFormat, ValueRootOrigin,
 };
 // The host packages' refusal record (§FS-distribution.3.3).
 #[doc(hidden)]

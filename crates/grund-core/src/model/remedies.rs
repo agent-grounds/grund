@@ -627,3 +627,15 @@ pub(crate) fn value_mismatch() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
     fill(Code::VALUE_MISMATCH, 2, None, slots)
 }
+
+/// `yaml-value-source-deferred`'s *Fix*, case `wrapped` (§FS-values.2.2.4).
+pub(crate) fn yaml_value_source_deferred_wrapped(fix: impl Display, file: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("fix", &fix), ("file", &file)];
+    fill(Code::YAML_VALUE_SOURCE_DEFERRED, 2, Some("wrapped"), slots)
+}
+
+/// `yaml-value-source-deferred`'s *Fix*, case `move` (§FS-values.2.2.4).
+pub(crate) fn yaml_value_source_deferred_move(file: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("file", &file)];
+    fill(Code::YAML_VALUE_SOURCE_DEFERRED, 2, Some("move"), slots)
+}

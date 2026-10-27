@@ -12,7 +12,7 @@
 
 use super::reference_scope::ScanScope;
 use super::shorthand::{ShorthandIndexes, report_shorthand_citation};
-use super::snapshots::{Resolve, fetches, snapshot_warns};
+use super::snapshots::{Resolve, snapshot_warns};
 use super::support::{
     citation_in_markdown_inline_code, close_enough_for_hint, dangling_message_spelled,
     edit_distance, missing_snapshot_message, qualify,
@@ -246,7 +246,7 @@ pub(super) fn check_citation_resolution(
                 .schema
                 .rows
                 .iter()
-                .find(|row| row.name == cite.id.kind && fetches(row));
+                .find(|row| row.name == cite.id.kind && row.fetches());
             // §FS-config-v2.schema.sources: Markdown is the citing file's language's.
             let markdown = frame.compiled.reading(schema, &cite.file).markdown;
             let in_inline_code = citation_in_markdown_inline_code(findings, frame, cite, markdown);

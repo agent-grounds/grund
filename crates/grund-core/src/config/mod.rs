@@ -117,7 +117,7 @@ pub use project::{
     Threshold,
 };
 pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolicy};
-pub use rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
+pub use rows::{Extent, Form, Kind, Nesting, Place, Row};
 pub(crate) use run::{Invocation, Selection, scope_is_config_root};
 #[allow(unused_imports)]
 pub use run::{Run, RunScope, RunWorkspace};

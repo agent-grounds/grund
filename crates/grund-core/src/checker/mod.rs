@@ -73,6 +73,7 @@ mod support;
 mod value_mismatch;
 mod value_roots;
 mod values;
+mod yaml_window;
 
 pub use armed::ArmedChecks;
 pub use selection::CheckFindingSelection;
