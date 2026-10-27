@@ -17,7 +17,7 @@ from test_public_surface_inventory import (
 
 
 # §FS-distribution.3.1.2: the structs and enums among the frozen rows.
-PROMISED_STRUCTS, PROMISED_ENUMS = 80, 20
+PROMISED_STRUCTS, PROMISED_ENUMS = 80, 21
 NON_EXHAUSTIVE = "#[non_exhaustive]"
 # §FS-distribution.3.1.2, §FS-distribution.3.1.3: one `compile_fail` probe per
 # shape an embedder loses, each naming the error rustc stops it at.
@@ -117,7 +117,7 @@ class PromisedTypesAreNonExhaustiveTests(unittest.TestCase):
         frozen = {n for n, d in inventory_dispositions().items() if d == FROZEN}
         cls.definitions = {n: sites for n, sites in type_definitions().items() if n in frozen}
 
-    def test_the_promised_types_are_the_80_structs_and_20_enums_the_frozen_rows_name(self):
+    def test_the_promised_types_are_the_80_structs_and_21_enums_the_frozen_rows_name(self):
         twice = {n for n, sites in self.definitions.items() if len(sites) != 1}
         self.assertEqual("", _sample(twice), "promised types defined more than once")
         kinds = [sites[0][1] for sites in self.definitions.values()]

@@ -116,6 +116,7 @@ NOT_YET_MIGRATED = (
     "unlisted-workspace-block",
     "unused",
     "value-mismatch",
+    "yaml-value-source-deferred",
 )
 
 
