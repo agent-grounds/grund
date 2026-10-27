@@ -294,7 +294,6 @@ fn a_collection_nested_129_deep_is_refused_at_its_line() {
 
 /// The author's reproducer: 10000 levels ran the tree out of stack (§REQ-never-crashes.1).
 #[test]
-#[ignore = "red until #1048 bounds the span tree's nesting; implement removes this"]
 fn ten_thousand_nested_collections_are_refused_not_a_stack_overflow() {
     let text = format!("CONST-deep:\n  {}x\n", "- ".repeat(10_000));
     let error = parse_yaml(&text)
