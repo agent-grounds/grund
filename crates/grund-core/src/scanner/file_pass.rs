@@ -130,7 +130,14 @@ pub(super) fn scan_file_text(
     };
     // §FS-declarations.stubs.shape: a stub is a link-titled heading in a kind's home only.
     let stub_home = is_md && in_some_home(path, schema, frame);
-    let mut markdown_blocks = MarkdownBlocks::default();
+    // §FS-check.1.1.5.2: a Markdown file's front matter, found once and kept on the
+    // record, where the owner lookup reads it (§FS-check.1.1.5.2.1).
+    let mut markdown_blocks = if is_md {
+        MarkdownBlocks::file(text)
+    } else {
+        MarkdownBlocks::default()
+    };
+    record.front_matter = markdown_blocks.front_matter();
     let mut comment_fences = CommentFences::default();
     let mut py_docstring = PythonDocstringScanState::default();
     let mut current: Option<Declaration> = None;
@@ -177,8 +184,9 @@ pub(super) fn scan_file_text(
         if block.in_fence() {
             continue;
         }
-        // §FS-check.1.1.5.1: a raw-text HTML block line is never a heading, so it
-        // declares nothing and opens no section, but its citations stay live below.
+        // §FS-check.1.1.5.1, §FS-check.1.1.5.2: a raw-text HTML block or front-matter
+        // line is never a heading, so it declares nothing and opens no section, but
+        // its citations stay live below.
         let heading_position = block.may_be_heading();
         let trimmed = line.trim_start();
         let scan = source_scan_line(line, is_py, docstring_python, &mut py_docstring);

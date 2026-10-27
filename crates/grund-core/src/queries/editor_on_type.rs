@@ -4,7 +4,8 @@ use std::path::Path;
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::{
     DocstringContent, DocstringCursor, FmtDirectives, LineLinks, MarkdownBlocks, MarkdownLine,
-    MarkdownLinks, MultiLineStrings, id_token_end_at, never_rewrite_context_in, string_literal_in,
+    MarkdownLinks, MultiLineStrings, front_matter_extent, id_token_end_at,
+    never_rewrite_context_in, string_literal_in,
 };
 use crate::scanner::DeclarationLines;
 use crate::sources::canonical_snapshot_path;
@@ -193,7 +194,8 @@ pub(super) fn line_is_rewritable(
     // §FS-config-v2.schema.sources: the file is read as `rewrite_file` reads it.
     let reading = config.reading(path);
     let is_md = reading.markdown;
-    let mut markdown_blocks = MarkdownBlocks::default();
+    // §FS-check.1.1.5.2: the whole document, so its front matter is known.
+    let mut markdown_blocks = MarkdownBlocks::file(text);
     // §FS-fmt.2.3.1.1: `rewrite_file` reads a docstring line's content when it asks
     // whether the line is a declaration heading, so this walk does too.
     // It asks no string question, so it reads no multi-line literal.
@@ -236,7 +238,9 @@ pub(super) fn line_is_rewritable(
         }
         if index == line_index {
             // §FS-check.1.1.5.1: a raw-text HTML block holds no declaration heading.
+            // §FS-check.1.1.5.2: front matter is never rewritten.
             return directives.rewriting()
+                && block.rewritable()
                 && (!block.may_be_heading()
                     || declarations
                         .declared(index, docstring.text_of(line), docstring.is_docstring())
@@ -322,6 +326,12 @@ fn trigger_marker_edit(
     }
     // §FS-fmt.2.3.1.1: the docstring walk runs only here, past the two tests that
     // reject every ordinary keystroke (§GOAL-fast-feedback).
+    // §FS-check.1.1.5.2: a trigger in front matter stays as typed, as `fmt` leaves it.
+    if config.reading(path).markdown
+        && front_matter_extent(text.lines()).is_some_and(|last| line_index < last)
+    {
+        return None;
+    }
     let docstring = docstring_content_at(config, path, text, line_index);
     let links = MarkdownLinks::new(text);
     if !can_replace_trigger_with_config(

@@ -19,6 +19,9 @@ pub(super) struct LineOwners {
     /// `(body_start, body_end, id, sections)`, each section as
     /// `(path, heading line, last line)` in line order.
     bodies: Vec<(usize, usize, Id, Vec<(String, usize, usize)>)>,
+    /// The last line of the file's front matter, `None` where it has none
+    /// (§FS-check.1.1.5.2).
+    front_matter: Option<usize>,
 }
 
 impl LineOwners {
@@ -45,14 +48,24 @@ impl LineOwners {
                 (decl.body_start, decl.body_end, decl.id.clone(), sections)
             })
             .collect();
-        Self { bodies }
+        Self {
+            bodies,
+            front_matter: record.front_matter,
+        }
     }
 
     /// The declaration whose body contains `line` — the nearest preceding one when
     /// bodies nest — and the innermost accepted section of it containing `line`,
     /// or `None` for a line no body contains (§AR-scanner.2.4.3,
-    /// §AR-scanner.2.4.4, §FS-cover.6.2).
+    /// §AR-scanner.2.4.4, §FS-cover.6.2). A line of the file's front matter
+    /// belongs to the file's first declaration, the one whose body starts
+    /// earliest, under no section, though no body range covers it
+    /// (§FS-check.1.1.5.2.1).
     pub(super) fn owner_at(&self, line: usize) -> Option<(&Id, Option<String>)> {
+        if self.front_matter.is_some_and(|last| line <= last) {
+            let (_, _, id, _) = self.bodies.iter().min_by_key(|(start, _, _, _)| *start)?;
+            return Some((id, None));
+        }
         let (_, _, id, sections) = self
             .bodies
             .iter()

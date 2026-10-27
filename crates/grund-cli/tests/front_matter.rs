@@ -144,7 +144,6 @@ fn ids(declarations: &[(String, u64)]) -> Vec<&str> {
 /// A YAML comment `# METRIC-gross: …` declares nothing, so the bundle checks clean
 /// (§FS-check.1.1.5.2, §FS-declarations.requirements.mentions).
 #[test]
-#[ignore = "red until #1046 reads front matter as a region of its own; implement removes this"]
 fn a_yaml_comment_declares_nothing() {
     let fx = Fixture::new(&format!(
         "---\ntype: Metric\ntitle: Net revenue, monthly\n\
@@ -165,7 +164,6 @@ fn a_yaml_comment_declares_nothing() {
 
 /// A comment that repeats the file's own ID is no second declaration of it.
 #[test]
-#[ignore = "red until #1046 reads front matter as a region of its own; implement removes this"]
 fn a_comment_repeating_the_files_own_id_is_no_duplicate() {
     let fx = Fixture::new(&format!(
         "---\ntype: Metric\n# METRIC-net-revenue: keep this title in step with the heading\n\
@@ -192,7 +190,6 @@ fn a_comment_repeating_the_files_own_id_is_no_duplicate() {
 
 /// TOML front matter, `+++` as Hugo and Zola write it, reads the same way.
 #[test]
-#[ignore = "red until #1046 reads front matter as a region of its own; implement removes this"]
 fn a_toml_block_declares_nothing() {
     let fx = Fixture::new(&format!(
         "+++\ntitle = \"Net revenue, monthly\"\n\
@@ -214,7 +211,6 @@ fn a_toml_block_declares_nothing() {
 
 /// A `---` block closes at `...` as Pandoc allows, and `...` does not close a `+++` block.
 #[test]
-#[ignore = "red until #1046 reads front matter as a region of its own; implement removes this"]
 fn three_dots_close_a_yaml_block_only() {
     let fx = Fixture::new(&format!(
         "---\ntype: Metric\n# METRIC-gross: the gross figure is a separate metric\n...\n{BODY}"
@@ -274,7 +270,6 @@ fn what_is_not_front_matter_reads_as_today() {
 /// The front-matter citation belongs to the file's first declaration, under no section, so
 /// `refs --from` lists it and a `must cite` rule sees it (§FS-check.1.1.5.2.1).
 #[test]
-#[ignore = "red until #1046 gives front-matter citations to the first declaration; implement removes this"]
 fn a_front_matter_citation_belongs_to_the_first_declaration() {
     let fx = Fixture::new(&cited());
     let row = fx.ref_row("POL-revenue-recognition", METRIC);
@@ -308,7 +303,6 @@ fn a_front_matter_citation_belongs_to_the_first_declaration() {
 
 /// The owner is the first *declaration*, not the first heading.
 #[test]
-#[ignore = "red until #1046 gives front-matter citations to the first declaration; implement removes this"]
 fn the_owner_is_the_first_declaration_not_the_first_heading() {
     let fx = Fixture::new(
         "---\nsee: §POL-revenue-recognition\n---\n\n# Metrics\n\nThe bundle's metrics.\n\n\
@@ -339,7 +333,6 @@ fn a_file_with_no_declaration_owns_nothing() {
 /// `fmt --check` reports nothing in front matter, and `fmt --write` leaves it byte-identical
 /// while it still links the README's citation (§FS-citations.zones).
 #[test]
-#[ignore = "red until #1046 keeps fmt out of front matter; implement removes this"]
 fn fmt_never_rewrites_front_matter() {
     let fx = Fixture::new(&cited());
     let check = fx.run(&["fmt", "--check"]);
@@ -358,7 +351,6 @@ fn fmt_never_rewrites_front_matter() {
 /// `cover --lines` gives every front-matter line, delimiters included, to the first
 /// declaration; the blank line under the closing delimiter stays unowned (§FS-cover.6.2).
 #[test]
-#[ignore = "red until #1046 gives front-matter lines to the first declaration; implement removes this"]
 fn cover_lines_gives_front_matter_to_the_first_declaration() {
     let fx = Fixture::new(&cited());
     assert_eq!(
@@ -373,7 +365,6 @@ fn cover_lines_gives_front_matter_to_the_first_declaration() {
 /// `check` does not offer `grund fmt --write`, which would rewrite nothing there
 /// (§FS-check.3.24.1).
 #[test]
-#[ignore = "red until #1046 gives front-matter citations to the first declaration; implement removes this"]
 fn a_front_matter_shorthand_errors_without_the_fmt_offer() {
     let fx = Fixture::new(
         "---\ntype: Metric\nsee: \u{a7}2\n---\n\n# METRIC-net-revenue: Net revenue, monthly\n\n\

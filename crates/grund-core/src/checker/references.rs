@@ -126,6 +126,12 @@ pub(super) fn check_citation_resolution(
             && tier == ReferenceTier::Configured
             // §FS-check.3.24.1: an absent target section is a site fmt declines.
             && resolves
+            // §FS-check.3.24.1: so is front matter, which fmt never rewrites
+            // (§FS-check.1.1.5.2); the error still fires, only the offer goes.
+            && !findings
+                .files
+                .get(&cite.file)
+                .is_some_and(|record| record.in_front_matter(cite.line))
         {
             format!("; {}", remedies::local_section_citation_fmt())
         } else {

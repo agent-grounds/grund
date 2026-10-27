@@ -68,7 +68,8 @@ pub(super) fn index_mentions<'a>(
     unentered: &[(&'a Id, &'a Declaration)],
 ) -> BTreeSet<&'a Id> {
     let mut mentioned: BTreeSet<&Id> = BTreeSet::new();
-    let mut blocks = MarkdownBlocks::default();
+    // §FS-check.1.1.5.2: the whole index, so a fence opener in its front matter opens nothing.
+    let mut blocks = MarkdownBlocks::lines(lines.iter().copied());
     for (index, line) in lines.iter().enumerate() {
         let block = blocks.line(line);
         if block.in_fence() {
