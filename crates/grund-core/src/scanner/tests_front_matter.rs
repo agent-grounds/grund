@@ -32,6 +32,19 @@ fn coordinates(text: &str) -> Vec<(String, usize, String, String, usize)> {
         .collect()
 }
 
+/// Each key coordinate's path, slice and last line, the whole block left out.
+fn slices(text: &str) -> Vec<(String, String, usize)> {
+    coordinates(text)
+        .into_iter()
+        .skip(1)
+        .map(|(path, _, _, slice, end)| (path, slice, end))
+        .collect()
+}
+
+fn slice(path: &str, slice: &str, end: usize) -> (String, String, usize) {
+    (format!("front-matter.{path}"), slice.to_string(), end)
+}
+
 fn unreadable(text: &str) -> FrontMatterUnreadable {
     match read(text).0 {
         FrontMatterBlock::Unreadable(reason) => reason,
@@ -195,20 +208,63 @@ fn a_slice_runs_to_its_values_end_or_its_colon() {
     );
 }
 
+/// §FS-fields.front-matter.coordinates, §FS-fields.front-matter.reading: a slice
+/// that ends in a multi-byte character ends on its own last line, counted in the
+/// slice, and a key that is no section name ends in one without stopping the read.
+#[test]
+fn a_slice_ending_in_a_multi_byte_character_keeps_its_last_line() {
+    assert_eq!(
+        slices("---\nauthor: José\n---\n"),
+        vec![slice("author", "author: José", 2)]
+    );
+    assert_eq!(
+        slices("---\ntitle: Café\nstatus:\n---\n"),
+        vec![
+            slice("title", "title: Café", 2),
+            slice("status", "status:", 3)
+        ]
+    );
+    assert_eq!(
+        slices("---\nnote: é\nstatus: x\n---\n"),
+        vec![slice("note", "note: é", 2), slice("status", "status: x", 3)]
+    );
+    assert_eq!(
+        slices("---\nsummary: |\n  erste Zeile\n  zweite Zeile, groß\nstatus: x\n---\n"),
+        vec![
+            slice(
+                "summary",
+                "summary: |\n  erste Zeile\n  zweite Zeile, groß",
+                4
+            ),
+            slice("status", "status: x", 5)
+        ]
+    );
+    let names = |text: &str| -> Vec<(String, bool)> {
+        keys(text)
+            .into_iter()
+            .map(|key| (key.name, key.section))
+            .collect()
+    };
+    let text = "---\n? statuš\nstatus: x\n---\n";
+    assert_eq!(
+        names(text),
+        [("statuš".to_string(), false), ("status".to_string(), true)]
+    );
+    assert_eq!(slices(text), vec![slice("status", "status: x", 3)]);
+    assert_eq!(names("---\n? é\n---\n"), [("é".to_string(), false)]);
+    let text = "---\n{é, status: x}\n---\n";
+    assert_eq!(
+        names(text),
+        [("é".to_string(), false), ("status".to_string(), true)]
+    );
+    assert_eq!(slices(text), vec![slice("status", "status: x", 2)]);
+}
+
 /// §FS-fields.front-matter.coordinates: a value-less key with no colon of its own,
 /// in a flow mapping or written `? key`, ends at the key and never at the next
 /// key's colon, nor at a colon in a comment after it.
 #[test]
 fn a_key_with_no_colon_of_its_own_ends_at_the_key() {
-    let slices = |text: &str| -> Vec<(String, String, usize)> {
-        coordinates(text)
-            .into_iter()
-            .skip(1)
-            .map(|(path, _, _, slice, end)| (path, slice, end))
-            .collect()
-    };
-    let slice =
-        |path: &str, slice: &str, end| (format!("front-matter.{path}"), slice.to_string(), end);
     assert_eq!(
         slices("---\n{status, date: x}\n---\n"),
         vec![slice("status", "status", 2), slice("date", "date: x", 2)]

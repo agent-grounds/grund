@@ -300,7 +300,9 @@ impl<'a> Content<'a> {
                 one_line,
             },
             slice: &self.file[start..end],
-            end_line: self.line(key.span.start + slice.len().saturating_sub(1)),
+            // Counted in the slice, never at a byte stepped back from its end,
+            // which a multi-byte last character would split.
+            end_line: line + slice.matches('\n').count(),
         }
     }
 
