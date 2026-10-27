@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "case": "cover-front-matter-not-declared-unchanged",
+  "inputFiles": {
+    "command.args": {"bytes":[99,111,118,101,114,32,100,111,99,115,47,97,100,114,47,99,97,99,104,101,46,109,100,32,45,45,108,105,110,101,115,32,49,45,49,50,32,45,45,102,111,114,109,97,116,32,106,115,111,110,10]},
+    "command.cwd": {"bytes":[123,114,101,112,111,125,10]},
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[10]},
+    "expected.stdout": {"bytes":[123,34,112,97,116,104,34,58,34,100,111,99,115,47,97,100,114,47,99,97,99,104,101,46,109,100,34,44,34,115,116,97,114,116,34,58,49,44,34,101,110,100,34,58,49,50,44,34,111,119,110,101,114,115,34,58,91,123,34,100,101,99,108,97,114,97,116,105,111,110,34,58,34,65,68,82,45,99,97,99,104,101,34,44,34,115,116,97,114,116,34,58,49,44,34,101,110,100,34,58,52,44,34,115,101,99,116,105,111,110,115,34,58,91,123,34,115,101,99,116,105,111,110,34,58,110,117,108,108,44,34,115,116,97,114,116,34,58,49,44,34,101,110,100,34,58,52,125,93,125,44,123,34,100,101,99,108,97,114,97,116,105,111,110,34,58,34,65,68,82,45,99,97,99,104,101,34,44,34,115,116,97,114,116,34,58,54,44,34,101,110,100,34,58,49,50,44,34,115,101,99,116,105,111,110,115,34,58,91,123,34,115,101,99,116,105,111,110,34,58,110,117,108,108,44,34,115,116,97,114,116,34,58,54,44,34,101,110,100,34,58,57,125,44,123,34,115,101,99,116,105,111,110,34,58,34,102,114,111,110,116,45,109,97,116,116,101,114,34,44,34,115,116,97,114,116,34,58,49,48,44,34,101,110,100,34,58,49,50,125,93,125,93,125,10]},
+    "repo": {"directory":true},
+    "repo/README.md": {"bytes":[35,32,82,101,97,100,109,101,10,10,84,104,101,32,100,101,99,105,115,105,111,110,115,32,97,114,101,32,194,167,65,68,82,45,99,97,99,104,101,46,10]},
+    "repo/docs": {"directory":true},
+    "repo/docs/adr": {"directory":true},
+    "repo/docs/adr/cache.md": {"bytes":[45,45,45,10,115,116,97,116,117,115,58,32,91,97,99,99,101,112,116,101,100,10,115,116,97,116,117,115,58,32,97,99,99,101,112,116,101,100,10,45,45,45,10,10,35,32,65,68,82,45,99,97,99,104,101,58,32,67,97,99,104,101,32,97,118,97,105,108,97,98,105,108,105,116,121,10,10,84,101,120,116,46,10,10,35,35,32,102,114,111,110,116,45,109,97,116,116,101,114,58,32,70,114,111,110,116,32,109,97,116,116,101,114,10,10,83,116,97,116,117,115,32,105,115,32,97,99,99,101,112,116,101,100,46,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,50,10,112,114,111,106,101,99,116,95,110,97,109,101,32,61,32,34,109,97,100,114,34,10,10,91,115,99,104,101,109,97,46,107,105,110,100,115,46,65,68,82,93,10,102,111,108,100,101,114,115,32,61,32,91,34,100,111,99,115,47,97,100,114,34,93,10,105,110,100,101,120,32,61,32,102,97,108,115,101,10,10,91,115,99,104,101,109,97,46,107,105,110,100,115,46,112,97,103,101,93,10,99,105,116,97,98,108,101,32,61,32,102,97,108,115,101,10,102,105,108,101,115,32,61,32,91,34,82,69,65,68,77,69,46,109,100,34,93,10]},
+    "spec.refs": {"bytes":[70,83,45,102,105,101,108,100,115,46,102,114,111,110,116,45,109,97,116,116,101,114,46,114,101,97,100,105,110,103,10,70,83,45,99,111,118,101,114,46,54,46,50,10]}
+  },
+  "facts": {
+    "point": "§FS-fields.front-matter.reading",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 2, project madr, schema kind ADR on the folder docs/adr with no index and no front-matter field, and the non-citable page kind on README.md); docs/adr/cache.md opens with a `---` front matter on lines 1-4 whose YAML would not parse and repeats a key, but a kind that declares no front-matter field never reads the block, so it is opaque and no finding is made of it (§FS-fields.front-matter.reading); it holds no heading and belongs to the file's first declaration ADR-cache, with no section (§FS-check.1.1.5.2.1). ADR-cache is declared at line 6 with body lines 7-12, and its one section is the heading `## front-matter: Front matter` on line 10, the section front-matter as before, which runs to line 12 and cuts the lead at line 9 (§FS-declarations.section.named). README.md, a page, cites §ADR-cache outside any declaration. The citation is marked and resolves and the declaration is cited, so check finds nothing; fmt wraps the README citation (§FS-fmt.6.5); line 1 of the decision, the front matter's opening delimiter that the narrowed run reads, is owned by ADR-cache with no section (§FS-cover.6.2); ADR-absent is the authored absent query, an ID of the config's format that nothing declares or cites.",
+    "kinds": [
+      {"kind":"ADR","title":null,"home":"docs/adr","index":false}
+    ],
+    "scanned": ["README.md","docs/adr/cache.md"],
+    "declarations": [
+      {"id":"ADR-cache","kind":"ADR","file":"docs/adr/cache.md","heading":"ADR-cache: Cache availability","title":"Cache availability","body":[7,12],"anchor":"adr-cache-cache-availability"}
+    ],
+    "sections": [
+      {"of":"ADR-cache","path":"front-matter","heading":"front-matter: Front matter","title":"Front matter","anchor":"front-matter-front-matter","end":12}
+    ],
+    "citations": [
+      {"file":"README.md","token":"§ADR-cache","enclosing":[null,null]}
+    ],
+    "findings": [],
+    "refusals": {},
+    "fmt": {
+      "changes": [{"path":"README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "written": {"README.md":{"3":"The decisions are [§ADR-cache](docs/adr/cache.md#adr-cache-cache-availability)."}}
+    },
+    "absentQuery": "ADR-absent"
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null,"coverLines":[{"project":null,"path":"<repo>/docs/adr/cache.md","start":1,"end":1,"owners":[{"declaration":"ADR-cache","start":1,"end":1,"sections":[{"section":null,"start":1,"end":1}]}]}]},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "case": "cover-front-matter-lines-key-section",
+  "inputFiles": {
+    "command.args": {"bytes":[99,111,118,101,114,32,98,117,110,100,108,101,47,109,101,116,114,105,99,115,47,110,101,116,45,114,101,118,101,110,117,101,46,109,100,32,45,45,108,105,110,101,115,32,49,45,57,10]},
+    "command.cwd": {"bytes":[123,114,101,112,111,125,10]},
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[10]},
+    "expected.stdout": {"bytes":[98,117,110,100,108,101,47,109,101,116,114,105,99,115,47,110,101,116,45,114,101,118,101,110,117,101,46,109,100,58,49,45,57,10,32,32,49,32,32,77,69,84,82,73,67,45,110,101,116,45,114,101,118,101,110,117,101,46,102,114,111,110,116,45,109,97,116,116,101,114,10,32,32,50,32,32,77,69,84,82,73,67,45,110,101,116,45,114,101,118,101,110,117,101,46,102,114,111,110,116,45,109,97,116,116,101,114,46,116,121,112,101,10,32,32,51,32,32,77,69,84,82,73,67,45,110,101,116,45,114,101,118,101,110,117,101,46,102,114,111,110,116,45,109,97,116,116,101,114,46,116,105,116,108,101,10,32,32,52,45,54,32,32,77,69,84,82,73,67,45,110,101,116,45,114,101,118,101,110,117,101,46,102,114,111,110,116,45,109,97,116,116,101,114,46,115,111,117,114,99,101,115,10,32,32,55,32,32,77,69,84,82,73,67,45,110,101,116,45,114,101,118,101,110,117,101,46,102,114,111,110,116,45,109,97,116,116,101,114,10,32,32,56,32,32,40,110,111,32,111,119,110,101,114,41,10,32,32,57,32,32,77,69,84,82,73,67,45,110,101,116,45,114,101,118,101,110,117,101,10]},
+    "repo": {"directory":true},
+    "repo/README.md": {"bytes":[35,32,82,101,97,100,109,101,10,10,84,104,101,32,109,101,116,114,105,99,32,105,115,32,194,167,77,69,84,82,73,67,45,110,101,116,45,114,101,118,101,110,117,101,46,10]},
+    "repo/bundle": {"directory":true},
+    "repo/bundle/metrics": {"directory":true},
+    "repo/bundle/metrics/net-revenue.md": {"bytes":[45,45,45,10,116,121,112,101,58,32,77,101,116,114,105,99,10,116,105,116,108,101,58,32,78,101,116,32,114,101,118,101,110,117,101,44,32,109,111,110,116,104,108,121,10,115,111,117,114,99,101,115,58,10,32,32,45,32,105,100,58,32,114,101,118,45,112,111,108,105,99,121,10,32,32,32,32,114,101,115,111,117,114,99,101,58,32,194,167,80,79,76,45,114,101,118,101,110,117,101,45,114,101,99,111,103,110,105,116,105,111,110,10,45,45,45,10,10,35,32,77,69,84,82,73,67,45,110,101,116,45,114,101,118,101,110,117,101,58,32,78,101,116,32,114,101,118,101,110,117,101,44,32,109,111,110,116,104,108,121,10,10,71,114,111,115,115,32,98,111,111,107,105,110,103,115,32,108,101,115,115,32,114,101,102,117,110,100,115,32,97,110,100,32,99,114,101,100,105,116,115,44,32,114,101,99,111,103,110,105,115,101,100,32,105,110,32,116,104,101,32,109,111,110,116,104,32,111,102,32,116,104,101,32,115,116,97,121,46,10]},
+    "repo/bundle/policies": {"directory":true},
+    "repo/bundle/policies/revenue-recognition.md": {"bytes":[35,32,80,79,76,45,114,101,118,101,110,117,101,45,114,101,99,111,103,110,105,116,105,111,110,58,32,82,101,118,101,110,117,101,32,105,115,32,114,101,99,111,103,110,105,115,101,100,32,105,110,32,116,104,101,32,109,111,110,116,104,32,111,102,32,116,104,101,32,115,116,97,121,10,10,65,32,112,111,108,105,99,121,46,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,50,10,112,114,111,106,101,99,116,95,110,97,109,101,32,61,32,34,102,109,34,10,10,91,115,99,104,101,109,97,46,107,105,110,100,115,46,77,69,84,82,73,67,93,10,102,105,108,101,115,32,61,32,91,34,98,117,110,100,108,101,47,109,101,116,114,105,99,115,47,110,101,116,45,114,101,118,101,110,117,101,46,109,100,34,93,10,10,91,115,99,104,101,109,97,46,107,105,110,100,115,46,77,69,84,82,73,67,46,102,105,101,108,100,115,46,102,114,111,110,116,45,109,97,116,116,101,114,93,10,10,91,115,99,104,101,109,97,46,107,105,110,100,115,46,80,79,76,93,10,102,105,108,101,115,32,61,32,91,34,98,117,110,100,108,101,47,112,111,108,105,99,105,101,115,47,114,101,118,101,110,117,101,45,114,101,99,111,103,110,105,116,105,111,110,46,109,100,34,93,10,10,91,115,99,104,101,109,97,46,107,105,110,100,115,46,112,97,103,101,93,10,99,105,116,97,98,108,101,32,61,32,102,97,108,115,101,10,102,105,108,101,115,32,61,32,91,34,82,69,65,68,77,69,46,109,100,34,93,10]},
+    "spec.refs": {"bytes":[70,83,45,99,111,118,101,114,46,54,46,50,10,70,83,45,102,105,101,108,100,115,46,102,114,111,110,116,45,109,97,116,116,101,114,46,115,117,114,102,97,99,101,115,10]}
+  },
+  "facts": {
+    "point": "§FS-fields.front-matter.surfaces",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 2, project fm, schema kinds METRIC on bundle/metrics/net-revenue.md, which declares the front-matter field with no keys, and POL on bundle/policies/revenue-recognition.md, both untitled, and the non-citable page kind on README.md); bundle/metrics/net-revenue.md opens with a `---` YAML front matter on lines 1-7, which is the field of the file's first declaration METRIC-net-revenue, declared at line 9 (§FS-fields.front-matter.placement). Its coordinates are METRIC-net-revenue.front-matter, the block from delimiter to delimiter on lines 1-7, and one per top-level key: front-matter.type on line 2 (title Metric), front-matter.title on line 3 (title Net revenue, monthly) and front-matter.sources on lines 4-6 (no one-line value, so an empty title); each reads as its slice in every mode with no anchor, measured on that slice, and none joins the declaration's lead or --toc, whose body is lines 10-11 (§FS-fields.front-matter.coordinates, §FS-fields.front-matter.surfaces). The block's one citation, §POL-revenue-recognition on line 6, is inside the sources key's slice, so it encloses in METRIC-net-revenue.front-matter.sources (§FS-check.1.1.5.2.1); bundle/policies/revenue-recognition.md declares POL-revenue-recognition at line 1 and cites nothing; README.md, a page, cites §METRIC-net-revenue outside any declaration. Every citation is marked and resolves, both declarations are cited, and a field with no presence and no keys judges nothing, so check finds nothing; fmt wraps only the README citation (§FS-fmt.6.5), since nothing inside front matter is rewritten; line 1 of the metric file, the opening delimiter the narrowed run reads, is in METRIC-net-revenue.front-matter (§FS-cover.6.2); METRIC-absent is the authored absent query, an ID of the config's format that nothing declares or cites.",
+    "kinds": [
+      {"kind":"METRIC","title":null,"home":"bundle/metrics/net-revenue.md","index":false},
+      {"kind":"POL","title":null,"home":"bundle/policies/revenue-recognition.md","index":false}
+    ],
+    "scanned": ["README.md","bundle/metrics/net-revenue.md","bundle/policies/revenue-recognition.md"],
+    "declarations": [
+      {"id":"METRIC-net-revenue","kind":"METRIC","file":"bundle/metrics/net-revenue.md","heading":"METRIC-net-revenue: Net revenue, monthly","title":"Net revenue, monthly","body":[10,11],"anchor":"metric-net-revenue-net-revenue-monthly"},
+      {"id":"POL-revenue-recognition","kind":"POL","file":"bundle/policies/revenue-recognition.md","heading":"POL-revenue-recognition: Revenue is recognised in the month of the stay","title":"Revenue is recognised in the month of the stay","body":[2,3],"anchor":"pol-revenue-recognition-revenue-is-recognised-in-the-month-of-the-stay"}
+    ],
+    "sections": [
+      {"of":"METRIC-net-revenue","path":"front-matter","heading":"---","title":"","anchor":null,"end":7,"frontMatter":true,"slice":"---\ntype: Metric\ntitle: Net revenue, monthly\nsources:\n  - id: rev-policy\n    resource: §POL-revenue-recognition\n---"},
+      {"of":"METRIC-net-revenue","path":"front-matter.type","heading":"type: Metric","title":"Metric","anchor":null,"end":2,"frontMatter":true,"parent":"front-matter","slice":"type: Metric"},
+      {"of":"METRIC-net-revenue","path":"front-matter.title","heading":"title: Net revenue, monthly","title":"Net revenue, monthly","anchor":null,"end":3,"frontMatter":true,"parent":"front-matter","slice":"title: Net revenue, monthly"},
+      {"of":"METRIC-net-revenue","path":"front-matter.sources","heading":"sources:","title":"","anchor":null,"end":6,"frontMatter":true,"parent":"front-matter","slice":"sources:\n  - id: rev-policy\n    resource: §POL-revenue-recognition"}
+    ],
+    "citations": [
+      {"file":"README.md","token":"§METRIC-net-revenue","enclosing":[null,null]},
+      {"file":"bundle/metrics/net-revenue.md","token":"§POL-revenue-recognition","enclosing":["METRIC-net-revenue","front-matter.sources"]}
+    ],
+    "findings": [],
+    "refusals": {},
+    "fmt": {
+      "changes": [{"path":"README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "written": {"README.md":{"3":"The metric is [§METRIC-net-revenue](bundle/metrics/net-revenue.md#metric-net-revenue-net-revenue-monthly)."}}
+    },
+    "absentQuery": "METRIC-absent"
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null,"coverLines":[{"project":null,"path":"<repo>/bundle/metrics/net-revenue.md","start":1,"end":1,"owners":[{"declaration":"METRIC-net-revenue","start":1,"end":1,"sections":[{"section":"front-matter","start":1,"end":1}]}]}]},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

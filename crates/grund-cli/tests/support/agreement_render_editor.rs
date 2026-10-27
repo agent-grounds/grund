@@ -189,7 +189,10 @@ impl View<'_> {
                     Some("marked") => s.text.strip_suffix(" <!-- grund:value -->").unwrap_or(&s.text),
                     _ => &s.text,
                 };
-                let mut row = self.located(&s.file, s.line, s.column, text, &query);
+                // §FS-fields.front-matter.surfaces: with no heading to span, a
+                // front-matter coordinate's title is its path at column 1.
+                let (column, text) = if s.front_matter { (1, s.path.as_str()) } else { (s.column, text) };
+                let mut row = self.located(&s.file, s.line, column, text, &query);
                 row["hover_text"] = Value::Null;
                 row
             }).collect::<Vec<_>>(),

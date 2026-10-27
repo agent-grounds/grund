@@ -145,7 +145,9 @@ carries `point` and `authoredFrom`, and then:
   a workspace root.
 - `declarations`, `sections` and `citations`: each by its file and its written
   heading or token, with the title, anchor, body range, enclosing declaration
-  and the stub, duplicate or value-root facts its point defines. A section's
+  and the stub, duplicate or value-root facts its point defines. A front-matter
+  coordinate is a section marked `frontMatter`, with its `slice`
+  ([§FS-fields.front-matter.surfaces](../../../docs/functional-spec/FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)). A section's
   optional `file` selects its physical owner when `of` names duplicate homes;
   ambiguous ownership is rejected. Size rows interleave those homes by
   coordinate, then site, keeping every measurement local to its body
