@@ -138,7 +138,11 @@ CITED = (
 # FS-fmt.md grew by 3697 bytes in §FS-fmt.3.5, .3.5.1, .3.5.2, .3.6, .3.7, .7.3 and
 # .requirements.next-class: a dry-run row now names every kind its line receives and the
 # write summary totals them, new behaviour no other point states (grund#1021).
-BASELINES = {"FS-show.md": 70128, "FS-fmt.md": 103168}
+
+# FS-show.md grew by 421 bytes in §FS-show.2.1.2.1, .2.2 and .3.1.3.1, saying the section
+# map, a section read and a JSON anchor answer for front-matter coordinates by citing
+# §FS-fields.front-matter.coordinates, .surfaces and §FS-output-shapes.4.4 (grund#1048).
+BASELINES = {"FS-show.md": 70549, "FS-fmt.md": 103168}
 
 
 def _flat(text):
