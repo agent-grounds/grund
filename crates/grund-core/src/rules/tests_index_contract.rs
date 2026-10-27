@@ -47,10 +47,10 @@ fn facts() -> RuleFacts {
             (key("c"), "REQ".into()),
         ],
         chapter: vec![
-            (key("a"), "part.detail".into(), "Detail".into()),
-            (key("b"), "needs.detail".into(), "Terms".into()),
-            (key("q"), "needs".into(), "tErMs".into()),
-            (key("j"), "part".into(), "Part".into()),
+            (key("a"), "part.detail".into(), Some("Detail".into())),
+            (key("b"), "needs.detail".into(), Some("Terms".into())),
+            (key("q"), "needs".into(), Some("tErMs".into())),
+            (key("j"), "part".into(), Some("Part".into())),
         ],
         contains: vec![
             (key("j"), key("a")),

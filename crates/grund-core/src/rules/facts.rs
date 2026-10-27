@@ -40,7 +40,10 @@ pub(crate) struct SiteMeta {
 pub(crate) struct RuleFacts {
     pub(crate) header: FactHeader,
     pub(crate) decl: Vec<(NodeKey, String)>,
-    pub(crate) chapter: Vec<(NodeKey, String, String)>,
+    /// Each chapter unit's node, path and display name; a front-matter unit has no
+    /// display name, so a chapter-presence rule never counts or lists it
+    /// (§FS-fields.front-matter.surfaces).
+    pub(crate) chapter: Vec<(NodeKey, String, Option<String>)>,
     pub(crate) contains: Vec<(NodeKey, NodeKey)>,
     pub(crate) cites: Vec<(SiteKey, NodeKey, NodeKey)>,
     pub(crate) site_in: Vec<(SiteKey, NodeKey)>,

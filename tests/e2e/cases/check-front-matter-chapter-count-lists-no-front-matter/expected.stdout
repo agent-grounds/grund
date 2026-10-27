@@ -1,0 +1,1 @@
+docs/adr/cache.md:5: error: ADR-cache has 0 status chapters; --rule requires exactly one; expected display name "status" (case-insensitive, not section handle); observed direct chapters: none; add, remove or retitle chapters until the count fits

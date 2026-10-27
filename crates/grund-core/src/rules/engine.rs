@@ -180,29 +180,34 @@ fn evaluate_one(
                 return;
             };
             for subject in subjects {
-                let chapters = index.chapters_of(&subject);
                 // §FS-rules.7.11: a chapter a stub's target lends counts as a scanned one.
+                // §FS-fields.front-matter.surfaces: a front-matter unit, with no display
+                // name, is neither counted nor listed.
+                let chapters: Vec<(&NodeKey, &str, &str)> = index
+                    .chapters_of(&subject)
+                    .iter()
+                    .filter_map(|row| {
+                        let (node, coordinate, display_name) = &facts.chapter[*row];
+                        Some((node, coordinate.as_str(), display_name.as_deref()?))
+                    })
+                    .collect();
                 let count = chapters
                     .iter()
-                    .filter(|row| facts.chapter[**row].2.eq_ignore_ascii_case(name))
+                    .filter(|(_, _, display_name)| display_name.eq_ignore_ascii_case(name))
                     .count();
                 if !rule.cardinality.contains(count) {
                     // §FS-rules.7.2.1: show accepted direct chapters in source order,
                     // retaining the complete released prefix (§FS-errors.3).
-                    let mut observed = chapters.to_vec();
-                    observed.sort_by_key(|row| {
-                        facts
-                            .nodes
-                            .get(&facts.chapter[*row].0)
-                            .map(|meta| meta.anchor.line)
+                    let mut observed = chapters;
+                    observed.sort_by_key(|(node, _, _)| {
+                        facts.nodes.get(*node).map(|meta| meta.anchor.line)
                     });
                     let observed = if observed.is_empty() {
                         "none".to_string()
                     } else {
                         observed
                             .iter()
-                            .map(|row| {
-                                let (_, coordinate, display_name) = &facts.chapter[*row];
+                            .map(|(_, coordinate, display_name)| {
                                 format!("\"{coordinate}: {display_name}\"")
                             })
                             .collect::<Vec<_>>()

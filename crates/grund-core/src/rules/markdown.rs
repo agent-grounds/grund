@@ -134,7 +134,10 @@ pub(crate) fn adapt_workspace(
                         facts.chapter.push((
                             chapter.clone(),
                             section.clone(),
-                            section_display_name(&info.title, section, info.relative).into_owned(),
+                            (!info.in_front_matter()).then(|| {
+                                section_display_name(&info.title, section, info.relative)
+                                    .into_owned()
+                            }),
                         ));
                         facts.nodes.insert(
                             chapter,

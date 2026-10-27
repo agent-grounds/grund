@@ -1,0 +1,1 @@
+check {repo} --rule "Each ADR must have exactly one status chapter." --only-rule

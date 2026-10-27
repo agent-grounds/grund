@@ -141,7 +141,7 @@ fn direct_sections(declaration: &Declaration) -> Vec<(&str, usize, Cow<'_, str>)
     let mut direct: Vec<(&str, usize, Cow<'_, str>)> = declaration
         .sections
         .iter()
-        .filter(|(path, info)| !path.contains('.') && info.front_matter.is_none())
+        .filter(|(path, info)| !path.contains('.') && !info.in_front_matter())
         .map(|(path, info)| {
             let display = section_display_name(&info.title, path, info.relative);
             (path.as_str(), info.line, display)

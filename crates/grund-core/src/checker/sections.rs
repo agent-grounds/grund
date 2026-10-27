@@ -165,7 +165,7 @@ pub(super) fn check_section_headings(
                 for (section_path, section) in &decl.sections {
                     // §FS-config.3.3.3: a relative heading's depth is its parent's plus one.
                     // §FS-fields.front-matter.coordinates: a front-matter coordinate has none.
-                    if section.relative || section.front_matter.is_some() {
+                    if section.relative || section.in_front_matter() {
                         continue;
                     }
                     let expected_level = decl.heading_level + section_depth(section_path);
@@ -266,7 +266,7 @@ pub(super) fn check_section_headings(
                         path,
                         // §FS-fields.front-matter.keys: a key written twice is no heading.
                         match decl.sections.get(path) {
-                            Some(first) if first.front_matter.is_some() => {
+                            Some(first) if first.in_front_matter() => {
                                 remedies::duplicate_section_keys()
                             }
                             _ => remedies::duplicate_section_headings(),
