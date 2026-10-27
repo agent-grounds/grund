@@ -163,8 +163,8 @@ pub(super) fn check_section_headings(
         for (id, decls) in &findings.declarations {
             for decl in decls {
                 for (section_path, section) in &decl.sections {
-                    // §FS-config.3.3.3: a relative heading's depth is its parent's plus one,
-                    // and a front-matter coordinate has no heading (§FS-fields.front-matter.coordinates).
+                    // §FS-config.3.3.3: a relative heading's depth is its parent's plus one.
+                    // §FS-fields.front-matter.coordinates: a front-matter coordinate has none.
                     if section.relative || section.front_matter.is_some() {
                         continue;
                     }
