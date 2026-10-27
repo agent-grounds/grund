@@ -1855,7 +1855,7 @@
     },
     "v2FrontMatterField": {
       "type": "object",
-      "description": "The file's front matter as a field: the first declaration's YAML block, its top-level keys the field's sections. It has no heading, so it takes no title, position, after, content or one_of.",
+      "description": "The file's front matter as a field: the first declaration's block, YAML between --- lines or TOML between +++ lines, its top-level keys the field's sections. It has no heading, so it takes no title, position, after, content or one_of.",
       "x-grund-spec": {
         "id": "FS-fields.front-matter.config",
         "href": "docs/functional-spec/FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys"

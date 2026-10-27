@@ -192,7 +192,8 @@ docs/adr/queue.md:1: error: ADR-queue has no front-matter field; kind ADR declar
 Only a Markdown file's first declaration has front matter. A later
 declaration in the same file, or one in a doc-comment, gets `missing-field`
 with that reason ([§FS-fields.front-matter.placement](../functional-spec/FS-fields.md#front-matterplacement-which-declaration-has-it)). A block that does not
-parse as YAML is `unreadable-front-matter`, and none of its keys is judged. A
+parse, as YAML between `---` lines or as TOML between `+++` lines, is
+`unreadable-front-matter`, and none of its keys is judged. A
 `## front-matter:` heading in such a kind is `front-matter-heading`: the block
 holds that coordinate, so the heading declares nothing
 ([§FS-fields.checks.front-matter-heading](../functional-spec/FS-fields.md#checksfront-matter-heading-front-matter-heading)).
@@ -211,11 +212,42 @@ to the file, and a chapter rule can name one by its whole path
 ([§FS-fields.front-matter.surfaces](../functional-spec/FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)). The body still starts at the declaration's
 heading, so no lead, fingerprint or section lock moves.
 
-**TOML is not read yet.** A `+++` block in a kind that declares the field is
-`unreadable-front-matter`; write it as YAML between `---` lines. Reading it is
-[#1057](https://github.com/agent-grounds/grund/issues/1057). A kind that
-declares no `front-matter` field parses no block, YAML or TOML, and reads
-exactly as before.
+**A `+++` block is TOML.** A Hugo or Zola page keeps the same facts between
+`+++` lines, and grund reads that block as TOML 1.1, with the same keys,
+coordinates and findings a `---` block gets
+([§FS-fields.front-matter.reading](../functional-spec/FS-fields.md#front-matterreading-reading-the-block)):
+
+```markdown
++++
+status = "accepted"
+date = 2026-02-03
+decision-makers = ["platform team"]
+
+[[informed]]
+team = "support"
++++
+
+# ADR-cache: Use Redis for the session cache
+```
+
+A key is the first component of whatever the block writes at its top level:
+`status = …`, a dotted `consulted.security = …`, or a header `[consulted]` or
+`[[informed]]`, at the line it is first written. Its slice starts there, at the
+header's `[` for a table, and runs to the last value of its first run, so
+`grund show ADR-cache.front-matter.informed` prints the `[[informed]]` table. A string
+is its decoded text, and every other value keeps its spelling, so `2026-02-03`
+and `1_000` stay as written. A key TOML refuses to define again, `status`
+written twice or `[[informed]]` after `informed = […]`, is `duplicate-section`, as a key
+written twice in YAML is
+([§FS-fields.front-matter.keys](../functional-spec/FS-fields.md#front-matterkeys-its-keys-are-its-sections)). A block TOML cannot parse names the
+parser's message and its line:
+
+```text
+docs/adr/cache.md:1: error: ADR-cache.front-matter does not parse as TOML: string values must be quoted at line 2; fix the TOML
+```
+
+A kind that declares no `front-matter` field parses no block, YAML or TOML,
+and reads exactly as before.
 
 The runnable [`examples/front-matter/`](../../examples/front-matter/) holds a
 closed field to its keys in its third step and runs a rule over one key in its

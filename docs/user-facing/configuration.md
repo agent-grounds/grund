@@ -313,7 +313,7 @@ One row: its places, its form, and its fields. A row may list several places; a 
 
 ### `[schema.kinds.<NAME>.fields.front-matter]`
 
-The file's front matter as a field: the first declaration's YAML block, its top-level keys the field's sections. It has no heading, so it takes no title, position, after, content or one_of. [§FS-fields.front-matter.config](../functional-spec/FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys)
+The file's front matter as a field: the first declaration's block, YAML between --- lines or TOML between +++ lines, its top-level keys the field's sections. It has no heading, so it takes no title, position, after, content or one_of. [§FS-fields.front-matter.config](../functional-spec/FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys)
 
 | Key | Type | Default | What it sets |
 |---|---|---|---|

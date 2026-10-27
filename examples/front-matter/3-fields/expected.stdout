@@ -1,2 +1,3 @@
 bundle/metrics/gross-bookings.md:2: error: METRIC-gross-bookings.front-matter.type is "Measure"; kind METRIC admits Metric; change the value to one of them
 bundle/metrics/gross-bookings.md:4: error: METRIC-gross-bookings.front-matter.owner is not a key of kind METRIC's front matter, which is closed; its keys: type, title, sources; rename it to one of them, remove it, or add it to the field's keys
+bundle/metrics/refunds.md:4: error: METRIC-refunds.front-matter.unit is not a key of kind METRIC's front matter, which is closed; its keys: type, title, sources; rename it to one of them, remove it, or add it to the field's keys

@@ -131,7 +131,7 @@ Cons: can be noisy; recommend narrowing after the first `grund check`, then `gru
 
 Evidence: Markdown files that open with a `---` or `+++` block (Jekyll, Hugo, Zola, Pandoc, Docusaurus). A repository whose Markdown opens with YAML or TOML front matter can keep its relationships there as `§` citations: they count for the file's first declaration, a `#` comment in the block declares nothing, and `grund fmt` leaves the block as written.
 
-When existing records keep facts that define their kind in YAML front matter — a MADR `status`, an OKF `type` — declare those facts as the kind's `front-matter` field and its keys, not as chapters that mirror them. Version 2 only; the block's top-level keys become the field's sections, `check` holds each key, and a `+++` (TOML) block is not read as a field yet ([fields guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/fields.md#front-matter-is-a-field)):
+When existing records keep facts that define their kind in YAML or TOML front matter — a MADR `status`, an OKF `type` — declare those facts as the kind's `front-matter` field and its keys, not as chapters that mirror them. Version 2 only; the block's top-level keys become the field's sections, YAML between `---` lines and TOML between `+++` lines alike, and `check` holds each key ([fields guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/fields.md#front-matter-is-a-field)):
 
 ```toml
 [schema.kinds.ADR.fields.front-matter]
