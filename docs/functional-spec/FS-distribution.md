@@ -543,7 +543,9 @@ Declaration records: id/kind/number/slug/path/line/headingLevel/title/sections/
 duplicateSections/stub/defines/e2eCase/bodyStart/bodyEnd/bodyHasContent/source/
 valueValid. Citation records retain namespace/id/section/path/line/column/marker/
   shorthand/localSection/shorthandRewritable/numericRun/text/inlineSite/
-  enclosingDeclaration/enclosingSection.
+  enclosingDeclaration/enclosingSection. A front-matter coordinate is a Section
+record like any other, with `headingLevel` `0` and no new field
+([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
 Each structural/value fact is a fixed typed record carrying the actual source
 fields under camelCase, with paths rendered through core; source is discriminated
 `kind: 'text'` versus `kind: 'json'` memberSlice/keyColumn/keyText/format. `kind:

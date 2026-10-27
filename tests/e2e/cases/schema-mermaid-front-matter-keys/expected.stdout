@@ -1,0 +1,11 @@
+flowchart LR
+  %% madr · grund.toml · v2
+  %% must = check error · warn = check warning · should = suggestion (check --suggestions)
+  %% may = allowed · must not / warn not / should not = forbidden at that strength
+  %% any of = one obligation, met by citing any one of its arrows
+  classDef place stroke-dasharray:5 5
+  classDef unscanned stroke-dasharray:2 2
+  subgraph unruled["no direction rule names these"]
+    n0["ADR<br/>kind<br/>docs/adr/0004-cache-availability.md<br/>field front-matter: must · closed must<br/>key status: must · one of proposed, accepted, rejected, deprecated<br/>key date: must<br/>key decision-makers: may<br/>field context: must<br/>field decision: must<br/>closed must"]
+    n1["code<br/>complement<br/>every scanned file no other row claims"]
+  end

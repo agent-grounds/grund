@@ -158,6 +158,10 @@ For an E2E case ([§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-a
 
 For a value-source declaration ([§FS-values.terms](FS-values.md#terms-terms)), JSON or YAML, every read mode's `body` is the exact available member or element source slice and `path`/`line` is that slice's exact span start, and `anchor` is `null`; no Markdown heading, title or anchor is synthesized ([§FS-values.6.2](FS-values.md#62-value-source-declarations-in-the-catalog)).
 
+### 4.4 Front-matter coordinates
+
+For a front-matter coordinate ([§FS-fields.front-matter.coordinates](FS-fields.md#front-mattercoordinates-its-coordinates)), every read mode's `body` is the coordinate's slice, `path`/`line` is its start, and `anchor` is `null`, as for a value-source member; no heading is synthesized. `section` is its path, `front-matter` or `front-matter.<key>`, and `kind_title` is the declaration's kind title as for any section ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
+
 ## 5. `list --format=json`
 
 `list --format=json` emits one declaration object per line, sorted by `(id, path, line)`:
@@ -220,7 +224,7 @@ Under `--glob` and `--from` the citation object keeps these fields in this order
 {"id":"FS-001-login","section":"1","kind":"FS","path":"docs/functional-spec/FS-001-login.md","line":6,"stub":false,"defines":null,"duplicate":false,"lead_lines":3,"full_lines":3,"lead_words":9,"full_words":9,"lead_bytes":57,"full_bytes":57}
 ```
 
-The fixed prefix fields are `id`, `section`, `kind`, `path`, `line`, `stub`, `defines`, and `duplicate`. A workspace row begins with `project`; its `id` remains workspace-qualified ([§FS-workspace.8.3](FS-workspace.md#83-grund-list)). Selected unit pairs follow in caller order as `lead_<unit>`, `full_<unit>`; bare `--size` therefore emits `lines`, `words`, then `bytes`. Unselected pairs are absent. A broken stub uses `null` for each selected measurement. These are per-coordinate records rather than declaration-summary records, so `title` and `refs` are absent.
+The fixed prefix fields are `id`, `section`, `kind`, `path`, `line`, `stub`, `defines`, and `duplicate`. A workspace row begins with `project`; its `id` remains workspace-qualified ([§FS-workspace.8.3](FS-workspace.md#83-grund-list)). Selected unit pairs follow in caller order as `lead_<unit>`, `full_<unit>`; bare `--size` therefore emits `lines`, `words`, then `bytes`. Unselected pairs are absent. A broken stub uses `null` for each selected measurement. These are per-coordinate records rather than declaration-summary records, so `title` and `refs` are absent. A front-matter coordinate is a row like any section's, after the declaration's row and among its section paths in their order, and its lead and full both measure its slice ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
 
 ### 5.3 `cover --lines --format=json`
 

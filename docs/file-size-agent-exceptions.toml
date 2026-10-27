@@ -209,20 +209,22 @@ path = "docs/functional-spec/FS-declarations.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 782, unit = "lines" }
+max_accepted = { value = 794, unit = "lines" }
 until = "the stubs and checks chapters of the declarations specification move into their own declarations with existing FS-declarations section citations migrated"
 issue = "agent-grounds/grund#650"
 reason = """
 Missing boundary: what a stub is (§FS-declarations.stubs) and the finding catalog (§FS-declarations.checks) still share one declaration with the declaration grammar. Splitting them requires a mapped migration of their stable section IDs, which dozens of files cite; that migration is outside issue #650, which ends the 0.18.0 stub windows in the points that already hold them. The file was 781 non-blank lines before #650 and #650 leaves it at 772, so the ceiling accepts the measured size and permits no growth.
 
 The file arrived at issue #1027 measuring 782 non-blank lines, ten above this ceiling; #1027 rewrites five lines of §FS-declarations.checks in place and adds none. The declaration grammar and the finding catalog still share one declaration; the mapped migration above retires that debt and is outside a message change. The ceiling accepts exactly the measured 782 non-blank lines, with no growth allowance.
+
+Main reached 785 non-blank lines before issue #1048 touched it. #1048 extends §FS-declarations.section, §FS-declarations.section.map, §FS-declarations.body, §FS-declarations.checks.duplicate-section and its second point in place, because each said a section is a heading inside the body and a front-matter key is now a section that is neither; that adds nine lines. The mapped migration above still retires this debt and is outside a field change. The ceiling accepts exactly the measured 794 non-blank lines, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-distribution.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 932, unit = "lines" }
+max_accepted = { value = 945, unit = "lines" }
 until = "the release-process chapter has a dedicated specification and its published 4.* addresses retain forwarding points"
 reason = """
 The release-process chapter (4) is a separate subject from package and binding behavior, but its published 4.* addresses are cited by workflows, guards and tests. The missing boundary is a release-process specification with retained forwarding points for those addresses. This specification-only transition extends the existing release guard at 4.2.2 and 4.2.5 and defines its shared floor before implementation; extracting the entire publication contract here would expand the approved transition. Defer that extraction while keeping all published addresses in place. Main reached 848 non-blank lines before issue #503 touched it, and #503 rewrote the binding rows of §FS-distribution.3.2.1, §FS-distribution.3.2.2.2 and §FS-distribution.3.3.5 in place, so it added no line. At 848, agent-grounds/grund#466 named the Rust 1.0 promise; that change moves the Python adapter paragraphs from 3.1 to 3.3 and specifies the facade's records in FS-integrations, keeping 3.1.2 and 3.1.3 to the promise and the entry point that the 1.0 audit (#467) reads here, and the ceiling rises 848 -> 855 to accept the measured size. #805 clarifies the raw Cargo extension-build obligation at §FS-distribution.3.3.7.1 beside the existing Python source-build boundary, adding 11 non-blank lines. Extracting the unrelated publication contract would expand this native-build repair; the same forwarding-point migration still retires this debt. The ceiling moves from 855 to the measured 866. #846 specifies the correction-route audit's trigger and mention guidance beside its existing release-record contract, adding 18 non-blank lines at §FS-distribution.4.6.4.2 before implementation. The same release-process extraction and forwarding points retire this debt; expanding this diagnostic-only change into that migration would cross its scope. The ceiling rises to the measured 884 and permits no further growth. #829 says, in the Node check row of §FS-distribution.3.2.1 and the Python selectors of §FS-distribution.3.3.5, that a selected report carries every empty-citation-obligation row with a rule-produced code and can hold a selected-check-off line the complete report does not, adding 3 non-blank lines. The same release-process extraction retires this debt. The ceiling rises to the measured 887 and permits no further growth.
@@ -234,6 +236,8 @@ Issue #804 adds the approved first-stable selection contract at §FS-distributio
 Issue #913 adds four non-blank lines at §FS-distribution.3.2.4 referring to the existing Node acceptance architecture for its bounded deadline policy. The release-process extraction and forwarding-point retirement condition remain unchanged; migrating those addresses is outside this internal harness correction. The ceiling accepts exactly 914 non-blank lines, with no growth allowance.
 
 Issue #1019 defines the version-free release-window refusal and pull-request gate at §FS-distribution.4.2.5 and §FS-distribution.4.2.6, reconciling the candidate-version limitation at §FS-distribution.4.2.1. The integrated baseline already measured 928 non-blank lines; these four new paragraphs take it to exactly 932, with no growth allowance. The release-process extraction and forwarding-point retirement condition remain unchanged: migrating the published release addresses is outside this bounded guard change.
+
+Main reached 943 non-blank lines before issue #1048 touched it. #1048 adds two lines to §FS-distribution.3.2.2.3, saying that a front-matter coordinate is a Section record with `headingLevel` `0` and no new field. The release-process extraction and forwarding-point retirement condition remain unchanged. The ceiling accepts exactly the measured 945 non-blank lines, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/architecture/AR-ci.md"

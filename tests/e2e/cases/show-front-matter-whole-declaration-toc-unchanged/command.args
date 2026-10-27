@@ -1,0 +1,1 @@
+show ADR-cache --toc --format json {repo}

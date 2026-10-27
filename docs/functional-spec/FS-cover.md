@@ -147,6 +147,7 @@ A line's **owner** is the declaration whose body range contains it, the nearest 
 - A rejected or duplicate section heading closes the section above it and opens nothing; its lines belong to the declaration under no section until an accepted heading opens one. The first occurrence of a duplicated path keeps its lines.
 - A `#` line inside a fenced code block is not a heading and changes nothing.
 - A stub owns only its one line.
+- A line of the front matter of a declaration whose kind declares a `front-matter` field is in `front-matter.<key>` inside a key's slice and in `front-matter` elsewhere in the block ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
 - A source declaration owns its comment or docstring block up to the next declaration line in that block. The code below the block is owned by nothing: grund does not understand scopes ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)).
 
 ### 6.3 Output

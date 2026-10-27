@@ -1,0 +1,12 @@
+grund.toml is read as version 2.
+
+unreadable-front-matter
+The front matter of a declaration whose kind declares a front-matter field cannot be read as YAML keys, or is TOML.
+
+Severity: error, fixed.
+On: when [schema.kinds.<kind>.fields.front-matter] is set (a setting)
+Fix, yaml: fix the YAML
+Fix, toml: write it as YAML between --- lines, or remove kind {kind}'s front-matter field
+Note: The field is present, so no missing-field is reported beside it, and none of its keys is judged.
+
+Next: grund config explain '[schema.kinds.<kind>.fields.front-matter]'

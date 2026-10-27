@@ -1,0 +1,1 @@
+show --format json ADR-cache.front-matter.status {repo}

@@ -1,0 +1,1 @@
+cover docs/adr/cache.md --lines 1-12 --format json

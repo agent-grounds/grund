@@ -1,0 +1,20 @@
+madr · grund.toml · v2
+
+kinds and places
+  ADR   kind                     docs/adr/0004-cache-availability.md
+          field front-matter     must · closed must
+            key status           must · one of proposed, accepted, rejected, deprecated
+            key date             must
+            key decision-makers  may
+          field context          must
+          field decision         must
+          closed must
+  code  complement               every scanned file no other row claims
+
+citations
+  ADR   —
+  code  —
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it

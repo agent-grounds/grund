@@ -78,7 +78,9 @@ They use each configured kind's effective ID grammar
 body-local section records. A declaration unit is its owned body. A chapter
 unit is the named heading and its subtree through the line before the next
 heading of the same or shallower depth. Rejected outside-body and unmarked
-headings are not units.
+headings are not units. The front-matter coordinates of a declaration whose kind
+declares a `front-matter` field are chapter units too, each its slice, selected by the
+whole path `front-matter` or `front-matter.<key>` ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
 
 The four accepted subject spellings, and the one shorthand only a selector
 accepts, are:

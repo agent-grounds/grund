@@ -1,0 +1,7 @@
+docs/adr/keys.md:4: error: ADR-keys.front-matter.reviewer is not a key of kind ADR's front matter, which is closed; its keys: status, date; rename it to one of them, remove it, or add it to the field's keys
+docs/adr/keys.md:5: error: ADR-keys.front-matter.Reviewer is not a key of kind ADR's front matter, which is closed; its keys: status, date; rename it to one of them or remove it
+docs/adr/keys.md:6: error: ADR-keys.front-matter.review_date is not a key of kind ADR's front matter, which is closed; its keys: status, date; rename it to one of them or remove it
+docs/adr/merge.md:1: error: ADR-merge.front-matter has no status key; kind ADR declares it; add the key to the front matter
+docs/adr/merge.md:2: error: ADR-merge.front-matter.<< is not a key of kind ADR's front matter, which is closed; its keys: status, date; rename it to one of them or remove it
+docs/adr/odd.md:4: error: ADR-odd.front-matter.[a, b] is not a key of kind ADR's front matter, which is closed; its keys: status, date; rename it to one of them or remove it
+docs/adr/odd.md:6: error: ADR-odd.front-matter.*k is not a key of kind ADR's front matter, which is closed; its keys: status, date; rename it to one of them or remove it

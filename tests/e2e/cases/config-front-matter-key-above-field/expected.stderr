@@ -1,0 +1,1 @@
+error: grund.toml:8: `[schema.kinds.ADR.fields.front-matter.keys.status]` names no field: write [schema.kinds.ADR.fields.front-matter] above it

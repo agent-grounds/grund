@@ -1,0 +1,2 @@
+docs/adr/dup.md:2: error: duplicate section ADR-dup.front-matter.status (also declared at docs/adr/dup.md:4); remove all but one of the keys
+docs/adr/quoted.md:2: error: duplicate section ADR-quoted.front-matter.status (also declared at docs/adr/quoted.md:3); remove all but one of the keys

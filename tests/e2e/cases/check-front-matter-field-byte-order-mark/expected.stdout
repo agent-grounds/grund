@@ -1,0 +1,1 @@
+docs/adr/cache.md:6: error: ADR-cache has no front-matter field; kind ADR declares it; remove the byte-order mark before the --- on line 1

@@ -1,0 +1,1 @@
+error: grund.toml:12: `[schema.kinds.ADR.fields.front-matter.keys.Status]`: a key name is a section name matching `[a-z][a-z0-9-]*`

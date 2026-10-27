@@ -1,0 +1,8 @@
+wrote AGENTS.md
+wrote docs/adr/AGENTS.md
+exists grund.toml
+
+next:
+  1. run `grund check`
+  2. allocate an ID:  ID=$(grund id ADR "…")  then add it to docs/adr/0004-cache-availability.md
+see AGENTS.md for the full workflow.

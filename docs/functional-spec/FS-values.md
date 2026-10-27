@@ -293,6 +293,9 @@ Invalid config stops before scanning. A missing, unreadable, malformed-UTF-8, or
 | unreadable, malformed UTF-8, or a stream the parser rejects | `2`, an incomplete scan, as a JSON source that does not parse |
 | a refused construct, a wrong shape, an invalid component, or a refused escape | `1`, `invalid-value-declaration` |
 | a repeated key, or an ID declared across sources | `1`, `duplicate` |
+
+A YAML value source whose collections are nested more than 128 deep is a stream the reader rejects, at the line of the collection that crosses the bound, with the reason `collections are nested more than 128 deep` ([§DA-yaml-value-reader.2.2](../decisions/architectural/DA-yaml-value-reader.md#22-one-span-tree-with-no-value-rules-in-it)): until grund 0.22.0 the warning `invalid YAML: collections are nested more than 128 deep`, wrapped as [§FS-values.2.2.4](FS-values.md#224-yaml-findings-are-warnings-until-grund-0220) wraps every parse error, and from then on exit `2`. No source makes the reader recurse past that bound ([§REQ-never-crashes.1](../requirements/REQ-never-crashes.md#1-every-failure-is-a-diagnostic)).
+
  For readable input, declaration and citation-resolution findings precede comparison as [§FS-values.5.1](FS-values.md#51-resolve-before-comparison) specifies.
 
 Text and NDJSON use the existing streams, schema, and deterministic ordering ([§FS-output-shapes.1](FS-output-shapes.md#1-finding-object), [§FS-output-shapes.3](FS-output-shapes.md#3-text-report-ordering)). The NDJSON `code`, message, primary location, and declaration `sites` describe the same finding as text. A clean text check prints `success`; a clean JSON check remains empty.

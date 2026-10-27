@@ -1,0 +1,26 @@
+grund_config_version = 2
+project_name = "madr"
+
+[schema.kinds.ADR]
+files = ["docs/adr/0004-cache-availability.md"]
+id_format = "{kind}-{number}-{slug}"
+closed = "must"
+
+[schema.kinds.ADR.fields.front-matter]
+presence = "must"
+closed = "must"
+
+[schema.kinds.ADR.fields.front-matter.keys.status]
+presence = "must"
+one_of = ["proposed", "accepted", "rejected", "deprecated"]
+
+[schema.kinds.ADR.fields.front-matter.keys.date]
+presence = "must"
+
+[schema.kinds.ADR.fields.front-matter.keys.decision-makers]
+
+[schema.kinds.ADR.fields.context]
+presence = "must"
+
+[schema.kinds.ADR.fields.decision]
+presence = "must"

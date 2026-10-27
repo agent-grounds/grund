@@ -1,0 +1,6 @@
+docs/adr/alias.md:3: error: ADR-alias.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line
+docs/adr/block.md:2: error: ADR-block.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line
+docs/adr/empty.md:2: error: ADR-empty.front-matter.status is ""; kind ADR admits proposed, accepted; change the value to one of them
+docs/adr/folded.md:2: error: ADR-folded.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line
+docs/adr/seq.md:2: error: ADR-seq.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line
+docs/adr/typo.md:2: error: ADR-typo.front-matter.status is "Accepted"; kind ADR admits proposed, accepted; change the value to one of them
