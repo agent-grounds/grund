@@ -287,9 +287,6 @@ const HEADERS: &[Header] = &[
     ("schema.kinds.<NAME>.fields.front-matter", None, |names| {
         Opened::FrontMatter(names[0].to_string())
     }),
-    ("schema.kinds.<NAME>.fields.<field>", None, |names| {
-        Opened::Field(names[0].to_string(), names[1].to_string())
-    }),
     ("schema.kinds.<NAME>.fields.front-matter.keys", None, |_| {
         Opened::Table(Table::Parent)
     }),
@@ -298,6 +295,9 @@ const HEADERS: &[Header] = &[
         None,
         |names| Opened::Key(names[0].to_string(), names[1].to_string()),
     ),
+    ("schema.kinds.<NAME>.fields.<field>", None, |names| {
+        Opened::Field(names[0].to_string(), names[1].to_string())
+    }),
     ("rules", None, |_| Opened::Table(Table::Parent)),
     ("rules.citations", None, |_| Opened::Table(Table::Citations)),
     ("rules.citations.grounding", None, |_| {
