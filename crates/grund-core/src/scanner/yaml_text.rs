@@ -34,7 +34,7 @@ impl<'a> YamlText<'a> {
     /// Back from `pos` over whitespace, comment lines (less indented than
     /// `content_indent` for a block scalar), and for a plain scalar
     /// (`content_indent` absent) an inline comment and, in flow, the separator
-    /// before the next node.
+    /// before the next node. Out of flow, the next item's `-` goes as well.
     pub(super) fn trim_back(
         &self,
         mut pos: usize,
@@ -56,7 +56,9 @@ impl<'a> YamlText<'a> {
             let line_start = self.body[..pos].rfind('\n').map_or(0, |index| index + 1);
             let line = &self.body[line_start..pos];
             let indent = line.len() - line.trim_start().len();
-            if line.trim_start().starts_with('#') && content_indent.is_none_or(|own| indent < own) {
+            let below = content_indent.is_none_or(|own| indent < own);
+            let next_dash = !in_flow && line.trim() == "-";
+            if (line.trim_start().starts_with('#') || next_dash) && below {
                 pos = line_start;
             } else if plain && let Some(comment) = line.find(" #") {
                 pos = line_start + comment;

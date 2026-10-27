@@ -1,6 +1,7 @@
 //! Test module: a kind's slots, derived from its form and its fields
 //! (§AR-config.6.2, §FS-fields.record).
 
+use super::rows::Origin;
 use super::*;
 
 fn kind(form: Form, fields: Vec<Field>) -> Kind {

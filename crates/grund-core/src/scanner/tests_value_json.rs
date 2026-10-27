@@ -110,6 +110,7 @@ fn json_values_preserve_scalar_kind_spelling_and_member_order() {
             member_slice,
             key_column,
             key_text,
+            ..
         } = &declaration.source
         else {
             panic!("expected retained JSON member");

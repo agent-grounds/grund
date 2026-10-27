@@ -133,7 +133,9 @@ fn node_refusal(node: &YamlNode) -> Option<JsonNode> {
 /// element are invalid.
 fn scalar(text: &str, node: &YamlNode) -> JsonNode {
     let YamlKind::Scalar {
-        style, single_line, ..
+        value,
+        style,
+        single_line,
     } = &node.kind
     else {
         return refused(span(node.span), "a nested collection");
@@ -144,11 +146,12 @@ fn scalar(text: &str, node: &YamlNode) -> JsonNode {
     match style {
         ScalarStyle::Literal | ScalarStyle::Folded => refused(at, "a block scalar"),
         _ if !single_line => refused(at, "a multi-line scalar"),
-        ScalarStyle::Plain => match raw {
+        // The parser's value, not the slice: an empty element's slice is its `-`.
+        ScalarStyle::Plain => match value.as_str() {
             "" | "null" | "~" => JsonNode::Null(at),
             "true" | "false" => JsonNode::Bool(at),
-            _ if JSON_NUMBER_RE.is_match(raw) => JsonNode::Number(raw.to_string(), at),
-            _ => string(raw.to_string()),
+            plain if JSON_NUMBER_RE.is_match(plain) => JsonNode::Number(plain.to_string(), at),
+            plain => string(plain.to_string()),
         },
         ScalarStyle::SingleQuoted => string(raw[1..raw.len() - 1].replace("''", "'")),
         ScalarStyle::DoubleQuoted => match yaml_only_escape(raw) {

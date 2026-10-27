@@ -192,15 +192,14 @@ fn a_value_kind_arms_the_value_codes() {
 /// home holds a YAML source yet.
 #[test]
 fn a_value_kind_arms_the_yaml_window() {
+    let value = "[schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\nindex = false\n";
+    let root = v2("armed_value_home_on", "", value);
+    write(&root.join("values/.keep"), "");
     pinned(
         Switch::ValueHome,
         "yaml-value-source-deferred",
         armed(v2("armed_value_home_off", "", "")),
-        armed(v2(
-            "armed_value_home_on",
-            "",
-            "[schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\nindex = false\n",
-        )),
+        armed(root),
     );
 }
 
