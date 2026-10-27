@@ -1,0 +1,2 @@
+docs/adr/cafe.md:2: error: ADR-cafe.front-matter.status is "akzeptiert — geprüft"; kind ADR admits proposed, accepted; change the value to one of them
+docs/adr/cafe.md:6: error: ADR-cafe.front-matter.statuš is not a key of kind ADR's front matter, which is closed; its keys: status, author, title, date, summary; rename it to one of them or remove it
