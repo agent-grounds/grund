@@ -5,8 +5,9 @@
 //!
 //! It is one file rather than a function in `body.rs` because it is the *answer*
 //! a measurement reads, not the slicer: it chooses the body a site has at all —
-//! a JSON member's recorded slice, an e2e case's manifest, a stub's nothing —
-//! and only then falls through to the slicer (§FS-list.2).
+//! a JSON member's recorded slice, a front-matter coordinate's slice, an e2e
+//! case's manifest, a stub's nothing — and only then falls through to the
+//! slicer (§FS-list.2).
 //!
 //! Both of its readers slice the lead through that one slicer, which is why
 //! neither can be a pure function in a lower component: the answer is a function
@@ -56,6 +57,10 @@ pub(crate) fn point_body_pair(
             },
         };
         return Ok(Some((body.clone(), body)));
+    }
+    // §FS-fields.front-matter.surfaces: lead and full both measure the slice.
+    if let Some(slice) = section.and_then(|(_, info)| info.front_matter.as_ref()) {
+        return Ok(Some((slice.text.clone(), slice.text.clone())));
     }
     if let Some(case) = &declaration.e2e_case {
         let spelling = render_declaration_id(frame.grammar(), declaration);
