@@ -180,8 +180,8 @@ What a citing kind (or place) must, should, may, should not and must not cite. [
 | Key | Type | Default | What it sets |
 |---|---|---|---|
 | `default` | `"must"` \| `"should"` \| `"may"` \| `"should-not"` \| `"must-not"` | — | What this kind may cite when no list names the target, overriding `[citations] default`. [§FS-config.3.9.4](../functional-spec/FS-config.md#394-defaults-and-precedence) |
-| `must` | array of strings | `[]` | Kinds each declaration (or file, for a place) must cite; a miss is an error. [§FS-config.3.9.1](../functional-spec/FS-config.md#391-levels) |
-| `should` | array of strings | `[]` | Kinds it should cite; a miss is a suggestion. [§FS-config.3.9.1](../functional-spec/FS-config.md#391-levels) |
+| `must` | array of strings | `[]` | Kinds each declaration (or file, for a place) must cite; a miss is an error. A file of a place or the complement that cites nothing is not checked by this key; `require_grounding` makes it a finding. [§FS-config.3.9.1](../functional-spec/FS-config.md#391-levels) |
+| `should` | array of strings | `[]` | Kinds it should cite; a miss is a suggestion. A file of a place or the complement that cites nothing is not checked by this key; `require_grounding` makes it a finding. [§FS-config.3.9.1](../functional-spec/FS-config.md#391-levels) |
 | `may` | array of strings | `[]` | Kinds it may cite, even under a stricter default. [§FS-config.3.9.1](../functional-spec/FS-config.md#391-levels) |
 | `should-not` | array of strings | `[]` | Kinds it should not cite; a citation is a suggestion. [§FS-config.3.9.1](../functional-spec/FS-config.md#391-levels) |
 | `must-not` | array of strings | `[]` | Kinds it must not cite; a citation is an error. [§FS-config.3.9.1](../functional-spec/FS-config.md#391-levels) |
@@ -350,9 +350,9 @@ What a citing kind (or place) must, warn, should, may, should not, warn not and 
 | Key | Type | Default | What it sets |
 |---|---|---|---|
 | `default` | `"may"` \| `"should-not"` \| `"warn-not"` \| `"must-not"` | — | What this kind may cite when no list names the target: `may`, or a prohibition at some strength. [§FS-config-v2.rules.citations.default](../functional-spec/FS-config-v2.md#rulescitationsdefault-a-default-may-forbid-never-oblige) |
-| `must` | array of strings | `[]` | Kinds this one must cite; a miss is an error. [§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations) |
-| `warn` | array of strings | `[]` | Kinds this one must cite; a miss is a warning. [§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations) |
-| `should` | array of strings | `[]` | Kinds this one should cite; a miss is a suggestion. [§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations) |
+| `must` | array of strings | `[]` | Kinds this one must cite; a miss is an error. A file of a place or the complement that cites nothing is not checked by this key; `[rules.citations.<ROW>.grounding]` makes it a finding. [§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations) |
+| `warn` | array of strings | `[]` | Kinds this one must cite; a miss is a warning. A file of a place or the complement that cites nothing is not checked by this key; `[rules.citations.<ROW>.grounding]` makes it a finding. [§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations) |
+| `should` | array of strings | `[]` | Kinds this one should cite; a miss is a suggestion. A file of a place or the complement that cites nothing is not checked by this key; `[rules.citations.<ROW>.grounding]` makes it a finding. [§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations) |
 | `may` | array of strings | `[]` | Kinds this one may cite. [§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations) |
 | `should-not` | array of strings | `[]` | Kinds this one should not cite; a citation is a suggestion. [§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations) |
 | `warn-not` | array of strings | `[]` | Kinds this one must not cite; a citation is a warning. [§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations) |
