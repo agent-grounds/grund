@@ -220,9 +220,16 @@ impl<'a> Content<'a> {
         else {
             return Ok(Vec::new());
         };
+        // §FS-fields.front-matter.coordinates: an entry ends where the next key starts.
+        let bounds = entries
+            .iter()
+            .skip(1)
+            .map(|(key, _)| key.span.start)
+            .chain([self.text.len()]);
         Ok(entries
             .iter()
-            .map(|(key, value)| self.key(key, value))
+            .zip(bounds)
+            .map(|((key, value), bound)| self.key(key, value, bound))
             .collect())
     }
 
@@ -255,8 +262,8 @@ impl<'a> Content<'a> {
     }
 
     /// §FS-fields.front-matter.keys, §FS-fields.front-matter.values: one entry
-    /// of the top-level mapping.
-    fn key(&self, key: &YamlNode, value: &YamlNode) -> Key<'a> {
+    /// of the top-level mapping, which ends before `bound`.
+    fn key(&self, key: &YamlNode, value: &YamlNode, bound: usize) -> Key<'a> {
         let written = &self.text[key.span.start..key.span.end];
         let (name, section) = match &key.kind {
             YamlKind::Scalar { value, .. } => (value.clone(), named_section_component(value)),
@@ -275,8 +282,7 @@ impl<'a> Content<'a> {
         // §FS-fields.front-matter.coordinates: from the key to its value's end, or
         // to its colon where it has no value, no line ending at the end.
         let end = if empty(value) {
-            let colon = self.text[key.span.end..].find(':').map_or(0, |at| at + 1);
-            key.span.end + colon
+            self.colon_end(key.span.end, bound).unwrap_or(key.span.end)
         } else {
             value.span.end.max(key.span.end)
         };
@@ -295,6 +301,22 @@ impl<'a> Content<'a> {
             slice: &self.file[start..end],
             end_line: self.line(key.span.start + slice.len().saturating_sub(1)),
         }
+    }
+
+    /// Just past the colon a value-less key writes between `from` and `bound`, its
+    /// entry's end, skipping comments; `None` for a key that writes none (`? k`, `{k}`).
+    fn colon_end(&self, from: usize, bound: usize) -> Option<usize> {
+        let mut comment = false;
+        for (at, ch) in self.text[from..bound].char_indices() {
+            match ch {
+                '\n' => comment = false,
+                _ if comment => {}
+                '#' => comment = true,
+                ':' => return Some(from + at + 1),
+                _ => {}
+            }
+        }
+        None
     }
 }
 
