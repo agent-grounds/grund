@@ -319,7 +319,7 @@ The citation is right and the literal is stale, so the fix is `0.001 s`, cited a
 Until grund 0.22.0 the line opens with the older component-only message, and from then
 it is the root's alone.
 
-The [values guide](docs/user-facing/values.md) covers JSON declarations, values inside
+The [values guide](docs/user-facing/values.md) covers JSON and YAML declarations, values inside
 prose specs, and bindings in code comments.
 
 ## Chapter rules

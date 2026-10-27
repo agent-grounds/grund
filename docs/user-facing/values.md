@@ -177,22 +177,32 @@ set it reads, reports, and exits exactly as before ([§FS-values.9](../functiona
 binary refuses the unknown key loudly, so adopting it pins the repository to
 this release or later.
 
-## Declare values in JSON
+## Declare values in JSON or YAML
 
-JSON is discovered only at the enabled kind's existing home:
+A value source ([§FS-values.terms](../functional-spec/FS-values.md#terms-terms)) is discovered only at the enabled kind's existing home:
 
-- A kind whose `file` ends in `.json` reads that file.
-- A folder kind reads each direct `.json` child in normalized bytewise path
-  order.
-- Nested JSON, JSON outside the home, and a non-JSON `file` are not value
-  sources.
+- A kind whose `file` ends in `.json`, `.yaml` or `.yml` reads that file.
+- A folder kind reads each direct `.json`, `.yaml` and `.yml` child, in one
+  normalized bytewise path order across both formats.
+- Nested files, files outside the home, and a `file` with any other extension
+  are not value sources.
 
 Generic scan extensions, include/exclude and ignore filters, explicit command
-paths, and `--full` cannot add or suppress these inputs. A home JSON file is
+paths, and `--full` cannot add or suppress these inputs. A value source is
 catalog input only and never contributes citations.
 
-The root is a nonempty object. Every key is a full, unqualified ID of the owning
-kind, and every value is a nonempty array of JSON numbers or strings:
+> [!WARNING]
+> In a version 1 config, a `.yaml` or `.yml` file whose extension is in the
+> effective `[scan] extensions` — the list the config writes, or the default list
+> where it writes none — stays scan input and declares nothing, even at a value
+> home ([§FS-values.2.2](../functional-spec/FS-values.md#22-declarations-from-value-sources)). Leave `yaml` and `yml` out of that list to read
+> them as values. In version 2 a file is read by its language: a `data` language
+> means JSON whatever the name, and only a file no language claims is read by its
+> extension.
+
+The root is a nonempty object or mapping. Every key is a full, unqualified ID of
+the owning kind, and every value is a nonempty array or sequence of numbers or
+strings:
 
 ```json
 {
@@ -204,13 +214,58 @@ kind, and every value is a nonempty array of JSON numbers or strings:
 Array element zero declares `.1`, element one declares `.2`, and so on. String
 components follow the same nonempty, edge-whitespace, backtick, and control
 character boundary as Markdown. Duplicate keys are preserved and reported as
-ambiguous declarations; declarations duplicated across files or across JSON
-and Markdown are ambiguous too. Read, UTF-8, or JSON syntax failures make the
-scan incomplete and exit `2`; readable schema violations use
-`invalid-value-declaration` and exit `1`.
+ambiguous declarations; declarations duplicated across files, across formats,
+or across a value source and Markdown are ambiguous too. Read, UTF-8, or JSON
+syntax failures make the scan incomplete and exit `2`; readable schema
+violations use `invalid-value-declaration` and exit `1`.
 
-Application code can read this JSON file directly. `grund` does not generate a
+Application code can read the file directly. `grund` does not generate a
 module or maintain a second artifact.
+
+### YAML sources
+
+YAML is the format to reach for when a value needs a comment saying where it
+came from ([§FS-values.2.2.3](../functional-spec/FS-values.md#223-how-a-yaml-source-is-read)):
+
+```yaml
+# Fire code, section 4.2: occupancy per room.
+CONST-room-limit: [12, people]
+
+# Quoted, so it stays the string "1.10" rather than a number.
+CONST-release: ['1.10']
+
+CONST-field-price:
+  - 1200
+  - USD
+```
+
+A YAML source is one document: a mapping of IDs to sequences, flow or block, of
+single-line scalars. A component's kind comes from how it is written, never
+from YAML's type resolution:
+
+- A quoted scalar is a string.
+- A plain scalar is a number exactly when it matches JSON number grammar, and a
+  string otherwise, so `1.10` is the number `1.10`, while `0o17` and `yes` are
+  strings. Quote a value to keep it a string.
+- Plain `true`, `false`, `null`, `~` and an empty element are invalid, as a
+  JSON boolean or null is.
+- A double-quoted scalar takes JSON's escapes only.
+
+Anchors, aliases, tags, merge keys, block scalars, multi-line scalars, nested
+collections and a second document are refused, each at its own line.
+
+Until grund 0.22.0 every finding at a YAML source is a
+`yaml-value-source-deferred` warning, so adopting YAML cannot fail a run that
+passed before ([§FS-values.2.2.4](../functional-spec/FS-values.md#224-yaml-findings-are-warnings-until-grund-0220)). The warning keeps the wrapped finding's words
+and says how to fix it; a source with any finding declares nothing until it is
+fixed. A kind that sets `fetch` skips its YAML sources in this release, with the
+same warning.
+
+> [!NOTE]
+> A `§` citation written in a YAML comment is read by nothing: it neither
+> resolves nor dangles, and no check reports it. Cite a value's provenance from
+> Markdown, where it is checked, and let the comment say in words where the
+> number came from.
 
 ## Bind an authored component
 
@@ -377,16 +432,16 @@ The other fixed exit-`1` codes are `invalid-value-declaration` and
 ## Existing commands and editors
 
 Whole and embedded values share the ordinary declaration and section catalog.
-JSON declarations appear in `list`, completion, collision checks, unused checks,
+Value-source declarations appear in `list`, completion, collision checks, unused checks,
 indexes, and navigation; embedded roots add metadata to the enclosing `list`
-row. Binding citations appear in `refs` and `cover`. `id` notices JSON collisions
-but never writes JSON. `show` returns the exact source slice rather than
+row. Binding citations appear in `refs` and `cover`. `id` notices value-source collisions
+but never writes a value source. `show` returns the exact source slice rather than
 synthesizing Markdown.
 
 The LSP uses the same report, hover slice, and definition spans as the CLI.
-Go-to-definition lands on the Markdown component heading or exact JSON key or
+Go-to-definition lands on the Markdown component heading or exact JSON or YAML key or
 element; from a binding aimed at a root it lands on the root itself — the whole
-declaration's heading or JSON key, or the marked or chapter root's own heading
+declaration's heading or key, or the marked or chapter root's own heading
 ([§FS-lsp.1.3.5](../functional-spec/FS-lsp.md#135-values-and-named-sections)). `fmt --cross-refs` leaves the citation bytes inside a
 recognized binding unchanged so it cannot destroy the authored form. That now
 includes a whole-value ID with no coordinate, which earlier releases rewrote

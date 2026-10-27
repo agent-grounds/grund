@@ -2,8 +2,8 @@
 
 This runnable mini-repository demonstrates [§FS-values](../../docs/functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value) on a physics
 simulation, whose integration time step is the kind of number that gets tuned and
-then goes stale everywhere it was quoted. It shows a `CONST` kind with Markdown and
-JSON declarations, a section marked independently with `<!-- grund:value -->`, a
+then goes stale everywhere it was quoted. It shows a `CONST` kind with Markdown,
+JSON and YAML declarations, a section marked independently with `<!-- grund:value -->`, a
 chapter whose named children are roots by schema, exact numeric equality, prose and
 Python-comment bindings, direct application reads of the JSON source, the deliberate
 unbackticked non-binding, and one caught mismatch.
@@ -41,6 +41,15 @@ the run prints that caution where `success` would stand
 ([§FS-check.checks.config-version-1](../../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)). The part before it is the message
 earlier releases printed, kept whole until grund 0.22.0 drops it
 ([§FS-errors.3.9](../../docs/functional-spec/FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)).
+
+The solver's limits live in [`values/limits.yaml`](repo/values/limits.yaml), a
+YAML value source beside the JSON one, read the same way and checked the same
+way ([§FS-values.2.2.3](../../docs/functional-spec/FS-values.md#223-how-a-yaml-source-is-read)). YAML is there for its comments: each value says in
+words where it came from, and the integrator's version is quoted so it stays
+the string `1.10` rather than becoming a number. A `§` citation in one of those
+comments would be read by nothing, so the provenance is cited from the solver
+document instead. Change the bound substep cap `8` to `9` and the run reports
+the mismatch at `values/limits.yaml:7`.
 
 `DOC-solver.1` is the second authority form: an ordinary section inside the solver
 document, outside any `values = true` kind, owns the strict component

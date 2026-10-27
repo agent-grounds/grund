@@ -227,7 +227,7 @@
               },
               "file": {
                 "type": "string",
-                "description": "A single-file home: every declaration is a heading in this document. It is read only if its extension is in `[scan] extensions`, or, on a `values = true` row, as its JSON home by the value pass; otherwise `grund check` warns at this line."
+                "description": "A single-file home: every declaration is a heading in this document. It is read only if its extension is in `[scan] extensions`, or, on a `values = true` row, as its value source by the value pass when it ends in `.json`, `.yaml` or `.yml`; otherwise `grund check` warns at this line."
               },
               "title": {
                 "type": "string",

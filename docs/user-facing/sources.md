@@ -92,6 +92,13 @@ value reader only. A **source** language is read through its comment hosts.
 Any other suffix, such as `h`, `hpp`, `jsx`, `mjs` or `kts`, is read only
 through a mapping.
 
+No built-in language claims `yaml` or `yml`, so a `.yaml` or `.yml` file at a
+value kind's home is read by the YAML value reader, as its extension says
+([§FS-config-v2.schema.sources.values](../functional-spec/FS-config-v2.md#schemasourcesvalues-a-value-home-reads-a-file-by-its-language)). Map either suffix to a language
+and the language decides instead: a `data` language reads the file as JSON, and
+any other makes it no value source. Outside a value home no YAML file is read
+as a value.
+
 ## Remapping a suffix
 
 `[schema.sources.extensions]` maps a suffix to an admitted language

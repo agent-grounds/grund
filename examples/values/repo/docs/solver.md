@@ -13,6 +13,9 @@ The stability analysis still assumes `0.002 s` (§CONST-time-step).
 
 Each step damps velocity by `0.020` (§CONST-damping.1).
 
+The substep cap is `8` (§CONST-max-substeps.1), and the integration scheme is
+`velocity-verlet` (§CONST-integrator.1).
+
 The independently marked Courant limit agrees: `0.50` (§DOC-solver.1.1).
 
 Bound at its root, the same limit is one literal: `0.50` (§DOC-solver.1).
