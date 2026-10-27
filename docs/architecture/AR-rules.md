@@ -77,7 +77,7 @@ It has these fields:
 |---|---|
 | `origin` | configured rule identity, including its project, or the stable `--rule` origin |
 | `anchor` | repository-relative path, line and optional column for a declaration; the stable `--rule` pseudo-anchor otherwise |
-| `subject` | one normalized local kind, declaration, quantified named chapter, or exact named-chapter selector |
+| `subject` | one normalized local kind, declaration, quantified named chapter, or exact named-chapter selector; a kind or quantified chapter selector may carry one whose filter, a `(field path, value)` pair ([§FS-rules.2.2](../functional-spec/FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)) |
 | `modality` | required or recommended, paired with positive or prohibiting polarity |
 | `relation` | `have chapter`, `cite`, or `be cited by`; per-target coverage is `cite` with per-target cardinality |
 | `targets` | a chapter name or a bytewise-sorted, duplicate-free set of qualified kinds, with aggregate or per-target mode |
@@ -86,7 +86,12 @@ It has these fields:
 Normalization erases spelling alternatives such as `one` versus decimal `1`
 and preserves no title text. Equality over every field except `origin` and
 `anchor` is semantic equality for deduplication; contributing origins are then
-sorted separately. A subject or target never contains a path, file, folder,
+sorted separately. A subject's whose filter is part of that equality, so two
+rules with the same filter fold and a filtered and an unfiltered rule do not.
+The parser reads each kind's scalar fields and their values from its config
+vocabulary; the matcher that `list` and `list --size` share with the rules,
+`RuleSubject::selects`, is handed a declaration's field display name as a
+string its caller read, never a scanner record. A subject or target never contains a path, file, folder,
 wildcard, symbol, definition, or derived term in phase 1
 ([§FS-rules.12](../functional-spec/FS-rules.md#12-deliberate-phase-1-absences)).
 

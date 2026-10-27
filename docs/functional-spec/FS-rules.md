@@ -18,6 +18,12 @@ level, rule, grounded).
   about.
 - **selector** — What a subject or target spelling matches: a kind, a named chapter, or one
   exact ID.
+- **whose clause** — `whose FIELD is VALUE` at the end of a quantified subject. It narrows the
+  subject to the declarations of its kind whose scalar field `FIELD` holds `VALUE`
+  ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)).
+- **outside the rule** — Said of a declaration of the subject's kind that the subject's whose
+  clause does not select. It contributes no unit, no family reports it, and it is never
+  unreached ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)).
 - **chapter** — A rule's unit inside a declaration: one named heading in its body, direct or
   nested, as against the declaration's whole body. The rule grammar's subject-unit word.
 - **display name** — The label an author wrote after a chapter's coordinate: `Terms` in
@@ -37,7 +43,7 @@ Three requirements on the rule language as a whole, each carrying a mark — *re
 
 ### requirements.unseen: Nothing a rule governs passes unseen — realized, one case deferred
 
-A rule that cannot run is reported at its own heading and never silently omitted: the run keeps its other findings and exits nonzero, and `init` writes no block over an invalid rule ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)); a sentence the run's scope cannot verify is reported all the same ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)); and a run narrowed to the rule-produced codes keeps every `invalid-rule` row ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)). A `must` or `should` rule whose subject yields no unit says it applies to nothing, scoped or narrowed, rather than passing ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)). A declaration a quantified chapter subject cannot reach is reported where it is declared rather than passed over ([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)), and an incomplete snapshot yields no closed-world absence or count and keeps exit 2 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)). A chapter-presence rule beside a chapter-scoped citation rule suppresses nothing, but it counts display names where the citation rule selects handles ([§FS-rules.3.1](FS-rules.md#31-chapter-presence), [§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so the two report one absence together only where chapters are titled by their handles, as `## terms: Terms` is. A `[citations]` direction absorbs a duplicate rule's finding only where it reports the same unit itself, so a unit only the rule fails, because its only citation of the target kind does not resolve, is reported as the rule's ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)). One case is **deferred**, owed to its own change: a trial sentence that duplicates a `[citations]` direction authors nothing for a unit the direction itself reports, so `check --rule … --only-rule` prints `success` there while the tree's own findings stand ([§FS-rules.8](FS-rules.md#8-command-surfaces)). Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work), on the model [§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips) sets for a file the scan cannot read.
+A rule that cannot run is reported at its own heading and never silently omitted: the run keeps its other findings and exits nonzero, and `init` writes no block over an invalid rule ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)); a sentence the run's scope cannot verify is reported all the same ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)); and a run narrowed to the rule-produced codes keeps every `invalid-rule` row ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)). A `must` or `should` rule whose subject names a kind with no local declaration says it applies to nothing, scoped or narrowed, rather than passing ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)); a whose clause that selects none of the kind's declarations yet describes the project's state, not a broken rule, and says nothing. A declaration a whose clause leaves outside the rule does not pass unseen either: the clause selects by a scalar field the kind declares, so the declaration's field holds another value of its `one_of`, or is absent where the field is `may` and absence is allowed, or is reported on its own — an absent `must`, `warn` or `should` field as `missing-field` and a value outside `one_of` as `invalid-field-value`, at every strength ([§FS-fields.strengths.table](FS-fields.md#strengthstable-which-strength-each-finding-takes), [§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)). A run narrowed by `--only-rule` drops those field findings with everything else the trial sentence did not author, so it shows nothing for such a declaration ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A declaration a quantified chapter subject cannot reach is reported where it is declared rather than passed over ([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)), and an incomplete snapshot yields no closed-world absence or count and keeps exit 2 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)). A chapter-presence rule beside a chapter-scoped citation rule suppresses nothing, but it counts display names where the citation rule selects handles ([§FS-rules.3.1](FS-rules.md#31-chapter-presence), [§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so the two report one absence together only where chapters are titled by their handles, as `## terms: Terms` is. A `[citations]` direction absorbs a duplicate rule's finding only where it reports the same unit itself, so a unit only the rule fails, because its only citation of the target kind does not resolve, is reported as the rule's ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)). One case is **deferred**, owed to its own change: a trial sentence that duplicates a `[citations]` direction authors nothing for a unit the direction itself reports, so `check --rule … --only-rule` prints `success` there while the tree's own findings stand ([§FS-rules.8](FS-rules.md#8-command-surfaces)). Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work), on the model [§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips) sets for a file the scan cannot read.
 
 ### requirements.addition: The language grows by addition — directional
 
@@ -82,8 +88,8 @@ headings are not units. The front-matter coordinates of a declaration whose kind
 declares a `front-matter` field are chapter units too, each its slice, selected by the
 whole path `front-matter` or `front-matter.<key>` ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
 
-The four accepted subject spellings, and the one shorthand only a selector
-accepts, are:
+The four accepted subject spellings, the whose clause either quantified one may
+end in, and the one shorthand only a selector accepts, are:
 
 | Authored subject | Selector and match |
 |---|---|
@@ -91,6 +97,7 @@ accepts, are:
 | `ID` | the one local declaration with that full ID |
 | `The NAME chapter of each KIND` | the chapter at that whole path of every local declaration of the kind that has one |
 | `ID.NAME[.NAME…]` | the one local named chapter with that exact coordinate |
+| `Each KIND whose FIELD is VALUE`, `The NAME chapter of each KIND whose FIELD is VALUE` | what the subject without the clause selects, narrowed to the declarations of the kind whose scalar field `FIELD` holds `VALUE` ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)) |
 | `KIND.NAME[.NAME…]` | selector only: means `The NAME chapter of each KIND`, and a rule sentence refuses it |
 
 `KIND.NAME` selects by configured kind and `list --glob 'KIND-*.NAME'` by rendered ID
@@ -107,14 +114,18 @@ Presence rules compare the other field ([§FS-rules.3.1](FS-rules.md#31-chapter-
 path's last component ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)).
 
 A token exactly equal to a configured citable kind name is the quantified kind
-selector; any longer token must parse as a full ID under that kind's effective
+selector, and so is such a token followed by a whose clause
+([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)); any longer token must parse as a full ID under that kind's effective
 grammar. Named components require `[id] named_sections = true` and obey the
 configured named-section grammar. An exact literal subject must resolve to one
 unit; zero matches or ambiguity produces `invalid-rule` ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)). A quantified
 subject selects only the units that exist: a chapter subject selects the named
 chapter of every local declaration of the kind that has one, so a declaration
 without it contributes no unit rather than a failing one. Contributing no unit
-is not being outside the rule. A quantified chapter subject selects only the
+is not being outside the rule: a declaration is outside the rule only where the
+subject's whose clause does not select it
+([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)), and a selected declaration that lacks the chapter still
+contributes no unit and is still reported. A quantified chapter subject selects only the
 chapters that exist, and a declaration of the kind that has none is reported
 rather than passed over, so a chapter-scoped citation rule reaches every
 declaration of its kind. That finding is
@@ -175,6 +186,60 @@ families ([§FS-rules.3](FS-rules.md#3-the-five-sentence-families)), the declara
 `--size` included ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A declaration contributes a unit exactly when
 it has a chapter at that path, and it is unreached exactly when it has none.
 
+A whose clause's `FIELD` is a whole path in the same way
+([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)): it names the direct section at exactly that path, and
+never a nested section that only shares its last component.
+
+### 2.2 A whose clause selects on a scalar field's value
+
+A quantified subject may end in one whose clause: `Each KIND whose FIELD is
+VALUE`, and `The NAME chapter of each KIND whose FIELD is VALUE`. The clause
+belongs to the subject, so every family that takes the subject without it takes
+it with it: all five for `Each KIND`, and the four citation families for the
+chapter form, because presence takes no chapter subject
+([§FS-rules.3.1](FS-rules.md#31-chapter-presence)). An exact ID takes no clause, because it already names one
+declaration, and neither does the selector-only `KIND.NAME` shorthand, because a
+selector already accepts both full spellings. An object kind takes none either:
+a whose clause narrows only a rule's subject, and a target set stays the kinds
+of [§FS-rules.2](FS-rules.md#2-subject-selectors)
+([§DF-field-value-subjects](../decisions/functional/DF-field-value-subjects.md#df-field-value-subjects-a-rule-subject-may-select-on-a-scalar-fields-value-with-one-whose-clause)).
+
+The clause is read from the subject the modality split leaves
+([§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends)). It opens at the ` whose ` after the kind, and its first
+` is `, or an ` is` that ends the subject, divides it: `FIELD` is the text
+before, `VALUE` the text after, to the end of the subject.
+
+- **`FIELD`** is read as a chapter's `NAME` is, as a whole section path
+  ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), and names a scalar field of the kind: a version-2 field with
+  `one_of` ([§FS-fields.content.one-of](FS-fields.md#contentone-of-a-scalars-value-is-its-display-name)). A field is a direct section
+  ([§FS-fields.identity.name](FS-fields.md#identityname-a-field-is-the-direct-section-of-its-name)), so today only a one-component path names one. A
+  prose field, a values field, and anything in a version-1 config
+  ([§FS-fields.v1](FS-fields.md#v1-version-1-is-unchanged)) are not scalars.
+- **`VALUE`** must equal one `one_of` entry byte for byte
+  ([§FS-fields.identity.match](FS-fields.md#identitymatch-titles-and-values-match-byte-for-byte)), so `is test` does not match `Test`. It holds one
+  value: ` or ` inside it is part of that value, never a second one.
+
+`FIELD` reads a section's handle path and `VALUE` its display name, which is the
+answer [§FS-rules.requirements.addition](FS-rules.md#requirementsaddition-the-language-grows-by-addition--directional) asks of an addition. A front-matter key
+is not a field this clause reads; `whose front-matter.<key> is …` is owed to
+#1042, whose values are the key's text rather than a display name.
+
+What the clause selects is the declarations of `KIND` whose first direct
+section at `FIELD` has `VALUE` as its display name — the same answer
+[§FS-fields.checks.invalid-field-value](FS-fields.md#checksinvalid-field-value-invalid-field-value) reads — and, for the chapter form,
+their chapter at `NAME`. A declaration of the kind whose field holds another
+value, or that has no section at `FIELD`, is **outside the rule**: it
+contributes no unit, no family reports it, and it is never
+[§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration). A selected declaration that lacks the
+chapter is unreached exactly as it is without the clause. Nothing the clause
+leaves out passes unseen
+([§FS-rules.requirements.unseen](FS-rules.md#requirementsunseen-nothing-a-rule-governs-passes-unseen--realized-one-case-deferred)).
+
+A clause the grammar does not accept is refused for the part that failed, never
+as an unknown kind; the reasons are
+[§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed). The decision is
+[§DF-field-value-subjects](../decisions/functional/DF-field-value-subjects.md#df-field-value-subjects-a-rule-subject-may-select-on-a-scalar-fields-value-with-one-whose-clause).
+
 ## 3. The five sentence families
 
 The normative language is the following closed controlled-English grammar.
@@ -201,7 +266,8 @@ is `times` and whose ceiling of one is `at most once`
 <subject> must|should have exactly N <NAME> chapters.
 ```
 
-The subject may be a kind or exact declaration, not a chapter. The rule counts
+The subject may be a kind, a kind narrowed by a whose clause
+([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)), or an exact declaration, not a chapter. The rule counts
 the subject declaration's accepted direct chapters whose display name is
 `NAME`. A count outside the stated interval produces `chapter-cardinality`.
 The comparison is case-insensitive and does not match section handles: a direct
@@ -347,6 +413,11 @@ and `The must chapter of each FS should not cite any AR.` has the subject
 Where the split reaches a chapter's modal-word name first, as in
 `The must chapter of each FS must cite at least one FS.`, the subject left is
 `The`, and the refusal names the chapter ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)).
+The split cuts a whose clause's `VALUE` as it cuts a chapter's `NAME`: spaces, a
+capitalised `Must fix`, ` and ` and ` or ` survive it, a lowercase modal word
+inside a value ends the subject there, and the refusal names the value
+([§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)). No value is matched against the
+configuration before the split, so a rule and a selector split alike.
 
 ## 4. Validation lifecycle
 
@@ -523,6 +594,22 @@ Positive families report where `not within(n, cardinality)`. Prohibitions
 report every `forbidden_site`. Negation and aggregates are closed-world only
 when the snapshot is complete ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 
+A subject with a whose clause ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)), `whose F is V`, narrows the
+declarations every clause ranges over to the selected ones, written over the
+existing facts with no new relation:
+
+```text
+selected(d) :- decl(d, K), contains(d, f), chapter(f, F, V).
+```
+
+`contains(d, f)` is direct containment and `chapter(f, F, V)` joins the field's
+section path and its display name, so `selected` holds exactly where
+[§FS-fields.checks.invalid-field-value](FS-fields.md#checksinvalid-field-value-invalid-field-value) reads the value `V`. Under a whose clause
+`S` holds only the selected declarations, or their chapters at `N`, and every
+`decl(d, K)` premise below reads `selected(d)`, so a declaration outside the
+rule is in no family's `S` and in no `unreached`. Without a clause every
+declaration of `K` is selected, as before.
+
 A chapter subject `The N chapter of each K` carries a second premise, taken
 over the declarations of the kind rather than over the chapters `S` selected:
 
@@ -619,7 +706,7 @@ Config-to-rule deduplication is intentionally narrower, and like field-to-rule
 pairing below it is decided on the findings, unit by unit, rather than by
 discarding the rule before it runs. It applies only where an existing
 `[citations]` entry and a rule express the same local bare citing kind,
-declaration-wide unit, modality/level, `cite` relation, normalized target
+declaration-wide unit over every declaration of that kind, modality/level, `cite` relation, normalized target
 entry, and cardinality. Where, for one unit or site, config reports its existing
 `missing-citation`, `suggested-citation`, `forbidden-citation`, or
 `discouraged-citation` finding and the rule reports the same code there on the
@@ -629,7 +716,13 @@ list. `[citations]` remains authored, rendered, and interpreted as before. A
 rule that loses to config this way authored nothing for that unit, so a trial
 sentence duplicating a `[citations]` direction that reports the same unit is
 invisible to a report scoped by `authority`
-([§FS-rules.8](FS-rules.md#8-command-surfaces)).
+([§FS-rules.8](FS-rules.md#8-command-surfaces)). A subject with a whose clause
+([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)) is never kind-wide, so it never folds into a direction: beside
+`[citations.SWR] must = ["TC"]`, `Each SWR whose verification is Test must
+cite at least one TC.` reports its own finding for a selected declaration
+beside the direction's, as an exact-ID subject does. Two rules whose subjects
+carry the same clause are equal and deduplicate into one finding naming both;
+a rule with a clause and one without are two constraints.
 
 The two need not agree. A direction
 ([§FS-config.3.9.1.1](FS-config.md#3911-obligations-and-prohibitions)) counts a
@@ -798,7 +891,8 @@ citation directions ([§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinali
 [§FS-rules.7.5](FS-rules.md#75-prohibition-and-recommendation-reuse)) —
 `missing-citation`, `forbidden-citation`, `discouraged-citation`, and
 `suggested-citation` — and `empty-citation-obligation`, the line a `must` or
-`should` rule shares with the `[citations]` table when its subject yields no unit
+`should` rule shares with the `[citations]` table when its subject's kind has no
+local declaration
 ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)), so `--only
 empty-citation-obligation` keeps the `invalid-rule` row of a rule that could not
 say so. `invalid-rule` is selectable like every other public code,
@@ -807,8 +901,8 @@ rules find keeps every `invalid-rule` row, because a skipped rule is a check tha
 run did not evaluate
 ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
 `--ignore invalid-rule` still removes them. Every `empty-citation-obligation`
-row is carried the same way, because a rule whose subject yields no unit is a
-check that run judged nothing with ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)), and
+row is carried the same way, because a rule whose subject's kind has no local
+declaration is a check that run judged nothing with ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)), and
 `--ignore empty-citation-obligation` removes those.
 
 Rule-derived JSON adds no `sites` list — a rule finding names one site, so the
@@ -960,9 +1054,11 @@ which reads as a verdict rather than as the mistake it is. It composes with
 ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
 Bare `--rule` keeps its stdout and its exit: a run that passes no selector
 prints the same findings and exits the same way, and gains only the stderr line
-of [§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation) when the sentence's subject yields no unit. A sentence that
-applies to nothing is said to, scoped or not, because `success` there would read
-as the sentence's pass.
+of [§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation) when the sentence's subject names a kind with no local
+declaration. A sentence that applies to nothing is said to, scoped or not,
+because `success` there would read as the sentence's pass. A whose clause that
+selects none of the kind's declarations is not that case and adds no line
+([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)).
 
 Three consequences of scoping follow from what `authority` is rather than from
 the flag, and each is behavior a caller should be able to rely on.
@@ -982,6 +1078,11 @@ byte-for-byte and the rule authored nothing for those units
 findings still stand. This is known behavior, recorded here so it cannot change
 by accident; making such a sentence visible is a separate question this point
 does not answer.
+A declaration a whose clause leaves outside the rule shows nothing in a scoped
+report, whatever its field says: one whose value is outside the field's
+`one_of` raises `invalid-field-value`, which no rule authored, so only the
+unscoped run reports it
+([§FS-rules.requirements.unseen](FS-rules.md#requirementsunseen-nothing-a-rule-governs-passes-unseen--realized-one-case-deferred)).
 A unit the direction passes and the sentence fails, because its only citation
 of the target kind does not resolve, is not that case: the sentence's finding
 stands with `--rule` as its authority, and the scoped run reports it and exits
@@ -1000,7 +1101,9 @@ existing path, kind, project, unused, summary, size, top, and format selectors
 where their output modes admit unit rows. It selects exactly the units the
 same subject selects in a rule, in every mode, `--size` included, so
 `FS.requirements.terms` lists that nested chapter and `FS.terms` only a `terms`
-chapter directly under its declaration ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)). Text prints the
+chapter directly under its declaration ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), and `Each SWR whose
+verification is Test` lists only the declarations its whose clause selects
+([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)). Text prints the
 canonical coordinate, two spaces, location, two spaces, and title. A chapter JSON row uses the list
 object's existing fields in their existing order, adds `"section"` immediately
 after `"id"`, and puts the declaration ID in `id` and exact component path in
@@ -1163,7 +1266,11 @@ There is no `[settings]`, `config show --at`, path/folder/file subject,
 exception phrase, `grund:allow` comment, definition, derived term, component
 wildcard, wildcard subject alias, new command verb, suppression mechanism,
 SCIP/LSIF ingestion, symbol vocabulary, on-disk fact format, or Datalog
-runtime. Settings must reuse this selector parser and independently answer
+runtime. A whose clause ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)) is not the exception phrase: an
+exception carves a place or a site out of a subject and excuses the members it
+covers, while a whose clause selects positively, by a value the field check
+already holds, and excuses none of the declarations it selects
+([§DF-field-value-subjects](../decisions/functional/DF-field-value-subjects.md#df-field-value-subjects-a-rule-subject-may-select-on-a-scalar-fields-value-with-one-whose-clause)). Settings must reuse this selector parser and independently answer
 [§DF-fmt-suppression.2.2](../decisions/functional/DF-fmt-suppression.md#22-an-in-text-region-not-a-rule-keyed-by-declaration-section). A future adjacent-site exception may rely on rule prohibitions retaining their exact citation-site anchors. A future program producer inherits opaque identities, versioned immutable complete snapshots, repository-relative anchors, committed offline input, and evaluator independence, but no exchange format is chosen here.
 
 ## checks: Checks
@@ -1178,8 +1285,9 @@ A check this specification raises is a section named by its diagnostic code
 ### checks.unreached-declaration: Unreached declaration
 
 A declaration of a kind that a chapter-scoped citation rule over that kind
-cannot reach. The rule's subject is `The <NAME> chapter of each <KIND>`, the
-declaration is a local declaration of `<KIND>`, and it has no accepted
+cannot reach. The rule's subject is `The <NAME> chapter of each <KIND>`, with
+or without a whose clause, the declaration is a local declaration of `<KIND>`
+the subject selects ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)), and it has no accepted
 chapter at the section path `<NAME>` ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so it contributes no unit
 to the selection
 ([§FS-rules.2](FS-rules.md#2-subject-selectors)) and the rule's relation says
@@ -1214,7 +1322,10 @@ recommended level the same row is a suggestion with the landed clause dropped,
 so the message ends at `have one` and is visible only under `--suggestions`.
 
 The two actions the message names are the only two that answer it: add the
-chapter, or narrow the rule's subject to the declarations that have one. A
+chapter, or narrow the rule's subject to the declarations that have one, which
+a whose clause can do by a scalar field's value. A declaration the clause
+leaves outside the rule is never reported here, and the message bytes do not
+change with a clause. A
 chapter-presence rule standing beside the citation rule is not a third — it
 raises its own `chapter-cardinality`
 ([§FS-rules.7.2](FS-rules.md#72-chapter-cardinality)) and suppresses nothing,
