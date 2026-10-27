@@ -22,7 +22,7 @@ fn is_mutating_case(case: &Path) -> bool {
 }
 
 /// Shared direct invocation and stdin for both manifests (§FS-examples.5.4).
-fn run_grund(case: &Path, cwd: &Path, args: &[String], name: &str) -> Output {
+pub fn run_grund(case: &Path, cwd: &Path, args: &[String], name: &str) -> Output {
     let input_path = case.join("command.stdin");
     let external = external_words(case).is_some();
     let (executable, argv) = if external {

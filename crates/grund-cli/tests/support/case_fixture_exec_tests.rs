@@ -19,8 +19,6 @@ const ETXTBSY: i32 = 26;
 /// do. The padding keeps the copy's write descriptor open long enough that a
 /// sibling fork lands inside it on most attempts while the runner lets it.
 #[test]
-#[ignore = "red until #1050 the runner closes a copied fixture before a spawn can inherit it; \
-            implement removes this"]
 fn a_copied_fixture_script_is_never_busy_while_sibling_cases_spawn() {
     let scratch = std::env::temp_dir().join(format!("grund-fixture-exec-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);

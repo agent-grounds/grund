@@ -25,6 +25,14 @@ mod stub_extension_diagnostic;
 #[path = "support/case_isolation.rs"]
 mod case_isolation;
 
+// A copied fixture script is never busy because of a sibling spawn (§FS-examples.5.6.3).
+// Declared here rather than in the shared runner so it runs in this one binary.
+#[cfg(unix)]
+#[path = "support/case_fixture_exec_tests.rs"]
+mod fixture_exec_tests;
+#[cfg(unix)]
+use case_runner::{copy_dir, run_grund};
+
 #[path = "support/init_marker_guidance.rs"]
 mod init_marker_guidance;
 

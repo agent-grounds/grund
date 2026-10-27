@@ -16,11 +16,6 @@ include!("case_copy.rs");
 #[path = "case_copy_tests.rs"]
 mod copy_output_tests;
 
-// A copied fixture script is never busy because of a sibling spawn (§FS-examples.5.6.3).
-#[cfg(all(test, unix))]
-#[path = "case_fixture_exec_tests.rs"]
-mod fixture_exec_tests;
-
 // The citable half of the canonical kind set (§FS-config.3.4). The two default
 // test kinds are non-citable, so no `spec.refs` entry can name one.
 const CANONICAL_KINDS: &[&str] = &["GRUND", "GOAL", "FS", "AR", "DF", "DA", "RM"];
@@ -362,7 +357,33 @@ fn case_name(case: &Path) -> &str {
 
 // Shared command dispatch (§FS-examples.5.4).
 include!("case_command.rs");
-fn copy_dir(from: &Path, to: &Path) {
+/// Materializes a fixture tree into an invocation's copy. On Unix one `cp` child
+/// writes every file, so no write descriptor on the copy is ever open in this
+/// process for a sibling invocation's spawn to inherit, and a fixture script the
+/// case executes is never busy because of the runner (§FS-examples.5.6.3).
+#[cfg(unix)]
+pub fn copy_dir(from: &Path, to: &Path) {
+    fs::create_dir_all(to).unwrap_or_else(|err| panic!("create {}: {err}", to.display()));
+    // `-L` follows links as `fs::copy` did; `from/.` merges into an existing `to`.
+    let status = Command::new("cp")
+        .arg("-RL")
+        .arg(from.join("."))
+        .arg(to)
+        .stdin(Stdio::null())
+        .status()
+        .unwrap_or_else(|err| panic!("spawn cp for {}: {err}", from.display()));
+    assert!(
+        status.success(),
+        "copy {} to {}: cp exited {status}",
+        from.display(),
+        to.display()
+    );
+}
+
+/// The same materialization where `ETXTBSY` cannot arise (§FS-examples.5.6.3 holds
+/// there by construction): an in-process copy.
+#[cfg(not(unix))]
+pub fn copy_dir(from: &Path, to: &Path) {
     fs::create_dir_all(to).unwrap_or_else(|err| panic!("create {}: {err}", to.display()));
     for entry in fs::read_dir(from).unwrap_or_else(|err| panic!("read {}: {err}", from.display())) {
         let entry = entry.unwrap();
