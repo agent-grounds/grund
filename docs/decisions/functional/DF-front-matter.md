@@ -91,9 +91,9 @@ each, and for one of them there is none.
 
 1. *Prior prohibition.*
    - *A phantom declaration now dangles.* The old verdict resolved a citation to a YAML or
-     TOML comment, which [§FS-declarations.requirements.mentions](../../functional-spec/FS-declarations.md#requirementsmentions-writing-about-an-id-never-declares-it--realized-one-case-deferred) says is no declaration. That
-     is a wrong resolution, forbidden by [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution) since before front matter
-     reached any repository grund reads.
+     TOML comment, which [§FS-declarations.requirements.mentions](../../functional-spec/FS-declarations.md#requirementsmentions-writing-about-an-id-never-declares-it--realized-one-case-deferred) says is no declaration.
+     That old verdict is a wrong resolution, forbidden by [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution).
+     The prohibition already applied when the Markdown reading of front matter shipped, since before front matter reached any repository grund reads.
    - *A `---` thematic break on line 1 hides the headings after it.* The old verdict declared
      IDs at headings that Jekyll, Hugo and GitHub's renderer all read as front matter, so no
      reader of the rendered page could see them: a citation of one resolved to a declaration
@@ -112,12 +112,13 @@ each, and for one of them there is none.
      there, and it takes the red shape as a consequence of that correction, as
      [§DF-line-prefix-forms-declare](DF-line-prefix-forms-declare.md#df-line-prefix-forms-declare-lua-haskell-and-lisp-doc-comment-forms-declare-and-a-lisp-doc-block-is-not-a-note) took the duplicates and near misses its newly found
      declarations raised.
-2. *Accepted proof.* This record. The [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) deprecation path does
-   not fit: a release that warned first would keep the false declarations, the false
+2. *Accepted proof.* This record.
+   The [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) deprecation path does not fit:
+   a release that warned first would keep the false declarations, the false
    duplicates and the false `must cite` failures a release longer, which
-   [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution) and [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms) forbid. The
-   [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) mechanical migration has nothing to migrate: front matter
-   is right as written.
+   [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution) and [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms) forbid.
+   The [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) mechanical migration does not fit either:
+   there is nothing to migrate, because front matter is right as written.
 3. *Named release.* The release note below.
 4. *Actionable findings.* Every finding that replaces an old verdict is one grund already
    reports elsewhere, at the citation's own line and column, naming its fix: an
@@ -126,6 +127,7 @@ each, and for one of them there is none.
    reading, the enclosing declaration of [§AR-scanner.2.4.3](../../architecture/AR-scanner.md#243-the-enclosing-declaration), given an answer where it had
    none; every rule that now sees the citation is one the repository wrote. That `fmt`
    writes nothing in front matter serves [§REQ-no-data-loss.2](../../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own) and moves no verdict toward red.
+   This record is not a licence for any other verdict change.
 
 ## release-note: Release note
 
