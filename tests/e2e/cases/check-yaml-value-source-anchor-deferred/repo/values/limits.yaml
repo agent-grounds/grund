@@ -1,0 +1,2 @@
+# Limits agreed with the hotel group, 2026-10.
+CONST-room-limit: &limit [40, "rooms"]

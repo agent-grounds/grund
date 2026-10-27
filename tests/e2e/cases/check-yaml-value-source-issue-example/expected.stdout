@@ -1,0 +1,2 @@
+docs/offer.md:3: error: value mismatch for CONST-field-price.1: bound `1250`, declared `1200` at values/prices.json:2; change the literal to the declared value, or the declaration to the bound one
+values/limits.yaml:2: warning: CONST-room-limit is not listed in values/README.md: an entry is a `§`-marked Markdown link to the declaration — a YAML value source's findings are warnings until grund 0.22.0; write `[§CONST-room-limit](limits.yaml)` in values/README.md, or move values/limits.yaml out of the value home

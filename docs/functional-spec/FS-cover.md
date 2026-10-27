@@ -43,7 +43,7 @@ Every citation the scanner recognised in the file counts, **including a cross-pr
 
 ### 2.2 A value binding's citation
 
-A recognized value binding contributes its ordinary citation to the citing scanned file. Home JSON is catalog input, not a scanned citing file, and therefore adds no file or citation row ([§FS-values.2.2](FS-values.md#22-json-declarations-from-the-kind-home), [§FS-values.3.2](FS-values.md#32-recognized-text-contexts)).
+A recognized value binding contributes its ordinary citation to the citing scanned file. A value source ([§FS-values.terms](FS-values.md#terms-terms)) is catalog input, not a scanned citing file, and therefore adds no file or citation row ([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources), [§FS-values.3.2](FS-values.md#32-recognized-text-contexts)).
 
 ### 2.3 A citation whose fetched snapshot is missing
 

@@ -1,0 +1,6 @@
+# Limits agreed with the hotel group, 2026-10.
+CONST-room-limit:
+  - 40  # signed in October
+  # the unit
+  - "rooms"
+# Nothing below is part of the value.

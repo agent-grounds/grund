@@ -1,0 +1,2 @@
+{"id":"CONST-field-price","kind":"CONST","path":"values/prices.json","line":2,"title":null,"stub":false,"defines":null,"refs":1,"duplicate":false}
+{"id":"FS-offer","kind":"FS","path":"docs/FS-offer.md","line":1,"title":"Offer","stub":false,"defines":null,"refs":1,"duplicate":false}

@@ -546,7 +546,10 @@ valueValid. Citation records retain namespace/id/section/path/line/column/marker
   enclosingDeclaration/enclosingSection.
 Each structural/value fact is a fixed typed record carrying the actual source
 fields under camelCase, with paths rendered through core; source is discriminated
-text versus JSON memberSlice/keyColumn/keyText. Value numbers stay normalized
+`kind: 'text'` versus `kind: 'json'` memberSlice/keyColumn/keyText/format. `kind:
+'json'` means a member of a structured value source (§FS-values.terms) of either
+format, and `format: 'json' | 'yaml'` says which, so a consumer that reads only
+`kind` keeps working. Value numbers stay normalized
 coefficient/exponent strings or source strings, never lossy JS floating values.
 No new checker verdict is derived from these facts in JS.
 

@@ -1,0 +1,2 @@
+docs/offer.md:3: warning: no snapshot for CONST-room-limit in values — run grund fetch CONST-room-limit
+values/limits.yaml:1: warning: values/limits.yaml is not read, because CONST sets fetch; grund 0.22.0 reads a YAML value source in a fetched kind's home; move values/limits.yaml out of the value home

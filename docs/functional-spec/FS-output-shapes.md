@@ -65,7 +65,7 @@ docs/functional-spec/FS-001-alpha.md:3: warning: declared but never cited: FS-00
 
 stderr is empty for ordinary graph findings.
 
-Value findings join their fixed severity group. Home JSON sources are read in normalized bytewise path order before their declaration and binding findings are sorted into the report ([§FS-values.2.2](FS-values.md#22-json-declarations-from-the-kind-home)).
+Value findings join their fixed severity group. Value sources ([§FS-values.terms](FS-values.md#terms-terms)) are read in one normalized bytewise path order across both formats before their declaration and binding findings are sorted into the report ([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources)).
 
 JSON does not inherit the text grouping. The same two findings remain in the
 existing global bytewise location order, and every object retains its existing
@@ -107,11 +107,11 @@ Fields:
 ```
 
 Every successful form carries the optional metadata field: declarations, sections,
-lead/full/brief/toc and JSON values place it before their terminal location pair;
+lead/full/brief/toc and value-source declarations place it before their terminal location pair;
 E2E manifests keep their distinct `id`, `kind`, `path` prefix and append it last. It
 never changes `body`, authored section `title`, locations or workspace provenance.
 
-Every successful form also carries `anchor`. A declaration, section or JSON value
+Every successful form also carries `anchor`. A declaration, section or value-source
 object places it after `kind_title` and before the terminal pair, so its full key
 order is `id`, `section`, `body`, `sections` (`--toc` only), `kind_title` (when
 titled), `anchor`, `path`, `line`. An E2E manifest places `anchor:null` after
@@ -154,9 +154,9 @@ For an E2E case ([§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-a
 {"id":"E2E-login","kind":"E2E","path":"e2e/cases/login","args":[],"expected_exit":0,"fixtures":["expected.exit","expected.stdout","repo/docs/functional-spec/FS-001-login.md"],"anchor":null}
 ```
 
-### 4.3 JSON value declarations
+### 4.3 Value-source declarations
 
-For a JSON value declaration, every read mode's `body` is the exact available member or element source slice and `path`/`line` is that slice's exact span start, and `anchor` is `null`; no Markdown heading, title or anchor is synthesized ([§FS-values.6.2](FS-values.md#62-json-declarations-in-the-catalog)).
+For a value-source declaration ([§FS-values.terms](FS-values.md#terms-terms)), JSON or YAML, every read mode's `body` is the exact available member or element source slice and `path`/`line` is that slice's exact span start, and `anchor` is `null`; no Markdown heading, title or anchor is synthesized ([§FS-values.6.2](FS-values.md#62-value-source-declarations-in-the-catalog)).
 
 ## 5. `list --format=json`
 
@@ -314,6 +314,8 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 | `schema`, invalid config or usage error | empty | raw `error:` text, plus `known formats:` for an unknown format | `2` |
 | semantic value finding, text | located finding lines | empty | `1` |
 | semantic value finding, JSON | finding NDJSON with declaration `sites` | empty | `1` |
-| home JSON that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete | partial findings if any | incomplete-scan finding | `2` |
+| a value source that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete — a YAML one from grund 0.22.0 | partial findings if any | incomplete-scan finding | `2` |
+| a YAML value source's finding before grund 0.22.0 ([§FS-values.2.2.4](FS-values.md#224-yaml-findings-are-warnings-until-grund-0220)), text | one located `warning:` line in the warning group, at the wrapped finding's location, or at the file's line 1 for a fetched kind's skipped source | empty | `0`, unless another finding sets it |
+| a YAML value source's finding before grund 0.22.0, JSON | one ordinary located warning object, code `yaml-value-source-deferred`, at that same location, its `sites` the wrapped finding's, or `null` for a skipped source | empty | `0`, unless another finding sets it |
 
 The three `refs --total` rows are the whole difference that flag makes to this table: the `refs` resolver-rejection rows above and the incomplete-scan row apply to a `--total` invocation unchanged, because it renders the same scan result rather than running a different query ([§FS-refs.3.4](FS-refs.md#34---total)).
