@@ -89,9 +89,14 @@ pub(crate) fn parse_yaml(text: &str) -> Result<YamlStream, YamlError> {
         text: YamlText::new(body),
         bom,
         flow: 0,
+        depth: 0,
     };
     tree.stream()
 }
+
+/// §DA-yaml-value-reader.2.2: how deep collections may nest before the tree,
+/// which recurses once per collection, refuses one (§REQ-never-crashes.1).
+pub(crate) const MAX_NESTING: usize = 128;
 
 struct Tree<'a> {
     parser: Parser<Chars<'a>>,
@@ -99,6 +104,8 @@ struct Tree<'a> {
     bom: usize,
     /// How many flow collections enclose the event being read.
     flow: usize,
+    /// How many collections enclose the event being read, the root included.
+    depth: usize,
 }
 
 impl<'a> Tree<'a> {
@@ -123,6 +130,23 @@ impl<'a> Tree<'a> {
             }
         };
         Ok(self.text.offset(mark))
+    }
+
+    /// §DA-yaml-value-reader.2.2, §FS-values.5.3, §FS-fields.front-matter.reading:
+    /// open the collection that starts at `at`, refused at its line when it would
+    /// nest past [`MAX_NESTING`], before the tree recurses into it.
+    fn enter(&mut self, at: usize) -> Result<(), YamlError> {
+        self.depth += 1;
+        if self.depth <= MAX_NESTING {
+            return Ok(());
+        }
+        let line = self.text.line_of(at);
+        let start = self.text.lines[line - 1];
+        Err(YamlError {
+            line,
+            column: self.text.body[start..at].chars().count() + 1,
+            message: format!("collections are nested more than {MAX_NESTING} deep"),
+        })
     }
 
     fn stream(&mut self) -> Result<YamlStream, YamlError> {
@@ -166,6 +190,7 @@ impl<'a> Tree<'a> {
                 (kind, start, end, anchor, tag)
             }
             Event::SequenceStart(anchor, tag) => {
+                self.enter(at)?;
                 let flow = self.text.body[at..].starts_with('[');
                 self.flow += usize::from(flow);
                 let mut items = Vec::new();
@@ -176,6 +201,7 @@ impl<'a> Tree<'a> {
                     }
                 };
                 self.flow -= usize::from(flow);
+                self.depth -= 1;
                 let start = if flow { at } else { self.text.dash_before(at) };
                 if !flow {
                     self.locate_items(start, close, &mut items);
@@ -190,6 +216,7 @@ impl<'a> Tree<'a> {
                 (YamlKind::Sequence { items }, start, end, anchor, tag)
             }
             Event::MappingStart(anchor, tag) => {
+                self.enter(at)?;
                 let flow = self.text.body[at..].starts_with('{');
                 self.flow += usize::from(flow);
                 let mut entries = Vec::new();
@@ -212,6 +239,7 @@ impl<'a> Tree<'a> {
                     }
                 };
                 self.flow -= usize::from(flow);
+                self.depth -= 1;
                 // §DA-yaml-value-reader.2.3: a block mapping starts at its first key.
                 let start = match entries.first() {
                     Some((key, _)) if !flow => key.span.start - self.bom,
