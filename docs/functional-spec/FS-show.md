@@ -187,9 +187,8 @@ Which headings the map holds is [§FS-declarations.section.map](FS-declarations.
 ##### 2.1.2.1 The map is the declaration's body span
 
 Which headings the map holds is [§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span), and where the body span that
-bounds it ends is [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends). A declaration whose kind declares a `front-matter`
-field also holds its front-matter coordinates, which lie outside that span
-([§FS-fields.front-matter.coordinates](FS-fields.md#front-mattercoordinates-its-coordinates)).
+bounds it ends is [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends). The map also holds front-matter coordinates,
+outside that span ([§FS-fields.front-matter.coordinates](FS-fields.md#front-mattercoordinates-its-coordinates)).
 
 ##### 2.1.2.2 An empty lead, an empty map
 
@@ -222,7 +221,7 @@ If a declaration has no lead paragraph (its body opens directly with `## 1. ...`
 - `--toc`: section heading + lead + nested heading map.
 - `--full`: section heading + full body, the section's whole extent ([§FS-declarations.section](FS-declarations.md#section-what-a-section-is)).
 
-The selected section heading is printed in all four modes — `text` strips only the whole-declaration H1, not section headings ([§FS-show.3.1](FS-show.md#31-format-variants)) — as written, except that a relative heading prints its canonical path ([§FS-declarations.section.relative.shown.selected](FS-declarations.md#sectionrelativeshownselected-a-selected-sections-own-heading-names-its-path)). For `--brief`, the section heading is the slice's self-label. Named paths, including `name.number`, compose with default, brief, TOC, full, and `--section` exactly as numeric paths do. Arbitrary nesting depth is supported per [§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth). Every surface that names a section reads the same map ([§FS-show.2.2.3](FS-show.md#223-every-surface-reads-the-same-section-map)). A front-matter coordinate has no heading, so every mode prints its slice as written, with no heading line added ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
+The selected section heading is printed in all four modes — `text` strips only the whole-declaration H1, not section headings ([§FS-show.3.1](FS-show.md#31-format-variants)) — as written, except that a relative heading prints its canonical path ([§FS-declarations.section.relative.shown.selected](FS-declarations.md#sectionrelativeshownselected-a-selected-sections-own-heading-names-its-path)). For `--brief`, the section heading is the slice's self-label. Named paths, including `name.number`, compose with default, brief, TOC, full, and `--section` exactly as numeric paths do. Arbitrary nesting depth is supported per [§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth). Every surface that names a section reads the same map ([§FS-show.2.2.3](FS-show.md#223-every-surface-reads-the-same-section-map)). A front-matter coordinate prints only its slice ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
 
 #### 2.2.1 Ambiguous ID
 
@@ -423,8 +422,7 @@ invocation-level mode applies to every record.
 #### 2.6.2 Exhaustive generation
 
 The exhaustive form generates one query for every unique declaration and every
-recorded legal numeric or named section of that declaration, its front-matter
-coordinates included ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)). Generated queries
+recorded legal numeric or named section of that declaration. Generated queries
 sort bytewise by their workspace-qualified ID, with the whole declaration first
 and its section paths byte-sorted after it. IDs in the current project are
 unqualified; IDs in every other loaded project use that project's stable alias.
