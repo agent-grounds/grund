@@ -1,0 +1,14 @@
+grund.toml is read as version 2.
+
+yaml-value-source-deferred
+A finding that is an error at a YAML value source, or a YAML value source a fetched kind's home skips, is a warning for one release.
+
+Severity: warning, fixed.
+On: when form = "value" is set on a [schema.kinds] table (a setting)
+    and a YAML value source is in its home (a condition of the tree)
+Ramp: grund 0.22.0, where each wrapped finding takes its own code and severity and a fetched kind's YAML source is read
+Fix, wrapped: {fix}, or move {file} out of the value home
+Fix, move: move {file} out of the value home
+Note: The wrapped finding's own words stand before the release clause; a source the wrapped finding keeps from being enrolled declares nothing until it is fixed.
+
+Next: grund config explain '[schema.kinds]'
