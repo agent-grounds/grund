@@ -16,6 +16,9 @@ Top-level keys: grund_config_version, project_name
 [schema.kinds]  The kinds, one `[schema.kinds.<NAME>]` table each.
 [schema.kinds.<NAME>]  One row: its places, its form, and its fields. A row may list several places; a file listed in `files` belongs to its row, otherwise the deepest folder holding it decides, and a file in no place belongs to `code`. The row named `code` is the complement: it declares no IDs, and listing places on it narrows the scan to every place written.
 [schema.kinds.<NAME>.fields]  The kind's chapters as fields, by name.
+[schema.kinds.<NAME>.fields.front-matter]  The file's front matter as a field: the first declaration's YAML block, its top-level keys the field's sections. It has no heading, so it takes no title, position, after, content or one_of.
+[schema.kinds.<NAME>.fields.front-matter.keys]  The block's keys, by name, in the order they are listed and reported.
+[schema.kinds.<NAME>.fields.front-matter.keys.<key>]  One top-level key of the front matter: its presence and the values it may take.
 [schema.kinds.<NAME>.fields.<field>]  One field: a chapter of the kind, its presence, position and content.
 [rules]  How nodes relate: citation rules, grounding and snapshot resolution.
 [rules.citations]  Citation direction rules: one `[rules.citations.<KIND>]` table per citing kind.
@@ -28,6 +31,6 @@ Top-level keys: grund_config_version, project_name
 [presentation.kinds.<NAME>]  One kind's display title.
 [presentation.fmt]  What `grund fmt` writes and leaves alone.
 [workspace]  The sub-projects a workspace root checks, each in its own namespace.
-67 check codes: grund config explain --codes
+69 check codes: grund config explain --codes
 
 Next: grund config explain '[schema]' examples/config-explain/explain-1-index/repo

@@ -16,6 +16,7 @@ empty-scan: The scan read no files at all, which usually means its scope is misc
 escaped-citation-resolves: An escaped citation names an ID or section that exists, so it may be a live citation escaped by mistake.
 excluded-stub-target: A stub led to a file the scan excludes; that case is now reported as a broken stub.
 forbidden-citation: A citation goes to a target that a must-not entry or rule forbids.
+front-matter-heading: A heading claims the front-matter field's coordinate in a declaration whose kind reads that field from the file's front matter.
 full-scope-ignored: --full was given an explicit path, which it cannot widen, so it changed nothing.
 glob-citation: A marked citation is written as a pattern rather than as one ID.
 image-index-entry: A citation-only image was all a kind's index held for an ID; such an image is now neither an entry nor an enrollment.
@@ -63,6 +64,7 @@ unlisted-workspace-block: A directory declares [workspace], but no enclosing wor
 unmarked-heading: A heading inside a declaration's body is neither a declaration nor a recognized section heading.
 unreached-declaration: A declaration lacks the chapter a chapter-scoped citation rule over its kind needs in order to reach it.
 unread-scan-root: A file the config names as a scan root is not read, because its name is hidden or its extension is not scanned.
+unreadable-front-matter: The front matter of a declaration whose kind declares a front-matter field cannot be read as YAML keys, or is TOML.
 unrecorded-section-citation: A citation names a locked section address that has no entry in the section lock.
 unused: A declared ID is never cited.
 value-mismatch: A value binding's written value differs from the value its target declares.
