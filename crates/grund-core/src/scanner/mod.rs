@@ -190,6 +190,8 @@ mod tests_unwalked_kinds;
 #[cfg(test)]
 mod tests_value_json;
 #[cfg(test)]
+mod tests_value_yaml;
+#[cfg(test)]
 mod tests_values;
 #[cfg(all(test, unix))]
 mod tests_walk;
@@ -199,3 +201,5 @@ mod tests_walk_errors;
 mod tests_walk_roots;
 #[cfg(test)]
 mod tests_word_character_marker;
+#[cfg(test)]
+mod tests_yaml;
