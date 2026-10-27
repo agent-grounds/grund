@@ -234,3 +234,17 @@ executes, directly or through the command under test, therefore never fails
 to start as busy (`ETXTBSY`) because a sibling invocation's spawn carried the
 runner's write descriptor. Retrying the case or the spawn on that error does
 not meet this point: it hides the overlap rather than removing it.
+
+##### 5.6.3.1 Its regression counts attempts, never time
+
+The regression that holds this point copies an executable fixture with the
+runner's own copy, starts it at once, and repeats that a fixed number of times
+while sibling invocations spawn through the runner's own spawn. Every attempt
+runs to completion, and the regression fails only when an attempt could not
+start as busy. How many attempts fit within a time is never part of whether it
+passes: that number measures the machine rather than the overlap, so a slower
+runner would fail it with no attempt busy. The number of attempts is a constant
+of the regression, not a reading of the clock, and is large enough that a runner
+which lets a sibling spawn inherit the copy's write descriptor fails well within
+it. Lowering the number while keeping a time limit does not meet this point: it
+moves the speed at which the regression fails rather than removing it.
