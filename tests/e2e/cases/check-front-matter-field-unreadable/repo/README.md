@@ -1,3 +1,3 @@
 # Readme
 
-The decisions are §ADR-flow, §ADR-list, §ADR-second, §ADR-toml.
+The decisions are §ADR-cut, §ADR-flow, §ADR-list, §ADR-second, §ADR-toml, §ADR-toml-deep.
