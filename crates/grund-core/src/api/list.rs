@@ -272,7 +272,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                     .collect(),
             };
             let label = render_declaration_id(&entry.project_config.grammar, entry.home);
-            // §FS-rules.2.2: a whose clause is matched against the field's display name.
+            // §FS-rules.8: a whose clause is matched against the field's display name.
             let value = selector
                 .as_ref()
                 .and_then(|subject| subject.whose_field())

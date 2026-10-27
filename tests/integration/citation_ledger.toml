@@ -131,10 +131,12 @@ owners = [
   "crates/grund-core/src/grammar/section_paths.rs",
   "crates/grund-core/src/grammar/settings.rs",
   "crates/grund-core/src/rules/sentence.rs",
+  "crates/grund-core/src/rules/sentence/chapter_paths.rs",
   "crates/grund-core/src/rules/sentence/conjunction.rs",
   "crates/grund-core/src/rules/sentence/count.rs",
   "crates/grund-core/src/rules/sentence/forms.rs",
   "crates/grund-core/src/rules/sentence/literal.rs",
+  "crates/grund-core/src/rules/sentence/modality.rs",
   "crates/grund-core/src/rules/sentence/places.rs",
   "crates/grund-core/src/rules/sentence/predicate.rs",
   "crates/grund-core/src/rules/sentence/recovery.rs",
@@ -142,4 +144,5 @@ owners = [
   "crates/grund-core/src/rules/sentence/stages.rs",
   "crates/grund-core/src/rules/sentence/subjects.rs",
   "crates/grund-core/src/rules/sentence/targets.rs",
+  "crates/grund-core/src/rules/sentence/whose.rs",
 ]

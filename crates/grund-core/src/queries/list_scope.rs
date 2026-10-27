@@ -71,7 +71,7 @@ pub(crate) fn check_list_scope(
             .into_iter()
             .map(str::to_string)
             .collect(),
-        // §FS-rules.2.2: a whose clause is judged under the project that configures its kind.
+        // §FS-rules.8: a whose clause is judged under the project that configures its kind.
         fields: table.subject_fields(scope),
         non_citable: table.non_citable_entries(scope).into(),
         id_grammars: selected_projects()

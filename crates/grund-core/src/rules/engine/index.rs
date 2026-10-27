@@ -134,8 +134,8 @@ impl<'a> FactIndex<'a> {
 
     /// §FS-rules.5.2's `selected(d)`: the declaration has no whose clause to
     /// meet, or `contains(d, f), chapter(f, FIELD, VALUE)` holds, over the
-    /// direct chapter rows the field check reads too (§FS-rules.2.2). A
-    /// front-matter unit has no display name, so it holds no value
+    /// direct chapter rows the field check reads too (§FS-fields.content.one-of).
+    /// A front-matter unit has no display name, so it holds no value
     /// (§FS-fields.front-matter.surfaces).
     pub(super) fn selected(
         &self,

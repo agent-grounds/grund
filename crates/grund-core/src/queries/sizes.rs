@@ -172,7 +172,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
         // selector keeps, read as `list` reads it, and a literal counts the same.
         let selected = |row: &Pending<'_>| {
             let label = render_declaration_id(&row.project_config.grammar, row.declaration);
-            // §FS-rules.2.2: a whose clause is matched against the field's display name.
+            // §FS-rules.8: a whose clause is matched against the field's display name.
             let value = subject
                 .whose_field()
                 .and_then(|field| field_value(row.declaration, field));

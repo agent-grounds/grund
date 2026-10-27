@@ -1,0 +1,22 @@
+# The #1047 fixture: a requirement kind whose scalar `verification` field says
+# how each requirement is verified, and a rule that asks for a test case only
+# where it says Test (§FS-rules.2.2).
+grund_config_version = 2
+project_name = "swr"
+
+[schema.kinds.SWR]
+files = ["req/SWR-brake-latency.md", "req/SWR-fault-log.md"]
+[schema.kinds.SWR.fields.verification]
+one_of = ["Test", "Analysis", "Inspection", "Demonstration"]
+presence = "must"
+position = "first"
+
+[schema.kinds.TC]
+files = ["tc/TC-placeholder.md"] # no test case written yet
+
+[schema.kinds.AN]
+files = ["an/AN-brake-latency.md"]
+
+[schema.kinds.RULE]
+files = ["rules/RULE-tested.md"]
+form = "rule"
