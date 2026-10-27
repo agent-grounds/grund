@@ -6,18 +6,23 @@ use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::{Duration, Instant};
 
 const SPAWNERS: usize = 8;
-const ATTEMPTS: usize = 400;
-const BUDGET: Duration = Duration::from_secs(20);
+/// §FS-examples.5.6.3.1: a constant, never a reading of the clock. A runner that let a
+/// sibling inherit the copy's write descriptor went busy within the first five
+/// attempts, so 100 keeps a twentyfold margin; the macOS runner manages about 120
+/// attempts in 20 s beside eight spawners, so 100 finishes there within those 20 s.
+const ATTEMPTS: usize = 100;
 const ETXTBSY: i32 = 26;
 
 /// One worker copies a case's executable fixture with the runner's own `copy_dir`
 /// and starts it at once, as `grund fetch` starts `scripts/fetch-ticket`; the
 /// others keep spawning through the runner's own `run_grund`, as sibling cases
 /// do. The padding keeps the copy's write descriptor open long enough that a
-/// sibling fork lands inside it on most attempts while the runner lets it.
+/// sibling fork lands inside it on most attempts while the runner lets it. Every
+/// attempt runs to completion and only a busy start fails the test: no time budget
+/// bounds the loop, because how many attempts fit in a time measures the machine
+/// rather than the overlap (§FS-examples.5.6.3.1).
 #[test]
 fn a_copied_fixture_script_is_never_busy_while_sibling_cases_spawn() {
     let scratch = std::env::temp_dir().join(format!("grund-fixture-exec-{}", std::process::id()));
@@ -44,10 +49,9 @@ fn a_copied_fixture_script_is_never_busy_while_sibling_cases_spawn() {
         })
         .collect::<Vec<_>>();
 
-    let started = Instant::now();
     let mut busy = None;
     let mut attempts = 0;
-    while attempts < ATTEMPTS && started.elapsed() < BUDGET {
+    while attempts < ATTEMPTS {
         let copy = scratch.join(format!("copy-{attempts}"));
         copy_dir(&fixture, &copy);
         match Command::new(copy.join("scripts/fetch-ticket")).status() {
@@ -73,8 +77,4 @@ fn a_copied_fixture_script_is_never_busy_while_sibling_cases_spawn() {
             attempt + 1
         );
     }
-    assert_eq!(
-        attempts, ATTEMPTS,
-        "ran only {attempts} attempts within {BUDGET:?}"
-    );
 }
