@@ -175,6 +175,21 @@ explains that linking to that same file will not pair the stub: it remains a dup
 
 **Where a body, a section and a comment block end.** In Markdown a declaration's body runs to the next heading as high as its own or higher, whether or not that heading declares an ID. In source it is the comment block the declaration line opens, which ends where the comment does, or early at the next declaration line ([§FS-declarations.body](../functional-spec/FS-declarations.md#body-where-a-declarations-body-ends), [§FS-languages.comment-block](../functional-spec/FS-languages.md#comment-block-the-comment-block)). A section runs from its heading down to the next heading as deep or shallower, numbered or plain ([§FS-declarations.section](../functional-spec/FS-declarations.md#section-what-a-section-is)). Inside a doc-comment the depth counts from the declaration, as it does in Markdown: under `/// AR-event-bus:` above, `/// ## 1. Topology` is section 1, and `/// # 1. Topology` is a heading as high as the declaration, so it is no section ([§FS-show.2.3.3](../functional-spec/FS-show.md#233-section-selection-inside-a-doc-comment)). In a `/** … */` block, write every line behind ` * `, a heading's too — ` * ## 1. Topology`. A line without it is read as written, so its first `#` is no comment marker ([§FS-languages.comment-wrapper.headings](../functional-spec/FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)).
 
+**Front matter.** A Markdown file may open with the YAML or TOML block that Jekyll, Hugo, Zola, Pandoc and Docusaurus read: line 1 exactly `---` or `+++`, closed by the next line exactly the same, or by `...` for `---`. A block that never closes is not front matter. To grund the block is a region of its own ([§FS-check.1.1.5.2](../functional-spec/FS-check.md#1152-front-matter-holds-no-heading)):
+
+```markdown
+---
+type: Metric
+# METRIC-gross: a YAML comment, not a heading
+sources:
+  - resource: §POL-revenue-recognition
+---
+
+# METRIC-net-revenue: Net revenue, monthly
+```
+
+No line of it is a heading, so the `#` comment declares nothing. Its citations are live and belong to the file's first declaration, here `METRIC-net-revenue`, under no section, so `refs --from`, rules and citation directions count them ([§FS-check.1.1.5.2.1](../functional-spec/FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)). `grund fmt` rewrites nothing in the block, because a Markdown link is no valid YAML or TOML value. The declaration's body still starts at its heading, so `show` prints what it printed before. The runnable [`examples/front-matter/`](../../examples/front-matter/) shows the citation counting for its metric.
+
 Every command reads these rules from one parse of each file since grund 0.19.0 ([§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves)). grund 0.18.0 still gave 0.17's answer where they moved one and warned `parse-moves` at each line where that moved a `check` verdict; the warning went with the old answers.
 
 `grund` does this itself: [§AR-checker](../../crates/grund-core/src/checker/report.rs) lives only in the doc-comment of `fn check` in [`crates/grund-core/src/checker/report.rs`](../../crates/grund-core/src/checker/report.rs), and its canonical row in [`docs/architecture/README.md`](../architecture/README.md) enrolls it without a stub — `grund AR-checker` prints the source prose.

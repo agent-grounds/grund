@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "metrics"
+
+[schema.kinds.METRIC]
+files = ["bundle/metrics/net-revenue.md"]
+
+[schema.kinds.POL]
+files = ["bundle/policies/revenue-recognition.md"]
