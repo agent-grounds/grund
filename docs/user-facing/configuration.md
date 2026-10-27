@@ -311,6 +311,24 @@ One row: its places, its form, and its fields. A row may list several places; a 
 | `form` | `"prose"` \| `"value"` \| `"rule"` | `"prose"` | What a declaration is: ordinary `prose`, a first-class `value`, or an executable `rule`. [§FS-fields.declare.form](../functional-spec/FS-fields.md#declareform-form-is-a-row-key) |
 | `closed` | `"must"` \| `"warn"` \| `"should"` \| `"may"` | `"may"` | How strongly a chapter that is neither a declared field nor a numbered section is reported. [§FS-fields.declare.closed](../functional-spec/FS-fields.md#declareclosed-closed-is-a-strength-on-the-row) |
 
+### `[schema.kinds.<NAME>.fields.front-matter]`
+
+The file's front matter as a field: the first declaration's YAML block, its top-level keys the field's sections. It has no heading, so it takes no title, position, after, content or one_of. [§FS-fields.front-matter.config](../functional-spec/FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys)
+
+| Key | Type | Default | What it sets |
+|---|---|---|---|
+| `presence` | `"must"` \| `"warn"` \| `"should"` \| `"may"` | `"may"` | How strongly a declaration without front matter is reported. [§FS-fields.front-matter.config](../functional-spec/FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys) |
+| `closed` | `"must"` \| `"warn"` \| `"should"` \| `"may"` | `"may"` | How strongly a top-level key the field does not declare is reported. [§FS-fields.front-matter.config](../functional-spec/FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys) |
+
+### `[schema.kinds.<NAME>.fields.front-matter.keys.<key>]`
+
+One top-level key of the front matter: its presence and the values it may take. [§FS-fields.front-matter.config](../functional-spec/FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys)
+
+| Key | Type | Default | What it sets |
+|---|---|---|---|
+| `presence` | `"must"` \| `"warn"` \| `"should"` \| `"may"` | `"may"` | How strongly a block without the key is reported. [§FS-fields.front-matter.config](../functional-spec/FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys) |
+| `one_of` | array of strings | — | The values the key may take, each a one-line scalar. [§FS-fields.front-matter.config](../functional-spec/FS-fields.md#front-matterconfig-declaring-the-field-and-its-keys) |
+
 ### `[schema.kinds.<NAME>.fields.<field>]`
 
 One field: a chapter of the kind, its presence, position and content. [§FS-fields.declare.field](../functional-spec/FS-fields.md#declarefield-a-field-is-a-table-under-its-kind)

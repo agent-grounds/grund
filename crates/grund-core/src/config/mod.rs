@@ -102,7 +102,7 @@ pub(crate) use project_records::ProjectRecords;
 #[allow(unused_imports)]
 pub use compiled::ScanDemand;
 #[allow(unused_imports)]
-pub use fields::{Field, FieldContent, Placement};
+pub use fields::{FRONT_MATTER, Field, FieldContent, FrontMatterKey, FrontMatterShape, Placement};
 pub(crate) use global_excludes::global_excludes_path;
 pub(crate) use inputs::{observe_config, observe_config_candidates, observe_ignore_inputs};
 pub use kind::{KindConfig, KindIndex, KindResolution};

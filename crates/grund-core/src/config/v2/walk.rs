@@ -13,7 +13,8 @@ use super::fields::FieldDraft;
 use super::schema::RowDraft;
 use super::sources::{self, SourcesDraft};
 use super::tables::{self, Opened, Table};
-use super::{defaults, fields, measures, presentation, rules, schema};
+use super::{defaults, fields, front_matter, measures, presentation, rules, schema};
+use crate::config::fields::FRONT_MATTER;
 use crate::config::kind::KindResolution;
 use crate::config::project::Project;
 use crate::config::record::ConfigLocation;
@@ -91,6 +92,13 @@ impl<'a> Reader<'a> {
             Opened::Field(row, field) => {
                 Table::Field(fields::open_field(self, &row, &field, line)?)
             }
+            Opened::FrontMatter(row) => {
+                Table::FrontMatter(fields::open_field(self, &row, FRONT_MATTER, line)?)
+            }
+            Opened::Key(row, key) => {
+                let (field, key) = front_matter::open_key(self, &row, &key, line)?;
+                Table::FrontMatterKey(field, key)
+            }
             Opened::Definition(name) => {
                 Table::Definition(sources::open_definition(self, &name, line)?)
             }
@@ -160,6 +168,10 @@ impl<'a> Reader<'a> {
             Table::Definition(index) => sources::definition_key(self, *index, key, value, line),
             Table::Row(index) => schema::row_key(self, *index, key, value, line),
             Table::Field(index) => fields::field_key(self, *index, key, value, line),
+            Table::FrontMatter(index) => front_matter::field_key(self, *index, key, value, line),
+            Table::FrontMatterKey(field, index) => {
+                front_matter::key_key(self, *field, *index, key, value, line)
+            }
             Table::Measure(_, written) => measures::measure_key(self, written, key, value, line),
             Table::Text => measures::text_key(self, key, value, line),
             Table::Layout(first) => measures::layout_key(self, first, key, value, line),

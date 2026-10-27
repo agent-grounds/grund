@@ -1178,6 +1178,11 @@
         "fields": {
           "type": "object",
           "description": "The kind's chapters as fields, by name.",
+          "properties": {
+            "front-matter": {
+              "$ref": "#/definitions/v2FrontMatterField"
+            }
+          },
           "additionalProperties": {
             "$ref": "#/definitions/v2Field"
           },
@@ -1232,6 +1237,68 @@
             "type": "string"
           },
           "description": "The values a scalar chapter's title may take."
+        }
+      },
+      "additionalProperties": false
+    },
+    "v2FrontMatterField": {
+      "type": "object",
+      "description": "The file's front matter as a field: the first declaration's YAML block, its top-level keys the field's sections. It has no heading, so it takes no title, position, after, content or one_of.",
+      "properties": {
+        "presence": {
+          "type": "string",
+          "enum": [
+            "must",
+            "warn",
+            "should",
+            "may"
+          ],
+          "description": "How strongly a declaration without front matter is reported.",
+          "default": "may"
+        },
+        "closed": {
+          "type": "string",
+          "enum": [
+            "must",
+            "warn",
+            "should",
+            "may"
+          ],
+          "description": "How strongly a top-level key the field does not declare is reported.",
+          "default": "may"
+        },
+        "keys": {
+          "type": "object",
+          "description": "The block's keys, by name, in the order they are listed and reported.",
+          "additionalProperties": {
+            "$ref": "#/definitions/v2FrontMatterKey"
+          },
+          "x-grund-key": "<key>"
+        }
+      },
+      "additionalProperties": false
+    },
+    "v2FrontMatterKey": {
+      "type": "object",
+      "description": "One top-level key of the front matter: its presence and the values it may take.",
+      "properties": {
+        "presence": {
+          "type": "string",
+          "enum": [
+            "must",
+            "warn",
+            "should",
+            "may"
+          ],
+          "description": "How strongly a block without the key is reported.",
+          "default": "may"
+        },
+        "one_of": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The values the key may take, each a one-line scalar."
         }
       },
       "additionalProperties": false

@@ -8,7 +8,7 @@
 use super::citations::NamespaceMatch;
 use super::citations::{CitationDisjunction, CitationLevel, render_citation_target};
 use super::discovery::config_file_in;
-use super::fields::{FieldContent, Placement};
+use super::fields::{FieldContent, FrontMatterKey, Placement};
 use super::grounding::{configured_row_grounding, grounding_unit, soft_grounding_rungs};
 use super::project::{Project, Strength};
 use super::record::Config;
@@ -74,20 +74,21 @@ pub struct SchemaNode {
 
 impl SchemaNode {
     /// §FS-schema.4.1: the lines `grund schema` prints under this node, one per
-    /// slot and one for a `closed` that is not `may`, with a single space where the
-    /// view pads columns — the managed block's declaration shape
-    /// (§FS-init.2.3.5.12.2).
-    pub fn shape_lines(&self) -> Vec<String> {
-        let mut lines: Vec<String> = self
-            .slots
-            .iter()
-            .map(|slot| {
-                let (name, facts) = slot.field_line();
-                format!("field {name} {facts}")
-            })
-            .collect();
+    /// slot, one per front-matter key one level deeper than its field's
+    /// (§FS-fields.front-matter.record), and one for a `closed` that is not `may`,
+    /// each with its depth and a single space where the view pads columns — the
+    /// managed block's declaration shape (§FS-init.2.3.5.12.2).
+    pub fn shape_lines(&self) -> Vec<(usize, String)> {
+        let mut lines: Vec<(usize, String)> = Vec::new();
+        for slot in &self.slots {
+            let (name, facts) = slot.field_line();
+            lines.push((0, format!("field {name} {facts}")));
+            for (key, facts) in slot.key_lines() {
+                lines.push((1, format!("key {key} {facts}")));
+            }
+        }
         if let Some(closed) = self.closed {
-            lines.push(format!("closed {}", closed.as_str()));
+            lines.push((0, format!("closed {}", closed.as_str())));
         }
         lines
     }
@@ -121,8 +122,30 @@ impl SchemaSlot {
             FieldContent::Prose => {}
             FieldContent::Values => facts.push("values".to_string()),
             FieldContent::OneOf(values) => facts.push(format!("one of {}", values.join(", "))),
+            // §FS-fields.front-matter.record: its own `closed` where it is not `may`.
+            FieldContent::FrontMatter(shape) if shape.closed != Strength::May => {
+                facts.push(format!("closed {}", shape.closed.as_str()));
+            }
+            FieldContent::FrontMatter(_) => {}
         }
         (name, facts.join(" · "))
+    }
+
+    /// §FS-fields.front-matter.record: each front-matter key's name and its
+    /// facts — its presence, then `one of …` where it has values — in header
+    /// order; none for any other slot.
+    pub fn key_lines(&self) -> Vec<(String, String)> {
+        let FieldContent::FrontMatter(shape) = &self.content else {
+            return Vec::new();
+        };
+        let line = |key: &FrontMatterKey| {
+            let mut facts = vec![key.presence.as_str().to_string()];
+            if let Some(values) = &key.one_of {
+                facts.push(format!("one of {}", values.join(", ")));
+            }
+            (key.name.clone(), facts.join(" · "))
+        };
+        shape.keys.iter().map(line).collect()
     }
 }
 
@@ -366,6 +389,7 @@ fn node(project: &Project, row: &Row) -> SchemaNode {
                 Content::Prose => FieldContent::Prose,
                 Content::Values => FieldContent::Values,
                 Content::OneOf(values) => FieldContent::OneOf(values.to_vec()),
+                Content::FrontMatter(shape) => FieldContent::FrontMatter(shape.clone()),
             },
         });
     SchemaNode {

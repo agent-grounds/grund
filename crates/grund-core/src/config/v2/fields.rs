@@ -7,8 +7,9 @@
 use anyhow::Result;
 use std::collections::BTreeSet;
 
+use super::front_matter::KeyDraft;
 use super::walk::Reader;
-use crate::config::fields::{Field, FieldContent, Placement};
+use crate::config::fields::{FRONT_MATTER, Field, FieldContent, FrontMatterShape, Placement};
 use crate::config::project::Strength;
 use crate::config::rows::Form;
 use crate::config::v1::{parse_string, parse_string_list};
@@ -24,6 +25,10 @@ pub(super) struct FieldDraft {
     pub(super) after: Option<(String, usize)>,
     pub(super) content: Option<(bool, usize)>,
     pub(super) one_of: Option<(Vec<String>, usize)>,
+    /// The front-matter field's `closed` (§FS-fields.front-matter.config).
+    pub(super) closed: Option<Strength>,
+    /// The front-matter field's keys, in header order.
+    pub(super) keys: Vec<KeyDraft>,
 }
 
 impl FieldDraft {
@@ -39,6 +44,11 @@ impl FieldDraft {
             (None, None) => None,
         };
         let content = match (&self.one_of, self.content) {
+            // §FS-fields.front-matter.record: the slot carries its closed and its keys.
+            _ if self.name == FRONT_MATTER => FieldContent::FrontMatter(FrontMatterShape {
+                closed: self.closed.unwrap_or(Strength::May),
+                keys: self.keys.iter().map(KeyDraft::lower).collect(),
+            }),
             (Some((values, _)), _) => FieldContent::OneOf(values.clone()),
             (None, Some((true, _))) => FieldContent::Values,
             (None, _) => FieldContent::Prose,
@@ -79,6 +89,8 @@ pub(super) fn open_field(r: &mut Reader, kind: &str, name: &str, line: usize) ->
         after: None,
         content: None,
         one_of: None,
+        closed: None,
+        keys: Vec::new(),
     });
     Ok(r.fields.len() - 1)
 }
@@ -200,7 +212,7 @@ pub(super) fn field_key(
             if field.content.is_some() {
                 return r.fail(line, scalar_content);
             }
-            if let Some(message) = one_of_error(&label, &values) {
+            if let Some(message) = one_of_error(&format!("field {label}"), &values) {
                 return r.fail(line, message);
             }
             r.fields[index].one_of = Some((values, line));
@@ -211,22 +223,23 @@ pub(super) fn field_key(
 }
 
 /// §FS-fields.content.one-of, §FS-fields.identity.match: what a `one_of` list
-/// cannot be.
-fn one_of_error(label: &str, values: &[String]) -> Option<String> {
+/// cannot be, `label` naming whose it is: `field ADR.status` or, for a
+/// front-matter key, `key ADR.front-matter.status` (§FS-fields.front-matter.config).
+pub(super) fn one_of_error(label: &str, values: &[String]) -> Option<String> {
     if values.is_empty() {
         return Some(format!(
-            "field {label} has an empty one_of; a scalar needs at least one value"
+            "{label} has an empty one_of; a scalar needs at least one value"
         ));
     }
     let mut seen = BTreeSet::new();
     for value in values {
         if untrimmed(value) {
             return Some(format!(
-                "field {label} has one_of entry \"{value}\", which is empty or has surrounding whitespace"
+                "{label} has one_of entry \"{value}\", which is empty or has surrounding whitespace"
             ));
         }
         if !seen.insert(value.as_str()) {
-            return Some(format!("field {label} lists \"{value}\" twice in one_of"));
+            return Some(format!("{label} lists \"{value}\" twice in one_of"));
         }
     }
     None
@@ -270,6 +283,12 @@ pub(super) fn kind_checks(kind: &str, fields: &[&FieldDraft], late: &mut Vec<(us
         };
         let refusal = if *target == field.name {
             Some(format!("{} comes after itself", field.label()))
+        } else if target == FRONT_MATTER && find(target).is_some() {
+            // §FS-fields.front-matter.config: the block is not among the chapters.
+            Some(format!(
+                "{} comes after {FRONT_MATTER}, which is the file's front matter and has no place among the chapters",
+                field.label()
+            ))
         } else if let Some(predecessor) = find(target) {
             if matches!(predecessor.position, Some((Placement::Last, _))) {
                 Some(format!(

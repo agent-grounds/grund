@@ -85,6 +85,13 @@ fn schema_table(view: &SchemaView) -> String {
                 cells: vec![(field_at, format!("field {}", text(&name)))],
                 last: Some(text(&facts)),
             });
+            // §FS-fields.front-matter.record: each key two columns deeper.
+            for (key, facts) in slot.key_lines() {
+                kinds.push(SchemaTableLine {
+                    cells: vec![(field_at + 2, format!("key {}", text(&key)))],
+                    last: Some(text(&facts)),
+                });
+            }
         }
         if let Some(closed) = node.closed {
             kinds.push(SchemaTableLine {

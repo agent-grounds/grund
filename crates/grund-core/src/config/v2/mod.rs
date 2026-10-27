@@ -9,14 +9,16 @@
 //! table a header opens, the keys each admits, and where a v1 table's settings
 //! went; `schema.rs`, `measures.rs`, `rules.rs` and
 //! `presentation.rs` read the keys of each concern, `fields.rs` a kind's
-//! fields (§FS-fields) and `sources.rs` the source model, which `sources_model.rs`
-//! lowers and renders; `finish.rs` judges what
-//! only the whole file can say and lowers the rows; `defaults.rs` is the v2
-//! epoch; and `render.rs` writes a project back out in v2 spelling.
+//! fields (§FS-fields), `front_matter.rs` the front-matter field's own tables,
+//! and `sources.rs` the source model, which `sources_model.rs` lowers and
+//! renders; `finish.rs` judges what only the whole file can say and lowers the
+//! rows; `defaults.rs` is the v2 epoch; and `render.rs` writes a project back
+//! out in v2 spelling.
 
 mod defaults;
 mod fields;
 mod finish;
+mod front_matter;
 mod measures;
 mod places;
 mod presentation;
