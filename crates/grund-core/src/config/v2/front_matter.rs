@@ -34,7 +34,7 @@ impl KeyDraft {
 /// §FS-fields.front-matter.config: open `[schema.kinds.<kind>.fields.front-matter.keys.<key>]`
 /// at `line`, a section name under its field's table already written; the
 /// field's draft index and the key's index in it.
-pub(super) fn open_key(
+pub(super) fn open_key_table(
     r: &mut Reader,
     kind: &str,
     key: &str,
@@ -66,7 +66,7 @@ pub(super) fn open_key(
 }
 
 /// §FS-fields.front-matter.config: one key of the field's own table.
-pub(super) fn field_key(
+pub(super) fn front_matter_key(
     r: &mut Reader,
     index: usize,
     key: &str,

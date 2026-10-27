@@ -39,18 +39,21 @@ CODE_CELL = re.compile(r"^`?([a-z][a-z0-9-]*)`?$")
 # until the `FS-rules` slice moves them.
 # `glob-citation` is born the same way, at `FS-check.checks.glob-citation`, and so
 # is `config-version-1`, at its `FS-check.checks.<code>`, and `image-index-entry`,
-# at `FS-citations.checks.image-index-entry`.
+# at `FS-citations.checks.image-index-entry`, and the two front-matter codes, at
+# `FS-fields.checks.<code>`.
 MIGRATED = {
     "FS-check": ("config-version-1", "glob-citation"),
     "FS-citations": ("image-index-entry",),
     "FS-rules": ("unreached-declaration",),
     "FS-scan": ("unread-scan-root",),
     "FS-fields": (
+        "front-matter-heading",
         "invalid-field-value",
         "misplaced-field",
         "missing-field",
         "mistitled-field",
         "undeclared-chapter",
+        "unreadable-front-matter",
     ),
     "FS-declarations": (
         "broken-stub",
