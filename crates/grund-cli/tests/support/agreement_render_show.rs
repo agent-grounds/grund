@@ -69,8 +69,10 @@ impl View<'_> {
         let decl = &self.m.decls[d];
         // §FS-values.6.2: every read mode of a JSON value collapses to its slice.
         let sliced = decl.facts["slice"].is_string();
+        // §FS-fields.front-matter.surfaces: no read's map lists a front-matter coordinate.
         let children: Vec<usize> = (0..self.m.sections.len())
             .filter(|_| !sliced)
+            .filter(|&o| !self.m.sections[o].front_matter)
             .filter(|&o| match s {
                 Some(s) => self.m.descends(o, s),
                 None => self.m.sections[o].owner == d,

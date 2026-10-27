@@ -34,6 +34,9 @@ pub struct Section {
     pub raw: String,
     pub parent: Option<usize>,
     pub end: usize,
+    /// §FS-fields.front-matter.coordinates: a front-matter coordinate, above
+    /// its declaration's heading, read as its slice and under no heading.
+    pub front_matter: bool,
     pub facts: Value,
     pub lead: String,
     pub full: String,
@@ -250,7 +253,17 @@ impl Model {
             let text = model.text(&file)?;
             let heading = field(s, "heading")?;
             let nth = s["nth"].as_u64().unwrap_or(1) as usize;
-            let (line, column, _) = locate(text, heading, nth, model.decls[owner].line)?;
+            let front_matter = s["frontMatter"] == true;
+            if front_matter && !s["slice"].is_string() {
+                return Err(format!("a front-matter section needs its slice: {s}"));
+            }
+            // The block precedes the heading, so it is found from the file's start.
+            let from = if front_matter {
+                1
+            } else {
+                model.decls[owner].line
+            };
+            let (line, column, _) = locate(text, heading, nth, from)?;
             let strip = model.decls[owner].facts["strip"].as_str().unwrap_or("");
             let raw = line_text(text, line);
             let raw = raw.strip_prefix(strip).unwrap_or(raw).to_string();
@@ -271,6 +284,7 @@ impl Model {
                 raw,
                 parent: parent.transpose()?,
                 end: s["end"].as_u64().ok_or("section lacks end")? as usize,
+                front_matter,
                 facts: s.clone(),
                 lead: String::new(),
                 full: String::new(),
@@ -371,8 +385,10 @@ impl Model {
             );
             let strip = d.facts["strip"].as_str().unwrap_or("");
             let text = self.text(&d.file)?;
+            // §FS-fields.front-matter.surfaces: the block neither cuts the lead
+            // nor joins the whole declaration's --toc.
             let children: Vec<_> = (0..self.sections.len())
-                .filter(|&o| self.sections[o].owner == index)
+                .filter(|&o| self.sections[o].owner == index && !self.sections[o].front_matter)
                 .collect();
             let cut = children
                 .iter()
