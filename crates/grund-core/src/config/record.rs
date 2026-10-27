@@ -17,6 +17,7 @@ use std::path::PathBuf;
 use super::call_scope::PathBase;
 use super::citations::CitationRules;
 use super::facade::Records;
+use super::fields::Field;
 use super::kind::KindConfig;
 use super::point_sizes::LeadSizeWarning;
 use super::project::Schema;
@@ -452,4 +453,15 @@ pub(crate) fn kind_value_chapter<'a>(schema: &'a Schema, kind: &str) -> Option<&
                 _ => None,
             })
         })
+}
+
+/// §FS-fields.front-matter: the front-matter field of the kind named `kind`,
+/// where it declares one — what turns its first declaration's block into a
+/// field rather than text.
+pub(crate) fn kind_front_matter<'a>(schema: &'a Schema, kind: &str) -> Option<&'a Field> {
+    let (_, configured) = schema.kinds().find(|(name, _)| *name == kind)?;
+    configured
+        .fields
+        .iter()
+        .find(|field| field.front_matter().is_some())
 }

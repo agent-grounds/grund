@@ -87,6 +87,7 @@ pub(super) fn enroll_json_member(
             format,
         },
         value_valid: Some(true),
+        front_matter: None,
     };
     let JsonNode::Array(elements, _) = member.value else {
         declaration.value_valid = Some(false);
@@ -172,6 +173,7 @@ pub(super) fn enroll_json_member(
                 value,
                 value_root: None,
                 relative: false,
+                front_matter: None,
             },
         );
     }

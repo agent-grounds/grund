@@ -23,7 +23,7 @@ use super::citations::{
 use super::conflict_blocks::MarkerLines;
 use super::context::{
     assign_declaration_bodies, in_some_home, inline_citation_sites, markdown_heading_level,
-    resolve_citation_owners, retain_in_body_sections,
+    resolve_citation_owners,
 };
 use super::declaration_line::{close_declaration, stub_and_title};
 use super::embedded_value_context::{
@@ -265,6 +265,7 @@ pub(super) fn scan_file_text(
                 body_has_content: false,
                 source: DeclarationSource::Text,
                 value_valid: None,
+                front_matter: None,
             });
             if let Some(marker_start) = embedded_marker {
                 push_invalid_embedded_marker(
@@ -345,6 +346,7 @@ pub(super) fn scan_file_text(
                 body_has_content: false,
                 source: DeclarationSource::Text,
                 value_valid: None,
+                front_matter: None,
             });
             // §FS-declarations.checks.declaration-near-miss.5: its title is read below.
             declared = true;
@@ -617,9 +619,7 @@ pub(super) fn scan_file_text(
     }
     // §FS-declarations.body.conflict.where, §FS-declarations.body.conflict.owners.
     markers.record(path, &record, grammar, findings);
-    if due.text_sections {
-        retain_in_body_sections(findings);
-    }
+    due.settle_sections(findings, schema, text, is_md, record.front_matter);
     if has_unmarked_headings {
         assign_unmarked_heading_owners(findings, held_headings.unmarked, &record);
     }

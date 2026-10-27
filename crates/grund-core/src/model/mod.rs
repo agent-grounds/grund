@@ -40,6 +40,7 @@ mod excluded_stub_targets;
 mod expected;
 mod failure;
 mod file_record;
+mod front_matter;
 mod headings;
 mod id;
 mod line_owners;
@@ -88,6 +89,10 @@ pub(crate) use excluded_stub_targets::ExcludingRule;
 pub(crate) use file_record::{
     BlockForm, FileRecord, FileRecords, FileText, HeadingKind, LineZone, RecordedBlock,
     RecordedHeading,
+};
+pub(crate) use front_matter::{
+    FrontMatterAbsence, FrontMatterBlock, FrontMatterField, FrontMatterKeySite, FrontMatterSlice,
+    FrontMatterUnreadable,
 };
 pub(crate) use headings::UnmarkedHeadingCandidate;
 // §AR-system.2.2: checker and queries share the guidance.

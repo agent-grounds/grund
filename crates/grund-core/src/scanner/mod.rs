@@ -66,6 +66,7 @@ mod embedded_values;
 mod exclude_globs;
 mod extents;
 mod file_pass;
+mod front_matter;
 mod global_excludes;
 mod json;
 mod legacy;
@@ -157,6 +158,8 @@ mod tests_escape_position;
 mod tests_excluding_rule;
 #[cfg(test)]
 mod tests_file_pass;
+#[cfg(test)]
+mod tests_front_matter;
 #[cfg(test)]
 mod tests_inline_site;
 #[cfg(test)]
