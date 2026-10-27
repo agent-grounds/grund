@@ -1,0 +1,14 @@
+grund_config_version = 1
+project_name = "demo"
+
+[[kinds]]
+kind = "FS"
+file = "requirements.md"
+
+[[kinds]]
+kind = "e2e"
+folder = "tests/e2e"
+citable = false
+
+[citations.e2e]
+must = ["FS"]

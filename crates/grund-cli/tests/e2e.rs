@@ -38,6 +38,10 @@ mod fmt_cross_refs_sections;
 #[path = "support/index_use_explanations.rs"]
 mod index_use_explanations;
 
+// §FS-schema.8.2 / §FS-config-v2.rules.citations.uncited: issue #151, red until fixed.
+#[path = "support/pending_uncited_obligation.rs"]
+mod pending_uncited_obligation;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,

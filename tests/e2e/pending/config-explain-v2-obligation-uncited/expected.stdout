@@ -1,0 +1,5 @@
+grund.toml is read as version 2.
+
+[rules.citations.<KIND>] must
+Values: array of strings
+Kinds this one must cite; a miss is an error. A file of a place or the complement that cites nothing is not checked by this key; `[rules.citations.<ROW>.grounding]` makes it a finding.

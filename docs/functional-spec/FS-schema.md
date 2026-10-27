@@ -216,6 +216,8 @@ may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
 ```
 
+and a fourth legend line where [§FS-schema.8.3](FS-schema.md#83-the-legend-says-an-obligation-skips-an-uncited-file) asks for one.
+
 Sections are separated by one blank line. Columns are padded with spaces, two
 between columns: the name column is as wide as the longest row name, the strength
 column as the longest strength word, and the last column starts at one offset in
@@ -311,6 +313,52 @@ template, so what the view shows is still the effective configuration alone
 ([§FS-schema.3](FS-schema.md#3-what-the-view-reads)). A tree whose config file was read prints no note. The Mermaid
 and DOT sources carry the header comment and no note: they are source for a
 renderer, and stay byte for byte what they were.
+
+### 8.3 The legend says an obligation skips an uncited file
+
+A place's or the complement's `must`, `warn` and `should` judge only its files that cite something ([§FS-config-v2.rules.citations.uncited](FS-config-v2.md#rulescitationsuncited-an-obligation-never-judges-a-file-that-cites-nothing), [§FS-config.3.9.1.4](FS-config.md#3914-a-file-that-cites-nothing-is-not-judged)), so a `must` line beside no badge would read as a promise every file cites. Where some scanned place or the complement carries an obligation and no `grounded` badge, the legend gains a fourth line, in version 2:
+
+```text
+must/warn/should skip an uncited file of a place or the complement · [rules.citations.<ROW>.grounding] makes it a finding
+```
+
+and in version 1 the same line ending `· require_grounding makes it a finding`. Where every such row is grounded, or none carries an obligation, the legend keeps its three lines, as in [§FS-schema.8.1](FS-schema.md#81-the-table-for-one-small-project). The Mermaid and DOT comments carry the legend's first two lines only ([§FS-schema.9](FS-schema.md#9-the-mermaid-source)), so they do not change. The `place` row of the config of agent-grounds/grund#151 —
+
+```toml
+grund_config_version = 2
+project_name = "demo"
+
+[schema.kinds.FS]
+files = ["requirements.md"]
+
+[schema.kinds.e2e]
+folders = ["tests/e2e"]
+citable = false
+
+[rules.citations.e2e]
+must = ["FS"]
+```
+
+— prints:
+
+```text
+demo · grund.toml · v2
+
+kinds and places
+  FS    kind        requirements.md
+  e2e   place       tests/e2e/
+  code  complement  every scanned file no other row claims
+
+citations
+  FS    —
+  e2e   must  FS
+  code  —
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it
+must/warn/should skip an uncited file of a place or the complement · [rules.citations.<ROW>.grounding] makes it a finding
+```
 
 ## 9. The Mermaid source
 
