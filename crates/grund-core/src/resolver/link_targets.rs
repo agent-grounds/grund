@@ -254,7 +254,7 @@ pub(crate) fn markdown_link_target_with_root(
     // §FS-fields.front-matter.surfaces: a front-matter coordinate links to its file.
     let front_matter = section
         .and_then(|sec| record.sections.get(sec))
-        .is_some_and(|info| info.front_matter.is_some());
+        .is_some_and(SectionInfo::in_front_matter);
     if !takes_heading_anchor(markdown, presentation) || front_matter {
         return Some(rel);
     }
@@ -308,7 +308,7 @@ pub(crate) fn heading_anchor(
             let info = decl
                 .sections
                 .get(sec)
-                .filter(|info| info.front_matter.is_none())?;
+                .filter(|info| !info.in_front_matter())?;
             settled
                 .section_title(&decl.file, sec, info)
                 .unwrap_or_else(|| info.title.clone())

@@ -138,6 +138,12 @@ impl SectionInfo {
             .as_ref()
             .is_some_and(EmbeddedValueRoot::marked)
     }
+
+    /// Whether the entry is a front-matter coordinate rather than a heading of the
+    /// body, and so no chapter (§FS-fields.front-matter.coordinates).
+    pub(crate) fn in_front_matter(&self) -> bool {
+        self.front_matter.is_some()
+    }
 }
 
 /// One citation site: an `<ID>[.<section>]` token, optionally `§`-prefixed, or

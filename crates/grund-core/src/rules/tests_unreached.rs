@@ -55,7 +55,7 @@ fn facts() -> RuleFacts {
         chapter: vec![(
             chapter.clone(),
             "requirements".into(),
-            "Requirements".into(),
+            Some("Requirements".into()),
         )],
         contains: vec![(good.clone(), chapter.clone())],
         cites: Vec::new(),
@@ -88,7 +88,7 @@ fn facts_with_displayed_chapter() -> RuleFacts {
     facts.decl.push((displayed.clone(), "FS".into()));
     facts
         .chapter
-        .push((chapter.clone(), "requirements".into(), "Needs".into()));
+        .push((chapter.clone(), "requirements".into(), Some("Needs".into())));
     facts.contains.push((displayed.clone(), chapter.clone()));
     facts.nodes.insert(displayed, displayed_meta);
     facts.nodes.insert(
