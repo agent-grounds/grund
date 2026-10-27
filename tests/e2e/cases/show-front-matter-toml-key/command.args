@@ -1,0 +1,1 @@
+show --batch --glob 'ADR-*.front-matter.*' {repo} --format=json

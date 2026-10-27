@@ -1,0 +1,12 @@
+docs/adr/array.md:2: error: ADR-array.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line
+docs/adr/boolean.md:2: error: ADR-boolean.front-matter.status is "true"; kind ADR admits proposed, accepted; change the value to one of them
+docs/adr/datetime.md:2: error: ADR-datetime.front-matter.status is "1979-05-27T07:32:00Z"; kind ADR admits proposed, accepted; change the value to one of them
+docs/adr/dotted.md:2: error: ADR-dotted.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line
+docs/adr/empty.md:2: error: ADR-empty.front-matter.status is ""; kind ADR admits proposed, accepted; change the value to one of them
+docs/adr/float.md:2: error: ADR-float.front-matter.status is "1.10"; kind ADR admits proposed, accepted; change the value to one of them
+docs/adr/hex.md:2: error: ADR-hex.front-matter.status is "0x1F"; kind ADR admits proposed, accepted; change the value to one of them
+docs/adr/inline.md:2: error: ADR-inline.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line
+docs/adr/multi.md:2: error: ADR-multi.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line
+docs/adr/number.md:2: error: ADR-number.front-matter.status is "1_000"; kind ADR admits proposed, accepted; change the value to one of them
+docs/adr/table.md:2: error: ADR-table.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line
+docs/adr/typo.md:2: error: ADR-typo.front-matter.status is "Accepted"; kind ADR admits proposed, accepted; change the value to one of them

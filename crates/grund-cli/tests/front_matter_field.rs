@@ -1,6 +1,7 @@
-//! Black-box: a CRLF file's front matter reads as its LF form does, when its kind declares the
-//! `front-matter` field (§FS-fields.front-matter.reading). The pin lives here, not under
-//! `tests/e2e/cases/`, because `.gitattributes` checks every case fixture out with LF endings.
+//! Black-box: a CRLF file's front matter, a `---` (YAML) or a `+++` (TOML) block, reads as its LF
+//! form does, when its kind declares the `front-matter` field (§FS-fields.front-matter.reading,
+//! §FS-fields.front-matter.constructs). The pin lives here, not under `tests/e2e/cases/`, because
+//! `.gitattributes` checks every case fixture out with LF endings.
 
 use std::fs;
 use std::path::PathBuf;
@@ -33,6 +34,11 @@ files = [\"README.md\"]
 /// A misspelt status and a stray key, so both a value and a key's line are judged.
 const RECORD: &str = "---\nstatus: Accepted\ndate: 2026-02-03\nreviewer: Ana Ruiz\n---\n\n\
                       # ADR-cache: Cache availability\n\nText.\n";
+
+/// The same record in TOML, with a `[links]` table whose slice runs over two lines.
+const TOML_RECORD: &str = "+++\nstatus = \"Accepted\"\ndate = 2026-02-03\nreviewer = \"Ana Ruiz\"\n\n\
+                           [links]\nnext = \"ADR-seed\"\n+++\n\n\
+                           # ADR-cache: Cache availability\n\nText.\n";
 
 struct Fixture(PathBuf);
 
@@ -101,4 +107,43 @@ fn a_crlf_block_reads_as_its_lf_form() {
         assert!(!slice.contains('\r'), "grund {key} printed {slice:?}");
         assert_eq!((code, slice), lf.run(&[key]), "grund {key}");
     }
+}
+
+/// A `+++` block too: the same findings at the same lines, no slice ends in a carriage return,
+/// and a table's slice is its LF form with the file's own line endings inside it.
+#[test]
+fn a_crlf_toml_block_reads_as_its_lf_form() {
+    let lf = Fixture::new(TOML_RECORD);
+    let crlf = Fixture::new(&TOML_RECORD.replace('\n', "\r\n"));
+    let expected = "docs/adr/cache.md:2: error: ADR-cache.front-matter.status is \"Accepted\"; \
+                    kind ADR admits proposed, accepted; change the value to one of them\n\
+                    docs/adr/cache.md:4: error: ADR-cache.front-matter.reviewer is not a key of \
+                    kind ADR's front matter, which is closed; its keys: status, date; rename it \
+                    to one of them, remove it, or add it to the field's keys\n\
+                    docs/adr/cache.md:6: error: ADR-cache.front-matter.links is not a key of \
+                    kind ADR's front matter, which is closed; its keys: status, date; rename it \
+                    to one of them, remove it, or add it to the field's keys\n";
+    assert_eq!(lf.run(&["check"]), (Some(1), expected.to_owned()));
+    assert_eq!(crlf.run(&["check"]), (Some(1), expected.to_owned()));
+    for key in [
+        "ADR-cache.front-matter.status",
+        "ADR-cache.front-matter.date",
+    ] {
+        let (code, slice) = crlf.run(&[key]);
+        assert_eq!(code, Some(0), "grund {key}");
+        assert!(!slice.contains('\r'), "grund {key} printed {slice:?}");
+        assert_eq!((code, slice), lf.run(&[key]), "grund {key}");
+    }
+    let key = "ADR-cache.front-matter.links";
+    let (code, slice) = crlf.run(&[key]);
+    assert_eq!(code, Some(0), "grund {key}");
+    assert!(
+        !slice.trim_end_matches('\n').ends_with('\r'),
+        "grund {key} printed {slice:?}"
+    );
+    assert_eq!(
+        (code, slice.replace("\r\n", "\n")),
+        lf.run(&[key]),
+        "grund {key}"
+    );
 }

@@ -49,6 +49,10 @@ before.
 
 ### decision.5: YAML now, TOML later
 
+**Superseded by [§DF-toml-front-matter](DF-toml-front-matter.md#df-toml-front-matter-a-kinds-front-matter-field-reads-a-toml-block-as-it-reads-a-yaml-one).** A `+++` block in a kind that declares the field is now read as
+TOML, with the keys, coordinates and findings of a `---` block, so the refusal below
+never shipped. What follows is kept as the decision it was.
+
 The span tree grund already has reads YAML ([§DA-yaml-value-reader](../architectural/DA-yaml-value-reader.md#da-yaml-value-reader-one-yaml-event-parser-builds-one-span-tree-and-value-rules-are-a-pass-over-it)), and every format
 collected in #1042 writes YAML. A `+++` block in a kind that declares the field is
 reported as unreadable, `front-matter is TOML, which grund does not read yet`
@@ -72,7 +76,8 @@ with an error, for both of its readers ([§FS-values.5.3](../../functional-spec/
 - **Listing the coordinates in a whole-declaration `--toc`.** A table-of-contents line is
   a heading as written, and these coordinates have none. Listing them would change that
   read for every opted-in declaration.
-- **TOML now.** `toml_parser` brings two dependencies the tree does not have, and its
+- **TOML now.** **Superseded by [§DF-toml-front-matter](DF-toml-front-matter.md#df-toml-front-matter-a-kinds-front-matter-field-reads-a-toml-block-as-it-reads-a-yaml-one).** The cost below was paid once, in
+  [§DA-toml-front-matter-reader](../architectural/DA-toml-front-matter-reader.md#da-toml-front-matter-reader-one-toml-event-parser-builds-the-span-tree-a-toml-front-matter-block-is-read-through). `toml_parser` brings two dependencies the tree does not have, and its
   span tree must understand dotted keys, `[table]` headers and quoted keys before it can
   name a top-level key. A hand-written subset is the "two readers of one language"
   [§DA-yaml-value-reader.3.1](../architectural/DA-yaml-value-reader.md#31-a-hand-written-reader-of-the-value-subset) rejects. Deferring costs nothing a collected format needs.
@@ -112,7 +117,6 @@ past that.
   the name of a body chapter. Setting `title`, `position`, `after`, `content` or `one_of`
   on it, or `after = "front-matter"` on another field, now stops the config from loading,
   and a `## front-matter:` chapter of such a kind is now a `front-matter-heading` error.
-  Rename the chapter and its field. A `+++` (TOML) block in a kind that declares the
-  field is reported as unreadable until
-  [#1057](https://github.com/agent-grounds/grund/issues/1057). A repository that declares
-  no `front-matter` field sees no change.
+  Rename the chapter and its field. A `+++` (TOML) block is read the same way
+  ([§DF-toml-front-matter](DF-toml-front-matter.md#df-toml-front-matter-a-kinds-front-matter-field-reads-a-toml-block-as-it-reads-a-yaml-one)). A repository that declares no `front-matter` field
+  sees no change.

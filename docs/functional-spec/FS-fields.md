@@ -47,6 +47,7 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 - **Expresses**: a field expresses a chapter-presence rule when the field's `title`, or its name where it has no title, equals the rule's chapter `NAME`, compared case-insensitively ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)).
 - **Front-matter field**: the field named `front-matter` on a kind that declares it. It is its declaration's front matter ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)) and never a chapter ([§FS-fields.front-matter](FS-fields.md#front-matter-front-matter-is-a-field)).
 - **Key**: a top-level key of a front-matter field's block, which is a section of the field when its name is a section name. A **declared key** is one the field lists under `keys`.
+- **Contribution**: in a TOML block, one place the document writes a key at its top level: `k = …`, a dotted `k.x = …`, or a header `[k]`, `[k.x]` or `[[k]]` ([§FS-fields.front-matter.keys](FS-fields.md#front-matterkeys-its-keys-are-its-sections)).
 
 ## requirements: What every declared shape holds to
 
@@ -105,7 +106,7 @@ A field written twice is the existing `duplicate-section` error ([§FS-declarati
 
 `title` and every `one_of` entry are compared with the display name byte for byte, with no case folding and no whitespace trimming beyond what the heading parser already removes. A configured `title` or `one_of` entry that is empty or has leading or trailing whitespace is refused at its line: `field FS.terms has title " Terms", which is empty or has surrounding whitespace`, and `field DF.status has one_of entry " Accepted", which is empty or has surrounding whitespace`.
 
-A front-matter key's `one_of` entries are compared the same way, byte for byte, with the key's value, which is its decoded scalar text and never a type YAML would resolve it to ([§FS-fields.front-matter.values](FS-fields.md#front-mattervalues-a-keys-value-is-its-decoded-text)).
+A front-matter key's `one_of` entries are compared the same way, byte for byte, with the key's value, which is its decoded scalar text and never a type YAML or TOML would resolve it to ([§FS-fields.front-matter.values](FS-fields.md#front-mattervalues-a-keys-value-is-its-decoded-text)).
 
 ## order: Order
 
@@ -210,7 +211,7 @@ A kind's shape is one record, its slots, and every consumer reads that record: t
 
 ## front-matter: Front matter is a field
 
-On a kind that declares `[schema.kinds.<KIND>.fields.front-matter]`, that field is not a chapter. It is the front matter of its declaration's file, the block [§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading) delimits and [§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration) gives to the file's first declaration, and the block's top-level keys are the field's sections. A MADR record keeps its `status` there, an OKF concept its `type`, and a requirement its verification method. A format like these can state those facts once, on the kind, and `grund check`, `grund schema` and the agent guidance then hold them, rather than only a copy of each in a body chapter ([§GOAL-configurable.1](../goals.md#1-what-is-configurable), [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work)). A kind that does not declare the field parses no block, and every byte it reports stays as it is. Decided in [§DF-front-matter-field](../decisions/functional/DF-front-matter-field.md#df-front-matter-field-a-kinds-front-matter-field-holds-its-files-yaml-front-matter-with-the-blocks-top-level-keys-as-its-sections).
+On a kind that declares `[schema.kinds.<KIND>.fields.front-matter]`, that field is not a chapter. It is the front matter of its declaration's file, the block [§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading) delimits and [§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration) gives to the file's first declaration, and the block's top-level keys are the field's sections. A MADR record keeps its `status` there, an OKF concept its `type`, and a requirement its verification method. A format like these can state those facts once, on the kind, and `grund check`, `grund schema` and the agent guidance then hold them, rather than only a copy of each in a body chapter ([§GOAL-configurable.1](../goals.md#1-what-is-configurable), [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work)). A kind that does not declare the field parses no block, and every byte it reports stays as it is. Decided in [§DF-front-matter-field](../decisions/functional/DF-front-matter-field.md#df-front-matter-field-a-kinds-front-matter-field-holds-its-files-yaml-front-matter-with-the-blocks-top-level-keys-as-its-sections), and for a `+++` block in [§DF-toml-front-matter](../decisions/functional/DF-toml-front-matter.md#df-toml-front-matter-a-kinds-front-matter-field-reads-a-toml-block-as-it-reads-a-yaml-one).
 
 ```toml
 [schema.kinds.ADR]
@@ -280,15 +281,15 @@ Any other key is ``unknown key `title` in [schema.kinds.ADR.fields.front-matter.
 
 A block is parsed only when its owner's kind declares the field, and its owner is the file's first declaration ([§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)). Every other block parses as nothing and reads exactly as [§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading) says. That covers a block whose first declaration is of a kind that does not declare the field, and a block in a file that declares nothing.
 
-The block's content is read by the one YAML span tree, `scanner/yaml.rs` ([§DA-yaml-value-reader](../decisions/architectural/DA-yaml-value-reader.md#da-yaml-value-reader-one-yaml-event-parser-builds-one-span-tree-and-value-rules-are-a-pass-over-it)). The content runs from the line after the opening `---` to the line before the closing `---` or `...`, so the delimiter lines are not YAML. Every line and byte the tree reports is counted in the file, so a finding names the file's line. A line ends at LF or CRLF, so a CRLF file reads as its LF form does: the same keys and values, at the same lines and columns, and no value or slice ends in a carriage return.
+The delimiter names the language. A `---` block's content is YAML, read by the one YAML span tree, `scanner/yaml.rs` ([§DA-yaml-value-reader](../decisions/architectural/DA-yaml-value-reader.md#da-yaml-value-reader-one-yaml-event-parser-builds-one-span-tree-and-value-rules-are-a-pass-over-it)). A `+++` block's content is TOML 1.1, read by the one TOML span tree, `scanner/toml.rs` ([§DA-toml-front-matter-reader](../decisions/architectural/DA-toml-front-matter-reader.md#da-toml-front-matter-reader-one-toml-event-parser-builds-the-span-tree-a-toml-front-matter-block-is-read-through)). The content runs from the line after the opening delimiter to the line before the closing one, the closing `---` or `...` of a YAML block and the closing `+++` of a TOML one, so the delimiter lines are neither YAML nor TOML. Every line and byte either tree reports is counted in the file, so a finding names the file's line. A line ends at LF or CRLF, so a CRLF file reads as its LF form does: the same keys and values, at the same lines and columns, and no value or slice ends in a carriage return.
 
-The content is one YAML document whose top level is a mapping. Content that is empty, or only comments and blank lines, is a present field with no keys. Each of these is `unreadable-front-matter` at the opening delimiter ([§FS-fields.checks.unreadable-front-matter](FS-fields.md#checksunreadable-front-matter-unreadable-front-matter)):
+A YAML block's content is one YAML document whose top level is a mapping. A TOML block's content is one TOML document, whose top level is always a table. Content that is empty, or only comments and blank lines, is a present field with no keys, in either language. Each of these is `unreadable-front-matter` at the opening delimiter ([§FS-fields.checks.unreadable-front-matter](FS-fields.md#checksunreadable-front-matter-unreadable-front-matter)):
 
-- content the YAML parser rejects, a tab in indentation included, named by the parser's message and its line;
-- content whose top level is a sequence or a scalar, `its top level is not a mapping`;
-- content that holds a second document, `a second document starts`. A line such as `--- # x` is not exactly a delimiter, so it does not close the block ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)), but in YAML it starts a document;
-- collections nested more than 128 deep, `collections are nested more than 128 deep`. This is the span tree's one nesting bound, shared with value sources ([§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output)), so no block makes the reader recurse past it ([§REQ-never-crashes.1](../requirements/REQ-never-crashes.md#1-every-failure-is-a-diagnostic));
-- a `+++` block. That block is TOML, which grund does not read yet: reading it is [#1057](https://github.com/agent-grounds/grund/issues/1057).
+- YAML content the YAML parser rejects, a tab in indentation included, named by the parser's message and its line;
+- TOML content the TOML parser or its decoder rejects, named by the first such message in source order and the line of the first byte it did not expect. A bare word as a value, `status = accepted`, is `string values must be quoted`. A string still open when the content ends is reported at the closing delimiter's line. A key TOML refuses to define again is not a parse error here: it is a key written twice ([§FS-fields.front-matter.keys](FS-fields.md#front-matterkeys-its-keys-are-its-sections));
+- YAML content whose top level is a sequence or a scalar, `its top level is not a mapping`;
+- YAML content that holds a second document, `a second document starts`. A line such as `--- # x` is not exactly a delimiter, so it does not close the block ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)), but in YAML it starts a document;
+- collections nested more than 128 deep, `collections are nested more than 128 deep`, at the line of the collection that goes past. This is the span trees' one nesting bound, shared with value sources ([§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output)), so no block makes either reader recurse past it ([§REQ-never-crashes.1](../requirements/REQ-never-crashes.md#1-every-failure-is-a-diagnostic)). Levels are counted the way the YAML tree counts them, the top level being the first. In TOML, each array and each inline table is one level more than the value that holds it, so `notes = [[…]]` is refused exactly where `notes: [[…]]` is. A table opened by a header or a dotted key is written flat and adds no level.
 
 An unreadable block is still a present field, so `missing-field` is not also reported for it. None of its keys is read, so none is judged, and it gives no key a coordinate.
 
@@ -296,14 +297,26 @@ A file whose line 1 begins with a byte-order mark has no front matter ([§FS-che
 
 ### front-matter.keys: Its keys are its sections
 
-The field's keys are the top-level keys of the block's mapping, in source order. A key nested inside a value is no key of the field; it is part of that value. A key is named by its decoded scalar, so `status`, `'status'` and `"status"` are one key. A key whose name is a section name, `[a-z][a-z0-9-]*`, is a section of the field, `<ID>.front-matter.<key>`, whether or not the field declares it. Any other key is still a key but has no coordinate, and a closed field reports it with the shorter remedy `rename it to one of them or remove it`, because it cannot be declared. That covers:
+The field's keys are the top-level keys of the block's mapping, or of its table in TOML, in source order. A key nested inside a value is no key of the field; it is part of that value. A key is named by its decoded scalar, so `status`, `'status'` and `"status"` are one key. A key whose name is a section name, `[a-z][a-z0-9-]*`, is a section of the field, `<ID>.front-matter.<key>`, whether or not the field declares it. Any other key is still a key but has no coordinate, and a closed field reports it with the shorter remedy `rename it to one of them or remove it`, because it cannot be declared. That covers:
 
 - a scalar key outside the grammar, such as `Reviewer`, `review_date` or `<<`, named in a finding by its decoded text;
 - a key that is not a scalar, a collection written as a key (`? [a, b]`) or an alias (`*k`), named in a finding by the text it is written as on its line, `ADR-cache.front-matter.*k`.
 
 A merge key `<<` is a plain key outside the grammar, and nothing is merged. The keys it would merge are not keys of the field, because no YAML resolution is applied ([§DA-yaml-value-reader.2.1](../decisions/architectural/DA-yaml-value-reader.md#21-one-event-parser)), so a `status` that only a merge supplies is absent.
 
+In a TOML block, a top-level key is the first component of every key the document writes at its top level. `status = …` writes `status`, the dotted key `links.next = …` writes `links`, and the headers `[links]`, `[links.next]` and `[[authors]]` write `links`, `links` and `authors`. Each of these is a contribution to its key. A key is named by its decoded first component, so `status`, `"status"` and `'status'` are one key, and `"links.next" = …` writes the one key `links.next`, which is not a section name. A key's site is its first contribution, and the key keeps that place in source order. The components after the first are part of the key's value, as a nested YAML key is. A TOML key is always a string, so it is never named by its text the way a YAML collection key is.
+
 A key that is a section written twice, compared decoded, is `duplicate-section` at its first occurrence, naming the others ([§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)): `duplicate section ADR-cache.front-matter.status (also declared at docs/adr/cache.md:4); remove all but one of the keys`. Every check reads the first occurrence, as for a field written twice ([§FS-fields.identity.name](FS-fields.md#identityname-a-field-is-the-direct-section-of-its-name)), and a read of the coordinate is refused as ambiguous ([§FS-show.2.2.2](FS-show.md#222-ambiguous-section)). A key with no coordinate that is written twice is not a duplicate: it names no citation target.
+
+In a TOML block, a key is written twice by every later contribution that TOML refuses because of what the key already is. Each contribution is judged against what the contributions before it that TOML allowed have made the key, so a refused one changes nothing, and the finding names the line of each refused one and of no allowed one. What TOML refuses depends on what the key already is:
+
+- a value, `k = …`, whatever the value: every later contribution, `k = …` again, `k.x = …`, `[k]`, `[k.x]` or `[[k]]`. So `k = 1` then `k.x = 2`, `k = {…}` then `[k.x]` or `k.y = …`, and `k = […]` then `[[k]]` are each the key written twice;
+- a table its dotted keys define, `k.x = …`: `k = …`, `[k]` and `[[k]]`;
+- a table its own header defines, `[k]`: `[k]` and `[[k]]`;
+- a table only a header below it has opened, `[k.x]` or `[[k.x]]`: `[[k]]`;
+- an array of tables, `[[k]]`: `[k]`.
+
+Every other contribution is allowed, and the key stays one key written once: `k.y = …` or `[k.y]` to a table of dotted keys, `[k.y]` to a table its own header defines, `[k]` or `[k.y]` to a table only a header below it has opened, after which `[k]` makes it a table its own header defines, and `[[k]]` or `[k.x]` to an array of tables. TOML calls each refused contribution a parse error. Reading it as a key written twice keeps the findings those of the same key written twice between `---` lines, and the reading never admits, at the level grund judges, a page that TOML refuses. A conflict below the top level, such as `[k.x]` twice, is part of `k`'s value and is not judged, as a key repeated inside a nested YAML mapping is not.
 
 ### front-matter.values: A key's value is its decoded text
 
@@ -311,7 +324,9 @@ A key's value is its scalar as the parser decodes it, with quotes and escapes re
 
 `one_of` takes a one-line value: a plain or quoted scalar that starts on the key's line and ends on it. A block scalar (`|`, `>`) is not one, because YAML keeps its trailing newline and the comparison would read `accepted\n`. Nor is a scalar folded onto later lines, a sequence, a mapping, or an alias. Each of these is `invalid-field-value`, `ADR-cache.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line`. A key without `one_of` holds any value, nested or not, and nothing in it is judged.
 
-### front-matter.constructs: What each YAML construct gets
+In a TOML block, the value of a key written `k = …` is what follows its `=`, and the value of a key opened by a header or reached by a dotted key is the table they make. A string, basic or literal, on one line or several, is its decoded text, with escapes resolved, so `"accepted"`, `'accepted'`, `"""accepted"""` and `"accepted"` are all `accepted`. Every other scalar is its raw spelling, as written in the file, and no TOML type is applied: `1_000`, `0x1F`, `1.10`, `true`, `2026-02-03` and `1979-05-27T07:32:00Z` stay those exact characters, so `1_000` is never `1000` and `0x1F` never `1F`. TOML has no empty value, so `status = ""` is the counterpart of YAML's `status:`: present, and its value `""`. `one_of` takes the same one-line value: a scalar that starts on the key's line and ends on it, which `"""accepted"""` written on one line is. A string that spans lines is not one, and nor is an array, an inline table, or the table a header or a dotted key makes. Each is the same `not a one-line value` finding, at the key's site.
+
+### front-matter.constructs: What each YAML or TOML construct gets
 
 How each construct of YAML reads in the front matter of a kind that declares the field, as [§FS-values.2.2.3](FS-values.md#223-how-a-yaml-source-is-read) says for a value source:
 
@@ -330,7 +345,33 @@ How each construct of YAML reads in the front matter of a kind that declares the
 | a top level that is not a mapping | `unreadable-front-matter` |
 | collections nested more than 128 deep | `unreadable-front-matter` |
 | a parse error, a tab in indentation | `unreadable-front-matter` |
-| a `+++` block | `unreadable-front-matter` until #1057 |
+| a byte-order mark before the opening delimiter | no front matter, and a `missing-field` that names the mark |
+| a CRLF line ending | read as LF |
+
+And how each construct of TOML reads in a `+++` block, the same answers wherever TOML has the construct:
+
+| Construct | In front matter |
+|---|---|
+| a comment | read by no key; a `§` citation in it is live ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)) |
+| a quoted key, basic or literal | its decoded name, the same key as the bare one |
+| a key outside the grammar, a quoted key holding a dot included | a key with no coordinate; a closed field reports it |
+| a dotted key, `k.x = …` | the key `k`, its site the first contribution |
+| a header, `[k]` or `[k.x]` | the key `k`, its site the first contribution |
+| an array of tables, `[[k]]`, written again | one key `k`, its site the first `[[k]]` |
+| `k.x = …` then `k.y = …` or `[k.y]`; `[k.x]` then `[k.y]` or `[k]`; `[[k]]` then `[k.x]` | one key, written once |
+| `k = …` twice, `[k]` twice, or `k = …` then `[k]` | `duplicate-section` when it is a section, the first contribution read |
+| `k = 1` then `k.x = 2` | `duplicate-section` when it is a section, the first contribution read |
+| `k.x = 1` then `[k]` | `duplicate-section` when it is a section, the first contribution read |
+| `k = {…}` then `[k.x]` or `k.y = …` | `duplicate-section` when it is a section, the first contribution read |
+| `k = […]` or `[k]` then `[[k]]`; `[[k]]` then `[k]` | `duplicate-section` when it is a section, the first contribution read |
+| a conflict below the top level, `[k.x]` twice | part of `k`'s value, not judged |
+| a basic or literal string, on one line or several | its decoded text, escapes resolved |
+| a number, a boolean, a date or a time | its raw spelling, `1_000` and `0x1F` as written |
+| `k = ""` | present, `""` |
+| a string that spans lines, an array, an inline table, or the table a header or dotted key makes, as a value | held, and `not a one-line value` under `one_of` |
+| arrays and inline tables nested past the one bound | `unreadable-front-matter` |
+| a parse error, the decoder's included | `unreadable-front-matter`, at the first error's line |
+| a line that is exactly `+++` inside a multi-line string | closes the block ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)): the string is cut, `unreadable-front-matter` at the closing delimiter's line, and the lines after it are Markdown |
 | a byte-order mark before the opening delimiter | no front matter, and a `missing-field` that names the mark |
 | a CRLF line ending | read as LF |
 
@@ -347,6 +388,8 @@ A coordinate's **slice** is its text in the file:
 
 - for `<ID>.front-matter`, from the first byte of the opening delimiter to the last byte of the closing one, its line ending excluded;
 - for `<ID>.front-matter.<key>`, from the key's first byte to the last byte of its value, as [§FS-values.2.2.2](FS-values.md#222-reader-fidelity) cuts a member. Comments between the key and the end of its value are inside, and comments before the key or after its value are not. A key with no value ends at its colon, and no slice ends in a carriage return.
+
+In a TOML block, a key's coordinate is at the line of its first contribution, and its slice starts at that contribution's first byte: the key's own first byte, its opening quote where it is quoted, and the `[` or `[[` of a header, never the key's name inside it. The slice ends at the last byte of the last contribution in the key's **first run**, the contributions to the key that follow one another with no other top-level key's contribution between them. A `k = …` or `k.x = …` contribution ends at the last byte of its value. A header's contribution ends at the last byte of the last value written under it before the next header, or at its own `]` or `]]` where it holds none. Comments and blank lines after that last byte are not inside, and no slice ends in a carriage return. A key contributed to again after another key's contribution, which TOML allows (`[links.extra]` after `[[authors]]` reopens `links`), gains no second slice: those later lines are in `<ID>.front-matter`, as a comment between keys is.
 
 A key's **title** is its value where that is a one-line scalar on the key's line, and it has none otherwise. `<ID>.front-matter` has none.
 
@@ -374,12 +417,12 @@ A key's **title** is its value where that is a one-line scalar on the key's line
 | the declaration has no front matter | `missing-field` | the title line | the field's `presence` | `ADR-cache has no front-matter field; kind ADR declares it; add front matter at the top of its file` |
 | …because it is not its Markdown file's first declaration | `missing-field` | the title line | the field's `presence` | `ADR-later has no front-matter field; kind ADR declares it; only a file's first declaration has front matter; move it to a file of its own` |
 | …because it is a doc-comment declaration | `missing-field` | the title line | the field's `presence` | `ADR-code has no front-matter field; kind ADR declares it; only a Markdown file's first declaration has front matter; move it to a Markdown file of its own` |
-| …because line 1 is a byte-order mark and a delimiter | `missing-field` | the title line | the field's `presence` | `ADR-cache has no front-matter field; kind ADR declares it; remove the byte-order mark before the --- on line 1` |
+| …because line 1 is a byte-order mark and a delimiter | `missing-field` | the title line | the field's `presence` | `ADR-cache has no front-matter field; kind ADR declares it; remove the byte-order mark before the --- on line 1`, the `+++` in its place where that is the delimiter the mark is followed by |
 | a declared key is absent | `missing-field` | the opening delimiter | the key's `presence` | `ADR-cache.front-matter has no date key; kind ADR declares it; add the key to the front matter` |
 | a value is not in `one_of` | `invalid-field-value` | the key's line | the key's `presence` | `ADR-cache.front-matter.status is "acepted"; kind ADR admits proposed, accepted; change the value to one of them` |
 | a value under `one_of` is not one line | `invalid-field-value` | the key's line | the key's `presence` | `ADR-cache.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line` |
 | a key the field does not declare, in a closed field | `undeclared-chapter` | the key's line | the field's `closed` | as [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter) |
-| a key written twice | `duplicate-section` | its first occurrence | always an error | as [§FS-fields.front-matter.keys](FS-fields.md#front-matterkeys-its-keys-are-its-sections) |
+| a key written twice, or in TOML contributed to again in a way TOML refuses | `duplicate-section` | its first occurrence | always an error | as [§FS-fields.front-matter.keys](FS-fields.md#front-matterkeys-its-keys-are-its-sections) |
 | the block cannot be read | `unreadable-front-matter` | the opening delimiter | always an error | as [§FS-fields.checks.unreadable-front-matter](FS-fields.md#checksunreadable-front-matter-unreadable-front-matter) |
 | a heading claims the field's coordinate | `front-matter-heading` | the heading | always an error | as [§FS-fields.checks.front-matter-heading](FS-fields.md#checksfront-matter-heading-front-matter-heading) |
 
@@ -447,14 +490,14 @@ A front-matter field whose `closed` is not `may` admits only its declared keys. 
 
 ### checks.unreadable-front-matter: Unreadable front matter
 
-The front matter of a declaration whose kind declares the front-matter field, when grund cannot read its keys ([§FS-fields.front-matter.reading](FS-fields.md#front-matterreading-reading-the-block)). It is reported at the opening delimiter and is always an error. The message names the reason and, for YAML, the line of the file the reason is at:
+The front matter of a declaration whose kind declares the front-matter field, when grund cannot read its keys ([§FS-fields.front-matter.reading](FS-fields.md#front-matterreading-reading-the-block)). It is reported at the opening delimiter and is always an error. The message names the language, the reason, and the line of the file the reason is at:
 
 ```text
 docs/adr/cache.md:1: error: ADR-cache.front-matter does not parse as YAML: <reason> at line 3; fix the YAML
-docs/adr/cache.md:1: error: ADR-cache.front-matter is TOML, which grund does not read yet; write it as YAML between --- lines, or remove kind ADR's front-matter field
+docs/adr/toml.md:1: error: ADR-toml.front-matter does not parse as TOML: string values must be quoted at line 2; fix the TOML
 ```
 
-The `<reason>` is the parser's message, `its top level is not a mapping`, `a second document starts`, or `collections are nested more than 128 deep`. The field is present, so `missing-field` is not also reported, and no key of the block is judged.
+The `<reason>` is the parser's message, the YAML parser's or the TOML parser's or decoder's, or one of grund's own: `its top level is not a mapping` and `a second document starts`, which only YAML gives, and `collections are nested more than 128 deep`, which both share. The field is present, so `missing-field` is not also reported, and no key of the block is judged.
 
 ### checks.front-matter-heading: Front-matter heading
 

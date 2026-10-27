@@ -1,4 +1,6 @@
+docs/adr/cut.md:1: error: ADR-cut.front-matter does not parse as TOML: invalid multi-line basic string at line 5; fix the TOML
 docs/adr/flow.md:1: error: ADR-flow.front-matter does not parse as YAML: while parsing a flow sequence, expected ',' or ']' at line 4; fix the YAML
 docs/adr/list.md:1: error: ADR-list.front-matter does not parse as YAML: its top level is not a mapping at line 2; fix the YAML
 docs/adr/second.md:1: error: ADR-second.front-matter does not parse as YAML: a second document starts at line 3; fix the YAML
-docs/adr/toml.md:1: error: ADR-toml.front-matter is TOML, which grund does not read yet; write it as YAML between --- lines, or remove kind ADR's front-matter field
+docs/adr/toml-deep.md:1: error: ADR-toml-deep.front-matter does not parse as TOML: collections are nested more than 128 deep at line 4; fix the TOML
+docs/adr/toml.md:1: error: ADR-toml.front-matter does not parse as TOML: string values must be quoted at line 2; fix the TOML

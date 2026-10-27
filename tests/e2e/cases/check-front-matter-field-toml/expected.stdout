@@ -1,0 +1,8 @@
+docs/adr/toml.md:1: error: ADR-toml.front-matter has no date key; kind ADR declares it; add the key to the front matter
+docs/adr/toml.md:2: error: ADR-toml.front-matter.status is "acepted"; kind ADR admits proposed, accepted; change the value to one of them
+docs/adr/toml.md:3: error: ADR-toml.front-matter.reviewer is not a key of kind ADR's front matter, which is closed; its keys: status, date; rename it to one of them, remove it, or add it to the field's keys
+docs/adr/toml.md:5: error: ADR-toml.front-matter.links is not a key of kind ADR's front matter, which is closed; its keys: status, date; rename it to one of them, remove it, or add it to the field's keys
+docs/adr/yaml.md:1: error: ADR-yaml.front-matter has no date key; kind ADR declares it; add the key to the front matter
+docs/adr/yaml.md:2: error: ADR-yaml.front-matter.status is "acepted"; kind ADR admits proposed, accepted; change the value to one of them
+docs/adr/yaml.md:3: error: ADR-yaml.front-matter.reviewer is not a key of kind ADR's front matter, which is closed; its keys: status, date; rename it to one of them, remove it, or add it to the field's keys
+docs/adr/yaml.md:5: error: ADR-yaml.front-matter.links is not a key of kind ADR's front matter, which is closed; its keys: status, date; rename it to one of them, remove it, or add it to the field's keys

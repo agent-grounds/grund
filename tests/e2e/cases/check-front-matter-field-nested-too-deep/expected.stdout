@@ -1,1 +1,4 @@
 docs/adr/deep.md:1: error: ADR-deep.front-matter does not parse as YAML: collections are nested more than 128 deep at line 5; fix the YAML
+docs/adr/toml-deep.md:1: error: ADR-toml-deep.front-matter does not parse as TOML: collections are nested more than 128 deep at line 4; fix the TOML
+docs/adr/toml-edge.md:4: error: ADR-toml-edge.front-matter.notes is not a key of kind ADR's front matter, which is closed; its keys: status, date; rename it to one of them, remove it, or add it to the field's keys
+docs/adr/toml-tables.md:1: error: ADR-toml-tables.front-matter does not parse as TOML: collections are nested more than 128 deep at line 4; fix the TOML
