@@ -45,7 +45,8 @@ A line that names an ID without introducing it never declares that ID, wherever 
 ID followed by a section path is a coordinate in every declaration position, and with the
 declaration colon after it the whole token is the near miss, never a declaration of the
 shorter ID ([§FS-declarations.line.section-suffix](FS-declarations.md#linesection-suffix-an-id-with-a-section-after-it-declares-nothing), [§FS-declarations.line.section-suffix.2](FS-declarations.md#linesection-suffix2-with-the-colon-the-whole-token-is-the-near-miss)); a
-heading inside a fence or a raw-text HTML block is an example ([§FS-declarations.heading](FS-declarations.md#heading-what-a-heading-is),
+heading inside a fence or a raw-text HTML block is an example, and a `#` line in front matter is
+a YAML or TOML comment ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)) ([§FS-declarations.heading](FS-declarations.md#heading-what-a-heading-is),
 [§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing)); and an ID in inline code or in Markdown prose
 declares nothing and is no near miss ([§FS-declarations.checks.declaration-near-miss.3](FS-declarations.md#checksdeclaration-near-miss3-never-in-inline-code-prose-or-a-fenced-block)). One
 case is owed. Every comment-prefixed line of a source file is a declaration position
@@ -490,8 +491,8 @@ placed those findings at the stub; [§DF-stubs-by-home-and-at-the-target](../dec
 
 ## heading: What a heading is
 
-A heading is a Markdown ATX heading line (`#` through `######`) outside any fenced block
-or raw-text HTML block: a line inside one is never a heading, by [§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example), and in
+A heading is a Markdown ATX heading line (`#` through `######`) outside any fenced block,
+raw-text HTML block or front matter ([§FS-check.1.1.5.2](FS-check.md#1152-front-matter-holds-no-heading)): a line inside one is never a heading, by [§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example), and in
 a comment block the fence is the one read through the comment wrapper
 ([§FS-languages.fence.comment-block](FS-languages.md#fencecomment-block-a-fence-inside-a-comment-block-hides-its-headings)). A heading
 either opens a declaration ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares)), is a citable section of the
@@ -526,7 +527,9 @@ an ID (or end of file); in a source file it is the end of the comment block the
 declaration line opens ([§FS-show.2.3.1](FS-show.md#231-what-counts-as-the-comment-block)). The span, not the most recently scanned
 declaration, owns the coordinate: a same-or-higher Markdown heading, the end of an inline
 source doc-comment or docstring, the next declaration in a shared comment block, and a
-stub's single declaration line each end ownership.
+stub's single declaration line each end ownership. The one line the span does not reach that
+a declaration still owns is the file's front matter, which belongs to its first declaration
+without growing its body ([§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)).
 
 ### body.conflict: A body still in the middle of a merge
 
