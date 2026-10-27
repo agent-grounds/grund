@@ -1,0 +1,13 @@
+# Solver limits, in YAML so that each number can say where it came from.
+# A citation written in a comment here is read by nothing, so the provenance
+# is cited from docs/solver.md, where grund checks it.
+
+# More substeps than this cost more time than the accuracy they buy
+# (the 2026-10 profiling run).
+CONST-max-substeps: [8]
+
+# The integration scheme and its version. The version is quoted so that it
+# stays the string "1.10": unquoted, it would be the number 1.1.
+CONST-integrator:
+  - velocity-verlet
+  - '1.10'

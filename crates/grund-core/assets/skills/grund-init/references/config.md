@@ -96,6 +96,18 @@ For each kind ask: `kind`, `folder`, `title`.
 
 A directory that holds agent-facing content rather than declarations — skills, runbooks, a prompt library, a test suite — is a kind with `citable = false`: it gets a home, a title and citation rules, and declares no IDs. Ask for one wherever the repo has such a directory and the answer to "should an agent be told this exists?" is yes.
 
+Where the repo keeps tunable numbers (limits, rates, thresholds) that docs and code comments quote, offer a value kind: `form = "value"` in v2, `values = true` in v1, with a folder home such as `values/`. Each direct `.json`, `.yaml` or `.yml` child is a value source. Suggest YAML when a number needs a comment saying where it came from, and quote any component that must stay a string:
+
+```yaml
+# Fire code, section 4.2: occupancy per room.
+CONST-room-limit: [12, people]
+
+# Quoted, so it stays the string "1.10" rather than a number.
+CONST-api-version: ['1.10']
+```
+
+A `§` citation inside a YAML comment is read by nothing, so cite provenance from Markdown. Until grund 0.22.0 every finding at a YAML source is a `yaml-value-source-deferred` warning.
+
 ### `[scan]`
 
 `include`
@@ -108,7 +120,7 @@ Default: `["target", "node_modules", ".git", "dist", "build", ".venv"]`. Pros: s
 
 `extensions`
 
-Default includes common Markdown and source extensions. Pros: polyglot coverage. Cons: scanning more extensions costs time and may surface noise. Recommend only extensions found in the repo plus Markdown, unless the repo is fresh.
+Default includes common Markdown and source extensions. Pros: polyglot coverage. Cons: scanning more extensions costs time and may surface noise. Recommend only extensions found in the repo plus Markdown, unless the repo is fresh. With a value kind, leave `yaml` and `yml` out: a listed one keeps a value home's YAML files as scanned text that declares nothing.
 
 `comment_prefixes`
 
