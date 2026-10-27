@@ -156,7 +156,7 @@ A fetched snapshot is an ordinary declaration. Every slice below returns its
 committed body verbatim through the same scanner spans as an authored Markdown
 declaration; no query checks freshness or contacts its integration.
 
-Opted-in value-source declarations ([§FS-values.terms](FS-values.md#terms-terms)) are members of the same catalog. For one, `show` returns the exact source member slice for the ID or exact element slice for a numbered section, as [§FS-values.2.2.2](FS-values.md#222-reader-fidelity) bounds them in either format; `--brief`, default, `--toc`, and `--full` all collapse to that available slice and never synthesize Markdown ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
+An opted-in value-source declaration ([§FS-values.terms](FS-values.md#terms-terms)) is in the same catalog: each mode prints an ID's member slice or a numbered section's element slice ([§FS-values.2.2.2](FS-values.md#222-reader-fidelity)), and never synthesizes Markdown ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
 
 ### 2.1 Whole declaration (default)
 
