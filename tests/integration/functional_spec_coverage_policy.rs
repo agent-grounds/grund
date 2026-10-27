@@ -265,7 +265,6 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-rules.requirements.addition", reason: "directional rule-language policy, binding the next family rather than describing a released behavior" },
     Exception { id: "FS-section-lock.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-show.terms", reason: "vocabulary, not a behavioral requirement" },
-    Exception { id: "FS-values.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-workspace.terms", reason: "vocabulary, not a behavioral requirement" },
 ];
 
