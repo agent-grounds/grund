@@ -423,6 +423,16 @@ Every constraint takes one strength, and the strength names its channel:
 
 `default`, at the project or the kind, takes `may`, `should-not`, `warn-not` or `must-not`. A positive default is refused at its line: `` `default = "must"` is not a v2 citation default (expected may, should-not, warn-not, or must-not) ``. In v1 a positive `default` loads and creates no obligation ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)). v2 does not spell that state, so it refuses the form rather than give it a second meaning.
 
+#### rules.citations.uncited: An obligation never judges a file that cites nothing
+
+For a place or the complement an obligation is asked per file, and only of a file that carries a citation ([§FS-check.3.11.5](FS-check.md#3115-a-file-with-no-citation-is-no-unit)): `[rules.citations.e2e] must = ["FS"]` fails a file in `tests/e2e/` that cites only `GOAL`, and passes one that cites nothing. Whether such a file cites at all is grounding's question, which `[rules.citations.<PLACE>.grounding]` asks ([§FS-config-v2.rules.grounding](FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole)). Every text that says what `must`, `warn` or `should` does says so, because an author who reads a `must` as "every file cites FS" ships a rule that enforces less than it says. The keys' descriptions, which `grund config explain` prints ([§FS-config-explain.3](FS-config-explain.md#3-a-keys-answer)), are, for `must`:
+
+```text
+Kinds this one must cite; a miss is an error. A file of a place or the complement that cites nothing is not checked by this key; `[rules.citations.<ROW>.grounding]` makes it a finding.
+```
+
+and for `warn` and `should` the same second sentence after `Kinds this one must cite; a miss is a warning.` and `Kinds this one should cite; a miss is a suggestion.` The generated entrypoint says it per home ([§FS-init.2.3.5.2.2](FS-init.md#23522-a-home-whose-row-grounds-nothing-says-so)) and `grund schema`'s legend once ([§FS-schema.8.3](FS-schema.md#83-the-legend-says-an-obligation-skips-an-uncited-file)).
+
 ### rules.grounding: Grounding is a ladder, replaced whole
 
 `[rules.citations.grounding]` is the project's ladder and `[rules.citations.<PLACE>.grounding]` a row's. A ladder's keys are the positive strengths and its values are units: `"file"`, or `"h2"` to `"h6"`, the heading levels of [§FS-check.3.6.2](FS-check.md#362-the-unit). Each rung asks that every unit of that size in a governed file be grounded, and reports an ungrounded one on its strength's channel ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)). A row's files are governed as [§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs) says. A stronger rung never uses a finer unit: `must = "h2"` beside `warn = "file"` is refused at the stronger key: ``grounding ladder: `must` (h2) is finer than `warn` (file); a stronger rung never uses a finer unit``.

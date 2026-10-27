@@ -75,6 +75,8 @@ mod tests_citation_grounding;
 #[cfg(test)]
 mod tests_clickable_citations;
 #[cfg(test)]
+mod tests_prohibition_targets;
+#[cfg(test)]
 mod tests_scoped_guidance;
 #[cfg(test)]
 mod tests_setup_instructions;

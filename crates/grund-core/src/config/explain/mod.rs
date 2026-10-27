@@ -16,6 +16,8 @@ mod tests_audit;
 mod tests_dotted;
 #[cfg(test)]
 mod tests_page_parity;
+#[cfg(test)]
+mod tests_uncited;
 
 use anyhow::{Context, Result};
 use std::fs;
