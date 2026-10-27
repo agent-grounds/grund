@@ -80,6 +80,7 @@ owners = [
   "crates/grund-core/src/grammar/heading_text.rs",
   "crates/grund-core/src/grammar/line_scan.rs",
   "crates/grund-core/src/grammar/link_walk.rs",
+  "crates/grund-core/src/grammar/markdown_blocks.rs",
   "crates/grund-core/src/grammar/markdown_links.rs",
   "crates/grund-core/src/grammar/never_rewrite.rs",
   "crates/grund-core/src/grammar/relative_heading.rs",
