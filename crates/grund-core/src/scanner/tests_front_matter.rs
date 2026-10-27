@@ -395,8 +395,11 @@ fn an_unreadable_block_names_its_reason_and_line() {
         yaml("a second document starts", 3)
     );
     assert_eq!(
-        unreadable("+++\ntitle = 'x'\n+++\n"),
-        FrontMatterUnreadable::Toml
+        unreadable("+++\nstatus = accepted\n+++\n"),
+        FrontMatterUnreadable::Toml {
+            reason: "string values must be quoted".to_string(),
+            line: 2
+        }
     );
     let deep = format!("---\nk: {}{}\n---\n", "[".repeat(200), "]".repeat(200));
     assert!(matches!(

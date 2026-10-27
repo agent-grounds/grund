@@ -1,10 +1,12 @@
 //! The front-matter pass (§FS-fields.front-matter.reading): on a file holding a
 //! declaration whose kind declares the front-matter field, read the block its
 //! first declaration owns through the one YAML span tree (§DA-yaml-value-reader)
+//! or, for a `+++` block, the one TOML span tree (§DA-toml-front-matter-reader),
 //! and give its keys their coordinates in that declaration's section map
 //! (§FS-fields.front-matter.coordinates). Every other declaration of such a kind
 //! is told why it has no front matter (§FS-fields.front-matter.placement).
 
+use super::toml::{TomlKey, parse_toml};
 use super::yaml::{ScalarStyle, YamlKind, YamlNode, YamlStream, parse_yaml};
 use crate::config::{FRONT_MATTER, Schema, kind_front_matter};
 use crate::grammar::named_section_component;
@@ -135,16 +137,18 @@ pub(super) fn read_block(
         FRONT_MATTER.to_string(),
         entry(String::new(), 1, &text[..block_end], last),
     );
-    if opener == "+++" {
-        let reason = FrontMatterUnreadable::Toml;
-        return (FrontMatterBlock::Unreadable(reason), vec![whole]);
-    }
     let content = Content {
         text: &text[start..end],
         offset: start,
         file: text,
     };
-    match content.keys() {
+    // §FS-fields.front-matter.reading: the delimiter names the language.
+    let keys = if opener == "+++" {
+        content.toml_keys()
+    } else {
+        content.keys()
+    };
+    match keys {
         Ok(keys) => {
             let mut entries = vec![whole];
             let mut sites = Vec::new();
@@ -225,6 +229,34 @@ impl<'a> Content<'a> {
             .iter()
             .map(|(key, value)| self.key(key, value))
             .collect())
+    }
+
+    /// §FS-fields.front-matter.reading, §FS-fields.front-matter.keys: one TOML
+    /// document, its keys the TOML span tree's sites, each cut from the file as a
+    /// YAML key is.
+    fn toml_keys(&self) -> Result<Vec<Key<'a>>, FrontMatterUnreadable> {
+        let keys = parse_toml(self.text).map_err(|error| FrontMatterUnreadable::Toml {
+            reason: error.message,
+            line: self.line(error.at),
+        })?;
+        Ok(keys.into_iter().map(|key| self.toml_key(key)).collect())
+    }
+
+    /// §FS-fields.front-matter.coordinates: a TOML key at its first
+    /// contribution's line, its slice the span the tree gives it.
+    fn toml_key(&self, key: TomlKey) -> Key<'a> {
+        let line = self.line(key.span.start);
+        let slice = &self.file[self.offset + key.span.start..self.offset + key.span.end];
+        Key {
+            site: FrontMatterKeySite {
+                section: named_section_component(&key.name),
+                name: key.name,
+                line,
+                one_line: key.one_line,
+            },
+            slice,
+            end_line: line + slice.matches('\n').count(),
+        }
     }
 
     /// The one document's root, `None` for content with nothing in it.

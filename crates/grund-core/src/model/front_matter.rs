@@ -50,13 +50,14 @@ pub(crate) enum FrontMatterAbsence {
     DocComment,
 }
 
-/// §FS-fields.checks.unreadable-front-matter: why the keys cannot be read.
+/// §FS-fields.checks.unreadable-front-matter: why the keys cannot be read, in
+/// the language the delimiter names.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum FrontMatterUnreadable {
-    /// The reason and the file line it is at.
+    /// A `---` block: the reason and the file line it is at.
     Yaml { reason: String, line: usize },
-    /// A `+++` block, which grund does not read yet.
-    Toml,
+    /// A `+++` block: the reason and the file line it is at.
+    Toml { reason: String, line: usize },
 }
 
 /// §FS-fields.front-matter.keys: one top-level key as written.
