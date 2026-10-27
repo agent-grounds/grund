@@ -16,6 +16,11 @@ include!("case_copy.rs");
 #[path = "case_copy_tests.rs"]
 mod copy_output_tests;
 
+// A copied fixture script is never busy because of a sibling spawn (§FS-examples.5.6.3).
+#[cfg(all(test, unix))]
+#[path = "case_fixture_exec_tests.rs"]
+mod fixture_exec_tests;
+
 // The citable half of the canonical kind set (§FS-config.3.4). The two default
 // test kinds are non-citable, so no `spec.refs` entry can name one.
 const CANONICAL_KINDS: &[&str] = &["GRUND", "GOAL", "FS", "AR", "DF", "DA", "RM"];

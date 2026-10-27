@@ -224,3 +224,13 @@ logical `target/e2e-work/<case name>/repo` path, including its absolute form
 where the output uses an absolute path. Other text and paths remain significant:
 normalization must not erase an unrelated path or hide a substantive mismatch.
 Examples and ordinary e2e cases use this same normalization.
+
+#### 5.6.3 A materialized fixture is closed before any spawn can inherit it
+
+The shared runner finishes writing every file it materializes into an
+invocation's copy, closing it included, before any child process the runner
+spawns can inherit a descriptor to that file. A fixture script that a case
+executes, directly or through the command under test, therefore never fails
+to start as busy (`ETXTBSY`) because a sibling invocation's spawn carried the
+runner's write descriptor. Retrying the case or the spawn on that error does
+not meet this point: it hides the overlap rather than removing it.
