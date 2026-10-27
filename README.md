@@ -437,7 +437,7 @@ for the affected clients.
 | [`grund.toml` reference](docs/user-facing/configuration.md) | every key of both config versions, and the JSON Schema for your editor |
 | [Config explain](docs/user-facing/explain.md) | what a key or a check code means and what clears a finding, from the grund you run, in your config's version — [runnable example](examples/config-explain/) |
 | [Migrating to version 2](docs/user-facing/migrating.md) | preview, repairs and preserving listed comments — [runnable example](examples/migrate/) |
-| [Structure and IDs](docs/user-facing/structure.md) | kinds, ID schemes, citation syntax, inline declarations |
+| [Structure and IDs](docs/user-facing/structure.md) | kinds, ID schemes, citation syntax, inline declarations, front matter — [runnable example](examples/front-matter/) |
 | [Querying grund](docs/user-facing/querying.md) | selectors, batch reads, `refs`, `cover` — [runnable example](examples/refs-unused/) of `refs` on what nothing cites |
 | [Reviewing code](docs/user-facing/reviewing.md) | a citation's blast radius, diff recipes |
 | [Chapter rules](docs/user-facing/rules.md) | checked rules in controlled English — [runnable example](examples/rules/) |

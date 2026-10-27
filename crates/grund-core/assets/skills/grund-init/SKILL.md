@@ -103,6 +103,8 @@ Then ask the user to choose one adoption model:
 
 The question should include a recommendation grounded in the inventory. Do not write `grund.toml`, run `grund init --scaffold`, move documents, rename headings, or add bulk citations until the user chooses the adoption model. Once selected, use the model to decide whether the setup is only config plus entrypoint refresh, or a broader docs refactor with a visible plan.
 
+A repository whose Markdown opens with YAML or TOML front matter can keep its relationships there as `§` citations: they count for the file's first declaration, a `#` comment in the block declares nothing, and `grund fmt` leaves the block as written.
+
 ## Validation
 
 After writing config, run:
