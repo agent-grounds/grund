@@ -127,6 +127,10 @@ docstring_python = true
 Pros: broad coverage for adoption across teams.
 Cons: can be noisy; recommend narrowing after the first `grund check`, then `grund check --full .` to see what the narrowing left out.
 
+### Front Matter
+
+Evidence: Markdown files that open with a `---` or `+++` block (Jekyll, Hugo, Zola, Pandoc, Docusaurus). A repository whose Markdown opens with YAML or TOML front matter can keep its relationships there as `§` citations: they count for the file's first declaration, a `#` comment in the block declares nothing, and `grund fmt` leaves the block as written.
+
 ### Version 2: `[schema.sources]`
 
 With `grund_config_version = 2` there is no `[scan]`: name the languages the evidence shows, map each suffix the v2 epoch lacks, and write generated paths as gitignore-style globs, which have no built-in defaults ([sources guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/sources.md)). For C with headers:
