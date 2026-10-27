@@ -311,6 +311,7 @@ const SWITCHES: &[Switch] = &[
     Switch::FieldPlacement,
     Switch::FieldTitle,
     Switch::ClosedKind,
+    Switch::FrontMatterField,
     Switch::NamedSections,
     Switch::HeadingDepth,
     Switch::Grounding,
@@ -353,6 +354,7 @@ fn every_switch_is_spelled_in_both_config_versions() {
             Switch::FieldPlacement,
             Switch::FieldTitle,
             Switch::ClosedKind,
+            Switch::FrontMatterField,
         ])
     );
     assert_eq!(v2_absent, BTreeSet::from([Switch::NamedSections]));

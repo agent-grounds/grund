@@ -546,8 +546,17 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "renumber or rename all but one of the headings"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "headings",
+      "text": "renumber or rename all but one of the headings"
+     },
+     {
+      "label": "keys",
+      "text": "remove all but one of the keys"
+     }
+    ]
    },
    "note": null
   },
@@ -560,8 +569,17 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "renumber or rename all but one of the headings"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "headings",
+      "text": "renumber or rename all but one of the headings"
+     },
+     {
+      "label": "keys",
+      "text": "remove all but one of the keys"
+     }
+    ]
    },
    "note": null
   }
@@ -834,6 +852,46 @@
   }
  },
  {
+  "code": "front-matter-heading",
+  "meaning": "A heading claims the front-matter field's coordinate in a declaration whose kind reads that field from the file's front matter.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[schema.kinds.<kind>.fields.front-matter] is set",
+      "by": "setting"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "rename the section"
+   },
+   "note": "The heading declares nothing, so it is no section and no rule unit."
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "template",
+    "text": "rename the section"
+   },
+   "note": "The heading declares nothing, so it is no section and no rule unit."
+  }
+ },
+ {
   "code": "full-scope-ignored",
   "meaning": "--full was given an explicit path, which it cannot widen, so it changed nothing.",
   "ramp": null,
@@ -1032,8 +1090,21 @@
     ]
    },
    "fix": {
-    "kind": "template",
-    "text": "retitle the heading to one of them"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "heading",
+      "text": "retitle the heading to one of them"
+     },
+     {
+      "label": "value",
+      "text": "change the value to one of them"
+     },
+     {
+      "label": "one-line",
+      "text": "write one of them on the key's line"
+     }
+    ]
    },
    "note": null
   },
@@ -1047,8 +1118,21 @@
     "text": "not in version 1"
    },
    "fix": {
-    "kind": "template",
-    "text": "retitle the heading to one of them"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "heading",
+      "text": "retitle the heading to one of them"
+     },
+     {
+      "label": "value",
+      "text": "change the value to one of them"
+     },
+     {
+      "label": "one-line",
+      "text": "write one of them on the key's line"
+     }
+    ]
    },
    "note": null
   }
@@ -1564,8 +1648,33 @@
     "remark": "a warn or should presence turns it on too, at that strength"
    },
    "fix": {
-    "kind": "template",
-    "text": "add its {field} section"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "chapter",
+      "text": "add its {field} section"
+     },
+     {
+      "label": "block",
+      "text": "add front matter at the top of its file"
+     },
+     {
+      "label": "not-first",
+      "text": "only a file's first declaration has front matter; move it to a file of its own"
+     },
+     {
+      "label": "doc-comment",
+      "text": "only a Markdown file's first declaration has front matter; move it to a Markdown file of its own"
+     },
+     {
+      "label": "byte-order-mark",
+      "text": "remove the byte-order mark before the --- on line 1"
+     },
+     {
+      "label": "key",
+      "text": "add the key to the front matter"
+     }
+    ]
    },
    "note": null
   },
@@ -1579,8 +1688,33 @@
     "text": "not in version 1"
    },
    "fix": {
-    "kind": "template",
-    "text": "add its {field} section"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "chapter",
+      "text": "add its {field} section"
+     },
+     {
+      "label": "block",
+      "text": "add front matter at the top of its file"
+     },
+     {
+      "label": "not-first",
+      "text": "only a file's first declaration has front matter; move it to a file of its own"
+     },
+     {
+      "label": "doc-comment",
+      "text": "only a Markdown file's first declaration has front matter; move it to a Markdown file of its own"
+     },
+     {
+      "label": "byte-order-mark",
+      "text": "remove the byte-order mark before the --- on line 1"
+     },
+     {
+      "label": "key",
+      "text": "add the key to the front matter"
+     }
+    ]
    },
    "note": null
   }
@@ -2727,8 +2861,21 @@
     "remark": "a warn or should closed turns it on too, at that strength"
    },
    "fix": {
-    "kind": "template",
-    "text": "rename it to one of them, number it, or add it to the kind's fields"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "chapter",
+      "text": "rename it to one of them, number it, or add it to the kind's fields"
+     },
+     {
+      "label": "key",
+      "text": "rename it to one of them, remove it, or add it to the field's keys"
+     },
+     {
+      "label": "undeclarable-key",
+      "text": "rename it to one of them or remove it"
+     }
+    ]
    },
    "note": null
   },
@@ -2742,8 +2889,21 @@
     "text": "not in version 1"
    },
    "fix": {
-    "kind": "template",
-    "text": "rename it to one of them, number it, or add it to the kind's fields"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "chapter",
+      "text": "rename it to one of them, number it, or add it to the kind's fields"
+     },
+     {
+      "label": "key",
+      "text": "rename it to one of them, remove it, or add it to the field's keys"
+     },
+     {
+      "label": "undeclarable-key",
+      "text": "rename it to one of them or remove it"
+     }
+    ]
    },
    "note": null
   }
@@ -3090,6 +3250,64 @@
     ]
    },
    "note": null
+  }
+ },
+ {
+  "code": "unreadable-front-matter",
+  "meaning": "The front matter of a declaration whose kind declares a front-matter field cannot be read as YAML keys, or is TOML.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[schema.kinds.<kind>.fields.front-matter] is set",
+      "by": "setting"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "yaml",
+      "text": "fix the YAML"
+     },
+     {
+      "label": "toml",
+      "text": "write it as YAML between --- lines, or remove kind {kind}'s front-matter field"
+     }
+    ]
+   },
+   "note": "The field is present, so no missing-field is reported beside it, and none of its keys is judged."
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "yaml",
+      "text": "fix the YAML"
+     },
+     {
+      "label": "toml",
+      "text": "write it as YAML between --- lines, or remove kind {kind}'s front-matter field"
+     }
+    ]
+   },
+   "note": "The field is present, so no missing-field is reported beside it, and none of its keys is judged."
   }
  },
  {

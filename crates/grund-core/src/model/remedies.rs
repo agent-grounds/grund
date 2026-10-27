@@ -142,10 +142,16 @@ pub(crate) fn duplicate_there() -> String {
     fill(Code::DUPLICATE, 2, Some("there"), slots)
 }
 
-/// `duplicate-section`'s *Fix* (§FS-declarations.checks.duplicate-section).
-pub(crate) fn duplicate_section() -> String {
+/// `duplicate-section`'s *Fix*, case `headings` (§FS-declarations.checks.duplicate-section).
+pub(crate) fn duplicate_section_headings() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
-    fill(Code::DUPLICATE_SECTION, 2, None, slots)
+    fill(Code::DUPLICATE_SECTION, 2, Some("headings"), slots)
+}
+
+/// `duplicate-section`'s *Fix*, case `keys` (§FS-declarations.checks.duplicate-section).
+pub(crate) fn duplicate_section_keys() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::DUPLICATE_SECTION, 2, Some("keys"), slots)
 }
 
 /// `empty-citation-obligation`'s *Fix*, case `citable` (§FS-check.2.2.1).
@@ -208,6 +214,12 @@ pub(crate) fn forbidden_citation_index_prohibition(level: impl Display, table: i
     fill(Code::FORBIDDEN_CITATION, 2, Some("index-prohibition"), slots)
 }
 
+/// `front-matter-heading`'s *Fix* (§FS-fields.checks.front-matter-heading).
+pub(crate) fn front_matter_heading() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::FRONT_MATTER_HEADING, 2, None, slots)
+}
+
 /// `full-scope-ignored`'s *Fix* (§FS-check.1.3.7).
 pub(crate) fn full_scope_ignored() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
@@ -244,10 +256,22 @@ pub(crate) fn inline_citation_style_layout() -> String {
     fill(Code::INLINE_CITATION_STYLE, 2, Some("layout"), slots)
 }
 
-/// `invalid-field-value`'s *Fix* (§FS-fields.checks.invalid-field-value).
-pub(crate) fn invalid_field_value() -> String {
+/// `invalid-field-value`'s *Fix*, case `heading` (§FS-fields.checks.invalid-field-value).
+pub(crate) fn invalid_field_value_heading() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
-    fill(Code::INVALID_FIELD_VALUE, 2, None, slots)
+    fill(Code::INVALID_FIELD_VALUE, 2, Some("heading"), slots)
+}
+
+/// `invalid-field-value`'s *Fix*, case `value` (§FS-fields.checks.invalid-field-value).
+pub(crate) fn invalid_field_value_value() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::INVALID_FIELD_VALUE, 2, Some("value"), slots)
+}
+
+/// `invalid-field-value`'s *Fix*, case `one-line` (§FS-fields.checks.invalid-field-value).
+pub(crate) fn invalid_field_value_one_line() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::INVALID_FIELD_VALUE, 2, Some("one-line"), slots)
 }
 
 /// `invalid-rule`'s *Fix*, case `form` (§FS-check.3.25).
@@ -364,10 +388,40 @@ pub(crate) fn missing_citation() -> String {
     fill(Code::MISSING_CITATION, 2, None, slots)
 }
 
-/// `missing-field`'s *Fix* (§FS-fields.checks.missing-field).
-pub(crate) fn missing_field(field: impl Display) -> String {
+/// `missing-field`'s *Fix*, case `chapter` (§FS-fields.checks.missing-field).
+pub(crate) fn missing_field_chapter(field: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("field", &field)];
-    fill(Code::MISSING_FIELD, 2, None, slots)
+    fill(Code::MISSING_FIELD, 2, Some("chapter"), slots)
+}
+
+/// `missing-field`'s *Fix*, case `block` (§FS-fields.checks.missing-field).
+pub(crate) fn missing_field_block() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::MISSING_FIELD, 2, Some("block"), slots)
+}
+
+/// `missing-field`'s *Fix*, case `not-first` (§FS-fields.checks.missing-field).
+pub(crate) fn missing_field_not_first() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::MISSING_FIELD, 2, Some("not-first"), slots)
+}
+
+/// `missing-field`'s *Fix*, case `doc-comment` (§FS-fields.checks.missing-field).
+pub(crate) fn missing_field_doc_comment() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::MISSING_FIELD, 2, Some("doc-comment"), slots)
+}
+
+/// `missing-field`'s *Fix*, case `byte-order-mark` (§FS-fields.checks.missing-field).
+pub(crate) fn missing_field_byte_order_mark() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::MISSING_FIELD, 2, Some("byte-order-mark"), slots)
+}
+
+/// `missing-field`'s *Fix*, case `key` (§FS-fields.checks.missing-field).
+pub(crate) fn missing_field_key() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::MISSING_FIELD, 2, Some("key"), slots)
 }
 
 /// `missing-index-entry`'s *Fix* (§FS-check.3.18).
@@ -502,10 +556,22 @@ pub(crate) fn uncited_unit() -> String {
     fill(Code::UNCITED_UNIT, 2, None, slots)
 }
 
-/// `undeclared-chapter`'s *Fix* (§FS-fields.checks.undeclared-chapter).
-pub(crate) fn undeclared_chapter() -> String {
+/// `undeclared-chapter`'s *Fix*, case `chapter` (§FS-fields.checks.undeclared-chapter).
+pub(crate) fn undeclared_chapter_chapter() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
-    fill(Code::UNDECLARED_CHAPTER, 2, None, slots)
+    fill(Code::UNDECLARED_CHAPTER, 2, Some("chapter"), slots)
+}
+
+/// `undeclared-chapter`'s *Fix*, case `key` (§FS-fields.checks.undeclared-chapter).
+pub(crate) fn undeclared_chapter_key() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNDECLARED_CHAPTER, 2, Some("key"), slots)
+}
+
+/// `undeclared-chapter`'s *Fix*, case `undeclarable-key` (§FS-fields.checks.undeclared-chapter).
+pub(crate) fn undeclared_chapter_undeclarable_key() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNDECLARED_CHAPTER, 2, Some("undeclarable-key"), slots)
 }
 
 /// `ungrounded`'s *Fix* (§FS-check.3.6).
@@ -608,6 +674,18 @@ pub(crate) fn unread_scan_root_give(version: u32) -> String {
 pub(crate) fn unread_scan_root_hidden_list(version: u32) -> String {
     let slots: &[(&str, &dyn Display)] = &[];
     fill(Code::UNREAD_SCAN_ROOT, version, Some("hidden-list"), slots)
+}
+
+/// `unreadable-front-matter`'s *Fix*, case `yaml` (§FS-fields.checks.unreadable-front-matter).
+pub(crate) fn unreadable_front_matter_yaml() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREADABLE_FRONT_MATTER, 2, Some("yaml"), slots)
+}
+
+/// `unreadable-front-matter`'s *Fix*, case `toml` (§FS-fields.checks.unreadable-front-matter).
+pub(crate) fn unreadable_front_matter_toml(kind: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("kind", &kind)];
+    fill(Code::UNREADABLE_FRONT_MATTER, 2, Some("toml"), slots)
 }
 
 /// `unrecorded-section-citation`'s *Fix* (§FS-section-lock.checks.unrecorded-section-citation).

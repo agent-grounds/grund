@@ -30,6 +30,7 @@ const SWITCH_CLAUSES: &[(Switch, Code, usize)] = &[
     (Switch::FieldPlacement, Code::MISPLACED_FIELD, 0),
     (Switch::FieldTitle, Code::MISTITLED_FIELD, 0),
     (Switch::ClosedKind, Code::UNDECLARED_CHAPTER, 0),
+    (Switch::FrontMatterField, Code::UNREADABLE_FRONT_MATTER, 0),
     (Switch::NamedSections, Code::ORPHAN_SECTION, 0),
     (Switch::HeadingDepth, Code::SECTION_HEADING_LEVEL, 0),
     (Switch::Grounding, Code::UNGROUNDED, 0),

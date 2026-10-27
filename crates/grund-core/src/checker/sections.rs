@@ -163,8 +163,9 @@ pub(super) fn check_section_headings(
         for (id, decls) in &findings.declarations {
             for decl in decls {
                 for (section_path, section) in &decl.sections {
-                    // §FS-config.3.3.3: a relative heading's depth is its parent's plus one.
-                    if section.relative {
+                    // §FS-config.3.3.3: a relative heading's depth is its parent's plus one,
+                    // and a front-matter coordinate has no heading (§FS-fields.front-matter.coordinates).
+                    if section.relative || section.front_matter.is_some() {
                         continue;
                     }
                     let expected_level = decl.heading_level + section_depth(section_path);
@@ -263,7 +264,13 @@ pub(super) fn check_section_headings(
                         render_catalog_id(frame.grammar(), &findings.declarations, id),
                         schema.ids.section_separator,
                         path,
-                        remedies::duplicate_section()
+                        // §FS-fields.front-matter.keys: a key written twice is no heading.
+                        match decl.sections.get(path) {
+                            Some(first) if first.front_matter.is_some() => {
+                                remedies::duplicate_section_keys()
+                            }
+                            _ => remedies::duplicate_section_headings(),
+                        }
                     ),
                     sites,
                     authority: Vec::new(),

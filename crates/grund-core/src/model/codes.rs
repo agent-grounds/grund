@@ -46,6 +46,8 @@ impl Code {
     pub const EXCLUDED_STUB_TARGET: Code = Code("excluded-stub-target");
     /// §FS-check.3.12
     pub const FORBIDDEN_CITATION: Code = Code("forbidden-citation");
+    /// §FS-fields.checks.front-matter-heading
+    pub const FRONT_MATTER_HEADING: Code = Code("front-matter-heading");
     /// §FS-check.1.3.7
     pub const FULL_SCOPE_IGNORED: Code = Code("full-scope-ignored");
     /// §FS-check.checks.glob-citation
@@ -141,6 +143,8 @@ impl Code {
     pub const UNREACHED_DECLARATION: Code = Code("unreached-declaration");
     /// §FS-scan.checks.unread-scan-root
     pub const UNREAD_SCAN_ROOT: Code = Code("unread-scan-root");
+    /// §FS-fields.checks.unreadable-front-matter
+    pub const UNREADABLE_FRONT_MATTER: Code = Code("unreadable-front-matter");
     /// §FS-section-lock.checks.unrecorded-section-citation
     pub const UNRECORDED_SECTION_CITATION: Code = Code("unrecorded-section-citation");
     /// §FS-check.4.1
@@ -169,6 +173,7 @@ impl Code {
         Code::ESCAPED_CITATION_RESOLVES,
         Code::EXCLUDED_STUB_TARGET,
         Code::FORBIDDEN_CITATION,
+        Code::FRONT_MATTER_HEADING,
         Code::FULL_SCOPE_IGNORED,
         Code::GLOB_CITATION,
         Code::IMAGE_INDEX_ENTRY,
@@ -216,6 +221,7 @@ impl Code {
         Code::UNMARKED_HEADING,
         Code::UNREACHED_DECLARATION,
         Code::UNREAD_SCAN_ROOT,
+        Code::UNREADABLE_FRONT_MATTER,
         Code::UNRECORDED_SECTION_CITATION,
         Code::UNUSED,
         Code::VALUE_MISMATCH,
