@@ -531,11 +531,11 @@ hint: no grund.toml applies here, so grund read `FS-login` against its defaults.
 
 Several configs are named as [§FS-check.2.2.2.5.1](FS-check.md#22251-which-configs-it-names) names them, and `run grund from one of their directories` replaces the single directory. Resolution, codes, streams, exit `1` and the hint-free JSON ([§FS-output-shapes.6.1.2](FS-output-shapes.md#612-from-0160)) do not change.
 
-Grammar-rejected sections count (`FS-widget.1.nope` with numbered-only sections). Bare and explicit `show` keep the format/list hint; non-path operands get no check breadcrumb ([§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)). Parsed but absent numeric sections keep `--toc`.
+Grammar-rejected sections count (`FS-widget.1.nope` with numbered-only sections). Bare and explicit `show` keep this point's hint; non-path operands get no check breadcrumb ([§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)). Parsed but absent numeric sections keep `--toc`.
 
 #### 3.5.2 The filesystem-path migration breadcrumb
 
-In the bare `grund <arg>` form only, if the query failure begins with `unknown project alias` and `<arg>` exists as a filesystem path relative to the invocation's working directory, the text refusal is `invalid ID \`<arg>\``, the format/list hint, then `hint: run \`grund check <arg>\` to validate a path`, with empty stdout and exit `1`. This is recovery advice for the former bare-path check form: the command names an existing filesystem operand, as [§FS-check.1](FS-check.md#1-inputs) requires.
+In the bare `grund <arg>` form only, if the query failure begins with `unknown project alias` and `<arg>` exists as a filesystem path relative to the invocation's working directory, the text refusal is `invalid ID \`<arg>\``, the hint of [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects), then `hint: run \`grund check <arg>\` to validate a path`, with empty stdout and exit `1`. This is recovery advice for the former bare-path check form: the command names an existing filesystem operand, as [§FS-check.1](FS-check.md#1-inputs) requires.
 
 No other refusal emits that breadcrumb: neither a grammar-rejected ID or coordinate nor a non-path alias or other error becomes a filesystem check by using the bare form. The explicit `show` form emits no migration breadcrumb. This rule changes only the recovery advice; the other failure messages, hints, streams, exit codes and structured output keep their existing contracts.
 
