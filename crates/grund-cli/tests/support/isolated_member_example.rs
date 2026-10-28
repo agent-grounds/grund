@@ -270,7 +270,6 @@ fn the_isolated_member_example_runs_the_recipe() {
 /// costs as the example's goldens print them; the skill's two copies say the same,
 /// and the example is linked from the guide, the examples index and the README.
 #[test]
-#[ignore = "red until #1077 teaches the member recipe in the guide, both skill copies, the example README and both indexes; implement removes this"]
 fn the_guide_teaches_the_member_recipe_the_example_runs() {
     let root = repo_root();
     let rules = recipe(&root, LEAKS);
