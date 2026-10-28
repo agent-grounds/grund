@@ -1,8 +1,9 @@
 //! Test module: the scoped files `init` owns (§FS-init.2.3.5.13.1,
 //! §FS-init.2.3.5.14): the list on disk it reads them from, the byte-exact test
 //! that deletes an orphan only when its block was the whole file, which files
-//! of an orphan's directory lose their block, and a chapter rule written into
-//! its subject kind's scoped block.
+//! of an orphan's directory lose their block, a chapter rule written into its
+//! subject kind's scoped block, and the root section the swap of
+//! `finish_root_block` leaves out when no rule is declared (§FS-init.2.3.4.10).
 
 use std::fs;
 
@@ -151,4 +152,81 @@ fn a_chapter_rule_renders_in_its_subject_kinds_scoped_block() {
         "a second run is a no-op: {:?}",
         again.events
     );
+}
+
+/// A version-2 project `t` whose GRUND kind is `docs/grund.md`, with `rows` added
+/// and `dirs` laid, so each scoped destination exists (§FS-init.2.3.5.11.4).
+fn init_v2(name: &str, rows: &str, dirs: &[&str]) -> std::path::PathBuf {
+    let root = test_root(name);
+    write(
+        &root.join("grund.toml"),
+        &format!(
+            "grund_config_version = 2\nproject_name = \"t\"\n[schema.kinds.GRUND]\nfiles = [\"docs/grund.md\"]\n{rows}"
+        ),
+    );
+    write(&root.join("docs/grund.md"), "# GRUND-why: Why\n\nWhy.\n");
+    for dir in dirs {
+        fs::create_dir_all(root.join(dir)).expect("create place");
+    }
+    init(InitOpts {
+        target: root.clone(),
+        no_vcs: true,
+        ..InitOpts::default()
+    })
+    .expect("init");
+    root
+}
+
+/// §FS-init.2.3.4.10, §FS-init.2.3.5.12.1: with no rule and grounding on one
+/// scoped home alone, the all-rows section has a grounding clause and the root's
+/// has none, so the swap takes the section out with its separator: one blank
+/// line stays where it stood, and the scoped block holds the grounding sentence
+/// alone.
+#[test]
+#[ignore = "red until #1075 renders Citation directions only from declared rules; implement removes this"]
+fn the_swap_takes_a_section_only_scoped_rows_ground_out_with_its_separator() {
+    let root = init_v2(
+        "scoped_grounding_swap",
+        "[schema.kinds.e2e]\nfolders = [\"tests/e2e\"]\ncitable = false\n[rules.citations.e2e.grounding]\nmust = \"file\"\n",
+        &["tests/e2e"],
+    );
+    let agents = fs::read_to_string(root.join("AGENTS.md")).expect("root file");
+    assert!(!agents.contains("### Citation directions"), "{agents}");
+    assert!(!agents.contains("\n\n\n"), "{agents}");
+    assert!(
+        agents.contains("- **Always cite the most-specific point.**\n\n### Scoped guidance\n"),
+        "{agents}"
+    );
+    let scoped = fs::read_to_string(root.join("tests/e2e/AGENTS.md")).expect("scoped file");
+    assert!(
+        scoped.ends_with(
+            "\n\n### Citation directions\n\nEvery file under tests/e2e/ must cite one.\n<!-- END GRUND MANAGED BLOCK -->\n"
+        ),
+        "{scoped}"
+    );
+}
+
+/// §FS-init.2.3.4.10: scoped only by a field, with no rule and no grounding,
+/// neither block has a section, so there is nothing to swap and the root block
+/// is whole from its first byte.
+#[test]
+#[ignore = "red until #1075 renders Citation directions only from declared rules; implement removes this"]
+fn a_config_scoped_only_by_a_field_has_no_section_to_swap() {
+    let root = init_v2(
+        "scoped_field_swap",
+        "[schema.kinds.FS]\nfolders = [\"docs/fs\"]\n[schema.kinds.FS.fields.front-matter]\npresence = \"must\"\n",
+        &["docs/fs"],
+    );
+    let agents = fs::read_to_string(root.join("AGENTS.md")).expect("root file");
+    assert!(
+        agents.starts_with(
+            "# t — agent instructions\n\n<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (block v"
+        ),
+        "{agents}"
+    );
+    assert!(!agents.contains("### Citation directions"), "{agents}");
+    assert!(!agents.contains("\n\n\n"), "{agents}");
+    let scoped = fs::read_to_string(root.join("docs/fs/AGENTS.md")).expect("scoped file");
+    assert!(scoped.contains("### Declaration shapes\n"), "{scoped}");
+    assert!(!scoped.contains("### Citation directions"), "{scoped}");
 }
