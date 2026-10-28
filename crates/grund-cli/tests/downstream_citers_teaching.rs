@@ -39,7 +39,6 @@ fn collapsed(text: &str) -> String {
 }
 
 #[test]
-#[ignore = "red until #1078 adds the guide section and examples/downstream-citers/; implement removes this"]
 fn downstream_citers_example_pins_its_three_runs() {
     let example = root().join("examples/downstream-citers");
     assert!(
@@ -90,7 +89,6 @@ fn downstream_citers_example_pins_its_three_runs() {
 }
 
 #[test]
-#[ignore = "red until #1078 adds the guide section and examples/downstream-citers/; implement removes this"]
 fn repository_options_teaches_the_recipe_and_its_limits() {
     let guide = read("docs/user-facing/repository-options.md");
     let workspaces = section(&guide, "## Workspaces and sub-projects");
@@ -116,7 +114,6 @@ fn repository_options_teaches_the_recipe_and_its_limits() {
 }
 
 #[test]
-#[ignore = "red until #1078 adds the guide section and examples/downstream-citers/; implement removes this"]
 fn unused_teaching_links_to_the_recipe() {
     let querying = read("docs/user-facing/querying.md");
     let unused = section(&querying, "## What nothing cites yet: `list --unused`");
@@ -131,7 +128,6 @@ fn unused_teaching_links_to_the_recipe() {
 }
 
 #[test]
-#[ignore = "red until #1078 adds the guide section and examples/downstream-citers/; implement removes this"]
 fn indexes_list_the_example_and_the_guide_section() {
     assert!(
         read("examples/README.md").contains("(downstream-citers/)"),

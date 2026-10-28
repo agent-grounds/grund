@@ -140,6 +140,11 @@ carries `refs: 1`: read the rows `--unused` lists rather than thresholding on `r
 [Checking a repository](checking.md#when-only-an-index-cites-a-declaration) says why the
 index entry is discounted; `grund check --only unused` reports the same set as warnings.
 
+A point listed here may still be cited from a repository this run cannot read, such as
+a closed downstream. Have that repository generate a page of its citations into yours
+rather than ignoring the entry: [Citers in a repository you cannot read](repository-options.md#citers-in-a-repository-you-cannot-read)
+gives the recipe and its limits.
+
 ## Expand a unit's subtree: `show --batch --glob`
 
 `grund show --batch --glob` generates the queries `--all` would and keeps the ones a

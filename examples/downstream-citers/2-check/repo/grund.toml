@@ -1,0 +1,6 @@
+grund_config_version = 2
+project_name = "substratevm"
+
+[schema.kinds.FS]
+folders = ["docs/functional-spec"]
+index = false
