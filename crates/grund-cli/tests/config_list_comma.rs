@@ -2,7 +2,8 @@
 //! inside a basic string is part of the element and is read as written (§FS-config.3.11), in
 //! a version-2 list on one line or across lines (§FS-config-v2.reader.5) and in a version-1
 //! list (§FS-config.3). Ports #1076's reproducer. Nothing that was refused is now accepted: a
-//! version-1 trailing comma is still `expected string` at its line (§FS-config.4.3).
+//! version-1 trailing comma, or a comma missing between two strings, is still `expected string`
+//! at its line (§FS-config.4.3).
 
 use std::fs;
 use std::path::PathBuf;
@@ -153,6 +154,19 @@ fn a_v1_trailing_comma_or_unclosed_string_is_still_expected_string() {
         let refusal = "error: grund.toml:8: expected string\n";
         Fixture::comma_stray(&config).expect(&["check"], 2, "", refusal);
     }
+}
+
+/// Guard, green before the rule and kept: a comma missing between two strings is not one basic
+/// string, so the list is still cut at each comma and refused at its line, in both versions.
+#[test]
+fn a_comma_missing_between_two_strings_is_still_expected_string() {
+    let missing = "[\"target\" \"a,b\"]";
+    let v1 =
+        format!("{V1_HEAD}[scan]\ninclude = [\"specs\", \"src\"]\nexclude = {missing}\n{V1_KINDS}");
+    let refusal = "error: grund.toml:8: expected string\n";
+    Fixture::comma_stray(&v1).expect(&["check"], 2, "", refusal);
+    let refusal = "error: grund.toml:10: expected string\n";
+    Fixture::comma_stray(&v2("[\"specs/spec.md\"]", missing)).expect(&["check"], 2, "", refusal);
 }
 
 /// The closed `lead_size_warning` table separates its members by the same rule, so a comma
