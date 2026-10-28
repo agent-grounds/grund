@@ -156,9 +156,3 @@ impl Drop for Fixture {
         let _ = fs::remove_dir_all(&self.0);
     }
 }
-
-/// A refusal in `0.21.0`: the legacy `unknown kind` reason, the new one, and the suffix
-/// (§FS-errors.3.10).
-pub fn windowed(legacy: &str, reason: &str) -> String {
-    format!("unknown kind \"{legacy}\" — {reason}; this wording changes in grund 0.22.0")
-}

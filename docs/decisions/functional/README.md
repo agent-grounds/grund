@@ -221,6 +221,7 @@ The rulings the one-answer work is built from, one record per step family, each 
 - [§DF-one-kind-verdict](DF-one-kind-verdict.md#df-one-kind-verdict-every-command-reads-one-kind-verdict-in-its-own-scope-and-refuses-a-rule-sentence-for-the-first-stage-it-fails) — every command reads one kind verdict in its own scope, and refuses a rule sentence for the first stage it fails
 - [§DF-homeless-code-declares-no-ids](DF-homeless-code-declares-no-ids.md#df-homeless-code-declares-no-ids-code-with-no-row-is-refused-as-declaring-no-ids-alone-from-0190) — `code` with no row is refused as declaring no IDs alone from 0.19.0
 - [§DF-one-grammar-lands-in-0-19](DF-one-grammar-lands-in-0-19.md#df-one-grammar-lands-in-0-19-the-one-grammar-window-closes-in-0190-and-a-pinned-target-the-run-cannot-accept-fails-the-load) — the one-grammar window closes in 0.19.0, and a pinned target the run cannot accept fails the load
+- [§DF-whose-clause-window-closes-in-0-22](DF-whose-clause-window-closes-in-0-22.md#df-whose-clause-window-closes-in-0-22-the-whose-clause-wording-window-closes-in-0220) — the whose-clause wording window closes in 0.22.0
 - [§DF-unread-scan-root](DF-unread-scan-root.md#df-unread-scan-root-a-configured-file-root-whose-extension-is-unlisted-is-named-not-read) — a configured file root whose extension is unlisted is named, not read
 - [§DF-unread-hidden-root](DF-unread-hidden-root.md#df-unread-hidden-root-a-configured-file-root-with-a-hidden-name-is-named-not-read) — a configured file root with a hidden name is named, not read
 

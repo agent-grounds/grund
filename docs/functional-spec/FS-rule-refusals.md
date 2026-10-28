@@ -476,7 +476,7 @@ read again and offered as a conjunction's forms are
 accepted. Every other row offers none, because an offer never picks a field or
 a value for the author ([§FS-rule-refusals.requirements.typed](FS-rule-refusals.md#requirementstyped-an-offer-is-built-from-what-was-typed-and-what-is-configured-and-nothing-else--realized)), and a selector
 is offered none for any row. Since the kind was recognised, none of them adds
-a `known kinds:` line once the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) closes.
+a `known kinds:` line; the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) that kept one closed in `0.22.0`.
 
 Three spellings put a whose clause where no clause belongs, and each keeps the
 reason it printed before clauses existed as a verbatim contiguous prefix
@@ -529,13 +529,13 @@ every surface, is refused with `whose clauses require grund_config_version = 2`.
 because the split looks for a lowercase ` must `, and a value with spaces, a
 value holding ` and ` or ` or `, and the `.` that ends the sentence after a
 value all leave the value whole. The last row of the table and the two
-appended rows print the same bytes before, through and after the window; every
-other reason in the table is the one [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) moves to. The window is not the
-table's alone: a sentence whose clause is accepted and which a later production
-of [§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails) refuses takes it too, so `Each SWR whose
-verification is Test must cite at least one FOO.` prints `unknown kind "SWR whose
-verification is Test" — unknown kind "FOO"; this wording changes in grund 0.22.0`
-on `check --rule`, followed by `known kinds:` as an unknown object kind is.
+appended rows printed the same bytes before, through and after the window; every
+other reason in the table is the one [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) moved to. The window was not
+the table's alone: a sentence whose clause is accepted and which a later
+production of [§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails) refuses took it too, and now
+prints that production's reason alone, so `Each SWR whose verification is Test
+must cite at least one FOO.` prints `unknown kind "FOO"` on `check --rule`,
+followed by `known kinds:` as an unknown object kind is.
 
 ### sentences.rewrite: An accepted form is the typed sentence with the failed part replaced
 
@@ -748,7 +748,7 @@ spellings, rather than changing the shared kind reason on other surfaces.
 | a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says | scope cannot be reconstructed, rebuilding it drops a typed component ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)), no configured kind is recovered, or the subject holds a clause; `known kinds:` follows only for the latter two |
 | the ID grammar for a subject `The` cut short at a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | — | always; `known kinds:` follows |
 | a path subject, `Each file in …` | — | always; `known kinds:` follows |
-| a whose clause in a version-1 config, with no ` is `, an empty `FIELD` or `VALUE`, a `FIELD` that is no field or no scalar of the kind, a `VALUE` with surrounding whitespace, or a `VALUE` outside `one_of` ([§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)) | — | always; `known kinds:` follows only through the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration), and only on `list --selector` |
+| a whose clause in a version-1 config, with no ` is `, an empty `FIELD` or `VALUE`, a `FIELD` that is no field or no scalar of the kind, a `VALUE` with surrounding whitespace, or a `VALUE` outside `one_of` ([§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)) | — | always; no `known kinds:` follows, since the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) closed |
 | a `VALUE` joined by ` or ` | one form per value, as a conjunction's are | any form is refused, and always on a selector |
 | a `VALUE` cut by the modality split | — | always |
 | an exact ID followed by a whose clause | — | always; `known kinds:` follows on `list --selector`, as before |
@@ -957,12 +957,12 @@ reason and token-only repair of [§FS-rule-refusals.sentences.every](FS-rule-ref
 A subject with a whose clause gets the reason [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)
 gives the same subject in a rule, and no accepted selector: the clause's field
 and value are the author's to choose, and a value joined by ` or ` has no one
-selector to offer. Through the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) the
-`known kinds:` line that followed the legacy reason still follows it. An exact
+selector to offer. The `known kinds:` line that followed the legacy reason
+through the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) went with it, because the kind was recognised. An exact
 ID followed by a clause keeps its literal-subject reason and appends the
 clause's, and `KIND.NAME` followed by a clause keeps its section-grammar reason
 and accepted selector, both with the line they had before. In the repository
-of that point these are the exact selector refusals once the window closes:
+of that point these are the exact selector refusals:
 
 | Refused selector | Exact reason and accepted selector | Lines after it |
 |---|---|---|
