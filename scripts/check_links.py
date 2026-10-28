@@ -25,9 +25,12 @@ from link_scope import changed_lines, changed_urls, diff_base  # noqa: E402
 from link_settle import check_urls, report_failures, settle, write_report  # noqa: E402
 
 
-SELF_PREFIX = "https://github.com/agent-grounds/grund/blob/main/"
-SELF_PATH_PREFIX = "/agent-grounds/grund/blob/main/"
-SELF_PATH_PREFIXES = {"blob": SELF_PATH_PREFIX, "tree": "/agent-grounds/grund/tree/main/"}
+# The one set of self-link forms every step reads (§AR-ci-self-links.1).
+SELF_PATH_PREFIXES = {
+    "blob": "/agent-grounds/grund/blob/main/",
+    "tree": "/agent-grounds/grund/tree/main/",
+}
+SELF_PREFIXES = tuple(f"https://github.com{prefix}" for prefix in SELF_PATH_PREFIXES.values())
 RECHECK_PAUSE = 5  # seconds before the transient re-check (§AR-ci.3.1.3)
 
 
@@ -36,7 +39,8 @@ class SelfLinkError(Exception):
 
 
 def self_links(dumped: str) -> list[str]:
-    return sorted({line for line in dumped.splitlines() if line.startswith(SELF_PREFIX)})
+    """Every self-link of a `lychee --dump`, in either form (§AR-ci-self-links.1)."""
+    return sorted({line for line in dumped.splitlines() if line.startswith(SELF_PREFIXES)})
 
 
 def self_link_target(url: str, repo_root: Path) -> Path:
@@ -56,6 +60,11 @@ def self_link_target(url: str, repo_root: Path) -> Path:
         or parsed.query
     ):
         raise SelfLinkError(f"malformed canonical self-link: {url}")
+    if kind == "tree" and parsed.fragment:
+        # §AR-ci-self-links.3: a directory link names no heading; link its file instead.
+        raise SelfLinkError(
+            f"malformed canonical self-link: a tree/main link carries no fragment: {url}"
+        )
 
     encoded = parsed.path.removeprefix(SELF_PATH_PREFIXES[kind])
     try:
@@ -72,6 +81,7 @@ def self_link_target(url: str, repo_root: Path) -> Path:
         target.relative_to(root)
     except ValueError as exc:
         raise SelfLinkError(f"self-link escapes the repository: {url}") from exc
+    # §AR-ci-self-links.2: `blob` names a file, `tree` a directory.
     exists = target.is_file() if kind == "blob" else target.is_dir()
     if not exists:
         raise SelfLinkError(f"canonical self-link target is missing: {relative} ({url})")
@@ -79,11 +89,11 @@ def self_link_target(url: str, repo_root: Path) -> Path:
 
 
 def _local_url(url: str, repo_root: Path) -> str:
-    parsed = urlsplit(url)
-    if not parsed.path.startswith(SELF_PATH_PREFIX):
-        raise SelfLinkError(f"malformed canonical self-link: {url}")
+    """The `file://` URI a self-link of either form maps to in the checkout
+    (§AR-ci-self-links.1); `self_link_target()` alone decides what is a self-link."""
     target = self_link_target(url, repo_root)
-    fragment = f"#{parsed.fragment}" if parsed.fragment else ""
+    fragment = urlsplit(url).fragment
+    fragment = f"#{fragment}" if fragment else ""
     return f"{target.as_uri()}{fragment}"
 
 

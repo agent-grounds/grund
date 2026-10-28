@@ -23,10 +23,6 @@ CLI_SOURCES = REPO_ROOT / "crates" / "grund-cli" / "src"
 # §FS-cli.2.2: the footer's public address of the guides and examples.
 FOOTER_URL = "https://github.com/agent-grounds/grund/tree/main/docs/user-facing"
 
-SELF_URL = re.compile(
-    r"https://github\.com/agent-grounds/grund/(?:blob|tree)/main/[^\s)\]\"'`<>]+"
-)
-
 
 def _load(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -39,6 +35,13 @@ def _load(name, path):
 check_links = _load("check_links", REPO_ROOT / "scripts" / "check_links.py")
 shipped_surfaces = _load(
     "shipped_surfaces", REPO_ROOT / "tests" / "integration" / "test_shipped_surfaces.py"
+)
+
+# The forms come from the link gate, so the two read one set (§AR-ci-self-links.1).
+SELF_URL = re.compile(
+    "(?:"
+    + "|".join(re.escape(prefix) for prefix in check_links.SELF_PREFIXES)
+    + r")[^\s)\]\"'`<>]+"
 )
 
 
