@@ -134,8 +134,15 @@ fn workspace_paragraph(page: &str) -> Option<&str> {
         .find(|paragraph| paragraph.contains("`alias/KIND`"))
 }
 
-/// What one surface is missing of the member recipe, one line per gap.
-fn recipe_gaps(name: &str, page: &str, recipe: &str, costs: &[String]) -> Vec<String> {
+/// What one surface is missing of the member recipe, one line per gap: `leaks` are
+/// the root run's refusals, `costs` the lines each cost prints.
+fn recipe_gaps(
+    name: &str,
+    page: &str,
+    recipe: &str,
+    leaks: &[String],
+    costs: &[String],
+) -> Vec<String> {
     let mut gaps = Vec::new();
     let fences = fences(page);
     match fences
@@ -165,6 +172,13 @@ fn recipe_gaps(name: &str, page: &str, recipe: &str, costs: &[String]) -> Vec<St
         },
     }
     let text = collapsed(page);
+    for leak in leaks {
+        if !text.contains(&collapsed(leak)) {
+            gaps.push(format!(
+                "{name}: does not quote the root run's refusal as grund prints it: {leak}"
+            ));
+        }
+    }
     for cost in costs {
         if !text.contains(&collapsed(cost)) {
             gaps.push(format!(
@@ -266,13 +280,19 @@ fn the_isolated_member_example_runs_the_recipe() {
 }
 
 /// §FS-config.3.9.3, issue #1077: the guide teaches the member recipe the example
-/// runs, in its own section the workspace paragraph links, and quotes its two
-/// costs as the example's goldens print them; the skill's two copies say the same,
-/// and the example is linked from the guide, the examples index and the README.
+/// runs, in its own section the workspace paragraph links, and quotes the root
+/// run's two refusals and its two costs as the example's goldens print them; the
+/// skill's two copies say the same, and the example is linked from the guide, the
+/// examples index and the README.
 #[test]
 fn the_guide_teaches_the_member_recipe_the_example_runs() {
     let root = repo_root();
     let rules = recipe(&root, LEAKS);
+    // The root run's refusals of `ee`, each whole line, as the guide quotes them.
+    let leaks: Vec<String> = run_file(&root, LEAKS, "expected.stdout")
+        .lines()
+        .map(str::to_string)
+        .collect();
     // The homeless file's local citation, through the finding's message: the
     // repair advice after it is the ordinary one and not this cost's lesson.
     let code_row = run_file(&root, NO_CODE_ROW, "expected.stdout");
@@ -288,9 +308,15 @@ fn the_guide_teaches_the_member_recipe_the_example_runs() {
         .to_string();
     let costs = [code_row, pinned];
 
-    let mut gaps = recipe_gaps(GUIDE, &read(&root, GUIDE), &rules, &costs);
+    let mut gaps = recipe_gaps(GUIDE, &read(&root, GUIDE), &rules, &leaks, &costs);
     for copy in SKILL_COPIES {
-        gaps.extend(recipe_gaps(copy, &read(&root, copy), &rules, &costs));
+        gaps.extend(recipe_gaps(
+            copy,
+            &read(&root, copy),
+            &rules,
+            &leaks,
+            &costs,
+        ));
     }
 
     let readme = format!("{EXAMPLE}/README.md");
