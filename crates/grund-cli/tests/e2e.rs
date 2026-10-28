@@ -46,6 +46,10 @@ mod fmt_cross_refs_sections;
 #[path = "support/index_use_explanations.rs"]
 mod index_use_explanations;
 
+// §FS-config.3.9.3: the member recipe the guide teaches is the one the example runs.
+#[path = "support/isolated_member_example.rs"]
+mod isolated_member_example;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
