@@ -41,7 +41,6 @@ fn watch_coalesces_atomic_burst() {
 /// A release that comes long after the barrier was reached still lets the run finish, so a
 /// descheduled test thread cannot fail a correct run on the coordinator (§AR-bindings.3.2).
 #[test]
-#[ignore = "red until #1059 stops the barrier gate failing a late release; implement removes this"]
 fn watch_survives_a_late_barrier_release() {
     let _serial = crate::support::serial();
     let release_limit = Duration::from_millis(100);
