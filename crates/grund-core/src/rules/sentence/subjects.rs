@@ -92,11 +92,10 @@ pub(super) struct SubjectRefusal {
     /// The modal word the split took as a chapter's name, where it cut one
     /// short (§FS-rule-refusals.sentences.modal-chapter).
     pub(super) modal_chapter: Option<&'static str>,
-    /// What followed `Each ` or `of each ` where a quantified subject carried a
-    /// whose clause: the text the window of §FS-errors.3.10 names as the legacy
-    /// unknown kind. A refusal holding it offers no recovered subject, because
-    /// an offer never picks a field or a value (§FS-rule-refusals.sentences.whose).
-    pub(super) legacy: Option<String>,
+    /// Whether a quantified subject carried a whose clause. Such a refusal
+    /// offers no recovered subject, because an offer never picks a field or a
+    /// value (§FS-rule-refusals.sentences.whose).
+    pub(super) clause: bool,
     /// The modal-word append of a value the split cut
     /// (§FS-rule-refusals.sentences.whose).
     pub(super) modal_value: Option<String>,
@@ -219,7 +218,7 @@ impl SubjectRefusal {
     pub(super) fn rule_refusal(&self, vocabulary: &RuleVocabulary) -> Refusal {
         // §FS-rule-refusals.sentences.whose: only a value joined by ` or ` is offered forms,
         // one subject per value; a kind that is missing is the one thing a form cannot supply.
-        if let Some(legacy) = &self.legacy {
+        if self.clause {
             let form = match &self.fault {
                 SubjectFault::Whose(fault) => fault
                     .or_forms(&self.text)
@@ -227,7 +226,7 @@ impl SubjectRefusal {
                 SubjectFault::UnknownKind(_) => Form::None { kind: true },
                 _ => Form::None { kind: false },
             };
-            return refuse(self.reason(vocabulary), form).windowed(legacy);
+            return refuse(self.reason(vocabulary), form);
         }
         // §FS-rule-refusals.sentences.every: replace only the quantifier; the offer is reparsed.
         if let Some(text) = repair_every(self) {
@@ -277,7 +276,7 @@ pub(super) fn refused(
         path: path.map(Into::into),
         separator: separator.into(),
         modal_chapter: None,
-        legacy: None,
+        clause: false,
         modal_value: None,
     }
 }
@@ -318,7 +317,7 @@ pub(super) fn parse_subject(
         let (kind, clause) = split_whose(after_each, vocab);
         let each = |fault| {
             let refusal = refused(fault, Spelling::Each, text, kind, None, "");
-            with_clause(refusal, after_each, clause)
+            with_clause(refusal, clause)
         };
         known_subject(kind, vocab).map_err(each)?;
         let whose = clause
@@ -333,7 +332,7 @@ pub(super) fn parse_subject(
         let (kind, clause) = split_whose(after_each, vocab);
         let chapter = |fault| {
             let refusal = refused(fault, Spelling::ChapterOfEach, text, kind, Some(name), "");
-            with_clause(refusal, after_each, clause)
+            with_clause(refusal, clause)
         };
         known_subject(kind, vocab).map_err(chapter)?;
         if !vocab.named_sections_for(kind) {

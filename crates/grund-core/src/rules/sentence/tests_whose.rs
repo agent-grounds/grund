@@ -125,7 +125,6 @@ fn the_chapter_form_carries_the_clause() {
 /// clause is read, so an unknown field of it is never what is named; since the window of
 /// §FS-errors.3.10 closed the kind is named alone.
 #[test]
-#[ignore = "red until #1063 closes the whose-clause window; implement removes this"]
 fn an_unknown_kind_is_refused_before_an_unknown_field() {
     assert_eq!(
         subject("Each POLICY whose verfication is Test must cite at least one TC."),
@@ -151,7 +150,6 @@ fn a_conjunction_is_refused_before_the_clause() {
 /// then the field, then whether it is a scalar, then the value's whitespace,
 /// then the value. Each reason is the whole message (§FS-errors.3.10).
 #[test]
-#[ignore = "red until #1063 closes the whose-clause window; implement removes this"]
 fn the_clause_is_checked_in_its_order() {
     let reason = |sentence: &str| subject(sentence).unwrap_err();
     assert_eq!(
