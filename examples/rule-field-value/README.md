@@ -86,24 +86,25 @@ echo $?    # 0
 SWR-brake-latency  req/SWR-brake-latency.md:1  The brake command reaches the actuator within 10 ms
 ```
 
-## Step 5: a field the kind does not declare
+## Step 5: a value the field does not admit
 
 ```bash
 cd examples/rule-field-value/5-refused/repo
-grund check --rule 'Each SWR whose verfication is Test must be cited by at least one TC.'
+grund check --rule 'Each SWR whose verification is Tset must be cited by at least one TC.'
 echo $?    # 2
 ```
 
 ```text
-error: unknown kind "SWR whose verfication is Test" — "verfication" is not a field of kind SWR; its scalar fields: verification; this wording changes in grund 0.22.0
+error: "Tset" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration
 ```
 
-The reason after ` — ` names the misspelled field and the scalar fields the kind
-declares, and a value outside `one_of` is answered the same way, with the
-entries the field admits
-([§FS-rule-refusals.sentences.whose](../../docs/functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)). Until grund 0.22.0 it keeps the
-`unknown kind` reason that grund printed before whose clauses existed as its prefix, so a
-consumer matching that prefix keeps working through the window ([§FS-errors.3.10](../../docs/functional-spec/FS-errors.md#310-the-whose-clause-wording-migration)).
+The reason names the misspelled value and the entries the field admits, and a
+field the kind does not declare is answered the same way, with the scalar
+fields it does
+([§FS-rule-refusals.sentences.whose](../../docs/functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)).
+Through grund 0.21.0 the reason carried the `unknown kind` prefix grund printed
+before whose clauses existed; since 0.22.0 it is printed alone
+([§FS-errors.3.10](../../docs/functional-spec/FS-errors.md#310-the-whose-clause-wording-migration)).
 
 ## Trade-offs
 

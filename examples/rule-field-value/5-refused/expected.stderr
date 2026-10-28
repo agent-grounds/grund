@@ -1,1 +1,1 @@
-error: unknown kind "SWR whose verfication is Test" — "verfication" is not a field of kind SWR; its scalar fields: verification; this wording changes in grund 0.22.0
+error: "Tset" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration
