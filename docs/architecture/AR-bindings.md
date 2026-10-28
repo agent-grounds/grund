@@ -131,6 +131,10 @@ Private test builds provide an observer outside stdout/stderr for subscription r
 
 Each write a test makes is its own notification, and whether two of them reach one run depends only on whether the test thread stalls past the quiet window between them ([§FS-check.6.1.2](../functional-spec/FS-check.md#612-bounded-debounce-and-serialized-work)), which the test does not control: a loaded runner splits them. A barrier fires once, for the first run that reaches it. So a test that observes one particular run makes every change that run must see before it reads the tree, holding it at the `scanning` barrier for instance, and arms any later barrier for that run only then; whichever run the first write triggers then reads them all. A test that only waits, through intermediate completions, for the result of the final state arms nothing a partial run could take and needs no hold. Time between writes is never part of whether a watch test passes.
 
+### 3.2 A barrier waits for its release, never for a clock
+
+A barrier holds the coordinator until the test releases it or the test ends, however late that is, because the thread that releases it is the test thread, and a loaded runner can deschedule that thread for longer than any bound: a barrier that gave up on a clock would fail a run whose watch behaviour was correct, on the coordinator thread, far from the test that was slow. The bound on a hung test lives on the test thread's own waits, for an observation, a completion or shutdown, whose events are already queued when the test thread was only late.
+
 ## 4. grund-lsp: the LSP server binary
 
 Speaks LSP over stdio ([§AR-lsp.4](AR-lsp.md#4-transport)). Imports `grund-core` for scan/check/show/fmt-backed state, `lsp-server` for the stdio JSON-RPC loop and `lsp-types` for protocol data shapes. Published on Cargo as `grund-lsp`, with npm and PyPI packages planned ([§FS-distribution.1](../functional-spec/FS-distribution.md#1-targets)). Neither it nor `grund-cli` pulls the other in. Its architecture is [§AR-lsp](AR-lsp.md#ar-lsp-how-the-lsp-server-is-built).

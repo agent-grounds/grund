@@ -118,13 +118,27 @@ impl Harness {
         pause: Option<&str>,
         fail: Option<&str>,
     ) -> Self {
-        Self::construct(opts, selection, format, pause, fail, None)
+        Self::construct(opts, selection, format, pause, fail, None, LIMIT)
+    }
+    /// A harness whose barriers are given `release_limit` instead of the 10s bound, so a test
+    /// can release one later than that limit without stalling for 10s itself and show that a
+    /// late release never fails the run (§AR-bindings.3.2).
+    pub fn with_release_limit(f: &Fixture, release_limit: Duration) -> Self {
+        Self::construct(
+            f.opts(),
+            CheckFindingSelection::default(),
+            None,
+            None,
+            None,
+            None,
+            release_limit,
+        )
     }
     pub fn screen(f: &Fixture, eligible: bool) -> Self {
         Self::screen_selected(f, eligible, CheckFindingSelection::default())
     }
     pub fn screen_selected(f: &Fixture, eligible: bool, selection: CheckFindingSelection) -> Self {
-        Self::construct(f.opts(), selection, None, None, None, Some(eligible))
+        Self::construct(f.opts(), selection, None, None, None, Some(eligible), LIMIT)
     }
     fn construct(
         opts: CheckOpts,
@@ -133,6 +147,7 @@ impl Harness {
         pause: Option<&str>,
         fail: Option<&str>,
         terminal: Option<bool>,
+        release_limit: Duration,
     ) -> Self {
         let (tx, events) = mpsc::channel();
         let gates: Arc<Mutex<Vec<Gate>>> = Arc::new(Mutex::new(Vec::new()));
@@ -149,7 +164,7 @@ impl Harness {
             tx.send(event).unwrap();
             if let Some(gate) = gate {
                 gate.resume
-                    .recv_timeout(LIMIT)
+                    .recv_timeout(release_limit)
                     .expect("bounded barrier release");
             }
         });
