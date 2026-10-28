@@ -213,7 +213,6 @@ fn the_project_is_read_from_its_own_directory() {
 
 /// §FS-check.2.2.2.5: the report's tree, run from its root.
 #[test]
-#[ignore = "red until #1079 names the config below a run that loaded none; implement removes this"]
 fn check_names_the_config_below() {
     let tree = Tree::new("check");
     tree.project("suite/grund.toml");
@@ -225,7 +224,6 @@ fn check_names_the_config_below() {
 
 /// §FS-show.3.5.1: the report's lookup, in the bare, `show` and `refs` forms.
 #[test]
-#[ignore = "red until #1079 names the config below a run that loaded none; implement removes this"]
 fn the_refusal_names_the_config_below() {
     let tree = Tree::new("query");
     tree.project("suite/grund.toml");
@@ -238,7 +236,6 @@ fn the_refusal_names_the_config_below() {
 /// §FS-check.2.2.3: the JSON warning keeps its code and shape, and carries the
 /// text message.
 #[test]
-#[ignore = "red until #1079 names the config below a run that loaded none; implement removes this"]
 fn json_warning_carries_the_new_message() {
     let tree = Tree::new("json-check");
     tree.project("suite/grund.toml");
@@ -269,7 +266,6 @@ fn json_refusal_stays_hint_free() {
 /// §FS-check.2.2.2.5.1: `.agents/grund.toml` is named as itself, and its
 /// directory in the routes is the one holding `.agents/`.
 #[test]
-#[ignore = "red until #1079 names the config below a run that loaded none; implement removes this"]
 fn the_agents_form_is_named_as_itself() {
     let tree = Tree::new("agents");
     tree.project("suite/.agents/grund.toml");
@@ -281,7 +277,6 @@ fn the_agents_form_is_named_as_itself() {
 /// §FS-check.2.2.2.5.1: two configs, named in path order rather than the order
 /// they were laid, with every directory in `members`.
 #[test]
-#[ignore = "red until #1079 names the config below a run that loaded none; implement removes this"]
 fn two_configs_are_named_in_path_order() {
     let tree = Tree::new("two");
     tree.project("suite/grund.toml").project("other/grund.toml");
@@ -306,7 +301,6 @@ fn two_configs_are_named_in_path_order() {
 /// §FS-check.2.2.2.5.1: past three, the rest are counted and `members` is not
 /// spelled out, since three entries would leave the fourth unread.
 #[test]
-#[ignore = "red until #1079 names the config below a run that loaded none; implement removes this"]
 fn past_three_the_rest_are_counted() {
     let tree = Tree::new("four");
     for dir in ["d", "c", "b", "a"] {
@@ -328,7 +322,6 @@ fn past_three_the_rest_are_counted() {
 
 /// §FS-check.2.2.2.5.2: three levels below the root is inside the search.
 #[test]
-#[ignore = "red until #1079 names the config below a run that loaded none; implement removes this"]
 fn a_config_three_levels_down_is_found() {
     let tree = Tree::new("deep");
     tree.project("a/b/c/grund.toml");
@@ -341,7 +334,6 @@ fn a_config_three_levels_down_is_found() {
 /// §FS-check.2.2.2.5.2: the search stops at a config it found, so the project
 /// below it is that project's own and is not named beside it.
 #[test]
-#[ignore = "red until #1079 names the config below a run that loaded none; implement removes this"]
 fn a_config_below_a_found_one_is_not_named() {
     let tree = Tree::new("inner");
     tree.project("suite/grund.toml")

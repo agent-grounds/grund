@@ -28,6 +28,11 @@ pub struct Run {
     pub config_file: Option<PathBuf>,
     /// The file the read one outranks (§FS-config.1.1).
     pub redundant_config_file: Option<PathBuf>,
+    /// Whether discovery found no config at or above where it started, so the
+    /// run is held to the built-in defaults (§FS-check.2.2.2.5). Not the same as
+    /// `config_file` being `None`: a workspace member with no file of its own
+    /// is loaded under its workspace's config, which this run did read.
+    pub(crate) found_no_config: bool,
     /// The directory the load spelled every relative location it recorded from:
     /// `config_file`, `redundant_config_file` and a `grund.toml` row's
     /// (§FS-errors.4), kept so a reader joins one back where it was spelled.
@@ -219,6 +224,7 @@ impl Run {
             root,
             config_file: None,
             redundant_config_file: None,
+            found_no_config: false,
             scope: RunScope {
                 resolution_wide: false,
                 ..invocation.scope.clone()

@@ -16,6 +16,7 @@ use crate::model::remedies;
 use crate::sources::{canonical_path, path_is_file};
 use std::path::Path;
 
+use super::unread_configs::UnreadConfigs;
 use crate::checker::{ScanScope, scope_read_any_file};
 use crate::config::{Config, Display, format_guidance, kind_prefixes, source_scope_name};
 use crate::grammar::id_shape;
@@ -131,6 +132,10 @@ fn handed_a_hidden_file(config: &Config, path: &Path, path_provided: bool) -> bo
 /// warning — it never changes the exit code. Which of the three messages it
 /// carries is a question about *why* nothing was read, so the hidden file is
 /// asked first: it was skipped before either of the arms below could decide.
+/// A root run no config applies to is asked next, before the root arms: when it
+/// holds a project config below, the include list those arms name is the
+/// defaults' and the scaffold they offer would compete with that project
+/// (§FS-check.2.2.2.5).
 ///
 /// Every arm names `path` as `display` spells it (§FS-workspace.5.3), while
 /// which arm speaks is still asked of the real path.
@@ -151,7 +156,12 @@ pub(super) fn empty_scan_warning(
         || canonical_path(path)
             .map(|p| p == config.root)
             .unwrap_or(false);
-    let message = match (&config.include, scoped_to_root) {
+    // §FS-check.2.2.2.5: asked of the root run alone, which a handed hidden file
+    // never is; `below` walks nothing for a run that loaded a config.
+    let unread = scoped_to_root
+        .then(|| UnreadConfigs::below(config, display))
+        .flatten();
+    let message = match (&config.include, scoped_to_root, unread) {
         // §FS-check.2.2.2: name the hidden-name rule that actually skipped the file,
         // rather than the `include` list or the extensions that never got to answer.
         _ if handed_a_hidden_file(config, path, path_provided) => format!(
@@ -160,15 +170,23 @@ pub(super) fn empty_scan_warning(
             shown,
             remedies::empty_scan_hidden(version)
         ),
+        // §FS-check.2.2.2.5, §FS-check.2.2.2.5.1: the defaults' include list and the
+        // scaffold would both be false here, so name the configs the run did not read.
+        (_, _, Some(unread)) => format!(
+            "nothing to scan — no grund.toml applies here, so grund used its defaults and \
+             found no files. {}: {}.",
+            unread.names(),
+            unread.check_routes()
+        ),
         // §FS-check.2.2.2.1: a project with no kinds has no starter file to
         // scaffold, so the first remedy it is offered is its first kind.
-        (Some(dirs), true) if kind_prefixes(&config.kinds).is_empty() => format!(
+        (Some(dirs), true, None) if kind_prefixes(&config.kinds).is_empty() => format!(
             "nothing to scan — grund looked under [scan] include = [{}] and found no files. This \
              project declares no kinds yet: {}.",
             quoted_list(dirs),
             remedies::empty_scan_no_kinds(version)
         ),
-        (Some(dirs), true) => format!(
+        (Some(dirs), true, None) => format!(
             "nothing to scan — grund looked under [scan] include = [{}] and found no files. {}.",
             quoted_list(dirs),
             remedies::empty_scan_root(version)
@@ -198,8 +216,9 @@ pub(super) fn empty_scan_warning(
     }
 }
 
-/// `["a", "b"]`'s inside, as the empty-scan warning names `[scan] include`.
-fn quoted_list(dirs: &[String]) -> String {
+/// `["a", "b"]`'s inside, as the empty-scan warning names `[scan] include` and
+/// the `members` of §FS-check.2.2.2.5.1.
+pub(super) fn quoted_list(dirs: &[String]) -> String {
     dirs.iter()
         .map(|dir| format!("\"{dir}\""))
         .collect::<Vec<_>>()

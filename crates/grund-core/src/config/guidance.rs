@@ -18,7 +18,9 @@ pub(crate) struct FormatGuidance<'a> {
 }
 
 impl FormatGuidance<'_> {
-    /// §FS-show.3.5.1: one sentence for every query refusal adapter.
+    /// §FS-show.3.5.1: the sentence naming the effective template, which every
+    /// query refusal adapter reaches through the api's `invalid_id_hint`, the one
+    /// place that asks first whether a config below the run is the cause.
     pub(crate) fn hint(&self) -> String {
         format!(
             "hint: this repo's {} is `{}` (run `grund config show`); `grund list` shows the IDs that exist",

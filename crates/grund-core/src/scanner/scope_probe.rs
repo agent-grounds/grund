@@ -1,15 +1,20 @@
 //! What a walk would read, asked without scanning (§AR-scanner.1.13): whether a
-//! root holds one file the scan reads, which file that is, and the `exclude`
-//! pattern that kept a root from reading any. Each walks with the reporting
-//! walk's own builder and filter, so a probe and the scan cannot disagree.
+//! root holds one file the scan reads, which file that is, the `exclude`
+//! pattern that kept a root from reading any, and the project configs below a
+//! root no config applies to. Each walks with the reporting walk's own builder
+//! and filter, so a probe and the scan cannot disagree.
 
 use std::path::{Path, PathBuf};
 
 use super::exclude_globs::ExcludeGlobs;
-use super::walk::{scan_roots_for, scannable_walker};
+use super::walk::{scan_roots_for, scannable_walk_builder, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
-use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots};
-use crate::sources::{canonical_path, is_regular_file, path_exists, path_is_file};
+use crate::config::{Frame, Schema, canonical_config_root, config_file_in, root_scope_roots};
+use crate::model::sort_path_key;
+use crate::sources::{canonical_path, is_directory, is_regular_file, path_exists, path_is_file};
+
+/// §FS-check.2.2.2.5.2: how many levels below the root the config search asks.
+const CONFIG_SEARCH_DEPTH: usize = 3;
 
 /// Whether the effective configured scope contains a file the scanner would read
 /// (§FS-config.3.5, §FS-init.2.2.2). Root selection stays beside the walk so init
@@ -135,4 +140,57 @@ pub(crate) fn pruning_pattern(schema: &Schema, frame: Frame<'_>, path: &Path) ->
             .excluding_below(frame.root(), root, &file)
             .map(str::to_string)
     })
+}
+
+/// §FS-check.2.2.2.5.2: the project configs below `frame`'s root, each as the
+/// directory it governs and the file discovery would load there
+/// ([`config_file_in`], §FS-config.1), in path order. The directories asked are
+/// the ones the scan's own walker enters — never a hidden one, one `[scan]
+/// exclude` names, or one an ignore file excludes — at most
+/// [`CONFIG_SEARCH_DEPTH`] levels down, and none below a directory that holds a
+/// config, since what lies there is that project's own.
+///
+/// It answers for the empty-scan warning and the invalid-ID hint of a run that
+/// loaded no config (§FS-check.2.2.2.5, §FS-show.3.5.1); they ask only on those
+/// failure paths, so no other run pays for the walk (§GOAL-fast-feedback). The
+/// walk still lists a found directory's first levels; it only never asks them.
+pub(crate) fn project_configs_below(schema: &Schema, frame: Frame<'_>) -> Vec<(PathBuf, PathBuf)> {
+    let root = frame.root();
+    let canonical_root = canonical_path(root).unwrap_or_else(|_| root.to_path_buf());
+    let link_roots = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let looping_links = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let Ok(mut builder) = scannable_walk_builder(
+        schema,
+        frame,
+        root,
+        &canonical_root,
+        &canonical_config_root(root),
+        &link_roots,
+        &looping_links,
+    ) else {
+        return Vec::new();
+    };
+    let mut found: Vec<(PathBuf, PathBuf)> = Vec::new();
+    for entry in builder
+        .max_depth(Some(CONFIG_SEARCH_DEPTH))
+        .build()
+        .filter_map(Result::ok)
+    {
+        let dir = entry.path();
+        // The walk meets a directory before anything below it, so the last config
+        // found is the only one a later directory can lie under.
+        if entry.depth() == 0
+            || !entry.file_type().is_some_and(is_directory)
+            || found
+                .last()
+                .is_some_and(|(above, _)| dir.starts_with(above))
+        {
+            continue;
+        }
+        if let Some(config) = config_file_in(dir) {
+            found.push((dir.to_path_buf(), config));
+        }
+    }
+    found.sort_by_cached_key(|(dir, _)| sort_path_key(dir));
+    found
 }

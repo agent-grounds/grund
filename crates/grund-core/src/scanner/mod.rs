@@ -126,7 +126,7 @@ pub(crate) use legacy::{
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
 pub(crate) use scan_error::{api_scan_error, scan_error_message};
 pub(crate) use scope_probe::{
-    effective_scope_reads_any_file, pruning_pattern, walk_reads_any_file,
+    effective_scope_reads_any_file, project_configs_below, pruning_pattern, walk_reads_any_file,
 };
 pub(crate) use section_locks::{may_give_locked_heading, section_locks_present};
 pub(crate) use slices::{SliceMiss, SliceSink, record_slices, section_row_title};

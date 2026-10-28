@@ -181,7 +181,9 @@ pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
             .and_then(|cwd| fs::canonicalize(&cwd).ok())
             .unwrap_or_else(|| walk_start.clone()),
     };
-    let run = Run::of(root, walk_start, invocation);
+    let mut run = Run::of(root, walk_start, invocation);
+    // §FS-check.2.2.2.5: the one place a run learns that no config applies to it.
+    run.found_no_config = true;
     let config = defaults_under(run, invocation);
     // §FS-check.6.1.3: zero-config still has effective roots and probes.
     super::observe_config(&config);
