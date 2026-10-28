@@ -1,1 +1,1 @@
-check --rule 'Each SWR whose verfication is Test must be cited by at least one TC.'
+check --rule 'Each SWR whose verification is Tset must be cited by at least one TC.'
