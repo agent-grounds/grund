@@ -96,8 +96,8 @@ Anything not listed above is allowed.
 
 Sometimes one member of a workspace must cite no other project, such as an open
 edition that must never cite its closed sibling. Write that rule in the
-member's own `grund.toml`. Close its citation default, then list each citing
-kind's own targets under `may`:
+member's own `grund.toml`. In a version-2 member, close its citation default,
+then list each citing kind's own targets under `may`:
 
 ```toml
 # ce/substratevm/grund.toml, after the member's kinds
@@ -131,8 +131,8 @@ ce/substratevm/docs/requirements.md:6: error: FS must not cite ee/FS (citation d
 The rule has to live in the member. A workspace root is never consulted for a
 member's citation sites
 ([the project is the widest committed scope](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config.md#principleboundary-the-project-is-the-widest-committed-scope)).
-So `[rules.citations.FS] must-not = ["ee/FS"]` at the root judges only the
-root's own files, and the member's citations of `ee` still pass.
+So `[rules.citations.FS] must-not = ["ee/FS"]` at a version-2 root judges only
+the root's own files, and the member's citations of `ee` still pass.
 
 The recipe has two costs.
 
