@@ -53,6 +53,23 @@ pub(in crate::config) fn split_outside_strings(inner: &str) -> Vec<&str> {
     pieces
 }
 
+/// Whether `piece`, already trimmed, is one basic string: it opens with `"`, closes with a `"`
+/// that is not part of a `\"` escape, and holds no other such `"` (§FS-config.3.11). Only such a
+/// piece keeps the commas `split_outside_strings` left inside it; any other piece is cut at each
+/// of its commas, so a malformed list is read exactly as it was before that rule, until the
+/// laxness of `parse_string` that lets some of them through is retired on its own.
+fn is_one_basic_string(piece: &str) -> bool {
+    let bytes = piece.as_bytes();
+    if bytes.len() < 2 {
+        return false;
+    }
+    let last = bytes.len() - 1;
+    bytes[0] == b'"'
+        && bytes[last] == b'"'
+        && !is_escaped(bytes, last)
+        && (1..last).all(|i| bytes[i] != b'"' || is_escaped(bytes, i))
+}
+
 /// Whether `line`, its comment stripped and trimmed, is a table header,
 /// `[name]` or `[[name]]`: the one line shape the reader reads that is not
 /// `key = value`.
@@ -122,8 +139,8 @@ pub(in crate::config) fn parse_usize(path: &Path, line: usize, value: &str) -> R
 }
 
 /// Read a `["…", "…"]` string list, its elements ending only at a comma outside a
-/// string (§FS-config.3.11); each element is still one basic string, refused at
-/// `line` as before when it is not (§FS-config.4.3).
+/// string (§FS-config.3.11); a piece that is not one basic string is cut at each of its
+/// commas as before, and each element is refused at `line` when it is not one (§FS-config.4.3).
 pub(crate) fn parse_string_list(path: &Path, line: usize, value: &str) -> Result<Vec<String>> {
     if !value.starts_with('[') || !value.ends_with(']') {
         return bail_config(path, line, "expected string list".to_string());
@@ -132,8 +149,16 @@ pub(crate) fn parse_string_list(path: &Path, line: usize, value: &str) -> Result
     if inner.is_empty() {
         return Ok(Vec::new());
     }
-    split_outside_strings(inner)
-        .into_iter()
-        .map(|part| parse_string(path, line, part.trim()))
-        .collect()
+    let mut elements = Vec::new();
+    for piece in split_outside_strings(inner) {
+        let piece = piece.trim();
+        if is_one_basic_string(piece) {
+            elements.push(parse_string(path, line, piece)?);
+            continue;
+        }
+        for part in piece.split(',') {
+            elements.push(parse_string(path, line, part.trim())?);
+        }
+    }
+    Ok(elements)
 }

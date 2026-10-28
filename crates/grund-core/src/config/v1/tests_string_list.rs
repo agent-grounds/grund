@@ -42,11 +42,30 @@ fn a_list_without_a_comma_in_a_string_reads_as_before() {
     assert_eq!(read(r#"[ "a" ,"b" ]"#), ["a", "b"]);
 }
 
-/// Green today and kept: the rule refuses nothing new and moves no message.
+/// Green before the rule and kept: the rule refuses nothing new. A piece that is not one basic
+/// string, a quote dropped or a comma missing between two strings, is still cut at each comma.
 #[test]
 fn a_malformed_element_keeps_its_refusal() {
     for value in [r#"["a",]"#, r#"["a,b]"#, r#"[a, "b"]"#, r#"["a", ,"b"]"#] {
         assert_eq!(refusal(value), "grund.toml:7: expected string", "{value}");
     }
+    for value in [
+        r#"["a,"b"]"#,
+        r#"["a", "b,"c"]"#,
+        r#"["a, "b"]"#,
+        r#"["target" "a,b"]"#,
+    ] {
+        assert_eq!(refusal(value), "grund.toml:7: expected string", "{value}");
+    }
     assert_eq!(refusal(r#""a, b""#), "grund.toml:7: expected string list");
+}
+
+/// Pins the reading these lists had before the rule, not an endorsement of it: a piece that is
+/// not one basic string is cut at each comma and each part read as before. The follow-up that
+/// retires `parse_string`'s laxness changes these on purpose.
+#[test]
+fn a_list_read_before_the_rule_is_read_the_same() {
+    assert_eq!(read(r#"["a"b", "c"]"#), [r#"a"b"#, "c"]);
+    assert_eq!(read(r#"["x" \"y", "z"]"#), [r#"x" "y"#, "z"]);
+    assert_eq!(read(r#"["a" "b"]"#), [r#"a" "b"#]);
 }
