@@ -42,10 +42,6 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 - **Inline citation style.** Inline notes: ≤ 1 line preferred, hard cap 3 lines; ≤ 100 columns. A note is one comment block: a blank line splits it, an empty comment line does not. Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell, SQL or Lisp comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.
 - **Always cite the most-specific point.**
 
-### Citation directions
-
-Specs cite goals, architecture cites specs, code and executable tests cite the specs they realize. In a citation rule array, entries are all required; `|` inside one entry means any one alternative. See https://github.com/agent-grounds/grund/blob/main/docs/user-facing/citation-directions.md for the levels and examples.
-
 ### Clickable citations
 
 On repository web surfaces, link `§<ID>` to the PR branch in PR bodies, the reviewed commit in reviews, an exact commit for permalinks, and the default branch otherwise; fall back to plain when unsure.
