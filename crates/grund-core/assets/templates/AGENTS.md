@@ -32,9 +32,7 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 - **Cite as you write.** Place `{MARKER}<ID>` at the point a claim or behavior is made — on the doc-comment for a whole behavior, inline beside the clause it enforces.
 - **Marker = live citation.** A `{MARKER}`-prefixed token resolves and is checked wherever it appears — including inside Markdown backticks. To mention an ID without citing it, write `<{MARKER}><ID>`, omit the marker, or use a fenced code block.
 - **Inline citation style.** {INLINE_CITATION_STYLE}
-- **Always cite the most-specific point.**
-
-{CITATION_DIRECTIONS}
+- **Always cite the most-specific point.**{CITATION_DIRECTIONS}
 
 {CLICKABLE_CITATIONS}
 <!-- END GRUND MANAGED BLOCK -->

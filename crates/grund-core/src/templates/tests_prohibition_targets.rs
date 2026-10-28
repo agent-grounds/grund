@@ -46,7 +46,7 @@ fn render(name: &str, rules: &str) -> String {
     let root = test_root(name);
     write(&root.join("grund.toml"), &config(rules));
     let config = load_config(&root).expect("load config");
-    citation_directions_section(config.project(), config.run())
+    citation_directions_section(config.project(), config.run()).expect("the config declares rules")
 }
 
 /// The single-file subject of this repository's `README.md` row:

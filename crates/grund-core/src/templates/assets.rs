@@ -19,13 +19,12 @@ pub(super) const AGENTS_TEMPLATE: &str = include_str!("../../assets/templates/AG
 /// Workspace-only project-boundary guidance (§FS-init.2.3.4.16).
 pub(super) const AGENTS_PROJECT_NAMESPACES_TEMPLATE: &str =
     include_str!("../../assets/templates/AGENTS-project-namespaces.md");
-/// The scaffold config teaches open-ended marker choices (§FS-init.2.4.5).
-/// Its `[citations]` block comment explains the five levels
-/// and hands the reader the `CITATION_DIRECTIONS_URL` of
-/// `citation_directions.rs`, where it used to cite
-/// §FS-config.3.9 by ID: the file lands verbatim in the adopting repository, so
-/// an ID of this one names a document that reader does not have — or an
-/// unrelated one of their own (§REQ-shipped-surfaces.1).
+/// The scaffold config carries one comment, its first line, saying where the
+/// rest of the settings are; it declares no citation rule, and `grund guide
+/// citations` prints the guide to them (§FS-init.2.4.5). The file lands verbatim
+/// in the adopting repository, so it names no ID of this one: an ID would name a
+/// document that reader does not have — or an unrelated one of their own
+/// (§REQ-shipped-surfaces.1).
 const GRUND_TOML_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/grund.toml");
 /// The `none` template's config: the default one with `kinds = []` for its

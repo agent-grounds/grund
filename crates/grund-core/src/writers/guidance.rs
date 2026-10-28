@@ -15,8 +15,9 @@ use crate::grammar::{
 use crate::model::{Catalog, ExpectedEntrypoint, ExpectedSection, ScopedExpectation};
 use crate::sources::path_is_dir;
 use crate::templates::{
-    ConversationSurface, Layout, WorkspaceGuidance, citation_directions_section,
-    clickable_citations_section, declaration_shapes_section, render_agents_append_block,
+    ConversationSurface, Layout, WorkspaceGuidance, citation_directions_placeholder,
+    citation_directions_section, clickable_citations_section, declaration_shapes_section,
+    render_agents_append_block,
 };
 
 /// The validated chapter rules a run renders (§FS-init.2.3.5.10): the catalog
@@ -101,7 +102,8 @@ impl<'a> Guidance<'a> {
                 noun: "citation directions".into(),
                 bytes: self
                     .layout
-                    .root_citation_directions(project, self.config.run()),
+                    .root_citation_directions(project, self.config.run())
+                    .unwrap_or_default(),
             },
             ExpectedSection {
                 heading: "### Clickable citations".into(),
@@ -191,12 +193,14 @@ impl<'a> Guidance<'a> {
             &agents_block_heading(self.version),
             1,
         );
-        if self.layout.is_scoped() {
-            block = block.replacen(
-                &citation_directions_section(project, run),
-                &self.layout.root_citation_directions(project, run),
-                1,
-            );
+        // The placeholder's whole value, separator included, is both needle and
+        // replacement, so an absent root section leaves one blank line; with no
+        // all-rows section there is nothing to swap (§FS-init.2.3.4.10).
+        let all_rows = citation_directions_placeholder(citation_directions_section(project, run));
+        if self.layout.is_scoped() && !all_rows.is_empty() {
+            let root =
+                citation_directions_placeholder(self.layout.root_citation_directions(project, run));
+            block = block.replacen(&all_rows, &root, 1);
         }
         let inserted: String = [
             self.layout.declaration_shapes(project, ""),

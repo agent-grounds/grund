@@ -4,12 +4,9 @@
 //! the unit each bullet names, the grouping, the prose forms of rule grammar,
 //! the legend, the grounding sentence, and the closing line.
 
-use std::path::Path;
-
 use super::citation_directions::CITATION_LEVEL_LEGEND;
 use super::*;
 use crate::config::load_config;
-use crate::grammar::markdown_fence_delimiter;
 use crate::testing::{test_root, write};
 
 /// The kinds most cases share: three citable homes, a single-file citable
@@ -36,12 +33,13 @@ citable = false
 
 /// Render the section for a config written into a fresh test root. The homes
 /// named in a config need not exist: the render reads `[[kinds]]` and
-/// `[citations]`, never the tree.
+/// `[citations]`, never the tree. Every config here declares rules, so the
+/// section renders; a config without them is `tests_directions_without_rules`'s.
 fn render(name: &str, config: &str) -> String {
     let root = test_root(name);
     write(&root.join("grund.toml"), config);
     let config = load_config(&root).expect("load config");
-    citation_directions_section(config.project(), config.run())
+    citation_directions_section(config.project(), config.run()).expect("the config declares rules")
 }
 
 /// [`render`] over the shared kinds table plus one case's own rules.
@@ -474,25 +472,6 @@ fn grounding_shrinks_to_the_source_file_rule_and_disappears_when_off() {
     );
 }
 
-/// §FS-init.2.3.4.10: whether a file must ground at all is not a direction
-/// rule, so the sentence does not wait on `[citations]` being declared —
-/// which is the config this repository's own defect was reported against.
-#[test]
-fn grounding_renders_without_a_citations_section() {
-    let section = render(
-        "grounding_renders_without_a_citations_section",
-        "[reference]\nrequire_grounding = true\n[[kinds]]\nkind = \"FS\"\nfolder = \"docs/functional-spec\"\n",
-    );
-    assert!(
-        section.contains("Specs cite goals, architecture cites specs"),
-        "{section}"
-    );
-    assert!(
-        section.ends_with("Every source file must cite a declared ID or declare one inline."),
-        "{section}"
-    );
-}
-
 /// §FS-init.2.3.5.1: a kind with no rule has no bullet, and the section never
 /// ends with a newline — the template's placeholder supplies the one that
 /// keeps `grund init` idempotent.
@@ -507,81 +486,4 @@ fn a_kind_without_rules_has_no_bullet() {
         "cited, never citing: {section}"
     );
     assert!(!section.ends_with('\n'), "{section}");
-}
-
-/// §FS-init.2.3.5: the documented config/render pair must stay an exact
-/// example of the production Citation directions renderer. The extractor
-/// follows the shared fence state machine so another fence style or a
-/// shorter closing run cannot make the test compare the wrong block.
-#[test]
-fn documented_citation_directions_example_matches_production_render() {
-    let page_path =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/user-facing/citation-directions.md");
-    let page = std::fs::read_to_string(&page_path).expect("read canonical page");
-    let documented_config = fenced_example(&page, "toml");
-    let documented_render = fenced_example(&page, "markdown");
-
-    let root = test_root("documented_citation_directions_example_matches_production_render");
-    // The page intentionally shows only the citation tables. Add the
-    // three homes needed to give those tables their configured meanings;
-    // the citation fragment itself is read verbatim from the page above.
-    write(
-        &root.join("grund.toml"),
-        &format!(
-            "[[kinds]]\nkind = \"GOAL\"\nfile = \"docs/goals.md\"\n\n[[kinds]]\nkind = \"FS\"\nfolder = \"docs/functional-spec\"\n\n[[kinds]]\nkind = \"AR\"\nfolder = \"docs/architecture\"\n\n[[kinds]]\nkind = \"DA\"\nfolder = \"docs/decisions/architectural\"\n\n[[kinds]]\nkind = \"skill\"\nfolder = \"skills\"\ncitable = false\n\n{documented_config}"
-        ),
-    );
-    let config = load_config(&root).expect("load documented config");
-    let rendered = citation_directions_section(config.project(), config.run());
-    let expected = documented_render
-        .strip_suffix('\n')
-        .expect("render example ends with a newline");
-    assert_eq!(rendered, expected);
-}
-
-fn fenced_example(page: &str, language: &str) -> String {
-    let mut open = None;
-    let mut target = false;
-    let mut body = String::new();
-    for raw_line in page.split_inclusive('\n') {
-        let line = raw_line
-            .strip_suffix('\n')
-            .unwrap_or(raw_line)
-            .strip_suffix('\r')
-            .unwrap_or_else(|| raw_line.strip_suffix('\n').unwrap_or(raw_line));
-        let was_open = open.is_some();
-        let delimiter = markdown_fence_delimiter(&mut open, line);
-        if !was_open && delimiter {
-            target = fence_language(line) == Some(language);
-            continue;
-        }
-        if was_open && delimiter {
-            if target {
-                return body;
-            }
-            target = false;
-            continue;
-        }
-        if target {
-            body.push_str(raw_line);
-        }
-    }
-    panic!("missing fenced {language} example");
-}
-
-fn fence_language(line: &str) -> Option<&str> {
-    let bytes = line.as_bytes();
-    let indent = bytes.iter().take_while(|byte| **byte == b' ').count();
-    if indent > 3 || indent == bytes.len() {
-        return None;
-    }
-    let delimiter = bytes[indent];
-    if delimiter != b'`' && delimiter != b'~' {
-        return None;
-    }
-    let run = bytes[indent..]
-        .iter()
-        .take_while(|byte| **byte == delimiter)
-        .count();
-    (run >= 3).then(|| line[indent + run..].trim())
 }

@@ -93,8 +93,9 @@ impl Layout {
         self.destinations.get(row).map_or(ROOT, String::as_str) == dir
     }
 
-    /// The root block's `### Citation directions` (§FS-init.2.3.5.1).
-    pub(crate) fn root_citation_directions(&self, project: &Project, run: &Run) -> String {
+    /// The root block's `### Citation directions` (§FS-init.2.3.5.1), `None`
+    /// when it has nothing to state (§FS-init.2.3.4.10).
+    pub(crate) fn root_citation_directions(&self, project: &Project, run: &Run) -> Option<String> {
         root_citation_directions(project, run, &|row| self.lands(row, ROOT))
     }
 

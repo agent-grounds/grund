@@ -5,12 +5,6 @@ use crate::config::{
 
 use super::citation_grounding::citation_grounding_sentence;
 
-/// The public citation-directions page the scaffold config and the no-`[citations]`
-/// fallback sentence hand a reader instead of an ID of this repository
-/// (§FS-config.3.9, §REQ-shipped-surfaces.1).
-const CITATION_DIRECTIONS_URL: &str =
-    "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/citation-directions.md";
-
 /// The `### Citation directions` renderer of the managed block (§FS-init.2.3.5),
 /// in a file of its own so the payload constants and the renderer that composes
 /// them do not share one (§AR-core-module-layout.1).
@@ -35,52 +29,33 @@ pub(crate) const CITATION_LEVEL_LEGEND: &str = "`must`/`never` are `grund check`
 
 /// Render the `### Citation directions` managed-block section (§FS-init.2.3.5)
 /// from the effective config, every row in it: the root block of a config whose
-/// guidance all renders at the root (§FS-init.2.3.5.11.5).
-pub(crate) fn citation_directions_section(project: &Project, run: &Run) -> String {
+/// guidance all renders at the root (§FS-init.2.3.5.11.5). `None` where the
+/// section has nothing to state (§FS-init.2.3.4.10).
+pub(crate) fn citation_directions_section(project: &Project, run: &Run) -> Option<String> {
     root_citation_directions(project, run, &|_| true)
 }
 
+/// The `{CITATION_DIRECTIONS}` placeholder's value for `section`: the section
+/// behind its own leading blank line, as `{PROJECT_NAMESPACES}` carries its own,
+/// or nothing, so a block without the section keeps one blank line between
+/// `### Rules` and the next section (§FS-init.2.3.4.10). Both the template's
+/// substitution and the scoped swap that replaces it read this one value.
+pub(crate) fn citation_directions_placeholder(section: Option<String>) -> String {
+    section
+        .map(|section| format!("\n\n{section}"))
+        .unwrap_or_default()
+}
+
 /// The root block's `### Citation directions` (§FS-init.2.3.5.1), holding the
-/// rows `here` says land at the root. When no `[citations]` section is
-/// declared, the static climbing-rule sentence stands in, so a config that
-/// predates the feature keeps a stable block (§FS-init.2.3.4.10); the grounding
-/// sentence renders under either, because it is generated from each row's
-/// effective grounding and not from the direction rules (§FS-check.3.6).
+/// rows `here` says land at the root. Where rules are declared it renders the
+/// legend and the closing line even when every bullet lands in a scoped block,
+/// because the closing line's global default still governs the root's rows.
 pub(crate) fn root_citation_directions(
     project: &Project,
     run: &Run,
     here: &dyn Fn(&str) -> bool,
-) -> String {
-    // Built as lines joined with `\n` and returned without a trailing newline:
-    // the `{CITATION_DIRECTIONS}` placeholder in the template supplies the single
-    // block-final newline, so `grund init` stays idempotent on re-run.
-    let mut lines = vec!["### Citation directions".to_string(), String::new()];
-    let grounding = citation_grounding_sentence(project, run, here);
-    if !project.rules.citations.declared {
-        // §FS-init.2.3.4.4.2: the climbing-rule sentence names kinds; a config
-        // with no citable kind is told that no direction applies yet instead.
-        let paragraph = if project.kind_configs().iter().any(|kind| kind.citable) {
-            format!(
-                "Specs cite goals, architecture cites specs, code and executable tests cite the specs they realize. In a citation rule array, entries are all required; `|` inside one entry means any one alternative. See {CITATION_DIRECTIONS_URL} for the levels and examples."
-            )
-        } else {
-            format!(
-                "No kind is declared yet, so no citation direction applies. Once kinds exist, the config's citation rules say which kinds each may cite; see {CITATION_DIRECTIONS_URL} for the levels and examples."
-            )
-        };
-        lines.push(join_sentences(&paragraph, grounding.as_deref()));
-        return lines.join("\n");
-    }
-    lines.push(join_sentences(CITATION_LEVEL_LEGEND, grounding.as_deref()));
-    lines.push(String::new());
-    lines.extend(citation_bullets(project, run, here));
-    // Load-bearing (§FS-init.2.3.5.6): silence is open only when the global default
-    // leaves it open, and a per-kind default never reaches it — that one is
-    // folded into its own bullet, which is *listed above*.
-    lines.push(citation_closing_line(
-        project.rules.citations.global_default,
-    ));
-    lines.join("\n")
+) -> Option<String> {
+    directions_section(project, run, here, true)
 }
 
 /// A scoped block's `### Citation directions` (§FS-init.2.3.5.12.1): the legend
@@ -92,11 +67,34 @@ pub(crate) fn scoped_citation_directions(
     run: &Run,
     here: &dyn Fn(&str) -> bool,
 ) -> Option<String> {
+    directions_section(project, run, here, false)
+}
+
+/// The one render of a destination's `### Citation directions`, for the root
+/// (`at_root`, §FS-init.2.3.5.1) and for a scoped block (§FS-init.2.3.5.12.1)
+/// alike, so a config without rules answers one way at both. The grounding
+/// sentence renders whether or not rules are declared, because it is generated
+/// from each row's effective grounding and not from the direction rules
+/// (§FS-init.2.3.5.7).
+fn directions_section(
+    project: &Project,
+    run: &Run,
+    here: &dyn Fn(&str) -> bool,
+    at_root: bool,
+) -> Option<String> {
     let grounding = citation_grounding_sentence(project, run, here);
+    if !project.rules.citations.declared {
+        // §FS-init.2.3.4.10: no rule declared states no direction — the heading
+        // and the grounding sentence alone where it lands here, else no section.
+        return grounding.map(|sentence| format!("### Citation directions\n\n{sentence}"));
+    }
     let bullets = citation_bullets(project, run, here);
-    if grounding.is_none() && bullets.is_empty() {
+    if !at_root && grounding.is_none() && bullets.is_empty() {
         return None;
     }
+    // Built as lines joined with `\n` and returned without a trailing newline:
+    // the template supplies the block-final newline after the
+    // `{CITATION_DIRECTIONS}` placeholder, so `grund init` stays idempotent.
     let mut lines = vec![
         "### Citation directions".to_string(),
         String::new(),
@@ -104,6 +102,9 @@ pub(crate) fn scoped_citation_directions(
         String::new(),
     ];
     lines.extend(bullets);
+    // Load-bearing (§FS-init.2.3.5.6): silence is open only when the global default
+    // leaves it open, and a per-kind default never reaches it — that one is
+    // folded into its own bullet, which is *listed above*.
     lines.push(citation_closing_line(
         project.rules.citations.global_default,
     ));
