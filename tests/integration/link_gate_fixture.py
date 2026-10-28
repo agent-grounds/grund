@@ -141,3 +141,42 @@ class LinkFixture:
         except subprocess.TimeoutExpired as exc:
             raise RuntimeError(f"Infrastructure failure: wrapper exceeded {WATCHDOG}s") from exc
         return result.returncode, result.stdout + result.stderr
+
+    def recording_lychee(self) -> Path:
+        """A lychee that never reaches the network, written outside the inputs, and the log it
+        keeps: local calls go to the real lychee, every other URL is recorded and answered
+        200, so `sent()` names exactly what the gate would have requested (§AR-ci-self-links.1)."""
+        shim = self.root / "lychee-recording"
+        self.network_log = self.root / "lychee-network.log"
+        self.network_log.write_text("", encoding="utf-8")
+        shim.write_text(
+            RECORDING_LYCHEE.format(
+                python=sys.executable, real=LYCHEE, log=str(self.network_log)
+            ),
+            encoding="utf-8",
+        )
+        shim.chmod(0o755)
+        return shim
+
+    def sent(self) -> list[str]:
+        return self.network_log.read_text(encoding="utf-8").splitlines()
+
+
+# A dump, an `--offline` pass and a stdin document of `file://` self-links are local by
+# construction; any other call is one the gate sends to the network.
+RECORDING_LYCHEE = """#!{python}
+import os, re, subprocess, sys
+real, log, args = {real!r}, {log!r}, sys.argv[1:]
+if "--dump" in args or "--offline" in args:
+    os.execv(real, [real, *args])
+urls = []
+if "-" in args:
+    document = sys.stdin.read()
+    urls = re.findall(r"\\(<([^>]*)>\\)", document)
+    if urls and all(url.startswith("file://") for url in urls):
+        sys.exit(subprocess.run([real, *args], input=document, text=True).returncode)
+else:
+    urls = ["PATHS " + " ".join(args)]
+with open(log, "a", encoding="utf-8") as out:
+    out.writelines(url + "\\n" for url in urls)
+"""
