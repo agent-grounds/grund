@@ -62,6 +62,15 @@ They include the review-checklist walkthrough at `examples/review-checklist/`, a
 multi-run example ([§FS-examples.5.5](FS-examples.md#55-an-example-may-pin-several-runs)) whose runs `1-count`, `2-bodies`, `3-owners`, `4-citers` and `5-cites`
 are the review recipe of [§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern), [§FS-refs.globs](FS-refs.md#globs---glob-lists-who-cites-a-set) and [§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites), one step each.
 
+They include the downstream-citers walkthrough at `examples/downstream-citers/`,
+a multi-run example ([§FS-examples.5.5](FS-examples.md#55-an-example-may-pin-several-runs)) for a project whose citers live in a repository its
+own run cannot read. Run `1-cover` is the downstream's `cover --format json`,
+which keeps each cross-project alias it cannot resolve ([§FS-cover.2.1](FS-cover.md#21-a-cross-project-citation-counts)); run
+`2-check` is the upstream with the committed page of those citations, which
+counts as a use like any citing file ([§FS-check.4.1.4](FS-check.md#414-a-citation-anywhere-in-the-resolution-scope-counts)); run `3-deleted` is the same
+upstream after a listed point is deleted, refused at the page. The recipe and its
+limits are taught where the repository options guide covers workspaces.
+
 They include the opt-in Git co-change workflow at `examples/cochange/`, specified
 by [§FS-cochange-recipe.examples](FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance), with commit-msg/CI evidence and visible waivers.
 
