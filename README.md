@@ -264,6 +264,9 @@ A member a checkout may lack, such as a private package CI does not get, goes
 under `optional_members`; in a checkout without it, `grund check` does not judge
 the managed blocks' member lists and `grund init` keeps them as they are, as the
 [optional-member example](examples/workspace-optional-member/) shows.
+A member that must cite no other project closes its own citation default and
+lists only its own targets, as the
+[isolated-member example](examples/workspace-isolated-member/) shows.
 
 ## External facts
 

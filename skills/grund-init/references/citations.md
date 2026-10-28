@@ -33,7 +33,7 @@ The citing side may be any configured kind, including a non-citable kind, or
 the homeless `code` kind. The cited side must be citable, because a citation
 needs an ID to point at. A non-citable kind may cite and is labelled by its
 home, such as `skills/`; the homeless kind covers any file outside a configured
-kind home and renders last. In a workspace a target may name another project. A bare `KIND` is judged against the local project's kinds when the config loads. `alias/KIND` is judged against the kinds of the project that `alias` names, and `*/KIND` against the kinds of every loaded project, both when the workspace is expanded. So `[citations.FS] must = ["api/API"]` at a version-1 workspace root (`[rules.citations.FS]` in version 2) loads once member `api` configures `API`, and it is enforced exactly as the rule `Each FS must cite at least one api/API.` is. A pinned or `*/` target the workspace cannot accept fails the load: grund prints one `error:` line naming it and exits 2. This covers an unknown or non-citable kind in that project, and an alias the workspace does not load. A run with no workspace, such as a member's own run, cannot judge a target pinned to another project at all, and its error says to check from the workspace root.
+kind home and renders last. In a workspace a target may name another project. A bare `KIND` is judged against the local project's kinds when the config loads. `alias/KIND` is judged against the kinds of the project that `alias` names, and `*/KIND` against the kinds of every loaded project, both when the workspace is expanded. So `[citations.FS] must = ["api/API"]` at a version-1 workspace root (`[rules.citations.FS]` in version 2) loads once member `api` configures `API`, and it is enforced exactly as the rule `Each FS must cite at least one api/API.` is. A pinned or `*/` target the workspace cannot accept fails the load: grund prints one `error:` line naming it and exits 2. This covers an unknown or non-citable kind in that project, and an alias the workspace does not load. A run with no workspace, such as a member's own run, cannot judge a target pinned to another project at all, and its error says to check from the workspace root. That limit is on pinned targets, not on a member's own rules: a member that must cite no other project says so in its own config without naming one, as [one member that cites no other project](#one-member-that-cites-no-other-project) shows.
 
 An obligation on a citable kind that declares no IDs has no unit: no
 per-declaration unit fires. If a `must` or `should` obligation is configured,
@@ -94,6 +94,70 @@ should = ["FS|AR"]
 - Each source file outside the Project map (**code**) that cites anything should cite FS or AR.
 Anything not listed above is allowed.
 ```
+
+## One member that cites no other project
+
+Sometimes one member of a workspace must cite no other project, such as an open
+edition that must never cite its closed sibling. Write that rule in the
+member's own `grund.toml`. Close its citation default, then list each citing
+kind's own targets under `may`:
+
+```toml
+# ce/substratevm/grund.toml, after the member's kinds
+[rules.citations]
+default = "must-not"
+
+[rules.citations.FS]
+may = ["FS"]
+
+[rules.citations.code]
+may = ["FS"]
+```
+
+The member names no other project, yet it may cite only its own. A bare `FS`
+matches the local project's `FS` only
+([alias matching](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config.md#393-alias-matching)).
+An explicit list wins over the default
+([defaults and precedence](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config.md#394-defaults-and-precedence)),
+so the member's citations of its own `FS` pass. A citation of any other project
+is on no list, so it falls to the default, and a default may forbid
+([`rules.citations.default`](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config-v2.md#rulescitationsdefault-a-default-may-forbid-never-oblige)).
+Run from the workspace root, the example refuses two citations of the closed
+member `ee`: one from the open member's `FS` file, and one from a file outside
+every kind home:
+
+```text
+ce/substratevm/docs/notes.md:1: error: code must not cite ee/FS (citation direction) — re-point the citation or downgrade it to a plain Markdown link
+ce/substratevm/docs/requirements.md:6: error: FS must not cite ee/FS (citation direction) — re-point the citation or downgrade it to a plain Markdown link
+```
+
+The rule has to live in the member. A workspace root is never consulted for a
+member's citation sites
+([the project is the widest committed scope](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config.md#principleboundary-the-project-is-the-widest-committed-scope)).
+So `[rules.citations.FS] must-not = ["ee/FS"]` at the root judges only the
+root's own files, and the member's citations of `ee` still pass.
+
+The recipe has two costs.
+
+Every citing kind must list its own targets under `may`. That includes each
+non-citable kind, such as `skills/`, and the homeless `code` kind. A kind left
+out falls to the closed default, so its local citations fail too. With the
+`code` row dropped, the example's homeless file reports:
+
+```text
+ce/substratevm/docs/notes.md:1: error: code must not cite FS (citation direction) — re-point the citation or downgrade it to a plain Markdown link
+```
+
+Allowing one sibling but not another takes a pinned target, such as
+`may = ["FS", "compiler/FS"]`. The workspace root accepts it. A member's own run
+has no workspace to resolve the alias in, so it refuses the config and exits 2:
+
+```text
+error: grund.toml: [rules.citations.FS] may names `compiler/FS`: unknown project alias compiler; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this became an error in grund 0.19.0
+```
+
+The [`workspace-isolated-member` example](https://github.com/agent-grounds/grund/tree/main/examples/workspace-isolated-member)
+runs the recipe and both costs.
 <!-- END citation-directions -->
 
 Source: [grund's canonical citation-directions page](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/citation-directions.md); the
