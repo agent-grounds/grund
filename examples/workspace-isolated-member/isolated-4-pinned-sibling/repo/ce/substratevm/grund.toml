@@ -1,0 +1,17 @@
+grund_config_version = 2
+project_name = "substratevm"
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.kinds.FS]
+files = ["docs/requirements.md"]
+
+[rules.citations]
+default = "must-not"
+
+[rules.citations.FS]
+may = ["FS", "compiler/FS"]
+
+[rules.citations.code]
+may = ["FS"]
