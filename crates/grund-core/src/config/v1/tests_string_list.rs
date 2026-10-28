@@ -1,0 +1,54 @@
+//! §FS-config.3.11: a string list is cut into its elements only at a comma outside a string,
+//! a string closing at the first `"` that is not part of a `\"` escape; every element that is
+//! not one basic string keeps the refusal it had (§FS-config.4.3).
+
+use std::path::Path;
+
+use super::parse_string_list;
+
+fn read(value: &str) -> Vec<String> {
+    parse_string_list(Path::new("grund.toml"), 7, value)
+        .unwrap_or_else(|error| panic!("`{value}` is refused: {error}"))
+}
+
+fn refusal(value: &str) -> String {
+    match parse_string_list(Path::new("grund.toml"), 7, value) {
+        Ok(read) => panic!("`{value}` reads as {read:?}"),
+        Err(error) => error.to_string(),
+    }
+}
+
+#[test]
+#[ignore = "red until #1076 splits a list only at a comma outside a string; implement removes this"]
+fn a_comma_inside_a_string_belongs_to_its_element() {
+    assert_eq!(read(r#"["a,b", "c"]"#), ["a,b", "c"]);
+    assert_eq!(read(r#"[",", ",,"]"#), [",", ",,"]);
+    assert_eq!(
+        read(r#"["specs/{001-a,002-b}/spec.md"]"#),
+        ["specs/{001-a,002-b}/spec.md"]
+    );
+}
+
+#[test]
+#[ignore = "red until #1076 splits a list only at a comma outside a string; implement removes this"]
+fn an_escaped_quote_does_not_close_the_string_and_an_escaped_backslash_does_not_escape() {
+    assert_eq!(read(r#"["a\",b", "c"]"#), [r#"a",b"#, "c"]);
+    assert_eq!(read(r#"["a\\", "b,c"]"#), [r"a\", "b,c"]);
+}
+
+/// Green today and kept: lists without a comma in a string read as they always have.
+#[test]
+fn a_list_without_a_comma_in_a_string_reads_as_before() {
+    assert_eq!(read("[]"), Vec::<String>::new());
+    assert_eq!(read(r#"["a", "b"]"#), ["a", "b"]);
+    assert_eq!(read(r#"[ "a" ,"b" ]"#), ["a", "b"]);
+}
+
+/// Green today and kept: the rule refuses nothing new and moves no message.
+#[test]
+fn a_malformed_element_keeps_its_refusal() {
+    for value in [r#"["a",]"#, r#"["a,b]"#, r#"[a, "b"]"#, r#"["a", ,"b"]"#] {
+        assert_eq!(refusal(value), "grund.toml:7: expected string", "{value}");
+    }
+    assert_eq!(refusal(r#""a, b""#), "grund.toml:7: expected string list");
+}

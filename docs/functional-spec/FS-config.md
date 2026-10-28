@@ -173,7 +173,7 @@ Two sources decide a setting: the committed `grund.toml` and the CLI inputs of t
 
 This chapter is the version-1 format, and it stays: every key, default and meaning below is read by the v1 reader for as long as a version-1 file exists ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)), and every section keeps its address. The version-2 format is [§FS-config-v2](FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults), spelled by concern; [§FS-config.concerns](FS-config.md#concerns-every-key-belongs-to-exactly-one-concern) maps each concern to its v2 home and to the sections here that spell the same things. The config file is TOML. Every key is optional; omitted keys take the default value. Unknown keys are an **error**, not a warning, per [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) — typos in config files are bugs and grund surfaces them loudly.
 
-The recognized surface is the line-oriented subset that the keys below use: one `key = value` per line, basic (double-quoted) strings, booleans, integers, and single-line `["…", "…"]` arrays of basic strings; `#` comments; `[table]` and `[[array.of.tables]]` headers. Multi-line arrays, inline `{ … }` tables, and other TOML constructs are not parsed, except for the closed `lead_size_warning` inline table defined in [§FS-config.3.1.2](FS-config.md#312-lead_size_warning--the-oversized-lead-opt-in) — keep each value on one line. A line that does not fit this shape is reported as an error pointing at the offending line, per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior).
+The recognized surface is the line-oriented subset that the keys below use: one `key = value` per line, basic (double-quoted) strings, booleans, integers, and single-line `["…", "…"]` arrays of basic strings, whose elements end only at a comma outside a string ([§FS-config.3.11](FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string)); `#` comments; `[table]` and `[[array.of.tables]]` headers. Multi-line arrays, inline `{ … }` tables, and other TOML constructs are not parsed, except for the closed `lead_size_warning` inline table defined in [§FS-config.3.1.2](FS-config.md#312-lead_size_warning--the-oversized-lead-opt-in) — keep each value on one line. A line that does not fit this shape is reported as an error pointing at the offending line, per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior).
 
 Top-level keys:
 
@@ -230,17 +230,7 @@ bump `grund_config_version` ([§FS-config.5](FS-config.md#5-schema-versioning)).
 
 #### 3.1.2 `lead_size_warning` — the oversized-lead opt-in
 
-`lead_size_warning` opts this project into the lead-only warning defined by
-[§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in). Its inline table has
-exactly two required fields: `max`, a non-negative integer, and `unit`, one of
-the case-sensitive closed set `lines`, `words`, or `bytes`. Missing, extra, or
-duplicate fields and any other unit — including `tokens` — are load-time config
-errors ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). There is no severity field: an enabled finding is always a
-warning and cannot change `check`'s exit status. The key is absent by default
-and omitted from a fresh `grund init` scaffold, so an unconfigured repository's
-check output stays byte-identical. `grund config show` omits the key when absent
-and otherwise prints its canonical inline form,
-`lead_size_warning = { max = <N>, unit = "<unit>" }`.
+`lead_size_warning` opts this project into the lead-only warning defined by [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in). Its inline table has exactly two required fields, separated as a list's elements are ([§FS-config.3.11](FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string)): `max`, a non-negative integer, and `unit`, one of the case-sensitive closed set `lines`, `words`, or `bytes`. Missing, extra, or duplicate fields and any other unit — including `tokens` — are load-time config errors ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). There is no severity field: an enabled finding is always a warning and cannot change `check`'s exit status. The key is absent by default and omitted from a fresh `grund init` scaffold, so an unconfigured repository's check output stays byte-identical. `grund config show` omits the key when absent and otherwise prints its canonical inline form, `lead_size_warning = { max = <N>, unit = "<unit>" }`.
 
 #### 3.1.3 `conversation` — one name, two scopes
 
@@ -1118,6 +1108,12 @@ The table is optional and defaults to the empty list, which is what every config
 #### 3.10.3 `[fmt]` is the command's home, `[fmt.cross_refs]` the pass's
 
 `[fmt]` is the home for settings about the `fmt` command as a whole — it governs every rewrite `grund fmt` performs, not just the cross-reference pass; `[fmt.cross_refs]` ([§FS-config.3.7](FS-config.md#37-fmtcross_refs--cross-reference-emission)) remains the home for cross-reference settings specifically. The per-region counterpart to this key is not configured here at all — it is written in the file it governs ([§FS-fmt.2.5.2](FS-fmt.md#252-grundfmt-off--grundfmt-on--a-region-at-a-time)), and the reasoning for both is in [§DF-fmt-suppression](../decisions/functional/DF-fmt-suppression.md#df-fmt-suppression-fmt-suppression-is-per-file-and-per-region-and-the-index-carve-out-outranks-both).
+
+### 3.11 A list element ends at a comma outside a string
+
+A string list, the `["…", "…"]` array of basic strings that [§FS-config.3](FS-config.md#3-keys-version-1)'s surface reads, is cut into its elements only at a comma that stands outside a string. A comma inside a basic string belongs to that element, and the element is read as written: `files = ["specs/a,b/spec.md"]` names the file `specs/a,b/spec.md`, `exclude = ["a,b"]` names the directory `a,b`, and a brace pattern such as `"specs/{001-a,002-b}/spec.md"` reaches its key as one element. A string closes at the first `"` that is not part of a `\"` escape, so `["a\",b"]` is the one element `a",b` and `["a\\", "b"]` the two elements `a\` and `b`. Every list key of both versions reads its elements this way, and so does a list written across lines once it is joined ([§FS-config-v2.reader.5](FS-config-v2.md#reader5-an-array-may-span-lines)). The two members of the closed `lead_size_warning` inline table ([§FS-config.3.1.2](FS-config.md#312-lead_size_warning--the-oversized-lead-opt-in)) are separated by the same rule, so `unit = "lines,words"` is refused as an unknown unit that names `lines,words`, not as a value that is not a string.
+
+The rule reads more and refuses nothing new. Each element is still one basic string, and one that is not is refused at its key's line, in the shape of [§FS-config.4.3](FS-config.md#43-invalid-config-behavior), with the message it has always had ([§FS-config-v2.reader.3](FS-config-v2.md#reader3-one-setting-one-form)): a version-1 list that ends in a trailing comma, `["a",]`, is `expected string` at its line as before, and so is an unclosed string such as `["a,b]`, while version 2 takes TOML's trailing comma off before the elements are read ([§FS-config-v2.reader.5](FS-config-v2.md#reader5-an-array-may-span-lines)). A key whose own grammar cannot take a comma refuses it at that key, naming the value, as `[scan] exclude` refuses a `/` ([§FS-config.3.5.16](FS-config.md#3516-an-exclude-entry-containing--is-refused)) — never as a string that is not one.
 
 ## 4. Validation and inspection
 
