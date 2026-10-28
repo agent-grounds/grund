@@ -1,0 +1,15 @@
+grund_config_version = 2
+project_name = "demo"
+
+# Grounding on one scoped home alone (§FS-init.2.3.5.12.1): the root has no section,
+# and tests/e2e/AGENTS.md holds the grounding sentence alone.
+
+[schema.kinds.GRUND]
+files = ["docs/grund.md"]
+
+[schema.kinds.e2e]
+folders = ["tests/e2e"]
+citable = false
+
+[rules.citations.e2e.grounding]
+must = "file"

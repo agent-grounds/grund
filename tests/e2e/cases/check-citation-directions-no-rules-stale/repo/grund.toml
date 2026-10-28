@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "demo"
+
+# A current-version block that still carries the static sentence a config without rules
+# rendered before (§FS-init.2.3.4.10): `check` names its citation directions section.
+
+[schema.kinds.GRUND]
+files = ["docs/grund.md"]

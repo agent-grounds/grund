@@ -1,0 +1,5 @@
+grund_config_version = 1
+project_name = "demo"
+
+# `kinds = []` declares no rule either (§FS-init.2.3.4.4.2): no section.
+kinds = []

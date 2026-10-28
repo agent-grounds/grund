@@ -1,0 +1,10 @@
+grund_config_version = 2
+project_name = "demo"
+
+# A grounding ladder declares no rule (§FS-init.2.3.4.10): the grounding sentence alone.
+
+[schema.kinds.GRUND]
+files = ["docs/grund.md"]
+
+[rules.citations.grounding]
+must = "file"
