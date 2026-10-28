@@ -38,6 +38,30 @@ pub(super) fn scannable_walker(
     link_roots: &std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
     looping_links: &std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
 ) -> Result<ignore::Walk> {
+    Ok(scannable_walk_builder(
+        schema,
+        frame,
+        scan_root,
+        canonical_scan_root,
+        physical_root,
+        link_roots,
+        looping_links,
+    )?
+    .build())
+}
+
+/// [`scannable_walker`] before it is built, so a probe that only needs the walk's
+/// first levels bounds its depth without a second copy of its rules
+/// (§FS-check.2.2.2.5.2).
+pub(super) fn scannable_walk_builder(
+    schema: &Schema,
+    frame: Frame<'_>,
+    scan_root: &Path,
+    canonical_scan_root: &Path,
+    physical_root: &Path,
+    link_roots: &std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
+    looping_links: &std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
+) -> Result<WalkBuilder> {
     // §FS-check.6.1.3: include ignore discovery outside the source roots.
     if schema.sources.respect_gitignore && !crate::config::observe_ignore_inputs(scan_root) {
         return Err(anyhow!("watch ignore coverage failed"));
@@ -79,7 +103,7 @@ pub(super) fn scannable_walker(
             .is_some_and(|global| globally_ignored(global, entry))
             && filter.keep(entry)
     });
-    Ok(builder.build())
+    Ok(builder)
 }
 
 /// The directory filter the walk runs on every entry it meets: the workspace

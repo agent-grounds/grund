@@ -14,10 +14,11 @@ use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 use std::path::Path;
 
+use super::guidance::invalid_id_hint;
 use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsWithMetadata};
 use super::refs_note::{NoteQuery, empty_answer_note};
 use super::report::context_run_warnings;
-use crate::config::{display_path, format_guidance};
+use crate::config::display_path;
 use crate::grammar::{path_at_or_under, render_catalog_id, render_citation_id};
 use crate::model::{Citation, sort_path_key};
 use crate::queries::{declaration_ambiguity_refusal, reported_scope, reports_site};
@@ -103,7 +104,7 @@ pub(super) fn refs_impl_with_annotations(
     let (alias, raw_id) = split_qualified_id_arg(&opts.id).map_err(|err| {
         anyhow!(
             "{err:#}\n{}",
-            format_guidance(current_config.schema(), current_config.frame(), None).hint()
+            invalid_id_hint(current_config, &opts.id, None)
         )
     })?;
     let target_project = match alias.as_deref() {
@@ -143,9 +144,9 @@ pub(super) fn refs_impl_with_annotations(
         Ok(resolved) => resolved,
         Err(error) => {
             // §FS-show.3.5.1: carry prose separately; structured formats stay templates.
-            let guidance =
-                format_guidance(render_config.schema(), render_config.frame(), Some(raw_id));
-            *hint = error.wants_format_hint().then(|| guidance.hint());
+            *hint = error
+                .wants_format_hint()
+                .then(|| invalid_id_hint(render_config, &opts.id, Some(raw_id)));
             // §FS-distribution.3.3.2: retain original resolver data.
             *details = error.diagnostic().details;
             return Ok(RefsWithMetadata {

@@ -73,6 +73,7 @@ mod report;
 mod run;
 mod scope_cautions;
 mod show;
+mod unread_configs;
 mod unread_roots;
 
 pub use check::{CheckOpts, CheckOutput, check, check_with_opts, check_with_run_warnings, scan};
