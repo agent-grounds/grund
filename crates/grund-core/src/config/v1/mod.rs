@@ -40,7 +40,9 @@ pub(super) use defaults::default_project;
 pub(crate) use defaults::{DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR};
 pub(crate) use kind_defaults::default_kind_folder;
 pub(super) use kind_values::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
-pub(super) use values::{bail_config, parse_bool, parse_string, parse_usize};
+pub(super) use values::{
+    bail_config, parse_bool, parse_string, parse_usize, split_outside_strings,
+};
 pub(crate) use values::{is_header, parse_string_list, strip_comment};
 
 /// A v1 file read, its `[[kinds]]` table not yet lowered (§AR-config.2).

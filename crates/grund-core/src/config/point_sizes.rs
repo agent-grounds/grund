@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
 use std::path::Path;
 
-use super::v1::{bail_config, parse_string, parse_usize};
+use super::v1::{bail_config, parse_string, parse_usize, split_outside_strings};
 use crate::model::format_path;
 
 /// The closed built-in point-size vocabulary, its opt-in warning policy and
@@ -85,7 +85,8 @@ pub(super) fn parse_lead_size_warning(
     let inner = value[1..value.len() - 1].trim();
     let mut max = None;
     let mut unit = None;
-    for field in inner.split(',') {
+    // §FS-config.3.11: members are separated as a list's elements are.
+    for field in split_outside_strings(inner) {
         let Some((key, raw)) = field.split_once('=') else {
             return bail_config(path, line, "invalid lead_size_warning field".to_string());
         };
