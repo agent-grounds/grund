@@ -13,7 +13,6 @@ use super::forms::{Form, refuse, settle};
 use super::modality::split_modality;
 use super::recovery::{Recovered, as_if_enabled, recover, repair_every};
 use super::subjects::{Spelling, SubjectFault, SubjectRefusal, parse_subject, refused};
-use super::whose::windowed;
 use super::{RulePolarity, RuleSubject, RuleVocabulary};
 
 /// §FS-rule-refusals.selectors: the breadcrumb a numbered, wildcard or quantified refusal adds.
@@ -27,6 +26,9 @@ pub(crate) struct SelectorRefusal {
     suggestion: Option<String>,
     after_enabling: bool,
     hint: bool,
+    /// Whether `known kinds:` follows where no selector is offered: not after a
+    /// whose clause refused under a configured kind (§FS-errors.3.10).
+    kinds: bool,
 }
 
 impl SelectorRefusal {
@@ -39,6 +41,9 @@ impl SelectorRefusal {
             String::new()
         };
         let Some(suggestion) = &self.suggestion else {
+            if !self.kinds {
+                return format!("{}{hint}", self.reason);
+            }
             // §FS-rule-refusals.selectors: the breadcrumb follows the kinds where none was
             // recovered.
             return format!("{}\n{known_kinds}{hint}", self.reason);
@@ -73,6 +78,7 @@ pub(crate) fn parse_selector(
             suggestion: Some(subject.into()),
             after_enabling: false,
             hint: false,
+            kinds: true,
         },
         // §FS-rule-refusals.sentences.modal-chapter: a pasted sentence, or a two-word modal
         // name, is cut where the rule is and named as it is; a bare subject is not.
@@ -115,14 +121,15 @@ fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, Subjec
 
 /// Render a refused subject as a selector refusal (§FS-rule-refusals.selectors).
 fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefusal {
-    // §FS-rule-refusals.selectors: a subject with a whose clause is offered no selector, and
-    // its reason is windowed, `known kinds:` after it (§FS-errors.3.10).
-    if let Some(legacy) = &refusal.legacy {
+    // §FS-rule-refusals.selectors: a subject with a whose clause is offered no selector;
+    // `known kinds:` follows only a kind that is not configured (§FS-errors.3.10).
+    if refusal.clause {
         return SelectorRefusal {
-            reason: windowed(legacy, &refusal.reason(vocabulary)),
+            reason: refusal.reason(vocabulary),
             suggestion: None,
             after_enabling: false,
             hint: false,
+            kinds: matches!(refusal.fault, SubjectFault::UnknownKind(_)),
         };
     }
     // §FS-rule-refusals.sentences.every: reparse the token-only repair on this same surface.
@@ -132,6 +139,7 @@ fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefu
             suggestion: settle_every(text, vocabulary),
             after_enabling: false,
             hint: false,
+            kinds: true,
         };
     }
     // §FS-rule-refusals.selectors: a numbered or wildcard component is named as what failed.
@@ -150,6 +158,7 @@ fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefu
         ),
         suggestion: recover(refusal, vocabulary).map(|recovered| recovered.selector()),
         after_enabling: false,
+        kinds: true,
     }
 }
 
@@ -182,6 +191,7 @@ fn answer_as_if_enabled(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -
             .is_some_and(|suggested| suggested.after_enabling),
         suggestion: suggested.map(|suggested| suggested.text),
         hint: false,
+        kinds: true,
     }
 }
 

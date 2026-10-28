@@ -70,7 +70,6 @@ const REFUSED: &[(&str, &str)] = &[
 /// On `check --rule` each refusal prints its final reason alone, with no legacy prefix and no
 /// suffix, and nothing after it (§FS-errors.3.10).
 #[test]
-#[ignore = "red until #1063 closes the whose-clause window; implement removes this"]
 fn check_rule_refuses_a_clause_for_the_part_that_failed() {
     let fx = Fixture::table();
     for (sentence, reason) in REFUSED {
@@ -83,7 +82,6 @@ fn check_rule_refuses_a_clause_for_the_part_that_failed() {
 /// A configured rule declaration's `invalid-rule` carries the same reason (§FS-rules.7.1).
 /// The whitespace rows are left to `check --rule`: a heading's own spacing is not theirs.
 #[test]
-#[ignore = "red until #1063 closes the whose-clause window; implement removes this"]
 fn a_declared_rule_carries_the_same_reason() {
     let rows: Vec<_> = REFUSED
         .iter()
@@ -121,7 +119,6 @@ fn a_declared_rule_carries_the_same_reason() {
 /// On `list --selector` the reason is the rule's, no selector is offered, and no `known kinds:`
 /// line follows, because the kind was recognised (§FS-rule-refusals.selectors, §FS-errors.3.10).
 #[test]
-#[ignore = "red until #1063 closes the whose-clause window; implement removes this"]
 fn the_selector_refuses_a_clause_for_the_part_that_failed() {
     let fx = Fixture::table();
     for (selector, reason) in [
@@ -152,7 +149,6 @@ fn the_selector_refuses_a_clause_for_the_part_that_failed() {
 /// `known kinds:` line, on `check --rule` and every `list --selector` mode
 /// (§FS-rule-refusals.sentences.order stage 5, §FS-errors.3.10).
 #[test]
-#[ignore = "red until #1063 closes the whose-clause window; implement removes this"]
 fn an_unknown_kind_is_refused_before_its_clause() {
     let fx = Fixture::table();
     let run = fx.expect(
@@ -184,7 +180,6 @@ fn an_unknown_kind_is_refused_before_its_clause() {
 /// A version-1 config declares no scalar field, so any whose clause is refused for that, and
 /// the recognised kind adds no `known kinds:` line.
 #[test]
-#[ignore = "red until #1063 closes the whose-clause window; implement removes this"]
 fn a_version_one_config_refuses_every_clause() {
     let fx = Fixture::with(&[
         (
@@ -320,7 +315,6 @@ const LATER: &[(&str, &str, &str)] = &[
 /// A sentence whose clause is accepted and which a later production refuses prints that
 /// production's reason alone, on `check --rule` and as a declared rule (§FS-errors.3.10).
 #[test]
-#[ignore = "red until #1063 closes the whose-clause window; implement removes this"]
 fn a_later_refusal_after_an_accepted_clause_prints_its_reason_alone() {
     let fx = Fixture::table();
     for (sentence, reason, after) in LATER {

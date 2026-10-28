@@ -12,16 +12,6 @@ use crate::config::KindField;
 /// What opens a whose clause after a quantified subject's kind (§FS-rules.2.2).
 pub(super) const WHOSE: &str = " whose ";
 
-/// The suffix every reason the window of §FS-errors.3.10 moves ends in.
-const WINDOW_SUFFIX: &str = "; this wording changes in grund 0.22.0";
-
-/// §FS-errors.3.10: a refusal of a subject spelled with a whose clause keeps the
-/// reason it printed before clauses existed, `unknown kind "<legacy>"`, as a
-/// verbatim prefix, then ` — `, the reason that replaces it, and the suffix.
-pub(super) fn windowed(legacy: &str, message: &str) -> String {
-    format!("unknown kind \"{legacy}\" — {message}{WINDOW_SUFFIX}")
-}
-
 /// Why a whose clause is refused, in the order §FS-rule-refusals.sentences.whose
 /// checks it: the first that fails is the one kept.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -67,8 +57,7 @@ pub(super) struct Field {
 }
 
 impl WhoseFault {
-    /// The final reason (§FS-rule-refusals.sentences.whose), before any modal-word
-    /// append and before the window of §FS-errors.3.10.
+    /// The reason (§FS-rule-refusals.sentences.whose), before any modal-word append.
     pub(super) fn reason(&self) -> String {
         let shape = |clause: &str, what: &str| {
             format!("whose clause \"whose {clause}\" {what}; write whose FIELD is VALUE")
@@ -264,29 +253,11 @@ pub(super) fn split_whose<'a>(text: &'a str, vocab: &RuleVocabulary) -> (&'a str
     }
 }
 
-/// A refusal of a quantified subject that carried a whose clause keeps what
-/// followed the quantifier as the legacy unknown kind (§FS-errors.3.10).
-pub(super) fn with_clause(
-    mut refusal: SubjectRefusal,
-    after_each: &str,
-    clause: Option<&str>,
-) -> SubjectRefusal {
-    if clause.is_some() {
-        refusal.legacy = Some(after_each.into());
-    }
+/// A refusal of a quantified subject, marked where the subject carried a whose
+/// clause, which no form is recovered for (§FS-rule-refusals.sentences.whose).
+pub(super) fn with_clause(mut refusal: SubjectRefusal, clause: Option<&str>) -> SubjectRefusal {
+    refusal.clause = clause.is_some();
     refusal
-}
-
-/// What followed `Each ` or `of each ` in a quantified subject: the text a
-/// sentence whose subject carried a whose clause was refused for as an unknown
-/// kind before clauses existed, which every refusal of it is windowed after
-/// (§FS-errors.3.10).
-pub(super) fn legacy_kind(subject: &str) -> Option<&str> {
-    subject.strip_prefix("Each ").or_else(|| {
-        let rest = subject.strip_prefix("The ")?;
-        rest.split_once(" chapter of each ")
-            .map(|(_, after_each)| after_each)
-    })
 }
 
 /// Whether `text` is an exact ID followed by a whose clause
