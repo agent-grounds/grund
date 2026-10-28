@@ -1,0 +1,8 @@
+wrote AGENTS.md
+exists grund.toml
+
+next:
+  1. declare a first kind in grund.toml, then run `grund init` again so AGENTS.md lists it
+  2. run `grund check`
+  3. allocate an ID:  ID=$(grund id <KIND> "…")  then add it to that kind's home
+see AGENTS.md for the full workflow.

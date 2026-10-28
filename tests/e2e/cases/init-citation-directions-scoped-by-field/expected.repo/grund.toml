@@ -1,0 +1,10 @@
+grund_config_version = 2
+project_name = "demo"
+
+# Scoped only by a field, with no rule (§FS-init.2.3.4.10): neither block has a section.
+
+[schema.kinds.FS]
+folders = ["docs/fs"]
+
+[schema.kinds.FS.fields.front-matter]
+presence = "must"

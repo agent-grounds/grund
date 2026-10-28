@@ -1,0 +1,12 @@
+grund_config_version = 1
+project_name = "demo"
+
+# Grounding and no `[citations]` (§FS-init.2.3.4.10): the grounding sentence alone.
+
+[reference]
+require_grounding = true
+
+[[kinds]]
+kind = "GRUND"
+file = "docs/grund.md"
+title = "Why this project exists"

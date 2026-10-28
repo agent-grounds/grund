@@ -1,0 +1,11 @@
+grund_config_version = 2
+project_name = "demo"
+
+# The tree `grund init` wrote for grounding and no rule (§FS-init.2.3.4.10): the grounding
+# sentence alone, and `check` finds the block current.
+
+[schema.kinds.GRUND]
+files = ["docs/grund.md"]
+
+[rules.citations.grounding]
+must = "file"
