@@ -142,7 +142,11 @@ CITED = (
 # FS-show.md grew by 421 bytes in §FS-show.2.1.2.1, .2.2 and .3.1.3.1, saying the section
 # map, a section read and a JSON anchor answer for front-matter coordinates by citing
 # §FS-fields.front-matter.coordinates, .surfaces and §FS-output-shapes.4.4 (grund#1048).
-BASELINES = {"FS-show.md": 70549, "FS-fmt.md": 103168}
+
+# FS-show.md grew by 1228 bytes in §FS-show.3.5.1 and .3.5.2, saying an invalid-ID hint in a
+# run that loaded no config names the project config below it, as §FS-check.2.2.2.5.1 and
+# .5.2 choose it, in place of the default format (grund#1079).
+BASELINES = {"FS-show.md": 71777, "FS-fmt.md": 103168}
 
 
 def _flat(text):
