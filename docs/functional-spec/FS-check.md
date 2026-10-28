@@ -377,11 +377,11 @@ A `must` or `should` rule, declared or given with `--rule`, earns the warning wh
 
 #### 2.2.2 The message names the likely cause
 
-The message follows what the run was given: the repo root with `[scan] include` set ([§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root)), an explicit path ([§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path)), a hidden file handed by name ([§FS-check.2.2.2.3](FS-check.md#2223-a-hidden-file)), or a `[workspace]` block that put no project in scope ([§FS-check.2.2.2.4](FS-check.md#2224-no-project-in-scope)).
+The message follows what the run was given: the repo root with `[scan] include` set ([§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root)), an explicit path ([§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path)), a hidden file handed by name ([§FS-check.2.2.2.3](FS-check.md#2223-a-hidden-file)), a `[workspace]` block that put no project in scope ([§FS-check.2.2.2.4](FS-check.md#2224-no-project-in-scope)), or a repo root no config applies to, above a project config it did not read ([§FS-check.2.2.2.5](FS-check.md#2225-a-project-config-below-a-run-that-loaded-none)).
 
 ##### 2.2.2.1 The repo root
 
-At repo root (no path, or `grund check .`), v1 names `[scan] include` and its list, with `grund.toml` / `grund init --scaffold` advice. With no kinds ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)), no scaffold is possible; after `found no files.` append: ``This project declares no kinds yet: replace `kinds = []` in `grund.toml` with a `[[kinds]]` table for its first kind, point `[scan] include` at your sources, or pass a path explicitly (`grund check <dir>`).`` Any v2 repair instead names its places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)) or source exclusions ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)), never `[scan] include` or `[[kinds]]`. If recommending a first kind, name `[schema.kinds.<NAME>]`.
+At repo root (no path, or `grund check .`), v1 names `[scan] include` and its list, with `grund.toml` / `grund init --scaffold` advice. A run that loaded no config over a tree holding one below takes [§FS-check.2.2.2.5](FS-check.md#2225-a-project-config-below-a-run-that-loaded-none)'s message instead. With no kinds ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)), no scaffold is possible; after `found no files.` append: ``This project declares no kinds yet: replace `kinds = []` in `grund.toml` with a `[[kinds]]` table for its first kind, point `[scan] include` at your sources, or pass a path explicitly (`grund check <dir>`).`` Any v2 repair instead names its places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)) or source exclusions ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)), never `[scan] include` or `[[kinds]]`. If recommending a first kind, name `[schema.kinds.<NAME>]`.
 
 ##### 2.2.2.2 An explicit path
 
@@ -400,6 +400,30 @@ A hidden file whose extension is *also* unlisted keeps [§FS-check.2.2.2.2](FS-c
 ##### 2.2.2.4 No project in scope
 
 When a `[workspace]` block put no project in scope at all — `include_root = false`, and every member it has is an optional one this checkout does not have ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)) — the message says exactly that. The messages of [§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root) and [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path) would both be false here, because the scan never looked under `[scan] include` and the tree `grund init --scaffold` lays is not what is missing. This one names no remedy either, for the reason [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent)'s finding names none: nothing is misconfigured, and the only thing that changes the answer is a fuller checkout.
+
+##### 2.2.2.5 A project config below a run that loaded none
+
+When the run loaded no config file, so discovery found none at or above where it started and the tree is held to the built-in defaults ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), and the run was scoped to its root as [§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root)'s run is, but a project config lies below that root, the message says that no grund.toml applies and names the config the run did not read. For a tree whose only config is `suite/grund.toml`, run from its root:
+
+```text
+warning: nothing to scan — no grund.toml applies here, so grund used its defaults and found no files. `suite/grund.toml` declares a project this run does not read: run grund from `suite/` (or `grund check suite`), or add a grund.toml here whose [workspace] has members = ["suite"] and include_root = false.
+```
+
+Both routes read that project as it is configured: a run from its directory discovers it ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), and a root `[workspace]` listing it with `include_root = false` checks it and nothing beside it ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)). [§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root)'s message would be false here twice over: the `[scan] include` it names is the defaults', which nobody configured, and `grund init --scaffold` would lay a second project above the one already declared. This message never offers the scaffold, for the reason [§FS-check.2.2.2.4](FS-check.md#2224-no-project-in-scope) gives. The exit code, the `empty-scan` code and the JSON form stay [§FS-check.2.2.3](FS-check.md#223-exit-code-json-and-what-suppresses-it)'s, and a run that loaded a config, or has none below, keeps the message it had.
+
+###### 2.2.2.5.1 Which configs it names
+
+A project config is the file discovery would load from its directory: the bare `grund.toml`, or `.agents/grund.toml` where no bare one sits beside it ([§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both)), so `suite/.agents/grund.toml` is named as itself. Each is spelled from the report base as every other path of the run is ([§FS-config.3.6](FS-config.md#36-output--report-format), [§FS-workspace.5.3](FS-workspace.md#53-the-empty-scan-caution-names-each-project-from-the-report-base)), and so is its directory in the routes: the config root, which for `.agents/grund.toml` is the directory holding `.agents/` ([§FS-config.1](FS-config.md#1-file-location-and-discovery)). Several are named in path order, at most three, with `and N more` counting the rest; the verb and the routes then speak of all of them, and `members` lists every directory when every config is named:
+
+```text
+warning: nothing to scan — no grund.toml applies here, so grund used its defaults and found no files. `other/grund.toml` and `suite/grund.toml` declare projects this run does not read: run grund from one of their directories (or `grund check other`), or add a grund.toml here whose [workspace] has members = ["other", "suite"] and include_root = false.
+```
+
+Past three, the names read `` `a/grund.toml`, `b/grund.toml`, `c/grund.toml` and 2 more declare projects ``, and the workspace route reads `add a grund.toml here whose [workspace] lists their directories in members and has include_root = false`, because a list of the three it named would leave the rest unread.
+
+###### 2.2.2.5.2 The search is bounded and follows the scan
+
+The search runs only where its answer is read, in this message and in the invalid-ID hint of [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects), and only in a run that loaded no config, so no other run pays for it. It asks each directory at most three levels below the root for a config, so `a/b/c/grund.toml` is found and `a/b/c/d/grund.toml` is not. It enters only a directory the scan would enter: never a hidden one ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), one the defaults' `[scan] exclude` names, or one the ignore files exclude ([§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)). It does not look below a directory where it found a config, because what lies there is that project's own. A config only those rules hide is not named, and a run that finds none keeps [§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root)'s message.
 
 #### 2.2.3 Exit code, JSON, and what suppresses it
 

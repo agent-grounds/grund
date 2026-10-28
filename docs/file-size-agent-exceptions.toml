@@ -148,10 +148,12 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 1000, unit = "lines" }
+max_accepted = { value = 1007, unit = "lines" }
 until = "the check specification is partitioned into recognition, reporting, finding and watch declarations with existing section citations migrated"
 reason = """
 Missing boundary: citation recognition, command reporting, the finding catalog and the watch points extended for issue 473 still share one declaration. Splitting them into separate declarations requires a mapped migration of their stable numbered section IDs and callers; that migration is outside the specification-only contracts for issues #483 and #473. This entry records that existing debt while the configured-marker recognition and watch points are pinned. Issue #515's approved proposal adds §FS-check.3.24.3 beside the local-section finding it extends, where the code is to cite it, so the ceiling moved to the next step rather than the finding catalog moving out first.
+
+Issue #1079 adds §FS-check.2.2.2.5 and its two children beside the four empty-scan arms it completes, the message a run that loaded no config gives when a project config lies below it, since the arms share §FS-check.2.2.2's lead and the code that picks between them. The same mapped migration retires the debt and remains outside a message fix. The ceiling accepts exactly the measured 1007 non-blank lines, with no growth allowance.
 """
 [[exceptions]]
 path = "crates/grund-core/src/testing.rs"
@@ -274,7 +276,7 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["large-file-default"]
 kind = "deferred"
-max_accepted = { value = 290537, unit = "bytes" }
+max_accepted = { value = 301495, unit = "bytes" }
 until = "the finding catalog moves into independently declared child specifications and existing FS-check section citations are migrated"
 reason = """
 The check specification still combines recognition, reporting, its finding catalog and watch behavior in one declaration. Issue #823 adds only a cross-reference to the defining member diagnostic point in FS-workspace.5.1.1. Missing boundary: independent finding specifications with a stable mapping for current FS-check section citations; moving that catalog is outside this specification-only diagnostic change. This byte ceiling accepts only the current measured file size, separately from the existing line-budget exception.
@@ -294,6 +296,8 @@ Issue #932 adds §FS-check.3.5.3.1 beneath the existing agents-init message poin
 Issue #1023 adds version-correct offline help to the existing no-kinds message point, FS-check.4.5.2. The file already measured 289297 bytes on arrival; this specification adds 515 bytes. The same mapped migration of the finding catalog retires the debt, and remains outside this human-help correction. The byte ceiling accepts exactly the measured 289812 bytes, with no growth allowance.
 
 Issue #1027 appends each check's remedy to its message, so the message examples of §FS-check.1.3.7, §FS-check.3.6.3, §FS-check.3.11 and §FS-check.3.13 gain their remedy clauses in place, and §FS-check.2.4 says the scan-failure line ends in `io`'s remedy. The same mapped migration of the finding catalog retires the debt and remains outside a message change. The byte ceiling accepts exactly the measured 290537 bytes, with no growth allowance.
+
+Issue #1079 adds the fifth empty-scan arm, §FS-check.2.2.2.5, with its two children. The file already measured 296738 bytes on arrival, past the 290537 recorded here; this specification takes it to 301495. The same mapped migration of the finding catalog retires the debt and remains outside a message fix. The byte ceiling accepts exactly the measured 301495 bytes, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-init.md"
