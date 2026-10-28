@@ -190,7 +190,11 @@ bullets of the rows that land there and the closing line; the root block keeps
 the bullets of the rows that land at the root
 ([§FS-init.2.3.5.12.1](../functional-spec/FS-init.md#235121-what-a-scoped-block-holds-in-order)), so the single section the
 [citation-directions page](citation-directions.md) shows is split by
-directory. The example under
+directory. A config that declares no citation rule has no bullets and no
+legend to split: a scoped block whose rows ground holds the grounding sentence
+alone, `Every file under tests/e2e/ must cite one.`, and a block where no
+grounding clause lands has no citation-directions section at all
+([§FS-init.2.3.4.10](../functional-spec/FS-init.md#23410-citation-direction)). The example under
 [`examples/scoped-guidance`](../../examples/scoped-guidance/) records one run:
 
 ```text
