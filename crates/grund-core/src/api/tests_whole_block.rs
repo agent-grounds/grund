@@ -12,8 +12,9 @@ use super::{CheckOpts, CheckOutput, check_with_opts};
 use crate::Finding;
 use crate::config::load_config;
 use crate::grammar::block_sections;
+use crate::templates::ConversationSurface;
 use crate::testing::{current_block, scan_tree, test_root, write};
-use crate::writers::{InitOpts, WorkspaceBlocks, expected, init};
+use crate::writers::{InitOpts, WorkspaceBlocks, expected, init, render_agents_append_block_at};
 
 const BEGIN: &str = "<!-- BEGIN GRUND MANAGED BLOCK -->";
 const END: &str = "<!-- END GRUND MANAGED BLOCK -->";
@@ -152,6 +153,35 @@ fn expected_root_block_is_inits_on_the_plain_and_linked_surfaces() {
 #[test]
 fn block_sections_name_every_part_of_the_block() {
     let block = current_block();
+    let sections = block_sections(&block);
+    let nouns: Vec<String> = sections.iter().map(|s| s.noun()).collect();
+    assert_eq!(
+        nouns,
+        [
+            "citation scheme",
+            "grounding from a citation",
+            "project map",
+            "declarations and citations",
+            "rules",
+            "clickable citations",
+        ]
+    );
+    let whole: String = sections.iter().map(|s| s.bytes).collect();
+    assert_eq!(whole, block[..block.find(END).expect("end")]);
+}
+
+/// §FS-check.3.5.3, §FS-init.2.3.4.10: a config that declares a rule renders
+/// the citation directions section, and the parts name it in block order.
+#[test]
+fn block_sections_name_the_directions_a_declared_rule_renders() {
+    let root = test_root("block_sections_name_the_directions_a_declared_rule_renders");
+    write(
+        &root.join("grund.toml"),
+        "[citations]\n[citations.e2e]\nmust = [\"FS\"]\n",
+    );
+    let config = load_config(&root).expect("config");
+    let block =
+        render_agents_append_block_at("demo", &config, &root, true, ConversationSurface::Plain);
     let sections = block_sections(&block);
     let nouns: Vec<String> = sections.iter().map(|s| s.noun()).collect();
     assert_eq!(

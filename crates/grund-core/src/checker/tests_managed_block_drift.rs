@@ -291,9 +291,11 @@ fn citation_directions_section_extraction_is_position_independent() {
 /// of the deprecated process adapter.
 #[test]
 fn agents_init_messages_cover_all_five_final_templates() {
+    // §FS-init.2.3.4.10: the default config declares no rule, so its block has no
+    // directions section; the clickable citations section is always there.
     let stale = current_block().replacen(
-        "### Citation directions\n",
-        "### Citation directions\nstale generated guidance\n",
+        "### Clickable citations\n",
+        "### Clickable citations\nstale generated guidance\n",
         1,
     );
     // §FS-init.2.3.7.3.1: `unsupported` names this binary's maximum, not the selection.
@@ -320,7 +322,7 @@ fn agents_init_messages_cover_all_five_final_templates() {
         (
             "stale",
             stale.as_str(),
-            "repo maintenance: stale grund init block: the citation directions section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)",
+            "repo maintenance: stale grund init block: the clickable citations section differs from grund.toml — run `grund init` to refresh (does not affect citation validity)",
         ),
         (
             "missing",
