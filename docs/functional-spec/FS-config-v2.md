@@ -99,7 +99,7 @@ The reader keeps the line every value was written at, so the one validation pass
 
 ### reader.5: An array may span lines
 
-An array value may be written across lines. It opens on its key's line, and every line after it, with its `#` comment taken off, belongs to it until its `[` closes outside a string, so no line inside it is read as a header or a key. It is one value, read and located at its key's line ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)), and it may end in the trailing comma TOML allows before its `]`. One still open at the end of the file is refused at its key's line as `unclosed array`.
+An array value may be written across lines. It opens on its key's line, and every line after it, with its `#` comment taken off, belongs to it until its `[` closes outside a string, so no line inside it is read as a header or a key. It is one value, read and located at its key's line ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)), and it may end in the trailing comma TOML allows before its `]`. Its elements are then read as a one-line list's are, each ending only at a comma outside a string ([§FS-config.3.11](FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string)). One still open at the end of the file is refused at its key's line as `unclosed array`.
 
 ## defaults: The v2 epoch
 

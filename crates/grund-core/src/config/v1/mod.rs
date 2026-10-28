@@ -24,6 +24,8 @@ mod scan_block;
 mod tests_capture_contract;
 #[cfg(test)]
 mod tests_key_gate;
+#[cfg(test)]
+mod tests_string_list;
 mod values;
 
 use anyhow::Result;
