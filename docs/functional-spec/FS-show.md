@@ -522,6 +522,15 @@ Without an exact off-grammar declaration, a grammar-rejected argument fails with
 
 Name the effective template and loaded key: v1 `[id] format` or override `[[kinds]] format` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)); v2 `[schema] id_format` or override `[schema.kinds.<KIND>] id_format` ([§FS-config-v2.schema.1](FS-config-v2.md#schema1-schema)). Use the override's value; use the global template only without a kind or override. This covers bare/show/refs and core API hints, including qualified refusals. Preserve resolution, API records, codes/severity, streams, JSON and exit status; structured formats stay templates.
 
+A run that loaded no config file has no loaded key, and names the defaults' `[id] format` as above, unless a project config lies below its root, found and named as [§FS-check.2.2.2.5.1](FS-check.md#22251-which-configs-it-names) and [§FS-check.2.2.2.5.2](FS-check.md#22252-the-search-is-bounded-and-follows-the-scan) say. Then the template is not the cause, and the hint is still one line that says so and names that config. It offers the workspace route and running from the config's directory, and drops the `grund list` tail, which would list nothing here:
+
+```text
+invalid ID `FS-login`
+hint: no grund.toml applies here, so grund read `FS-login` against its defaults. `suite/grund.toml` declares a project this run does not read: run grund from `suite/`, or add a grund.toml here whose [workspace] has members = ["suite"] and include_root = false
+```
+
+Several configs are named as [§FS-check.2.2.2.5.1](FS-check.md#22251-which-configs-it-names) names them, and `run grund from one of their directories` replaces the single directory. Resolution, codes, streams, exit `1` and the hint-free JSON ([§FS-output-shapes.6.1.2](FS-output-shapes.md#612-from-0160)) do not change.
+
 Grammar-rejected sections count (`FS-widget.1.nope` with numbered-only sections). Bare and explicit `show` keep the format/list hint; non-path operands get no check breadcrumb ([§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)). Parsed but absent numeric sections keep `--toc`.
 
 #### 3.5.2 The filesystem-path migration breadcrumb
