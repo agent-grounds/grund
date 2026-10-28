@@ -17,6 +17,7 @@ command's own `--help` page links the guide and example that cover it
 | [Python API](python-api.md) | [`examples/python-api`](../../examples/python-api/) |
 | [Rust API](rust-api.md) | [`examples/rust-api`](../../examples/rust-api/) |
 | [Citation directions](citation-directions.md) | — |
+| [Repository options](repository-options.md): [citers in a repository you cannot read](repository-options.md#citers-in-a-repository-you-cannot-read) | [`examples/downstream-citers`](../../examples/downstream-citers/) |
 | [Seeing a repository's schema](schema.md) | [`examples/schema`](../../examples/schema/) |
 | [Clickable citations](clickable-citations.md) | — |
 | [Coordinate sizes](coordinate-sizes.md) | — |

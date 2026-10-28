@@ -13,4 +13,7 @@ exclude = [
   # The fmt-reporting example is the tree just after a rename, whose stale link
   # is what its `fmt` run re-derives (§FS-fmt.3.7): the link is the lesson.
   "examples/fmt-reporting/repo/docs/functional-spec/FS-login\\.md",
+  # The downstream-citers run is the tree just after a listed point's file is
+  # deleted, whose page `check` then refuses (§FS-examples.2): the link is the lesson.
+  "examples/downstream-citers/3-deleted/repo/docs/functional-spec/security-providers\\.md",
 ]

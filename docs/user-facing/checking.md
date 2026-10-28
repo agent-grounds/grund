@@ -39,6 +39,11 @@ an unused warning alone is no reason to invent one. Ordinary use rows stay
 unannotated; when a summary mixes entry and use sites, its annotation identifies
 only the excluded lines (and columns when they share a line).
 
+When the use lives in a repository this check cannot read — a closed downstream
+that cites your points through a workspace alias — commit a generated page of its
+citations instead, as [Citers in a repository you cannot read](repository-options.md#citers-in-a-repository-you-cannot-read)
+describes, so your own gate guards them. Never write such a page by hand to quiet the warning.
+
 ## A misplaced declaration beneath another project's config
 
 A nested `grund.toml` does not make its directory a workspace member. Until an
