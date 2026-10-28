@@ -78,6 +78,20 @@ struct Gate {
     key: String,
     resume: mpsc::Receiver<()>,
 }
+impl Gate {
+    /// Hold the coordinator until the test releases the barrier or ends, however late; past
+    /// `release_limit` only a note is printed, never a panic (§AR-bindings.3.2).
+    fn wait(self, release_limit: Duration) {
+        if let Err(mpsc::RecvTimeoutError::Timeout) = self.resume.recv_timeout(release_limit) {
+            eprintln!(
+                "barrier `{}` released later than {release_limit:?}; still waiting",
+                self.key
+            );
+            // A disconnect means the harness and every release handle are gone.
+            let _ = self.resume.recv();
+        }
+    }
+}
 pub struct Harness {
     pub control: Arc<Control>,
     events: mpsc::Receiver<WatchObservation>,
@@ -163,9 +177,7 @@ impl Harness {
             };
             tx.send(event).unwrap();
             if let Some(gate) = gate {
-                gate.resume
-                    .recv_timeout(release_limit)
-                    .expect("bounded barrier release");
+                gate.wait(release_limit);
             }
         });
         if let Some(fail) = fail {
