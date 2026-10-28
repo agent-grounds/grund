@@ -158,7 +158,6 @@ fn assert_settled(target: &Path, files: &[&str]) {
 /// §FS-init.2.3.4.10: the issue's config, and its version-2 spelling, declare
 /// kinds and no rule: no section, and one blank line where it stood.
 #[test]
-#[ignore = "red until #1075 renders Citation directions only from declared rules; implement removes this"]
 fn kinds_and_no_rules_render_no_section() {
     for (name, config) in [("v1_plain", V1_PLAIN), ("v2_plain", V2_PLAIN)] {
         let target = tree(name, config, &[]);
@@ -178,7 +177,6 @@ fn kinds_and_no_rules_render_no_section() {
 /// §FS-init.2.3.4.4.2: `kinds = []` declares no rule either, so its "No kind is
 /// declared yet" paragraph goes with the section.
 #[test]
-#[ignore = "red until #1075 renders Citation directions only from declared rules; implement removes this"]
 fn no_kinds_render_no_section() {
     for (name, config) in [("v1_no_kinds", V1_NO_KINDS), ("v2_no_kinds", V2_NO_KINDS)] {
         let target = tree(name, config, &[]);
@@ -191,7 +189,6 @@ fn no_kinds_render_no_section() {
 /// §FS-init.2.3.4.10, §FS-init.2.3.5.7: grounding without rules is the heading
 /// and the grounding sentence alone, in either config version.
 #[test]
-#[ignore = "red until #1075 renders Citation directions only from declared rules; implement removes this"]
 fn grounding_without_rules_is_the_grounding_sentence_alone() {
     for (name, config) in [
         ("v1_grounding", V1_GROUNDING),
@@ -216,7 +213,6 @@ fn grounding_without_rules_is_the_grounding_sentence_alone() {
 /// and the scoped block holds its grounding sentence with no legend and no
 /// closing line.
 #[test]
-#[ignore = "red until #1075 renders Citation directions only from declared rules; implement removes this"]
 fn grounding_only_in_a_scoped_home_leaves_the_root_without_a_section() {
     let target = tree("v2_scoped_grounding", V2_SCOPED_GROUNDING, &["tests/e2e"]);
     init(&target);
@@ -240,7 +236,6 @@ fn grounding_only_in_a_scoped_home_leaves_the_root_without_a_section() {
 /// §FS-init.2.3.4.10: a config scoped only by a field renders no section in
 /// either block, and the root block is whole from its first byte.
 #[test]
-#[ignore = "red until #1075 renders Citation directions only from declared rules; implement removes this"]
 fn a_config_scoped_only_by_a_field_renders_no_section_anywhere() {
     let target = tree("v2_scoped_field", V2_SCOPED_FIELD, &["docs/fs"]);
     init(&target);
@@ -261,7 +256,6 @@ fn a_config_scoped_only_by_a_field_renders_no_section_anywhere() {
 /// the render, so `check` names its citation directions section and `init
 /// --check` would rewrite it.
 #[test]
-#[ignore = "red until #1075 renders Citation directions only from declared rules; implement removes this"]
 fn a_block_still_carrying_the_static_sentence_is_stale() {
     for (name, config) in [("v1_stale", V1_PLAIN), ("v2_stale", V2_PLAIN)] {
         let target = tree(name, config, &[]);

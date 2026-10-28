@@ -180,7 +180,8 @@ fn citation_directions_drift_compares_managed_block_only() {
         "**tests/e2e/** that cites anything must cite FS",
         "**tests/e2e/** that cites anything should cite GOAL",
     );
-    let expected = citation_directions_section(config.project(), config.run());
+    let expected = citation_directions_section(config.project(), config.run())
+        .expect("the config declares rules");
     write(
         &root.join("AGENTS.md"),
         &format!("# demo\n\n{stale}\n\n## Notes\n\n{expected}\n"),
@@ -210,7 +211,8 @@ fn citation_directions_drift_rejects_extra_managed_section_bytes() {
     let config = load_config(&root).expect("load config");
     let fresh =
         render_agents_append_block_at("demo", &config, &root, true, ConversationSurface::Plain);
-    let expected = citation_directions_section(config.project(), config.run());
+    let expected = citation_directions_section(config.project(), config.run())
+        .expect("the config declares rules");
     let stale = fresh.replace(
         &expected,
         &format!("{expected}\n\nstale hand-edited citation guidance"),

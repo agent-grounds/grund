@@ -39,7 +39,7 @@ fn render(name: &str, config: &str) -> String {
     let root = test_root(name);
     write(&root.join("grund.toml"), config);
     let config = load_config(&root).expect("load config");
-    citation_directions_section(config.project(), config.run())
+    citation_directions_section(config.project(), config.run()).expect("the config declares rules")
 }
 
 /// The opening paragraph when only the `tests/e2e/` home grounds: the homeless

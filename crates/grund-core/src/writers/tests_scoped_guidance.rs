@@ -183,7 +183,6 @@ fn init_v2(name: &str, rows: &str, dirs: &[&str]) -> std::path::PathBuf {
 /// line stays where it stood, and the scoped block holds the grounding sentence
 /// alone.
 #[test]
-#[ignore = "red until #1075 renders Citation directions only from declared rules; implement removes this"]
 fn the_swap_takes_a_section_only_scoped_rows_ground_out_with_its_separator() {
     let root = init_v2(
         "scoped_grounding_swap",
@@ -210,7 +209,6 @@ fn the_swap_takes_a_section_only_scoped_rows_ground_out_with_its_separator() {
 /// neither block has a section, so there is nothing to swap and the root block
 /// is whole from its first byte.
 #[test]
-#[ignore = "red until #1075 renders Citation directions only from declared rules; implement removes this"]
 fn a_config_scoped_only_by_a_field_has_no_section_to_swap() {
     let root = init_v2(
         "scoped_field_swap",

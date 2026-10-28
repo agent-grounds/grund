@@ -11,13 +11,26 @@ mod init_fixture;
 
 use init_fixture::{manifest_dir, run_grund, workdir};
 
-const CITATION_DIRECTIONS_URL: &str =
-    "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/citation-directions.md";
+/// §FS-init.2.3.4.10: the starter config declares no citation rule, so a fresh
+/// block has no `### Citation directions` section, and the guide it once linked
+/// is the one `grund guide citations` prints from the installed binary.
+fn assert_no_directions_and_the_guide_prints(form: &str, agents: &str) {
+    assert!(
+        !agents.contains("### Citation directions"),
+        "{form} AGENTS.md declares no citation rule, so it has no Citation directions section"
+    );
+    let guide = run_grund(&["guide", "citations"], manifest_dir());
+    let guide = String::from_utf8_lossy(&guide.stdout);
+    assert!(
+        guide.contains("<!-- BEGIN citation-directions -->\n# Citation directions\n"),
+        "`grund guide citations` should print the citation-directions guide, got:\n{guide}"
+    );
+}
 
 #[test]
 fn init_default_writes_canonical_pair_and_passes_check() {
     // §FS-init.2.1 (default form) + §FS-config.1 (config file location) +
-    // §FS-init.2.3.4.10 (reachable static citation-direction guidance, in AGENTS.md).
+    // §FS-init.2.3.4.10 (no rule declared, no Citation directions section).
     let target = workdir("init_default_writes_canonical_pair_and_passes_check");
     let output = run_grund(
         &["init", target.to_str().unwrap(), "--agents-md"],
@@ -42,13 +55,10 @@ fn init_default_writes_canonical_pair_and_passes_check() {
         "init must NOT write .agents/grund.toml — that form is discovered, not generated"
     );
 
-    // §FS-init.2.4.5: the managed block links the guide; the minimal grund.toml does not.
+    // §FS-init.2.4.5: `grund guide citations` prints the guide; neither file links it.
     let agents = fs::read_to_string(target.join("AGENTS.md")).expect("read AGENTS.md");
     let grund_toml = fs::read_to_string(target.join("grund.toml")).expect("read grund.toml");
-    assert!(
-        agents.contains(CITATION_DIRECTIONS_URL),
-        "fresh AGENTS.md should link to the reachable canonical citation directions page"
-    );
+    assert_no_directions_and_the_guide_prints("fresh", &agents);
     for (surface, contents) in [("AGENTS.md", &agents), ("grund.toml", &grund_toml)] {
         assert!(
             !contents.contains("See docs/user-facing/citation-directions.md"),
@@ -122,10 +132,7 @@ fn init_scaffold_form_emits_full_scaffold_and_check_is_clean() {
         grund_toml.contains("project_name = \"DemoProject\""),
         "grund.toml must carry project_name from --name"
     );
-    assert!(
-        agents.contains(CITATION_DIRECTIONS_URL),
-        "--scaffold AGENTS.md should link to the reachable canonical citation directions page"
-    );
+    assert_no_directions_and_the_guide_prints("--scaffold", &agents);
     assert!(
         !agents.contains("See docs/user-facing/citation-directions.md")
             && !grund_toml.contains("See docs/user-facing/citation-directions.md"),

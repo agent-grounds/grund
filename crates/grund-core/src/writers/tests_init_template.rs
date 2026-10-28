@@ -120,7 +120,8 @@ fn the_none_template_writes_a_config_with_no_kinds() {
 
 /// §FS-init.2.3.4.4.2: the block a config with no kinds renders names no empty
 /// set, and teaches the first `[schema.kinds.<KIND>]` table of the v2 file
-/// `none` writes instead (§FS-init.2.4.9).
+/// `none` writes instead (§FS-init.2.4.9); it declares no rule, so it has no
+/// Citation directions section (§FS-init.2.3.4.10).
 #[test]
 fn the_none_template_block_teaches_the_first_kind() {
     let root = test_root("init_template_none_block");
@@ -137,12 +138,8 @@ fn the_none_template_block_teaches_the_first_kind() {
         ),
         "{block}"
     );
-    assert!(
-        block.contains(
-            "### Citation directions\n\nNo kind is declared yet, so no citation direction applies."
-        ),
-        "{block}"
-    );
+    assert!(!block.contains("### Citation directions"), "{block}");
+    assert!(!block.contains("No kind is declared yet"), "{block}");
 }
 
 /// §FS-init.1.6.5: an explicit template over an existing config keeps the config

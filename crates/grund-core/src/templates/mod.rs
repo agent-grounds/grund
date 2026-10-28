@@ -54,7 +54,9 @@ pub(crate) use assets::{
     FS_FILE_TEMPLATE, FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE,
     REQ_README_TEMPLATE, Template, render_grund_toml, render_scaffold_id_shapes,
 };
-pub(crate) use citation_directions::citation_directions_section;
+pub(crate) use citation_directions::{
+    citation_directions_placeholder, citation_directions_section,
+};
 pub(crate) use clickable_citations::{ConversationSurface, clickable_citations_section};
 pub(crate) use scoped_guidance::{Layout, declaration_shapes_section};
 
@@ -74,6 +76,10 @@ mod tests_citation_directions;
 mod tests_citation_grounding;
 #[cfg(test)]
 mod tests_clickable_citations;
+#[cfg(test)]
+mod tests_directions_without_rules;
+#[cfg(test)]
+mod tests_documented_directions;
 #[cfg(test)]
 mod tests_prohibition_targets;
 #[cfg(test)]

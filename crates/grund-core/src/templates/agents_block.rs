@@ -12,7 +12,7 @@
 //! (`writers/init_render.rs`).
 
 use super::assets::{AGENTS_PROJECT_NAMESPACES_TEMPLATE, AGENTS_TEMPLATE, canonical_template_text};
-use super::citation_directions::citation_directions_section;
+use super::citation_directions::{citation_directions_placeholder, citation_directions_section};
 use super::clickable_citations::{ConversationSurface, clickable_citations_section};
 use crate::config::{Compiled, KindConfig, Place, Project, Run, guided_kind, kind_prefixes};
 use crate::grammar::{
@@ -125,7 +125,7 @@ fn agents_template_substitutions(
         ("{DECLARATION_MAP}", declaration_map(project)),
         (
             "{CITATION_DIRECTIONS}",
-            citation_directions_section(project, run),
+            citation_directions_placeholder(citation_directions_section(project, run)),
         ),
         (
             "{CLICKABLE_CITATIONS}",

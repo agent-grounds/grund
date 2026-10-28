@@ -96,7 +96,9 @@ must = ["FS"]
         pointer.ends_with("- `docs/spec/AGENTS.md`: FS\n"),
         "{pointer}"
     );
-    let root = scoped.root_citation_directions(config.project(), config.run());
+    let root = scoped
+        .root_citation_directions(config.project(), config.run())
+        .expect("the config declares rules");
     assert!(
         root.contains("**AR**") && root.contains("**ADR**"),
         "{root}"
@@ -147,7 +149,9 @@ must = "file"
     );
     let scoped = layout(&config, &[]);
     let (project, run) = (config.project(), config.run());
-    let root = scoped.root_citation_directions(project, run);
+    let root = scoped
+        .root_citation_directions(project, run)
+        .expect("the config declares rules");
     assert!(
         root.contains(
             "(`grund check --suggestions`). Every source file must cite a declared ID or declare one inline.\n"
