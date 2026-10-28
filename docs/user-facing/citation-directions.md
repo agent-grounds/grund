@@ -58,6 +58,16 @@ The finding names the applicable repair; ordinary citations keep their
 plain-link advice, and suggestions keep their existing wording
 ([the index-entry repair specification](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry)).
 
+The generated entrypoint states the directions a config declares and no
+others ([the citation-direction rule of `grund init`](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#23410-citation-direction)).
+A config that declares no citation rule has no `### Citation directions`
+section in its managed block, whatever kinds it declares. A grounding ladder
+declares no rule, so where grounding is on, with
+`[reference] require_grounding = true` in version 1 or a
+`[rules.citations.grounding]` ladder with a `must` rung in version 2, the
+section holds the grounding sentence alone, with no legend and no closing line:
+`Every source file must cite a declared ID or declare one inline.`
+
 The config and the generated section below are the same example. The TOML, a
 version-1 config, is shown beside the Markdown it renders:
 
@@ -91,6 +101,46 @@ should = ["FS|AR"]
 - Each source file outside the Project map (**code**) that cites anything should cite FS or AR.
 Anything not listed above is allowed.
 ```
+
+grund's own convention climbs: goals cite why the project exists, specs cite
+goals, architecture and decisions cite specs, and code and executable tests cite
+the specs they realize. A config holds none of it until it declares it, so the
+convention is a recommended starting ruleset rather than a default. Over the
+kinds `grund init`'s starter config declares, in version 2 and at `should`, it
+reads:
+
+```toml
+[rules.citations.GOAL]
+should = ["GRUND|GOAL"]
+
+[rules.citations.FS]
+should = ["GOAL|FS"]
+
+[rules.citations.REQ]
+should = ["GRUND|GOAL"]
+
+[rules.citations.AR]
+should = ["FS|GOAL"]
+
+[rules.citations.DF]
+should = ["FS|GOAL"]
+
+[rules.citations.DA]
+should = ["AR|FS"]
+
+[rules.citations.e2e]
+should = ["FS"]
+
+[rules.citations.integration]
+should = ["AR"]
+
+[rules.citations.code]
+should = ["FS|AR"]
+```
+
+Start there, run `grund check --suggestions`, and promote each kind's rule to
+`must` once the repository passes it. Choose a different set only where the
+repository's documents genuinely depend on each other differently.
 
 ## One member that cites no other project
 
