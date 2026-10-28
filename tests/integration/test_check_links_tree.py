@@ -26,12 +26,8 @@ ADDED = "examples/grund1085-added-by-branch"
 ABSENT = "examples/grund1085-absent"
 MISSING = "canonical self-link target is missing"
 
-# red until #1085 collects the tree/main form; implement removes each marker below.
-RED = unittest.expectedFailure
-
 
 class SelfLinkFormsTests(unittest.TestCase):
-    @RED
     def test_self_links_collects_both_forms(self):
         blob = f"{SELF}/blob/main/{ADDED}/README.md"
         tree = f"{SELF}/tree/main/{ADDED}"
@@ -40,14 +36,12 @@ class SelfLinkFormsTests(unittest.TestCase):
             sorted([blob, tree]), check_links.self_links(f"{blob}\n{tree}\n{other}\n")
         )
 
-    @RED
     def test_a_tree_link_maps_to_its_directory(self):
         root = ROOT
         expected = (root / "examples").resolve().as_uri()
         self.assertEqual(expected, check_links._local_url(f"{SELF}/tree/main/examples", root))
         self.assertEqual(expected, check_links._local_url(f"{SELF}/tree/main/examples/", root))
 
-    @RED
     def test_a_fragment_on_a_tree_link_is_malformed(self):
         with self.assertRaisesRegex(
             check_links.SelfLinkError, "malformed canonical self-link.*fragment"
@@ -80,7 +74,6 @@ class TreeSelfLinkGateTests(unittest.TestCase):
         self.assertNotEqual(0, code)
         self.assertIn(MISSING, output)
 
-    @RED
     def test_tree_link_to_a_directory_the_branch_adds_stays_local(self):
         for url in (f"{SELF}/tree/main/{ADDED}", f"{SELF}/tree/main/{ADDED}/"):
             with self.subTest(url=url):
@@ -88,21 +81,18 @@ class TreeSelfLinkGateTests(unittest.TestCase):
                 self.assertEqual([], sent, "the gate sent a self-link to the network")
                 self.assertEqual(0, code, output)
 
-    @RED
     def test_tree_link_to_a_missing_directory_fails_the_internal_pass(self):
         code, output, sent = self.gate(f"See [nothing]({SELF}/tree/main/{ABSENT}).")
         self.assertEqual([], sent, "the gate sent a self-link to the network")
         self.assertNotEqual(0, code, output)
         self.assertIn(f"{MISSING}: {ABSENT}", output)
 
-    @RED
     def test_tree_link_to_a_file_fails_as_missing(self):
         code, output, sent = self.gate(f"See [a file]({SELF}/tree/main/{ADDED}/README.md).")
         self.assertEqual([], sent, "the gate sent a self-link to the network")
         self.assertNotEqual(0, code, output)
         self.assertIn(MISSING, output)
 
-    @RED
     def test_tree_link_with_a_fragment_is_malformed(self):
         code, output, sent = self.gate(f"See [a heading]({SELF}/tree/main/{ADDED}#added).")
         self.assertEqual([], sent, "the gate sent a self-link to the network")
