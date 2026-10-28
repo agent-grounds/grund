@@ -518,57 +518,59 @@ docs/operations.md:3: error: value mismatch for FS-session.1 (component 1.1): bo
 
 ### 3.10 The whose-clause wording migration
 
-Before a rule subject could carry a whose clause
-([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)), every subject spelled with one was refused as an unknown
-kind: `Each SWR whose verfication is Test` printed `unknown kind "SWR whose
-verfication is Test"`, the whole text after `Each ` or `of each ` up to the
-modality read as one kind name. The refusals that stay are now answered for the
-part that failed ([§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)). Those are bytes a
-consumer may match, so the change takes the warning release of
-[§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather than replacing the reason outright
-([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), D10).
+Before a rule subject could carry a whose clause ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)), every subject
+spelled with one was refused as an unknown kind: `Each SWR whose verfication is
+Test` printed `unknown kind "SWR whose verfication is Test"`, the whole text
+after `Each ` or `of each ` up to the modality read as one kind name. The
+refusals that stay are now answered for the part that failed
+([§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)). Those were bytes a consumer may match, so
+the change took the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather
+than replacing the reason outright ([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), D10).
 
-In `0.21.0` the complete legacy reason stays a verbatim contiguous prefix,
-followed by ` — `, the reason of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) with any
-append and accepted forms it carries, and the suffix `; this wording changes in
-grund 0.22.0`. It holds on `check --rule`, on a configured rule declaration's
-`invalid-rule` finding, and on every `list --selector` mode. Whatever followed
-the legacy reason on the next line still follows it for the whole window: on
-`list --selector` that is `known kinds:` and the configured kinds, and on
-`check --rule` nothing, save after an unknown kind, where `known kinds:` followed
-and still follows.
+Its window opened in `0.21.0` and closed in `0.22.0` (#1063). Until then the
+complete legacy reason stayed a verbatim contiguous prefix, followed by ` — `,
+the reason of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) with any append and accepted
+forms it carries, and the suffix `; this wording changes in grund 0.22.0`, on
+`check --rule`, on a configured rule declaration's `invalid-rule` finding, and
+on every `list --selector` mode. The window covered every refusal of a sentence
+whose subject carried a whose clause from the subject on, not only the clause's
+own: a sentence whose clause is accepted but which a later production refuses,
+for its quantifier, a prohibition, an object kind or a chapter subject that
+would have chapters, printed the same prefix, ` — `, the later production's
+reason and the suffix, which ended the whole message. Whatever had followed the
+legacy reason on the next line still followed it: on `list --selector` that was
+`known kinds:` and the configured kinds.
 
-The window covers every refusal of a sentence whose subject carried a whose
-clause from the subject on, not only the clause's own. A sentence whose clause
-is now accepted but which a later production refuses, for its quantifier, a
-prohibition, an object kind or a chapter subject that would have chapters, was
-refused before as the same unknown kind, so it prints the same prefix, ` — `,
-the later production's reason with any append and accepted form it carries, and
-the suffix, which ends the whole message. A refusal raised before the subject is
-read, such as a missing terminal period, printed its own reason before as well,
-and keeps it without the window. In the repository of
-[§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed):
+In `0.22.0` the prefix, the ` — ` and the suffix went, and each such refusal
+prints the reason of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed), or of the later
+production, alone, with any append and accepted forms it carries
+([§DF-whose-clause-window-closes-in-0-22](../decisions/functional/DF-whose-clause-window-closes-in-0-22.md#df-whose-clause-window-closes-in-0-22-the-whose-clause-wording-window-closes-in-0220)). The `known kinds:` line went with the
+prefix after a refused clause, because the kind was recognised; it still
+follows a kind that is not configured, in the subject or as an object, on
+every surface where an unknown kind is followed by it. A refusal raised before
+the subject is read, such as a missing terminal period, never took the window.
+Neither did three refusals that only append or do not move, which keep their
+bytes and the line after them: an exact ID followed by a clause, an object kind
+followed by one under a subject that carries none, and `KIND.NAME` followed by
+one. The exit code `2`, the `invalid-rule` code and its severity, and what is
+refused did not move; only the reason's text did. In the repository of
+[§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) these are the exact lines:
 
 ```text
 $ grund check --rule 'Each SWR whose verfication is Test must be cited by at least one TC.'
-error: unknown kind "SWR whose verfication is Test" — "verfication" is not a field of kind SWR; its scalar fields: verification; this wording changes in grund 0.22.0
+error: "verfication" is not a field of kind SWR; its scalar fields: verification
 $ grund check --rule 'Each SWR whose verification is Test must cite every TC.'
-error: unknown kind "SWR whose verification is Test" — quantifier "every" is not accepted; this wording changes in grund 0.22.0
+error: quantifier "every" is not accepted
 $ grund list --selector 'Each SWR whose verification is Tset'
-error: unknown kind "SWR whose verification is Tset" — "Tset" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration; this wording changes in grund 0.22.0
+error: "Tset" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration
+$ grund list --selector 'Each POLICY whose status is Open'
+error: unknown kind "POLICY"
 known kinds: SWR, TC, AN
 ```
 
-In `0.22.0` the prefix, the suffix and the `known kinds:` line go, and each
-refusal prints the final reason of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)
-alone. The issue that closes the window is opened when the change that opens it
-merges, and is named here then. Three refusals never take the window, because
-they only append or do not move: an exact ID followed by a clause, an object
-kind followed by one under a subject that carries none, and `KIND.NAME`
-followed by one. The exit code `2`, the
-`invalid-rule` code and its severity, and what is refused do not move; only the
-reason's text does. Exact-line consumers migrate during the window to the
-reason after the ` — `.
+Exact-line consumers were asked to migrate during the window to the reason
+after the ` — `, which is what `0.22.0` prints; a matcher of the legacy prefix
+no longer finds it.
 
 ## 4. Determinism
 

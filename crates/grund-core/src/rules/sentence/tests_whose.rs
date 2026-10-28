@@ -122,16 +122,14 @@ fn the_chapter_form_carries_the_clause() {
 }
 
 /// §FS-rule-refusals.sentences.whose: a kind that is not configured fails before its
-/// clause is read, so an unknown field of it is never what is named.
+/// clause is read, so an unknown field of it is never what is named; since the window of
+/// §FS-errors.3.10 closed the kind is named alone.
 #[test]
+#[ignore = "red until #1063 closes the whose-clause window; implement removes this"]
 fn an_unknown_kind_is_refused_before_an_unknown_field() {
     assert_eq!(
         subject("Each POLICY whose verfication is Test must cite at least one TC."),
-        Err(
-            "unknown kind \"POLICY whose verfication is Test\" — unknown kind \"POLICY\"; \
-             this wording changes in grund 0.22.0"
-                .into()
-        )
+        Err("unknown kind \"POLICY\"".into())
     );
 }
 
@@ -151,16 +149,11 @@ fn a_conjunction_is_refused_before_the_clause() {
 
 /// §FS-rule-refusals.sentences.whose: within the clause, the shape is checked first,
 /// then the field, then whether it is a scalar, then the value's whitespace,
-/// then the value.
+/// then the value. Each reason is the whole message (§FS-errors.3.10).
 #[test]
+#[ignore = "red until #1063 closes the whose-clause window; implement removes this"]
 fn the_clause_is_checked_in_its_order() {
-    let reason = |sentence: &str| {
-        let message = subject(sentence).unwrap_err();
-        let (_, rest) = message.split_once(" — ").expect("windowed");
-        rest.strip_suffix("; this wording changes in grund 0.22.0")
-            .expect("windowed")
-            .to_string()
-    };
+    let reason = |sentence: &str| subject(sentence).unwrap_err();
     assert_eq!(
         reason("Each SWR whose verfication is  must cite at least one TC."),
         "whose clause \"whose verfication is \" names no value; write whose FIELD is VALUE"
