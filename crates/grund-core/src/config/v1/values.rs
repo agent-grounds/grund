@@ -29,6 +29,30 @@ pub(crate) fn strip_comment(line: &str) -> &str {
     line
 }
 
+/// Cut `inner`, the text between a string list's brackets or an inline table's
+/// braces, at each comma outside a basic string, and only there (§FS-config.3.11).
+/// A string opens and closes at a `"` that is not part of a `\"` escape, the walk
+/// `strip_comment` reads a line by, so a comma inside a string stays in its piece.
+/// Like `str::split`, an empty `inner` is one empty piece.
+pub(in crate::config) fn split_outside_strings(inner: &str) -> Vec<&str> {
+    let bytes = inner.as_bytes();
+    let mut pieces = Vec::new();
+    let mut in_string = false;
+    let mut start = 0;
+    for (i, &byte) in bytes.iter().enumerate() {
+        match byte {
+            b'"' if !is_escaped(bytes, i) => in_string = !in_string,
+            b',' if !in_string => {
+                pieces.push(&inner[start..i]);
+                start = i + 1;
+            }
+            _ => {}
+        }
+    }
+    pieces.push(&inner[start..]);
+    pieces
+}
+
 /// Whether `line`, its comment stripped and trimmed, is a table header,
 /// `[name]` or `[[name]]`: the one line shape the reader reads that is not
 /// `key = value`.
@@ -97,6 +121,9 @@ pub(in crate::config) fn parse_usize(path: &Path, line: usize, value: &str) -> R
         .or_else(|_| bail_config(path, line, "expected non-negative integer".to_string()))
 }
 
+/// Read a `["…", "…"]` string list, its elements ending only at a comma outside a
+/// string (§FS-config.3.11); each element is still one basic string, refused at
+/// `line` as before when it is not (§FS-config.4.3).
 pub(crate) fn parse_string_list(path: &Path, line: usize, value: &str) -> Result<Vec<String>> {
     if !value.starts_with('[') || !value.ends_with(']') {
         return bail_config(path, line, "expected string list".to_string());
@@ -105,8 +132,8 @@ pub(crate) fn parse_string_list(path: &Path, line: usize, value: &str) -> Result
     if inner.is_empty() {
         return Ok(Vec::new());
     }
-    inner
-        .split(',')
+    split_outside_strings(inner)
+        .into_iter()
         .map(|part| parse_string(path, line, part.trim()))
         .collect()
 }

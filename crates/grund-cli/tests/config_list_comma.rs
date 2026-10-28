@@ -101,7 +101,6 @@ fn v2(spec_files: &str, exclude: &str) -> String {
 
 /// The issue's first case: a v2 place holding a comma names that file.
 #[test]
-#[ignore = "red until #1076 splits a list only at a comma outside a string; implement removes this"]
 fn a_v2_files_element_holding_a_comma_names_that_file() {
     let fx = Fixture::comma_spec(&v2("[\"specs/a,b/spec.md\"]", "[]"));
     fx.expect(&["check"], 0, "success\n", "");
@@ -110,7 +109,6 @@ fn a_v2_files_element_holding_a_comma_names_that_file() {
 
 /// The issue's second case: a v2 exclude entry holding a comma keeps that directory out.
 #[test]
-#[ignore = "red until #1076 splits a list only at a comma outside a string; implement removes this"]
 fn a_v2_exclude_element_holding_a_comma_keeps_that_directory_out() {
     let config = v2("[\"specs/spec.md\"]", "[\"ab\", \"a,b\"]");
     Fixture::comma_stray(&config).expect(&["check"], 0, "success\n", "");
@@ -128,7 +126,6 @@ fn the_comma_named_directory_is_scanned_when_nothing_excludes_it() {
 
 /// The same two lists written across lines, each with TOML's trailing comma (§FS-config-v2.reader.5).
 #[test]
-#[ignore = "red until #1076 splits a list only at a comma outside a string; implement removes this"]
 fn a_v2_list_across_lines_reads_a_comma_inside_a_string() {
     let fx = Fixture::comma_spec(&v2("[\n  \"specs/a,b/spec.md\",\n]", "[]"));
     fx.expect(&["check"], 0, "success\n", "");
@@ -139,7 +136,6 @@ fn a_v2_list_across_lines_reads_a_comma_inside_a_string() {
 
 /// A v1 list reads the same element the same way: `[scan] exclude` keeps `a,b` out.
 #[test]
-#[ignore = "red until #1076 splits a list only at a comma outside a string; implement removes this"]
 fn a_v1_exclude_element_holding_a_comma_keeps_that_directory_out() {
     let config =
         format!("{V1_HEAD}[scan]\ninclude = [\"specs\", \"src\"]\nexclude = [\"a,b\"]\n{V1_KINDS}");
@@ -162,7 +158,6 @@ fn a_v1_trailing_comma_or_unclosed_string_is_still_expected_string() {
 /// The closed `lead_size_warning` table separates its members by the same rule, so a comma
 /// inside `unit` is part of the unit it names (§FS-config.3.1.2).
 #[test]
-#[ignore = "red until #1076 splits a list only at a comma outside a string; implement removes this"]
 fn a_comma_inside_the_lead_size_warning_unit_is_part_of_that_unit() {
     let config = format!(
         "{V1_HEAD}[reference]\nlead_size_warning = {{ max = 40, unit = \"lines,words\" }}\n\n\
@@ -176,7 +171,6 @@ fn a_comma_inside_the_lead_size_warning_unit_is_part_of_that_unit() {
 /// A brace pattern always holds a comma. What the place then matches is #1069's; this pins only
 /// that the line is no longer refused as a string that is not one.
 #[test]
-#[ignore = "red until #1076 splits a list only at a comma outside a string; implement removes this"]
 fn a_brace_pattern_element_is_not_refused_as_expected_string() {
     let fx = Fixture::comma_spec(&v2("[\"specs/{001-a,002-b}/spec.md\"]", "[]"));
     let run = fx.run(&["check"]);

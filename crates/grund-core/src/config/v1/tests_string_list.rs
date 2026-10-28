@@ -19,7 +19,6 @@ fn refusal(value: &str) -> String {
 }
 
 #[test]
-#[ignore = "red until #1076 splits a list only at a comma outside a string; implement removes this"]
 fn a_comma_inside_a_string_belongs_to_its_element() {
     assert_eq!(read(r#"["a,b", "c"]"#), ["a,b", "c"]);
     assert_eq!(read(r#"[",", ",,"]"#), [",", ",,"]);
@@ -30,7 +29,6 @@ fn a_comma_inside_a_string_belongs_to_its_element() {
 }
 
 #[test]
-#[ignore = "red until #1076 splits a list only at a comma outside a string; implement removes this"]
 fn an_escaped_quote_does_not_close_the_string_and_an_escaped_backslash_does_not_escape() {
     assert_eq!(read(r#"["a\",b", "c"]"#), [r#"a",b"#, "c"]);
     assert_eq!(read(r#"["a\\", "b,c"]"#), [r"a\", "b,c"]);
