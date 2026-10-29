@@ -236,43 +236,17 @@ fn an_open_line_and_a_doubled_comma_earn_both_warnings() {
     );
 }
 
-/// §FS-config-v2.reader.5.commas.window: an array with a string that closes early and a doubled
-/// comma earns both warnings. `config validate` and `config show` keep the config's order, the
-/// commas' first; `check` sorts them (§FS-errors.4.1), so there the early close comes first.
+/// §FS-config-v2.reader.5.commas.window: an array with a string in it that closes early does not
+/// load, so it earns neither warning; it is refused at its key's line as the early close, with
+/// the release that made it one (§FS-config-v2.reader.6.refusal).
 #[test]
-fn an_early_close_and_a_doubled_comma_earn_both_warnings() {
+fn an_early_close_beside_a_doubled_comma_is_refused_as_the_early_close() {
     let fx = Fixture::exclude("[\"a\" \"b\",,]");
-    let early = "warning: grund.toml:9: expected string, read for now as the one string \
-                 `a\" \"b`; end the string on line 9 at its closing quote: write `\\\"` for a \
-                 quote inside it, or a `,` between two strings; this warning becomes an error \
-                 in grund 0.22.0\n";
-    let commas = commas(9);
-    fx.expect(&["check"], 0, "", &format!("{early}{commas}"));
-    let config_order = format!("{commas}{early}");
-    fx.expect(&["config", "validate"], 0, "", &config_order);
-    assert_eq!(fx.shown(&config_order), "exclude = [\"a\\\" \\\"b\"]");
-    let lines = fx.json();
-    assert_eq!(lines.len(), 2, "{lines:?}");
-    assert!(
-        lines[0].contains("read for now as the one string"),
-        "{}",
-        lines[0]
-    );
-    assert!(
-        lines[1].contains("every comma before the `]`"),
-        "{}",
-        lines[1]
-    );
-    for line in &lines {
-        assert!(line.contains("\"code\":\"config-not-toml\""), "{line}");
-        assert!(line.contains("\"line\":9"), "{line}");
-    }
-    fx.expect(
-        &["check", "--ignore", "config-not-toml"],
-        0,
-        "success\n",
-        "",
-    );
+    let refusal = "error: grund.toml:9: expected string; this became an error in grund 0.22.0\n";
+    fx.expect(&["check"], 2, "", refusal);
+    fx.expect(&["config", "validate"], 1, "", refusal);
+    fx.expect(&["config", "show"], 2, "", refusal);
+    fx.expect(&["check", "--format", "json"], 2, "", refusal);
 }
 
 /// Guard, green today and kept: a shape the readers before refused, because whitespace or an
