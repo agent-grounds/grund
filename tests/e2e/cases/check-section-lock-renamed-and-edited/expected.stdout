@@ -1,0 +1,2 @@
+src/loans.py:5: error: section not found: SPEC-loans.requirements.borrow-a-book; write <§> before it to show the shape without citing it
+tests/test_loans.py:5: error: section not found: SPEC-loans.requirements.borrow-a-book.copy-on-shelf; write <§> before it to show the shape without citing it

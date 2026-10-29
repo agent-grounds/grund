@@ -1,0 +1,2 @@
+src/loans.py:5: error: section not found: SPEC-loans.requirements.borrow-a-book; write <§> before it to show the shape without citing it; what .grund/sections/SPEC-loans.lock recorded for it now sits at SPEC-loans.requirements.check-out-a-book
+tests/test_loans.py:5: error: section not found: SPEC-loans.requirements.borrow-a-book.copy-on-shelf; write <§> before it to show the shape without citing it; what .grund/sections/SPEC-loans.lock recorded for it now sits at SPEC-loans.requirements.check-out-a-book.copy-on-shelf
