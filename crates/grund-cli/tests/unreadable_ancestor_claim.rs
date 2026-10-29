@@ -223,3 +223,37 @@ fn an_unclosed_array_of_another_key_leaves_the_claim_answered() {
         );
     }
 }
+
+/// Guard, green today and kept through grund 0.21.x (§FS-config-v2.reader.5.strings.window,
+/// §FS-workspace.6.1.7.5): a `members` list whose string runs over a line break gives the
+/// climb the entry the config reader loads, `project/packages/ hub`, which names no block
+/// here, so the absence is confirmed and the block is reported.
+#[test]
+fn an_ancestor_members_string_over_a_break_is_the_entry_the_config_loads() {
+    let outer = Outer::listing("[\n  \"project/packages/\nhub\",\n]");
+    let (code, stdout, _) = outcome(&outer.check());
+    assert_eq!(code, Some(1), "{stdout}");
+    assert!(
+        stdout.starts_with(
+            "packages/hub/grund.toml:7: error: this [workspace] is listed by no enclosing workspace"
+        ),
+        "{stdout}"
+    );
+}
+
+/// Guard, green today and kept (§FS-config-v2.reader.5.strings.refusal,
+/// §FS-workspace.6.1.7.5): a `members` list whose string never closes is not a list to the
+/// climb exactly where the reader refuses it as `unclosed array`, so the claim is
+/// undecidable and the block is left unreported.
+#[test]
+fn an_ancestor_members_string_that_never_closes_is_not_a_list() {
+    let outer = Outer::listing("[\n  \"project/packages/hub\n#x\",\n]");
+    assert_eq!(
+        outcome(&outer.check()),
+        (Some(0), QUIET.to_string(), String::new()),
+        "an ancestor whose members string never closes cannot say nobody lists packages/hub"
+    );
+    let (code, _, stderr) = outcome(&outer.check_in(&outer.0));
+    assert_eq!(code, Some(2), "{stderr}");
+    assert!(stderr.contains("unclosed array"), "{stderr}");
+}
