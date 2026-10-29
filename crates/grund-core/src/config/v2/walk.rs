@@ -255,7 +255,7 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
                 .strings_over_breaks
                 .push(StringOverBreak { at, open });
         }
-        reader.value = JoinedLines::new(line_no, joined.starts, joined.open);
+        reader.value = JoinedLines::new(line_no, joined.starts);
         reader.entry(key.trim(), &value, line_no)?;
     }
     reader.close()
