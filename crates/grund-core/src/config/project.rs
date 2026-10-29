@@ -41,10 +41,6 @@ pub struct Project {
     /// end, each warned for until grund 0.22.0 refuses it
     /// (§FS-config-v2.reader.5.strings.window). Empty for every v1 file.
     pub(crate) strings_over_breaks: Vec<StringOverBreak>,
-    /// The arrays a version-2 reader read with a comma with no element before it taken
-    /// off before their `]`, each warned for until grund 0.22.0 refuses it
-    /// (§FS-config-v2.reader.5.commas.window). Empty for every v1 file.
-    pub(crate) commas_without_elements: Vec<CommaWithoutElement>,
     /// The values and quoted keys a version-2 reader read past a string's closing
     /// quote, each warned for until grund 0.22.0 refuses it
     /// (§FS-config-v2.reader.6.window). Empty for every v1 file.
@@ -57,14 +53,6 @@ pub struct Project {
 pub(crate) struct StringOverBreak {
     pub(crate) at: ConfigLocation,
     pub(crate) open: OpenLine,
-}
-
-/// §FS-config-v2.reader.5.commas.window: an array read with a comma with no element
-/// before it taken off — where its key was written, and the line of the first such comma.
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct CommaWithoutElement {
-    pub(crate) at: ConfigLocation,
-    pub(crate) line: usize,
 }
 
 /// §FS-config-v2.reader.6.window: the first string in a value, or a quoted key, read

@@ -17,6 +17,10 @@ use crate::config::v1::{
     bail_config, list_elements, parse_string, parse_string_list, string_close,
 };
 
+/// The clause the refusal of an array that read through the 0.21.x trailing-comma window
+/// ends with (§FS-config-v2.reader.5.commas.refusal).
+const COMMA_WINDOW_CLOSED: &str = "; this became an error in grund 0.22.0";
+
 /// A string the version-2 reader reads past its closing quote
 /// (§FS-config-v2.reader.6.window).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -76,13 +80,32 @@ pub(crate) fn read_string_list<'a>(
     line: usize,
     value: &'a str,
 ) -> Result<(Vec<String>, Vec<EarlyClose<'a>>)> {
+    read_elements(path, line, value, false)
+}
+
+/// [`read_string_list`], with the empty element's `expected string` naming grund 0.22.0
+/// where `through_window` says the array's text read through the 0.21.x trailing-comma
+/// window (§FS-config-v2.reader.5.commas.refusal). Only an empty element's refusal takes
+/// it: an element refused before the empty one is reached was refused in 0.21.x too.
+fn read_elements<'a>(
+    path: &Path,
+    line: usize,
+    value: &'a str,
+    through_window: bool,
+) -> Result<(Vec<String>, Vec<EarlyClose<'a>>)> {
     // A value that is not bracketed is refused as version 1 refuses it.
     let Some(elements) = list_elements(value) else {
         return Ok((parse_string_list(path, line, value)?, Vec::new()));
     };
     let read = elements
         .iter()
-        .map(|element| basic_string(path, line, element))
+        .map(|element| {
+            if element.is_empty() && through_window {
+                bail_config(path, line, format!("expected string{COMMA_WINDOW_CLOSED}"))
+            } else {
+                basic_string(path, line, element)
+            }
+        })
         .collect::<Result<_>>()?;
     let early = elements
         .into_iter()
@@ -121,16 +144,22 @@ fn literal_form(written: &str) -> Option<&'static str> {
 }
 
 /// The lines a value was written across, as `joined_value` joined them: its key's line
-/// and where each later one starts in the value (§FS-config-v2.reader.5).
+/// and where each later one starts in the value (§FS-config-v2.reader.5), and whether its
+/// text read through the 0.21.x trailing-comma window (§FS-config-v2.reader.5.commas.refusal).
 #[derive(Default)]
 pub(super) struct JoinedLines {
     line: usize,
     starts: Vec<usize>,
+    through_window: bool,
 }
 
 impl JoinedLines {
-    pub(super) fn new(line: usize, starts: Vec<usize>) -> Self {
-        Self { line, starts }
+    pub(super) fn new(line: usize, starts: Vec<usize>, through_window: bool) -> Self {
+        Self {
+            line,
+            starts,
+            through_window,
+        }
     }
 
     /// The line the byte at `offset` in the value was written on.
@@ -167,7 +196,8 @@ impl Reader<'_> {
     /// one warning, for the first of its elements that closes early, naming the line that
     /// element closes on (§FS-config-v2.reader.6.window).
     pub(super) fn string_list(&mut self, line: usize, value: &str) -> Result<Vec<String>> {
-        let (read, early) = read_string_list(self.path, line, value)?;
+        let through_window = self.value.through_window;
+        let (read, early) = read_elements(self.path, line, value, through_window)?;
         let lines = &self.value;
         if let Some(early) = early
             .iter()
