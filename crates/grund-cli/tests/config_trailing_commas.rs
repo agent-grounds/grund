@@ -161,7 +161,6 @@ impl Drop for Fixture {
 /// grund.158's case, line 9, one comma against two: `["ab",]` loads as `["ab"]` with no word,
 /// and `["ab",,]` still loads as `["ab"]` but warns, naming line 9 and 0.22.0.
 #[test]
-#[ignore = "red until #1087 warns for a comma with no element before it; implement removes this"]
 fn one_trailing_comma_loads_and_a_second_one_warns() {
     Fixture::exclude("[\"ab\",]").loads("exclude = [\"ab\"]");
     Fixture::exclude("[\"ab\",,]").warns(&commas(9), "exclude = [\"ab\"]");
@@ -170,7 +169,6 @@ fn one_trailing_comma_loads_and_a_second_one_warns() {
 /// §FS-config-v2.reader.5.commas.window: every run of two or more adjacent commas after the
 /// last element is taken off as before, whatever whitespace stands around it, and warns.
 #[test]
-#[ignore = "red until #1087 warns for a comma with no element before it; implement removes this"]
 fn adjacent_commas_after_the_last_element_warn_and_are_read_as_before() {
     for value in ["[\"ab\" ,, ]", "[\"ab\",,,]"] {
         Fixture::exclude(value).warns(&commas(9), "exclude = [\"ab\"]");
@@ -180,7 +178,6 @@ fn adjacent_commas_after_the_last_element_warn_and_are_read_as_before() {
 /// §FS-config-v2.reader.5.commas.window: in an array written across lines the warning stays
 /// at the key's line, and its remedy names line 10, where the doubled comma stands.
 #[test]
-#[ignore = "red until #1087 warns for a comma with no element before it; implement removes this"]
 fn a_doubled_comma_on_a_later_line_names_the_line_it_stands_on() {
     Fixture::exclude("[\n  \"ab\",,\n]").warns(&commas(10), "exclude = [\"ab\"]");
 }
@@ -189,7 +186,6 @@ fn a_doubled_comma_on_a_later_line_names_the_line_it_stands_on() {
 /// them, is read as the empty list and warns, naming the comma's line; a comment beside the
 /// `[` is read as whitespace is.
 #[test]
-#[ignore = "red until #1087 warns for a comma with no element before it; implement removes this"]
 fn an_array_of_commas_alone_warns_and_is_read_as_empty() {
     for (value, line) in [
         ("[,]", 9),
@@ -206,7 +202,6 @@ fn an_array_of_commas_alone_warns_and_is_read_as_empty() {
 /// both warnings. `config validate` and `config show` keep the config's order, the open line's
 /// first; `check` sorts them (§FS-errors.4.1), so there the commas' comes first.
 #[test]
-#[ignore = "red until #1087 warns for a comma with no element before it; implement removes this"]
 fn an_open_line_and_a_doubled_comma_earn_both_warnings() {
     let fx = Fixture::exclude("[\n  \"a\nb\",,\n]");
     let open = "warning: grund.toml:9: unclosed array (a string is still open at the end of \
@@ -245,7 +240,6 @@ fn an_open_line_and_a_doubled_comma_earn_both_warnings() {
 /// comma earns both warnings. `config validate` and `config show` keep the config's order, the
 /// commas' first; `check` sorts them (§FS-errors.4.1), so there the early close comes first.
 #[test]
-#[ignore = "red until #1087 warns for a comma with no element before it; implement removes this"]
 fn an_early_close_and_a_doubled_comma_earn_both_warnings() {
     let fx = Fixture::exclude("[\"a\" \"b\",,]");
     let early = "warning: grund.toml:9: expected string, read for now as the one string \

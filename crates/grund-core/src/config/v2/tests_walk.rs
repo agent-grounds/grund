@@ -124,3 +124,50 @@ fn the_run_of_commas_before_the_bracket_is_taken_off_as_before() {
         assert_eq!(joined(text).as_deref(), Some(value), "{text:?}");
     }
 }
+
+/// The line `joined_value` names for the first comma with no element before it in the run
+/// it takes off, for `text` read as the value of a key on line 1.
+fn commas(text: &str) -> Option<usize> {
+    let mut lines = text.lines().enumerate();
+    let (_, first) = lines.next().unwrap();
+    joined_value(first, 1, &mut lines).commas
+}
+
+/// §FS-config-v2.reader.5.commas.window: the run taken off names the line its first comma
+/// with no element before it stands on, which in an array written across lines is not the
+/// key's. The shapes the element reader refuses name one too: what keeps their warning from
+/// showing is that refusal, not this line.
+#[test]
+fn the_run_taken_off_names_the_line_of_its_first_comma_with_no_element_before_it() {
+    for (text, line) in [
+        ("[\"ab\",,]", 1),
+        ("[\"ab\" ,, ]", 1),
+        ("[\"ab\",,,]", 1),
+        ("[,]", 1),
+        ("[ , ]", 1),
+        ("[,,]", 1),
+        ("[\n  \"ab\",,\n]", 2),
+        ("[\n  ,\n]", 2),
+        ("[\"ab\", ,]", 1),
+        ("[ , , ]", 1),
+        ("[\n  \"ab\",\n  ,\n]", 3),
+    ] {
+        assert_eq!(commas(text), Some(line), "{text:?}");
+    }
+}
+
+/// Guard (§FS-config-v2.reader.5.commas): the one trailing comma after an element, and an
+/// array with no comma before its `]`, name no line.
+#[test]
+fn one_trailing_comma_after_an_element_names_no_line() {
+    for text in [
+        "[]",
+        "[ ]",
+        "[\n]",
+        "[\"ab\",]",
+        "[\"ab\" , ]",
+        "[\n  \"ab\"\n  ,\n]",
+    ] {
+        assert_eq!(commas(text), None, "{text:?}");
+    }
+}

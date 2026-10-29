@@ -404,7 +404,10 @@ for `[schema.*]`, `rules.rs` for `[rules.*]`, and `presentation.rs` for
 `[presentation.*]` and `[workspace]`. Each of them reads a string, a scalar, a
 list's element or a quoted key, through `strings.rs`, which reads it as the
 readers before it did and records the first that closes early in each value for
-its warning ([§FS-config-v2.reader.6](../functional-spec/FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). A key the table's handler does not admit
+its warning ([§FS-config-v2.reader.6](../functional-spec/FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). An array reaches them with the run of
+commas before its `]` taken off by `walk.rs`, which names the first comma in
+that run with no element before it and records it once the elements load
+([§FS-config-v2.reader.5.commas.window](../functional-spec/FS-config-v2.md#reader5commaswindow-through-grund-021x-the-run-of-commas-before-the--is-taken-off-as-before-and-warns)). A key the table's handler does not admit
 is `unknown key`, and a repeated header or key is refused at its second line
 ([§FS-config-v2.reader.1](../functional-spec/FS-config-v2.md#reader1-tables-and-keys-are-closed), [§FS-config-v2.reader.2](../functional-spec/FS-config-v2.md#reader2-every-row-and-field-is-written-under-its-own-header)). Because every key is judged
 where it is written, the first refusal reported is the first one in the file
