@@ -257,3 +257,25 @@ fn an_ancestor_members_string_that_never_closes_is_not_a_list() {
     assert_eq!(code, Some(2), "{stderr}");
     assert!(stderr.contains("unclosed array"), "{stderr}");
 }
+
+/// Guard, green today and kept through grund 0.21.x (§FS-config-v2.reader.5.commas.window,
+/// §FS-workspace.6.1.7.5): a `members` list ending in a doubled comma gives the climb the list
+/// the config reader loads, its one entry, so it answers the claim both ways and records
+/// nothing: naming elsewhere reports the block, and naming `packages/hub` leaves it unreported
+/// with nothing on stderr.
+#[test]
+fn an_ancestor_members_list_with_a_doubled_comma_is_the_list_the_config_loads() {
+    let (code, stdout, _) = outcome(&Outer::listing("[\"elsewhere\",,]").check());
+    assert_eq!(code, Some(1), "{stdout}");
+    assert!(
+        stdout.starts_with(
+            "packages/hub/grund.toml:7: error: this [workspace] is listed by no enclosing workspace"
+        ),
+        "{stdout}"
+    );
+    assert_eq!(
+        outcome(&Outer::listing("[\"project/packages/hub\",,]").check()),
+        (Some(0), QUIET.to_string(), String::new()),
+        "an ancestor that lists packages/hub leaves the block unreported"
+    );
+}

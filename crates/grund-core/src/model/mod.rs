@@ -50,6 +50,10 @@ mod patterns;
 mod records;
 // §AR-config.9.1: the rendered *Fix* fillers, the one place a message's remedy is built.
 #[rustfmt::skip]
+#[expect(
+    dead_code,
+    reason = "red until #1087 calls the commas case; implement removes this"
+)]
 pub(crate) mod remedies;
 mod report;
 mod section_lock;

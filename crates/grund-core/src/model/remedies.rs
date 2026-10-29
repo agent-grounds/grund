@@ -100,6 +100,12 @@ pub(crate) fn config_not_toml_scalar_or_key(line: impl Display) -> String {
     fill(Code::CONFIG_NOT_TOML, 2, Some("scalar-or-key"), slots)
 }
 
+/// `config-not-toml`'s *Fix*, case `commas` (§FS-config-v2.checks.config-not-toml).
+pub(crate) fn config_not_toml_commas(line: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("line", &line)];
+    fill(Code::CONFIG_NOT_TOML, 2, Some("commas"), slots)
+}
+
 /// `config-version-1`'s *Fix* (§FS-check.checks.config-version-1).
 pub(crate) fn config_version_1(files: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("files", &files)];
