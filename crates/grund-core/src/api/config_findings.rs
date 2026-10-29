@@ -2,8 +2,9 @@
 //! discovery pair (§FS-check.4.3), the deprecated `.agents/` location
 //! (§FS-check.4.11), a file read as version 1
 //! (§FS-check.checks.config-version-1) and a version-2 array read across a
-//! string open at a line's end (§FS-config-v2.checks.config-not-toml), all known
-//! from the file the run read rather than from the walk.
+//! string open at a line's end (§FS-config-v2.checks.config-not-toml,
+//! §FS-config-v2.checks.config-multiline-string), all known from the file the
+//! run read rather than from the walk.
 //!
 //! They are data because the published `config_warnings` reads them
 //! (§FS-config.4.1) and so does the run beside them. Neither prints: the

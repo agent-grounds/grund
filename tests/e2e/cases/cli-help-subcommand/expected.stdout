@@ -53,6 +53,8 @@ Supported check finding codes:
   broken-stub
   chapter-cardinality
   citation-cardinality
+  config-multiline-string
+  config-not-toml
   config-version-1
   conflict-marker
   dangling
