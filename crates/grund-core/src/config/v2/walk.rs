@@ -12,13 +12,14 @@ use std::path::Path;
 use super::fields::FieldDraft;
 use super::schema::RowDraft;
 use super::sources::{self, SourcesDraft};
+use super::strings::JoinedLines;
 use super::tables::{self, Opened, Table};
 use super::{defaults, fields, front_matter, measures, presentation, rules, schema};
 use crate::config::fields::FRONT_MATTER;
 use crate::config::kind::KindResolution;
 use crate::config::project::{Project, StringOverBreak};
 use crate::config::record::ConfigLocation;
-use crate::config::v1::{bail_config, parse_string, strip_comment};
+use crate::config::v1::{bail_config, string_close, strip_comment};
 use crate::grammar::is_escaped;
 
 /// The reader's state: the project lowered so far, and what only the whole
@@ -39,6 +40,8 @@ pub(super) struct Reader<'a> {
     pub(super) row_ladders: Vec<(String, usize)>,
     /// The kind each `[presentation.kinds.<NAME>]` names, at its header.
     pub(super) presentation_kinds: Vec<(String, usize)>,
+    /// The lines the value being read was written across (§FS-config-v2.reader.6.window).
+    pub(super) value: JoinedLines,
     headers: BTreeMap<String, usize>,
     header: String,
     keys: BTreeMap<String, usize>,
@@ -56,6 +59,7 @@ impl<'a> Reader<'a> {
             resolution: Vec::new(),
             row_ladders: Vec::new(),
             presentation_kinds: Vec::new(),
+            value: JoinedLines::default(),
             headers: BTreeMap::new(),
             header: String::new(),
             keys: BTreeMap::new(),
@@ -145,7 +149,7 @@ impl<'a> Reader<'a> {
         // malformed one reaches the suffix check rather than the bare-key one.
         let quoted = key.len() >= 2 && key.starts_with('"') && key.ends_with('"');
         let admitted = if matches!(table, Table::Extensions) && quoted {
-            let key = parse_string(self.path, line, key)?;
+            let key = self.string(line, key)?;
             self.read_key(&mut table, &key, value, line)?
         } else {
             bare(key) && keys.admit(key) && self.read_key(&mut table, key, value, line)?
@@ -197,7 +201,7 @@ impl<'a> Reader<'a> {
             // `selects` read this key's value.
             "grund_config_version" => {}
             "project_name" => {
-                self.project.name = Some(parse_string(self.path, line, value)?);
+                self.project.name = Some(self.string(line, value)?);
                 self.project.name_source = self.at(line);
             }
             _ => return Ok(false),
@@ -251,6 +255,7 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
                 .strings_over_breaks
                 .push(StringOverBreak { at, open });
         }
+        reader.value = JoinedLines::new(line_no, joined.starts, joined.open);
         reader.entry(key.trim(), &value, line_no)?;
     }
     reader.close()
@@ -263,6 +268,9 @@ pub(crate) struct Joined {
     /// The array's open line, the first that ends inside a string
     /// (§FS-config-v2.reader.5.strings); `None` when every string closes on its line.
     pub(crate) open: Option<OpenLine>,
+    /// Where in `value` each line after the key's starts, in order, so a place in the value
+    /// names the line it was written on (§FS-config-v2.reader.6.window).
+    pub(crate) starts: Vec<usize>,
 }
 
 /// A line of an array that ends inside a string (§FS-config-v2.reader.5.strings).
@@ -306,10 +314,12 @@ pub(crate) fn joined_value<'a>(
     lines: &mut impl Iterator<Item = (usize, &'a str)>,
 ) -> Joined {
     let mut value = value.trim().to_string();
+    let mut starts = Vec::new();
     if !value.starts_with('[') {
         return Joined {
             value: Some(value),
             open: None,
+            starts,
         };
     }
     let mut brackets = Brackets::default();
@@ -317,10 +327,15 @@ pub(crate) fn joined_value<'a>(
     let mut open = brackets.open_line(line);
     while brackets.depth > 0 {
         let Some((idx, next)) = lines.next() else {
-            return Joined { value: None, open };
+            return Joined {
+                value: None,
+                open,
+                starts,
+            };
         };
         let next = strip_comment(next).trim();
         value.push(' ');
+        starts.push(value.len());
         value.push_str(next);
         brackets.read(next);
         open = open.or(brackets.open_line(idx + 1));
@@ -328,14 +343,15 @@ pub(crate) fn joined_value<'a>(
     Joined {
         value: Some(array_value(&value)),
         open,
+        starts,
     }
 }
 
 /// The `[` an array's text still holds open outside its strings, and the string
-/// open at the end of the text read so far. A `"` is a quote unless it is part of
-/// a `\"` escape, by the rule `strip_comment`, `split_outside_strings` and
-/// `is_one_basic_string` read strings by (§FS-config.3.11), inside a string or
-/// outside one.
+/// open at the end of the text read so far. A `"` outside a string opens one unless
+/// it is part of a `\"` escape, and the string closes where `string_close` says, the
+/// one close `strip_comment`, `split_outside_strings` and `is_one_basic_string`
+/// read strings by (§FS-config.3.11).
 #[derive(Default)]
 struct Brackets {
     depth: i32,
@@ -348,21 +364,27 @@ impl Brackets {
     /// so no `\"` escape reaches across two of them.
     fn read(&mut self, piece: &str) {
         let bytes = piece.as_bytes();
-        for (i, &byte) in bytes.iter().enumerate() {
-            match byte {
+        let mut i = 0;
+        while i < bytes.len() {
+            if self.string.is_some() {
+                let Some(close) = string_close(bytes, i) else {
+                    return;
+                };
+                self.string = None;
+                i = close + 1;
+                continue;
+            }
+            match bytes[i] {
+                // §FS-config-v2.reader.5.strings.multi-line: the third quote of
+                // a `"""` opens what the first would have in TOML.
                 b'"' if !is_escaped(bytes, i) => {
-                    // §FS-config-v2.reader.5.strings.multi-line: the third quote of
-                    // a `"""` opens what the first would have in TOML.
-                    let multi_line = i >= 2 && bytes[i - 2..i] == *b"\"\"";
-                    self.string = match self.string {
-                        Some(_) => None,
-                        None => Some(multi_line),
-                    };
+                    self.string = Some(i >= 2 && bytes[i - 2..i] == *b"\"\"");
                 }
-                b'[' if self.string.is_none() => self.depth += 1,
-                b']' if self.string.is_none() => self.depth -= 1,
+                b'[' => self.depth += 1,
+                b']' => self.depth -= 1,
                 _ => {}
             }
+            i += 1;
         }
     }
 

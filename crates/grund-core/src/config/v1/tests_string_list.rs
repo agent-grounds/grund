@@ -4,7 +4,7 @@
 
 use std::path::Path;
 
-use super::parse_string_list;
+use super::{parse_string_list, string_close};
 
 fn read(value: &str) -> Vec<String> {
     parse_string_list(Path::new("grund.toml"), 7, value)
@@ -69,4 +69,25 @@ fn a_list_read_before_the_rule_is_read_the_same() {
     assert_eq!(read(r#"["a"b", "c"]"#), [r#"a"b"#, "c"]);
     assert_eq!(read(r#"["x" \"y", "z"]"#), [r#"x" "y"#, "z"]);
     assert_eq!(read(r#"["a" "b"]"#), [r#"a" "b"#]);
+}
+
+/// §FS-config.3.11: the one close every reader shares, read from just past an opening quote,
+/// is the first `"` no odd run of backslashes escapes, wherever the value's last quote stands.
+#[test]
+fn a_string_closes_at_its_first_unescaped_quote() {
+    for (written, close) in [
+        (r#""a""#, 2),
+        (r#""a\"b""#, 5),
+        (r#""a\\""#, 4),
+        (r#""a" "b""#, 2),
+        (r#""a"b""#, 2),
+        (r#""""a""""#, 1),
+    ] {
+        assert_eq!(
+            string_close(written.as_bytes(), 1),
+            Some(close),
+            "{written}"
+        );
+    }
+    assert_eq!(string_close(br#""a\""#, 1), None);
 }

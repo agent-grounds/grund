@@ -10,7 +10,6 @@ use super::fields::{FieldDraft, one_of_error};
 use super::walk::Reader;
 use crate::config::fields::{FRONT_MATTER, FrontMatterKey};
 use crate::config::project::Strength;
-use crate::config::v1::{parse_string, parse_string_list};
 use crate::grammar::named_section_component;
 
 /// One key table as written (§FS-fields.front-matter.config).
@@ -107,7 +106,7 @@ pub(super) fn key_key(
             r.fields[field].keys[index].presence = Some(presence);
         }
         "one_of" => {
-            let values = parse_string_list(r.path, line, value)?;
+            let values = r.string_list(line, value)?;
             if let Some(message) = one_of_error(&label, &values) {
                 return r.fail(line, message);
             }
@@ -120,8 +119,8 @@ pub(super) fn key_key(
 
 /// A strength-valued key of `clause`, refused outside its four words as a
 /// field's `presence` is (§FS-fields.front-matter.config).
-fn strength(r: &Reader, clause: &str, key: &str, value: &str, line: usize) -> Result<Strength> {
-    let written = parse_string(r.path, line, value)?;
+fn strength(r: &mut Reader, clause: &str, key: &str, value: &str, line: usize) -> Result<Strength> {
+    let written = r.string(line, value)?;
     match Strength::parse(&written) {
         Some(strength) => Ok(strength),
         None => r.fail(

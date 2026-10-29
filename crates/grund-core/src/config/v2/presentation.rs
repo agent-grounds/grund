@@ -8,7 +8,7 @@ use anyhow::Result;
 use super::tables::not_yet;
 use super::walk::Reader;
 use crate::config::fmt_block::validate_fmt_exclude;
-use crate::config::v1::{parse_bool, parse_string, parse_string_list};
+use crate::config::v1::parse_bool;
 
 /// `[presentation]`: v1's `project_description`, `trigger` and `conversation`.
 pub(super) fn presentation_key(
@@ -17,7 +17,7 @@ pub(super) fn presentation_key(
     value: &str,
     line: usize,
 ) -> Result<bool> {
-    let presentation = |r: &mut Reader| parse_string(r.path, line, value);
+    let presentation = |r: &mut Reader| r.string(line, value);
     match key {
         "description" => {
             let description = presentation(r)?;
@@ -70,7 +70,7 @@ pub(super) fn kind_key(
     if key != "title" {
         return Ok(false);
     }
-    let title = parse_string(r.path, line, value)?;
+    let title = r.string(line, value)?;
     r.project.presentation.kinds.insert(kind.to_string(), title);
     Ok(true)
 }
@@ -82,7 +82,7 @@ pub(super) fn fmt_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Re
     match key {
         "anchors" | "links" => {
             let executed = if key == "anchors" { "github" } else { "index" };
-            let supplied = parse_string(r.path, line, value)?;
+            let supplied = r.string(line, value)?;
             if supplied != executed {
                 let refusal = not_yet(&format!("[presentation.fmt] {key}"));
                 return r.fail(
@@ -95,7 +95,7 @@ pub(super) fn fmt_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Re
             }
         }
         "exclude" => {
-            let patterns = parse_string_list(r.path, line, value)?;
+            let patterns = r.string_list(line, value)?;
             if let Err(message) = validate_fmt_exclude(&patterns) {
                 return r.fail(line, message);
             }
@@ -110,17 +110,17 @@ pub(super) fn fmt_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Re
 /// (§FS-config.3.8); their meanings are judged once for both readers.
 pub(super) fn workspace_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Result<bool> {
     let at = r.at(line);
-    let workspace = &mut r.project.workspace;
     match key {
         "members" => {
-            workspace.members = parse_string_list(r.path, line, value)?;
-            workspace.members_source = at;
+            r.project.workspace.members = r.string_list(line, value)?;
+            r.project.workspace.members_source = at;
         }
         "optional_members" => {
-            workspace.optional_members = parse_string_list(r.path, line, value)?;
-            workspace.optional_members_source = at;
+            r.project.workspace.optional_members = r.string_list(line, value)?;
+            r.project.workspace.optional_members_source = at;
         }
         "include_root" => {
+            let workspace = &mut r.project.workspace;
             workspace.include_root = parse_bool(r.path, line, value)?;
             workspace.include_root_source = at;
         }

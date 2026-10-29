@@ -82,7 +82,7 @@ fn header_target(name: &str, row: Option<&str>) -> Option<Target> {
 }
 
 /// The v1 key a line is, as the report names it.
-fn v1_key(record: &LineRecord) -> String {
+pub(super) fn v1_key(record: &LineRecord) -> String {
     match &record.kind {
         LineKind::Header { name, array, .. } if *array => format!("[[{name}]]"),
         LineKind::Header { name, .. } => format!("[{name}]"),

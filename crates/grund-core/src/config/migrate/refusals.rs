@@ -3,12 +3,15 @@
 
 use std::path::Path;
 
+use super::comments::v1_key;
 use super::keys::Keys;
 use super::places::scanned_files;
 use super::record::{MigrateRefusal, RefusalAnchor};
 use crate::config::grounding::configured_row_grounding;
 use crate::config::point_sizes::PointSizeUnit;
 use crate::config::project::Project;
+use crate::config::v1::LineKind;
+use crate::config::v2::{read_string, read_string_list};
 
 fn at(line: Option<usize>) -> RefusalAnchor {
     line.map_or(RefusalAnchor::Unset, RefusalAnchor::Line)
@@ -115,6 +118,49 @@ pub(super) fn settings(v1: &Project, keys: &Keys, root: &Path) -> Vec<MigrateRef
     }
     out.extend(grounding(v1, keys));
     out.extend(path_shaped_excludes(v1, keys, root));
+    out
+}
+
+/// §FS-config-migrate.3.1.8: each key whose value holds a string that closes early, at
+/// its line, naming the first such string as version 2's warning names it
+/// (§FS-config-v2.reader.6.window), with that warning's repair made under version 1:
+/// the first half for a scalar, both halves for a list element. `path` names the file
+/// a value the string readers refuse would be refused in, which no refusal here shows.
+pub(super) fn strings_closing_early(keys: &Keys, path: &Path) -> Vec<MigrateRefusal> {
+    let mut out = Vec::new();
+    for record in keys.lines {
+        let LineKind::Key { value, .. } = &record.kind else {
+            continue;
+        };
+        let (line, element) = (record.line, value.starts_with('['));
+        let early = if element {
+            let read = read_string_list(path, line, value).ok();
+            read.and_then(|(_, early)| early.first().copied())
+        } else {
+            read_string(path, line, value)
+                .ok()
+                .and_then(|(_, early)| early)
+        };
+        let Some(early) = early else {
+            continue;
+        };
+        let split = if element {
+            ", or a `,` between two strings"
+        } else {
+            ""
+        };
+        let what = format!(
+            "{} reads the one string `{}`, and version 2 ends a string at its first \
+             unescaped quote",
+            v1_key(record),
+            early.text()
+        );
+        let repair = format!(
+            "end the string at its closing quote under version 1: write `\\\"` for a quote \
+             inside it{split}; grund check shows its effect"
+        );
+        out.push(refusal(RefusalAnchor::Line(line), what, &repair));
+    }
     out
 }
 

@@ -8,7 +8,7 @@ use ignore::gitignore::GitignoreBuilder;
 
 use super::walk::Reader;
 use crate::config::sources::{DeclarationMode, LanguageClass, builtin, default_languages};
-use crate::config::v1::{parse_bool, parse_string, parse_string_list};
+use crate::config::v1::parse_bool;
 use crate::grammar::DocProfile;
 
 /// What `[schema.sources]` and its tables wrote, each value at its line.
@@ -37,11 +37,11 @@ pub(super) fn sources_key(r: &mut Reader, key: &str, value: &str, line: usize) -
     match key {
         // §FS-config-v2.schema.sources.languages: judged once the definitions are known.
         "languages" => {
-            let languages = parse_string_list(r.path, line, value)?;
+            let languages = r.string_list(line, value)?;
             r.sources.languages = Some((languages, line));
         }
         "declarations" => {
-            let mode = parse_string(r.path, line, value)?;
+            let mode = r.string(line, value)?;
             r.sources.declarations = Some(match mode.as_str() {
                 "doc-comments" => DeclarationMode::DocComments,
                 "any-comment" => DeclarationMode::AnyComment,
@@ -57,7 +57,7 @@ pub(super) fn sources_key(r: &mut Reader, key: &str, value: &str, line: usize) -
         }
         // §FS-config-v2.schema.sources.exclude: the formatter's glob grammar, refused at its line.
         "exclude" => {
-            let patterns = parse_string_list(r.path, line, value)?;
+            let patterns = r.string_list(line, value)?;
             let mut builder = GitignoreBuilder::new("");
             for pattern in &patterns {
                 let unclosed = unclosed_class(pattern).then_some("unclosed character class");
@@ -133,7 +133,7 @@ pub(super) fn extension_key(r: &mut Reader, key: &str, value: &str, line: usize)
             ),
         );
     }
-    let language = parse_string(r.path, line, value)?;
+    let language = r.string(line, value)?;
     r.sources.extensions.push((key.to_string(), language, line));
     Ok(true)
 }
@@ -187,14 +187,14 @@ pub(super) fn definition_key(
     };
     match key {
         "class" => {
-            let class = parse_string(r.path, line, value)?;
+            let class = r.string(line, value)?;
             let Some(parsed) = LanguageClass::ALL.into_iter().find(|c| c.name() == class) else {
                 return r.fail(line, unknown(&class, "document, data, or source"));
             };
             r.sources.definitions[index].class = Some((parsed, line));
         }
         "comment_prefixes" => {
-            let prefixes = parse_string_list(r.path, line, value)?;
+            let prefixes = r.string_list(line, value)?;
             for (at, prefix) in prefixes.iter().enumerate() {
                 if prefix.trim().is_empty() || prefix.contains(['\n', '\r']) {
                     let message = format!(
@@ -210,7 +210,7 @@ pub(super) fn definition_key(
             r.sources.definitions[index].prefixes = Some((prefixes, line));
         }
         "doc_comments" => {
-            let profile = parse_string(r.path, line, value)?;
+            let profile = r.string(line, value)?;
             let Some(parsed) = DocProfile::parse(&profile) else {
                 let names: Vec<&str> = DocProfile::ALL.iter().map(|p| p.name()).collect();
                 return r.fail(line, unknown(&profile, &names.join(", ")));
@@ -218,7 +218,7 @@ pub(super) fn definition_key(
             r.sources.definitions[index].doc_comments = Some((parsed, line));
         }
         "docstrings" => {
-            let docstrings = parse_string(r.path, line, value)?;
+            let docstrings = r.string(line, value)?;
             let python = match docstrings.as_str() {
                 "off" => false,
                 "python" => true,

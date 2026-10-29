@@ -11,7 +11,8 @@
 //! `presentation.rs` read the keys of each concern, `fields.rs` a kind's
 //! fields (§FS-fields), `front_matter.rs` the front-matter field's own tables,
 //! and `sources.rs` the source model, which `sources_model.rs` lowers and
-//! renders; `finish.rs` judges what only the whole file can say and lowers the
+//! renders; `strings.rs` reads every string a key or a value holds
+//! (§FS-config-v2.reader.6); `finish.rs` judges what only the whole file can say and lowers the
 //! rows; `defaults.rs` is the v2 epoch; and `render.rs` writes a project back
 //! out in v2 spelling.
 
@@ -27,6 +28,7 @@ mod rules;
 mod schema;
 mod sources;
 mod sources_model;
+mod strings;
 mod tables;
 #[cfg(test)]
 mod tests_keys;
@@ -34,6 +36,7 @@ mod tests_keys;
 mod tests_walk;
 mod walk;
 
+pub(super) use strings::{read_string, read_string_list};
 #[cfg(test)]
 pub(super) use tables::V1_TABLES;
 pub(super) use tables::{admitted, v1_homes};

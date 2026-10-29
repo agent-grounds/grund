@@ -41,6 +41,10 @@ pub struct Project {
     /// end, each warned for until grund 0.22.0 refuses it
     /// (§FS-config-v2.reader.5.strings.window). Empty for every v1 file.
     pub(crate) strings_over_breaks: Vec<StringOverBreak>,
+    /// The values and quoted keys a version-2 reader read past a string's closing
+    /// quote, each warned for until grund 0.22.0 refuses it
+    /// (§FS-config-v2.reader.6.window). Empty for every v1 file.
+    pub(crate) strings_closing_early: Vec<StringClosesEarly>,
 }
 
 /// §FS-config-v2.reader.5.strings.window: an array read with a string run over a
@@ -49,6 +53,20 @@ pub struct Project {
 pub(crate) struct StringOverBreak {
     pub(crate) at: ConfigLocation,
     pub(crate) open: OpenLine,
+}
+
+/// §FS-config-v2.reader.6.window: the first string in a value, or a quoted key, read
+/// past its closing quote — where its key was written, the string's text as written,
+/// the line it closes on, and what it stood in.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct StringClosesEarly {
+    pub(crate) at: ConfigLocation,
+    pub(crate) text: String,
+    pub(crate) line: usize,
+    /// An element of an array, rather than a scalar value or a key.
+    pub(crate) element: bool,
+    /// Opened with `"""` (§FS-config-v2.reader.6.multi-line).
+    pub(crate) multi_line: bool,
 }
 
 /// §AR-config.1.1: the `[workspace]` block, each list with the line it was

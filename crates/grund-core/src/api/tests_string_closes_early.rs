@@ -76,7 +76,6 @@ fn spec_kind(root: &Path) -> (Option<String>, Option<String>) {
 /// §FS-config-v2.reader.6.window: a scalar that closes early is read as before, every
 /// quote kept, and earns one warning whose remedy is the `\"` half alone.
 #[test]
-#[ignore = "red until #1088 warns for a scalar that closes early; implement removes this"]
 fn a_scalar_that_closes_early_is_read_as_before_and_warns_once() {
     let root = v2("scalar", "fetch = \"one\" \"two\"\n");
     assert_eq!(spec_kind(&root).0.as_deref(), Some("one\" \"two"));
@@ -86,7 +85,6 @@ fn a_scalar_that_closes_early_is_read_as_before_and_warns_once() {
 /// §FS-config-v2.reader.6.window: an element that closes early is read as the one
 /// element it is today, and earns one warning with both halves of the remedy.
 #[test]
-#[ignore = "red until #1088 warns for an element that closes early; implement removes this"]
 fn an_element_that_closes_early_is_read_as_before_and_warns_once() {
     let root = v2(
         "element",
@@ -110,7 +108,6 @@ fn an_element_that_closes_early_is_read_as_before_and_warns_once() {
 /// §FS-config-v2.reader.6.window: a value earns one warning however many of its
 /// strings close early, naming the first.
 #[test]
-#[ignore = "red until #1088 warns once per value, naming its first early close; implement removes this"]
 fn a_value_with_two_early_closes_earns_one_warning_naming_the_first() {
     let root = v2(
         "two",
@@ -122,7 +119,6 @@ fn a_value_with_two_early_closes_earns_one_warning_naming_the_first() {
 /// §FS-config-v2.reader.6.window: in an array written across lines the warning stays
 /// at the key's line and names the line the string closes on.
 #[test]
-#[ignore = "red until #1088 names the line a string closes early on; implement removes this"]
 fn an_element_on_a_later_line_names_the_line_it_closes_on() {
     let root = v2(
         "later",
@@ -134,7 +130,6 @@ fn an_element_on_a_later_line_names_the_line_it_closes_on() {
 /// §FS-config-v2.reader.6: a quoted key is a string of its own, read as before, and
 /// earns its own warning with the scalar's remedy.
 #[test]
-#[ignore = "red until #1088 warns for a quoted key that closes early; implement removes this"]
 fn a_quoted_key_that_closes_early_is_read_as_before_and_warns() {
     let root = v2(
         "key",
@@ -159,7 +154,6 @@ fn a_quoted_key_that_closes_early_is_read_as_before_and_warns() {
 /// §FS-config-v2.reader.6: the text in backticks is the string as written, so an
 /// escape before the early close is shown as it is written, and `\\` closes nothing.
 #[test]
-#[ignore = "red until #1088 reads a quote by the one escape rule in the close check; implement removes this"]
 fn the_warning_shows_escapes_as_written() {
     let escaped_quote = v2("escaped-quote", "fetch = \"a\\\"b\" \"c\"\n");
     assert_eq!(
@@ -176,7 +170,6 @@ fn the_warning_shows_escapes_as_written() {
 /// §FS-config-v2.reader.6.multi-line: a `"""` string on one line is read as before,
 /// its quotes kept, and earns `config-multiline-string` in place of `config-not-toml`.
 #[test]
-#[ignore = "red until #1088 warns for a one-line multi-line string; implement removes this"]
 fn a_triple_quoted_string_on_one_line_warns_that_version_2_does_not_read_it() {
     let root = v2(
         "triple",
@@ -195,7 +188,6 @@ fn a_triple_quoted_string_on_one_line_warns_that_version_2_does_not_read_it() {
 /// §FS-config-v2.reader.6.window: an array with an open line and an early close earns
 /// both warnings, the open line's first, and the early close names the joined text.
 #[test]
-#[ignore = "red until #1088 warns for an early close after #1089's open line; implement removes this"]
 fn an_open_line_and_an_early_close_earn_both_warnings() {
     let root = v2(
         "both",

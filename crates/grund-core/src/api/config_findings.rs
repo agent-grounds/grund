@@ -1,8 +1,9 @@
 //! What a loaded config carries on its own (§AR-system.2.9): the redundant
 //! discovery pair (§FS-check.4.3), the deprecated `.agents/` location
 //! (§FS-check.4.11), a file read as version 1
-//! (§FS-check.checks.config-version-1) and a version-2 array read across a
-//! string open at a line's end (§FS-config-v2.checks.config-not-toml,
+//! (§FS-check.checks.config-version-1), a version-2 array read across a
+//! string open at a line's end and a version-2 string read past its closing
+//! quote (§FS-config-v2.checks.config-not-toml,
 //! §FS-config-v2.checks.config-multiline-string), all known from the file the
 //! run read rather than from the walk.
 //!
@@ -110,9 +111,10 @@ fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Dia
     })
 }
 
-/// §FS-config-v2.reader.5.strings.window: the clause the window's warning ends
-/// with, naming the release from which the array is refused instead
-/// (§FS-config-v2.reader.5.strings.refusal).
+/// §FS-config-v2.reader.5.strings.window, §FS-config-v2.reader.6.window: the clause
+/// each window's warning ends with, naming the release from which the value is
+/// refused instead (§FS-config-v2.reader.5.strings.refusal,
+/// §FS-config-v2.reader.6.refusal).
 const STRINGS_WINDOW_CLAUSE: &str = "this warning becomes an error in grund 0.22.0";
 
 /// §FS-config-v2.checks.config-not-toml, §FS-config-v2.checks.config-multiline-string:
@@ -149,6 +151,48 @@ fn string_over_break_warnings(config: &Config) -> impl Iterator<Item = Diagnosti
     })
 }
 
+/// §FS-config-v2.checks.config-not-toml, §FS-config-v2.checks.config-multiline-string:
+/// one warning per value, and per quoted key, the version-2 reader read past a string's
+/// closing quote (§FS-config-v2.reader.6.window), or whose `"""` string it read on one
+/// line (§FS-config-v2.reader.6.multi-line). Its message is the refusal the value
+/// becomes, the string as it is read until then, the remedy for the line the string
+/// closes on and the release, behind the `<config>:<line>:` breadcrumb of the key's
+/// line, which JSON carries too. Pushed after an array's open-line warning, as the
+/// reader meets the two (§FS-config-v2.reader.6.window).
+fn string_closes_early_warnings(config: &Config) -> impl Iterator<Item = Diagnostic> + '_ {
+    config.project().strings_closing_early.iter().map(|early| {
+        let (at, text, line) = (&early.at, &early.text, early.line);
+        let (code, refusal, read, remedy) = if early.multi_line {
+            let refusal = " (a multi-line string, which version 2 does not read)";
+            let read = format!("`{text}`, its quotes kept");
+            let remedy = remedies::config_multiline_string(line);
+            (Code::CONFIG_MULTILINE_STRING, refusal, read, remedy)
+        } else {
+            let read = format!("the one string `{text}`");
+            let remedy = if early.element {
+                remedies::config_not_toml_element(line)
+            } else {
+                remedies::config_not_toml_scalar_or_key(line)
+            };
+            (Code::CONFIG_NOT_TOML, "", read, remedy)
+        };
+        Diagnostic {
+            code,
+            path: Some(at.path.clone()),
+            line: Some(at.line),
+            column: None,
+            message: format!(
+                "{}:{}: expected string{refusal}, read for now as {read}; {remedy}; \
+                 {STRINGS_WINDOW_CLAUSE}",
+                format_path(&at.path),
+                at.line,
+            ),
+            sites: Vec::new(),
+            authority: Vec::new(),
+        }
+    })
+}
+
 /// The findings a loaded config carries on its own — the redundant discovery
 /// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11),
 /// a file read as version 1 (§FS-check.checks.config-version-1) and the
@@ -170,4 +214,5 @@ pub(super) fn config_diagnostics<'a>(
         .chain(deprecated_config_location_warning(config))
         .chain(config_version_1_warning(config, display))
         .chain(string_over_break_warnings(config))
+        .chain(string_closes_early_warnings(config))
 }

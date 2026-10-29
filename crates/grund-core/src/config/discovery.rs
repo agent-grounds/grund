@@ -24,8 +24,11 @@ const CONFIG_NAMES: [&[&str]; 2] = [&["grund.toml"], &[".agents", "grund.toml"]]
 
 /// §FS-declarations.checks.misplaced-declaration.unlisted-project: an unread
 /// config's optional identity, using the same top-level/string grammar as both
-/// readers. No project load, regex compilation, or refusal for malformed input.
+/// readers. No project load, regex compilation, or refusal for malformed input,
+/// and no finding: a version-2 name is read as the load reads it, its place
+/// dropped (§FS-config-v2.reader.6.refusal).
 pub(crate) fn unread_project_name(text: &str, path: &Path) -> Option<String> {
+    let version_2 = v2::selects(text);
     let mut name = None;
     for (idx, raw) in text.lines().enumerate() {
         let line = v1::strip_comment(raw).trim();
@@ -38,7 +41,12 @@ pub(crate) fn unread_project_name(text: &str, path: &Path) -> Option<String> {
             if name.is_some() {
                 return None;
             }
-            let value = v1::parse_string(path, idx + 1, value.trim()).ok()?;
+            let (line, value) = (idx + 1, value.trim());
+            let value = match version_2 {
+                true => v2::read_string(path, line, value).map(|(read, _)| read),
+                false => v1::parse_string(path, line, value),
+            }
+            .ok()?;
             if value.is_empty() || value.chars().any(char::is_control) {
                 return None;
             }
@@ -46,6 +54,26 @@ pub(crate) fn unread_project_name(text: &str, path: &Path) -> Option<String> {
         }
     }
     name
+}
+
+/// A string list read by a reader that reads one key of a config without loading it: as
+/// the load of a version-2 file reads it when `version_2`, of a version-1 file
+/// otherwise, `None` for a value the load refuses, and no finding recorded
+/// (§FS-config-v2.reader.6.refusal). The ancestor climb reads `[workspace] members`
+/// through this (§FS-workspace.6.1.7.5).
+pub(crate) fn unloaded_string_list(
+    version_2: bool,
+    path: &Path,
+    line: usize,
+    value: &str,
+) -> Option<Vec<String>> {
+    if version_2 {
+        v2::read_string_list(path, line, value)
+            .ok()
+            .map(|(read, _)| read)
+    } else {
+        v1::parse_string_list(path, line, value).ok()
+    }
 }
 
 /// Every config name `dir` actually carries, in precedence order (§FS-config.1).

@@ -13,7 +13,7 @@ use crate::config::project::Strength;
 use crate::config::record::CODE_SOURCE_KIND;
 use crate::config::record::ShorthandPolicy;
 use crate::config::rows::{Extent, Form};
-use crate::config::v1::{parse_bool, parse_string, parse_string_list};
+use crate::config::v1::parse_bool;
 use crate::grammar::{id_grammar_literal_slash_error, id_grammar_v2_slash_error};
 
 /// One `[schema.kinds.<NAME>]` row as written, each key at its line, before the
@@ -91,7 +91,7 @@ impl RowDraft {
 pub(super) fn schema_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Result<bool> {
     match key {
         "marker" => {
-            let marker = parse_string(r.path, line, value)?;
+            let marker = r.string(line, value)?;
             if marker.is_empty() {
                 // §FS-config-v2.defaults.1: citations are marked, with no opt-out.
                 return r.fail(line, "[schema] marker must not be empty".to_string());
@@ -99,7 +99,7 @@ pub(super) fn schema_key(r: &mut Reader, key: &str, value: &str, line: usize) ->
             r.project.schema.citation.marker = marker;
         }
         "shorthand" => {
-            let policy = parse_string(r.path, line, value)?;
+            let policy = r.string(line, value)?;
             r.project.schema.citation.shorthand = match policy.as_str() {
                 "canonical" => ShorthandPolicy::Canonical,
                 "accepted" => ShorthandPolicy::Accepted,
@@ -114,7 +114,7 @@ pub(super) fn schema_key(r: &mut Reader, key: &str, value: &str, line: usize) ->
             };
         }
         "id_format" | "slug_pattern" | "number_pattern" | "section_separator" => {
-            let parsed = parse_string(r.path, line, value)?;
+            let parsed = r.string(line, value)?;
             if let Some(message) = id_grammar_v2_slash_error(key, &parsed) {
                 return r.fail(line, message);
             }
@@ -128,7 +128,7 @@ pub(super) fn schema_key(r: &mut Reader, key: &str, value: &str, line: usize) ->
         }
         // §FS-config-v2.schema.1: `may` recognizes sections unchecked, v1's `loose`.
         "heading_depth" => {
-            let strength = parse_string(r.path, line, value)?;
+            let strength = r.string(line, value)?;
             let mode = match strength.as_str() {
                 "must" => "strict",
                 "warn" => "warn",
@@ -161,7 +161,7 @@ pub(super) fn row_key(
     let clause = format!("[schema.kinds.{}] {key}", r.rows[index].name);
     match key {
         "files" | "folders" => {
-            for written in parse_string_list(r.path, line, value)? {
+            for written in r.string_list(line, value)? {
                 if written.is_empty() {
                     return r.fail(line, format!("`{clause}` names an empty path"));
                 }
@@ -207,7 +207,7 @@ pub(super) fn row_key(
                     return r.fail(line, message);
                 }
                 _ => {
-                    let name = parse_string(r.path, line, value)?;
+                    let name = r.string(line, value)?;
                     if let Some(why) = index_name_error(&name) {
                         return r.fail(line, format!("`{clause}` {why}"));
                     }
@@ -217,19 +217,19 @@ pub(super) fn row_key(
             r.rows[index].index = Some((index_value, line));
         }
         "id_format" => {
-            let format = parse_string(r.path, line, value)?;
+            let format = r.string(line, value)?;
             if let Some(message) = id_grammar_literal_slash_error(&clause, &format) {
                 return r.fail(line, message);
             }
             r.rows[index].id_format = Some((format, line));
         }
         "fetch" => {
-            let fetch = parse_string(r.path, line, value)?;
+            let fetch = r.string(line, value)?;
             r.rows[index].fetch = Some((fetch, line));
         }
         // §FS-fields.declare.form
         "form" => {
-            let form = parse_string(r.path, line, value)?;
+            let form = r.string(line, value)?;
             let parsed = match form.as_str() {
                 "prose" => Form::Prose,
                 "value" => Form::Value,
@@ -246,7 +246,7 @@ pub(super) fn row_key(
         }
         // §FS-fields.declare.closed
         "closed" => {
-            let closed = parse_string(r.path, line, value)?;
+            let closed = r.string(line, value)?;
             let Some(strength) = Strength::parse(&closed) else {
                 let message = format!(
                     "unknown [schema.kinds.{}] closed `{closed}` (expected must, warn, should, or may)",

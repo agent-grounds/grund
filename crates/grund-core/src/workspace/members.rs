@@ -28,7 +28,7 @@ use super::optional_members::expand_optional_members;
 use super::scope::{config_location_error, workspace_members_error};
 use crate::config::{
     AbsentOptionalNamespace, Config, ConfigLocation, Invocation, Selection, config_at,
-    config_file_in, joined_value, parse_string_list, selects_v2, strip_comment,
+    config_file_in, joined_value, selects_v2, strip_comment, unloaded_string_list,
 };
 use crate::model::{Diagnostic, OperationDiagnostic, is_hidden, sort_path_key};
 
@@ -372,7 +372,7 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
             Some(value.trim().to_string())
         };
         *slot = value
-            .and_then(|value| parse_string_list(config_path, idx + 1, &value).ok())
+            .and_then(|value| unloaded_string_list(spans_lines, config_path, idx + 1, &value))
             .ok_or_else(|| format!("`{name}` is not a list of strings"))?;
     }
     entries.extend(optional);
