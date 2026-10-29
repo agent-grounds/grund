@@ -124,13 +124,37 @@ drawn beside it ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schem
 A kind's fields follow its node, in header order, one line each: `field <name>`,
 then its presence, its placement where one is set (`first`, `last`, or
 `after <field>`), and its content where it is not prose (`one of A, B` for a
-scalar field, `values` for a value chapter), joined by ` · `. A value kind's
+scalar field, `values` for a value chapter), and last its title where the field sets
+`title` (`titled` and the title as a code span), joined by ` · `. A value kind's
 numbered children are one line, `field <number>`. A kind whose
 `closed` strength is not `may` adds the line `closed <strength>` after its fields.
 These are the slots the checks read ([§FS-fields.record](FS-fields.md#record-the-record)), so the view and
 `grund check` cannot describe two shapes. A `front-matter` field adds `closed <strength>`
 to its own line where that is not `may`, and each of its keys follows as `key <name>`, two
 columns deeper, with its presence and its `one of A, B` ([§FS-fields.front-matter.record](FS-fields.md#front-matterrecord-the-record-and-what-renders-it)).
+
+The title is the exact text a field's heading must carry, which `grund check` holds
+byte for byte ([§FS-fields.identity.match](FS-fields.md#identitymatch-titles-and-values-match-byte-for-byte)), so the view names it before the author
+writes rather than after `check` refuses the heading ([§FS-fields.requirements.record](FS-fields.md#requirementsrecord-the-agent-and-a-schema-view-read-the-shape-the-checks-read--realized)). It is
+written as a Markdown code span: the title's bytes between fences of backticks one
+longer than the longest run of backticks inside it, with one space inside each fence
+where the title begins or ends with a backtick. A control character in it is written
+as its TOML basic-string escape (`\n`, `\t`, `\r`, otherwise `\uXXXX`), so the line
+stays one line. Only a prose field or a value chapter can carry a title; a scalar,
+a `front-matter` field and its keys, and a value kind's `field <number>` cannot, and
+their lines do not change. A field with no title prints the line it printed before
+titles were shown. For the issue's RFC kind, with an untitled `amendments`:
+
+```text
+  RFC   kind                             rfcs/text/
+          field summary                  must · first · titled `Summary`
+          field motivation               must · after summary · titled `Motivation`
+          field guide-level-explanation  must · after motivation · titled `Guide-level explanation`
+          field amendments               may · last
+          closed must
+```
+
+The form, and the forms it was chosen over, are [§DF-field-line-names-its-title](../decisions/functional/DF-field-line-names-its-title.md#df-field-line-names-its-title-a-field-line-names-the-heading-title-the-field-is-held-to).
 
 ### 4.2 A node no direction rule names is set apart
 
@@ -426,8 +450,10 @@ exit `1`: the command makes no query that can fail ([§FS-cli.5](FS-cli.md#5-exi
 - **No ID graph.** The view draws the configuration, never declarations, their
   citations or their counts ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)); there is no instance overlay, no
   `--toc`, and no browser hosting.
-- **No change to `grund config show`** or to the managed block's bytes
-  ([§FS-fields.record](FS-fields.md#record-the-record)).
+- **No change to `grund config show`** ([§FS-fields.record](FS-fields.md#record-the-record)). The managed block prints
+  the view's field lines ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)), so a change to their wording, such as
+  naming a field's title ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)), is a block-version change
+  ([§FS-init.2.3.7](FS-init.md#237-the-block-version)).
 
 ## 14. Where an agent learns it
 

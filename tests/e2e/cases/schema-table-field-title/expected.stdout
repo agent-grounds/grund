@@ -1,0 +1,19 @@
+skerry · grund.toml · v2
+
+kinds and places
+  RFC   kind                             rfcs/text/
+          field summary                  must · first · titled `Summary`
+          field motivation               must · after summary · titled `Motivation`
+          field guide-level-explanation  must · after motivation · titled `Guide-level explanation`
+          field drawbacks                may · after guide-level-explanation · titled `Drawbacks & "open" *questions*`
+          field amendments               may · last
+          closed must
+  code  complement                       every scanned file no other row claims
+
+citations
+  RFC   —
+  code  —
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it
