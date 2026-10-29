@@ -17,9 +17,9 @@ use super::tables::{self, Opened, Table};
 use super::{defaults, fields, front_matter, measures, presentation, rules, schema};
 use crate::config::fields::FRONT_MATTER;
 use crate::config::kind::KindResolution;
-use crate::config::project::{CommaWithoutElement, Project, StringOverBreak};
+use crate::config::project::{Project, StringOverBreak};
 use crate::config::record::ConfigLocation;
-use crate::config::v1::{bail_config, string_close, strip_comment};
+use crate::config::v1::{bail_config, list_elements, string_close, strip_comment};
 use crate::grammar::is_escaped;
 
 /// The reader's state: the project lowered so far, and what only the whole
@@ -258,15 +258,8 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
                 .strings_over_breaks
                 .push(StringOverBreak { at, open });
         }
-        reader.value = JoinedLines::new(line_no, joined.starts);
+        reader.value = JoinedLines::new(line_no, joined.starts, joined.through_window);
         reader.entry(key.trim(), &value, line_no)?;
-        // §FS-config-v2.reader.5.commas.window: warned for once its elements load.
-        if let Some(comma) = joined.commas
-            && let Some(at) = reader.at(line_no)
-        {
-            let commas = CommaWithoutElement { at, line: comma };
-            reader.project.commas_without_elements.push(commas);
-        }
     }
     reader.close()
 }
@@ -278,9 +271,10 @@ pub(crate) struct Joined {
     /// The array's open line, the first that ends inside a string
     /// (§FS-config-v2.reader.5.strings); `None` when every string closes on its line.
     pub(crate) open: Option<OpenLine>,
-    /// The line of the first comma with no element before it in the run taken off before
-    /// the `]` (§FS-config-v2.reader.5.commas), 1-based; `None` when there is none.
-    pub(crate) commas: Option<usize>,
+    /// Whether the array's text read through the 0.21.x window: taking off the whole run of
+    /// commas before its `]` would leave no empty element where the one trailing comma
+    /// leaves one (§FS-config-v2.reader.5.commas.refusal).
+    pub(crate) through_window: bool,
     /// Where in `value` each line after the key's starts, in order, so a place in the value
     /// names the line it was written on (§FS-config-v2.reader.6.multi-line).
     pub(crate) starts: Vec<usize>,
@@ -311,8 +305,8 @@ impl OpenLine {
 
 /// The value a `key = value` line starts, read as the reader reads it
 /// (§FS-config-v2.reader.5): an array written across lines takes the lines it
-/// spans from `lines`, joined into one, and loses the run of commas before its `]`,
-/// reporting the first with no element before it (§FS-config-v2.reader.5.commas.window). `line` is the key's line, 1-based, and `lines` yields each line
+/// spans from `lines`, joined into one, and loses the one trailing comma after its last
+/// element (§FS-config-v2.reader.5.commas). `line` is the key's line, 1-based, and `lines` yields each line
 /// after it with its 0-based index, as `str::lines().enumerate()` does.
 /// The ancestor climb reads `[workspace] members` through this too, so a value the
 /// config loads is never one the climb cannot read (§FS-workspace.6.1.7.5).
@@ -332,7 +326,7 @@ pub(crate) fn joined_value<'a>(
         return Joined {
             value: Some(value),
             open: None,
-            commas: None,
+            through_window: false,
             starts,
         };
     }
@@ -344,7 +338,7 @@ pub(crate) fn joined_value<'a>(
             return Joined {
                 value: None,
                 open,
-                commas: None,
+                through_window: false,
                 starts,
             };
         };
@@ -355,13 +349,11 @@ pub(crate) fn joined_value<'a>(
         brackets.read(next);
         open = open.or(brackets.open_line(idx + 1));
     }
-    let (value, comma) = array_value(&value);
-    // §FS-config-v2.reader.5.commas.window: the line the comma stands on, not the key's.
-    let commas = comma.map(|at| line + starts.partition_point(|&start| start <= at));
+    let (value, through_window) = array_value(&value);
     Joined {
         value: Some(value),
         open,
-        commas,
+        through_window,
         starts,
     }
 }
@@ -414,26 +406,27 @@ impl Brackets {
     }
 }
 
-/// An array value with the run of adjacent commas before its `]` taken off, as the
-/// readers before grund 0.21.0 took it off (§FS-config-v2.reader.5.commas.window), and
-/// where in `value` the first comma of that run with no element before it stands: one
-/// whose text before it, whitespace skipped, ends in `[` or `,`
-/// (§FS-config-v2.reader.5.commas). Only a run that holds such a comma differs from the
-/// one trailing comma TOML allows.
-fn array_value(value: &str) -> (String, Option<usize>) {
-    match value.strip_suffix(']') {
-        Some(inner) if value.starts_with('[') && inner.trim_end().ends_with(',') => {
-            let kept = inner.trim_end().trim_end_matches(',');
-            let run = inner.trim_end().len() - kept.len();
-            let first = if kept.trim_end().ends_with(['[', ',']) {
-                Some(kept.len())
-            } else {
-                (run > 1).then_some(kept.len() + 1)
-            };
-            (format!("{kept}]"), first)
-        }
-        _ => (value.to_string(), None),
+/// An array value with its one trailing comma taken off, the one TOML allows: a comma
+/// before the `]` whose text before it, whitespace skipped, is neither `[` nor `,`
+/// (§FS-config-v2.reader.5.commas). Any other comma before the `]` has no element before
+/// it and stays for the element reader to refuse (§FS-config-v2.reader.5.commas.refusal),
+/// which is told whether the array's text read through the 0.21.x window: whether taking
+/// off the whole run of adjacent commas, as the 0.18.0 to 0.21.x readers did, would have
+/// left no empty element behind.
+fn array_value(value: &str) -> (String, bool) {
+    let Some(inner) = value.strip_suffix(']').filter(|_| value.starts_with('[')) else {
+        return (value.to_string(), false);
+    };
+    let Some(before) = inner.trim_end().strip_suffix(',') else {
+        return (value.to_string(), false);
+    };
+    if !before.trim_end().ends_with(['[', ',']) {
+        return (format!("{before}]"), false);
     }
+    let run_off = format!("{}]", before.trim_end_matches(','));
+    let through_window = list_elements(&run_off)
+        .is_some_and(|elements| elements.iter().all(|element| !element.is_empty()));
+    (value.to_string(), through_window)
 }
 
 /// The dotted name a header line writes. v2 writes every table under its own
