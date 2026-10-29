@@ -61,8 +61,8 @@ impl Code {
     pub(crate) const UNDECIDABLE_WORKSPACE_CLAIM: Code = Code("undecidable-workspace-claim");
 
     /// The check findings about a config line that a terminal still prints CLI-level,
-    /// the line in their text (§FS-errors.2.2.1) as well as in `line`: the version-2
-    /// window's warnings (§FS-config-v2.checks.config-not-toml,
+    /// the line in their text (§FS-errors.2.2.1) as well as in `line` (§FS-errors.5.2.3):
+    /// the version-2 window's warnings (§FS-config-v2.checks.config-not-toml,
     /// §FS-config-v2.checks.config-multiline-string).
     const CLI_LEVEL_AT_A_LINE: [Code; 2] = [Code::CONFIG_MULTILINE_STRING, Code::CONFIG_NOT_TOML];
 }
@@ -128,8 +128,8 @@ impl Finding {
     /// Whether a terminal prints this finding as a CLI-level message on stderr
     /// (§FS-errors.2.2) rather than as a located one on stdout (§FS-errors.2.1): one
     /// with no line, and one of the few whose line a config file holds and whose
-    /// message already names it (§FS-config-v2.checks.config-not-toml). Asked of the
-    /// finding, so text and JSON put it on the same stream.
+    /// message already names it (§FS-errors.5.2.3). Asked of the finding, so text and
+    /// JSON put it on the same stream.
     pub fn is_cli_level(&self) -> bool {
         self.line.is_none() || Code::CLI_LEVEL_AT_A_LINE.contains(&Code(self.code))
     }
