@@ -1,0 +1,1 @@
+check {repo} --rule 'REQ-coupons.2.2 must be cited by at least one DESIGN.' --only-rule

@@ -288,13 +288,16 @@ chapters, and a count must be positive ([§FS-rules.2](../../docs/functional-spe
 
 ```console
 $ grund check examples/rust-rfc/2-check/repo --rule 'The unresolved-questions chapter of each RFC must have at most 1 open chapter.' --only-rule
-error: chapter subjects cannot have chapters; accepted form: Each RFC must have at most 1 open chapter.
+error: chapter subjects cannot have chapters
 $ grund check examples/rust-rfc/2-check/repo --rule 'Each RFC must have at most 0 unresolved-questions chapters.' --only-rule
 error: count must be a canonical positive base-10 integer
 ```
 
-The accepted form offered counts something else: chapters named `open`
-directly under each RFC. Two more pieces are missing as well. Which RFCs are
+The first refusal offers no accepted form, because every rule sentence grund
+could build would count other chapters than the ones under
+`unresolved-questions` ([§FS-rule-refusals.sentences.rewrite.same-units](../../docs/functional-spec/FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)). The
+question it asks is the one `grund list --glob 'RFC-*.unresolved-questions.*'`
+above answers. Two more pieces are missing as well. Which RFCs are
 stable is not in the file: it lives on the tracking issue, and nothing in a
 rule can select "each RFC whose status is stable". And a chapter-presence rule
 names a chapter by its title, in one word, so it cannot name

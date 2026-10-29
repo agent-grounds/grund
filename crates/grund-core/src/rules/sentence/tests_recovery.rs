@@ -2,9 +2,10 @@
 //! it back, on a hand-written vocabulary with named sections off
 //! (§FS-rule-refusals.sentences.named-sections). A selector's `KIND.NAME[.NAME…]` is a rule's
 //! `The NAME[.NAME…] chapter of each KIND`, and a selector's bare `KIND` is a
-//! rule's `Each KIND`.
+//! rule's `Each KIND`. The rule surfaces offer that subject only where it drops
+//! no typed component (§FS-rule-refusals.sentences.rewrite.same-units).
 
-use super::{Recovered, as_if_enabled, enabled, recover, recover_subject};
+use super::{enabled, recover, recover_subject};
 use crate::config::{Config, KindTable};
 use crate::rules::sentence::RuleVocabulary;
 use crate::rules::sentence::subjects::parse_subject;
@@ -36,12 +37,15 @@ fn named_off(kinds: &[&str]) -> RuleVocabulary {
     }
 }
 
-/// The selector and the rule subject recovered from `subject`'s refusal once
-/// named sections are on, or `None` where no configured kind is recovered.
-fn spelled(subject: &str, off: &RuleVocabulary) -> Option<(String, String)> {
+/// The selector recovered from `subject`'s refusal once named sections are on,
+/// and the rule subject the rule surfaces offer for it, if any; `None` where no
+/// configured kind is recovered.
+fn spelled(subject: &str, off: &RuleVocabulary) -> Option<(String, Option<String>)> {
     let on = enabled(off).expect("{kind}-{slug} compiles with named sections");
     let refusal = parse_subject(subject, &on).expect_err("refused with named sections on");
-    recover(&refusal, &on).map(|recovered| (recovered.selector(), recovered.rule_subject()))
+    let rule = refusal.rule_refusal(&on);
+    let rule = rule.offered().map(|(subject, _)| subject.to_string());
+    recover(&refusal, &on).map(|recovered| (recovered.selector(), rule))
 }
 
 /// §FS-rule-refusals.sentences.rewrite.recovered: recovery uses typed scope and
@@ -73,7 +77,9 @@ fn offer_scope_keeps_recoverable_chapters_and_literals_or_offers_nothing() {
             } else {
                 vec![canonical, "FS.requirements"]
             };
-            if rule != canonical || !selectors.contains(&selector.as_str()) {
+            if rule.as_deref().is_some_and(|rule| rule != canonical)
+                || !selectors.contains(&selector.as_str())
+            {
                 wrong.push(format!(
                     "{subject}: recovered selector {selector:?}, rule subject {rule:?}; \
                      expected scope {canonical:?} or no offer"
@@ -85,9 +91,11 @@ fn offer_scope_keeps_recoverable_chapters_and_literals_or_offers_nothing() {
 }
 
 /// §FS-rule-refusals.sentences.rewrite.recovered: the invalid-component policy
-/// still applies when `Each` left the refused path in the subject head.
+/// still applies when `Each` left the refused path in the subject head, and the
+/// rule, which would lose the typed component, is offered nothing
+/// (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
-fn each_path_recovery_keeps_the_valid_prefix_on_both_surfaces() {
+fn each_path_recovery_keeps_the_valid_prefix_only_as_a_selector() {
     let vocabulary = named_off(&["FS"]);
     for (subject, canonical) in [
         ("Each FS.*", "Each FS"),
@@ -102,14 +110,16 @@ fn each_path_recovery_keeps_the_valid_prefix_on_both_surfaces() {
     ] {
         assert_eq!(
             spelled(subject, &vocabulary),
-            Some((canonical.into(), canonical.into())),
+            Some((canonical.into(), None)),
             "{subject}"
         );
     }
 }
 
 /// §FS-rule-refusals.sentences.rewrite.recovered: removing `Each` also keeps a
-/// literal and its valid named prefix when a later chapter component is refused.
+/// literal and its valid named prefix when a later chapter component is refused,
+/// which a rule is offered only where the component is a trailing empty one
+/// (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
 fn each_literal_path_recovery_keeps_the_literal_and_valid_prefix() {
     for (separator, format, literal) in [
@@ -140,9 +150,10 @@ fn each_literal_path_recovery_keeps_the_literal_and_valid_prefix() {
             } else {
                 format!("{literal}{separator}{prefix}")
             };
+            let rule = (path == "requirements.").then(|| canonical.clone());
             assert_eq!(
                 spelled(&subject, &off),
-                Some((canonical.clone(), canonical)),
+                Some((canonical, rule)),
                 "{subject}"
             );
             let refusal = parse_subject(&subject, &off).expect_err("Each literal is refused");
@@ -167,34 +178,32 @@ fn offer_scope_suppresses_unnamed_chapter_quantifiers() {
 }
 
 /// §FS-rule-refusals.sentences.named-sections step 2: every rebuilt row of the table, and the rewrites the
-/// point states beyond it, from one set of recovered parts.
+/// point states beyond it, from one set of recovered parts. The selector keeps
+/// every row; the rule is offered none where a typed component was dropped
+/// (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
 fn every_rebuilt_row_is_spelled_as_a_selector_and_as_a_rule_subject() {
     let off = named_off(&["FS", "REQ", "GOAL"]);
     let chapter = "The requirements chapter of each FS";
     for (subject, selector, rule) in [
-        ("FS-*.requirements", "FS.requirements", chapter),
-        ("FS.requirements", "FS.requirements", chapter),
-        ("The requirements.1 chapter of each FS", chapter, chapter),
-        ("FS-login.Requirements", "FS-login", "FS-login"),
-        ("The Requirements chapter of each FS", "Each FS", "Each FS"),
-        ("The * chapter of each FS", "Each FS", "Each FS"),
+        ("FS-*.requirements", "FS.requirements", Some(chapter)),
+        ("FS.requirements", "FS.requirements", Some(chapter)),
+        ("The requirements.1 chapter of each FS", chapter, None),
+        ("FS-login.Requirements", "FS-login", None),
+        ("The Requirements chapter of each FS", "Each FS", None),
+        ("The * chapter of each FS", "Each FS", None),
         (
             "FS.requirements.security",
             "FS.requirements.security",
-            "The requirements.security chapter of each FS",
+            Some("The requirements.security chapter of each FS"),
         ),
-        ("FS-*.Requirements", "FS", "Each FS"),
+        ("FS-*.Requirements", "FS", None),
         // A declaration written as a valid ID is kept, with its named run.
-        (
-            "FS-login.requirements.Scope",
-            "FS-login.requirements",
-            "FS-login.requirements",
-        ),
+        ("FS-login.requirements.Scope", "FS-login.requirements", None),
     ] {
         assert_eq!(
             spelled(subject, &off),
-            Some((selector.to_string(), rule.to_string())),
+            Some((selector.to_string(), rule.map(str::to_string))),
             "{subject}"
         );
     }
@@ -212,32 +221,39 @@ fn the_kind_is_recovered_from_the_configured_kinds_or_not_at_all() {
         spelled("FSA-*.requirements", &named_off(&["FS", "FSA", "REQ"])),
         Some((
             "FSA.requirements".to_string(),
-            "The requirements chapter of each FSA".to_string()
+            Some("The requirements chapter of each FSA".to_string())
         ))
     );
 }
 
 /// §FS-rule-refusals.sentences.named-sections steps 1 and 3 on the rule side: a subject enabling makes
 /// valid is kept as typed, and the label follows from parsing the suggestion
-/// as configured.
+/// as configured. One rebuilt by dropping a typed component is not suggested
+/// (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
 fn a_subject_enabling_makes_valid_is_kept_and_the_label_is_decided_by_parsing() {
     let off = named_off(&["FS", "REQ", "GOAL"]);
-    let suggest = |subject| {
-        as_if_enabled(subject, &off, parse_subject, Recovered::rule_subject)
-            .map(|suggested| (suggested.text, suggested.after_enabling))
+    let suggest = |subject: &str| {
+        let refusal = parse_subject(subject, &off).expect_err("refused with named sections off");
+        let refusal = refusal.rule_refusal(&off);
+        refusal
+            .offered()
+            .map(|(text, after_enabling)| (text.to_string(), after_enabling))
     };
     let chapter = "The requirements chapter of each FS";
-    for (subject, text, after_enabling) in [
-        ("FS-login.requirements", "FS-login.requirements", true),
-        (chapter, chapter, true),
-        ("FS-*.requirements", chapter, true),
-        ("FS-login.Requirements", "FS-login", false),
-        ("The * chapter of each FS", "Each FS", false),
+    for (subject, suggested) in [
+        (
+            "FS-login.requirements",
+            Some(("FS-login.requirements", true)),
+        ),
+        (chapter, Some((chapter, true))),
+        ("FS-*.requirements", Some((chapter, true))),
+        ("FS-login.Requirements", None),
+        ("The * chapter of each FS", None),
     ] {
         assert_eq!(
             suggest(subject),
-            Some((text.to_string(), after_enabling)),
+            suggested.map(|(text, after_enabling)| (text.to_string(), after_enabling)),
             "{subject}"
         );
     }

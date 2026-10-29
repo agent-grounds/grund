@@ -308,9 +308,11 @@ fn as_rule_subject(selector: &str) -> String {
 
 /// §FS-rule-refusals.selectors, §FS-rule-refusals.sentences.rewrite.recovered: a rule sentence over a refused subject is
 /// answered with the subject `list --selector` gives it, written as a rule
-/// subject under the typed predicate. Safe suppression with a recovered kind
-/// prints no `known kinds:` on the rule surface. Only what follows the reason
-/// is compared, because the
+/// subject under the typed predicate, save where that subject drops a typed
+/// component, which the rule is offered nothing for
+/// (§FS-rule-refusals.sentences.rewrite.same-units). Safe suppression with a
+/// recovered kind prints no `known kinds:` on the rule surface. Only what
+/// follows the reason is compared, because the
 /// reasons are agent-grounds/grund#507's to correct.
 #[test]
 fn the_rule_side_answers_a_refused_subject_as_the_selector_does() {
@@ -333,8 +335,16 @@ fn the_rule_side_answers_a_refused_subject_as_the_selector_does() {
     ] {
         let listed = text(&run(&repo(), &["list", ".", "--selector", subject]).stderr);
         let first = listed.lines().next().unwrap_or_default();
+        let dropped = [
+            "The requirements.1 chapter of each FS",
+            "FS.*",
+            "FS-login.*",
+            "FS-login.requirements.1",
+            "FS.requirements.1",
+            "FS-login..requirements",
+        ];
         let expected = match first.split_once("; accepted selector: ") {
-            _ if subject == "Each chapter of each FS" => "\n".into(),
+            _ if subject == "Each chapter of each FS" || dropped.contains(&subject) => "\n".into(),
             Some((_, selector)) => {
                 format!(
                     "; accepted form: {} {predicate}\n",

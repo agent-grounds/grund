@@ -84,15 +84,15 @@ fn fs_only_sentences() -> Vec<(&'static str, Answer)> {
         ),
         (
             "FS-login.requirements must have exactly one should chapter.",
-            Form,
+            NoForm,
         ),
         (
             "The requirements chapter of each FS should have at least one should chapter.",
-            Form,
+            NoForm,
         ),
         ("FS-*.requirements must cite at least one FS.", Form),
-        ("FS.* must cite at least one FS.", Form),
-        ("FS-login.2 should cite at most 2 FS.", Form),
+        ("FS.* must cite at least one FS.", NoForm),
+        ("FS-login.2 should cite at most 2 FS.", NoForm),
         (
             "Each chapter of each FS must be cited by at least one FS.",
             NoForm,
@@ -123,13 +123,16 @@ fn named_on_sentences() -> Vec<(&'static str, Answer)> {
     vec![
         ("FS-login.requirements must cite at least 1 REQ.", Form),
         ("Each REQ should be cited by exactly 1 FS or GOAL.", Form),
-        ("FS-login.requirements.1 must cite at least one GOAL.", Form),
-        ("FS-login.* must cite at least one REQ.", Form),
+        (
+            "FS-login.requirements.1 must cite at least one GOAL.",
+            NoForm,
+        ),
+        ("FS-login.* must cite at least one REQ.", NoForm),
         (
             "Each chapter of each REQ must cite at least one GOAL.",
             NoForm,
         ),
-        ("REQ-password.2 must cite at least one GOAL.", Form),
+        ("REQ-password.2 must cite at least one GOAL.", NoForm),
         ("Each REQ must have exactly 02 requirements chapters.", Form),
         ("Each GOAL must cite a REQ.", Form),
         (
@@ -158,10 +161,10 @@ fn named_off_sentences() -> Vec<(&'static str, Answer)> {
         ("FS-*.requirements must cite at least one GOAL.", Form),
         (
             "FS-login.Requirements should be cited by at most 2 GOAL.",
-            Form,
+            NoForm,
         ),
         ("FS-login.requirements must cite at least 1 GOAL.", Form),
-        ("FS-login.2 must cite at least one GOAL.", Form),
+        ("FS-login.2 must cite at least one GOAL.", NoForm),
         ("Each REQ must cite at least 1 GOAL.", Form),
         (
             "FS-login.requirements must cite at least one POLICY.",
@@ -288,7 +291,9 @@ fn every_offered_form_is_accepted_when_pasted_back() {
 }
 
 /// §FS-rule-refusals.sentences.rewrite.no-form: a refusal with nothing to supply offers no form; it is
-/// its reason alone, followed by `known kinds:` only where a kind is missing.
+/// its reason alone, followed by `known kinds:` only where a kind is missing. A
+/// refusal whose every form would judge other units is one of them
+/// (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
 fn a_refusal_with_nothing_to_supply_is_its_reason_alone() {
     let (off, on) = (named_off(), named_on());

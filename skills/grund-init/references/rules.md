@@ -114,7 +114,7 @@ Replace an existing per-target `at most 1 times` with `at most once`, then rerun
 stops init before it writes ([migration decision](https://github.com/agent-grounds/grund/blob/main/docs/decisions/functional/DF-per-target-once-ceiling.md#compatibility-use-the-pre-10-allowance-not-a-verdict-correction)).
 
 <!-- BEGIN chapter-rules-refused -->
-Common refusals are intentional. A sentence is refused for the first stage it fails, and no later stage is read: the final `.`, the fixed word and the phase-1 subject, a conjunction, the modality, the rest of the subject, then the predicate. A configured kind that declares no IDs is refused as that, naming its home, rather than as an unknown kind, as in `kind "e2e" declares no IDs — tests/e2e/ is not a citable home`. Each names what failed and offers your sentence with only the refused part replaced, which is accepted when you paste it back; where grund cannot know what belongs in its place, it offers nothing, and `grund check --rule` lists the known kinds when what is missing is a kind:
+Common refusals are intentional. A sentence is refused for the first stage it fails, and no later stage is read: the final `.`, the fixed word and the phase-1 subject, a conjunction, the modality, the rest of the subject, then the predicate. A configured kind that declares no IDs is refused as that, naming its home, rather than as an unknown kind, as in `kind "e2e" declares no IDs — tests/e2e/ is not a citable home`. Each names what failed and offers your sentence with only the refused part replaced, which is accepted when you paste it back and judges the same declarations and chapters you named; where grund cannot know what belongs in its place, or every sentence it could offer would judge other ones, it offers nothing, and `grund check --rule` lists the known kinds when what is missing is a kind:
 
 - `Each FS may not cite any AR.` → `modality "may not" is not accepted; accepted form: Each FS must not cite any AR.`
 - `Each FS must cite no AR.` → `"cite no" is not accepted; accepted form: Each FS must not cite any AR.`
@@ -131,9 +131,9 @@ Common refusals are intentional. A sentence is refused for the first stage it fa
 - `AR-overview.system-overview must cite every AR exactly once.` → `quantifier "every" is not accepted; accepted form: AR-overview.system-overview must cite each AR exactly once.`
 - `Each file in vendor/ must cite at least one FS.` → `path subjects are not accepted in phase 1`, then `known kinds: GOAL, REQ, FS, AR, RULE`
 - `Each */FS must cite at least one GOAL.` → `subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one GOAL.`
-- `FS-login.* must cite at least one REQ.` → `section-component wildcards are not accepted in phase 1; accepted form: FS-login must cite at least one REQ.`
+- `FS-login.* must cite at least one REQ.` → `section-component wildcards are not accepted in phase 1` (no rewrite)
 - `Each chapter of each FS must cite at least one REQ.` → `chapter-quantified subjects are not accepted in phase 1` (no rewrite)
-- `FS-login.2 must cite at least one REQ.` → `numbered chapter subjects can detach when headings move; accepted form: FS-login must cite at least one REQ.`
+- `FS-login.2 must cite at least one REQ.` → `numbered chapter subjects can detach when headings move` (no rewrite)
 - With named sections off, `FS-login.requirements must cite at least one REQ.` → `named chapter subjects require [id] named_sections = true; accepted form after enabling it: FS-login.requirements must cite at least one REQ.`
 - `Each POLICY must cite at least one GOAL.` → `unknown kind "POLICY"`, then `known kinds: GOAL, REQ, FS, AR, RULE`
 <!-- END chapter-rules-refused -->
@@ -147,6 +147,18 @@ name that same scope. `FS-store requirements chapter` can be repaired to
 recover that scope unambiguously, it offers no form. An unnamed
 `Each chapter of each FS` therefore gets no rewrite; choose the chapter
 explicitly. See [scope-preserving recovery](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied).
+
+Nor does an offer drop a chapter you typed to reach a sentence grund accepts,
+because the declaration or parent chapter left behind would judge other units:
+the rule would pass on a citation of any chapter, or count the wrong chapters.
+`FS-login.2`, `FS-login.*` and `The requirements.1 chapter of each FS` get no
+rewrite, and neither does a chapter subject given a chapter count, as in
+`FS-login.requirements must have exactly one should chapter.`. No rule sentence
+asks those questions today. To see whether a numbered section is cited, run
+`grund refs FS-login.2`; to count the chapters under a chapter, list them with
+`grund list --glob 'FS-*.requirements.*'`. `grund list --selector` still
+answers `FS.requirements.1` with `FS.requirements`, because a selector judges
+nothing. See [offers that judge the same units](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered).
 
 Use `Each` for a declaration subject and `each` after `chapter of` or `cite`.
 The unsupported quantifier `every` stays refused; grund offers the `each`
