@@ -134,7 +134,7 @@ pub use slots::{Content, Handle, Slot};
 // directory that can name any of it.
 pub(crate) use discovery::{
     config_at, config_file_in, config_file_under, discover_config, discovery_start_dir,
-    home_form_of, pending_config, unread_project_name,
+    home_form_of, pending_config, unloaded_string_list, unread_project_name,
 };
 #[cfg(test)]
 pub(crate) use discovery::{load_config, load_config_at};
@@ -160,8 +160,7 @@ pub(crate) use scope_roots::{
     canonical_config_root, file_root_rows, root_scope_roots, unwalked_home_roots, unwalked_homes,
 };
 pub(crate) use v1::{
-    DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR, default_kind_folder, parse_string_list,
-    strip_comment,
+    DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR, default_kind_folder, strip_comment,
 };
 pub(crate) use v2::{joined_value, selects as selects_v2};
 pub(crate) use validate::{citations_table, reject_unaccepted_citation_targets};

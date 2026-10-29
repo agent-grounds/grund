@@ -161,7 +161,6 @@ impl Drop for Fixture {
 /// grund.159's first case: `fetch = "one" "two"` still loads as the one string `one" "two`,
 /// and warns with the scalar's remedy, the `\"` half alone.
 #[test]
-#[ignore = "red until #1088 warns for a scalar that closes early; implement removes this"]
 fn a_scalar_that_closes_early_warns_and_is_read_as_before() {
     Fixture::v2("fetch = \"one\" \"two\"\n").warns(
         "config-not-toml",
@@ -175,7 +174,6 @@ fn a_scalar_that_closes_early_warns_and_is_read_as_before() {
 /// grund.159's second case: `folders = ["a" "b"]`, a comma forgotten, still loads as the one
 /// folder `a" "b`, and warns with both halves of an element's remedy.
 #[test]
-#[ignore = "red until #1088 warns for an element that closes early; implement removes this"]
 fn an_element_that_closes_early_warns_and_is_read_as_before() {
     Fixture::v2("folders = [\"a\" \"b\"]\n").warns(
         "config-not-toml",
@@ -188,7 +186,6 @@ fn an_element_that_closes_early_warns_and_is_read_as_before() {
 
 /// grund.159's third case: a `[presentation.kinds]` title is a scalar like any other.
 #[test]
-#[ignore = "red until #1088 warns for a presentation title that closes early; implement removes this"]
 fn a_presentation_title_that_closes_early_warns_and_is_read_as_before() {
     Fixture::v2("\n[presentation.kinds.SPEC]\ntitle = \"one\" \"two\"\n").warns(
         "config-not-toml",
@@ -202,7 +199,6 @@ fn a_presentation_title_that_closes_early_warns_and_is_read_as_before() {
 /// §FS-config-v2.reader.6: a quoted key is a string of its own, and earns its own warning
 /// with the scalar's remedy.
 #[test]
-#[ignore = "red until #1088 warns for a quoted key that closes early; implement removes this"]
 fn a_quoted_key_that_closes_early_warns_and_is_read_as_before() {
     Fixture::v2("\n[schema.sources.extensions]\n\"md\" \"x\" = \"markdown\"\n").warns(
         "config-not-toml",
@@ -216,7 +212,6 @@ fn a_quoted_key_that_closes_early_warns_and_is_read_as_before() {
 /// §FS-config-v2.reader.6.multi-line: `title = """one"""` is TOML version 2 does not read;
 /// it loads as `""one""`, its quotes kept, and earns `config-multiline-string`.
 #[test]
-#[ignore = "red until #1088 warns for a one-line multi-line string; implement removes this"]
 fn a_triple_quoted_string_on_one_line_warns_that_version_2_does_not_read_it() {
     let warning = "warning: grund.toml:10: expected string (a multi-line string, which version 2 \
                    does not read), read for now as `\"\"one\"\"`, its quotes kept; write the \
@@ -234,7 +229,6 @@ fn a_triple_quoted_string_on_one_line_warns_that_version_2_does_not_read_it() {
 /// §FS-config-v2.reader.6.window: in an array written across lines the warning stays at the
 /// key's line, and its remedy names line 12, where the string closes early.
 #[test]
-#[ignore = "red until #1088 names the line a string closes early on; implement removes this"]
 fn an_element_on_a_later_line_names_the_line_it_closes_on() {
     Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\",\n  \"b\" \"c\",\n]\n").warns(
         "config-not-toml",
@@ -248,7 +242,6 @@ fn an_element_on_a_later_line_names_the_line_it_closes_on() {
 /// §FS-config-v2.reader.6.window: a value earns one warning however many of its strings
 /// close early, naming the first.
 #[test]
-#[ignore = "red until #1088 warns once per value, naming its first early close; implement removes this"]
 fn a_value_with_two_early_closes_earns_one_warning_naming_the_first() {
     Fixture::v2("\n[schema.sources]\nexclude = [\"a\" \"b\", \"c\" \"d\"]\n").warns(
         "config-not-toml",
@@ -389,7 +382,6 @@ fn version_1_keeps_its_reading_with_only_the_version_1_caution() {
 /// §FS-config-migrate.3.1.8: migrating a version-1 scalar that closes early is refused at its
 /// key's line with the scalar's version-1 repair, and nothing is written.
 #[test]
-#[ignore = "red until #1088 refuses to migrate a version-1 scalar that closes early; implement removes this"]
 fn migrating_a_version_1_scalar_that_closes_early_is_refused() {
     let fx = v1_folder();
     let before = fs::read(fx.0.join("grund.toml")).unwrap();
@@ -406,7 +398,6 @@ fn migrating_a_version_1_scalar_that_closes_early_is_refused() {
 /// §FS-config-migrate.3.1.8: migrating a version-1 element that closes early is refused at
 /// its key's line with both halves of an element's version-1 repair.
 #[test]
-#[ignore = "red until #1088 refuses to migrate a version-1 element that closes early; implement removes this"]
 fn migrating_a_version_1_element_that_closes_early_is_refused() {
     let fx = v1_include();
     let report = "grund.toml: version 1 → 2, preview, nothing written\n\

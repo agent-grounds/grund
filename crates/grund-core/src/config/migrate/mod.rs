@@ -157,6 +157,7 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
     refusals.extend(places::nested_homes(&project, &keys, root));
     refusals.extend(include.refusals.iter().cloned());
     refusals.extend(languages.refusals.iter().cloned());
+    refusals.extend(refusals::strings_closing_early(&keys, shown));
     refusals.sort_by_key(|refusal| match refusal.anchor {
         RefusalAnchor::Line(line) => line,
         RefusalAnchor::Unset | RefusalAnchor::File => usize::MAX,

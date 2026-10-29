@@ -12,7 +12,7 @@ use super::walk::Reader;
 use crate::config::point_sizes::{LeadSizeWarning, PointSizeUnit};
 use crate::config::project::{Strength, Threshold};
 use crate::config::record::ConfigLocation;
-use crate::config::v1::{parse_bool, parse_string, parse_usize};
+use crate::config::v1::{parse_bool, parse_usize};
 
 /// One strength key of a measure table. Measures take positive strengths only
 /// (§FS-config-v2.rules.strengths), so a prohibition is an unknown key.
@@ -180,7 +180,7 @@ pub(super) fn layout_key(
         );
     }
     *first = Some(line);
-    let layout = parse_string(r.path, line, value)?;
+    let layout = r.string(line, value)?;
     if !matches!(layout.as_str(), "any" | "citation-first-colon") {
         return r.fail(
             line,

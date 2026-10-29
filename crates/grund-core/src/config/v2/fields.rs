@@ -12,7 +12,6 @@ use super::walk::Reader;
 use crate::config::fields::{FRONT_MATTER, Field, FieldContent, FrontMatterShape, Placement};
 use crate::config::project::Strength;
 use crate::config::rows::Form;
-use crate::config::v1::{parse_string, parse_string_list};
 use crate::grammar::named_section_component;
 
 /// One field table as written, each key at its line.
@@ -142,8 +141,8 @@ pub(super) fn field_key(
     let both = format!("field {label} sets both position and after; a field takes one placement");
     match key {
         "title" => {
-            let title = parse_string(r.path, line, value)?;
-            if field.one_of.is_some() {
+            let title = r.string(line, value)?;
+            if r.fields[index].one_of.is_some() {
                 return r.fail(line, scalar_title);
             }
             if untrimmed(&title) {
@@ -155,7 +154,7 @@ pub(super) fn field_key(
             r.fields[index].title = Some((title, line));
         }
         "presence" => {
-            let presence = parse_string(r.path, line, value)?;
+            let presence = r.string(line, value)?;
             let Some(strength) = Strength::parse(&presence) else {
                 let message = format!(
                     "unknown {clause} presence `{presence}` (expected must, warn, should, or may)"
@@ -165,7 +164,7 @@ pub(super) fn field_key(
             r.fields[index].presence = Some(strength);
         }
         "position" => {
-            let position = parse_string(r.path, line, value)?;
+            let position = r.string(line, value)?;
             let placement = match position.as_str() {
                 "first" => Placement::First,
                 "last" => Placement::Last,
@@ -176,20 +175,20 @@ pub(super) fn field_key(
                 }
             };
             // §FS-fields.order.refusals: one placement, refused at the later key.
-            if field.after.is_some() {
+            if r.fields[index].after.is_some() {
                 return r.fail(line, both);
             }
             r.fields[index].position = Some((placement, line));
         }
         "after" => {
-            let after = parse_string(r.path, line, value)?;
-            if field.position.is_some() {
+            let after = r.string(line, value)?;
+            if r.fields[index].position.is_some() {
                 return r.fail(line, both);
             }
             r.fields[index].after = Some((after, line));
         }
         "content" => {
-            let content = parse_string(r.path, line, value)?;
+            let content = r.string(line, value)?;
             let values = match content.as_str() {
                 "prose" => false,
                 "values" => true,
@@ -199,17 +198,17 @@ pub(super) fn field_key(
                     return r.fail(line, message);
                 }
             };
-            if field.one_of.is_some() {
+            if r.fields[index].one_of.is_some() {
                 return r.fail(line, scalar_content);
             }
             r.fields[index].content = Some((values, line));
         }
         "one_of" => {
-            let values = parse_string_list(r.path, line, value)?;
-            if field.title.is_some() {
+            let values = r.string_list(line, value)?;
+            if r.fields[index].title.is_some() {
                 return r.fail(line, scalar_title);
             }
-            if field.content.is_some() {
+            if r.fields[index].content.is_some() {
                 return r.fail(line, scalar_content);
             }
             if let Some(message) = one_of_error(&format!("field {label}"), &values) {

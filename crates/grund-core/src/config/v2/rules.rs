@@ -13,7 +13,6 @@ use crate::config::citations::{
 use crate::config::grounding::grounding_unit as unit;
 use crate::config::kind::KindResolution;
 use crate::config::project::{KindGrounding, Rung, Strength};
-use crate::config::v1::{parse_string, parse_string_list};
 
 /// `[rules.citations]`: the project's `default` alone.
 pub(super) fn citations_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Result<bool> {
@@ -78,8 +77,8 @@ pub(super) fn citation_kind_key(
 }
 
 /// §FS-config-v2.rules.citations.default: a default may forbid, never oblige.
-fn parse_default(r: &Reader, value: &str, line: usize) -> Result<CitationLevel> {
-    let level = parse_string(r.path, line, value)?;
+fn parse_default(r: &mut Reader, value: &str, line: usize) -> Result<CitationLevel> {
+    let level = r.string(line, value)?;
     match level.as_str() {
         "may" => Ok(CitationLevel::May),
         "should-not" => Ok(CitationLevel::ShouldNot),
@@ -102,9 +101,13 @@ fn parse_default(r: &Reader, value: &str, line: usize) -> Result<CitationLevel> 
 
 /// A list of targets, each a target or an any-of `A|B` in v1's target grammar
 /// (§FS-config.3.9.3).
-fn parse_disjunctions(r: &Reader, value: &str, line: usize) -> Result<Vec<CitationDisjunction>> {
+fn parse_disjunctions(
+    r: &mut Reader,
+    value: &str,
+    line: usize,
+) -> Result<Vec<CitationDisjunction>> {
     let mut disjunctions = Vec::new();
-    for entry in parse_string_list(r.path, line, value)? {
+    for entry in r.string_list(line, value)? {
         let mut targets = Vec::new();
         for token in entry.split('|').map(str::trim) {
             if token.is_empty() {
@@ -170,7 +173,7 @@ pub(super) fn ladder_key(
     let Some(strength) = Strength::parse(key) else {
         return Ok(false);
     };
-    let unit = parse_string(r.path, line, value)?;
+    let unit = r.string(line, value)?;
     let level = match unit.as_str() {
         "file" => 1,
         "h2" => 2,
@@ -242,7 +245,7 @@ pub(super) fn close_ladder(
 /// or v1's `should` warning spelled `warn`. Whether the kind fetches is a
 /// question about its row, asked once every row is read.
 pub(super) fn resolution_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Result<bool> {
-    let strength = parse_string(r.path, line, value)?;
+    let strength = r.string(line, value)?;
     let resolution = match strength.as_str() {
         "must" => KindResolution::Must,
         "warn" => KindResolution::Should,

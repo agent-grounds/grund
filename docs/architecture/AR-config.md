@@ -401,7 +401,10 @@ tables, a strength key written as a table ([§FS-config-v2.reader.3](../function
 this grund does not execute yet ([§FS-config-v2.rollout](../functional-spec/FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)). A key is read the
 moment it is met, by the file of its concern: `schema.rs` and `measures.rs`
 for `[schema.*]`, `rules.rs` for `[rules.*]`, and `presentation.rs` for
-`[presentation.*]` and `[workspace]`. A key the table's handler does not admit
+`[presentation.*]` and `[workspace]`. Each of them reads a string, a scalar, a
+list's element or a quoted key, through `strings.rs`, which reads it as the
+readers before it did and records the first that closes early in each value for
+its warning ([§FS-config-v2.reader.6](../functional-spec/FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). A key the table's handler does not admit
 is `unknown key`, and a repeated header or key is refused at its second line
 ([§FS-config-v2.reader.1](../functional-spec/FS-config-v2.md#reader1-tables-and-keys-are-closed), [§FS-config-v2.reader.2](../functional-spec/FS-config-v2.md#reader2-every-row-and-field-is-written-under-its-own-header)). Because every key is judged
 where it is written, the first refusal reported is the first one in the file
