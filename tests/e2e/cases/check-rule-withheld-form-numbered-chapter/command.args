@@ -1,0 +1,1 @@
+check {repo} --rule 'The unresolved-questions.1 chapter of each RFC must cite at least one REQ.' --only-rule

@@ -14,7 +14,8 @@ Leans on [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding) and
 - **refusal** — The answer to an input outside the grammar: a reason naming the production that
   failed, and an accepted input where one can be built.
 - **accepted form** — A rule sentence offered after a refusal, which `check --rule` does not
-  refuse when it is pasted back.
+  refuse when it is pasted back and which judges the units the typed sentence named
+  ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)).
 - **accepted selector** — A selector offered after a refusal, which `list --selector` does not
   refuse when it is pasted back.
 
@@ -47,7 +48,9 @@ is offered: the reason stands alone, followed on `check --rule` and
 ([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered), [§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)); and
 an ambiguity names every candidate and chooses none ([§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals)).
 So an offer never names a kind, a chapter or a declaration that neither the
-author nor the repository supplied, and pasting it back is not refused. Serves
+author nor the repository supplied, a rule's offer judges the units its
+sentence named ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)), and pasting it
+back is not refused. Serves
 [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work), whose agent acts on the offer as printed.
 
 ### requirements.next-refusal: A refusal added from here on joins every table that enumerates them — directional
@@ -78,13 +81,18 @@ spelling reached it ([§FS-rule-refusals.sentences.chapter-path](FS-rule-refusal
 every rewrite, and it names the refusals that offer none because the sentence
 does not say what belongs in their place: a path subject, an object kind that
 is not configured, a subject from which no configured kind can be recovered,
-and a sentence with no modality, verb or accepted count. In a repository whose
+a subject no accepted subject can name the same units of
+([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)), and a sentence with no
+modality, verb or accepted count. In a repository whose
 kinds are `GOAL`, `REQ`, `FS`, `AR` and `RULE`, with named sections on, the
 documentation and parser tests carry at least these exact rows. Where a row
 offers no rewrite, `check --rule` prints the reason (including the configuration
-guidance of [§FS-rule-refusals.sentences.rewrite.no-form.place](FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration) where applicable)
-and then the line
-`known kinds: GOAL, REQ, FS, AR, RULE`:
+guidance of [§FS-rule-refusals.sentences.rewrite.no-form.place](FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration) where applicable),
+and then, for the path subject and the unknown kind, the line
+`known kinds: GOAL, REQ, FS, AR, RULE`. The three chapter subjects that offer
+none, `FS-login.*`, `Each chapter of each FS` and `FS-login.2`, print the reason
+alone, because what is missing is chapter scope and not a kind
+([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)):
 
 | Refused sentence | Exact reason and accepted rewrite(s) |
 |---|---|
@@ -99,9 +107,9 @@ and then the line
 | `each FS must cite at least one GOAL.` | `fixed word "Each" is case-sensitive; accepted form: Each FS must cite at least one GOAL.` |
 | `Each file in vendor/ must cite at least one FS.` | `path subjects are not accepted in phase 1`, and no rewrite |
 | `Each */FS must cite at least one GOAL.` | `subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one GOAL.` |
-| `FS-login.* must cite at least one REQ.` | `section-component wildcards are not accepted in phase 1; accepted form: FS-login must cite at least one REQ.` |
+| `FS-login.* must cite at least one REQ.` | `section-component wildcards are not accepted in phase 1`, and no rewrite |
 | `Each chapter of each FS must cite at least one REQ.` | `chapter-quantified subjects are not accepted in phase 1`, and no rewrite |
-| `FS-login.2 must cite at least one REQ.` | `numbered chapter subjects can detach when headings move; accepted form: FS-login must cite at least one REQ.` |
+| `FS-login.2 must cite at least one REQ.` | `numbered chapter subjects can detach when headings move`, and no rewrite |
 | `FS-login.requirements must cite at least one REQ.` with named sections off | `named chapter subjects require [id] named_sections = true; accepted form after enabling it: FS-login.requirements must cite at least one REQ.` |
 | `Each POLICY must cite at least one GOAL.` | `unknown kind "POLICY"`, and no rewrite |
 | `Every AR must cite at least one FS.` | `quantifier "every" is not accepted; accepted form: Each AR must cite at least one FS.` |
@@ -117,6 +125,9 @@ declaration or a kind the sentence never typed. The decision to replace those
 rewrites in place, and every other fixed rewrite with one built from the
 typed sentence, is
 [§DF-rule-refusal-rewrites](../decisions/functional/DF-rule-refusal-rewrites.md#df-rule-refusal-rewrites-a-refused-rules-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced-in-place).
+Two of them, `FS-login.*` and `FS-login.2`, were then answered with
+`FS-login`, which judges the whole declaration rather than the chapters typed.
+The decision to withdraw those forms in place is [§DF-rule-form-same-units](../decisions/functional/DF-rule-form-same-units.md#df-rule-form-same-units-a-refused-rules-accepted-form-judges-the-units-the-typed-sentence-named-or-none-is-offered-in-place).
 
 ### sentences.every: Unsupported every is refused as a quantifier, with an each repair
 
@@ -193,7 +204,9 @@ built from what was typed and from the configured kinds:
    second refusal, written as a rule subject. `KIND.NAME` is selector-only
    ([§FS-rules.2](FS-rules.md#2-subject-selectors)), so where a selector would get `KIND.NAME[.NAME…]` the rule gets
    `The NAME[.NAME…] chapter of each KIND`, and where a selector would get a
-   bare `KIND` the rule gets `Each KIND`.
+   bare `KIND` the rule gets `Each KIND`. Where those steps drop a component
+   that was typed, the rule gets nothing
+   ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)).
 3. The label is `accepted form after enabling it:` only where the suggested
    subject is refused with the configuration as it is, and `accepted form:`
    where the repository accepts it as configured. Only a refusal whose reason
@@ -248,20 +261,26 @@ gives what follows it.
 | `The requirements chapter of each FS` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
 | `FS-*.requirements` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
 | `FS.requirements` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
-| `The requirements.1 chapter of each FS` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
-| `FS-login.Requirements` | `; accepted form: FS-login must cite at least one REQ.` |
-| `The Requirements chapter of each FS` | `; accepted form: Each FS must cite at least one REQ.` |
-| `The * chapter of each FS` | `; accepted form: Each FS must cite at least one REQ.` |
+| `The requirements.1 chapter of each FS` | nothing, and no line after it |
+| `FS-login.Requirements` | nothing, and no line after it |
+| `The Requirements chapter of each FS` | nothing, and no line after it |
+| `The * chapter of each FS` | nothing, and no line after it |
 | `POLICY.requirements` | nothing on the `error:` line, then the line `known kinds: FS, REQ, GOAL` |
 
 The first two rows are the subjects enabling named sections does make valid,
 and they print what they printed before this point existed; the first is the
-named-sections-off row of [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals). A subject refused for its own production
+named-sections-off row of [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals). The next two are rebuilt
+without losing a component. The four after them are rebuilt only by dropping
+the component that was typed, `1`, `Requirements` or `*`, so a rebuilt subject
+would judge a parent chapter or the whole declaration in its place, and nothing
+is suggested ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)). A subject refused for its own production
 before named sections are asked about, such as `FS-login.*`, `FS-login.2` or
 `Each chapter of each FS`, keeps its [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) row. With named sections on,
 nothing here applies. The decision to replace the as-typed suggestion in place
 rather than append to it is
-[§DF-rule-after-enabling-rewrites](../decisions/functional/DF-rule-after-enabling-rewrites.md#df-rule-after-enabling-rewrites-a-rule-subject-that-needs-named-sections-is-answered-with-one-they-make-valid-in-place).
+[§DF-rule-after-enabling-rewrites](../decisions/functional/DF-rule-after-enabling-rewrites.md#df-rule-after-enabling-rewrites-a-rule-subject-that-needs-named-sections-is-answered-with-one-they-make-valid-in-place), and the decision to withdraw
+the suggestion of the four rows that dropped a component is
+[§DF-rule-form-same-units](../decisions/functional/DF-rule-form-same-units.md#df-rule-form-same-units-a-refused-rules-accepted-form-judges-the-units-the-typed-sentence-named-or-none-is-offered-in-place).
 
 ### sentences.chapter-path: A chapter path is refused for the component that failed
 
@@ -295,9 +314,16 @@ sections off `FS-login.requirements.` still gets the section-grammar reason,
 while `The requirements.1 chapter of each FS`, which asks first, keeps its
 named-sections-off refusal.
 
-This point decides the reason alone. The accepted form after `; ` is the typed
-sentence with its subject rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says, the subject
-`list --selector` gives the same path written as a rule subject.
+This point decides the reason alone. What follows `; ` is decided by
+[§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered). A path whose only dropped
+component is an empty one at its end, as in `FS-login.requirements.`, names the
+same chapter without it, so its accepted form is the typed sentence with its
+subject rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says. A path that
+loses a numbered or wildcard component, a name after an empty one, or a name
+the configured section grammar refuses, as it refuses every name with named
+sections off, is offered nothing, and no line follows the reason. `list --selector` still
+answers every one of these paths with its longest valid prefix
+([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)).
 
 In a repository whose kinds are `FS` and `REQ`, with named sections on and
 `FS-login` holding a named `requirements` chapter, these are the exact refusals.
@@ -306,16 +332,17 @@ In a repository whose kinds are `FS` and `REQ`, with named sections on and
 
 | Refused sentence (`… must cite at least one REQ.`) | Exact reason and accepted form |
 |---|---|
-| `The requirements.1 chapter of each FS` | `numbered chapter subjects can detach when headings move; accepted form: The requirements chapter of each FS must cite at least one REQ.` |
-| `The requirements.* chapter of each FS` | `section-component wildcards are not accepted in phase 1; accepted form: The requirements chapter of each FS must cite at least one REQ.` |
+| `The requirements.1 chapter of each FS` | `numbered chapter subjects can detach when headings move` |
+| `The requirements.* chapter of each FS` | `section-component wildcards are not accepted in phase 1` |
 | `FS-login.requirements.` | `named chapter subject "FS-login.requirements." does not match the configured section grammar; accepted form: FS-login.requirements must cite at least one REQ.` |
-| `FS-login..requirements` | `named chapter subject "FS-login..requirements" does not match the configured section grammar; accepted form: FS-login must cite at least one REQ.` |
+| `FS-login..requirements` | `named chapter subject "FS-login..requirements" does not match the configured section grammar` |
 
 In the same repository `The requirements chapter of each FS` and
 `FS-login.requirements` are accepted. A selector is read by the same parse, so
 `list --selector` names the same component ([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)). The decision to
 correct these reasons in place is
-[§DF-rule-refusal-reasons](../decisions/functional/DF-rule-refusal-reasons.md#df-rule-refusal-reasons-a-chapter-path-is-refused-for-the-component-that-failed-corrected-in-place).
+[§DF-rule-refusal-reasons](../decisions/functional/DF-rule-refusal-reasons.md#df-rule-refusal-reasons-a-chapter-path-is-refused-for-the-component-that-failed-corrected-in-place), and the decision to withdraw the forms of the
+three rows that lose a component is [§DF-rule-form-same-units](../decisions/functional/DF-rule-form-same-units.md#df-rule-form-same-units-a-refused-rules-accepted-form-judges-the-units-the-typed-sentence-named-or-none-is-offered-in-place).
 
 ### sentences.count-range: A count above the largest supported count is refused for its range
 
@@ -547,20 +574,88 @@ These remain refused spellings, not new grammar. The predicate, including its
 modality, citation direction, count and object, is kept. Where the typed scope
 cannot be reconstructed unambiguously, no form is offered: never replace a
 chapter obligation with a whole-declaration obligation or a literal with
-`Each KIND` merely to produce an accepted sentence. In particular,
+`Each KIND` merely to produce an accepted sentence
+([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)). In particular,
 `Each chapter of each FS` supplies no chapter name and gets no form.
 
 A chapter name is never invented: the front end reads the configuration and
-not the scan. This scope-preservation rule does not change the longest-valid-
-prefix policy for a refused path component: a subject keeps the named components
-typed before that component, falling back to its declaration or `Each KIND`
-when that prefix is empty. So an empty component keeps what was typed
-before it and nothing after it, as `list --selector` does: `FS-login..requirements`
-is offered `FS-login` and `FS-login.requirements.` is offered
-`FS-login.requirements`. A refused subject that holds a modality followed
+not the scan. Nor is a refused path component recovered by dropping it. The
+four steps keep the named components typed before it, which is the selector a
+selector surface offers, but a rule subject that would lose a component typed
+after them is not offered ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)). So
+with named sections on `FS-login.requirements.` is offered
+`FS-login.requirements`, whose dropped component is an empty one at its end,
+while `FS-login..requirements`, `FS-login.2` and `FS-login.*` are offered
+nothing. A refused subject that holds a modality followed
 by a verb is the first of two clauses the modality split read into the subject
 ([§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends)), joined by anything but the ` and ` that [§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction) refuses first, so
 it is not rebuilt: a form built from it would drop a clause. No form is offered, and `known kinds:` follows.
+
+#### sentences.rewrite.same-units: A form judges the units the typed sentence named, or none is offered
+
+On both rule surfaces, `check --rule` and a configured rule declaration's
+`invalid-rule` finding, a form is offered only where its subject selects the
+units the typed subject named and its predicate counts in each of them what the
+typed predicate counted. Being accepted when pasted back is not enough. A form
+that is accepted and judges other units goes green over the unit its author
+asked about, or flags another one, and nothing in the refusal says so. Where no
+accepted sentence judges the same units, the refusal is its reason alone
+([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)). What could not be supplied is chapter
+scope, not a kind, so no `known kinds:` line follows on `check --rule`. Two
+refusals meet this:
+
+1. A refused chapter path, in any spelling, rebuilt by
+   [§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)'s four steps. Where step 3 drops a component
+   that was typed, the rebuilt subject is a parent chapter, the declaration or
+   `Each KIND`, and no form is offered. That component may be a numbered one, a
+   wildcard, a name the configured section grammar refuses, as it refuses every
+   name with named sections off, or any component after an empty one. The one
+   component that may be dropped is an empty one at the end of the path, which
+   names nothing, so with named sections on `FS-login.requirements.` is still
+   offered `FS-login.requirements`.
+2. A chapter subject in a presence rule, refused with
+   `chapter subjects cannot have chapters`. A presence rule counts the direct
+   chapters of each declaration its subject names ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)), and no
+   accepted sentence counts the chapters under a chapter. So no form is offered,
+   whether the subject is a literal `ID.PATH` or `The NAME chapter of each KIND`,
+   and with or without a whose clause.
+
+Every other rebuilt subject keeps the units that were typed, and keeps its form.
+That covers `every` repaired to `each`
+([§FS-rule-refusals.sentences.every](FS-rule-refusals.md#sentencesevery-unsupported-every-is-refused-as-a-quantifier-with-an-each-repair)), `FS-*.requirements` answered with
+`The requirements chapter of each FS`, the reordered spellings of
+[§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied), and `Each FS-store` answered with
+`FS-store`. `Each */KIND` answered with `Each KIND` keeps the kind and the
+chapter scope typed and drops only the namespace, which its reason,
+`subject namespaces must be local in phase 1`, already names.
+
+`list --selector` is not a rule surface, and it keeps the longest valid prefix
+for a refused path component ([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)). A selector judges
+nothing: it lists the nearest unit that holds what was typed, and the
+breadcrumb that follows a numbered or wildcard reason says how to reach inside
+it. So `FS.requirements.1` is still answered with `FS.requirements` there, while
+the rule `The requirements.1 chapter of each FS must cite at least one REQ.` is
+answered with its reason alone.
+
+In a repository whose kinds are `REQ`, `DESIGN` and `RFC`, with named sections
+on, where `REQ-coupons` holds the numbered criteria `2.1` and `2.2` and each
+`RFC` an `unresolved-questions` chapter, these are the exact refusals. Each is
+printed after `error: ` on `check --rule`, with no line after it, and after
+`is not a valid rule: ` in a configured rule declaration's finding:
+
+| Refused sentence | Exact reason | The form it was offered, and what that judged |
+|---|---|---|
+| `REQ-coupons.2.2 must be cited by at least one DESIGN.` | `numbered chapter subjects can detach when headings move` | `REQ-coupons must be cited by at least one DESIGN.`, which a citation of any chapter of `REQ-coupons` satisfies |
+| `The unresolved-questions chapter of each RFC must have at most 1 open chapter.` | `chapter subjects cannot have chapters` | `Each RFC must have at most 1 open chapter.`, which counts the `Open` chapters directly under each `RFC` and none under `unresolved-questions` |
+| `The unresolved-questions chapter of each RFC must have at least one open chapter.` | `chapter subjects cannot have chapters` | `Each RFC must have at least one open chapter.`, the same count with the opposite verdict |
+| `The unresolved-questions.1 chapter of each RFC must cite at least one REQ.` | `numbered chapter subjects can detach when headings move` | `The unresolved-questions chapter of each RFC must cite at least one REQ.`, which judges the parent chapter |
+
+The questions those sentences ask have no accepted spelling today. Whether a
+numbered criterion is cited is what `grund refs REQ-coupons.2.2` answers
+([§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id)), and the chapters under a chapter are what
+`grund list --glob 'RFC-*.unresolved-questions.*'` lists
+([§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern)). The decision to
+withdraw these forms in place is [§DF-rule-form-same-units](../decisions/functional/DF-rule-form-same-units.md#df-rule-form-same-units-a-refused-rules-accepted-form-judges-the-units-the-typed-sentence-named-or-none-is-offered-in-place).
 
 #### sentences.rewrite.reparsed: A form is parsed before it is offered
 
@@ -649,8 +744,8 @@ spellings, rather than changing the shared kind reason on other surfaces.
 | a presence object not ending in `chapter` | its last word becomes `chapter` or `chapters`, as the count takes | no word precedes it |
 | a presence noun of the wrong number | `chapter` or `chapters`, as the count takes | — |
 | a presence `NAME` with whitespace ([§FS-rule-refusals.sentences.whitespace](FS-rule-refusals.md#sentenceswhitespace-presence-name-whitespace-refusal)) | the `NAME` trimmed of its surrounding whitespace | the `NAME` is empty or has whitespace inside |
-| a chapter subject in a presence rule | the subject's declaration, or `Each KIND` | — |
-| a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says | scope cannot be reconstructed, no configured kind is recovered, or the subject holds a clause; `known kinds:` follows only for the latter two |
+| a chapter subject in a presence rule ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)) | — | always |
+| a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says | scope cannot be reconstructed, rebuilding it drops a typed component ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)), no configured kind is recovered, or the subject holds a clause; `known kinds:` follows only for the latter two |
 | the ID grammar for a subject `The` cut short at a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | — | always; `known kinds:` follows |
 | a path subject, `Each file in …` | — | always; `known kinds:` follows |
 | a whose clause in a version-1 config, with no ` is `, an empty `FIELD` or `VALUE`, a `FIELD` that is no field or no scalar of the kind, a `VALUE` with surrounding whitespace, or a `VALUE` outside `one_of` ([§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)) | — | always; `known kinds:` follows only through the window of [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration), and only on `list --selector` |
@@ -706,11 +801,11 @@ configured rule declaration's finding carries the same text after
 | `FS-login should have at most 2 requirements chapter.` | `chapter count has the wrong singular/plural spelling; accepted form: FS-login should have at most 2 requirements chapters.` | none |
 | `FS-login must have exactly one  requirements chapter.` | `chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: FS-login must have exactly one requirements chapter. NAME forbids whitespace anywhere.` | none |
 | `FS-login must have exactly one Goal and hypothesis chapter.` | `chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbids whitespace anywhere.` | none |
-| `FS-login.requirements must have exactly one should chapter.` | `chapter subjects cannot have chapters; accepted form: FS-login must have exactly one should chapter.` | none |
-| `The requirements chapter of each FS should have at least one should chapter.` | `chapter subjects cannot have chapters; accepted form: Each FS should have at least one should chapter.` | none |
+| `FS-login.requirements must have exactly one should chapter.` | `chapter subjects cannot have chapters` | none |
+| `The requirements chapter of each FS should have at least one should chapter.` | `chapter subjects cannot have chapters` | none |
 | `FS-*.requirements must cite at least one FS.` | `literal subject "FS-*.requirements" does not match the configured ID grammar; accepted form: The requirements chapter of each FS must cite at least one FS.` | none |
-| `FS.* must cite at least one FS.` | `section-component wildcards are not accepted in phase 1; accepted form: Each FS must cite at least one FS.` | none |
-| `FS-login.2 should cite at most 2 FS.` | `numbered chapter subjects can detach when headings move; accepted form: FS-login should cite at most 2 FS.` | none |
+| `FS.* must cite at least one FS.` | `section-component wildcards are not accepted in phase 1` | none |
+| `FS-login.2 should cite at most 2 FS.` | `numbered chapter subjects can detach when headings move` | none |
 | `Each chapter of each FS must be cited by at least one FS.` | `chapter-quantified subjects are not accepted in phase 1` | none |
 | `Each */FS must cite at least one FS.` | `subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one FS.` | none |
 | `Each POLICY must cite at least one FS.` | `unknown kind "POLICY"` | `known kinds: FS` |
@@ -728,7 +823,10 @@ The fourth row is offered a form only after a second pass: appending the `.`
 leaves `at least 1`, which the next pass rewrites. The conjunction and the last
 `FS-*.requirements` row are offered none for the opposite reason: the first
 pass rebuilds what failed, and the form it leaves names a kind this repository
-does not configure, which no pass may guess.
+does not configure, which no pass may guess. The two chapter subjects given a
+chapter count, and `FS.*` and `FS-login.2`, are offered none because any
+subject that could be built would judge other units
+([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)).
 
 ### sentences.conjunction: Any clauses joined by `and` are refused as a conjunction
 
@@ -884,9 +982,14 @@ follows it. The append moves no verdict, so no release is named
 The suggestion is built from what was typed and from the configured kinds,
 never from a fixed template. The scope-preservation and safe-suppression
 constraint of [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied)
-also applies to selector offers. An unnamed `Each chapter of each KIND` gets
-no selector offer. The following steps retain their longest-valid-prefix policy
-for refused path components:
+also applies to selector offers: a chapter typed in another word order is
+kept, and an unnamed `Each chapter of each KIND` gets no selector offer. The
+rule surfaces' refusal to offer a subject that drops a typed component
+([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)) does not apply here, because a
+selector judges nothing: it lists the nearest unit that holds what was typed.
+So the following steps keep their longest-valid-prefix policy for refused path
+components, and selector refusals print what they printed before that point
+existed:
 
 1. Its kind is the configured kind the text names or starts with: `FS-*` and
    `FS-login` both give `FS`.
@@ -993,10 +1096,13 @@ An exact literal that does not resolve or is ambiguous keeps its refusal,
 which suggests nothing. The rule surfaces, `check --rule` and a configured rule
 declaration, answer a refused subject with a rule subject the same four steps
 build, under the modality and predicate the author typed
-([§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied)), and with named sections off as [§FS-rule-refusals.sentences.named-sections](FS-rule-refusals.md#sentencesnamed-sections-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) says. A
+([§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied)), and with named sections off as [§FS-rule-refusals.sentences.named-sections](FS-rule-refusals.md#sentencesnamed-sections-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) says,
+save where those steps drop a typed component, which a rule is offered nothing
+for ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)). A
 chapter subject refused for a component of its path opens with the reason a
 selector gets for the same component, as [§FS-rule-refusals.sentences.chapter-path](FS-rule-refusals.md#sentenceschapter-path-a-chapter-path-is-refused-for-the-component-that-failed) says. So a
-selector and a rule refused for the same subject suggest the same units, each
+selector and a rule refused for the same subject give the same reason, and
+where both offer one they suggest the same units, each
 in its own spelling: `FS-*.requirements` is answered with `FS.requirements` as
 a selector and with `The requirements chapter of each FS` in a rule. The
 decision to replace these lines rather than append to them is

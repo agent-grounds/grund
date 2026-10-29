@@ -300,9 +300,10 @@ fn selector_offers_keep_typed_chapter_and_literal_scope() {
     assert!(wrong.is_empty(), "{}", wrong.join("\n\n"));
 }
 
-/// The scope correction leaves the separate longest-valid-prefix policy intact.
+/// §FS-rule-refusals.sentences.rewrite.same-units: a rule that would lose the typed
+/// component is offered nothing, while the selector keeps its longest valid prefix.
 #[test]
-fn refused_components_still_keep_their_valid_prefix() {
+fn refused_components_keep_their_valid_prefix_only_as_a_selector() {
     assert_run(
         &check(
             &repo(),
@@ -310,17 +311,18 @@ fn refused_components_still_keep_their_valid_prefix() {
         ),
         2,
         "",
-        "error: numbered chapter subjects can detach when headings move; accepted form: FS-store.requirements must cite at least one REQ.\n",
+        "error: numbered chapter subjects can detach when headings move\n",
     );
     let output = run(&repo(), &["list", ".", "--selector", "FS.requirements.1"]);
     assert_eq!(output.status.code(), Some(2));
     assert!(text(&output.stderr).contains("; accepted selector: FS.requirements\n"));
 }
 
-/// §FS-rule-refusals.sentences.rewrite.recovered: a refused path component in
-/// an `Each` head keeps the established prefix repair on both shared surfaces.
+/// §FS-rule-refusals.sentences.rewrite.same-units: a refused path component in an
+/// `Each` head is offered nothing as a rule, and no known kinds, since the kind was
+/// recovered; §FS-rule-refusals.selectors keeps the prefix repair for a selector.
 #[test]
-fn each_refused_components_keep_their_valid_prefix() {
+fn each_refused_components_keep_their_valid_prefix_only_as_a_selector() {
     let root = repo();
     for (subject, canonical) in [
         ("Each FS.*", "Each FS"),
@@ -328,28 +330,15 @@ fn each_refused_components_keep_their_valid_prefix() {
         ("Each FS.requirements.1", CHAPTER),
     ] {
         let sentence = format!("{subject} must cite at least one REQ.");
-        let canonical_sentence = format!("{canonical} must cite at least one REQ.");
-        let refused = check(&root, &sentence);
-        assert_eq!(refused.status.code(), Some(2));
-        let message = text(&refused.stderr);
-        assert!(message.starts_with(&format!(
-            "error: unknown kind \"{}\";",
-            subject.strip_prefix("Each ").unwrap()
-        )));
-        assert_eq!(
-            offer(&message, "; accepted form: ").as_deref(),
-            Some(canonical_sentence.as_str()),
-            "{subject}: {message}"
+        assert_run(
+            &check(&root, &sentence),
+            2,
+            "",
+            &format!(
+                "error: unknown kind \"{}\"\n",
+                subject.strip_prefix("Each ").unwrap()
+            ),
         );
-        let mut wrong = Vec::new();
-        check_offer(
-            &root,
-            &message,
-            Some(&canonical_sentence),
-            &sentence,
-            &mut wrong,
-        );
-        assert!(wrong.is_empty(), "{}", wrong.join("\n\n"));
 
         let refused = run(&root, &["list", ".", "--selector", subject]);
         assert_eq!(refused.status.code(), Some(2));

@@ -1,22 +1,24 @@
-//! Each-prefixed literals keep the longest valid chapter prefix on every
-//! refusal surface (§FS-rule-refusals.sentences.rewrite.recovered,
-//! §FS-rule-refusals.selectors), using the four-FS scope fixture.
+//! Each-prefixed literals keep the longest valid chapter prefix as a selector
+//! (§FS-rule-refusals.selectors), and as a rule only where it drops no typed
+//! component (§FS-rule-refusals.sentences.rewrite.recovered,
+//! §FS-rule-refusals.sentences.rewrite.same-units), using the four-FS scope fixture.
 
 use super::super::support::case_repo;
 use super::{Configured, check, check_offer, identities, offer, run, text, write};
 use std::fs;
 use std::path::Path;
 
-const PATHS: [(&str, &str); 5] = [
-    ("requirements.1", "requirements"),
-    ("requirements.*", "requirements"),
-    ("requirements.", "requirements"),
-    (".requirements", ""),
-    ("*", ""),
+// A refused path, the selector's prefix, and whether a rule is offered it too.
+const PATHS: [(&str, &str, bool); 5] = [
+    ("requirements.1", "requirements", false),
+    ("requirements.*", "requirements", false),
+    ("requirements.", "requirements", true),
+    (".requirements", "", false),
+    ("*", "", false),
 ];
 
 fn prefixes(root: &Path, separator: &str) {
-    for (index, (path, _)) in PATHS.iter().enumerate() {
+    for (index, (path, _, _)) in PATHS.iter().enumerate() {
         write(
             root,
             &format!("docs/rules/RULE-prefix-{index}.md"),
@@ -30,7 +32,7 @@ fn prefixes(root: &Path, separator: &str) {
     assert!(configured.stderr.is_empty(), "{}", text(&configured.stderr));
     let findings = text(&configured.stdout);
     let mut wrong = Vec::new();
-    for (index, (path, prefix)) in PATHS.iter().enumerate() {
+    for (index, (path, prefix, kept)) in PATHS.iter().enumerate() {
         let subject = format!("Each FS-store{separator}{path}");
         let canonical = if prefix.is_empty() {
             "FS-store".to_string()
@@ -47,17 +49,22 @@ fn prefixes(root: &Path, separator: &str) {
         ] {
             let sentence = format!("{subject} {predicate}");
             let expected = format!("{canonical} {predicate}");
+            let offered = kept.then_some(expected.as_str());
             let refused = check(root, &sentence);
             assert_eq!(refused.status.code(), Some(2), "{sentence}");
             assert!(refused.stdout.is_empty());
             let message = text(&refused.stderr);
-            assert!(message.starts_with(&format!("error: {reason};")));
+            if *kept {
+                assert!(message.starts_with(&format!("error: {reason};")));
+            } else {
+                assert_eq!(message, format!("error: {reason}\n"), "{sentence}");
+            }
             assert_eq!(
                 offer(&message, "; accepted form: ").as_deref(),
-                Some(expected.as_str()),
+                offered,
                 "{sentence}: {message}"
             );
-            check_offer(root, &message, Some(&expected), &sentence, &mut wrong);
+            check_offer(root, &message, offered, &sentence, &mut wrong);
             let control = check(root, &expected);
             if predicate == "must cite at least one REQ." {
                 assert_eq!(control.status.code(), Some(0));
@@ -68,7 +75,7 @@ fn prefixes(root: &Path, separator: &str) {
                     .find_map(|line| line.split_once(&finding_prefix).map(|(_, tail)| tail))
                     .expect("configured invalid-rule finding");
                 assert_eq!(message, format!("error: {finding}\n"));
-                check_offer(root, finding, Some(&expected), &sentence, &mut wrong);
+                check_offer(root, finding, offered, &sentence, &mut wrong);
             } else {
                 assert_eq!(control.status.code(), Some(1));
                 assert_eq!(identities(&control), [canonical.as_str()]);
@@ -119,7 +126,11 @@ fn each_literal_refused_paths_preserve_scope_with_configured_separator() {
 #[test]
 fn each_literal_refused_paths_suppress_unsafe_named_off_offers() {
     let root = case_repo("check-rule-named-off-rebuilt-subject");
-    for path in PATHS.iter().map(|(path, _)| *path).chain(["requirements"]) {
+    for path in PATHS
+        .iter()
+        .map(|(path, _, _)| *path)
+        .chain(["requirements"])
+    {
         let subject = format!("Each FS-login.{path}");
         let reason = format!("error: unknown kind \"FS-login.{path}\"");
         for (output, label) in [

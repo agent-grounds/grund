@@ -67,7 +67,9 @@ fn wrong(rows: &[(&str, String)], vocabulary: &RuleVocabulary) -> Vec<String> {
 
 /// §FS-rule-refusals.sentences.named-sections: every row of the exact table, and the two rewrites it
 /// states beyond them: a selector's multi-component `KIND.NAME.NAME` is written
-/// `The NAME.NAME chapter of each KIND`, and its bare `KIND` is `Each KIND`.
+/// `The NAME.NAME chapter of each KIND`, and its bare `KIND` is `Each KIND`. A
+/// rebuild that drops a typed component is offered nothing
+/// (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
 fn a_subject_needing_named_sections_is_answered_with_one_they_make_valid() {
     let after = "accepted form after enabling it";
@@ -91,20 +93,11 @@ fn a_subject_needing_named_sections_is_answered_with_one_they_make_valid() {
         ),
         (
             "The requirements.1 chapter of each FS",
-            format!("{NAMED_OFF}; {after}: {chapter}"),
+            NAMED_OFF.to_string(),
         ),
-        (
-            "FS-login.Requirements",
-            format!("{NAMED_OFF}; accepted form: FS-login must cite at least one REQ."),
-        ),
-        (
-            "The Requirements chapter of each FS",
-            format!("{NAMED_OFF}; accepted form: Each FS must cite at least one REQ."),
-        ),
-        (
-            "The * chapter of each FS",
-            format!("{NAMED_OFF}; accepted form: Each FS must cite at least one REQ."),
-        ),
+        ("FS-login.Requirements", NAMED_OFF.to_string()),
+        ("The Requirements chapter of each FS", NAMED_OFF.to_string()),
+        ("The * chapter of each FS", NAMED_OFF.to_string()),
         // §FS-rules.7.1: a finding that offers no form ends at the reason.
         ("POLICY.requirements", NAMED_OFF.to_string()),
         (
@@ -113,10 +106,7 @@ fn a_subject_needing_named_sections_is_answered_with_one_they_make_valid() {
                 "{NAMED_OFF}; {after}: The requirements.security chapter of each FS must cite at least one REQ."
             ),
         ),
-        (
-            "FS-*.Requirements",
-            format!("{NAMED_OFF}; accepted form: Each FS must cite at least one REQ."),
-        ),
+        ("FS-*.Requirements", NAMED_OFF.to_string()),
     ];
     let wrong = wrong(&rows, &vocabulary(&["FS", "REQ", "GOAL"]));
     assert!(

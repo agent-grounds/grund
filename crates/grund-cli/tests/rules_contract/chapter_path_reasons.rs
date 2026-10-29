@@ -29,41 +29,35 @@ fn unconfigured() -> PathBuf {
 
 /// §FS-rule-refusals.sentences.chapter-path, §FS-rule-refusals.sentences.rewrite.recovered: every row of the exact table, as the
 /// fixture's rule declaration that writes it, its subject, and the reason and
-/// accepted form both rule surfaces print.
+/// accepted form both rule surfaces print, the reason alone where the form
+/// would drop a typed component (§FS-rule-refusals.sentences.rewrite.same-units).
 fn rows() -> Vec<(&'static str, &'static str, String)> {
-    let refusal = |reason: &str, subject: &str| {
-        format!("{reason}; accepted form: {subject} must cite at least one REQ.")
-    };
     let grammar = |typed: &str| {
         format!("named chapter subject \"{typed}\" does not match the configured section grammar")
     };
-    let chapter = "The requirements chapter of each FS";
     vec![
         (
             "RULE-numbered",
             "The requirements.1 chapter of each FS",
-            refusal(
-                "numbered chapter subjects can detach when headings move",
-                chapter,
-            ),
+            "numbered chapter subjects can detach when headings move".into(),
         ),
         (
             "RULE-wildcard",
             "The requirements.* chapter of each FS",
-            refusal(
-                "section-component wildcards are not accepted in phase 1",
-                chapter,
-            ),
+            "section-component wildcards are not accepted in phase 1".into(),
         ),
         (
             "RULE-trailing",
             "FS-login.requirements.",
-            refusal(&grammar("FS-login.requirements."), "FS-login.requirements"),
+            format!(
+                "{}; accepted form: FS-login.requirements must cite at least one REQ.",
+                grammar("FS-login.requirements.")
+            ),
         ),
         (
             "RULE-doubled",
             "FS-login..requirements",
-            refusal(&grammar("FS-login..requirements"), "FS-login"),
+            grammar("FS-login..requirements"),
         ),
     ]
 }
@@ -158,35 +152,34 @@ fn the_unnumbered_spellings_of_the_same_chapter_are_accepted() {
     }
 }
 
-/// §FS-rule-refusals.sentences.rewrite.recovered: a literal keeps the named components typed before the
-/// one that failed, and its own declaration where none was typed, here
-/// `FS-demo`, not `FS-login`.
+/// §FS-rule-refusals.sentences.rewrite.recovered: a literal keeps its own declaration and the named
+/// components typed before the one that failed, here `FS-demo`, not `FS-login`,
+/// and is offered nothing where that would drop a typed component
+/// (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
-fn a_literal_keeps_its_declaration_and_the_components_before_the_failed_one() {
+fn a_literal_keeps_its_own_chapter_or_is_offered_nothing() {
     for (subject, reason, form) in [
         (
             "FS-demo.requirements.",
             "named chapter subject \"FS-demo.requirements.\" does not match the configured section grammar",
-            "FS-demo.requirements",
+            Some("FS-demo.requirements"),
         ),
         (
             "FS-demo..requirements",
             "named chapter subject \"FS-demo..requirements\" does not match the configured section grammar",
-            "FS-demo",
+            None,
         ),
         (
             "FS-demo.2",
             "numbered chapter subjects can detach when headings move",
-            "FS-demo",
+            None,
         ),
     ] {
         let sentence = format!("{subject} must cite at least one REQ.");
         let output = run(&fixture(), &["check", ".", "--rule", &sentence]);
-        assert_run(
-            &output,
-            2,
-            "",
-            &format!("error: {reason}; accepted form: {form} must cite at least one REQ.\n"),
-        );
+        let offer = form.map_or(String::new(), |form| {
+            format!("; accepted form: {form} must cite at least one REQ.")
+        });
+        assert_run(&output, 2, "", &format!("error: {reason}{offer}\n"));
     }
 }

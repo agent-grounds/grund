@@ -220,6 +220,19 @@ pub(super) fn settle(
     Err(false)
 }
 
+/// What a test reads of a refusal before it is rendered: the one form it
+/// offers and whether that is read with named sections on, or `None` where it
+/// offers none or several (§FS-rule-refusals.sentences.rewrite.same-units).
+#[cfg(test)]
+impl Refusal {
+    pub(super) fn offered(&self) -> Option<(&str, bool)> {
+        match &self.form {
+            Form::One(form) => Some((form, self.enabling)),
+            Form::Many(..) | Form::None { .. } => None,
+        }
+    }
+}
+
 #[cfg(test)]
 #[path = "tests_forms.rs"]
 mod tests_forms;

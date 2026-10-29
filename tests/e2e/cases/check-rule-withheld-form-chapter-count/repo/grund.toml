@@ -1,0 +1,17 @@
+grund_config_version = 2
+project_name = "checkout"
+
+# A spec's acceptance criteria are numbered chapters, as Kiro writes them.
+[schema.kinds.REQ]
+folders = ["specs"]
+index = false
+
+[schema.kinds.DESIGN]
+folders = ["design"]
+index = false
+
+# An RFC holds its open questions as named chapters of its
+# unresolved-questions chapter, as Rust RFCs do.
+[schema.kinds.RFC]
+folders = ["rfcs"]
+index = false

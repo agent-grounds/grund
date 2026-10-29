@@ -214,19 +214,20 @@ fn a_presence_name_is_trimmed_under_the_typed_subject() {
     )]);
 }
 
-/// §FS-rule-refusals.sentences.rewrite.by-refusal: a chapter subject in a presence rule becomes its
-/// declaration, or `Each KIND`, and the presence predicate stays as typed.
+/// §FS-rule-refusals.sentences.rewrite.by-refusal, §FS-rule-refusals.sentences.rewrite.same-units: a
+/// chapter subject in a presence rule is offered no form, because its declaration or `Each KIND`
+/// would count other chapters, and what is missing is not a kind.
 #[test]
-fn a_chapter_subject_with_chapters_becomes_its_declaration() {
+fn a_chapter_subject_with_chapters_is_offered_no_form() {
     assert_rows(&[
         (
             "FS-login.requirements must have exactly one should chapter.",
-            "chapter subjects cannot have chapters; accepted form: FS-login must have exactly one should chapter.",
+            "chapter subjects cannot have chapters",
             false,
         ),
         (
             "The requirements chapter of each FS should have at least one should chapter.",
-            "chapter subjects cannot have chapters; accepted form: Each FS should have at least one should chapter.",
+            "chapter subjects cannot have chapters",
             false,
         ),
     ]);
@@ -234,7 +235,8 @@ fn a_chapter_subject_with_chapters_becomes_its_declaration() {
 
 /// §FS-rule-refusals.sentences.rewrite.recovered: a refused subject is rebuilt with §FS-rule-refusals.selectors's steps
 /// and written as a rule subject, keeping the named components typed before
-/// the refused one; where no configured kind is recovered there is no form.
+/// the refused one; where no configured kind is recovered there is no form, and
+/// none where the rebuild drops a typed component (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
 fn a_refused_subject_is_rebuilt_as_the_selector_rebuilds_it() {
     assert_rows(&[
@@ -245,22 +247,22 @@ fn a_refused_subject_is_rebuilt_as_the_selector_rebuilds_it() {
         ),
         (
             "FS-login.Requirements must cite at least one FS.",
-            "literal subject \"FS-login.Requirements\" does not match the configured ID grammar; accepted form: FS-login must cite at least one FS.",
+            "literal subject \"FS-login.Requirements\" does not match the configured ID grammar",
             false,
         ),
         (
             "The Requirements chapter of each FS must cite at least one FS.",
-            "named chapter subject \"The Requirements chapter of each FS\" does not match the configured section grammar; accepted form: Each FS must cite at least one FS.",
+            "named chapter subject \"The Requirements chapter of each FS\" does not match the configured section grammar",
             false,
         ),
         (
             "FS.* must cite at least one FS.",
-            "section-component wildcards are not accepted in phase 1; accepted form: Each FS must cite at least one FS.",
+            "section-component wildcards are not accepted in phase 1",
             false,
         ),
         (
             "FS-login.requirements.2 should cite at most 2 FS.",
-            "numbered chapter subjects can detach when headings move; accepted form: FS-login.requirements should cite at most 2 FS.",
+            "numbered chapter subjects can detach when headings move",
             false,
         ),
         (

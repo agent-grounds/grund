@@ -145,12 +145,12 @@ fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
         ),
         (
             "FS-login.requirements must have exactly one should chapter.",
-            "chapter subjects cannot have chapters; accepted form: FS-login must have exactly one should chapter.",
+            "chapter subjects cannot have chapters",
             "",
         ),
         (
             "The requirements chapter of each FS should have at least one should chapter.",
-            "chapter subjects cannot have chapters; accepted form: Each FS should have at least one should chapter.",
+            "chapter subjects cannot have chapters",
             "",
         ),
         (
@@ -160,12 +160,12 @@ fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
         ),
         (
             "FS.* must cite at least one FS.",
-            "section-component wildcards are not accepted in phase 1; accepted form: Each FS must cite at least one FS.",
+            "section-component wildcards are not accepted in phase 1",
             "",
         ),
         (
             "FS-login.2 should cite at most 2 FS.",
-            "numbered chapter subjects can detach when headings move; accepted form: FS-login should cite at most 2 FS.",
+            "numbered chapter subjects can detach when headings move",
             "",
         ),
         (
@@ -284,7 +284,7 @@ fn a_named_off_subject_keeps_the_typed_predicate() {
         ),
         (
             "FS-login.Requirements should be cited by at most 2 GOAL.",
-            format!("{NAMED_OFF}; accepted form: FS-login should be cited by at most 2 GOAL."),
+            NAMED_OFF.to_string(),
             "",
         ),
         (

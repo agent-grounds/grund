@@ -44,7 +44,8 @@ fn every_released_family_subject_modality_and_count_spelling_is_accepted() {
 /// spell - path subjects, wildcard namespaces, component wildcards, chapter
 /// quantification - are refused by name, with the typed sentence repaired or,
 /// where it does not say what belongs in the gap, the known kinds
-/// (§FS-rule-refusals.sentences.rewrite.by-refusal).
+/// (§FS-rule-refusals.sentences.rewrite.by-refusal), or alone where every repair
+/// would judge other units (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
 fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
     let rows = [
@@ -86,7 +87,7 @@ fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
         ),
         (
             "FS-demo.* must cite at least one REQ.",
-            "section-component wildcards are not accepted in phase 1; accepted form: FS-demo must cite at least one REQ.",
+            "section-component wildcards are not accepted in phase 1",
         ),
         (
             "Each chapter of each FS must cite at least one REQ.",
@@ -94,7 +95,7 @@ fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
         ),
         (
             "FS-demo.2 must cite at least one REQ.",
-            "numbered chapter subjects can detach when headings move; accepted form: FS-demo must cite at least one REQ.",
+            "numbered chapter subjects can detach when headings move",
         ),
         (
             "Each POLICY must cite at least one GOAL.",
@@ -179,22 +180,10 @@ fn named_off_rows() -> Vec<(&'static str, String)> {
         ),
         ("FS-*.requirements", format!("{after} {chapter}\n")),
         ("FS.requirements", format!("{after} {chapter}\n")),
-        (
-            "The requirements.1 chapter of each FS",
-            format!("{after} {chapter}\n"),
-        ),
-        (
-            "FS-login.Requirements",
-            "; accepted form: FS-login must cite at least one REQ.\n".into(),
-        ),
-        (
-            "The Requirements chapter of each FS",
-            "; accepted form: Each FS must cite at least one REQ.\n".into(),
-        ),
-        (
-            "The * chapter of each FS",
-            "; accepted form: Each FS must cite at least one REQ.\n".into(),
-        ),
+        ("The requirements.1 chapter of each FS", "\n".into()),
+        ("FS-login.Requirements", "\n".into()),
+        ("The Requirements chapter of each FS", "\n".into()),
+        ("The * chapter of each FS", "\n".into()),
         (
             "POLICY.requirements",
             "\nknown kinds: FS, REQ, GOAL\n".into(),
@@ -285,12 +274,15 @@ fn pastes_back(refusal: &str, off: &Path, on: &Path) -> Result<(), String> {
 /// §FS-rule-refusals.sentences.named-sections, the issue's reproducer: every form offered with named
 /// sections off pastes back where its label says. One labelled `after enabling
 /// it` is accepted once they are on and refused as configured, a plain one is
-/// accepted as configured, and a refusal that offers none lists the kinds.
+/// accepted as configured, and a refusal that offers none lists the kinds, save
+/// a row the exact table answers with the reason alone because every form would
+/// drop a typed component (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
 fn every_named_off_rule_suggestion_is_accepted_where_its_label_says() {
     let (off, on) = (named_off(), named_on());
     let wrong = named_off_rows()
         .into_iter()
+        .filter(|(_, tail)| tail != "\n")
         .filter_map(|(subject, _)| {
             let sentence = format!("{subject} must cite at least one REQ.");
             let refusal = pre_scan_refusal(&off, &sentence).unwrap_or_default();
@@ -304,7 +296,9 @@ fn every_named_off_rule_suggestion_is_accepted_where_its_label_says() {
 
 /// §FS-rules.4, §FS-rule-refusals.sentences.rewrite.no-form: each is refused before the scan, and each
 /// offers a form but `FSbogus`, from which no configured kind is recovered, so
-/// it is answered with the known kinds instead.
+/// it is answered with the known kinds instead, and `FS-demo.bad_path`, whose
+/// only form would drop the chapter it names
+/// (§FS-rule-refusals.sentences.rewrite.same-units), so it is the reason alone.
 #[test]
 fn malformed_counts_ids_and_named_paths_are_pre_scan_refusals() {
     for sentence in [
@@ -329,6 +323,12 @@ fn malformed_counts_ids_and_named_paths_are_pre_scan_refusals() {
                 !stderr.contains("accepted form")
                     && stderr.ends_with("\nknown kinds: GOAL, REQ, FS, AR, RULE\n"),
                 "an unrecovered subject offers a form or lists no kinds: {stderr}"
+            );
+        } else if sentence.starts_with("FS-demo.bad_path") {
+            assert_eq!(
+                stderr,
+                "error: literal subject \"FS-demo.bad_path\" does not match the configured ID grammar\n",
+                "a form that drops the typed chapter is offered: {sentence}"
             );
         } else {
             assert!(

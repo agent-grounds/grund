@@ -1,0 +1,1 @@
+check {repo} --rule 'The unresolved-questions chapter of each RFC must have at most 1 open chapter.' --only-rule

@@ -322,8 +322,8 @@ const LATER: &[(&str, &str, &str)] = &[
     (
         "The evidence chapter of each SWR whose verification is Test must have at least one \
          notes chapter.",
-        "chapter subjects cannot have chapters; accepted form: Each SWR whose verification is \
-         Test must have at least one notes chapter.",
+        // §FS-rule-refusals.sentences.rewrite.same-units: no sentence counts under a chapter.
+        "chapter subjects cannot have chapters",
         "",
     ),
 ];

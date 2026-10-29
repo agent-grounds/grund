@@ -82,27 +82,18 @@ fn assert_rows(rows: &[(&str, String)], vocabulary: &RuleVocabulary) {
 /// §FS-rule-refusals.sentences.chapter-path: the exact table. A numbered or wildcard component in
 /// `The PATH chapter of each KIND` gets the reason its literal spelling gets,
 /// and an empty component is refused off the section grammar, not as numbered.
-/// The form keeps the named components typed before it (§FS-rule-refusals.sentences.rewrite.recovered).
+/// A form is offered only where nothing but a trailing empty component is
+/// dropped (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
 fn a_chapter_path_is_refused_for_the_component_that_failed() {
-    let chapter = form("The requirements chapter of each FS");
     let rows = [
-        (
-            "The requirements.1 chapter of each FS",
-            format!("{NUMBERED}{chapter}"),
-        ),
-        (
-            "The requirements.* chapter of each FS",
-            format!("{WILDCARD}{chapter}"),
-        ),
+        ("The requirements.1 chapter of each FS", NUMBERED.into()),
+        ("The requirements.* chapter of each FS", WILDCARD.into()),
         (
             "FS-login.requirements.",
             grammar("FS-login.requirements.") + &form("FS-login.requirements"),
         ),
-        (
-            "FS-login..requirements",
-            grammar("FS-login..requirements") + &form("FS-login"),
-        ),
+        ("FS-login..requirements", grammar("FS-login..requirements")),
         ("FS-login.", grammar("FS-login.") + &form("FS-login")),
     ];
     assert_rows(&rows, &vocabulary(true));
@@ -110,43 +101,39 @@ fn a_chapter_path_is_refused_for_the_component_that_failed() {
 
 /// §FS-rule-refusals.sentences.chapter-path: the first refused component decides. In the literal
 /// spelling that is the first empty or all-digit one; in
-/// `The PATH chapter of each KIND` the first that is not a named one.
+/// `The PATH chapter of each KIND` the first that is not a named one. Each of
+/// these drops a typed component, so none is offered a form
+/// (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
 fn the_first_refused_component_decides_the_reason() {
     let rows = [
-        ("FS-login..1", grammar("FS-login..1") + &form("FS-login")),
-        ("FS-login.1.", format!("{NUMBERED}{}", form("FS-login"))),
-        (
-            "The 1.requirements chapter of each FS",
-            format!("{NUMBERED}{}", form("Each FS")),
-        ),
+        ("FS-login..1", grammar("FS-login..1")),
+        ("FS-login.1.", NUMBERED.into()),
+        ("The 1.requirements chapter of each FS", NUMBERED.into()),
         (
             "The requirements..1 chapter of each FS",
-            grammar("The requirements..1 chapter of each FS")
-                + &form("The requirements chapter of each FS"),
+            grammar("The requirements..1 chapter of each FS"),
         ),
         (
             "The Requirements.1 chapter of each FS",
-            grammar("The Requirements.1 chapter of each FS") + &form("Each FS"),
+            grammar("The Requirements.1 chapter of each FS"),
         ),
     ];
     assert_rows(&rows, &vocabulary(true));
 }
 
 /// §FS-rule-refusals.sentences.rewrite.recovered: a literal keeps its own declaration and the named
-/// components typed before the one that failed, whichever component failed.
+/// components typed before the one that failed, and is offered nothing where
+/// that drops a typed component (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
-fn a_literal_keeps_its_declaration_and_the_components_before_the_failed_one() {
+fn a_literal_keeps_its_own_chapter_or_is_offered_nothing() {
     let rows = [
         (
             "FS-demo.requirements.",
             grammar("FS-demo.requirements.") + &form("FS-demo.requirements"),
         ),
-        (
-            "FS-demo..requirements",
-            grammar("FS-demo..requirements") + &form("FS-demo"),
-        ),
-        ("FS-demo.2", format!("{NUMBERED}{}", form("FS-demo"))),
+        ("FS-demo..requirements", grammar("FS-demo..requirements")),
+        ("FS-demo.2", NUMBERED.into()),
     ];
     assert_rows(&rows, &vocabulary(true));
 }
@@ -154,23 +141,18 @@ fn a_literal_keeps_its_declaration_and_the_components_before_the_failed_one() {
 /// §FS-rule-refusals.sentences.chapter-path: the literal spelling judges its path before it asks about
 /// named sections, so an empty component is refused off the section grammar
 /// with them off too, while the chapter spelling, which asks first, keeps its
-/// named-sections-off refusal (§FS-rule-refusals.sentences.named-sections). With them off the literal is
-/// offered `FS-login`, the subject `list --selector` gives it then too.
+/// named-sections-off refusal (§FS-rule-refusals.sentences.named-sections). With them off
+/// `list --selector` answers the literal with `FS-login`, which drops the typed `requirements`, so
+/// the rule is offered nothing (§FS-rule-refusals.sentences.rewrite.same-units).
 #[test]
 fn an_empty_literal_component_is_judged_before_named_sections_are_asked_about() {
     let rows = [
-        (
-            "FS-login.requirements.",
-            grammar("FS-login.requirements.") + &form("FS-login"),
-        ),
-        (
-            "FS-login..requirements",
-            grammar("FS-login..requirements") + &form("FS-login"),
-        ),
-        ("FS-login.2", format!("{NUMBERED}{}", form("FS-login"))),
+        ("FS-login.requirements.", grammar("FS-login.requirements.")),
+        ("FS-login..requirements", grammar("FS-login..requirements")),
+        ("FS-login.2", NUMBERED.into()),
         (
             "The requirements.1 chapter of each FS",
-            "named chapter subjects require [id] named_sections = true; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.".into(),
+            "named chapter subjects require [id] named_sections = true".into(),
         ),
     ];
     assert_rows(&rows, &vocabulary(false));
