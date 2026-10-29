@@ -26,9 +26,10 @@ The run writes two files and touches nothing under `docs/`
 
 - `grund.toml`, the `none` template's config ([§FS-init.2.4.9](../../docs/functional-spec/FS-init.md#249-the-none-templates-config)): a
   version-2 file holding the version, the project name and a comment on
-  declaring a first kind. With no `[schema.kinds]` row it declares no kinds, and
-  `grund config show` prints every setting it leaves at its default
-  ([§FS-config.4.2](../../docs/functional-spec/FS-config.md#42-grund-config-show-path)).
+  declaring a first kind. With no `[schema.kinds]` row it declares no kinds.
+  `grund config show` prints what applies, each default the file leaves included
+  ([§FS-config.4.2](../../docs/functional-spec/FS-config.md#42-grund-config-show-path)), and `grund config explain` every setting
+  ([§FS-config.4.2.3.1](../../docs/functional-spec/FS-config.md#4231-what-sends-a-reader-to-show-names-explain)).
 - `AGENTS.md`, whose Project map teaches the first `[schema.kinds]` table rather
   than listing an empty one ([§FS-init.2.3.4.4.2](../../docs/functional-spec/FS-init.md#23442-no-kinds-yet)).
 

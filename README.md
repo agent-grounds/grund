@@ -154,7 +154,7 @@ Then:
 
 - add `grund check` to [pre-commit and CI](docs/user-facing/checking.md#in-pre-commit-and-ci);
 - look up any key in the [`grund.toml` reference](docs/user-facing/configuration.md), and point your editor at its [JSON Schema](schemas/grund.schema.json);
-- `grund.toml` has two versions: version 2 (`grund_config_version = 2`) is what `grund init` writes, holding only what differs from a default, and `grund config show` prints every effective setting; a file without a version is version 1 and keeps loading unchanged. Version 1 reads the extensions `[scan]` lists, and version 2 names the languages it reads, maps suffixes to them, and lets only doc comments declare — see [sources](docs/user-facing/sources.md) and its [runnable example](examples/sources/);
+- `grund.toml` has two versions: version 2 (`grund_config_version = 2`) is what `grund init` writes, holding only what differs from a default, and `grund config show` prints what applies, `grund config explain` every setting; a file without a version is version 1 and keeps loading unchanged. Version 1 reads the extensions `[scan]` lists, and version 2 names the languages it reads, maps suffixes to them, and lets only doc comments declare — see [sources](docs/user-facing/sources.md) and its [runnable example](examples/sources/);
 - for prebuilt binaries and the Python and Node APIs, see [installation](docs/user-facing/installation.md).
 
 ## Declaration format
