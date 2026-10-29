@@ -253,13 +253,14 @@ fn a_value_with_two_early_closes_earns_one_warning_naming_the_first() {
 }
 
 /// §FS-config-v2.reader.6.window: an array with an open line and an early close earns both
-/// warnings, the open line's first, the early close naming the joined text and line 12.
+/// warnings, the early close naming the joined text and line 12. `config validate` and `config
+/// show` keep the config's order, the open line's first; `check` sorts them (§FS-errors.4.1).
 #[test]
-#[ignore = "red until #1088 warns for an early close after #1089's open line; implement removes this"]
 fn an_open_line_and_an_early_close_earn_both_warnings() {
     let fx = Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\nb\" \"c\",\n]\n");
-    let both = format!("{OPEN_LINE}{}", element(10, "a b\" \"c", 12));
-    fx.expect(&["check"], 0, "", &both);
+    let early = element(10, "a b\" \"c", 12);
+    fx.expect(&["check"], 0, "", &format!("{early}{OPEN_LINE}"));
+    let both = format!("{OPEN_LINE}{early}");
     fx.expect(&["config", "validate"], 0, "", &both);
     assert_eq!(
         fx.shown("schema.sources", "exclude = ", &both),
@@ -269,12 +270,12 @@ fn an_open_line_and_an_early_close_earn_both_warnings() {
     let lines: Vec<&str> = run.stderr.lines().collect();
     assert_eq!(lines.len(), 2, "{}", run.stderr);
     assert!(
-        lines[0].contains("still open at the end of line 11"),
+        lines[0].contains("read for now as the one string"),
         "{}",
         lines[0]
     );
     assert!(
-        lines[1].contains("read for now as the one string"),
+        lines[1].contains("still open at the end of line 11"),
         "{}",
         lines[1]
     );
@@ -345,16 +346,17 @@ fn v1_folder() -> Fixture {
     )
 }
 
-/// A version-1 tree whose `[scan] include` is `["a"b", "c"]`, its key on line 12.
-fn v1_include() -> Fixture {
+/// A version-1 tree whose `[scan] exclude` is `["a"b", "c"]`, its key on line 13. No file
+/// path holds the quote, which Windows refuses in a name.
+fn v1_exclude() -> Fixture {
     Fixture::with(
         "grund_config_version = 1\n\n[id]\nnamed_sections = true\n\n[[kinds]]\nkind = \"SPEC\"\n\
-         folder = \"docs\"\nindex = false\n\n[scan]\ninclude = [\"a\"b\", \"c\"]\n",
+         folder = \"docs\"\nindex = false\n\n[scan]\ninclude = [\"docs\", \"src\"]\n\
+         exclude = [\"a\"b\", \"c\"]\n",
         &[
             ("docs/spec.md", "# SPEC-001-one: One\n\nLead.\n"),
-            ("a\"b/notes.txt", "Notes.\n"),
             (
-                "c/main.rs",
+                "src/main.rs",
                 "// Realizes \u{a7}SPEC-001-one.\nfn main() {}\n",
             ),
         ],
@@ -371,11 +373,11 @@ fn version_1_keeps_its_reading_with_only_the_version_1_caution() {
         folder.shown("[kinds]", "folder = ", VERSION_1),
         "folder = \"docs\\\" \\\"x\""
     );
-    let include = v1_include();
-    include.expect(&["check"], 0, "", VERSION_1);
+    let exclude = v1_exclude();
+    exclude.expect(&["check"], 0, "", VERSION_1);
     assert_eq!(
-        include.shown("scan", "include = ", VERSION_1),
-        "include = [\"a\\\"b\", \"c\"]"
+        exclude.shown("scan", "exclude = ", VERSION_1),
+        "exclude = [\"a\\\"b\", \"c\"]"
     );
 }
 
@@ -399,9 +401,9 @@ fn migrating_a_version_1_scalar_that_closes_early_is_refused() {
 /// its key's line with both halves of an element's version-1 repair.
 #[test]
 fn migrating_a_version_1_element_that_closes_early_is_refused() {
-    let fx = v1_include();
+    let fx = v1_exclude();
     let report = "grund.toml: version 1 → 2, preview, nothing written\n\
-                  refused: grund.toml:12: [scan] include reads the one string `a\"b`, and \
+                  refused: grund.toml:13: [scan] exclude reads the one string `a\"b`, and \
                   version 2 ends a string at its first unescaped quote\n  \
                   repair: end the string at its closing quote under version 1: write `\\\"` for \
                   a quote inside it, or a `,` between two strings; grund check shows its effect\n\
