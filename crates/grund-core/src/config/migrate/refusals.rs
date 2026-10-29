@@ -11,7 +11,7 @@ use crate::config::grounding::configured_row_grounding;
 use crate::config::point_sizes::PointSizeUnit;
 use crate::config::project::Project;
 use crate::config::v1::LineKind;
-use crate::config::v2::{read_string, read_string_list};
+use crate::config::v2::{read_string_as_before, read_string_list_as_before};
 
 fn at(line: Option<usize>) -> RefusalAnchor {
     line.map_or(RefusalAnchor::Unset, RefusalAnchor::Line)
@@ -122,8 +122,9 @@ pub(super) fn settings(v1: &Project, keys: &Keys, root: &Path) -> Vec<MigrateRef
 }
 
 /// §FS-config-migrate.3.1.8: each key whose value holds a string that closes early, at
-/// its line, naming the first such string as version 2's warning names it
-/// (§FS-config-v2.reader.6.window), with that warning's repair made under version 1:
+/// its line, naming the first such string as version 1 reads it, which version 2 refuses
+/// (§FS-config-v2.reader.6.refusal), with the repair its 0.21.x warning gave
+/// (§FS-config-v2.reader.6.window) made under version 1:
 /// the first half for a scalar, both halves for a list element. `path` names the file
 /// a value the string readers refuse would be refused in, which no refusal here shows.
 pub(super) fn strings_closing_early(keys: &Keys, path: &Path) -> Vec<MigrateRefusal> {
@@ -134,10 +135,10 @@ pub(super) fn strings_closing_early(keys: &Keys, path: &Path) -> Vec<MigrateRefu
         };
         let (line, element) = (record.line, value.starts_with('['));
         let early = if element {
-            let read = read_string_list(path, line, value).ok();
+            let read = read_string_list_as_before(path, line, value).ok();
             read.and_then(|(_, early)| early.first().copied())
         } else {
-            read_string(path, line, value)
+            read_string_as_before(path, line, value)
                 .ok()
                 .and_then(|(_, early)| early)
         };

@@ -277,14 +277,6 @@
       "text": "close the string on line {line}"
      },
      {
-      "label": "element",
-      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it, or a `,` between two strings"
-     },
-     {
-      "label": "scalar-or-key",
-      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it"
-     },
-     {
       "label": "commas",
       "text": "delete each comma on line {line} that has no element before it"
      }
@@ -307,14 +299,6 @@
      {
       "label": "open-line",
       "text": "close the string on line {line}"
-     },
-     {
-      "label": "element",
-      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it, or a `,` between two strings"
-     },
-     {
-      "label": "scalar-or-key",
-      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it"
      },
      {
       "label": "commas",
