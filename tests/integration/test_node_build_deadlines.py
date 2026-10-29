@@ -18,6 +18,9 @@ from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[2]
 SCALE = 500
+# §AR-ci.3.4.1.1: the start-up a loaded runner spends before the healthy child's own code runs.
+START_UP = 1.5
+SLOW_START = f"import time\ntime.sleep({START_UP})\n"
 CHILD = """
 import sys, time
 from pathlib import Path
@@ -55,12 +58,14 @@ def probe(mode, scratch):
             # An outer cap also bounds a broken policy during this regression test.
             options["timeout"] = min(6, budget / SCALE)
             duration = 1100 / SCALE if mode == "healthy" else 4000 / SCALE
-            return real_run([sys.executable, "-c", CHILD, str(out), str(duration)], **options)
+            code = SLOW_START + CHILD if mode == "healthy" else CHILD
+            return real_run([sys.executable, "-c", code, str(out), str(duration)], **options)
 
         if mode == "healthy":
             # Same child, ample budget: fixture/tooling failures cannot masquerade as #913.
             control = scratch / "control"
-            result = real_run([sys.executable, "-c", CHILD, str(control), str(1100 / SCALE)],
+            result = real_run([sys.executable, "-c", SLOW_START + CHILD, str(control),
+                               str(1100 / SCALE)],
                               capture_output=True, text=True, timeout=6)
             check.assertEqual(0, result.returncode, result.stderr)
             check.assertTrue((control / "grund.node").is_file())
@@ -134,6 +139,8 @@ class NodeBuildDeadlineTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         return result
 
+    # Red until #1104 charges CHILD's scaled time from its launch; implement removes this.
+    @unittest.expectedFailure
     def test_documented_release_build_survives_the_old_deadline(self):
         self.run_probe("healthy")
 
