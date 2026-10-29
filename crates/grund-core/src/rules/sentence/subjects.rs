@@ -241,9 +241,13 @@ impl SubjectRefusal {
                 Recovered::rule_subject,
             )
         } else {
-            recover_subject(self, vocabulary).map(|recovered| Suggestion {
-                text: recovered.rule_subject(),
-                after_enabling: false,
+            // §FS-rule-refusals.sentences.rewrite.same-units: a rebuild that drops a typed
+            // component judges other units, so the kind was recovered and no form is.
+            recover_subject(self, vocabulary).and_then(|recovered| {
+                Ok(Suggestion {
+                    text: recovered.rule_subject().ok_or(false)?,
+                    after_enabling: false,
+                })
             })
         };
         let reason = self.reason(vocabulary);

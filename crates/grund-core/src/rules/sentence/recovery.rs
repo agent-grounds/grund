@@ -29,6 +29,9 @@ pub(super) struct Recovered {
     names: String,
     /// What joined the head and the chapter path as typed.
     separator: String,
+    /// Whether step 3 dropped a typed component that names something, which a
+    /// selector may and a rule may not (§FS-rule-refusals.sentences.rewrite.same-units).
+    dropped: bool,
 }
 
 impl Recovered {
@@ -48,13 +51,19 @@ impl Recovered {
     /// The parts as a rule subject (§FS-rule-refusals.sentences.rewrite.recovered): what the selector would
     /// be, with the selector-only `KIND.NAME[.NAME…]` written
     /// `The NAME[.NAME…] chapter of each KIND` and a bare `KIND` `Each KIND`.
-    pub(super) fn rule_subject(&self) -> String {
+    /// `None` where step 3 dropped a typed component, because that subject would
+    /// judge a parent chapter, the declaration or every declaration of the kind
+    /// rather than what was typed (§FS-rule-refusals.sentences.rewrite.same-units).
+    pub(super) fn rule_subject(&self) -> Option<String> {
         let Self { kind, names, .. } = self;
-        match &self.declaration {
+        if self.dropped {
+            return None;
+        }
+        Some(match &self.declaration {
             Some(declaration) => self.with_names(declaration),
             None if names.is_empty() => format!("Each {kind}"),
             None => format!("The {names} chapter of each {kind}"),
-        }
+        })
     }
 
     fn with_names(&self, base: &str) -> String {
@@ -129,6 +138,7 @@ pub(super) fn recover_subject(
                 declaration: Some(declaration.to_string()),
                 names,
                 separator,
+                dropped: false,
             });
         }
         // §FS-rule-refusals.sentences.rewrite.recovered: a refused component keeps its
@@ -141,23 +151,27 @@ pub(super) fn recover_subject(
             if !vocabulary.named_sections_for(kind) {
                 return Err(false);
             }
+            let (names, dropped) = named_prefix(Some(path), kind, vocabulary);
             return Ok(Recovered {
                 spelling: Spelling::ChapterOfEach,
                 kind: kind.into(),
                 declaration: None,
-                names: named_prefix(Some(path), kind, vocabulary),
+                names,
                 separator: String::new(),
+                dropped,
             });
         }
     }
     let declaration = (refusal.spelling == Spelling::Literal && is_declaration(head, vocabulary))
         .then(|| head.to_string());
+    let (names, dropped) = named_prefix(refusal.path.as_deref(), kind, vocabulary);
     Ok(Recovered {
         spelling: refusal.spelling,
         kind: kind.into(),
         declaration,
-        names: named_prefix(refusal.path.as_deref(), kind, vocabulary),
+        names,
         separator: refusal.separator.clone(),
+        dropped,
     })
 }
 
@@ -186,6 +200,7 @@ fn reordered_scope(
             declaration: None,
             names: names.into(),
             separator: String::new(),
+            dropped: false,
         });
     }
     if refusal.spelling != Spelling::Literal || !is_declaration(base, vocabulary) {
@@ -211,6 +226,7 @@ fn reordered_scope(
                 declaration: Some(declaration.to_string()),
                 names: path,
                 separator,
+                dropped: false,
             }),
             _ => None,
         }
@@ -257,21 +273,23 @@ pub(super) fn as_if_enabled<T>(
     parse: impl Fn(&str, &RuleVocabulary) -> Result<T, SubjectRefusal>,
     render: impl Fn(&Recovered) -> String,
 ) -> Option<Suggestion> {
-    as_if_enabled_subject(text, vocabulary, parse, render).ok()
+    as_if_enabled_subject(text, vocabulary, parse, |recovered| Some(render(recovered))).ok()
 }
 
 /// §FS-rule-refusals.sentences.rewrite.recovered: preserve the shared recovery's
 /// missing-kind distinction when a rule retries with named sections enabled.
+/// Where `render` spells nothing, the kind was recovered and the typed scope
+/// was not (§FS-rule-refusals.sentences.rewrite.same-units).
 pub(super) fn as_if_enabled_subject<T>(
     text: &str,
     vocabulary: &RuleVocabulary,
     parse: impl Fn(&str, &RuleVocabulary) -> Result<T, SubjectRefusal>,
-    render: impl Fn(&Recovered) -> String,
+    render: impl Fn(&Recovered) -> Option<String>,
 ) -> Result<Suggestion, bool> {
     let enabled = enabled(vocabulary).ok_or(true)?;
     let text = match parse(text, &enabled) {
         Ok(_) => text.to_string(),
-        Err(own) => render(&recover_subject(&own, &enabled)?),
+        Err(own) => render(&recover_subject(&own, &enabled)?).ok_or(false)?,
     };
     Ok(Suggestion {
         after_enabling: parse(&text, vocabulary).is_err(),
@@ -317,21 +335,26 @@ fn is_declaration(head: &str, vocabulary: &RuleVocabulary) -> bool {
     )
 }
 
-/// Step 3: the longest run of named components before the first refused one.
-fn named_prefix(path: Option<&str>, kind: &str, vocabulary: &RuleVocabulary) -> String {
+/// Step 3: the longest run of named components before the first refused one,
+/// and whether that drops a typed component other than one empty one at the
+/// end, which names nothing (§FS-rule-refusals.sentences.rewrite.same-units).
+fn named_prefix(path: Option<&str>, kind: &str, vocabulary: &RuleVocabulary) -> (String, bool) {
     let Some(path) = path else {
-        return String::new();
+        return (String::new(), false);
     };
     let components = path.split('.').collect::<Vec<_>>();
     let named = components
         .iter()
         .take_while(|component| named_section_component(component))
         .count();
-    (1..=named)
+    let kept = (1..=named)
         .rev()
-        .map(|length| components[..length].join("."))
-        .find(|prefix| validate_named_path(prefix, kind, vocabulary).is_ok())
-        .unwrap_or_default()
+        .find(|&length| {
+            validate_named_path(&components[..length].join("."), kind, vocabulary).is_ok()
+        })
+        .unwrap_or(0);
+    let dropped = !matches!(&components[kept..], [] | [""]);
+    (components[..kept].join("."), dropped)
 }
 
 #[cfg(test)]
