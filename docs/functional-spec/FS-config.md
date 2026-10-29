@@ -329,14 +329,14 @@ The effective format is the **authoring and conformance grammar**, not a reason
 to make a persisted declaration unreadable. A heading in declaration position
 whose exact token starts with a configured citable kind, ends at the
 declaration colon, and carries no `/` ([§FS-config.3.2.3](FS-config.md#323-no-id-contains-a-)) is retained in that project's catalog
-even when the token does not match the kind's effective format. Its exact
-written spelling, body,
+even when the token does not match the kind's effective format. Its exact written spelling, body,
 sections, and location remain available to readers, and it earns the
 `declaration-near-miss` finding ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)). Exact marker-prefixed candidates
 that normal grammar rejects become citations only when that same project's
 catalog contains an exact declaration spelling; an unmarked candidate or a
-marked candidate with no exact declaration gains no compatibility meaning.
-This catalog-backed boundary is decided in
+marked candidate with no exact declaration gains no compatibility meaning. Such a marked candidate
+still cites nothing, but where it opens with a configured kind and no other reading claims its
+marker, `check` reports it as an off-format citation ([§FS-citations.recognized.off-format](FS-citations.md#recognizedoff-format-a-marked-token-its-kinds-format-does-not-spell-is-reported-never-dropped)). This catalog-backed boundary is decided in
 [§DF-off-grammar-declaration-compatibility](../decisions/functional/DF-off-grammar-declaration-compatibility.md#df-off-grammar-declaration-compatibility-persisted-declarations-remain-readable-without-relaxing-the-authoring-grammar).
 
 #### 3.2.6 Resolving an off-grammar citation

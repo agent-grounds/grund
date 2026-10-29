@@ -148,12 +148,14 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 1007, unit = "lines" }
+max_accepted = { value = 1036, unit = "lines" }
 until = "the check specification is partitioned into recognition, reporting, finding and watch declarations with existing section citations migrated"
 reason = """
 Missing boundary: citation recognition, command reporting, the finding catalog and the watch points extended for issue 473 still share one declaration. Splitting them into separate declarations requires a mapped migration of their stable numbered section IDs and callers; that migration is outside the specification-only contracts for issues #483 and #473. This entry records that existing debt while the configured-marker recognition and watch points are pinned. Issue #515's approved proposal adds §FS-check.3.24.3 beside the local-section finding it extends, where the code is to cite it, so the ceiling moved to the next step rather than the finding catalog moving out first.
 
 Issue #1079 adds §FS-check.2.2.2.5 and its two children beside the four empty-scan arms it completes, the message a run that loaded no config gives when a project config lies below it, since the arms share §FS-check.2.2.2's lead and the code that picks between them. The same mapped migration retires the debt and remains outside a message fix. The ceiling accepts exactly the measured 1007 non-blank lines, with no growth allowance.
+
+Issue #1073 adds §FS-check.checks.off-format-citation, the finding for a marked token its kind's format does not spell, beside §FS-check.checks.glob-citation, the other finding about a marked token's form, with its release point, the §FS-check.1.1.12 pointer to the recognition point §FS-citations.recognized.off-format owns, and the new finding in the out-of-scope lead of §FS-check.3.14. Partitioning the declaration still retires this debt, and that mapped migration is outside a specification-only contract. The file already measured 1020 non-blank lines on arrival, past the 1007 recorded here; this specification adds 16. The ceiling accepts exactly the measured 1036 non-blank lines, with no growth allowance.
 """
 [[exceptions]]
 path = "crates/grund-core/src/testing.rs"
@@ -277,7 +279,7 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["large-file-default"]
 kind = "deferred"
-max_accepted = { value = 301793, unit = "bytes" }
+max_accepted = { value = 309903, unit = "bytes" }
 until = "the finding catalog moves into independently declared child specifications and existing FS-check section citations are migrated"
 reason = """
 The check specification still combines recognition, reporting, its finding catalog and watch behavior in one declaration. Issue #823 adds only a cross-reference to the defining member diagnostic point in FS-workspace.5.1.1. Missing boundary: independent finding specifications with a stable mapping for current FS-check section citations; moving that catalog is outside this specification-only diagnostic change. This byte ceiling accepts only the current measured file size, separately from the existing line-budget exception.
@@ -301,6 +303,8 @@ Issue #1027 appends each check's remedy to its message, so the message examples 
 Issue #1079 adds the fifth empty-scan arm, §FS-check.2.2.2.5, with its two children. The file already measured 296738 bytes on arrival, past the 290537 recorded here; this specification takes it to 301495. The same mapped migration of the finding catalog retires the debt and remains outside a message fix. The byte ceiling accepts exactly the measured 301495 bytes, with no growth allowance.
 
 Issue #1071 has a missing-section finding name where the section lock's recorded text now sits. The defining point is §FS-section-lock.checks.vanished, kept in FS-section-lock.md so this file does not grow with it; §FS-check.3.2 gains only the one sentence that cites it, so its account of the message stays whole. The file already measured 301495 bytes on arrival, at the ceiling #1079 recorded; the sentence takes it to 301793. The same mapped migration of the finding catalog retires the debt and remains outside a message change. The byte ceiling accepts exactly the measured 301793 bytes, with no growth allowance.
+
+Issue #1073 adds §FS-check.checks.off-format-citation with its release point §FS-check.checks.off-format-citation.1, the §FS-check.1.1.12 pointer, and the new finding in the out-of-scope lead of §FS-check.3.14. The file already measured 304776 bytes on arrival, past the 301793 ceiling #1071 recorded; this specification adds 5127 bytes. The same mapped migration of the finding catalog retires the debt, and remains outside a specification-only contract. The byte ceiling accepts exactly the measured 309903 bytes, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-init.md"
