@@ -302,7 +302,7 @@ Ownership reads the path as written, not its link target, as a v1 home does ([§
 
 ##### schema.places.boundaries.4: A missing place is quiet
 
-A place that does not exist scans nothing and earns no finding, as a v1 home does ([§FS-config.3.5.8](FS-config.md#358-every-configured-kind-home-is-scanned)), so a fresh repository loads clean.
+A place that does not exist scans nothing and earns no finding, as a v1 home does ([§FS-config.3.5.8](FS-config.md#358-every-configured-kind-home-is-scanned)), so a fresh repository loads clean. A citation of a kind none of whose places exists says so at the citer ([§FS-check.3.1.4](FS-check.md#314-a-kind-none-of-whose-places-exists)).
 
 ##### schema.places.boundaries.5: Not inside a member
 
