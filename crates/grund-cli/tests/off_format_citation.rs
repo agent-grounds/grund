@@ -180,7 +180,13 @@ fn a_qualified_token_is_judged_by_the_project_its_alias_names() {
         [
             text(page, 3, "error", &off_format("req/REQ-999", REQ_FORMAT)),
             text(page, 3, "error", "unknown project alias nope"),
-            text(page, 3, "error", "unknown reference req/REQ-zzz"),
+            text(
+                page,
+                3,
+                "error",
+                "unknown reference req/REQ-zzz; no place of kind REQ exists: docs/REQ \
+                 (req/grund.toml:9)"
+            ),
             text(
                 page,
                 1,
@@ -221,7 +227,10 @@ fn under_full_an_out_of_scope_site_takes_the_compound_code() {
     let fx = out_of_scope();
     let scope = "outside configured places and source scope: ";
     let off = format!("{scope}{}", off_format("REQ-999", REQ_FORMAT));
-    let dangling = format!("{scope}unknown reference REQ-a12");
+    // No docs/REQ exists here, so the dangling control names the missing place (§FS-check.3.1.4).
+    let dangling = format!(
+        "{scope}unknown reference REQ-a12; no place of kind REQ exists: docs/REQ (grund.toml:9)"
+    );
     let run = fx.expect(1, &["check", "--full"]);
     assert_eq!(
         run.stdout,
