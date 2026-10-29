@@ -2,8 +2,7 @@
 //! discovery pair (§FS-check.4.3), the deprecated `.agents/` location
 //! (§FS-check.4.11), a file read as version 1
 //! (§FS-check.checks.config-version-1), a version-2 array read across a
-//! string open at a line's end or with a comma with no element before it
-//! taken off (§FS-config-v2.reader.5.commas.window), and a version-2 string
+//! string open at a line's end, and a version-2 string
 //! read past its closing quote (§FS-config-v2.checks.config-not-toml,
 //! §FS-config-v2.checks.config-multiline-string), all known from the file the
 //! run read rather than from the walk.
@@ -112,10 +111,9 @@ fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Dia
     })
 }
 
-/// §FS-config-v2.reader.5.strings.window, §FS-config-v2.reader.5.commas.window,
-/// §FS-config-v2.reader.6.window: the clause each window's warning ends with, naming the
-/// release from which the value is refused instead (§FS-config-v2.reader.5.strings.refusal,
-/// §FS-config-v2.reader.5.commas.refusal, §FS-config-v2.reader.6.refusal).
+/// §FS-config-v2.reader.5.strings.window, §FS-config-v2.reader.6.window: the clause each
+/// window's warning ends with, naming the release from which the value is refused instead
+/// (§FS-config-v2.reader.5.strings.refusal, §FS-config-v2.reader.6.refusal).
 const STRINGS_WINDOW_CLAUSE: &str = "this warning becomes an error in grund 0.22.0";
 
 /// §FS-config-v2.checks.config-not-toml, §FS-config-v2.checks.config-multiline-string:
@@ -150,36 +148,6 @@ fn string_over_break_warnings(config: &Config) -> impl Iterator<Item = Diagnosti
             authority: Vec::new(),
         }
     })
-}
-
-/// §FS-config-v2.checks.config-not-toml: one warning per array the version-2 reader read
-/// with a comma with no element before it taken off before its `]`
-/// (§FS-config-v2.reader.5.commas.window), at its key's line, naming the line of the first
-/// such comma. Pushed once the array's elements load, so after its open-line warning and
-/// before its early close's in the config's order.
-fn comma_without_element_warnings(config: &Config) -> impl Iterator<Item = Diagnostic> + '_ {
-    config
-        .project()
-        .commas_without_elements
-        .iter()
-        .map(|commas| {
-            let at = &commas.at;
-            Diagnostic {
-                code: Code::CONFIG_NOT_TOML,
-                path: Some(at.path.clone()),
-                line: Some(at.line),
-                column: None,
-                message: format!(
-                    "{}:{}: expected string, read for now with every comma before the `]` taken \
-                 off; {}; {STRINGS_WINDOW_CLAUSE}",
-                    format_path(&at.path),
-                    at.line,
-                    remedies::config_not_toml_commas(commas.line)
-                ),
-                sites: Vec::new(),
-                authority: Vec::new(),
-            }
-        })
 }
 
 /// §FS-config-v2.checks.config-not-toml, §FS-config-v2.checks.config-multiline-string:
@@ -245,6 +213,5 @@ pub(super) fn config_diagnostics<'a>(
         .chain(deprecated_config_location_warning(config))
         .chain(config_version_1_warning(config, display))
         .chain(string_over_break_warnings(config))
-        .chain(comma_without_element_warnings(config))
         .chain(string_closes_early_warnings(config))
 }

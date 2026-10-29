@@ -131,7 +131,6 @@ impl Drop for Fixture {
 /// grund.158's case, line 9, one comma against two (§FS-config-v2.reader.5.commas.refusal):
 /// `["ab",]` loads as `["ab"]` with no word, and `["ab",,]` is refused, naming 0.22.0.
 #[test]
-#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
 fn one_trailing_comma_loads_and_a_second_one_is_refused() {
     Fixture::exclude("[\"ab\",]").loads("exclude = [\"ab\"]");
     Fixture::exclude("[\"ab\",,]").refused(BECAME);
@@ -140,7 +139,6 @@ fn one_trailing_comma_loads_and_a_second_one_is_refused() {
 /// §FS-config-v2.reader.5.commas.refusal: every run of two or more adjacent commas after the
 /// last element is refused, naming 0.22.0, whatever whitespace stands around the run.
 #[test]
-#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
 fn adjacent_commas_after_the_last_element_are_refused() {
     for value in ["[\"ab\" ,, ]", "[\"ab\",,,]"] {
         Fixture::exclude(value).refused(BECAME);
@@ -150,7 +148,6 @@ fn adjacent_commas_after_the_last_element_are_refused() {
 /// §FS-config-v2.reader.5.commas.refusal: in an array written across lines the refusal is at
 /// the key's line, line 9, though the doubled comma stands on line 10.
 #[test]
-#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
 fn a_doubled_comma_on_a_later_line_is_refused_at_the_keys_line() {
     Fixture::exclude("[\n  \"ab\",,\n]").refused(BECAME);
 }
@@ -158,7 +155,6 @@ fn a_doubled_comma_on_a_later_line_is_refused_at_the_keys_line() {
 /// §FS-config-v2.reader.5.commas.refusal: an array with no element and one comma, or one run of
 /// them, is refused, naming 0.22.0; a comment beside the `[` is read as whitespace is.
 #[test]
-#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
 fn an_array_of_commas_alone_is_refused() {
     for value in ["[,]", "[ , ]", "[,,]", "[\n  ,\n]", "[ # c\n  ,\n]"] {
         Fixture::exclude(value).refused(BECAME);
@@ -170,7 +166,6 @@ fn an_array_of_commas_alone_is_refused() {
 /// said `unknown language` for `["nope",,]`. One trailing comma after the element keeps that
 /// refusal, and a shape refused before keeps its bare `expected string`.
 #[test]
-#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
 fn a_window_shape_names_0_22_whatever_its_key_would_have_said() {
     Fixture::sources("languages", "[\"nope\",,]").refused(BECAME);
     let unknown = "error: grund.toml:9: unknown language `nope` in [schema.sources] languages\n";
@@ -182,7 +177,6 @@ fn a_window_shape_names_0_22_whatever_its_key_would_have_said() {
 /// §FS-config-v2.reader.5.strings.window is still open: the lines are joined, and the joined
 /// array's doubled comma is refused, and its open line earns no warning beside the refusal.
 #[test]
-#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
 fn an_open_line_and_a_doubled_comma_are_refused_alone() {
     Fixture::exclude("[\n  \"a\nb\",,\n]").refused(BECAME);
 }
@@ -191,7 +185,6 @@ fn an_open_line_and_a_doubled_comma_are_refused_alone() {
 /// §FS-config-v2.reader.6.window is still open: the doubled comma is refused, and the string
 /// that closes early earns no warning beside the refusal.
 #[test]
-#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
 fn an_early_close_and_a_doubled_comma_are_refused_alone() {
     Fixture::exclude("[\"a\" \"b\",,]").refused(BECAME);
 }
