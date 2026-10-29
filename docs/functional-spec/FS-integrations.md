@@ -96,11 +96,28 @@ Zero, one, or several clients may match at once. Matches are reported in the fro
 
 ### 2.1 The setup guide
 
-The detected list and the catalog both close with the same two lines: how to preview a client before installing it, and the URL of the setup guide. The guide is where the parts of this setup that `--write` cannot perform are written down — the prerequisites that each fail silently (the resolver's directory on `PATH`, an editor it can find) and the per-client manual step ([§FS-integrations.3.4](FS-integrations.md#34-manual-client-iterm2), [§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)) — and detection is the command a user runs *first*, often having reached it from `grund --help` rather than from the README. Naming the guide there costs two lines and is the only pointer that reaches a caller who never saw the repository.
+The detected list and the catalog both close with the same lines: how to preview a client before installing it and the URL of the setup guide, then the way to `grund-lsp` ([§FS-integrations.2.3](FS-integrations.md#23-the-way-to-grund-lsp)). The guide is where the parts of this setup that `--write` cannot perform are written down — the prerequisites that each fail silently (the resolver's directory on `PATH`, an editor it can find) and the per-client manual step ([§FS-integrations.3.4](FS-integrations.md#34-manual-client-iterm2), [§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)) — and detection is the command a user runs *first*, often having reached it from `grund --help` rather than from the README. Naming the guide there costs two lines and is the only pointer that reaches a caller who never saw the repository.
 
 ### 2.2 Byte stability
 
 Because detection depends on ambient environment variables, only the explicit-`<client>` form ([§FS-integrations.1](FS-integrations.md#1-user-facing-command)) and `--help` are byte-stable across machines; the no-client form is stable only for a fixed environment. Golden coverage therefore pins explicit clients ([§FS-integrations.6](FS-integrations.md#6-determinism-and-exit-codes)).
+
+### 2.3 The way to grund-lsp
+
+`grund integrations` installs what renders a citation as a link: in a terminal, in an agent's answer, in an editor's terminal pane. What an editor does with a citation in its buffer — go-to-definition, hover, references, completion, diagnostics — comes from `grund-lsp` instead, a separate command family with integrations of its own ([§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor), [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations)). An editor with no clickable-citation client — IntelliJ IDEA and its family through LSP4IJ, Helix, Neovim, Zed, Emacs, Sublime Text — is served by `grund-lsp` alone. So every surface where `grund` offers this setup names it:
+
+- **Detection.** After the setup guide ([§FS-integrations.2.1](FS-integrations.md#21-the-setup-guide)), the detected list and the catalog both close with the same two further lines: one naming `grund-lsp` for go-to-definition and hover and `grund-lsp integrations lsp4ij` for IntelliJ-family editors, and one giving the public address of the LSP guide, which is where every editor's setup is written down:
+
+  ```text
+  Editors get go-to-definition and hover from grund-lsp (IntelliJ: `grund-lsp integrations lsp4ij`).
+  LSP guide: https://github.com/agent-grounds/grund/blob/main/docs/user-facing/lsp.md
+  ```
+
+  The address is the guide's public `blob/main` one, like the setup guide's printed just before it, rather than a `grund guide` section: `grund guide editor` itself defers to the LSP guide for each editor's steps, and the LSP4IJ import is written down there alone.
+- **The command's page.** `grund integrations -h` says in its body that go-to-definition, hover and completion in an editor come from `grund-lsp`, not from these integrations, and names `grund-lsp integrations lsp4ij` for IntelliJ-family editors. Its closing guide links ([§FS-cli.2.3](FS-cli.md#23-a-subcommands-help-page)) list the LSP guide after the setup guide.
+- **The top-level row.** The `integrations` row of `grund --help` names `grund-lsp` in its one-line description, within that page's one-screen budget ([§FS-cli.2.2](FS-cli.md#22-the-top-level-help-page)).
+
+The reason is the one [§FS-integrations.2.1](FS-integrations.md#21-the-setup-guide) gives for the setup guide: these are the surfaces a user reaches first, often from `grund --help`, and the only ones that reach a caller who never saw the repository. Without the pointer they tell an IntelliJ user, accurately as far as they go, that nothing applies to them, while `grund-lsp` already ships what that editor needs. The pointer is text a person reads and nothing more: the JSON detection plan ([§FS-integrations.5](FS-integrations.md#5-json-format)) carries no pointer and does not change, the client set stays closed ([§FS-integrations.1.4](FS-integrations.md#14-unknown-client)), and `grund integrations` never detects, installs or runs `grund-lsp`. The separation of [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations) stands; this is its cross-reference run the other way.
 
 ## 3. Per-client artifacts
 
