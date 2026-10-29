@@ -25,23 +25,23 @@ fn markdown_fences_match_the_opening_delimiter() {
         concat!(
             "# FS-001-live: Live\n",
             "\n",
-            "§FS-001-live\n",
+            "\u{a7}FS-001-live\n",
             "````markdown\n",
-            "§FS-900-inside\n",
+            "\u{a7}FS-900-inside\n",
             "~~~~\n",
-            "§FS-901-still-inside\n",
+            "\u{a7}FS-901-still-inside\n",
             "```\n",
-            "§FS-902-also-inside\n",
+            "\u{a7}FS-902-also-inside\n",
             "````\n",
-            "§FS-001-live\n",
+            "\u{a7}FS-001-live\n",
             "    ```\n",
-            "§FS-001-live\n",
+            "\u{a7}FS-001-live\n",
             "~~~\n",
-            "§FS-903-tilde-inside\n",
+            "\u{a7}FS-903-tilde-inside\n",
             "~~~~\n",
-            "§FS-001-live\n",
+            "\u{a7}FS-001-live\n",
             "```bad`info\n",
-            "§FS-001-live\n",
+            "\u{a7}FS-001-live\n",
         ),
     );
 
@@ -249,7 +249,7 @@ slug_pattern = "[a-z0-9][a-z0-9-]*"
     );
     write(
         &root.join("docs/functional-spec/FS_001_alpha.md"),
-        "# FS_001_alpha: Alpha\n\nMentions §FS_999_missing.\n",
+        "# FS_001_alpha: Alpha\n\nMentions \u{a7}FS_999_missing.\n",
     );
     let config = load_config(&root).expect("load config");
     let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan root");
@@ -337,10 +337,10 @@ fn bare_token_in_markdown_link_destination_is_not_a_citation() {
     write(
         &path,
         concat!(
-            "[§FS-001-login](FS-001-login-a.md#fs-001-login-user-login)\n",
+            "[\u{a7}FS-001-login](FS-001-login-a.md#fs-001-login-user-login)\n",
             "[login spec](FS-001-login.md)\n",
             "FS-001-login\n",
-            "§FS-001-login\n",
+            "\u{a7}FS-001-login\n",
         ),
     );
     let mut config = numbered_config(root.clone());

@@ -23,7 +23,7 @@ fn full_scope_leaves_the_in_scope_report_unchanged() {
     );
     write(
         &root.join("src/engine_client.rs"),
-        "// Uses §AR-002-engine\n",
+        "// Uses \u{a7}AR-002-engine\n",
     );
 
     let scoped = check_run(&root, false);
@@ -52,7 +52,7 @@ fn full_scope_keeps_the_empty_scan_caution() {
         &root.join("grund.toml"),
         "grund_config_version = 1\n\n[scan]\ninclude = [\"nowhere\"]\n",
     );
-    write(&root.join("sim/world.py"), "# Cites §FS-999-missing\n");
+    write(&root.join("sim/world.py"), "# Cites \u{a7}FS-999-missing\n");
 
     let full = check_run(&root, true);
     assert!(
@@ -76,8 +76,11 @@ fn full_scope_keeps_the_empty_scan_caution() {
 #[test]
 fn an_explicit_path_argument_is_not_widened_by_full() {
     let root = drifted_include_repo("an_explicit_path_argument_is_not_widened_by_full");
-    write(&root.join("sim/world.py"), "# Cites §FS-999-missing\n");
-    write(&root.join("render/prompts.md"), "Cites §FS-998-absent\n");
+    write(&root.join("sim/world.py"), "# Cites \u{a7}FS-999-missing\n");
+    write(
+        &root.join("render/prompts.md"),
+        "Cites \u{a7}FS-998-absent\n",
+    );
 
     let scoped = check_run(&root.join("sim"), false);
     let full = check_run(&root.join("sim"), true);
@@ -101,7 +104,7 @@ fn an_explicit_path_argument_is_not_widened_by_full() {
 fn full_scope_warns_when_an_explicit_path_leaves_it_nothing_to_cancel() {
     let root =
         drifted_include_repo("full_scope_warns_when_an_explicit_path_leaves_it_nothing_to_cancel");
-    write(&root.join("sim/world.py"), "# Cites §FS-999-missing\n");
+    write(&root.join("sim/world.py"), "# Cites \u{a7}FS-999-missing\n");
 
     let full = check_run(&root.join("sim"), true);
     let caution = full
@@ -134,7 +137,7 @@ fn full_scope_warns_when_an_explicit_path_leaves_it_nothing_to_cancel() {
 #[test]
 fn full_scope_warning_keeps_a_lexical_root_alias() {
     let root = drifted_include_repo("full_scope_warning_keeps_a_lexical_root_alias");
-    write(&root.join("sim/world.py"), "# Cites §FS-999-missing\n");
+    write(&root.join("sim/world.py"), "# Cites \u{a7}FS-999-missing\n");
     let alias = root.with_extension("alias");
     symlink(root.to_str().expect("UTF-8 test path"), &alias);
 
@@ -172,7 +175,7 @@ fn full_scope_widens_every_workspace_member() {
     // (§FS-check.3.18) or the run is red for a reason this case is not about.
     write(
         &root.join("docs/functional-spec/README.md"),
-        "# Functional spec\n\n- [§FS-001-root](FS-001-root.md#fs-001-root-root-spec)\n",
+        "# Functional spec\n\n- [\u{a7}FS-001-root](FS-001-root.md#fs-001-root-root-spec)\n",
     );
     write(
         &root.join("api/grund.toml"),
@@ -185,9 +188,12 @@ fn full_scope_widens_every_workspace_member() {
     // The member owes its own entry for the same reason as the root above.
     write(
         &root.join("api/docs/functional-spec/README.md"),
-        "# Functional spec\n\n- [§FS-002-api](FS-002-api.md#fs-002-api-api-spec)\n",
+        "# Functional spec\n\n- [\u{a7}FS-002-api](FS-002-api.md#fs-002-api-api-spec)\n",
     );
-    write(&root.join("api/sim/model.py"), "# Cites §FS-404-nope\n");
+    write(
+        &root.join("api/sim/model.py"),
+        "# Cites \u{a7}FS-404-nope\n",
+    );
 
     let scoped = check_run(&root, false);
     assert!(scoped.report.errors.is_empty());
@@ -214,17 +220,17 @@ fn full_scope_still_reads_a_gitignored_include_root() {
     );
     write(
         &root.join("docs/functional-spec/FS-001-login.md"),
-        "# FS-001-login: A user can log in\n\nCites §AR-002-gen.\n",
+        "# FS-001-login: A user can log in\n\nCites \u{a7}AR-002-gen.\n",
     );
     // The default config indexes `FS`, so the fixture owes the entry
     // (§FS-check.3.18) or the run is red for a reason this case is not about.
     write(
         &root.join("docs/functional-spec/README.md"),
-        "# Functional spec\n\n- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)\n",
+        "# Functional spec\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)\n",
     );
     write(
         &root.join("generated/notes.md"),
-        "# Notes\n\nCites §FS-999-missing.\n",
+        "# Notes\n\nCites \u{a7}FS-999-missing.\n",
     );
     write(
         &root.join("generated/AR-002-gen.md"),
@@ -276,11 +282,11 @@ fn full_scope_still_reads_an_excluded_or_hidden_include_root() {
         // (§FS-check.3.18) or the run is red for a reason this case is not about.
         write(
             &root.join("docs/functional-spec/README.md"),
-            "# Functional spec\n\n- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)\n",
+            "# Functional spec\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)\n",
         );
         write(
             &root.join(dir).join("notes.md"),
-            "# Notes\n\nCites §FS-999-missing.\n",
+            "# Notes\n\nCites \u{a7}FS-999-missing.\n",
         );
 
         let scoped = check_run(&root, false);
@@ -317,12 +323,12 @@ fn full_scope_still_prunes_excluded_hidden_and_ignored_descendants() {
     // (§FS-check.3.18) or the run is red for a reason this case is not about.
     write(
         &root.join("docs/functional-spec/README.md"),
-        "# Functional spec\n\n- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)\n",
+        "# Functional spec\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)\n",
     );
-    write(&root.join("sim/vendor/a.py"), "# Cites §FS-901-nope\n");
-    write(&root.join("sim/.cache/b.py"), "# Cites §FS-902-nope\n");
-    write(&root.join("sim/build/c.py"), "# Cites §FS-903-nope\n");
-    write(&root.join("sim/world.py"), "# Cites §FS-904-nope\n");
+    write(&root.join("sim/vendor/a.py"), "# Cites \u{a7}FS-901-nope\n");
+    write(&root.join("sim/.cache/b.py"), "# Cites \u{a7}FS-902-nope\n");
+    write(&root.join("sim/build/c.py"), "# Cites \u{a7}FS-903-nope\n");
+    write(&root.join("sim/world.py"), "# Cites \u{a7}FS-904-nope\n");
     write(&root.join(".gitignore"), "build/\n");
     std::fs::create_dir_all(root.join(".git")).expect("create .git");
 
@@ -347,13 +353,13 @@ fn full_scope_reads_each_file_once_across_overlapping_roots() {
     );
     write(
         &root.join("docs/functional-spec/FS-001-login.md"),
-        "# FS-001-login: A user can log in\n\nCited by §FS-001-login.\n",
+        "# FS-001-login: A user can log in\n\nCited by \u{a7}FS-001-login.\n",
     );
     // The default config indexes `FS`, so the fixture owes the entry
     // (§FS-check.3.18) or the run is red for a reason this case is not about.
     write(
         &root.join("docs/functional-spec/README.md"),
-        "# Functional spec\n\n- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)\n",
+        "# Functional spec\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)\n",
     );
 
     for full in [false, true] {
@@ -402,7 +408,7 @@ fn full_scope_reads_an_aliased_include_root_once() {
     );
     write(
         &root.join("docs/functional-spec/FS-001-login.md"),
-        "# FS-001-login: A user can log in\n\n## 1. Rules\n\nSee §FS-001-login.1.\n",
+        "# FS-001-login: A user can log in\n\n## 1. Rules\n\nSee \u{a7}FS-001-login.1.\n",
     );
 
     let scoped = check_run(&root, false);
@@ -432,7 +438,7 @@ fn full_scope_keeps_the_include_spelling_of_an_aliased_root() {
     );
     write(
         &root.join("real/notes.md"),
-        "# Notes\n\nCites §FS-999-missing.\n",
+        "# Notes\n\nCites \u{a7}FS-999-missing.\n",
     );
 
     let scoped = check_run(&root, false);
@@ -459,7 +465,7 @@ fn full_scope_exits_two_on_an_unreadable_file_outside_include() {
 
     let root = drifted_include_repo("full_scope_exits_two_on_an_unreadable_file_outside_include");
     let unreadable = root.join("sim/world.py");
-    write(&unreadable, "# Cites §FS-001-login\n");
+    write(&unreadable, "# Cites \u{a7}FS-001-login\n");
     std::fs::set_permissions(&unreadable, std::fs::Permissions::from_mode(0o000))
         .expect("chmod the fixture");
     if std::fs::read_to_string(&unreadable).is_ok() {

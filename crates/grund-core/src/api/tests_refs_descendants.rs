@@ -25,7 +25,7 @@ fn refs_descendants_repo(name: &str) -> PathBuf {
     );
     write(
         &root.join("docs/FS-002-beta.md"),
-        "# FS-002-beta: Beta\n\n§FS-001-alpha.1\n\n§FS-001-alpha.1.1\n\n§FS-001-alpha.1.1.1\n\n§FS-001-alpha.1.10\n\n§FS-001-alpha.2\n\n§FS-001-alpha\n",
+        "# FS-002-beta: Beta\n\n\u{a7}FS-001-alpha.1\n\n\u{a7}FS-001-alpha.1.1\n\n\u{a7}FS-001-alpha.1.1.1\n\n\u{a7}FS-001-alpha.1.10\n\n\u{a7}FS-001-alpha.2\n\n\u{a7}FS-001-alpha\n",
     );
     root
 }

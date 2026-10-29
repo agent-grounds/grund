@@ -52,7 +52,7 @@ fn an_inline_note_records_its_own_block_span_and_width() {
     let found = sites(
         "an_inline_note_records_its_own_block_span_and_width",
         concat!(
-            "// §FS-001-login: reject an expired credential\n",
+            "// \u{a7}FS-001-login: reject an expired credential\n",
             "pub fn login() {}\n",
         ),
         false,
@@ -80,8 +80,8 @@ fn two_citations_in_one_block_carry_one_span() {
         "two_citations_in_one_block_carry_one_span",
         concat!(
             "// Walks the credential store.\n",
-            "// §FS-001-login: one error per expired credential.\n",
-            "// §FS-002-session — and one more, laid out wrong.\n",
+            "// \u{a7}FS-001-login: one error per expired credential.\n",
+            "// \u{a7}FS-002-session — and one more, laid out wrong.\n",
             "pub fn sweep() {}\n",
         ),
         false,
@@ -106,9 +106,9 @@ fn a_doc_comment_block_records_no_site() {
     let found = sites(
         "a_doc_comment_block_records_no_site",
         concat!(
-            "//! §FS-002-session: the module's own documentation.\n",
+            "//! \u{a7}FS-002-session: the module's own documentation.\n",
             "\n",
-            "/// §FS-001-login: reject an expired credential.\n",
+            "/// \u{a7}FS-001-login: reject an expired credential.\n",
             "pub fn login() {}\n",
         ),
         false,
@@ -122,7 +122,7 @@ fn a_doc_comment_block_records_no_site() {
 fn a_block_of_bare_citations_records_no_note() {
     let found = sites(
         "a_block_of_bare_citations_records_no_note",
-        concat!("// §FS-001-login\n", "pub fn login() {}\n"),
+        concat!("// \u{a7}FS-001-login\n", "pub fn login() {}\n"),
         false,
     );
     assert_eq!(
@@ -146,8 +146,8 @@ fn the_recorded_layout_violations_are_ascending_and_shared_by_the_block() {
     let found = sites(
         "the_recorded_layout_violations_are_ascending_and_shared_by_the_block",
         concat!(
-            "// §FS-001-login: this line opens the note correctly.\n",
-            "// §FS-002-session — and this one does not.\n",
+            "// \u{a7}FS-001-login: this line opens the note correctly.\n",
+            "// \u{a7}FS-002-session — and this one does not.\n",
             "pub fn sweep() {}\n",
         ),
         true,
@@ -192,32 +192,32 @@ fn every_block_form_retains_widths_with_physical_line_association() {
     let cases: &[(&str, &str, &[usize])] = &[
         (
             "hash",
-            "\t# é界e\u{301}\n\t#\n\t# §FS-001-login\n",
+            "\t# é界e\u{301}\n\t#\n\t# \u{a7}FS-001-login\n",
             &[7, 2, 16],
         ),
         (
             "slash",
-            "\t// é界e\u{301}\n\t//\n\t// §FS-001-login\n",
+            "\t// é界e\u{301}\n\t//\n\t// \u{a7}FS-001-login\n",
             &[8, 3, 17],
         ),
         (
             "closed",
-            "  /* é界e\u{301}\n\n * §FS-001-login\n */\n",
+            "  /* é界e\u{301}\n\n * \u{a7}FS-001-login\n */\n",
             &[9, 0, 16, 3],
         ),
         (
             "bare",
-            "  /* é界e\u{301}\n\n§FS-001-login\n */\n",
+            "  /* é界e\u{301}\n\n\u{a7}FS-001-login\n */\n",
             &[9, 0, 13, 3],
         ),
         (
             "unclosed",
-            "  /* é界e\u{301}\n\n * §FS-001-login\n",
+            "  /* é界e\u{301}\n\n * \u{a7}FS-001-login\n",
             &[9, 0, 16],
         ),
         (
             "docstring",
-            "  \"\"\"é界e\u{301}\n\n§FS-001-login\n  \"\"\"\n",
+            "  \"\"\"é界e\u{301}\n\n\u{a7}FS-001-login\n  \"\"\"\n",
             &[9, 0, 13, 5],
         ),
     ];
@@ -229,7 +229,7 @@ fn every_block_form_retains_widths_with_physical_line_association() {
     }
     write(
         &root.join("src/doc.py"),
-        "\"\"\"§FS-001-login\nDocumentation.\n\"\"\"\n",
+        "\"\"\"\u{a7}FS-001-login\nDocumentation.\n\"\"\"\n",
     );
     let config = load_config(&root).expect("custom source config");
     let findings = scan_findings(&config, &root);

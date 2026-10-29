@@ -117,7 +117,7 @@ impl<'a> ShorthandTargets<'a> {
 /// full-ID pattern rather than an unanchored search is what keeps `fmt --check`
 /// cheap — a canonical citation, nearly every marker in a real tree, never reaches
 /// the shorthand pattern at all. That pattern is anchored only at its start, so
-/// `§FS-042-User-Login`, a full ID whose slug this grammar rejects, matches on its
+/// `<§>FS-042-User-Login`, a full ID whose slug this grammar rejects, matches on its
 /// `FS-042` prefix; rewriting it would splice the canonical slug into the middle of
 /// the author's token, leave the tail glued on, and silently corrupt the file. And
 /// declarations are reached for last because `fmt --check` has no other reason to
@@ -235,13 +235,13 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         };
         let match_end = caps.get(0).map_or(0, |found| found.end());
         // §DF-number-only-citation-shorthand.2.6: the pattern is anchored only at
-        // the start, so rewriting `§FS-042-User-Login` on its `FS-042` prefix would
+        // the start, so rewriting `<§>FS-042-User-Login` on its `FS-042` prefix would
         // corrupt the file — see the gate order above.
         if !target_grammar.id_token_ends_cleanly(tail, match_end) {
             continue;
         }
         // §FS-check.1.1.11: a pattern's shorthand prefix is never expanded — the
-        // reading the scanner and the link pass ask, so all three agree on `§FS-001-*`.
+        // reading the scanner and the link pass ask, so all three agree on `<§>FS-001-*`.
         if matches!(
             target_grammar.read_candidate(tail, match_end),
             CandidateReading::Pattern(_)

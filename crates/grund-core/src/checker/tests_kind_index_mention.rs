@@ -110,7 +110,7 @@ fn a_declaration_heading_in_the_index_is_not_a_mention() {
     let root = kind_index_repo("a_declaration_heading_in_the_index_is_not_a_mention");
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\n- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)\n\n\
+        "# Specs\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)\n\n\
          ## FS-002-logout: A user logs out\n\nBody.\n",
     );
 
@@ -159,7 +159,7 @@ fn a_repairable_bare_entry_never_earns_the_mention_clause() {
     let root = kind_index_repo("a_repairable_bare_entry_never_earns_the_mention_clause");
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\n- §FS-001-login\n",
+        "# Specs\n\n- \u{a7}FS-001-login\n",
     );
 
     let run = check_run(&root, false);

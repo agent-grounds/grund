@@ -104,7 +104,7 @@ fn on_type_trigger_characters(trigger: &str) -> Vec<String> {
     }
     // §FS-lsp.1.4.1: the shorthand expands on the keystroke that *ends* the token,
     // and a space is the commonest way to end one. The printable range above
-    // starts at `!`, so without this the ordinary `see §FS-042 and …` never fires.
+    // starts at `!`, so without this the ordinary `see <§>FS-042 and …` never fires.
     chars.insert(" ".to_string());
     for ch in trigger.chars() {
         chars.insert(ch.to_string());

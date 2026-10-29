@@ -17,7 +17,7 @@ fn block_close_bytes_are_wrapper_syntax_only_in_block_comments() {
              ## 2. Price <!-- grund:value -->\n\
              ### 2.1. 1200*/\n\
              ## 3. Use\n\
-             Bound: `1200` (§FS-001-alpha.2.1)\n",
+             Bound: `1200` (\u{a7}FS-001-alpha.2.1)\n",
     );
     let declaration = findings
         .declarations
@@ -56,7 +56,7 @@ fn block_close_bytes_are_wrapper_syntax_only_in_block_comments() {
              /// ## 1. Price <!-- grund:value -->\n\
              /// ### 1.1. 1200*/\n\
              /// ## 2. Use\n\
-             /// Bound: `1200` (§FS-001-alpha.1.1)\n",
+             /// Bound: `1200` (\u{a7}FS-001-alpha.1.1)\n",
     );
     let config = embedded_value_config(root);
     let (findings, errors) = scan_tree(&config, Some(&path), true).expect("scan line comment");
@@ -182,7 +182,7 @@ fn reversed_and_duplicate_root_claims_invalidate_catalog_authority() {
              #### 1.1.1. 1200\n\
              ## 1. Outer <!-- grund:value -->\n\
              ## 2. Use\n\
-             Bound: `999` (§FS-001-alpha.1.1.1)\n",
+             Bound: `999` (\u{a7}FS-001-alpha.1.1.1)\n",
     );
     let declaration = findings
         .declarations
@@ -242,7 +242,7 @@ fn reversed_and_duplicate_root_claims_invalidate_catalog_authority() {
              ### 1.1. 1200\n\
              ## 1. Duplicate <!-- grund:value -->\n\
              ## 2. Use\n\
-             Bound: `999` (§FS-001-alpha.1.1)\n",
+             Bound: `999` (\u{a7}FS-001-alpha.1.1)\n",
     );
     let declaration = findings
         .declarations

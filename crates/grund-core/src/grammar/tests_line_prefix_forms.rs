@@ -99,7 +99,7 @@ fn lisp_block_above(name: &str, next: &str) -> Vec<(usize, String)> {
         concat!(
             "(in-package :app)\n",
             "\n",
-            ";; Documents §FS-001-login in a sentence\n",
+            ";; Documents \u{a7}FS-001-login in a sentence\n",
             ";; that wraps to a second line,\n",
             ";; and a third,\n",
             ";; and a fourth.\n",
@@ -140,7 +140,7 @@ fn a_lisp_block_above_anything_else_is_a_note() {
     for next in ["(let ((p 1)) p)", "(nsx-route)", "(route \"/\")", "x"] {
         assert_eq!(
             lisp_block_above("a_lisp_block_above_anything_else_is_a_note", next),
-            over_the_line_cap(3, 4, "§FS-001-login"),
+            over_the_line_cap(3, 4, "\u{a7}FS-001-login"),
             "next line {next:?}"
         );
     }
@@ -153,7 +153,7 @@ fn a_leading_lisp_header_is_documentation() {
         "a_leading_lisp_header_is_documentation",
         "src/app.lisp",
         concat!(
-            ";;; app.lisp --- documents §FS-001-login in a sentence\n",
+            ";;; app.lisp --- documents \u{a7}FS-001-login in a sentence\n",
             ";;; that wraps to a second line,\n",
             ";;; and a third,\n",
             ";;; and a fourth.\n",

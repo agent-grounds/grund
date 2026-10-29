@@ -23,8 +23,8 @@ fn marked(line: &str, is_md: bool) -> String {
 
 /// §FS-fmt.2.3: in Markdown prose the pass promotes the bare citation and leaves
 /// the escaped illustration on the same line byte-identical. Without the
-/// carve-out the escape becomes `<§>§FS-001-login`, a live dangling citation the
-/// writer invented (§FS-check.1.1.9).
+/// carve-out a marker lands after the escape's own `<§>`, a live dangling citation
+/// the writer invented (§FS-check.1.1.9).
 #[test]
 fn the_marker_pass_leaves_a_markdown_escape_and_still_promotes_its_neighbour() {
     assert_eq!(
@@ -32,7 +32,7 @@ fn the_marker_pass_leaves_a_markdown_escape_and_still_promotes_its_neighbour() {
             "Login is FS-001-login, whose shape is written <§>FS-001-login.",
             true
         ),
-        "Login is §FS-001-login, whose shape is written <§>FS-001-login."
+        "Login is \u{a7}FS-001-login, whose shape is written <§>FS-001-login."
     );
 }
 
@@ -46,7 +46,7 @@ fn the_marker_pass_leaves_a_source_escape_and_still_promotes_its_neighbour() {
             "// A comment illustrating <§>FS-001-login beside a live FS-001-login.",
             false
         ),
-        "// A comment illustrating <§>FS-001-login beside a live §FS-001-login."
+        "// A comment illustrating <§>FS-001-login beside a live \u{a7}FS-001-login."
     );
     assert_eq!(
         marked(

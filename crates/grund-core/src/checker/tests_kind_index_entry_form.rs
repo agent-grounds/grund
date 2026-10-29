@@ -94,7 +94,7 @@ fn a_citation_on_a_declaration_heading_is_not_an_entry() {
     let root = kind_index_repo("a_citation_on_a_declaration_heading_is_not_an_entry");
     write(
         &root.join("docs/specs/README.md"),
-        "# FS-002-index: The index of §FS-001-login\n\nProse.\n",
+        "# FS-002-index: The index of \u{a7}FS-001-login\n\nProse.\n",
     );
 
     let run = check_run(&root, false);
@@ -120,7 +120,7 @@ fn an_inline_code_mention_is_not_an_entry_and_is_not_an_error() {
     let root = kind_index_repo("an_inline_code_mention_is_not_an_entry_and_is_not_an_error");
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\nThe login flow is `§FS-001-login`, explained below.\n",
+        "# Specs\n\nThe login flow is `\u{a7}FS-001-login`, explained below.\n",
     );
 
     let run = check_run(&root, false);

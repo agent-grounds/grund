@@ -29,9 +29,9 @@ fn embedded_value_ranges_navigation_and_diagnostics_match_the_cli() {
              {root_heading}\n\
              ### 1.1. 1200\n\
              ## 2. Use\n\
-             Bound: `999` (§FS-001-pricing.1.1)\n\
-             See §FS-001-pricing.1.\n\
-             Whole: `1200` (§FS-001-pricing.1)\n"
+             Bound: `999` (\u{a7}FS-001-pricing.1.1)\n\
+             See \u{a7}FS-001-pricing.1.\n\
+             Whole: `1200` (\u{a7}FS-001-pricing.1)\n"
         ),
     )
     .expect("write document");

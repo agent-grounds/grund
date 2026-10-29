@@ -26,21 +26,21 @@ const KINDLESS_CONFIG: &str = "grund_config_version = 1\n";
 
 /// Two FS declarations in `requirements.md` that cite each other.
 const REQUIREMENTS: &str = "# Requirements\n\n## FS-001-login: Login\n\n\
-                            A user logs in, before §FS-002-logout.\n\n\
-                            ## FS-002-logout: Logout\n\nA user logs out, after §FS-001-login.\n";
+                            A user logs in, before \u{a7}FS-002-logout.\n\n\
+                            ## FS-002-logout: Logout\n\nA user logs out, after \u{a7}FS-001-login.\n";
 
 /// One FS declaration in the folder home, listed in its index.
 const FS_FOLDER: &[(&str, &str)] = &[
     (
         "docs/functional-spec/README.md",
         "# Functional Spec\n\n| ID | Subject |\n|---|---|\n\
-         | [§FS-001-login](FS-001-login.md) | Login |\n",
+         | [\u{a7}FS-001-login](FS-001-login.md) | Login |\n",
     ),
     (
         "docs/functional-spec/FS-001-login.md",
         "# FS-001-login: Login\n\nA user logs in.\n",
     ),
-    ("docs/notes.md", "Login is §FS-001-login.\n"),
+    ("docs/notes.md", "Login is \u{a7}FS-001-login.\n"),
 ];
 
 fn tree(name: &str, files: &[(&str, &str)]) -> PathBuf {

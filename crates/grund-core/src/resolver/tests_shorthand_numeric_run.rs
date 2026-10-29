@@ -76,51 +76,57 @@ fn a_shorthand_glued_to_a_second_number_is_never_rewritten() {
 
     // The reported shapes, and the ones nobody has hit yet. A bare number, a
     // kind-qualified one, and a full ID all count as the second element.
-    unchanged("Renumbered: §FS-042→FS-043");
-    unchanged("Renumbered: §FS-042/043");
-    unchanged("Renumbered: §FS-042..043");
-    unchanged("Renumbered: §FS-042\u{2026}043");
-    unchanged("Renumbered: §FS-042|043");
-    unchanged("Renumbered: §FS-042,043");
-    unchanged("Renumbered: §FS-042→FS-043-user-logout");
+    unchanged("Renumbered: \u{a7}FS-042→FS-043");
+    unchanged("Renumbered: \u{a7}FS-042/043");
+    unchanged("Renumbered: \u{a7}FS-042..043");
+    unchanged("Renumbered: \u{a7}FS-042\u{2026}043");
+    unchanged("Renumbered: \u{a7}FS-042|043");
+    unchanged("Renumbered: \u{a7}FS-042,043");
+    unchanged("Renumbered: \u{a7}FS-042→FS-043-user-logout");
     // A section suffix is part of the token, so the run begins after it.
-    unchanged("Renumbered: §FS-042.1→FS-043");
+    unchanged("Renumbered: \u{a7}FS-042.1→FS-043");
     // Three elements: the head is the marked one and is still a numeral.
-    unchanged("Folded: §FS-042/043/044");
+    unchanged("Folded: \u{a7}FS-042/043/044");
 
     // Whitespace breaks the glue, and the glue is the whole evidence — under
     // the default `number_pattern = "\d+"` a year is number-shaped too.
     assert_eq!(
-        expand("Cited §FS-042 (2024) here"),
-        "Cited §FS-042-user-login (2024) here"
+        expand("Cited \u{a7}FS-042 (2024) here"),
+        "Cited \u{a7}FS-042-user-login (2024) here"
     );
     assert_eq!(
-        expand("Cited §FS-042, 043 here"),
-        "Cited §FS-042-user-login, 043 here"
+        expand("Cited \u{a7}FS-042, 043 here"),
+        "Cited \u{a7}FS-042-user-login, 043 here"
     );
     // A marker on the neighbour says the author marked two citations, one at
     // a time — the clearest statement of intent this grammar offers.
     assert_eq!(
-        expand("Both §FS-042, §FS-043 here"),
-        "Both §FS-042-user-login, §FS-043-user-logout here"
+        expand("Both \u{a7}FS-042, \u{a7}FS-043 here"),
+        "Both \u{a7}FS-042-user-login, \u{a7}FS-043-user-logout here"
     );
     // The rule reads forward only: a glued *left* neighbour is what a date or
     // a path looks like, and refusing those costs real citations
     // (§DF-shorthand-numeric-run.2.3).
     assert_eq!(
-        expand("Dated 2026-08-19/§FS-042 here"),
-        "Dated 2026-08-19/§FS-042-user-login here"
+        expand("Dated 2026-08-19/\u{a7}FS-042 here"),
+        "Dated 2026-08-19/\u{a7}FS-042-user-login here"
     );
     // A delimiter with no number after it is not a run.
-    assert_eq!(expand("End §FS-042."), "End §FS-042-user-login.");
-    assert_eq!(expand("Wrapped (§FS-042)"), "Wrapped (§FS-042-user-login)");
-    assert_eq!(expand("Trailing §FS-042/"), "Trailing §FS-042-user-login/");
+    assert_eq!(expand("End \u{a7}FS-042."), "End \u{a7}FS-042-user-login.");
+    assert_eq!(
+        expand("Wrapped (\u{a7}FS-042)"),
+        "Wrapped (\u{a7}FS-042-user-login)"
+    );
+    assert_eq!(
+        expand("Trailing \u{a7}FS-042/"),
+        "Trailing \u{a7}FS-042-user-login/"
+    );
 
     // One line, both verdicts: the run is left byte-for-byte while the
     // ordinary citation beside it still expands.
     assert_eq!(
-        expand("Was §FS-042→FS-043, see §FS-042 now"),
-        "Was §FS-042→FS-043, see §FS-042-user-login now"
+        expand("Was \u{a7}FS-042→FS-043, see \u{a7}FS-042 now"),
+        "Was \u{a7}FS-042→FS-043, see \u{a7}FS-042-user-login now"
     );
 }
 
@@ -166,43 +172,43 @@ fn a_construct_boundary_does_not_open_a_run() {
     // destination. `](` is a construct boundary, and the destination is a path
     // rather than a second number even where it ends in one.
     assert_eq!(
-        expand("See [§FS-042](FS-042-user-login.md) for it"),
-        "See [§FS-042-user-login](FS-042-user-login.md) for it"
+        expand("See [\u{a7}FS-042](FS-042-user-login.md) for it"),
+        "See [\u{a7}FS-042-user-login](FS-042-user-login.md) for it"
     );
     assert_eq!(
-        expand("See [§FS-042](docs/functional-spec/FS-042-user-login.md)"),
-        "See [§FS-042-user-login](docs/functional-spec/FS-042-user-login.md)"
+        expand("See [\u{a7}FS-042](docs/functional-spec/FS-042-user-login.md)"),
+        "See [\u{a7}FS-042-user-login](docs/functional-spec/FS-042-user-login.md)"
     );
     // A footnote reference, a parenthesised year with no space in front of it,
     // a quoted citation, and a braced count.
     assert_eq!(
-        expand("Note §FS-042[^1] here"),
-        "Note §FS-042-user-login[^1] here"
+        expand("Note \u{a7}FS-042[^1] here"),
+        "Note \u{a7}FS-042-user-login[^1] here"
     );
     assert_eq!(
-        expand("Cited §FS-042(2024)"),
-        "Cited §FS-042-user-login(2024)"
+        expand("Cited \u{a7}FS-042(2024)"),
+        "Cited \u{a7}FS-042-user-login(2024)"
     );
     assert_eq!(
-        expand("Quoted \"§FS-042\"/2 here"),
-        "Quoted \"§FS-042-user-login\"/2 here"
+        expand("Quoted \"\u{a7}FS-042\"/2 here"),
+        "Quoted \"\u{a7}FS-042-user-login\"/2 here"
     );
     // A `{` before an address character is an alternation, so the braced count is
     // a pattern fmt never rewrites (§FS-check.1.1.11), not a construct boundary.
-    assert_eq!(expand("Braced §FS-042{2}"), "Braced §FS-042{2}");
+    assert_eq!(expand("Braced \u{a7}FS-042{2}"), "Braced \u{a7}FS-042{2}");
     // Clause 2 on its own, with no bracket anywhere: a `<alias>/` namespace
     // precedes a citation and never follows one, so a path glued to the token
     // carries no second number.
     assert_eq!(
-        expand("Moved: §FS-042/docs/functional-spec/FS-043-user-logout.md"),
-        "Moved: §FS-042-user-login/docs/functional-spec/FS-043-user-logout.md"
+        expand("Moved: \u{a7}FS-042/docs/functional-spec/FS-043-user-logout.md"),
+        "Moved: \u{a7}FS-042-user-login/docs/functional-spec/FS-043-user-logout.md"
     );
 
     // And the exclusion is about the delimiters, not the surroundings: a real
     // run inside brackets is still a run.
     assert_eq!(
-        expand("Renumbered (§FS-042→FS-043) on import"),
-        "Renumbered (§FS-042→FS-043) on import"
+        expand("Renumbered (\u{a7}FS-042→FS-043) on import"),
+        "Renumbered (\u{a7}FS-042→FS-043) on import"
     );
 
     // `check` says the same thing about the same sites, which is the agreement
@@ -210,15 +216,15 @@ fn a_construct_boundary_does_not_open_a_run() {
     // ordinary shorthand error, naming an edit `fmt` will actually make.
     write(
         &root.join("docs/notes.md"),
-        "See [§FS-042](FS-042-user-login.md) and §FS-042[^1].\n\n[^1]: §FS-043\n",
+        "See [\u{a7}FS-042](FS-042-user-login.md) and \u{a7}FS-042[^1].\n\n[^1]: \u{a7}FS-043\n",
     );
     let (_, report) = check_tree(&config, &root);
     assert_eq!(
         messages(&report),
         vec![
-            "shorthand citation §FS-042; write §FS-042-user-login".to_string(),
-            "shorthand citation §FS-042; write §FS-042-user-login".to_string(),
-            "shorthand citation §FS-043; write §FS-043-user-logout".to_string(),
+            "shorthand citation \u{a7}FS-042; write \u{a7}FS-042-user-login".to_string(),
+            "shorthand citation \u{a7}FS-042; write \u{a7}FS-042-user-login".to_string(),
+            "shorthand citation \u{a7}FS-043; write \u{a7}FS-043-user-logout".to_string(),
         ]
     );
 }
@@ -242,19 +248,19 @@ fn a_shorthand_in_a_numeric_run_names_both_exits() {
     );
     write(
         &root.join("docs/notes.md"),
-        "Renumbered: §FS-042→FS-043, and §FS-042/043 moved.\n\nLive: §FS-042\n",
+        "Renumbered: \u{a7}FS-042→FS-043, and \u{a7}FS-042/043 moved.\n\nLive: \u{a7}FS-042\n",
     );
     let config = numbered_config(root.clone());
     let (findings, report) = check_tree(&config, &root);
 
-    let run = "shorthand §FS-042 sits in a numeric run and was not rewritten; \
-                   write §FS-042-user-login, or <§>FS-042 if these are old numbers";
+    let run = "shorthand \u{a7}FS-042 sits in a numeric run and was not rewritten; \
+                   write \u{a7}FS-042-user-login, or <§>FS-042 if these are old numbers";
     assert_eq!(
         messages(&report),
         vec![
             run.to_string(),
             run.to_string(),
-            "shorthand citation §FS-042; write §FS-042-user-login".to_string(),
+            "shorthand citation \u{a7}FS-042; write \u{a7}FS-042-user-login".to_string(),
         ]
     );
     assert_eq!(report.errors[0].code, "shorthand-numeric-run");
@@ -299,7 +305,7 @@ fn a_numeric_run_changes_only_the_message_that_names_the_rewrite() {
     );
     write(
         &root.join("docs/notes.md"),
-        "Unknown: §FS-999→FS-043\n\nAmbiguous: §FS-007→FS-008\n\nShown as `§FS-042→FS-043`.\n",
+        "Unknown: \u{a7}FS-999→FS-043\n\nAmbiguous: \u{a7}FS-007→FS-008\n\nShown as `\u{a7}FS-042→FS-043`.\n",
     );
     let config = numbered_config(root.clone());
     let (_, report) = check_tree(&config, &root);
@@ -311,8 +317,8 @@ fn a_numeric_run_changes_only_the_message_that_names_the_rewrite() {
             .map(|finding| finding.message.as_str())
             .collect::<Vec<_>>(),
         vec![
-            "shorthand citation §FS-999 matches no declaration; write the full ID it means",
-            "shorthand citation §FS-007 is ambiguous: FS-007-a, FS-007-b; write the full ID it means",
+            "shorthand citation \u{a7}FS-999 matches no declaration; write the full ID it means",
+            "shorthand citation \u{a7}FS-007 is ambiguous: FS-007-a, FS-007-b; write the full ID it means",
         ]
     );
     // The inline-code site earns nothing at all, and the ambiguous one
@@ -361,7 +367,7 @@ fn on_type_refuses_a_run_already_on_the_line() {
     let edits = |line: &str, cursor: usize| {
         on_type_line_edits(&path, line, 0, cursor, &declarations).expect("on-type edits")
     };
-    let run = "Renumbered §FS-042→FS-043 today";
+    let run = "Renumbered \u{a7}FS-042→FS-043 today";
     let cursor = run.find("FS-043").expect("run tail");
     assert!(
         edits(run, cursor).is_empty(),
@@ -370,7 +376,7 @@ fn on_type_refuses_a_run_already_on_the_line() {
 
     // The identical keystroke on a line with no run behind it still expands,
     // so the refusal above is the rule and not a dead transform.
-    let plain = "Renumbered §FS-042→ today";
+    let plain = "Renumbered \u{a7}FS-042→ today";
     let cursor = plain.find('\u{2192}').expect("arrow") + '\u{2192}'.len_utf8();
     let applied = edits(plain, cursor);
     assert_eq!(applied.len(), 1, "expected one expansion");

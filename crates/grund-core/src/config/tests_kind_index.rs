@@ -169,7 +169,7 @@ fn a_declared_e2e_kind_takes_the_index_false_default() {
     );
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\n- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)\n",
+        "# Specs\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)\n",
     );
     write(&root.join("e2e/cases/login/spec.refs"), "FS-001-login\n");
     write(&root.join("e2e/cases/login/expected.exit"), "0\n");

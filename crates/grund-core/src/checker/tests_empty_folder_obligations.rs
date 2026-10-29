@@ -197,7 +197,7 @@ must = ["FS"]
     );
     write(&root.join("skills/README.md"), "# Skills\n");
     write(&root.join("skills/review.md"), "# Review\n");
-    write(&root.join("src/app.rs"), "// see §FS-001-missing\n");
+    write(&root.join("src/app.rs"), "// see \u{a7}FS-001-missing\n");
 
     let config = load_config(&root).expect("load config");
     let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan");

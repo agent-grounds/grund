@@ -44,7 +44,7 @@ fn render_id_prints_a_slugless_id_as_the_shorthand() {
 
 // §FS-check.1.2.6 (§FS-citations.shorthand.cli) / §FS-show.1.2: a query persists
 // nothing, so the shorthand is simply expanded at the CLI boundary. This is also
-// what makes a clicked `§FS-042` open (§FS-integrations.3.1.7).
+// what makes a clicked `<§>FS-042` open (§FS-integrations.3.1.7).
 #[test]
 fn shorthand_resolves_as_a_query_argument() {
     let root = test_root("shorthand_resolves_as_a_query_argument");
@@ -146,7 +146,7 @@ fn lsp_snapshot_navigates_a_shorthand_citation() {
         &root.join("docs/functional-spec/FS-042-user-login.md"),
         "# FS-042-user-login: User login\n\nLead.\n\n## 1. Inputs\n\nStuff.\n",
     );
-    write(&root.join("src/lib.rs"), "//! §FS-042.1\n");
+    write(&root.join("src/lib.rs"), "//! \u{a7}FS-042.1\n");
     let snapshot = lsp_snapshot(LspSnapshotOpts {
         path: root.clone(),
         path_provided: true,

@@ -26,7 +26,10 @@ fn write_project(root: &Path, source_name: &str) -> (PathBuf, PathBuf) {
     let spec = root.join("docs/FS-001-example.md");
     let source = root.join(format!("src/{source_name}.java"));
     write(&spec, "# FS-001-example: Example\n\nLead.\n");
-    write(&source, "/// Uses §FS-001-example.\nfinal class Use {}\n");
+    write(
+        &source,
+        "/// Uses \u{a7}FS-001-example.\nfinal class Use {}\n",
+    );
     (spec, source)
 }
 
@@ -145,7 +148,7 @@ fn a_scanned_sibling_does_not_give_another_project_ownership() {
         "# FS-001-example: Example\n\nLead.\n",
     );
     let user = shared.join("user.md");
-    write(&user, "See §FS-001-example.\n");
+    write(&user, "See \u{a7}FS-001-example.\n");
     write(
         &second.join("grund.toml"),
         "grund_config_version = 1\n[scan]\ninclude = [\"../../shared\"]\n\
@@ -196,7 +199,7 @@ fn two_external_scan_claims_are_rejected_as_ambiguous() {
         "# FS-001-example: Second\n\nSecond project body.\n",
     );
     let user = shared.join("FS-002-user.md");
-    write(&user, "# FS-002-user: User\n\nSee §FS-001-example.\n");
+    write(&user, "# FS-002-user: User\n\nSee \u{a7}FS-001-example.\n");
 
     let (mut child, mut stdin, receiver) =
         start_server_with_workspace_folders(&base, &[&first, &second]);

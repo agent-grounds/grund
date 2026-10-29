@@ -44,7 +44,7 @@ fn templates_repo_at(name: &str, home: &str, include: &str, extra: &str) -> Path
     );
     write(
         &root.join(home).join("agents.md"),
-        "# Agents\n\nSee §FS-999-ghost.\n",
+        "# Agents\n\nSee \u{a7}FS-999-ghost.\n",
     );
     root
 }
@@ -177,7 +177,7 @@ fn a_single_file_unwalked_home_is_not_walked() {
     );
     write(
         &root.join("docs/template.md"),
-        "# Scaffold\n\nSee §FS-999-ghost.\n",
+        "# Scaffold\n\nSee \u{a7}FS-999-ghost.\n",
     );
     let plain = codes(&check_run(&root, false));
     assert!(

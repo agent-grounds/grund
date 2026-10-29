@@ -28,9 +28,9 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     // alike, which is why the counts below are two (§FS-check.4.1.2).
     write(
         &root.join("docs/functional-spec/README.md"),
-        "# Functional spec\n\n- [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha)\n",
+        "# Functional spec\n\n- [\u{a7}FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha)\n",
     );
-    write(&root.join("src/lib.rs"), "//! §FS-001-alpha\n");
+    write(&root.join("src/lib.rs"), "//! \u{a7}FS-001-alpha\n");
 
     let report = check(&root).expect("public check api");
     assert!(report.errors.is_empty(), "expected no errors");
@@ -166,10 +166,19 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
         &lsp_root.join("docs/functional-spec/FS-001-alpha.md"),
         "# FS-001-alpha: Alpha\n\nLead.\n\n## 1. Detail\nMore.\n",
     );
-    write(&lsp_root.join("src/lib.rs"), "//! §FS-001-alpha.1\n");
-    write(&lsp_root.join("ignored/open.rs"), "//! §FS-001-alpha\n");
-    write(&lsp_root.join(".hidden/open.rs"), "//! §FS-001-alpha\n");
-    write(&lsp_root.join("gitignored/open.rs"), "//! §FS-001-alpha\n");
+    write(&lsp_root.join("src/lib.rs"), "//! \u{a7}FS-001-alpha.1\n");
+    write(
+        &lsp_root.join("ignored/open.rs"),
+        "//! \u{a7}FS-001-alpha\n",
+    );
+    write(
+        &lsp_root.join(".hidden/open.rs"),
+        "//! \u{a7}FS-001-alpha\n",
+    );
+    write(
+        &lsp_root.join("gitignored/open.rs"),
+        "//! \u{a7}FS-001-alpha\n",
+    );
     let snapshot = lsp_snapshot(LspSnapshotOpts {
         path: lsp_root.clone(),
         path_provided: true,
@@ -193,7 +202,7 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     let mut open_documents = BTreeMap::new();
     open_documents.insert(
         lsp_root.join("src/lib.rs"),
-        "//! §FS-999-missing\n".to_string(),
+        "//! \u{a7}FS-999-missing\n".to_string(),
     );
     let snapshot = lsp_snapshot(LspSnapshotOpts {
         path: lsp_root.clone(),
@@ -219,19 +228,19 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     let mut open_documents = BTreeMap::new();
     open_documents.insert(
         lsp_root.join("ignored/open.rs"),
-        "//! §FS-999-excluded\n".to_string(),
+        "//! \u{a7}FS-999-excluded\n".to_string(),
     );
     open_documents.insert(
         lsp_root.join(".hidden/open.rs"),
-        "//! §FS-999-hidden\n".to_string(),
+        "//! \u{a7}FS-999-hidden\n".to_string(),
     );
     open_documents.insert(
         lsp_root.join("gitignored/open.rs"),
-        "//! §FS-999-gitignored\n".to_string(),
+        "//! \u{a7}FS-999-gitignored\n".to_string(),
     );
     open_documents.insert(
         lsp_root.join("gitignored/new.rs"),
-        "//! §FS-999-unsaved-gitignored\n".to_string(),
+        "//! \u{a7}FS-999-unsaved-gitignored\n".to_string(),
     );
     let snapshot = lsp_snapshot(LspSnapshotOpts {
         path: lsp_root.clone(),

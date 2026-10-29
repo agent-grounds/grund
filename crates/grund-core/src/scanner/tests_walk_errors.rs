@@ -82,7 +82,7 @@ fn a_symlink_loop_is_reported_and_the_walk_carries_on() {
     let root = linked_repo("a_symlink_loop_is_reported_and_the_walk_carries_on");
     write(
         &root.join("docs/functional-spec/FS-001-alpha.md"),
-        "# FS-001-alpha: Alpha\n\nCites §FS-999-ghost.\n",
+        "# FS-001-alpha: Alpha\n\nCites \u{a7}FS-999-ghost.\n",
     );
     symlink(".", &root.join("docs/self"));
 

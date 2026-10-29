@@ -86,7 +86,7 @@ pub(crate) fn parse_id_arg_with_shorthand(raw: &str, grammar: &Grammar) -> Resul
 /// number-only shorthand (§FS-check.1.2.6). A query persists nothing, so the
 /// shorthand is simply expanded here rather than reported the way a shorthand in
 /// a file is (§DF-number-only-citation-shorthand.2.2) — this is what lets a
-/// clicked `§FS-042` open in a terminal (§FS-integrations.3.1.7).
+/// clicked `<§>FS-042` open in a terminal (§FS-integrations.3.1.7).
 ///
 /// A shorthand matching several declarations is the same class of query failure
 /// as an ambiguous full ID (§FS-show.2.2.1.1); one matching none keeps its

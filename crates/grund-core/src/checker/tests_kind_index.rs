@@ -107,7 +107,7 @@ fn a_bare_entry_is_an_error_at_its_line_in_the_index() {
     let root = kind_index_repo("a_bare_entry_is_an_error_at_its_line_in_the_index");
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\n- §FS-001-login\n",
+        "# Specs\n\n- \u{a7}FS-001-login\n",
     );
 
     let run = check_run(&root, false);
@@ -152,7 +152,7 @@ fn a_linked_entry_satisfies_the_rule_whatever_the_target_says() {
     let root = kind_index_repo("a_linked_entry_satisfies_the_rule_whatever_the_target_says");
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\n- [§FS-001-login](FS-001-login.md#a-stale-anchor)\n",
+        "# Specs\n\n- [\u{a7}FS-001-login](FS-001-login.md#a-stale-anchor)\n",
     );
 
     let run = check_run(&root, false);
@@ -186,7 +186,7 @@ fn an_anchorless_link_to_a_source_home_is_a_full_link() {
     );
     write(
         &root.join("docs/architecture/README.md"),
-        "# Architecture\n\n- [§AR-001-bus](../../src/bus.rs)\n",
+        "# Architecture\n\n- [\u{a7}AR-001-bus](../../src/bus.rs)\n",
     );
 
     let run = check_run(&root, false);
@@ -207,7 +207,7 @@ fn one_link_satisfies_an_id_that_is_also_mentioned_bare() {
     let root = kind_index_repo("one_link_satisfies_an_id_that_is_also_mentioned_bare");
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\n- [§FS-001-login](FS-001-login.md#fs-login-a-user-logs-in)\n\nSee also `§FS-001-login`.\n",
+        "# Specs\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-login-a-user-logs-in)\n\nSee also `\u{a7}FS-001-login`.\n",
     );
 
     let run = check_run(&root, false);
@@ -232,7 +232,7 @@ fn the_walk_reaches_a_declaration_in_a_subdirectory() {
     );
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\n- [§FS-001-login](FS-001-login.md#fs-login-a-user-logs-in)\n",
+        "# Specs\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-login-a-user-logs-in)\n",
     );
 
     let run = check_run(&root, false);
@@ -252,7 +252,7 @@ fn an_index_entry_does_not_suppress_the_unused_warning() {
     let root = kind_index_repo("an_index_entry_does_not_suppress_the_unused_warning");
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\n- [§FS-001-login](FS-001-login.md#fs-login-a-user-logs-in)\n",
+        "# Specs\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-login-a-user-logs-in)\n",
     );
 
     let run = check_run(&root, false);
@@ -286,7 +286,7 @@ fn an_index_citation_of_a_foreign_id_is_an_ordinary_citation() {
     );
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\n- [§FS-001-login](FS-001-login.md#fs-login-a-user-logs-in) — built on [§AR-001-bus](../architecture/AR-001-bus.md#ar-bus-the-bus)\n",
+        "# Specs\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-login-a-user-logs-in) — built on [\u{a7}AR-001-bus](../architecture/AR-001-bus.md#ar-bus-the-bus)\n",
     );
 
     let unused: Vec<String> = run_unused_ids(&root);
@@ -375,7 +375,7 @@ fn a_run_that_did_not_scan_the_index_does_not_judge_it() {
     let root = kind_index_repo("a_run_that_did_not_scan_the_index_does_not_judge_it");
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\n- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)\n",
+        "# Specs\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)\n",
     );
 
     let run = run_check(
@@ -423,7 +423,7 @@ fn the_always_linkify_carve_out_wraps_entries_and_not_prose() {
     );
     write(
         &root.join("docs/specs/README.md"),
-        "# Specs\n\n- §FS-001-login\n\nBuilt on §AR-001-bus.\n",
+        "# Specs\n\n- \u{a7}FS-001-login\n\nBuilt on \u{a7}AR-001-bus.\n",
     );
 
     format_references(FmtOpts {
@@ -436,11 +436,11 @@ fn the_always_linkify_carve_out_wraps_entries_and_not_prose() {
 
     let index = std::fs::read_to_string(root.join("docs/specs/README.md")).expect("read");
     assert!(
-        index.contains("- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)"),
+        index.contains("- [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)"),
         "the entry is wrapped whatever the toggle says: {index}"
     );
     assert!(
-        index.contains("Built on §AR-001-bus."),
+        index.contains("Built on \u{a7}AR-001-bus."),
         "a citation of a foreign ID is prose in an ordinary file, and stays bare: {index}"
     );
     assert!(

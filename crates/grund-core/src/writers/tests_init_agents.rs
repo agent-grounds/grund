@@ -456,7 +456,7 @@ fn rendered_block_citation_example_is_escaped() {
         "worked example should be escaped: {block}"
     );
     assert!(
-        !block.contains("`§FS-042-user-login"),
+        !block.contains("`\u{a7}FS-042-user-login"),
         "worked example must not be a live citation: {block}"
     );
 }

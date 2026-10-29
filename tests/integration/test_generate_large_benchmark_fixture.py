@@ -35,11 +35,11 @@ class GenerateLargeBenchmarkFixtureTests(unittest.TestCase):
                 "docs/functional-spec/component-000/FS-00001-feature-00001.md",
             )
             self.assertIn(
-                "§FS-00002-feature-00002",
+                "\u00a7FS-00002-feature-00002",
                 declaration_files[0].read_text(encoding="utf-8"),
             )
             self.assertIn(
-                "§FS-00001-feature-00001",
+                "\u00a7FS-00001-feature-00001",
                 declaration_files[-1].read_text(encoding="utf-8"),
             )
 
@@ -49,11 +49,11 @@ class GenerateLargeBenchmarkFixtureTests(unittest.TestCase):
                 encoding="utf-8"
             )
             self.assertIn(
-                "[§FS-00001-feature-00001](component-000/FS-00001-feature-00001.md)",
+                "[\u00a7FS-00001-feature-00001](component-000/FS-00001-feature-00001.md)",
                 index_text,
             )
             self.assertIn(
-                "[§FS-00012-feature-00012](component-002/FS-00012-feature-00012.md)",
+                "[\u00a7FS-00012-feature-00012](component-002/FS-00012-feature-00012.md)",
                 index_text,
             )
 

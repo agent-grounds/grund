@@ -68,7 +68,7 @@ detailed walkthrough for canonical user workflows
 | Scheme                                     | Example             | Benefit                                                                                                          | Trade-off                                                                |
 |--------------------------------------------|---------------------|------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
 | `{kind}-{number}-{slug}` *(default)*       | `FS-014-user-login` | Number is stable; a number-only shorthand survives a slug change, while full-ID citations require deliberate updates (and canonical shorthand is reported for rewriting). | Two tokens to type; needs `grund id` to allocate the next number.        |
-| `{kind}-{number}` (RFC-style)              | `FS-014`            | Maximally stable — no slug to drift. Familiar from RFCs/PEPs/JEPs/ADRs.                                          | Opaque at the call site: `§FS-014` tells you nothing without resolving it. |
+| `{kind}-{number}` (RFC-style)              | `FS-014`            | Maximally stable — no slug to drift. Familiar from RFCs/PEPs/JEPs/ADRs.                                          | Opaque at the call site: `<§>FS-014` tells you nothing without resolving it. |
 | `{kind}-{slug}` *(`grund` itself uses this)* | `FS-user-login`     | Self-describing — reads like English in prose and code. No number to allocate.                                   | Renaming a slug rewrites every citation. Slug must be unique per kind.   |
 
 Rule of thumb: pick `{kind}-{slug}` until rename churn or ID count starts to hurt; switch to `{kind}-{number}-{slug}` when it does.
@@ -90,7 +90,7 @@ A citation is the marker `§`, the ID, and an optional `.<section>` — with the
 Type `$$` in a `grund`-aware editor and it's rewritten to `§` automatically. Both marker and trigger are configurable in `grund.toml`.
 
 With the default `{kind}-{number}-{slug}` scheme, a persisted shorthand such as
-`§FS-042` is an error and `grund fmt --write` expands it to the descriptive full
+`<§>FS-042` is an error and `grund fmt --write` expands it to the descriptive full
 ID. A project that deliberately wants both spellings may opt in
 ([§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)):
 
@@ -99,9 +99,9 @@ ID. A project that deliberately wants both spellings may opt in
 shorthand = "accepted" # default: "canonical"
 ```
 
-Then `§FS-042` and `§FS-042-user-login` resolve as the same citation, and
+Then `<§>FS-042` and `<§>FS-042-user-login` resolve as the same citation, and
 formatting preserves whichever marker form the author wrote. Typed trigger input
-remains canonicalizing: `$$FS-042` still becomes `§FS-042-user-login`
+remains canonicalizing: `$$FS-042` still becomes `<§>FS-042-user-login`
 ([§FS-fmt.2.4](../functional-spec/FS-fmt.md#24-shorthand-to-canonical)). The
 tradeoff is permanent mixed-form drift while the policy is enabled: searching by
 the number finds both forms, but searching by the slug misses shorthand sites,

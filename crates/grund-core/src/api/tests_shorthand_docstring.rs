@@ -89,39 +89,39 @@ fn rewrite_lines(root: &Path) -> (Vec<usize>, Vec<String>) {
 /// comment line, and does not change what a comment line does
 /// (§FS-fmt.2.3.1.1's walk still runs over the content). And a `"…"` literal on
 /// a code line, which is the runtime text the exclusion is about.
-const EVERY_SHAPE: &str = "\"\"\"Opening line cites §FS-042.\n\
+const EVERY_SHAPE: &str = "\"\"\"Opening line cites \u{a7}FS-042.\n\
                            \n\
-                           Interior line cites §FS-042.\n\
-                           Closing line cites §FS-042.\"\"\"\n\
+                           Interior line cites \u{a7}FS-042.\n\
+                           Closing line cites \u{a7}FS-042.\"\"\"\n\
                            \n\
                            \n\
                            def method():\n\
-                           \x20   \"\"\"One-line docstring cites §FS-042.\"\"\"\n\
+                           \x20   \"\"\"One-line docstring cites \u{a7}FS-042.\"\"\"\n\
                            \x20   return 1\n\
                            \n\
                            \n\
                            def single():\n\
-                           \x20   '''Single-quoted opening cites §FS-042.\n\
+                           \x20   '''Single-quoted opening cites \u{a7}FS-042.\n\
                            \n\
-                           \x20   Interior of the single-quoted one cites §FS-042.\n\
+                           \x20   Interior of the single-quoted one cites \u{a7}FS-042.\n\
                            \x20   '''\n\
                            \x20   return 2\n\
                            \n\
                            \n\
                            def quoted():\n\
-                           \x20   \"\"\"A \"quoted\" word before §FS-042 here.\"\"\"\n\
+                           \x20   \"\"\"A \"quoted\" word before \u{a7}FS-042 here.\"\"\"\n\
                            \x20   return 3\n\
                            \n\
                            \n\
                            def apostrophe():\n\
-                           \x20   \"\"\"It's per §FS-042 here.\"\"\"\n\
+                           \x20   \"\"\"It's per \u{a7}FS-042 here.\"\"\"\n\
                            \x20   return 4\n\
                            \n\
                            \n\
-                           # Comment citing §FS-042.\n\
-                           # It's per §FS-042 in a comment.\n\
+                           # Comment citing \u{a7}FS-042.\n\
+                           # It's per \u{a7}FS-042 in a comment.\n\
                            \n\
-                           BODY = \"Copy citing §FS-042.\"\n";
+                           BODY = \"Copy citing \u{a7}FS-042.\"\n";
 
 /// The lines of `EVERY_SHAPE` a shorthand finding and a rewrite both land on.
 const EVERY_SHAPE_SITES: [usize; 8] = [1, 3, 4, 8, 13, 15, 21, 30];
@@ -172,7 +172,10 @@ fn fmt_write_expands_docstrings_and_leaves_the_rest_byte_identical() {
         .enumerate()
         .map(|(index, line)| {
             if EVERY_SHAPE_SITES.contains(&(index + 1)) {
-                format!("{}\n", line.replace("§FS-042", "§FS-042-user-login"))
+                format!(
+                    "{}\n",
+                    line.replace("\u{a7}FS-042", "\u{a7}FS-042-user-login")
+                )
             } else {
                 format!("{line}\n")
             }
@@ -191,7 +194,7 @@ fn fmt_write_expands_docstrings_and_leaves_the_rest_byte_identical() {
 /// and no rewrite, because rewriting it would change what the program prints.
 #[test]
 fn a_string_literal_on_a_code_line_stays_silent_and_unrewritten() {
-    let source = "BODY = \"Copy citing §FS-042.\"\nOTHER = 'Also §FS-042.'\n";
+    let source = "BODY = \"Copy citing \u{a7}FS-042.\"\nOTHER = 'Also \u{a7}FS-042.'\n";
     let root = docstring_repo(
         "a_string_literal_on_a_code_line_stays_silent_and_unrewritten",
         source,
@@ -219,13 +222,13 @@ fn a_string_literal_on_a_code_line_stays_silent_and_unrewritten() {
 /// not.
 #[test]
 fn docstring_python_false_keeps_the_raw_line_rule() {
-    let source = "\"\"\"Opening cites §FS-042.\n\
-                  Interior cites §FS-042.\n\
+    let source = "\"\"\"Opening cites \u{a7}FS-042.\n\
+                  Interior cites \u{a7}FS-042.\n\
                   \"\"\"\n\
                   \n\
                   \n\
                   def method():\n\
-                  \x20   \"\"\"One-line cites §FS-042.\"\"\"\n\
+                  \x20   \"\"\"One-line cites \u{a7}FS-042.\"\"\"\n\
                   \x20   return 1\n";
     let root = docstring_repo(
         "docstring_python_false_keeps_the_raw_line_rule",
@@ -271,7 +274,7 @@ fn marker_pass_marks_a_bare_id_on_a_docstring_opening_line() {
 
     assert_eq!(
         fs::read_to_string(root.join("src/render.py")).expect("read rewritten file"),
-        "\"\"\"Opening cites §FS-042-user-login.\"\"\"\n\
+        "\"\"\"Opening cites \u{a7}FS-042-user-login.\"\"\"\n\
          BODY = \"Copy citing FS-042-user-login.\"\n",
         "the docstring is marked, the code-line string literal is not"
     );
@@ -290,9 +293,9 @@ fn fmt_skips_a_declaration_heading_inside_a_docstring() {
     let root = docstring_repo(
         "fmt_skips_a_declaration_heading_inside_a_docstring",
         "class Service:\n\
-         \x20   \"\"\"AR-005-service: The service, per §FS-042.\n\
+         \x20   \"\"\"AR-005-service: The service, per \u{a7}FS-042.\n\
          \n\
-         \x20   Body citing §FS-042.\n\
+         \x20   Body citing \u{a7}FS-042.\n\
          \x20   \"\"\"\n",
         "",
     );
@@ -354,7 +357,7 @@ fn on_type_expands_inside_a_docstring_and_refuses_a_code_line_string() {
 
     assert_eq!(
         type_after(&root, "src/render.py", "", "\"\"\"Opening $$FS-042 here."),
-        "\"\"\"Opening §FS-042-user-login here.",
+        "\"\"\"Opening \u{a7}FS-042-user-login here.",
     );
     assert_eq!(
         type_after(
@@ -363,7 +366,7 @@ fn on_type_expands_inside_a_docstring_and_refuses_a_code_line_string() {
             "\"\"\"\n",
             "Interior $$FS-042 here."
         ),
-        "Interior §FS-042-user-login here.",
+        "Interior \u{a7}FS-042-user-login here.",
     );
     assert_eq!(
         type_after(&root, "src/render.py", "", "BODY = \"Copy $$FS-042 here.\""),

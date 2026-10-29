@@ -50,7 +50,7 @@ should = ["GRUND"]
 may = ["FS"]
 should-not = ["DF"]
 must-not = ["AR"]"#,
-        "See §FS-001-subject.\nSee §AR-001-target.\nSee §DF-001-target.\n",
+        "See \u{a7}FS-001-subject.\nSee \u{a7}AR-001-target.\nSee \u{a7}DF-001-target.\n",
     );
     let signature = |diagnostics: &[crate::model::Diagnostic]| {
         diagnostics
@@ -123,7 +123,7 @@ fn explicit_may_overrides_a_restrictive_default() {
         let (_, report) = check_rules(
             &format!("citation_may_override_{suffix}"),
             &format!("[citations]\ndefault = \"must-not\"\n{permission}"),
-            "See §GOAL-001-target.\n",
+            "See \u{a7}GOAL-001-target.\n",
         );
         assert_eq!(
             report
@@ -150,9 +150,9 @@ fn citation_obligations_require_each_entry_but_allow_either_alternative() {
         ] {
             for (index, body) in [
                 "No citations.\n",
-                "See §GOAL-001-target.\n",
-                "See §GRUND-001-target.\n",
-                "See §GOAL-001-target and §GRUND-001-target.\n",
+                "See \u{a7}GOAL-001-target.\n",
+                "See \u{a7}GRUND-001-target.\n",
+                "See \u{a7}GOAL-001-target and \u{a7}GRUND-001-target.\n",
             ]
             .iter()
             .enumerate()

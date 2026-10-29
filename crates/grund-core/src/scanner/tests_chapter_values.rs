@@ -319,10 +319,10 @@ fn a_chapter_binding_compares_and_its_near_misses_are_refused() {
          ### values.aux-voltage: Auxiliary supply voltage\n\n\
          #### values.aux-voltage.1: 24\n\n\
          ## 2. Use\n\n\
-         Mismatch: `48` (§AR-004-value-probe.values.aux-voltage.1)\n\n\
-         Root: `24` (§AR-004-value-probe.values.aux-voltage)\n\n\
-         Chapter: `24` (§AR-004-value-probe.values)\n\n\
-         Zero: `24` (§AR-004-value-probe.values.aux-voltage.0)\n",
+         Mismatch: `48` (\u{a7}AR-004-value-probe.values.aux-voltage.1)\n\n\
+         Root: `24` (\u{a7}AR-004-value-probe.values.aux-voltage)\n\n\
+         Chapter: `24` (\u{a7}AR-004-value-probe.values)\n\n\
+         Zero: `24` (\u{a7}AR-004-value-probe.values.aux-voltage.0)\n",
     );
     let report = check(&root).expect("check the chapter fixture");
     let codes = report
@@ -358,7 +358,7 @@ fn a_named_section_outside_every_chapter_stays_prose() {
          ### notes.aux-voltage: Auxiliary supply voltage\n\n\
          #### notes.aux-voltage.1: 24\n\n\
          ## 2. Use\n\n\
-         Prose: `48` (§AR-004-value-probe.notes.aux-voltage.1)\n",
+         Prose: `48` (\u{a7}AR-004-value-probe.notes.aux-voltage.1)\n",
     );
     let report = check(&root).expect("check the prose fixture");
     assert!(

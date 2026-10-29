@@ -111,7 +111,7 @@ pub struct LineEdit {
 /// trigger becomes rewritable at the first *digit*, because `FS-0` is already a
 /// well-formed shorthand; expanding there would rewrite the token to whatever
 /// `FS-0` happens to name and leave the rest of the number trailing behind it
-/// (`$$FS-12` → `§FS-001-login2`). Waiting for the terminator is the only point at
+/// (`$$FS-12` → `<§>FS-001-login2`). Waiting for the terminator is the only point at
 /// which the typed number is known to be finished.
 ///
 /// `declarations` are the declarations already known to the caller's session
@@ -270,7 +270,7 @@ fn file_is_fmt_excluded(config: &Config, path: &Path) -> bool {
 /// **unqualified** rendered ID (§FS-lsp.1.4.2).
 ///
 /// The path is what scopes a shorthand to the right namespace. In a workspace the
-/// snapshot holds every member's declarations, and `§FS-042` typed in `web` means
+/// snapshot holds every member's declarations, and `<§>FS-042` typed in `web` means
 /// `web`'s `FS-042-…` — never `api`'s. Filtering by the edited file's config root
 /// is what keeps a sibling member from either stealing the expansion or creating a
 /// false ambiguity that suppresses it (§FS-workspace.5).
@@ -357,7 +357,7 @@ fn trigger_marker_edit(
 ///
 /// Returns `None` for every case that must not stall typing: no marker, a full ID,
 /// a shorthand naming zero or several declarations, or a keystroke that could
-/// still be extending the token. The resulting `§FS-042` then earns the
+/// still be extending the token. The resulting `<§>FS-042` then earns the
 /// §FS-check.3.13 diagnostic, which names the problem in the editor instead.
 ///
 /// Why a *fresh* numeric run still expands: the author has not written the second

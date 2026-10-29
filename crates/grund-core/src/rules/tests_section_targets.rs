@@ -62,7 +62,7 @@ fn edges(facts: &RuleFacts) -> Vec<(String, String)> {
 fn numbered_section_citation_targets_its_declaration() {
     let facts = facts(
         "rules_section_target_declaration",
-        "## goal: Goal\n\nValidates §FS-002-target.4 here.\n",
+        "## goal: Goal\n\nValidates \u{a7}FS-002-target.4 here.\n",
     );
     assert_eq!(
         edges(&facts),
@@ -78,7 +78,7 @@ fn numbered_section_citation_targets_its_declaration() {
 fn numbered_child_of_a_chapter_targets_that_chapter() {
     let facts = facts(
         "rules_section_target_chapter",
-        "## goal: Goal\n\nValidates §FS-002-target.outcome.2 here.\n",
+        "## goal: Goal\n\nValidates \u{a7}FS-002-target.outcome.2 here.\n",
     );
     assert_eq!(
         edges(&facts),
@@ -94,7 +94,7 @@ fn numbered_child_of_a_chapter_targets_that_chapter() {
 fn site_inside_a_numbered_section_comes_from_its_named_ancestor() {
     let facts = facts(
         "rules_section_target_from",
-        "## goal: Goal\n\nThe aim.\n\n### goal.3: Third\n\nValidates §FS-002-target here.\n",
+        "## goal: Goal\n\nThe aim.\n\n### goal.3: Third\n\nValidates \u{a7}FS-002-target here.\n",
     );
     assert_eq!(
         edges(&facts),
@@ -112,8 +112,8 @@ fn site_inside_a_numbered_section_comes_from_its_named_ancestor() {
 fn unresolved_and_ambiguous_coordinates_contribute_no_fact() {
     let facts = facts(
         "rules_section_target_unresolved",
-        "## goal: Goal\n\nCites §FS-002-target.9, §FS-002-target.outcome.7, \
-         §FS-003-twin.1, §FS-009-missing.4, and §FS-002-target.outcome here.\n",
+        "## goal: Goal\n\nCites \u{a7}FS-002-target.9, \u{a7}FS-002-target.outcome.7, \
+         \u{a7}FS-003-twin.1, \u{a7}FS-009-missing.4, and \u{a7}FS-002-target.outcome here.\n",
     );
     assert_eq!(
         edges(&facts),

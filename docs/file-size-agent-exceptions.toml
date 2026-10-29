@@ -279,7 +279,7 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["large-file-default"]
 kind = "deferred"
-max_accepted = { value = 309938, unit = "bytes" }
+max_accepted = { value = 309940, unit = "bytes" }
 until = "the finding catalog moves into independently declared child specifications and existing FS-check section citations are migrated"
 reason = """
 The check specification still combines recognition, reporting, its finding catalog and watch behavior in one declaration. Issue #823 adds only a cross-reference to the defining member diagnostic point in FS-workspace.5.1.1. Missing boundary: independent finding specifications with a stable mapping for current FS-check section citations; moving that catalog is outside this specification-only diagnostic change. This byte ceiling accepts only the current measured file size, separately from the existing line-budget exception.
@@ -306,7 +306,7 @@ Issue #1071 has a missing-section finding name where the section lock's recorded
 
 Issue #1073 adds §FS-check.checks.off-format-citation with its release point §FS-check.checks.off-format-citation.1, the §FS-check.1.1.12 pointer, and the new finding in the out-of-scope lead of §FS-check.3.14. The file already measured 304776 bytes on arrival, past the 301793 ceiling #1071 recorded; this specification adds 5127 bytes. The same mapped migration of the finding catalog retires the debt, and remains outside a specification-only contract. The byte ceiling accepts exactly the measured 309903 bytes, with no growth allowance.
 
-The implementation of #1073 names the out-of-scope code in the code list of §FS-check.3.14.5, which the finding's out-of-scope tier requires, and counts six rather than five codes there, adding no line. The ceiling accepts exactly the measured 309938 bytes, with no growth allowance.
+The implementation of #1073 names the out-of-scope code in the code list of §FS-check.3.14.5, which the finding's out-of-scope tier requires, and counts six rather than five codes there, adding no line; escaping its one illustration in another format, in §FS-check.4.1.1, adds two bytes. The ceiling accepts exactly the measured 309940 bytes, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-init.md"

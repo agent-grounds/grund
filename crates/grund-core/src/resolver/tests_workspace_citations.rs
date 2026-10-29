@@ -409,7 +409,7 @@ fn require_grounding_treats_dangling_only_file_as_ungrounded() {
     let root = test_root("require_grounding_treats_dangling_only_file_as_ungrounded");
     write(
         &root.join("src/app.rs"),
-        "// §FS-001-missing\npub fn run() {}\n",
+        "// \u{a7}FS-001-missing\npub fn run() {}\n",
     );
 
     let mut config = Config::default_for(root.clone());

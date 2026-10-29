@@ -44,22 +44,34 @@ fn fmt_expands_resolvable_shorthands_only() {
         )
         .unwrap_or_else(|| line.to_string())
     };
-    assert_eq!(expand("See §FS-042.", true), "See §FS-042-user-login.");
-    assert_eq!(expand("See §FS-042.1.", true), "See §FS-042-user-login.1.");
-    assert_eq!(expand("Missing §FS-999.", true), "Missing §FS-999.");
     assert_eq!(
-        expand("Already §FS-042-user-login.", true),
-        "Already §FS-042-user-login."
+        expand("See \u{a7}FS-042.", true),
+        "See \u{a7}FS-042-user-login."
     );
-    assert_eq!(expand("Shown as `§FS-042`.", true), "Shown as `§FS-042`.");
     assert_eq!(
-        expand("let s = \"§FS-042\";", false),
-        "let s = \"§FS-042\";"
+        expand("See \u{a7}FS-042.1.", true),
+        "See \u{a7}FS-042-user-login.1."
+    );
+    assert_eq!(
+        expand("Missing \u{a7}FS-999.", true),
+        "Missing \u{a7}FS-999."
+    );
+    assert_eq!(
+        expand("Already \u{a7}FS-042-user-login.", true),
+        "Already \u{a7}FS-042-user-login."
+    );
+    assert_eq!(
+        expand("Shown as `\u{a7}FS-042`.", true),
+        "Shown as `\u{a7}FS-042`."
+    );
+    assert_eq!(
+        expand("let s = \"\u{a7}FS-042\";", false),
+        "let s = \"\u{a7}FS-042\";"
     );
     // Idempotent: a second pass over the expanded line changes nothing.
     assert_eq!(
-        expand(&expand("See §FS-042.", true), true),
-        "See §FS-042-user-login."
+        expand(&expand("See \u{a7}FS-042.", true), true),
+        "See \u{a7}FS-042-user-login."
     );
 }
 
@@ -99,33 +111,51 @@ fn a_shorthand_prefix_of_a_longer_token_is_never_rewritten() {
     };
     // A full ID whose slug this grammar rejects: wrong case, underscores.
     assert_eq!(
-        expand("A §FS-042-User-Login here", true),
-        "A §FS-042-User-Login here"
+        expand("A \u{a7}FS-042-User-Login here", true),
+        "A \u{a7}FS-042-User-Login here"
     );
     assert_eq!(
-        expand("B §FS-042_user_login here", true),
-        "B §FS-042_user_login here"
+        expand("B \u{a7}FS-042_user_login here", true),
+        "B \u{a7}FS-042_user_login here"
     );
     // Glued alphanumerics, a version suffix, and a path tail.
-    assert_eq!(expand("C §FS-042abc here", true), "C §FS-042abc here");
-    assert_eq!(expand("D §FS-042v2 here", true), "D §FS-042v2 here");
+    assert_eq!(
+        expand("C \u{a7}FS-042abc here", true),
+        "C \u{a7}FS-042abc here"
+    );
+    assert_eq!(
+        expand("D \u{a7}FS-042v2 here", true),
+        "D \u{a7}FS-042v2 here"
+    );
     // A section suffix followed by junk is the same case one level in.
-    assert_eq!(expand("F §FS-042.1x here", true), "F §FS-042.1x here");
+    assert_eq!(
+        expand("F \u{a7}FS-042.1x here", true),
+        "F \u{a7}FS-042.1x here"
+    );
 
     // `/` is *not* a continuation: it can only precede a kind, never follow a
-    // number, and the full-ID pass already reads `§FS-042-user-login/x` as a
+    // number, and the full-ID pass already reads `<§>FS-042-user-login/x` as a
     // citation (§DF-number-only-citation-shorthand.2.6).
     assert_eq!(
-        expand("E §FS-042/docs/x.md", true),
-        "E §FS-042-user-login/docs/x.md"
+        expand("E \u{a7}FS-042/docs/x.md", true),
+        "E \u{a7}FS-042-user-login/docs/x.md"
     );
 
     // The terminators that *do* end a token still expand: end of line, a
     // sentence period, a space, and a closing bracket.
-    assert_eq!(expand("G §FS-042", true), "G §FS-042-user-login");
-    assert_eq!(expand("H §FS-042.", true), "H §FS-042-user-login.");
-    assert_eq!(expand("I §FS-042 x", true), "I §FS-042-user-login x");
-    assert_eq!(expand("J (§FS-042)", true), "J (§FS-042-user-login)");
+    assert_eq!(expand("G \u{a7}FS-042", true), "G \u{a7}FS-042-user-login");
+    assert_eq!(
+        expand("H \u{a7}FS-042.", true),
+        "H \u{a7}FS-042-user-login."
+    );
+    assert_eq!(
+        expand("I \u{a7}FS-042 x", true),
+        "I \u{a7}FS-042-user-login x"
+    );
+    assert_eq!(
+        expand("J (\u{a7}FS-042)", true),
+        "J (\u{a7}FS-042-user-login)"
+    );
 }
 
 /// §FS-fmt.3.6: a line that expands a shorthand names the text it will write, so
@@ -150,7 +180,7 @@ fn the_report_names_the_text_every_expansion_writes() {
     let mut expansions = Vec::new();
     let mut saw_candidate = false;
     expand_shorthand_citations(
-        "See §FS-042.1 and §FS-043.",
+        "See \u{a7}FS-042.1 and \u{a7}FS-043.",
         DocstringContent::default(),
         config.schema(),
         config.frame(),
@@ -164,8 +194,14 @@ fn the_report_names_the_text_every_expansion_writes() {
     assert_eq!(
         expansions,
         vec![
-            ("§FS-042.1".to_string(), "§FS-042-user-login.1".to_string()),
-            ("§FS-043".to_string(), "§FS-043-user-logout".to_string()),
+            (
+                "\u{a7}FS-042.1".to_string(),
+                "\u{a7}FS-042-user-login.1".to_string()
+            ),
+            (
+                "\u{a7}FS-043".to_string(),
+                "\u{a7}FS-043-user-logout".to_string()
+            ),
         ]
     );
 }
@@ -214,7 +250,7 @@ fn fmt_expands_a_qualified_shorthand_against_its_own_namespace() {
 
 // §FS-fmt.2.4.3 / §FS-lsp.1.4: a typed trigger lands on the canonical form in
 // one pass — the trigger rewrite runs first and the shorthand pass reads its
-// output, so the author never sees an intermediate `§FS-042`.
+// output, so the author never sees an intermediate `<§>FS-042`.
 #[test]
 fn fmt_expands_a_typed_trigger_shorthand_in_one_pass() {
     let root = test_root("fmt_expands_a_typed_trigger_shorthand_in_one_pass");
@@ -244,7 +280,7 @@ fn fmt_expands_a_typed_trigger_shorthand_in_one_pass() {
         false,
         &mut false,
     );
-    assert_eq!(line, "Typed §FS-042-user-login here.");
+    assert_eq!(line, "Typed \u{a7}FS-042-user-login here.");
     assert_eq!(
         label,
         "trigger \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; \
@@ -252,7 +288,7 @@ fn fmt_expands_a_typed_trigger_shorthand_in_one_pass() {
     );
 
     let (line, label) = fmt_line(
-        "Persisted §FS-042 here.",
+        "Persisted \u{a7}FS-042 here.",
         DocstringCursor::default(),
         &root.join("docs/notes.md"),
         &config,
@@ -270,7 +306,7 @@ fn fmt_expands_a_typed_trigger_shorthand_in_one_pass() {
         false,
         &mut false,
     );
-    assert_eq!(line, "Persisted §FS-042-user-login here.");
+    assert_eq!(line, "Persisted \u{a7}FS-042-user-login here.");
     assert_eq!(
         label,
         "shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login"
@@ -340,33 +376,36 @@ fn on_type_expands_a_shorthand_when_the_token_ends() {
     // Typed left to right and finished with a space — the whole point.
     assert_eq!(
         type_line(&path, "See ", "$$FS-042 x", &declared),
-        "See §FS-042-user-login x"
+        "See \u{a7}FS-042-user-login x"
     );
     // A sentence period ends the token just as well, and the trailing `.`
     // survives so a following digit still reads as a section.
     assert_eq!(
         type_line(&path, "See ", "$$FS-042.", &declared),
-        "See §FS-042-user-login."
+        "See \u{a7}FS-042-user-login."
     );
     assert_eq!(
         type_line(&path, "See ", "$$FS-042.1 ", &declared),
-        "See §FS-042-user-login.1 "
+        "See \u{a7}FS-042-user-login.1 "
     );
     // A number whose *prefix* names another declaration must not be rewritten
     // on the way past it: `FS-1` names `FS-001-login`, but the author is
     // typing `FS-12`.
     assert_eq!(
         type_line(&path, "See ", "$$FS-12 x", &declared),
-        "See §FS-012-logout x"
+        "See \u{a7}FS-012-logout x"
     );
     // A full ID is not a shorthand and is never rewritten.
     assert_eq!(
         type_line(&path, "See ", "$$FS-042-user-login x", &declared),
-        "See §FS-042-user-login x"
+        "See \u{a7}FS-042-user-login x"
     );
     // Nothing declared: the trigger still converts, so typing never stalls,
     // and §FS-check.3.13 is what names the problem.
-    assert_eq!(type_line(&path, "See ", "$$FS-777 x", &[]), "See §FS-777 x");
+    assert_eq!(
+        type_line(&path, "See ", "$$FS-777 x", &[]),
+        "See \u{a7}FS-777 x"
+    );
 }
 
 /// §FS-fmt.2.4.4 / §FS-workspace.1.2: a qualified citation's ID tail is parsed with
@@ -436,22 +475,22 @@ fn on_type_refuses_the_lines_fmt_refuses() {
     // Ordinary prose expands.
     assert_eq!(
         type_line_in(&path, "See ", "$$FS-042 x", &declared, "Intro.\n"),
-        "See §FS-042-user-login x"
+        "See \u{a7}FS-042-user-login x"
     );
     // The same keystrokes inside a fenced block do not.
     assert_eq!(
         type_line_in(&path, "See ", "$$FS-042 x", &declared, "Intro.\n```\n"),
-        "See §FS-042 x"
+        "See \u{a7}FS-042 x"
     );
     // …and expand again once the fence has closed.
     assert_eq!(
         type_line_in(&path, "See ", "$$FS-042 x", &declared, "```\ncode\n```\n"),
-        "See §FS-042-user-login x"
+        "See \u{a7}FS-042-user-login x"
     );
     // A declaration heading is a whole-line skip too.
     assert_eq!(
         type_line_in(&path, "# FS-100-thing: See ", "$$FS-042 x", &declared, ""),
-        "# FS-100-thing: See §FS-042 x"
+        "# FS-100-thing: See \u{a7}FS-042 x"
     );
 }
 
@@ -490,7 +529,7 @@ fn expansion_survives_a_root_reached_by_another_path() {
     )];
     assert_eq!(
         type_line_in(&path, "See ", "$$FS-042 x", &declared, "Intro.\n"),
-        "See §FS-042-user-login x"
+        "See \u{a7}FS-042-user-login x"
     );
 }
 
@@ -515,7 +554,7 @@ fn on_type_expansion_is_scoped_and_never_guesses() {
     ];
     assert_eq!(
         type_line(&path, "See ", "$$FS-042 x", &ambiguous),
-        "See §FS-042 x"
+        "See \u{a7}FS-042 x"
     );
 
     // An exact persisted spelling joins the same target set instead of
@@ -526,7 +565,7 @@ fn on_type_expansion_is_scoped_and_never_guesses() {
     ];
     assert_eq!(
         type_line(&path, "See ", "$$FS-042 x", &legacy_collision),
-        "See §FS-042 x"
+        "See \u{a7}FS-042 x"
     );
 
     // The only candidate lives outside this file's project root, so it is not
@@ -539,6 +578,6 @@ fn on_type_expansion_is_scoped_and_never_guesses() {
     )];
     assert_eq!(
         type_line(&path, "See ", "$$FS-042 x", &foreign),
-        "See §FS-042 x"
+        "See \u{a7}FS-042 x"
     );
 }

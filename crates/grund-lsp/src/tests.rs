@@ -49,7 +49,7 @@ fn hover_linkifier_uses_displayed_citation_text_for_workspace_links() {
         display_path: "docs/functional-spec/FS-001-a.md".to_string(),
         line: 3,
         column: 6,
-        text: "§FS-002-b".to_string(),
+        text: "\u{a7}FS-002-b".to_string(),
         query_id: "root/FS-002-b".to_string(),
         declaration_query_id: "root/FS-002-b".to_string(),
         section_separator: ".".to_string(),
@@ -57,10 +57,10 @@ fn hover_linkifier_uses_displayed_citation_text_for_workspace_links() {
         target_line: Some(1),
     };
 
-    let linked = linkify_hover_body("See §FS-002-b.", &[citation]);
+    let linked = linkify_hover_body("See \u{a7}FS-002-b.", &[citation]);
 
     assert!(
-        linked.contains("[§FS-002-b]("),
+        linked.contains("[\u{a7}FS-002-b]("),
         "hover linkification must use the displayed citation text, not the workspace-qualified query ID (§FS-lsp.1.2.1): {linked}"
     );
     assert!(

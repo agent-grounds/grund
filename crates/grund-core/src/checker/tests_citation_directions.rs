@@ -19,7 +19,7 @@ fn scanner_markdown_body_and_source_kind() {
     let root = test_root("scanner_markdown_body_and_source_kind");
     write(
         &root.join("docs/goals.md"),
-        "# Goals\n\n## GOAL-001-first: First\n\nGrounds in §GRUND-001-why.\n\n### 1. Detail\n\nMore.\n\n## GOAL-002-second: Second\n\nNothing cited.\n",
+        "# Goals\n\n## GOAL-001-first: First\n\nGrounds in \u{a7}GRUND-001-why.\n\n### 1. Detail\n\nMore.\n\n## GOAL-002-second: Second\n\nNothing cited.\n",
     );
     // Classification runs only under `[citations]` (§AR-benchmarks), which
     // is what these tests exercise.
@@ -56,7 +56,7 @@ fn scanner_code_source_kind_and_inline_block() {
     let root = test_root("scanner_code_source_kind_and_inline_block");
     write(
         &root.join("src/app.rs"),
-        "/// AR-001-router: Router\n/// Implements §FS-001-cli.\n\nfn main() {\n    // see §FS-002-check\n}\n",
+        "/// AR-001-router: Router\n/// Implements \u{a7}FS-001-cli.\n\nfn main() {\n    // see \u{a7}FS-002-check\n}\n",
     );
     let mut config = Config::default_for(root.clone());
     config.citations.declared = true;
@@ -92,7 +92,7 @@ fn scanner_file_home_source_kind() {
     let root = test_root("scanner_file_home_source_kind");
     write(
         &root.join("docs/architecture/README.md"),
-        "Overview prose citing §FS-001-cli before any declaration.\n",
+        "Overview prose citing \u{a7}FS-001-cli before any declaration.\n",
     );
     let mut config = Config::default_for(root.clone());
     config.citations.declared = true;
@@ -150,7 +150,7 @@ must = ["FS"]
     );
     write(
         &root.join("docs/functional-spec/FS-001-login.md"),
-        "# FS-001-login: Login\n\nImplements via §AR-001-router.\n",
+        "# FS-001-login: Login\n\nImplements via \u{a7}AR-001-router.\n",
     );
     write(
         &root.join("docs/architecture/AR-001-router.md"),
@@ -230,7 +230,7 @@ must = ["FS"]
     );
     write(
         &root.join("README.md"),
-        "# Scratch\n\nSee §GOAL-001-fast.\n",
+        "# Scratch\n\nSee \u{a7}GOAL-001-fast.\n",
     );
 
     let config = load_config(&root).expect("load config");
