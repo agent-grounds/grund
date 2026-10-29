@@ -120,6 +120,26 @@ fn untrimmed(value: &str) -> bool {
     value.is_empty() || value.trim() != value
 }
 
+/// A configured `title` or field `one_of` entry no one-line heading can show,
+/// refused with its control characters escaped so the message stays one line
+/// (§FS-fields.identity.match): `None` when it holds none.
+fn unshowable(value: &str) -> Option<String> {
+    if !value.chars().any(char::is_control) {
+        return None;
+    }
+    let mut escaped = String::with_capacity(value.len());
+    for ch in value.chars() {
+        if ch.is_control() {
+            escaped.extend(ch.escape_default());
+        } else {
+            escaped.push(ch);
+        }
+    }
+    Some(format!(
+        "\"{escaped}\", which holds a control character no heading can show"
+    ))
+}
+
 /// §FS-fields.declare.field: one key of the field table at `index`.
 pub(super) fn field_key(
     r: &mut Reader,
@@ -150,6 +170,9 @@ pub(super) fn field_key(
                     "field {label} has title \"{title}\", which is empty or has surrounding whitespace"
                 );
                 return r.fail(line, message);
+            }
+            if let Some(why) = unshowable(&title) {
+                return r.fail(line, format!("field {label} has title {why}"));
             }
             r.fields[index].title = Some((title, line));
         }
@@ -213,6 +236,10 @@ pub(super) fn field_key(
             }
             if let Some(message) = one_of_error(&format!("field {label}"), &values) {
                 return r.fail(line, message);
+            }
+            // §FS-fields.identity.match: a front-matter key's entry may hold one; a field's never.
+            if let Some(why) = values.iter().find_map(|value| unshowable(value)) {
+                return r.fail(line, format!("field {label} has one_of entry {why}"));
             }
             r.fields[index].one_of = Some((values, line));
         }
