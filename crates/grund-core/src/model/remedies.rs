@@ -88,18 +88,6 @@ pub(crate) fn config_not_toml_open_line(line: impl Display) -> String {
     fill(Code::CONFIG_NOT_TOML, 2, Some("open-line"), slots)
 }
 
-/// `config-not-toml`'s *Fix*, case `element` (§FS-config-v2.checks.config-not-toml).
-pub(crate) fn config_not_toml_element(line: impl Display) -> String {
-    let slots: &[(&str, &dyn Display)] = &[("line", &line)];
-    fill(Code::CONFIG_NOT_TOML, 2, Some("element"), slots)
-}
-
-/// `config-not-toml`'s *Fix*, case `scalar-or-key` (§FS-config-v2.checks.config-not-toml).
-pub(crate) fn config_not_toml_scalar_or_key(line: impl Display) -> String {
-    let slots: &[(&str, &dyn Display)] = &[("line", &line)];
-    fill(Code::CONFIG_NOT_TOML, 2, Some("scalar-or-key"), slots)
-}
-
 /// `config-not-toml`'s *Fix*, case `commas` (§FS-config-v2.checks.config-not-toml).
 pub(crate) fn config_not_toml_commas(line: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("line", &line)];

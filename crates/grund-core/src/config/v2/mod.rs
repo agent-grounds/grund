@@ -37,7 +37,9 @@ mod tests_walk;
 mod walk;
 
 pub(crate) use sources::{holds_glob, literal_suffix};
-pub(super) use strings::{read_string, read_string_list};
+pub(super) use strings::{
+    JoinedLines, read_string, read_string_as_before, read_string_list, read_string_list_as_before,
+};
 #[cfg(test)]
 pub(super) use tables::V1_TABLES;
 pub(super) use tables::{admitted, v1_homes};

@@ -11,7 +11,6 @@ use crate::testing::{test_root, write};
 
 /// The config no run loads has no name when its `project_name` closes early.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn the_unread_project_name_passes_over_a_string_that_closes_early() {
     let text = "grund_config_version = 2\nproject_name = \"one\" \"two\"\n";
     assert_eq!(unread_project_name(text, Path::new("grund.toml")), None);
@@ -20,7 +19,6 @@ fn the_unread_project_name_passes_over_a_string_that_closes_early() {
 /// The ancestor climb's `members` cannot be obtained when an element closes early, as for
 /// any value it cannot read (§FS-workspace.6.1.7.5).
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn the_ancestor_members_pass_over_an_element_that_closes_early() {
     let root = test_root("quick-reader-strings-members");
     let config = root.join("grund.toml");

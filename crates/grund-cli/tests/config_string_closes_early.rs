@@ -129,21 +129,18 @@ impl Drop for Fixture {
 /// grund.159's first case: `fetch = "one" "two"` loaded as the one string `one" "two` through
 /// 0.21.x, and is refused from 0.22.0 with the suffix.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn a_scalar_that_closes_early_is_refused() {
     Fixture::v2("fetch = \"one\" \"two\"\n").refuses(&refusal(8));
 }
 
 /// grund.159's second case: `folders = ["a" "b"]`, a comma forgotten, is refused.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn an_element_that_closes_early_is_refused() {
     Fixture::v2("folders = [\"a\" \"b\"]\n").refuses(&refusal(8));
 }
 
 /// grund.159's third case: a `[presentation.kinds]` title is a scalar like any other.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn a_presentation_title_that_closes_early_is_refused() {
     Fixture::v2("\n[presentation.kinds.SPEC]\ntitle = \"one\" \"two\"\n").refuses(&refusal(10));
 }
@@ -151,7 +148,6 @@ fn a_presentation_title_that_closes_early_is_refused() {
 /// §FS-config-v2.reader.6.refusal: a quoted key is a string of its own, and is refused at
 /// its line.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn a_quoted_key_that_closes_early_is_refused() {
     Fixture::v2("\n[schema.sources.extensions]\n\"md\" \"x\" = \"markdown\"\n")
         .refuses(&refusal(10));
@@ -160,7 +156,6 @@ fn a_quoted_key_that_closes_early_is_refused() {
 /// §FS-config-v2.reader.6.multi-line: `title = """one"""` is refused with the parenthetical
 /// that names the form, then the suffix.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn a_triple_quoted_string_on_one_line_is_refused_as_one_version_2_does_not_read() {
     let refusal = "error: grund.toml:10: expected string (a multi-line string, which version 2 \
                    does not read); this became an error in grund 0.22.0\n";
@@ -170,7 +165,6 @@ fn a_triple_quoted_string_on_one_line_is_refused_as_one_version_2_does_not_read(
 /// §FS-config-v2.reader.6.refusal: in an array written across lines the refusal stays at the
 /// key's line, as every value's does.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn an_element_on_a_later_line_is_refused_at_its_key() {
     Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\",\n  \"b\" \"c\",\n]\n")
         .refuses(&refusal(10));
@@ -178,7 +172,6 @@ fn an_element_on_a_later_line_is_refused_at_its_key() {
 
 /// §FS-config-v2.reader.6.refusal: a value with two strings that close early is refused once.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn a_value_with_two_early_closes_is_refused_once() {
     Fixture::v2("\n[schema.sources]\nexclude = [\"a\" \"b\", \"c\" \"d\"]\n").refuses(&refusal(10));
 }
@@ -187,7 +180,6 @@ fn a_value_with_two_early_closes_is_refused_once() {
 /// window still reads it, and its string that closes early is then refused; the open line's
 /// warning is not printed, because the config does not load.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn an_open_line_and_an_early_close_are_refused_as_the_early_close() {
     Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\nb\" \"c\",\n]\n").refuses(&refusal(10));
 }
