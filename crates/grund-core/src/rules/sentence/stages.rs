@@ -235,14 +235,13 @@ fn subject_refusal(
 
 /// Stage 6, the predicate, and a chapter subject that would have chapters.
 fn predicate(reading: &mut Reading<'_>) -> Result<(), Refusal> {
-    let (Some((subject_text, _, polarity, predicate)), Some(subject)) =
+    let (Some((_, _, polarity, predicate)), Some(subject)) =
         (reading.split, reading.subject.as_ref())
     else {
         return Ok(());
     };
     let sentence = reading.sentence;
-    // What follows the subject and what precedes the predicate, both as typed.
-    let after_subject = &reading.title[subject_text.len()..];
+    // What precedes the predicate, as typed.
     let before_predicate = &sentence[..sentence.len() - predicate.len()];
     let (relation, targets, cardinality) = parse_predicate(
         predicate,
@@ -251,24 +250,18 @@ fn predicate(reading: &mut Reading<'_>) -> Result<(), Refusal> {
         &mut reading.unverifiable,
     )
     .map_err(|refusal| refusal.within(|predicate| format!("{before_predicate}{predicate}.")))?;
-    if relation == RuleRelation::HaveChapter {
-        // §FS-rule-refusals.sentences.rewrite.by-refusal: a chapter subject becomes its
-        // declaration, or `Each KIND`.
-        let declaration = match subject {
-            RuleSubject::ChapterOfKind { kind, whose, .. } => Some(match whose {
-                // §FS-rules.2.2: the whose clause belongs to the subject, so it stays.
-                Some(whose) => format!("Each {kind}{whose}"),
-                None => format!("Each {kind}"),
-            }),
-            RuleSubject::ExactChapter { declaration, .. } => Some(declaration.to_string()),
-            RuleSubject::Kind(..) | RuleSubject::ExactDeclaration(_) => None,
-        };
-        if let Some(declaration) = declaration {
-            return Err(refuse(
-                "chapter subjects cannot have chapters",
-                Form::One(format!("{declaration}{after_subject}")),
-            ));
-        }
+    // §FS-rule-refusals.sentences.rewrite.same-units: no accepted sentence counts the chapters
+    // under a chapter, so a chapter subject's presence rule is offered no form.
+    if relation == RuleRelation::HaveChapter
+        && matches!(
+            subject,
+            RuleSubject::ChapterOfKind { .. } | RuleSubject::ExactChapter { .. }
+        )
+    {
+        return Err(refuse(
+            "chapter subjects cannot have chapters",
+            Form::None { kind: false },
+        ));
     }
     reading.predicate = Some((relation, targets, cardinality));
     Ok(())
