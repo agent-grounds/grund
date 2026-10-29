@@ -155,7 +155,7 @@ The same `lead_size_warning` line reads `counts bytes` for a byte budget, and `a
 
 #### 3.1.8 A string that closes early
 
-Version 1 reads a string from its opening quote to the last quote of its value or its element, every quote between kept, and keeps that reading for good ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)); version 2 ends a string at its first unescaped quote ([§FS-config-v2.reader.6](FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). Writing the value out would carry the same string into version 2 escaped, `"docs\" \"x"`, so a forgotten comma or a stray quote would become valid TOML that means what the typo meant. Migration refuses instead, at the key's line, naming the string as version 1 reads it, with the repair version 2's warning gives, made under version 1: the first half alone for a scalar, and both halves for a list element.
+Version 1 reads a string from its opening quote to the last quote of its value or its element, every quote between kept, and keeps that reading for good ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)); version 2 ends a string at its first unescaped quote ([§FS-config-v2.reader.6](FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). Writing the value out would carry the same string into version 2 escaped, `"docs\" \"x"`, so a forgotten comma or a stray quote would become valid TOML that means what the typo meant. Migration refuses instead, at the key's line, naming the string as version 1 reads it, with the repair version 2's warning gave through grund 0.21.x ([§FS-config-v2.reader.6.window](FS-config-v2.md#reader6window-through-grund-021x-a-string-that-closes-early-is-read-as-before-and-warns)), made under version 1: the first half alone for a scalar, and both halves for a list element.
 
 ```text
 refused: grund.toml:8: [[kinds]] folder reads the one string `docs" "x`, and version 2 ends a string at its first unescaped quote
@@ -164,7 +164,7 @@ refused: grund.toml:12: [scan] include reads the one string `a"b`, and version 2
   repair: end the string at its closing quote under version 1: write `\"` for a quote inside it, or a `,` between two strings; grund check shows its effect
 ```
 
-A key earns one block, naming the first string in its value that closes early, and the text in backticks is that string as written from its opening quote to the last quote, as version 2's warning shows it ([§FS-config-v2.reader.6.window](FS-config-v2.md#reader6window-through-grund-021x-a-string-that-closes-early-is-read-as-before-and-warns)).
+A key earns one block, naming the first string in its value that closes early, and the text in backticks is that string as written from its opening quote to the last quote, as version 1 reads it. The refusal stays after grund 0.22.0 refuses such a string in version 2 ([§FS-config-v2.reader.6.refusal](FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)): a version-1 file reads it for good, and only its migration meets the rule.
 
 ### 3.2 Notices
 
