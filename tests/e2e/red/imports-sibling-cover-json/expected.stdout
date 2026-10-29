@@ -1,0 +1,3 @@
+{"project":"native-image","path":"../graal/substratevm/docs/functional-spec/FS-security-providers.md","citations":[]}
+{"project":"native-image","path":"../graal/substratevm/docs/functional-spec/README.md","citations":[{"project":"native-image","path":"../graal/substratevm/docs/functional-spec/README.md","line":3,"column":4,"id":"FS-security-providers","section":null,"marker":true,"text":"§FS-security-providers","enclosing_declaration":null,"enclosing_section":null}]}
+{"project":"enterprise","path":"src/Example.java","citations":[{"project":"enterprise","path":"src/Example.java","line":1,"column":27,"id":"native-image/FS-security-providers","section":null,"marker":true,"text":"§native-image/FS-security-providers","enclosing_declaration":null,"enclosing_section":null}]}

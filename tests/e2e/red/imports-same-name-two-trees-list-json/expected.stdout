@@ -1,0 +1,2 @@
+{"project":"a/shared","id":"a/shared/FS-x","kind":"FS","path":"../shared-1/docs/fs/FS-x.md","line":1,"title":"First tree","stub":false,"defines":null,"refs":3,"duplicate":false}
+{"project":"b/shared","id":"b/shared/FS-x","kind":"FS","path":"../shared-2/docs/fs/FS-x.md","line":1,"title":"Second tree","stub":false,"defines":null,"refs":3,"duplicate":false}

@@ -1,0 +1,10 @@
+grund_config_version = 2
+project_name = "enterprise"
+
+[workspace.imports.a]
+path = "../a"
+project = "a"
+
+[workspace.imports.b]
+path = "../b"
+project = "b"

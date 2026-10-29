@@ -1,0 +1,5 @@
+grund_config_version = 2
+project_name = "graal"
+
+[workspace]
+members = ["substratevm", "compiler"]

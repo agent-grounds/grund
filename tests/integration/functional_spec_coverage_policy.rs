@@ -244,6 +244,7 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-fmt.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-fmt.requirements.next-class", reason: "directional formatter policy, binding the next rewrite class rather than describing a released behavior" },
     Exception { id: "FS-id.terms", reason: "vocabulary, not a behavioral requirement" },
+    Exception { id: "FS-imports.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-init.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-init.requirements.next-agent", reason: "directional init policy, binding the next supported agent rather than describing a released behavior" },
     Exception { id: "FS-init-fixtures.terms", reason: "vocabulary, not a behavioral requirement" },

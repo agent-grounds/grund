@@ -1,0 +1,1 @@
+error: grund.toml:7: duplicate workspace project alias `native-image` (workspace member `opt/native-image` and import `../graal/substratevm`)

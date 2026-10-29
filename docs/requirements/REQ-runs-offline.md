@@ -13,6 +13,12 @@ I/O and execute no repository-configured process. This remains true for a kind t
 configures a fetcher and for a missing snapshot. Those paths read only the tree and
 configuration they already own.
 
+For a config that declares imports, those paths also read each tree an import names, from
+disk, still with no network I/O and nothing executed ([§FS-imports.mount](../functional-spec/FS-imports.md#mount-an-import-is-a-mounted-root-read-live-and-read-only)). Such a config is
+verifiable offline once the named trees are present; without one the run fails at the import
+and never reports a pass ([§FS-imports.checks.import-missing](../functional-spec/FS-imports.md#checksimport-missing-an-import-names-no-directory)). That is specified ahead of its
+release.
+
 ## 2. Materialization is explicit
 
 Only a deliberate `grund fetch` invocation may reach outside the tree, and it names what it materializes. `grund fetch <ID>` executes the selected kind's configured integration under [§FS-fetch](../functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot); `grund fetch --remote <alias>`, or `--remote --all`, reads the repository a `[workspace.remotes.<alias>]` table declares, under [§FS-remote-projects](../functional-spec/FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection). Neither makes verification online: an integration's output must first become a local Markdown declaration, and a remote must first become a committed projection pinned in `grund.lock`. Subsequent resolution reads those committed bytes through the ordinary scanner.

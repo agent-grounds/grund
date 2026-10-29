@@ -1,0 +1,1 @@
+error: grund.toml:5: invalid import path `/srv/graal` for `native-image` (expected a relative path written with /)

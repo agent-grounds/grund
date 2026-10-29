@@ -33,6 +33,10 @@ name = "lsp_unsaved_files"
 path = "lsp_unsaved_files.rs"
 
 [[test]]
+name = "imports_no_common_parent"
+path = "imports_no_common_parent.rs"
+
+[[test]]
 name = "integrations_resolve"
 path = "integrations_resolve.rs"
 

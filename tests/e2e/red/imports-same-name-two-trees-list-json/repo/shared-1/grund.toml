@@ -1,0 +1,5 @@
+grund_config_version = 2
+project_name = "shared"
+
+[schema.kinds.FS]
+folders = ["docs/fs"]

@@ -316,6 +316,7 @@ const WIDENING: &[(&str, &str)] = &[
     ("fmt", "S4"),
     ("glob", "S4"),
     ("id", "S4"),
+    ("imports", "S4"),
     ("init", "S4"),
     ("inline", "S4"),
     ("integrations", "S4"),

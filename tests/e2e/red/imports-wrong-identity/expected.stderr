@@ -1,0 +1,1 @@
+error: grund.toml:6: import `native-image` expects project `native-image`, but `../graal/substratevm` declares `svm`

@@ -1,0 +1,10 @@
+grund_config_version = 2
+project_name = "enterprise"
+
+[workspace.imports.lib-b]
+path = "../lib-b"
+project = "lib-b"
+
+[workspace.imports.lib-a]
+path = "../lib-a"
+project = "lib-a"

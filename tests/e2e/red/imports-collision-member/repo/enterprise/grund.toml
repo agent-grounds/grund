@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "enterprise"
+
+[workspace]
+members = ["tools/native-image"]
+
+[workspace.imports.native-image]
+path = "../graal/substratevm"
+project = "native-image"

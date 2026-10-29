@@ -1,0 +1,6 @@
+grund_config_version = 2
+project_name = "enterprise"
+
+[workspace.imports.native-image]
+path = "/srv/graal"
+project = "native-image"

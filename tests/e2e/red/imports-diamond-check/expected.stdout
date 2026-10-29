@@ -1,0 +1,4 @@
+../lib-a/grund.toml:4: warning: import `lib-a/core` is read live from `../core`, unpinned
+../lib-b/grund.toml:4: warning: import `lib-b/core` is read live from `../core`, unpinned
+grund.toml:4: warning: import `lib-b` is read live from `../lib-b`, unpinned
+grund.toml:8: warning: import `lib-a` is read live from `../lib-a`, unpinned

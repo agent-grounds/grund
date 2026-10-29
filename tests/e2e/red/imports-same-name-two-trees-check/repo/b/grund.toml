@@ -1,0 +1,6 @@
+grund_config_version = 2
+project_name = "b"
+
+[workspace.imports.shared]
+path = "../shared-2"
+project = "shared"
