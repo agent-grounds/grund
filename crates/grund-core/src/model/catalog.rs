@@ -149,7 +149,7 @@ fn template(code: Code, version: u32, case: Option<&str>) -> &'static str {
 
 /// §FS-errors.5.5.1: `code`'s *Fix* template for `version`, or its case `case`,
 /// with each `{slot}` filled from `slots`: the one way a message's remedy is
-/// worded, which `remedies.rs` calls (§AR-config.9.1).
+/// worded, which `remedies/` calls (§AR-config.9.1).
 pub(crate) fn fill(
     code: Code,
     version: u32,
