@@ -4,7 +4,8 @@
 
 use std::collections::BTreeMap;
 
-use super::section_lock::{judge_section_locks, section_fingerprint};
+use super::section_fingerprint::section_fingerprint;
+use super::section_lock::judge_section_locks;
 use crate::config::load_config;
 use crate::testing::{scan_findings, test_root, write};
 

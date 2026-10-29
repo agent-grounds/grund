@@ -11,32 +11,13 @@ use std::path::{Path, PathBuf};
 use super::citation_target::WorkspaceCheckTarget;
 use super::point_body::point_body_pair;
 use super::relative_fingerprint::relative_nested_headings;
+use super::section_fingerprint::section_fingerprint;
 use crate::config::{Frame, Schema};
 use crate::grammar::{parse_id_arg, render_catalog_id, render_id};
 use crate::model::{
     Catalog, Citation, Declaration, Id, LockEntry, LockLines, locked, paired_declarations,
     read_lock_lines, section_lock_path, sort_path_key,
 };
-use crate::sources::sha256_hex;
-
-/// The fingerprint of a section's text (§FS-section-lock.holds.fingerprint): the
-/// first sixteen lowercase hex digits of the SHA-256 of `text` with LF line
-/// endings, each line's trailing spaces and tabs removed, leading and trailing
-/// empty lines dropped, and the lines joined with LF and no final LF.
-pub(crate) fn section_fingerprint(text: &str) -> String {
-    let lines = text
-        .split('\n')
-        .map(|line| line.strip_suffix('\r').unwrap_or(line))
-        .map(|line| line.trim_end_matches([' ', '\t']))
-        .collect::<Vec<_>>();
-    let first = lines.iter().position(|line| !line.is_empty());
-    let last = lines.iter().rposition(|line| !line.is_empty());
-    let normalized = match (first, last) {
-        (Some(first), Some(last)) => lines[first..=last].join("\n"),
-        _ => String::new(),
-    };
-    sha256_hex(normalized.as_bytes())[..16].to_string()
-}
 
 /// What `fmt --write` does with one entry the lock holds (§FS-section-lock.write.rules).
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -455,26 +436,4 @@ fn points_at(findings: &Catalog, decl: Option<&Declaration>, section: &str, to: 
             && info.line < citation.line
             && citation.line <= end
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::section_fingerprint;
-
-    #[test]
-    fn the_fingerprint_is_the_digest_of_the_normalized_text() {
-        assert_eq!(
-            section_fingerprint("Trim surrounding whitespace."),
-            "8f332b6fe87bb346"
-        );
-        assert_eq!(section_fingerprint("Split on commas."), "be879e46c73e3d05");
-    }
-
-    #[test]
-    fn line_endings_and_trailing_blanks_do_not_change_it() {
-        let plain = section_fingerprint("One.\nTwo.");
-        assert_eq!(section_fingerprint("\r\nOne.  \r\nTwo.\t\r\n\r\n"), plain);
-        assert_eq!(section_fingerprint("\n\nOne.\nTwo.\n"), plain);
-        assert_ne!(section_fingerprint("One.\n\nTwo."), plain);
-    }
 }
