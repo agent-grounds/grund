@@ -10,7 +10,7 @@
 use anyhow::Result;
 use std::path::Path;
 
-use super::walk::{OpenLine, Reader};
+use super::walk::Reader;
 use crate::config::project::StringClosesEarly;
 use crate::config::v1::{list_elements, parse_string, parse_string_list, string_close};
 
@@ -82,18 +82,17 @@ pub(crate) fn read_string_list<'a>(
     Ok((read, early))
 }
 
-/// The lines a value was written across, as `joined_value` joined them: its key's line,
-/// where each later one starts in the value, and its open line (§FS-config-v2.reader.5).
+/// The lines a value was written across, as `joined_value` joined them: its key's line
+/// and where each later one starts in the value (§FS-config-v2.reader.5).
 #[derive(Default)]
 pub(super) struct JoinedLines {
     line: usize,
     starts: Vec<usize>,
-    open: Option<OpenLine>,
 }
 
 impl JoinedLines {
-    pub(super) fn new(line: usize, starts: Vec<usize>, open: Option<OpenLine>) -> Self {
-        Self { line, starts, open }
+    pub(super) fn new(line: usize, starts: Vec<usize>) -> Self {
+        Self { line, starts }
     }
 
     /// The line the byte at `offset` in the value was written on.
@@ -101,16 +100,17 @@ impl JoinedLines {
         self.line + self.starts.partition_point(|&start| start <= offset)
     }
 
-    /// Whether `early` is the `"""` string the value's open line leaves open, the one
-    /// construct §FS-config-v2.reader.5.strings.multi-line already warns for, which earns
-    /// that warning alone (§FS-config-v2.reader.6.multi-line).
-    fn is_open_multi_line(&self, early: &EarlyClose) -> bool {
-        let end = early.start + early.written.len() - 1;
-        self.open.is_some_and(|open| {
-            open.multi_line
-                && self.line_at(early.start) <= open.line
-                && open.line < self.line_at(end)
-        })
+    /// Whether `early` opens with a `"""` string a joined line break runs through, at any
+    /// of the array's open lines: the one construct §FS-config-v2.reader.5.strings.multi-line
+    /// already warns for, which earns that warning alone (§FS-config-v2.reader.6.multi-line).
+    /// The string is the one its third quote opens, as the open line is read, so a break
+    /// inside a plain string after it, as in `"""a""" "b` / `c"`, is not one.
+    fn is_multi_line_over_break(&self, early: &EarlyClose) -> bool {
+        let close = string_close(early.written.as_bytes(), 3);
+        early.written.starts_with("\"\"\"")
+            && close.is_some_and(|close| {
+                self.line_at(early.start + 2) < self.line_at(early.start + close)
+            })
     }
 }
 
@@ -131,7 +131,10 @@ impl Reader<'_> {
     pub(super) fn string_list(&mut self, line: usize, value: &str) -> Result<Vec<String>> {
         let (read, early) = read_string_list(self.path, line, value)?;
         let lines = &self.value;
-        if let Some(early) = early.iter().find(|early| !lines.is_open_multi_line(early)) {
+        if let Some(early) = early
+            .iter()
+            .find(|early| !lines.is_multi_line_over_break(early))
+        {
             let close = lines.line_at(early.close);
             self.record_early_close(line, early, close, true);
         }

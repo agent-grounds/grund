@@ -223,6 +223,65 @@ fn a_triple_quoted_string_over_a_break_earns_only_the_open_line_warning() {
     );
 }
 
+/// §FS-config-v2.reader.6.multi-line: every `"""` string a line break runs through is
+/// #1089's construct, not only the one across the array's first open line, so two of them
+/// earn its one warning alone.
+#[test]
+fn two_triple_quoted_strings_over_breaks_earn_only_the_open_line_warning() {
+    let root = v2(
+        "two-triple-breaks",
+        "\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n  \"\"\"c\nd\"\"\",\n]\n",
+    );
+    let message = "grund.toml:10: unclosed array (a multi-line string opens on line 11, which \
+                   version 2 does not read), read for now with the line break as a space; \
+                   write the string on line 11 as one basic string; this warning becomes an \
+                   error in grund 0.22.0";
+    assert_eq!(
+        window_findings(&root),
+        vec![("config-multiline-string", Some(10), message.to_string())]
+    );
+}
+
+/// §FS-config-v2.reader.6.multi-line: a `"""` string over a break after a plain open line
+/// is #1089's construct too, and earns nothing beyond that array's one warning.
+#[test]
+fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_earns_only_that_warning() {
+    let root = v2(
+        "plain-then-triple",
+        "\n[schema.sources]\nexclude = [\n  \"a\nb\",\n  \"\"\"c\nd\"\"\",\n]\n",
+    );
+    let open = "grund.toml:10: unclosed array (a string is still open at the end of line 11), \
+                read for now with the line break as a space; close the string on line 11; this \
+                warning becomes an error in grund 0.22.0";
+    assert_eq!(
+        window_findings(&root),
+        vec![("config-not-toml", Some(10), open.to_string())]
+    );
+}
+
+/// §FS-config-v2.reader.6.multi-line: the `"""` string is the one its third quote opens, so
+/// a break inside a plain string after it leaves the element's one-line `"""` warning.
+#[test]
+fn a_break_after_a_one_line_triple_quoted_string_keeps_its_warning() {
+    let root = v2(
+        "triple-then-break",
+        "\n[schema.sources]\nexclude = [\n  \"\"\"a\"\"\" \"b\nc\",\n]\n",
+    );
+    let open = "grund.toml:10: unclosed array (a string is still open at the end of line 11), \
+                read for now with the line break as a space; close the string on line 11; this \
+                warning becomes an error in grund 0.22.0";
+    let message = "grund.toml:10: expected string (a multi-line string, which version 2 does not \
+                   read), read for now as `\"\"a\"\"\" \"b c`, its quotes kept; write the string \
+                   on line 11 as one basic string; this warning becomes an error in grund 0.22.0";
+    assert_eq!(
+        window_findings(&root),
+        vec![
+            ("config-not-toml", Some(10), open.to_string()),
+            ("config-multiline-string", Some(10), message.to_string())
+        ]
+    );
+}
+
 /// Guard, green today and kept: strings that close at their end, an escaped quote, an
 /// escaped backslash and a comment after the value among them, earn nothing.
 #[test]

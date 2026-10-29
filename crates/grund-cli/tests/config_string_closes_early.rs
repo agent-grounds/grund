@@ -307,6 +307,30 @@ fn a_triple_quoted_string_over_a_break_earns_only_the_open_line_warning() {
     );
 }
 
+/// §FS-config-v2.reader.6.multi-line: every `"""` string a line break runs through is #1089's
+/// construct, not only the one across the first open line, so two of them earn its one warning.
+#[test]
+fn two_triple_quoted_strings_over_breaks_earn_only_the_open_line_warning() {
+    let fx = Fixture::v2(
+        "\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n  \"\"\"c\nd\"\"\",\n]\n",
+    );
+    let warning = "warning: grund.toml:10: unclosed array (a multi-line string opens on line \
+                   11, which version 2 does not read), read for now with the line break as a \
+                   space; write the string on line 11 as one basic string; this warning \
+                   becomes an error in grund 0.22.0\n";
+    fx.expect(&["check"], 0, "", warning);
+    fx.expect(&["config", "validate"], 0, "", warning);
+}
+
+/// §FS-config-v2.reader.6.multi-line: a `"""` string over a break after a plain open line is
+/// #1089's construct too, and earns nothing beyond that array's one warning.
+#[test]
+fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_earns_only_that_warning() {
+    let fx = Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\nb\",\n  \"\"\"c\nd\"\"\",\n]\n");
+    fx.expect(&["check"], 0, "", OPEN_LINE);
+    fx.expect(&["config", "validate"], 0, "", OPEN_LINE);
+}
+
 /// Guard, green today and kept: a value the readers before refused keeps its bare refusal
 /// (§FS-config-v2.reader.6.refusal).
 #[test]
