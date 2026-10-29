@@ -1,0 +1,2 @@
+docs/REQ/REQ-999.md:1: error: `REQ-999` resolves for compatibility but does not match [schema] id_format = "{kind}-{slug}" — rename it or change the effective format; this became an error in grund 0.16.0
+docs/FS/FS-a.md:1: warning: declared but never cited: FS-a; cite it

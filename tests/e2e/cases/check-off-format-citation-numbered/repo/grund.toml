@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "numbered"
+
+[schema]
+id_format = "{kind}-{number}-{slug}"
+
+[schema.kinds.FS]
+folders = ["docs/FS"]
+index = false
