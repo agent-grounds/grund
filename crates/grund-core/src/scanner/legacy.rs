@@ -11,7 +11,7 @@ use anyhow::anyhow;
 use std::collections::BTreeMap;
 
 use super::legacy_inline::reconcile_promoted_inline_site;
-use super::off_format::record_off_format_citation;
+use super::off_format::record_off_format_citations;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
     IdArgError, LineLinks, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX,
@@ -111,20 +111,25 @@ pub(super) fn promote_local_legacy_citations(
     let catalog = legacy_catalog_ids(&findings.declarations);
     let configured_catalog = configured_catalog_ids(&findings.declarations);
     let candidates = std::mem::take(&mut findings.legacy_citation_candidates);
+    let mut undeclared = Vec::new();
     for candidate in candidates {
         if candidate.namespace.is_some() {
             findings.legacy_citation_candidates.push(candidate);
             continue;
         }
-        promote_legacy_candidate(
-            (schema, frame),
-            (schema, frame),
-            &configured_catalog,
-            &catalog,
-            candidate,
-            findings,
+        undeclared.extend(
+            promote_legacy_candidate(
+                (schema, frame),
+                (schema, frame),
+                &configured_catalog,
+                &catalog,
+                candidate,
+                &mut findings.citations,
+            )
+            .map(|candidate| ((schema, frame), candidate)),
         );
     }
+    record_off_format_citations(&undeclared, findings);
     findings.local_section_citation_candidates.retain(|local| {
         !findings.citations.iter().any(|citation| {
             citation.file == local.file
@@ -158,23 +163,21 @@ pub(crate) fn configured_catalog_ids(declarations: &BTreeMap<Id, Vec<Declaration
 /// One deferred candidate reconciled against one target catalog — the step both
 /// halves of this pass share, the local one above and the qualified one in
 /// `resolver/legacy_promotion.rs` (§AR-resolver.placement). A candidate nothing
-/// declares is recorded as an off-format citation where `off_format.rs` reads it
-/// as one, and is otherwise text (§FS-config.3.2.5).
+/// declares is handed back, for the caller to record as an off-format citation
+/// where `off_format.rs` reads it as one; it is otherwise text (§FS-config.3.2.5).
 pub(crate) fn promote_legacy_candidate(
     (source_schema, source_frame): (&Schema, Frame<'_>),
     (target_schema, target_frame): (&Schema, Frame<'_>),
     configured_catalog: &[Id],
     catalog: &[Id],
     candidate: LegacyCitationCandidate,
-    findings: &mut Catalog,
-) {
+    citations: &mut Vec<Citation>,
+) -> Option<LegacyCitationCandidate> {
     let Some((id, section, consumed)) =
         match_legacy_tail(&candidate.tail, target_schema, target_frame, catalog)
     else {
-        record_off_format_citation((target_schema, target_frame), &candidate, findings);
-        return;
+        return Some(candidate);
     };
-    let citations = &mut findings.citations;
     let qualified = candidate
         .namespace
         .as_deref()
@@ -201,14 +204,14 @@ pub(crate) fn promote_legacy_candidate(
                     .iter()
                     .any(|id| shorthand_names(id, &citation.id)))
     }) {
-        return;
+        return None;
     }
     // With no configured interpretation left, exact catalog compatibility is
     // the one target and replaces the rejected/empty shorthand parse.
     citations.retain(|citation| !same_marker(citation));
     // §AR-scanner.2.3: a heading's citation of the ID it declares is none.
     if candidate.namespace.is_none() && candidate.declares.as_ref() == Some(&id) {
-        return;
+        return None;
     }
     let site = candidate.inline_site.clone();
     let block_lines = candidate.inline_block_lines.clone();
@@ -241,6 +244,7 @@ pub(crate) fn promote_legacy_candidate(
             &block_lines,
         );
     }
+    None
 }
 
 /// Apply the exact-ID-before-section precedence from §FS-config.3.2.6 to one
