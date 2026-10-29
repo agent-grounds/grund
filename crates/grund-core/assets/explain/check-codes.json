@@ -428,6 +428,10 @@
      {
       "label": "fetch",
       "text": "run grund fetch {id}"
+     },
+     {
+      "label": "pattern",
+      "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
     ]
    },
@@ -459,6 +463,10 @@
      {
       "label": "fetch",
       "text": "run grund fetch {id}"
+     },
+     {
+      "label": "pattern",
+      "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
     ]
    },
@@ -2161,6 +2169,10 @@
      {
       "label": "fetch",
       "text": "run grund fetch {id}"
+     },
+     {
+      "label": "pattern",
+      "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
     ]
    },
@@ -2198,6 +2210,10 @@
      {
       "label": "fetch",
       "text": "run grund fetch {id}"
+     },
+     {
+      "label": "pattern",
+      "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
     ]
    },

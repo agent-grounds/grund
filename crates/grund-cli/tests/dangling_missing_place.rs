@@ -78,7 +78,6 @@ const GLOB_TAIL: &str =
     "; a place is a path from the config root, not a pattern, so list each file or name the folder";
 
 #[test]
-#[ignore = "red until #1069 names a kind's missing places at the citer; implement removes this"]
 fn a_files_glob_is_named_at_the_citer() {
     let fixture = Fixture::new("files-glob", "files = [\"specs/*/spec.md\"]");
     let tail = format!("no place of kind SPEC exists: specs/*/spec.md (grund.toml:4){GLOB_TAIL}");
@@ -91,7 +90,6 @@ fn a_files_glob_is_named_at_the_citer() {
 }
 
 #[test]
-#[ignore = "red until #1069 names a kind's missing places at the citer; implement removes this"]
 fn a_folders_glob_is_named_at_the_citer() {
     let fixture = Fixture::new("folders-glob", "folders = [\"specs/*\"]");
     let tail = format!("no place of kind SPEC exists: specs/* (grund.toml:4){GLOB_TAIL}");
@@ -105,7 +103,6 @@ fn a_folders_glob_is_named_at_the_citer() {
 }
 
 #[test]
-#[ignore = "red until #1069 names a kind's missing places at the citer; implement removes this"]
 fn every_missing_place_is_named_in_row_order_without_the_pattern_clause() {
     let fixture = Fixture::new(
         "literal-missing",
@@ -123,7 +120,6 @@ fn every_missing_place_is_named_in_row_order_without_the_pattern_clause() {
 }
 
 #[test]
-#[ignore = "red until #1069 names a kind's missing places at the citer; implement removes this"]
 fn the_json_finding_stays_dangling_with_the_hint_in_its_message() {
     let fixture = Fixture::new("json", "files = [\"specs/*/spec.md\"]");
     let out = fixture.check(&["--format", "json"]);
