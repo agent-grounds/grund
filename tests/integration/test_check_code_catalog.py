@@ -168,8 +168,16 @@ class CheckCodeRemedyTests(unittest.TestCase):
         self.assertEqual(blank, [], "rows whose Fix cell is blank")
 
     def test_the_rendered_remedy_fillers_are_written_beside_the_handles(self):
-        remedies = REPO_ROOT / "crates" / "grund-core" / "src" / "model" / "remedies.rs"
-        self.assertIn(remedies, render_check_codes.render())
+        remedies = REPO_ROOT / "crates" / "grund-core" / "src" / "model" / "remedies"
+        rendered = render_check_codes.render()
+        self.assertIn(remedies / "mod.rs", rendered)
+        pieces = [path for path in rendered if path.parent == remedies and path.name != "mod.rs"]
+        self.assertGreater(len(pieces), 1, "the fillers are split one file per concern")
+        declared = rendered[remedies / "mod.rs"]
+        for piece in pieces:
+            with self.subTest(piece=piece.name):
+                self.assertIn(f"mod {piece.stem};", declared)
+                self.assertIn(f"pub(crate) use {piece.stem}::*;", declared)
 
     def test_a_blank_fix_is_refused(self):
         with with_fix({"dangling": ("", "—")}):

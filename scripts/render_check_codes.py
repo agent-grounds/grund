@@ -14,15 +14,18 @@ is typed in Rust (§DF-config-explain.2.3). Each cell is read by the grammar of
   citing its section, the sorted list of them and the `out-of-scope-` pairing
   of §FS-check.3.14, so a finding is built only from a code the catalog has
   (§AR-system.2.2);
-- `crates/grund-core/src/model/remedies.rs`: one typed filler per *Fix* template
+- `crates/grund-core/src/model/remedies/`: one typed filler per *Fix* template
   or case, taking its slots, so a message's remedy is built only from its row
-  and worded nowhere in the checker (§AR-config.9.1).
+  and worded nowhere in the checker (§AR-config.9.1). The fillers are written
+  one file per specification page their rows' *Check* cells name, and `mod.rs`
+  declares the files and re-exports their fillers, so no one file grows with the
+  whole catalog.
 
 A row marked `planned — ` is specified ahead of its release and is in neither.
 Edit the catalog, then run the script:
 
-    python scripts/render_check_codes.py          # rewrite both files
-    python scripts/render_check_codes.py --check  # exit 1 if either is stale
+    python scripts/render_check_codes.py          # rewrite every file
+    python scripts/render_check_codes.py --check  # exit 1 if any is stale
 """
 
 import json
@@ -34,7 +37,9 @@ ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "docs" / "functional-spec" / "FS-errors.md"
 ASSET = ROOT / "crates" / "grund-core" / "assets" / "explain" / "check-codes.json"
 HANDLES = ROOT / "crates" / "grund-core" / "src" / "model" / "codes.rs"
-REMEDIES = ROOT / "crates" / "grund-core" / "src" / "model" / "remedies.rs"
+REMEDIES = ROOT / "crates" / "grund-core" / "src" / "model" / "remedies"
+# The single file the fillers were rendered into before they were split, removed on render.
+MONOLITH = REMEDIES.with_suffix(".rs")
 
 HEADING = re.compile(r"^### 5\.5 ")
 COLUMNS = ("Code", "Meaning", "Severity", "Ramp", "Enabled by", "Fix", "Note", "Check")
@@ -410,7 +415,7 @@ def slots(fix):
 
 
 def fillers(entry, codes):
-    """What `remedies.rs` renders for one code: `(name, label, version, slots)` per
+    """What `remedies/` renders for one code: `(name, label, version, slots)` per
     template or case its sides hold, the version `None` where both sides say one thing.
     An `out-of-scope-` code has none: its message is its in-scope code's, filled by
     that code's filler and then reported under the other code (§FS-check.3.14)."""
@@ -445,42 +450,84 @@ def argument(slot):
     return name + "_" if name in KEYWORDS else name
 
 
+def concern(entry):
+    """The file of `remedies/` a code's fillers go in: the specification page its
+    *Check* cell names, as a module name (`FS-section-lock.2` is `section_lock`)."""
+    name = entry["check"].split(".")[0].removeprefix("FS-").lower().replace("-", "_")
+    return name + "_" if name in KEYWORDS else name
+
+
+def render_filler(entry, name, label, version, names):
+    case = "None" if label is None else f'Some("{label}")'
+    params = ([] if version is not None else ["version: u32"]) + [
+        f"{argument(slot)}: impl Display" for slot in names]
+    pairs = ", ".join(f'("{slot}", &{argument(slot)})' for slot in names)
+    which = f"`{entry['code']}`'s *Fix*" + ("" if label is None else f", case `{label}`")
+    at = "version" if version is None else str(version)
+    return [
+        "",
+        f"/// {which} (§{entry['check']}).",
+        f"pub(crate) fn {name}({', '.join(params)}) -> String {{",
+        f"    let slots: &[(&str, &dyn Display)] = &[{pairs}];",
+        f"    fill(Code::{constant(entry['code'])}, {at}, {case}, slots)",
+        "}",
+    ]
+
+
 def render_remedies(read):
-    out = [
+    """`{path: text}` for `remedies/`: `mod.rs` and one file per concern, each filler
+    in catalog order within its file."""
+    codes = {entry["code"] for entry in read}
+    pieces = {}
+    for entry in read:
+        for name, label, version, names in fillers(entry, codes):
+            page = entry["check"].split(".")[0]
+            piece = pieces.setdefault(concern(entry), (page, []))
+            piece[1].extend(render_filler(entry, name, label, version, names))
+    files = {}
+    for module, (page, body) in sorted(pieces.items()):
+        files[REMEDIES / f"{module}.rs"] = "\n".join([
+            f"//! The *Fix* fillers of the codes §{page} checks, rendered from the",
+            "//! §FS-errors.5.5 catalog by `scripts/render_check_codes.py`: edit the catalog,",
+            "//! then run the script (§AR-config.9.1).",
+            "",
+            "use std::fmt::Display;",
+            "",
+            "use super::super::catalog::fill;",
+            "use super::super::codes::Code;",
+            *body,
+        ]) + "\n"
+    head = [
         "//! The *Fix* fillers, rendered from the §FS-errors.5.5 catalog by",
         "//! `scripts/render_check_codes.py`: edit the catalog, then run the script.",
         "//!",
-        "//! A message's remedy is built only by its code's filler below, which fills the",
-        "//! row's template from the embedded catalog, so no remedy is worded in the",
-        "//! checker and a misspelt slot or case does not compile (§AR-config.9.1).",
+        "//! A message's remedy is built only by its code's filler, which fills the row's",
+        "//! template from the embedded catalog, so no remedy is worded in the checker and",
+        "//! a misspelt slot or case does not compile (§AR-config.9.1). The fillers live",
+        "//! one file per specification page their rows' *Check* cells name, and are",
+        "//! re-exported here, so a caller names each as `remedies::<filler>`.",
         "",
-        "use std::fmt::Display;",
-        "",
-        "use super::catalog::fill;",
-        "use super::codes::Code;",
     ]
-    codes = {entry["code"] for entry in read}
-    for entry in read:
-        for name, label, version, names in fillers(entry, codes):
-            case = "None" if label is None else f'Some("{label}")'
-            params = ([] if version is not None else ["version: u32"]) + [
-                f"{argument(slot)}: impl Display" for slot in names]
-            pairs = ", ".join(f'("{slot}", &{argument(slot)})' for slot in names)
-            which = f"`{entry['code']}`'s *Fix*" + ("" if label is None else f", case `{label}`")
-            out.append("")
-            out.append(f"/// {which} (§{entry['check']}).")
-            out.append(f"pub(crate) fn {name}({', '.join(params)}) -> String {{")
-            out.append(f"    let slots: &[(&str, &dyn Display)] = &[{pairs}];")
-            at = "version" if version is None else str(version)
-            out.append(f"    fill(Code::{constant(entry['code'])}, {at}, {case}, slots)")
-            out.append("}")
-    return "\n".join(out) + "\n"
+    head.extend(f"mod {module};" for module in sorted(pieces))
+    head.append("")
+    head.extend(f"pub(crate) use {module}::*;" for module in sorted(pieces))
+    files[REMEDIES / "mod.rs"] = "\n".join(head) + "\n"
+    return files
 
 
 def render():
     read = catalog()
     return {ASSET: render_asset(read), HANDLES: render_handles(read),
-            REMEDIES: render_remedies(read)}
+            **render_remedies(read)}
+
+
+def strays(rendered):
+    """Files a render no longer writes: the pre-split `remedies.rs`, and a file under
+    `remedies/` whose concern has no filler left."""
+    left = [MONOLITH] if MONOLITH.exists() else []
+    if REMEDIES.is_dir():
+        left.extend(path for path in sorted(REMEDIES.iterdir()) if path not in rendered)
+    return left
 
 
 def main(argv):
@@ -492,10 +539,13 @@ def main(argv):
     if "--check" in argv:
         stale = [path for path, text in rendered.items()
                  if not path.is_file() or path.read_text(encoding="utf-8") != text]
+        stale.extend(strays(rendered))
         for path in stale:
             print(f"{path.relative_to(ROOT)} is stale: run python scripts/render_check_codes.py",
                   file=sys.stderr)
         return 1 if stale else 0
+    for path in strays(rendered):
+        path.unlink()
     for path, text in rendered.items():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
