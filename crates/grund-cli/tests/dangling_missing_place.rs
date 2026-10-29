@@ -166,3 +166,59 @@ fn one_existing_place_withholds_the_hint() {
         "src/main.rs:1: error: unknown reference SPEC-share\n",
     );
 }
+
+/// Precedence: a near ID's hint wins over the place tail, so its dangling finding keeps
+/// only `did you mean`.
+#[test]
+fn a_near_id_keeps_only_its_hint() {
+    let fixture = Fixture::new("near-id", "files = [\"specs/*/spec.md\"]");
+    fixture.write("src/main.rs", "// Implements §SPEC-upload.\nfn main() {}\n");
+    fixture.write(
+        "src/lib.rs",
+        "/// SPEC-uploads: Uploads\n///\n/// Uploads.\nfn a() {}\n",
+    );
+    let out = fixture.check(&[]);
+    assert_eq!(out.status.code(), Some(1), "stderr: {}", text(&out.stderr));
+    let stdout = text(&out.stdout);
+    assert!(
+        stdout.lines().any(|line| line
+            == "src/main.rs:1: error: unknown reference SPEC-upload; did you mean SPEC-uploads?"),
+        "{stdout}"
+    );
+    assert!(!stdout.contains("no place of kind"), "{stdout}");
+}
+
+/// A workspace member's config is spelled the way the run spells finding paths: from the
+/// workspace root, never as the root's own `grund.toml`.
+#[test]
+fn a_member_config_is_spelled_from_the_workspace_root() {
+    let fixture = Fixture::new("workspace", "files = [\"specs/*/spec.md\"]");
+    fixture.write(
+        "grund.toml",
+        "grund_config_version = 2\n\n[workspace]\nmembers = [\"m\"]\n\n\
+         [schema.kinds.code]\nfolders = [\"src\"]\n",
+    );
+    fixture.write(
+        "m/grund.toml",
+        "grund_config_version = 2\n\n[schema.kinds.SPEC]\nfiles = [\"specs/*/spec.md\"]\n\n\
+         [schema.kinds.code]\nfolders = [\"src\"]\n",
+    );
+    fixture.write(
+        "m/src/main.rs",
+        "// Implements §SPEC-upload.\nfn main() {}\n",
+    );
+    let out = fixture.check(&[]);
+    assert_eq!(out.status.code(), Some(1), "stderr: {}", text(&out.stderr));
+    let tail = format!("no place of kind SPEC exists: specs/*/spec.md (m/grund.toml:4){GLOB_TAIL}");
+    assert_eq!(
+        text(&out.stdout)
+            .lines()
+            .filter(|line| line.starts_with("m/"))
+            .collect::<Vec<_>>(),
+        [format!(
+            "m/src/main.rs:1: error: unknown reference SPEC-upload; {tail}"
+        )],
+        "stdout: {}",
+        text(&out.stdout)
+    );
+}

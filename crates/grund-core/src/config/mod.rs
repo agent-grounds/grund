@@ -162,7 +162,7 @@ pub(crate) use scope_roots::{
 pub(crate) use v1::{
     DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR, default_kind_folder, strip_comment,
 };
-pub(crate) use v2::{holds_glob, joined_value, selects as selects_v2};
+pub(crate) use v2::{holds_glob, joined_value, literal_suffix, selects as selects_v2};
 pub(crate) use validate::{citations_table, reject_unaccepted_citation_targets};
 pub(crate) use vocabulary::admitted;
 pub(crate) use workspace_block::{
