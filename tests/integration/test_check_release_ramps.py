@@ -35,6 +35,17 @@ def apart_from_the_integrations_retirement(found):
     return [claim for claim in found if not (claim.path == LIB_RS and claim.release == "0.21.0")]
 
 
+OFF_FORMAT_PAIR = {("unchecked in", "0.20.0"), ("an error in", "0.21.0")}
+
+
+def apart_from_the_off_format_flip(found):
+    """§FS-check.checks.off-format-citation.1: the tree's claims less the pair the
+    off-format-citation message closes with, `unchecked in grund 0.20.0, an error
+    in 0.21.0`, judged on its own, so a window pinned for another ramp does not
+    move with it."""
+    return [claim for claim in found if (claim.clause, claim.release) not in OFF_FORMAT_PAIR]
+
+
 class ClauseReadingTests(unittest.TestCase):
     def test_a_pending_clause_names_its_release(self):
         (claim,) = claims('"… becomes an error in grund 0.14.0"')
@@ -325,9 +336,21 @@ class ThisRepositoryTests(unittest.TestCase):
         unreached-declaration flip (§FS-rules.checks.unreached-declaration)
         refuse 0.15.x, the unlisted-`[workspace]` flip (§FS-check.3.29.14)
         refuses 0.14.x, and the `prefix` removal refuses 0.12.x. The integrations
-        retirement's lines raise the tree's floor further, and are judged apart."""
-        floor, _ = ramps.release_window(apart_from_the_integrations_retirement(self.claims))
+        retirement's lines raise the tree's floor further, and are judged apart.
+        So is the off-format flip (§FS-check.checks.off-format-citation.1), whose
+        pair refuses a 0.20.x release (§FS-distribution.4.2)."""
+        floor, _ = ramps.release_window(
+            apart_from_the_off_format_flip(apart_from_the_integrations_retirement(self.claims))
+        )
         self.assertEqual(floor, "0.19.0")
+        self.assertTrue(
+            any(
+                "check-off-format-citation/expected.stdout" in line
+                and "an error in 0.21.0" in line
+                for line in ramps.report(self.claims, "0.20.1")
+            ),
+            "the off-format flip must refuse a 0.20.x release",
+        )
         report = ramps.report(self.claims, "0.15.0")
         self.assertTrue(
             any(

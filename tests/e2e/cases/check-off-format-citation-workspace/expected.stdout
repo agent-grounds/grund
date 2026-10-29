@@ -1,0 +1,4 @@
+app/docs/FS/FS-b.md:3: error: off-format citation §req/REQ-999: REQ IDs follow [schema] id_format = "{kind}-{slug}" with slug_pattern = "[a-z][a-z0-9-]*", and nothing declares this one; cite an ID in that format, or write <§>req/REQ-999 for an illustration — unchecked in grund 0.20.0, an error in 0.21.0
+app/docs/FS/FS-b.md:3: error: unknown project alias nope
+app/docs/FS/FS-b.md:3: error: unknown reference req/REQ-zzz
+app/docs/FS/FS-b.md:1: warning: declared but never cited: FS-b; cite it
