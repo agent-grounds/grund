@@ -73,6 +73,7 @@ mod legacy;
 mod legacy_inline;
 mod line_owners;
 mod merge;
+mod off_format;
 mod qualified_citations;
 mod read_predicate;
 mod record;
@@ -167,6 +168,8 @@ mod tests_inline_site;
 mod tests_line_owners;
 #[cfg(test)]
 mod tests_local_section_citations;
+#[cfg(test)]
+mod tests_off_format;
 #[cfg(test)]
 mod tests_qualified_citations;
 #[cfg(test)]

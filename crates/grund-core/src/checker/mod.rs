@@ -60,6 +60,7 @@ mod inline_style;
 mod judge;
 mod near_miss;
 mod obligation_units;
+mod off_format_citations;
 mod reference_scope;
 mod references;
 mod report;

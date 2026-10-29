@@ -101,7 +101,7 @@ pub(crate) use paths::{
     configured_home_path_key, format_path, is_hidden, normalize_path_lexically, relative_from_base,
     scanned_decl_relative_path, scanned_path_key, sort_path_key,
 };
-pub(crate) use patterns::GlobCitation;
+pub(crate) use patterns::{GlobCitation, OffFormatCitation};
 pub(crate) use records::{LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode};
 pub(crate) use report::{CheckReport, Diagnostic, LANDED_CLAUSE, Site};
 pub(crate) use section_lock::{

@@ -39,11 +39,13 @@ missing-section: A citation names a section its declaration does not have.
 missing-snapshot: A citation targets a fetched kind whose declarations have not been fetched yet.
 mistitled-field: A field's heading is titled differently from the title its kind gives it.
 nothing-recognized: The scan read files but recognized no declaration and no citation in them.
+off-format-citation: A marked citation opens with a configured kind, but its kind's ID format does not spell it and nothing declares it.
 optional-member-absent: A workspace member listed as optional is not in this checkout, so it was not read.
 orphan-section: A named section path is used before every shorter prefix of it is recorded in the same declaration.
 out-of-scope-dangling: Under --full, a file outside the default scope cites an ID that no declaration declares.
 out-of-scope-local-section-citation: Under --full, a file outside the default scope writes a marker followed by a bare section number.
 out-of-scope-missing-section: Under --full, a file outside the default scope cites a section its declaration does not have.
+out-of-scope-off-format-citation: Under --full, a file outside the default scope writes a marked citation its kind's ID format does not spell and nothing declares.
 out-of-scope-shorthand-citation: Under --full, a file outside the default scope writes a number-only shorthand that matches no declaration or several.
 out-of-scope-unknown-project: Under --full, a file outside the default scope cites through a project alias the workspace does not know.
 oversized-lead: A declaration's lead is longer than the configured word limit.

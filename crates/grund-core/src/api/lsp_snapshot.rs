@@ -150,6 +150,17 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 text: format!("{marker}{}", pattern.token),
             }
         }));
+        // §FS-check.checks.off-format-citation / §FS-lsp.1.1: no citation either, so the
+        // finding covers the token as written, marker and alias included.
+        finding_ranges.extend(project.findings.off_format_citations.iter().map(|record| {
+            LspFindingRange {
+                code: "off-format-citation",
+                path: absolutize_path(&record.file),
+                line: record.line,
+                column: record.column,
+                text: format!("{marker}{}", record.token),
+            }
+        }));
         // §FS-lsp.1.1 / §FS-check.3.24: unresolved local-section forms
         // remain outside the navigation graph, but retain their exact authored
         // spans for the shared check diagnostic.

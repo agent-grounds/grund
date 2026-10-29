@@ -49,7 +49,9 @@ fn off_grammar_heading_missing_the_number_is_reported() {
 
 /// §FS-config.3.2.5 / §FS-check.1.1.1 / §FS-show.1.1: a mismatch remains a
 /// readable declaration, and only an exact marked candidate backed by that
-/// catalog entry is promoted. Bare and unbacked malformed tokens stay text.
+/// catalog entry is promoted. Bare and unbacked malformed tokens stay text, and
+/// the unbacked marked one is an off-format citation at its line
+/// (§FS-check.checks.off-format-citation), still recorded as no citation.
 #[test]
 fn an_off_grammar_declaration_and_its_exact_marked_citation_remain_readable() {
     let root = near_miss_repo(
@@ -76,13 +78,18 @@ fn an_off_grammar_declaration_and_its_exact_marked_citation_remain_readable() {
     assert!(shown.body.contains("Stable."), "{}", shown.body);
 
     let report = check(&root).expect("check fixture");
+    let mut errors = report
+        .errors
+        .iter()
+        .map(|finding| (finding.path.as_deref(), finding.line, finding.code))
+        .collect::<Vec<_>>();
+    errors.sort();
     assert_eq!(
-        report
-            .errors
-            .iter()
-            .map(|finding| finding.code)
-            .collect::<Vec<_>>(),
-        ["declaration-near-miss"],
+        errors,
+        [
+            (Some("docs/notes.md"), Some(3), "off-format-citation"),
+            (Some("docs/spec.md"), Some(1), "declaration-near-miss"),
+        ],
         "{:?}",
         report.errors
     );

@@ -508,6 +508,12 @@ pub(crate) fn nothing_recognized() -> String {
     fill(Code::NOTHING_RECOGNIZED, 2, None, slots)
 }
 
+/// `off-format-citation`'s *Fix* (§FS-check.checks.off-format-citation).
+pub(crate) fn off_format_citation(escape: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("escape", &escape)];
+    fill(Code::OFF_FORMAT_CITATION, 2, None, slots)
+}
+
 /// `orphan-section`'s *Fix* (§FS-declarations.checks.orphan-section).
 pub(crate) fn orphan_section() -> String {
     let slots: &[(&str, &dyn Display)] = &[];

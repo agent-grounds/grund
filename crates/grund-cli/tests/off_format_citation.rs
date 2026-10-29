@@ -12,7 +12,6 @@ use support::*;
 
 /// The issue's own run: both off-format tokens are reported beside the dangling one.
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn the_issue_reports_both_off_format_tokens_beside_the_dangling_one() {
     let fx = Fixture::issue();
     let run = fx.expect(1, &["check"]);
@@ -31,7 +30,6 @@ fn the_issue_reports_both_off_format_tokens_beside_the_dangling_one() {
 
 /// JSON carries the same findings with the code, in the global order of §FS-errors.4.1.
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn the_issue_in_json_carries_the_off_format_code() {
     let fx = Fixture::issue();
     let run = fx.expect(1, &["check", "--format", "json"]);
@@ -55,7 +53,6 @@ fn the_issue_in_json_carries_the_off_format_code() {
 
 /// With the dangling token deleted the tree passed; the two off-format tokens now fail it.
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn without_the_dangling_token_the_tree_no_longer_passes() {
     let fx = Fixture::page("# FS-a: A\n\nSee \u{a7}REQ-999 and \u{a7}REQ-12a.\n");
     let run = fx.expect(1, &["check"]);
@@ -73,7 +70,6 @@ fn without_the_dangling_token_the_tree_no_longer_passes() {
 /// A section path is part of the token, one trailing `.` is punctuation, and inline code is read
 /// like prose.
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn a_section_path_is_part_of_the_token_and_a_trailing_dot_is_not() {
     let fx = Fixture::page(
         "# FS-a: A\n\nSections \u{a7}REQ-999.2 and \u{a7}REQ-12a.3.1.\n\n\
@@ -96,7 +92,6 @@ fn a_section_path_is_part_of_the_token_and_a_trailing_dot_is_not() {
 /// Under a numbered format a token with no number, or off the slug pattern, is reported, and a
 /// number-only shorthand keeps its own verdict (§FS-citations.shorthand.full-id-wins).
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn a_numbered_format_reports_what_it_does_not_spell() {
     let page = "docs/FS/FS-001-a.md";
     let fx = Fixture::with(&[
@@ -129,7 +124,6 @@ fn a_numbered_format_reports_what_it_does_not_spell() {
 /// A kind's own format names its own key and only the component its template holds, beside an
 /// in-format token that dangles.
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn a_kinds_own_format_names_its_own_key() {
     let fx = Fixture::with(&[
         ("grund.toml", TICKETS),
@@ -159,7 +153,6 @@ fn a_kinds_own_format_names_its_own_key() {
 /// A qualified token is judged by the project its alias names and named with its alias, while an
 /// unknown alias stays an unknown project and nothing else (§FS-check.3.8).
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn a_qualified_token_is_judged_by_the_project_its_alias_names() {
     let page = "app/docs/FS/FS-b.md";
     let fx = Fixture::with(&[
@@ -224,7 +217,6 @@ fn a_plain_run_reports_nothing_outside_the_default_scope() {
 /// Under `--full` an out-of-scope site takes the compound code (§FS-check.3.14.5), its message
 /// after the scope, in text and in JSON.
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn under_full_an_out_of_scope_site_takes_the_compound_code() {
     let fx = out_of_scope();
     let scope = "outside configured places and source scope: ";
@@ -273,7 +265,6 @@ fn under_full_an_out_of_scope_site_takes_the_compound_code() {
 /// `--only` and `--ignore` select the code by the ordinary rules, and an ignored finding takes
 /// its exit code with it (§FS-check.1.4).
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn only_and_ignore_select_the_off_format_code() {
     let fx = Fixture::page("# FS-a: A\n\nSee \u{a7}REQ-999 and \u{a7}REQ-12a.\n");
     let run = fx.expect(1, &["check", "--only", CODE]);
@@ -291,7 +282,6 @@ fn only_and_ignore_select_the_off_format_code() {
 
 /// `config explain` answers both codes from their rows in the catalog of §FS-errors.5.5.
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn config_explain_answers_both_codes() {
     let fx = Fixture::issue();
     let fix = "Fix: cite an ID in that format, or write {escape} for an illustration\n";

@@ -92,6 +92,8 @@ impl Code {
     pub const MISTITLED_FIELD: Code = Code("mistitled-field");
     /// §FS-check.4.5
     pub const NOTHING_RECOGNIZED: Code = Code("nothing-recognized");
+    /// §FS-check.checks.off-format-citation
+    pub const OFF_FORMAT_CITATION: Code = Code("off-format-citation");
     /// §FS-check.4.9
     pub const OPTIONAL_MEMBER_ABSENT: Code = Code("optional-member-absent");
     /// §FS-declarations.checks.orphan-section
@@ -103,6 +105,8 @@ impl Code {
         Code("out-of-scope-local-section-citation");
     /// §FS-check.3.14
     pub const OUT_OF_SCOPE_MISSING_SECTION: Code = Code("out-of-scope-missing-section");
+    /// §FS-check.3.14
+    pub const OUT_OF_SCOPE_OFF_FORMAT_CITATION: Code = Code("out-of-scope-off-format-citation");
     /// §FS-check.3.14
     pub const OUT_OF_SCOPE_SHORTHAND_CITATION: Code = Code("out-of-scope-shorthand-citation");
     /// §FS-check.3.14
@@ -200,11 +204,13 @@ impl Code {
         Code::MISSING_SNAPSHOT,
         Code::MISTITLED_FIELD,
         Code::NOTHING_RECOGNIZED,
+        Code::OFF_FORMAT_CITATION,
         Code::OPTIONAL_MEMBER_ABSENT,
         Code::ORPHAN_SECTION,
         Code::OUT_OF_SCOPE_DANGLING,
         Code::OUT_OF_SCOPE_LOCAL_SECTION_CITATION,
         Code::OUT_OF_SCOPE_MISSING_SECTION,
+        Code::OUT_OF_SCOPE_OFF_FORMAT_CITATION,
         Code::OUT_OF_SCOPE_SHORTHAND_CITATION,
         Code::OUT_OF_SCOPE_UNKNOWN_PROJECT,
         Code::OVERSIZED_LEAD,
@@ -254,6 +260,7 @@ impl Code {
             "dangling" => Some(Code::OUT_OF_SCOPE_DANGLING),
             "local-section-citation" => Some(Code::OUT_OF_SCOPE_LOCAL_SECTION_CITATION),
             "missing-section" => Some(Code::OUT_OF_SCOPE_MISSING_SECTION),
+            "off-format-citation" => Some(Code::OUT_OF_SCOPE_OFF_FORMAT_CITATION),
             "shorthand-citation" => Some(Code::OUT_OF_SCOPE_SHORTHAND_CITATION),
             "unknown-project" => Some(Code::OUT_OF_SCOPE_UNKNOWN_PROJECT),
             _ => None,

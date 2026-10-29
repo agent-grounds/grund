@@ -95,7 +95,7 @@ pub use citations::{
 pub(crate) use citations::{parse_citation_target_entry, render_citation_target};
 pub use compiled::Compiled;
 pub use frame::{Display, Frame};
-pub(crate) use guidance::{format_guidance, source_scope_name};
+pub(crate) use guidance::{format_guidance, kind_format_guidance, source_scope_name};
 pub(crate) use project_records::ProjectRecords;
 // The parts of the records (§AR-config.1): an embedder reaches them through the
 // public fields of `Project`, `Run` and `Compiled`, and this component's tests
