@@ -28,7 +28,13 @@ AR-event-bus
 
 - **Slug uniqueness is enforced.** Two specs about adjacent topics need distinct slugs (`FS-login`, `FS-login-mfa`) — there is no number to fall back on.
 - **Renaming is destructive.** Reslugging a spec changes its ID, which breaks every existing citation. Either preserve the original slug after a title change, or deliberately rewrite cites.
-- **Prefix discipline.** With `slug_pattern = "[a-z][a-z0-9-]*"`, slugs must start with a letter so illustrative tokens like `FS-001` in prose aren't accidentally picked up as citations.
+- **Prefix discipline.** With `slug_pattern = "[a-z][a-z0-9-]*"`, slugs must start with a letter, so a digit-led token like `FS-001` is no ID of this scheme. Unmarked it is prose; marked, nothing declares it, and `grund check` says so:
+
+  ```text
+  docs/functional-spec/FS-login.md:4: error: off-format citation §FS-001: FS IDs follow [id] format = "{kind}-{slug}" with slug_pattern = "[a-z][a-z0-9-]*", and nothing declares this one; cite an ID in that format, or write <§>FS-001 for an illustration — unchecked in grund 0.20.0, an error in 0.21.0
+  ```
+
+  An illustration in another scheme's shape is written `<§>FS-001`, as `FS-login` writes it.
 
 ## Verify
 
