@@ -149,6 +149,62 @@ class ReleaseWindowCommandTests(unittest.TestCase):
         self.assertNotIn("usage:", result.stderr)
 
 
+@unittest.skip("red until #1112 lists every pending line at the ceiling; implement removes this")
+class EveryCeilingLineIsNamedTests(unittest.TestCase):
+    """An empty window names every pending line at the ceiling, once. §FS-distribution.4.2.5"""
+
+    PENDING_LINES = (
+        "crates/a/src/config_findings.rs:1: `becomes an error in 0.22.0`",
+        "crates/a/src/config_findings.rs:2: `becomes an error in 0.22.0`",
+        "crates/a/src/value_mismatch.rs:1: `wording changes in 0.22.0`",
+        "crates/a/src/whose.rs:1: `wording changes in 0.22.0`",
+        "crates/a/tests/string_closes_early.rs:1: `becomes an error in 0.22.0`",
+    )
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="grund-1112-release-window-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        # One ramp landed at 0.22.0, five still promising it, across four files and both clauses.
+        files = {
+            FLOOR: "0.19.0\n",
+            "crates/a/src/landed.rs":
+                'const T: &str = "a trailing comma became an error in grund 0.22.0";\n',
+            "crates/a/tests/string_closes_early.rs":
+                'const A: &str = "text after the quote becomes an error in grund 0.22.0";\n',
+            "crates/a/src/config_findings.rs":
+                'const W1: &str = "this form becomes an error in grund 0.22.0";\n'
+                'const W2: &str = "this other form becomes an error in grund 0.22.0";\n',
+            "crates/a/src/whose.rs":
+                'const W: &str = "this whose-clause wording changes in grund 0.22.0";\n',
+            "crates/a/src/value_mismatch.rs":
+                'const R: &str = "the values root wording changes in grund 0.22.0";\n',
+        }
+        for path, text in files.items():
+            target = self.root / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(text, encoding="utf-8")
+
+    def assert_names_every_ceiling_line_once(self, result):
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("no release at all", result.stderr)
+        missing = [line for line in self.PENDING_LINES if line not in result.stderr]
+        self.assertEqual(missing, [], result.stderr)
+        repeated = [line for line in self.PENDING_LINES if result.stderr.count(line) > 1]
+        self.assertEqual(repeated, [], result.stderr)
+
+    def test_version_free_refusal_names_every_pending_line_at_the_ceiling(self):
+        result = run_guard(self.root)
+        self.assert_names_every_ceiling_line_once(result)
+        self.assertIn("crates/a/src/landed.rs:1: `became an error in 0.22.0`", result.stderr)
+
+    def test_release_refusal_below_the_ceiling_names_every_pending_line_at_it(self):
+        self.assert_names_every_ceiling_line_once(run_guard(self.root, "0.21.0"))
+
+    def test_release_refusal_at_the_ceiling_names_each_pending_line_once(self):
+        self.assert_names_every_ceiling_line_once(run_guard(self.root, "0.22.0"))
+
+
 class ThisRepositoryReleaseWindowTests(unittest.TestCase):
     def test_every_scanned_ramp_in_this_repository_permits_some_release(self):
         """The PR gate checks all real ramps. §FS-distribution.4.2.6"""
