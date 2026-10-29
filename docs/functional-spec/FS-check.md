@@ -500,7 +500,7 @@ Each of the following is an error and contributes to a non-zero exit code.
 
 ### 3.1 Dangling citation
 
-A recognized citation (per [§FS-check.1.1](FS-check.md#11-recognized-citations)) for which no declaration is found: `unknown reference <ID>`. A near ID ([§FS-check.3.1.1](FS-check.md#311-a-near-id)) or an inline-code context ([§FS-check.3.1.2](FS-check.md#312-an-illustration-in-inline-code)) adds a hint, and a fetch-enabled kind adds the fetch action ([§FS-check.3.1.3](FS-check.md#313-a-kind-that-fetches)).
+A recognized citation (per [§FS-check.1.1](FS-check.md#11-recognized-citations)) for which no declaration is found: `unknown reference <ID>`. A near ID ([§FS-check.3.1.1](FS-check.md#311-a-near-id)) or an inline-code context ([§FS-check.3.1.2](FS-check.md#312-an-illustration-in-inline-code)) adds a hint, a fetch-enabled kind adds the fetch action ([§FS-check.3.1.3](FS-check.md#313-a-kind-that-fetches)), and a kind none of whose places exists names them ([§FS-check.3.1.4](FS-check.md#314-a-kind-none-of-whose-places-exists)).
 
 Resolution is computed over the run's **resolution scope**, which for a run given an explicit path is the whole enclosing project rather than the path ([§FS-check.1.3.6.1](FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)), so a path-scoped run never calls a project-resolvable ID unknown. The message and the code are the same under either scope.
 
@@ -519,6 +519,26 @@ When the dangling citation sits inside a Markdown inline-code span ([§FS-fmt.2.
 This is also the fixed finding for a fetch-enabled kind whose effective target-side resolution is `must` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)). In that case the exact message is `unknown reference <qualified-ID>; no snapshot in <home> — run grund fetch <qualified-ID>`, its JSON code remains `dangling`, its severity is `error`, and it contributes exit 1. For a kind without `fetch`, the historical `unknown reference <qualified-ID>` bytes remain unchanged.
 
 The near-ID and escaped-inline-code hints ([§FS-check.3.1.1](FS-check.md#311-a-near-id), [§FS-check.3.1.2](FS-check.md#312-an-illustration-in-inline-code)) take precedence over the fetch action. The message retains `unknown reference <qualified-ID>; no snapshot in <home>` and substitutes the existing conditional tail for the em-dash fetch tail: `; did you mean <candidate>?`, `; write <§><qualified-ID> if this is an illustration`, or their existing combined form. One citation site still produces one finding.
+
+#### 3.1.4 A kind none of whose places exists
+
+A v2 place is a path from the config root, and one that does not exist is quiet ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places), [§FS-config-v2.schema.places.boundaries.4](FS-config-v2.md#schemaplacesboundaries4-a-missing-place-is-quiet)). So a place written as a pattern, `files = ["specs/*/spec.md"]` or `folders = ["specs/*"]`, loads as a literal path that names nothing, its files go unread, and the only findings are dangling citations at the citers. The fix is one line of `grund.toml`, so the dangling finding names that line.
+
+The hint applies when the dangling ID's kind is a row of the v2 config of the project the ID resolves against, the row has at least one place, and none of its places exists on disk. Then the message appends one tail, naming every place of the row in the row's order ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)), each as written and followed by the config file and the line of its entry, the config path written the way the run writes finding paths:
+
+```text
+unknown reference SPEC-upload; no place of kind SPEC exists: docs/specs (grund.toml:4)
+```
+
+Several places are joined with `, `: `no place of kind SPEC exists: docs/a.md (grund.toml:4), docs/specs (grund.toml:5)`. When any named place holds one of the glob characters `*`, `?`, `[`, `]`, `{`, `}` or `!`, the set [§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language) refuses in a suffix, the tail adds what was meant:
+
+```text
+unknown reference SPEC-upload; no place of kind SPEC exists: specs/*/spec.md (grund.toml:4); a place is a path from the config root, not a pattern, so list each file or name the folder
+```
+
+The condition is every place. A row with one existing place and one missing place earns no hint, because the existing place was read and the ID may be a plain typo; a row with no place at all is declared in doc-comments only and earns none either. A kind that is no row of the config, and a v1 config, keep the bare message.
+
+The tail is the last resort among the hints. A near ID ([§FS-check.3.1.1](FS-check.md#311-a-near-id)) or an inline-code context ([§FS-check.3.1.2](FS-check.md#312-an-illustration-in-inline-code)) takes precedence and the message is theirs alone, and a fetch-enabled kind keeps its fetch action ([§FS-check.3.1.3](FS-check.md#313-a-kind-that-fetches)), which already names the missing home. One citation site still produces one finding. The JSON code stays `dangling`, the severity `error`, and the exit code `1`; a missing place still earns no finding of its own.
 
 ### 3.2 Missing section
 
