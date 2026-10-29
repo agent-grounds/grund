@@ -146,6 +146,7 @@ CITED = (
 # FS-show.md grew by 1228 bytes in §FS-show.3.5.1 and .3.5.2, saying an invalid-ID hint in a
 # run that loaded no config names the project config below it, as §FS-check.2.2.2.5.1 and
 # .5.2 choose it, in place of the default format (grund#1079).
+
 # FS-fmt.md grew by 42 bytes in §FS-fmt.2.4, .2.4.1.2, .2.4.2, .2.4.3, .2.4.6 and .3.6: its
 # shorthand illustrations take the <§> escape, so none is an off-format citation (grund#1073).
 BASELINES = {"FS-show.md": 71777, "FS-fmt.md": 103210}
