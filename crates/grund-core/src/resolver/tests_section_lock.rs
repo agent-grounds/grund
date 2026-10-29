@@ -1,7 +1,7 @@
 //! Test module: the one judgement of a section lock that `check` reports from and
 //! `fmt --write` writes from (§FS-section-lock.write.rules,
 //! §FS-section-lock.checks.section-address-changed,
-//! §FS-section-lock.checks.missing-section), over a scanned tree.
+//! §FS-section-lock.checks.vanished), over a scanned tree.
 
 use std::collections::BTreeMap;
 
@@ -186,7 +186,7 @@ fn a_pointer_acknowledges_the_move() {
     assert_eq!(unrecorded, ["parse.1"]);
 }
 
-/// §FS-section-lock.checks.missing-section: an address no section holds, whose
+/// §FS-section-lock.checks.vanished: an address no section holds, whose
 /// recorded text another section holds now, is gone there; `fmt --write` still
 /// drops it (§FS-section-lock.write.rules), and drops one whose text is found
 /// nowhere or that recorded `-`, with nowhere to name.

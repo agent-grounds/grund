@@ -322,7 +322,7 @@ pub(crate) fn out_of_scope_references(
         return Vec::new();
     };
     let mut tier = CheckReport::default();
-    // §FS-section-lock.checks.missing-section: the whole walk's locks, as it resolves.
+    // §FS-section-lock.checks.vanished: the whole walk's locks, as it resolves.
     let locks = judge_section_locks(findings, schema, frame, workspace);
     check_citation_resolution(
         findings,

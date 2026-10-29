@@ -86,7 +86,7 @@ fn full_citation_or_escape(schema: &Schema, written: &str) -> String {
 /// does not carry (§AR-config.5).
 ///
 /// `locks` is the judgement of `findings`' section locks, which a missing section
-/// reads where its recorded text went (§FS-section-lock.checks.missing-section).
+/// reads where its recorded text went (§FS-section-lock.checks.vanished).
 #[allow(clippy::too_many_arguments)]
 pub(super) fn check_citation_resolution(
     findings: &Catalog,
@@ -357,7 +357,7 @@ pub(super) fn check_citation_resolution(
                 } else {
                     format!("missing section {coordinate}")
                 };
-                // §FS-section-lock.checks.missing-section: appended after either form whole.
+                // §FS-section-lock.checks.vanished: appended after either form whole.
                 let alias = cite.namespace.as_deref();
                 if let Some((lock, to)) = recorded_text_now_at(locks, alias, &cite.id, sec) {
                     let lock = frame.display_path(lock);

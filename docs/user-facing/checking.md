@@ -175,7 +175,7 @@ escape an illustrative shape with `<§>`.
 
 When the section was renamed after its section lock recorded it, the finding
 also names where the recorded text sits now
-([§FS-section-lock.checks.missing-section](../functional-spec/FS-section-lock.md#checksmissing-section-a-cited-address-that-is-gone-and-where-its-text-went)):
+([§FS-section-lock.checks.vanished](../functional-spec/FS-section-lock.md#checksvanished-a-cited-address-that-is-gone-and-where-its-text-went)):
 
 ```text
 src/loans.py:5: error: section not found: SPEC-loans.requirements.borrow-a-book; write <§> before it to show the shape without citing it; what .grund/sections/SPEC-loans.lock recorded for it now sits at SPEC-loans.requirements.check-out-a-book

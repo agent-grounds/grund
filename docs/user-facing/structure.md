@@ -259,7 +259,7 @@ prints the three ways out and why a lock edit is not one
 When you rename the heading of a section the lock records and no section takes
 its old address, each citation of that address is `missing-section`, and the
 finding names the address its recorded text sits at now
-([§FS-section-lock.checks.missing-section](../functional-spec/FS-section-lock.md#checksmissing-section-a-cited-address-that-is-gone-and-where-its-text-went)).
+([§FS-section-lock.checks.vanished](../functional-spec/FS-section-lock.md#checksvanished-a-cited-address-that-is-gone-and-where-its-text-went)).
 Re-point those citations to it before you run `grund fmt --write`, not after: the
 write drops the old entry, and the finding then no longer names the new address
 ([§FS-section-lock.move.citations](../functional-spec/FS-section-lock.md#movecitations-update-every-citation)).
