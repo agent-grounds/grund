@@ -524,6 +524,8 @@ The near-ID and escaped-inline-code hints ([§FS-check.3.1.1](FS-check.md#311-a-
 
 A citation with a section suffix (`§FS-<user-login>.3.1` or, in an opted-in repository, `§FS-<user-login>.goals`) where the declaration exists but the requested section heading does not. A missing marker-prefixed named coordinate is never shortened to its declaration; it produces the ordinary `section not found` error and adds `write <§> before it to show the shape without citing it` to the message. A number-only shorthand carrying a missing named section produces both the existing shorthand finding and this finding: the persisted ID form and the requested target are independent facts ([AR-checker.2.12](../../crates/grund-core/src/checker/report.rs)).
 
+Where the section lock recorded the cited coordinate and its text now sits at another section of the declaration, the message ends in one more clause naming that section ([§FS-section-lock.checks.missing-section](FS-section-lock.md#checksmissing-section-a-cited-address-that-is-gone-and-where-its-text-went)).
+
 An owned declaration-local numeric candidate ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) follows the same rule. Its
 [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) form
 finding and this missing-section finding are independent, so a missing local path reports both.
