@@ -395,9 +395,10 @@ fn a_many_fault_sentence_ends_without_looping() {
             "rule must end with \".\"; accepted form: Each FS should have exactly one requirements chapter.",
             false,
         ),
+        // §FS-rule-refusals.sentences.rewrite.same-units: `Each FS` would drop the typed `*`.
         (
             "each FS.* may not cite at least 1 FS",
-            "rule must end with \".\"; accepted form: Each FS must not cite any FS.",
+            "rule must end with \".\"",
             false,
         ),
         (
@@ -405,10 +406,11 @@ fn a_many_fault_sentence_ends_without_looping() {
             "rule must end with \".\"; accepted form: FS-login should cite each FS exactly once.",
             false,
         ),
+        // §FS-rule-refusals.sentences.rewrite.same-units: the walk stops at the withheld subject.
         (
             "each FS.* may not cite at least 1 POLICY",
             "rule must end with \".\"",
-            true,
+            false,
         ),
         (
             "each FS should have exactly 01 Goal and hypothesis section",

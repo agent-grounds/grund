@@ -108,10 +108,10 @@ fn a_wildcard_is_read_from_the_subject_of_the_first_clause() {
             "The * chapter of each FS should cite at least one FS and should not cite any FS.",
             format!("error: {wildcard}"),
         ),
+        // §FS-rule-refusals.sentences.rewrite.same-units: `FS-x` would drop the typed `*`.
         (
             "FS-x.* may not cite any FS.",
-            "error: modality \"may not\" is not accepted; accepted form: FS-x must not cite any FS."
-                .to_string(),
+            "error: modality \"may not\" is not accepted".to_string(),
         ),
     ];
     let mut wrong = Vec::new();
