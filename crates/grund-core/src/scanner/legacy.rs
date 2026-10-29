@@ -158,8 +158,8 @@ pub(crate) fn configured_catalog_ids(declarations: &BTreeMap<Id, Vec<Declaration
 /// One deferred candidate reconciled against one target catalog — the step both
 /// halves of this pass share, the local one above and the qualified one in
 /// `resolver/legacy_promotion.rs` (§AR-resolver.placement). A candidate nothing
-/// declares is recorded as an off-format citation where it reads as one, and is
-/// otherwise text (§FS-citations.recognized.off-format).
+/// declares is recorded as an off-format citation where `off_format.rs` reads it
+/// as one, and is otherwise text (§FS-config.3.2.5).
 pub(crate) fn promote_legacy_candidate(
     (source_schema, source_frame): (&Schema, Frame<'_>),
     (target_schema, target_frame): (&Schema, Frame<'_>),

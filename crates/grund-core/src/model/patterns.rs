@@ -17,10 +17,10 @@ pub(crate) struct GlobCitation {
 }
 
 /// A marked token that opens like an ID of a configured kind, that its kind's
-/// format does not spell and that nothing declares (§FS-citations.recognized.off-format):
-/// recorded by the promotion step where it would have dropped the token, so the
-/// checker can report it (§FS-check.checks.off-format-citation) while no pass
-/// ever takes an edge for it.
+/// format does not spell and that nothing declares, as `scanner/off_format.rs`
+/// reads it: recorded by the promotion step where it would have dropped the
+/// token, so the checker can report it (§FS-check.checks.off-format-citation)
+/// while no pass ever takes an edge for it.
 pub(crate) struct OffFormatCitation {
     pub(crate) file: PathBuf,
     pub(crate) line: usize,
