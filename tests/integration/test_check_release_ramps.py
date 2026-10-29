@@ -338,8 +338,9 @@ class ThisRepositoryTests(unittest.TestCase):
         self.assertEqual([], pending)
 
     def test_the_landed_string_close_flip_holds_the_floor_at_0_22_0(self):
-        """§FS-distribution.4.2.2 — a version-2 string that closes early became
-        an error in 0.22.0 (§FS-config-v2.reader.6.refusal), raising the message
+        """§FS-distribution.4.2.2 — a version-2 string that closes early, and an
+        array's comma with no element before it, each became an error in 0.22.0
+        (§FS-config-v2.reader.6.refusal, §FS-config-v2.reader.5.commas.refusal), raising the message
         floor above the 0.19.0 that excluded and ignored stub targets set when
         they became errors (§FS-declarations.stubs.target.3), independently of
         the shared floor. Historical landed clauses
