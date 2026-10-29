@@ -6,7 +6,7 @@
 //! the resolver's answer (§AR-system.2.10).
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use super::citation_target::WorkspaceCheckTarget;
 use super::point_body::point_body_pair;
@@ -57,6 +57,11 @@ pub(crate) enum EntryVerdict {
         to: String,
         sites: Vec<(PathBuf, usize)>,
     },
+    /// No section holds its address any more, and its recorded text sits at `to`,
+    /// another section of the declaration: dropped as `Drop` is, its coordinate no
+    /// longer a locked address, and named on the `missing-section` finding of a
+    /// citation of it (§FS-section-lock.checks.missing-section).
+    Gone { to: String },
 }
 
 /// One lock file judged against the tree: the one that exists, the one a locked
@@ -70,6 +75,8 @@ pub(crate) struct LockJudgement<'a> {
     /// What separates the ID from a section path there.
     pub(crate) separator: String,
     pub(crate) path: PathBuf,
+    /// The ID it is of, `None` where the file's ID is declared nowhere.
+    pub(crate) id: Option<&'a Id>,
     /// Its text as read, `None` where no file exists.
     pub(crate) text: Option<&'a str>,
     pub(crate) lines: LockLines,
@@ -112,7 +119,7 @@ impl LockJudgement<'_> {
                 EntryVerdict::Refresh(fingerprint) => {
                     Some((coordinate(&entry.section), fingerprint.clone()))
                 }
-                EntryVerdict::Drop => None,
+                EntryVerdict::Drop | EntryVerdict::Gone { .. } => None,
             });
         let added = self
             .unrecorded
@@ -120,6 +127,31 @@ impl LockJudgement<'_> {
             .map(|(section, _, fingerprint)| (coordinate(section), fingerprint.clone()));
         kept.chain(added).collect()
     }
+}
+
+/// Where the text the lock of `id`, cited through `alias`, recorded for `section`
+/// sits now, when no section holds `section` any more: the lock file, and the
+/// address as a finding names it (§FS-section-lock.checks.missing-section).
+pub(crate) fn recorded_text_now_at<'j>(
+    judgements: &'j [LockJudgement<'_>],
+    alias: Option<&str>,
+    id: &Id,
+    section: &str,
+) -> Option<(&'j Path, String)> {
+    judgements
+        .iter()
+        .filter(|judgement| judgement.alias == alias && judgement.id == Some(id))
+        .find_map(|judgement| {
+            judgement
+                .verdicts
+                .iter()
+                .find_map(|(entry, verdict)| match verdict {
+                    EntryVerdict::Gone { to } if entry.section == section => {
+                        Some((judgement.path.as_path(), judgement.cited(to)))
+                    }
+                    _ => None,
+                })
+        })
 }
 
 /// The project a lock file's entries are judged against: the citing project
@@ -242,6 +274,7 @@ pub(crate) fn judge_section_locks<'a>(
             judge_entries(target.catalog, decl, &lines, cited, &fingerprints);
         judgements.push(LockJudgement {
             path: section_lock_path(frame.root(), alias, &rendered),
+            id,
             alias,
             rendered,
             separator,
@@ -320,6 +353,14 @@ fn judge_entries<'a>(
             .filter(|(_, _, other)| other == fingerprint);
         (holders.count() == 1).then(|| fingerprint.to_string())
     };
+    // §FS-section-lock.checks.section-address-changed, §FS-section-lock.checks.missing-section:
+    // the first other section, in document order, holding the recorded text now.
+    let moved_to = |section: &str, recorded: &str| {
+        fingerprints
+            .iter()
+            .find(|(path, _, fingerprint)| path != section && fingerprint == recorded)
+            .map(|(path, _, _)| path.clone())
+    };
     // §FS-section-lock.write.rebuild: of a coordinate entered twice, the entry
     // the section holds now, or else the first.
     let holds = |entry: &LockEntry| {
@@ -338,9 +379,8 @@ fn judge_entries<'a>(
     let mut verdicts = Vec::new();
     for (index, entry) in lines.entries.iter().enumerate() {
         let section = entry.section.as_str();
-        let held = decl
-            .and_then(|decl| decl.sections.get(section))
-            .is_some_and(|info| locked(section, info));
+        let info = decl.and_then(|decl| decl.sections.get(section));
+        let held = info.is_some_and(|info| locked(section, info));
         let verdict = match (current(section), held && was_cited.contains_key(section)) {
             _ if chosen.get(section) != Some(&index) => EntryVerdict::Drop,
             // A text no slice could read is no evidence of an edit or a move.
@@ -351,24 +391,21 @@ fn judge_entries<'a>(
                     None => EntryVerdict::Keep,
                 },
                 Some(recorded) if recorded == now => EntryVerdict::Keep,
-                Some(recorded) => {
-                    let moved_to = fingerprints
-                        .iter()
-                        .find(|(path, _, fingerprint)| path != section && fingerprint == recorded)
-                        .map(|(path, _, _)| path.clone());
-                    match moved_to {
-                        Some(to) if !points_at(findings, decl, section, &to) => {
-                            EntryVerdict::Moved {
-                                to,
-                                sites: citing_sites(&was_cited[section]),
-                            }
-                        }
-                        // Edited in place, or a move a pointer acknowledged.
-                        _ => EntryVerdict::Refresh(written(now)),
-                    }
-                }
+                Some(recorded) => match moved_to(section, recorded) {
+                    Some(to) if !points_at(findings, decl, section, &to) => EntryVerdict::Moved {
+                        to,
+                        sites: citing_sites(&was_cited[section]),
+                    },
+                    // Edited in place, or a move a pointer acknowledged.
+                    _ => EntryVerdict::Refresh(written(now)),
+                },
             },
-            _ => EntryVerdict::Drop,
+            // §FS-section-lock.checks.missing-section: an address no section holds.
+            _ => match entry.fingerprint.as_deref() {
+                Some(recorded) if info.is_none() => moved_to(section, recorded)
+                    .map_or(EntryVerdict::Drop, |to| EntryVerdict::Gone { to }),
+                _ => EntryVerdict::Drop,
+            },
         };
         cited.remove(section);
         verdicts.push((entry.clone(), verdict));

@@ -256,6 +256,13 @@ at the old address first ([§FS-section-lock.write](../functional-spec/FS-sectio
 When `check` reports a moved section, `grund config explain section-address-changed`
 prints the three ways out and why a lock edit is not one
 ([§FS-config-explain.4](../functional-spec/FS-config-explain.md#4-a-codes-answer)).
+When you rename the heading of a section the lock records and no section takes
+its old address, each citation of that address is `missing-section`, and the
+finding names the address its recorded text sits at now
+([§FS-section-lock.checks.missing-section](../functional-spec/FS-section-lock.md#checksmissing-section-a-cited-address-that-is-gone-and-where-its-text-went)).
+Re-point those citations to it before you run `grund fmt --write`, not after: the
+write drops the old entry, and the finding then no longer names the new address
+([§FS-section-lock.move.citations](../functional-spec/FS-section-lock.md#movecitations-update-every-citation)).
 fmt does not replace authored IDs or repair arbitrary URLs. Try the rename on a
 copy with [`examples/relative-sections-lock/`](../../examples/relative-sections-lock/).
 

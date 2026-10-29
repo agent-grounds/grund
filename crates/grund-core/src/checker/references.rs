@@ -21,7 +21,10 @@ use crate::config::{Frame, Schema};
 use crate::grammar::{render_catalog_id, render_citation_id};
 use crate::model::remedies;
 use crate::model::{Catalog, CheckReport, Code, Diagnostic, section_resolves};
-use crate::resolver::{WorkspaceCheckTarget, join_alternatives, target_for_citation};
+use crate::resolver::{
+    LockJudgement, WorkspaceCheckTarget, join_alternatives, recorded_text_now_at,
+    target_for_citation,
+};
 use crate::workspace::{member_root_guidance, namespace_is_unverified};
 use std::cell::OnceCell;
 use std::collections::BTreeMap;
@@ -81,6 +84,9 @@ fn full_citation_or_escape(schema: &Schema, written: &str) -> String {
 /// `resolve` answers a target kind's `resolve` policy by the citation's namespace
 /// (§FS-check.4.12): a rule of the target's, which its `WorkspaceCheckTarget`
 /// does not carry (§AR-config.5).
+///
+/// `locks` is the judgement of `findings`' section locks, which a missing section
+/// reads where its recorded text went (§FS-section-lock.checks.missing-section).
 #[allow(clippy::too_many_arguments)]
 pub(super) fn check_citation_resolution(
     findings: &Catalog,
@@ -88,6 +94,7 @@ pub(super) fn check_citation_resolution(
     frame: Frame<'_>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     resolve: &Resolve<'_>,
+    locks: &[LockJudgement<'_>],
     tier: ReferenceTier,
     outside: Option<&ScanScope>,
     report: &mut CheckReport,
@@ -339,7 +346,7 @@ pub(super) fn check_citation_resolution(
                     target.schema.ids.section_separator,
                     sec
                 );
-                let message = if target.schema.ids.named_sections
+                let mut message = if target.schema.ids.named_sections
                     && target.compiled.grammar.is_named_section(Some(sec))
                     && cite.has_marker
                 {
@@ -350,6 +357,12 @@ pub(super) fn check_citation_resolution(
                 } else {
                     format!("missing section {coordinate}")
                 };
+                // §FS-section-lock.checks.missing-section: appended after either form whole.
+                let alias = cite.namespace.as_deref();
+                if let Some((lock, to)) = recorded_text_now_at(locks, alias, &cite.id, sec) {
+                    let lock = frame.display_path(lock);
+                    message.push_str(&format!("; what {lock} recorded for it now sits at {to}"));
+                }
                 // §FS-citations.checks.mixed-path: all missing sections use ordinary errors.
                 report.errors.push(Diagnostic {
                     code: Code::MISSING_SECTION,

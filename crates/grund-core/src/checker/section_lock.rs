@@ -4,26 +4,22 @@
 //! The lock files are read by the scan, beside the walk, so no rule here reads
 //! a file (§AR-checker.placement).
 
-use std::collections::BTreeMap;
-
-use crate::config::{Frame, Schema};
+use crate::config::Frame;
 use crate::model::remedies;
 use crate::model::{CheckReport, Code, Diagnostic, Site};
-use crate::resolver::{EntryVerdict, WorkspaceCheckTarget, judge_section_locks};
+use crate::resolver::{EntryVerdict, LockJudgement};
 
 /// §FS-section-lock.checks: a lock line grund cannot read, a cited locked
 /// address the lock does not hold, and a cited section whose recorded text now
-/// sits at another address. None fires in a tree with no lock file and no
-/// citation of a locked address. A citation into another project is judged
-/// against that project in `targets` (§FS-section-lock.file.members).
-pub(super) fn check_section_locks<'a>(
-    findings: &'a crate::model::Catalog,
-    schema: &Schema,
+/// sits at another address, read off `judgements`, the run's one judgement of
+/// its locks. None fires in a tree with no lock file and no citation of a locked
+/// address.
+pub(super) fn check_section_locks(
+    judgements: &[LockJudgement<'_>],
     frame: Frame<'_>,
-    targets: &BTreeMap<String, WorkspaceCheckTarget<'a>>,
     report: &mut CheckReport,
 ) {
-    for judgement in judge_section_locks(findings, schema, frame, targets) {
+    for judgement in judgements {
         // §FS-section-lock.checks: named as the report names every path.
         let lock = frame.display_path(&judgement.path);
         let coordinate = |section: &str| judgement.cited(section);
