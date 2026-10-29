@@ -15,8 +15,18 @@ use crate::config::project::Strength;
 use crate::config::project::{Project, Rung, Threshold};
 use crate::config::rows::{Form, Kind};
 
+/// `value` as a TOML basic string. Beyond the `\` and `"` the shared escaper
+/// takes, a line feed, a tab and a carriage return are written as the escapes the
+/// reader reads back, so no string this prints runs over a line and what it prints
+/// loads to the same value (§FS-config.4.2, §FS-config-v2.reader.5.strings). The
+/// shared escaper keeps its bytes for version 1's writers
+/// (§DF-v2-string-closes-on-its-line.2.5).
 pub(super) fn string(value: &str) -> String {
-    format!("\"{}\"", escape_toml_basic(value))
+    let escaped = escape_toml_basic(value)
+        .replace('\n', "\\n")
+        .replace('\t', "\\t")
+        .replace('\r', "\\r");
+    format!("\"{escaped}\"")
 }
 
 pub(super) fn list(values: impl IntoIterator<Item = impl AsRef<str>>) -> String {

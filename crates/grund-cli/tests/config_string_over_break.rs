@@ -118,7 +118,6 @@ impl Drop for Fixture {
 /// grund.160's first case: `"a` / `b",` still loads as `a b`, and every command that reports
 /// the config's own findings warns at the key's line, naming line 11 and 0.22.0.
 #[test]
-#[ignore = "red until #1089 warns config-not-toml; implement removes this"]
 fn a_string_over_a_break_warns_and_is_read_as_before() {
     let fx = Fixture::excluding("[\n  \"a\nb\",\n]\n");
     fx.expect(&["check"], 0, "", &not_toml(11));
@@ -129,7 +128,6 @@ fn a_string_over_a_break_warns_and_is_read_as_before() {
 /// grund.160's second case: since #1083 kept a comma inside a string, `"a,` / `b",` loads
 /// too, as `a, b`, and warns the same way.
 #[test]
-#[ignore = "red until #1089 warns config-not-toml; implement removes this"]
 fn a_string_holding_a_comma_over_a_break_warns_and_is_read_as_before() {
     let fx = Fixture::excluding("[\n  \"a,\nb\",\n]\n");
     fx.expect(&["check"], 0, "", &not_toml(11));
@@ -138,7 +136,6 @@ fn a_string_holding_a_comma_over_a_break_warns_and_is_read_as_before() {
 
 /// The key's own line can be the open line, and only the first open line is named.
 #[test]
-#[ignore = "red until #1089 warns config-not-toml; implement removes this"]
 fn the_warning_names_the_first_line_that_ends_inside_a_string() {
     Fixture::excluding("[\"a\nb\"]\n").expect(&["check"], 0, "", &not_toml(10));
     Fixture::excluding("[\n  \"a\n  b\n  c\",\n]\n").expect(&["check"], 0, "", &not_toml(11));
@@ -147,7 +144,6 @@ fn the_warning_names_the_first_line_that_ends_inside_a_string() {
 /// A `\"` at a line's end escapes the quote, so the string is open there: `"a\"` / `b",`
 /// is read as `a" b` and warns at line 11.
 #[test]
-#[ignore = "red until #1089 warns config-not-toml; implement removes this"]
 fn an_escaped_quote_at_a_line_end_leaves_the_string_open() {
     let fx = Fixture::excluding("[\n  \"a\\\"\n  b\",\n]\n");
     fx.expect(&["check"], 0, "", &not_toml(11));
@@ -158,7 +154,6 @@ fn an_escaped_quote_at_a_line_end_leaves_the_string_open() {
 /// config file and the key's line; `--ignore` brings back `success` and `--only` selects it.
 /// It names 0.22.0 as the release it becomes the refusal in (§FS-config-v2.checks.config-not-toml.1).
 #[test]
-#[ignore = "red until #1089 warns config-not-toml; implement removes this"]
 fn the_warning_is_a_selectable_finding_with_its_path_and_line() {
     let fx = Fixture::excluding("[\n  \"a\nb\",\n]\n");
     let run = fx.run(&["check", "--format", "json"]);
@@ -198,7 +193,6 @@ fn the_warning_is_a_selectable_finding_with_its_path_and_line() {
 /// is not `config-not-toml`; it says version 2 does not read it, and loads as before.
 /// Its code is its own (§FS-config-v2.checks.config-multiline-string).
 #[test]
-#[ignore = "red until #1089 warns config-multiline-string; implement removes this"]
 fn a_multi_line_string_warns_that_version_2_does_not_read_it() {
     let fx = Fixture::excluding("[\n  \"\"\"a\nb\"\"\",\n]\n");
     let warning = "warning: grund.toml:10: unclosed array (a multi-line string opens on line \
@@ -222,7 +216,6 @@ fn a_multi_line_string_warns_that_version_2_does_not_read_it() {
 /// line; the `#` on the line after it is never read as a comment that swallows the quote,
 /// and the refusal claims no release, because it was refused before.
 #[test]
-#[ignore = "red until #1089 names the open line in `unclosed array`; implement removes this"]
 fn an_array_that_never_closes_names_its_open_line() {
     let fx = Fixture::excluding("[\n  \"a\n#b\",\n]\n");
     fx.expect(&["check"], 2, "", &unclosed(11));
@@ -233,7 +226,6 @@ fn an_array_that_never_closes_names_its_open_line() {
 /// §FS-config.4.2: a line break, a tab and a carriage return inside a value are written as
 /// their escapes, and what `config show` prints loads back to the same values.
 #[test]
-#[ignore = "red until #1089 escapes control characters on the v2 path; implement removes this"]
 fn config_show_writes_a_line_break_inside_a_value_as_its_escape() {
     let fx = Fixture::excluding("[\"a\\nb\", \"c\\td\\re\"]\n");
     let shown = "exclude = [\"a\\nb\", \"c\\td\\re\"]";

@@ -224,6 +224,74 @@
   }
  },
  {
+  "code": "config-multiline-string",
+  "meaning": "An array in a version-2 config holds a multi-line string, which version 2 does not read; it is read for one more release with the line break as a space.",
+  "ramp": "grund 0.22.0, where the array is refused as an unclosed array",
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write the string on line {line} as one basic string"
+   },
+   "note": "Until then the string is read as one line, its quotes kept, so the value is not the one TOML reads."
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "template",
+    "text": "write the string on line {line} as one basic string"
+   },
+   "note": "Until then the string is read as one line, its quotes kept, so the value is not the one TOML reads."
+  }
+ },
+ {
+  "code": "config-not-toml",
+  "meaning": "A version-2 config holds text TOML refuses, such as a string in an array left open at the end of a line, which grund still reads for one release.",
+  "ramp": "grund 0.22.0, where the array is refused as an unclosed array",
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   },
+   "fix": {
+    "kind": "template",
+    "text": "close the string on line {line}"
+   },
+   "note": "Until then the line break is read as a space, so the value is one nobody wrote."
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "template",
+    "text": "close the string on line {line}"
+   },
+   "note": "Until then the line break is read as a space, so the value is one nobody wrote."
+  }
+ },
+ {
   "code": "config-version-1",
   "meaning": "A config file is read as version 1; the warning names the command that migrates it.",
   "ramp": null,

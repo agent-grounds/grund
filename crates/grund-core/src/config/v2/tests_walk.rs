@@ -26,7 +26,6 @@ fn unclosed(open: usize) -> Option<String> {
 
 /// §FS-config-v2.reader.5: the key's own line is the open line.
 #[test]
-#[ignore = "red until #1089 names the open line in `unclosed array`; implement removes this"]
 fn an_array_open_in_a_string_at_its_key_line_names_that_line() {
     assert_eq!(refusal("[\"a,b]\n"), unclosed(2));
 }
@@ -34,7 +33,6 @@ fn an_array_open_in_a_string_at_its_key_line_names_that_line() {
 /// §FS-config-v2.reader.5: a continuation line is the open line, and only the first such
 /// line is named, however many after it also end inside the string.
 #[test]
-#[ignore = "red until #1089 names the open line in `unclosed array`; implement removes this"]
 fn an_array_open_in_a_string_on_a_later_line_names_the_first_such_line() {
     assert_eq!(refusal("[\n  \"a\",\n  \"b\n"), unclosed(4));
     assert_eq!(refusal("[\n  \"a\n  b\n  c\n"), unclosed(3));
@@ -43,7 +41,6 @@ fn an_array_open_in_a_string_on_a_later_line_names_the_first_such_line() {
 /// §FS-config-v2.reader.5.strings: a `\"` at a line's end escapes the quote, so the
 /// string is still open there.
 #[test]
-#[ignore = "red until #1089 names the open line in `unclosed array`; implement removes this"]
 fn an_escaped_quote_at_a_line_end_leaves_the_string_open() {
     assert_eq!(refusal("[\n  \"a\\\"\n"), unclosed(3));
 }
@@ -51,7 +48,6 @@ fn an_escaped_quote_at_a_line_end_leaves_the_string_open() {
 /// §FS-config-v2.reader.5.strings.multi-line: a string opened with `"""` is named as one
 /// version 2 does not read, not as one left unclosed.
 #[test]
-#[ignore = "red until #1089 names the open line in `unclosed array`; implement removes this"]
 fn a_multi_line_string_names_what_version_2_does_not_read() {
     assert_eq!(
         refusal("[\n  \"\"\"a\n"),
@@ -77,7 +73,6 @@ fn an_array_whose_strings_close_on_their_lines_is_unclosed_with_no_parenthetical
 /// `\"` outside a string opens none, and the `]` after it closes the array. The element
 /// is then refused for what it is, not as an array that swallowed the rest of the file.
 #[test]
-#[ignore = "red until #1089 has open_brackets use is_escaped; implement removes this"]
 fn an_escaped_quote_outside_a_string_opens_no_string() {
     let refusal = refusal("[a\\\"]\n\n[presentation]\ntrigger = \"$$\"\n");
     assert_eq!(refusal, Some("grund.toml:2: expected string".to_string()));
@@ -86,7 +81,6 @@ fn an_escaped_quote_outside_a_string_opens_no_string() {
 /// §FS-config.4.2: the version-2 writer escapes a line feed, a tab and a carriage return,
 /// which the reader reads back, and writes `\` and `"` as before.
 #[test]
-#[ignore = "red until #1089 escapes control characters on the v2 path; implement removes this"]
 fn the_v2_writer_escapes_a_line_break_inside_a_value() {
     assert_eq!(render::string("a\nb\tc\rd"), "\"a\\nb\\tc\\rd\"");
     assert_eq!(render::string("a\\\"b"), "\"a\\\\\\\"b\"");

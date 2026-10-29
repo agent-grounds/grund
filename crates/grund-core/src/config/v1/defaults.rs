@@ -143,6 +143,7 @@ pub(in crate::config) fn default_project() -> Project {
             },
             rules_at_root: true,
         },
+        strings_over_breaks: Vec::new(),
     }
 }
 

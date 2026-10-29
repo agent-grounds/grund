@@ -16,9 +16,10 @@ use super::tables::{self, Opened, Table};
 use super::{defaults, fields, front_matter, measures, presentation, rules, schema};
 use crate::config::fields::FRONT_MATTER;
 use crate::config::kind::KindResolution;
-use crate::config::project::Project;
+use crate::config::project::{Project, StringOverBreak};
 use crate::config::record::ConfigLocation;
 use crate::config::v1::{bail_config, parse_string, strip_comment};
+use crate::grammar::is_escaped;
 
 /// The reader's state: the project lowered so far, and what only the whole
 /// file can judge, kept with the line it was written at (§FS-config-v2.reader.4).
@@ -236,47 +237,140 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
         };
         // §FS-config-v2.reader.5: an array written across lines is one value, read
         // at the line of its key.
-        let Some(value) = joined_value(value, &mut lines) else {
-            return reader.fail(line_no, "unclosed array".to_string());
+        let joined = joined_value(value, line_no, &mut lines);
+        let Some(value) = joined.value else {
+            let open = joined.open.map(OpenLine::parenthetical).unwrap_or_default();
+            return reader.fail(line_no, format!("unclosed array{open}"));
         };
+        // §FS-config-v2.reader.5.strings.window: read as before, and warned for.
+        if let Some(open) = joined.open
+            && let Some(at) = reader.at(line_no)
+        {
+            reader
+                .project
+                .strings_over_breaks
+                .push(StringOverBreak { at, open });
+        }
         reader.entry(key.trim(), &value, line_no)?;
     }
     reader.close()
 }
 
+/// The value a `key = value` line starts, as [`joined_value`] reads it.
+pub(crate) struct Joined {
+    /// The value, or `None` when the array is still open at the end of the text.
+    pub(crate) value: Option<String>,
+    /// The array's open line, the first that ends inside a string
+    /// (§FS-config-v2.reader.5.strings); `None` when every string closes on its line.
+    pub(crate) open: Option<OpenLine>,
+}
+
+/// A line of an array that ends inside a string (§FS-config-v2.reader.5.strings).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct OpenLine {
+    /// The line, 1-based.
+    pub(crate) line: usize,
+    /// Whether the string open at its end opened with `"""`, which version 2 does
+    /// not read (§FS-config-v2.reader.5.strings.multi-line).
+    pub(crate) multi_line: bool,
+}
+
+impl OpenLine {
+    /// The parenthetical `unclosed array` appends for this open line
+    /// (§FS-config-v2.reader.5, §FS-config-v2.reader.5.strings.multi-line).
+    pub(crate) fn parenthetical(self) -> String {
+        let line = self.line;
+        if self.multi_line {
+            format!(" (a multi-line string opens on line {line}, which version 2 does not read)")
+        } else {
+            format!(" (a string is still open at the end of line {line})")
+        }
+    }
+}
+
 /// The value a `key = value` line starts, read as the reader reads it
 /// (§FS-config-v2.reader.5): an array written across lines takes the lines it
 /// spans from `lines`, joined into one, and loses the trailing comma TOML allows
-/// before its `]`. `None` when the array is still open at the end of the text.
+/// before its `]`. `line` is the key's line, 1-based, and `lines` yields each line
+/// after it with its 0-based index, as `str::lines().enumerate()` does.
 /// The ancestor climb reads `[workspace] members` through this too, so a value the
 /// config loads is never one the climb cannot read (§FS-workspace.6.1.7.5).
+///
+/// Through grund 0.21.x a string still open at a line's end runs on into the next
+/// line, joined with the break read as one space, as the readers before it read it
+/// (§FS-config-v2.reader.5.strings.window); the first line that ends so is reported
+/// beside the value, which is what the warning and the refusal name.
 pub(crate) fn joined_value<'a>(
     value: &str,
+    line: usize,
     lines: &mut impl Iterator<Item = (usize, &'a str)>,
-) -> Option<String> {
+) -> Joined {
     let mut value = value.trim().to_string();
-    while value.starts_with('[') && open_brackets(&value) > 0 {
-        let (_, next) = lines.next()?;
-        value.push(' ');
-        value.push_str(strip_comment(next).trim());
+    if !value.starts_with('[') {
+        return Joined {
+            value: Some(value),
+            open: None,
+        };
     }
-    Some(array_value(&value))
+    let mut brackets = Brackets::default();
+    brackets.read(&value);
+    let mut open = brackets.open_line(line);
+    while brackets.depth > 0 {
+        let Some((idx, next)) = lines.next() else {
+            return Joined { value: None, open };
+        };
+        let next = strip_comment(next).trim();
+        value.push(' ');
+        value.push_str(next);
+        brackets.read(next);
+        open = open.or(brackets.open_line(idx + 1));
+    }
+    Joined {
+        value: Some(array_value(&value)),
+        open,
+    }
 }
 
-/// How many `[` of `value` are still open, outside its strings.
-fn open_brackets(value: &str) -> i32 {
-    let (mut depth, mut in_string, mut escaped) = (0, false, false);
-    for c in value.chars() {
-        match c {
-            _ if escaped => escaped = false,
-            '\\' if in_string => escaped = true,
-            '"' => in_string = !in_string,
-            '[' if !in_string => depth += 1,
-            ']' if !in_string => depth -= 1,
-            _ => {}
+/// The `[` an array's text still holds open outside its strings, and the string
+/// open at the end of the text read so far. A `"` is a quote unless it is part of
+/// a `\"` escape, by the rule `strip_comment`, `split_outside_strings` and
+/// `is_one_basic_string` read strings by (§FS-config.3.11), inside a string or
+/// outside one.
+#[derive(Default)]
+struct Brackets {
+    depth: i32,
+    /// `Some(multi_line)` while inside a string: whether it opened with `"""`.
+    string: Option<bool>,
+}
+
+impl Brackets {
+    /// Read the next piece of the array's text. The pieces are joined with a space,
+    /// so no `\"` escape reaches across two of them.
+    fn read(&mut self, piece: &str) {
+        let bytes = piece.as_bytes();
+        for (i, &byte) in bytes.iter().enumerate() {
+            match byte {
+                b'"' if !is_escaped(bytes, i) => {
+                    // §FS-config-v2.reader.5.strings.multi-line: the third quote of
+                    // a `"""` opens what the first would have in TOML.
+                    let multi_line = i >= 2 && bytes[i - 2..i] == *b"\"\"";
+                    self.string = match self.string {
+                        Some(_) => None,
+                        None => Some(multi_line),
+                    };
+                }
+                b'[' if self.string.is_none() => self.depth += 1,
+                b']' if self.string.is_none() => self.depth -= 1,
+                _ => {}
+            }
         }
     }
-    depth
+
+    /// `line`, when the text read so far ends inside a string
+    /// (§FS-config-v2.reader.5.strings).
+    fn open_line(&self, line: usize) -> Option<OpenLine> {
+        self.string.map(|multi_line| OpenLine { line, multi_line })
+    }
 }
 
 /// An array value with the trailing comma TOML allows before its `]` taken off.
