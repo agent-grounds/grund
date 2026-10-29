@@ -85,7 +85,7 @@ licence of [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-co
   sentence it passed, and this change moves neither.
 - No verdict moves. The accepted and refused sentences, the exit codes and the
   finding code stay as they are, so this is not a correction under
-  [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids) and needs none of that route's proof.
+  <§>REQ-backwards-compatibility.5 and needs none of that route's proof.
 
 ## 3. Consequences
 
