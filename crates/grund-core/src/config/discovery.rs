@@ -25,8 +25,9 @@ const CONFIG_NAMES: [&[&str]; 2] = [&["grund.toml"], &[".agents", "grund.toml"]]
 /// §FS-declarations.checks.misplaced-declaration.unlisted-project: an unread
 /// config's optional identity, using the same top-level/string grammar as both
 /// readers. No project load, regex compilation, or refusal for malformed input,
-/// and no finding: a version-2 name is read as the load reads it, its place
-/// dropped (§FS-config-v2.reader.6.refusal).
+/// and no finding: a version-2 name is read as the load reads it, and one the load
+/// refuses, a string that closes early among them, is passed over
+/// (§FS-config-v2.reader.6.refusal).
 pub(crate) fn unread_project_name(text: &str, path: &Path) -> Option<String> {
     let version_2 = v2::selects(text);
     let mut name = None;
@@ -43,7 +44,7 @@ pub(crate) fn unread_project_name(text: &str, path: &Path) -> Option<String> {
             }
             let (line, value) = (idx + 1, value.trim());
             let value = match version_2 {
-                true => v2::read_string(path, line, value).map(|(read, _)| read),
+                true => v2::read_string(path, line, value),
                 false => v1::parse_string(path, line, value),
             }
             .ok()?;
@@ -57,20 +58,20 @@ pub(crate) fn unread_project_name(text: &str, path: &Path) -> Option<String> {
 }
 
 /// A string list read by a reader that reads one key of a config without loading it: as
-/// the load of a version-2 file reads it when `version_2`, of a version-1 file
-/// otherwise, `None` for a value the load refuses, and no finding recorded
-/// (§FS-config-v2.reader.6.refusal). The ancestor climb reads `[workspace] members`
-/// through this (§FS-workspace.6.1.7.5).
+/// the load of a version-2 file reads it when `version_2`, its later lines starting at
+/// `starts` in `value`, of a version-1 file otherwise, `None` for a value the load
+/// refuses, and no finding recorded (§FS-config-v2.reader.6.refusal). The ancestor climb
+/// reads `[workspace] members` through this (§FS-workspace.6.1.7.5).
 pub(crate) fn unloaded_string_list(
     version_2: bool,
     path: &Path,
     line: usize,
     value: &str,
+    starts: Vec<usize>,
 ) -> Option<Vec<String>> {
     if version_2 {
-        v2::read_string_list(path, line, value)
-            .ok()
-            .map(|(read, _)| read)
+        let lines = v2::JoinedLines::new(line, starts);
+        v2::read_string_list(path, line, value, &lines).ok()
     } else {
         v1::parse_string_list(path, line, value).ok()
     }
