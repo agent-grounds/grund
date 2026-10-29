@@ -415,10 +415,12 @@ closes early and records nothing. It keeps the reading of the readers before it
 for two callers and no more: the refusal's message, which ends with the release
 that made it one where that reading loads the value and is the bare `expected
 string` where it does not ([§FS-config-v2.reader.6.refusal](../functional-spec/FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)), and `grund config migrate`,
-which names each string that closes early as version 1 reads it ([§FS-config-migrate.3.1.8](../functional-spec/FS-config-migrate.md#318-a-string-that-closes-early)). An array reaches them with the run of
-commas before its `]` taken off by `walk.rs`, which names the first comma in
-that run with no element before it and records it once the elements load
-([§FS-config-v2.reader.5.commas.window](../functional-spec/FS-config-v2.md#reader5commaswindow-through-grund-021x-the-run-of-commas-before-the--is-taken-off-as-before-and-warns)). A key the table's handler does not admit
+which names each string that closes early as version 1 reads it ([§FS-config-migrate.3.1.8](../functional-spec/FS-config-migrate.md#318-a-string-that-closes-early)). An array reaches them with at most
+one comma before its `]` taken off by `walk.rs`, the one trailing comma after an
+element; any other comma stays for the element reader, whose refusal of the
+empty element it leaves carries 0.22.0's suffix where the whole run's removal
+would have left none
+([§FS-config-v2.reader.5.commas.refusal](../functional-spec/FS-config-v2.md#reader5commasrefusal-from-grund-0220-a-comma-with-no-element-before-it-is-expected-string)). A key the table's handler does not admit
 is `unknown key`, and a repeated header or key is refused at its second line
 ([§FS-config-v2.reader.1](../functional-spec/FS-config-v2.md#reader1-tables-and-keys-are-closed), [§FS-config-v2.reader.2](../functional-spec/FS-config-v2.md#reader2-every-row-and-field-is-written-under-its-own-header)). Because every key is judged
 where it is written, the first refusal reported is the first one in the file
