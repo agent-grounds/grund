@@ -145,4 +145,5 @@ owners = [
   "crates/grund-core/src/rules/sentence/subjects.rs",
   "crates/grund-core/src/rules/sentence/targets.rs",
   "crates/grund-core/src/rules/sentence/whose.rs",
+  "crates/grund-core/src/scanner/off_format.rs",
 ]
