@@ -9,6 +9,14 @@ that section's own line.
 
 This is a one-time setup per machine. It changes nothing in any repository.
 
+These integrations make a citation a link to click. What an editor does with a
+citation in its buffer — go-to-definition, hover, references, completion — comes
+from `grund-lsp` instead. It also serves the editors with no client here:
+IntelliJ IDEA and its family through LSP4IJ (`grund-lsp integrations lsp4ij`),
+Helix, Neovim, Zed, Emacs and Sublime Text. [Editor Support via LSP](lsp.md)
+sets it up
+([§FS-integrations.2.3](../functional-spec/FS-integrations.md#23-the-way-to-grund-lsp)).
+
 ---
 
 ## Quick start
@@ -59,8 +67,9 @@ it](#7-remove-it)
 ## 1. Install
 
 `grund integrations` reads your environment and prints the integrations that
-match, each with its one-line install, and closes by naming this guide. Nothing
-is written and nothing is scanned. If you are in a VS Code terminal inside tmux
+match, each with its one-line install, and closes by naming this guide, then
+`grund-lsp` and its guide for navigation inside an editor. Nothing is written
+and nothing is scanned. If you are in a VS Code terminal inside tmux
 inside WezTerm, all three match — that is normal, and you can install all three.
 
 Preview any client before committing to it:
