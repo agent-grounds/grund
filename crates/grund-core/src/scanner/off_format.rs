@@ -20,22 +20,6 @@ pub(super) fn record_off_format_citation(
     candidate: &LegacyCitationCandidate,
     findings: &mut Catalog,
 ) {
-    // 1. No other reading claims its marker: a citation, resolved or dangling, a
-    // shorthand or a local section form there keeps its own verdict.
-    let at_marker = |file: &std::path::Path, line: usize, column: usize| {
-        file == candidate.file && line == candidate.line && column == candidate.column
-    };
-    if findings
-        .citations
-        .iter()
-        .any(|cite| at_marker(&cite.file, cite.line, cite.column))
-        || findings
-            .local_section_citation_candidates
-            .iter()
-            .any(|local| at_marker(&local.file, local.line, local.column))
-    {
-        return;
-    }
     let token = off_format_token(&candidate.tail);
     // 2. It opens with exactly one configured kind, a character that is no ASCII
     // letter or digit, and then one that is, so a prefix mention stays text.
@@ -52,6 +36,23 @@ pub(super) fn record_off_format_citation(
     // 3. Its kind's format does not spell it, whole or before a section path; a
     // number-only shorthand of that format is the shorthand pass's to judge.
     if parse_id_arg_with_shorthand(token, frame.grammar()).is_ok() {
+        return;
+    }
+    // 1. No other reading claims its marker: a citation, resolved or dangling, a
+    // shorthand or a local section form there keeps its own verdict. Asked last
+    // because it walks the catalog and every marker of the tree is a candidate.
+    let at_marker = |file: &std::path::Path, line: usize, column: usize| {
+        file == candidate.file && line == candidate.line && column == candidate.column
+    };
+    if findings
+        .citations
+        .iter()
+        .any(|cite| at_marker(&cite.file, cite.line, cite.column))
+        || findings
+            .local_section_citation_candidates
+            .iter()
+            .any(|local| at_marker(&local.file, local.line, local.column))
+    {
         return;
     }
     let qualified = candidate
