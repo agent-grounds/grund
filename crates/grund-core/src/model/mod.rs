@@ -50,6 +50,10 @@ mod patterns;
 mod records;
 // §AR-config.9.1: the rendered *Fix* fillers, the one place a message's remedy is built.
 #[rustfmt::skip]
+#[expect(
+    dead_code,
+    reason = "red until #1088 calls the element and scalar-or-key cases; implement removes this"
+)]
 pub(crate) mod remedies;
 mod report;
 mod section_lock;

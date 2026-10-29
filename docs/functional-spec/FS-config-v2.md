@@ -129,13 +129,59 @@ Where they would not have closed it either, the array was refused before and the
 
 ##### reader.5.strings.multi-line: A string opened with `"""` is one version 2 does not read
 
-TOML admits a multi-line basic string, opened and closed by `"""`, and version 2 does not read one: a file that writes one is TOML, but not a `grund.toml` version 2 reads. So where the string open at the end of the open line opened with `"""`, every message above says that rather than that a string is unclosed. The parenthetical is ` (a multi-line string opens on line <n>, which version 2 does not read)`, the warning's code is `config-multiline-string` ([§FS-config-v2.checks.config-multiline-string](FS-config-v2.md#checksconfig-multiline-string-a-version-2-config-array-holds-a-multi-line-string)), and its remedy is to write the string on that line as one basic string:
+TOML admits a multi-line basic string, opened and closed by `"""`, and version 2 does not read one: a file that writes one is TOML, but not a `grund.toml` version 2 reads. So where the string open at the end of the open line opened with `"""`, every message above says that rather than that a string is unclosed. The parenthetical is ` (a multi-line string opens on line <n>, which version 2 does not read)`, the warning's code is `config-multiline-string` ([§FS-config-v2.checks.config-multiline-string](FS-config-v2.md#checksconfig-multiline-string-a-version-2-config-value-holds-a-multi-line-string)), and its remedy is to write the string on that line as one basic string:
 
 ```text
 warning: grund.toml:7: unclosed array (a multi-line string opens on line 8, which version 2 does not read), read for now with the line break as a space; write the string on line 8 as one basic string; this warning becomes an error in grund 0.22.0
 ```
 
 The window and the refusal are the ones above: through 0.21.x `exclude = [` / `"""a` / `b""",` / `]` loads as it always has, as the one element `""a b""`, its quotes kept, and from 0.22.0 it is refused. Reading multi-line strings is not part of version 2.
+
+### reader.6: A string ends at its first unescaped quote
+
+A basic string the version-2 reader reads, a scalar value, an element of an array or a quoted key, opens at its `"` and closes at the first `"` after it that is not part of a `\"` escape, by the one rule [§FS-config.3.11](FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string) reads strings by. After its closing quote a scalar or a key holds nothing but whitespace, its `#` comment already taken off, and an element holds nothing but whitespace before the `,` that separates it from the next or the `]` that closes the array. A string *closes early* when anything else follows its closing quote: `fetch = "one" "two"`, `folders = ["docs" "specs"]` with its comma forgotten, `"a"b"` with a quote left unescaped, or the key `"md" "x"`. TOML refuses each of them, and so does every other tool that reads a `grund.toml` as TOML.
+
+The 0.18.0 to 0.20.x readers checked a string only at the first and the last byte of its value or its element, so each of those loaded, as the one string `one" "two`, the one folder `docs" "specs`, the string `a"b` and the suffix `md" "x`. The rule moves that verdict, so it arrives through a deprecation window ([§FS-config-v2.reader.6.window](FS-config-v2.md#reader6window-through-grund-021x-a-string-that-closes-early-is-read-as-before-and-warns)) before the refusal ([§FS-config-v2.reader.6.refusal](FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)), the route [§DF-v2-string-closes-at-its-quote](../decisions/functional/DF-v2-string-closes-at-its-quote.md#df-v2-string-closes-at-its-quote-a-version-2-string-ends-at-its-first-unescaped-quote-warned-for-in-0210-and-refused-from-0220-and-version-1-keeps-its-reading) records. A string opened with `"""` is TOML's multi-line string, which version 2 does not read, and the messages say so ([§FS-config-v2.reader.6.multi-line](FS-config-v2.md#reader6multi-line-a--string-on-one-line-is-one-version-2-does-not-read)). Version 1 keeps the reading of the readers before it for good ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)) and meets the rule only when it is migrated ([§FS-config-migrate.3.1.8](FS-config-migrate.md#318-a-string-that-closes-early)).
+
+#### reader.6.window: Through grund 0.21.x a string that closes early is read as before and warns
+
+Through grund 0.21.x a string that closes early is read as the readers before it read it, from its opening quote to the last quote of its value or its element with every quote between kept, so `fetch = "one" "two"` is the string `one" "two` and `folders = ["docs" "specs"]` the one element `docs" "specs`. The config loads, and the run earns one warning with code `config-not-toml` ([§FS-config-v2.checks.config-not-toml](FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses)) at the line of the key, naming the string as it is read, the line to edit and the release that refuses it:
+
+```text
+warning: grund.toml:5: expected string, read for now as the one string `docs" "specs`; end the string on line 5 at its closing quote: write `\"` for a quote inside it, or a `,` between two strings; this warning becomes an error in grund 0.22.0
+```
+
+The text in backticks is the string's text from its opening quote to that last quote, as written, so an escape in it is shown as it is written, and a line break the window of [§FS-config-v2.reader.5.strings.window](FS-config-v2.md#reader5stringswindow-through-grund-021x-an-array-a-later-line-closes-is-read-as-before-and-warns) joins is shown as the space it is read as. The line `on line <n>` names is the one the string closes early on, the line its closing quote stands on. That is the key's line except in an array written across lines, where `<n>` is the line of the element and the warning is still located at the key's line, as every value is ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)).
+
+The remedy above is an element's, and both of its halves are a repair: a quote meant inside the string is written `\"`, and two strings meant are separated by a `,`. A scalar's or a key's is the first half alone, because a `,` between two strings is no repair where one string is read: `fetch = "one", "two"` closes early again.
+
+```text
+warning: grund.toml:5: expected string, read for now as the one string `one" "two`; end the string on line 5 at its closing quote: write `\"` for a quote inside it; this warning becomes an error in grund 0.22.0
+```
+
+A value earns one warning, naming the first string in it that closes early, however many do, as an array earns one warning however many of its lines end inside a string ([§FS-config-v2.reader.5.strings.window](FS-config-v2.md#reader5stringswindow-through-grund-021x-an-array-a-later-line-closes-is-read-as-before-and-warns)); a quoted key is a string of its own and earns its own. An array that also has an open line earns both warnings, one per construct ([§FS-config-v2.checks.config-not-toml](FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses)), and the one for its open line comes first, because the array's lines are joined before its elements are read.
+
+A value the readers before it refused is refused as before and earns no warning. `exclude = ["target" "a,b"]`, whose second piece they cut at its comma, is still `expected string` at its key's line ([§FS-config.3.11](FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string)), and in `exclude = ["a"b", "c"]` the line ends inside a string, so [§FS-config-v2.reader.5.strings](FS-config-v2.md#reader5strings-a-string-closes-on-the-line-it-opens-on) reads it before any element is. A string that closes at its end, such as `"a\"b"`, `"a\\"` or `"a" # a comment`, earns nothing.
+
+#### reader.6.refusal: From grund 0.22.0 a string that closes early is `expected string`
+
+From grund 0.22.0 version 2 no longer reads a string the way the readers before it did: one that closes early is refused at its key's line as `expected string`, exit `2` on every command that loads the config ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). Where the value loaded through the window, the refusal ends with the release that made it one ([§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)):
+
+```text
+error: grund.toml:5: expected string; this became an error in grund 0.22.0
+```
+
+A value refused before keeps the bare message, in 0.21.x and from 0.22.0 alike: `exclude = ["target" "a,b"]` is `error: grund.toml:5: expected string`. The readers that read one key of a config without loading it, the `project_name` of a config no run loads ([§FS-declarations.checks.misplaced-declaration.unlisted-project](FS-declarations.md#checksmisplaced-declarationunlisted-project-explain-the-enclosing-homes-beneath-an-unlisted-project)) and the ancestor climb's `[workspace] members` ([§FS-workspace.6.1.7.5](FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable)), record no finding: through 0.21.x they read what the full load reads, and from 0.22.0 they pass over a value the full load refuses, as they pass over any value they cannot read.
+
+#### reader.6.multi-line: A `"""` string on one line is one version 2 does not read
+
+A string that opens with `"""` and closes on its own line, such as `title = """one"""`, is a TOML multi-line basic string, which version 2 does not read ([§FS-config-v2.reader.5.strings.multi-line](FS-config-v2.md#reader5stringsmulti-line-a-string-opened-with--is-one-version-2-does-not-read)). Through grund 0.21.x it is read as before, from its first quote to its last with the quotes between kept, so that title is `""one""`, and it earns one warning with code `config-multiline-string` ([§FS-config-v2.checks.config-multiline-string](FS-config-v2.md#checksconfig-multiline-string-a-version-2-config-value-holds-a-multi-line-string)) at the key's line, with the remedy of a multi-line string written across lines:
+
+```text
+warning: grund.toml:8: expected string (a multi-line string, which version 2 does not read), read for now as `""one""`, its quotes kept; write the string on line 8 as one basic string; this warning becomes an error in grund 0.22.0
+```
+
+From grund 0.22.0 it is refused with the same parenthetical, `error: grund.toml:8: expected string (a multi-line string, which version 2 does not read); this became an error in grund 0.22.0`. Where the first string in a value that closes early is one opened with `"""`, this is the value's one warning, in place of `config-not-toml`. A `"""` string that a line break runs through is one construct, the one [§FS-config-v2.reader.5.strings.multi-line](FS-config-v2.md#reader5stringsmulti-line-a-string-opened-with--is-one-version-2-does-not-read) already warns for: `exclude = [` / `"""a` / `b""",` / `]` reaches the element reader as `"""a b"""` once its lines are joined, and it earns that warning alone.
 
 ## defaults: The v2 epoch
 
@@ -543,26 +589,33 @@ The check codes the version-2 reader's own findings carry, beside the `check` co
 
 ### checks.config-not-toml: A version-2 config holds text TOML refuses
 
-A version-2 config that holds text TOML refuses, and that this grund still reads for one release as the readers before it did, earns one warning with code `config-not-toml` per construct, at the line of the key whose value holds it. Its one construct today is an array with a string still open at the end of a line that a later line closes ([§FS-config-v2.reader.5.strings.window](FS-config-v2.md#reader5stringswindow-through-grund-021x-an-array-a-later-line-closes-is-read-as-before-and-warns)):
+A version-2 config that holds text TOML refuses, and that this grund still reads for one release as the readers before it did, earns one warning with code `config-not-toml` per construct, at the line of the key whose value holds it. Its constructs today are two. One is an array with a string still open at the end of a line that a later line closes ([§FS-config-v2.reader.5.strings.window](FS-config-v2.md#reader5stringswindow-through-grund-021x-an-array-a-later-line-closes-is-read-as-before-and-warns)):
 
 ```text
 warning: grund.toml:7: unclosed array (a string is still open at the end of line 8), read for now with the line break as a space; close the string on line 8; this warning becomes an error in grund 0.22.0
 ```
 
-The message is the refusal the construct becomes in the named release, then what it is read as until then, then the remedy, then the release ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)). It fires only for a config file read as version 2, and never for version 1, whose reader reads no value across lines ([§FS-config.3](FS-config.md#3-keys-version-1)).
+The other is a string that closes before the end of its value or its element ([§FS-config-v2.reader.6.window](FS-config-v2.md#reader6window-through-grund-021x-a-string-that-closes-early-is-read-as-before-and-warns)), whose remedy drops its second half for a scalar or a key:
+
+```text
+warning: grund.toml:5: expected string, read for now as the one string `docs" "specs`; end the string on line 5 at its closing quote: write `\"` for a quote inside it, or a `,` between two strings; this warning becomes an error in grund 0.22.0
+```
+
+The message is the refusal the construct becomes in the named release, then what it is read as until then, then the remedy, then the release ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)). It fires only for a config file read as version 2, and never for version 1: version 1 reads no value across lines ([§FS-config.3](FS-config.md#3-keys-version-1)), and it keeps its reading of a string that closes early for good ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)), which it meets only at `config migrate` ([§FS-config-migrate.3.1.8](FS-config-migrate.md#318-a-string-that-closes-early)).
 
 It is a CLI-level `warning:` on stderr whose text carries the config line ([§FS-errors.2.2.1](FS-errors.md#221-a-location-inside-the-message-text), [§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)), on `check`, `config validate` and `config show` and no other command, as [§FS-check.4.11.2](FS-check.md#4112-the-same-three-surfaces-as-fs-check43-and-no-more) says of the other config findings, once per construct rather than once per scope. It leaves the exit code alone and stands in place of the `success` line ([§FS-check.4.11.6](FS-check.md#4116-it-stands-in-place-of-the-success-line)). `--ignore config-not-toml` drops it and `--only config-not-toml` selects it ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)). Under `--format=json` it is one warning finding carrying the code, its `path` the config file as a report path and its `line` the key's, in the shape [§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report) gives a warning at a config line.
 
-#### checks.config-not-toml.1: A warning in 0.21.x, the `unclosed array` refusal from 0.22.0
+#### checks.config-not-toml.1: A warning in 0.21.x, the `unclosed array` or `expected string` refusal from 0.22.0
 
-From grund 0.22.0 the construct is refused at load instead, `error: grund.toml:7: unclosed array (a string is still open at the end of line 8); this became an error in grund 0.22.0`, exit `2` ([§FS-config-v2.reader.5.strings.refusal](FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array)), and the code no longer fires for it. The code stays: a later construct of the same class, text TOML refuses that a version-2 reader loads, joins it under its own decision for the one release its window lasts.
+From grund 0.22.0 each construct is refused at load instead, exit `2`: the array as `error: grund.toml:7: unclosed array (a string is still open at the end of line 8); this became an error in grund 0.22.0` ([§FS-config-v2.reader.5.strings.refusal](FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array)), and the string as `error: grund.toml:5: expected string; this became an error in grund 0.22.0` ([§FS-config-v2.reader.6.refusal](FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)). The code no longer fires for either. The code stays: a later construct of the same class, text TOML refuses that a version-2 reader loads, joins it under its own decision for the one release its window lasts.
 
-### checks.config-multiline-string: A version-2 config array holds a multi-line string
+### checks.config-multiline-string: A version-2 config value holds a multi-line string
 
-An array in a version-2 config whose string opens with `"""` on one line and that a later line closes earns one warning with code `config-multiline-string` at the line of its key ([§FS-config-v2.reader.5.strings.multi-line](FS-config-v2.md#reader5stringsmulti-line-a-string-opened-with--is-one-version-2-does-not-read)). Such a file is TOML, which is why it is not `config-not-toml`: what is untrue of it is only that version 2 reads it, and through grund 0.21.x it is read as one line with the break as a space and its quotes kept:
+A value in a version-2 config that holds a string opened with `"""` earns one warning with code `config-multiline-string` at the line of its key, per construct: an array whose `"""` string opens on one line and that a later line closes ([§FS-config-v2.reader.5.strings.multi-line](FS-config-v2.md#reader5stringsmulti-line-a-string-opened-with--is-one-version-2-does-not-read)), and a value, an element or a key whose `"""` string opens and closes on one line ([§FS-config-v2.reader.6.multi-line](FS-config-v2.md#reader6multi-line-a--string-on-one-line-is-one-version-2-does-not-read)). Such a file is TOML, which is why it is not `config-not-toml`: what is untrue of it is only that version 2 reads it, and through grund 0.21.x it is read as before, its quotes kept and a line break read as a space:
 
 ```text
 warning: grund.toml:7: unclosed array (a multi-line string opens on line 8, which version 2 does not read), read for now with the line break as a space; write the string on line 8 as one basic string; this warning becomes an error in grund 0.22.0
+warning: grund.toml:8: expected string (a multi-line string, which version 2 does not read), read for now as `""one""`, its quotes kept; write the string on line 8 as one basic string; this warning becomes an error in grund 0.22.0
 ```
 
-It is [§FS-config-v2.checks.config-not-toml](FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses)'s finding in everything but its trigger and its text: the same surfaces, channel, exit code, selectors and JSON shape ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)), and from grund 0.22.0 the same refusal, its parenthetical the multi-line one.
+It is [§FS-config-v2.checks.config-not-toml](FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses)'s finding in everything but its trigger and its text: the same surfaces, channel, exit code, selectors and JSON shape ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)), and from grund 0.22.0 the same refusals, each with its multi-line parenthetical.
