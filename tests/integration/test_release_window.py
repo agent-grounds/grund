@@ -149,7 +149,6 @@ class ReleaseWindowCommandTests(unittest.TestCase):
         self.assertNotIn("usage:", result.stderr)
 
 
-@unittest.skip("red until #1112 lists every pending line at the ceiling; implement removes this")
 class EveryCeilingLineIsNamedTests(unittest.TestCase):
     """An empty window names every pending line at the ceiling, once. §FS-distribution.4.2.5"""
 

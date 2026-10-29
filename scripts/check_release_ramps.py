@@ -184,13 +184,18 @@ def report(claims: Sequence[Claim], release: str | None, shared_floor: str | Non
     lines.append("")
     if empty:
         basis = "landed changes and its shared floor" if shared_floor else "the changes it has already made"
+        # §FS-distribution.4.2.5: every pending line at the ceiling, each once, not one example.
+        ceiling_lines = [c for c in claims if c.direction == PENDING and c.release == ceiling]
+        held = [c for c in ceiling_lines if c not in ahead]
         lines.append(
             f"  this tree can be cut as no release at all: at or above {floor} for {basis}, "
-            f"and below {ceiling} for the ones it still only promises —"
+            f"and below {ceiling} for the ones it still only promises"
+            + (" —" if held else ", listed above.")
         )
-        held = next(c for c in claims if c.direction == PENDING and c.release == ceiling)
-        lines.append(f"    {held.quoted()}")
-        lines.append(f"  land that ramp too, and every other one naming {ceiling}, before cutting anything.")
+        lines.extend(f"    {claim.quoted()}" for claim in held)
+        count = len(ceiling_lines)
+        ramps = "that ramp" if count == 1 else f"all {count} ramps naming {ceiling}"
+        lines.append(f"  land {ramps} too before cutting anything.")
     else:
         window = f"at or above {floor}" if floor else "any release"
         if ceiling:
