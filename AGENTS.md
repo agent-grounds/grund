@@ -81,10 +81,10 @@ Anything not listed above is allowed.
 `grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:
 
 - **FS**
-  - field terms must · first
+  - field terms must · first · titled `Terms`
 - **AR**
   - field placement must · first
-  - field terms must · after placement
+  - field terms must · after placement · titled `Terms`
 - **DF**
   - field status must · first · one of Accepted, Superseded
 - **DA**

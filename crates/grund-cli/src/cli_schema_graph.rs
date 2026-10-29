@@ -31,10 +31,10 @@ fn schema_graph_text(graph: SchemaGraph, raw: &str) -> String {
             (SchemaGraph::Dot, '\\') => out.push_str("\\\\"),
             (SchemaGraph::Dot, '\n') => out.push_str("\\n"),
             (SchemaGraph::Dot, other) if other.is_control() => {
-                out.push_str(&schema_table_text(&other.to_string()).replace('\\', "\\\\"));
+                out.push_str(&schema_text(&other.to_string()).replace('\\', "\\\\"));
             }
             (SchemaGraph::Mermaid, other) if other.is_control() => {
-                out.push_str(&schema_table_text(&other.to_string()));
+                out.push_str(&schema_text(&other.to_string()));
             }
             (_, other) => out.push(other),
         }
@@ -160,7 +160,7 @@ fn schema_graph(view: &SchemaView, graph: SchemaGraph) -> String {
         SchemaGraph::Dot => "digraph schema {\n",
     });
     for line in &comments {
-        out.push_str(&format!("  {comment} {}\n", schema_table_text(line)));
+        out.push_str(&format!("  {comment} {}\n", schema_text(line)));
     }
     match graph {
         SchemaGraph::Mermaid => {

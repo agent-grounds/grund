@@ -215,6 +215,8 @@ pub use config::{
     BadgeRung, EdgeTarget, Extent, FieldContent, Junction, NodeClass, Placement, ScaffoldNote,
     SchemaEdge, SchemaNode, SchemaSlot, SchemaView, Strength,
 };
+#[doc(hidden)]
+pub use model::schema_text;
 // §FS-config-migrate: `grund config migrate --to 2` and the one record it returns.
 #[doc(hidden)]
 pub use api::{MigrateOpts, config_migrate};

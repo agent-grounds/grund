@@ -34,6 +34,24 @@ pub(crate) fn json_escape(raw: &str) -> String {
     escaped
 }
 
+/// §FS-schema.11, §FS-schema.4.1: a configured name or title as the schema view
+/// prints it, each control character written as a TOML basic string writes its
+/// escape, so no configured text can break a line. The one escaper the table,
+/// the graph labels and a field line's title all read.
+pub fn schema_text(raw: &str) -> String {
+    let mut out = String::with_capacity(raw.len());
+    for ch in raw.chars() {
+        match ch {
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            other if other.is_control() => out.push_str(&format!("\\u{:04X}", other as u32)),
+            other => out.push(other),
+        }
+    }
+    out
+}
+
 /// `a`, `b`, `c`, or `d` — a list spelled the way the message reads, joined by
 /// the `conjunction` that message wants before the last item. Lives with the
 /// other shared spellings rather than beside any one message: the refusals in

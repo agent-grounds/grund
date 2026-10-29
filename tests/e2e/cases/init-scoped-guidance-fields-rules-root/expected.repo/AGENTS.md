@@ -50,7 +50,7 @@ Anything not listed above is allowed.
 `grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:
 
 - **FS**
-  - field terms must · first
+  - field terms must · first · titled `Terms`
 - **DF**
   - field status must · first · one of Proposed, Accepted, Superseded
   - closed must

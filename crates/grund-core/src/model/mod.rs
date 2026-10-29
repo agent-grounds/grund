@@ -111,6 +111,7 @@ pub(crate) use section_lock::{
 pub(crate) use stub_resolution::{
     Paired, PairedDeclarations, StubResolution, paired_declarations, section_resolves,
 };
+pub use text::schema_text;
 pub(crate) use text::{citation_direction_repair, format_list, json_escape, plural};
 pub(crate) use unread_roots::{Refused, RootOrigin, RootRow};
 pub(crate) use values::{
