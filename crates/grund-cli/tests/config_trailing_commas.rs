@@ -1,9 +1,10 @@
 //! Black-box: a version-2 array takes one trailing comma, after an element
-//! (§FS-config-v2.reader.5.commas). Ports grund.158's reproducer (#1087): through grund 0.21.x
-//! an array whose run of commas before its `]` holds a comma with no element before it is read
-//! as before and warns at its key's line, naming the line of that comma and 0.22.0
-//! (§FS-config-v2.reader.5.commas.window, §FS-config-v2.checks.config-not-toml), while one
-//! trailing comma after an element, and every shape refused before, keep their verdicts.
+//! (§FS-config-v2.reader.5.commas). Ports grund.158's reproducer (#1087) and #1098's: from grund
+//! 0.22.0 an array whose run of commas before its `]` holds a comma with no element before it is
+//! refused at its key's line as `expected string`, ending with the release that made it one
+//! where the array's text loaded through the 0.21.x window
+//! (§FS-config-v2.reader.5.commas.refusal), while one trailing comma after an element, and every
+//! shape refused before, keep their verdicts.
 
 use std::fs;
 use std::path::PathBuf;
@@ -13,23 +14,17 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 const SPEC: &str = "# SPEC-one: One\n\nLead.\n";
 const CODE: &str = "// Realizes \u{a7}SPEC-one.\nfn main() {}\n";
 
-/// The version-2 config every case extends, `[schema.sources]` on line 8 and its `exclude`
-/// key on line 9, as in grund.158's fixture.
+/// The version-2 config every case extends, `[schema.sources]` on line 8 and the key under
+/// test on line 9, as in grund.158's fixture.
 const HEAD: &str = "grund_config_version = 2\n\n[schema.kinds.code]\nfolders = [\"src\"]\n\n\
                     [schema.kinds.SPEC]\nfiles = [\"specs/spec.md\"]\n[schema.sources]\n";
 
 /// The bare refusal of an array the readers before 0.21.0 refused too.
 const REFUSAL: &str = "error: grund.toml:9: expected string\n";
 
-/// The warning for the array at line 9 whose first comma with no element before it stands on
-/// line `line` (§FS-config-v2.reader.5.commas.window).
-fn commas(line: usize) -> String {
-    format!(
-        "warning: grund.toml:9: expected string, read for now with every comma before the `]` \
-         taken off; delete each comma on line {line} that has no element before it; this \
-         warning becomes an error in grund 0.22.0\n"
-    )
-}
+/// The refusal of an array at line 9 whose text loaded through the window
+/// (§FS-config-v2.reader.5.commas.refusal).
+const BECAME: &str = "error: grund.toml:9: expected string; this became an error in grund 0.22.0\n";
 
 struct Fixture(PathBuf);
 
@@ -43,11 +38,16 @@ impl Fixture {
     /// A clean version-2 tree whose `exclude`, on line 9, is `value`, which may run on
     /// across the lines after it.
     fn exclude(value: &str) -> Self {
+        Self::sources("exclude", value)
+    }
+
+    /// A clean version-2 tree whose `[schema.sources]` key `key`, on line 9, is `value`.
+    fn sources(key: &str, value: &str) -> Self {
         static SERIAL: AtomicUsize = AtomicUsize::new(0);
         let serial = SERIAL.fetch_add(1, Ordering::Relaxed);
         let dir = std::env::temp_dir().join(format!("grund-1087-{}-{serial}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
-        let config = format!("{HEAD}exclude = {value}\n");
+        let config = format!("{HEAD}{key} = {value}\n");
         let files = [
             ("grund.toml", config.as_str()),
             ("specs/spec.md", SPEC),
@@ -103,44 +103,14 @@ impl Fixture {
             .to_string()
     }
 
-    /// `check --format json`'s stderr lines, requiring exit 0 and an empty stdout.
-    fn json(&self) -> Vec<String> {
-        let run = self.run(&["check", "--format", "json"]);
-        assert_eq!(
-            (run.code, run.stdout.as_str()),
-            (Some(0), ""),
-            "{}",
-            run.stderr
-        );
-        run.stderr.lines().map(str::to_string).collect()
-    }
-
-    /// The window's whole contract for an array whose one finding is `warning`: `check`,
-    /// `config validate` and `config show` print it and exit 0, `config show` prints the
-    /// value read as before, `shown`, JSON carries the code and the key's line, and
-    /// `--ignore config-not-toml` brings back `success`.
-    fn warns(&self, warning: &str, shown: &str) {
-        self.expect(&["check"], 0, "", warning);
-        self.expect(&["config", "validate"], 0, "", warning);
-        assert_eq!(self.shown(warning), shown);
-        let lines = self.json();
-        assert_eq!(lines.len(), 1, "{lines:?}");
-        for part in [
-            "\"severity\":\"warning\"",
-            "\"path\":\"grund.toml\"",
-            "\"line\":9",
-            "\"code\":\"config-not-toml\"",
-            "read for now with every comma before the `]` taken off",
-            "this warning becomes an error in grund 0.22.0",
-        ] {
-            assert!(lines[0].contains(part), "{part} missing from {}", lines[0]);
-        }
-        self.expect(
-            &["check", "--ignore", "config-not-toml"],
-            0,
-            "success\n",
-            "",
-        );
+    /// The refusal's whole contract (§FS-config.4.3): `check` and `config show` exit 2 and
+    /// `config validate` 1, each printing `refusal` alone on stderr and nothing on stdout, and
+    /// `--ignore config-not-toml` drops nothing, because a refused load is no finding.
+    fn refused(&self, refusal: &str) {
+        self.expect(&["check"], 2, "", refusal);
+        self.expect(&["config", "validate"], 1, "", refusal);
+        self.expect(&["config", "show"], 2, "", refusal);
+        self.expect(&["check", "--ignore", "config-not-toml"], 2, "", refusal);
     }
 
     /// The loads-silently contract: `check` prints `success`, `config validate` nothing, and
@@ -158,121 +128,72 @@ impl Drop for Fixture {
     }
 }
 
-/// grund.158's case, line 9, one comma against two: `["ab",]` loads as `["ab"]` with no word,
-/// and `["ab",,]` still loads as `["ab"]` but warns, naming line 9 and 0.22.0.
+/// grund.158's case, line 9, one comma against two (§FS-config-v2.reader.5.commas.refusal):
+/// `["ab",]` loads as `["ab"]` with no word, and `["ab",,]` is refused, naming 0.22.0.
 #[test]
-fn one_trailing_comma_loads_and_a_second_one_warns() {
+#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
+fn one_trailing_comma_loads_and_a_second_one_is_refused() {
     Fixture::exclude("[\"ab\",]").loads("exclude = [\"ab\"]");
-    Fixture::exclude("[\"ab\",,]").warns(&commas(9), "exclude = [\"ab\"]");
+    Fixture::exclude("[\"ab\",,]").refused(BECAME);
 }
 
-/// §FS-config-v2.reader.5.commas.window: every run of two or more adjacent commas after the
-/// last element is taken off as before, whatever whitespace stands around it, and warns.
+/// §FS-config-v2.reader.5.commas.refusal: every run of two or more adjacent commas after the
+/// last element is refused, naming 0.22.0, whatever whitespace stands around the run.
 #[test]
-fn adjacent_commas_after_the_last_element_warn_and_are_read_as_before() {
+#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
+fn adjacent_commas_after_the_last_element_are_refused() {
     for value in ["[\"ab\" ,, ]", "[\"ab\",,,]"] {
-        Fixture::exclude(value).warns(&commas(9), "exclude = [\"ab\"]");
+        Fixture::exclude(value).refused(BECAME);
     }
 }
 
-/// §FS-config-v2.reader.5.commas.window: in an array written across lines the warning stays
-/// at the key's line, and its remedy names line 10, where the doubled comma stands.
+/// §FS-config-v2.reader.5.commas.refusal: in an array written across lines the refusal is at
+/// the key's line, line 9, though the doubled comma stands on line 10.
 #[test]
-fn a_doubled_comma_on_a_later_line_names_the_line_it_stands_on() {
-    Fixture::exclude("[\n  \"ab\",,\n]").warns(&commas(10), "exclude = [\"ab\"]");
+#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
+fn a_doubled_comma_on_a_later_line_is_refused_at_the_keys_line() {
+    Fixture::exclude("[\n  \"ab\",,\n]").refused(BECAME);
 }
 
-/// §FS-config-v2.reader.5.commas.window: an array with no element and one comma, or one run of
-/// them, is read as the empty list and warns, naming the comma's line; a comment beside the
-/// `[` is read as whitespace is.
+/// §FS-config-v2.reader.5.commas.refusal: an array with no element and one comma, or one run of
+/// them, is refused, naming 0.22.0; a comment beside the `[` is read as whitespace is.
 #[test]
-fn an_array_of_commas_alone_warns_and_is_read_as_empty() {
-    for (value, line) in [
-        ("[,]", 9),
-        ("[ , ]", 9),
-        ("[,,]", 9),
-        ("[\n  ,\n]", 10),
-        ("[ # c\n  ,\n]", 10),
-    ] {
-        Fixture::exclude(value).warns(&commas(line), "exclude = []");
+#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
+fn an_array_of_commas_alone_is_refused() {
+    for value in ["[,]", "[ , ]", "[,,]", "[\n  ,\n]", "[ # c\n  ,\n]"] {
+        Fixture::exclude(value).refused(BECAME);
     }
 }
 
-/// §FS-config-v2.reader.5.commas.window: an array with an open line and a doubled comma earns
-/// both warnings. `config validate` and `config show` keep the config's order, the open line's
-/// first; `check` sorts them (§FS-errors.4.1), so there the commas' comes first.
+/// §FS-config-v2.reader.5.commas.refusal: the suffix is the array's text's, not the key's, so a
+/// window shape under a key that would refuse its element anyway still names 0.22.0: 0.21.x
+/// said `unknown language` for `["nope",,]`. One trailing comma after the element keeps that
+/// refusal, and a shape refused before keeps its bare `expected string`.
 #[test]
-fn an_open_line_and_a_doubled_comma_earn_both_warnings() {
-    let fx = Fixture::exclude("[\n  \"a\nb\",,\n]");
-    let open = "warning: grund.toml:9: unclosed array (a string is still open at the end of \
-                line 10), read for now with the line break as a space; close the string on \
-                line 10; this warning becomes an error in grund 0.22.0\n";
-    let commas = commas(11);
-    fx.expect(&["check"], 0, "", &format!("{commas}{open}"));
-    let config_order = format!("{open}{commas}");
-    fx.expect(&["config", "validate"], 0, "", &config_order);
-    assert_eq!(fx.shown(&config_order), "exclude = [\"a b\"]");
-    let lines = fx.json();
-    assert_eq!(lines.len(), 2, "{lines:?}");
-    assert!(
-        lines[0].contains("every comma before the `]`"),
-        "{}",
-        lines[0]
-    );
-    assert!(
-        lines[1].contains("still open at the end of line 10"),
-        "{}",
-        lines[1]
-    );
-    for line in &lines {
-        assert!(line.contains("\"code\":\"config-not-toml\""), "{line}");
-        assert!(line.contains("\"line\":9"), "{line}");
-    }
-    fx.expect(
-        &["check", "--ignore", "config-not-toml"],
-        0,
-        "success\n",
-        "",
-    );
+#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
+fn a_window_shape_names_0_22_whatever_its_key_would_have_said() {
+    Fixture::sources("languages", "[\"nope\",,]").refused(BECAME);
+    let unknown = "error: grund.toml:9: unknown language `nope` in [schema.sources] languages\n";
+    Fixture::sources("languages", "[\"nope\",]").refused(unknown);
+    Fixture::sources("languages", "[\"nope\", ,]").refused(REFUSAL);
 }
 
-/// §FS-config-v2.reader.5.commas.window: an array with a string that closes early and a doubled
-/// comma earns both warnings. `config validate` and `config show` keep the config's order, the
-/// commas' first; `check` sorts them (§FS-errors.4.1), so there the early close comes first.
+/// §FS-config-v2.reader.5.commas.refusal, pinned while the open-line window of
+/// §FS-config-v2.reader.5.strings.window is still open: the lines are joined, and the joined
+/// array's doubled comma is refused, and its open line earns no warning beside the refusal.
 #[test]
-fn an_early_close_and_a_doubled_comma_earn_both_warnings() {
-    let fx = Fixture::exclude("[\"a\" \"b\",,]");
-    let early = "warning: grund.toml:9: expected string, read for now as the one string \
-                 `a\" \"b`; end the string on line 9 at its closing quote: write `\\\"` for a \
-                 quote inside it, or a `,` between two strings; this warning becomes an error \
-                 in grund 0.22.0\n";
-    let commas = commas(9);
-    fx.expect(&["check"], 0, "", &format!("{early}{commas}"));
-    let config_order = format!("{commas}{early}");
-    fx.expect(&["config", "validate"], 0, "", &config_order);
-    assert_eq!(fx.shown(&config_order), "exclude = [\"a\\\" \\\"b\"]");
-    let lines = fx.json();
-    assert_eq!(lines.len(), 2, "{lines:?}");
-    assert!(
-        lines[0].contains("read for now as the one string"),
-        "{}",
-        lines[0]
-    );
-    assert!(
-        lines[1].contains("every comma before the `]`"),
-        "{}",
-        lines[1]
-    );
-    for line in &lines {
-        assert!(line.contains("\"code\":\"config-not-toml\""), "{line}");
-        assert!(line.contains("\"line\":9"), "{line}");
-    }
-    fx.expect(
-        &["check", "--ignore", "config-not-toml"],
-        0,
-        "success\n",
-        "",
-    );
+#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
+fn an_open_line_and_a_doubled_comma_are_refused_alone() {
+    Fixture::exclude("[\n  \"a\nb\",,\n]").refused(BECAME);
+}
+
+/// §FS-config-v2.reader.5.commas.refusal, pinned while the early-close window of
+/// §FS-config-v2.reader.6.window is still open: the doubled comma is refused, and the string
+/// that closes early earns no warning beside the refusal.
+#[test]
+#[ignore = "red until #1098 keeps each comma with no element before it; implement removes this"]
+fn an_early_close_and_a_doubled_comma_are_refused_alone() {
+    Fixture::exclude("[\"a\" \"b\",,]").refused(BECAME);
 }
 
 /// Guard, green today and kept: a shape the readers before refused, because whitespace or an
@@ -286,11 +207,9 @@ fn shapes_refused_before_keep_their_bare_refusal() {
         "[\"ab\", ,]",
         "[ , , ]",
         "[\n  \"ab\",\n  ,\n]",
+        "[\n  ,\n  ,\n]",
     ] {
-        let fx = Fixture::exclude(value);
-        fx.expect(&["check"], 2, "", REFUSAL);
-        fx.expect(&["config", "validate"], 1, "", REFUSAL);
-        fx.expect(&["config", "show"], 2, "", REFUSAL);
+        Fixture::exclude(value).refused(REFUSAL);
     }
 }
 

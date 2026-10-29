@@ -325,8 +325,15 @@ class ThisRepositoryTests(unittest.TestCase):
         unreached-declaration flip (§FS-rules.checks.unreached-declaration)
         refuse 0.15.x, the unlisted-`[workspace]` flip (§FS-check.3.29.14)
         refuses 0.14.x, and the `prefix` removal refuses 0.12.x. The integrations
-        retirement's lines raise the tree's floor further, and are judged apart."""
-        floor, _ = ramps.release_window(apart_from_the_integrations_retirement(self.claims))
+        retirement's lines raise the tree's floor further, and so do the lines of
+        the flips that landed for 0.22.0 (§FS-config-v2.reader.5.commas.refusal);
+        both are judged apart."""
+        older = [
+            claim
+            for claim in apart_from_the_integrations_retirement(self.claims)
+            if not (claim.direction == ramps.LANDED and claim.release == "0.22.0")
+        ]
+        floor, _ = ramps.release_window(older)
         self.assertEqual(floor, "0.19.0")
         report = ramps.report(self.claims, "0.15.0")
         self.assertTrue(
