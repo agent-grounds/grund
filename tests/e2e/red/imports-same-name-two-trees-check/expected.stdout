@@ -1,0 +1,4 @@
+../a/grund.toml:4: warning: import `a/shared` is read live from `../shared-1`, unpinned
+../b/grund.toml:4: warning: import `b/shared` is read live from `../shared-2`, unpinned
+grund.toml:4: warning: import `a` is read live from `../a`, unpinned
+grund.toml:8: warning: import `b` is read live from `../b`, unpinned

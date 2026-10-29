@@ -202,7 +202,9 @@ and with none of the consumer's or the machine's: no consumer `.gitignore` or `.
 above it, no `.git/info/exclude`, and no global `core.excludesFile`. A consumer's `*.md`
 line or one developer's global excludes would otherwise delete the remote's declarations
 from view, and two clones of one commit would disagree. A mounted root's ignore state is
-therefore a committed, portable input ([§REQ-deterministic-output.2](../requirements/REQ-deterministic-output.md#2-input-is-the-tree-the-config-and-the-invocation)).
+therefore a committed, portable input ([§REQ-deterministic-output.2](../requirements/REQ-deterministic-output.md#2-input-is-the-tree-the-config-and-the-invocation)). Its own ignore files are the ones at
+and below the mounted root, whether or not that root is a git checkout: an ignore file of its
+repository above it is no more its own than the consumer's is.
 
 ## differences: The closed list of differences
 

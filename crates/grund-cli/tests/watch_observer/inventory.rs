@@ -309,6 +309,56 @@ fn watch_inventory_shared_resolver_and_narrowed_scope() {
     );
 }
 
+/// A config that declares no import records the same effective inputs with a sibling
+/// whose `project_name` matches a cited alias present or gone, and nothing under it
+/// (§FS-imports.declaration.none, §FS-check.6.1.3). Holds today.
+#[test]
+fn watch_inventory_no_imports_never_reads_a_sibling() {
+    let _serial = crate::support::serial();
+    let f = Fixture::new();
+    f.write(
+        "enterprise/grund.toml",
+        "grund_config_version = 2\nproject_name = \"enterprise\"\n",
+    );
+    f.write(
+        "enterprise/src/Example.java",
+        "// \u{a7}native-image/FS-security-providers\n",
+    );
+    let inventory = |f: &Fixture| {
+        let inputs = Arc::new(Mutex::new(BTreeSet::new()));
+        let record = inputs.clone();
+        let observer: grund_core::CheckInputObserver = Arc::new(move |input| {
+            record.lock().unwrap().insert(input);
+            true
+        });
+        let mut opts = f.opts();
+        opts.path = f.0.join("enterprise");
+        opts.path_provided = true;
+        grund_core::with_check_input_observer(Some(observer), || {
+            let _ = grund_core::check_with_run_warnings(opts);
+        });
+        let inputs = inputs.lock().unwrap().clone();
+        inputs
+    };
+    let without = inventory(&f);
+    f.write(
+        "graal/substratevm/grund.toml",
+        "grund_config_version = 2\nproject_name = \"native-image\"\n\n\
+         [schema.kinds.FS]\nfolders = [\"docs/functional-spec\"]\n",
+    );
+    f.write(
+        "graal/substratevm/docs/functional-spec/FS-security-providers.md",
+        "# FS-security-providers: Registered at build time\n",
+    );
+    let with = inventory(&f);
+    assert_eq!(without, with);
+    let sibling = f.0.join("graal");
+    assert!(
+        with.iter().all(|input| !input.path.starts_with(&sibling)),
+        "{with:?}"
+    );
+}
+
 #[cfg(unix)]
 #[test]
 fn watch_inventory_followed_external_target_replacement() {

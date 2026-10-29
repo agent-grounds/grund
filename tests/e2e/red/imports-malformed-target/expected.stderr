@@ -1,0 +1,2 @@
+error: ../graal/substratevm/grund.toml:3: unknown key `strcit` at the top level (expected grund_config_version or project_name)
+note: imported as `native-image` from grund.toml:4

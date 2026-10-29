@@ -1,0 +1,1 @@
+error: grund.toml:7: unknown key `ref` in [workspace.imports.native-image] (expected path or project)

@@ -126,10 +126,11 @@ NOT_YET_MIGRATED = (
 )
 
 
-# Codes the catalog publishes ahead of the release that introduces them: their
-# sections and rows land with the contract, and the selector constant gains them
-# with the Remotes piece of §DF-remote-projects, which strikes them off here.
+# Codes the catalog publishes ahead of the release that introduces them: their sections
+# and rows land with the contract, and the change that ships each one (§DF-remote-projects,
+# §DF-imports) adds it to the selector constant and strikes it off here.
 SPECIFIED_AHEAD = {
+    "FS-imports": ("import-live", "import-missing"),
     "FS-remote-projects": ("remote-missing", "remote-modified", "remote-orphan", "remote-stale"),
 }
 

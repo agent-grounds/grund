@@ -1,0 +1,2 @@
+// §FS-missing
+class Main {}

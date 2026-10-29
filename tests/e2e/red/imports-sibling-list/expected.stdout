@@ -1,0 +1,1 @@
+native-image/FS-security-providers  ../graal/substratevm/docs/functional-spec/FS-security-providers.md:1  Security providers are registered at build time

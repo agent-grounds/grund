@@ -1,0 +1,1 @@
+{"project":"native-image","id":"native-image/FS-security-providers","kind":"FS","path":"../graal/substratevm/docs/functional-spec/FS-security-providers.md","line":1,"title":"Security providers are registered at build time","stub":false,"defines":null,"refs":2,"duplicate":false}

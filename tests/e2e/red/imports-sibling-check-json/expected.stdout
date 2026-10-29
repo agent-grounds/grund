@@ -1,0 +1,1 @@
+{"severity":"warning","path":"grund.toml","line":4,"code":"import-live","message":"import `native-image` is read live from `../graal/substratevm`, unpinned","sites":null,"authority":null}

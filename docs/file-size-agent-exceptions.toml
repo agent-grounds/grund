@@ -132,7 +132,7 @@ path = "docs/functional-spec/FS-workspace.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 1183, unit = "lines" }
+max_accepted = { value = 1192, unit = "lines" }
 until = "workspace concerns move into independently declared child specs with stable replacements for existing FS-workspace section citations"
 reason = """
 This file is the single normative contract for workspace configuration, resolution, command scope, nested boundaries, and alias IDs. The issue-232 one-line correction belongs in §FS-workspace.5 so its existing citations remain stable. Missing boundary: independently declared child specifications for those concerns, plus a migration for the section citations that currently target this declaration.
@@ -142,6 +142,8 @@ Issue 474 changes only the link to the renamed roadmap heading in this file, wit
 Issue 823 adds the member diagnostic point under the existing §FS-workspace.5.1, as its supervising contract requires. The independent workspace child specifications and citation migration named above still do not exist. The ceiling is reconciled to the current 1180 non-blank lines, without headroom for further growth.
 
 Issue #921 adds one sentence to §FS-workspace.2.2.2, pointing at the init point that keeps a member list while an optional member is absent, so the workspace side of the boundary names it. The split boundary above remains; the ceiling accepts the measured 1183 non-blank lines, with no growth allowance.
+
+Issue #1080 specifies imports in their own declaration, FS-imports, and adds here only what the workspace points must say about them: an import's alias joins the sibling level of §FS-workspace.3, and §FS-workspace.7 names an import as the unpinned way to cite a neighbouring repository, in one new paragraph. The file already measured 1191 non-blank lines on arrival. The split boundary above remains; the ceiling accepts the measured 1192 non-blank lines, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-check.md"
@@ -279,7 +281,7 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["large-file-default"]
 kind = "deferred"
-max_accepted = { value = 309940, unit = "bytes" }
+max_accepted = { value = 310232, unit = "bytes" }
 until = "the finding catalog moves into independently declared child specifications and existing FS-check section citations are migrated"
 reason = """
 The check specification still combines recognition, reporting, its finding catalog and watch behavior in one declaration. Issue #823 adds only a cross-reference to the defining member diagnostic point in FS-workspace.5.1.1. Missing boundary: independent finding specifications with a stable mapping for current FS-check section citations; moving that catalog is outside this specification-only diagnostic change. This byte ceiling accepts only the current measured file size, separately from the existing line-budget exception.
@@ -307,6 +309,8 @@ Issue #1071 has a missing-section finding name where the section lock's recorded
 Issue #1073 adds §FS-check.checks.off-format-citation with its release point §FS-check.checks.off-format-citation.1, the §FS-check.1.1.12 pointer, and the new finding in the out-of-scope lead of §FS-check.3.14. The file already measured 304776 bytes on arrival, past the 301793 ceiling #1071 recorded; this specification adds 5127 bytes. The same mapped migration of the finding catalog retires the debt, and remains outside a specification-only contract. The byte ceiling accepts exactly the measured 309903 bytes, with no growth allowance.
 
 The implementation of #1073 names the out-of-scope code in the code list of §FS-check.3.14.5, which the finding's out-of-scope tier requires, and counts six rather than five codes there, adding no line; escaping its one illustration in another format, in §FS-check.4.1.1, adds two bytes. The ceiling accepts exactly the measured 309940 bytes, with no growth allowance.
+
+Issue #1080 adds one sentence to §FS-check.2.1.2, the point that already says which findings no selector hides: the two import codes join `io` there once imports ship. The codes themselves are specified in FS-imports, so only the selection fact lands here. The file already measured 309940 bytes on arrival, at the ceiling #1073 recorded; this sentence adds 292. The same mapped migration of the finding catalog retires the debt and remains outside a specification-only contract. The byte ceiling accepts exactly the measured 310232 bytes, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-init.md"

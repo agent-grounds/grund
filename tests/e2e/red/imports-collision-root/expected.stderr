@@ -1,0 +1,1 @@
+error: grund.toml:4: duplicate workspace project alias `enterprise` (workspace root and import `../graal/substratevm`)

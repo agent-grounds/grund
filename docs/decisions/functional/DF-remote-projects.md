@@ -81,6 +81,8 @@ The approved plan took four further choices as proposed:
 - **`scope` narrowing** of a projection: a partial tree breaks equivalence by construction
   ([§FS-remote-projects.projection.format](../../functional-spec/FS-remote-projects.md#projectionformat-format-1-with-no-narrowing)).
 
+A tree the build already placed beside the consumer is read live through an import instead, which is not a remote and claims no pin ([§DF-imports](DF-imports.md#df-imports-an-import-is-a-named-input-read-live-from-a-sibling-tree-never-a-remote)).
+
 ## 3. Consequences
 
 - The contract lands first, with no behaviour: this decision, [§FS-remote-projects](../../functional-spec/FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection),

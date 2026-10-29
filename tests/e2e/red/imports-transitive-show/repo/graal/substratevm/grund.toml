@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "native-image"
+
+[schema.kinds.FS]
+folders = ["docs/functional-spec"]
+
+[workspace.imports.org]
+path = "../../org"
+project = "org"

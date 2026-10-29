@@ -1,0 +1,2 @@
+{"project":"lib-a/core","id":"lib-a/core/FS-x","kind":"FS","path":"../core/docs/fs/FS-x.md","line":1,"title":"X","stub":false,"defines":null,"refs":6,"duplicate":false}
+{"project":"lib-b/core","id":"lib-b/core/FS-x","kind":"FS","path":"../core/docs/fs/FS-x.md","line":1,"title":"X","stub":false,"defines":null,"refs":6,"duplicate":false}

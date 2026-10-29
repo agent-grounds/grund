@@ -1,0 +1,1 @@
+error: ../graal/substratevm/grund.toml:4: import cycle: enterprise → native-image → enterprise

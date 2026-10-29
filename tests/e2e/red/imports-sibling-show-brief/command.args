@@ -1,0 +1,1 @@
+show native-image/FS-security-providers --brief --path {repo}/enterprise

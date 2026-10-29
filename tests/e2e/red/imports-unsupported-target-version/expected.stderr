@@ -1,0 +1,2 @@
+error: ../graal/substratevm/grund.toml:1: unsupported config version `3` (this grund understands grund_config_version = 1 or 2; upgrade grund if the config is newer)
+note: imported as `native-image` from grund.toml:4

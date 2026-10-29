@@ -1,0 +1,1 @@
+error: grund.toml:5: import `native-image` resolves to the config root that declares it
