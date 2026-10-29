@@ -14,4 +14,6 @@ citations
   code  —
 ```
 
+A kind's fields follow it, one `field` line each. Where a field sets a `title`, its line ends with ``titled `Title` ``: that is the exact text the field's heading must carry, `## <handle>: Title`, and `grund check` refuses a heading that differs by one byte.
+
 `--format mermaid` and `--format dot` print the same facts as graph source. `grund config show` is for the effective TOML, every value filled in.

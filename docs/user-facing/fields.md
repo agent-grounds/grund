@@ -338,15 +338,21 @@ it from the finding ([§FS-init.2.3.5.12.2](../functional-spec/FS-init.md#235122
 
 `grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:
 
+- **FS**
+  - field terms must · first · titled `Terms`
 - **DF**
   - field status must · first · one of Proposed, Accepted, Superseded
   - closed must
 ```
 
+A field that sets a `title` names it last, `titled` and the title as a code
+span, because that is the heading text `check` holds the chapter to byte for
+byte ([§FS-schema.4.1](../functional-spec/FS-schema.md#41-fields-are-lines-inside-their-kinds-node)).
+
 The section sits in the `AGENTS.md` of the directory above the kind's places,
 or in the root block under `[presentation] rules = "root"`
 ([scoped guidance](init.md#scoped-guidance-in-a-version-2-config)). A declared
-field moves the block to v21, or v22 where a rule kind is enabled, so the first
+field moves the block to v45, or v46 where a rule kind is enabled, so the first
 `grund check` after adding one reports the block outdated until `grund init`
 runs.
 

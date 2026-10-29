@@ -61,7 +61,9 @@ A|B = one obligation, met by citing either · — = no direction rule names it
   word: `kind` declares IDs, `place` is a folder whose files cite and are
   checked but declare nothing, `place, not scanned` is never read, and the
   `complement` is every scanned file no other row claims. A kind's fields follow
-  it, one `field` line each: presence, placement, and what the chapter may say.
+  it, one `field` line each: presence, placement, what the chapter may say,
+  and last the heading title the field is held to, where it sets one
+  (``field terms  must · first · titled `Terms` ``).
   A row with several places lists every one, comma-separated in written order
   (`docs/a/, docs/b/`). In a version-2 config, a `code` row that lists places
   is the complement, drawn with those places (`crates/, scripts/`) and no
