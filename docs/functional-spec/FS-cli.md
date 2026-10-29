@@ -119,6 +119,14 @@ names that set beside the whole catalog, and its sample call is the flag that se
   list          Every declared ID, or the ones nothing cites.           grund list --unused
 ```
 
+The `integrations` row names `grund-lsp` beside the clickable-citation clients the command
+installs, because this row is where an editor user looks for setup, and navigation in an
+editor is `grund-lsp`'s rather than this command's ([§FS-integrations.2.3](FS-integrations.md#23-the-way-to-grund-lsp)):
+
+```text
+  integrations  Clickable-citation clients; LSP editors use grund-lsp.  grund integrations wezterm
+```
+
 ### 2.3 A subcommand's help page
 
 Static help describes configuration scope truthfully across supported versions, without discovering a configuration just to render help. In particular, `check` help preserves the no-config default directories, and either uses version-neutral scope terms or explicitly labels v1's `[scan] include` and v2's places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)). Its `--full` description widens past configured scope as [§FS-config-v2.schema.places.boundaries.7](FS-config-v2.md#schemaplacesboundaries7---full-widens-past-the-places) specifies; it does not suggest bypassing source exclusions ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)). An unqualified instruction to set `[scan] include` is not v2 repair advice.

@@ -18,7 +18,7 @@ Set up:
   init          Scaffold agent instructions + grund.toml.               grund init --scaffold
   config        Validate or show grund.toml; explain a key or a code.   grund config show
   schema        Kinds, places, shapes and citation rules at a glance.   grund schema
-  integrations  Print/install clickable-citation integrations.          grund integrations wezterm
+  integrations  Clickable-citation clients; LSP editors use grund-lsp.  grund integrations wezterm
   completions   Print shell completion scripts.                         grund completions bash
 
 Guides and examples:  https://github.com/agent-grounds/grund/tree/main/docs/user-facing

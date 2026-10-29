@@ -14,6 +14,10 @@ only that preference. --conversation-target picks how a linked citation
 addresses its declaration; --agent scopes that choice to one agent instead
 of the machine. --format json emits a plan.
 
+Go-to-definition, hover and completion in an editor come from grund-lsp, not
+from these integrations; IntelliJ-family editors get them through
+`grund-lsp integrations lsp4ij`.
+
 Options:
   --path-base project|invocation
                        project (default) spells report paths from the config root;
@@ -33,3 +37,4 @@ Preview and install examples:
 Exit:  0 printed or installed · 2 invalid options, missing write target, or a newer block.
 
 Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/clickable-citations.md
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/lsp.md
