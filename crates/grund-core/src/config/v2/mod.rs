@@ -30,6 +30,8 @@ mod sources_model;
 mod tables;
 #[cfg(test)]
 mod tests_keys;
+#[cfg(test)]
+mod tests_walk;
 mod walk;
 
 #[cfg(test)]

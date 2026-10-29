@@ -188,7 +188,7 @@ What a citing kind (or place) must, should, may, should not and must not cite. [
 
 ## Version 2
 
-Version 2: keys grouped by concern — `[schema]` for what exists, `[rules]` for how it relates, `[presentation]` for what grund writes. Every constraint takes one strength: `must` is an error, `warn` a warning, `should` a suggestion shown by `grund check --suggestions`, and `may` is not checked.
+Version 2: keys grouped by concern — `[schema]` for what exists, `[rules]` for how it relates, `[presentation]` for what grund writes. Every constraint takes one strength: `must` is an error, `warn` a warning, `should` a suggestion shown by `grund check --suggestions`, and `may` is not checked. An array may be written across lines, but a string in it may not: a string left open at the end of a line is a warning until grund 0.22.0 and an error from then on.
 
 ### Top level
 

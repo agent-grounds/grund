@@ -127,6 +127,8 @@ NOT_YET_MIGRATED = (
 # sections and rows land with the contract, and the selector constant gains them
 # with the Remotes piece of §DF-remote-projects, which strikes them off here.
 SPECIFIED_AHEAD = {
+    # Red until #1089 warns; implement strikes this entry off with the `planned — ` marks.
+    "FS-config-v2": ("config-multiline-string", "config-not-toml"),
     "FS-remote-projects": ("remote-missing", "remote-modified", "remote-orphan", "remote-stale"),
 }
 

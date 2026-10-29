@@ -99,7 +99,43 @@ The reader keeps the line every value was written at, so the one validation pass
 
 ### reader.5: An array may span lines
 
-An array value may be written across lines. It opens on its key's line, and every line after it, with its `#` comment taken off, belongs to it until its `[` closes outside a string, so no line inside it is read as a header or a key. It is one value, read and located at its key's line ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)), and it may end in the trailing comma TOML allows before its `]`. Its elements are then read as a one-line list's are, each ending only at a comma outside a string ([§FS-config.3.11](FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string)). One still open at the end of the file is refused at its key's line as `unclosed array`.
+An array value may be written across lines; a string in it may not ([§FS-config-v2.reader.5.strings](FS-config-v2.md#reader5strings-a-string-closes-on-the-line-it-opens-on)). It opens on its key's line, and every line after it, with its `#` comment taken off, belongs to it until its `[` closes outside a string, so no line inside it is read as a header or a key. It is one value, read and located at its key's line ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)), and it may end in the trailing comma TOML allows before its `]`. Its elements are then read as a one-line list's are, each ending only at a comma outside a string ([§FS-config.3.11](FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string)). One still open at the end of the file is refused at its key's line as `unclosed array`, and where a line of it ended inside a string the refusal appends a parenthetical naming the first such line, ` (a string is still open at the end of line <n>)`, or the one [§FS-config-v2.reader.5.strings.multi-line](FS-config-v2.md#reader5stringsmulti-line-a-string-opened-with--is-one-version-2-does-not-read) gives a string that opened with `"""`.
+
+#### reader.5.strings: A string closes on the line it opens on
+
+A string in an array closes on the line it opens on, as a TOML basic string does, so a line break is never part of a value. A line of an array that ends inside a string is the array's *open line*, and the first such line is the one every message below names as `<n>`. A string is open at a line's end when the `"` that opened it has no closing `"` after it on that line; a `"` is a quote unless it is part of a `\"` escape, by the one rule [§FS-config.3.11](FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string) reads strings by, so `"a\"` at a line's end is still open. Each line still has its `#` comment taken off on its own ([§FS-config-v2.reader.5](FS-config-v2.md#reader5-an-array-may-span-lines)); once no string crosses a line, the string boundaries of the joined array are those of each line, so a `#` taken for a comment is never one inside a string.
+
+The array is read and refused at its key's line ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)), as every array is, and the rule moves the verdict on files the 0.18.0 to 0.20.x readers loaded, so it arrives through a deprecation window ([§FS-config-v2.reader.5.strings.window](FS-config-v2.md#reader5stringswindow-through-grund-021x-an-array-a-later-line-closes-is-read-as-before-and-warns)) before the refusal ([§FS-config-v2.reader.5.strings.refusal](FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array)), the route [§DF-v2-string-closes-on-its-line](../decisions/functional/DF-v2-string-closes-on-its-line.md#df-v2-string-closes-on-its-line-a-string-in-a-version-2-array-closes-on-its-own-line-warned-for-in-0210-and-refused-from-0220) records. Version 1 reads no array across lines ([§FS-config.3](FS-config.md#3-keys-version-1)) and is untouched.
+
+##### reader.5.strings.window: Through grund 0.21.x an array a later line closes is read as before and warns
+
+Through grund 0.21.x an array that has an open line and that a later line closes is still read as the readers before it read it: the lines are joined with the break read as one space, so `exclude = [` / `"a` / `b",` / `]` is the list `["a b"]` and `"a,` / `b",` the list `["a, b"]`. The config loads, and the run earns one warning at the array's key's line, naming the open line and the release that refuses it:
+
+```text
+warning: grund.toml:7: unclosed array (a string is still open at the end of line 8), read for now with the line break as a space; close the string on line 8; this warning becomes an error in grund 0.22.0
+```
+
+Its code is `config-not-toml` ([§FS-config-v2.checks.config-not-toml](FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses)), or `config-multiline-string` where the string opened with `"""` ([§FS-config-v2.reader.5.strings.multi-line](FS-config-v2.md#reader5stringsmulti-line-a-string-opened-with--is-one-version-2-does-not-read)). One array earns one warning, however many of its lines end inside a string. An array that no later line closes earns no warning: it is refused, now as before, as `unclosed array` with the parenthetical ([§FS-config-v2.reader.5](FS-config-v2.md#reader5-an-array-may-span-lines)).
+
+##### reader.5.strings.refusal: From grund 0.22.0 the open line ends the array
+
+From grund 0.22.0 no line after an open line is joined to the array: the open line is the array's last, the array is still open there, and it is refused at its key's line as `unclosed array` with the parenthetical naming the open line, exit `2` on every command that loads the config ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). Where the readers before 0.22.0 would have closed the array on a later line, so that the file loaded through the window, the refusal ends with the release that made it one ([§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)):
+
+```text
+error: grund.toml:7: unclosed array (a string is still open at the end of line 8); this became an error in grund 0.22.0
+```
+
+Where they would not have closed it either, the array was refused before and the refusal claims no release: `exclude = ["a,b]` as the last line of the file is `error: grund.toml:7: unclosed array (a string is still open at the end of line 7)`, in 0.21.x and from 0.22.0 alike. The ancestor climb reads the array through the same join, so a `[workspace] members` value with an open line is not a list exactly where the reader refuses it, and another key's array with an open line is passed over as one still open at the end of the file is ([§FS-workspace.6.1.7.5](FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable)).
+
+##### reader.5.strings.multi-line: A string opened with `"""` is one version 2 does not read
+
+TOML admits a multi-line basic string, opened and closed by `"""`, and version 2 does not read one: a file that writes one is TOML, but not a `grund.toml` version 2 reads. So where the string open at the end of the open line opened with `"""`, every message above says that rather than that a string is unclosed. The parenthetical is ` (a multi-line string opens on line <n>, which version 2 does not read)`, the warning's code is `config-multiline-string` ([§FS-config-v2.checks.config-multiline-string](FS-config-v2.md#checksconfig-multiline-string-a-version-2-config-array-holds-a-multi-line-string)), and its remedy is to write the string on that line as one basic string:
+
+```text
+warning: grund.toml:7: unclosed array (a multi-line string opens on line 8, which version 2 does not read), read for now with the line break as a space; write the string on line 8 as one basic string; this warning becomes an error in grund 0.22.0
+```
+
+The window and the refusal are the ones above: through 0.21.x `exclude = [` / `"""a` / `b""",` / `]` loads as it always has, as the one element `""a b""`, its quotes kept, and from 0.22.0 it is refused. Reading multi-line strings is not part of version 2.
 
 ## defaults: The v2 epoch
 
@@ -500,3 +536,33 @@ Both readers lower into the same records, so the records hold every state either
 | `[fmt.cross_refs] enabled = false`, or an `anchor_format` other than `"github"` | none in this grund ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)) | the formatter's link policy |
 | An `include` entry that does not exist | none: a place is a file or a folder | the authored scan root, of no known type |
 | A project `grounding_level` that only `--require-grounding` switches on | a rung of a ladder, which is always on | the level, apart from whether it is enforced |
+
+## checks: Checks
+
+The check codes the version-2 reader's own findings carry, beside the `check` code catalog's row for each ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)).
+
+### checks.config-not-toml: A version-2 config holds text TOML refuses
+
+A version-2 config that holds text TOML refuses, and that this grund still reads for one release as the readers before it did, earns one warning with code `config-not-toml` per construct, at the line of the key whose value holds it. Its one construct today is an array with a string still open at the end of a line that a later line closes ([§FS-config-v2.reader.5.strings.window](FS-config-v2.md#reader5stringswindow-through-grund-021x-an-array-a-later-line-closes-is-read-as-before-and-warns)):
+
+```text
+warning: grund.toml:7: unclosed array (a string is still open at the end of line 8), read for now with the line break as a space; close the string on line 8; this warning becomes an error in grund 0.22.0
+```
+
+The message is the refusal the construct becomes in the named release, then what it is read as until then, then the remedy, then the release ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)). It fires only for a config file read as version 2, and never for version 1, whose reader reads no value across lines ([§FS-config.3](FS-config.md#3-keys-version-1)).
+
+It is a CLI-level `warning:` on stderr whose text carries the config line ([§FS-errors.2.2.1](FS-errors.md#221-a-location-inside-the-message-text)), on `check`, `config validate` and `config show` and no other command, as [§FS-check.4.11.2](FS-check.md#4112-the-same-three-surfaces-as-fs-check43-and-no-more) says of the other config findings, once per construct rather than once per scope. It leaves the exit code alone and stands in place of the `success` line ([§FS-check.4.11.6](FS-check.md#4116-it-stands-in-place-of-the-success-line)). `--ignore config-not-toml` drops it and `--only config-not-toml` selects it ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)). Under `--format=json` it is one warning finding on stderr carrying the code, with `path` the config file as a report path, `line` the key's line, and `sites` null.
+
+#### checks.config-not-toml.1: A warning in 0.21.x, the `unclosed array` refusal from 0.22.0
+
+From grund 0.22.0 the construct is refused at load instead, `error: grund.toml:7: unclosed array (a string is still open at the end of line 8); this became an error in grund 0.22.0`, exit `2` ([§FS-config-v2.reader.5.strings.refusal](FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array)), and the code no longer fires for it. The code stays: a later construct of the same class, text TOML refuses that a version-2 reader loads, joins it under its own decision for the one release its window lasts.
+
+### checks.config-multiline-string: A version-2 config array holds a multi-line string
+
+An array in a version-2 config whose string opens with `"""` on one line and that a later line closes earns one warning with code `config-multiline-string` at the line of its key ([§FS-config-v2.reader.5.strings.multi-line](FS-config-v2.md#reader5stringsmulti-line-a-string-opened-with--is-one-version-2-does-not-read)). Such a file is TOML, which is why it is not `config-not-toml`: what is untrue of it is only that version 2 reads it, and through grund 0.21.x it is read as one line with the break as a space and its quotes kept:
+
+```text
+warning: grund.toml:7: unclosed array (a multi-line string opens on line 8, which version 2 does not read), read for now with the line break as a space; write the string on line 8 as one basic string; this warning becomes an error in grund 0.22.0
+```
+
+It is [§FS-config-v2.checks.config-not-toml](FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses)'s finding in everything but its trigger and its text: the same surfaces, channel, exit code, selectors and JSON shape, and from grund 0.22.0 the same refusal, its parenthetical the multi-line one.
