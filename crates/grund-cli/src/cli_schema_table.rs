@@ -38,28 +38,12 @@ impl SchemaTableLine {
     }
 }
 
-/// §FS-schema.11: the table prints a control character as a TOML basic string
-/// writes its escape, so no configured name can break a line.
-fn schema_table_text(raw: &str) -> String {
-    let mut out = String::with_capacity(raw.len());
-    for ch in raw.chars() {
-        match ch {
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            other if other.is_control() => out.push_str(&format!("\\u{:04X}", other as u32)),
-            other => out.push(other),
-        }
-    }
-    out
-}
-
 /// §FS-schema.8: the default format — the header, `kinds and places`, `citations`
 /// with the grounding badges, the unscanned rows, the legend, and at a workspace
 /// root the members line (§FS-schema.2.1). Columns are two spaces apart, and the
 /// last column starts at one offset in both sections.
 fn schema_table(view: &SchemaView) -> String {
-    let text = |raw: &str| schema_table_text(raw);
+    let text = |raw: &str| schema_text(raw);
     let width = |raw: &str| text(raw).chars().count();
     let name_w = view.nodes.iter().map(|n| width(&n.name)).max().unwrap_or(0);
     let strength_w = view

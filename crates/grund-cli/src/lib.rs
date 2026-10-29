@@ -32,7 +32,7 @@ use grund_core::{CheckFindingSelection, Code};
 // (§FS-schema, §DA-engine-renders-nothing).
 use grund_core::{
     EdgeTarget, Extent, NodeClass, ScaffoldNote, SchemaEdge, SchemaNode, SchemaSlot, SchemaView,
-    schema_view,
+    schema_text, schema_view,
 };
 
 // §FS-config-migrate: the one record `grund config migrate --to 2` returns, which

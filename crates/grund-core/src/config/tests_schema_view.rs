@@ -235,6 +235,86 @@ fn a_kind_carries_its_slots_and_closed_strength() {
     );
 }
 
+fn titled(content: FieldContent, title: Option<&str>) -> SchemaSlot {
+    SchemaSlot {
+        name: Some("terms".to_string()),
+        presence: Strength::Must,
+        placement: Some(Placement::First),
+        content,
+        title: title.map(str::to_string),
+    }
+}
+
+/// §FS-schema.4.1: a titled field's line ends with `titled` and its title as a
+/// code span, after its content, for a prose field and a value chapter alike.
+#[test]
+fn a_field_line_names_its_title_last() {
+    let prose = titled(FieldContent::Prose, Some("Terms"));
+    assert_eq!(
+        prose.field_line(),
+        (
+            "terms".to_string(),
+            "must · first · titled `Terms`".to_string()
+        )
+    );
+    let values = SchemaSlot {
+        presence: Strength::May,
+        placement: None,
+        ..titled(FieldContent::Values, Some("Constants"))
+    };
+    assert_eq!(values.field_line().1, "may · values · titled `Constants`");
+}
+
+/// §FS-schema.4.1: a field with no title prints the line it printed before
+/// titles were shown.
+#[test]
+fn an_untitled_field_line_keeps_its_bytes() {
+    assert_eq!(
+        titled(FieldContent::Prose, None).field_line().1,
+        "must · first"
+    );
+}
+
+/// §FS-schema.4.1: the fence is one backtick longer than the longest run inside
+/// the title, with a space inside each fence where the title begins or ends with one.
+#[test]
+fn a_title_with_backticks_gets_a_longer_fence() {
+    let line = |title: &str| titled(FieldContent::Prose, Some(title)).field_line().1;
+    assert_eq!(
+        line("Use ``x`` here"),
+        "must · first · titled ```Use ``x`` here```"
+    );
+    assert_eq!(
+        line("`code` form"),
+        "must · first · titled `` `code` form ``"
+    );
+    assert_eq!(line("form `x`"), "must · first · titled `` form `x` ``");
+}
+
+/// §FS-schema.4.1: a control character in a title is its TOML basic-string
+/// escape, so the line stays one line.
+#[test]
+fn a_title_with_a_line_break_stays_on_one_line() {
+    let line = titled(FieldContent::Prose, Some("Sum\nmary"))
+        .field_line()
+        .1;
+    assert_eq!(line, "must · first · titled `Sum\\nmary`");
+}
+
+/// §FS-init.2.3.5.12.2: the block's bullet is the field line with single spaces.
+#[test]
+fn the_block_bullet_is_the_titled_field_line() {
+    let fields = "[schema.kinds.FS.fields.terms]\ntitle = \"Terms\"\n\
+                  presence = \"must\"\nposition = \"first\"\n";
+    let view = SchemaView::of(&project("schema-view-titled", &format!("{KINDS}{fields}")));
+    let fs = node(&view, "FS");
+    assert_eq!(fs.slots[0].title.as_deref(), Some("Terms"));
+    assert_eq!(
+        fs.shape_lines(),
+        vec![(0, "field terms must · first · titled `Terms`".to_string())]
+    );
+}
+
 /// §FS-schema.8: with no config file found, the header names none.
 #[test]
 fn a_tree_without_a_config_file_names_none_in_the_header() {

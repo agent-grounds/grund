@@ -73,6 +73,7 @@ mod rows;
 mod run;
 mod run_warnings;
 mod schema_scaffold_note;
+mod schema_slot;
 mod schema_view;
 mod scope_roots;
 mod slots;
@@ -122,9 +123,10 @@ pub(crate) use run::{Invocation, Selection, scope_is_config_root};
 #[allow(unused_imports)]
 pub use run::{Run, RunScope, RunWorkspace};
 pub use schema_scaffold_note::ScaffoldNote;
+pub use schema_slot::SchemaSlot;
 pub(crate) use schema_view::config_file_read;
 pub use schema_view::{
-    BadgeRung, EdgeTarget, Junction, NodeClass, SchemaEdge, SchemaNode, SchemaSlot, SchemaView,
+    BadgeRung, EdgeTarget, Junction, NodeClass, SchemaEdge, SchemaNode, SchemaView,
 };
 #[allow(unused_imports)]
 pub use slots::{Content, Handle, Slot};

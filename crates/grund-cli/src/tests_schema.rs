@@ -86,7 +86,7 @@ mod tests_schema {
         let table = schema_table(&hostile());
         assert!(table.contains("a\"b<c>&d\\e\\nf/"), "{table}");
         assert!(!table.contains("e\nf"), "{table}");
-        assert_eq!(schema_table_text("a\tb\u{1}"), "a\\tb\\u0001");
+        assert_eq!(schema_text("a\tb\u{1}"), "a\\tb\\u0001");
     }
 
     /// §FS-schema.5.2: a prohibition ends in a tee in DOT and an `x` in Mermaid,
