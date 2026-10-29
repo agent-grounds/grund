@@ -171,7 +171,23 @@ docs/use.md:5: error: section not found: FS-login.1.goals; write <§> before it 
 
 The finding goes to stdout and makes the check exit `1`; JSON reports
 `missing-section` with severity `error`. Repair the heading or citation, or
-escape an illustrative shape with `<§>`. When the section resolves but its
+escape an illustrative shape with `<§>`.
+
+When the section was renamed after its section lock recorded it, the finding
+also names where the recorded text sits now
+([§FS-section-lock.checks.missing-section](../functional-spec/FS-section-lock.md#checksmissing-section-a-cited-address-that-is-gone-and-where-its-text-went)):
+
+```text
+src/loans.py:5: error: section not found: SPEC-loans.requirements.borrow-a-book; write <§> before it to show the shape without citing it; what .grund/sections/SPEC-loans.lock recorded for it now sits at SPEC-loans.requirements.check-out-a-book
+```
+
+That citation is live, so do not escape it. Cite the address the finding names,
+or rename the heading back, then run `grund fmt --write` and commit the lock
+([§FS-section-lock.move.citations](../functional-spec/FS-section-lock.md#movecitations-update-every-citation)).
+A write before the citations follow drops the old entry, and from then on the
+finding no longer names the new address.
+
+When the section resolves but its
 lock entry is missing
 ([§FS-section-lock.checks.unrecorded-section-citation](../functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold)),
 run `grund fmt --write` with no path at the workspace root, or at the project

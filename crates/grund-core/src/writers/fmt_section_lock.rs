@@ -133,7 +133,7 @@ pub(super) fn section_lock_changes(
         for (entry, verdict) in &judgement.verdicts {
             let verb = match verdict {
                 EntryVerdict::Refresh(_) => "refresh",
-                EntryVerdict::Drop => "drop",
+                EntryVerdict::Drop | EntryVerdict::Gone { .. } => "drop",
                 // §FS-section-lock.write.never-a-move: a move stays reported.
                 EntryVerdict::Keep | EntryVerdict::Moved { .. } => continue,
             };

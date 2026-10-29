@@ -1,11 +1,13 @@
 //! Test module: the one judgement of a section lock that `check` reports from and
 //! `fmt --write` writes from (§FS-section-lock.write.rules,
-//! §FS-section-lock.checks.section-address-changed), over a scanned tree.
+//! §FS-section-lock.checks.section-address-changed,
+//! §FS-section-lock.checks.missing-section), over a scanned tree.
 
 use std::collections::BTreeMap;
 
 use super::section_lock::{EntryVerdict, judge_section_locks};
-use crate::config::load_config;
+use crate::config::{Config, load_config};
+use crate::model::Catalog;
 use crate::testing::{scan_findings, test_root, write};
 
 const CONFIG: &str = "grund_config_version = 1\n\n[reference]\nstrict = true\n\
@@ -33,11 +35,35 @@ fn judge(
 /// address with the fingerprint `fmt --write` would enter for it.
 fn judge_in(
     name: &str,
-    [format, parse]: [&str; 2],
+    sections: [&str; 2],
     cites: &str,
     lock: &str,
     extra: &[(&str, &str)],
 ) -> (Vec<(String, EntryVerdict)>, Vec<(String, Option<String>)>) {
+    let (config, findings) = scan_tree(name, sections, cites, lock, extra);
+    let judgements =
+        judge_section_locks(&findings, config.schema(), config.frame(), &BTreeMap::new());
+    let verdicts = judgements
+        .iter()
+        .flat_map(|judgement| &judgement.verdicts)
+        .map(|(entry, verdict)| (entry.section.clone(), verdict.clone()))
+        .collect();
+    let unrecorded = judgements
+        .iter()
+        .flat_map(|judgement| &judgement.unrecorded)
+        .map(|(section, _, fingerprint)| (section.clone(), fingerprint.clone()))
+        .collect();
+    (verdicts, unrecorded)
+}
+
+/// The tree `judge_in` judges, scanned.
+fn scan_tree(
+    name: &str,
+    [format, parse]: [&str; 2],
+    cites: &str,
+    lock: &str,
+    extra: &[(&str, &str)],
+) -> (Config, Catalog) {
     let root = test_root(name);
     for (path, text) in extra {
         write(&root.join(path), text);
@@ -56,19 +82,7 @@ fn judge_in(
     }
     let config = load_config(&root).expect("load config");
     let findings = scan_findings(&config, &root);
-    let judgements =
-        judge_section_locks(&findings, config.schema(), config.frame(), &BTreeMap::new());
-    let verdicts = judgements
-        .iter()
-        .flat_map(|judgement| &judgement.verdicts)
-        .map(|(entry, verdict)| (entry.section.clone(), verdict.clone()))
-        .collect();
-    let unrecorded = judgements
-        .iter()
-        .flat_map(|judgement| &judgement.unrecorded)
-        .map(|(section, _, fingerprint)| (section.clone(), fingerprint.clone()))
-        .collect();
-    (verdicts, unrecorded)
+    (config, findings)
 }
 
 #[test]
@@ -170,6 +184,57 @@ fn a_pointer_acknowledges_the_move() {
         )]
     );
     assert_eq!(unrecorded, ["parse.1"]);
+}
+
+/// §FS-section-lock.checks.missing-section: an address no section holds, whose
+/// recorded text another section holds now, is gone there; `fmt --write` still
+/// drops it (§FS-section-lock.write.rules), and drops one whose text is found
+/// nowhere or that recorded `-`, with nowhere to name.
+#[test]
+fn a_renamed_address_is_gone_to_where_its_text_sits_and_still_drops() {
+    let cites = "See \u{a7}FS-login.format.2 and \u{a7}FS-login.parse.1.";
+    let sections = ["Trim surrounding whitespace.", "Split on commas."];
+    let lock = "FS-login.format.2 8f332b6fe87bb346\nFS-login.parse.1 be879e46c73e3d05\n";
+    let (config, findings) = scan_tree("section_lock_gone", sections, cites, lock, &[]);
+    let judgements =
+        judge_section_locks(&findings, config.schema(), config.frame(), &BTreeMap::new());
+    let [judgement] = &judgements[..] else {
+        panic!("expected one lock judged");
+    };
+    let verdicts = judgement
+        .verdicts
+        .iter()
+        .map(|(entry, verdict)| (entry.section.as_str(), verdict.clone()))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        verdicts,
+        [
+            (
+                "format.2",
+                EntryVerdict::Gone {
+                    to: "format.1".to_string()
+                }
+            ),
+            ("parse.1", EntryVerdict::Keep),
+        ]
+    );
+    assert_eq!(
+        judgement.written_entries(),
+        [(
+            "FS-login.parse.1".to_string(),
+            Some("be879e46c73e3d05".to_string())
+        )]
+    );
+    for (name, lock) in [
+        (
+            "section_lock_gone_edited",
+            "FS-login.format.2 0123456789abcdef\n",
+        ),
+        ("section_lock_gone_dash", "FS-login.format.2 -\n"),
+    ] {
+        let (verdicts, _) = judge_in(name, sections, cites, lock, &[]);
+        assert_eq!(verdicts, [("format.2".to_string(), EntryVerdict::Drop)]);
+    }
 }
 
 #[test]

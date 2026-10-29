@@ -22,7 +22,7 @@ use crate::grammar::render_catalog_id;
 use crate::model::{
     Catalog, CheckReport, Code, Diagnostic, Expected, Id, paired_declarations, sort_path_key,
 };
-use crate::resolver::{WorkspaceCheckTarget, resolved_coordinate_target};
+use crate::resolver::{WorkspaceCheckTarget, judge_section_locks, resolved_coordinate_target};
 
 /// The workspace a project is judged in (§FS-workspace.4): every loaded
 /// project as a citation resolves against it, and each one's rules by alias.
@@ -87,12 +87,17 @@ pub(crate) fn judge(
     };
     // §FS-check.1.4.1: the warning is on where the pass below can choose it.
     arm_missing_snapshot(schema, targets, &resolve, &mut report.armed);
+    // §FS-section-lock: one judgement of the locks, against `targets` by alias
+    // (§FS-section-lock.file.members), that the lock rules report and a missing
+    // section reads where its text went (§FS-section-lock.checks.missing-section).
+    let locks = judge_section_locks(findings, schema, frame, targets);
     check_citation_resolution(
         findings,
         schema,
         frame,
         targets,
         &resolve,
+        &locks,
         ReferenceTier::Configured,
         None,
         &mut report,
@@ -101,7 +106,7 @@ pub(crate) fn judge(
     // focused pass suppresses comparison at every unresolved or ambiguous site.
     check_values(findings, schema, frame, targets, &mut report);
     // §FS-section-lock.checks: the lock against the tree, in `section_lock.rs`.
-    check_section_locks(findings, schema, frame, targets, &mut report);
+    check_section_locks(&locks, frame, &mut report);
 
     // §FS-check.2.3.1 / §AR-checker.2.11: a `<§>`-escaped illustration whose coordinate
     // resolves is likely a live citation bracketed by mistake; its live form keeps the

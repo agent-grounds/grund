@@ -14,7 +14,7 @@ use crate::model::{
     Catalog, CheckReport, Code, DeclarationSource, Diagnostic, paired_declarations,
     scanned_decl_relative_path, scanned_path_key, sort_path_key,
 };
-use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject};
+use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject, judge_section_locks};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, lend_citations, scan_roots_for,
 };
@@ -322,6 +322,8 @@ pub(crate) fn out_of_scope_references(
         return Vec::new();
     };
     let mut tier = CheckReport::default();
+    // §FS-section-lock.checks.missing-section: the whole walk's locks, as it resolves.
+    let locks = judge_section_locks(findings, schema, frame, workspace);
     check_citation_resolution(
         findings,
         schema,
@@ -329,6 +331,7 @@ pub(crate) fn out_of_scope_references(
         workspace,
         // §FS-check.3.14.1: out of scope, a `should` never demotes a dangling error.
         &|_, _| None,
+        &locks,
         ReferenceTier::OutOfScope,
         Some(scope),
         &mut tier,

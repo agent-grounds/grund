@@ -107,7 +107,9 @@ pub(crate) use link_targets::{
     takes_heading_anchor,
 };
 pub(crate) use point_body::point_body_pair;
-pub(crate) use section_lock::{EntryVerdict, judge_section_locks};
+pub(crate) use section_lock::{
+    EntryVerdict, LockJudgement, judge_section_locks, recorded_text_now_at,
+};
 pub(crate) use settled_headings::SettledHeadings;
 pub(crate) use shorthand::{
     ShorthandTargets, expand_shorthand_citations_with_origins, shorthand_token_expansion,
