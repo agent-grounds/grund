@@ -5,8 +5,8 @@ project_name = "grund"
 marker = "§"
 shorthand = "canonical"
 # Slug-only IDs — see FS-config.3.2. Slugs must be unique within a kind.
-# Slug must start with a letter so digit-prefixed tokens (e.g. `FS-001`
-# in illustrative prose) are not picked up as citations.
+# Slug must start with a letter: a marked digit-led token such as `FS-001` is an
+# off-format-citation error, so an illustration in another format is `<§>FS-001`.
 id_format = "{kind}-{slug}"
 slug_pattern = "[a-z][a-z0-9-]*"
 number_pattern = "\\d+"

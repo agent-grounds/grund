@@ -2,8 +2,8 @@ grund_config_version = 1
 
 [id]
 # Slug-only scheme — `{kind}-{slug}`. Slugs must be unique within a kind.
-# Slug must start with a letter so digit-prefixed tokens (e.g. `FS-001`
-# in illustrative prose) are not picked up as citations.
+# Slug must start with a letter: a marked digit-led token such as `FS-001` is an
+# off-format-citation error, so an illustration in another format is `<§>FS-001`.
 format = "{kind}-{slug}"
 section_separator = "."
 slug_pattern = "[a-z][a-z0-9-]*"
