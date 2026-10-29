@@ -78,7 +78,6 @@ fn spec_fetch(root: &Path) -> Option<String> {
 
 /// §FS-config-v2.reader.6.refusal: a scalar that closes early is refused with the suffix.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn a_scalar_that_closes_early_is_refused() {
     refused(&v2("scalar", "fetch = \"one\" \"two\"\n"), &suffixed(8));
 }
@@ -86,7 +85,6 @@ fn a_scalar_that_closes_early_is_refused() {
 /// §FS-config-v2.reader.6.refusal: an element that closes early is refused with the
 /// suffix.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn an_element_that_closes_early_is_refused() {
     let root = v2(
         "element",
@@ -98,7 +96,6 @@ fn an_element_that_closes_early_is_refused() {
 /// §FS-config-v2.reader.6.refusal: a value is refused once however many of its strings
 /// close early.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn a_value_with_two_early_closes_is_refused() {
     let root = v2(
         "two",
@@ -110,7 +107,6 @@ fn a_value_with_two_early_closes_is_refused() {
 /// §FS-config-v2.reader.6.refusal: in an array written across lines the refusal is at
 /// the key's line, as every value's is.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn an_element_on_a_later_line_is_refused_at_its_key() {
     let root = v2(
         "later",
@@ -121,7 +117,6 @@ fn an_element_on_a_later_line_is_refused_at_its_key() {
 
 /// §FS-config-v2.reader.6.refusal: a quoted key is a string of its own, and is refused.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn a_quoted_key_that_closes_early_is_refused() {
     let root = v2(
         "key",
@@ -133,7 +128,6 @@ fn a_quoted_key_that_closes_early_is_refused() {
 /// §FS-config-v2.reader.6: an escaped quote before the early close, or an escaped
 /// backslash before the closing quote, leaves the string closing early, and refused.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn escapes_before_an_early_close_are_refused() {
     refused(
         &v2("escaped-quote", "fetch = \"a\\\"b\" \"c\"\n"),
@@ -146,7 +140,6 @@ fn escapes_before_an_early_close_are_refused() {
 /// §FS-config-v2.reader.6.multi-line: a `"""` string on one line is refused with the
 /// parenthetical, then the suffix.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn a_triple_quoted_string_on_one_line_is_refused() {
     let root = v2(
         "triple",
@@ -159,7 +152,6 @@ fn a_triple_quoted_string_on_one_line_is_refused() {
 /// string that closes early is then refused; the config does not load, so it carries no
 /// open-line warning.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn an_open_line_and_an_early_close_are_refused_as_the_early_close() {
     let root = v2(
         "both",
@@ -172,7 +164,6 @@ fn an_open_line_and_an_early_close_are_refused_as_the_early_close() {
 /// so a break inside a plain string after it leaves the element a one-line `"""` string,
 /// refused with its parenthetical once the array's lines are joined.
 #[test]
-#[ignore = "red until #1094's implementation; implement removes this"]
 fn a_break_after_a_one_line_triple_quoted_string_is_refused() {
     let root = v2(
         "triple-then-break",

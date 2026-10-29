@@ -366,13 +366,16 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
         };
         // A version-2 claim still open at the end of the file is not a list; one read across
         // an open string is the config's list (§FS-config-v2.reader.5.strings.window).
-        let value = if spans_lines {
-            joined_value(value, idx + 1, &mut lines).value
+        let (value, starts) = if spans_lines {
+            let joined = joined_value(value, idx + 1, &mut lines);
+            (joined.value, joined.starts)
         } else {
-            Some(value.trim().to_string())
+            (Some(value.trim().to_string()), Vec::new())
         };
         *slot = value
-            .and_then(|value| unloaded_string_list(spans_lines, config_path, idx + 1, &value))
+            .and_then(|value| {
+                unloaded_string_list(spans_lines, config_path, idx + 1, &value, starts)
+            })
             .ok_or_else(|| format!("`{name}` is not a list of strings"))?;
     }
     entries.extend(optional);

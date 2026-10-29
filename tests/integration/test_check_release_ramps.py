@@ -337,10 +337,12 @@ class ThisRepositoryTests(unittest.TestCase):
         ]
         self.assertEqual([], pending)
 
-    def test_the_landed_stub_target_flip_holds_the_floor_at_0_19_0(self):
-        """§FS-distribution.4.2.2 — excluded and ignored stub targets became
-        errors in 0.19.0 (§FS-declarations.stubs.target.3), raising the message
-        floor independently of the shared floor. Historical landed clauses
+    def test_the_landed_string_close_flip_holds_the_floor_at_0_22_0(self):
+        """§FS-distribution.4.2.2 — a version-2 string that closes early became
+        an error in 0.22.0 (§FS-config-v2.reader.6.refusal), raising the message
+        floor above the 0.19.0 that excluded and ignored stub targets set when
+        they became errors (§FS-declarations.stubs.target.3), independently of
+        the shared floor. Historical landed clauses
         still refuse lower releases: the bare-`grund` removal (§FS-cli.4) and
         unreached-declaration flip (§FS-rules.checks.unreached-declaration)
         refuse 0.15.x, the unlisted-`[workspace]` flip (§FS-check.3.29.14)
@@ -351,7 +353,7 @@ class ThisRepositoryTests(unittest.TestCase):
         floor, _ = ramps.release_window(
             apart_from_the_off_format_flip(apart_from_the_integrations_retirement(self.claims))
         )
-        self.assertEqual(floor, "0.19.0")
+        self.assertEqual(floor, "0.22.0")
         self.assertTrue(
             any(
                 "check-off-format-citation/expected.stdout" in line
