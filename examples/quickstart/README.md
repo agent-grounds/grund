@@ -7,7 +7,8 @@ citations ([§FS-examples.2](../../docs/functional-spec/FS-examples.md#2-canonic
 The fixture's own `grund.toml` is a version-2 file with one row, the `FS` kind in
 `docs/functional-spec/`; everything else is a default, so IDs are slug-only, named
 sections are on, and the rest of the tree, `src/` included, is scanned
-(`grund config show` prints each setting). Its IDs belong to that mini-repository.
+(`grund config show` prints what applies, `grund config explain` every setting).
+Its IDs belong to that mini-repository.
 
 ## Try it
 

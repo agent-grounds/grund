@@ -11,6 +11,10 @@ fn print_config_help() {
     println!(
         "  show       print the effective config as TOML in the file's own version (defaults filled in for keys you didn't set)."
     );
+    // §FS-config.4.2.3.1: `show` leaves out an opt-in table that is off; `explain` answers.
+    println!(
+        "             It prints what applies, not an opt-in table that is off; `grund config explain` answers for every setting."
+    );
     println!(
         "  validate   parse the discovered config and report the first error; exit 0 if it's well-formed."
     );

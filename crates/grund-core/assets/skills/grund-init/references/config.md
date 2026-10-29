@@ -18,7 +18,7 @@ Ask these in order. The last of them, the citation directions (version 1's `[cit
 
 `grund_config_version`
 
-Do not ask. A fresh setup gets `2` from `grund init`. An existing file keeps its version: a file without the key is version 1 and keeps loading unchanged, and moving it is `grund config migrate` (see Version 1 to version 2: `grund guide languages`). The questions below name each setting by its version-1 key; for a version-2 file, `grund config show` prints the table each one lives in.
+Do not ask. A fresh setup gets `2` from `grund init`. An existing file keeps its version: a file without the key is version 1 and keeps loading unchanged, and moving it is `grund config migrate` (see Version 1 to version 2: `grund guide languages`). The questions below name each setting by its version-1 key; for a version-2 file, `grund config show` prints what applies, `grund config explain` every setting and the table it lives in.
 
 `project_name`
 

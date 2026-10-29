@@ -27,9 +27,12 @@ The file is short. It is version 2 (`grund_config_version = 2`) and writes only
 what differs from a default: the project name, each kind's row with its places,
 and each kind's title ([§FS-init.2.4.3](../functional-spec/FS-init.md#243-every-written-key-differs-from-its-default)). Every other setting is left to its
 default, so a new project gets slug-only IDs such as `FS-login`, named sections,
-and the whole tree scanned. `grund config show` prints every effective setting,
+and the whole tree scanned. `grund config show` prints the settings in effect,
 defaults included, in the file's own version ([§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)); copy a
-line from it into `grund.toml` to change that setting. A version-1 file an
+line from it into `grund.toml` to change that setting. An opt-in table that is
+off, such as `[schema.leads.words]` while no lead is capped, is not printed:
+`grund config explain` lists every table and answers for its keys
+([§FS-config.4.2.3.1](../functional-spec/FS-config.md#4231-what-sends-a-reader-to-show-names-explain)). A version-1 file an
 earlier `init` wrote keeps loading unchanged, and `grund config migrate` converts
 it when you choose to.
 
