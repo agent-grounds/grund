@@ -86,16 +86,16 @@ skerry · grund.toml · v2
 
 kinds and places
   RFC    kind                                 rfcs/text/
-           field summary                      must · first
-           field motivation                   must · after summary
-           field guide-level-explanation      must · after motivation
-           field reference-level-explanation  must · after guide-level-explanation
-           field drawbacks                    must · after reference-level-explanation
-           field rationale-and-alternatives   must · after drawbacks
-           field prior-art                    must · after rationale-and-alternatives
-           field unresolved-questions         must · after prior-art
-           field future-possibilities         must · after unresolved-questions
-           field amendments                   may · after future-possibilities
+           field summary                      must · first · titled `Summary`
+           field motivation                   must · after summary · titled `Motivation`
+           field guide-level-explanation      must · after motivation · titled `Guide-level explanation`
+           field reference-level-explanation  must · after guide-level-explanation · titled `Reference-level explanation`
+           field drawbacks                    must · after reference-level-explanation · titled `Drawbacks`
+           field rationale-and-alternatives   must · after drawbacks · titled `Rationale and alternatives`
+           field prior-art                    must · after rationale-and-alternatives · titled `Prior art`
+           field unresolved-questions         must · after prior-art · titled `Unresolved questions`
+           field future-possibilities         must · after unresolved-questions · titled `Future possibilities`
+           field amendments                   may · after future-possibilities · titled `Amendments`
            closed must
   crate  place                                src/
   test   place                                tests/
@@ -199,22 +199,21 @@ The `next:` steps name the repository's own kind and place, `RFC` in
 
 ```markdown
 - **RFC**
-  - field summary must · first
-  - field motivation must · after summary
-  - field guide-level-explanation must · after motivation
-  - field reference-level-explanation must · after guide-level-explanation
-  - field drawbacks must · after reference-level-explanation
-  - field rationale-and-alternatives must · after drawbacks
-  - field prior-art must · after rationale-and-alternatives
-  - field unresolved-questions must · after prior-art
-  - field future-possibilities must · after unresolved-questions
-  - field amendments may · after future-possibilities
+  - field summary must · first · titled `Summary`
+  - field motivation must · after summary · titled `Motivation`
+  - field guide-level-explanation must · after motivation · titled `Guide-level explanation`
+  - field reference-level-explanation must · after guide-level-explanation · titled `Reference-level explanation`
+  - field drawbacks must · after reference-level-explanation · titled `Drawbacks`
+  - field rationale-and-alternatives must · after drawbacks · titled `Rationale and alternatives`
+  - field prior-art must · after rationale-and-alternatives · titled `Prior art`
+  - field unresolved-questions must · after prior-art · titled `Unresolved questions`
+  - field future-possibilities must · after unresolved-questions · titled `Future possibilities`
+  - field amendments may · after future-possibilities · titled `Amendments`
   - closed must
 ```
 
-An agent learns the order and the handles before it writes. It does not learn
-the titles, so it takes the heading itself, `## summary: Summary`, from the
-template it copies.
+An agent learns the order and the handles before it writes. It learns each
+heading's title too, so it writes `## summary: Summary` before `check` runs.
 
 `[presentation] rules = "root"` keeps that guidance in the root `AGENTS.md`
 ([§FS-init.2.3.5.11.5](../../docs/functional-spec/FS-init.md#235115-rules--root-and-every-version-1-config-render-at-the-root)). The default writes it into `rfcs/text/AGENTS.md`,
