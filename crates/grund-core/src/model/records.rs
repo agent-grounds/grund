@@ -9,7 +9,7 @@ use super::headings::{
     NearMissHeading, RelativeSectionParent, SectionHeadingOutsideDeclaration, UnmarkedHeading,
 };
 use super::line_owners::FileLineOwnership;
-use super::patterns::GlobCitation;
+use super::patterns::{GlobCitation, OffFormatCitation};
 use super::section_lock::SectionLockFile;
 use super::stub_resolution::StubResolution;
 use super::unread_roots::RootRow;
@@ -379,6 +379,10 @@ pub struct Catalog {
     /// Marked candidates read as patterns (§FS-check.1.1.11): no citation, only
     /// the site §FS-check.checks.glob-citation reports.
     pub(crate) glob_citations: Vec<GlobCitation>,
+    /// Marked tokens of a configured kind that its format does not spell and
+    /// nothing declares (§FS-check.1.1.12): no citation, only the site
+    /// §FS-check.checks.off-format-citation reports.
+    pub(crate) off_format_citations: Vec<OffFormatCitation>,
     /// Headings that open like a declaration and do not parse as one
     /// (§FS-declarations.checks.declaration-near-miss) — recorded where the scan already decided the line was
     /// not a declaration, so the rule costs one regex on heading-shaped lines

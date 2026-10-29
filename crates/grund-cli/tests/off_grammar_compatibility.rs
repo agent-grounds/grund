@@ -101,7 +101,9 @@ fn numbered_fixture(root: &Path) {
 /// off-grammar declaration unchanged. §FS-fmt.6.3.2: the `fmt --cross-refs
 /// --write` block wraps the marked, catalog-backed off-grammar citation like any
 /// conforming one while the declaration-less `<§>FS-not-declared` candidate and
-/// the source file stay untouched.
+/// the source file stay untouched. §FS-check.checks.off-format-citation: `check`
+/// reports that candidate once at each site, in the Markdown and in the Rust
+/// comment, and it is still no citation.
 #[test]
 fn persisted_off_grammar_declaration_is_read_consistently_across_cli_surfaces() {
     let root = test_root("cli-matrix");
@@ -208,8 +210,19 @@ fn persisted_off_grammar_declaration_is_read_consistently_across_cli_surfaces() 
     if check_text.contains("success\n") {
         failures.push("check text: an error-bearing run printed `success`".into());
     }
-    if check_text.contains("FS-not-declared") {
-        failures.push("check text: an unbacked malformed candidate became a citation".into());
+    let unbacked = check_text
+        .lines()
+        .filter(|line| line.contains("FS-not-declared"))
+        .map(|line| {
+            line.split_once(": error: off-format citation \u{a7}FS-not-declared: ")
+                .map(|(site, _)| site)
+        })
+        .collect::<Vec<_>>();
+    if unbacked != [Some("docs/consumer.md:2"), Some("src/security.rs:3")] {
+        failures.push(format!(
+            "check text: an unbacked malformed candidate must be one off-format citation per \
+             site and no citation: {unbacked:?}"
+        ));
     }
 
     let check_json = run(&root, &["check", "--format", "json"]);

@@ -89,11 +89,13 @@ Supported check finding codes:
   missing-snapshot
   mistitled-field
   nothing-recognized
+  off-format-citation
   optional-member-absent
   orphan-section
   out-of-scope-dangling
   out-of-scope-local-section-citation
   out-of-scope-missing-section
+  out-of-scope-off-format-citation
   out-of-scope-shorthand-citation
   out-of-scope-unknown-project
   oversized-lead

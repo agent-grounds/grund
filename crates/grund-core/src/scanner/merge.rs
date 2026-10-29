@@ -43,6 +43,9 @@ pub(super) fn merge_findings(target: &mut Catalog, mut source: Catalog) {
         .append(&mut source.escaped_citations);
     target.glob_citations.append(&mut source.glob_citations);
     target
+        .off_format_citations
+        .append(&mut source.off_format_citations);
+    target
         .near_miss_headings
         .append(&mut source.near_miss_headings);
     target.conflict_blocks.append(&mut source.conflict_blocks);

@@ -891,7 +891,7 @@ An out-of-scope citation whose declaration is also out of scope resolves normall
 
 #### 3.14.5 A compound code per rule
 
-A finding here carries `out-of-scope-` followed by the code its in-scope equivalent carries: `out-of-scope-dangling`, `out-of-scope-missing-section`, `out-of-scope-local-section-citation`, `out-of-scope-unknown-project`, `out-of-scope-shorthand-citation`. A `--format=json` consumer ([§FS-errors.5](FS-errors.md#5-json-format)) then filters the scope by prefix and the rule by exact match, both on the `code` field the shape already carries; one code for all five would have left the rule readable only by parsing the message prose. The JSON shape gains no field.
+A finding here carries `out-of-scope-` followed by the code its in-scope equivalent carries: `out-of-scope-dangling`, `out-of-scope-missing-section`, `out-of-scope-local-section-citation`, `out-of-scope-unknown-project`, `out-of-scope-shorthand-citation`, `out-of-scope-off-format-citation`. A `--format=json` consumer ([§FS-errors.5](FS-errors.md#5-json-format)) then filters the scope by prefix and the rule by exact match, both on the `code` field the shape already carries; one code for all six would have left the rule readable only by parsing the message prose. The JSON shape gains no field.
 
 #### 3.14.6 The scope leads the message
 

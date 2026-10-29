@@ -11,6 +11,7 @@ use anyhow::anyhow;
 use std::collections::BTreeMap;
 
 use super::legacy_inline::reconcile_promoted_inline_site;
+use super::off_format::record_off_format_citation;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
     IdArgError, LineLinks, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX,
@@ -121,7 +122,7 @@ pub(super) fn promote_local_legacy_citations(
             &configured_catalog,
             &catalog,
             candidate,
-            &mut findings.citations,
+            findings,
         );
     }
     findings.local_section_citation_candidates.retain(|local| {
@@ -156,20 +157,24 @@ pub(crate) fn configured_catalog_ids(declarations: &BTreeMap<Id, Vec<Declaration
 
 /// One deferred candidate reconciled against one target catalog — the step both
 /// halves of this pass share, the local one above and the qualified one in
-/// `resolver/legacy_promotion.rs` (§AR-resolver.placement).
+/// `resolver/legacy_promotion.rs` (§AR-resolver.placement). A candidate nothing
+/// declares is recorded as an off-format citation where it reads as one, and is
+/// otherwise text (§FS-citations.recognized.off-format).
 pub(crate) fn promote_legacy_candidate(
     (source_schema, source_frame): (&Schema, Frame<'_>),
     (target_schema, target_frame): (&Schema, Frame<'_>),
     configured_catalog: &[Id],
     catalog: &[Id],
     candidate: LegacyCitationCandidate,
-    citations: &mut Vec<Citation>,
+    findings: &mut Catalog,
 ) {
     let Some((id, section, consumed)) =
         match_legacy_tail(&candidate.tail, target_schema, target_frame, catalog)
     else {
+        record_off_format_citation((target_schema, target_frame), &candidate, findings);
         return;
     };
+    let citations = &mut findings.citations;
     let qualified = candidate
         .namespace
         .as_deref()

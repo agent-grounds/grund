@@ -27,6 +27,33 @@ impl FormatGuidance<'_> {
             self.key, self.template
         )
     }
+
+    /// §FS-check.checks.off-format-citation: `<key> = "<template>"`, then the
+    /// pattern of each component the template holds, in its order and by the
+    /// bare key, because the patterns are schema-wide.
+    pub(crate) fn with_patterns(&self, schema: &Schema) -> String {
+        let mut components = [
+            ("{number}", "number_pattern", &schema.ids.number_pattern),
+            ("{slug}", "slug_pattern", &schema.ids.slug_pattern),
+        ]
+        .into_iter()
+        .filter_map(|(placeholder, key, pattern)| {
+            let at = self.template.find(placeholder)?;
+            Some((at, format!("{key} = \"{pattern}\"")))
+        })
+        .collect::<Vec<_>>();
+        components.sort();
+        let patterns = components
+            .into_iter()
+            .map(|(_, pattern)| pattern)
+            .collect::<Vec<_>>();
+        let mut clause = format!("{} = \"{}\"", self.key, self.template);
+        if !patterns.is_empty() {
+            clause.push_str(" with ");
+            clause.push_str(&patterns.join(" and "));
+        }
+        clause
+    }
 }
 
 /// §FS-show.3.5.1: use the selected kind's override, or the global template
@@ -38,6 +65,16 @@ pub(crate) fn format_guidance<'a>(
     operand: Option<&str>,
 ) -> FormatGuidance<'a> {
     let name = operand.and_then(|text| frame.grammar().kind_for_guidance(text));
+    kind_format_guidance(schema, frame, name)
+}
+
+/// §FS-show.3.5.1: [`format_guidance`] for a kind the caller already selected,
+/// as §FS-check.checks.off-format-citation names the kind its token opens with.
+pub(crate) fn kind_format_guidance<'a>(
+    schema: &'a Schema,
+    frame: Frame<'_>,
+    name: Option<&str>,
+) -> FormatGuidance<'a> {
     let overridden = name.and_then(|name| {
         schema.kinds().find_map(|(kind, settings)| {
             (kind == name)

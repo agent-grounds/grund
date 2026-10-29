@@ -2048,6 +2048,39 @@
   }
  },
  {
+  "code": "off-format-citation",
+  "meaning": "A marked citation opens with a configured kind, but its kind's ID format does not spell it and nothing declares it.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   },
+   "fix": {
+    "kind": "template",
+    "text": "cite an ID in that format, or write {escape} for an illustration"
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   },
+   "fix": {
+    "kind": "template",
+    "text": "cite an ID in that format, or write {escape} for an illustration"
+   },
+   "note": null
+  }
+ },
+ {
   "code": "optional-member-absent",
   "meaning": "A workspace member listed as optional is not in this checkout, so it was not read.",
   "ramp": null,
@@ -2324,6 +2357,51 @@
    "fix": {
     "kind": "template",
     "text": "write {escape} before it to show the shape without citing it"
+   },
+   "note": null
+  }
+ },
+ {
+  "code": "out-of-scope-off-format-citation",
+  "meaning": "Under --full, a file outside the default scope writes a marked citation its kind's ID format does not spell and nothing declares.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "cite an ID in that format, or write {escape} for an illustration"
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "cite an ID in that format, or write {escape} for an illustration"
    },
    "note": null
   }

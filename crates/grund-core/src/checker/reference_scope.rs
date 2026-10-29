@@ -276,6 +276,10 @@ pub(crate) fn retain_findings_in_scope(
     findings
         .glob_citations
         .retain(|pattern| scope.contains(&pattern.file));
+    // §FS-check.checks.off-format-citation: out there it is the tier's (§FS-check.3.14).
+    findings
+        .off_format_citations
+        .retain(|record| scope.contains(&record.file));
     // §FS-declarations.checks.declaration-near-miss asks a question about the configured scope, so
     // a `--full` walk's extra files are dropped with the rest: `--full` widens the *reference* tier
     // (§FS-check.3.14.2) and nothing else.
@@ -391,14 +395,14 @@ pub(crate) fn tag_out_of_scope(diagnostic: Diagnostic) -> Diagnostic {
 /// The code is the in-scope one under an `out-of-scope-` prefix, so a
 /// `--format=json` consumer filters the tier by prefix and the rule by exact
 /// match on the `code` field the report shape already carries (§FS-errors.5.1) —
-/// one code for all five would leave the rule readable only in the prose.
+/// one code for all six would leave the rule readable only in the prose.
 ///
 /// The tier leads the message rather than trailing it: out here the fix is
 /// usually to widen `[scan] include`, so a rule's own fix-it hint ("did you
 /// mean …?") is the fact most likely to be wrong and least deserving of being
 /// read first.
 fn tag_out_of_scope_for_version(mut diagnostic: Diagnostic, version: u32) -> Diagnostic {
-    // `check_citation_resolution` emits exactly the five families the catalog pairs;
+    // `check_citation_resolution` emits exactly the six families the catalog pairs;
     // anything else would be a new rule joining the family without a tier code.
     diagnostic.code = diagnostic.code.out_of_scope().unwrap_or(diagnostic.code);
     let scope = source_scope_name(version);

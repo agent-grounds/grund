@@ -65,7 +65,6 @@ fn rust_sites_are_read_as_citations() {
 
 /// The same Rust sites report an off-format token, and the escaped marker stays silent.
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn rust_sites_report_an_off_format_token() {
     let fx = Fixture::source("src/lib.rs", &rust(["1a", "2a", "3a", "4a", "5a"]));
     let run = fx.expect(1, &["check"]);
@@ -86,7 +85,6 @@ fn python_sites_are_read_as_citations() {
 
 /// The same Python sites report an off-format token, and the data span and escape stay silent.
 #[test]
-#[ignore = "red until #1073 reports an off-format citation; implement removes this"]
 fn python_sites_report_an_off_format_token() {
     let fx = Fixture::source("src/m.py", &python(["1a", "2a", "3a", "4a", "5a"]));
     let run = fx.expect(1, &["check"]);

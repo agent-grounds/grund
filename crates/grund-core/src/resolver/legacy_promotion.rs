@@ -49,7 +49,7 @@ pub(crate) fn promote_qualified_legacy_citations(projects: &mut [WorkspaceProjec
                 configured_catalog,
                 catalog,
                 candidate,
-                &mut project.findings.citations,
+                &mut project.findings,
             );
         }
         sort_citations(&mut project.findings.citations);

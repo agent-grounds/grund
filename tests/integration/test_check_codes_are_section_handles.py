@@ -43,7 +43,7 @@ CODE_CELL = re.compile(r"^`?([a-z][a-z0-9-]*)`?$")
 # `FS-fields.checks.<code>`, and the two v2-reader codes, at
 # `FS-config-v2.checks.<code>`.
 MIGRATED = {
-    "FS-check": ("config-version-1", "glob-citation"),
+    "FS-check": ("config-version-1", "glob-citation", "off-format-citation"),
     "FS-citations": ("image-index-entry",),
     "FS-config-v2": ("config-multiline-string", "config-not-toml"),
     "FS-rules": ("unreached-declaration",),
@@ -107,6 +107,7 @@ NOT_YET_MIGRATED = (
     "out-of-scope-dangling",
     "out-of-scope-local-section-citation",
     "out-of-scope-missing-section",
+    "out-of-scope-off-format-citation",
     "out-of-scope-shorthand-citation",
     "out-of-scope-unknown-project",
     "redundant-config",
