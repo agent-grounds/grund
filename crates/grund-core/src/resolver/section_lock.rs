@@ -41,7 +41,7 @@ pub(crate) enum EntryVerdict {
     /// No section holds its address any more, and its recorded text sits at `to`,
     /// another section of the declaration: dropped as `Drop` is, its coordinate no
     /// longer a locked address, and named on the `missing-section` finding of a
-    /// citation of it (§FS-section-lock.checks.missing-section).
+    /// citation of it (§FS-section-lock.checks.vanished).
     Gone { to: String },
 }
 
@@ -112,7 +112,7 @@ impl LockJudgement<'_> {
 
 /// Where the text the lock of `id`, cited through `alias`, recorded for `section`
 /// sits now, when no section holds `section` any more: the lock file, and the
-/// address as a finding names it (§FS-section-lock.checks.missing-section).
+/// address as a finding names it (§FS-section-lock.checks.vanished).
 pub(crate) fn recorded_text_now_at<'j>(
     judgements: &'j [LockJudgement<'_>],
     alias: Option<&str>,
@@ -334,7 +334,7 @@ fn judge_entries<'a>(
             .filter(|(_, _, other)| other == fingerprint);
         (holders.count() == 1).then(|| fingerprint.to_string())
     };
-    // §FS-section-lock.checks.section-address-changed, §FS-section-lock.checks.missing-section:
+    // §FS-section-lock.checks.section-address-changed, §FS-section-lock.checks.vanished:
     // the first other section, in document order, holding the recorded text now.
     let moved_to = |section: &str, recorded: &str| {
         fingerprints
@@ -381,7 +381,7 @@ fn judge_entries<'a>(
                     _ => EntryVerdict::Refresh(written(now)),
                 },
             },
-            // §FS-section-lock.checks.missing-section: an address no section holds.
+            // §FS-section-lock.checks.vanished: an address no section holds.
             _ => match entry.fingerprint.as_deref() {
                 Some(recorded) if info.is_none() => moved_to(section, recorded)
                     .map_or(EntryVerdict::Drop, |to| EntryVerdict::Gone { to }),

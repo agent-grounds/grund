@@ -89,7 +89,7 @@ pub(crate) fn judge(
     arm_missing_snapshot(schema, targets, &resolve, &mut report.armed);
     // §FS-section-lock: one judgement of the locks, against `targets` by alias
     // (§FS-section-lock.file.members), that the lock rules report and a missing
-    // section reads where its text went (§FS-section-lock.checks.missing-section).
+    // section reads where its text went (§FS-section-lock.checks.vanished).
     let locks = judge_section_locks(findings, schema, frame, targets);
     check_citation_resolution(
         findings,

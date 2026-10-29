@@ -152,7 +152,7 @@ An edit that `fmt --write` never recorded leaves the old fingerprint in place, w
 
 ## checks: Checks
 
-Each is a located `grund check` error with its code in [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog), selected by `--only` and `--ignore` like any other, and rendered in text, JSON and the LSP as [§FS-check.2.1](FS-check.md#21-report-format) says. JSON `sites` is `null` for each but `section-address-changed`, which carries the sites that cite the recorded address ([§FS-section-lock.checks.section-address-changed](FS-section-lock.md#checkssection-address-changed-a-cited-sections-text-sits-at-another-address)). None fires in a repository with no lock file and no citation of a locked address. A message names the lock file as the report names every path, so from the workspace root a member's lock is `packages/api/.grund/sections/FS-login.lock`. [§FS-section-lock.checks.missing-section](FS-section-lock.md#checksmissing-section-a-cited-address-that-is-gone-and-where-its-text-went) has no code of its own: it is what the lock adds to the `missing-section` finding of [§FS-check.3.2](FS-check.md#32-missing-section).
+Each is a located `grund check` error with its code in [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog), selected by `--only` and `--ignore` like any other, and rendered in text, JSON and the LSP as [§FS-check.2.1](FS-check.md#21-report-format) says. JSON `sites` is `null` for each but `section-address-changed`, which carries the sites that cite the recorded address ([§FS-section-lock.checks.section-address-changed](FS-section-lock.md#checkssection-address-changed-a-cited-sections-text-sits-at-another-address)). None fires in a repository with no lock file and no citation of a locked address. A message names the lock file as the report names every path, so from the workspace root a member's lock is `packages/api/.grund/sections/FS-login.lock`. [§FS-section-lock.checks.vanished](FS-section-lock.md#checksvanished-a-cited-address-that-is-gone-and-where-its-text-went) has no code of its own: it is what the lock adds to the `missing-section` finding of [§FS-check.3.2](FS-check.md#32-missing-section).
 
 ### checks.section-address-changed: A cited section's text sits at another address
 
@@ -170,7 +170,7 @@ The remedy is the *Fix* cell of the code's row in the check code catalog ([§FS-
 
 The row's *Note* says what the check compares and what writes the lock, from [§FS-section-lock.write.never-a-move](FS-section-lock.md#writenever-a-move-fmt-never-approves-a-move): only `fmt --write` writes a lock, it never approves a move, and a lock is not edited by hand, because an edit that records the new text at the old address, or a citation dropped and restored around a `fmt --write`, silences this report without undoing, following or acknowledging the move.
 
-### checks.missing-section: A cited address that is gone, and where its text went
+### checks.vanished: A cited address that is gone, and where its text went
 
 A citation of an address that holds no section is [§FS-check.3.2](FS-check.md#32-missing-section)'s `missing-section` error. The lock may still know where that section's text went, and then the finding says so. That is the case when all three hold:
 
