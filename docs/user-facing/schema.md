@@ -19,8 +19,8 @@ grund schema docs/ --path-base=invocation
 The configuration is discovered from `PATH` exactly as `grund config show`
 discovers it. A path inside a workspace member shows that member; at a workspace
 root the view is of the root project, and its last line names the members to run
-`grund schema <member>` on. `grund config show` stays the effective TOML, every
-value filled in.
+`grund schema <member>` on. For the TOML, `grund config show` prints what
+applies, `grund config explain` every setting.
 
 With no `grund.toml` at or above `PATH`, the header reads `defaults, no grund.toml`
 and the view is the built-in defaults a config-less tree is held to. The line
@@ -142,4 +142,5 @@ flowchart LR
 ```
 
 There is no `--format json` yet: a caller that needs the facts as data reads
-`grund config show`, whose TOML loads back to the same values.
+`grund config show`, whose TOML loads back to the same values; an opt-in table
+it leaves out is off, and `grund config explain` answers for it.

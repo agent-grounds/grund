@@ -88,5 +88,6 @@ flowchart LR
 `--format dot` prints Graphviz source, for `grund schema --format dot | dot -Tsvg > schema.svg`.
 grund runs neither program.
 
-`grund config show` is still the effective TOML, every value filled in; `grund
-schema` is the picture of what that TOML holds a repository to.
+For the TOML, `grund config show` prints what applies, `grund config explain`
+every setting; `grund schema` is the picture of what that TOML holds a
+repository to.
