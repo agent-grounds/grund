@@ -297,9 +297,10 @@ pub(super) fn check_citation_resolution(
             } else {
                 (
                     Code::DANGLING,
+                    // §FS-check.3.1.4: the target's places, spelled as the report spells paths.
                     dangling_message_spelled(
                         target.schema,
-                        target.frame(),
+                        target.frame().displayed_by(frame.display),
                         cite.namespace.as_deref(),
                         target.catalog,
                         &cite.id,

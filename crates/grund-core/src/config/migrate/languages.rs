@@ -5,6 +5,7 @@
 //! definition can read a suffix as v1 did.
 
 use super::record::{MigrateRefusal, RefusalAnchor};
+use crate::config::literal_suffix;
 use crate::config::project::Project;
 use crate::config::sources::{DeclarationMode, Language, LanguageClass, SourceModel};
 use crate::grammar::{DocCommentRule, DocProfile, extension_rule};
@@ -42,18 +43,6 @@ fn reading(suffix: &str, docstring_python: bool) -> (String, LanguageClass, DocP
     (name, LanguageClass::Source, profile, docstrings)
 }
 
-/// §FS-config-v2.schema.sources.extensions: a final extension, no dot, no
-/// separator, no glob.
-fn in_domain(suffix: &str) -> bool {
-    !suffix.is_empty()
-        && !suffix.chars().any(|c| {
-            matches!(
-                c,
-                '.' | '/' | '\\' | '*' | '?' | '[' | ']' | '{' | '}' | '!'
-            )
-        })
-}
-
 /// §FS-config-v2.schema.sources.migration: the model for `v1`, whose
 /// `extensions` and `comment_prefixes` keys sit at `extensions_line` and
 /// `prefixes_line`; `values_home` says whether a kind reads `.json` as values.
@@ -85,7 +74,7 @@ pub(super) fn translate(
     let mut definitions: Vec<Language> = Vec::new();
     let mut extensions = Vec::new();
     for suffix in &sources.extensions {
-        if !in_domain(suffix) {
+        if !literal_suffix(suffix) {
             refusals.push(MigrateRefusal {
                 anchor: anchor(extensions_line),
                 what: format!(

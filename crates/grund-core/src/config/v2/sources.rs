@@ -121,11 +121,16 @@ pub(crate) fn holds_glob(text: &str) -> bool {
     text.contains(['*', '?', '[', ']', '{', '}', '!'])
 }
 
+/// §FS-config-v2.schema.sources.extensions: a final extension, no dot, no
+/// separator, no glob — the one judge of a suffix, at load and in migration.
+pub(crate) fn literal_suffix(suffix: &str) -> bool {
+    !suffix.is_empty() && !suffix.contains(['.', '/', '\\']) && !holds_glob(suffix)
+}
+
 /// §FS-config-v2.schema.sources.extensions: one suffix mapping. The suffix is
 /// judged here; the language it names once every definition is read.
 pub(super) fn extension_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Result<bool> {
-    let literal = !key.is_empty() && !key.contains(['.', '/', '\\']) && !holds_glob(key);
-    if !literal {
+    if !literal_suffix(key) {
         return r.fail(
             line,
             format!(
