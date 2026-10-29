@@ -1,0 +1,96 @@
+grund_config_version = 2
+project_name = "repo"
+
+[schema]
+marker = "§"
+shorthand = "canonical"
+id_format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z0-9-]*"
+number_pattern = "\\d+"
+section_separator = "."
+heading_depth = "must"
+
+[schema.sources]
+languages = ["markdown", "json", "rust", "c", "cpp", "java", "kotlin", "scala", "swift", "javascript", "typescript", "csharp", "php", "python", "go", "ruby", "sql", "lua", "haskell", "lisp", "scheme", "clojure", "ada"]
+declarations = "doc-comments"
+exclude = []
+respect_gitignore = true
+
+[schema.notes.lines]
+must = 3
+
+[schema.notes.columns]
+must = 100
+
+[schema.notes.text]
+must = true
+
+[schema.kinds.GRUND]
+files = ["docs/grund.md"]
+
+[schema.kinds.GOAL]
+files = ["docs/goals.md"]
+
+[schema.kinds.FS]
+folders = ["docs/functional-spec"]
+
+[schema.kinds.REQ]
+folders = ["docs/requirements"]
+
+[schema.kinds.AR]
+folders = ["docs/architecture"]
+
+[schema.kinds.DF]
+folders = ["docs/decisions/functional"]
+
+[schema.kinds.DA]
+folders = ["docs/decisions/architectural"]
+
+[schema.kinds.e2e]
+folders = ["tests/e2e"]
+citable = false
+
+[schema.kinds.integration]
+folders = ["tests/integration"]
+citable = false
+
+[schema.kinds.RM]
+files = ["docs/roadmap.md"]
+
+[presentation]
+trigger = "$$"
+
+[presentation.kinds.GRUND]
+title = "Why: project motivation"
+
+[presentation.kinds.GOAL]
+title = "Where: project direction and outcomes"
+
+[presentation.kinds.FS]
+title = "What: behavior, requirements, and constraints"
+
+[presentation.kinds.REQ]
+title = "Hard requirements: what the project must never break"
+
+[presentation.kinds.AR]
+title = "How: high-level implementation, structure, and design"
+
+[presentation.kinds.DF]
+title = "Product behavior decisions and tradeoffs"
+
+[presentation.kinds.DA]
+title = "Architecture decisions and tradeoffs"
+
+[presentation.kinds.e2e]
+title = "User scenarios: black-box proof of the spec"
+
+[presentation.kinds.integration]
+title = "Integration tests: proof that the parts fit as designed"
+
+[presentation.kinds.RM]
+title = "Planned milestones and sequencing"
+
+[presentation.fmt]
+anchors = "github"
+links = "index"
+exclude = []

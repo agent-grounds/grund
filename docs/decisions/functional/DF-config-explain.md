@@ -16,7 +16,7 @@ agent-grounds/grund#832 asked that the installed binary say what every setting a
 
 ### 2.2 It narrows "`config show` is the teaching surface"
 
-[§DF-v2-onboarding.2.2](DF-v2-onboarding.md#22-config-show-is-the-teaching-surface) made `show` the place a user learns the schema, because the minimal file `grund init` writes no longer lists every setting. That stays true of the configuration in effect: `show` still prints every setting at its value. What a key means and what values it accepts is `explain`'s, and so is a setting `show` leaves out because it is not enabled ([§FS-config.4.2.3](../../functional-spec/FS-config.md#423-named_sections-and-values-print-only-when-enabled)).
+[§DF-v2-onboarding.2.2](DF-v2-onboarding.md#22-config-show-is-the-teaching-surface) made `show` the place a user learns the schema, because the minimal file `grund init` writes no longer lists every setting. That stays true of the configuration in effect: `show` still prints the settings in effect at their values. What a key means and what values it accepts is `explain`'s, and so is a setting `show` leaves out because it is not enabled ([§FS-config.4.2.3](../../functional-spec/FS-config.md#423-named_sections-and-values-print-only-when-enabled)), which is why the text that sends a reader to `show` names `explain` beside it ([§FS-config.4.2.3.1](../../functional-spec/FS-config.md#4231-what-sends-a-reader-to-show-names-explain)).
 
 ### 2.3 The catalog and the schema are rendered, never retyped
 

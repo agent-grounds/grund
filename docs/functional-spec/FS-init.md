@@ -1018,7 +1018,7 @@ When a companion path is a symlink to `AGENTS.md`, `init` does not touch it sepa
 
 ### 2.4 Generated `grund.toml`
 
-`init` writes `<path>/grund.toml` — the bare, root-visible form — and **only when the target has no config at all**, in either discovery location ([§FS-init.2.4.1](FS-init.md#241-both-discovery-locations-are-probed)). An existing config is never overwritten, not even with `--force` ([§FS-init.2.4.2](FS-init.md#242-an-existing-config-is-never-overwritten)). The file it does write is the template's config ([§FS-init.1.6](FS-init.md#16-templates)): a version-2 file ([§FS-config-v2](FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults)) that holds the project's own choices and nothing `grund` would assume anyway ([§FS-init.2.4.3](FS-init.md#243-every-written-key-differs-from-its-default)), while `grund config show` prints every effective setting ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)). [§FS-init.2.4.4](FS-init.md#244-no-section-switch-is-written) to [§FS-init.2.4.8](FS-init.md#248-values-are-not-enabled) and [§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements) say how particular settings are written or left out, and [§FS-init.2.4.9](FS-init.md#249-the-none-templates-config) what the `none` template writes instead. The starter is written fresh rather than migrated from the version-1 file earlier releases wrote, which `grund config migrate` would refuse as it stands ([§DF-v2-onboarding](../decisions/functional/DF-v2-onboarding.md#df-v2-onboarding-grund-init-writes-a-minimal-version-2-file-and-grund-config-show-does-the-teaching)).
+`init` writes `<path>/grund.toml` — the bare, root-visible form — and **only when the target has no config at all**, in either discovery location ([§FS-init.2.4.1](FS-init.md#241-both-discovery-locations-are-probed)). An existing config is never overwritten, not even with `--force` ([§FS-init.2.4.2](FS-init.md#242-an-existing-config-is-never-overwritten)). The file it does write is the template's config ([§FS-init.1.6](FS-init.md#16-templates)): a version-2 file ([§FS-config-v2](FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults)) that holds the project's own choices and nothing `grund` would assume anyway ([§FS-init.2.4.3](FS-init.md#243-every-written-key-differs-from-its-default)), while `grund config show` prints what applies and `grund config explain` every setting ([§FS-config.4.2.3.1](FS-config.md#4231-what-sends-a-reader-to-show-names-explain)). [§FS-init.2.4.4](FS-init.md#244-no-section-switch-is-written) to [§FS-init.2.4.8](FS-init.md#248-values-are-not-enabled) and [§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements) say how particular settings are written or left out, and [§FS-init.2.4.9](FS-init.md#249-the-none-templates-config) what the `none` template writes instead. The starter is written fresh rather than migrated from the version-1 file earlier releases wrote, which `grund config migrate` would refuse as it stands ([§DF-v2-onboarding](../decisions/functional/DF-v2-onboarding.md#df-v2-onboarding-grund-init-writes-a-minimal-version-2-file-and-grund-config-show-does-the-teaching)).
 
 #### 2.4.1 Both discovery locations are probed
 
@@ -1030,14 +1030,14 @@ An existing config is the repo's configuration — the one surface a project cus
 
 #### 2.4.3 Every written key differs from its default
 
-When the file is absent and `init` does write it, the file is version 2 ([§FS-config.5](FS-config.md#5-schema-versioning)), and every key it writes either differs from its version-2 default ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)) or has none. v2 has no built-in kinds and no default titles, so a row, its places and its title are written because without them the file declares nothing ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)). The file is therefore minimal: taking any written key or table out of it changes the effective configuration. It is an override surface, not a teaching surface; `grund config show` is the teaching surface, and prints every setting the file leaves at its default, in the file's own version ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)).
+When the file is absent and `init` does write it, the file is version 2 ([§FS-config.5](FS-config.md#5-schema-versioning)), and every key it writes either differs from its version-2 default ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)) or has none. v2 has no built-in kinds and no default titles, so a row, its places and its title are written because without them the file declares nothing ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)). The file is therefore minimal: taking any written key or table out of it changes the effective configuration. It is an override surface, not a teaching surface; `grund config show` is the teaching surface, and prints the settings in effect that the file leaves at their defaults, in the file's own version ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)), while `grund config explain` answers for an opt-in table that is off ([§FS-config.4.2.3.1](FS-config.md#4231-what-sends-a-reader-to-show-names-explain)).
 
 What is not written follows from that. No `[schema.sources]` and no `[schema.kinds.code]` is written, so a new project scans v2's default extent: the rows' places and the config root, less what `.gitignore` excludes ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)). No `[schema] id_format` is written, so a new project takes v2's slug-only format `{kind}-{slug}`: `grund id FS "Login"` allocates `FS-login`, and the starter files follow that format ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)). No `[rules]` table is written, so no citation direction is enforced until the project adopts one.
 
 The `software-development` file is exactly these bytes, with `{NAME}` the project name of [§FS-init.2.4.7](FS-init.md#247-project_name-and-presentation-description):
 
 ```toml
-# Only what differs from grund's defaults; `grund config show` prints every setting.
+# Only non-defaults; `grund config show` prints what applies, `grund config explain` every setting.
 grund_config_version = 2
 project_name = "{NAME}"
 
@@ -1094,10 +1094,10 @@ v2 has no `named_sections` switch: named sections are always enabled ([§FS-conf
 
 #### 2.4.5 One comment is kept
 
-The file carries one comment, its first line, which says where the rest of the settings are:
+The file carries one comment, its first line, which says where the rest of the settings are, in the sentence of [§FS-config.4.2.3.1](FS-config.md#4231-what-sends-a-reader-to-show-names-explain):
 
 ```toml
-# Only what differs from grund's defaults; `grund config show` prints every setting.
+# Only non-defaults; `grund config show` prints what applies, `grund config explain` every setting.
 ```
 
 No key carries a value-set comment and no commented-out key is written: a minimal file has no default-valued key to annotate. The commented citation ruleset and the commented `CONST` row of earlier starters are dropped; `grund guide citations` prints the citation-directions guide ([§FS-init.5](FS-init.md#5-the-guide)). The `none` template keeps one more comment, which says how to declare a first kind ([§FS-init.2.4.9](FS-init.md#249-the-none-templates-config)). Comments are not schema keys and do not change parsing.
@@ -1119,7 +1119,7 @@ The starter declares no value kind and illustrates none. Fresh repositories rema
 The `none` template ([§FS-init.1.6.2](FS-init.md#162-none)) writes the envelope alone: the comment of [§FS-init.2.4.5](FS-init.md#245-one-comment-is-kept), `grund_config_version = 2`, `project_name`, and one comment saying how to declare a first kind. With no `[schema.kinds]` row the file declares no kinds and still loads ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). It is exactly these bytes:
 
 ```toml
-# Only what differs from grund's defaults; `grund config show` prints every setting.
+# Only non-defaults; `grund config show` prints what applies, `grund config explain` every setting.
 grund_config_version = 2
 project_name = "{NAME}"
 
