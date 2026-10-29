@@ -20,6 +20,11 @@ places may nest: a file listed in a row's `files` is that row's, otherwise the d
 holding it decides, and a file in no place is `code`'s. Each folder of a kind keeps its own index.
 The runnable [`examples/places/`](../../examples/places/) shows all three
 ([§FS-config-v2.schema.places.ownership](../functional-spec/FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder)).
+A place is a path from the config root, not a pattern: `files = ["specs/*/spec.md"]` names
+nothing, and a missing place is quiet, so what you see is each citation of the kind reported as
+`unknown reference <ID>; no place of kind <KIND> exists: specs/*/spec.md (grund.toml:4)`, with a
+reminder to list each file or name the folder
+([§FS-check.3.1.4](../functional-spec/FS-check.md#314-a-kind-none-of-whose-places-exists)).
 
 | Kind | What it is | Where it lives |
 | --- | --- | --- |

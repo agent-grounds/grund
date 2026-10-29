@@ -1,4 +1,4 @@
-use crate::config::{Frame, Schema};
+use crate::config::{Extent, Frame, Schema, holds_glob};
 #[cfg(test)]
 use crate::grammar::render_id;
 use crate::grammar::{is_inside_inline_code, render_catalog_id};
@@ -62,8 +62,50 @@ pub(super) fn dangling_message_spelled(
                 remedies::dangling_escape(escape)
             )
         }
-        (None, None) => format!("unknown reference {unknown}"),
+        // §FS-check.3.1.4: the last resort, when no other hint applies.
+        (None, None) => match missing_places(schema, frame, &missing.kind) {
+            Some(places) => format!("unknown reference {unknown}; {places}"),
+            None => format!("unknown reference {unknown}"),
+        },
     }
+}
+
+/// §FS-check.3.1.4: when the v2 row of `kind` has places and none of them
+/// exists, every one of them in row order, each at its config line, and the
+/// pattern remedy when one is written as a glob. The places and their lines are
+/// the schema load's (§FS-config-v2.schema.places); a partly missing row, a row
+/// with no place, a kind that is no row, and a v1 config yield `None`.
+fn missing_places(schema: &Schema, frame: Frame<'_>, kind: &str) -> Option<String> {
+    if frame.version != 2 {
+        return None;
+    }
+    let row = schema.rows.iter().find(|row| row.name == kind)?;
+    let mut named = Vec::with_capacity(row.places.len());
+    let mut pattern = false;
+    for place in &row.places {
+        let (Extent::File(path) | Extent::Folder(path)) = &place.extent else {
+            return None;
+        };
+        if frame.run.root.join(path).exists() {
+            return None;
+        }
+        let source = place.source.as_ref()?;
+        let config = frame.display_path(&frame.run.location_base.join(&source.path));
+        pattern |= holds_glob(path);
+        named.push(format!("{path} ({config}:{})", source.line));
+    }
+    if named.is_empty() {
+        return None;
+    }
+    let remedy = if pattern {
+        format!("; {}", remedies::dangling_pattern())
+    } else {
+        String::new()
+    };
+    Some(format!(
+        "no place of kind {kind} exists: {}{remedy}",
+        named.join(", ")
+    ))
 }
 
 /// §FS-check.3.1.3 / §FS-check.4.12.1: a missing declaration in a fetch-enabled

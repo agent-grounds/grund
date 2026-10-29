@@ -115,16 +115,16 @@ fn unclosed_class(pattern: &str) -> bool {
     false
 }
 
+/// The glob characters a suffix may not hold (§FS-config-v2.schema.sources.extensions),
+/// which also mark a place written as a pattern (§FS-check.3.1.4).
+pub(crate) fn holds_glob(text: &str) -> bool {
+    text.contains(['*', '?', '[', ']', '{', '}', '!'])
+}
+
 /// §FS-config-v2.schema.sources.extensions: one suffix mapping. The suffix is
 /// judged here; the language it names once every definition is read.
 pub(super) fn extension_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Result<bool> {
-    let literal = !key.is_empty()
-        && !key.chars().any(|c| {
-            matches!(
-                c,
-                '.' | '/' | '\\' | '*' | '?' | '[' | ']' | '{' | '}' | '!'
-            )
-        });
+    let literal = !key.is_empty() && !key.contains(['.', '/', '\\']) && !holds_glob(key);
     if !literal {
         return r.fail(
             line,

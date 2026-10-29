@@ -36,6 +36,7 @@ mod tests_keys;
 mod tests_walk;
 mod walk;
 
+pub(crate) use sources::holds_glob;
 pub(super) use strings::{read_string, read_string_list};
 #[cfg(test)]
 pub(super) use tables::V1_TABLES;

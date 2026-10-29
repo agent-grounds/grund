@@ -142,6 +142,12 @@ pub(crate) fn dangling_fetch(id: impl Display) -> String {
     fill(Code::DANGLING, 2, Some("fetch"), slots)
 }
 
+/// `dangling`'s *Fix*, case `pattern` (§FS-check.3.1).
+pub(crate) fn dangling_pattern() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::DANGLING, 2, Some("pattern"), slots)
+}
+
 /// `declaration-near-miss`'s *Fix* (§FS-declarations.checks.declaration-near-miss).
 pub(crate) fn declaration_near_miss() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
