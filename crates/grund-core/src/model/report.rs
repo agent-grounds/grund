@@ -59,6 +59,12 @@ impl Code {
     pub(crate) const UNREAD_WORKSPACE_BLOCK: Code = Code("unread-workspace-block");
     /// §FS-workspace.6.1.7: an ancestor's claim on a block that could not be read.
     pub(crate) const UNDECIDABLE_WORKSPACE_CLAIM: Code = Code("undecidable-workspace-claim");
+
+    /// The check findings about a config line that a terminal still prints CLI-level,
+    /// the line in their text (§FS-errors.2.2.1) as well as in `line`: the version-2
+    /// window's warnings (§FS-config-v2.checks.config-not-toml,
+    /// §FS-config-v2.checks.config-multiline-string).
+    const CLI_LEVEL_AT_A_LINE: [Code; 2] = [Code::CONFIG_MULTILINE_STRING, Code::CONFIG_NOT_TOML];
 }
 
 /// The outcome of `check`: errors and warnings, kept apart so the exit code keys
@@ -116,6 +122,17 @@ pub struct Finding {
     /// meaning (§FS-rules.6). It is the field `check --only-rule` queries
     /// (§FS-rules.8).
     pub authority: Vec<String>,
+}
+
+impl Finding {
+    /// Whether a terminal prints this finding as a CLI-level message on stderr
+    /// (§FS-errors.2.2) rather than as a located one on stdout (§FS-errors.2.1): one
+    /// with no line, and one of the few whose line a config file holds and whose
+    /// message already names it (§FS-config-v2.checks.config-not-toml). Asked of the
+    /// finding, so text and JSON put it on the same stream.
+    pub fn is_cli_level(&self) -> bool {
+        self.line.is_none() || Code::CLI_LEVEL_AT_A_LINE.contains(&Code(self.code))
+    }
 }
 
 /// The published outcome of `check` — the twin of [`CheckReport`], kept in the

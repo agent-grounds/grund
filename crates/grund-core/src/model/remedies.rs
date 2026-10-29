@@ -76,6 +76,18 @@ pub(crate) fn citation_cardinality() -> String {
     fill(Code::CITATION_CARDINALITY, 2, None, slots)
 }
 
+/// `config-multiline-string`'s *Fix* (§FS-config-v2.checks.config-multiline-string).
+pub(crate) fn config_multiline_string(line: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("line", &line)];
+    fill(Code::CONFIG_MULTILINE_STRING, 2, None, slots)
+}
+
+/// `config-not-toml`'s *Fix* (§FS-config-v2.checks.config-not-toml).
+pub(crate) fn config_not_toml(line: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("line", &line)];
+    fill(Code::CONFIG_NOT_TOML, 2, None, slots)
+}
+
 /// `config-version-1`'s *Fix* (§FS-check.checks.config-version-1).
 pub(crate) fn config_version_1(files: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("files", &files)];

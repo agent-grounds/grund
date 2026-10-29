@@ -17,6 +17,7 @@ use super::point_sizes::LeadSizeWarning;
 use super::record::{ConfigLocation, ShorthandPolicy};
 use super::rows::{Nesting, Row};
 use super::sources::SourceModel;
+use super::v2::OpenLine;
 
 /// The `[citations]` table under its concern's name (§AR-config.1.2): the
 /// direction rules, unchanged in shape from the record `Config` carried.
@@ -36,6 +37,18 @@ pub struct Project {
     pub schema: Schema,
     pub rules: Rules,
     pub presentation: Presentation,
+    /// The arrays a version-2 reader read across a string still open at a line's
+    /// end, each warned for until grund 0.22.0 refuses it
+    /// (§FS-config-v2.reader.5.strings.window). Empty for every v1 file.
+    pub(crate) strings_over_breaks: Vec<StringOverBreak>,
+}
+
+/// §FS-config-v2.reader.5.strings.window: an array read with a string run over a
+/// line break — where its key was written, and its open line.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct StringOverBreak {
+    pub(crate) at: ConfigLocation,
+    pub(crate) open: OpenLine,
 }
 
 /// §AR-config.1.1: the `[workspace]` block, each list with the line it was

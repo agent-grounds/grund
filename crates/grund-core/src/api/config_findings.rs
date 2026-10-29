@@ -1,8 +1,9 @@
 //! What a loaded config carries on its own (§AR-system.2.9): the redundant
 //! discovery pair (§FS-check.4.3), the deprecated `.agents/` location
-//! (§FS-check.4.11) and a file read as version 1
-//! (§FS-check.checks.config-version-1), all known from the file the run read
-//! rather than from the walk.
+//! (§FS-check.4.11), a file read as version 1
+//! (§FS-check.checks.config-version-1) and a version-2 array read across a
+//! string open at a line's end (§FS-config-v2.checks.config-not-toml), all known
+//! from the file the run read rather than from the walk.
 //!
 //! They are data because the published `config_warnings` reads them
 //! (§FS-config.4.1) and so does the run beside them. Neither prints: the
@@ -108,9 +109,48 @@ fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Dia
     })
 }
 
+/// §FS-config-v2.reader.5.strings.window: the clause the window's warning ends
+/// with, naming the release from which the array is refused instead
+/// (§FS-config-v2.reader.5.strings.refusal).
+const STRINGS_WINDOW_CLAUSE: &str = "this warning becomes an error in grund 0.22.0";
+
+/// §FS-config-v2.checks.config-not-toml, §FS-config-v2.checks.config-multiline-string:
+/// one warning per array the version-2 reader read across a string still open at a
+/// line's end. Its message is the refusal the array becomes, what it is read as
+/// until then, the remedy and the release (§REQ-backwards-compatibility.2), behind
+/// the `<config>:<line>:` breadcrumb that refusal prints (§FS-errors.2.2.1). It
+/// anchors at the same key's line, so JSON carries the line too.
+fn string_over_break_warnings(config: &Config) -> impl Iterator<Item = Diagnostic> + '_ {
+    config.project().strings_over_breaks.iter().map(|over| {
+        let (at, open) = (&over.at, over.open);
+        let (code, remedy) = if open.multi_line {
+            let remedy = remedies::config_multiline_string(open.line);
+            (Code::CONFIG_MULTILINE_STRING, remedy)
+        } else {
+            (Code::CONFIG_NOT_TOML, remedies::config_not_toml(open.line))
+        };
+        Diagnostic {
+            code,
+            path: Some(at.path.clone()),
+            line: Some(at.line),
+            column: None,
+            message: format!(
+                "{}:{}: unclosed array{}, read for now with the line break as a space; \
+                 {remedy}; {STRINGS_WINDOW_CLAUSE}",
+                format_path(&at.path),
+                at.line,
+                open.parenthetical()
+            ),
+            sites: Vec::new(),
+            authority: Vec::new(),
+        }
+    })
+}
+
 /// The findings a loaded config carries on its own — the redundant discovery
-/// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11)
-/// and a file read as version 1 (§FS-check.checks.config-version-1), in that
+/// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11),
+/// a file read as version 1 (§FS-check.checks.config-version-1) and the
+/// version-2 window's warnings (§FS-config-v2.checks.config-not-toml), in that
 /// order, which the report then sorts (§FS-check.checks.config-version-1.1). All
 /// are known from the file the run read rather than from the walk, which is why
 /// they arrive together.
@@ -127,4 +167,5 @@ pub(super) fn config_diagnostics<'a>(
         .into_iter()
         .chain(deprecated_config_location_warning(config))
         .chain(config_version_1_warning(config, display))
+        .chain(string_over_break_warnings(config))
 }

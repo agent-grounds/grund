@@ -357,16 +357,17 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
                 // so the read goes on at the next line (§FS-workspace.6.1.7.5).
                 if spans_lines {
                     let mut ahead = lines.clone();
-                    if joined_value(value, &mut ahead).is_some() {
+                    if joined_value(value, idx + 1, &mut ahead).value.is_some() {
                         lines = ahead;
                     }
                 }
                 continue;
             }
         };
-        // A version-2 claim still open at the end of the file is not a list.
+        // A version-2 claim still open at the end of the file is not a list; one read across
+        // an open string is the config's list (§FS-config-v2.reader.5.strings.window).
         let value = if spans_lines {
-            joined_value(value, &mut lines)
+            joined_value(value, idx + 1, &mut lines).value
         } else {
             Some(value.trim().to_string())
         };
