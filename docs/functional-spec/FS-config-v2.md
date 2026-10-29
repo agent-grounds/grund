@@ -211,6 +211,17 @@ warning: grund.toml:8: expected string (a multi-line string, which version 2 doe
 
 From grund 0.22.0 it is refused with the same parenthetical, `error: grund.toml:8: expected string (a multi-line string, which version 2 does not read); this became an error in grund 0.22.0`. Where the first string in a value that closes early is one opened with `"""`, this is the value's one warning, in place of `config-not-toml`. A `"""` string that a line break runs through is one construct, the one [§FS-config-v2.reader.5.strings.multi-line](FS-config-v2.md#reader5stringsmulti-line-a-string-opened-with--is-one-version-2-does-not-read) already warns for: `exclude = [` / `"""a` / `b""",` / `]` reaches the element reader as `"""a b"""` once its lines are joined, and it earns that warning alone.
 
+#### reader.6.literal: A `'` string is one version 2 does not read
+
+TOML admits two more string forms: a literal string, opened and closed by `'`, and a multi-line literal string, opened and closed by `'''`. Version 2 reads neither, because it reads basic strings only, as version 1 does ([§FS-config.3](FS-config.md#3-keys-version-1)). So a scalar value or an array element that opens with `'` is refused at its key's line as `expected string`, as it always has been, and the refusal names the form it refused and the remedy, so that a value that is visibly a string is not taken for one whose contents are at fault. One that opens with `'''` is a multi-line literal string, and any other that opens with `'` is a literal string:
+
+```text
+error: grund.toml:8: expected string (a literal string, which version 2 does not read); write it as a basic string, "...", with \" for a quote inside it
+error: grund.toml:8: expected string (a multi-line literal string, which version 2 does not read); write it as a basic string, "...", with \" for a quote inside it
+```
+
+So `project_name = 'x'`, `title = 'Drawbacks & "open" *questions*'`, `folders = ['specs']` and `folders = ["docs", 'specs']` each earn the first, and `project_name = '''x'''` earns the second. Only the words change. These values were refused before, with the same exit `2` on every command that loads the config ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)), the same channel and the same code, so the change takes no deprecation window. Version 1 refuses the same forms with the bare `expected string`, as before, because it is frozen ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)) and the parenthetical names version 2. A value malformed in any other way keeps the bare `expected string`, such as `fetch = true` where a string is expected, or `exclude = ["target" "a,b"]`.
+
 ## defaults: The v2 epoch
 
 ### defaults.1: What v2 fixes
