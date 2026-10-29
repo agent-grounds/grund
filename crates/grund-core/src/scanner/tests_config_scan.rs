@@ -49,7 +49,7 @@ fn parallel_file_scan_matches_sequential_scan() {
     for idx in 0..300 {
         write(
             &root.join(format!("src/module-{idx:03}.rs")),
-            &format!("// §FS-001-root.1\npub fn module_{idx:03}() {{}}\n"),
+            &format!("// \u{a7}FS-001-root.1\npub fn module_{idx:03}() {{}}\n"),
         );
     }
 
@@ -217,11 +217,11 @@ fn check_rejects_declaration_in_wrong_unique_kind_home() {
     let root = test_root("check_rejects_declaration_in_wrong_unique_kind_home");
     write(
         &root.join("docs/functional-spec/FS-001-login.md"),
-        "# AR-001-router: Router\n\nSupports §FS-002-login.\n",
+        "# AR-001-router: Router\n\nSupports \u{a7}FS-002-login.\n",
     );
     write(
         &root.join("docs/functional-spec/FS-002-login.md"),
-        "# FS-002-login: Login\n\nUses §AR-001-router.\n",
+        "# FS-002-login: Login\n\nUses \u{a7}AR-001-router.\n",
     );
 
     let config = legacy_fs_folder_config(root.clone());
@@ -246,7 +246,7 @@ fn check_uses_scanned_symlink_path_for_kind_home() {
     let root = test_root("check_uses_scanned_symlink_path_for_kind_home");
     write(
         &root.join("outside/spec.md"),
-        "# AR-001-router: Router\n\nSupports §FS-002-login.\n",
+        "# AR-001-router: Router\n\nSupports \u{a7}FS-002-login.\n",
     );
     std::fs::create_dir_all(root.join("docs/functional-spec")).expect("create docs");
     std::os::unix::fs::symlink(
@@ -416,7 +416,7 @@ fn escaped_citation_that_resolves_is_suggested_not_errored() {
     // holds a resolving escape and a dangling escape.
     write(
         &root.join("docs/guide.md"),
-        "Live §FS-001-login. Escaped `<§>FS-001-login`. Ghost `<§>FS-999-ghost`.\n",
+        "Live \u{a7}FS-001-login. Escaped `<§>FS-001-login`. Ghost `<§>FS-999-ghost`.\n",
     );
 
     let config = legacy_fs_folder_config(root.clone());

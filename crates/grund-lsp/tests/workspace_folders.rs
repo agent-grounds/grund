@@ -26,7 +26,7 @@ fn write_project(root: &Path, citation_name: &str) -> (PathBuf, PathBuf) {
     fs::write(&spec, "# FS-001-example: Example\n\nLead.\n").expect("write spec");
     fs::write(
         &source,
-        "/// Implements §FS-001-example.\nfinal class Example {}\n",
+        "/// Implements \u{a7}FS-001-example.\nfinal class Example {}\n",
     )
     .expect("write source");
     (spec, source)
@@ -259,7 +259,7 @@ fn a_zero_config_folder_uses_its_anchor_for_hover_reads() {
     )
     .expect("write folder declaration");
     let user = second.join("docs/FS-002-user.md");
-    fs::write(&user, "# FS-002-user: User\n\nSee §FS-001-example.\n").expect("write citation");
+    fs::write(&user, "# FS-002-user: User\n\nSee \u{a7}FS-001-example.\n").expect("write citation");
 
     let (mut child, mut stdin, receiver) =
         start_server_with_workspace_folders(&server_cwd, &[&first, &second]);

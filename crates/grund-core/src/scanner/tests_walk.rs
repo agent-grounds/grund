@@ -18,7 +18,7 @@ fn a_symlinked_file_is_read_at_the_path_the_link_occupies() {
     let root = linked_repo("a_symlinked_file_is_read_at_the_path_the_link_occupies");
     write(
         &root.join("outside/FS-002-beta.md"),
-        "# FS-002-beta: Beta\n\nCites §FS-001-alpha and §FS-999-ghost.\n",
+        "# FS-002-beta: Beta\n\nCites \u{a7}FS-001-alpha and \u{a7}FS-999-ghost.\n",
     );
     symlink(
         "../../outside/FS-002-beta.md",
@@ -48,7 +48,7 @@ fn an_aliased_file_is_read_once_under_the_first_of_its_names() {
     let root = linked_repo("an_aliased_file_is_read_once_under_the_first_of_its_names");
     write(
         &root.join("docs/functional-spec/FS-001-alpha.md"),
-        "# FS-001-alpha: Alpha\n\nCites §FS-999-ghost.\n",
+        "# FS-001-alpha: Alpha\n\nCites \u{a7}FS-999-ghost.\n",
     );
     symlink(
         "FS-001-alpha.md",
@@ -72,7 +72,7 @@ fn an_alias_that_sorts_last_leaves_the_real_name_reported() {
     let root = linked_repo("an_alias_that_sorts_last_leaves_the_real_name_reported");
     write(
         &root.join("docs/functional-spec/FS-001-alpha.md"),
-        "# FS-001-alpha: Alpha\n\nCites §FS-999-ghost.\n",
+        "# FS-001-alpha: Alpha\n\nCites \u{a7}FS-999-ghost.\n",
     );
     symlink(
         "FS-001-alpha.md",
@@ -98,7 +98,7 @@ fn full_scope_keeps_the_plain_runs_spelling_of_a_linked_file() {
     // and the `--full` walk reaches it both ways.
     write(
         &root.join("outside/FS-002-beta.md"),
-        "# FS-002-beta: Beta\n\nCites §FS-999-ghost.\n",
+        "# FS-002-beta: Beta\n\nCites \u{a7}FS-999-ghost.\n",
     );
     symlink(
         "../../outside/FS-002-beta.md",
@@ -239,7 +239,7 @@ fn an_excluded_directory_reached_through_a_link_is_still_excluded() {
     let root = linked_repo("an_excluded_directory_reached_through_a_link_is_still_excluded");
     write(
         &root.join("docs/functional-spec/FS-001-alpha.md"),
-        "# FS-001-alpha: Alpha\n\nCites §FS-003-vendor.\n",
+        "# FS-001-alpha: Alpha\n\nCites \u{a7}FS-003-vendor.\n",
     );
     write(
         &root.join("vendored/FS-003-vendor.md"),
@@ -353,7 +353,7 @@ fn a_link_to_content_no_project_owns_is_pruned_outside_the_physical_root() {
         &root.join("packages/sub/docs/functional-spec/FS-002-beta.md"),
         "# FS-002-beta: Beta\n",
     );
-    write(&root.join("shared/notes.md"), "Cites §FS-001-alpha.\n");
+    write(&root.join("shared/notes.md"), "Cites \u{a7}FS-001-alpha.\n");
     symlink("../../../shared", &root.join("packages/other/docs/shared"));
 
     let (config, findings) = member_scan(&root, "packages/other");

@@ -67,7 +67,7 @@ fn navigation_covers_source_comment_citations_and_stub_titles() {
     fs::write(&stub, format!("{stub_heading}\n")).expect("write stub");
     fs::write(
         &source,
-        "/// AR-001-router: Router\n/// Uses §FS-001-alpha.1.\npub fn router() {}\n",
+        "/// AR-001-router: Router\n/// Uses \u{a7}FS-001-alpha.1.\npub fn router() {}\n",
     )
     .expect("write source");
 
@@ -263,7 +263,7 @@ fn navigation_covers_source_comment_citations_and_stub_titles() {
 
     // `## 1. Detail` is line 5 (0-based 4); the section number `1` starts at
     // character 3. Definition and references on the section heading resolve to
-    // the `§FS-001-alpha.1` citation, not the whole-ID usages (§FS-lsp.1.3.1).
+    // the `<§>FS-001-alpha.1` citation, not the whole-ID usages (§FS-lsp.1.3.1).
     send_message(
         &mut stdin,
         json!({
@@ -360,7 +360,7 @@ fn diagnostic_anchors_on_offending_citation_token() {
     )
     .expect("write spec");
     // The first citation resolves; the second is a mistyped unknown reference.
-    let line = "Refs §FS-001-alpha and §FS-404-ghost.";
+    let line = "Refs \u{a7}FS-001-alpha and \u{a7}FS-404-ghost.";
     let uses = root.join("docs/uses.md");
     fs::write(&uses, format!("{line}\n")).expect("write uses");
 
@@ -368,8 +368,8 @@ fn diagnostic_anchors_on_offending_citation_token() {
 
     let diagnostics = recv_diagnostics(&receiver, &mut child, "uses.md");
 
-    // UTF-16 columns: the resolving §FS-001-alpha starts before the unknown
-    // §FS-404-ghost, so the two anchors must differ.
+    // UTF-16 columns: the resolving <§>FS-001-alpha starts before the unknown
+    // <§>FS-404-ghost, so the two anchors must differ.
     let first_marker_col = line[..line.find('§').expect("first marker")]
         .encode_utf16()
         .count() as i64;
@@ -400,7 +400,7 @@ fn diagnostic_anchors_on_offending_citation_token() {
     assert_eq!(
         dangling["range"]["start"]["character"].as_i64(),
         Some(ghost_marker_col),
-        "diagnostic must anchor on the offending §FS-404-ghost token, not the \
+        "diagnostic must anchor on the offending \u{a7}FS-404-ghost token, not the \
          resolving first citation at column {first_marker_col} (§FS-lsp.1.1.1): {dangling:?}"
     );
 
@@ -508,8 +508,8 @@ fn document_links_cover_python_docstring_citation_columns() {
     let source = root.join("src/service.py");
     fs::write(
         &source,
-        "class Service:\n    \"\"\"\n    Uses §FS-001-alpha.\n    \"\"\"\n\n\
-         def inline():\n    \"\"\"Inline §FS-001-alpha.\"\"\"\n",
+        "class Service:\n    \"\"\"\n    Uses \u{a7}FS-001-alpha.\n    \"\"\"\n\n\
+         def inline():\n    \"\"\"Inline \u{a7}FS-001-alpha.\"\"\"\n",
     )
     .expect("write source");
 
@@ -580,7 +580,7 @@ fn definition_links_carry_whole_token_origin_span() {
         format!("{spec_heading}\n\nLead.\n\n## 1. Detail\nMore.\n"),
     )
     .expect("write spec");
-    let citation_line = "Uses §FS-001-alpha.";
+    let citation_line = "Uses \u{a7}FS-001-alpha.";
     fs::write(&user, format!("# AR-002-user: User\n\n{citation_line}\n")).expect("write user");
 
     let (mut child, mut stdin, receiver) = start_server_with_capabilities(
@@ -668,7 +668,7 @@ fn definition_links_carry_whole_token_origin_span() {
 }
 
 /// With no highlight provider an editor falls back to its word pattern and
-/// boxes only one sub-word of `§FS-001-alpha`. The server marks the whole
+/// boxes only one sub-word of `<§>FS-001-alpha`. The server marks the whole
 /// token under the cursor as one span, plus the sibling citation of the same
 /// ID in the same file (§FS-lsp.1.3.3).
 #[test]
@@ -679,7 +679,7 @@ fn document_highlight_marks_whole_citation_token() {
     let spec = root.join("docs/functional-spec/FS-001-alpha.md");
     let user = root.join("docs/architecture/AR-002-user.md");
     fs::write(&spec, "# FS-001-alpha: Alpha\n\nLead.\n").expect("write spec");
-    let citation_line = "Uses §FS-001-alpha and again §FS-001-alpha.";
+    let citation_line = "Uses \u{a7}FS-001-alpha and again \u{a7}FS-001-alpha.";
     fs::write(&user, format!("# AR-002-user: User\n\n{citation_line}\n")).expect("write user");
 
     let (mut child, mut stdin, receiver) = start_server(&root);
@@ -688,7 +688,7 @@ fn document_highlight_marks_whole_citation_token() {
     // sub-word inside it (a few units past the marker).
     let first_marker_byte = citation_line.find('§').expect("first marker");
     let first_marker_col = citation_line[..first_marker_byte].encode_utf16().count();
-    let token_units = "§FS-001-alpha".encode_utf16().count();
+    let token_units = "\u{a7}FS-001-alpha".encode_utf16().count();
     let cursor = first_marker_col + 7;
 
     send_message(
@@ -714,7 +714,7 @@ fn document_highlight_marks_whole_citation_token() {
                 && highlight["range"]["end"]["character"].as_i64()
                     == Some((first_marker_col + token_units) as i64)
         }),
-        "highlight should cover the whole §FS-001-alpha token under the cursor, not a sub-word: {highlights:?}"
+        "highlight should cover the whole \u{a7}FS-001-alpha token under the cursor, not a sub-word: {highlights:?}"
     );
 
     let second_marker_byte = citation_line
@@ -769,7 +769,7 @@ fn forbidden_citation_surfaces_as_diagnostic() {
     let spec = root.join("docs/functional-spec/FS-001-alpha.md");
     fs::write(
         &spec,
-        "# FS-001-alpha: Alpha\n\nThe behavior leans on §AR-001-arch.\n",
+        "# FS-001-alpha: Alpha\n\nThe behavior leans on \u{a7}AR-001-arch.\n",
     )
     .expect("write spec");
 

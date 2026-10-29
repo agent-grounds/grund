@@ -10,59 +10,59 @@ use std::process::{Command, Output, Stdio};
 
 const SECTION_ONE: &str = concat!(
     "## 1. Both fence characters\n\n",
-    "Before the fences, §FS-002-target.1 is ordinary prose.\n\n",
+    "Before the fences, \u{a7}FS-002-target.1 is ordinary prose.\n\n",
     "```markdown\n",
-    "[§FS-002-target.1](FS-002-target.md#1-detail)\n",
+    "[\u{a7}FS-002-target.1](FS-002-target.md#1-detail)\n",
     "[§FS-<foo>.3.1](<relative-path>#<anchor>)\n",
     "```\n\n",
-    "Between the fences, §FS-002-target.1 is ordinary prose.\n\n",
+    "Between the fences, \u{a7}FS-002-target.1 is ordinary prose.\n\n",
     "~~~markdown\n",
-    "[§FS-002-target.1](FS-002-target.md#1-detail)\n",
+    "[\u{a7}FS-002-target.1](FS-002-target.md#1-detail)\n",
     "[§FS-<foo>.3.1](<relative-path>#<anchor>)\n",
     "~~~\n\n",
-    "After the fences, §FS-002-target.1 is ordinary prose.\n",
+    "After the fences, \u{a7}FS-002-target.1 is ordinary prose.\n",
 );
 
 const MARKDOWN_SECTION_ONE: &str = concat!(
     "## 1. Both fence characters\n\n",
-    "Before the fences, [§FS-002-target.1](FS-002-target.md#1-detail) is ordinary prose.\n\n",
+    "Before the fences, [\u{a7}FS-002-target.1](FS-002-target.md#1-detail) is ordinary prose.\n\n",
     "```markdown\n",
-    "[§FS-002-target.1](FS-002-target.md#1-detail)\n",
+    "[\u{a7}FS-002-target.1](FS-002-target.md#1-detail)\n",
     "[§FS-<foo>.3.1](<relative-path>#<anchor>)\n",
     "```\n\n",
-    "Between the fences, [§FS-002-target.1](FS-002-target.md#1-detail) is ordinary prose.\n\n",
+    "Between the fences, [\u{a7}FS-002-target.1](FS-002-target.md#1-detail) is ordinary prose.\n\n",
     "~~~markdown\n",
-    "[§FS-002-target.1](FS-002-target.md#1-detail)\n",
+    "[\u{a7}FS-002-target.1](FS-002-target.md#1-detail)\n",
     "[§FS-<foo>.3.1](<relative-path>#<anchor>)\n",
     "~~~\n\n",
-    "After the fences, [§FS-002-target.1](FS-002-target.md#1-detail) is ordinary prose.\n",
+    "After the fences, [\u{a7}FS-002-target.1](FS-002-target.md#1-detail) is ordinary prose.\n",
 );
 
 const SECTION_TWO: &str = concat!(
     "## 2. Close and resume\n\n",
-    "Before the fence, §FS-002-target.1 is ordinary prose.\n\n",
+    "Before the fence, \u{a7}FS-002-target.1 is ordinary prose.\n\n",
     "````markdown\n",
-    "[§FS-002-target.1](FS-002-target.md#1-detail)\n",
+    "[\u{a7}FS-002-target.1](FS-002-target.md#1-detail)\n",
     "~~~\n",
-    "[§FS-002-target.1](FS-002-target.md#1-detail)\n",
+    "[\u{a7}FS-002-target.1](FS-002-target.md#1-detail)\n",
     "```\n",
-    "[§FS-002-target.1](FS-002-target.md#1-detail)\n",
+    "[\u{a7}FS-002-target.1](FS-002-target.md#1-detail)\n",
     "`````\n\n",
-    "After the valid longer closer, §FS-002-target.1 is ordinary prose.\n",
+    "After the valid longer closer, \u{a7}FS-002-target.1 is ordinary prose.\n",
 );
 
 const SECTION_THREE: &str = concat!(
     "## 3. Unclosed fence\n\n",
-    "Before the fence, §FS-002-target.1 is ordinary prose.\n\n",
+    "Before the fence, \u{a7}FS-002-target.1 is ordinary prose.\n\n",
     "~~~~markdown\n",
-    "[§FS-002-target.1](FS-002-target.md#1-detail)\n",
+    "[\u{a7}FS-002-target.1](FS-002-target.md#1-detail)\n",
     "~~~\n",
-    "[§FS-002-target.1](FS-002-target.md#1-detail)\n",
+    "[\u{a7}FS-002-target.1](FS-002-target.md#1-detail)\n",
 );
 
 fn full_body() -> String {
     format!(
-        "Lead prose flattens §FS-002-target.1.\n\n{SECTION_ONE}\n{SECTION_TWO}\n{SECTION_THREE}"
+        "Lead prose flattens \u{a7}FS-002-target.1.\n\n{SECTION_ONE}\n{SECTION_TWO}\n{SECTION_THREE}"
     )
 }
 
@@ -146,15 +146,18 @@ fn default_brief_and_toc_keep_their_existing_slice_boundaries() {
         &root,
     );
     let toc = run(binaries::grund(), &["show", "FS-001-wraps", "--toc"], &root);
-    assert_eq!(stdout(&default), "Lead prose flattens §FS-002-target.1.\n");
+    assert_eq!(
+        stdout(&default),
+        "Lead prose flattens \u{a7}FS-002-target.1.\n"
+    );
     assert_eq!(
         stdout(&brief),
-        "# FS-001-wraps: Wrapped citation examples\n\nLead prose flattens §FS-002-target.1.\n"
+        "# FS-001-wraps: Wrapped citation examples\n\nLead prose flattens \u{a7}FS-002-target.1.\n"
     );
     assert_eq!(
         stdout(&toc),
         concat!(
-            "Lead prose flattens §FS-002-target.1.\n\n",
+            "Lead prose flattens \u{a7}FS-002-target.1.\n\n",
             "## 1. Both fence characters\n",
             "## 2. Close and resume\n",
             "## 3. Unclosed fence\n",
@@ -235,8 +238,8 @@ fn fence_looking_source_text_does_not_suppress_existing_flattening() {
     assert_eq!(output.stderr, b"");
     let body = stdout(&output);
     assert!(
-        body.contains("```markdown\n§FS-002-target.1\n```"),
+        body.contains("```markdown\n\u{a7}FS-002-target.1\n```"),
         "{body}"
     );
-    assert!(!body.contains("[§FS-002-target.1]"), "{body}");
+    assert!(!body.contains("[\u{a7}FS-002-target.1]"), "{body}");
 }

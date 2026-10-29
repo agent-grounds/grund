@@ -28,7 +28,7 @@ fn require_grounding_flags_uncited_source_file() {
     );
     write(
         &root.join("src/auth.rs"),
-        "// §FS-001-login\npub fn login() {}\n",
+        "// \u{a7}FS-001-login\npub fn login() {}\n",
     );
     write(&root.join("src/util.rs"), "pub fn helper() {}\n");
 
@@ -46,7 +46,7 @@ fn require_grounding_flags_uncited_source_file() {
     assert_eq!(
         ungrounded,
         vec![canonical_test_path(&root.join("src/util.rs"))],
-        "only the uncited source file is flagged; the one citing §FS-001-login is grounded"
+        "only the uncited source file is flagged; the one citing \u{a7}FS-001-login is grounded"
     );
 }
 
@@ -59,7 +59,7 @@ fn inline_citation_only_rejects_prose_once_per_site() {
     );
     write(
         &root.join("src/auth.rs"),
-        "// §FS-001-login login branch rationale\n// §FS-001-login\npub fn login() {}\n",
+        "// \u{a7}FS-001-login login branch rationale\n// \u{a7}FS-001-login\npub fn login() {}\n",
     );
 
     let mut config = Config::default_for(root.clone());
@@ -89,7 +89,7 @@ fn inline_note_hard_caps_can_report_multiple_errors() {
     );
     write(
         &root.join("src/auth.rs"),
-        "// §FS-001-login rationale with a long line that exceeds the cap\n// second line\npub fn login() {}\n",
+        "// \u{a7}FS-001-login rationale with a long line that exceeds the cap\n// second line\npub fn login() {}\n",
     );
 
     let mut config = Config::default_for(root.clone());
@@ -106,13 +106,13 @@ fn inline_note_hard_caps_can_report_multiple_errors() {
 
     assert!(
             messages.contains(
-                &"inline note is 2 lines, over the 1-line maximum: lines 1-2 cite §FS-001-login; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment"
+                &"inline note is 2 lines, over the 1-line maximum: lines 1-2 cite \u{a7}FS-001-login; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment"
             ),
             "line cap should be reported: {messages:?}"
         );
     assert!(
         messages.contains(
-            &"inline note is 64 columns, over the 40-column maximum: lines 1-2 cite §FS-001-login; over-limit lines: line 1: 64 columns; shorten or rewrap its widest line"
+            &"inline note is 64 columns, over the 40-column maximum: lines 1-2 cite \u{a7}FS-001-login; over-limit lines: line 1: 64 columns; shorten or rewrap its widest line"
         ),
         "column cap should be reported: {messages:?}"
     );
@@ -131,7 +131,7 @@ fn inline_note_line_cap_names_citations_in_source_order_deduplicated() {
     );
     write(
         &root.join("src/auth.rs"),
-        "// §FS-001-login.1 the session rule, and §FS-001-login for the\n// whole feature, and §FS-001-login.1 again for the same rule\npub fn login() {}\n",
+        "// \u{a7}FS-001-login.1 the session rule, and \u{a7}FS-001-login for the\n// whole feature, and \u{a7}FS-001-login.1 again for the same rule\npub fn login() {}\n",
     );
 
     let mut config = Config::default_for(root.clone());
@@ -147,7 +147,7 @@ fn inline_note_line_cap_names_citations_in_source_order_deduplicated() {
 
     assert!(
             messages.contains(
-                &"inline note is 2 lines, over the 1-line maximum: lines 1-2 cite §FS-001-login.1, §FS-001-login; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment"
+                &"inline note is 2 lines, over the 1-line maximum: lines 1-2 cite \u{a7}FS-001-login.1, \u{a7}FS-001-login; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment"
             ),
             "citations are named as written, in source order, deduplicated: {messages:?}"
         );
@@ -165,8 +165,8 @@ fn inline_note_column_cap_counts_characters_not_bytes() {
     );
 
     // Identical character counts; only the padding's encoding differs.
-    let ascii = format!("// §FS-001-login {}", "x".repeat(60));
-    let accented = format!("// §FS-001-login {}", "é".repeat(60));
+    let ascii = format!("// \u{a7}FS-001-login {}", "x".repeat(60));
+    let accented = format!("// \u{a7}FS-001-login {}", "é".repeat(60));
     assert_eq!(
         ascii.chars().count(),
         accented.chars().count(),
@@ -213,8 +213,8 @@ fn inline_note_column_cap_is_exact_in_non_ascii_prose() {
         "# FS-001-login: Login\n",
     );
 
-    let at_cap = format!("// §FS-001-login {}", "é".repeat(60));
-    let over_by_one = format!("// §FS-001-login {}", "é".repeat(61));
+    let at_cap = format!("// \u{a7}FS-001-login {}", "é".repeat(60));
+    let over_by_one = format!("// \u{a7}FS-001-login {}", "é".repeat(61));
 
     write(
         &root.join("src/auth.rs"),
@@ -240,7 +240,7 @@ fn inline_note_column_cap_is_exact_in_non_ascii_prose() {
         vec![(
             Some(4),
             format!(
-                "inline note is {} columns, over the {}-column maximum: line 4 cites §FS-001-login; over-limit lines: line 4: {} columns; shorten or rewrap its widest line",
+                "inline note is {} columns, over the {}-column maximum: line 4 cites \u{a7}FS-001-login; over-limit lines: line 4: {} columns; shorten or rewrap its widest line",
                 at_cap.chars().count() + 1,
                 at_cap.chars().count(),
                 at_cap.chars().count() + 1,
@@ -259,7 +259,7 @@ fn inline_note_soft_cap_is_warning_only_when_enabled() {
     );
     write(
         &root.join("src/auth.rs"),
-        "// §FS-001-login rationale\n// continuation\npub fn login() {}\n",
+        "// \u{a7}FS-001-login rationale\n// continuation\npub fn login() {}\n",
     );
 
     let mut config = Config::default_for(root.clone());
@@ -272,7 +272,7 @@ fn inline_note_soft_cap_is_warning_only_when_enabled() {
                 .warnings
                 .iter()
                 .any(|warning| warning.code == "inline-citation-style"
-                    && warning.message == "inline note is 2 lines, over the 1-line preferred limit: lines 1-2 cite §FS-001-login; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment"),
+                    && warning.message == "inline note is 2 lines, over the 1-line preferred limit: lines 1-2 cite \u{a7}FS-001-login; a blank line splits a note, an empty comment line does not; shorten the note, or move its detail into a doc-comment"),
             "soft-cap overrun should be a warning when enabled"
         );
     assert!(
@@ -293,7 +293,7 @@ fn inline_declaration_blocks_are_not_citation_style_sites() {
     );
     write(
         &root.join("src/auth.rs"),
-        "// FS-001-login: Login\n// §FS-002-beta body citation with prose\npub fn login() {}\n",
+        "// FS-001-login: Login\n// \u{a7}FS-002-beta body citation with prose\npub fn login() {}\n",
     );
 
     let mut config = Config::default_for(root.clone());
@@ -319,7 +319,7 @@ fn inline_style_respects_disabled_python_docstring_scanning() {
     );
     write(
         &root.join("src/auth.py"),
-        "\"\"\"\n§FS-001-login\nsecond line\nthird line\n\"\"\"\n",
+        "\"\"\"\n\u{a7}FS-001-login\nsecond line\nthird line\n\"\"\"\n",
     );
 
     let mut config = Config::default_for(root.clone());
@@ -346,8 +346,8 @@ fn python_docstring_citations_keep_source_columns() {
     );
     write(
         &root.join("src/auth.py"),
-        "class Auth:\n    \"\"\"\n    Uses §FS-001-login.\n    \"\"\"\n\n\
-             def inline():\n    \"\"\"Inline §FS-001-login.\"\"\"\n",
+        "class Auth:\n    \"\"\"\n    Uses \u{a7}FS-001-login.\n    \"\"\"\n\n\
+             def inline():\n    \"\"\"Inline \u{a7}FS-001-login.\"\"\"\n",
     );
 
     let config = Config::default_for(root.clone());
@@ -370,7 +370,7 @@ fn python_docstring_citations_keep_source_columns() {
             citations[0].column,
             citations[0].text.as_str()
         ),
-        (3, 10, "§FS-001-login"),
+        (3, 10, "\u{a7}FS-001-login"),
         "indented docstring body citation must use original source column (§AR-scanner.4.4)"
     );
     assert_eq!(
@@ -379,7 +379,7 @@ fn python_docstring_citations_keep_source_columns() {
             citations[1].column,
             citations[1].text.as_str()
         ),
-        (7, 15, "§FS-001-login"),
+        (7, 15, "\u{a7}FS-001-login"),
         "same-line triple-quoted docstring citation must be scanned after the opening delimiter (§AR-scanner.4.4)"
     );
 }
@@ -391,7 +391,7 @@ fn inline_style_strips_configured_comment_prefixes_for_note_detection() {
         &root.join("docs/functional-spec/FS-001-login.md"),
         "# FS-001-login: Login\n",
     );
-    write(&root.join("src/auth.rs"), "% §FS-001-login\n");
+    write(&root.join("src/auth.rs"), "% \u{a7}FS-001-login\n");
 
     let mut config = Config::default_for(root.clone());
     config.inline_style = "citation-only".into();
@@ -418,7 +418,7 @@ fn inline_style_strips_block_comment_continuation_prefix() {
     );
     write(
         &root.join("src/auth.rs"),
-        "/*\n * §FS-001-login\n */\npub fn login() {}\n",
+        "/*\n * \u{a7}FS-001-login\n */\npub fn login() {}\n",
     );
 
     let mut config = Config::default_for(root.clone());

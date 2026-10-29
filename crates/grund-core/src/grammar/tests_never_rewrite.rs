@@ -24,7 +24,7 @@ fn an_escape_position_is_the_bytes_immediately_before_the_token() {
         "`<§> ` with a space escapes nothing — the token does not begin after the `>`"
     );
 
-    let live = "The rule is §FS-001-login here.";
+    let live = "The rule is \u{a7}FS-001-login here.";
     let live_start = live.find("FS-001-login").expect("the live token");
     assert!(
         !in_escape_position(live, live_start, "§"),

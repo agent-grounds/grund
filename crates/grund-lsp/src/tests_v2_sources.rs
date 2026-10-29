@@ -46,7 +46,7 @@ fn expanded() -> Vec<String> {
 
 const GATED: &str = concat!(
     "/// FS-002-api: The API\npub fn f() {\n",
-    "    // FS-003-note: a note on §FS-001 \n}\n",
+    "    // FS-003-note: a note on \u{a7}FS-001 \n}\n",
 );
 
 /// §FS-config-v2.schema.sources.declarations.gate: under v2's `doc-comments` a plain
@@ -63,7 +63,7 @@ fn a_gated_line_expands_under_v2_and_is_kept_under_v1() {
 /// string's line, as `.rs` does, and expands the comment beside it.
 #[test]
 fn a_remapped_rust_suffix_keeps_its_raw_string() {
-    let text = "/// See §FS-001 \npub const S: &str = r#\"\n// §FS-001 \n\"#;\n";
+    let text = "/// See \u{a7}FS-001 \npub const S: &str = r#\"\n// \u{a7}FS-001 \n\"#;\n";
     for rel in ["src/a.rs", "src/b.rustdoc"] {
         let name = format!("v2_remap_{rel}");
         assert_eq!(edits(&name, V2, rel, text, 0), expanded(), "{rel} comment");
@@ -79,7 +79,7 @@ fn a_remapped_rust_suffix_keeps_its_raw_string() {
 /// example, as `.md` does, and expands the prose above it.
 #[test]
 fn a_remapped_markdown_suffix_keeps_its_fence() {
-    let text = "# FS-002-b: B\n\nSee §FS-001 \n\n```text\nexample §FS-001 \n```\n";
+    let text = "# FS-002-b: B\n\nSee \u{a7}FS-001 \n\n```text\nexample \u{a7}FS-001 \n```\n";
     for rel in ["docs/FS-002-b.md", "docs/FS-002-b.mdx"] {
         let name = format!("v2_remap_{rel}");
         assert_eq!(edits(&name, V2, rel, text, 2), expanded(), "{rel} prose");
@@ -92,7 +92,7 @@ fn a_remapped_markdown_suffix_keeps_its_fence() {
 /// in its docstring, as `.py` does.
 #[test]
 fn a_remapped_python_suffix_reads_its_docstring() {
-    let text = "def f():\n    \"\"\"Implements §FS-001 \n    \"\"\"\n";
+    let text = "def f():\n    \"\"\"Implements \u{a7}FS-001 \n    \"\"\"\n";
     for rel in ["src/m.py", "src/m.pyi"] {
         let name = format!("v2_remap_{rel}");
         assert_eq!(

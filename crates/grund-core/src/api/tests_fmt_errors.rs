@@ -16,7 +16,7 @@ fn public_fmt_api_preserves_every_strict_scan_error() {
     );
     write(
         &root.join("docs/FS-001-alpha.md"),
-        "# FS-001-alpha: Alpha\n\nCites §FS-001-alpha.\n",
+        "# FS-001-alpha: Alpha\n\nCites \u{a7}FS-001-alpha.\n",
     );
     std::os::unix::fs::symlink("nowhere.md", root.join("docs/FS-002-gone.md"))
         .expect("create first broken symlink");

@@ -42,7 +42,7 @@ fn messages(diagnostics: &[Value]) -> Vec<&str> {
 
 const NOT_LISTED: &str = "FS-002-session is not listed in docs/fs/README.md: an entry is a \
      `§`-marked Markdown link to the declaration; write \
-     `[§FS-002-session](FS-002-session.md#fs-002-session-user-session)` in docs/fs/README.md \
+     `[\u{a7}FS-002-session](FS-002-session.md#fs-002-session-user-session)` in docs/fs/README.md \
      — became an error in grund 0.13.0";
 
 /// The missing-entry messages on FS-002-session with the index `saved` on disk,
@@ -113,7 +113,7 @@ fn shifting_an_unsaved_index_buffer_moves_no_mention() {
     // A declaration heading declares its ID rather than mentioning another
     // (§FS-fmt.6.4), so FS-002-session is not listed in the saved index.
     let saved = "# FS-000-index: Index of FS-002-session\n\n\
-                 - [§FS-001-login](FS-001-login.md#fs-001-login-user-login)\n";
+                 - [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-user-login)\n";
     let buffer = format!("Intro line.\n\n{saved}");
     let (before, after) = missing_entry_under_buffer("buffer-index-mention", saved, &buffer);
     assert_eq!(before, [NOT_LISTED], "saved");
@@ -126,10 +126,10 @@ fn shifting_an_unsaved_index_buffer_moves_no_mention() {
 /// (§FS-check.3.17.4).
 #[test]
 fn an_entry_in_an_unsaved_index_buffer_lists_the_id() {
-    let link = "[§FS-002-session](FS-002-session.md#fs-002-session-user-session)";
+    let link = "[\u{a7}FS-002-session](FS-002-session.md#fs-002-session-user-session)";
     let saved = format!(
         "# FS-000-index: Index of {link}\n\n\
-         - [§FS-001-login](FS-001-login.md#fs-001-login-user-login)\n"
+         - [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-user-login)\n"
     );
     let buffer = format!("- {link}\n{saved}");
     let (before, after) = missing_entry_under_buffer("buffer-index-entry", &saved, &buffer);

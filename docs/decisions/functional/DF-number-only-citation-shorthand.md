@@ -11,7 +11,7 @@ committed, per-project `accepted` exception.
 
 `grund init` writes `[id] format = "{kind}-{number}-{slug}"` by default ([§FS-config.3.2](../../functional-spec/FS-config.md#32-id--id-grammar)), so most repositories that adopt `grund` are on a format where **the number alone already identifies the declaration within its kind**: `grund id` issues numbers strictly above the maximum and never reuses one ([§FS-id.4](../../functional-spec/FS-id.md#4-next-number-derivation)), so `FS-042` names exactly one `FS-042-…`.
 
-People will therefore write `§FS-042`. It is shorter, and it does not go stale when the topic drifts away from the slug — an ID is an immutable handle ([§FS-non-goals.4](../../functional-spec/FS-non-goals.md#4-cross-workspace-id-renaming)), so a drifted slug is never rewritten and the full citation keeps naming the old topic forever.
+People will therefore write `<§>FS-042`. It is shorter, and it does not go stale when the topic drifts away from the slug — an ID is an immutable handle ([§FS-non-goals.4](../../functional-spec/FS-non-goals.md#4-cross-workspace-id-renaming)), so a drifted slug is never rewritten and the full citation keeps naming the old topic forever.
 
 Before this record, `grund` had **no position on the shorthand at all, and the failure mode was silent**. Against a declaration `FS-042-user-login`:
 
@@ -26,7 +26,7 @@ $ grund FS-042
 invalid ID `FS-042`
 ```
 
-A `§`-marked token that every human reads as a live citation was dropped on the floor: not resolved, not flagged, absent from `refs` and `cover` — and the declaration was *simultaneously* reported as uncited, which is the opposite of the truth and invites a reader to delete a live declaration. A dangling *full* ID (`§FS-999-nope`) errors correctly; only the shorthand shape vanished.
+A `§`-marked token that every human reads as a live citation was dropped on the floor: not resolved, not flagged, absent from `refs` and `cover` — and the declaration was *simultaneously* reported as uncited, which is the opposite of the truth and invites a reader to delete a live declaration. A dangling *full* ID (`<§>FS-999-nope`) errors correctly; only the shorthand shape vanished.
 
 [§GOAL-no-dangling-refs](../../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) states the standard this violates in one line: *false negatives are bugs*. The rule below is the fix; which rule it is matters less than that it is the same rule on every surface.
 
@@ -34,7 +34,7 @@ A `§`-marked token that every human reads as a live citation was dropped on the
 
 ### 2.1 The shorthand is authoring sugar; persisted citations stay canonical
 
-`§FS-042` is **not** a second ID grammar. It is a shape `grund` recognizes and
+`<§>FS-042` is **not** a second ID grammar. It is a shape `grund` recognizes and
 resolves to the canonical ID. By default it is authoring sugar: accepted at an
 input boundary and corrected in a file. A project may deliberately opt into
 `[reference] shorthand = "accepted"`, making the resolved marker form valid to
@@ -46,7 +46,7 @@ This is the same principle [§DISC-declaration-local-shorthand](../../discussion
 Two properties pay for the canonical default:
 
 - **One greppable string per edge.** `grep -r 'FS-042-user-login'`, `grund refs`, and `grund cover` all see the same token. A resolvable alias would split every ID into two forms, and a reader grepping the canonical one would silently miss half the graph.
-- **A citation is readable without a lookup.** `§FS-042-user-login` tells a reader what it points at; `§FS-042` makes them run a command. The slug is the whole reason the citation is worth reading inline, which is the [§GOAL-token-economy](../../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file) case for the long form even though it costs more characters.
+- **A citation is readable without a lookup.** `<§>FS-042-user-login` tells a reader what it points at; `<§>FS-042` makes them run a command. The slug is the whole reason the citation is worth reading inline, which is the [§GOAL-token-economy](../../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file) case for the long form even though it costs more characters.
 
 An opting project knowingly gives up both properties: grep by the canonical
 slug misses short sites, the short citation is opaque at the point of reading,
@@ -62,9 +62,9 @@ the citation form is one of the things a project chooses
 
 | Surface | Shorthand | Why |
 | --- | --- | --- |
-| Typed after the trigger (`$$FS-042`) | **Expands** to `§FS-042-user-login` | Authoring. The sugar's whole point. |
-| A CLI ID argument (`grund FS-042`, `grund refs FS-042`) | **Resolves** | Input boundary; nothing is persisted. Also what makes a clicked `§FS-042` open ([§FS-integrations.3.1](../../functional-spec/FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)). |
-| Persisted under `shorthand = "canonical"` (`§FS-042`) | **`grund check` error**, with the canonical form named | The default keeps one stored form. |
+| Typed after the trigger (`$$FS-042`) | **Expands** to `<§>FS-042-user-login` | Authoring. The sugar's whole point. |
+| A CLI ID argument (`grund FS-042`, `grund refs FS-042`) | **Resolves** | Input boundary; nothing is persisted. Also what makes a clicked `<§>FS-042` open ([§FS-integrations.3.1](../../functional-spec/FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)). |
+| Persisted under `shorthand = "canonical"` (`<§>FS-042`) | **`grund check` error**, with the canonical form named | The default keeps one stored form. |
 | `grund fmt --write` under `canonical` | **Rewrites** to the canonical form | The bulk fix-it for the error above. |
 | Persisted under `shorthand = "accepted"` | **Accepted** when it resolves uniquely | The project explicitly permits both stored forms. |
 | `grund fmt` under `accepted` | **Preserves** marker-origin shorthand | Equivalent forms have no normalization target. |
@@ -85,7 +85,7 @@ This does mean a repository that already contains shorthand citations gains erro
 
 ### 2.4 The marker is required; a bare shorthand is text
 
-`§FS-042` is a citation shape; a bare `FS-042` is not — not even under `[reference] strict = false` ([§FS-config.3.1](../../functional-spec/FS-config.md#31-reference--citation-form)), where a bare *full* ID does count.
+`<§>FS-042` is a citation shape; a bare `FS-042` is not — not even under `[reference] strict = false` ([§FS-config.3.1](../../functional-spec/FS-config.md#31-reference--citation-form)), where a bare *full* ID does count.
 
 The asymmetry is deliberate and is the reason the shorthand can exist at all. A full ID carries a slug, which makes an accidental match vanishingly rare; `KIND-NNN` is a shape that occurs constantly in the wild as issue keys, part numbers, standards references, and version strings. Recognizing it unmarked would turn compatibility mode into a false-positive machine — precisely the failure [§DF-reference-marker.2.1](DF-reference-marker.md#21-marker) introduced the marker to prevent. The marker is what supplies the missing intent, so the shorthand requires it.
 
@@ -102,9 +102,9 @@ A repository on the number-less form is entirely unaffected by this decision, wh
 
 The full-ID pass claims a token first; the shorthand pass only considers what is left. A configured grammar exotic enough that some full ID is also shorthand-shaped therefore resolves as the full ID, and no repository can be pushed into ambiguity by adopting this rule.
 
-That ordering is necessary but not sufficient, because the shorthand is a **prefix** of every longer ID-shaped token. `§FS-042-User-Login` is not a full ID under the default grammar — the slug pattern rejects the capitals — so the full-ID pass claims nothing, and a shorthand pass that stopped at `FS-042` would report a token the file does not contain and, worse, let `grund fmt` rewrite the prefix and leave `-User-Login` glued to the canonical slug. A shorthand therefore counts only when the character after it cannot continue an ID. Typos, `snake_case` slips, and version suffixes are left exactly as written: they were never citations, and the tool's job at a token it does not understand is to say nothing and change nothing.
+That ordering is necessary but not sufficient, because the shorthand is a **prefix** of every longer ID-shaped token. `<§>FS-042-User-Login` is not a full ID under the default grammar — the slug pattern rejects the capitals — so the full-ID pass claims nothing, and a shorthand pass that stopped at `FS-042` would report a token the file does not contain and, worse, let `grund fmt` rewrite the prefix and leave `-User-Login` glued to the canonical slug. A shorthand therefore counts only when the character after it cannot continue an ID. Typos, `snake_case` slips, and version suffixes are left exactly as written: they were never citations, and the tool's job at a token it does not understand is to say nothing and change nothing.
 
-The boundary is drawn to match the *full* form exactly, because any gap between them is a shorthand that resolves in one place and not the other — the defect this record exists to close, reintroduced from the other side. So a separator counts only when a component follows it (`see §FS.042.` at the end of a sentence is a citation; `§FS.042.User-Login` is not), and `/` never counts, since `§FS-042-user-login/x` is already a citation of the full ID.
+The boundary is drawn to match the *full* form exactly, because any gap between them is a shorthand that resolves in one place and not the other — the defect this record exists to close, reintroduced from the other side. So a separator counts only when a component follows it (`see <§>FS.042.` at the end of a sentence is a citation; `<§>FS.042.User-Login` is not), and `/` never counts, since `<§>FS-042-user-login/x` is already a citation of the full ID.
 
 ### 2.7 Ambiguity is reported, never guessed
 
@@ -118,7 +118,7 @@ This is the half of the fix that is easy to skip and expensive to omit. The orig
 
 ## 3. Rejected default: every resolvable shorthand may persist
 
-Let `§FS-042` resolve everywhere and make the slug advisory for every project.
+Let `<§>FS-042` resolve everywhere and make the slug advisory for every project.
 
 It is cheaper to type, rename-proof, and needs no error class. It was rejected because it splits every ID into two greppable forms — `grund refs` would have to report both, every downstream `grep` becomes wrong, and the two forms drift in different files — and because it makes a citation opaque at the point of reading, which is the property the sectioned, slugged citation exists to provide ([§RM-positioning-trace-tools](../../roadmap.md#rm-positioning-trace-tools-position-grund-against-requirements-traceability-tools-in-readme) names it as the axis `grund` is different on).
 
@@ -142,4 +142,4 @@ a policy that made the short form canonical is reserved for separate work.
 - `[id] number_pattern` and `[id] slug_pattern` must each be a valid regex standalone ([§FS-config.3.2](../../functional-spec/FS-config.md#32-id--id-grammar)). The shorthand pattern is the ID pattern with one capture group removed, which is only sound if each group is self-contained.
 - No `grund_config_version` bump and no `[id]` key: the shorthand shape is derived from `format`, while its persistence policy is the additive, committed `[reference] shorthand` key. Two installs reading the same project input therefore agree about what is accepted ([§FS-non-goals.13](../../functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 - No managed-block version bump ([§FS-init.2.3](../../functional-spec/FS-init.md#23-generated-agent-entrypoints)). The block tells an agent to write canonical citations, which is still exactly right; the shorthand rule only fires when one is written anyway, and the finding names its own fix. Bumping the block would hand every repository on the previous version an `agents-init` error for a rule that changes nothing about what they should write.
-- The terminal and editor clients need no new matcher. Their shared citation shape ([§FS-integrations.3.1](../../functional-spec/FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)) already matches `§FS-042`, so a clicked shorthand resolves the moment `grund <ID>` accepts one — which is why [§DF-number-only-citation-shorthand.2.2](DF-number-only-citation-shorthand.md#22-where-the-shorthand-is-accepted-and-where-it-is-an-error) puts the shorthand at the CLI input boundary and not only in the editor.
+- The terminal and editor clients need no new matcher. Their shared citation shape ([§FS-integrations.3.1](../../functional-spec/FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)) already matches `<§>FS-042`, so a clicked shorthand resolves the moment `grund <ID>` accepts one — which is why [§DF-number-only-citation-shorthand.2.2](DF-number-only-citation-shorthand.md#22-where-the-shorthand-is-accepted-and-where-it-is-an-error) puts the shorthand at the CLI input boundary and not only in the editor.

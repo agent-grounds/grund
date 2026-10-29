@@ -50,7 +50,7 @@ fn a_kind_home_outside_include_is_still_walked() {
         &skills_repo(
             "a_kind_home_outside_include_is_still_walked",
             "",
-            "# Review skill\n\nSee §FS-999-ghost.\n",
+            "# Review skill\n\nSee \u{a7}FS-999-ghost.\n",
         ),
         false,
     );
@@ -69,7 +69,7 @@ fn a_declaration_in_a_non_citable_home_is_misplaced() {
         &skills_repo(
             "a_declaration_in_a_non_citable_home_is_misplaced",
             "",
-            "# FS-002-review: Review\n\nSee §FS-001-login.\n",
+            "# FS-002-review: Review\n\nSee \u{a7}FS-001-login.\n",
         ),
         false,
     );
@@ -88,7 +88,7 @@ fn an_obligation_fires_per_file_on_markdown_in_the_home() {
         &skills_repo(
             "an_obligation_fires_per_file_on_markdown_in_the_home",
             "[citations]\n[citations.skill]\nmust = [\"FS\"]\n",
-            "# Review skill\n\nSee §AR-001-bus.\n",
+            "# Review skill\n\nSee \u{a7}AR-001-bus.\n",
         ),
         false,
     );
@@ -115,7 +115,7 @@ fn an_obligation_is_satisfied_by_a_citation_anywhere_in_the_file() {
         &skills_repo(
             "an_obligation_is_satisfied_by_a_citation_anywhere_in_the_file",
             "[citations]\n[citations.skill]\nmust = [\"FS\"]\n",
-            "# Review skill\n\nSee §FS-001-login.\n",
+            "# Review skill\n\nSee \u{a7}FS-001-login.\n",
         ),
         false,
     );
@@ -132,7 +132,7 @@ fn a_prohibition_names_the_home() {
     let root = skills_repo(
         "a_prohibition_names_the_home",
         "[citations]\n[citations.skill]\nmust-not = [\"FS\"]\n",
-        "# Review skill\n\nSee §FS-001-login.\n",
+        "# Review skill\n\nSee \u{a7}FS-001-login.\n",
     );
     let run = check_run(&root, false);
     assert_eq!(
@@ -189,7 +189,7 @@ fn the_generated_block_names_a_non_citable_kind_by_place() {
     let root = skills_repo(
         "the_generated_block_names_a_non_citable_kind_by_place",
         "[citations]\n[citations.skill]\nmust = [\"FS\"]\n",
-        "# Review skill\n\nSee §FS-001-login.\n",
+        "# Review skill\n\nSee \u{a7}FS-001-login.\n",
     );
     let config = load_config(&root).expect("load config");
     let block =
@@ -378,7 +378,7 @@ fn named_homeless_repo(name: &str, citations: &str) -> PathBuf {
     );
     write(
         &root.join("modules/login.py"),
-        "# Realizes §FS-001-login.\n",
+        "# Realizes \u{a7}FS-001-login.\n",
     );
     root
 }
@@ -516,7 +516,7 @@ fn the_kind_selectors_refuse_a_non_citable_kind() {
     let root = skills_repo(
         "the_kind_selectors_refuse_a_non_citable_kind",
         "",
-        "# Review skill\n\nSee §FS-001-login.\n",
+        "# Review skill\n\nSee \u{a7}FS-001-login.\n",
     );
     let outcome = propose_id(
         "skill",

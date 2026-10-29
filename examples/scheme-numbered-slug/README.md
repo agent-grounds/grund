@@ -22,7 +22,7 @@ AR-014-event-bus
 ## Pros
 
 - **Stable refs.** Renaming a spec's title rewrites the slug only — the number keeps every existing citation valid (with `grund fmt --marker` to refresh slugs in prose later).
-- **Skimmable.** A reader sees both an identifier and a hint of what it's about (`§FS-014-event-bus` vs `§FS-014`).
+- **Skimmable.** A reader sees both an identifier and a hint of what it's about (`<§>FS-014-event-bus` vs `<§>FS-014`).
 - **No slug-uniqueness collisions.** Two specs with similar slugs are fine — different numbers separate them.
 
 ## Cons
@@ -33,8 +33,8 @@ AR-014-event-bus
 
 ## Persisting the number-only form
 
-The example's accepted shorthand policy lets `§FS-002` coexist with
-`§FS-002-session`; both resolve to the same declaration
+The example's accepted shorthand policy lets `<§>FS-002` coexist with
+`<§>FS-002-session`; both resolve to the same declaration
 ([§FS-config.3.1](../../docs/functional-spec/FS-config.md#31-reference--citation-form)).
 `grund check` still rejects an unknown or ambiguous number. `grund fmt` preserves
 an existing short marker citation, while typed `$$FS-002` authoring input still
@@ -55,5 +55,5 @@ grund examples/scheme-numbered-slug/repo
 echo $?    # 0
 ```
 
-Silent + exit 0 means every cross-citation, including the persisted `§FS-002`
+Silent + exit 0 means every cross-citation, including the persisted `<§>FS-002`
 shorthand, resolved against the declared IDs.

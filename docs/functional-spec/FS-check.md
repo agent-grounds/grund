@@ -1364,7 +1364,7 @@ An ID that is declared but never cited. Reported as a warning, not an error — 
 
 #### 4.1.1 A resolving shorthand counts
 
-A number-only shorthand citation that resolves counts here like any other citation ([§FS-check.1.2.4](FS-check.md#124-a-resolved-shorthand-is-a-real-edge)): a declaration abbreviated as `§FS-042` everywhere is cited, and reporting it as unused would state the opposite of the truth.
+A number-only shorthand citation that resolves counts here like any other citation ([§FS-check.1.2.4](FS-check.md#124-a-resolved-shorthand-is-a-real-edge)): a declaration abbreviated as `<§>FS-042` everywhere is cited, and reporting it as unused would state the opposite of the truth.
 
 #### 4.1.2 An index entry does not count
 

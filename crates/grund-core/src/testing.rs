@@ -487,9 +487,12 @@ pub(crate) fn drifted_include_repo(name: &str) -> PathBuf {
     // which is a fact about the fixture, not about the scope layer under test.
     write(
         &root.join("docs/functional-spec/README.md"),
-        "# Functional spec\n\n- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)\n",
+        "# Functional spec\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)\n",
     );
-    write(&root.join("src/auth.rs"), "// Implements §FS-001-login.1\n");
+    write(
+        &root.join("src/auth.rs"),
+        "// Implements \u{a7}FS-001-login.1\n",
+    );
     root
 }
 

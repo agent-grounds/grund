@@ -371,7 +371,7 @@ impl Grammar {
     ///
     /// `/` is deliberately **not** one of them. It is the namespace separator of
     /// §FS-workspace.1.1, which can only *precede* a kind, never follow a number, and
-    /// the full-ID pass already reads `§FS-042-user-login/x` as a citation of
+    /// the full-ID pass already reads `<§>FS-042-user-login/x` as a citation of
     /// `FS-042-user-login`. Treating it as a continuation here would make the
     /// shorthand and the canonical form disagree about the same boundary — and the
     /// shorthand would be the one silently dropped, which is the false negative
@@ -391,9 +391,9 @@ impl Grammar {
     ///
     /// A separator only continues the token when a component actually follows it.
     /// That distinction matters wherever a format literal is also ordinary
-    /// punctuation: under `{kind}.{number}.{slug}` the sentence `see §FS.042.` ends
+    /// punctuation: under `{kind}.{number}.{slug}` the sentence `see <§>FS.042.` ends
     /// with a literal `.`, and reading that as a continuation would drop a real
-    /// citation. `see §FS.042.User-Login` has a component after the separator and
+    /// citation. `see <§>FS.042.User-Login` has a component after the separator and
     /// is correctly refused.
     pub(crate) fn id_token_ends_cleanly(&self, rest: &str, end: usize) -> bool {
         let tail = &rest[end..];
@@ -466,16 +466,16 @@ fn format_literal_in(elements: &[IdElement], ch: char) -> Option<&str> {
 ///
 /// - **Whitespace.** The gluing is the evidence — a run is written as one
 ///   unbroken string because its parts belong together. Without this, the default
-///   `number_pattern = "\d+"` would read `§FS-042 (2024)` as a run and refuse to
+///   `number_pattern = "\d+"` would read `<§>FS-042 (2024)` as a run and refuse to
 ///   expand an ordinary citation.
-/// - **The marker.** `§FS-042, §FS-043` is two citations the author marked one at
+/// - **The marker.** `<§>FS-042, <§>FS-043` is two citations the author marked one at
 ///   a time, which is the clearest statement of intent this grammar offers.
 /// - **A bracket or a quote.** Those bound a construct instead of gluing two
 ///   numerals, so a walk that crossed one would join the characters *closing* the
 ///   citation's own construct to the ones *opening* the next and read the next
 ///   construct's number as the second one — making a run of the Markdown link
-///   `[§FS-042](FS-042-user-login.md)` that §FS-fmt.6 itself writes, and of the
-///   footnote reference `§FS-042[^1]`.
+///   `[<§>FS-042](FS-042-user-login.md)` that §FS-fmt.6 itself writes, and of the
+///   footnote reference `<§>FS-042[^1]`.
 fn numeric_run_neighbor<'a>(marker: &str, tail: &'a str) -> Option<&'a str> {
     let mut end = 0;
     for ch in tail.chars() {
@@ -502,7 +502,7 @@ fn numeric_run_neighbor<'a>(marker: &str, tail: &'a str) -> Option<&'a str> {
 /// is here for one property — it pairs — so a member nobody thought of costs a
 /// withheld rewrite, not a corrupted line. `|` is deliberately absent: it is a
 /// delimiter people write between numbers, and a Markdown table cell writes
-/// `| §FS-042 |` with the spaces the whitespace rule already covers.
+/// `| <§>FS-042 |` with the spaces the whitespace rule already covers.
 fn bounds_a_construct(ch: char) -> bool {
     matches!(ch, '(' | ')' | '[' | ']' | '{' | '}' | '"' | '\'' | '`')
 }

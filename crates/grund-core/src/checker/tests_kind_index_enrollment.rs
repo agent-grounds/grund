@@ -68,7 +68,7 @@ pub(super) fn scanned_index(root: &Path) -> (Config, Catalog, KindIndexEntries) 
 fn a_canonical_source_link_enrolls_without_a_stub() {
     let root = external_index_repo(
         "a_canonical_source_link_enrolls_without_a_stub",
-        "# Architecture\n\n- [§AR-001-bus](../../src/bus.rs)\n",
+        "# Architecture\n\n- [\u{a7}AR-001-bus](../../src/bus.rs)\n",
     );
 
     let run = check_run(&root, false);
@@ -120,8 +120,8 @@ fn a_second_same_id_reference_on_the_page_still_counts_as_use() {
     let root = external_index_repo(
         "a_second_same_id_reference_on_the_page_still_counts_as_use",
         "# Architecture\n\n\
-             - [§AR-001-bus](../../src/bus.rs)\n\n\
-             Ordering is explained by [§AR-001-bus.1](../../src/bus.rs).\n",
+             - [\u{a7}AR-001-bus](../../src/bus.rs)\n\n\
+             Ordering is explained by [\u{a7}AR-001-bus.1](../../src/bus.rs).\n",
     );
 
     let run = check_run(&root, false);
@@ -146,7 +146,7 @@ fn a_second_same_id_reference_on_the_page_still_counts_as_use() {
 fn a_noncanonical_link_is_an_ordinary_reference() {
     let root = external_index_repo(
         "a_noncanonical_link_is_an_ordinary_reference",
-        "# Architecture\n\nSee [§AR-001-bus](../../src/not-the-bus.rs).\n",
+        "# Architecture\n\nSee [\u{a7}AR-001-bus](../../src/not-the-bus.rs).\n",
     );
 
     let run = check_run(&root, false);
@@ -184,7 +184,7 @@ fn an_external_markdown_declaration_is_not_enrolled() {
     );
     write(
         &root.join("docs/architecture/README.md"),
-        "# Architecture\n\nSee [§AR-001-bus](../../notes/AR-001-bus.md#ar-001-bus-the-bus).\n",
+        "# Architecture\n\nSee [\u{a7}AR-001-bus](../../notes/AR-001-bus.md#ar-001-bus-the-bus).\n",
     );
 
     let (config, findings, entries) = scanned_index(&root);
@@ -203,7 +203,7 @@ fn an_external_markdown_declaration_is_not_enrolled() {
 fn fmt_can_write_the_canonical_enrollment_form() {
     let root = external_index_repo(
         "fmt_can_write_the_canonical_enrollment_form",
-        "# Architecture\n\n- §AR-001-bus\n",
+        "# Architecture\n\n- \u{a7}AR-001-bus\n",
     );
 
     format_references(FmtOpts {
@@ -217,7 +217,7 @@ fn fmt_can_write_the_canonical_enrollment_form() {
     let index =
         fs::read_to_string(root.join("docs/architecture/README.md")).expect("read formatted index");
     assert!(
-        index.contains("[§AR-001-bus](../../src/bus.rs)"),
+        index.contains("[\u{a7}AR-001-bus](../../src/bus.rs)"),
         "fmt writes the enrollment discriminator: {index}"
     );
     assert!(
@@ -233,7 +233,7 @@ fn fmt_can_write_the_canonical_enrollment_form() {
 fn entries_only_fmt_does_not_turn_external_prose_into_membership() {
     let root = external_index_repo(
         "entries_only_fmt_does_not_turn_external_prose_into_membership",
-        "# Architecture\n\nSee §AR-001-bus.\n",
+        "# Architecture\n\nSee \u{a7}AR-001-bus.\n",
     );
     write(
         &root.join("grund.toml"),
@@ -254,7 +254,7 @@ fn entries_only_fmt_does_not_turn_external_prose_into_membership() {
     let index =
         fs::read_to_string(root.join("docs/architecture/README.md")).expect("read formatted index");
     assert!(
-        index.contains("See §AR-001-bus."),
+        index.contains("See \u{a7}AR-001-bus."),
         "ordinary prose stays bare: {index}"
     );
     assert!(
@@ -282,7 +282,7 @@ fn every_kind_sharing_an_index_can_enroll() {
     );
     write(
         &root.join("docs/design/README.md"),
-        "# Design\n\n- [§AR-001-bus](../../src/bus.rs)\n",
+        "# Design\n\n- [\u{a7}AR-001-bus](../../src/bus.rs)\n",
     );
 
     let run = check_run(&root, false);
@@ -307,7 +307,7 @@ fn every_kind_sharing_an_index_can_enroll() {
 fn a_shorthand_link_does_not_enroll() {
     let root = external_index_repo(
         "a_shorthand_link_does_not_enroll",
-        "# Architecture\n\n- [§AR-001](../../src/bus.rs)\n",
+        "# Architecture\n\n- [\u{a7}AR-001](../../src/bus.rs)\n",
     );
 
     let run = check_run(&root, false);
@@ -334,7 +334,7 @@ fn a_shorthand_link_does_not_enroll() {
 fn a_link_nested_in_a_markdown_destination_does_not_enroll() {
     let root = external_index_repo(
         "a_link_nested_in_a_markdown_destination_does_not_enroll",
-        "# Architecture\n\n[docs]([§AR-001-bus](../../src/bus.rs))\n",
+        "# Architecture\n\n[docs]([\u{a7}AR-001-bus](../../src/bus.rs))\n",
     );
 
     let run = check_run(&root, false);
@@ -361,7 +361,7 @@ fn a_link_nested_in_a_markdown_destination_does_not_enroll() {
 fn a_canonical_link_on_a_declaration_heading_does_not_enroll() {
     let root = external_index_repo(
         "a_canonical_link_on_a_declaration_heading_does_not_enroll",
-        "# AR-000-index: Architecture, after [§AR-001-bus](../../src/bus.rs)\n",
+        "# AR-000-index: Architecture, after [\u{a7}AR-001-bus](../../src/bus.rs)\n",
     );
 
     let run = check_run(&root, false);

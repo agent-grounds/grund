@@ -42,7 +42,7 @@ fn resolvable_shorthand_reports_once_and_counts_as_a_citation() {
     );
     write(
         &root.join("docs/notes.md"),
-        "Bare ID: §FS-042\n\nWith a section: §FS-042.1\n",
+        "Bare ID: \u{a7}FS-042\n\nWith a section: \u{a7}FS-042.1\n",
     );
     let config = numbered_config(root.clone());
     let (findings, report) = check_tree(&config, &root);
@@ -50,8 +50,8 @@ fn resolvable_shorthand_reports_once_and_counts_as_a_citation() {
     assert_eq!(
         messages(&report),
         vec![
-            "shorthand citation §FS-042; write §FS-042-user-login",
-            "shorthand citation §FS-042.1; write §FS-042-user-login.1",
+            "shorthand citation \u{a7}FS-042; write \u{a7}FS-042-user-login",
+            "shorthand citation \u{a7}FS-042.1; write \u{a7}FS-042-user-login.1",
         ]
     );
     // Exactly one finding per site: no `unknown reference`, no `unused`.
@@ -71,9 +71,9 @@ fn resolvable_shorthand_reports_once_and_counts_as_a_citation() {
     }
     // The written token is preserved, which is what keeps editor ranges and
     // report columns pointing at what the author actually typed.
-    assert_eq!(findings.citations[0].text, "§FS-042");
+    assert_eq!(findings.citations[0].text, "\u{a7}FS-042");
     assert_eq!(findings.citations[0].column, 10);
-    assert_eq!(findings.citations[1].text, "§FS-042.1");
+    assert_eq!(findings.citations[1].text, "\u{a7}FS-042.1");
     assert_eq!(findings.citations[1].section.as_deref(), Some("1"));
 }
 
@@ -92,7 +92,7 @@ fn unknown_and_ambiguous_shorthands_are_named_not_guessed() {
     );
     write(
         &root.join("docs/notes.md"),
-        "Ambiguous: §FS-042\n\nUnknown: §FS-999\n",
+        "Ambiguous: \u{a7}FS-042\n\nUnknown: \u{a7}FS-999\n",
     );
     let config = numbered_config(root.clone());
     let (_, report) = check_tree(&config, &root);
@@ -105,8 +105,8 @@ fn unknown_and_ambiguous_shorthands_are_named_not_guessed() {
     assert_eq!(
         errors,
         vec![
-            "shorthand citation §FS-042 is ambiguous: FS-042-user-login, FS-042-user-logout; write the full ID it means",
-            "shorthand citation §FS-999 matches no declaration; write the full ID it means",
+            "shorthand citation \u{a7}FS-042 is ambiguous: FS-042-user-login, FS-042-user-logout; write the full ID it means",
+            "shorthand citation \u{a7}FS-999 matches no declaration; write the full ID it means",
         ]
     );
     // §FS-check.3.1 is suppressed at a shorthand site, so `unknown reference
@@ -163,7 +163,7 @@ fn full_id_wins_over_the_shorthand_prefix_inside_it() {
     );
     write(
         &root.join("docs/notes.md"),
-        "Canonical: §FS-042-user-login and §FS-042-user-login.1\n",
+        "Canonical: \u{a7}FS-042-user-login and \u{a7}FS-042-user-login.1\n",
     );
     let config = numbered_config(root.clone());
     let (findings, report) = check_tree(&config, &root);
@@ -249,11 +249,11 @@ fn a_shorthand_fmt_cannot_rewrite_is_counted_but_not_reported() {
     );
     write(
         &root.join("docs/notes.md"),
-        "Illustration: `§FS-042`\n\nLink: [t](§FS-042)\n\nUnknown here: `§FS-999`\n",
+        "Illustration: `\u{a7}FS-042`\n\nLink: [t](\u{a7}FS-042)\n\nUnknown here: `\u{a7}FS-999`\n",
     );
     write(
         &root.join("src/login.rs"),
-        "fn f() { let s = \"§FS-042\"; }\n",
+        "fn f() { let s = \"\u{a7}FS-042\"; }\n",
     );
     let config = numbered_config(root.clone());
     let (findings, report) = check_tree(&config, &root);
@@ -261,7 +261,7 @@ fn a_shorthand_fmt_cannot_rewrite_is_counted_but_not_reported() {
     // Three resolving shorthands, none of them reported…
     assert_eq!(
         messages(&report),
-        vec!["shorthand citation §FS-999 matches no declaration; write the full ID it means"],
+        vec!["shorthand citation \u{a7}FS-999 matches no declaration; write the full ID it means"],
         "only the genuinely dangling one is reported"
     );
     // …but all of them are real citations, so the declaration is not unused.
@@ -298,11 +298,11 @@ fn a_docstring_delimiter_is_not_a_quote_for_rewritability() {
     );
     write(
         &root.join("src/opening.py"),
-        "def f():\n    \"\"\"§FS-042 on the opening line.\"\"\"\n    return 1\n",
+        "def f():\n    \"\"\"\u{a7}FS-042 on the opening line.\"\"\"\n    return 1\n",
     );
     write(
         &root.join("src/interior.py"),
-        "def g():\n    \"\"\"\n    §FS-042 on an interior line.\n    \"\"\"\n    return 2\n",
+        "def g():\n    \"\"\"\n    \u{a7}FS-042 on an interior line.\n    \"\"\"\n    return 2\n",
     );
     let mut config = numbered_config(root.clone());
     config.docstring_python = true;
@@ -336,8 +336,8 @@ fn a_docstring_delimiter_is_not_a_quote_for_rewritability() {
     assert_eq!(
         messages(&report),
         vec![
-            "shorthand citation §FS-042; write §FS-042-user-login",
-            "shorthand citation §FS-042; write §FS-042-user-login",
+            "shorthand citation \u{a7}FS-042; write \u{a7}FS-042-user-login",
+            "shorthand citation \u{a7}FS-042; write \u{a7}FS-042-user-login",
         ]
     );
 }
@@ -397,8 +397,8 @@ fn shorthand_shape_is_derived_from_either_separator_side() {
 
 /// §FS-check.1.2.3 / §FS-check.3.13: the trailing boundary in the scanner. A
 /// shorthand claims a token only where the character after the match cannot
-/// continue an ID, so `§FS-042-User-Login` and `§FS-042abc` are no citation at
-/// all — reporting one would name a token (`§FS-042`) that does not appear in
+/// continue an ID, so `<§>FS-042-User-Login` and `<§>FS-042abc` are no citation at
+/// all — reporting one would name a token (`<§>FS-042`) that does not appear in
 /// the file, and a site the rewrite will not touch must not be reported either.
 #[test]
 fn a_shorthand_prefix_of_a_longer_token_is_never_reported() {
@@ -409,7 +409,7 @@ fn a_shorthand_prefix_of_a_longer_token_is_never_reported() {
     );
     write(
         &root.join("docs/notes.md"),
-        "Typo: §FS-042-User-Login\n\nGlued: §FS-042abc\n\nReal: §FS-042\n",
+        "Typo: \u{a7}FS-042-User-Login\n\nGlued: \u{a7}FS-042abc\n\nReal: \u{a7}FS-042\n",
     );
     let config = numbered_config(root.clone());
     let (findings, report) = check_tree(&config, &root);
@@ -425,8 +425,9 @@ fn a_shorthand_prefix_of_a_longer_token_is_never_reported() {
         messages(&report)
     );
     assert!(
-        messages(&report)
-            .contains(&"shorthand citation §FS-042; write §FS-042-user-login".to_string()),
+        messages(&report).contains(
+            &"shorthand citation \u{a7}FS-042; write \u{a7}FS-042-user-login".to_string()
+        ),
         "{:?}",
         messages(&report)
     );
@@ -436,7 +437,7 @@ fn a_shorthand_prefix_of_a_longer_token_is_never_reported() {
         .filter(|cite| cite.shorthand)
         .map(|cite| cite.text.as_str())
         .collect();
-    assert_eq!(shorthands, vec!["§FS-042"]);
+    assert_eq!(shorthands, vec!["\u{a7}FS-042"]);
 }
 
 // §FS-check.1.2.4: a resolved shorthand grounds its file under
@@ -450,7 +451,7 @@ fn a_resolved_shorthand_grounds_its_source_file() {
     );
     write(
         &root.join("src/login.rs"),
-        "// §FS-042: enforce login\nfn main() {}\n",
+        "// \u{a7}FS-042: enforce login\nfn main() {}\n",
     );
     let mut config = numbered_config(root.clone());
     config.require_grounding = true;

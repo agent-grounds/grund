@@ -103,7 +103,7 @@ fn build_external_inline_fixture() -> PathBuf {
     .expect("write source declaration");
     fs::write(
         dir.join("docs/architecture/README.md"),
-        "# Architecture\n\n- [§AR-001-bus](../../src/bus.rs)\n",
+        "# Architecture\n\n- [\u{a7}AR-001-bus](../../src/bus.rs)\n",
     )
     .expect("write index");
     dir
@@ -151,7 +151,7 @@ fn fmt_write_clears_a_bare_entry() {
     let dir = build_fixture(
         "bare_entry",
         true,
-        "# Specs\n\n- §FS-001-login — a user logs in\n",
+        "# Specs\n\n- \u{a7}FS-001-login — a user logs in\n",
     );
     assert_round_trip(&dir, "bare entry");
 }
@@ -164,7 +164,7 @@ fn fmt_write_clears_a_marked_bare_entry_off_strict_mode() {
     let dir = build_fixture(
         "bare_entry_loose",
         false,
-        "# Specs\n\n- §FS-001-login — a user logs in\n",
+        "# Specs\n\n- \u{a7}FS-001-login — a user logs in\n",
     );
     assert_round_trip(&dir, "marked bare entry, strict = false");
 }
@@ -179,7 +179,7 @@ fn fmt_write_clears_a_bare_entry_whose_home_extends_the_id() {
     let dir = build_fixture_with_home(
         "bare_entry_home_extends_id",
         false,
-        "# Specs\n\n- §FS-001-login — a user logs in\n",
+        "# Specs\n\n- \u{a7}FS-001-login — a user logs in\n",
         "FS-001-login-a.md",
     );
 
@@ -221,7 +221,7 @@ fn fmt_write_clears_a_bare_entry_naming_a_section() {
     let dir = build_fixture(
         "bare_entry_section",
         true,
-        "# Specs\n\n- §FS-001-login.1 — how a user logs in\n",
+        "# Specs\n\n- \u{a7}FS-001-login.1 — how a user logs in\n",
     );
     assert_round_trip(&dir, "bare entry with a section");
 }
@@ -236,7 +236,7 @@ fn a_dangling_section_is_not_an_entry() {
     let dir = build_fixture(
         "dangling_section",
         false,
-        "# Specs\n\n- §FS-001-login.9 — a section that is not there\n",
+        "# Specs\n\n- \u{a7}FS-001-login.9 — a section that is not there\n",
     );
 
     let before = run_grund(&["check", "."], &dir);

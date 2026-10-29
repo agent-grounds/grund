@@ -6,7 +6,7 @@
 
 ## 1. Context
 
-A declaration's numbered headings are addressable: `## 1. Inputs` under `# FS-001-login` makes `§FS-001-login.1` a pointer to that heading. Two headings claiming the same dotted path were accepted in silence:
+A declaration's numbered headings are addressable: `## 1. Inputs` under `# FS-001-login` makes `<§>FS-001-login.1` a pointer to that heading. Two headings claiming the same dotted path were accepted in silence:
 
 ```markdown
 # FS-001-login: User login

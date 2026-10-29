@@ -35,7 +35,10 @@ fn invalid_lines(name: &str, body: &str, named: bool) -> Vec<usize> {
 
 #[test]
 fn exact_marker_probe_is_total_for_utf8_and_rejects_lookalikes() {
-    assert_eq!(exact_embedded_value_marker("`1200` §FS-001-alpha.1"), None);
+    assert_eq!(
+        exact_embedded_value_marker("`1200` \u{a7}FS-001-alpha.1"),
+        None
+    );
     assert_eq!(exact_embedded_value_marker("## 1. Café"), None);
     assert_eq!(
         exact_embedded_value_marker("## 1. Café <!-- grund:value -->"),
@@ -64,7 +67,7 @@ fn exact_marker_requires_a_citable_numeric_heading() {
     let (_, findings) = scan_embedded(
         "embedded_marker_heading_boundary",
         "# FS-001-alpha: Alpha\n\n## Notes <!-- grund:value -->\n\
-             ## 1. Price <!-- Grund:value -->\n§FS-001-alpha\n",
+             ## 1. Price <!-- Grund:value -->\n\u{a7}FS-001-alpha\n",
     );
     assert_eq!(
         findings
@@ -100,7 +103,7 @@ fn every_source_wrapper_and_python_docstring_compares_values() {
                      {prefix} ## 1. Price <!-- grund:value -->\n\
                      {prefix} ### 1.1. 1200\n\
                      {prefix} ## 2. Use\n\
-                     {prefix} Bound: `999` (§FS-001-alpha.1.1)\n"
+                     {prefix} Bound: `999` (\u{a7}FS-001-alpha.1.1)\n"
             ),
         );
         assert_single_mismatch(&root, &path, name);
@@ -135,7 +138,7 @@ fn every_source_wrapper_and_python_docstring_compares_values() {
                      ## 1. Price <!-- grund:value -->\n\
                      ### 1.1. 1200\n\
                      ## 2. Use\n\
-                     Bound: `999` (§FS-001-alpha.1.1)\n\
+                     Bound: `999` (\u{a7}FS-001-alpha.1.1)\n\
                      {quote}\n"
             ),
         );
@@ -260,9 +263,9 @@ fn an_invalid_nested_root_refuses_only_the_form_below_its_component() {
              ### 1.1. Inner <!-- grund:value -->\n\
              #### 1.1.1. 1200\n\
              ## 2. Use\n\
-             `1200` (§FS-001-alpha.1.1.1)\n\
-             `1200` (§FS-001-alpha.1.1)\n\
-             `1200` (§FS-001-alpha.1.1.1.1)\n",
+             `1200` (\u{a7}FS-001-alpha.1.1.1)\n\
+             `1200` (\u{a7}FS-001-alpha.1.1)\n\
+             `1200` (\u{a7}FS-001-alpha.1.1.1.1)\n",
     );
     let report = check_findings(&findings, &config);
     let binding_lines = report
@@ -290,7 +293,7 @@ fn write_local_format_fixture(name: &str) -> (PathBuf, PathBuf) {
              ### 1.1. Price <!-- grund:value -->\n\
              #### 1.1.1. 1200\n\
              ## 2. Use\n\
-             Bound: `999` (§FS-001-pricing.1.1.1)\n",
+             Bound: `999` (\u{a7}FS-001-pricing.1.1.1)\n",
     );
     (root, path)
 }

@@ -53,13 +53,13 @@ fn wrapped(config: &Config, findings: &Catalog, line: &str) -> String {
 fn a_wrap_is_rederived_an_authored_label_is_left_and_a_bare_citation_is_wrapped() {
     let (config, findings) =
         project("a_wrap_is_rederived_an_authored_label_is_left_and_a_bare_citation_is_wrapped");
-    let line = "A [§FS-001-login](stale.md) wrap, [the §FS-001-login spec](specs/FS-001-login.md) \
-                link, and §FS-001-login bare.";
+    let line = "A [\u{a7}FS-001-login](stale.md) wrap, [the \u{a7}FS-001-login spec](specs/FS-001-login.md) \
+                link, and \u{a7}FS-001-login bare.";
     assert_eq!(
         wrapped(&config, &findings, line),
         format!(
-            "A [§FS-001-login]({CANON}) wrap, [the §FS-001-login spec](specs/FS-001-login.md) \
-             link, and [§FS-001-login]({CANON}) bare."
+            "A [\u{a7}FS-001-login]({CANON}) wrap, [the \u{a7}FS-001-login spec](specs/FS-001-login.md) \
+             link, and [\u{a7}FS-001-login]({CANON}) bare."
         )
     );
 }
@@ -72,13 +72,13 @@ fn a_wrap_is_rederived_an_authored_label_is_left_and_a_bare_citation_is_wrapped(
 fn every_enclosing_shape_keeps_its_bytes() {
     let (config, findings) = project("every_enclosing_shape_keeps_its_bytes");
     for line in [
-        r"See [§FS-001-login: logs in \] for good](specs/FS-001-login.md).",
-        "See [§FS-001-login: logs in [draft]](specs/FS-001-login.md).",
-        "See [§FS-001-login: run `grund check` then `]`](specs/FS-001-login.md).",
-        r"See [the §FS-001-login spec](specs/FS-001-login\).md).",
-        "See [the §FS-001-login spec](specs/FS-001-login(1).md).",
-        "See [the §FS-001-login spec]().",
-        "See [§FS-001-login, that is §FS-001-login](specs/FS-001-login.md).",
+        "See [\u{a7}FS-001-login: logs in \\] for good](specs/FS-001-login.md).",
+        "See [\u{a7}FS-001-login: logs in [draft]](specs/FS-001-login.md).",
+        "See [\u{a7}FS-001-login: run `grund check` then `]`](specs/FS-001-login.md).",
+        "See [the \u{a7}FS-001-login spec](specs/FS-001-login\\).md).",
+        "See [the \u{a7}FS-001-login spec](specs/FS-001-login(1).md).",
+        "See [the \u{a7}FS-001-login spec]().",
+        "See [\u{a7}FS-001-login, that is \u{a7}FS-001-login](specs/FS-001-login.md).",
     ] {
         assert_eq!(wrapped(&config, &findings, line), line, "`{line}` encloses");
     }
@@ -93,10 +93,10 @@ fn the_same_citation_outside_the_link_is_still_wrapped() {
         wrapped(
             &config,
             &findings,
-            "See [the §FS-001-login spec](specs/FS-001-login.md), and §FS-001-login itself."
+            "See [the \u{a7}FS-001-login spec](specs/FS-001-login.md), and \u{a7}FS-001-login itself."
         ),
         format!(
-            "See [the §FS-001-login spec](specs/FS-001-login.md), and [§FS-001-login]({CANON}) itself."
+            "See [the \u{a7}FS-001-login spec](specs/FS-001-login.md), and [\u{a7}FS-001-login]({CANON}) itself."
         )
     );
 }
@@ -109,16 +109,16 @@ fn what_encloses_nothing_is_wrapped_fresh() {
     let (config, findings) = project("what_encloses_nothing_is_wrapped_fresh");
     for (line, expected) in [
         (
-            r"See \[the §FS-001-login spec](specs/FS-001-login.md).",
-            format!(r"See \[the [§FS-001-login]({CANON}) spec](specs/FS-001-login.md)."),
+            "See \\[the \u{a7}FS-001-login spec](specs/FS-001-login.md).",
+            format!("See \\[the [\u{a7}FS-001-login]({CANON}) spec](specs/FS-001-login.md)."),
         ),
         (
-            "See `[` §FS-001-login](specs/FS-001-login.md).",
-            format!("See `[` [§FS-001-login]({CANON})](specs/FS-001-login.md)."),
+            "See `[` \u{a7}FS-001-login](specs/FS-001-login.md).",
+            format!("See `[` [\u{a7}FS-001-login]({CANON})](specs/FS-001-login.md)."),
         ),
         (
-            "See [the §FS-001-login spec](specs/FS-001-login.md",
-            format!("See [the [§FS-001-login]({CANON}) spec](specs/FS-001-login.md"),
+            "See [the \u{a7}FS-001-login spec](specs/FS-001-login.md",
+            format!("See [the [\u{a7}FS-001-login]({CANON}) spec](specs/FS-001-login.md"),
         ),
     ] {
         assert_eq!(wrapped(&config, &findings, line), expected, "`{line}`");
@@ -134,9 +134,9 @@ fn a_citation_in_an_image_description_is_wrapped() {
         wrapped(
             &config,
             &findings,
-            "See ![a diagram of §FS-001-login](diagram.png)."
+            "See ![a diagram of \u{a7}FS-001-login](diagram.png)."
         ),
-        format!("See ![a diagram of [§FS-001-login]({CANON})](diagram.png).")
+        format!("See ![a diagram of [\u{a7}FS-001-login]({CANON})](diagram.png).")
     );
 }
 
@@ -146,7 +146,7 @@ fn a_citation_in_an_image_description_is_wrapped() {
 #[test]
 fn an_already_nested_line_rederives_only_its_inner_wrap() {
     let (config, findings) = project("an_already_nested_line_rederives_only_its_inner_wrap");
-    let canonical = format!("See [the [§FS-001-login]({CANON}) spec](specs/FS-001-login.md).");
+    let canonical = format!("See [the [\u{a7}FS-001-login]({CANON}) spec](specs/FS-001-login.md).");
     assert_eq!(
         wrapped(&config, &findings, &canonical),
         canonical,
@@ -156,7 +156,7 @@ fn an_already_nested_line_rederives_only_its_inner_wrap() {
         wrapped(
             &config,
             &findings,
-            "See [the [§FS-001-login](specs/old.md#gone) spec](specs/FS-001-login.md)."
+            "See [the [\u{a7}FS-001-login](specs/old.md#gone) spec](specs/FS-001-login.md)."
         ),
         canonical,
         "the stale inner wrap is re-derived"
@@ -174,15 +174,15 @@ fn an_already_nested_line_rederives_only_its_inner_wrap() {
 fn every_link_form_the_scope_lists_keeps_its_bytes() {
     let (config, findings) = project("every_link_form_the_scope_lists_keeps_its_bytes");
     for line in [
-        "See [the §FS-001-login rationale][pg].",
-        "See [§FS-001-login][pg].",
-        "See [the §FS-001-login spec][].",
-        "[§FS-001-login]: specs/FS-001-login.md",
-        "[the §FS-001-login spec]: specs/FS-001-login.md \"the §FS-001-login spec\"",
-        "See <https://example.com/§FS-001-login>.",
-        r#"See <a href="specs/FS-001-login.md">the §FS-001-login spec</a>."#,
-        r#"See <a title="§FS-001-login" href="specs/FS-001-login.md">it</a>."#,
-        "See ![§FS-001-login](diagram.png).",
+        "See [the \u{a7}FS-001-login rationale][pg].",
+        "See [\u{a7}FS-001-login][pg].",
+        "See [the \u{a7}FS-001-login spec][].",
+        "[\u{a7}FS-001-login]: specs/FS-001-login.md",
+        "[the \u{a7}FS-001-login spec]: specs/FS-001-login.md \"the \u{a7}FS-001-login spec\"",
+        "See <https://example.com/\u{a7}FS-001-login>.",
+        "See <a href=\"specs/FS-001-login.md\">the \u{a7}FS-001-login spec</a>.",
+        "See <a title=\"\u{a7}FS-001-login\" href=\"specs/FS-001-login.md\">it</a>.",
+        "See ![\u{a7}FS-001-login](diagram.png).",
     ] {
         assert_eq!(
             wrapped(&config, &findings, line),
@@ -191,8 +191,8 @@ fn every_link_form_the_scope_lists_keeps_its_bytes() {
         );
     }
     assert_eq!(
-        wrapped(&config, &findings, "See [the §FS-001-login"),
-        format!("See [the [§FS-001-login]({CANON})"),
+        wrapped(&config, &findings, "See [the \u{a7}FS-001-login"),
+        format!("See [the [\u{a7}FS-001-login]({CANON})"),
         "an opener nothing closes encloses nothing"
     );
 }

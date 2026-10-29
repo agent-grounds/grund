@@ -299,8 +299,8 @@ pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Cat
     }
 }
 
-/// §AR-scanner.2.6: collect number-only shorthand citations — `§FS-042` for
-/// `§FS-042-user-login` — under a `[id] format` that carries both `{number}` and
+/// §AR-scanner.2.6: collect number-only shorthand citations — `<§>FS-042` for
+/// `<§>FS-042-user-login` — under a `[id] format` that carries both `{number}` and
 /// `{slug}`. Three gates in order, each cheap enough to run per line: the repo
 /// must have a shorthand at all, the line must contain the marker, and the token
 /// must not already be claimed by the full-ID pass (§DF-number-only-citation-shorthand.2.6).
@@ -360,7 +360,7 @@ pub(super) fn scan_shorthand_citations(
         let match_end = caps.get(0).map_or(0, |found| found.end());
         // §DF-number-only-citation-shorthand.2.6: the pattern is anchored only at
         // the start, so without this the `FS-042` inside the rejected full ID
-        // `§FS-042-User-Login` would be reported as a token the file does not hold.
+        // `<§>FS-042-User-Login` would be reported as a token the file does not hold.
         if !line.frame.grammar().id_token_ends_cleanly(rest, match_end) {
             continue;
         }

@@ -80,11 +80,11 @@ fn plural_fixture(root: &Path) {
     // gamma — the three count shapes §FS-lsp.1.2.4 words differently.
     write(
         &root.join("src/first.rs"),
-        "//! §FS-001-alpha\n/// §FS-001-alpha.1\npub fn first() {}\n",
+        "//! \u{a7}FS-001-alpha\n/// \u{a7}FS-001-alpha.1\npub fn first() {}\n",
     );
     write(
         &root.join("src/second.rs"),
-        "//! §FS-001-alpha.1.1\n/// §FS-002-beta\npub fn second() {}\n",
+        "//! \u{a7}FS-001-alpha.1.1\n/// \u{a7}FS-002-beta\npub fn second() {}\n",
     );
 }
 
@@ -260,7 +260,7 @@ fn title_hover_fences_backticks_read_off_a_real_tree() {
         &root.join("docs/functional-spec/FS-004-delta.md"),
         "# FS-004-delta: The `--toc` flag\n\nLead.\n\n## 1. Section map (`--toc`)\nMore.\n",
     );
-    write(&root.join("src/user.rs"), "//! §FS-004-delta.1\n");
+    write(&root.join("src/user.rs"), "//! \u{a7}FS-004-delta.1\n");
     let snapshot = snapshot_of(&root);
 
     assert_eq!(
@@ -309,7 +309,7 @@ fn stub_title_hover_counts_the_inline_declarations_citations() {
         &root.join("src/router.rs"),
         "/// AR-001-router: Router\npub fn router() {}\n",
     );
-    write(&root.join("src/caller.rs"), "//! §AR-001-router\n");
+    write(&root.join("src/caller.rs"), "//! \u{a7}AR-001-router\n");
     let snapshot = snapshot_of(&root);
 
     assert_eq!(
@@ -369,7 +369,7 @@ fn workspace_title_hover_counts_cross_namespace_citations() {
     // One local citation inside the member, one qualified from the root.
     write(
         &root.join("apps/api/src/session.rs"),
-        "//! §FS-001-session\n",
+        "//! \u{a7}FS-001-session\n",
     );
     write(&root.join("src/root.rs"), "//! §api/FS-001-session\n");
     let snapshot = snapshot_of(&root);

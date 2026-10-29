@@ -131,9 +131,9 @@ fn level_two_asks_each_section_of_a_markdown_home() {
             "level_two_asks_each_section_of_a_markdown_home",
             "",
             "require_grounding = true\ngrounding_level = 2\n",
-            "# Review skill\n\nGrounded in §FS-001-login.\n\n\
+            "# Review skill\n\nGrounded in \u{a7}FS-001-login.\n\n\
                  ## Steps\n\nNothing here.\n\n\
-                 ## Notes\n\nAlso §FS-001-login.\n",
+                 ## Notes\n\nAlso \u{a7}FS-001-login.\n",
             UNCITED_CODE,
         ),
         false,
@@ -155,8 +155,8 @@ fn level_three_lets_a_leaf_satisfy_its_parent() {
             "level_three_lets_a_leaf_satisfy_its_parent",
             "",
             "require_grounding = true\ngrounding_level = 3\n",
-            "# Review skill\n\nGrounded in §FS-001-login.\n\n\
-                 ## Steps\n\n### First\n\nSee §FS-001-login.\n",
+            "# Review skill\n\nGrounded in \u{a7}FS-001-login.\n\n\
+                 ## Steps\n\n### First\n\nSee \u{a7}FS-001-login.\n",
             UNCITED_CODE,
         ),
         false,
@@ -198,7 +198,7 @@ fn source_repo(name: &str, level: usize) -> PathBuf {
                  require_grounding = true\ngrounding_level = {level}\n"
         ),
         "# Review skill\n\nNothing here.\n",
-        "//! Module doc, grounded in §FS-001-login.\n\n\
+        "//! Module doc, grounded in \u{a7}FS-001-login.\n\n\
              /// Ungrounded top-level item.\n\
              fn alpha() {\n\
              \x20   /// An indented block.\n\
@@ -252,7 +252,7 @@ fn an_obligation_fires_per_section_at_level_two() {
         "an_obligation_fires_per_section_at_level_two",
         "",
         "require_grounding = true\ngrounding_level = 2\n",
-        "# Review skill\n\nSee §FS-001-login.\n\n## Steps\n\nSee §AR-001-bus.\n",
+        "# Review skill\n\nSee \u{a7}FS-001-login.\n\n## Steps\n\nSee \u{a7}AR-001-bus.\n",
         UNCITED_CODE,
     );
     let config_path = root.join("grund.toml");
@@ -283,7 +283,7 @@ fn an_unmet_obligation_reports_on_the_file_and_the_section() {
         "an_unmet_obligation_reports_on_the_file_and_the_section",
         "",
         "require_grounding = true\ngrounding_level = 2\n",
-        "# Review skill\n\n## Steps\n\nSee §AR-001-bus.\n",
+        "# Review skill\n\n## Steps\n\nSee \u{a7}AR-001-bus.\n",
         UNCITED_CODE,
     );
     let config_path = root.join("grund.toml");

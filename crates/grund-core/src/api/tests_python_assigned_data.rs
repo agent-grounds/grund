@@ -53,10 +53,10 @@ fn every_prefix_and_quote_excludes_only_the_assigned_span() {
         let quote = if index % 2 == 0 { "\"\"\"" } else { "'''" };
         let annotation = if index == 1 { ": str" } else { "" };
         let line = format!(
-            "DATA_{index}{annotation} = {prefix}{quote}inside §FS-999-missing{quote}; # §FS-042-user-login\n"
+            "DATA_{index}{annotation} = {prefix}{quote}inside \u{a7}FS-999-missing{quote}; # \u{a7}FS-042-user-login\n"
         );
-        let column = line.find("§FS-042-user-login").expect("tail citation") + 1;
-        expected.push((index + 1, column, "§FS-042-user-login".to_string()));
+        let column = line.find("\u{a7}FS-042-user-login").expect("tail citation") + 1;
+        expected.push((index + 1, column, "\u{a7}FS-042-user-login".to_string()));
         source.push_str(&line);
     }
     let root = assigned_repo(
@@ -74,14 +74,14 @@ fn every_prefix_and_quote_excludes_only_the_assigned_span() {
 fn multiline_data_recovers_tails_and_later_docstrings() {
     let source = concat!(
         "\"\"\"Module documentation.\"\"\"\n",
-        "PAYLOAD = \"\"\"opening §FS-999-missing\n",
-        "escaped \\\"\"\" still data §FS-999-missing\n",
-        "closing data §FS-999-missing\"\"\"; # §FS-042-user-login\n",
+        "PAYLOAD = \"\"\"opening \u{a7}FS-999-missing\n",
+        "escaped \\\"\"\" still data \u{a7}FS-999-missing\n",
+        "closing data \u{a7}FS-999-missing\"\"\"; # \u{a7}FS-042-user-login\n",
         "def function():\n",
-        "    \"\"\"Function cites §FS-042-user-login.\"\"\"\n",
+        "    \"\"\"Function cites \u{a7}FS-042-user-login.\"\"\"\n",
         "class Service:\n",
         "    def method(self):\n",
-        "        '''Method cites §FS-042-user-login.'''\n",
+        "        '''Method cites \u{a7}FS-042-user-login.'''\n",
     );
     let root = assigned_repo(
         "multiline_data_recovers_tails_and_later_docstrings",
@@ -91,9 +91,9 @@ fn multiline_data_recovers_tails_and_later_docstrings() {
     assert_eq!(
         source_sites(&root),
         vec![
-            (4, 37, "§FS-042-user-login".into()),
-            (6, 23, "§FS-042-user-login".into()),
-            (9, 25, "§FS-042-user-login".into()),
+            (4, 37, "\u{a7}FS-042-user-login".into()),
+            (6, 23, "\u{a7}FS-042-user-login".into()),
+            (9, 25, "\u{a7}FS-042-user-login".into()),
         ]
     );
 }
@@ -107,12 +107,12 @@ fn annotation_equals_selects_only_the_direct_triple_string_rhs() {
     let source = concat!(
         "from typing import Literal\n",
         "\n",
-        "DATA: Literal[\"kind=value\"] = \"\"\"stored §FS-999-missing\n",
+        "DATA: Literal[\"kind=value\"] = \"\"\"stored \u{a7}FS-999-missing\n",
         "\"\"\"\n",
         "\n",
         "def later():\n",
-        "    \"\"\"Cites §FS-042-user-login.\"\"\"\n",
-        "EXPRESSION: str = choose(value=\"\"\"§FS-042-user-login\"\"\")\n",
+        "    \"\"\"Cites \u{a7}FS-042-user-login.\"\"\"\n",
+        "EXPRESSION: str = choose(value=\"\"\"\u{a7}FS-042-user-login\"\"\")\n",
     );
     let root = assigned_repo(
         "annotation_equals_selects_only_the_direct_triple_string_rhs",
@@ -122,8 +122,8 @@ fn annotation_equals_selects_only_the_direct_triple_string_rhs() {
     assert_eq!(
         source_sites(&root),
         vec![
-            (7, 14, "§FS-042-user-login".into()),
-            (8, 35, "§FS-042-user-login".into()),
+            (7, 14, "\u{a7}FS-042-user-login".into()),
+            (8, 35, "\u{a7}FS-042-user-login".into()),
         ]
     );
 }
@@ -133,12 +133,20 @@ fn annotation_equals_selects_only_the_direct_triple_string_rhs() {
 /// resume at their exact raw sites (§FS-check.1.1.3.1).
 #[test]
 fn escaped_candidate_does_not_skip_an_overlapping_close() {
-    let source = r#"PAYLOAD = """stored §FS-999-missing
-escaped quote then close: \""""  # §FS-042-user-login
+    let source = concat!(
+        r#"PAYLOAD = """stored "#,
+        "\u{a7}",
+        r#"FS-999-missing
+escaped quote then close: \""""  # "#,
+        "\u{a7}",
+        r#"FS-042-user-login
 
 def later():
-    """Cites §FS-042-user-login."""
-"#;
+    """Cites "#,
+        "\u{a7}",
+        r#"FS-042-user-login."""
+"#
+    );
     let root = assigned_repo(
         "escaped_candidate_does_not_skip_an_overlapping_close",
         source,
@@ -147,8 +155,8 @@ def later():
     assert_eq!(
         source_sites(&root),
         vec![
-            (2, 36, "§FS-042-user-login".into()),
-            (5, 14, "§FS-042-user-login".into()),
+            (2, 36, "\u{a7}FS-042-user-login".into()),
+            (5, 14, "\u{a7}FS-042-user-login".into()),
         ]
     );
 }
@@ -161,8 +169,8 @@ fn marked_bare_and_qualified_forms_keep_distinct_rules() {
     let root = assigned_repo(
         "marked_bare_and_qualified_forms_keep_distinct_rules",
         concat!(
-            "DATA = \"\"\"§FS-042-user-login FS-042-user-login ",
-            "§api/FS-042-user-login\"\"\"; # §FS-042-user-login ",
+            "DATA = \"\"\"\u{a7}FS-042-user-login FS-042-user-login ",
+            "§api/FS-042-user-login\"\"\"; # \u{a7}FS-042-user-login ",
             "FS-042-user-login §api/FS-042-user-login\n",
         ),
         "",
@@ -173,7 +181,7 @@ fn marked_bare_and_qualified_forms_keep_distinct_rules() {
             .map(|(_, _, text)| text)
             .collect::<Vec<_>>(),
         vec![
-            "§FS-042-user-login",
+            "\u{a7}FS-042-user-login",
             "FS-042-user-login",
             "§api/FS-042-user-login",
         ]
@@ -188,9 +196,9 @@ fn check_refs_cover_and_lsp_share_the_assigned_data_boundary() {
     let root = assigned_repo(
         "check_refs_cover_and_lsp_share_the_assigned_data_boundary",
         concat!(
-            "PAYLOAD = \"\"\"§FS-999-missing\"\"\"\n",
+            "PAYLOAD = \"\"\"\u{a7}FS-999-missing\"\"\"\n",
             "def login():\n",
-            "    \"\"\"Uses §FS-042-user-login.\"\"\"\n",
+            "    \"\"\"Uses \u{a7}FS-042-user-login.\"\"\"\n",
         ),
         "",
     );
@@ -272,11 +280,11 @@ fn type_after(root: &Path, before: &str, typed: &str) -> String {
 #[test]
 fn fmt_and_on_type_preserve_data_and_recover_for_a_later_docstring() {
     let source = concat!(
-        "PAYLOAD = \"\"\"Stored §FS-042 bytes.\n",
-        "Also $$FS-042 and §FS-042.\n",
+        "PAYLOAD = \"\"\"Stored \u{a7}FS-042 bytes.\n",
+        "Also $$FS-042 and \u{a7}FS-042.\n",
         "\"\"\"\n",
         "def login():\n",
-        "    \"\"\"Uses §FS-042.\"\"\"\n",
+        "    \"\"\"Uses \u{a7}FS-042.\"\"\"\n",
     );
     let root = assigned_repo(
         "fmt_and_on_type_preserve_data_and_recover_for_a_later_docstring",
@@ -299,8 +307,8 @@ fn fmt_and_on_type_preserve_data_and_recover_for_a_later_docstring() {
     assert_eq!(
         (written, live),
         (
-            source.replace("Uses §FS-042.", "Uses §FS-042-user-login."),
-            "    \"\"\"Uses §FS-042-user-login here.".to_string(),
+            source.replace("Uses \u{a7}FS-042.", "Uses \u{a7}FS-042-user-login."),
+            "    \"\"\"Uses \u{a7}FS-042-user-login here.".to_string(),
         )
     );
 }
@@ -312,17 +320,17 @@ fn docstring_python_false_keeps_raw_line_behavior() {
     let root = assigned_repo(
         "docstring_python_false_keeps_raw_line_behavior",
         concat!(
-            "PAYLOAD = \"\"\"§FS-042-user-login\"\"\"\n",
+            "PAYLOAD = \"\"\"\u{a7}FS-042-user-login\"\"\"\n",
             "def login():\n",
-            "    \"\"\"§FS-042-user-login\"\"\"\n",
+            "    \"\"\"\u{a7}FS-042-user-login\"\"\"\n",
         ),
         "docstring_python = false\n",
     );
     assert_eq!(
         source_sites(&root),
         vec![
-            (1, 14, "§FS-042-user-login".into()),
-            (3, 8, "§FS-042-user-login".into()),
+            (1, 14, "\u{a7}FS-042-user-login".into()),
+            (3, 8, "\u{a7}FS-042-user-login".into()),
         ]
     );
 }
@@ -334,20 +342,20 @@ fn out_of_scope_and_other_language_controls_keep_existing_rules() {
     let root = assigned_repo(
         "out_of_scope_and_other_language_controls_keep_existing_rules",
         concat!(
-            "PAREN = (\"\"\"§FS-042-user-login\"\"\")\n",
+            "PAREN = (\"\"\"\u{a7}FS-042-user-login\"\"\")\n",
             "def nested():\n",
-            "    DATA = \"\"\"§FS-042-user-login\"\"\"\n",
-            "PLAIN = \"§FS-042-user-login\"\n",
+            "    DATA = \"\"\"\u{a7}FS-042-user-login\"\"\"\n",
+            "PLAIN = \"\u{a7}FS-042-user-login\"\n",
         ),
         "",
     );
     write(
         &root.join("src/other.rs"),
-        "const TEXT: &str = \"§FS-042-user-login\";\n",
+        "const TEXT: &str = \"\u{a7}FS-042-user-login\";\n",
     );
     write(
         &root.join("docs/control.md"),
-        "Markdown cites §FS-042-user-login.\n",
+        "Markdown cites \u{a7}FS-042-user-login.\n",
     );
     let findings = scan(&root).expect("scan controls");
     let sites = findings

@@ -40,12 +40,12 @@ fn hover_fixture(name: &str) -> std::path::PathBuf {
     .expect("write stub");
     fs::write(
         root.join("src/router.rs"),
-        "/// AR-001-router: Router\n/// Uses §FS-001-alpha.1.\npub fn router() {}\n",
+        "/// AR-001-router: Router\n/// Uses \u{a7}FS-001-alpha.1.\npub fn router() {}\n",
     )
     .expect("write source");
     fs::write(
         root.join("src/caller.rs"),
-        "//! §FS-001-alpha\n//! §AR-001-router\npub fn caller() {}\n",
+        "//! \u{a7}FS-001-alpha\n//! \u{a7}AR-001-router\npub fn caller() {}\n",
     )
     .expect("write caller");
     root
@@ -70,8 +70,8 @@ fn title_hover_reports_usage_counts_for_every_title_kind() {
     let source = root.join("src/router.rs");
     let (mut child, mut stdin, receiver) = start_server(&root);
 
-    // Two sites in two files: `§FS-001-alpha.1` in src/router.rs and
-    // `§FS-001-alpha` in src/caller.rs.
+    // Two sites in two files: `<§>FS-001-alpha.1` in src/router.rs and
+    // `<§>FS-001-alpha` in src/caller.rs.
     let declaration = hover_result(&mut stdin, &receiver, &mut child, 2, &file_uri(&spec), 0, 5);
     assert_eq!(
         hover_body(&declaration),

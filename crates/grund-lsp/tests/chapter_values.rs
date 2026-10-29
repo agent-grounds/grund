@@ -33,8 +33,8 @@ fn chapter_value_ranges_navigation_and_diagnostics_match_the_cli() {
              {root_heading}\n\
              #### values.aux-voltage.1: 24\n\
              ## 2. Use\n\
-             Bound: `48` (§AR-004-value-probe.values.aux-voltage.1)\n\
-             Whole: `24` (§AR-004-value-probe.values.aux-voltage)\n"
+             Bound: `48` (\u{a7}AR-004-value-probe.values.aux-voltage.1)\n\
+             Whole: `24` (\u{a7}AR-004-value-probe.values.aux-voltage)\n"
         ),
     )
     .expect("write document");

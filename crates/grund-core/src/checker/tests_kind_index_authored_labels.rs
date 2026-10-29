@@ -43,7 +43,7 @@ fn assert_entry(run: &CheckRun, why: &str) {
 fn an_authored_label_is_an_entry() {
     let run = checked_index(
         "an_authored_label_is_an_entry",
-        "# Specs\n\n- [§FS-001-login: A user logs in](FS-001-login.md)\n",
+        "# Specs\n\n- [\u{a7}FS-001-login: A user logs in](FS-001-login.md)\n",
     );
     assert_entry(&run, "the author's link is the entry");
 }
@@ -67,9 +67,9 @@ fn a_wrap_and_an_authored_label_are_entries_and_a_bare_citation_is_not_a_link() 
     write(
         &root.join("docs/specs/README.md"),
         "# Specs\n\n\
-         - [§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in): A user logs in\n\
-         - [§FS-002-logout: A user logs out](FS-002-logout.md)\n\
-         - §FS-003-reset: A user resets a password\n",
+         - [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in): A user logs in\n\
+         - [\u{a7}FS-002-logout: A user logs out](FS-002-logout.md)\n\
+         - \u{a7}FS-003-reset: A user resets a password\n",
     );
 
     let run = check_run(&root, false);
@@ -102,7 +102,7 @@ fn each_citation_in_one_label_counts_for_its_own_id() {
     write(
         &root.join("docs/specs/README.md"),
         "# Specs\n\n\
-         - [§FS-001-login, then §FS-002-logout, then §FS-001-login again](session.md)\n",
+         - [\u{a7}FS-001-login, then \u{a7}FS-002-logout, then \u{a7}FS-001-login again](session.md)\n",
     );
 
     let run = check_run(&root, false);
@@ -136,27 +136,27 @@ fn every_enclosing_shape_is_an_entry() {
     let rows = [
         (
             "escaped_bracket",
-            r"- [§FS-001-login: logs in \] for good](FS-001-login.md)",
+            "- [\u{a7}FS-001-login: logs in \\] for good](FS-001-login.md)",
         ),
         (
             "balanced_brackets",
-            "- [§FS-001-login: logs in [draft]](FS-001-login.md)",
+            "- [\u{a7}FS-001-login: logs in [draft]](FS-001-login.md)",
         ),
         (
             "code_span",
-            "- [§FS-001-login: run `grund check` then `]`](FS-001-login.md)",
+            "- [\u{a7}FS-001-login: run `grund check` then `]`](FS-001-login.md)",
         ),
         (
             "escaped_paren",
-            r"- [§FS-001-login: A user logs in](FS-001-login\).md)",
+            "- [\u{a7}FS-001-login: A user logs in](FS-001-login\\).md)",
         ),
         (
             "balanced_parens",
-            "- [§FS-001-login: A user logs in](FS-001-login(1).md)",
+            "- [\u{a7}FS-001-login: A user logs in](FS-001-login(1).md)",
         ),
         (
             "words_before",
-            "- [the §FS-001-login record](FS-001-login.md)",
+            "- [the \u{a7}FS-001-login record](FS-001-login.md)",
         ),
     ];
     for (shape, row) in rows {
@@ -176,7 +176,7 @@ fn every_enclosing_shape_is_an_entry() {
 fn an_empty_destination_is_no_entry() {
     let run = checked_index(
         "an_empty_destination_is_no_entry",
-        "# Specs\n\n- [§FS-001-login: A user logs in]()\n",
+        "# Specs\n\n- [\u{a7}FS-001-login: A user logs in]()\n",
     );
     assert!(!has(&run, "unlinked-index-entry"), "{:?}", findings(&run));
     let missing: Vec<_> = findings(&run)
@@ -192,7 +192,7 @@ fn an_empty_destination_is_no_entry() {
 fn an_escaped_opener_encloses_nothing() {
     let run = checked_index(
         "an_escaped_opener_encloses_nothing",
-        "# Specs\n\n- \\[§FS-001-login: A user logs in](FS-001-login.md)\n",
+        "# Specs\n\n- \\[\u{a7}FS-001-login: A user logs in](FS-001-login.md)\n",
     );
     assert!(has(&run, "unlinked-index-entry"), "{:?}", findings(&run));
 }
@@ -203,7 +203,7 @@ fn an_escaped_opener_encloses_nothing() {
 fn a_bracket_in_a_code_span_encloses_nothing() {
     let run = checked_index(
         "a_bracket_in_a_code_span_encloses_nothing",
-        "# Specs\n\n- `[` §FS-001-login: A user logs in](FS-001-login.md)\n",
+        "# Specs\n\n- `[` \u{a7}FS-001-login: A user logs in](FS-001-login.md)\n",
     );
     assert!(has(&run, "unlinked-index-entry"), "{:?}", findings(&run));
 }
@@ -214,7 +214,7 @@ fn a_bracket_in_a_code_span_encloses_nothing() {
 fn an_unclosed_destination_makes_no_link() {
     let run = checked_index(
         "an_unclosed_destination_makes_no_link",
-        "# Specs\n\n- [§FS-001-login: A user logs in](FS-001-login.md\n",
+        "# Specs\n\n- [\u{a7}FS-001-login: A user logs in](FS-001-login.md\n",
     );
     assert!(has(&run, "unlinked-index-entry"), "{:?}", findings(&run));
 }
@@ -225,7 +225,7 @@ fn an_unclosed_destination_makes_no_link() {
 fn an_image_is_never_an_entry() {
     let run = checked_index(
         "an_image_is_never_an_entry",
-        "# Specs\n\n- ![a diagram of §FS-001-login](diagram.png)\n",
+        "# Specs\n\n- ![a diagram of \u{a7}FS-001-login](diagram.png)\n",
     );
     assert!(has(&run, "unlinked-index-entry"), "{:?}", findings(&run));
 }
@@ -239,7 +239,7 @@ fn an_image_is_never_an_entry() {
 fn a_citation_only_image_is_no_entry() {
     let run = checked_index(
         "a_citation_only_image_is_no_entry",
-        "# Specs\n\n- ![§FS-001-login](diagram.png)\n",
+        "# Specs\n\n- ![\u{a7}FS-001-login](diagram.png)\n",
     );
     assert!(!has(&run, "image-index-entry"), "{:?}", findings(&run));
     assert!(!has(&run, "unlinked-index-entry"), "{:?}", findings(&run));
@@ -257,8 +257,8 @@ fn a_citation_only_image_is_no_entry() {
 fn a_citation_only_image_beside_an_entry_draws_no_warning() {
     let run = checked_index(
         "a_citation_only_image_beside_an_entry_draws_no_warning",
-        "# Specs\n\n- ![§FS-001-login](diagram.png)\n\
-         - [§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in): A user logs in\n",
+        "# Specs\n\n- ![\u{a7}FS-001-login](diagram.png)\n\
+         - [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in): A user logs in\n",
     );
     assert_entry(&run, "the wrap is the entry");
     assert!(!has(&run, "image-index-entry"), "{:?}", findings(&run));
@@ -271,7 +271,7 @@ fn an_already_nested_line_is_an_entry() {
     let run = checked_index(
         "an_already_nested_line_is_an_entry",
         "# Specs\n\n\
-         - [[§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in): A user logs in](FS-001-login.md)\n",
+         - [[\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in): A user logs in](FS-001-login.md)\n",
     );
     assert_entry(&run, "the inner wrap is the entry");
 }
@@ -283,9 +283,9 @@ fn a_dangling_or_missing_section_citation_in_a_label_keeps_its_finding() {
     let run = checked_index(
         "a_dangling_or_missing_section_citation_in_a_label_keeps_its_finding",
         "# Specs\n\n\
-         - [§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in): A user logs in\n\
-         - [§FS-009-gone: A spec that is gone](FS-009-gone.md)\n\
-         - [§FS-001-login.9: The ninth section](FS-001-login.md)\n",
+         - [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in): A user logs in\n\
+         - [\u{a7}FS-009-gone: A spec that is gone](FS-009-gone.md)\n\
+         - [\u{a7}FS-001-login.9: The ninth section](FS-001-login.md)\n",
     );
     let lines = findings(&run);
     assert!(

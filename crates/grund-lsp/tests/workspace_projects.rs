@@ -30,7 +30,7 @@ fn write_project(root: &Path, citation_name: &str) -> (PathBuf, PathBuf) {
     write(&spec, "# FS-001-example: Example\n\nLead.\n");
     write(
         &source,
-        "/// Implements §FS-001-example.\nfinal class Example {}\n",
+        "/// Implements \u{a7}FS-001-example.\nfinal class Example {}\n",
     );
     (spec, source)
 }
@@ -40,7 +40,7 @@ fn write(path: &Path, text: &str) {
     fs::write(path, text).expect("write fixture");
 }
 
-/// Hover over the `§FS-001-example` citation on the third line of a spec body.
+/// Hover over the `<§>FS-001-example` citation on the third line of a spec body.
 fn hover_citation(
     child: &mut Child,
     stdin: &mut ChildStdin,
@@ -158,7 +158,7 @@ fn an_external_directory_link_has_no_diagnostics_or_hover() {
     );
     write(
         &outside.join("FS-002-user.md"),
-        "# FS-002-user: User\n\nSee §FS-001-example, and §FS-404-gone.\n",
+        "# FS-002-user: User\n\nSee \u{a7}FS-001-example, and \u{a7}FS-404-gone.\n",
     );
     symlink(&outside, root.join("docs")).expect("symlink the include root");
 
@@ -202,7 +202,7 @@ fn a_parent_relative_include_root_still_answers() {
     );
     write(
         &shared.join("FS-002-user.md"),
-        "# FS-002-user: User\n\nSee §FS-001-example, and §FS-404-gone.\n",
+        "# FS-002-user: User\n\nSee \u{a7}FS-001-example, and \u{a7}FS-404-gone.\n",
     );
 
     let (mut child, mut stdin, receiver) = start_server_with_workspace_folders(&root, &[&root]);
@@ -290,7 +290,7 @@ fn a_virtual_workspace_folder_is_skipped_not_fatal() {
     );
     write(
         &root.join("docs/FS-002-user.md"),
-        "# FS-002-user: User\n\nSee §FS-001-example.\n",
+        "# FS-002-user: User\n\nSee \u{a7}FS-001-example.\n",
     );
 
     let (mut child, mut stdin, receiver) = start_server_with_initialize(
@@ -343,7 +343,7 @@ fn a_folder_whose_config_will_not_load_leaves_the_others_serving() {
     );
     write(
         &good.join("docs/FS-002-user.md"),
-        "# FS-002-user: User\n\nSee §FS-001-example.\n",
+        "# FS-002-user: User\n\nSee \u{a7}FS-001-example.\n",
     );
     write(&bad.join("grund.toml"), "grund_config_version = 1\n[scan\n");
 

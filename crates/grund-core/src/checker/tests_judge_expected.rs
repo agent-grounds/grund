@@ -223,7 +223,7 @@ fn external_index_repo(name: &str) -> PathBuf {
     );
     write(
         &root.join("docs/architecture/README.md"),
-        "# Architecture\n\n- [§AR-001-bus](../../src/bus.rs)\n",
+        "# Architecture\n\n- [\u{a7}AR-001-bus](../../src/bus.rs)\n",
     );
     root
 }

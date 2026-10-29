@@ -52,10 +52,10 @@ fn violations(config: &Config, block: &[&str], has_note: bool) -> Vec<usize> {
 fn any_layout_accepts_every_arrangement() {
     let config = layout_config(test_root("any_layout_accepts_every_arrangement"), "any");
     for line in [
-        "// §FS-001-login: reject an expired credential",
-        "// §FS-001-login reject an expired credential",
-        "// reject an expired credential (§FS-001-login)",
-        "// §FS-001-login §FS-002-logout: two of them",
+        "// \u{a7}FS-001-login: reject an expired credential",
+        "// \u{a7}FS-001-login reject an expired credential",
+        "// reject an expired credential (\u{a7}FS-001-login)",
+        "// \u{a7}FS-001-login \u{a7}FS-002-logout: two of them",
     ] {
         assert!(conforms(&config, line), "`any` must accept `{line}`");
     }
@@ -75,17 +75,17 @@ fn citation_first_colon_accepts_the_canonical_forms() {
         "citation-first-colon",
     );
     for line in [
-        "// §FS-001-login: reject an expired credential",
-        "    // §FS-001-login: indented like the code it annotates",
-        "// §FS-001-login, §FS-002-logout: both branches",
-        "// §FS-001-login, §FS-002-logout, §FS-003-reset: three of them",
-        "// §FS-001-login: the rule (see also §FS-002-logout)",
-        "// §FS-001-login:",
-        "// §FS-001-login:  two spaces still open a note",
-        "//   §FS-001-login: indented past the prefix",
-        "//\t§FS-001-login: a tab past the prefix",
-        " *   §FS-001-login: aligned under the block opener",
-        "#\t§FS-001-login: a tab after a hash",
+        "// \u{a7}FS-001-login: reject an expired credential",
+        "    // \u{a7}FS-001-login: indented like the code it annotates",
+        "// \u{a7}FS-001-login, \u{a7}FS-002-logout: both branches",
+        "// \u{a7}FS-001-login, \u{a7}FS-002-logout, \u{a7}FS-003-reset: three of them",
+        "// \u{a7}FS-001-login: the rule (see also \u{a7}FS-002-logout)",
+        "// \u{a7}FS-001-login:",
+        "// \u{a7}FS-001-login:  two spaces still open a note",
+        "//   \u{a7}FS-001-login: indented past the prefix",
+        "//\t\u{a7}FS-001-login: a tab past the prefix",
+        " *   \u{a7}FS-001-login: aligned under the block opener",
+        "#\t\u{a7}FS-001-login: a tab after a hash",
         "// Walks every recognized citation and resolves it.",
         "//",
     ] {
@@ -103,18 +103,18 @@ fn citation_first_colon_rejects_near_misses() {
         "citation-first-colon",
     );
     for line in [
-        "// §FS-001-login reject an expired credential",
-        "// reject an expired credential (§FS-001-login)",
-        "// §FS-001-login — reject an expired credential",
-        "// §FS-001-login §FS-002-logout: both branches",
-        "// §FS-001-login,§FS-002-logout: both branches",
-        "// §FS-001-login , §FS-002-logout: both branches",
-        "// §FS-001-login :reject an expired credential",
-        "// §FS-001-login::doubled",
-        "// see §FS-001-login: reject an expired credential",
-        "// §FS-001-login, reject an expired credential",
-        "// §FS-001-login, x §FS-002-logout: a word inside the run",
-        "// §FS-001-login, §FS-002-logout, prose the run does not close",
+        "// \u{a7}FS-001-login reject an expired credential",
+        "// reject an expired credential (\u{a7}FS-001-login)",
+        "// \u{a7}FS-001-login — reject an expired credential",
+        "// \u{a7}FS-001-login \u{a7}FS-002-logout: both branches",
+        "// \u{a7}FS-001-login,\u{a7}FS-002-logout: both branches",
+        "// \u{a7}FS-001-login , \u{a7}FS-002-logout: both branches",
+        "// \u{a7}FS-001-login :reject an expired credential",
+        "// \u{a7}FS-001-login::doubled",
+        "// see \u{a7}FS-001-login: reject an expired credential",
+        "// \u{a7}FS-001-login, reject an expired credential",
+        "// \u{a7}FS-001-login, x \u{a7}FS-002-logout: a word inside the run",
+        "// \u{a7}FS-001-login, \u{a7}FS-002-logout, prose the run does not close",
     ] {
         assert!(!conforms(&config, line), "must reject `{line}`");
     }
@@ -134,19 +134,19 @@ fn citation_first_colon_reads_every_comment_prefix() {
         "citation-first-colon",
     );
     for line in [
-        "/** §FS-001-login: reject an expired credential",
-        " * §FS-001-login: reject an expired credential",
-        "/* §FS-001-login: reject an expired credential */",
-        "\"\"\"§FS-001-login: reject an expired credential\"\"\"",
-        "# §FS-001-login: reject an expired credential",
-        "//! §FS-001-login: reject an expired credential",
-        "-- §FS-001-login: reject an expired credential",
+        "/** \u{a7}FS-001-login: reject an expired credential",
+        " * \u{a7}FS-001-login: reject an expired credential",
+        "/* \u{a7}FS-001-login: reject an expired credential */",
+        "\"\"\"\u{a7}FS-001-login: reject an expired credential\"\"\"",
+        "# \u{a7}FS-001-login: reject an expired credential",
+        "//! \u{a7}FS-001-login: reject an expired credential",
+        "-- \u{a7}FS-001-login: reject an expired credential",
     ] {
         assert!(conforms(&config, line), "must accept `{line}`");
     }
     for line in [
-        " * §FS-001-login reject an expired credential",
-        "# reject an expired credential (§FS-001-login)",
+        " * \u{a7}FS-001-login reject an expired credential",
+        "# reject an expired credential (\u{a7}FS-001-login)",
     ] {
         assert!(!conforms(&config, line), "must reject `{line}`");
     }
@@ -162,9 +162,12 @@ fn a_block_closer_leaves_no_trailing_space() {
         "citation-first-colon",
     );
     for (line, content) in [
-        ("/* §FS-001-login: */", "§FS-001-login:"),
-        ("/* §FS-001-login: reject it */", "§FS-001-login: reject it"),
-        ("\"\"\"§FS-001-login: \"\"\"", "§FS-001-login:"),
+        ("/* \u{a7}FS-001-login: */", "\u{a7}FS-001-login:"),
+        (
+            "/* \u{a7}FS-001-login: reject it */",
+            "\u{a7}FS-001-login: reject it",
+        ),
+        ("\"\"\"\u{a7}FS-001-login: \"\"\"", "\u{a7}FS-001-login:"),
     ] {
         let (start, end) = comment_content_range(line, &comment_strip_prefixes(config.lexical()));
         assert_eq!(&line[start..end], content, "content of `{line}`");
@@ -172,7 +175,7 @@ fn a_block_closer_leaves_no_trailing_space() {
     }
 
     // A citation alone inside a block comment still carries no note.
-    let block = ["/* §FS-001-login */"];
+    let block = ["/* \u{a7}FS-001-login */"];
     assert!(!has_note(&config, &block));
 }
 
@@ -186,29 +189,29 @@ fn a_list_marker_is_skipped_like_indentation() {
         "citation-first-colon",
     );
     for line in [
-        "// - §FS-001-login: a bulleted grounded point",
-        "// * §FS-001-login: a star bullet",
-        "// + §FS-001-login: a plus bullet",
-        "// 1. §FS-001-login: an ordered item",
-        "// 12) §FS-001-login: a two-digit ordered item",
-        "//   - §FS-001-login: indented past the prefix first",
+        "// - \u{a7}FS-001-login: a bulleted grounded point",
+        "// * \u{a7}FS-001-login: a star bullet",
+        "// + \u{a7}FS-001-login: a plus bullet",
+        "// 1. \u{a7}FS-001-login: an ordered item",
+        "// 12) \u{a7}FS-001-login: a two-digit ordered item",
+        "//   - \u{a7}FS-001-login: indented past the prefix first",
     ] {
         assert!(conforms(&config, line), "must accept `{line}`");
     }
     for line in [
         // No space after the marker: the `-` is the first thing the content says.
-        "// -§FS-001-login: not a list item",
+        "// -\u{a7}FS-001-login: not a list item",
         // One marker is skipped, not a chain of them.
-        "// - - §FS-001-login: two markers deep",
+        "// - - \u{a7}FS-001-login: two markers deep",
         // The marker changes nothing about the rest of the form.
-        "// - §FS-001-login a bulleted point with no colon",
+        "// - \u{a7}FS-001-login a bulleted point with no colon",
     ] {
         assert!(!conforms(&config, line), "must reject `{line}`");
     }
 
     // §FS-inline-citation-style.2.3: the marker is still note text when note
     // presence is decided, so a bulleted pointer is not silently reclassified.
-    assert!(has_note(&config, &["// - §FS-001-login"]));
+    assert!(has_note(&config, &["// - \u{a7}FS-001-login"]));
 }
 
 /// §FS-inline-citation-style.3.3.1, rule 1: the line that opens the note is
@@ -223,16 +226,16 @@ fn a_wrapped_note_may_name_a_point_on_its_continuation() {
     );
 
     let wrapped = [
-        "/* §FS-001-login: a note that runs past one line and",
-        "   still names §FS-002-logout on the way */",
+        "/* \u{a7}FS-001-login: a note that runs past one line and",
+        "   still names \u{a7}FS-002-logout on the way */",
     ];
     assert!(violations(&config, &wrapped, true).is_empty());
 
     // The same continuation, opening with the citation: indistinguishable from
     // a note opening, so it is judged and it fails.
     let opens_with_citation = [
-        "/* §FS-001-login: a note that runs past one line and",
-        "   §FS-002-logout opens the continuation */",
+        "/* \u{a7}FS-001-login: a note that runs past one line and",
+        "   \u{a7}FS-002-logout opens the continuation */",
     ];
     assert_eq!(violations(&config, &opens_with_citation, true), vec![2]);
 
@@ -240,8 +243,8 @@ fn a_wrapped_note_may_name_a_point_on_its_continuation() {
     // summary line above it is unconstrained, it is not.
     let prose_first = [
         "// Walks the credential store.",
-        "// then §FS-001-login decides",
-        "// and §FS-002-logout follows",
+        "// then \u{a7}FS-001-login decides",
+        "// and \u{a7}FS-002-logout follows",
     ];
     assert_eq!(violations(&config, &prose_first, true), vec![2]);
 }
@@ -266,7 +269,7 @@ fn a_site_without_a_note_is_exempt() {
         test_root("a_site_without_a_note_is_exempt"),
         "citation-first-colon",
     );
-    let block = ["// §FS-001-login  §FS-002-logout"];
+    let block = ["// \u{a7}FS-001-login  \u{a7}FS-002-logout"];
     assert!(violations(&config, &block, false).is_empty());
     // The same block, told it carries a note, is judged and fails.
     assert_eq!(violations(&config, &block, true), vec![1]);
@@ -287,12 +290,12 @@ fn a_citation_chain_carries_no_note() {
         "citation-first-colon",
     );
     for line in [
-        "// §FS-001-login  §FS-002-logout",
-        "// §FS-001-login, §FS-002-logout",
-        "// §FS-001-login,§FS-002-logout",
-        "// §FS-001-login  ,  §FS-002-logout",
-        "/* §FS-001-login, §FS-002-logout */",
-        "// §FS-001-login, §FS-002-logout, §FS-003-reset",
+        "// \u{a7}FS-001-login  \u{a7}FS-002-logout",
+        "// \u{a7}FS-001-login, \u{a7}FS-002-logout",
+        "// \u{a7}FS-001-login,\u{a7}FS-002-logout",
+        "// \u{a7}FS-001-login  ,  \u{a7}FS-002-logout",
+        "/* \u{a7}FS-001-login, \u{a7}FS-002-logout */",
+        "// \u{a7}FS-001-login, \u{a7}FS-002-logout, \u{a7}FS-003-reset",
     ] {
         let block = [line];
         let carries_note = has_note(&config, &block);
@@ -303,10 +306,10 @@ fn a_citation_chain_carries_no_note() {
         );
     }
     for line in [
-        "// §FS-001-login + §FS-002-logout",
-        "// §FS-001-login and §FS-002-logout",
-        "// §FS-001-login,, §FS-002-logout",
-        "// §FS-001-login, §FS-002-logout: both branches",
+        "// \u{a7}FS-001-login + \u{a7}FS-002-logout",
+        "// \u{a7}FS-001-login and \u{a7}FS-002-logout",
+        "// \u{a7}FS-001-login,, \u{a7}FS-002-logout",
+        "// \u{a7}FS-001-login, \u{a7}FS-002-logout: both branches",
     ] {
         let block = [line];
         assert!(
@@ -332,10 +335,10 @@ fn citation_only_accepts_a_comma_joined_chain() {
     write(
         &root.join("src/auth.rs"),
         concat!(
-            "// §FS-001-login, §FS-002-logout\n",
+            "// \u{a7}FS-001-login, \u{a7}FS-002-logout\n",
             "pub fn login() {}\n",
             "\n",
-            "// §FS-001-login + §FS-002-logout\n",
+            "// \u{a7}FS-001-login + \u{a7}FS-002-logout\n",
             "pub fn logout() {}\n",
         ),
     );
@@ -365,7 +368,7 @@ fn citation_only_accepts_a_comma_joined_chain() {
 #[test]
 fn no_layout_records_no_violations() {
     let root = test_root("no_layout_records_no_violations");
-    let block = ["// §FS-001-login reject an expired credential"];
+    let block = ["// \u{a7}FS-001-login reject an expired credential"];
 
     let any = checked_layout_config(root.clone(), "any");
     let mut citation_only = checked_layout_config(root.clone(), "citation-first-colon");
@@ -390,7 +393,7 @@ fn no_layout_records_no_violations() {
 #[test]
 fn an_unknown_check_level_classifies_nothing() {
     let root = test_root("an_unknown_check_level_classifies_nothing");
-    let block = ["// §FS-001-login reject an expired credential"];
+    let block = ["// \u{a7}FS-001-login reject an expired credential"];
 
     let mut config = checked_layout_config(root, "citation-first-colon");
     config.inline_note_layout_check = "info".into();
@@ -421,8 +424,8 @@ fn note_walk_tokenizes_only_the_lines_it_reads() {
     // there and the two citation lines below it are never read.
     let block = [
         "// Walks the credential store.",
-        "// §FS-001-login: one error per expired credential.",
-        "// §FS-001-login — and one more, laid out wrong.",
+        "// \u{a7}FS-001-login: one error per expired credential.",
+        "// \u{a7}FS-001-login — and one more, laid out wrong.",
     ];
 
     // Documented-only (§FS-inline-citation-style.4.4): no channel, so no second

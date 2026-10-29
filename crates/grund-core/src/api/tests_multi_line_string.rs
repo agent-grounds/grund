@@ -64,16 +64,16 @@ fn rewrite_lines(root: &Path) -> Vec<usize> {
 fn check_and_fmt_agree_across_a_rust_multi_line_string() {
     let source = "fn usage() -> &'static str {\n\
                   \x20   r#\"\n\
-                  Interior cites §FS-042.\n\
+                  Interior cites \u{a7}FS-042.\n\
                   \"#\n\
                   }\n\
                   fn hint() -> &'static str {\n\
                   \x20   \"first\n\
-                  Interior cites §FS-042.\n\
-                  last\" // Tail cites §FS-042.\n\
+                  Interior cites \u{a7}FS-042.\n\
+                  last\" // Tail cites \u{a7}FS-042.\n\
                   }\n\
                   const X: &str = r#\"one\n\
-                  \"#; // Closing tail cites §FS-042.\n";
+                  \"#; // Closing tail cites \u{a7}FS-042.\n";
     let root = rust_repo(
         "check_and_fmt_agree_across_a_rust_multi_line_string",
         source,
@@ -87,7 +87,7 @@ fn check_and_fmt_agree_across_a_rust_multi_line_string() {
 #[test]
 fn an_unclosed_raw_string_opens_nothing() {
     let source = "fn broken() { let s = r#\"never closed; }\n\
-                  // Later cites §FS-042.\n";
+                  // Later cites \u{a7}FS-042.\n";
     let root = rust_repo("an_unclosed_raw_string_opens_nothing", source);
     assert_eq!(reported_lines(&root), vec![2]);
     assert_eq!(rewrite_lines(&root), vec![2]);

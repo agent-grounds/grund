@@ -19,15 +19,15 @@ fn layout_fixture(name: &str) -> PathBuf {
     write(
         &root.join("src/auth.rs"),
         concat!(
-            "// §FS-001-login: reject an expired credential\n",
+            "// \u{a7}FS-001-login: reject an expired credential\n",
             "pub fn login() {}\n",
             "\n",
-            "// §FS-001-login reject an expired credential\n",
+            "// \u{a7}FS-001-login reject an expired credential\n",
             "pub fn relogin() {}\n",
             "\n",
             "// Walks the credential store.\n",
-            "// §FS-001-login: one error per expired credential.\n",
-            "// §FS-001-login — and one more, laid out wrong.\n",
+            "// \u{a7}FS-001-login: one error per expired credential.\n",
+            "// \u{a7}FS-001-login — and one more, laid out wrong.\n",
             "pub fn sweep() {}\n",
         ),
     );
@@ -255,10 +255,10 @@ fn a_line_can_break_the_layout_and_the_column_budget_at_once() {
     write(
         &root.join("src/auth.rs"),
         concat!(
-            "// §FS-001-login: short, and laid out the way the project asked\n",
+            "// \u{a7}FS-001-login: short, and laid out the way the project asked\n",
             "pub fn login() {}\n",
             "\n",
-            "// §FS-001-login and this one note opens with no colon at all and \
+            "// \u{a7}FS-001-login and this one note opens with no colon at all and \
              also runs well past the hundredth column on purpose\n",
             "pub fn sweep() {}\n",
         ),

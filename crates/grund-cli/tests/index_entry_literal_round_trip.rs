@@ -140,7 +140,7 @@ fn assert_printed_entries_repair(dir: &Path, case: &str, expected: usize) {
 }
 
 const LISTS_LOGIN: &str =
-    "# Specs\n\n- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)\n";
+    "# Specs\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)\n";
 
 #[test]
 fn the_printed_entry_repairs_the_index_under_strict_mode() {

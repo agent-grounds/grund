@@ -58,7 +58,7 @@ fn an_absorbed_scan_is_a_config_error_at_the_blocks_members_line() {
     );
     write(
         &root.join("docs/FS-001-root.md"),
-        "# FS-001-root: Root\n\nCited as §FS-001-root\n",
+        "# FS-001-root: Root\n\nCited as \u{a7}FS-001-root\n",
     );
     let err = check_with_opts(CheckOpts {
         path: root.clone(),
@@ -88,7 +88,7 @@ fn an_unread_opted_out_block_anchors_at_its_include_root_line() {
     );
     write(
         &root.join("docs/FS-001-root.md"),
-        "# FS-001-root: Root\n\nCited as §FS-001-root\n",
+        "# FS-001-root: Root\n\nCited as \u{a7}FS-001-root\n",
     );
     write(
         &root.join("group/grund.toml"),
@@ -107,11 +107,11 @@ fn an_unread_opted_out_block_anchors_at_its_include_root_line() {
     );
     write(
         &root.join("group/docs/FS-001-g.md"),
-        "# FS-001-g: Group\n\nRead by nobody, and cited as §FS-001-g\n",
+        "# FS-001-g: Group\n\nRead by nobody, and cited as \u{a7}FS-001-g\n",
     );
     write(
         &root.join("group/alpha/docs/FS-001-a.md"),
-        "# FS-001-a: Alpha\n\nCited as §FS-001-a\n",
+        "# FS-001-a: Alpha\n\nCited as \u{a7}FS-001-a\n",
     );
     assert_eq!(
         check_anchors(&root),
@@ -207,7 +207,7 @@ fn unlisted_block_snapshot(name: &str) -> crate::LspSnapshot {
     );
     write(
         &root.join("docs/FS-001-root.md"),
-        "# FS-001-root: Root\n\nCited as §FS-001-root\n",
+        "# FS-001-root: Root\n\nCited as \u{a7}FS-001-root\n",
     );
     write(
         &root.join("b/grund.toml"),
@@ -250,7 +250,7 @@ fn an_undecidable_ancestor_claim_anchors_at_the_config_with_no_line() {
     );
     write(
         &root.join("docs/FS-001-root.md"),
-        "# FS-001-root: Root\n\nCited as §FS-001-root\n",
+        "# FS-001-root: Root\n\nCited as \u{a7}FS-001-root\n",
     );
     write(
         &root.join("a/grund.toml"),
@@ -261,7 +261,7 @@ fn an_undecidable_ancestor_claim_anchors_at_the_config_with_no_line() {
     );
     write(
         &root.join("a/docs/FS-001-a.md"),
-        "# FS-001-a: A\n\nCited as §FS-001-a\n",
+        "# FS-001-a: A\n\nCited as \u{a7}FS-001-a\n",
     );
     let anchors = check_anchors(&root);
     assert_eq!(

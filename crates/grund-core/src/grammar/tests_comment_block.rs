@@ -18,25 +18,25 @@ fn rust_measures_slash_slash_but_not_slash_slash_slash_or_bang() {
         "rust_measures_slash_slash_but_not_slash_slash_slash_or_bang",
         "src/lib.rs",
         concat!(
-            "//! Module doc citing §FS-001-login in a sentence\n",
+            "//! Module doc citing \u{a7}FS-001-login in a sentence\n",
             "//! that wraps to a second line,\n",
             "//! and a third,\n",
             "//! and a fourth.\n",
             "\n",
-            "/// Documents §FS-001-login in a sentence\n",
+            "/// Documents \u{a7}FS-001-login in a sentence\n",
             "/// that wraps to a second line,\n",
             "/// and a third,\n",
             "/// and a fourth.\n",
             "pub fn login() {}\n",
             "\n",
-            "// Notes §FS-001-login in a comment\n",
+            "// Notes \u{a7}FS-001-login in a comment\n",
             "// that wraps to a second line,\n",
             "// and a third,\n",
             "// and a fourth.\n",
             "pub fn relogin() {}\n",
         ),
     );
-    assert_eq!(findings, over_the_line_cap(12, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(12, 4, "\u{a7}FS-001-login"));
 }
 
 /// §FS-inline-citation-style.1.2 (§FS-languages.comment-block.forms): a block comment runs from opener to closer,
@@ -50,21 +50,21 @@ fn java_measures_a_plain_block_comment_but_not_a_javadoc() {
         "src/App.java",
         concat!(
             "/**\n",
-            " * Documents §FS-001-login in a sentence\n",
+            " * Documents \u{a7}FS-001-login in a sentence\n",
             " * that wraps to a second line,\n",
             " * and a third.\n",
             " */\n",
             "class App {}\n",
             "\n",
             "/*\n",
-            " * Notes §FS-001-login in a comment\n",
+            " * Notes \u{a7}FS-001-login in a comment\n",
             " * that wraps to a second line,\n",
             " * and a third.\n",
             " */\n",
             "class Other {}\n",
         ),
     );
-    assert_eq!(findings, over_the_line_cap(8, 5, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(8, 5, "\u{a7}FS-001-login"));
 }
 
 /// §FS-inline-citation-style.1.1.2: exactly three slashes. A `////` run is a
@@ -76,14 +76,14 @@ fn a_four_slash_run_is_a_rule_line_not_a_doc_comment() {
         "a_four_slash_run_is_a_rule_line_not_a_doc_comment",
         "src/lib.rs",
         concat!(
-            "//// Notes §FS-001-login in a banner\n",
+            "//// Notes \u{a7}FS-001-login in a banner\n",
             "//// that wraps to a second line,\n",
             "//// and a third,\n",
             "//// and a fourth.\n",
             "pub fn login() {}\n",
         ),
     );
-    assert_eq!(findings, over_the_line_cap(1, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(1, 4, "\u{a7}FS-001-login"));
 }
 
 /// §FS-inline-citation-style.1.1.2: `/**/` is the empty block comment, not a
@@ -95,9 +95,9 @@ fn an_empty_block_comment_is_not_a_javadoc_opener() {
     let findings = inline_style_findings(
         "an_empty_block_comment_is_not_a_javadoc_opener",
         "src/App.java",
-        &format!("/**/ §FS-001-login {padding} */\nclass App {{}}\n"),
+        &format!("/**/ \u{a7}FS-001-login {padding} */\nclass App {{}}\n"),
     );
-    assert_eq!(findings, over_the_column_cap(1, 122, "§FS-001-login"));
+    assert_eq!(findings, over_the_column_cap(1, 122, "\u{a7}FS-001-login"));
 }
 
 /// §FS-inline-citation-style.1.1.2: `/**` and `/*!` both open documentation,
@@ -109,7 +109,7 @@ fn a_javadoc_or_bang_block_opener_is_a_doc_comment() {
         "a_javadoc_or_bang_block_opener_is_a_doc_comment",
         "src/App.java",
         &format!(
-            "/** §FS-001-login {padding} */\nclass App {{}}\n\n/*! §FS-001-login {padding} */\nclass Other {{}}\n"
+            "/** \u{a7}FS-001-login {padding} */\nclass App {{}}\n\n/*! \u{a7}FS-001-login {padding} */\nclass Other {{}}\n"
         ),
     );
     assert_eq!(findings, Vec::new());
@@ -122,20 +122,20 @@ fn python_measures_a_hash_block_but_not_a_docstring() {
         "src/auth.py",
         concat!(
             "def login():\n",
-            "    \"\"\"Documents §FS-001-login in a sentence\n",
+            "    \"\"\"Documents \u{a7}FS-001-login in a sentence\n",
             "    that wraps to a second line,\n",
             "    and a third,\n",
             "    and a fourth.\"\"\"\n",
             "\n",
             "\n",
-            "# Notes §FS-001-login in a comment\n",
+            "# Notes \u{a7}FS-001-login in a comment\n",
             "# that wraps to a second line,\n",
             "# and a third,\n",
             "# and a fourth.\n",
             "x = 1\n",
         ),
     );
-    assert_eq!(findings, over_the_line_cap(8, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(8, 4, "\u{a7}FS-001-login"));
 }
 
 /// §FS-inline-citation-style.1.1.2: PEP 257 says only a docstring is
@@ -147,7 +147,7 @@ fn a_python_hash_block_above_a_def_is_still_measured() {
         "a_python_hash_block_above_a_def_is_still_measured",
         "src/auth.py",
         concat!(
-            "# Notes §FS-001-login in a comment\n",
+            "# Notes \u{a7}FS-001-login in a comment\n",
             "# that wraps to a second line,\n",
             "# and a third,\n",
             "# and a fourth.\n",
@@ -155,7 +155,7 @@ fn a_python_hash_block_above_a_def_is_still_measured() {
             "    pass\n",
         ),
     );
-    assert_eq!(findings, over_the_line_cap(1, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(1, 4, "\u{a7}FS-001-login"));
 }
 
 #[test]
@@ -164,20 +164,20 @@ fn lua_measures_two_dashes_but_not_three() {
         "lua_measures_two_dashes_but_not_three",
         "src/mod.lua",
         concat!(
-            "--- Documents §FS-001-login in a sentence\n",
+            "--- Documents \u{a7}FS-001-login in a sentence\n",
             "-- that wraps to a second line,\n",
             "-- and a third,\n",
             "-- and a fourth.\n",
             "function login() end\n",
             "\n",
-            "-- Notes §FS-001-login in a comment\n",
+            "-- Notes \u{a7}FS-001-login in a comment\n",
             "-- that wraps to a second line,\n",
             "-- and a third,\n",
             "-- and a fourth.\n",
             "function relogin() end\n",
         ),
     );
-    assert_eq!(findings, over_the_line_cap(7, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(7, 4, "\u{a7}FS-001-login"));
 }
 
 #[test]
@@ -186,20 +186,20 @@ fn haskell_measures_a_plain_dash_run_but_not_a_haddock_bar() {
         "haskell_measures_a_plain_dash_run_but_not_a_haddock_bar",
         "src/Auth.hs",
         concat!(
-            "-- | Documents §FS-001-login in a sentence\n",
+            "-- | Documents \u{a7}FS-001-login in a sentence\n",
             "-- that wraps to a second line,\n",
             "-- and a third,\n",
             "-- and a fourth.\n",
             "login = ()\n",
             "\n",
-            "-- Notes §FS-001-login in a comment\n",
+            "-- Notes \u{a7}FS-001-login in a comment\n",
             "-- that wraps to a second line,\n",
             "-- and a third,\n",
             "-- and a fourth.\n",
             "relogin = ()\n",
         ),
     );
-    assert_eq!(findings, over_the_line_cap(7, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(7, 4, "\u{a7}FS-001-login"));
 }
 
 /// §FS-inline-citation-style.1.1.2: Haddock's other marker documents what
@@ -211,7 +211,7 @@ fn haskell_reads_a_haddock_caret_as_a_doc_comment_too() {
         "src/Auth.hs",
         concat!(
             "login = ()\n",
-            "-- ^ Documents §FS-001-login in a sentence\n",
+            "-- ^ Documents \u{a7}FS-001-login in a sentence\n",
             "-- that wraps to a second line,\n",
             "-- and a third,\n",
             "-- and a fourth.\n",
@@ -226,13 +226,13 @@ fn r_measures_a_hash_block_but_not_a_roxygen_run() {
         "r_measures_a_hash_block_but_not_a_roxygen_run",
         "src/auth.R",
         concat!(
-            "#' Documents §FS-001-login in a sentence\n",
+            "#' Documents \u{a7}FS-001-login in a sentence\n",
             "#' that wraps to a second line,\n",
             "#' and a third,\n",
             "#' and a fourth.\n",
             "login <- function() NULL\n",
             "\n",
-            "# Notes §FS-001-login in a comment\n",
+            "# Notes \u{a7}FS-001-login in a comment\n",
             "# that wraps to a second line,\n",
             "# and a third,\n",
             "# and a fourth.\n",
@@ -241,7 +241,7 @@ fn r_measures_a_hash_block_but_not_a_roxygen_run() {
         // `R` is outside the default `[scan] extensions`.
         |config| config.extensions.push("R".to_string()),
     );
-    assert_eq!(findings, over_the_line_cap(7, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(7, 4, "\u{a7}FS-001-login"));
 }
 
 /// §FS-inline-citation-style.1.1.1: an extension neither table names has no
@@ -253,13 +253,13 @@ fn an_unknown_extension_measures_every_block() {
         "an_unknown_extension_measures_every_block",
         "src/auth.ada",
         concat!(
-            "-- Documents §FS-001-login in a sentence\n",
+            "-- Documents \u{a7}FS-001-login in a sentence\n",
             "-- that wraps to a second line,\n",
             "-- and a third,\n",
             "-- and a fourth.\n",
             "procedure Login is begin null; end Login;\n",
             "\n",
-            "-- Notes §FS-001-login in a comment\n",
+            "-- Notes \u{a7}FS-001-login in a comment\n",
             "-- that wraps to a second line,\n",
             "-- and a third,\n",
             "-- and a fourth.\n",
@@ -269,8 +269,8 @@ fn an_unknown_extension_measures_every_block() {
     assert_eq!(
         findings,
         vec![
-            over_the_line_cap(1, 4, "§FS-001-login")[0].clone(),
-            over_the_line_cap(7, 4, "§FS-001-login")[0].clone(),
+            over_the_line_cap(1, 4, "\u{a7}FS-001-login")[0].clone(),
+            over_the_line_cap(7, 4, "\u{a7}FS-001-login")[0].clone(),
         ]
     );
 }
@@ -285,11 +285,11 @@ fn citation_only_does_not_reach_a_javadoc() {
         "src/App.java",
         concat!(
             "/**\n",
-            " * Documents §FS-001-login and says something about it.\n",
+            " * Documents \u{a7}FS-001-login and says something about it.\n",
             " */\n",
             "class App {}\n",
             "\n",
-            "/* §FS-001-login and a note beside the clause */\n",
+            "/* \u{a7}FS-001-login and a note beside the clause */\n",
             "class Other {}\n",
         ),
         |config| config.inline_style = "citation-only".to_string(),
@@ -320,11 +320,11 @@ fn the_note_layout_check_does_not_reach_a_doc_comment() {
         "src/lib.rs",
         concat!(
             "/// Walks the credential store.\n",
-            "/// §FS-001-login — and a sentence laid out as prose.\n",
+            "/// \u{a7}FS-001-login — and a sentence laid out as prose.\n",
             "pub fn login() {}\n",
             "\n",
             "// Walks the credential store.\n",
-            "// §FS-001-login — and a note laid out wrong.\n",
+            "// \u{a7}FS-001-login — and a note laid out wrong.\n",
             "pub fn relogin() {}\n",
         ),
         |config| {

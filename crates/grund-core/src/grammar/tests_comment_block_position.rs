@@ -14,14 +14,14 @@ fn go_measures_a_comment_that_is_not_above_a_definition() {
         concat!(
             "package auth\n",
             "\n",
-            "// Documents §FS-001-login in a sentence\n",
+            "// Documents \u{a7}FS-001-login in a sentence\n",
             "// that wraps to a second line,\n",
             "// and a third,\n",
             "// and a fourth.\n",
             "func Login() {}\n",
             "\n",
             "func Relogin() {\n",
-            "\t// Notes §FS-001-login in a comment\n",
+            "\t// Notes \u{a7}FS-001-login in a comment\n",
             "\t// that wraps to a second line,\n",
             "\t// and a third,\n",
             "\t// and a fourth.\n",
@@ -29,7 +29,7 @@ fn go_measures_a_comment_that_is_not_above_a_definition() {
             "}\n",
         ),
     );
-    assert_eq!(findings, over_the_line_cap(10, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(10, 4, "\u{a7}FS-001-login"));
 }
 
 /// §FS-inline-citation-style.1.1.1: the definition has to be the *next* line.
@@ -40,7 +40,7 @@ fn a_blank_line_before_the_definition_makes_the_block_a_note() {
     let adjacent = concat!(
         "package auth\n",
         "\n",
-        "// Documents §FS-001-login in a sentence\n",
+        "// Documents \u{a7}FS-001-login in a sentence\n",
         "// that wraps to a second line,\n",
         "// and a third,\n",
         "// and a fourth.\n",
@@ -58,7 +58,7 @@ fn a_blank_line_before_the_definition_makes_the_block_a_note() {
     let detached = concat!(
         "package auth\n",
         "\n",
-        "// Notes §FS-001-login in a comment\n",
+        "// Notes \u{a7}FS-001-login in a comment\n",
         "// that wraps to a second line,\n",
         "// and a third,\n",
         "// and a fourth.\n",
@@ -71,7 +71,7 @@ fn a_blank_line_before_the_definition_makes_the_block_a_note() {
             "src/auth.go",
             detached,
         ),
-        over_the_line_cap(3, 4, "§FS-001-login")
+        over_the_line_cap(3, 4, "\u{a7}FS-001-login")
     );
 }
 
@@ -84,12 +84,12 @@ fn ruby_reads_an_indented_def_as_a_definition() {
         "src/auth.rb",
         concat!(
             "class Auth\n",
-            "  # Documents §FS-001-login in a sentence\n",
+            "  # Documents \u{a7}FS-001-login in a sentence\n",
             "  # that wraps to a second line,\n",
             "  # and a third,\n",
             "  # and a fourth.\n",
             "  def login\n",
-            "    # Notes §FS-001-login in a comment\n",
+            "    # Notes \u{a7}FS-001-login in a comment\n",
             "    # that wraps to a second line,\n",
             "    # and a third,\n",
             "    # and a fourth.\n",
@@ -98,7 +98,7 @@ fn ruby_reads_an_indented_def_as_a_definition() {
             "end\n",
         ),
     );
-    assert_eq!(findings, over_the_line_cap(7, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(7, 4, "\u{a7}FS-001-login"));
 }
 
 #[test]
@@ -109,7 +109,7 @@ fn shell_reads_a_name_paren_definition() {
         concat!(
             "set -euo pipefail\n",
             "\n",
-            "# Documents §FS-001-login in a sentence\n",
+            "# Documents \u{a7}FS-001-login in a sentence\n",
             "# that wraps to a second line,\n",
             "# and a third,\n",
             "# and a fourth.\n",
@@ -117,7 +117,7 @@ fn shell_reads_a_name_paren_definition() {
             "  relog\n",
             "}\n",
             "\n",
-            "# Notes §FS-001-login in a comment\n",
+            "# Notes \u{a7}FS-001-login in a comment\n",
             "# that wraps to a second line,\n",
             "# and a third,\n",
             "# and a fourth.\n",
@@ -126,7 +126,7 @@ fn shell_reads_a_name_paren_definition() {
         // `sh` is outside the default `[scan] extensions`.
         |config| config.extensions.push("sh".to_string()),
     );
-    assert_eq!(findings, over_the_line_cap(11, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(11, 4, "\u{a7}FS-001-login"));
 }
 
 /// §FS-inline-citation-style.1.1.2: shell's other spelling, and the identifier
@@ -139,7 +139,7 @@ fn shell_reads_the_function_keyword_but_not_a_word_starting_with_it() {
         concat!(
             "set -euo pipefail\n",
             "\n",
-            "# Documents §FS-001-login in a sentence\n",
+            "# Documents \u{a7}FS-001-login in a sentence\n",
             "# that wraps to a second line,\n",
             "# and a third,\n",
             "# and a fourth.\n",
@@ -147,7 +147,7 @@ fn shell_reads_the_function_keyword_but_not_a_word_starting_with_it() {
             "  relog\n",
             "}\n",
             "\n",
-            "# Notes §FS-001-login in a comment\n",
+            "# Notes \u{a7}FS-001-login in a comment\n",
             "# that wraps to a second line,\n",
             "# and a third,\n",
             "# and a fourth.\n",
@@ -155,7 +155,7 @@ fn shell_reads_the_function_keyword_but_not_a_word_starting_with_it() {
         ),
         |config| config.extensions.push("sh".to_string()),
     );
-    assert_eq!(findings, over_the_line_cap(11, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(11, 4, "\u{a7}FS-001-login"));
 }
 
 #[test]
@@ -166,26 +166,26 @@ fn sql_reads_create_in_either_case() {
         concat!(
             "SET search_path = public;\n",
             "\n",
-            "-- Documents §FS-001-login in a sentence\n",
+            "-- Documents \u{a7}FS-001-login in a sentence\n",
             "-- that wraps to a second line,\n",
             "-- and a third,\n",
             "-- and a fourth.\n",
             "CREATE TABLE login (id int);\n",
             "\n",
-            "-- Documents §FS-001-login once more, in a sentence\n",
+            "-- Documents \u{a7}FS-001-login once more, in a sentence\n",
             "-- that wraps to a second line,\n",
             "-- and a third,\n",
             "-- and a fourth.\n",
             "create or replace function login_count() returns int as 'select 1';\n",
             "\n",
-            "-- Notes §FS-001-login in a comment\n",
+            "-- Notes \u{a7}FS-001-login in a comment\n",
             "-- that wraps to a second line,\n",
             "-- and a third,\n",
             "-- and a fourth.\n",
             "INSERT INTO login VALUES (1);\n",
         ),
     );
-    assert_eq!(findings, over_the_line_cap(15, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(15, 4, "\u{a7}FS-001-login"));
 }
 
 /// §FS-inline-citation-style.1.1.1: a position language's file header is its
@@ -196,7 +196,7 @@ fn the_leading_comment_of_a_position_language_documents_the_file() {
     let with_shebang = concat!(
         "#!/usr/bin/env bash\n",
         "\n",
-        "# Documents §FS-001-login in a sentence\n",
+        "# Documents \u{a7}FS-001-login in a sentence\n",
         "# that wraps to a second line,\n",
         "# and a third,\n",
         "# and a fourth.\n",
@@ -214,7 +214,7 @@ fn the_leading_comment_of_a_position_language_documents_the_file() {
 
     let without_shebang = concat!(
         "\n",
-        "# Documents §FS-001-login in a sentence\n",
+        "# Documents \u{a7}FS-001-login in a sentence\n",
         "# that wraps to a second line,\n",
         "# and a third,\n",
         "# and a fourth.\n",
@@ -241,7 +241,7 @@ fn a_block_below_the_first_line_of_code_is_not_the_leading_comment() {
         concat!(
             "echo start\n",
             "\n",
-            "# Notes §FS-001-login in a comment\n",
+            "# Notes \u{a7}FS-001-login in a comment\n",
             "# that wraps to a second line,\n",
             "# and a third,\n",
             "# and a fourth.\n",
@@ -249,5 +249,5 @@ fn a_block_below_the_first_line_of_code_is_not_the_leading_comment() {
         ),
         |config| config.extensions.push("sh".to_string()),
     );
-    assert_eq!(findings, over_the_line_cap(3, 4, "§FS-001-login"));
+    assert_eq!(findings, over_the_line_cap(3, 4, "\u{a7}FS-001-login"));
 }

@@ -55,19 +55,19 @@ fn unlisted_block_repo_at(root: PathBuf) -> PathBuf {
     );
     write(
         &root.join("docs/FS-001-root.md"),
-        "# FS-001-root: Root\n\nThe root project, cited as §FS-001-root\n",
+        "# FS-001-root: Root\n\nThe root project, cited as \u{a7}FS-001-root\n",
     );
     write(
         &root.join("a/docs/FS-001-alpha.md"),
-        "# FS-001-alpha: A\n\nA listed member, cited as §FS-001-alpha\n",
+        "# FS-001-alpha: A\n\nA listed member, cited as \u{a7}FS-001-alpha\n",
     );
     write(
         &root.join("b/docs/FS-001-beta.md"),
-        "# FS-001-beta: B\n\nInside the unlisted block, cited as §FS-001-beta, and citing §c/FS-001-gamma\n",
+        "# FS-001-beta: B\n\nInside the unlisted block, cited as \u{a7}FS-001-beta, and citing §c/FS-001-gamma\n",
     );
     write(
         &root.join("b/c/docs/FS-001-gamma.md"),
-        "# FS-001-gamma: C\n\nUnder the unlisted block, cited as §FS-001-gamma\n",
+        "# FS-001-gamma: C\n\nUnder the unlisted block, cited as \u{a7}FS-001-gamma\n",
     );
     root
 }
@@ -260,7 +260,7 @@ fn only_the_outermost_unlisted_block_of_a_chain_is_reported() {
     );
     write(
         &root.join("b/c/d/docs/FS-001-delta.md"),
-        "# FS-001-delta: D\n\nTwo levels down, cited as §FS-001-delta\n",
+        "# FS-001-delta: D\n\nTwo levels down, cited as \u{a7}FS-001-delta\n",
     );
     let run = check_run(&root, false);
     assert_eq!(
@@ -293,15 +293,15 @@ fn a_nested_config_with_no_workspace_table_is_not_reported() {
     );
     write(
         &root.join("docs/FS-001-root.md"),
-        "# FS-001-root: Root\n\nThe root project, cited as §FS-001-root\n",
+        "# FS-001-root: Root\n\nThe root project, cited as \u{a7}FS-001-root\n",
     );
     write(
         &root.join("a/docs/FS-001-alpha.md"),
-        "# FS-001-alpha: A\n\nA listed member, cited as §FS-001-alpha\n",
+        "# FS-001-alpha: A\n\nA listed member, cited as \u{a7}FS-001-alpha\n",
     );
     write(
         &root.join("b/docs/FS-001-beta.md"),
-        "# FS-001-beta: B\n\nOrdinary tree, cited as §FS-001-beta\n",
+        "# FS-001-beta: B\n\nOrdinary tree, cited as \u{a7}FS-001-beta\n",
     );
     let run = check_run(&root, false);
     assert!(
@@ -365,11 +365,11 @@ fn the_runs_own_workspace_root_is_never_reported_under_full() {
     );
     write(
         &root.join("docs/FS-001-root.md"),
-        "# FS-001-root: Root\n\nThe root project, cited as §FS-001-root\n",
+        "# FS-001-root: Root\n\nThe root project, cited as \u{a7}FS-001-root\n",
     );
     write(
         &root.join("a/docs/FS-001-alpha.md"),
-        "# FS-001-alpha: A\n\nA listed member, cited as §FS-001-alpha\n",
+        "# FS-001-alpha: A\n\nA listed member, cited as \u{a7}FS-001-alpha\n",
     );
     let run = check_run(&root, true);
     assert!(
