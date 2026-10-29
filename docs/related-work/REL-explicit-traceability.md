@@ -52,14 +52,16 @@ no sentence of this entry rests on them.
 **Issue keys in commits.** Christian Bird, Adrian Bachmann, Eirik Aune, John Duffy,
 Abraham Bernstein, Vladimir Filkov and Premkumar Devanbu, *Fair and Balanced? Bias in
 Bug-Fix Datasets*, ESEC/FSE 2009, pages 121–130, DOI 10.1145/1595696.1595716
-([open copy](https://www.zora.uzh.ch/id/eprint/25866/)), observe that "only a fraction of
-bug fixes are actually labelled in source code version histories" and find "strong
-evidence of systematic bias" in the labelled part. Adrian Bachmann, Christian Bird,
+([open copy](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/bird2009fbb.pdf)),
+observe that "only a fraction of bug fixes are actually labelled in source code version
+histories" and find "strong evidence of systematic bias" in the labelled part.
+Adrian Bachmann, Christian Bird,
 Foyzur Rahman, Premkumar Devanbu and Abraham Bernstein, *The Missing Links: Bugs and
 Bug-Fix Commits*, FSE 2010, pages 97–106, DOI 10.1145/1882291.1882308
-([open copy](https://www.zora.uzh.ch/id/eprint/44841/)), had a core developer of the
-Apache HTTP server annotate 493 commits exhaustively, and report "serious and
-consequential problems in the data". Michael Rath, Jacob Rendall, Jin L. C. Guo, Jane
+([open copy](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/bachmann2010mlb.pdf)),
+had a core developer of the Apache HTTP server annotate 493 commits exhaustively, and
+report "serious and consequential problems in the data". Michael Rath,
+Jacob Rendall, Jin L. C. Guo, Jane
 Cleland-Huang and Patrick Mäder, *Traceability in the Wild: Automatically Augmenting
 Incomplete Trace Links*, ICSE 2018, pages 834–845, DOI 10.1145/3180155.3180207
 ([arXiv](https://arxiv.org/abs/1804.02433)), note that version control lets developers
