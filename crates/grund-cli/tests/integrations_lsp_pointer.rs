@@ -53,7 +53,6 @@ fn run(case: &str, vars: &[(&str, &str)], args: &[&str]) -> (Option<i32>, String
 /// is about gets the catalog, and the catalog has to tell them where their
 /// editor's integration is.
 #[test]
-#[ignore = "red until #1074 closes detection on the way to grund-lsp; implement removes this"]
 fn the_catalog_an_intellij_terminal_gets_closes_on_the_way_to_grund_lsp() {
     let jediterm = [
         ("TERM", "xterm-256color"),
@@ -80,7 +79,6 @@ fn the_catalog_an_intellij_terminal_gets_closes_on_the_way_to_grund_lsp() {
 /// §FS-integrations.2.1, §FS-integrations.2.3: a detected client closes with the
 /// same lines as the catalog, so a user in WezTerm learns of `grund-lsp` too.
 #[test]
-#[ignore = "red until #1074 closes detection on the way to grund-lsp; implement removes this"]
 fn a_detected_client_closes_on_the_same_way_to_grund_lsp() {
     let expected = format!(
         "{}{CLOSING}",

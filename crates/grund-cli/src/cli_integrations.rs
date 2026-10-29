@@ -12,6 +12,12 @@
 const SETUP_GUIDE_URL: &str =
     "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/clickable-citations.md";
 
+/// The LSP guide, named by detection and by the `-h` page after the setup guide
+/// (§FS-integrations.2.3): every editor's `grund-lsp` setup, the LSP4IJ import
+/// among them, is written down there.
+const LSP_GUIDE_URL: &str =
+    "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/lsp.md";
+
 /// Parsed `grund integrations` invocation: the engine's options, and the format
 /// that is the CLI's own.
 struct IntegrationsInvocation {
@@ -232,7 +238,7 @@ fn command_integrations(args: &[String]) -> ExitCode {
 }
 
 /// No-client detection print (§FS-integrations.2.2). Environment-dependent, so it
-/// is never goldened; exit is always `0`.
+/// is byte-stable only for a fixed environment; exit is always `0`.
 fn print_detection(out: &IntegrationsOutput, json: bool) {
     if json {
         print!("{}", detection_plan_json(out));
@@ -254,6 +260,11 @@ fn print_detection(out: &IntegrationsOutput, json: bool) {
     // The prerequisites and the per-client manual step live in the guide, and
     // this is the command a user reaches first (§FS-integrations.2.1).
     println!("Setup guide: {SETUP_GUIDE_URL}");
+    // Editor navigation is grund-lsp's, not these clients' (§FS-integrations.2.3).
+    println!(
+        "Editors get go-to-definition and hover from grund-lsp (IntelliJ: `grund-lsp integrations lsp4ij`)."
+    );
+    println!("LSP guide: {LSP_GUIDE_URL}");
 }
 
 /// The machine-shaped detection plan (§FS-integrations.5): detected clients in

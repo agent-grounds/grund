@@ -22,7 +22,8 @@ fn print_help() {
     println!("  init          Scaffold agent instructions + grund.toml.               grund init --scaffold");
     println!("  config        Validate or show grund.toml; explain a key or a code.   grund config show");
     println!("  schema        Kinds, places, shapes and citation rules at a glance.   grund schema");
-    println!("  integrations  Print/install clickable-citation integrations.          grund integrations wezterm");
+    // The row names grund-lsp for LSP editors (§FS-integrations.2.3).
+    println!("  integrations  Clickable-citation clients; LSP editors use grund-lsp.  grund integrations wezterm");
     println!("  completions   Print shell completion scripts.                         grund completions bash");
     println!();
     println!("Guides and examples:  https://github.com/agent-grounds/grund/tree/main/docs/user-facing");
@@ -268,6 +269,13 @@ fn print_subcommand_help(cmd: &str) {
             println!("addresses its declaration; --agent scopes that choice to one agent instead");
             println!("of the machine. --format json emits a plan.");
             println!();
+            // Editor navigation is grund-lsp's, not these clients' (§FS-integrations.2.3).
+            println!(
+                "Go-to-definition, hover and completion in an editor come from grund-lsp, not"
+            );
+            println!("from these integrations; IntelliJ-family editors get them through");
+            println!("`grund-lsp integrations lsp4ij`.");
+            println!();
             println!("Options:");
             print_run_flag_help("grund integrations", false);
             println!();
@@ -287,10 +295,8 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "Exit:  0 printed or installed · 2 invalid options, missing write target, or a newer block."
             );
-            print_guide_links(
-                &["https://github.com/agent-grounds/grund/blob/main/docs/user-facing/clickable-citations.md"],
-                &[],
-            );
+            // The setup guide, then the LSP guide, as detection names them (§FS-integrations.2.3).
+            print_guide_links(&[SETUP_GUIDE_URL, LSP_GUIDE_URL], &[]);
         }
         // §FS-init.5, §FS-cli.2.3.1: the section names are read from the one table.
         "guide" => {
