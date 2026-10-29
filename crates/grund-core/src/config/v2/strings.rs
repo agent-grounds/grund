@@ -15,6 +15,10 @@ use crate::config::v1::{
     bail_config, list_elements, parse_string, parse_string_list, string_close,
 };
 
+/// The clause the refusal of an array that read through the 0.21.x trailing-comma window
+/// ends with (§FS-config-v2.reader.5.commas.refusal).
+const COMMA_WINDOW_CLOSED: &str = "; this became an error in grund 0.22.0";
+
 /// A string the readers before grund 0.22.0 read past its closing quote, the 0.21.x
 /// window's (§FS-config-v2.reader.6.window), which version 2 now refuses
 /// (§FS-config-v2.reader.6.refusal) and migrate refuses to carry
@@ -83,13 +87,32 @@ pub(crate) fn read_string_list_as_before<'a>(
     line: usize,
     value: &'a str,
 ) -> Result<(Vec<String>, Vec<EarlyClose<'a>>)> {
+    read_elements(path, line, value, false)
+}
+
+/// [`read_string_list`], with the empty element's `expected string` naming grund 0.22.0
+/// where `through_window` says the array's text read through the 0.21.x trailing-comma
+/// window (§FS-config-v2.reader.5.commas.refusal). Only an empty element's refusal takes
+/// it: an element refused before the empty one is reached was refused in 0.21.x too.
+fn read_elements<'a>(
+    path: &Path,
+    line: usize,
+    value: &'a str,
+    through_window: bool,
+) -> Result<(Vec<String>, Vec<EarlyClose<'a>>)> {
     // A value that is not bracketed is refused as version 1 refuses it.
     let Some(elements) = list_elements(value) else {
         return Ok((parse_string_list(path, line, value)?, Vec::new()));
     };
     let read = elements
         .iter()
-        .map(|element| basic_string(path, line, element))
+        .map(|element| {
+            if element.is_empty() && through_window {
+                bail_config(path, line, format!("expected string{COMMA_WINDOW_CLOSED}"))
+            } else {
+                basic_string(path, line, element)
+            }
+        })
         .collect::<Result<_>>()?;
     let early = elements
         .into_iter()
@@ -110,16 +133,18 @@ pub(crate) fn read_string(path: &Path, line: usize, value: &str) -> Result<Strin
 }
 
 /// §FS-config-v2.reader.6.refusal: a version-2 string list at `line`, written across
-/// `lines`, refused once at `line` for the first element that closes early. A `"""`
-/// string a line break runs through is #1089's construct, still read through its own
-/// window (§FS-config-v2.reader.6.multi-line, §FS-config-v2.reader.5.strings.window).
+/// `lines`, refused once at `line` for the first element that closes early, and its empty
+/// element naming grund 0.22.0 where its text read through the trailing-comma window
+/// (§FS-config-v2.reader.5.commas.refusal). A `"""` string a line break runs through is
+/// #1089's construct, still read through its own window (§FS-config-v2.reader.6.multi-line,
+/// §FS-config-v2.reader.5.strings.window).
 pub(crate) fn read_string_list(
     path: &Path,
     line: usize,
     value: &str,
     lines: &JoinedLines,
 ) -> Result<Vec<String>> {
-    let (read, early) = read_string_list_as_before(path, line, value)?;
+    let (read, early) = read_elements(path, line, value, lines.through_window)?;
     match early
         .iter()
         .find(|early| !lines.is_multi_line_over_break(early))
@@ -159,16 +184,22 @@ fn literal_form(written: &str) -> Option<&'static str> {
 }
 
 /// The lines a value was written across, as `joined_value` joined them: its key's line
-/// and where each later one starts in the value (§FS-config-v2.reader.5).
+/// and where each later one starts in the value (§FS-config-v2.reader.5), and whether its
+/// text read through the 0.21.x trailing-comma window (§FS-config-v2.reader.5.commas.refusal).
 #[derive(Default)]
 pub(crate) struct JoinedLines {
     line: usize,
     starts: Vec<usize>,
+    through_window: bool,
 }
 
 impl JoinedLines {
-    pub(crate) fn new(line: usize, starts: Vec<usize>) -> Self {
-        Self { line, starts }
+    pub(crate) fn new(line: usize, starts: Vec<usize>, through_window: bool) -> Self {
+        Self {
+            line,
+            starts,
+            through_window,
+        }
     }
 
     /// The line the byte at `offset` in the value was written on.

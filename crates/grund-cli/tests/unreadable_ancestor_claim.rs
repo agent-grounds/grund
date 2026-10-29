@@ -263,7 +263,6 @@ fn an_ancestor_members_string_that_never_closes_is_not_a_list() {
 /// it as `expected string` with 0.22.0's suffix, so the claim is undecidable whatever the list
 /// names: the quiet climb records nothing and leaves the block unreported.
 #[test]
-#[ignore = "red until #1098 makes the climb read a doubled comma as not a list; implement removes this"]
 fn an_ancestor_members_list_with_a_doubled_comma_is_not_a_list() {
     for members in ["[\"elsewhere\",,]", "[\"project/packages/hub\",,]"] {
         let outer = Outer::listing(members);

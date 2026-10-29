@@ -99,7 +99,6 @@ fn joined(text: &str) -> Option<String> {
 /// §FS-config-v2.reader.5.commas: `joined_value` takes off at most one comma before the `]`,
 /// and only one with an element before it; every other comma stays for the element reader.
 #[test]
-#[ignore = "red until #1098 makes array_value take off at most one comma; implement removes this"]
 fn only_one_trailing_comma_after_an_element_comes_off_before_the_bracket() {
     for (text, off) in [
         ("[\"ab\",,]", 0),
@@ -134,7 +133,6 @@ fn only_one_trailing_comma_after_an_element_comes_off_before_the_bracket() {
 /// the window as `expected string` with 0.22.0's suffix, at its key's line, and each shape it
 /// refused before with the bare message.
 #[test]
-#[ignore = "red until #1098 refuses a comma with no element before it; implement removes this"]
 fn a_comma_with_no_element_before_it_is_refused_naming_0_22_where_it_loaded_before() {
     let became = "grund.toml:2: expected string; this became an error in grund 0.22.0";
     for text in [

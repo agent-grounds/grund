@@ -70,7 +70,8 @@ pub(crate) fn unloaded_string_list(
     starts: Vec<usize>,
 ) -> Option<Vec<String>> {
     if version_2 {
-        let lines = v2::JoinedLines::new(line, starts);
+        // Only `Ok` and `Err` are read here, so the refusal's 0.22.0 clause is moot.
+        let lines = v2::JoinedLines::new(line, starts, false);
         v2::read_string_list(path, line, value, &lines).ok()
     } else {
         v1::parse_string_list(path, line, value).ok()
