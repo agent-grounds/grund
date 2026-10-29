@@ -1,0 +1,13 @@
+digraph schema {
+  // skerry · grund.toml · v2
+  // must = check error · warn = check warning · should = suggestion (check --suggestions)
+  // may = allowed · must not / warn not / should not = forbidden at that strength
+  // any of = one obligation, met by citing any one of its arrows
+  rankdir=LR;
+  node [shape=box];
+  subgraph cluster_unruled {
+    label="no direction rule names these";
+    n0 [label="RFC\nkind\nrfcs/text/\nfield summary: must · first · titled `Summary`\nfield motivation: must · after summary · titled `Motivation`\nfield guide-level-explanation: must · after motivation · titled `Guide-level explanation`\nfield drawbacks: may · after guide-level-explanation · titled `Drawbacks & \"open\" *questions*`\nfield amendments: may · last\nclosed must"];
+    n1 [label="code\ncomplement\nevery scanned file no other row claims"];
+  }
+}

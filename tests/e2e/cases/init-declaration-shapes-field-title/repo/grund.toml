@@ -1,0 +1,37 @@
+grund_config_version = 2
+project_name = "skerry"
+
+[schema]
+id_format = "{kind}-{number}-{slug}"
+
+[schema.kinds.RFC]
+folders = ["rfcs/text"]
+index = false
+closed = "must"
+
+[schema.kinds.RFC.fields.summary]
+title = "Summary"
+presence = "must"
+position = "first"
+
+[schema.kinds.RFC.fields.motivation]
+title = "Motivation"
+presence = "must"
+after = "summary"
+
+[schema.kinds.RFC.fields.guide-level-explanation]
+title = "Guide-level explanation"
+presence = "must"
+after = "motivation"
+
+[schema.kinds.RFC.fields.drawbacks]
+title = "Drawbacks & \"open\" *questions*"
+presence = "may"
+after = "guide-level-explanation"
+
+[schema.kinds.RFC.fields.amendments]
+presence = "may"
+position = "last"
+
+[presentation]
+rules = "root"

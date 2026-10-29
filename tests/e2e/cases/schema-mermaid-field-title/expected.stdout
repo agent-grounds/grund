@@ -1,0 +1,11 @@
+flowchart LR
+  %% skerry · grund.toml · v2
+  %% must = check error · warn = check warning · should = suggestion (check --suggestions)
+  %% may = allowed · must not / warn not / should not = forbidden at that strength
+  %% any of = one obligation, met by citing any one of its arrows
+  classDef place stroke-dasharray:5 5
+  classDef unscanned stroke-dasharray:2 2
+  subgraph unruled["no direction rule names these"]
+    n0["RFC<br/>kind<br/>rfcs/text/<br/>field summary: must · first · titled `Summary`<br/>field motivation: must · after summary · titled `Motivation`<br/>field guide-level-explanation: must · after motivation · titled `Guide-level explanation`<br/>field drawbacks: may · after guide-level-explanation · titled `Drawbacks #amp; #quot;open#quot; *questions*`<br/>field amendments: may · last<br/>closed must"]
+    n1["code<br/>complement<br/>every scanned file no other row claims"]
+  end

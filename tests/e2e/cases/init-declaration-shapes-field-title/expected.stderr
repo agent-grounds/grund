@@ -1,0 +1,7 @@
+wrote AGENTS.md
+exists grund.toml
+
+next:
+  1. run `grund check`
+  2. allocate an ID:  ID=$(grund id RFC "…")  then add it under rfcs/text
+see AGENTS.md for the full workflow.
