@@ -1,5 +1,6 @@
-//! The fresh config's one comment (§FS-init.2.4.5) through the ordinary e2e
-//! runner: the marker is a default, so `grund config show` names it, not the file.
+//! The fresh config's one comment (§FS-init.2.4.5), in the sentence of
+//! §FS-config.4.2.3.1, through the ordinary e2e runner: the marker is a default,
+//! so `grund config show` names it, not the file.
 
 use std::fs;
 use std::path::PathBuf;
@@ -24,9 +25,9 @@ fn assert_fresh_comments(case: &str, comments: usize) {
     assert_eq!(
         config.lines().next(),
         Some(
-            "# Only what differs from grund's defaults; `grund config show` prints every setting."
+            "# Only non-defaults; `grund config show` prints what applies, `grund config explain` every setting."
         ),
-        "{case}: the first line says where every setting is printed"
+        "{case}: the first line says what `show` prints and names `explain` for the rest"
     );
     assert!(
         !config.lines().any(|line| line.contains("marker")),

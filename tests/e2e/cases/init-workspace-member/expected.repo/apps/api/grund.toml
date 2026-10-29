@@ -1,4 +1,4 @@
-# Only what differs from grund's defaults; `grund config show` prints every setting.
+# Only non-defaults; `grund config show` prints what applies, `grund config explain` every setting.
 grund_config_version = 2
 project_name = "api"
 

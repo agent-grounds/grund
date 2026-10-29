@@ -119,13 +119,14 @@ fn show(target: &Path) -> (bool, String) {
     )
 }
 
-/// A fresh starter for `template`, asserted to be version 2 (§FS-init.2.4.3).
+/// A fresh starter for `template`, asserted to be version 2 (§FS-init.2.4.3) and to
+/// open with the comment of §FS-config.4.2.3.1.
 fn fresh_starter(case: &str, template: &str) -> (std::path::PathBuf, String) {
     let target = workdir(case);
     let (ok, stderr) = init(&target, &[&format!("--template={template}")]);
     assert!(ok, "{stderr}");
     let config = fs::read_to_string(target.join("grund.toml")).unwrap();
-    let head = "# Only what differs from grund's defaults; `grund config show` prints every setting.\n\
+    let head = "# Only non-defaults; `grund config show` prints what applies, `grund config explain` every setting.\n\
                 grund_config_version = 2\nproject_name = \"demo\"\n";
     assert!(config.starts_with(head), "{template} starter:\n{config}");
     (target, config)

@@ -5,6 +5,7 @@ Usage:  grund config <show | validate> [PATH]
         grund config migrate --to 2 [PATH] [--write] [--drop-comments] [--full]
 
   show       print the effective config as TOML in the file's own version (defaults filled in for keys you didn't set).
+             It prints what applies, not an opt-in table that is off; `grund config explain` answers for every setting.
   validate   parse the discovered config and report the first error; exit 0 if it's well-formed.
   explain    say what a table, a key or a check code is, in the version the file is read as; with no target, list
              the tables. It reads the file's version and nothing else, so a config other commands refuse is answered.
