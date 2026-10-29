@@ -392,7 +392,7 @@ Retired: these sentences once moved no managed-block version, because `check` di
 
 ### 5.7 `grund config show` is the machine-readable form
 
-`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) is the canonical machine-readable form: each inline-style setting is printed, in the config file's own version, at its value with no collapse ([§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)), so a human or downstream tool diffing config sees the raw shape.
+`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) is the canonical machine-readable form: each inline-style setting in effect is printed, in the config file's own version, at its value with no collapse ([§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)), so a human or downstream tool diffing config sees the raw shape. In a version-2 file one that is off, such as `[schema.notes.layout]` while no layout is required, prints nothing, and `grund config explain` answers for it ([§FS-config.4.2.3.1](FS-config.md#4231-what-sends-a-reader-to-show-names-explain)).
 
 ## 6. Non-goals
 

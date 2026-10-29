@@ -12,26 +12,34 @@ const SENTENCE: &str =
     "`grund config show` prints what applies, `grund config explain` every setting";
 
 /// The claims a place made before #1068: that `show` prints every setting.
-const OVERCLAIMS: [&str; 5] = [
+const OVERCLAIMS: [&str; 6] = [
     "prints every setting",
     "prints every effective setting",
     "every effective setting is printed",
+    "each inline-style setting is printed",
     "prints each setting",
     "prints the table each one lives in",
 ];
 
-/// The places that send a reader to `grund config show`: each paragraph that
-/// names it also names `grund config explain`.
-const POINTERS: [&str; 10] = [
+/// The places that send a reader to `grund config show`, as §FS-config.4.2.3.1
+/// names them: the `init` templates, both copies of `grund guide config`, and the
+/// guides (`grund guide schema` among them), examples and README that say what
+/// `show` prints or present it as where a reader finds a setting. Each paragraph
+/// in them that names `show` also names `grund config explain`.
+const POINTERS: [&str; 14] = [
     "crates/grund-core/assets/templates/software-development/grund.toml",
     "crates/grund-core/assets/templates/none/grund.toml",
     "skills/grund-init/references/config.md",
     "crates/grund-core/assets/skills/grund-init/references/config.md",
+    "skills/grund-init/references/schema.md",
+    "crates/grund-core/assets/skills/grund-init/references/schema.md",
     "README.md",
     "docs/user-facing/init.md",
     "docs/user-facing/setup.md",
+    "docs/user-facing/schema.md",
     "examples/init-template-none/README.md",
     "examples/quickstart/README.md",
+    "examples/schema/README.md",
     "docs/user-facing/configuration.md",
 ];
 
