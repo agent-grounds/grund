@@ -6,6 +6,7 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+use super::off_format_citations::check_off_format_citations;
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::sections::retain_heading_findings_in_scope;
 use crate::config::{Frame, Nesting, Schema, source_scope_name, unwalked_home_roots};
@@ -340,6 +341,8 @@ pub(crate) fn out_of_scope_references(
         Some(scope),
         &mut tier,
     );
+    // §FS-check.3.14.2: the off-format verdict is the tier's too.
+    check_off_format_citations(findings, schema, Some(scope), &mut tier);
     tier.errors
         .into_iter()
         .map(|diagnostic| tag_out_of_scope_for_version(diagnostic, frame.version))

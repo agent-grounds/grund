@@ -1,9 +1,9 @@
 //! The reference-resolution rule family — dangling citations (§FS-check.3.1),
 //! missing sections (§FS-check.3.2), unknown project aliases (§FS-check.3.8),
-//! unresolved number-only shorthands (§FS-check.3.13), and the off-format
-//! citations of `off_format_citations.rs` (§FS-check.checks.off-format-citation).
-//! The scope layer that decides where the family is reported is its
-//! `reference_scope.rs` sibling
+//! and unresolved number-only shorthands (§FS-check.3.13); its callers enter
+//! the off-format citations of `off_format_citations.rs` beside it
+//! (§FS-check.checks.off-format-citation). The scope layer that decides where
+//! the family is reported is its `reference_scope.rs` sibling
 //! (§FS-check.1.3, §FS-check.3.14, §AR-checker.2.13,
 //! §AR-core-module-layout.1.5).
 //!
@@ -12,7 +12,6 @@
 //! leaves out, while every other rule stays inside the configured scope
 //! (§AR-core-module-layout.1).
 
-use super::off_format_citations::check_off_format_citations;
 use super::reference_scope::ScanScope;
 use super::shorthand::{ShorthandIndexes, report_shorthand_citation};
 use super::snapshots::{Resolve, snapshot_warns};
@@ -185,8 +184,6 @@ pub(super) fn check_citation_resolution(
             authority: Vec::new(),
         });
     }
-    // §FS-check.3.14.2: a verdict on the citing token and the catalog it names.
-    check_off_format_citations(findings, schema, outside, report);
     let mut shorthand_indexes = ShorthandIndexes::default();
     // §FS-workspace.5.1.1: diagnostic-only, discovered once and only when a
     // member-local refusal needs it; loaded-workspace scope/candidate hints stay intact.

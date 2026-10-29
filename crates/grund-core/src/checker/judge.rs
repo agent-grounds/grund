@@ -13,6 +13,7 @@ use super::grounding::check_grounding;
 use super::homes::KindHomeIndex;
 use super::index::check_kind_indexes;
 use super::index_entries::KindIndexEntries;
+use super::off_format_citations::check_off_format_citations;
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::section_lock::check_section_locks;
 use super::snapshots::arm_missing_snapshot;
@@ -102,6 +103,8 @@ pub(crate) fn judge(
         None,
         &mut report,
     );
+    // §FS-check.3.14.2: a verdict on the citing token and the catalog it names.
+    check_off_format_citations(findings, schema, None, &mut report);
     // §AR-checker.2.18 / §FS-values.5: ordinary resolution runs first and the
     // focused pass suppresses comparison at every unresolved or ambiguous site.
     check_values(findings, schema, frame, targets, &mut report);
