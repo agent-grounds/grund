@@ -4,6 +4,7 @@ use crate::grammar::render_id;
 use crate::grammar::{is_inside_inline_code, render_catalog_id};
 use crate::model::remedies;
 use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
+use crate::sources::path_exists;
 
 /// §FS-check.3.1: the dangling message. A near same-kind ID is a likely typo; a
 /// Markdown inline-code context is a likely illustration. Offer whichever
@@ -86,7 +87,7 @@ fn missing_places(schema: &Schema, frame: Frame<'_>, kind: &str) -> Option<Strin
         let (Extent::File(path) | Extent::Folder(path)) = &place.extent else {
             return None;
         };
-        if frame.run.root.join(path).exists() {
+        if path_exists(frame.run.root.join(path)) {
             return None;
         }
         let source = place.source.as_ref()?;
