@@ -13,14 +13,8 @@ pub(crate) fn config_multiline_string(line: impl Display) -> String {
     fill(Code::CONFIG_MULTILINE_STRING, 2, None, slots)
 }
 
-/// `config-not-toml`'s *Fix*, case `open-line` (§FS-config-v2.checks.config-not-toml).
-pub(crate) fn config_not_toml_open_line(line: impl Display) -> String {
+/// `config-not-toml`'s *Fix* (§FS-config-v2.checks.config-not-toml).
+pub(crate) fn config_not_toml(line: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("line", &line)];
-    fill(Code::CONFIG_NOT_TOML, 2, Some("open-line"), slots)
-}
-
-/// `config-not-toml`'s *Fix*, case `commas` (§FS-config-v2.checks.config-not-toml).
-pub(crate) fn config_not_toml_commas(line: impl Display) -> String {
-    let slots: &[(&str, &dyn Display)] = &[("line", &line)];
-    fill(Code::CONFIG_NOT_TOML, 2, Some("commas"), slots)
+    fill(Code::CONFIG_NOT_TOML, 2, None, slots)
 }
