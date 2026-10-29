@@ -40,7 +40,7 @@ pub(super) struct Reader<'a> {
     pub(super) row_ladders: Vec<(String, usize)>,
     /// The kind each `[presentation.kinds.<NAME>]` names, at its header.
     pub(super) presentation_kinds: Vec<(String, usize)>,
-    /// The lines the value being read was written across (§FS-config-v2.reader.6.window).
+    /// The lines the value being read was written across (§FS-config-v2.reader.6.multi-line).
     pub(super) value: JoinedLines,
     headers: BTreeMap<String, usize>,
     header: String,
@@ -279,7 +279,7 @@ pub(crate) struct Joined {
     /// the `]` (§FS-config-v2.reader.5.commas), 1-based; `None` when there is none.
     pub(crate) commas: Option<usize>,
     /// Where in `value` each line after the key's starts, in order, so a place in the value
-    /// names the line it was written on (§FS-config-v2.reader.6.window).
+    /// names the line it was written on (§FS-config-v2.reader.6.multi-line).
     pub(crate) starts: Vec<usize>,
 }
 
