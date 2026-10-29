@@ -462,12 +462,12 @@ start-up it spends before its own code runs counts against its build time
 rather than adding to it, so a start-up shorter than that build time cannot
 fail the healthy case, and a healthy child that does overrun its cap is
 reported as the harness's timing, not as the release budget's fault. The healthy
-case holds this by giving its child a fixed simulated start-up longer than the
-margin a child timed from its own start would leave. Focused checks cover the
-build profiles, both launcher entry points, the shorter budgets and explicit
-overrides. These cheap mechanism checks supplement the one real release/LTO
-build; their stand-in artifact is not a native addon or evidence of Windows
-compiler progress.
+case holds this by letting its child's own code start no sooner than a fixed
+simulated start-up after its launch, longer than the margin a child timed from
+its own start would leave. Focused checks cover the build profiles, both
+launcher entry points, the shorter budgets and explicit overrides. These cheap
+mechanism checks supplement the one real release/LTO build; their stand-in
+artifact is not a native addon or evidence of Windows compiler progress.
 
 So that CI can attribute the acceptance's time without the captured output of
 cargo, every build the acceptance runs prints one line to its standard error

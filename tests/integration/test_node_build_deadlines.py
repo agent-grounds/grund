@@ -18,14 +18,19 @@ from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[2]
 SCALE = 500
-# §AR-ci.3.4.1.1: the start-up a loaded runner spends before the healthy child's own code runs.
+# §AR-ci.3.4.1.1: a start-up a loaded runner can spend; the healthy child's own code starts
+# no sooner than this after its launch, whatever the real start-up took.
 START_UP = 1.5
-SLOW_START = f"import time\ntime.sleep({START_UP})\n"
+SLOW_START = f"""
+import sys, time
+time.sleep(max(0, float(sys.argv[3]) + {START_UP} - time.time()))
+"""
+# argv: artifact directory, scaled build seconds, launch instant (§AR-ci.3.4.1.1).
 CHILD = """
 import sys, time
 from pathlib import Path
-started = time.monotonic()
-while time.monotonic() - started < float(sys.argv[2]):
+deadline = float(sys.argv[3]) + float(sys.argv[2])
+while time.time() < deadline:
     print('controlled build progress', flush=True)
     time.sleep(0.1)
 out = Path(sys.argv[1])
@@ -43,6 +48,14 @@ def probe(mode, scratch):
 
     check = unittest.TestCase()
     real_run = subprocess.run
+
+    def run_child(code, out, duration, **options):
+        """Run a controlled child charged its scaled time from this launch (§AR-ci.3.4.1.1)."""
+        # time.time(): the one clock Python documents with a reference shared across processes.
+        launched = time.time()
+        return real_run([sys.executable, "-c", code, str(out), str(duration), repr(launched)],
+                        **options)
+
     if mode in ("healthy", "over-budget"):
         selected, outputs = [], []
 
@@ -59,14 +72,13 @@ def probe(mode, scratch):
             options["timeout"] = min(6, budget / SCALE)
             duration = 1100 / SCALE if mode == "healthy" else 4000 / SCALE
             code = SLOW_START + CHILD if mode == "healthy" else CHILD
-            return real_run([sys.executable, "-c", code, str(out), str(duration)], **options)
+            return run_child(code, out, duration, **options)
 
         if mode == "healthy":
             # Same child, ample budget: fixture/tooling failures cannot masquerade as #913.
             control = scratch / "control"
-            result = real_run([sys.executable, "-c", SLOW_START + CHILD, str(control),
-                               str(1100 / SCALE)],
-                              capture_output=True, text=True, timeout=6)
+            result = run_child(SLOW_START + CHILD, control, 1100 / SCALE,
+                               capture_output=True, text=True, timeout=6)
             check.assertEqual(0, result.returncode, result.stderr)
             check.assertTrue((control / "grund.node").is_file())
 
@@ -78,13 +90,18 @@ def probe(mode, scratch):
                 # The real test creates scratch, calls checked -> command, and checks the artifact.
                 acceptance.NativeSourceBuildTests().test_documented_native_source_builder()
             except subprocess.TimeoutExpired as error:
+                if mode == "healthy":
+                    # §AR-ci.3.4.1.1: an overrun under the right budget is the harness's timing.
+                    if selected == [1800]:
+                        check.fail(f"the stand-in child overran the {error.timeout:g}s scaled cap "
+                                   "of the correctly selected 1800s release budget: harness "
+                                   "timing, not #913's regression")
+                    check.fail(f"selected budget {selected[0]}s killed the progressing "
+                               "1100-logical-second release build before its artifact")
                 progress = error.output or b""
                 if isinstance(progress, bytes):
                     progress = progress.decode("utf-8")
                 check.assertGreaterEqual(progress.count("controlled build progress"), 5)
-                if mode == "healthy":
-                    check.fail(f"selected budget {selected[0]}s killed the progressing "
-                               "1100-logical-second release build before its artifact")
                 check.assertEqual([1800], selected, "release must get its full finite budget")
                 check.assertEqual(1800 / SCALE, error.timeout)
                 check.assertLess(time.monotonic() - started, 6)
@@ -139,8 +156,6 @@ class NodeBuildDeadlineTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         return result
 
-    # Red until #1104 charges CHILD's scaled time from its launch; implement removes this.
-    @unittest.expectedFailure
     def test_documented_release_build_survives_the_old_deadline(self):
         self.run_probe("healthy")
 
