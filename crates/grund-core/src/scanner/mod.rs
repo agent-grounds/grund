@@ -124,6 +124,7 @@ pub(crate) use legacy::{
     collect_local_legacy_markdown_citations, configured_catalog_ids, legacy_catalog_ids,
     match_legacy_tail, promote_legacy_candidate, resolve_id_arg, sort_citations,
 };
+pub(crate) use off_format::record_off_format_citations;
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
 pub(crate) use scan_error::{api_scan_error, scan_error_message};
 pub(crate) use scope_probe::{

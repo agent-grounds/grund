@@ -13,7 +13,8 @@
 
 use super::context::WorkspaceProject;
 use crate::scanner::{
-    configured_catalog_ids, legacy_catalog_ids, promote_legacy_candidate, sort_citations,
+    configured_catalog_ids, legacy_catalog_ids, promote_legacy_candidate,
+    record_off_format_citations, sort_citations,
 };
 
 /// The workspace half of the same reconciliation (§FS-workspace.4.1,
@@ -34,6 +35,7 @@ pub(crate) fn promote_qualified_legacy_citations(projects: &mut [WorkspaceProjec
 
     for project in projects {
         let candidates = std::mem::take(&mut project.findings.legacy_citation_candidates);
+        let mut undeclared = Vec::new();
         for candidate in candidates {
             let Some(alias) = candidate.namespace.as_deref() else {
                 continue;
@@ -43,15 +45,20 @@ pub(crate) fn promote_qualified_legacy_citations(projects: &mut [WorkspaceProjec
             else {
                 continue;
             };
-            promote_legacy_candidate(
-                (project.config.schema(), project.config.frame()),
-                (target_config.schema(), target_config.frame()),
-                configured_catalog,
-                catalog,
-                candidate,
-                &mut project.findings,
+            let target = (target_config.schema(), target_config.frame());
+            undeclared.extend(
+                promote_legacy_candidate(
+                    (project.config.schema(), project.config.frame()),
+                    target,
+                    configured_catalog,
+                    catalog,
+                    candidate,
+                    &mut project.findings.citations,
+                )
+                .map(|candidate| (target, candidate)),
             );
         }
+        record_off_format_citations(&undeclared, &mut project.findings);
         sort_citations(&mut project.findings.citations);
     }
 }
