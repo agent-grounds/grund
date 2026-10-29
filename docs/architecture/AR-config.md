@@ -410,9 +410,11 @@ this grund does not execute yet ([§FS-config-v2.rollout](../functional-spec/FS-
 moment it is met, by the file of its concern: `schema.rs` and `measures.rs`
 for `[schema.*]`, `rules.rs` for `[rules.*]`, and `presentation.rs` for
 `[presentation.*]` and `[workspace]`. Each of them reads a string, a scalar, a
-list's element or a quoted key, through `strings.rs`, which reads it as the
-readers before it did and records the first that closes early in each value for
-its warning ([§FS-config-v2.reader.6](../functional-spec/FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). An array reaches them with the run of
+list's element or a quoted key, through `strings.rs`, which refuses a string that
+closes early and records nothing. It keeps the reading of the readers before it
+only to choose the refusal's message, which ends with the release that made it
+one where that reading loads the value and is the bare `expected string` where
+it does not ([§FS-config-v2.reader.6.refusal](../functional-spec/FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)). An array reaches them with the run of
 commas before its `]` taken off by `walk.rs`, which names the first comma in
 that run with no element before it and records it once the elements load
 ([§FS-config-v2.reader.5.commas.window](../functional-spec/FS-config-v2.md#reader5commaswindow-through-grund-021x-the-run-of-commas-before-the--is-taken-off-as-before-and-warns)). A key the table's handler does not admit

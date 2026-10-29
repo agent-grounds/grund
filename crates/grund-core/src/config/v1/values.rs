@@ -163,8 +163,8 @@ pub(crate) fn parse_string_list(path: &Path, line: usize, value: &str) -> Result
 /// The elements of a `["…", "…"]` string list as written, each still quoted and trimmed, or
 /// `None` when `value` is not bracketed: its text cut only at a comma outside a string, and a
 /// piece that is not one basic string cut at each of its commas, as [`parse_string_list`] reads
-/// them (§FS-config.3.11). Each is a slice of `value`, so version 2 can name the line one of
-/// them closes early on (§FS-config-v2.reader.6.multi-line).
+/// them (§FS-config.3.11). Each is a slice of `value`, so version 2 can tell a `"""` string
+/// that a joined line break runs through (§FS-config-v2.reader.6.multi-line).
 pub(in crate::config) fn list_elements(value: &str) -> Option<Vec<&str>> {
     let inner = value.strip_prefix('[')?.strip_suffix(']')?.trim();
     if inner.is_empty() {

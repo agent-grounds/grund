@@ -47,3 +47,21 @@ fn the_ancestor_members_pass_over_a_value_refused_before() {
         Err("`members` is not a list of strings".to_string())
     );
 }
+
+/// Guard: a `"""` string a line break runs through is #1089's construct, not a string that
+/// closes early, so the climb reads `members` across the lines it was written on as the full
+/// load reads it, quotes kept and the break read as a space (§FS-config-v2.reader.6.multi-line,
+/// §FS-workspace.6.1.7.5).
+#[test]
+fn the_ancestor_members_read_a_triple_quoted_string_over_a_break_as_the_load_does() {
+    let root = test_root("quick-reader-strings-members-over-a-break");
+    let config = root.join("grund.toml");
+    write(
+        &config,
+        "grund_config_version = 2\n\n[workspace]\nmembers = [\n  \"a\",\n  \"\"\"b\n  c\"\"\",\n]\n",
+    );
+    assert_eq!(
+        ancestor_member_entries(&config),
+        Ok(vec!["a".to_string(), "\"\"b c\"\"".to_string()])
+    );
+}
