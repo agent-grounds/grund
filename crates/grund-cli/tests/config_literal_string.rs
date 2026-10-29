@@ -79,14 +79,12 @@ impl Drop for Fixture {
 }
 
 #[test]
-#[ignore = "red until #1103 names the literal-string form in parse_string's refusal; implement removes this"]
 fn a_scalar_literal_string_is_refused_naming_its_form() {
     Fixture::with("grund_config_version = 2\nproject_name = 'x'\n")
         .refused(&refusal(2, "a literal string"));
 }
 
 #[test]
-#[ignore = "red until #1103 names the literal-string form in parse_string's refusal; implement removes this"]
 fn a_presentation_title_literal_string_is_refused_naming_its_form() {
     // The issue's case: the quotes, `&` and `*` inside are not what is refused.
     Fixture::with(&format!(
@@ -96,21 +94,18 @@ fn a_presentation_title_literal_string_is_refused_naming_its_form() {
 }
 
 #[test]
-#[ignore = "red until #1103 names the literal-string form in parse_string's refusal; implement removes this"]
 fn a_multi_line_literal_string_is_refused_naming_its_form() {
     Fixture::with("grund_config_version = 2\nproject_name = '''x'''\n")
         .refused(&refusal(2, "a multi-line literal string"));
 }
 
 #[test]
-#[ignore = "red until #1103 names the literal-string form in parse_string's refusal; implement removes this"]
 fn an_element_literal_string_is_refused_naming_its_form() {
     Fixture::with(&format!("{HEAD}\n[schema.kinds.X]\nfolders = ['specs']\n"))
         .refused(&refusal(10, "a literal string"));
 }
 
 #[test]
-#[ignore = "red until #1103 names the literal-string form in parse_string's refusal; implement removes this"]
 fn a_later_element_literal_string_is_refused_naming_its_form() {
     Fixture::with(&format!(
         "{HEAD}\n[schema.kinds.X]\nfolders = [\"docs\", 'specs']\n"

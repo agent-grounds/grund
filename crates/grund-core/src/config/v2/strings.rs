@@ -4,7 +4,8 @@
 //! (§FS-config.3.11). Through grund 0.21.x a string that closes early is read as the
 //! readers before it read it, by version 1's own functions, and the reader records the
 //! first one in each value for its warning (§FS-config-v2.reader.6.window); every other
-//! malformed string is refused as before. Apart from `walk.rs` so the line walk stays
+//! malformed string is refused as before, and a TOML literal string is refused naming its
+//! form (§FS-config-v2.reader.6.literal). Apart from `walk.rs` so the line walk stays
 //! one pass and the string rule is one file.
 
 use anyhow::Result;
@@ -12,7 +13,9 @@ use std::path::Path;
 
 use super::walk::Reader;
 use crate::config::project::StringClosesEarly;
-use crate::config::v1::{list_elements, parse_string, parse_string_list, string_close};
+use crate::config::v1::{
+    bail_config, list_elements, parse_string, parse_string_list, string_close,
+};
 
 /// A string the version-2 reader reads past its closing quote
 /// (§FS-config-v2.reader.6.window).
@@ -61,7 +64,7 @@ pub(crate) fn read_string<'a>(
     line: usize,
     value: &'a str,
 ) -> Result<(String, Option<EarlyClose<'a>>)> {
-    let read = parse_string(path, line, value)?;
+    let read = basic_string(path, line, value)?;
     Ok((read, closes_early(value, value)))
 }
 
@@ -73,13 +76,48 @@ pub(crate) fn read_string_list<'a>(
     line: usize,
     value: &'a str,
 ) -> Result<(Vec<String>, Vec<EarlyClose<'a>>)> {
-    let read = parse_string_list(path, line, value)?;
-    let early = list_elements(value)
-        .unwrap_or_default()
+    // A value that is not bracketed is refused as version 1 refuses it.
+    let Some(elements) = list_elements(value) else {
+        return Ok((parse_string_list(path, line, value)?, Vec::new()));
+    };
+    let read = elements
+        .iter()
+        .map(|element| basic_string(path, line, element))
+        .collect::<Result<_>>()?;
+    let early = elements
         .into_iter()
         .filter_map(|element| closes_early(value, element))
         .collect();
     Ok((read, early))
+}
+
+/// §FS-config-v2.reader.6, §FS-config-v2.reader.6.literal: `written`, a scalar value or one
+/// element, read as one basic string, refused as before where it is not one, and naming
+/// the form where it opens as a TOML literal string, which version 2 does not read.
+fn basic_string(path: &Path, line: usize, written: &str) -> Result<String> {
+    if let Some(form) = literal_form(written) {
+        return bail_config(
+            path,
+            line,
+            format!(
+                "expected string ({form}, which version 2 does not read); write it as a basic \
+                 string, \"...\", with \\\" for a quote inside it"
+            ),
+        );
+    }
+    parse_string(path, line, written)
+}
+
+/// §FS-config-v2.reader.6.literal: the TOML literal string form `written` opens with, if it
+/// opens with `'`: `'''` opens a multi-line literal string, any other `'` a literal string.
+fn literal_form(written: &str) -> Option<&'static str> {
+    if written.starts_with("'''") {
+        Some("a multi-line literal string")
+    } else if written.starts_with('\'') {
+        Some("a literal string")
+    } else {
+        None
+    }
 }
 
 /// The lines a value was written across, as `joined_value` joined them: its key's line
