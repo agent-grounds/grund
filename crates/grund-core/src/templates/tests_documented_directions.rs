@@ -42,7 +42,8 @@ fn documented_citation_directions_example_matches_production_render() {
 }
 
 /// §FS-init.2.3.4.10: the climbing convention the block no longer states is the
-/// page's recommended starting ruleset, its last `toml` example. Over the kinds
+/// page's recommended starting ruleset, its `toml` example that opens with the
+/// GOAL table; later sections carry toml examples of their own. Over the kinds
 /// the starter config declares (§FS-init.2.4) it loads, and every table it
 /// writes renders a bullet, so the page cannot teach a rule `grund init` drops.
 #[test]
@@ -51,7 +52,8 @@ fn the_recommended_starting_ruleset_loads_over_the_starter_kinds() {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/user-facing/citation-directions.md");
     let page = std::fs::read_to_string(&page_path).expect("read canonical page");
     let ruleset = fenced_examples(&page, "toml")
-        .pop()
+        .into_iter()
+        .find(|example| example.starts_with("[rules.citations.GOAL]"))
         .expect("a recommended starting ruleset");
     let root = test_root("the_recommended_starting_ruleset_loads_over_the_starter_kinds");
     let starter = render_grund_toml(Template::SoftwareDevelopment, "demo", None);
