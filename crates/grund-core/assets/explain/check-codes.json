@@ -225,8 +225,8 @@
  },
  {
   "code": "config-multiline-string",
-  "meaning": "An array in a version-2 config holds a multi-line string, which version 2 does not read; it is read for one more release with the line break as a space.",
-  "ramp": "grund 0.22.0, where the array is refused as an unclosed array",
+  "meaning": "A value in a version-2 config holds a multi-line string, which version 2 does not read; it is read for one more release as before, its quotes kept and a line break read as a space.",
+  "ramp": "grund 0.22.0, where a string across lines is refused as an unclosed array, and one on one line as expected string",
   "2": {
    "severity": {
     "kind": "fixed",
@@ -259,8 +259,8 @@
  },
  {
   "code": "config-not-toml",
-  "meaning": "A version-2 config holds text TOML refuses, such as a string in an array left open at the end of a line, which grund still reads for one release.",
-  "ramp": "grund 0.22.0, where the array is refused as an unclosed array",
+  "meaning": "A version-2 config holds text TOML refuses, such as a string in an array left open at the end of a line, or a string followed by more text after its closing quote, which grund still reads for one release.",
+  "ramp": "grund 0.22.0, where the array is refused as an unclosed array, and the string as expected string",
   "2": {
    "severity": {
     "kind": "fixed",
@@ -270,10 +270,23 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "close the string on line {line}"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "open-line",
+      "text": "close the string on line {line}"
+     },
+     {
+      "label": "element",
+      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it, or a `,` between two strings"
+     },
+     {
+      "label": "scalar-or-key",
+      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it"
+     }
+    ]
    },
-   "note": "Until then the line break is read as a space, so the value is one nobody wrote."
+   "note": "Until then a line break inside a string is read as a space, and a quote that closes a string early as part of it, so the value is one nobody wrote."
   },
   "1": {
    "severity": {
@@ -285,10 +298,23 @@
     "text": "not in version 1"
    },
    "fix": {
-    "kind": "template",
-    "text": "close the string on line {line}"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "open-line",
+      "text": "close the string on line {line}"
+     },
+     {
+      "label": "element",
+      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it, or a `,` between two strings"
+     },
+     {
+      "label": "scalar-or-key",
+      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it"
+     }
+    ]
    },
-   "note": "Until then the line break is read as a space, so the value is one nobody wrote."
+   "note": "Until then a line break inside a string is read as a space, and a quote that closes a string early as part of it, so the value is one nobody wrote."
   }
  },
  {

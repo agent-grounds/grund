@@ -61,8 +61,9 @@ fn a_malformed_element_keeps_its_refusal() {
 }
 
 /// Pins the reading these lists had before the rule, not an endorsement of it: a piece that is
-/// not one basic string is cut at each comma and each part read as before. The follow-up that
-/// retires `parse_string`'s laxness changes these on purpose.
+/// not one basic string is cut at each comma and each part read as before. Version 1 keeps this
+/// reading for good (§FS-config.5.2), and meets the rule only at `config migrate`
+/// (§FS-config-migrate.3.1.8).
 #[test]
 fn a_list_read_before_the_rule_is_read_the_same() {
     assert_eq!(read(r#"["a"b", "c"]"#), [r#"a"b"#, "c"]);

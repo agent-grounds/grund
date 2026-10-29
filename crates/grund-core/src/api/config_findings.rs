@@ -128,7 +128,8 @@ fn string_over_break_warnings(config: &Config) -> impl Iterator<Item = Diagnosti
             let remedy = remedies::config_multiline_string(open.line);
             (Code::CONFIG_MULTILINE_STRING, remedy)
         } else {
-            (Code::CONFIG_NOT_TOML, remedies::config_not_toml(open.line))
+            let remedy = remedies::config_not_toml_open_line(open.line);
+            (Code::CONFIG_NOT_TOML, remedy)
         };
         Diagnostic {
             code,

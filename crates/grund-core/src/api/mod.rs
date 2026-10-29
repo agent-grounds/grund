@@ -182,6 +182,8 @@ mod tests_shorthand_docstring;
 #[cfg(test)]
 mod tests_shorthand_surfaces;
 #[cfg(test)]
+mod tests_string_closes_early;
+#[cfg(test)]
 mod tests_stub_home_overlays;
 #[cfg(test)]
 mod tests_stub_overlays;

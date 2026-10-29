@@ -87,6 +87,8 @@ mod tests_nested;
 #[cfg(test)]
 mod tests_optional_members;
 #[cfg(test)]
+mod tests_quick_reader_strings;
+#[cfg(test)]
 mod tests_run_warning_anchors;
 #[cfg(test)]
 mod tests_scope;
