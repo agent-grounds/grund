@@ -325,8 +325,9 @@ const SWITCHES: &[Switch] = &[
 ];
 
 /// §FS-check.1.4.1: every switch the catalog names is spelled under both config
-/// versions, except the field switches a version-1 file cannot hold, which name
-/// the migration, and named sections, which version 2 never turns off.
+/// versions, except the field switches and the import table a version-1 file
+/// cannot hold (§FS-imports.declaration.table), which name the migration, and
+/// named sections, which version 2 never turns off.
 #[test]
 fn every_switch_is_spelled_in_both_config_versions() {
     let mut v1_absent = BTreeSet::new();
@@ -358,6 +359,7 @@ fn every_switch_is_spelled_in_both_config_versions() {
             Switch::FieldTitle,
             Switch::ClosedKind,
             Switch::FrontMatterField,
+            Switch::Import,
         ])
     );
     assert_eq!(v2_absent, BTreeSet::from([Switch::NamedSections]));

@@ -20,7 +20,7 @@ use super::refs_note::{NoteQuery, empty_answer_note};
 use super::report::context_run_warnings;
 use crate::config::display_path;
 use crate::grammar::{path_at_or_under, render_catalog_id, render_citation_id};
-use crate::model::{Citation, sort_path_key};
+use crate::model::Citation;
 use crate::queries::{declaration_ambiguity_refusal, reported_scope, reports_site};
 use crate::resolver::{WorkspaceContext, WorkspaceProject, load_classifying_workspace_context};
 use crate::scanner::{ApiScanError, api_scan_error, resolve_id_arg};
@@ -63,6 +63,22 @@ pub(super) fn hit_path(
     } else {
         display_path(&project.config, path)
     }
+}
+
+/// The key every `refs` mode orders its sites by and lists each once under: the path
+/// as the hit prints it, then the line and the column (§FS-refs.2, §FS-errors.4.1), so
+/// an import's `../` site sorts where its printed path does, not where its tree sits
+/// on disk (§FS-imports.paths).
+pub(super) fn site_key(
+    context: &WorkspaceContext,
+    project: &WorkspaceProject,
+    citation: &Citation,
+) -> (String, usize, usize) {
+    (
+        hit_path(context, project, &citation.file),
+        citation.line,
+        citation.column,
+    )
 }
 
 /// Resolve and refuse recorded target ambiguities before filtering any citations
@@ -243,18 +259,7 @@ pub(super) fn refs_impl_with_annotations(
             });
         }
     }
-    hits.sort_by(|a, b| {
-        (
-            sort_path_key(&a.citation.file),
-            a.citation.line,
-            a.citation.column,
-        )
-            .cmp(&(
-                sort_path_key(&b.citation.file),
-                b.citation.line,
-                b.citation.column,
-            ))
-    });
+    hits.sort_by_cached_key(|hit| site_key(&context, hit.project, hit.citation));
     hits.dedup_by(|a, b| {
         a.citation.file == b.citation.file
             && a.citation.line == b.citation.line

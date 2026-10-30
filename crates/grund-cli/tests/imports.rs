@@ -118,6 +118,27 @@ fn imports_located_outcomes_contract() {
     run("imports located outcomes", LOCATED);
 }
 
+const UNCHANGED: &[&str] = &[
+    "imports-none-matching-sibling",
+    "imports-none-malformed-sibling",
+    "imports-none-malformed-sibling-json",
+    "imports-dependency-standalone",
+    "imports-v1-consumer-refused",
+    "imports-v1-consumer-migrate-refused",
+    "imports-adopted-block-init-check",
+    "imports-adopted-block-check",
+];
+
+/// What an import leaves as it was: a config with no import reads no sibling, however
+/// its `project_name` or its config reads (§FS-imports.declaration.none); the
+/// dependency run on its own never learns its consumer (§FS-imports.graph.reverse); a
+/// version-1 consumer keeps today's refusal of the table; and a managed block rendered
+/// before an import was adopted stays current (§FS-imports.declaration.table).
+#[test]
+fn imports_unchanged_ground_contract() {
+    run("imports unchanged ground", UNCHANGED);
+}
+
 /// No import case of the corpus is left out of the runners above, so each stays named
 /// by the contract it pins (§FS-examples.5).
 #[test]
@@ -133,6 +154,7 @@ fn every_import_case_is_run() {
         .iter()
         .chain(GRAPH)
         .chain(LOCATED)
+        .chain(UNCHANGED)
         .map(|name| name.to_string())
         .collect::<BTreeSet<_>>();
     assert_eq!(cases, run, "an import case no runner names, or the reverse");
@@ -281,13 +303,12 @@ fn ignore_files_above_the_target_hide_nothing_of_it() {
     assert_run(&tree.grund("enterprise", &["check"]), 0, LIVE, "");
 }
 
-/// `grund fetch` of an ID in an import is refused before its integration runs, naming
-/// the target as the place to run it (§FS-imports.writes).
+/// A sibling layout whose dependency fetches `TICKET` IDs through a script that would
+/// leave a mark if it ran (§FS-fetch.2).
 #[cfg(unix)]
-#[test]
-fn fetch_into_an_import_is_refused_before_its_integration_runs() {
+fn fetching_sibling(name: &str) -> Tree {
     use std::os::unix::fs::PermissionsExt;
-    let tree = Tree::sibling("fetch");
+    let tree = Tree::sibling(name);
     tree.write(
         "graal/substratevm/grund.toml",
         &format!(
@@ -301,6 +322,15 @@ fn fetch_into_an_import_is_refused_before_its_integration_runs() {
         "#!/bin/sh\ntouch \"$(dirname \"$0\")/../FETCHED\"\n",
     );
     fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).unwrap();
+    tree
+}
+
+/// `grund fetch` of an ID in an import is refused before its integration runs, naming
+/// the target as the place to run it (§FS-imports.writes).
+#[cfg(unix)]
+#[test]
+fn fetch_into_an_import_is_refused_before_its_integration_runs() {
+    let tree = fetching_sibling("fetch");
     let output = tree.grund("enterprise", &["fetch", "native-image/TICKET-1"]);
     assert_run(
         &output,
@@ -311,6 +341,29 @@ fn fetch_into_an_import_is_refused_before_its_integration_runs() {
     );
     assert!(!tree.0.join("graal/substratevm/FETCHED").exists());
     assert!(!tree.0.join("graal/substratevm/docs/tickets.md").exists());
+}
+
+/// Run from the root of a workspace one of whose members declares the import, the
+/// refusal names the target from where the run started, not from the member that
+/// wrote the path (§FS-imports.writes, §FS-errors.4).
+#[cfg(unix)]
+#[test]
+fn fetch_into_a_members_import_names_the_target_from_the_run() {
+    let tree = fetching_sibling("fetch-member");
+    tree.write(
+        "grund.toml",
+        "grund_config_version = 2\nproject_name = \"checkout\"\n\n\
+         [workspace]\nmembers = [\"enterprise\", \"graal/substratevm\"]\ninclude_root = false\n",
+    );
+    let output = tree.grund(".", &["fetch", "enterprise/native-image/TICKET-1"]);
+    assert_run(
+        &output,
+        2,
+        "",
+        "error: `enterprise/native-image/TICKET-1` is in import `enterprise/native-image`, \
+         read-only here \u{2014} run grund fetch TICKET-1 in graal/substratevm\n",
+    );
+    assert!(!tree.0.join("graal/substratevm/FETCHED").exists());
 }
 
 /// A dependency defect that breaks a consumer citation fails at the consumer's site,
@@ -432,6 +485,23 @@ fn a_relocated_composition_prints_the_same_bytes() {
          Security providers are registered at build time\n",
         "",
     );
+    // A link `fmt --write` writes into the consumer climbs from the consumer's document
+    // to the imported file, wherever the composition sits (§FS-imports.writes).
+    let notes = "enterprise/docs/notes.md";
+    let linked = "See [\u{a7}native-image/FS-security-providers](../../graal/substratevm/docs/\
+        functional-spec/FS-security-providers.md#fs-security-providers-security-providers-are-\
+        registered-at-build-time).\n";
+    for tree in [&plain, &spaced] {
+        tree.write(notes, "See \u{a7}native-image/FS-security-providers.\n");
+        let fmt = tree.grund("enterprise", &["fmt", "--write"]);
+        assert_run(
+            &fmt,
+            0,
+            "rewrote 1 line: 1 link written\n  docs/notes.md (1)\n",
+            "",
+        );
+        assert_eq!(fs::read_to_string(tree.0.join(notes)).unwrap(), linked);
+    }
 }
 
 /// A symlinked `path` is followed to the directory whose identity is checked, the

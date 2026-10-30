@@ -411,7 +411,10 @@ fn relative_url(from_file: &Path, to_file: &Path, root: &Path) -> String {
 /// Same as `relative_url`, but uses an explicit project root for stripping —
 /// the workspace-root variant (§FS-workspace.8.5) so a citing file in one
 /// project can link to a target file in another project under the same
-/// workspace root with a single common-prefix walk.
+/// workspace root with a single common-prefix walk. A target outside the root,
+/// an import's file, is walked to from the citing document's canonical path, so
+/// the link climbs out of the consumer and never names where the trees sit
+/// (§FS-imports.writes).
 fn relative_url_under(from_file: &Path, to_file: &Path, root: &Path) -> String {
     let (from_rel, to_rel) = match (from_file.strip_prefix(root), to_file.strip_prefix(root)) {
         (Ok(from_rel), Ok(to_rel)) => (
@@ -422,18 +425,16 @@ fn relative_url_under(from_file: &Path, to_file: &Path, root: &Path) -> String {
             let root = canonical_path(root).unwrap_or_else(|_| root.to_path_buf());
             let from_file = canonical_path(from_file).unwrap_or_else(|_| from_file.to_path_buf());
             let to_file = canonical_path(to_file).unwrap_or_else(|_| to_file.to_path_buf());
-            let from_rel = from_file
-                .strip_prefix(&root)
-                .map(Path::to_path_buf)
-                .unwrap_or(from_file);
-            let to_rel = to_file
-                .strip_prefix(&root)
-                .map(Path::to_path_buf)
-                .unwrap_or(to_file);
-            (
-                std::borrow::Cow::Owned(from_rel),
-                std::borrow::Cow::Owned(to_rel),
-            )
+            match (from_file.strip_prefix(&root), to_file.strip_prefix(&root)) {
+                (Ok(from_rel), Ok(to_rel)) => (
+                    std::borrow::Cow::Owned(from_rel.to_path_buf()),
+                    std::borrow::Cow::Owned(to_rel.to_path_buf()),
+                ),
+                _ => (
+                    std::borrow::Cow::Owned(from_file),
+                    std::borrow::Cow::Owned(to_file),
+                ),
+            }
         }
     };
     let from_dir = from_rel.parent().unwrap_or(Path::new(""));

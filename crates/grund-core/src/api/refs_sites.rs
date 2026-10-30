@@ -10,12 +10,12 @@ use std::path::PathBuf;
 
 use super::cover::{cited_id, target_config};
 use super::refs::{RefHit, RefsOutput};
-use super::refs_query::{hit_path, refs_scan_errors};
+use super::refs_query::{hit_path, refs_scan_errors, site_key};
 use super::report::context_run_warnings;
 use super::show::ShowSource;
 use crate::checker::ScanScope;
 use crate::grammar::{path_at_or_under, render_catalog_id};
-use crate::model::{Citation, Declaration, Finding, Id, ShowRenderMode, sort_path_key};
+use crate::model::{Citation, Declaration, Finding, Id, ShowRenderMode};
 use crate::queries::{GlobSelection, read_globs, reported_scope, reports_site};
 use crate::resolver::{
     WorkspaceContext, load_classifying_workspace_context, load_reported_workspace_context,
@@ -126,15 +126,8 @@ fn refs_sites_run(
     }
     // §FS-refs.globs: in `(path, line, column)` order, each site once however many
     // patterns select it or catalogs hold it.
-    let key = |site: &Site| {
-        let citation = site.citation;
-        (
-            sort_path_key(&citation.file),
-            citation.line,
-            citation.column,
-        )
-    };
-    sites.sort_by_key(key);
+    let key = |site: &Site| site_key(&context, &context.projects[site.project], site.citation);
+    sites.sort_by_cached_key(key);
     sites.dedup_by_key(|site| key(site));
     let hits = sites
         .iter()

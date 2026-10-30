@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use super::fetch_write::{write_file_home, write_folder_home};
 use crate::config::{Config, run_warning_findings};
 use crate::grammar::{MarkdownBlocks, parse_id_arg};
-use crate::model::Finding;
+use crate::model::{Finding, format_path, relative_from_base};
 use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, resolve_workspace_config, split_qualified_id_arg};
 
@@ -103,8 +103,10 @@ pub(crate) fn fetch_with_diagnostics(raw: &str, path: &Path) -> (Vec<Finding>, a
 }
 
 /// §FS-imports.writes: an ID in an import is read-only here, refused before its
-/// integration runs and named by the place it is fetched from — the target, by
-/// its path as written, with the alias path below the import kept on the ID.
+/// integration runs and named by the place it is fetched from — the target, spelled
+/// from the run's report base as every reported path is (§FS-errors.4), so an import
+/// a member declares is named from where the run started, not from the member — with
+/// the alias path below the import kept on the ID.
 fn imported_fetch(root_config: &Config, namespace: &str, local: &str) -> Option<String> {
     let edge = root_config.run().workspace.mounts.iter().find(|edge| {
         namespace == edge.alias || namespace.starts_with(&format!("{}/", edge.alias))
@@ -115,9 +117,13 @@ fn imported_fetch(root_config: &Config, namespace: &str, local: &str) -> Option<
     } else {
         format!("{below}/{local}")
     };
-    let (alias, written) = (&edge.alias, &edge.written);
+    let alias = &edge.alias;
+    let target = format_path(&relative_from_base(
+        root_config.display().base(),
+        &edge.root,
+    ));
     Some(format!(
-        "`{namespace}/{local}` is in import `{alias}`, read-only here — run grund fetch {there} in {written}"
+        "`{namespace}/{local}` is in import `{alias}`, read-only here — run grund fetch {there} in {target}"
     ))
 }
 
