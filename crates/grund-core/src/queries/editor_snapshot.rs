@@ -175,4 +175,19 @@ impl LspShowContext {
     pub fn read_files(&self) -> Vec<PathBuf> {
         self.buffers.recorded_paths()
     }
+
+    /// The canonical root of every import the snapshot's run mounted, transitive
+    /// ones included: each an input of the snapshot, and each answered by a
+    /// project of its own where no folder's project holds it (§AR-lsp.2.1,
+    /// §FS-imports.editor).
+    pub fn import_roots(&self) -> Vec<PathBuf> {
+        let configs = std::iter::once(&self.context.render_config)
+            .chain(self.context.projects.iter().map(|project| &project.config));
+        let roots = configs.flat_map(|config| config.run().workspace.mounted_roots.iter());
+        roots
+            .cloned()
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect()
+    }
 }

@@ -19,8 +19,11 @@ impl Server {
         let (Some(path), Some(text)) = (uri.to_file_path().ok(), self.document_text(&uri)) else {
             return Ok(result);
         };
-        let Some(context) = self.project_for_path(&path)
-            .and_then(|project| project.completion.as_ref()) else { return Ok(result) };
+        // §FS-imports.editor: an imported document is offered no edit.
+        let owner = self.project_for_path(&path).filter(|_| !self.import_owns(&path));
+        let Some(context) = owner.and_then(|project| project.completion.as_ref()) else {
+            return Ok(result);
+        };
         let Some(line) = text.lines().nth(position.line as usize) else { return Ok(result) };
         let cursor = utf16_to_byte(line, position.character);
         let at = |byte| Position { line: position.line, character: byte_to_utf16(line, byte) };

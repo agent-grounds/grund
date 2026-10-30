@@ -4,6 +4,7 @@ use grund::{
     WatchObservation,
     watch_test::{self, Control, Snapshot},
 };
+pub use grund_core::native_watch::notify;
 use grund_core::{CheckFindingSelection, CheckOpts};
 use std::{
     fs,

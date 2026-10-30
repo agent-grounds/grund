@@ -40,12 +40,18 @@ yaml-rust2 = { version = "0.13", default-features = false }
 # reads, 1.1. Only `alloc` is on, for its event and error lists and decoded
 # strings; `std` adds nothing the tree uses.
 toml_parser = { version = "~1.1", default-features = false, features = ["alloc"] }
+# §FS-check.6.1: native notifications, never a polling fallback. Only through the
+# `native-watch` feature below.
+notify = { version = "8.2", optional = true }
 
 [[example]]
 name = "grund-binding-oracle"
 path = "examples/grund-binding-oracle.rs"
 
 [features]
+# The native watcher `check --watch` runs and an editor server falls back on
+# (§AR-lsp.2.1): only grund-cli and grund-lsp enable it, so the bindings never link it.
+native-watch = ["dep:notify"]
 test-binding-writes = []
 # Black-box CLI tests use this opt-in observer to prove a batch loads one
 # workspace context. It is absent from normal builds.

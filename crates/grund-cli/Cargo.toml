@@ -15,11 +15,11 @@ exclude = [
 ]
 
 [dependencies]
-grund-core = { path = "../grund-core", version = "0.20.1-dev" }
+# §FS-check.6.1: native notifications, never a polling fallback, through the core's
+# `native-watch` feature.
+grund-core = { path = "../grund-core", version = "0.20.1-dev", features = ["native-watch"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-# §FS-check.6.1: native notifications, never a polling fallback.
-notify = "8.2"
 
 # Bench-only — pulled in solely by the `bench` feature (see `[features]` below),
 # so a plain `cargo build` / `cargo install grund` and the `cargo test` matrix

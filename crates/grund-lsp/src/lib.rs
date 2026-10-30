@@ -31,6 +31,7 @@ pub fn run() -> Result<()> {
     let folders = initialize_folders(&initialize_params)?;
     let definition_link_support = client_supports_definition_links(&initialize_params);
     let mut server = Server::new(connection, folders, definition_link_support)?;
+    server.watch.client = client_registers_watchers(&initialize_params);
     // §FS-lsp.1.6.1: advertise all initially loaded member introducers.
     let mut capabilities = server_capabilities(server.trigger());
     capabilities
@@ -49,6 +50,9 @@ pub fn run() -> Result<()> {
         .connection
         .initialize_finish(initialize_id, initialize_result)?;
     server.publish_diagnostics()?;
+    // `initialize_finish` consumed `initialized`: the client now takes requests.
+    server.watch.ready = true;
+    server.watch_imports();
     server.event_loop()?;
     drop(server);
     io_threads.join()?;
@@ -187,6 +191,7 @@ fn workspace_folder_paths(folders: &[WorkspaceFolder]) -> BTreeMap<Url, PathBuf>
 include!("index.rs");
 include!("workspace.rs");
 include!("completion.rs");
+include!("imports.rs");
 
 struct Server {
     connection: Connection,
@@ -203,6 +208,9 @@ struct Server {
     folder_config_failures: BTreeMap<Url, ConfigFailure>,
     scan_config_failures: BTreeMap<PathBuf, ConfigFailure>,
     projects: Vec<ProjectSnapshot>,
+    /// One project per import root no folder's project holds (§AR-lsp.2.1).
+    imports: Vec<ProjectSnapshot>,
+    watch: ImportWatch,
     open_docs: BTreeMap<Url, String>,
     diagnostic_uris: BTreeSet<Url>,
     definition_link_support: bool,
@@ -226,6 +234,8 @@ impl Server {
             folder_config_failures: BTreeMap::new(),
             scan_config_failures: BTreeMap::new(),
             projects: Vec::new(),
+            imports: Vec::new(),
+            watch: ImportWatch::default(),
             open_docs: BTreeMap::new(),
             diagnostic_uris: BTreeSet::new(),
             definition_link_support,
@@ -243,7 +253,17 @@ impl Server {
     }
 
     fn event_loop(&mut self) -> Result<()> {
-        while let Ok(message) = self.connection.receiver.recv() {
+        loop {
+            let message = match self.wake() {
+                Wake::Client(message) => message,
+                Wake::Closed => return Ok(()),
+                // §AR-lsp.2.1: the server's own watcher saw an import root change.
+                Wake::Disk => {
+                    self.refresh();
+                    self.publish_diagnostics()?;
+                    continue;
+                }
+            };
             match message {
                 Message::Request(request) => {
                     if self.connection.handle_shutdown(&request)? {
@@ -266,7 +286,6 @@ impl Server {
                 Message::Response(_) => {}
             }
         }
-        Ok(())
     }
 
     /// Rebuild every project's snapshot. The whole-workspace answer, for the
@@ -295,6 +314,7 @@ impl Server {
         let scope = uri.to_file_path().ok().map(normalize_path).filter(|path| {
             self.projects
                 .iter()
+                .chain(&self.imports)
                 .any(|project| project.might_cover(path))
         });
         self.rebuild(scope);
@@ -388,6 +408,8 @@ impl Server {
             }
         }
         self.projects = projects;
+        self.rebuild_imports(changed.as_deref(), &overlays);
+        self.watch_imports();
         // The rebuilt snapshot reflects the new document contents, so any cached
         // lines from before the edit are stale.
         self.line_cache.borrow_mut().clear();
@@ -881,6 +903,10 @@ impl Server {
         let Some(path) = uri.to_file_path().ok() else {
             return Ok(Some(Vec::new()));
         };
+        // §FS-imports.editor: an imported document is offered no edit.
+        if self.import_owns(&path) {
+            return Ok(Some(Vec::new()));
+        }
         let declared_ids = self
             .snapshot_for_path(&path)
             .map(Self::declared_ids)
@@ -1050,12 +1076,9 @@ impl Server {
     /// (§FS-lsp.2.2.3, §REQ-no-wrong-citation.1).
     fn project_for_path(&self, path: &Path) -> Option<&ProjectSnapshot> {
         let path = normalize_path(path);
-        if let Some(project) = self
-            .projects
-            .iter()
-            .filter_map(|project| Some((project.containing_root_depth(&path)?, project)))
-            .max_by_key(|(depth, _)| *depth)
-            .map(|(_, project)| project)
+        // §FS-imports.editor: an import root no folder's project holds is its own project's.
+        if let Some(project) =
+            deepest_root(&self.projects, &path).or_else(|| deepest_root(&self.imports, &path))
         {
             return Some(project);
         }

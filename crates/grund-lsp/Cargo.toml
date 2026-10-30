@@ -12,7 +12,9 @@ readme = "../../README.md"
 
 [dependencies]
 anyhow = "1"
-grund-core = { path = "../grund-core", version = "0.20.1-dev" }
+# One receiver for the client's messages and the native watcher's (§AR-lsp.2.1).
+crossbeam-channel = "0.5"
+grund-core = { path = "../grund-core", version = "0.20.1-dev", features = ["native-watch"] }
 lsp-server = "0.7"
 lsp-types = "0.95"
 serde = "1"

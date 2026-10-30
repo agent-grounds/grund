@@ -16,6 +16,10 @@ pub struct OperationDiagnostic {
     /// points at the file rather than printing its rendered path: the config a
     /// load failed on, which an editor marks (§FS-lsp.2.2.4.1).
     pub file: Option<std::path::PathBuf>,
+    /// For a refusal inside an imported tree, the config and line of the outermost
+    /// import that reached it, absolute: the line an editor marks, since the
+    /// consumer's config is the one its user has open (§FS-imports.editor).
+    pub import_site: Option<(std::path::PathBuf, usize)>,
     pub details: Value,
     pub partial_output: Value,
     source: Option<std::sync::Arc<anyhow::Error>>,
@@ -32,6 +36,7 @@ impl OperationDiagnostic {
             line: None,
             column: None,
             file: None,
+            import_site: None,
             details: json!({}),
             partial_output: Value::Null,
             source: None,
