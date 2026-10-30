@@ -664,7 +664,7 @@ Gate: one e2e case per v2 table and one migration case per row of [§DISC-core-c
 
 ### 9.4 Phase 3: adoption, and the last removals before `1.0`
 
-Not shipped in full. Adoption is done and the `0.19.0` removals shipped; what remains is the removals planned for `0.21.0` ([§DISC-core-concerns.9.9](2026-09-30-core-concerns.md#99-the-deprecation-ledger)).
+Shipped in `0.21.0`. Adoption was done and the `0.19.0` removals had shipped; `0.21.0` carries the last removals, which `agent-grounds/grund#808` landed as `agent-grounds/grund#813` ([§DISC-core-concerns.9.9](2026-09-30-core-concerns.md#99-the-deprecation-ledger)).
 
 This organization migrates, `grund` first (`agent-grounds/grund#464`, then `agent-grounds/grund#465`); grund's own fields arrive (`FS.terms`, `AR.placement` and `AR.terms` with `after`, and `status` on `DF` and `DA` at `warn` first if `agent-grounds/grund#464` adopts it, [§DISC-core-concerns.10.2](2026-09-30-core-concerns.md#102-the-five-decisions-the-plan-makes-one-way)); and the public-surface removals land in the minor their notes named: the four root aliases in `0.19.0` (`agent-grounds/grund#466`), and in `0.21.0` the integrations names with `#[non_exhaustive]` on the promised records (`agent-grounds/grund#808`). A ramp from warning to error that adoption chooses names a release no earlier than the minor after its notice. Each repository's CI pin moves deliberately, which is what lets every repository move when it chooses.
 
