@@ -267,6 +267,9 @@ the managed blocks' member lists and `grund init` keeps them as they are, as the
 A member that must cite no other project closes its own citation default and
 lists only its own targets, as the
 [isolated-member example](examples/workspace-isolated-member/) shows.
+A neighbour the build checks out beside the repository needs no config above both: the
+consumer declares it under `[workspace.imports]` and cites it by its alias, read live from
+that tree, as the [sibling-imports example](examples/sibling-imports/) shows.
 
 ## External facts
 

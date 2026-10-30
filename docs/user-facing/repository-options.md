@@ -78,6 +78,35 @@ workspace member, while in-root directory links, file links, and intentional
 parent-relative `[scan] include` paths remain readable
 ([§FS-scan.scope.links](../functional-spec/FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)).
 
+### A sibling project the build places beside you
+
+When the build checks out another repository beside yours, at a path it fixes, cite it
+without a config above both: declare it in your own config, one table per import, and cite
+it by the table key ([§FS-imports.declaration.table](../functional-spec/FS-imports.md#declarationtable-the-import-table)).
+
+```toml
+[workspace.imports.native-image]
+path = "../graal/substratevm"
+project = "native-image"
+```
+
+`path` is relative to your config's root and written with `/`; it names the directory that
+holds the neighbour's own `grund.toml`, and `project` is the `project_name` it must declare
+there, so another tree at that path is refused rather than read
+([§FS-imports.declaration.identity](../functional-spec/FS-imports.md#declarationidentity-the-project-is-named-never-inferred)). The neighbour is read live, with its own config
+and ignore files, and read-only: `fmt`, `init` and `fetch` write only your own files
+([§FS-imports.mount](../functional-spec/FS-imports.md#mount-an-import-is-a-mounted-root-read-live-and-read-only), [§FS-imports.writes](../functional-spec/FS-imports.md#writes-the-consumer-writes-only-its-own-files)). Its own findings stay its
+own run's, unless one breaks a citation of yours, which then fails where you wrote it
+([§FS-imports.findings](../functional-spec/FS-imports.md#findings-dependency-findings-are-suppressed-consumer-citations-are-not)). An import's alias shares the sibling level with
+the root and the members of the same block, and an import's own imports nest beneath its
+alias ([§FS-imports.graph.transitive](../functional-spec/FS-imports.md#graphtransitive-imports-nest-beneath-their-importer)).
+
+Nothing pins the neighbour's revision; the build that places it does. So `grund check` says
+so on every run, once per import, and a neighbour that is not there fails the run rather
+than passing it, as [Checking a repository](checking.md#imports-are-always-reported)
+describes. The [sibling-imports example](../../examples/sibling-imports/) is the
+smallest such pair.
+
 ### Citers in a repository you cannot read
 
 An open project's gate never sees a closed repository that cites it. Say the

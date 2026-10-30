@@ -285,6 +285,22 @@ Selection happens only after the complete scan, and operational failures remain
 visible; selected `success` describes only that view, not an all-findings
 repository verdict ([§FS-check.2](../functional-spec/FS-check.md#2-outputs)).
 
+### Imports are always reported
+
+A config that declares `[workspace.imports]` reads each neighbour live from the tree at its
+path, which no commit pins, and `check` says so on every run: one `import-live` warning per
+import, at its table line ([§FS-imports.checks.import-live](../functional-spec/FS-imports.md#checksimport-live-an-import-is-read-live-unpinned)).
+
+```text
+grund.toml:4: warning: import `native-image` is read live from `../graal/substratevm`, unpinned
+```
+
+A neighbour whose path names no directory is one `import-missing` error there instead, the
+run exits `1`, and every citation into it is left unchecked rather than passed
+([§FS-imports.checks.import-missing](../functional-spec/FS-imports.md#checksimport-missing-an-import-names-no-directory)). Neither `--only` nor `--ignore` hides either line,
+as neither hides an `io` finding, so a narrowed run still says what it read
+([§FS-imports.checks](../functional-spec/FS-imports.md#checks-checks)).
+
 ## What it does not check
 
 `grund` does **not** check Markdown links, URLs, spelling, or grammar. Use [`lychee`](https://github.com/lycheeverse/lychee), `vale`, etc. for those.
