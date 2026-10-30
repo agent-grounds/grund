@@ -15,7 +15,7 @@ use anyhow::Result;
 
 use super::context::{WorkspaceProject, load_projects_with};
 use crate::config::{MountEdge, ProjectRecords, config_at};
-use crate::model::Catalog;
+use crate::model::{Catalog, OperationDiagnostic, format_path};
 use crate::scanner::scan_tree_with_workspace;
 use crate::workspace::config_location_error;
 
@@ -55,6 +55,8 @@ impl Mounted {
 /// leaves its root out (§FS-remote-projects.mount.rule).
 #[derive(Clone)]
 struct Native {
+    /// The `project_name` the tree's own config declares (§FS-imports.declaration.identity).
+    name: Option<String>,
     projects: Vec<WorkspaceProject>,
     root_alias: Option<String>,
     /// Every mounted root the native load reached, its own included, so the
@@ -67,7 +69,9 @@ struct Native {
 /// (§FS-imports.graph.cycle), and each tree's native load, kept by canonical root so
 /// a diamond loads a tree once (§FS-imports.graph.diamond).
 pub(crate) struct MountLoader {
-    chain: Vec<(PathBuf, String)>,
+    /// Each root on the chain, by the name its importer gave it and the alias
+    /// path its import spelled in the importer's run.
+    chain: Vec<(PathBuf, String, String)>,
     memo: BTreeMap<PathBuf, Native>,
     cli_base: PathBuf,
     report_base: PathBuf,
@@ -80,7 +84,7 @@ impl MountLoader {
     pub(crate) fn for_consumer(consumer: &ProjectRecords) -> Self {
         let name = consumer.project().name.clone().unwrap_or_default();
         Self {
-            chain: vec![(consumer.root.clone(), name)],
+            chain: vec![(consumer.root.clone(), name, String::new())],
             memo: BTreeMap::new(),
             cli_base: consumer.cli_base.clone(),
             report_base: consumer.root.clone(),
@@ -118,47 +122,69 @@ impl MountLoader {
     /// already reached that canonical root, else from its own config at exactly that
     /// root, climbing nothing (§FS-imports.declaration.root).
     fn native(&mut self, edge: &MountEdge, declaring: &ProjectRecords) -> Result<Native> {
-        if self.chain.iter().any(|(root, _)| *root == edge.root) {
+        if self.chain.iter().any(|(root, ..)| *root == edge.root) {
             // §FS-imports.graph.cycle: the chain from the consumer, by the names
             // each importer gave, closed by the import that reaches back.
             let chain = self
                 .chain
                 .iter()
-                .map(|(_, name)| name.as_str())
+                .map(|(_, name, _)| name.as_str())
                 .chain(std::iter::once(edge.segment.as_str()))
                 .collect::<Vec<_>>()
                 .join(" → ");
             return Err(config_location_error(
                 declaring,
                 edge.source.as_ref(),
-                format!("import cycle: {chain}"),
+                format!("{CYCLE}{chain}"),
             ));
         }
         if let Some(native) = self.memo.get(&edge.root) {
-            return Ok(native.clone());
+            let native = native.clone();
+            identity(edge, declaring, native.name.as_deref())?;
+            return Ok(native);
         }
         let mut invocation = declaring.run().members();
         invocation.path = edge.root.clone();
-        let mut config = config_at(
+        // §FS-imports.failures: the target's own refusal, then the import that reached it.
+        let spelled = self.spelled(edge);
+        let config = config_at(
             &edge.root,
             &self.cli_base,
             Some(&self.report_base),
             &invocation,
-        )?;
+        );
+        let mut config = config.map_err(|err| imported(err, &spelled, edge))?;
+        identity(edge, declaring, config.project_name.as_deref())?;
         config.set_mounted_root(edge.root.clone());
         let mut records = ProjectRecords::of(config);
-        self.chain.push((edge.root.clone(), edge.segment.clone()));
+        self.chain
+            .push((edge.root.clone(), edge.segment.clone(), edge.alias.clone()));
         let native = self.load_native(&mut records);
         self.chain.pop();
-        let native = native?;
+        let native = native.map_err(|err| imported(err, &spelled, edge))?;
         self.memo.insert(edge.root.clone(), native.clone());
         Ok(native)
+    }
+
+    /// The alias path the run spells `edge`'s target with: every mount the chain
+    /// passed through, then the edge's own (§FS-imports.graph.transitive).
+    fn spelled(&self, edge: &MountEdge) -> String {
+        let outer = self
+            .chain
+            .iter()
+            .skip(1)
+            .map(|(_, _, alias)| alias.as_str());
+        outer
+            .chain(std::iter::once(edge.alias.as_str()))
+            .collect::<Vec<_>>()
+            .join("/")
     }
 
     /// The projects a mounted root's own run builds (§FS-remote-projects.mount.rule):
     /// its workspace, members and mounts beneath it, or the one project it is.
     fn load_native(&mut self, records: &mut ProjectRecords) -> Result<Native> {
         let mut roots = vec![records.root.clone()];
+        let name = records.project_name.clone();
         if records.project().workspace.declared || !records.run().workspace.mounts.is_empty() {
             let include_root = records.project().workspace.include_root;
             let (projects, below) = load_projects_with(records, self)?;
@@ -169,6 +195,7 @@ impl MountLoader {
                 .filter(|project| include_root && project.mount.is_none())
                 .map(|project| project.alias.clone());
             return Ok(Native {
+                name,
                 projects,
                 root_alias,
                 roots,
@@ -182,6 +209,7 @@ impl MountLoader {
             &[],
         )?;
         Ok(Native {
+            name,
             projects: vec![WorkspaceProject {
                 alias: String::new(),
                 config: records.clone(),
@@ -192,6 +220,49 @@ impl MountLoader {
             root_alias: None,
             roots,
         })
+    }
+}
+
+/// What opens the message of a cycle (§FS-imports.graph.cycle), whose chain already
+/// names every import that reached its closing table.
+const CYCLE: &str = "import cycle: ";
+
+/// §FS-imports.declaration.identity: the target names itself what the import
+/// expects, refused at the `project` line of the config that declares the import.
+fn identity(edge: &MountEdge, declaring: &ProjectRecords, found: Option<&str>) -> Result<()> {
+    let expected = &edge.project;
+    if found == Some(expected.as_str()) {
+        return Ok(());
+    }
+    let declares = found.map_or("declares no project_name".to_string(), |found| {
+        format!("declares `{found}`")
+    });
+    let (alias, written) = (&edge.segment, &edge.written);
+    Err(config_location_error(
+        declaring,
+        edge.project_source.as_ref(),
+        format!("import `{alias}` expects project `{expected}`, but `{written}` {declares}"),
+    ))
+}
+
+/// §FS-imports.failures: a refusal inside the target's own tree, followed by one
+/// `note:` line naming the import that reached it, as a recovery breadcrumb
+/// (§FS-errors.1.2); a cycle, or a refusal a deeper import already noted, is
+/// passed on as it is.
+fn imported(err: anyhow::Error, spelled: &str, edge: &MountEdge) -> anyhow::Error {
+    let from = edge.source.as_ref().map_or_else(String::new, |source| {
+        format!(" from {}:{}", format_path(&source.path), source.line)
+    });
+    let note = format!("\nnote: imported as `{spelled}`{from}");
+    match err.downcast::<OperationDiagnostic>() {
+        Ok(failure) if failure.message.contains(CYCLE) || failure.message.contains("\nnote: ") => {
+            failure.into()
+        }
+        Ok(mut failure) => {
+            failure.message.push_str(&note);
+            failure.into()
+        }
+        Err(err) => anyhow::anyhow!("{err:#}{note}"),
     }
 }
 

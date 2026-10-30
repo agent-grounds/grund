@@ -85,6 +85,13 @@ pub(crate) fn has_dot_path_component(path: &str) -> bool {
     path.split('/').any(|part| part == "." || part == "..")
 }
 
+/// §FS-imports.declaration.path: an import's path is relative and written with `/`
+/// on every platform, so an absolute one, a drive prefix or a backslash is refused
+/// as text, before anything is resolved.
+pub(crate) fn invalid_import_path(path: &str) -> bool {
+    path.starts_with('/') || path.contains('\\') || looks_like_windows_drive_prefix(path)
+}
+
 fn looks_like_windows_drive_prefix(part: &str) -> bool {
     let bytes = part.as_bytes();
     bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':'

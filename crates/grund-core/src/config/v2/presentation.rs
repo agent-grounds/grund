@@ -10,7 +10,9 @@ use super::walk::Reader;
 use crate::config::fmt_block::validate_fmt_exclude;
 use crate::config::project::Import;
 use crate::config::v1::parse_bool;
-use crate::config::workspace_block::{invalid_project_alias_message, is_valid_project_alias};
+use crate::config::workspace_block::{
+    invalid_import_path, invalid_project_alias_message, is_valid_project_alias,
+};
 
 /// `[presentation]`: v1's `project_description`, `trigger` and `conversation`.
 pub(super) fn presentation_key(
@@ -162,6 +164,13 @@ pub(super) fn import_key(
     let at = r.at(line);
     let import = &mut r.project.workspace.imports[index];
     match key {
+        "path" if invalid_import_path(&read) => {
+            let alias = &import.alias;
+            let message = format!(
+                "invalid import path `{read}` for `{alias}` (expected a relative path written with /)"
+            );
+            return r.fail(line, message);
+        }
         "path" => (import.path, import.path_source) = (Some(read), at),
         "project" => (import.project, import.project_source) = (Some(read), at),
         _ => return Ok(false),

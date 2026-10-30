@@ -291,6 +291,16 @@ expansion climbs no claim above it, then loaded by the same function as its own 
 root. The canonical roots the current edge was reached through are a stack on the loader, and
 an edge whose root is already on it closes the cycle [§FS-imports.graph.cycle](../functional-spec/FS-imports.md#graphcycle-a-cycle-is-a-config-error) refuses.
 
+The loader is also where a target's own config is first read, so the two failures only that
+read can see are its ([§FS-imports.failures](../functional-spec/FS-imports.md#failures-config-failures)). The target's `project_name` is held to the import's
+`project` before anything below the target is loaded, at the `project` line of the config that
+declares the import, and again on every memo hit, since each edge expects a name of its own. A
+refusal inside the target's tree keeps the target's own `error:` line and gains one `note:`
+line naming the alias path the run spells the target with and the table that reached it; a
+cycle, whose chain already names every import, and a refusal a deeper import already noted,
+pass through as they are. What config text and a canonical path can answer is refused earlier,
+at expansion ([§AR-workspace.imports](AR-workspace.md#imports-an-import-is-a-mount-edge-expansion-hands-the-resolver)).
+
 The graft is the one place an identity is mapped. Each native project is cloned under the
 mount's alias path: the native root alias, or a standalone target's empty one, becomes the
 mount alias, every other alias path gains the mount alias in front, and every namespace its
