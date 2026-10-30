@@ -9,7 +9,7 @@
 //! and never reads the key (§AR-config.5).
 
 use crate::sources::Sources;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::compiled::Compiled;
 use super::run::Run;
@@ -44,6 +44,10 @@ pub struct Display<'a> {
     pub root: &'a Path,
     pub cli_base: &'a Path,
     pub from_root: bool,
+    /// The canonical roots of the mounts the run loaded: a file under one lies
+    /// outside the root and is still reported relative to the base, with `..`
+    /// (§FS-imports.paths, §FS-config.3.6).
+    pub(crate) mounted: &'a [PathBuf],
 }
 
 impl<'a> Frame<'a> {
@@ -101,7 +105,11 @@ impl Display<'_> {
             .strip_prefix(base)
             .map(Path::to_path_buf)
             .unwrap_or_else(|_| {
-                if !self.from_root && path.starts_with(self.root) {
+                // §FS-imports.paths: a mounted file is the second exception to
+                // "never above the report base" (§FS-config.3.6).
+                if (!self.from_root && path.starts_with(self.root))
+                    || self.mounted.iter().any(|root| path.starts_with(root))
+                {
                     relative_from_base(base, path)
                 } else {
                     path.to_path_buf()

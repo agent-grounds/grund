@@ -382,9 +382,11 @@ pub(crate) fn workspace_out_of_scope_section_headings(
     projects: &[WorkspaceProject],
     scopes: &[Option<ScanScope>],
 ) -> Vec<Diagnostic> {
+    // §FS-imports.findings: a mounted project's headings are its standalone run's.
     projects
         .iter()
         .zip(scopes)
+        .filter(|(project, _)| project.reports_findings())
         .flat_map(|(project, scope)| {
             out_of_scope_section_headings(&project.findings, scope.as_ref())
         })

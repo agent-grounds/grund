@@ -9,6 +9,7 @@ use std::path::PathBuf;
 
 /// One pattern written where a citation belongs: the marker's line and column,
 /// and the candidate as written after the marker.
+#[derive(Clone)]
 pub(crate) struct GlobCitation {
     pub(crate) file: PathBuf,
     pub(crate) line: usize,
@@ -21,6 +22,7 @@ pub(crate) struct GlobCitation {
 /// reads it: recorded by the promotion step where it would have dropped the
 /// token, so the checker can report it (§FS-check.checks.off-format-citation)
 /// while no pass ever takes an edge for it.
+#[derive(Clone)]
 pub(crate) struct OffFormatCitation {
     pub(crate) file: PathBuf,
     pub(crate) line: usize,

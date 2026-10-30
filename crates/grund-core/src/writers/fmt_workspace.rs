@@ -53,6 +53,12 @@ pub(crate) fn fmt_workspace_projects(
     let mut plans = Vec::new();
     let mut refusals: Vec<Option<anyhow::Error>> = Vec::new();
     for project in &context.projects {
+        // §FS-imports.writes: a mounted project is read, never planned or written.
+        if !project.reports_findings() {
+            plans.push(None);
+            refusals.push(None);
+            continue;
+        }
         let auto_cross_refs =
             auto_cross_refs_for_scope(&project.config, Some(&project.config.root), true)?;
         let run_opts = FmtRunOpts {

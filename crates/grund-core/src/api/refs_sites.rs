@@ -120,6 +120,10 @@ fn refs_sites_run(
         let declarations = &context.projects[site.project].findings.declarations;
         reports_site(scope.as_ref(), declarations, site.citation)
     });
+    // §FS-imports.graph.diamond: a site of a tree two alias paths reach, under its canonical one.
+    for site in &mut sites {
+        (site.project, site.citation) = context.canonical_site(site.project, site.citation);
+    }
     // §FS-refs.globs: in `(path, line, column)` order, each site once however many
     // patterns select it or catalogs hold it.
     let key = |site: &Site| {
@@ -151,6 +155,7 @@ fn refs_sites_run(
                     .findings,
                     citation,
                     &project.config.marker,
+                    project.mount.as_ref(),
                 ),
                 section: citation.section.clone(),
                 marker: citation.has_marker,

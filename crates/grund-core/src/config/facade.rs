@@ -22,6 +22,8 @@ use super::compiled::compile;
 use super::file_reading::FileReading;
 use super::frame::{Display, Frame};
 use super::kinds::KindTable;
+#[cfg(test)]
+use super::mount_edge::MountEdge;
 use super::project::{Project, Rules, Schema};
 use super::record::{AbsentOptionalNamespace, Config};
 use super::run::Run;
@@ -173,6 +175,7 @@ impl Config {
             root: &self.root,
             cli_base: &self.cli_base,
             from_root: self.reports_from_root(),
+            mounted: &self.records.run.workspace.mounted_roots,
         }
     }
 
@@ -235,6 +238,32 @@ impl Config {
     /// (§FS-check.1.4.1). Not a façade field, like the kind table below.
     pub(crate) fn set_workspace_lists_optional(&mut self, lists: bool) {
         self.records.run.workspace.lists_optional = lists;
+    }
+
+    /// Mark this project as loaded under the mounted root at `root`
+    /// (§FS-remote-projects.mount.rule): its walk reads ignore files at and below
+    /// it only (§FS-remote-projects.ignore), and no claim above it is climbed.
+    pub(crate) fn set_mounted_root(&mut self, root: PathBuf) {
+        self.records.run.workspace.mounted_root = Some(root);
+    }
+
+    /// The mounted root this project was loaded under, if any.
+    pub(crate) fn mounted_root(&self) -> Option<&Path> {
+        self.records.run.workspace.mounted_root.as_deref()
+    }
+
+    /// The canonical roots of the mounts the run loaded, whose files are reported
+    /// relative to the report base (§FS-imports.paths).
+    pub(crate) fn set_mounted_roots(&mut self, roots: Vec<PathBuf>) {
+        self.records.run.workspace.mounted_roots = roots;
+    }
+
+    /// The mount edges this run's blocks declare (§AR-resolver.mount). No config key
+    /// declares one yet, so only the mount layer's own proof sets them
+    /// (§REQ-remote-equivalence.4).
+    #[cfg(test)]
+    pub(crate) fn set_mount_edges(&mut self, mounts: Vec<MountEdge>) {
+        self.records.run.workspace.mounts = mounts;
     }
 
     /// What [`Self::set_workspace_lists_optional`] recorded; `false` in a run

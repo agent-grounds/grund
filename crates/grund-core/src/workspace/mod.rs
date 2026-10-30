@@ -63,8 +63,8 @@ pub(crate) use optional_members::{
 };
 pub(crate) use preflight::preflight_embedding_paths;
 pub(crate) use scope::{
-    apply_workspace_boundary, open, open_at, populate_workspace_boundary, resolve_workspace_config,
-    scope_is_config_root,
+    apply_workspace_boundary, config_location_error, open, open_at, populate_workspace_boundary,
+    resolve_workspace_config, scope_is_config_root,
 };
 pub(crate) use unlisted::{unlisted_workspace_block_errors, unlisted_workspace_block_run_warnings};
 pub(crate) use unlisted_project::unlisted_project_contexts;

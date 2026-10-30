@@ -40,6 +40,8 @@ The global filename is resolved by the config component using Gitoxide's Git-con
 
 Setting `[scan] respect_gitignore = false` turns this off, and is only for a repo that genuinely needs ignored paths scanned. The directory skip rules of [§AR-scanner.1.2](AR-scanner.md#12-directory-skip-rules) apply **in addition** to the ignore files, never instead of them ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned)).
 
+A mounted root ([§FS-remote-projects.ignore](../functional-spec/FS-remote-projects.md#ignore-ignore-isolation)) is walked in its own ignore mode. The builder reads no parent directory's ignore files, no `.git/info/exclude` and no global file, and reads `.gitignore` whether or not a repository encloses the root; where a scan root lies below the mounted root, the ignore files between the two are handed to the builder explicitly, each still matched from its own directory. The per-path predicates ask the same rules through `GlobalExcludes::for_walk`, which for a mounted root holds no global pattern, takes the mounted root as the repository top, and reads no `info/exclude` and no ignore file above it, so the walk, the one-level probe walker and the rule-by-rule predicate cannot disagree about a mounted file.
+
 ### 1.2 Directory skip rules
 
 The walker's directory filter prunes, at any depth:

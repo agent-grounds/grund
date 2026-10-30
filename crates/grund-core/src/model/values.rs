@@ -164,7 +164,7 @@ pub(crate) fn positive_numeric_component(part: &str) -> bool {
 /// path as written, `None` for a bare ID: whether it names a root or one of a
 /// root's components is resolved against the catalog, not read off the
 /// spelling (§FS-values.5.1).
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[non_exhaustive]
 pub struct ValueBinding {
     pub namespace: Option<String>,
@@ -182,7 +182,7 @@ pub struct ValueBinding {
 
 /// A readable declaration or attempted binding that violates the explicit
 /// value grammar (§FS-values.5.2, §AR-scanner.3).
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[non_exhaustive]
 pub struct InvalidValueSite {
     pub id: Option<Id>,

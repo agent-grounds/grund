@@ -63,6 +63,7 @@ mod inputs;
 mod kind;
 mod kinds;
 pub(crate) mod migrate;
+mod mount_edge;
 mod places;
 mod point_sizes;
 mod project;
@@ -107,6 +108,7 @@ pub use fields::{FRONT_MATTER, Field, FieldContent, FrontMatterKey, FrontMatterS
 pub(crate) use global_excludes::global_excludes_path;
 pub(crate) use inputs::{observe_config, observe_config_candidates, observe_ignore_inputs};
 pub use kind::{KindConfig, KindIndex, KindResolution};
+pub(crate) use mount_edge::MountEdge;
 #[allow(unused_imports)]
 pub use places::Owner;
 pub(crate) use places::Owners;

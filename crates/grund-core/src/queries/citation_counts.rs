@@ -23,27 +23,44 @@ use crate::resolver::{
 /// have to be wrong for one of the two questions; two counts printed by two
 /// commands that disagreed would be worse than one that needs a sentence of
 /// explanation, so `refs` stays the total and the sentence lives in §FS-list.3.2.1.
+///
+/// §FS-imports.graph.diamond: a tree two alias paths reach is counted once, under
+/// its canonical alias path, and each of its alias paths reads that one count.
 pub(crate) struct ListCitationCounts<'a> {
     refs: BTreeMap<&'a str, BTreeMap<&'a Id, usize>>,
     used: BTreeMap<&'a str, BTreeMap<&'a Id, usize>>,
     empty: BTreeMap<&'a Id, usize>,
+    canonical: BTreeMap<&'a str, &'a str>,
 }
 
 impl<'a> ListCitationCounts<'a> {
     pub(crate) fn new(context: &'a WorkspaceContext) -> Self {
+        let projects = &context.projects;
+        let canonical = projects
+            .iter()
+            .filter(|copy| !copy.reports_sites())
+            .filter_map(|copy| {
+                let same = |owner: &&WorkspaceProject| {
+                    owner.config.root == copy.config.root && owner.reports_sites()
+                };
+                let owner = projects.iter().find(same)?;
+                Some((copy.alias.as_str(), owner.alias.as_str()))
+            })
+            .collect();
         let mut counts = Self {
             refs: BTreeMap::new(),
             used: BTreeMap::new(),
             empty: BTreeMap::new(),
+            canonical,
         };
-        for source in &context.projects {
+        for source in projects.iter().filter(|source| source.reports_sites()) {
             let index_entries = kind_index_entries(source);
             // §FS-refs.2: `list` counts the set `refs` lists, lent citations included.
             for citation in source.findings.edges() {
-                let target_alias: &str = match &citation.namespace {
+                let target_alias = counts.tree(match &citation.namespace {
                     Some(ns) => ns.as_str(),
                     None => source.alias.as_str(),
-                };
+                });
                 *counts
                     .refs
                     .entry(target_alias)
@@ -70,13 +87,21 @@ impl<'a> ListCitationCounts<'a> {
     /// a workspace-root `grund list --unused` see members' declarations that only
     /// sibling projects cite.
     pub(crate) fn refs_for(&self, alias: &str) -> &BTreeMap<&'a Id, usize> {
-        self.refs.get(alias).unwrap_or(&self.empty)
+        self.refs.get(self.tree(alias)).unwrap_or(&self.empty)
+    }
+
+    /// The alias path a tree's count is kept under (§FS-imports.graph.diamond).
+    fn tree<'s>(&self, alias: &'s str) -> &'s str
+    where
+        'a: 's,
+    {
+        self.canonical.get(alias).copied().unwrap_or(alias)
     }
 
     /// The same count minus each kind's own index entries — what `--unused`
     /// asks, so a declaration only its index names still counts as unused.
     pub(crate) fn used_for(&self, alias: &str) -> &BTreeMap<&'a Id, usize> {
-        self.used.get(alias).unwrap_or(&self.empty)
+        self.used.get(self.tree(alias)).unwrap_or(&self.empty)
     }
 }
 

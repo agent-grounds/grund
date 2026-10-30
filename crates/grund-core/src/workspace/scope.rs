@@ -199,7 +199,7 @@ pub(super) fn project_name_error(config: &Config, message: String) -> anyhow::Er
 /// It names that file on disk too, as the error a load raises does, so an editor
 /// marks a `[workspace]` or `project_name` refusal where it marks a parse error
 /// (§FS-lsp.2.2.4.1).
-pub(super) fn config_location_error(
+pub(crate) fn config_location_error(
     config: &Config,
     source: Option<&ConfigLocation>,
     message: String,

@@ -277,3 +277,37 @@ places below the writers that name `Presentation` ([§AR-system.4](README.md#4-d
 calls it: the canonical target of an index entry reaches the checker already built,
 as `Expected` ([§AR-checker.1.3](../../crates/grund-core/src/checker/report.rs)), so an anchor-format change moves a drift comparison
 through bytes and no index verdict through a setting.
+
+## mount: The mount layer loads each mounted tree once and grafts it
+
+A mounted root ([§FS-remote-projects.mount.rule](../functional-spec/FS-remote-projects.md#mountrule-a-mounted-root-resolves-natively-and-is-shown-under-its-alias)) is loaded here, in `resolver/mount.rs`,
+and nowhere else. `load_workspace_projects` hands every root it loads, the run's own and
+each mounted one, to `load_projects_with` with one `MountLoader` for the run. After a root's
+tree is expanded and before any of its scans, the loader loads each mount edge the root's run
+carries: from its memo, keyed by the target's canonical root, when the run already reached that
+tree ([§FS-imports.graph.diamond](../functional-spec/FS-imports.md#graphdiamond-one-tree-reached-under-two-alias-paths)), and otherwise from the target's own config at exactly its
+root, marked as mounted so its walk reads only its own ignore files ([§AR-scanner.1.1](AR-scanner.md#11-respecting-gitignore-and-friends)) and its
+expansion climbs no claim above it, then loaded by the same function as its own outermost
+root. The canonical roots the current edge was reached through are a stack on the loader, and
+an edge whose root is already on it closes the cycle [§FS-imports.graph.cycle](../functional-spec/FS-imports.md#graphcycle-a-cycle-is-a-config-error) refuses.
+
+The graft is the one place an identity is mapped. Each native project is cloned under the
+mount's alias path: the native root alias, or a standalone target's empty one, becomes the
+mount alias, every other alias path gains the mount alias in front, and every namespace its
+citations, escaped citations, value bindings and deferred legacy candidates name is mapped the
+same way. Grafted projects follow the root's own projects in alias order, and their grammars
+join the scan targets, so a consumer's qualified citation into a mount is parsed with the
+target's grammar inline ([§AR-workspace.2](AR-workspace.md#2-single-citation-grammar)). Every reader downstream sees one more loaded
+project: [§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function), `show`, `list`, `refs`, `cover` and the writers resolve through it
+unchanged.
+
+Three facts ride on a grafted project, `WorkspaceProject::mount`, and only these readers ask
+them. Its findings are suppressed: `check` and the run's cautions skip it
+([§FS-imports.findings](../functional-spec/FS-imports.md#findings-dependency-findings-are-suppressed-consumer-citations-are-not)), and the writers plan nothing in it ([§FS-imports.writes](../functional-spec/FS-imports.md#writes-the-consumer-writes-only-its-own-files)). Its tree's
+canonical alias path, the fewest segments and then the first in byte order, with an ordinary
+project of the run owning its tree outright, is the one copy `refs`, `cover` and `list`'s
+counts report a site under, and `refs` takes either alias path of one tree as that tree
+([§FS-imports.graph.diamond](../functional-spec/FS-imports.md#graphdiamond-one-tree-reached-under-two-alias-paths)). And the inverse of the map is kept for the one field that spells a
+citation as its file wrote it, the `id` of `cover` and `refs` ([§FS-workspace.8.6.4](../functional-spec/FS-workspace.md#864-the-rendered-id-says-what-the-token-says)). The roots
+the run mounted travel on its display, so a file below one is spelled from the report base
+with `..` ([§FS-imports.paths](../functional-spec/FS-imports.md#paths-imported-files-are-reported-where-they-are)).

@@ -375,7 +375,12 @@ pub(crate) fn workspace_out_of_scope_references(
         })
         .collect::<BTreeMap<_, _>>();
     let mut diagnostics = Vec::new();
-    for (project, scope) in projects.iter().zip(scopes) {
+    // §FS-imports.findings: what a mounted project's own citations earn is suppressed.
+    let own = projects
+        .iter()
+        .zip(scopes)
+        .filter(|(project, _)| project.reports_findings());
+    for (project, scope) in own {
         diagnostics.extend(out_of_scope_references(
             &project.findings,
             project.config.schema(),

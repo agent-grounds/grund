@@ -18,6 +18,7 @@ use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 use super::legacy_promotion::promote_qualified_legacy_citations;
+use super::mount::{MountLoader, Mounted, mark_canonical};
 use super::shorthand::resolve_qualified_shorthand_citations;
 use super::unread_block::settled_run_warnings;
 use crate::config::{Invocation, ProjectRecords, Selection};
@@ -25,8 +26,8 @@ use crate::model::{Catalog, Citation, Diagnostic};
 use crate::scanner::{ScanError, scan_tree_with_workspace};
 use crate::sources::record_test_workspace_load;
 use crate::workspace::{
-    WorkspaceCitationTarget, expand_workspace_tree, open, open_narrowable, scope_is_config_root,
-    unlisted_workspace_block_run_warnings,
+    WorkspaceCitationTarget, expand_workspace_tree_with_report_base, open, open_narrowable,
+    scope_is_config_root, unlisted_workspace_block_run_warnings,
 };
 
 /// One project in scope for a query command — an alias, the loaded project's
@@ -34,11 +35,32 @@ use crate::workspace::{
 /// project's tree.
 /// Mirrors `ProjectScan` in `api/run.rs`; kept here as the shared shape
 /// every query command consumes (§AR-resolver.3).
+#[derive(Clone)]
 pub(crate) struct WorkspaceProject {
     pub(crate) alias: String,
     pub(crate) config: ProjectRecords,
     pub(crate) findings: Catalog,
     pub(crate) scan_errors: Vec<ScanError>,
+    /// Set where a mount grafted this project into the run, `None` for one of the
+    /// run's own (§FS-remote-projects.mount.rule): its findings are suppressed and
+    /// its sites are reported once, under the canonical alias path
+    /// (§FS-imports.findings, §FS-imports.graph.diamond).
+    pub(crate) mount: Option<Mounted>,
+}
+
+impl WorkspaceProject {
+    /// Whether this project's own findings are the run's to report: every project
+    /// but a mounted one (§FS-imports.findings).
+    pub(crate) fn reports_findings(&self) -> bool {
+        self.mount.is_none()
+    }
+
+    /// Whether this copy is the one a site of its tree is reported under: an
+    /// ordinary project always, a mounted copy only at its canonical alias path
+    /// (§FS-imports.graph.diamond).
+    pub(crate) fn reports_sites(&self) -> bool {
+        self.mount.as_ref().is_none_or(|mounted| mounted.canonical)
+    }
 }
 
 /// Everything a workspace-aware query command needs (§FS-workspace.8 intro,
@@ -118,6 +140,48 @@ impl WorkspaceContext {
             None => Some(citing),
             Some(alias) => self.loaded_alias(alias),
         }
+    }
+
+    /// Whether two citation targets are one tree: the same loaded project, or two
+    /// alias paths a mount gave one tree (§FS-imports.graph.diamond).
+    pub(crate) fn same_target(&self, left: Option<usize>, right: Option<usize>) -> bool {
+        match (left, right) {
+            (Some(left), Some(right)) => {
+                left == right
+                    || (self.projects[left].mount.is_some() || self.projects[right].mount.is_some())
+                        && self.projects[left].config.root == self.projects[right].config.root
+            }
+            (left, right) => left == right,
+        }
+    }
+
+    /// The copy a site of `project`'s tree is reported under, and the site as that
+    /// copy holds it: the project itself unless a mount put a second alias path of
+    /// the same tree in the run (§FS-imports.graph.diamond).
+    pub(crate) fn canonical_site<'c>(
+        &'c self,
+        project: usize,
+        citation: &'c Citation,
+    ) -> (usize, &'c Citation) {
+        if self.projects[project].reports_sites() {
+            return (project, citation);
+        }
+        let root = &self.projects[project].config.root;
+        let canonical = self
+            .projects
+            .iter()
+            .position(|copy| copy.config.root == *root && copy.reports_sites());
+        canonical
+            .and_then(|index| {
+                let same = |copy: &&Citation| {
+                    copy.file == citation.file
+                        && copy.line == citation.line
+                        && copy.column == citation.column
+                };
+                let edges = self.projects[index].findings.edges();
+                edges.into_iter().find(same).map(|copy| (index, copy))
+            })
+            .unwrap_or((project, citation))
     }
 
     /// Every known alias in the workspace, in `projects` order. An empty list
@@ -250,7 +314,8 @@ pub(crate) fn load_resolved_workspace_context(
     // joins the run's warning channel here (§DF-unlisted-workspace-block.2.3),
     // after the three the workspace pass settled — the order they were emitted in.
     let mut run_warnings = settled_run_warnings(render_config.run());
-    for project in &projects {
+    // §FS-imports.findings: a mounted project's cautions are its standalone run's.
+    for project in projects.iter().filter(|project| project.reports_findings()) {
         run_warnings.extend(unlisted_workspace_block_run_warnings(
             &project.config,
             &render_config,
@@ -305,6 +370,7 @@ fn single_project_context(
             config,
             findings,
             scan_errors,
+            mount: None,
         }],
         current: Some(0),
         workspace_loaded: false,
@@ -371,11 +437,44 @@ pub(crate) fn load_narrowable_workspace_context(
 pub(crate) fn load_workspace_projects(
     root_config: &mut ProjectRecords,
 ) -> Result<Vec<WorkspaceProject>> {
+    let mut mounts = MountLoader::for_consumer(root_config);
+    let (mut projects, mounted_roots) = load_projects_with(root_config, &mut mounts)?;
+    // §FS-imports.graph.diamond: named once every project of the run is known.
+    mark_canonical(&mut projects);
+    // §FS-imports.paths: the report spells a file below a mounted root from its base.
+    if !mounted_roots.is_empty() {
+        root_config
+            .facade_mut()
+            .set_mounted_roots(mounted_roots.clone());
+        for project in &mut projects {
+            project
+                .config
+                .facade_mut()
+                .set_mounted_roots(mounted_roots.clone());
+        }
+    }
+    Ok(projects)
+}
+
+/// [`load_workspace_projects`] for one root, the run's own or a mounted one
+/// (§AR-resolver.mount): its tree expanded, each mount it declares loaded and
+/// grafted through `mounts` before any scan of its own, so the scans parse a
+/// qualified citation into a mount with that mount's grammar, and the grafted
+/// projects after its own in alias order. Returns the mounted roots it reached.
+pub(super) fn load_projects_with(
+    root_config: &mut ProjectRecords,
+    mounts: &mut MountLoader,
+) -> Result<(Vec<WorkspaceProject>, Vec<PathBuf>)> {
     // Stage 1: build the (alias, config) list, recursing into any member that
     // is itself a workspace root. Failing fast on alias errors, empty
     // workspaces, duplicates, member cycles, and missing members before any
     // scan keeps misconfiguration cheap to diagnose.
-    let entries = expand_workspace_tree(root_config.facade_mut())?
+    let report_base = if root_config.run().workspace.mounted_root.is_some() {
+        mounts.report_base().to_path_buf()
+    } else {
+        root_config.root.clone()
+    };
+    let entries = expand_workspace_tree_with_report_base(root_config.facade_mut(), &report_base)?
         .into_iter()
         .map(|entry| (entry.alias, ProjectRecords::of(entry.config)))
         .collect::<Vec<_>>();
@@ -383,11 +482,20 @@ pub(crate) fn load_workspace_projects(
     // §AR-scanner.2.4.2, §FS-check.1.3.8: each member's run was built carrying the
     // root's classification and `--full` (`Run::members`), so nothing is set here.
 
+    // §FS-remote-projects.mount.rule: every mount this tree declares, loaded natively.
+    let (grafted, mounted_roots) = mounts.graft_all(root_config)?;
+
     // Stage 2: build the target list up-front so each project's scan can
     // parse `§<alias>/<ID>` citations with the target's grammar inline —
     // no second disk pass (§FS-workspace.1.2, §AR-workspace.2).
     let targets = entries
         .iter()
+        .map(|(alias, records)| (alias, records))
+        .chain(
+            grafted
+                .iter()
+                .map(|project| (&project.alias, &project.config)),
+        )
         .map(|(alias, records)| WorkspaceCitationTarget {
             alias: alias.clone(),
             schema: records.schema().clone(),
@@ -427,9 +535,10 @@ pub(crate) fn load_workspace_projects(
         .into_iter()
         .map(|(_, project)| project)
         .collect::<Result<Vec<_>>>()?;
+    projects.extend(grafted);
     promote_qualified_legacy_citations(&mut projects);
     resolve_qualified_shorthand_citations(&mut projects);
-    Ok(projects)
+    Ok((projects, mounted_roots))
 }
 
 fn load_workspace_project(
@@ -449,5 +558,6 @@ fn load_workspace_project(
         config,
         findings,
         scan_errors,
+        mount: None,
     })
 }

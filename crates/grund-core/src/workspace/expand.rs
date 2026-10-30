@@ -88,6 +88,10 @@ pub(crate) struct WorkspaceProjectEntry {
 /// namespace no other scope agrees with, and §FS-check.3.8 would then tell the
 /// author to write the one spelling that fails in CI.
 fn enclosing_alias_prefix(config: &mut Config) -> Result<String> {
+    // §FS-remote-projects.mount.rule: no claim above a mounted root reaches inside it.
+    if config.mounted_root().is_some() {
+        return Ok(String::new());
+    }
     let mut segments: Vec<String> = Vec::new();
     // The first child is the caller's own config, already loaded; each later one is
     // the claiming ancestor the previous step returned — either way the config in
@@ -459,6 +463,10 @@ fn collect_workspace_members(
             Some(report_base),
             &invocation,
         )?;
+        // §FS-remote-projects.ignore: a mounted root's members are walked inside its fence.
+        if let Some(mounted) = top_config.mounted_root() {
+            member_config.set_mounted_root(mounted.to_path_buf());
+        }
         // The alias is derived whether or not the member turns out to be a
         // project: a member that is itself a workspace still contributes its
         // segment to every alias path below it (§FS-workspace.6.1.2).

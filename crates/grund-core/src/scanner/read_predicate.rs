@@ -22,6 +22,7 @@ use ignore::{Match, WalkBuilder, gitignore::Glob};
 
 use super::exclude_globs::ExcludeGlobs;
 use super::global_excludes::GlobalExcludes;
+use super::mounted_ignore::mounted_ignore_files;
 use super::walk::WalkDirFilter;
 use crate::config::{Frame, Schema, canonical_config_root};
 use crate::model::{ExcludingRule, format_path, is_hidden, scanned_path_key};
@@ -122,10 +123,11 @@ pub(crate) fn excluding_rule(
     let mut refusal = None;
     let globs = ExcludeGlobs::of(schema);
     // §FS-scan.scope.ignore-files.pathname: resolve once for the whole target probe.
+    let mounted = frame.run.workspace.mounted_root.as_deref();
     let global = schema
         .sources
         .respect_gitignore
-        .then(|| GlobalExcludes::load().map(Arc::new))
+        .then(|| GlobalExcludes::for_walk(mounted).map(Arc::new))
         .transpose()
         .ok()?;
     let roots = roots.iter().map(|root| scanned_path_key(root));
@@ -248,10 +250,11 @@ fn under_root(
         &looping_links,
     );
     // §FS-scan.scope.ignore-files.pathname: every component asks the same resolved file.
+    let mounted = frame.run.workspace.mounted_root.as_deref();
     let global = schema
         .sources
         .respect_gitignore
-        .then(|| GlobalExcludes::load().map(Arc::new))
+        .then(|| GlobalExcludes::for_walk(mounted).map(Arc::new))
         .transpose()
         .ok()?;
     let names: Vec<_> = relative
@@ -285,9 +288,11 @@ fn under_root(
 /// also how `walk_errors.rs` asks about a link the walker could not resolve;
 /// where it is not, the same files are
 /// matched against the name in the walker's order of precedence.
-/// Both use one resolved global file (§FS-scan.scope.ignore-files.pathname).
-pub(super) fn ignored(path: &Path, is_dir: bool) -> bool {
-    GlobalExcludes::load()
+/// Both use one resolved global file (§FS-scan.scope.ignore-files.pathname), and
+/// under a mounted root none, with only the ignore files at and below it
+/// (§FS-remote-projects.ignore).
+pub(super) fn ignored(path: &Path, is_dir: bool, mounted: Option<&Path>) -> bool {
+    GlobalExcludes::for_walk(mounted)
         .map(Arc::new)
         .is_ok_and(|global| ignored_with(path, is_dir, &global))
 }
@@ -327,6 +332,9 @@ fn walker_ignores(path: &Path, follow_links: bool, global: &Arc<GlobalExcludes>)
         .max_depth(Some(1))
         .follow_links(follow_links)
         .git_global(false);
+    if let Some(mounted) = global.mounted() {
+        mounted_ignore_files(&mut builder, mounted, parent);
+    }
     // §FS-scan.scope.ignore-files.pathname: no dependency fallback, even for an empty file.
     let global = Arc::clone(global);
     builder.filter_entry(move |entry| !globally_ignored(&global, entry));
@@ -386,7 +394,7 @@ fn ignored_by_rules(path: &Path, is_dir: bool, global: &GlobalExcludes) -> Optio
     let matched = |dir: &Path, file: PathBuf| -> Option<Option<IgnoredBy>> {
         decision(global.ignore_file(dir, file)?.matched(path, is_dir))
     };
-    for dir in &dirs {
+    for dir in dirs.iter().filter(|dir| global.reads_dir(dir)) {
         if let Some(verdict) = matched(dir, dir.join(".ignore")) {
             return verdict;
         }
@@ -397,7 +405,10 @@ fn ignored_by_rules(path: &Path, is_dir: bool, global: &GlobalExcludes) -> Optio
             return verdict;
         }
     }
-    if let Some(verdict) = matched(&top, git_dir(&top).join("info/exclude")) {
+    // §FS-remote-projects.ignore: a mounted root reads no `info/exclude`.
+    if global.mounted().is_none()
+        && let Some(verdict) = matched(&top, git_dir(&top).join("info/exclude"))
+    {
         return verdict;
     }
     decision(global.matched(path, is_dir)).flatten()
