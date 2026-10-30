@@ -10,10 +10,10 @@ second revision pin and no committed copy ([§GOAL-small-and-large](../goals.md#
 cross-repository citation stays a checked one ([§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration)). The decision is
 [§DF-imports](../decisions/functional/DF-imports.md#df-imports-an-import-is-a-named-input-read-live-from-a-sibling-tree-never-a-remote).
 
-The table is read, every import whose path names a directory is mounted under its alias
-([§FS-imports.mount](FS-imports.md#mount-an-import-is-a-mounted-root-read-live-and-read-only)), and each failure of [§FS-imports.failures](FS-imports.md#failures-config-failures) is refused where it says. The rest
-is specified ahead of its release: the two checks, what selection, the writers and `fetch` do
-with an import, and the editor. A config that declares no import reads nothing this spec names
+The command line ships it whole: the table is read, every import whose path names a
+directory is mounted under its alias ([§FS-imports.mount](FS-imports.md#mount-an-import-is-a-mounted-root-read-live-and-read-only)), each failure of [§FS-imports.failures](FS-imports.md#failures-config-failures) is
+refused where it says, and the two checks, selection, the writers and `fetch` treat an import
+as this spec says. The editor ([§FS-imports.editor](FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)) is specified ahead of its release. A config that declares no import reads nothing this spec names
 ([§FS-imports.declaration.none](FS-imports.md#declarationnone-a-config-with-no-imports-reads-nothing-new)).
 
 ## terms: Terms

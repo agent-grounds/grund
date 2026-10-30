@@ -72,6 +72,8 @@ Supported check finding codes:
   full-scope-ignored
   glob-citation
   image-index-entry
+  import-live
+  import-missing
   inline-citation-style
   invalid-field-value
   invalid-rule

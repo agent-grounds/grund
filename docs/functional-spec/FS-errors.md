@@ -579,8 +579,8 @@ Two runs of the same subcommand on the same input must produce byte-identical st
   [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes) names — an absolute path or one that escapes the loaded
   root other than the `..` path of a config above it that the run had to read, with
   no absolute fallback for an in-root target ([§FS-config.3.6](FS-config.md#36-output--report-format),
-  [§DF-cli-base-parent-paths.2](../decisions/functional/DF-cli-base-parent-paths.md#2-decision)). The `..` path of a file in an import is the other, which is
-  specified ahead of its release ([§FS-imports.paths](FS-imports.md#paths-imported-files-are-reported-where-they-are)).
+  [§DF-cli-base-parent-paths.2](../decisions/functional/DF-cli-base-parent-paths.md#2-decision)). The `..` path of a file in an import is the other
+  ([§FS-imports.paths](FS-imports.md#paths-imported-files-are-reported-where-they-are)).
 - Non-deterministic ordering — the order each report keeps is [§FS-errors.4.1](FS-errors.md#41-ordering).
 - Platform-native path separators in repo-relative output. Any path that appears in a report, JSON field, e2e case manifest, duplicate-site list, stub-link note, or formatter summary is rendered with `/`, so Windows and Unix runs over the same tree compare byte-for-byte.
 

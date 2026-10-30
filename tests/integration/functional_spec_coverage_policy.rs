@@ -316,7 +316,6 @@ pub(super) const TEMPORARY_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-remote-projects.lock.ownership", reason: "specified ahead of its release; the Remotes piece of remote projects proves it" },
     Exception { id: "FS-remote-projects.mount.inside", reason: "specified ahead of its release; the Mount piece of remote projects proves it" },
     Exception { id: "FS-remote-projects.mount.local", reason: "specified ahead of its release; the Mount piece of remote projects proves it" },
-    Exception { id: "FS-remote-projects.mount.nested", reason: "specified ahead of its release; the Mount piece of remote projects proves it" },
     Exception { id: "FS-remote-projects.projection.committed", reason: "specified ahead of its release; the Remotes piece of remote projects proves it" },
     Exception { id: "FS-remote-projects.projection.format", reason: "specified ahead of its release; the Remotes piece of remote projects proves it" },
     Exception { id: "FS-remote-projects.projection.tree", reason: "specified ahead of its release; the Remotes piece of remote projects proves it" },
