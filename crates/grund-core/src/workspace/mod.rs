@@ -84,7 +84,7 @@ mod tests_absorbed_scan;
 mod tests_claim_answers;
 #[cfg(test)]
 mod tests_claims;
-#[cfg(test)]
+#[cfg(all(test, unix))]
 mod tests_imports;
 #[cfg(test)]
 mod tests_nested;

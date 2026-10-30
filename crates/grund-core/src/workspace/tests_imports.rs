@@ -9,7 +9,6 @@ use crate::testing::{canonical_test_path, test_root, write};
 
 /// A consumer `app` beside a target `lib`, with `link` a symlink to `app` itself and
 /// `alias` one to `lib`, and `app` importing `dep` from `path`.
-#[cfg(unix)]
 fn consumer(name: &str, path: &str) -> std::path::PathBuf {
     let base = canonical_test_path(&test_root(name));
     let app = base.join("app");
@@ -31,7 +30,6 @@ fn consumer(name: &str, path: &str) -> std::path::PathBuf {
 }
 
 /// §FS-imports.failures: a symlink that resolves to the consumer is the consumer.
-#[cfg(unix)]
 #[test]
 fn an_import_through_a_symlink_to_its_own_root_is_refused_at_its_path_line() {
     let app = consumer("an_import_through_a_symlink_to_its_own_root", "../link");
@@ -47,7 +45,6 @@ fn an_import_through_a_symlink_to_its_own_root_is_refused_at_its_path_line() {
 
 /// §FS-imports.declaration.path: the edge carries the canonical root, so a link to
 /// the target and the target itself are one tree (§FS-imports.graph.diamond).
-#[cfg(unix)]
 #[test]
 fn an_import_through_a_symlink_mounts_the_canonical_target() {
     let app = consumer(
