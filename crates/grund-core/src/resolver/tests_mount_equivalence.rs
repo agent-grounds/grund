@@ -195,6 +195,7 @@ fn mounted(lib: &Path, app: &Path) -> Vec<WorkspaceProject> {
         written: "../outer/lib".into(),
         root: lib.to_path_buf(),
         source: None,
+        missing: false,
         project: "lib".into(),
         project_source: None,
     }]);
@@ -338,6 +339,7 @@ fn a_mount_of_the_consumer_itself_closes_a_cycle() {
         written: ".".into(),
         root: app.clone(),
         source: None,
+        missing: false,
         project: "app".into(),
         project_source: None,
     }]);

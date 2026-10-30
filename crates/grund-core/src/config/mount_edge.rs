@@ -22,8 +22,12 @@ pub(crate) struct MountEdge {
     /// The path as the declaring config wrote it, which is how every message
     /// names the target (§FS-errors.4).
     pub(crate) written: String,
-    /// The canonical root of the target (§FS-scan.identity).
+    /// The canonical root of the target (§FS-scan.identity), or, for a missing
+    /// one, the directory its path names, spelled lexically.
     pub(crate) root: PathBuf,
+    /// Whether the path names no directory, so there is nothing to mount and every
+    /// citation into the alias is unverified (§FS-imports.checks.import-missing).
+    pub(crate) missing: bool,
     /// The declaring block's line the edge is located at, spelled from the run's
     /// report base (§FS-errors.4).
     pub(crate) source: Option<ConfigLocation>,
@@ -31,4 +35,30 @@ pub(crate) struct MountEdge {
     /// where it wrote it (§FS-imports.declaration.identity).
     pub(crate) project: String,
     pub(crate) project_source: Option<ConfigLocation>,
+}
+
+/// One import edge a run reached (§FS-imports.checks): read live from its tree, or
+/// missing, by the alias path the run spells it with and the path as its config
+/// wrote it. The loader collects one per edge, a transitive one included, onto
+/// every project's run, which is what the report announces and what resolution
+/// asks of a citation into a missing one (§FS-workspace.4.3).
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct ImportRead {
+    pub(crate) alias: String,
+    pub(crate) written: String,
+    /// The table line of the config that declares the import (§FS-errors.4).
+    pub(crate) source: Option<ConfigLocation>,
+    pub(crate) missing: bool,
+}
+
+impl ImportRead {
+    /// Whether `namespace` is this missing import's alias path or one below it,
+    /// all of which it absorbs (§FS-imports.checks.import-missing).
+    pub(crate) fn absorbs(&self, namespace: &str) -> bool {
+        self.missing
+            && (namespace == self.alias
+                || namespace
+                    .strip_prefix(self.alias.as_str())
+                    .is_some_and(|rest| rest.starts_with('/')))
+    }
 }

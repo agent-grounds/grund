@@ -6,7 +6,7 @@
 use std::path::{Path, PathBuf};
 
 use super::fetch_write::{write_file_home, write_folder_home};
-use crate::config::run_warning_findings;
+use crate::config::{Config, run_warning_findings};
 use crate::grammar::{MarkdownBlocks, parse_id_arg};
 use crate::model::Finding;
 use crate::resolver::settled_run_warnings;
@@ -102,6 +102,25 @@ pub(crate) fn fetch_with_diagnostics(raw: &str, path: &Path) -> (Vec<Finding>, a
     (warnings, result)
 }
 
+/// §FS-imports.writes: an ID in an import is read-only here, refused before its
+/// integration runs and named by the place it is fetched from — the target, by
+/// its path as written, with the alias path below the import kept on the ID.
+fn imported_fetch(root_config: &Config, namespace: &str, local: &str) -> Option<String> {
+    let edge = root_config.run().workspace.mounts.iter().find(|edge| {
+        namespace == edge.alias || namespace.starts_with(&format!("{}/", edge.alias))
+    })?;
+    let below = namespace[edge.alias.len()..].trim_start_matches('/');
+    let there = if below.is_empty() {
+        local.to_owned()
+    } else {
+        format!("{below}/{local}")
+    };
+    let (alias, written) = (&edge.alias, &edge.written);
+    Some(format!(
+        "`{namespace}/{local}` is in import `{alias}`, read-only here — run grund fetch {there} in {written}"
+    ))
+}
+
 fn fetch_run(
     raw: &str,
     path: &Path,
@@ -129,6 +148,9 @@ fn fetch_run(
             fetch_operational(message)
         })?;
         *run_warnings = run_warning_findings(&root_config, settled_run_warnings(root_config.run()));
+        if let Some(refusal) = imported_fetch(&root_config, namespace, local) {
+            return Err(fetch_operational(refusal));
+        }
         projects
             .into_iter()
             .find(|project| project.alias == namespace)

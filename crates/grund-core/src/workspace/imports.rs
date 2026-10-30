@@ -12,8 +12,10 @@ use std::path::PathBuf;
 
 use super::expand::qualify_alias;
 use super::scope::{config_location_error, project_label};
-use crate::config::{Config, Import, MountEdge, config_file_in};
-use crate::model::{format_path, relative_from_base};
+use crate::config::{Config, Import, ImportRead, MountEdge, config_file_in};
+use crate::model::{
+    Armed, Code, Diagnostic, Switch, format_path, normalize_path_lexically, relative_from_base,
+};
 use crate::sources::{Sources, canonical_path};
 
 /// The mount edges `block`'s imports declare, under `prefix`, the alias path of the
@@ -22,7 +24,8 @@ use crate::sources::{Sources, canonical_path};
 /// Each alias joins `siblings`, which already holds the block's root and members:
 /// a collision is refused at the import's table line, naming the first claimant by
 /// its role and the import by its path as written (§FS-imports.failures). An import
-/// whose path names no directory has no root to mount, so it is no edge.
+/// whose path names no directory is a missing edge, which the loader announces and
+/// mounts nothing for (§FS-imports.checks.import-missing).
 ///
 /// Every refusal is located in `block`'s config, at the line the failure table
 /// names; a target's own config is read by the loader (§AR-resolver.mount).
@@ -50,15 +53,16 @@ pub(super) fn collect_imports(
                 message,
             ));
         }
-        let Some(root) = import_root(block, import, path)? else {
-            continue;
-        };
+        let found = import_root(block, import, path)?;
+        let missing = found.is_none();
+        let root = found.unwrap_or_else(|| normalize_path_lexically(&block.root.join(path)));
         siblings.insert(import.alias.clone(), root.clone());
         edges.push(MountEdge {
             alias: qualify_alias(prefix, &import.alias),
             segment: import.alias.clone(),
             written: path.clone(),
             root,
+            missing,
             source: import.source.clone(),
             project: project.clone(),
             project_source: import.project_source.clone(),
@@ -117,4 +121,55 @@ fn import_root(block: &Config, import: &Import, path: &str) -> Result<Option<Pat
         return Err(at_table(message));
     }
     Ok(Some(root))
+}
+
+/// §FS-imports.checks: the run's word on every import edge it reached, each at the
+/// table line of the config that declares it and by the alias path the run spells
+/// it with: an error for a missing one, and a warning for each one read live. The
+/// errors come first.
+pub(crate) fn import_diagnostics(config: &Config) -> (Vec<Diagnostic>, Vec<Diagnostic>) {
+    let (missing, live): (Vec<_>, Vec<_>) = config
+        .run()
+        .workspace
+        .imports_read
+        .iter()
+        .partition(|import| import.missing);
+    let diagnostic = |import: &ImportRead, code: Code, message: String| Diagnostic {
+        code,
+        path: import.source.as_ref().map(|source| source.path.clone()),
+        line: import.source.as_ref().map(|source| source.line),
+        column: None,
+        message,
+        sites: Vec::new(),
+        authority: Vec::new(),
+    };
+    let missing = missing.into_iter().map(|import| {
+        let message = format!(
+            "{} — citations into namespace `{}` were not checked",
+            missing_import_message(import),
+            import.alias
+        );
+        diagnostic(import, Code::IMPORT_MISSING, message)
+    });
+    let live = live.into_iter().map(|import| {
+        let (alias, written) = (&import.alias, &import.written);
+        let message = format!("import `{alias}` is read live from `{written}`, unpinned");
+        diagnostic(import, Code::IMPORT_LIVE, message)
+    });
+    (missing.collect(), live.collect())
+}
+
+/// §FS-check.1.4.1: both import checks are on wherever a config the run reads
+/// declares an import, a dependency's included, whether or not any is missing.
+pub(crate) fn arm_imports(config: &Config, armed: &mut Armed) {
+    if !config.run().workspace.imports_read.is_empty() {
+        armed.arm(Switch::Import);
+    }
+}
+
+/// What a missing import is called wherever it is named: the error's opening and
+/// the whole refusal of a query into it (§FS-imports.checks.import-missing).
+pub(crate) fn missing_import_message(import: &ImportRead) -> String {
+    let (alias, written) = (&import.alias, &import.written);
+    format!("import `{alias}` is missing: `{written}` is not a directory")
 }

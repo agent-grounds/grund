@@ -108,7 +108,7 @@ pub use fields::{FRONT_MATTER, Field, FieldContent, FrontMatterKey, FrontMatterS
 pub(crate) use global_excludes::global_excludes_path;
 pub(crate) use inputs::{observe_config, observe_config_candidates, observe_ignore_inputs};
 pub use kind::{KindConfig, KindIndex, KindResolution};
-pub(crate) use mount_edge::MountEdge;
+pub(crate) use mount_edge::{ImportRead, MountEdge};
 #[allow(unused_imports)]
 pub use places::Owner;
 pub(crate) use places::Owners;

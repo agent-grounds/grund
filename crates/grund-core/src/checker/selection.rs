@@ -85,6 +85,9 @@ impl CheckFindingSelection {
     /// unselectable with it, and is a warning (§FS-check.2.1.2).
     pub fn retains(&self, code: &str, authority: &[String]) -> bool {
         code == "io"
+            // §FS-imports.checks: what a run read, or could not, about its imports.
+            || code == "import-live"
+            || code == "import-missing"
             // §FS-check.1.4.1: about the selection itself, so both axes pass it.
             || code == SELECTED_CHECK_OFF && !self.ignore.contains(code)
             || self.code_axis_retains(code)

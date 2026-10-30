@@ -22,7 +22,7 @@ use super::compiled::compile;
 use super::file_reading::FileReading;
 use super::frame::{Display, Frame};
 use super::kinds::KindTable;
-use super::mount_edge::MountEdge;
+use super::mount_edge::{ImportRead, MountEdge};
 use super::project::{Project, Rules, Schema};
 use super::record::{AbsentOptionalNamespace, Config};
 use super::run::Run;
@@ -261,6 +261,12 @@ impl Config {
     /// expansion collects from every import table it reaches (§FS-imports.mount).
     pub(crate) fn set_mount_edges(&mut self, mounts: Vec<MountEdge>) {
         self.records.run.workspace.mounts = mounts;
+    }
+
+    /// Every import edge the run reached (§FS-imports.checks), which the loader
+    /// stamps on each project once the whole tree is loaded.
+    pub(crate) fn set_imports_read(&mut self, read: Vec<ImportRead>) {
+        self.records.run.workspace.imports_read = read;
     }
 
     /// What [`Self::set_workspace_lists_optional`] recorded; `false` in a run

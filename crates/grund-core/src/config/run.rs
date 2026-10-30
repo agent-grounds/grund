@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 use super::call_scope::{PathBase, report_path_base};
 use super::kinds::KindTable;
-use super::mount_edge::MountEdge;
+use super::mount_edge::{ImportRead, MountEdge};
 use super::record::AbsentOptionalNamespace;
 use super::run_warnings::RunWarning;
 use crate::sources::Buffers;
@@ -95,6 +95,9 @@ pub struct RunWorkspace {
     /// The mounts this run's blocks declare, each the edge to one mounted root;
     /// the loader reads them off the run's own config (§AR-resolver.mount).
     pub(crate) mounts: Vec<MountEdge>,
+    /// Every import edge the run reached, the whole tree's, stamped on each
+    /// project's run once the mounts are loaded (§FS-imports.checks).
+    pub(crate) imports_read: Vec<ImportRead>,
 }
 
 impl Default for RunScope {

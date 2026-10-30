@@ -318,6 +318,7 @@ const SWITCHES: &[Switch] = &[
     Switch::HeadingDepth,
     Switch::Grounding,
     Switch::OptionalMember,
+    Switch::Import,
     Switch::SnapshotWarning,
     Switch::KindHome,
     Switch::ValueHome,

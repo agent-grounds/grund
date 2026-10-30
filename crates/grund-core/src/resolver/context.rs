@@ -22,12 +22,12 @@ use super::mount::{MountLoader, Mounted, mark_canonical};
 use super::shorthand::resolve_qualified_shorthand_citations;
 use super::unread_block::settled_run_warnings;
 use crate::config::{Invocation, ProjectRecords, Selection};
-use crate::model::{Catalog, Citation, Diagnostic};
+use crate::model::{Catalog, Citation, Diagnostic, OperationDiagnostic};
 use crate::scanner::{ScanError, scan_tree_with_workspace};
 use crate::sources::record_test_workspace_load;
 use crate::workspace::{
-    WorkspaceCitationTarget, expand_workspace_tree_with_report_base, open, open_narrowable,
-    scope_is_config_root, unlisted_workspace_block_run_warnings,
+    WorkspaceCitationTarget, expand_workspace_tree_with_report_base, missing_import_message, open,
+    open_narrowable, scope_is_config_root, unlisted_workspace_block_run_warnings,
 };
 
 /// One project in scope for a query command — an alias, the loaded project's
@@ -121,6 +121,19 @@ impl WorkspaceContext {
 
     pub(crate) fn project_by_alias(&self, alias: &str) -> Option<&WorkspaceProject> {
         self.projects.iter().find(|project| project.alias == alias)
+    }
+
+    /// The refusal a query into a missing import earns, or `None` where `alias`
+    /// lies in no missing import: the queries ask it before an unknown alias, so
+    /// the import is named rather than guessed past (§FS-imports.checks.import-missing).
+    pub(crate) fn missing_import(&self, alias: &str) -> Option<anyhow::Error> {
+        let workspace = &self.render_config.run().workspace;
+        let import = workspace
+            .imports_read
+            .iter()
+            .find(|import| import.absorbs(alias))?;
+        let message = missing_import_message(import);
+        Some(OperationDiagnostic::new("query", "query-failed", message).into())
     }
 
     /// The index of the loaded project an alias names; `None` outside a workspace,
@@ -439,6 +452,19 @@ pub(crate) fn load_workspace_projects(
 ) -> Result<Vec<WorkspaceProject>> {
     let mut mounts = MountLoader::for_consumer(root_config);
     let (mut projects, mounted_roots) = load_projects_with(root_config, &mut mounts)?;
+    // §FS-imports.checks: every project's run knows every edge, a missing one to
+    // leave unverified (§FS-imports.checks.import-missing).
+    if !mounts.read.is_empty() {
+        root_config
+            .facade_mut()
+            .set_imports_read(mounts.read.clone());
+        for project in &mut projects {
+            project
+                .config
+                .facade_mut()
+                .set_imports_read(mounts.read.clone());
+        }
+    }
     // §FS-imports.graph.diamond: named once every project of the run is known.
     mark_canonical(&mut projects);
     // §FS-imports.paths: the report spells a file below a mounted root from its base.

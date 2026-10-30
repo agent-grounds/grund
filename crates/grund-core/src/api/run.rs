@@ -29,7 +29,7 @@ use crate::resolver::{
 use crate::scanner::{scan_error_message, scan_tree};
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, absent_optional_members,
-    arm_optional_members, open, unlisted_workspace_block_errors,
+    arm_imports, arm_optional_members, import_diagnostics, open, unlisted_workspace_block_errors,
 };
 use crate::writers::{ListedProject, WorkspaceBlocks, expected, listed_projects};
 
@@ -450,7 +450,12 @@ fn run_workspace_check(
         &root_config,
         report.verified_blocks,
     ));
+    // §FS-imports.checks: every import edge the run reached, the dependencies' too.
+    let (missing, live) = import_diagnostics(&root_config);
+    report.errors.extend(missing);
+    report.warnings.extend(live);
     arm_optional_members(&root_config, &mut report.armed);
+    arm_imports(&root_config, &mut report.armed);
     if full {
         report.armed.arm(Switch::Full);
     }
