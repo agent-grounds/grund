@@ -116,6 +116,13 @@ pub(crate) fn invalid_alias_path_segment(alias: &str) -> Option<&str> {
         .find(|segment| !is_valid_project_alias(segment))
 }
 
+/// How many workspace levels an alias path crosses, one per segment
+/// (§FS-workspace.1.1): the length a mounted copy's canonical path is ranked by
+/// (§FS-imports.graph.diamond).
+pub(crate) fn alias_path_depth(alias: &str) -> usize {
+    alias.split('/').count()
+}
+
 /// The `invalid workspace project alias` sentence, shared by the entry text
 /// refused here and the member refused for its `project_name` where the alias is
 /// derived, so the two read as one rule (§AR-workspace.5.3).

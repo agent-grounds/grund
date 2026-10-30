@@ -14,7 +14,9 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use super::context::{WorkspaceProject, load_projects_with};
-use crate::config::{ImportRead, MountEdge, ProjectRecords, config_at, config_file_in};
+use crate::config::{
+    ImportRead, MountEdge, ProjectRecords, alias_path_depth, config_at, config_file_in,
+};
 use crate::model::{Catalog, OperationDiagnostic, format_path};
 use crate::scanner::scan_tree_with_workspace;
 use crate::workspace::config_location_error;
@@ -357,7 +359,7 @@ pub(super) fn mark_canonical(projects: &mut [WorkspaceProject]) {
     for project in projects.iter() {
         let key = (
             project.mount.is_some(),
-            project.alias.split('/').count(),
+            alias_path_depth(&project.alias),
             project.alias.clone(),
         );
         owner

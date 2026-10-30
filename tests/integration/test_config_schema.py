@@ -157,7 +157,7 @@ def sample(node):
 
 
 PLACEHOLDERS = {"<KIND>": "FS", "<NAME>": "FS", "<field>": "summary", "<suffix>": "mdx",
-                "<name>": "notes", "<key>": "status"}
+                "<name>": "notes", "<key>": "status", "<alias>": "native-image"}
 
 
 def leaf_keys(node, path=()):

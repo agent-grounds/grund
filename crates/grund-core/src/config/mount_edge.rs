@@ -22,7 +22,7 @@ pub(crate) struct MountEdge {
     /// The path as the declaring config wrote it, which is how every message
     /// names the target (§FS-errors.4).
     pub(crate) written: String,
-    /// The canonical root of the target (§FS-scan.identity), or, for a missing
+    /// The canonical root of the target (§FS-imports.declaration.path), or, for a missing
     /// one, the directory its path names, spelled lexically.
     pub(crate) root: PathBuf,
     /// Whether the path names no directory, so there is nothing to mount and every

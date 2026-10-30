@@ -22,6 +22,8 @@ The hidden escaper `schema_text`, which writes a control character as its TOML b
 
 The record `ValueFormat`, which `DeclarationSource::Json` carries for the format a value source is written in ([§FS-values.2.2.3](../../functional-spec/FS-values.md#223-how-a-yaml-source-is-read)), was added on the `fix/issue-1049` branch above `d7799c9cf5`. No frontend names it; it reaches them as a data type of `Catalog`.
 
+The hidden module `native_watch`, the native watcher behind grund-core's `native-watch` feature that `check --watch` runs and an editor server falls back on for the import roots its client cannot watch ([§FS-imports.editor](../../functional-spec/FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)), was added on the `fix/issue-1080` branch above `0b117ae12d`. The CLI and the LSP server name it; the bindings never enable the feature.
+
 ## How a cell reads
 
 Paths are relative to `crates/`, and an evidence location is one site, not every site: the import or call that establishes the consumer, so a reader can start somewhere rather than grep.
@@ -42,18 +44,18 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 274 |
+| Public root names | 275 |
 | Rustdoc-visible | 118 |
-| `#[doc(hidden)]` | 156 |
+| `#[doc(hidden)]` | 157 |
 | Named, a related API, or a data type of one | 143 |
-| Outside that closure | 131 |
-| Named by a frontend or its tests | 164 |
+| Outside that closure | 132 |
+| Named by a frontend or its tests | 165 |
 | Reached structurally only | 52 |
 | No repository consumer of either kind | 58 |
 | Disposition frozen at 1.0 | 118 |
-| Disposition hidden | 156 |
+| Disposition hidden | 157 |
 
-The two count columns do not line up, and they are not meant to: 58 names have no repository consumer while 131 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 58 names have no repository consumer while 132 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
@@ -254,6 +256,7 @@ The two count columns do not line up, and they are not meant to: 58 names have n
 | `MigrateRefusal` | config | `#[doc(hidden)]` | no | none found | via config_migrate → MigrateOutcome → MigrateReport → MigrateRefusal `grund-cli/src/cli_config_migrate.rs:89` | hidden |
 | `MigrateReport` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | hidden |
 | `names_member_id_candidate` | resolver | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `native_watch` | sources | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:14`; grund-lsp `grund-lsp/src/imports.rs:15` | — | hidden |
 | `NamespaceMatch` | config | `#[doc(hidden)]` | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
 | `NearMissHeading` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
 | `node_embedding_call` | api | `#[doc(hidden)]` | related API | grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | hidden |
