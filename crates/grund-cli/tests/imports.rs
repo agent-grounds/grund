@@ -466,6 +466,34 @@ fn a_symlinked_import_path_is_one_target() {
     );
 }
 
+/// A missing import is never answered by another tree: neither a sibling beside the
+/// consumer nor one beside the missing path that declares the expected `project_name` and the
+/// cited ID is searched, so the run fails at the import and the query names it
+/// (§FS-imports.graph.reverse, §FS-imports.checks.import-missing).
+#[test]
+fn a_missing_import_never_falls_back_to_a_decoy_with_its_name() {
+    let tree = Tree::sibling("decoy");
+    fs::remove_dir_all(tree.0.join("graal/substratevm")).unwrap();
+    for decoy in ["decoy", "graal/other"] {
+        tree.write(&format!("{decoy}/grund.toml"), GRAAL);
+        tree.write(
+            &format!("{decoy}/docs/functional-spec/FS-security-providers.md"),
+            PROVIDERS,
+        );
+    }
+    let missing = "import `native-image` is missing: `../graal/substratevm` is not a directory";
+    assert_run(
+        &tree.grund("enterprise", &["check"]),
+        1,
+        &format!(
+            "grund.toml:4: error: {missing} \u{2014} citations into namespace `native-image` were not checked\n"
+        ),
+        "",
+    );
+    let show = tree.grund("enterprise", &["native-image/FS-security-providers"]);
+    assert_run(&show, 2, "", &format!("error: {missing}\n"));
+}
+
 /// With no import declared, nothing changes: a sibling whose `project_name` matches
 /// the alias a citation spells is never searched, and the citation keeps today's
 /// finding (§FS-imports.declaration.none).
