@@ -2,8 +2,7 @@
 //! consumer's own config reaches the sibling from the command line, run in the consumer or
 //! below it, and from an editor holding only the consumer's folder or one inside it
 //! (§FS-imports.editor, §FS-imports.declaration.path). Git sees no configuration but the
-//! fixture's, and stops at the fixture root. The editor's half is red until #1080 answers
-//! through imports in the editor; the change that ships it removes that `ignore`.
+//! fixture's, and stops at the fixture root.
 
 #[path = "binaries.rs"]
 mod binaries;
@@ -200,7 +199,6 @@ fn request(
 /// Hover and definition through the import, and no diagnostic on the consumer's file,
 /// from a session holding only the consumer's folder or only a folder inside it.
 #[test]
-#[ignore = "red until #1080 answers through imports in the editor; implement removes this"]
 fn the_editor_answers_through_the_import_from_the_consumer_folder_alone() {
     let _ = support::SERVER_BINARY.set(binaries::grund_lsp());
     for folder in ["enterprise", "enterprise/src"] {
