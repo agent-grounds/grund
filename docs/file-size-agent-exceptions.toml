@@ -310,7 +310,7 @@ Issue #1073 adds §FS-check.checks.off-format-citation with its release point §
 
 The implementation of #1073 names the out-of-scope code in the code list of §FS-check.3.14.5, which the finding's out-of-scope tier requires, and counts six rather than five codes there, adding no line; escaping its one illustration in another format, in §FS-check.4.1.1, adds two bytes. The ceiling accepts exactly the measured 309940 bytes, with no growth allowance.
 
-Issue #1080 adds one sentence to §FS-check.2.1.2, the point that already says which findings no selector hides: the two import codes join `io` there once imports ship. The codes themselves are specified in FS-imports, so only the selection fact lands here. The file already measured 309940 bytes on arrival, at the ceiling #1073 recorded; this sentence adds 292. The same mapped migration of the finding catalog retires the debt and remains outside a specification-only contract. The byte ceiling accepts exactly the measured 310232 bytes, with no growth allowance.
+Issue #1080 adds one sentence to §FS-check.2.1.2, the point that already says which findings no selector hides: the two import codes join `io` there. The codes themselves are specified in FS-imports, so only the selection fact lands here. The file already measured 309940 bytes on arrival, at the ceiling #1073 recorded; this sentence adds 292. The same mapped migration of the finding catalog retires the debt and remains outside a specification-only contract. The byte ceiling accepts exactly the measured 310232 bytes, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-init.md"

@@ -503,7 +503,7 @@ rather than a second name ([§FS-workspace.2.2.2](FS-workspace.md#222-the-alias-
 segment too, and a remote's is its table key, both specified ahead of their release ([§FS-remote-projects.declaration.alias](FS-remote-projects.md#declarationalias-the-alias-is-the-table-key)). An import's alias is its table key as well ([§FS-imports.declaration.alias](FS-imports.md#declarationalias-the-alias-is-the-table-key)).
 
 Aliases must match the lowercase slug grammar in [§FS-workspace.1.1](FS-workspace.md#11-the-alias-path) and must be unique **among
-siblings** — the root project, the top-level members and, once they ship, the block's remotes and imports share one level, and
+siblings** — the root project, the top-level members, the block's imports and, once they ship, its remotes share one level, and
 each nested `[workspace]` block's members share another ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)). A duplicate or
 invalid alias is a launch-time error, because a qualified citation would
 otherwise have two possible targets. Two projects under different parents may
