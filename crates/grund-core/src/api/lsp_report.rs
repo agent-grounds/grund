@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 use super::path_report::unread_resolution_source_cautions;
 use super::report::complete_report;
-use super::run::workspace_block_projects;
+use super::reporting::{reporting, workspace_block_projects};
 use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
@@ -124,7 +124,8 @@ fn check_workspace_context(
     let blocks = listed
         .as_deref()
         .map_or(WorkspaceBlocks::LeftOut, WorkspaceBlocks::Compared);
-    for project in &context.projects {
+    // §FS-imports.findings: an import's own findings are its standalone run's.
+    for project in reporting(&context.projects) {
         let config = project.config.clone();
         let no_workspace = BTreeMap::new();
         let expected = expected(
@@ -239,7 +240,7 @@ fn check_workspace_context(
     // §FS-check.3.29.13, §FS-check.3.29.11: per project, the blocks that walk met that
     // no enclosing one lists — located report errors, the decision `run_workspace_check`
     // makes, so an editor and a terminal place one diagnostic at one line (§FS-lsp.4.1).
-    for project in &context.projects {
+    for project in reporting(&context.projects) {
         let mut unlisted = unlisted_workspace_block_errors(
             &project.config,
             context.render_config(),
@@ -281,7 +282,7 @@ fn check_workspace_context(
         let report_is_silent = report.errors.is_empty() && report.warnings.is_empty();
         report.warnings.extend(workspace_path_caution(
             context.render_config(),
-            context.projects.iter().map(|project| &project.findings),
+            reporting(&context.projects).map(|project| &project.findings),
             anchor,
             true,
             report_is_silent,

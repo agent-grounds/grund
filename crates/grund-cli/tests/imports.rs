@@ -64,6 +64,8 @@ const GRAPH: &[&str] = &[
     "imports-diamond-show",
     "imports-diamond-refs-json",
     "imports-diamond-cover-json",
+    "imports-diamond-refs-glob",
+    "imports-diamond-cover-glob-json",
     "imports-member-and-import-check",
     "imports-cycle",
 ];

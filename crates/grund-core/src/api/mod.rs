@@ -70,6 +70,7 @@ mod refs_note;
 mod refs_query;
 mod refs_sites;
 mod report;
+mod reporting;
 mod run;
 mod scope_cautions;
 mod show;
