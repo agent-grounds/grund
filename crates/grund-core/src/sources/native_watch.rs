@@ -15,14 +15,11 @@ pub fn watch_roots(
     roots: &[PathBuf],
     changed: impl Fn() + Send + 'static,
 ) -> notify::Result<notify::RecommendedWatcher> {
-    let mut watcher = notify::RecommendedWatcher::new(
-        move |event: notify::Result<notify::Event>| {
-            if !event.is_ok_and(|event| matches!(event.kind, notify::EventKind::Access(_))) {
-                changed();
-            }
-        },
-        notify::Config::default(),
-    )?;
+    let mut watcher = notify::recommended_watcher(move |event: notify::Result<notify::Event>| {
+        if !event.is_ok_and(|event| matches!(event.kind, notify::EventKind::Access(_))) {
+            changed();
+        }
+    })?;
     for root in roots {
         let _ = watcher.watch(root, notify::RecursiveMode::Recursive);
     }
