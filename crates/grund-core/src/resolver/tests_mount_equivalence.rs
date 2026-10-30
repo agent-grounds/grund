@@ -1,7 +1,7 @@
 //! Test module: the mount layer answers as the mounted tree's own standalone run
 //! does (§REQ-remote-equivalence.4, §FS-remote-projects.mount.rule), with its ignore
-//! inputs isolated (§FS-remote-projects.ignore). No config key declares a mount yet,
-//! so the consumer's edge is set through the test-only hook.
+//! inputs isolated (§FS-remote-projects.ignore). The consumer's edge is set through the
+//! test-only hook, and once through the import table that declares it.
 
 use std::path::{Path, PathBuf};
 
@@ -286,6 +286,41 @@ fn a_mounted_root_reads_only_the_ignore_files_at_and_below_it() {
             !mounted.iter().any(|id| id.contains(own)),
             "the mounted root's own `.gitignore` still hides FS-{own}, in a member too"
         );
+    }
+}
+
+/// §FS-imports.declaration.table, §FS-imports.mount: the edge an import table
+/// declares is the one the proof above sets by hand, so the consumer's run through its
+/// own config answers every inventoried operation as the run through the bare edge.
+#[test]
+fn an_import_table_mounts_the_tree_as_the_bare_edge_does() {
+    let (lib, app) = fixture("an_import_table_mounts_the_tree_as_the_bare_edge_does");
+    let by_edge = mounted(&lib, &app);
+    write(
+        &app.join("grund.toml"),
+        &format!(
+            "grund_config_version = 2\nproject_name = \"app\"\n\n{KINDS}\n\
+             [workspace.imports.dep]\npath = \"../outer/lib\"\nproject = \"lib\"\n"
+        ),
+    );
+    let config = load_config_at(&app, &app).expect("app loads its import table");
+    let by_table = load_workspace_projects(&mut ProjectRecords::of(config)).expect("app's run");
+    let aliases = |run: &[WorkspaceProject]| {
+        run.iter()
+            .map(|p| (p.alias.clone(), p.mount.is_some()))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(aliases(&by_table), aliases(&by_edge));
+    let as_is = |ns: Option<&str>| ns.map(str::to_string);
+    for (table, edge) in by_table.iter().zip(&by_edge) {
+        for operation in Operation::ALL {
+            assert_eq!(
+                answer(operation, table, &as_is),
+                answer(operation, edge, &as_is),
+                "{operation:?} of `{}` differs between the table and the edge",
+                edge.alias
+            );
+        }
     }
 }
 
