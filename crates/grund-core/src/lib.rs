@@ -388,7 +388,7 @@ pub use api::{
 // The native watcher, a frontend seam outside the promise with its feature (§AR-lsp.2.1).
 #[cfg(feature = "native-watch")]
 #[doc(hidden)]
-pub mod native_watch;
+pub use sources::native_watch;
 // The `test-binding-writes` hooks, outside the promise with their feature.
 #[cfg(feature = "test-binding-writes")]
 #[doc(hidden)]

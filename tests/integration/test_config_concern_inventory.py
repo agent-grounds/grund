@@ -298,6 +298,7 @@ V2 = CONFIG / "v2"
 V2_HANDLERS = {
     "envelope_key": ("", "arms"),
     "workspace_key": ("workspace", "arms"),
+    "import_key": ("workspace.imports.<alias>", "arms"),
     "schema_key": ("schema", "arms"),
     "sources_key": ("schema.sources", "arms"),
     "extension_key": ("schema.sources.extensions", "suffix"),
@@ -318,7 +319,7 @@ V2_HANDLERS = {
     "fmt_key": ("presentation.fmt", "arms"),
 }
 # The envelope's tables (§FS-config.concerns): read inside the concerns, never one.
-V2_ENVELOPE = ("", "workspace")
+V2_ENVELOPE = ("", "workspace", "workspace.imports.<alias>")
 V2_HANDLER = re.compile(r"^( *)(?:pub\(super\) )?fn ([a-z_]+_key)\(", re.MULTILINE)
 V2_SINGLE = re.compile(r'if key != "([a-z_-]+)"')
 V2_SPINE = (
