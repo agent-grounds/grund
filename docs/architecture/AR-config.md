@@ -51,7 +51,15 @@ The records live in `crates/grund-core/src/config/` and follow
 decide which file governs and which projects there are, and constrain no node
 ([§FS-config.concerns](../functional-spec/FS-config.md#concerns-every-key-belongs-to-exactly-one-concern)). `version` is `1` for every file the v1 reader reads.
 `workspace` carries `declared`, `members`, `optional_members` and
-`include_root`, each with the `ConfigLocation` it was written at.
+`include_root`, each with the `ConfigLocation` it was written at, and `imports`,
+one `Import` per `[workspace.imports.<alias>]` table in the order written: its
+alias, its `path` and `project` as written, and the line of the table and of each
+key ([§FS-imports.declaration.table](../functional-spec/FS-imports.md#declarationtable-the-import-table)). Only the version-2 reader fills `imports`; an
+import table is what makes a block `declared` when nothing else in `[workspace]`
+is written, and `Members::holds_only_imports` is the one answer to whether a
+block is that block, which the managed block and `config show` read as a config
+without `[workspace]`. What an import's path names is judged where the block is
+expanded ([§AR-workspace.imports](AR-workspace.md#imports-an-import-is-a-mount-edge-expansion-hands-the-resolver)), never here.
 
 ### 1.2 `Schema`, `Rules`, `Presentation`
 

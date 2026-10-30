@@ -333,6 +333,24 @@ canonical root and is pruned there
 ([§FS-workspace.6](../functional-spec/FS-workspace.md#6-nested-project-boundary)).
 No ancestor climb or workspace expansion is added to a single-project run.
 
+## imports: An import is a mount edge expansion hands the resolver
+
+An import ([§FS-imports.declaration](../functional-spec/FS-imports.md#declaration-declaration)) is read here as far as config text and the canonical
+path it names can answer, and no further: `workspace/imports.rs` turns each
+`[workspace.imports.<alias>]` table of a block the expansion reaches into one mount edge, the
+record the resolver loads a mounted root from ([§AR-resolver.mount](AR-resolver.md#mount-the-mount-layer-loads-each-mounted-tree-once-and-grafts-it)). It is asked after the block's
+root and members have claimed their aliases, so an import joins the same sibling set and a
+collision with any of them is refused at the import's table line, the first claimant named by
+its role ([§FS-workspace.3](../functional-spec/FS-workspace.md#3-aliases)). An import of a nested block is named under that block's alias
+path, as its members are ([§FS-workspace.6.1.5](../functional-spec/FS-workspace.md#615-alias-paths-do-not-change-with-scope)).
+
+Every block's edges are collected onto the run of the config the tree is expanded from, which
+is the one config the loader holds when it grafts. An import is no member: it is not an entry of
+the expanded tree, owns no boundary root and joins no kind table, so nothing this page fences
+or stamps reaches into a mounted root, which carries its own run. A `[workspace]` that holds
+only imports is a declared block whose projects are the root alone, so every reader of members
+reads it as a config without one ([§FS-imports.declaration.table](../functional-spec/FS-imports.md#declarationtable-the-import-table)).
+
 ## 9. Test contracts
 
 The architecture is observable. Each invariant above has a fixture or unit test

@@ -154,5 +154,18 @@ pub(super) fn schema(c: &Config) -> Value {
     if let Some(sources) = sources(c) {
         schema["sources"] = sources;
     }
+    // §FS-imports.declaration.table: present only where an import is declared, so a
+    // config without one keeps its bytes.
+    let imports = &c.project().workspace.imports;
+    if !imports.is_empty() {
+        schema["workspace"]["imports"] = imports
+            .iter()
+            .map(|import| {
+                let table = json!({"path": import.path, "project": import.project});
+                (import.alias.clone(), table)
+            })
+            .collect::<serde_json::Map<_, _>>()
+            .into();
+    }
     schema
 }

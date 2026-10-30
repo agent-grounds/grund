@@ -10,9 +10,10 @@ second revision pin and no committed copy ([§GOAL-small-and-large](../goals.md#
 cross-repository citation stays a checked one ([§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration)). The decision is
 [§DF-imports](../decisions/functional/DF-imports.md#df-imports-an-import-is-a-named-input-read-live-from-a-sibling-tree-never-a-remote).
 
-Every behaviour below is specified ahead of its release. Until it ships, a config that
-declares `[workspace.imports]` is refused at load as an unknown config section, with exit 2,
-and a config that declares none reads nothing this spec names
+The table is read, and every import whose path names a directory is mounted under its alias
+([§FS-imports.mount](FS-imports.md#mount-an-import-is-a-mounted-root-read-live-and-read-only)). The rest is specified ahead of its release: the located failures of
+[§FS-imports.failures](FS-imports.md#failures-config-failures), the two checks, what selection, the writers and `fetch` do with an
+import, and the editor. A config that declares no import reads nothing this spec names
 ([§FS-imports.declaration.none](FS-imports.md#declarationnone-a-config-with-no-imports-reads-nothing-new)).
 
 ## terms: Terms

@@ -196,7 +196,8 @@ fn find_init_workspace_root(
     // reader an ancestor it could not read, whether or not the climb then
     // succeeded — the warning is about the chain, not about the section.
     run_warnings.extend(run_warning_findings(&config, ancestors.take_warnings()));
-    if !climbed || !config.workspace_declared {
+    // §FS-imports.declaration.table: a block of imports alone lists no members.
+    if !climbed || !config.workspace_declared || config.project().workspace.holds_only_imports() {
         return None;
     }
     Some((config, run_root))

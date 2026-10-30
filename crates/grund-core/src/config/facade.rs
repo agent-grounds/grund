@@ -22,7 +22,6 @@ use super::compiled::compile;
 use super::file_reading::FileReading;
 use super::frame::{Display, Frame};
 use super::kinds::KindTable;
-#[cfg(test)]
 use super::mount_edge::MountEdge;
 use super::project::{Project, Rules, Schema};
 use super::record::{AbsentOptionalNamespace, Config};
@@ -258,10 +257,8 @@ impl Config {
         self.records.run.workspace.mounted_roots = roots;
     }
 
-    /// The mount edges this run's blocks declare (§AR-resolver.mount). No config key
-    /// declares one yet, so only the mount layer's own proof sets them
-    /// (§REQ-remote-equivalence.4).
-    #[cfg(test)]
+    /// The mount edges this run's blocks declare (§AR-resolver.mount), which
+    /// expansion collects from every import table it reaches (§FS-imports.mount).
     pub(crate) fn set_mount_edges(&mut self, mounts: Vec<MountEdge>) {
         self.records.run.workspace.mounts = mounts;
     }

@@ -11,6 +11,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::findings::reject_absorbed_scan;
+use super::imports::collect_imports;
 use super::members::{
     AncestorWorkspaces, WorkspaceMember, canonical_workspace_path, expand_workspace_member_list,
 };
@@ -24,7 +25,8 @@ use super::scope::{
 };
 use crate::config::display_path;
 use crate::config::{
-    AbsentOptionalNamespace, Compiled, Config, RunWarning, Schema, config_at, install_kind_table,
+    AbsentOptionalNamespace, Compiled, Config, MountEdge, RunWarning, Schema, config_at,
+    install_kind_table,
 };
 
 /// One project of the run a qualified citation can name, as the scanner needs
@@ -338,6 +340,7 @@ pub(super) fn expand_workspace_projects(
     )?;
     // §FS-check.4.10.7: every block below the run's root is posed the question down
     // there and answered below, once this run knows where its projects are.
+    let mut mounts = Vec::new();
     let unread_blocks = collect_workspace_members(
         &members,
         root_config,
@@ -349,7 +352,21 @@ pub(super) fn expand_workspace_projects(
         &mut entries,
         &mut absent_optional,
         &mut lists_optional,
+        &mut mounts,
     )?;
+    // §FS-imports.declaration.alias: the imports join the level the root and the
+    // members have claimed (§AR-workspace.imports).
+    collect_imports(
+        root_config,
+        root_config,
+        &self_path,
+        &mut siblings,
+        &mut mounts,
+    )?;
+    // An edge already on the run stays where no block declares one (§REQ-remote-equivalence.4).
+    if !mounts.is_empty() {
+        root_config.set_mount_edges(mounts);
+    }
     // §FS-workspace.2.2.10: read from the config text — see this function's docs.
     if entries.is_empty() && root_config.workspace_optional_members.is_empty() {
         return Err(empty_workspace_error(root_config));
@@ -436,6 +453,7 @@ fn collect_workspace_members(
     entries: &mut Vec<WorkspaceProjectEntry>,
     absent_optional: &mut Vec<AbsentOptionalNamespace>,
     lists_optional: &mut bool,
+    mounts: &mut Vec<MountEdge>,
 ) -> Result<Vec<Config>> {
     let mut unread = Vec::new();
     for member in members {
@@ -555,8 +573,16 @@ fn collect_workspace_members(
             entries,
             absent_optional,
             lists_optional,
+            mounts,
         )?;
         unread.extend(nested_unread);
+        collect_imports(
+            &member_config,
+            top_config,
+            &qualified,
+            &mut nested_siblings,
+            mounts,
+        )?;
         // §FS-workspace.2.2.10: the same reading one block down — a nested block whose
         // only members may be absent named members, so it is not an empty block.
         if entries.len() == before && member_config.workspace_optional_members.is_empty() {

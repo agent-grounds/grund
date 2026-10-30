@@ -94,6 +94,35 @@ pub struct Members {
     pub optional_members_source: Option<ConfigLocation>,
     pub include_root: bool,
     pub include_root_source: Option<ConfigLocation>,
+    /// The `[workspace.imports.<alias>]` tables, in the order they were written
+    /// (§FS-imports.declaration.table).
+    pub imports: Vec<Import>,
+}
+
+impl Members {
+    /// Whether the block holds nothing but imports, which every reader of the
+    /// block's members reads as a config without `[workspace]`
+    /// (§FS-imports.declaration.table).
+    pub(crate) fn holds_only_imports(&self) -> bool {
+        !self.imports.is_empty()
+            && self.members_source.is_none()
+            && self.optional_members_source.is_none()
+            && self.include_root
+    }
+}
+
+/// §FS-imports.declaration.table: one `[workspace.imports.<alias>]` table as
+/// written, each key with the line it was written at; what the path names is
+/// judged where the block is expanded (§FS-imports.declaration.path).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Import {
+    pub alias: String,
+    /// Where the table's header was written.
+    pub source: Option<ConfigLocation>,
+    pub path: Option<String>,
+    pub path_source: Option<ConfigLocation>,
+    pub project: Option<String>,
+    pub project_source: Option<ConfigLocation>,
 }
 
 /// §AR-config.1.2: what exists — the citation and ID grammar, what is read,

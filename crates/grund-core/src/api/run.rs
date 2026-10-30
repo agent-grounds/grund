@@ -527,7 +527,9 @@ pub(super) fn workspace_block_projects(
         .iter()
         .filter(|project| project.reports_findings())
         .all(|project| project.config.workspace_scope_path.is_empty());
-    (outermost && absent_optional_members(root_config).is_empty()).then(|| {
+    // §FS-imports.declaration.table: a block of imports alone renders as no block.
+    let only_imports = root_config.project().workspace.holds_only_imports();
+    (outermost && !only_imports && absent_optional_members(root_config).is_empty()).then(|| {
         // §FS-imports.declaration.table: an import is no member, and the block lists none.
         let own = projects.iter().filter(|project| project.reports_findings());
         listed_projects(own.map(|project| {

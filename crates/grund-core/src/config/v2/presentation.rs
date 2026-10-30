@@ -1,14 +1,16 @@
 //! The presentation concern's keys (§FS-config-v2.presentation) and the
-//! envelope's `[workspace]`. Each executed key means its v1 counterpart; what
-//! the format defines and this grund does not execute is refused at its line
-//! (§FS-config-v2.rollout).
+//! envelope's `[workspace]` with its imports (§FS-imports.declaration.table).
+//! Each executed key means its v1 counterpart; what the format defines and this
+//! grund does not execute is refused at its line (§FS-config-v2.rollout).
 
 use anyhow::Result;
 
 use super::tables::not_yet;
 use super::walk::Reader;
 use crate::config::fmt_block::validate_fmt_exclude;
+use crate::config::project::Import;
 use crate::config::v1::parse_bool;
+use crate::config::workspace_block::{invalid_project_alias_message, is_valid_project_alias};
 
 /// `[presentation]`: v1's `project_description`, `trigger` and `conversation`.
 pub(super) fn presentation_key(
@@ -127,4 +129,59 @@ pub(super) fn workspace_key(r: &mut Reader, key: &str, value: &str, line: usize)
         _ => return Ok(false),
     }
     Ok(true)
+}
+
+/// §FS-imports.declaration.table: an import's table opens the block it belongs
+/// to, which then holds the root and its imports when nothing else is written;
+/// its key is its alias, in the alias grammar (§FS-imports.declaration.alias).
+pub(super) fn open_import(r: &mut Reader, alias: String, line: usize) -> Result<usize> {
+    if !is_valid_project_alias(&alias) {
+        return r.fail(line, invalid_project_alias_message(&alias));
+    }
+    let source = r.at(line);
+    let workspace = &mut r.project.workspace;
+    workspace.declared = true;
+    workspace.imports.push(Import {
+        alias,
+        source,
+        ..Import::default()
+    });
+    Ok(workspace.imports.len() - 1)
+}
+
+/// `[workspace.imports.<alias>]`: both keys are strings, read as written
+/// (§FS-imports.declaration.path, §FS-imports.declaration.identity).
+pub(super) fn import_key(
+    r: &mut Reader,
+    index: usize,
+    key: &str,
+    value: &str,
+    line: usize,
+) -> Result<bool> {
+    let read = r.string(line, value)?;
+    let at = r.at(line);
+    let import = &mut r.project.workspace.imports[index];
+    match key {
+        "path" => (import.path, import.path_source) = (Some(read), at),
+        "project" => (import.project, import.project_source) = (Some(read), at),
+        _ => return Ok(false),
+    }
+    Ok(true)
+}
+
+/// §FS-imports.failures: both keys are required, and the one missing is named at
+/// the table's line, `path` first.
+pub(super) fn close_import(r: &mut Reader, index: usize) -> Result<()> {
+    let import = &r.project.workspace.imports[index];
+    let missing = match (&import.path, &import.project) {
+        (None, _) => "path",
+        (_, None) => "project",
+        _ => return Ok(()),
+    };
+    let line = import.source.as_ref().map_or(0, |source| source.line);
+    let alias = &import.alias;
+    r.fail(
+        line,
+        format!("[workspace.imports.{alias}] needs `{missing}`"),
+    )
 }

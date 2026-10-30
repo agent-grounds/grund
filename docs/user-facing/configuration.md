@@ -441,3 +441,12 @@ The sub-projects a workspace root checks, each in its own namespace. [§FS-confi
 | `members` | array of strings | `[]` | Member directories, or globs of them, each checked as its own project. [§FS-config.3.8](../functional-spec/FS-config.md#38-workspace--sub-project-members) |
 | `optional_members` | array of strings | `[]` | Members that may be absent, such as an uninitialized submodule. [§FS-config.3.8](../functional-spec/FS-config.md#38-workspace--sub-project-members) |
 | `include_root` | boolean | `true` | Whether the root is checked as a project too. [§FS-config.3.8](../functional-spec/FS-config.md#38-workspace--sub-project-members) |
+
+### `[workspace.imports.<alias>]`
+
+One imported project: the directory that holds its own config, and the project_name it must declare. [§FS-imports.declaration.table](../functional-spec/FS-imports.md#declarationtable-the-import-table)
+
+| Key | Type | Default | What it sets |
+|---|---|---|---|
+| `path` | string | — | The directory of the imported project's own config, relative to this config's root and written with `/`; it may use `..`, and must name neither this root, a directory containing it, nor one inside it. [§FS-imports.declaration.path](../functional-spec/FS-imports.md#declarationpath-the-path-is-the-consumers-relative-and-literal) |
+| `project` | string | — | The project_name the imported config must declare; the alias is this config's own name for it. [§FS-imports.declaration.identity](../functional-spec/FS-imports.md#declarationidentity-the-project-is-named-never-inferred) |
