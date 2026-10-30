@@ -96,8 +96,9 @@ A tree the build already placed beside the consumer is read live through an impo
   The mount layer of the Mount piece is built: ignore isolation, the load that mounts a
   tree as its own outermost root and grafts it under its alias, and the
   standalone-against-mounted comparison over the catalog-level inventory
-  ([§AR-resolver.mount](../../architecture/AR-resolver.md#mount-the-mount-layer-loads-each-mounted-tree-once-and-grafts-it)). `mounted_members`, a run started inside a projection, and the
-  command-line, library and editor rows of the inventory are what the piece still owes.
+  ([§AR-resolver.mount](../../architecture/AR-resolver.md#mount-the-mount-layer-loads-each-mounted-tree-once-and-grafts-it)) and over every command, through an import. `mounted_members`, a
+  run started inside a projection, the editor's rows of the inventory, and the comparison
+  against a locally mounted twin are what the piece still owes.
 - [§FS-workspace](../../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace) keeps ordinary members on the outermost claim; a mounted root is the one
   exception ([§FS-workspace.6.1.6](../../functional-spec/FS-workspace.md#616-a-path-is-read-from-the-outermost-claim)).
 - A repository that declares nothing sees no new read, finding or byte
