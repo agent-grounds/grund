@@ -125,7 +125,10 @@ fn fixture(name: &str) -> (PathBuf, PathBuf) {
     let lib = outer.join("lib");
     write(&outer.join(".git/info/exclude"), "FS-excluded.md\n");
     write(&outer.join(".gitignore"), "FS-above.md\nFS-core-above.md\n");
-    write(&lib.join(".gitignore"), "FS-own.md\nFS-core-own.md\n");
+    write(
+        &lib.join(".gitignore"),
+        "FS-own.md\nFS-core-own.md\n/core/docs/fs/FS-core-anchored.md\n",
+    );
     write(
         &lib.join("grund.toml"),
         &format!(
@@ -154,6 +157,10 @@ fn fixture(name: &str) -> (PathBuf, PathBuf) {
     write(
         &lib.join("core/docs/fs/FS-core-own.md"),
         "# FS-core-own: Own\n",
+    );
+    write(
+        &lib.join("core/docs/fs/FS-core-anchored.md"),
+        "# FS-core-anchored: Anchored\n",
     );
     write(
         &lib.join("core/docs/fs/FS-y.md"),
@@ -273,7 +280,8 @@ fn a_mounted_root_reads_only_the_ignore_files_at_and_below_it() {
             "no ignore file above the mounted root hides FS-{hidden_above}"
         );
     }
-    for own in ["\"own", "core-own"] {
+    // An anchored line is matched from the directory of the file that holds it.
+    for own in ["\"own", "core-own", "core-anchored"] {
         assert!(
             !mounted.iter().any(|id| id.contains(own)),
             "the mounted root's own `.gitignore` still hides FS-{own}, in a member too"

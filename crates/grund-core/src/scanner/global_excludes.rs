@@ -77,18 +77,25 @@ impl GlobalExcludes {
     }
 
     /// The rules a walk under `mounted` reads (§FS-remote-projects.ignore): the
-    /// machine's global file where it is no mounted root, and no pattern at all
-    /// where it is one, whose own ignore files are the ones at and below it.
+    /// machine's global file where it is no mounted root, and [`Self::for_mount`]
+    /// where it is one.
     pub(super) fn for_walk(mounted: Option<&Path>) -> Result<Self> {
-        let Some(mounted) = mounted else {
-            return Self::load();
-        };
-        Ok(Self {
+        match mounted {
+            Some(mounted) => Ok(Self::for_mount(mounted)),
+            None => Self::load(),
+        }
+    }
+
+    /// A mounted root's rules (§FS-remote-projects.ignore): no global pattern, and
+    /// only the ignore files at and below `mounted`, which stands in for the
+    /// repository top.
+    pub(super) fn for_mount(mounted: &Path) -> Self {
+        Self {
             patterns: Gitignore::empty(),
             tops: Mutex::default(),
             files: Mutex::default(),
             mounted: Some(mounted.to_path_buf()),
-        })
+        }
     }
 
     /// The mounted root these rules are fenced to, `None` for an ordinary walk.

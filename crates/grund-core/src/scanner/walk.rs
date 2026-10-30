@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use super::e2e::{e2e_cases_folder, e2e_id_from_case_dir_name};
 use super::exclude_globs::ExcludeGlobs;
 use super::global_excludes::GlobalExcludes;
-use super::mounted_ignore::mounted_ignore_files;
+use super::mounted_ignore::{mounted_ignore_mode, rules_above};
 use super::read_predicate::{Unread, directory_refusal, globally_ignored};
 use super::walk_boundaries::{is_directory_symlink, owned_by_another_project};
 pub(super) use super::walk_reporting::walk_scannable_files_reporting;
@@ -82,18 +82,19 @@ pub(super) fn scannable_walk_builder(
             .parents(false);
     }
     // §FS-remote-projects.ignore: a mounted root reads the ignore files at and below
-    // its own root, git checkout or not, and none above it or the machine's.
+    // its own root, git checkout or not, and none above it or the machine's; those
+    // above a scan root below it are the filter's to ask, as the global file is.
     let mounted_root = frame.run.workspace.mounted_root.as_deref();
-    if let Some(mounted_root) = mounted_root.filter(|_| schema.sources.respect_gitignore) {
-        mounted_ignore_files(&mut builder, mounted_root, scan_root);
-    }
     // §FS-scan.scope.ignore-files.global: no one root the builder could be handed anchors
     // every entry, so its global matcher is off and the global file is asked here, first,
     // where the walker would have asked it: before the filter sees the entry.
-    let global = if schema.sources.respect_gitignore && mounted_root.is_none() {
-        GlobalExcludes::take_over(&mut builder)?
-    } else {
-        None
+    let global = match mounted_root.filter(|_| schema.sources.respect_gitignore) {
+        Some(mounted_root) => {
+            mounted_ignore_mode(&mut builder);
+            rules_above(mounted_root, scan_root)
+        }
+        None if schema.sources.respect_gitignore => GlobalExcludes::take_over(&mut builder)?,
+        None => None,
     };
     let filter = WalkDirFilter::new(
         schema,
