@@ -22,7 +22,7 @@ The hidden escaper `schema_text`, which writes a control character as its TOML b
 
 The record `ValueFormat`, which `DeclarationSource::Json` carries for the format a value source is written in ([§FS-values.2.2.3](../../functional-spec/FS-values.md#223-how-a-yaml-source-is-read)), was added on the `fix/issue-1049` branch above `d7799c9cf5`. No frontend names it; it reaches them as a data type of `Catalog`.
 
-The hidden module `native_watch`, the native watcher behind grund-core's `native-watch` feature that `check --watch` runs and an editor server falls back on for the import roots its client cannot watch ([§FS-imports.editor](../../functional-spec/FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)), was added on the `fix/issue-1080` branch above `0b117ae12d`. The CLI and the LSP server name it; the bindings never enable the feature.
+The hidden module `native_watch`, the native watcher that `check --watch` runs and an editor server falls back on for the import roots its client cannot watch, its backend behind grund-core's `native-watch` feature and the debounce both coalesce its events by outside it ([§FS-imports.editor](../../functional-spec/FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)), was added on the `fix/issue-1080` branch above `0b117ae12d`. The CLI and the LSP server name it; the bindings never enable the feature, so they link no backend.
 
 ## How a cell reads
 

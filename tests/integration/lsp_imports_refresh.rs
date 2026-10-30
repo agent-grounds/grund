@@ -119,6 +119,51 @@ fn without_client_watchers_the_server_watches_the_dependency_itself() {
     session.shutdown();
 }
 
+/// A dependency that keeps changing holds no request behind the server's own watcher,
+/// and the rebuild after it reads the latest bytes (§FS-imports.editor, §FS-check.6.1.2).
+#[test]
+fn a_dependency_that_never_settles_holds_no_request() {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::time::{Duration, Instant};
+    let composition = Composition::new("churn");
+    let mut session = consumer(&composition, false);
+    let answered = Arc::new(AtomicBool::new(false));
+    let path = composition.path(DECLARATION);
+    let flag = answered.clone();
+    // A rewrite every 10 ms, well inside any quiet interval; the cap fails the test
+    // rather than hanging it. The last title written, or `None` at the cap.
+    let churn = std::thread::spawn(move || {
+        let cap = Instant::now() + Duration::from_secs(30);
+        let mut last = None;
+        for n in 0u32.. {
+            if flag.load(Ordering::Acquire) {
+                return last;
+            }
+            if Instant::now() > cap {
+                return None;
+            }
+            let title = format!("CHURN {n} END");
+            if std::fs::write(&path, declaration(&title)).is_ok() {
+                last = Some(title);
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        None
+    });
+    std::thread::sleep(Duration::from_millis(500));
+    session.hover("enterprise/src/Example.java", 0, 32);
+    answered.store(true, Ordering::Release);
+    let last = churn.join().expect("churn thread");
+    let last = last.expect("the hover was held until the dependency stopped changing");
+    let hover = session.hover_until(|hover| has(hover, &last));
+    assert!(
+        has(hover.as_deref(), &last),
+        "the rebuild after the churn missed `{last}`: {hover:?}"
+    );
+    session.shutdown();
+}
+
 #[test]
 fn a_dependency_config_edit_is_followed() {
     let composition = Composition::new("config-edit");

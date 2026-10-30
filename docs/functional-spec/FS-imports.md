@@ -258,6 +258,10 @@ upward walk finds the consumer's config, answers through every import.
   outside every open folder, from the effective inputs `check --watch` records
   ([§FS-check.6.1.3](FS-check.md#613-effective-input-inventory)): through watchers it registers with the client where the client can,
   and through its own watcher where it cannot. `check --watch` follows the same inputs.
+  The server's own watcher makes a burst of changes one rebuild, bounded as `check --watch`
+  bounds its debounce ([§FS-check.6.1.2](FS-check.md#612-bounded-debounce-and-serialized-work)), and a request that arrives while that rebuild is
+  pending is answered from the current snapshot: a tree that never stops changing neither
+  postpones the rebuild nor holds a request in any project behind it.
 - **Unsaved buffers.** An unsaved buffer of an imported file is that file's text for the
   consumer, under whichever spelling the editor opened it ([§FS-scan.identity.buffers](FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)).
 - **Ownership.** A document under an import root that no folder's project owns is answered by

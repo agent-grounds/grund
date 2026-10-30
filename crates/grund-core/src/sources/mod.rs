@@ -11,15 +11,15 @@
 //! (§AR-core-module-layout.1.1). `observe.rs` is the run's input observer, which
 //! came down out of `model/check_inputs.rs`; `identity.rs` the physical path
 //! keys, out of `model/paths.rs`; `disk.rs` the reads, out of `config/inputs.rs`;
-//! and `buffers.rs` the buffers and the view every reader asks. `native_watch.rs`,
-//! behind the `native-watch` feature, is the disk's change notification, which
-//! only the frontends that wait on the disk turn on (§AR-lsp.2.1).
+//! and `buffers.rs` the buffers and the view every reader asks. `native_watch.rs`
+//! is the disk's change notification: the debounce its events are coalesced by
+//! (§FS-check.6.1.2), and behind the `native-watch` feature its backend, which only
+//! the frontends that wait on the disk turn on (§AR-lsp.2.1).
 
 mod buffers;
 mod digest;
 mod disk;
 mod identity;
-#[cfg(feature = "native-watch")]
 pub mod native_watch;
 mod observe;
 
