@@ -1,6 +1,7 @@
-"""Read the existing ledger for release preflight. §FS-distribution.4.2.2
+"""Read the core-concerns plan for release preflight. §FS-distribution.4.2.2.1
 
-§DISC-core-concerns.9.9 defines the table and the due-notice consistency rule.
+§DISC-core-concerns.9.9 defines the ledger table and the due-notice consistency
+rule, and the phase leads of §DISC-core-concerns.9 say whether each phase shipped.
 Release preflight and the candidate-CI validator share this interpretation
 (§AR-system.principle); removal deadlines remain that validator's responsibility.
 """
@@ -12,6 +13,9 @@ LEDGER_PATH = "docs/discussions/proposals/2026-09-30-core-concerns.md"
 HEADING = re.compile(r"^(#{2,3}) (\d+(?:\.\d+)?)[. ]", re.MULTILINE)
 VERSION = re.compile(r"`?v?(\d+)\.(\d+)\.(\d+)`?")
 LEDGER_HEADER = ("surface", "notice", "removal", "status")
+PHASE = re.compile(r"^Phase \d+:")
+PLANNED_FOR = re.compile(r"\bfor ((?:`\d+\.\d+\.(?:\d+|x)`(?:,? (?:and )?)?)+)")
+PLANNED_RELEASE = re.compile(r"`(\d+)\.(\d+)\.(\d+|x)`")
 
 
 def section(text, number):
@@ -54,7 +58,7 @@ def planned_notice_due(notice, status, release):
 
 
 def notice_problems(root, release):
-    """§FS-distribution.4.2.2: refuse only planned notices due by this release."""
+    """§FS-distribution.4.2.2.1: refuse only planned notices due by this release."""
     path = root / LEDGER_PATH
     if not path.exists():
         return []
@@ -73,3 +77,42 @@ def notice_problems(root, release):
                 f"at or below requested release {release}; land the notice and mark it shipped"
             )
     return problems
+
+
+def unshipped_phases(text, bound):
+    """§FS-distribution.4.2.2.1: each §DISC-core-concerns.9 phase whose lead opens
+    `Not shipped` and plans it for a release at or below the bound, as the phase's
+    number and name beside the release as the lead writes it."""
+    found = []
+    for minor in range(1, 10):
+        body = section(text, f"9.{minor}")
+        if body is None:
+            continue
+        title, _, rest = body.partition("\n")
+        if not PHASE.match(title):
+            continue
+        lead = rest.strip().split("\n\n", 1)[0]
+        if not lead.startswith("Not shipped"):
+            continue
+        for listed in PLANNED_FOR.finditer(lead):
+            for major, minor_part, patch in PLANNED_RELEASE.findall(listed.group(1)):
+                # A series `0.N.x` has closed once the bound is past `0.N`.
+                last_patch = float("inf") if patch == "x" else int(patch)
+                if (int(major), int(minor_part), last_patch) <= bound:
+                    phase = f"9.{minor} {title.split(':')[0]}"
+                    found.append((phase, f"{major}.{minor_part}.{patch}"))
+    return found
+
+
+def phase_lead_problems(root, release):
+    """§FS-distribution.4.2.2.1: refuse only phases still planned for this release."""
+    path = root / LEDGER_PATH
+    if not path.exists():
+        return []
+    text = path.read_text(encoding="utf-8")
+    return [
+        f"error: {LEDGER_PATH}: {phase}: not shipped but planned for {planned}, "
+        f"at or below requested release {release}; "
+        "record the phase as shipped or move it to a later release"
+        for phase, planned in unshipped_phases(text, version(release))
+    ]

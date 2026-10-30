@@ -34,7 +34,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from deprecation_ledger import (
-    LEDGER_HEADER, ledger_rows, planned_notice_due, section, version,
+    LEDGER_HEADER, ledger_rows, planned_notice_due, section, unshipped_phases, version,
 )
 
 
@@ -47,9 +47,6 @@ ITEM = re.compile(r"^(\d+)\. ", re.MULTILINE)
 OWNED = re.compile(r"Open — owner #\d+|Settled by")
 STATUSES = ("planned", "shipped")
 TAG = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
-PHASE = re.compile(r"^Phase \d+:")
-PLANNED_FOR = re.compile(r"\bfor ((?:`\d+\.\d+\.(?:\d+|x)`(?:,? (?:and )?)?)+)")
-PLANNED_RELEASE = re.compile(r"`(\d+)\.(\d+)\.(\d+|x)`")
 RELEASED = re.compile(
     r"^(?:## \d+\. |- )\[(\d+)\.(\d+)\.(\d+)\]", re.MULTILINE
 )
@@ -90,29 +87,11 @@ def row_problems(cells, last_shipped):
 
 def phase_problems(text, last_shipped):
     """Each §DISC-core-concerns.9 phase still `Not shipped` for a release that is out."""
-    problems = []
-    for minor in range(1, 10):
-        body = section(text, f"9.{minor}")
-        if body is None:
-            continue
-        title, _, rest = body.partition("\n")
-        if not PHASE.match(title):
-            continue
-        lead = rest.strip().split("\n\n", 1)[0]
-        if not lead.startswith("Not shipped"):
-            continue
-        for listed in PLANNED_FOR.finditer(lead):
-            for major, minor_part, patch in PLANNED_RELEASE.findall(listed.group(1)):
-                # A series `0.N.x` has closed once a later minor shipped.
-                last_patch = float("inf") if patch == "x" else int(patch)
-                planned = (int(major), int(minor_part), last_patch)
-                if planned <= last_shipped:
-                    problems.append(
-                        f"9.{minor} {title.split(':')[0]}: not shipped but planned for "
-                        f"{major}.{minor_part}.{patch}, at or below the last shipped release "
-                        f"{'.'.join(map(str, last_shipped))}"
-                    )
-    return problems
+    return [
+        f"{phase}: not shipped but planned for {planned}, at or below the last shipped "
+        f"release {'.'.join(map(str, last_shipped))}"
+        for phase, planned in unshipped_phases(text, last_shipped)
+    ]
 
 
 def last_shipped_release():
