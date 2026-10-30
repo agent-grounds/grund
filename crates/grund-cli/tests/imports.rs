@@ -1,9 +1,6 @@
 //! A project cites a sibling project its build places beside it, read live from that tree
-//! (§FS-imports). Every test here but the last is red until #1080 ships `[workspace.imports]`:
-//! until then a config that declares one is refused at load as an unknown config section.
-//! The e2e cases these runners drive are staged under `tests/e2e/red/`, outside the corpus
-//! the gate runs; the change that ships imports moves them into `tests/e2e/cases/` and
-//! removes each `ignore` below.
+//! (§FS-imports). The runners below name the import cases of `tests/e2e/cases/` by the
+//! contract each pins, and the rest build what a committed case cannot hold.
 #![allow(dead_code)]
 #[path = "support/case_runner.rs"]
 mod case_runner;
@@ -20,12 +17,12 @@ fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
-fn run_red(label: &str, names: &[&str]) {
+fn run(label: &str, names: &[&str]) {
     let root = repo_root();
-    let red = root.join("tests/e2e/red");
+    let cases = root.join("tests/e2e/cases");
     let outcomes = names
         .iter()
-        .map(|name| run_case(&root, &red.join(name), E2e))
+        .map(|name| run_case(&root, &cases.join(name), E2e))
         .collect::<Vec<_>>();
     assert_every_case_passed(label, &outcomes);
 }
@@ -50,9 +47,8 @@ const HEADLINE: &[&str] = &[
 /// (§FS-imports.paths), counting them (§FS-imports.findings), and writing only the
 /// consumer's own files (§FS-imports.writes).
 #[test]
-#[ignore = "red until #1080 ships [workspace.imports]; implement removes this"]
 fn imports_headline_surfaces_contract() {
-    run_red("imports headline", HEADLINE);
+    run("imports headline", HEADLINE);
 }
 
 const GRAPH: &[&str] = &[
@@ -77,9 +73,8 @@ const GRAPH: &[&str] = &[
 /// config error (§FS-imports.graph.cycle), and one tree reached under two alias paths
 /// is one tree, reported once under its canonical alias path (§FS-imports.graph.diamond).
 #[test]
-#[ignore = "red until #1080 ships the import graph; implement removes this"]
 fn imports_alias_and_graph_contract() {
-    run_red("imports graph", GRAPH);
+    run("imports graph", GRAPH);
 }
 
 const LOCATED: &[&str] = &[
@@ -119,20 +114,20 @@ const LOCATED: &[&str] = &[
 /// (§FS-imports.declaration.identity), and the dependency's own findings and cautions
 /// stay its own (§FS-imports.findings).
 #[test]
-#[ignore = "red until #1080 ships located import outcomes; implement removes this"]
 fn imports_located_outcomes_contract() {
-    run_red("imports located outcomes", LOCATED);
+    run("imports located outcomes", LOCATED);
 }
 
-/// No staged case is left out of the runners above, so none is dropped silently
-/// while the corpus waits outside the gate (§FS-examples.5). Holds today.
+/// No import case of the corpus is left out of the runners above, so each stays named
+/// by the contract it pins (§FS-examples.5).
 #[test]
-fn every_staged_import_case_is_run() {
-    let staged = fs::read_dir(repo_root().join("tests/e2e/red"))
-        .expect("read tests/e2e/red")
-        .map(|entry| entry.expect("staged entry").path())
+fn every_import_case_is_run() {
+    let cases = fs::read_dir(repo_root().join("tests/e2e/cases"))
+        .expect("read tests/e2e/cases")
+        .map(|entry| entry.expect("case entry").path())
         .filter(|path| path.is_dir())
         .map(|path| path.file_name().unwrap().to_string_lossy().into_owned())
+        .filter(|name| name.starts_with("imports-"))
         .collect::<BTreeSet<_>>();
     let run = HEADLINE
         .iter()
@@ -140,10 +135,7 @@ fn every_staged_import_case_is_run() {
         .chain(LOCATED)
         .map(|name| name.to_string())
         .collect::<BTreeSet<_>>();
-    assert_eq!(
-        staged, run,
-        "a staged import case no runner names, or the reverse"
-    );
+    assert_eq!(cases, run, "an import case no runner names, or the reverse");
 }
 
 // The fixtures the cases below build by hand, because each needs something a
@@ -245,7 +237,6 @@ fn assert_run(output: &Output, code: i32, stdout: &str, stderr: &str) {
 /// it: not its repository's `.gitignore` above the target, not `.git/info/exclude`,
 /// not the global excludes file, and not the consumer's (§FS-imports.mount).
 #[test]
-#[ignore = "red until #1080 reads an import with its own ignore files; implement removes this"]
 fn ignore_files_above_the_target_hide_nothing_of_it() {
     let tree = Tree::sibling("ignore");
     for id in ["FS-a", "FS-b", "FS-c"] {
@@ -294,7 +285,6 @@ fn ignore_files_above_the_target_hide_nothing_of_it() {
 /// the target as the place to run it (§FS-imports.writes).
 #[cfg(unix)]
 #[test]
-#[ignore = "red until #1080 refuses a fetch into an import; implement removes this"]
 fn fetch_into_an_import_is_refused_before_its_integration_runs() {
     use std::os::unix::fs::PermissionsExt;
     let tree = Tree::sibling("fetch");
@@ -327,7 +317,6 @@ fn fetch_into_an_import_is_refused_before_its_integration_runs() {
 /// and nothing is reported inside the import (§FS-imports.findings). The wording of
 /// that site's finding is the implementing change's to choose.
 #[test]
-#[ignore = "red until #1080 fails a consumer citation at its site; implement removes this"]
 fn a_duplicate_in_the_dependency_fails_at_the_consumer_site() {
     let tree = Tree::sibling("duplicate");
     tree.write(
@@ -353,10 +342,8 @@ fn a_duplicate_in_the_dependency_fails_at_the_consumer_site() {
 
 /// `grund config show` prints the table as written, with no resolved path, and
 /// `grund config explain` answers for the table and both keys
-/// (§FS-imports.declaration.table). The exact explain bytes move with the series that
-/// ships the table's schema entries.
+/// (§FS-imports.declaration.table).
 #[test]
-#[ignore = "red until #1080 adds the import table to the config schema; implement removes this"]
 fn config_show_and_explain_answer_for_the_import_table() {
     let tree = Tree::sibling("config");
     let show = tree.grund("enterprise", &["config", "show"]);
@@ -387,7 +374,6 @@ fn config_show_and_explain_answer_for_the_import_table() {
 /// byte the dependency changes changes the consumer's verdict, and changing it back
 /// restores it (§FS-imports.mount).
 #[test]
-#[ignore = "red until #1080 reads an import live; implement removes this"]
 fn one_changed_dependency_byte_moves_the_consumer_verdict() {
     let tree = Tree::sibling("live");
     assert_run(&tree.grund("enterprise", &["check"]), 0, LIVE, "");
@@ -411,7 +397,6 @@ fn one_changed_dependency_byte_moves_the_consumer_verdict() {
 /// the same bytes: an imported file is reported relative to the report base, never
 /// absolute (§FS-imports.paths, §REQ-deterministic-output.2).
 #[test]
-#[ignore = "red until #1080 reports imported files where they are; implement removes this"]
 fn a_relocated_composition_prints_the_same_bytes() {
     let plain = Tree::sibling("relocated");
     let spaced = Tree::sibling("relocated \u{e9}t\u{e9} root");
@@ -454,7 +439,6 @@ fn a_relocated_composition_prints_the_same_bytes() {
 /// root are one target, whose sites are listed once (§FS-imports.declaration.path).
 #[cfg(unix)]
 #[test]
-#[ignore = "red until #1080 resolves an import's canonical root; implement removes this"]
 fn a_symlinked_import_path_is_one_target() {
     let tree = Tree::sibling("symlink");
     fs::create_dir_all(tree.0.join("links")).unwrap();
@@ -484,7 +468,7 @@ fn a_symlinked_import_path_is_one_target() {
 
 /// With no import declared, nothing changes: a sibling whose `project_name` matches
 /// the alias a citation spells is never searched, and the citation keeps today's
-/// finding (§FS-imports.declaration.none). Holds today.
+/// finding (§FS-imports.declaration.none).
 #[test]
 fn no_import_declared_never_reads_a_matching_sibling() {
     let tree = Tree::sibling("none");
