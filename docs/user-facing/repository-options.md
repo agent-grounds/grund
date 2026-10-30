@@ -101,11 +101,28 @@ own run's, unless one breaks a citation of yours, which then fails where you wro
 the root and the members of the same block, and an import's own imports nest beneath its
 alias ([§FS-imports.graph.transitive](../functional-spec/FS-imports.md#graphtransitive-imports-nest-beneath-their-importer)).
 
-Nothing pins the neighbour's revision; the build that places it does. So `grund check` says
-so on every run, once per import, and a neighbour that is not there fails the run rather
-than passing it, as [Checking a repository](checking.md#imports-are-always-reported)
-describes. The [sibling-imports example](../../examples/sibling-imports/) is the
-smallest such pair.
+An import costs you three things a member does not:
+
+- It is read live and unpinned. Nothing pins the neighbour's revision; the build that places
+  it does, so `grund check` says so on every run, once per import, and the verdict is about
+  whatever tree sits at `path` when the run reads it.
+- `success` is never printed while an import is declared, because that warning is a finding;
+  the exit code is still the one the rest of the report gives
+  ([§FS-imports.checks.import-live](../functional-spec/FS-imports.md#checksimport-live-an-import-is-read-live-unpinned)).
+- The build places the tree, not grund. A neighbour that is not there fails the run rather
+  than passing it, as [Checking a repository](checking.md#imports-are-always-reported)
+  describes; grund does not clone it.
+
+Its ignore files are its own, at and below the path you name, and nothing else's
+([§FS-imports.mount](../functional-spec/FS-imports.md#mount-an-import-is-a-mounted-root-read-live-and-read-only)). Three ignore sources do not apply through
+the import: a `.gitignore` in the neighbour's repository above that path, a
+`.git/info/exclude` entry, and a line of your own `.gitignore` such as `*.md`; nor does a
+global `core.excludesFile`. Your own lines never hide the neighbour's declarations, and a
+file the neighbour's own run hides through one of the others shows through the import, so
+that rule belongs in an ignore file at or below the neighbour's root
+([§FS-remote-projects.ignore](../functional-spec/FS-remote-projects.md#ignore-ignore-isolation)).
+
+The [sibling-imports example](../../examples/sibling-imports/) is the smallest such pair.
 
 ### Citers in a repository you cannot read
 
