@@ -2,8 +2,8 @@
 //! consumer's own config reaches the sibling from the command line, run in the consumer or
 //! below it, and from an editor holding only the consumer's folder or one inside it
 //! (§FS-imports.editor, §FS-imports.declaration.path). Git sees no configuration but the
-//! fixture's, and stops at the fixture root. Red until #1080 ships `[workspace.imports]`;
-//! the change that ships it removes each `ignore`.
+//! fixture's, and stops at the fixture root. The editor's half is red until #1080 answers
+//! through imports in the editor; the change that ships it removes that `ignore`.
 
 #[path = "binaries.rs"]
 mod binaries;
@@ -99,7 +99,6 @@ fn text(bytes: &[u8]) -> String {
 
 /// `check` and a query, from the consumer and from below it, under either config name.
 #[test]
-#[ignore = "red until #1080 ships [workspace.imports]; implement removes this"]
 fn the_command_line_reaches_the_sibling_with_no_common_parent() {
     for (config, report, caution) in [
         ("enterprise/grund.toml", "grund.toml", ""),
