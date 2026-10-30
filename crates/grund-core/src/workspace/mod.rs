@@ -84,6 +84,8 @@ mod tests_claim_answers;
 #[cfg(test)]
 mod tests_claims;
 #[cfg(test)]
+mod tests_imports;
+#[cfg(test)]
 mod tests_nested;
 #[cfg(test)]
 mod tests_optional_members;
