@@ -301,6 +301,8 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "full-scope-ignored",
         "glob-citation",
         "image-index-entry",
+        "import-live",
+        "import-missing",
         "inline-citation-style",
         "invalid-field-value",
         "invalid-rule",
