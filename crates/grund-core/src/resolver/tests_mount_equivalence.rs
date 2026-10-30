@@ -2,6 +2,8 @@
 //! does (§REQ-remote-equivalence.4, §FS-remote-projects.mount.rule), with its ignore
 //! inputs isolated (§FS-remote-projects.ignore). The consumer's edge is set on its
 //! run directly, so the proof holds the mount layer apart from the import table.
+//! These are the catalog-level rows; the command rows, one per command the binary
+//! lists, are `crates/grund-cli/tests/mount_operations.rs`, where the commands are.
 
 use std::path::{Path, PathBuf};
 
