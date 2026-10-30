@@ -1,0 +1,1 @@
+grund.toml:7: warning: import `native-image` is read live from `../graal/substratevm`, unpinned

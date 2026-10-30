@@ -1145,14 +1145,8 @@
     "text": "warning"
    },
    "enabled": {
-    "kind": "clauses",
-    "clauses": [
-     {
-      "text": "[workspace.imports] is set",
-      "by": "setting"
-     }
-    ],
-    "remark": "in any config the run reads, a dependency's included"
+    "kind": "absent",
+    "text": "not in version 1"
    },
    "fix": {
     "kind": "none",
@@ -1192,14 +1186,8 @@
     "text": "error"
    },
    "enabled": {
-    "kind": "clauses",
-    "clauses": [
-     {
-      "text": "[workspace.imports] is set",
-      "by": "setting"
-     }
-    ],
-    "remark": "in any config the run reads, a dependency's included"
+    "kind": "absent",
+    "text": "not in version 1"
    },
    "fix": {
     "kind": "none",

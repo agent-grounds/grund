@@ -31,6 +31,8 @@ Top-level keys: grund_config_version, project_name
 [presentation.kinds.<NAME>]  One kind's display title.
 [presentation.fmt]  What `grund fmt` writes and leaves alone.
 [workspace]  The sub-projects a workspace root checks, each in its own namespace.
-73 check codes: grund config explain --codes
+[workspace.imports]  Projects a build places beside this one, cited as `<alias>/<ID>` and read live from their own trees, one `[workspace.imports.<alias>]` table each.
+[workspace.imports.<alias>]  One imported project: the directory that holds its own config, and the project_name it must declare.
+75 check codes: grund config explain --codes
 
 Next: grund config explain '[schema]' examples/config-explain/explain-1-index/repo
