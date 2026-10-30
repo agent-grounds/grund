@@ -22,7 +22,7 @@ use ignore::{Match, WalkBuilder, gitignore::Glob};
 
 use super::exclude_globs::ExcludeGlobs;
 use super::global_excludes::GlobalExcludes;
-use super::mounted_ignore::mounted_ignore_files;
+use super::mounted_ignore::mounted_ignore_mode;
 use super::walk::WalkDirFilter;
 use crate::config::{Frame, Schema, canonical_config_root};
 use crate::model::{ExcludingRule, format_path, is_hidden, scanned_path_key};
@@ -332,8 +332,8 @@ fn walker_ignores(path: &Path, follow_links: bool, global: &Arc<GlobalExcludes>)
         .max_depth(Some(1))
         .follow_links(follow_links)
         .git_global(false);
-    if let Some(mounted) = global.mounted() {
-        mounted_ignore_files(&mut builder, mounted, parent);
+    if global.mounted().is_some() {
+        mounted_ignore_mode(&mut builder);
     }
     // §FS-scan.scope.ignore-files.pathname: no dependency fallback, even for an empty file.
     let global = Arc::clone(global);
@@ -373,10 +373,16 @@ fn decision(found: Match<&Glob>) -> Option<Option<IgnoredBy>> {
 /// asked again here, and only for an entry the global file ignores
 /// (§GOAL-fast-feedback). The walk root is never dropped, as the walker never
 /// ignores it.
+///
+/// Under a mounted root the same question is asked of the ignore files above the
+/// walk root, down to the mounted root, which a builder in the mounted ignore mode
+/// does not read (§FS-remote-projects.ignore): every entry, as those files may
+/// ignore any of them.
 pub(super) fn globally_ignored(global: &GlobalExcludes, entry: &ignore::DirEntry) -> bool {
     let is_dir = entry.file_type().is_some_and(is_directory);
     entry.depth() > 0
-        && matches!(global.matched(entry.path(), is_dir), Match::Ignore(_))
+        && (global.mounted().is_some()
+            || matches!(global.matched(entry.path(), is_dir), Match::Ignore(_)))
         && ignored_by_rules(entry.path(), is_dir, global).is_some()
 }
 
