@@ -250,8 +250,9 @@ write is ordinary.
 
 `grund-lsp` answers through imports from the graph `check` reads ([§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree)): hover,
 completion, definition, references, highlights and document links resolve through them, and
-completion offers each import's alias from the same alias list. An import needs no folder of
-its own: a session holding only the consumer's folder, or only a folder inside it whose
+completion offers each import's alias and every alias reached through it from the same alias
+list, by the rule `complete ids` offers an alias path by ([§FS-workspace.8.4.1](FS-workspace.md#841-a-prefix-containing-)). An import
+needs no folder of its own: a session holding only the consumer's folder, or only a folder inside it whose
 upward walk finds the consumer's config, answers through every import.
 
 - **Watching.** The server follows each import's tree, config and ignore files that lie

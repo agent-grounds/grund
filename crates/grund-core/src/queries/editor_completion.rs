@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use super::editor_on_type::{docstring_content_at, line_is_rewritable};
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::{
-    MarkdownLinks, in_escape_position, never_rewrite_context_in, parse_id_arg,
+    MarkdownLinks, alias_continuation, in_escape_position, never_rewrite_context_in, parse_id_arg,
     render_declaration_id,
 };
 use crate::model::{format_path, paired_declarations, relative_from_base};
@@ -35,8 +35,9 @@ pub struct CitationCompletion {
 /// (§AR-lsp.2). Rebuilt together with notified overlays (§FS-lsp.1.6.4).
 pub struct LspCompletionContext {
     projects: Vec<CompletionProject>,
-    /// Each import's alias in the run's alias list, with its root as the run
-    /// spells it (§FS-imports.editor).
+    /// Each alias of the run's alias list that an import reached, the import's own
+    /// and every alias beneath it, with its root as the run spells it
+    /// (§FS-imports.editor).
     imports: Vec<(String, String)>,
     qualified: bool,
     complete: bool,
@@ -121,9 +122,8 @@ impl LspCompletionContext {
             })
             .collect();
         let imports = context
-            .projects
-            .iter()
-            .filter(|project| context.workspace_loaded && project.mount.is_some())
+            .aliased_projects()
+            .filter(|project| project.mount.is_some())
             .map(|project| {
                 let root = relative_from_base(&context.render_root, &project.config.root);
                 (project.alias.clone(), format_path(&root))
@@ -247,12 +247,14 @@ impl LspCompletionContext {
             let id = format!("{}{}", token.qualification, candidate.id);
             completion(id, &candidate.title, &candidate.path, sort_text)
         });
-        // §FS-imports.editor: each import's alias, after the declared IDs, before a `/`.
-        let imports = self
-            .imports
-            .iter()
-            .filter(|(alias, _)| token.qualification.is_empty() && alias.starts_with(token.prefix))
-            .map(|(alias, root)| completion(format!("{alias}/"), "", root, format!("2:{alias}/")));
+        // §FS-lsp.1.6.2: each alias an import reached that continues past the typed token,
+        // by the rule `complete ids` reads (§FS-workspace.8.4.1), after the declared IDs.
+        let typed = format!("{}{}", token.qualification, token.prefix);
+        let imports = self.imports.iter().filter_map(|(alias, root)| {
+            let continuation = alias_continuation(alias, &typed)?;
+            let sort_text = format!("2:{continuation}");
+            Some(completion(continuation, "", root, sort_text))
+        });
         declared.chain(imports).collect()
     }
 }

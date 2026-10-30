@@ -286,6 +286,16 @@ pub(crate) fn split_alias_path(token: &str) -> (Option<&str>, &str) {
     }
 }
 
+/// The alias path `alias` offers a partly typed `prefix`, with its trailing `/`, where
+/// it continues past what is typed (§FS-workspace.8.4.1). The one alias-offer rule:
+/// `complete ids` and the editor's completion both read it. The prefix itself is
+/// withheld: re-offering what is already on the line stalls the shell instead of
+/// advancing it.
+pub(crate) fn alias_continuation(alias: &str, prefix: &str) -> Option<String> {
+    let continuation = format!("{alias}/");
+    (continuation != prefix && continuation.starts_with(prefix)).then_some(continuation)
+}
+
 /// Render an identity without a source record. Reports with source context use
 /// `spelling.rs` to preserve authored numeric digits (§FS-config.3.2.8).
 pub(crate) fn render_id(grammar: &Grammar, id: &Id) -> String {

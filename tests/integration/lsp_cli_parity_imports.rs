@@ -4,7 +4,7 @@
 //! diagnostics for a section citation, a missing section and a value binding through
 //! it are `check`'s findings.
 
-use crate::lsp_import_session::{Composition, Session};
+use crate::lsp_import_session::{Composition, DEPENDENCY_CONFIG, Session, consumer_config};
 use crate::{cli_findings, lsp_findings};
 use serde_json::{Value, json};
 use std::path::PathBuf;
@@ -172,6 +172,82 @@ fn navigation_through_an_import_is_the_cli_answer() {
             offered,
             "{typed}"
         );
+    }
+    session.shutdown();
+}
+
+/// §FS-imports.editor: completion offers the aliases an import reached from the same alias
+/// list and by the same rule as `complete ids`. At the import's `/` that is its nested
+/// member's alias beside its IDs, and every alias the editor offers the command line
+/// offers too. A plain member alias outside the import is not offered.
+#[test]
+fn completion_offers_the_aliases_beneath_an_import_as_complete_ids_does() {
+    let composition = composition("parity-nested");
+    let nested = format!("{DEPENDENCY_CONFIG}\n[workspace]\nmembers = [\"org\"]\n");
+    composition.write("graal/substratevm/grund.toml", &nested);
+    composition.write(
+        "graal/substratevm/org/grund.toml",
+        "grund_config_version = 2\nproject_name = \"org\"\n\n[schema.kinds.GOAL]\nfolders = [\"docs\"]\n",
+    );
+    composition.write(
+        "graal/substratevm/org/docs/GOAL-reach.md",
+        "# GOAL-reach: Reach\n",
+    );
+    let member = format!(
+        "{}\n[workspace]\nmembers = [\"sub\"]\n",
+        consumer_config("enterprise")
+    );
+    composition.write("enterprise/grund.toml", &member);
+    composition.write(
+        "enterprise/sub/grund.toml",
+        "grund_config_version = 2\nproject_name = \"sub\"\n",
+    );
+    let mut session = Session::start(&composition, &["enterprise"], true);
+    session.open(CITING, CITATIONS);
+    let offered = |prefix: &str| {
+        let offered = cli(&composition, &["complete", "ids", "--prefix", prefix]).expect("ids");
+        offered.lines().map(str::to_string).collect::<Vec<_>>()
+    };
+
+    for typed in ["\u{a7}native-image/", "\u{a7}native-image/o"] {
+        let editor = completion(&mut session, &composition, typed);
+        assert!(
+            editor.iter().any(|label| label == "native-image/org/"),
+            "{typed}: {editor:?}"
+        );
+        assert_eq!(
+            editor,
+            offered(typed.trim_start_matches('\u{a7}')),
+            "{typed}"
+        );
+    }
+    assert!(
+        completion(&mut session, &composition, "\u{a7}native-image/")
+            .iter()
+            .any(|label| label == WHOLE),
+        "the import's IDs beside its nested alias"
+    );
+    for typed in ["\u{a7}n", "\u{a7}s", "\u{a7}"] {
+        let cli = offered(typed.trim_start_matches('\u{a7}'));
+        let editor = completion(&mut session, &composition, typed);
+        let aliases = editor.iter().filter(|label| label.ends_with('/'));
+        let unoffered = aliases
+            .filter(|label| !cli.contains(label))
+            .collect::<Vec<_>>();
+        assert!(
+            unoffered.is_empty(),
+            "{typed}: {unoffered:?} beyond {cli:?}"
+        );
+        let reached = ["native-image/", "native-image/org/"];
+        if typed != "\u{a7}s" {
+            assert!(
+                reached
+                    .iter()
+                    .all(|alias| editor.contains(&alias.to_string())),
+                "{typed}: {editor:?}"
+            );
+        }
+        assert!(!editor.contains(&"sub/".to_string()), "{typed}: {editor:?}");
     }
     session.shutdown();
 }
