@@ -140,15 +140,12 @@ class PhasePreflightTests(unittest.TestCase):
         result = self.guard(release, lead)
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
-    @unittest.expectedFailure
     def test_preflight_refuses_phase_planned_for_requested_release(self):
         self.check_refused("0.21.0")
 
-    @unittest.expectedFailure
     def test_preflight_refuses_phase_planned_before_requested_release(self):
         self.check_refused("0.21.1")
 
-    @unittest.expectedFailure
     def test_preflight_refuses_phase_series_once_requested_release_is_past_it(self):
         self.check_refused("0.22.0", "Not shipped. Planned for `0.21.x`.", "0.21.x")
 

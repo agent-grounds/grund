@@ -10,9 +10,10 @@ With no positional release, check that the message bounds and shared minimum
 publishable release (§FS-distribution.release-floor) leave a nonempty window.
 Exit 1 if no release is possible, without choosing a candidate version.
 
-Given the version about to be cut, also check the deprecation ledger's notice
-statuses (§FS-distribution.4.2.2). Exit 1 when a message, the shared floor or a
-notice disagrees with that release.
+Given the version about to be cut, also check what the core-concerns plan still
+owes it: the deprecation ledger's notice statuses and the phase leads
+(§FS-distribution.4.2.2.1). Exit 1 when a message, the shared floor, a notice or
+a phase disagrees with that release.
 
 Usage: check_release_ramps.py [release] [--root <tree>]
 """
@@ -26,7 +27,7 @@ from pathlib import Path
 from typing import Iterable, NamedTuple, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from deprecation_ledger import notice_problems
+from deprecation_ledger import notice_problems, phase_lead_problems
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -225,8 +226,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     # §FS-distribution.release-floor: manifest rewrites cannot lower the tree's floor.
     try:
         shared_floor = read_release_floor(args.root)
-        # §FS-distribution.4.2.2: only an explicit candidate has ledger notice deadlines.
-        ledger_problems = notice_problems(args.root, args.release) if args.release is not None else []
+        # §FS-distribution.4.2.2.1: only an explicit candidate has the plan's deadlines.
+        ledger_problems = (
+            notice_problems(args.root, args.release) + phase_lead_problems(args.root, args.release)
+            if args.release is not None else []
+        )
     except (OSError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2

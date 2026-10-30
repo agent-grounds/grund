@@ -100,13 +100,20 @@ landed/shared-floor and pending locations ([§FS-distribution.4.2.5](../function
 revert the conflicting ramps together, or in an order that keeps a release
 possible at every merge. A nonempty window passes even if it excludes the
 next patch. This check chooses no release and evaluates no version-specific
-ledger notice deadline.
+deadline of the core-concerns plan.
 
 Before preparing a release, check the version against the checked-out tree:
 
 ```bash
 python3 scripts/check_release_ramps.py <version>
 ```
+
+This run also reads the core-concerns plan as that release would record it
+([§FS-distribution.4.2.2.1](../functional-spec/FS-distribution.md#4221-the-preflight-reads-the-plan-as-the-release-would-record-it)). It refuses the version while a `planned`
+notice in the deprecation ledger, or a phase whose lead still opens
+`Not shipped`, is due at or below it, and names the plan's file, the notice's
+surface or the phase's number, and the release it is planned for. Record that
+notice or phase as shipped, or move it to a later release, before cutting.
 
 The guard reads the single shared minimum publishable release from
 `scripts/release-floor.txt`, currently `0.19.0`, together with bounds named by
