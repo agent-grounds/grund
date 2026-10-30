@@ -971,13 +971,29 @@ The release path asks directly: the release guard, `scripts/check_release_ramps.
 | `will exit <status> ... in <release>` | a scalar exit-status change has not been made yet | must be **below** that release |
 | `wording changes in <release>` | the message wording has not changed yet | must be **below** that release |
 
-Before constructing a candidate, the same preflight also reads the deprecation
-ledger at [§DISC-core-concerns.9.9](../discussions/proposals/2026-09-30-core-concerns.md#99-the-deprecation-ledger) and rejects a `planned` notice whose notice
-release is at or below the requested release. This applies the ledger's existing
-consistency rule to the release about to be recorded as shipped. A future
-`planned` notice and a `shipped` notice do not themselves refuse that release;
-the message bounds and shared release floor still apply. The ledger remains
-the source of notice dates and statuses, rather than a second deadline table.
+##### 4.2.2.1 The preflight reads the plan as the release would record it
+
+Before constructing a candidate, the same preflight also reads the releases
+section of the core-concerns plan, [§DISC-core-concerns.9](../discussions/proposals/2026-09-30-core-concerns.md#9-the-releases), and refuses the
+requested release where the plan still calls something due by it unshipped:
+
+- a `planned` notice in the deprecation ledger at [§DISC-core-concerns.9.9](../discussions/proposals/2026-09-30-core-concerns.md#99-the-deprecation-ledger)
+  whose notice release is at or below the requested release;
+- a phase of [§DISC-core-concerns.9](../discussions/proposals/2026-09-30-core-concerns.md#9-the-releases) whose lead opens `Not shipped` and names a
+  release it is planned for at or below the requested release. A series
+  `0.N.x` is at or below it once the requested release is past `0.N`.
+
+This applies the plan's existing consistency rules to the release about to be
+recorded as shipped. Candidate CI holds those rules once the bump writes that
+release's changelog section; `main`'s CI cannot, because there the last shipped
+release is still the previous one, so without the preflight a tree would be
+refused only after its candidate was pushed. Its refusal names the plan's file,
+the notice's surface or the phase's number, and the release it is planned for.
+A future `planned` notice, a `shipped` notice, a phase planned for a later
+release and a phase whose lead does not open `Not shipped` do not themselves
+refuse that release; the message bounds and shared release floor still apply.
+The plan remains the only source of notice dates, statuses and phase plans,
+rather than a second deadline table.
 
 #### 4.2.3 The vocabulary is closed
 
@@ -997,7 +1013,7 @@ The scalar clause is the one the `refs` warning of grund 0.14.0 and 0.15.0 was w
 
 The refusal names every line that disagrees and the window of releases the tree may still be cut as, combining message bounds with [§FS-distribution.release-floor](FS-distribution.md#release-floor-one-shared-minimum-publishable-release). That window can be empty when the shared floor or a landed ramp reaches an independent pending promise. Nothing may be published until the conflicting promises are fulfilled or the changes are reverted. When it is empty, the refusal names every pending line that sets the ceiling, each once, as the version-free check names every landed line that sets the floor, so the lines it lists are the whole set to land or revert rather than one example of it; the `<release>` invocation names the ceiling's lines the same way when its window is empty.
 
-`scripts/check_release_ramps.py [--root <tree>]`, with no positional release, checks whether that message/shared-floor window permits any release. It exits `1` exactly when the inclusive floor is at or above the exclusive ceiling, reporting `no release at all`, both conflicting bounds and their source locations, including `scripts/release-floor.txt:1` when the shared floor conflicts. It exits `0` for a nonempty or unbounded window, even if the next patch would be refused. It reads the same sources and shared floor as the version-specific invocation, without excluding any ramp or choosing a candidate version to evaluate ledger notice deadlines. Configuration and I/O errors retain their error handling; they are not empty-window verdicts. The existing `<release>` invocation keeps its output, exit behavior, shared-floor enforcement and version-specific ledger preflight unchanged.
+`scripts/check_release_ramps.py [--root <tree>]`, with no positional release, checks whether that message/shared-floor window permits any release. It exits `1` exactly when the inclusive floor is at or above the exclusive ceiling, reporting `no release at all`, both conflicting bounds and their source locations, including `scripts/release-floor.txt:1` when the shared floor conflicts. It exits `0` for a nonempty or unbounded window, even if the next patch would be refused. It reads the same sources and shared floor as the version-specific invocation, without excluding any ramp or choosing a candidate version to evaluate the plan's deadlines of [§FS-distribution.4.2.2.1](FS-distribution.md#4221-the-preflight-reads-the-plan-as-the-release-would-record-it). Configuration and I/O errors retain their error handling; they are not empty-window verdicts. The existing `<release>` invocation keeps its output, exit behavior, shared-floor enforcement and version-specific ledger preflight unchanged.
 
 `main` must never hold an empty release window: a pull request that would leave one must fail before it merges, until the conflicting promises are fulfilled or the changes are reverted.
 
