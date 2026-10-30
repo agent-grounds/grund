@@ -344,6 +344,13 @@ collision with any of them is refused at the import's table line, the first clai
 its role ([§FS-workspace.3](../functional-spec/FS-workspace.md#3-aliases)). An import of a nested block is named under that block's alias
 path, as its members are ([§FS-workspace.6.1.5](../functional-spec/FS-workspace.md#615-alias-paths-do-not-change-with-scope)).
 
+What the import's path names is judged here too, on its canonical form, because that is a
+question of config text and the directory tree alone ([§FS-imports.declaration.path](../functional-spec/FS-imports.md#declarationpath-the-path-is-the-consumers-relative-and-literal)): the
+consumer's own root, a directory containing it and one inside it are refused at the `path`
+line, and a directory that cannot be read or holds no config at its root at the table line
+([§FS-imports.failures](../functional-spec/FS-imports.md#failures-config-failures)). The text of the path, absolute or backslashed, is the reader's to refuse,
+before anything is resolved. A path that names no directory is no edge.
+
 Every block's edges are collected onto the run of the config the tree is expanded from, which
 is the one config the loader holds when it grafts. An import is no member: it is not an entry of
 the expanded tree, owns no boundary root and joins no kind table, so nothing this page fences
