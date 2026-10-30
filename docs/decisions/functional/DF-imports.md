@@ -55,8 +55,8 @@ pass.
 ## 3. Consequences
 
 - The contract landed ahead of its release: this decision, [§FS-imports](../../functional-spec/FS-imports.md#fs-imports-a-project-cites-a-sibling-project-its-build-places-beside-it-read-live-from-that-tree), and one
-  sentence each in the points that name a run's inputs. The command line now reads
-  `[workspace.imports]`; the editor's half ([§FS-imports.editor](../../functional-spec/FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)) is still ahead of it.
+  sentence each in the points that name a run's inputs. The command line and the editor
+  ([§FS-imports.editor](../../functional-spec/FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)) now both read `[workspace.imports]`.
 - Imports reuse the mounted-root resolver [§FS-remote-projects.mount.rule](../../functional-spec/FS-remote-projects.md#mountrule-a-mounted-root-resolves-natively-and-is-shown-under-its-alias) specifies, so
   the layer that reads a projection later is the layer an import reads with now; reading
   live is a property of the import edge, not of the layer.

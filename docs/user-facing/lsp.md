@@ -125,6 +125,14 @@ The editor judges what a save would write ([§FS-scan.text.buffer](../functional
 
 A `grund.toml` that stops loading — a half-typed table header, say — shows up as an error on `grund.toml` itself, at the line `grund check` names, with the message `grund check` prints. The project keeps its last good scan meanwhile, so the diagnostics on your other files are from before the config broke, and the error says so. Fix the config and the error goes away on the next load ([§FS-lsp.2.2.4.1](../functional-spec/FS-lsp.md#2241-a-config-that-will-not-load-is-a-diagnostic-on-that-config)).
 
+## Imports
+
+A config that declares [`[workspace.imports]`](configuration.md#workspaceimportsalias) is answered through its imports as `grund check` reads them, and the imported project needs no folder of its own. Open the consumer alone and hover, go-to-definition, references, highlights and document links on a citation qualified with an import's alias, such as `native-image/`, resolve into the sibling tree, completion offers that alias and then the imported project's declarations, and a missing section or a wrong value through an import is reported as `grund check` reports it ([§FS-imports.editor](../functional-spec/FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)).
+
+A file of the imported tree that you open from there is read-only to the consumer: it gets no diagnostics, because its findings are the dependency's own, and no completion or `$$` edit. Two consumers that import the same tree in one session share it rather than claim it twice. To edit the dependency, add it as a folder: it then owns its files and is edited as any project is ([§FS-lsp.2.2.3](../functional-spec/FS-lsp.md#223-a-document-no-project-answers)).
+
+The editor reports changes only inside its folders, so the server watches each imported tree outside them itself: through file watchers it registers with the client where the client supports relative patterns, and through its own watcher where it does not. Saved edits, new and deleted files and edits to the dependency's `grund.toml` are followed, and so is an unsaved edit to an imported file you have open. A dependency that disappears drops out of the consumer with `import-missing` on its import line. A dependency `grund.toml` that stops loading shows up on that same import line with the message `grund check` prints, and the consumer keeps its last good scan until the dependency's config loads again.
+
 ## VSCode / VSCodium
 
 Install a generic LSP client extension and configure it to launch `grund-lsp` for Markdown plus the source file types in your `[scan] extensions`. Use one that is available on your editor's marketplace: VSCodium installs from Open VSX, where "Simple LSP Client" (`wdomitrz.simple-lsp-client`) is published — the older `zsol.vscode-glspc` is only on the Microsoft Marketplace and cannot be installed in VSCodium.
