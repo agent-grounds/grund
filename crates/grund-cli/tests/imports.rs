@@ -9,7 +9,7 @@ use case_runner::CaseKind::E2e;
 use case_runner::{assert_every_case_passed, run_case};
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -215,7 +215,8 @@ impl Tree {
             .current_dir(self.0.join(cwd))
             .env("HOME", self.0.join("home"))
             .env("USERPROFILE", self.0.join("home"))
-            .env("XDG_CONFIG_HOME", self.0.join("xdg"))
+            // Git joins `/git/ignore` onto it, which a verbatim Windows root cannot take.
+            .env("XDG_CONFIG_HOME", git_path(&self.0.join("xdg")))
             .env("GIT_CONFIG_GLOBAL", self.0.join("xdg/git/config"))
             .env("GIT_CONFIG_NOSYSTEM", "1")
             .env("GIT_CEILING_DIRECTORIES", &self.0)
@@ -240,6 +241,13 @@ impl Drop for Tree {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.0);
     }
+}
+
+/// `path` spelled as Git takes a path from its environment: forward slashes, and no
+/// `\\?\` prefix, inside which a `/` Git appends would not separate anything.
+fn git_path(path: &Path) -> String {
+    let path = path.to_string_lossy().replace('\\', "/");
+    path.strip_prefix("//?/").unwrap_or(&path).to_string()
 }
 
 fn text(bytes: &[u8]) -> String {
