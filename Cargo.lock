@@ -657,7 +657,7 @@ dependencies = [
 
 [[package]]
 name = "grund"
-version = "0.20.1-dev"
+version = "0.21.0"
 dependencies = [
  "grund-core",
  "iai-callgrind",
@@ -669,7 +669,7 @@ dependencies = [
 
 [[package]]
 name = "grund-core"
-version = "0.20.1-dev"
+version = "0.21.0"
 dependencies = [
  "anyhow",
  "gix-config",
@@ -689,7 +689,7 @@ dependencies = [
 
 [[package]]
 name = "grund-integration-tests"
-version = "0.20.1-dev"
+version = "0.21.0"
 dependencies = [
  "grund-core",
  "serde_json",
@@ -698,7 +698,7 @@ dependencies = [
 
 [[package]]
 name = "grund-lsp"
-version = "0.20.1-dev"
+version = "0.21.0"
 dependencies = [
  "anyhow",
  "crossbeam-channel",
@@ -712,7 +712,7 @@ dependencies = [
 
 [[package]]
 name = "grund-node"
-version = "0.20.1-dev"
+version = "0.21.0"
 dependencies = [
  "grund-core",
  "napi",
@@ -724,7 +724,7 @@ dependencies = [
 
 [[package]]
 name = "grund-py"
-version = "0.20.1-dev"
+version = "0.21.0"
 dependencies = [
  "grund-core",
  "pyo3",
@@ -734,7 +734,7 @@ dependencies = [
 
 [[package]]
 name = "grund-rust-api-example"
-version = "0.20.1-dev"
+version = "0.21.0"
 dependencies = [
  "grund-core",
 ]
