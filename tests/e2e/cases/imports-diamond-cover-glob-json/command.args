@@ -1,0 +1,1 @@
+cover --glob 'lib-b/core/FS-*' {repo}/enterprise --format json

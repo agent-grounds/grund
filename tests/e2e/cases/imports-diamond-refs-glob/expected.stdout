@@ -1,0 +1,4 @@
+../core/docs/fs/README.md:3: §FS-x (index entry)
+../core/src/Core.java:1: §FS-x
+../lib-b/src/B.java:1: §core/FS-x
+src/Example.java:2: §lib-b/core/FS-x

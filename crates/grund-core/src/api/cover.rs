@@ -236,17 +236,24 @@ fn cover_rows<'a>(
     let mut by_file: BTreeMap<&PathBuf, (usize, Vec<CoverCitationRow>)> = BTreeMap::new();
     for (index, project) in context.projects.iter().enumerate() {
         // §FS-imports.graph.diamond: each file once, under its canonical alias path.
-        if !project.reports_sites() {
-            continue;
-        }
-        for file in &project.findings.scanned_files {
-            by_file.entry(file).or_insert_with(|| (index, Vec::new()));
+        if project.reports_sites() {
+            for file in &project.findings.scanned_files {
+                by_file.entry(file).or_insert_with(|| (index, Vec::new()));
+            }
         }
         for citation in &project.findings.citations {
+            // §FS-coordinate-globs.matching.citations: a glob selects on the copy that
+            // holds the site, and the site is then reported under its canonical copy,
+            // as `refs` reports it (§FS-imports.graph.diamond).
+            let selected =
+                globs.is_none_or(|globs| globs.selects_citation(context, index, citation));
+            let (index, citation) = context.canonical_site(index, citation);
+            let project = &context.projects[index];
             let row = by_file
                 .entry(&citation.file)
                 .or_insert_with(|| (index, Vec::new()));
-            if globs.is_some_and(|globs| !globs.selects_citation(context, index, citation)) {
+            let listed = row.1.iter().any(|row| std::ptr::eq(row.citation, citation));
+            if !selected || listed {
                 continue;
             }
             row.1.push(CoverCitationRow {

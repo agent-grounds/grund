@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 use super::config_findings::config_diagnostics;
 use super::path_report::PathReport;
 use super::report::{complete_report, public_run_warnings};
+use super::reporting::{reporting, workspace_block_projects};
 use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
@@ -23,15 +24,13 @@ use crate::checker::{
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
 use crate::model::{CheckReport, Code, Diagnostic, Finding, Switch};
-use crate::resolver::{
-    WorkspaceCheckTarget, WorkspaceProject, load_workspace_projects, settled_run_warnings,
-};
+use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
 use crate::scanner::{scan_error_message, scan_tree};
 use crate::workspace::{
-    absent_only_workspace_caution, absent_optional_member_warnings, absent_optional_members,
-    arm_imports, arm_optional_members, import_diagnostics, open, unlisted_workspace_block_errors,
+    absent_only_workspace_caution, absent_optional_member_warnings, arm_imports,
+    arm_optional_members, import_diagnostics, open, unlisted_workspace_block_errors,
 };
-use crate::writers::{ListedProject, WorkspaceBlocks, expected, listed_projects};
+use crate::writers::{WorkspaceBlocks, expected};
 
 pub(crate) struct CheckRun {
     pub(crate) config: Config,
@@ -368,7 +367,7 @@ fn run_workspace_check(
     let blocks = listed
         .as_deref()
         .map_or(WorkspaceBlocks::LeftOut, WorkspaceBlocks::Compared);
-    for project in projects.iter().filter(|project| project.reports_findings()) {
+    for project in reporting(&projects) {
         let expected = expected(&project.findings, &project.config, &workspace, blocks);
         // §FS-workspace.8.1: the report is rendered from the workspace root,
         // so a path a member's message names is spelled from there too.
@@ -462,7 +461,7 @@ fn run_workspace_check(
     // §FS-check.3.29.11: per project — the candidates are what *that* walk reached, and
     // the absorbing namespace is its own. Rendered against the workspace root like
     // every other message here (§FS-workspace.8.1).
-    for project in projects.iter().filter(|project| project.reports_findings()) {
+    for project in reporting(&projects) {
         report.errors.extend(unlisted_workspace_block_errors(
             &project.config,
             &root_config,
@@ -476,7 +475,7 @@ fn run_workspace_check(
     // workspace may mix the two discovery forms (§FS-workspace.2).
     let mut config_warnings =
         config_diagnostics(&root_config, root_config.display()).collect::<Vec<_>>();
-    for project in projects.iter().filter(|project| project.reports_findings()) {
+    for project in reporting(&projects) {
         if project.config.root != root_config.root {
             config_warnings.extend(config_diagnostics(&project.config, root_config.display()));
         }
@@ -491,10 +490,7 @@ fn run_workspace_check(
         |report_is_silent| {
             workspace_path_caution(
                 &root_config,
-                projects
-                    .iter()
-                    .filter(|project| project.reports_findings())
-                    .map(|project| &project.findings),
+                reporting(&projects).map(|project| &project.findings),
                 narrowing.path,
                 narrowing.path_provided,
                 report_is_silent,
@@ -510,40 +506,9 @@ fn run_workspace_check(
         config: root_config.into_facade(),
         report,
         had_scan_errors,
-        projects: projects
-            .iter()
-            .filter(|project| project.reports_findings())
+        projects: reporting(&projects)
             .map(|project| project.config.root.clone())
             .collect(),
-    })
-}
-
-/// §FS-check.3.5.5: the projects a workspace run renders its blocks' workspace
-/// sections from, or `None` where it leaves them out — a run at a nested group's
-/// root, whose projects carry the group's alias path, and one with an optional
-/// member absent anywhere in the tree, the fact `init` keeps the member list on
-/// (§FS-init.2.3.4.15.8). The list is the projects already loaded, so the
-/// comparison adds no walk.
-pub(super) fn workspace_block_projects(
-    root_config: &Config,
-    projects: &[WorkspaceProject],
-) -> Option<Vec<ListedProject>> {
-    let outermost = projects
-        .iter()
-        .filter(|project| project.reports_findings())
-        .all(|project| project.config.workspace_scope_path.is_empty());
-    // §FS-imports.declaration.table: a block of imports alone renders as no block.
-    let only_imports = root_config.project().workspace.holds_only_imports();
-    (outermost && !only_imports && absent_optional_members(root_config).is_empty()).then(|| {
-        // §FS-imports.declaration.table: an import is no member, and the block lists none.
-        let own = projects.iter().filter(|project| project.reports_findings());
-        listed_projects(own.map(|project| {
-            (
-                project.alias.clone(),
-                project.config.root.clone(),
-                project.config.project_description.clone(),
-            )
-        }))
     })
 }
 
