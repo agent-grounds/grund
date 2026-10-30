@@ -13,7 +13,7 @@ cross-repository citation stays a checked one ([§GOAL-no-dangling-refs](../goal
 The command line ships it whole: the table is read, every import whose path names a
 directory is mounted under its alias ([§FS-imports.mount](FS-imports.md#mount-an-import-is-a-mounted-root-read-live-and-read-only)), each failure of [§FS-imports.failures](FS-imports.md#failures-config-failures) is
 refused where it says, and the two checks, selection, the writers and `fetch` treat an import
-as this spec says. The editor ([§FS-imports.editor](FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)) is specified ahead of its release. A config that declares no import reads nothing this spec names
+as this spec says. The editor ships beside it, answering through every import ([§FS-imports.editor](FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)). A config that declares no import reads nothing this spec names
 ([§FS-imports.declaration.none](FS-imports.md#declarationnone-a-config-with-no-imports-reads-nothing-new)).
 
 ## terms: Terms
