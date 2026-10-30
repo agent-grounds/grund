@@ -500,7 +500,7 @@ basename when omitted. A member listed in `optional_members` is the one exceptio
 and it is an exception in both checkouts: its alias is the entry's last path
 segment, and a `project_name` that disagrees with that segment is a config error
 rather than a second name ([§FS-workspace.2.2.2](FS-workspace.md#222-the-alias-of-an-optional-member)). A mounted member's alias is its entry's last
-segment too, and a remote's is its table key, both specified ahead of their release ([§FS-remote-projects.declaration.alias](FS-remote-projects.md#declarationalias-the-alias-is-the-table-key)). An import's alias is its table key as well, specified ahead of its release too ([§FS-imports.declaration.alias](FS-imports.md#declarationalias-the-alias-is-the-table-key)).
+segment too, and a remote's is its table key, both specified ahead of their release ([§FS-remote-projects.declaration.alias](FS-remote-projects.md#declarationalias-the-alias-is-the-table-key)). An import's alias is its table key as well ([§FS-imports.declaration.alias](FS-imports.md#declarationalias-the-alias-is-the-table-key)).
 
 Aliases must match the lowercase slug grammar in [§FS-workspace.1.1](FS-workspace.md#11-the-alias-path) and must be unique **among
 siblings** — the root project, the top-level members and, once they ship, the block's remotes and imports share one level, and
@@ -964,7 +964,7 @@ A neighbouring repository is cited as `<alias>/<ID>`, for example `<§>payments/
 it is declared as a remote and fetched into a committed, pinned projection
 ([§FS-remote-projects](FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection)), offline and fast ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). That is specified ahead of its release: until it ships, a config that declares a remote is refused at load ([§FS-remote-projects.declaration.older](FS-remote-projects.md#declarationolder-an-older-grund-refuses-the-table-loudly)).
 
-The second way is unpinned: a neighbour the build already placed beside the repository is declared as an import and read live from that tree, with `check` saying so on every run ([§FS-imports](FS-imports.md#fs-imports-a-project-cites-a-sibling-project-its-build-places-beside-it-read-live-from-that-tree)). That is specified ahead of its release too: until it ships, a config that declares an import is refused at load ([§FS-imports.declaration.table](FS-imports.md#declarationtable-the-import-table)).
+The second way is unpinned: a neighbour the build already placed beside the repository is declared as an import and read live from that tree, with `check` saying so on every run ([§FS-imports](FS-imports.md#fs-imports-a-project-cites-a-sibling-project-its-build-places-beside-it-read-live-from-that-tree)).
 
 ## 8. Other commands
 

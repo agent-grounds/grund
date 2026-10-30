@@ -16,8 +16,7 @@ configuration they already own.
 For a config that declares imports, those paths also read each tree an import names, from
 disk, still with no network I/O and nothing executed ([§FS-imports.mount](../functional-spec/FS-imports.md#mount-an-import-is-a-mounted-root-read-live-and-read-only)). Such a config is
 verifiable offline once the named trees are present; without one the run fails at the import
-and never reports a pass ([§FS-imports.checks.import-missing](../functional-spec/FS-imports.md#checksimport-missing-an-import-names-no-directory)). That is specified ahead of its
-release.
+and never reports a pass ([§FS-imports.checks.import-missing](../functional-spec/FS-imports.md#checksimport-missing-an-import-names-no-directory)).
 
 ## 2. Materialization is explicit
 
