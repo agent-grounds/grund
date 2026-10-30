@@ -26,6 +26,10 @@
 mod binaries;
 #[path = "corpus.rs"]
 mod corpus;
+#[path = "lsp_cli_parity_imports.rs"]
+mod imports;
+#[path = "lsp_import_session.rs"]
+mod lsp_import_session;
 #[path = "ordered_pool.rs"]
 mod ordered_pool;
 #[path = "../../crates/grund-lsp/tests/support/mod.rs"]

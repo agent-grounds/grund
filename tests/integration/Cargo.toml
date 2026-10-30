@@ -41,6 +41,10 @@ name = "lsp_imports_refresh"
 path = "lsp_imports_refresh.rs"
 
 [[test]]
+name = "lsp_mount_operations"
+path = "lsp_mount_operations.rs"
+
+[[test]]
 name = "integrations_resolve"
 path = "integrations_resolve.rs"
 

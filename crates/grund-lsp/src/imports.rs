@@ -198,6 +198,24 @@ impl Server {
         Ok(())
     }
 
+    /// Answer `shutdown` and wait for `exit`, as `Connection::handle_shutdown` does, but
+    /// drop a client's answer to a registration that arrives in between rather than
+    /// fail the session on it.
+    fn shut_down(&self, id: lsp_server::RequestId) -> Result<()> {
+        self.send_response(Response::new_ok(id, ()))?;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+        loop {
+            let left = deadline.saturating_duration_since(std::time::Instant::now());
+            match self.connection.receiver.recv_timeout(left)? {
+                Message::Notification(notification) if notification.method == "exit" => {
+                    return Ok(());
+                }
+                Message::Response(_) => {}
+                message => anyhow::bail!("unexpected message during shutdown: {message:?}"),
+            }
+        }
+    }
+
     /// Send the client a request whose answer the event loop drops.
     fn client_request(&mut self, method: &str, params: Value) -> Result<()> {
         self.watch.requests += 1;
