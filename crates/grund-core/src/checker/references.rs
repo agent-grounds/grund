@@ -12,13 +12,13 @@
 //! leaves out, while every other rule stays inside the configured scope
 //! (§AR-core-module-layout.1).
 
-use super::reference_scope::ScanScope;
 use super::shorthand::{ShorthandIndexes, report_shorthand_citation};
 use super::snapshots::{Resolve, snapshot_warns};
 use super::support::{
     citation_in_markdown_inline_code, close_enough_for_hint, dangling_message_spelled,
     edit_distance, missing_snapshot_message, qualify,
 };
+use super::{mounted_citation::report_mounted_duplicate, reference_scope::ScanScope};
 use crate::config::{Frame, Schema};
 use crate::grammar::{render_catalog_id, render_citation_id};
 use crate::model::remedies;
@@ -232,18 +232,19 @@ pub(super) fn check_citation_resolution(
             });
             continue;
         };
-        // §FS-check.3.13.3 / §AR-checker.2.12: the shorthand pass, and the one rule that
-        // can end this citation early — an unresolved shorthand skips the dangling check
-        // below rather than adding `unknown reference FS-042` for a token that is not an ID.
-        if cite.shorthand
-            && report_shorthand_citation(
-                cite,
-                schema,
-                &target,
-                tier,
-                &mut shorthand_indexes,
-                report,
-            )
+        // §FS-check.3.13.3 / §AR-checker.2.12: the shorthand pass, one of two rules that end
+        // a citation early — an unresolved shorthand skips the dangling check below rather
+        // than adding `unknown reference FS-042`; the other is §FS-imports.findings.
+        if report_mounted_duplicate(cite, &target, report)
+            || cite.shorthand
+                && report_shorthand_citation(
+                    cite,
+                    schema,
+                    &target,
+                    tier,
+                    &mut shorthand_indexes,
+                    report,
+                )
         {
             continue;
         }

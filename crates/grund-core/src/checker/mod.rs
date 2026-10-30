@@ -58,6 +58,7 @@ mod index_form;
 mod index_mention;
 mod inline_style;
 mod judge;
+mod mounted_citation;
 mod near_miss;
 mod obligation_units;
 mod off_format_citations;
