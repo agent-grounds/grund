@@ -115,9 +115,9 @@ pub(crate) use places::Owners;
 pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
 #[allow(unused_imports)]
 pub use project::{
-    CitationSyntax, Citations, FmtPresentation, Grounding, IdGrammar, KindGrounding, Members,
-    NoteStyle, OutputPresentation, Presentation, Project, Rules, Rung, Schema, Sources, Strength,
-    Threshold,
+    CitationSyntax, Citations, FmtPresentation, Grounding, IdGrammar, Import, KindGrounding,
+    Members, NoteStyle, OutputPresentation, Presentation, Project, Rules, Rung, Schema, Sources,
+    Strength, Threshold,
 };
 pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolicy};
 pub use rows::{Extent, Form, Kind, Nesting, Place, Row};

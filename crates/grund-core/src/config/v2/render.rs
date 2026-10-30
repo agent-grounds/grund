@@ -57,7 +57,7 @@ impl Project {
             let _ = writeln!(out, "project_name = {}", string(name));
         }
         let workspace = &self.workspace;
-        if workspace.declared {
+        if workspace.declared && !workspace.holds_only_imports() {
             let _ = writeln!(out, "\n[workspace]\nmembers = {}", list(&workspace.members));
             if !workspace.optional_members.is_empty() {
                 let _ = writeln!(
@@ -67,6 +67,15 @@ impl Project {
                 );
             }
             let _ = writeln!(out, "include_root = {}", workspace.include_root);
+        }
+        // §FS-imports.declaration.table: each import as written, its path unresolved.
+        for import in &workspace.imports {
+            let _ = writeln!(out, "\n[workspace.imports.{}]", import.alias);
+            for (key, value) in [("path", &import.path), ("project", &import.project)] {
+                if let Some(value) = value {
+                    let _ = writeln!(out, "{key} = {}", string(value));
+                }
+            }
         }
     }
 

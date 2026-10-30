@@ -41,6 +41,8 @@ const HEADERS: &[&str] = &[
     "presentation.kinds.FS",
     "presentation.fmt",
     "workspace",
+    "workspace.imports",
+    "workspace.imports.dep",
 ];
 
 /// The table `header` opens; a row, a field and a definition list their keys
@@ -56,6 +58,7 @@ fn table(header: &str) -> Table {
         Opened::FrontMatter(_) => Table::FrontMatter(0),
         Opened::Key(..) => Table::FrontMatterKey(0, 0),
         Opened::Definition(_) => Table::Definition(0),
+        Opened::Import(_) => Table::Import(0),
         Opened::Refused(message) => panic!("[{header}] is refused: {message}"),
     }
 }

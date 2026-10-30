@@ -1630,6 +1630,55 @@
                 "id": "FS-config.3.8",
                 "href": "docs/functional-spec/FS-config.md#38-workspace--sub-project-members"
               }
+            },
+            "imports": {
+              "type": "object",
+              "x-grund-key": "<alias>",
+              "description": "Projects a build places beside this one, cited as `<alias>/<ID>` and read live from their own trees, one `[workspace.imports.<alias>]` table each.",
+              "x-grund-spec": {
+                "id": "FS-imports.declaration.table",
+                "href": "docs/functional-spec/FS-imports.md#declarationtable-the-import-table"
+              },
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "additionalProperties": {
+                "type": "object",
+                "description": "One imported project: the directory that holds its own config, and the project_name it must declare.",
+                "x-grund-spec": {
+                  "id": "FS-imports.declaration.table",
+                  "href": "docs/functional-spec/FS-imports.md#declarationtable-the-import-table"
+                },
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "The directory of the imported project's own config, relative to this config's root and written with `/`; it may use `..`, and must name neither this root, a directory containing it, nor one inside it.",
+                    "examples": [
+                      "../graal/substratevm"
+                    ],
+                    "x-grund-spec": {
+                      "id": "FS-imports.declaration.path",
+                      "href": "docs/functional-spec/FS-imports.md#declarationpath-the-path-is-the-consumers-relative-and-literal"
+                    }
+                  },
+                  "project": {
+                    "type": "string",
+                    "description": "The project_name the imported config must declare; the alias is this config's own name for it.",
+                    "examples": [
+                      "native-image"
+                    ],
+                    "x-grund-spec": {
+                      "id": "FS-imports.declaration.identity",
+                      "href": "docs/functional-spec/FS-imports.md#declarationidentity-the-project-is-named-never-inferred"
+                    }
+                  }
+                },
+                "required": [
+                  "path",
+                  "project"
+                ],
+                "additionalProperties": false
+              }
             }
           },
           "additionalProperties": false

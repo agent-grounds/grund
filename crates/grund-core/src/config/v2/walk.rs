@@ -107,6 +107,7 @@ impl<'a> Reader<'a> {
             Opened::Definition(name) => {
                 Table::Definition(sources::open_definition(self, &name, line)?)
             }
+            Opened::Import(alias) => Table::Import(presentation::open_import(self, alias, line)?),
             Opened::Table(table) => table,
         };
         let citations = &mut self.project.rules.citations;
@@ -192,6 +193,7 @@ impl<'a> Reader<'a> {
             Table::PresentationKind(kind) => presentation::kind_key(self, kind, key, value, line),
             Table::PresentationFmt => presentation::fmt_key(self, key, value, line),
             Table::Workspace => presentation::workspace_key(self, key, value, line),
+            Table::Import(index) => presentation::import_key(self, *index, key, value, line),
         }
     }
 
@@ -216,6 +218,7 @@ impl<'a> Reader<'a> {
             Table::CitationKind(kind, lists) => rules::close_citation_kind(self, &kind, &lists),
             Table::Ladder(place, rungs) => rules::close_ladder(self, place, rungs),
             Table::Row(index) => schema::close_row(self, index),
+            Table::Import(index) => presentation::close_import(self, index),
             _ => Ok(()),
         }
     }

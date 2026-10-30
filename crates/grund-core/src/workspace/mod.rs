@@ -35,6 +35,7 @@ mod declared;
 mod expand;
 mod findings;
 mod id_arg;
+mod imports;
 mod member_guidance;
 mod members;
 mod optional_members;

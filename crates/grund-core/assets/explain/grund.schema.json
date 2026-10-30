@@ -1086,6 +1086,39 @@
               "type": "boolean",
               "description": "Whether the root is checked as a project too.",
               "default": true
+            },
+            "imports": {
+              "type": "object",
+              "x-grund-key": "<alias>",
+              "description": "Projects a build places beside this one, cited as `<alias>/<ID>` and read live from their own trees, one `[workspace.imports.<alias>]` table each.",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "additionalProperties": {
+                "type": "object",
+                "description": "One imported project: the directory that holds its own config, and the project_name it must declare.",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "The directory of the imported project's own config, relative to this config's root and written with `/`; it may use `..`, and must name neither this root, a directory containing it, nor one inside it.",
+                    "examples": [
+                      "../graal/substratevm"
+                    ]
+                  },
+                  "project": {
+                    "type": "string",
+                    "description": "The project_name the imported config must declare; the alias is this config's own name for it.",
+                    "examples": [
+                      "native-image"
+                    ]
+                  }
+                },
+                "required": [
+                  "path",
+                  "project"
+                ],
+                "additionalProperties": false
+              }
             }
           },
           "additionalProperties": false

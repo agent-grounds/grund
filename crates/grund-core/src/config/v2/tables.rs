@@ -50,6 +50,9 @@ pub(super) enum Table {
     PresentationKind(String),
     PresentationFmt,
     Workspace,
+    /// `[workspace.imports.<alias>]`: the index of its import
+    /// (§FS-imports.declaration.table).
+    Import(usize),
 }
 
 /// The measure a measure table is named for.
@@ -174,6 +177,7 @@ impl Table {
             Table::PresentationKind(_) => Keys::Closed(&["title"]),
             Table::PresentationFmt => Keys::Closed(&["anchors", "links", "exclude"]),
             Table::Workspace => Keys::Closed(&["members", "optional_members", "include_root"]),
+            Table::Import(_) => Keys::Closed(&["path", "project"]),
         }
     }
 }
@@ -321,6 +325,11 @@ const HEADERS: &[Header] = &[
         Opened::Table(Table::PresentationFmt)
     }),
     ("workspace", None, |_| Opened::Table(Table::Workspace)),
+    // §FS-imports.declaration.table, §FS-imports.declaration.alias.
+    ("workspace.imports", None, |_| Opened::Table(Table::Parent)),
+    ("workspace.imports.<alias>", None, |names| {
+        Opened::Import(names[0].to_string())
+    }),
 ];
 
 /// §FS-config-explain.3: each table the v2 reader admits, `[header]` or `""`
@@ -336,6 +345,7 @@ pub(in crate::config) fn admitted() -> Vec<(String, Vec<String>)> {
             Opened::FrontMatter(_) => Table::FrontMatter(0),
             Opened::Key(..) => Table::FrontMatterKey(0, 0),
             Opened::Definition(_) => Table::Definition(0),
+            Opened::Import(_) => Table::Import(0),
             Opened::Refused(why) => unreachable!("[{header}] is refused: {why}"),
         };
         tables.push((format!("[{header}]"), keys_of(&table, *placeholder)));
@@ -365,6 +375,9 @@ pub(super) enum Opened {
     Key(String, String),
     /// A language definition's header and its name; the reader makes its draft.
     Definition(String),
+    /// An import's header and its alias; the reader makes its record
+    /// (§FS-imports.declaration.table).
+    Import(String),
     Refused(String),
 }
 

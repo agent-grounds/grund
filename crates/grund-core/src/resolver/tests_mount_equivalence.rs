@@ -1,7 +1,7 @@
 //! Test module: the mount layer answers as the mounted tree's own standalone run
 //! does (§REQ-remote-equivalence.4, §FS-remote-projects.mount.rule), with its ignore
-//! inputs isolated (§FS-remote-projects.ignore). The consumer's edge is set through the
-//! test-only hook, and once through the import table that declares it.
+//! inputs isolated (§FS-remote-projects.ignore). The consumer's edge is set on its
+//! run directly, so the proof holds the mount layer apart from the import table.
 
 use std::path::{Path, PathBuf};
 
@@ -195,6 +195,8 @@ fn mounted(lib: &Path, app: &Path) -> Vec<WorkspaceProject> {
         written: "../outer/lib".into(),
         root: lib.to_path_buf(),
         source: None,
+        project: "lib".into(),
+        project_source: None,
     }]);
     load_workspace_projects(&mut ProjectRecords::of(config)).expect("app's run")
 }
@@ -336,6 +338,8 @@ fn a_mount_of_the_consumer_itself_closes_a_cycle() {
         written: ".".into(),
         root: app.clone(),
         source: None,
+        project: "app".into(),
+        project_source: None,
     }]);
     let error = load_workspace_projects(&mut ProjectRecords::of(config))
         .err()

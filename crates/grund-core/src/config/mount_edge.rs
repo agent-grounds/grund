@@ -1,8 +1,9 @@
 //! §FS-remote-projects.mount.rule: one mount edge, the record expansion hands the
 //! resolver for a project it loads as its own outermost root and shows under an
-//! alias. A record rather than a rule, like `AbsentOptionalNamespace`: it rides on
-//! the `Run` of the config whose block declared it, because that run is what the
-//! loader of §AR-resolver.mount holds when it reaches the edge.
+//! alias. A record rather than a rule, like `AbsentOptionalNamespace`: expansion
+//! collects every block's edges onto the `Run` of the config the tree is expanded
+//! from, because that run is what the loader of §AR-resolver.mount holds when it
+//! grafts the tree's mounts.
 
 use std::path::PathBuf;
 
@@ -26,4 +27,8 @@ pub(crate) struct MountEdge {
     /// The declaring block's line the edge is located at, spelled from the run's
     /// report base (§FS-errors.4).
     pub(crate) source: Option<ConfigLocation>,
+    /// The `project_name` the declaring block expects the target to declare, and
+    /// where it wrote it (§FS-imports.declaration.identity).
+    pub(crate) project: String,
+    pub(crate) project_source: Option<ConfigLocation>,
 }
