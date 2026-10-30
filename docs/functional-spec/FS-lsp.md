@@ -272,7 +272,7 @@ triggering; manual requests always use current effective configuration.
 Candidates come from the cached owner catalog. A complete known alias plus `/`
 selects the loaded target project's catalog and grammar through the existing
 qualified resolver ([§FS-workspace.4.1](FS-workspace.md#41-each-lookup-stays-in-its-project)). Unknown or unavailable aliases yield no
-items. Each import's alias, with its `/`, is a candidate of its own ([§FS-imports.editor](FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)). Never
+items. Each alias an import reached, the import's own and every alias beneath it, is a candidate of its own with its `/` wherever it continues past the typed token, as `complete ids` offers it ([§FS-workspace.8.4.1](FS-workspace.md#841-a-prefix-containing-), [§FS-imports.editor](FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)). Never
 offer an unqualified sibling declaration. Offer only uniquely
 resolving declaration spellings, including retained legacy spellings; incomplete
 declaration discovery withholds edits.

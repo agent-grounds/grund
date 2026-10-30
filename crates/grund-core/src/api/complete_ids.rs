@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 use crate::checker::ScanScope;
 use crate::config::Config;
-use crate::grammar::{render_catalog_id, split_alias_path};
+use crate::grammar::{alias_continuation, render_catalog_id, split_alias_path};
 use crate::model::{Catalog, Finding, paired_declarations};
 use crate::queries::{reported_scope, reports};
 use crate::resolver::load_workspace_context;
@@ -77,14 +77,6 @@ fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> R
         if !context.workspace_loaded {
             return Ok(Vec::new());
         }
-        for alias in context.aliases() {
-            let continuation = format!("{alias}/");
-            // The exact prefix is withheld: re-offering what is already on the
-            // line stalls the shell instead of advancing it.
-            if continuation != opts.prefix && continuation.starts_with(&opts.prefix) {
-                candidates.insert(continuation);
-            }
-        }
         if let Some(project) = context.project_by_alias(alias_prefix) {
             let complete_sections =
                 opts.sections || id_prefix.contains(&project.config.section_separator);
@@ -110,12 +102,11 @@ fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> R
                 complete_sections,
             );
         }
-        if context.workspace_loaded {
-            for alias in context.aliases() {
-                candidates.insert(format!("{alias}/"));
-            }
-        }
     }
+    // §FS-workspace.8.4.1: every alias path that continues past the prefix, by the one
+    // rule the editor's completion reads too.
+    let aliases = context.aliases().into_iter();
+    candidates.extend(aliases.filter_map(|alias| alias_continuation(alias, &opts.prefix)));
     Ok(candidates
         .into_iter()
         .filter(|candidate| candidate.starts_with(&opts.prefix))

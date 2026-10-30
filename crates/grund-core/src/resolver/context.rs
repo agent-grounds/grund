@@ -202,13 +202,15 @@ impl WorkspaceContext {
     /// "neither declared nor cited" hint in `refs` to suggest the right
     /// `--project` slug.
     pub(crate) fn aliases(&self) -> Vec<&str> {
-        if !self.workspace_loaded {
-            return Vec::new();
-        }
-        self.projects
-            .iter()
+        self.aliased_projects()
             .map(|project| project.alias.as_str())
             .collect()
+    }
+
+    /// The projects behind [`Self::aliases`], in the same order: none when
+    /// `workspace_loaded == false`, where no alias names a project (§FS-workspace.8.1).
+    pub(crate) fn aliased_projects(&self) -> impl Iterator<Item = &WorkspaceProject> {
+        self.projects.iter().filter(|_| self.workspace_loaded)
     }
 
     /// The run's kind table (§AR-config.1.5): the one the workspace
