@@ -10,8 +10,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-// §FS-check.6.1: the native backend `check --watch` subscribes through.
-use grund_core::native_watch::notify;
+// §FS-check.6.1: the native backend `check --watch` subscribes through, and the one
+// debounce its events are coalesced by (§FS-check.6.1.2).
+use grund_core::native_watch::{Debounce, notify};
 use grund_core::{
     ApiScanError, BatchShowQuery, CheckOpts, CitationDisjunction, CitationLevel, CitationTarget,
     CompleteIdsOpts, CoverCitation, CoverLinesOpts, CoverOpts, FetchFailureKind, Finding,

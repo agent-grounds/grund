@@ -17,6 +17,10 @@ struct ImportWatch {
         crossbeam_channel::Sender<()>,
         crossbeam_channel::Receiver<()>,
     ),
+    /// The burst of native events not yet rebuilt, on `check --watch`'s debounce
+    /// (§FS-check.6.1.2), timed against `clock`.
+    debounce: grund_core::native_watch::Debounce,
+    clock: std::time::Instant,
 }
 
 impl Default for ImportWatch {
@@ -29,6 +33,8 @@ impl Default for ImportWatch {
             requests: 0,
             native: None,
             events: crossbeam_channel::unbounded(),
+            debounce: grund_core::native_watch::Debounce::default(),
+            clock: std::time::Instant::now(),
         }
     }
 }
@@ -53,9 +59,6 @@ enum Wake {
     Closed,
 }
 
-/// The quiet a burst of native events waits out before it is one rebuild.
-const SETTLE: std::time::Duration = std::time::Duration::from_millis(50);
-
 /// The project among `projects` whose root contains `path` most deeply.
 fn deepest_root<'a>(projects: &'a [ProjectSnapshot], path: &Path) -> Option<&'a ProjectSnapshot> {
     projects
@@ -66,12 +69,27 @@ fn deepest_root<'a>(projects: &'a [ProjectSnapshot], path: &Path) -> Option<&'a 
 }
 
 impl Server {
-    fn wake(&self) -> Wake {
-        crossbeam_channel::select! {
-            recv(self.connection.receiver) -> message => message.map_or(Wake::Closed, Wake::Client),
-            recv(self.watch.events.1) -> _ => {
-                while self.watch.events.1.recv_timeout(SETTLE).is_ok() {}
-                Wake::Disk
+    /// The next thing the event loop acts on. A native event opens a burst that
+    /// `check --watch`'s debounce ends (§FS-check.6.1.2), so events that never stop
+    /// still rebuild; while it runs the client is read as ever, and a request is
+    /// answered from the current snapshot rather than held behind the disk
+    /// (§FS-imports.editor).
+    fn wake(&mut self) -> Wake {
+        loop {
+            let pending = self.watch.debounce.remaining(self.watch.clock.elapsed());
+            if pending.is_some_and(|wait| wait.is_zero()) {
+                self.watch.debounce = grund_core::native_watch::Debounce::default();
+                return Wake::Disk;
+            }
+            let due = pending.map_or_else(crossbeam_channel::never, crossbeam_channel::after);
+            crossbeam_channel::select! {
+                recv(self.connection.receiver) -> message => {
+                    return message.map_or(Wake::Closed, Wake::Client);
+                }
+                recv(self.watch.events.1) -> _ => {
+                    self.watch.debounce.event(self.watch.clock.elapsed());
+                }
+                recv(due) -> _ => {}
             }
         }
     }

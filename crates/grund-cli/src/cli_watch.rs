@@ -1,26 +1,5 @@
 // Synchronous terminal coordinator (§FS-check.6.1.2, §AR-bindings.3).
 
-/// Keep time policy independent of native event counts. During work the bounded
-/// backend queue is drained into a single pending burst (§FS-check.6.1.2).
-#[derive(Default)]
-struct WatchDebounce {
-    first: Option<std::time::Duration>,
-    last: std::time::Duration,
-}
-
-impl WatchDebounce {
-    fn event(&mut self, now: std::time::Duration) {
-        self.first.get_or_insert(now);
-        self.last = now;
-    }
-    fn remaining(&self, now: std::time::Duration) -> Option<std::time::Duration> {
-        let first = self.first?;
-        let deadline = (first + std::time::Duration::from_millis(500))
-            .min(self.last + std::time::Duration::from_millis(100));
-        Some(deadline.saturating_sub(now))
-    }
-}
-
 fn command_check_watch(
     opts: CheckOpts,
     selection: CheckFindingSelection,
@@ -84,7 +63,9 @@ fn run_check_watch(
     let clock = Instant::now();
     let mut last = None;
     let mut failure = None;
-    let mut debounce = WatchDebounce::default();
+    // During work the bounded backend queue is drained into a single pending burst,
+    // under the one debounce the editor server's watcher runs too (§FS-check.6.1.2).
+    let mut debounce = Debounce::default();
     let mut run = true;
     let mut recovery = false;
     loop {
@@ -111,7 +92,7 @@ fn run_check_watch(
                 failure = Some(err);
                 break;
             }
-            debounce = WatchDebounce::default();
+            debounce = Debounce::default();
             recovery = false;
             watch_observe!(WatchObservation::Scanning);
             let output = grund_core::with_check_input_observer(Some(observer.clone()), || {

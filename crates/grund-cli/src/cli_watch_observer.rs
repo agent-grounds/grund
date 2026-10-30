@@ -168,7 +168,7 @@ pub mod watch_test {
 
     /// The actual idle policy with supplied clock values, not a test replica.
     pub fn debounce_deadline(events_ms: &[u64], now_ms: u64) -> Option<u64> {
-        let mut debounce = WatchDebounce::default();
+        let mut debounce = Debounce::default();
         for event in events_ms {
             debounce.event(std::time::Duration::from_millis(*event));
         }
