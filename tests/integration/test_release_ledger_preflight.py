@@ -1,8 +1,15 @@
-"""§FS-distribution.4.2.2: refuse due planned ledger notices before candidates.
+"""§FS-distribution.4.2.2.1: refuse what the plan still owes a release before candidates.
 
 Candidate headings exercise the existing §DISC-core-concerns.9.9 validator,
-without duplicating its rule. Guard probes restore a planned notice in a copy
-of the real ledger, so reconciling today's statuses alone cannot satisfy them.
+without duplicating its rule. Guard probes restore a planned notice, or a
+§DISC-core-concerns.9 phase lead still `Not shipped`, in a copy of the real
+plan, so reconciling today's statuses alone cannot satisfy them.
+
+The phase probes are agent-grounds/grund#1116: the guard passed 0.21.0 while the
+9.4 lead still planned it, and only candidate CI refused it. The refusing ones
+landed under `@unittest.expectedFailure`, one commit before the guard reads the
+phase leads, because the pre-commit hook runs this suite; an expected failure
+that passes fails the suite, so the commit that teaches the guard takes them off.
 """
 
 import re
@@ -93,6 +100,69 @@ class LedgerPreflightTests(unittest.TestCase):
     def test_preflight_accepts_shipped_notice(self):
         result = self.guard("0.19.0", status="shipped")
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+
+# §DISC-core-concerns.9.4's lead on main at b8e5dfa210, before #1115 shipped it.
+UNSHIPPED_LEAD = (
+    "Not shipped in full. Adoption is done and the `0.19.0` removals shipped; "
+    "what remains is the removals planned for `0.21.0`."
+)
+PHASE_HEADING = re.compile(r"^### 9\.4 Phase 3:[^\n]*\n\n", re.MULTILINE)
+
+
+class PhasePreflightTests(unittest.TestCase):
+    """§FS-distribution.4.2.2.1: a phase lead still `Not shipped` for the release refuses it."""
+
+    def guard(self, release, lead=None):
+        """Run the guard on a copy of the tree, its 9.4 lead replaced by `lead`."""
+        root = copy_tree(self)
+        path = root / LEDGER
+        text = path.read_text(encoding="utf-8")
+        heading = PHASE_HEADING.search(text)
+        self.assertIsNotNone(heading, "§DISC-core-concerns.9.4 must stay Phase 3")
+        if lead is None:
+            self.assertTrue(text[heading.end():].startswith("Shipped in `0.21.0`."),
+                            "the real 9.4 lead records Phase 3 as shipped in 0.21.0")
+        else:
+            end = text.index("\n\n", heading.end())
+            path.write_text(text[:heading.end()] + lead + text[end:], encoding="utf-8")
+        return run(root, sys.executable, REPO / "scripts/check_release_ramps.py",
+                   release, "--root", root)
+
+    def check_refused(self, release, lead=UNSHIPPED_LEAD, planned="0.21.0"):
+        result = self.guard(release, lead)
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertIn(LEDGER, result.stderr)
+        self.assertIn("9.4", result.stderr)
+        self.assertIn(planned, result.stderr)
+
+    def check_accepted(self, release, lead=None):
+        result = self.guard(release, lead)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    @unittest.expectedFailure
+    def test_preflight_refuses_phase_planned_for_requested_release(self):
+        self.check_refused("0.21.0")
+
+    @unittest.expectedFailure
+    def test_preflight_refuses_phase_planned_before_requested_release(self):
+        self.check_refused("0.21.1")
+
+    @unittest.expectedFailure
+    def test_preflight_refuses_phase_series_once_requested_release_is_past_it(self):
+        self.check_refused("0.22.0", "Not shipped. Planned for `0.21.x`.", "0.21.x")
+
+    def test_preflight_accepts_phase_planned_after_requested_release(self):
+        self.check_accepted("0.20.1", UNSHIPPED_LEAD)
+
+    def test_preflight_accepts_phase_series_while_requested_release_is_in_it(self):
+        self.check_accepted("0.21.1", "Not shipped. Planned for `0.21.x`.")
+
+    def test_preflight_accepts_shipped_phase_at_its_release(self):
+        self.check_accepted("0.21.0")
+
+    def test_preflight_accepts_phase_planned_for_later_release(self):
+        self.check_accepted("0.21.0", UNSHIPPED_LEAD.replace("`0.21.0`", "`0.22.0`"))
 
 
 if __name__ == "__main__":
