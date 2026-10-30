@@ -217,7 +217,9 @@ pub(super) fn refs_impl_with_annotations(
     for (index, project) in context.projects.iter().enumerate() {
         // §FS-refs.2: the set holds what a stub's target lends, resolved.
         for citation in project.findings.edges() {
-            if context.citation_target(index, citation) != target || citation.id != id {
+            // §FS-imports.graph.diamond: either alias path of one tree is that tree.
+            let cited = context.citation_target(index, citation);
+            if !context.same_target(cited, target) || citation.id != id {
                 continue;
             }
             if !reports_site(scope.as_ref(), &project.findings.declarations, citation) {
@@ -231,7 +233,12 @@ pub(super) fn refs_impl_with_annotations(
             {
                 continue;
             }
-            hits.push(Hit { project, citation });
+            // §FS-imports.graph.diamond: each site once, under its canonical alias path.
+            let (index, citation) = context.canonical_site(index, citation);
+            hits.push(Hit {
+                project: &context.projects[index],
+                citation,
+            });
         }
     }
     hits.sort_by(|a, b| {
@@ -245,6 +252,11 @@ pub(super) fn refs_impl_with_annotations(
                 b.citation.line,
                 b.citation.column,
             ))
+    });
+    hits.dedup_by(|a, b| {
+        a.citation.file == b.citation.file
+            && a.citation.line == b.citation.line
+            && a.citation.column == b.citation.column
     });
     let public_hits = hits
         .iter()

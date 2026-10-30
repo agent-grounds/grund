@@ -60,6 +60,7 @@ impl<'a> WorkspaceCheckTarget<'a> {
                 root: &self.run.root,
                 cli_base: &self.run.cli_base,
                 from_root: true,
+                mounted: &self.run.workspace.mounted_roots,
             },
         }
     }

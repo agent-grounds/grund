@@ -368,7 +368,7 @@ fn run_workspace_check(
     let blocks = listed
         .as_deref()
         .map_or(WorkspaceBlocks::LeftOut, WorkspaceBlocks::Compared);
-    for project in &projects {
+    for project in projects.iter().filter(|project| project.reports_findings()) {
         let expected = expected(&project.findings, &project.config, &workspace, blocks);
         // §FS-workspace.8.1: the report is rendered from the workspace root,
         // so a path a member's message names is spelled from there too.
@@ -457,7 +457,7 @@ fn run_workspace_check(
     // §FS-check.3.29.11: per project — the candidates are what *that* walk reached, and
     // the absorbing namespace is its own. Rendered against the workspace root like
     // every other message here (§FS-workspace.8.1).
-    for project in &projects {
+    for project in projects.iter().filter(|project| project.reports_findings()) {
         report.errors.extend(unlisted_workspace_block_errors(
             &project.config,
             &root_config,
@@ -471,7 +471,7 @@ fn run_workspace_check(
     // workspace may mix the two discovery forms (§FS-workspace.2).
     let mut config_warnings =
         config_diagnostics(&root_config, root_config.display()).collect::<Vec<_>>();
-    for project in &projects {
+    for project in projects.iter().filter(|project| project.reports_findings()) {
         if project.config.root != root_config.root {
             config_warnings.extend(config_diagnostics(&project.config, root_config.display()));
         }
@@ -486,7 +486,10 @@ fn run_workspace_check(
         |report_is_silent| {
             workspace_path_caution(
                 &root_config,
-                projects.iter().map(|project| &project.findings),
+                projects
+                    .iter()
+                    .filter(|project| project.reports_findings())
+                    .map(|project| &project.findings),
                 narrowing.path,
                 narrowing.path_provided,
                 report_is_silent,
@@ -504,6 +507,7 @@ fn run_workspace_check(
         had_scan_errors,
         projects: projects
             .iter()
+            .filter(|project| project.reports_findings())
             .map(|project| project.config.root.clone())
             .collect(),
     })
@@ -521,9 +525,12 @@ pub(super) fn workspace_block_projects(
 ) -> Option<Vec<ListedProject>> {
     let outermost = projects
         .iter()
+        .filter(|project| project.reports_findings())
         .all(|project| project.config.workspace_scope_path.is_empty());
     (outermost && absent_optional_members(root_config).is_empty()).then(|| {
-        listed_projects(projects.iter().map(|project| {
+        // §FS-imports.declaration.table: an import is no member, and the block lists none.
+        let own = projects.iter().filter(|project| project.reports_findings());
+        listed_projects(own.map(|project| {
             (
                 project.alias.clone(),
                 project.config.root.clone(),

@@ -12,7 +12,7 @@ use crate::config::{Config, display_path};
 use crate::grammar::{render_catalog_id, render_citation_id};
 use crate::model::{Catalog, Citation, Finding, sort_path_key};
 use crate::queries::{GlobSelection, read_globs};
-use crate::resolver::{WorkspaceContext, load_narrowable_workspace_context};
+use crate::resolver::{Mounted, WorkspaceContext, load_narrowable_workspace_context};
 use crate::scanner::{ApiScanError, api_scan_error};
 
 use super::report::context_run_warnings;
@@ -153,6 +153,9 @@ struct CoverCitationRow<'a> {
     /// (§FS-workspace.8.6). The two differ only where a qualified citation
     /// crosses into a project whose `[id]` grammar spells IDs another way.
     citing_config: &'a Config,
+    /// The mount the citing project was grafted through, which holds the namespace
+    /// the file wrote (§FS-remote-projects.mount.rule).
+    citing_mount: Option<&'a Mounted>,
 }
 
 impl CoverCitationRow<'_> {
@@ -162,6 +165,7 @@ impl CoverCitationRow<'_> {
             self.target_catalog,
             self.citation,
             &self.citing_config.marker,
+            self.citing_mount,
         )
     }
 
@@ -193,12 +197,14 @@ pub(super) fn target_config<'a>(
 /// The canonical spelling of the token the file wrote: alias-qualified only
 /// when the citation itself was, never qualified on the file's behalf
 /// (§FS-workspace.8.6.4). `refs --glob` and `refs --from` spell a record's `id`
-/// so too (§FS-refs.3.2).
+/// so too (§FS-refs.3.2). A citation a mount grafted keeps the namespace its file
+/// wrote, which `mount` maps back (§FS-remote-projects.mount.rule).
 pub(super) fn cited_id(
     target_config: &Config,
     catalog: &Catalog,
     citation: &Citation,
     marker: &str,
+    mount: Option<&Mounted>,
 ) -> String {
     let id = render_citation_id(
         &target_config.grammar,
@@ -206,9 +212,10 @@ pub(super) fn cited_id(
         citation,
         marker,
     );
-    match &citation.namespace {
-        Some(alias) => format!("{alias}/{id}"),
-        None => id,
+    match (&citation.namespace, mount) {
+        (Some(alias), Some(mount)) => format!("{}/{id}", mount.written_namespace(alias)),
+        (Some(alias), None) => format!("{alias}/{id}"),
+        (None, _) => id,
     }
 }
 
@@ -228,6 +235,10 @@ fn cover_rows<'a>(
     // per-file grouping and the owning alias in step.
     let mut by_file: BTreeMap<&PathBuf, (usize, Vec<CoverCitationRow>)> = BTreeMap::new();
     for (index, project) in context.projects.iter().enumerate() {
+        // §FS-imports.graph.diamond: each file once, under its canonical alias path.
+        if !project.reports_sites() {
+            continue;
+        }
         for file in &project.findings.scanned_files {
             by_file.entry(file).or_insert_with(|| (index, Vec::new()));
         }
@@ -246,6 +257,7 @@ fn cover_rows<'a>(
                 citing_catalog: &project.findings,
                 target_config: target_config(context, index, citation),
                 citing_config: &project.config,
+                citing_mount: project.mount.as_ref(),
             });
         }
     }

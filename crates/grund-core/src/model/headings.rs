@@ -5,6 +5,7 @@ use super::records::Id;
 /// One section-like heading rejected from a declaration's shared coordinate
 /// maps because it lies beyond that declaration's body (§AR-scanner.2.4.1).
 #[non_exhaustive]
+#[derive(Clone)]
 pub struct SectionHeadingOutsideDeclaration {
     pub file: PathBuf,
     pub line: usize,
@@ -15,6 +16,7 @@ pub struct SectionHeadingOutsideDeclaration {
 /// knowledge graph, together with the scanner's deterministic repair guidance
 /// (§FS-declarations.checks.unmarked-heading, §AR-scanner.2.2.7).
 #[non_exhaustive]
+#[derive(Clone)]
 pub struct UnmarkedHeading {
     pub file: PathBuf,
     pub line: usize,
@@ -38,6 +40,7 @@ pub struct UnmarkedHeading {
 /// (empty for the declaration) and the relative heading written under it
 /// (§FS-declarations.checks.unmarked-heading.2.1).
 #[non_exhaustive]
+#[derive(Clone)]
 pub struct RelativeHint {
     pub parent: String,
     pub heading: String,
@@ -50,6 +53,7 @@ pub struct RelativeHint {
 /// the declaration. `column` and `heading` are the authored heading, the span an
 /// editor underlines (§FS-lsp.1.1).
 #[non_exhaustive]
+#[derive(Clone)]
 pub struct RelativeSectionParent {
     pub file: PathBuf,
     pub line: usize,
@@ -78,6 +82,7 @@ pub(crate) struct UnmarkedHeadingCandidate {
 /// written, so the finding can quote it back beside `format`, the candidate
 /// kind's effective template that it missed.
 #[non_exhaustive]
+#[derive(Clone)]
 pub struct NearMissHeading {
     pub file: PathBuf,
     pub line: usize,

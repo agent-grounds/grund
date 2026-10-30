@@ -47,6 +47,10 @@ pub(super) struct GlobalExcludes {
     /// for each entry the global file ignores, a `.DS_Store` in every directory
     /// among them, so each is parsed once per walk rather than once per entry.
     files: Mutex<HashMap<PathBuf, Option<Arc<Gitignore>>>>,
+    /// The mounted root a walk of a mounted project is fenced to
+    /// (§FS-remote-projects.ignore): no global pattern, no `info/exclude`, and no
+    /// ignore file above it, and the root itself standing in for the repository top.
+    mounted: Option<PathBuf>,
 }
 
 impl GlobalExcludes {
@@ -68,7 +72,37 @@ impl GlobalExcludes {
             patterns: builder.build()?,
             tops: Mutex::default(),
             files: Mutex::default(),
+            mounted: None,
         })
+    }
+
+    /// The rules a walk under `mounted` reads (§FS-remote-projects.ignore): the
+    /// machine's global file where it is no mounted root, and no pattern at all
+    /// where it is one, whose own ignore files are the ones at and below it.
+    pub(super) fn for_walk(mounted: Option<&Path>) -> Result<Self> {
+        let Some(mounted) = mounted else {
+            return Self::load();
+        };
+        Ok(Self {
+            patterns: Gitignore::empty(),
+            tops: Mutex::default(),
+            files: Mutex::default(),
+            mounted: Some(mounted.to_path_buf()),
+        })
+    }
+
+    /// The mounted root these rules are fenced to, `None` for an ordinary walk.
+    pub(super) fn mounted(&self) -> Option<&Path> {
+        self.mounted.as_deref()
+    }
+
+    /// Whether an ignore file in `dir` is one these rules read: every one for an
+    /// ordinary walk, and for a mounted root only those at and below it
+    /// (§FS-remote-projects.ignore).
+    pub(super) fn reads_dir(&self, dir: &Path) -> bool {
+        self.mounted
+            .as_deref()
+            .is_none_or(|root| dir.starts_with(root))
     }
 
     /// The global excludes a walker leaves to its filter, with the builder's own
@@ -107,6 +141,11 @@ impl GlobalExcludes {
     /// (§FS-scan.scope.ignore-files.global). It is one of `path`'s ancestors, so it
     /// is spelled as `path` is, `\\?\` included, and always prefixes it.
     pub(super) fn top(&self, path: &Path) -> Option<PathBuf> {
+        // §FS-remote-projects.ignore: a mounted root bounds its `.gitignore` files,
+        // git checkout or not, and no repository above it does.
+        if let Some(root) = &self.mounted {
+            return path.starts_with(root).then(|| root.clone());
+        }
         let mut tops = self.tops.lock().unwrap_or_else(PoisonError::into_inner);
         let mut unknown = Vec::new();
         let mut top = None;

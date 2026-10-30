@@ -151,7 +151,7 @@ impl SectionInfo {
 /// (§AR-scanner.2.3, §AR-scanner.2.4). `has_marker` drives strict-mode
 /// filtering (§FS-config.3.1) and is what `grund fmt` upgrades a bare token
 /// from (§FS-fmt.2.2).
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[non_exhaustive]
 pub struct Citation {
     pub namespace: Option<String>,
@@ -232,7 +232,7 @@ pub struct Citation {
 /// with one enclosing declaration are promoted to [`Citation`]; unsupported or
 /// ownerless forms stay here so the checker can diagnose them without inventing
 /// a graph target (§AR-scanner.2.4).
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(crate) struct LocalSectionCitationCandidate {
     pub(crate) text: String,
     pub(crate) section: Option<String>,
@@ -249,7 +249,7 @@ pub(crate) struct LocalSectionCitationCandidate {
 /// A marker-prefixed token the configured grammar rejected, retained during
 /// the same file scan until the project catalog can prove it names an exact
 /// persisted declaration (§FS-check.1.1.1, §FS-config.3.2.6).
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(crate) struct LegacyCitationCandidate {
     pub(crate) namespace: Option<String>,
     pub(crate) tail: String,
@@ -318,7 +318,7 @@ pub struct InlineCitationSite {
 /// is the scanner's whole output; the checker (§AR-checker) consumes it without
 /// re-reading files. It was `Findings` before §AR-system.2.2 took the glossary's
 /// word, which kept the report item `Finding` apart from it (§FS-terms.terms.5).
-#[derive(Default)]
+#[derive(Clone, Default)]
 #[non_exhaustive]
 pub struct Catalog {
     pub declarations: BTreeMap<Id, Vec<Declaration>>,
@@ -466,6 +466,7 @@ pub struct ShowOutput {
 /// and its text without the leading `#`s, which is what a section finding quotes
 /// back (§FS-check.3.6.3).
 #[non_exhaustive]
+#[derive(Clone)]
 pub struct FileHeading {
     pub line: usize,
     pub level: usize,
@@ -478,6 +479,7 @@ pub struct FileHeading {
 /// §FS-check.3.6.2.2 reads at level 2 — it holds across Rust, Python, Java, Go, and
 /// Kotlin without knowing any of them (§FS-non-goals.3).
 #[non_exhaustive]
+#[derive(Clone)]
 pub struct DocCommentBlock {
     pub start: usize,
     pub end: usize,
@@ -487,7 +489,7 @@ pub struct DocCommentBlock {
 /// One file's grounding structure (§AR-scanner.2.7). A Markdown file fills
 /// `headings` and a source file `doc_comments`; `total_lines` closes the last
 /// subtree or block, which would otherwise have no end.
-#[derive(Default)]
+#[derive(Clone, Default)]
 #[non_exhaustive]
 pub struct FileStructure {
     pub headings: Vec<FileHeading>,

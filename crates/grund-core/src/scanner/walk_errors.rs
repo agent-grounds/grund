@@ -49,7 +49,7 @@ pub(super) fn walk_error_report(
     if !link_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
         return Some((path.to_path_buf(), walk_error_reason(err)));
     }
-    if name_refusal(path, schema).is_some() || walk_ignores(path, false, schema) {
+    if name_refusal(path, schema).is_some() || walk_ignores(path, false, schema, frame) {
         return None;
     }
     let reason = match err.io_error().map(std::io::Error::kind) {
@@ -84,7 +84,7 @@ pub(super) fn symlink_loop_report(
     frame: Frame<'_>,
 ) -> Option<ScanError> {
     if directory_refusal(link, &schema.sources.exclude).is_some()
-        || walk_ignores(link, true, schema)
+        || walk_ignores(link, true, schema, frame)
     {
         return None;
     }
@@ -142,8 +142,9 @@ fn link_identity(path: &Path) -> Option<PathBuf> {
 /// predicate's `ignored` asks the walker about the link as an ordinary entry of
 /// its own directory. Only a positive "the walker filtered this out" suppresses
 /// the report: a silent skip is the failure §REQ-no-missed-citation.1 rules out.
-fn walk_ignores(path: &Path, is_dir: bool, schema: &Schema) -> bool {
-    schema.sources.respect_gitignore && ignored(path, is_dir)
+fn walk_ignores(path: &Path, is_dir: bool, schema: &Schema, frame: Frame<'_>) -> bool {
+    schema.sources.respect_gitignore
+        && ignored(path, is_dir, frame.run.workspace.mounted_root.as_deref())
 }
 
 /// The `(link, ancestor)` of a symlink loop, at any nesting depth of the error.

@@ -76,6 +76,7 @@ mod e2e_body;
 mod id_candidates;
 mod legacy_promotion;
 mod link_targets;
+mod mount;
 mod point_body;
 mod relative_fingerprint;
 mod section_fingerprint;
@@ -107,6 +108,7 @@ pub(crate) use link_targets::{
     markdown_link_target_with_root, numbered_heading_anchor, section_site_anchor,
     takes_heading_anchor,
 };
+pub(crate) use mount::Mounted;
 pub(crate) use point_body::point_body_pair;
 pub(crate) use section_lock::{
     EntryVerdict, LockJudgement, judge_section_locks, recorded_text_now_at,
@@ -125,6 +127,8 @@ mod tests_link_target_body_end;
 mod tests_link_target_fences;
 #[cfg(test)]
 mod tests_link_target_no_anchor;
+#[cfg(test)]
+mod tests_mount_equivalence;
 #[cfg(test)]
 mod tests_section_lock;
 #[cfg(test)]

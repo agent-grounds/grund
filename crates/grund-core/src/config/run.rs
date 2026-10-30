@@ -12,6 +12,7 @@ use std::sync::Arc;
 
 use super::call_scope::{PathBase, report_path_base};
 use super::kinds::KindTable;
+use super::mount_edge::MountEdge;
 use super::record::AbsentOptionalNamespace;
 use super::run_warnings::RunWarning;
 use crate::sources::Buffers;
@@ -81,6 +82,19 @@ pub struct RunWorkspace {
     /// (§AR-config.1.5); `None` in a run that expanded none, whose
     /// table is its one project's.
     pub(crate) kinds: Option<Arc<KindTable>>,
+    /// The canonical root of the mounted root this project was loaded under, or
+    /// `None` for a project the run reached by its own tree
+    /// (§FS-remote-projects.mount.rule). It is the one switch both halves of the
+    /// mount read: the walk takes its ignore files at and below it and none above
+    /// (§FS-remote-projects.ignore, §AR-scanner.1.1), and the climb for a claim
+    /// above the project stops there (§FS-imports.declaration.root).
+    pub(crate) mounted_root: Option<PathBuf>,
+    /// The canonical root of every mount the run loaded, each of whose files is
+    /// reported where it is, relative to the report base (§FS-imports.paths).
+    pub(crate) mounted_roots: Vec<PathBuf>,
+    /// The mounts this run's blocks declare, each the edge to one mounted root;
+    /// the loader reads them off the run's own config (§AR-resolver.mount).
+    pub(crate) mounts: Vec<MountEdge>,
 }
 
 impl Default for RunScope {

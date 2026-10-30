@@ -73,6 +73,7 @@ mod legacy;
 mod legacy_inline;
 mod line_owners;
 mod merge;
+mod mounted_ignore;
 mod off_format;
 mod qualified_citations;
 mod read_predicate;

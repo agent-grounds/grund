@@ -11,7 +11,10 @@ keeps every cross-repository citation a checked one ([§GOAL-no-dangling-refs](.
 `grund check` local and fast ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). The decision is
 [§DF-remote-projects](../decisions/functional/DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root); equivalence with a local member is [§REQ-remote-equivalence](../requirements/REQ-remote-equivalence.md#req-remote-equivalence-a-fetched-remote-answers-every-operation-as-a-local-project-does).
 
-Every behaviour below is specified ahead of the releases that build it. Until those land,
+The mount layer below is built: a mounted root resolves natively and is shown under its
+alias ([§FS-remote-projects.mount.rule](FS-remote-projects.md#mountrule-a-mounted-root-resolves-natively-and-is-shown-under-its-alias)), and is walked with its own ignore files alone
+([§FS-remote-projects.ignore](FS-remote-projects.md#ignore-ignore-isolation)). Every other behaviour below is specified ahead of the releases
+that build it. Until those land,
 a config that declares `[workspace.remotes]` or `mounted_members` is refused at load
 ([§FS-remote-projects.declaration.older](FS-remote-projects.md#declarationolder-an-older-grund-refuses-the-table-loudly)), and a repository that declares neither reads
 nothing this spec names ([§FS-remote-projects.declaration.none](FS-remote-projects.md#declarationnone-a-repository-with-no-remotes-reads-nothing-new)).
