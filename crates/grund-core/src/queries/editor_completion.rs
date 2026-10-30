@@ -35,6 +35,9 @@ pub struct CitationCompletion {
 /// (§AR-lsp.2). Rebuilt together with notified overlays (§FS-lsp.1.6.4).
 pub struct LspCompletionContext {
     projects: Vec<CompletionProject>,
+    /// Each import's alias in the run's alias list, with its root as the run
+    /// spells it (§FS-imports.editor).
+    imports: Vec<(String, String)>,
     qualified: bool,
     complete: bool,
 }
@@ -117,8 +120,18 @@ impl LspCompletionContext {
                 }
             })
             .collect();
+        let imports = context
+            .projects
+            .iter()
+            .filter(|project| context.workspace_loaded && project.mount.is_some())
+            .map(|project| {
+                let root = relative_from_base(&context.render_root, &project.config.root);
+                (project.alias.clone(), format_path(&root))
+            })
+            .collect();
         Self {
             projects,
+            imports,
             qualified: context.workspace_loaded,
             complete: context
                 .projects
@@ -213,26 +226,33 @@ impl LspCompletionContext {
                 &b.id,
             ))
         });
-        candidates
-            .into_iter()
-            .map(|candidate| {
-                let id = format!("{}{}", token.qualification, candidate.id);
-                CitationCompletion {
-                    title: candidate.title.clone(),
-                    source_path: candidate.path.clone(),
-                    sort_text: format!(
-                        "{}:{:08}:{}",
-                        u8::from(candidate.id != token.prefix),
-                        candidate.kind_order,
-                        candidate.id
-                    ),
-                    filter_text: format!("{}{id}", token.introducer),
-                    start: token.start,
-                    end: token.end,
-                    text: format!("{}{id}", owner.config.marker),
-                    id,
-                }
-            })
-            .collect()
+        let completion =
+            |id: String, title: &str, source_path: &str, sort_text: String| CitationCompletion {
+                title: title.to_string(),
+                source_path: source_path.to_string(),
+                sort_text,
+                filter_text: format!("{}{id}", token.introducer),
+                start: token.start,
+                end: token.end,
+                text: format!("{}{id}", owner.config.marker),
+                id,
+            };
+        let declared = candidates.into_iter().map(|candidate| {
+            let sort_text = format!(
+                "{}:{:08}:{}",
+                u8::from(candidate.id != token.prefix),
+                candidate.kind_order,
+                candidate.id
+            );
+            let id = format!("{}{}", token.qualification, candidate.id);
+            completion(id, &candidate.title, &candidate.path, sort_text)
+        });
+        // §FS-imports.editor: each import's alias, after the declared IDs, before a `/`.
+        let imports = self
+            .imports
+            .iter()
+            .filter(|(alias, _)| token.qualification.is_empty() && alias.starts_with(token.prefix))
+            .map(|(alias, root)| completion(format!("{alias}/"), "", root, format!("2:{alias}/")));
+        declared.chain(imports).collect()
     }
 }

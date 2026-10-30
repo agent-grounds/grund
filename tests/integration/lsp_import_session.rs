@@ -131,6 +131,8 @@ pub struct Session<'a> {
     pub diagnostics: BTreeMap<String, Vec<Value>>,
     /// Every request the server sent, in order.
     pub server_requests: Vec<Value>,
+    /// The capabilities the server advertised in its `initialize` answer.
+    pub capabilities: Value,
 }
 
 impl<'a> Session<'a> {
@@ -153,18 +155,20 @@ impl<'a> Session<'a> {
             next: 1,
             diagnostics: BTreeMap::new(),
             server_requests: Vec::new(),
+            capabilities: Value::Null,
         };
         let folders = folders
             .iter()
             .map(|folder| json!({"uri": composition.uri(folder), "name": folder}))
             .collect::<Vec<_>>();
         let watched = json!({"dynamicRegistration": watchers, "relativePatternSupport": watchers});
-        session.request(
+        let initialized = session.request(
             "initialize",
             json!({"processId": std::process::id(), "workspaceFolders": folders,
                 "capabilities": {"workspace": {"workspaceFolders": true,
                     "didChangeWatchedFiles": watched}}}),
         );
+        session.capabilities = initialized["capabilities"].clone();
         session.notify("initialized", json!({}));
         session
     }

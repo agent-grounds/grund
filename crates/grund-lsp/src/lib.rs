@@ -266,8 +266,8 @@ impl Server {
             };
             match message {
                 Message::Request(request) => {
-                    if self.connection.handle_shutdown(&request)? {
-                        return Ok(());
+                    if request.method == "shutdown" {
+                        return self.shut_down(request.id);
                     }
                     // A request that fails (bad params, resolution error) is
                     // answered with an error response, never fatal to the

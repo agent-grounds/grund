@@ -3,7 +3,9 @@
 //! inputs isolated (§FS-remote-projects.ignore). The consumer's edge is set on its
 //! run directly, so the proof holds the mount layer apart from the import table.
 //! These are the catalog-level rows; the command rows, one per command the binary
-//! lists, are `crates/grund-cli/tests/mount_operations.rs`, where the commands are.
+//! lists, are `crates/grund-cli/tests/mount_operations.rs`, where the commands are, and
+//! the editor's, one per capability the server advertises, are
+//! `tests/integration/lsp_mount_operations.rs`.
 
 use std::path::{Path, PathBuf};
 
