@@ -58,6 +58,10 @@ impl Code {
     pub const GLOB_CITATION: Code = Code("glob-citation");
     /// §FS-citations.checks.image-index-entry
     pub const IMAGE_INDEX_ENTRY: Code = Code("image-index-entry");
+    /// §FS-imports.checks.import-live
+    pub const IMPORT_LIVE: Code = Code("import-live");
+    /// §FS-imports.checks.import-missing
+    pub const IMPORT_MISSING: Code = Code("import-missing");
     /// §FS-check.3.10
     pub const INLINE_CITATION_STYLE: Code = Code("inline-citation-style");
     /// §FS-fields.checks.invalid-field-value
@@ -187,6 +191,8 @@ impl Code {
         Code::FULL_SCOPE_IGNORED,
         Code::GLOB_CITATION,
         Code::IMAGE_INDEX_ENTRY,
+        Code::IMPORT_LIVE,
+        Code::IMPORT_MISSING,
         Code::INLINE_CITATION_STYLE,
         Code::INVALID_FIELD_VALUE,
         Code::INVALID_RULE,

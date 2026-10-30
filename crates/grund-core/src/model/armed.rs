@@ -53,6 +53,9 @@ pub enum Switch {
     Grounding,
     /// `[workspace] optional_members`, in any block the run expands.
     OptionalMember,
+    /// `[workspace.imports]`, in any config the run reads, a dependency's
+    /// included (§FS-imports.checks).
+    Import,
     /// A fetched kind whose resolution is `should`, v2's `warn`: `fetch` alone
     /// resolves `must`, which selects the `dangling` error instead.
     SnapshotWarning,

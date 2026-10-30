@@ -352,11 +352,18 @@ pub(crate) fn absent_only_workspace_caution(
 /// `[workspace]` and the run cannot know how many levels it had or what they were
 /// called (§FS-workspace.2.2.2.3) — `hardware/AR-bus` and `hardware/sprayer/FS-nozzle`
 /// alike when `hardware` is the absent entry.
+///
+/// A missing import is read the same way, absorbing every alias path that begins
+/// with its own (§FS-imports.checks.import-missing).
 pub(crate) fn namespace_is_unverified(run: &Run, namespace: &str) -> bool {
     run.workspace.absent_optional.iter().any(|absent| {
         namespace == absent.alias_path
             || namespace
                 .strip_prefix(&absent.alias_path)
                 .is_some_and(|rest| rest.starts_with('/'))
-    })
+    }) || run
+        .workspace
+        .imports_read
+        .iter()
+        .any(|import| import.absorbs(namespace))
 }

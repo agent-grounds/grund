@@ -56,6 +56,7 @@ pub(crate) use findings::{
     block_relative_root, uncovered_block_scope_roots, unread_block_diagnostic,
 };
 pub(crate) use id_arg::split_qualified_id_arg;
+pub(crate) use imports::{arm_imports, import_diagnostics, missing_import_message};
 pub(crate) use member_guidance::member_root_guidance;
 pub(crate) use members::AncestorWorkspaces;
 pub(crate) use optional_members::{

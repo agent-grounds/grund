@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use super::context::{WorkspaceProject, load_projects_with};
-use crate::config::{MountEdge, ProjectRecords, config_at};
+use crate::config::{ImportRead, MountEdge, ProjectRecords, config_at};
 use crate::model::{Catalog, OperationDiagnostic, format_path};
 use crate::scanner::scan_tree_with_workspace;
 use crate::workspace::config_location_error;
@@ -75,6 +75,8 @@ pub(crate) struct MountLoader {
     memo: BTreeMap<PathBuf, Native>,
     cli_base: PathBuf,
     report_base: PathBuf,
+    /// Every edge reached so far, in the order reached (§FS-imports.checks).
+    pub(super) read: Vec<ImportRead>,
 }
 
 impl MountLoader {
@@ -88,6 +90,7 @@ impl MountLoader {
             memo: BTreeMap::new(),
             cli_base: consumer.cli_base.clone(),
             report_base: consumer.root.clone(),
+            read: Vec::new(),
         }
     }
 
@@ -109,6 +112,17 @@ impl MountLoader {
         let mut grafted = Vec::new();
         let mut roots = Vec::new();
         for edge in &edges {
+            // §FS-imports.checks: every edge the run reaches is announced, a missing one
+            // instead of being mounted.
+            self.read.push(ImportRead {
+                alias: self.spelled(edge),
+                written: edge.written.clone(),
+                source: edge.source.clone(),
+                missing: edge.missing,
+            });
+            if edge.missing {
+                continue;
+            }
             let native = self.native(edge, config)?;
             roots.extend(native.roots.iter().cloned());
             grafted.extend(graft(&native, &edge.alias));

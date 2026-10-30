@@ -182,7 +182,9 @@ impl<'c, 'a> ShowSource<'c, 'a> {
             Some(name) => context
                 .project_by_alias(name)
                 .ok_or_else(|| {
-                    if !context.workspace_loaded {
+                    if let Some(refusal) = context.missing_import(name) {
+                        refusal
+                    } else if !context.workspace_loaded {
                         anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
                             "unknown project alias `{name}`\nnote: workspace aliases are defined in the root grund.toml under [workspace]"
                         )))

@@ -23,7 +23,8 @@ use crate::model::{CheckReport, Code, Diagnostic};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext};
 use crate::scanner::scan_error_message;
 use crate::workspace::{
-    absent_only_workspace_caution, absent_optional_member_warnings, unlisted_workspace_block_errors,
+    absent_only_workspace_caution, absent_optional_member_warnings, import_diagnostics,
+    unlisted_workspace_block_errors,
 };
 use crate::writers::{WorkspaceBlocks, expected};
 
@@ -265,6 +266,13 @@ fn check_workspace_context(
         report_scope,
     );
     report.warnings.extend(announcements);
+    // §FS-imports.checks: the import lines, narrowed by the same rule.
+    let (mut missing, mut live) = import_diagnostics(context.render_config());
+    for lines in [&mut missing, &mut live] {
+        retain_diagnostics_in_report_scope(lines, context.render_config().frame(), report_scope);
+    }
+    report.errors.extend(missing);
+    report.warnings.extend(live);
     report.warnings.extend(absent_only_workspace_caution(
         context.render_config(),
         context.projects.is_empty(),

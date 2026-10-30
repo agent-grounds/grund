@@ -241,6 +241,33 @@ fn an_optional_member_arms_its_absence() {
     );
 }
 
+/// §FS-imports.checks: a consumer importing a sibling arms both import checks,
+/// a live import and a missing one alike; one with no import arms neither.
+#[test]
+fn an_import_arms_both_import_checks() {
+    for (name, present) in [("armed_import_live", true), ("armed_import_missing", false)] {
+        let root = test_root(name);
+        if present {
+            write(
+                &root.join("dep/grund.toml"),
+                "grund_config_version = 2\nproject_name = \"dep\"\n",
+            );
+        }
+        let consumer = root.join("consumer");
+        let tail = "[workspace.imports.dep]\npath = \"../dep\"\nproject = \"dep\"\n";
+        write(
+            &consumer.join("grund.toml"),
+            &std::fs::read_to_string(v2(&format!("{name}_shape"), "", tail).join("grund.toml"))
+                .expect("the shape reads"),
+        );
+        write(&consumer.join("docs/fs/FS-a.md"), "# FS-a: A\n\nText.\n");
+        for code in ["import-live", "import-missing"] {
+            let off = armed(v2(&format!("{name}_off"), "", ""));
+            pinned(Switch::Import, code, off, armed(consumer.clone()));
+        }
+    }
+}
+
 /// The rule twin of the e2e `check-rule-applies-to-nothing-declared` project:
 /// a `RULE-e2e` whose subject kind is homed by `e2e_home`, holding `files`
 /// (§FS-check.2.2.1.4).

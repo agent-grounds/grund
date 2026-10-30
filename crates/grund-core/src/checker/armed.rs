@@ -35,6 +35,7 @@ const SWITCH_CLAUSES: &[(Switch, Code, usize)] = &[
     (Switch::HeadingDepth, Code::SECTION_HEADING_LEVEL, 0),
     (Switch::Grounding, Code::UNGROUNDED, 0),
     (Switch::OptionalMember, Code::OPTIONAL_MEMBER_ABSENT, 0),
+    (Switch::Import, Code::IMPORT_LIVE, 0),
     (Switch::SnapshotWarning, Code::MISSING_SNAPSHOT, 0),
     (Switch::KindHome, Code::MISPLACED_DECLARATION, 0),
     (Switch::ValueHome, Code::YAML_VALUE_SOURCE_DEFERRED, 0),
