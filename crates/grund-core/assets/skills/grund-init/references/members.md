@@ -40,5 +40,7 @@ Source exclusions use `[schema.sources] exclude` in v2, `[scan] exclude` in v1.
 
 If a misplaced-declaration error names an unread nested config, repair ownership before editing declarations: add the directory to the enclosing config’s `[workspace] members`, or exclude it with that config version’s source key. A declaration heading promotion does not fix membership. Exclusions prune descendants, so remove configured scan roots at or beneath the directory too when needed ([placement context](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-declarations.md#checksmisplaced-declarationunlisted-project-explain-the-enclosing-homes-beneath-an-unlisted-project)).
 
+A neighbour the build checks out beside the repository is not a member: declare it under `[workspace.imports.<alias>]` with its `path` and the `project` it must declare, cite it as `§alias/<ID>`, and keep the `import-live` warning, which says it is read live ([sibling imports](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-imports.md)).
+
 See [workspace configuration and command scope](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-workspace.md)
 for membership, alias derivation, and nested workspaces.
