@@ -37,6 +37,10 @@ name = "imports_no_common_parent"
 path = "imports_no_common_parent.rs"
 
 [[test]]
+name = "lsp_imports_refresh"
+path = "lsp_imports_refresh.rs"
+
+[[test]]
 name = "integrations_resolve"
 path = "integrations_resolve.rs"
 

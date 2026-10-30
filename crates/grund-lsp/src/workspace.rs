@@ -113,15 +113,25 @@ struct ConfigFailure {
 }
 
 impl ConfigFailure {
-    /// `None` for a failure that names no config file: it stays on stderr alone.
+    /// `None` for a failure that names no config file: it stays on stderr alone. One
+    /// inside an imported tree goes on the import line that reached it, in the
+    /// consumer's config (§FS-imports.editor).
     fn of(error: &anyhow::Error, retained_root: Option<PathBuf>) -> Option<Self> {
         let diagnostic = error.downcast_ref::<grund_core::OperationDiagnostic>()?;
+        let (file, line, report_path) = match &diagnostic.import_site {
+            Some((file, line)) => (file.clone(), Some(*line), None),
+            None => (
+                diagnostic.file.clone()?,
+                diagnostic.line,
+                diagnostic.path.clone(),
+            ),
+        };
         Some(Self {
-            file: diagnostic.file.clone()?,
-            line: diagnostic.line,
+            file,
+            line,
             code: diagnostic.code,
             message: format!("{error:#}"),
-            report_path: diagnostic.path.clone(),
+            report_path,
             retained_root,
         })
     }

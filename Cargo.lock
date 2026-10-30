@@ -662,7 +662,6 @@ dependencies = [
  "grund-core",
  "iai-callgrind",
  "libc",
- "notify",
  "serde",
  "serde_json",
  "windows-sys 0.61.2",
@@ -675,6 +674,7 @@ dependencies = [
  "anyhow",
  "gix-config",
  "ignore",
+ "notify",
  "once_cell",
  "rayon",
  "regex",
@@ -701,6 +701,7 @@ name = "grund-lsp"
 version = "0.20.1-dev"
 dependencies = [
  "anyhow",
+ "crossbeam-channel",
  "grund-core",
  "lsp-server",
  "lsp-types",

@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use super::context::{WorkspaceProject, load_projects_with};
-use crate::config::{ImportRead, MountEdge, ProjectRecords, config_at};
+use crate::config::{ImportRead, MountEdge, ProjectRecords, config_at, config_file_in};
 use crate::model::{Catalog, OperationDiagnostic, format_path};
 use crate::scanner::scan_tree_with_workspace;
 use crate::workspace::config_location_error;
@@ -167,7 +167,7 @@ impl MountLoader {
             Some(&self.report_base),
             &invocation,
         );
-        let mut config = config.map_err(|err| imported(err, &spelled, edge))?;
+        let mut config = config.map_err(|err| imported(err, &spelled, edge, declaring))?;
         identity(edge, declaring, config.project_name.as_deref())?;
         config.set_mounted_root(edge.root.clone());
         let mut records = ProjectRecords::of(config);
@@ -175,7 +175,7 @@ impl MountLoader {
             .push((edge.root.clone(), edge.segment.clone(), edge.alias.clone()));
         let native = self.load_native(&mut records);
         self.chain.pop();
-        let native = native.map_err(|err| imported(err, &spelled, edge))?;
+        let native = native.map_err(|err| imported(err, &spelled, edge, declaring))?;
         self.memo.insert(edge.root.clone(), native.clone());
         Ok(native)
     }
@@ -262,18 +262,28 @@ fn identity(edge: &MountEdge, declaring: &ProjectRecords, found: Option<&str>) -
 /// §FS-imports.failures: a refusal inside the target's own tree, followed by one
 /// `note:` line naming the import that reached it, as a recovery breadcrumb
 /// (§FS-errors.1.2); a cycle, or a refusal a deeper import already noted, is
-/// passed on as it is.
-fn imported(err: anyhow::Error, spelled: &str, edge: &MountEdge) -> anyhow::Error {
+/// passed on as it is. Each import it passes through marks itself as the site,
+/// so the outermost one, in the consumer's own config, is the last to.
+fn imported(
+    err: anyhow::Error,
+    spelled: &str,
+    edge: &MountEdge,
+    declaring: &ProjectRecords,
+) -> anyhow::Error {
     let from = edge.source.as_ref().map_or_else(String::new, |source| {
         format!(" from {}:{}", format_path(&source.path), source.line)
     });
     let note = format!("\nnote: imported as `{spelled}`{from}");
+    let site = edge
+        .source
+        .as_ref()
+        .and_then(|source| Some((config_file_in(&declaring.root)?, source.line)));
     match err.downcast::<OperationDiagnostic>() {
-        Ok(failure) if failure.message.contains(CYCLE) || failure.message.contains("\nnote: ") => {
-            failure.into()
-        }
         Ok(mut failure) => {
-            failure.message.push_str(&note);
+            if !failure.message.contains(CYCLE) && !failure.message.contains("\nnote: ") {
+                failure.message.push_str(&note);
+            }
+            failure.import_site = site.or(failure.import_site.take());
             failure.into()
         }
         Err(err) => anyhow::anyhow!("{err:#}{note}"),
