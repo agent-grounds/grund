@@ -208,16 +208,27 @@ fn head_paths(git: &OsStr, root: &Path) -> Option<BTreeSet<PathBuf>> {
     // such a git cannot read a reftable repository at all.
     let format = run(git, root, &["rev-parse", "--show-ref-format"]);
     let reftable = format.is_some_and(|format| line(&format) == b"reftable");
-    let mut args = vec!["rev-parse", "--git-dir", "--git-common-dir"];
-    args.extend(["--git-path", "HEAD", "--git-path", "index"]);
-    args.extend(["--git-path", "packed-refs"]);
+    let mut args: Vec<&OsStr> = [
+        "rev-parse",
+        "--git-dir",
+        "--git-common-dir",
+        "--git-path",
+        "HEAD",
+        "--git-path",
+        "index",
+        "--git-path",
+        "packed-refs",
+    ]
+    .into_iter()
+    .map(OsStr::new)
+    .collect();
     let branches = if reftable {
         Vec::new()
     } else {
         symbolic_refs(git, root)?
     };
     for branch in &branches {
-        args.extend(["--git-path", branch.as_str()]);
+        args.extend([OsStr::new("--git-path"), branch.as_os_str()]);
     }
     let resolved = run(git, root, &args)?;
     let paths: Vec<PathBuf> = resolved
@@ -243,7 +254,7 @@ fn head_paths(git: &OsStr, root: &Path) -> Option<BTreeSet<PathBuf>> {
             if !loose.exists() {
                 watched.insert(nearest_existing(packed_refs));
             }
-            watched.insert(nearest_existing(loose));
+            watched.insert(ref_watch_path(loose));
         }
     }
     Some(watched)
@@ -254,19 +265,28 @@ fn head_paths(git: &OsStr, root: &Path) -> Option<BTreeSet<PathBuf>> {
 /// (§FS-distribution.4.1.1). A detached HEAD returns an empty list. A cycle,
 /// excessive depth or failed read counts as no qualifying git; the bound also
 /// terminates a chain that another process keeps extending while it is read.
-fn symbolic_refs(git: &OsStr, root: &Path) -> Option<Vec<String>> {
+fn symbolic_refs(git: &OsStr, root: &Path) -> Option<Vec<PathBuf>> {
     let mut refs = Vec::new();
     let mut seen = BTreeSet::new();
-    let mut name = String::from("HEAD");
+    let mut name = PathBuf::from("HEAD");
     for _ in 0..64 {
         if !seen.insert(name.clone()) {
             return None;
         }
-        let output = git_output(git, root, &["symbolic-ref", "--no-recurse", "-q", &name])?;
+        let output = git_output(
+            git,
+            root,
+            &[
+                OsStr::new("symbolic-ref"),
+                OsStr::new("--no-recurse"),
+                OsStr::new("-q"),
+                name.as_os_str(),
+            ],
+        )?;
         match output.status.code() {
             Some(0) => {
-                name = String::from_utf8(line(&output.stdout).to_vec()).ok()?;
-                if name.is_empty() {
+                name = path_from(line(&output.stdout));
+                if name.as_os_str().is_empty() {
                     return None;
                 }
                 refs.push(name.clone());
@@ -276,6 +296,16 @@ fn symbolic_refs(git: &OsStr, root: &Path) -> Option<Vec<String>> {
         }
     }
     None
+}
+
+/// Git ref paths retain their native bytes (§FS-distribution.4.1.1). Cargo's
+/// build-script instructions require UTF-8, so a non-UTF-8 ref watches its nearest
+/// existing UTF-8 ancestor recursively rather than emitting a lossy, missing path.
+fn ref_watch_path(path: &Path) -> PathBuf {
+    path.ancestors()
+        .find(|ancestor| ancestor.to_str().is_some() && ancestor.exists())
+        .unwrap_or(path)
+        .to_path_buf()
 }
 
 /// `path`, or its nearest ancestor that exists: Cargo reads a missing watched path
@@ -288,14 +318,14 @@ fn nearest_existing(path: &Path) -> PathBuf {
 }
 
 /// Run git in `dir` and return its stdout when it exits 0.
-fn run(git: &OsStr, dir: &Path, args: &[&str]) -> Option<Vec<u8>> {
+fn run(git: &OsStr, dir: &Path, args: &[impl AsRef<OsStr>]) -> Option<Vec<u8>> {
     let output = git_output(git, dir, args)?;
     output.status.success().then_some(output.stdout)
 }
 
 /// Run git in `dir` with its local environment cleared and without the optional
 /// locks, so reading the index never rewrites the file the script watches.
-fn git_output(git: &OsStr, dir: &Path, args: &[&str]) -> Option<Output> {
+fn git_output(git: &OsStr, dir: &Path, args: &[impl AsRef<OsStr>]) -> Option<Output> {
     let mut command = Command::new(git);
     for name in GIT_LOCAL_ENV {
         command.env_remove(name);
