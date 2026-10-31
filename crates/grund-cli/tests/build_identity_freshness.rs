@@ -487,3 +487,7 @@ fn retargeting_an_intermediate_symbolic_ref_updates_the_label() {
     ws.expect("packed terminal moves", root, &[], &third, Rerun::Must);
     ws.settled("packed terminal moves", root, &[], &third);
 }
+
+#[cfg(unix)]
+#[path = "support/build_identity_modes.rs"]
+mod mode_changes;
