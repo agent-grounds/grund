@@ -4,7 +4,8 @@
 //! it loaded through the 0.21.x window (§FS-config-v2.reader.6.refusal); a `"""` string
 //! on one line is refused with a parenthetical naming the form
 //! (§FS-config-v2.reader.6.multi-line). A string that closes at its end, a value refused
-//! before, a `"""` string over a break and a version-1 file keep what they had.
+//! before and a version-1 file keep what they had, and an array with an open line is refused
+//! for it first (§FS-config-v2.reader.5.strings.refusal).
 
 use std::path::{Path, PathBuf};
 
@@ -64,6 +65,17 @@ fn multi_line(key: usize) -> String {
          read); this became an error in grund 0.22.0"
     )
 }
+
+/// The 0.22.0 refusal of the array at line 10 whose string is open at the end of line 11,
+/// which a later line closed through the 0.21.x window (§FS-config-v2.reader.5.strings.refusal).
+const OPEN_LINE: &str = "grund.toml:10: unclosed array (a string is still open at the end of line \
+                         11); this became an error in grund 0.22.0";
+
+/// [`OPEN_LINE`] where the string open at line 11's end opened with `"""`
+/// (§FS-config-v2.reader.5.strings.multi-line).
+const MULTI_LINE_OPEN: &str = "grund.toml:10: unclosed array (a multi-line string opens on line \
+                               11, which version 2 does not read); this became an error in \
+                               grund 0.22.0";
 
 /// The SPEC kind's `fetch`, as the load reads it.
 fn spec_fetch(root: &Path) -> Option<String> {
@@ -148,82 +160,66 @@ fn a_triple_quoted_string_on_one_line_is_refused() {
     refused(&root, &multi_line(10));
 }
 
-/// §FS-config-v2.reader.6.refusal: an array with an open line is joined first, and its
-/// string that closes early is then refused; the config does not load, so it carries no
-/// open-line warning.
+/// §FS-config-v2.reader.5.strings.refusal, §FS-config-v2.reader.6.refusal: an array with an
+/// open line is refused for it before any element is read, so its string that closes early
+/// earns no refusal of its own.
 #[test]
-fn an_open_line_and_an_early_close_are_refused_as_the_early_close() {
+#[ignore = "red until #1118 refuses the open line; implement removes this"]
+fn an_open_line_and_an_early_close_are_refused_as_the_open_line() {
     let root = v2(
         "both",
         "\n[schema.sources]\nexclude = [\n  \"a\nb\" \"c\",\n]\n",
     );
-    refused(&root, &suffixed(10));
+    refused(&root, OPEN_LINE);
 }
 
-/// §FS-config-v2.reader.6.multi-line: the `"""` string is the one its third quote opens,
-/// so a break inside a plain string after it leaves the element a one-line `"""` string,
-/// refused with its parenthetical once the array's lines are joined.
+/// §FS-config-v2.reader.5.strings: a `"""` run closes the multi-line string the one before it
+/// opened, so the `"` after it opens a plain string, and the line it leaves open is the plain
+/// open line the array is refused for (§FS-config-v2.reader.5.strings.refusal).
 #[test]
-fn a_break_after_a_one_line_triple_quoted_string_is_refused() {
+#[ignore = "red until #1118 refuses the open line; implement removes this"]
+fn a_break_after_a_one_line_triple_quoted_string_is_refused_as_a_plain_open_line() {
     let root = v2(
         "triple-then-break",
         "\n[schema.sources]\nexclude = [\n  \"\"\"a\"\"\" \"b\nc\",\n]\n",
     );
-    refused(&root, &multi_line(10));
+    refused(&root, OPEN_LINE);
 }
 
-/// Guard, green today and kept: a `"""` string a line break runs through is one
-/// construct, warned for by §FS-config-v2.reader.5.strings.multi-line alone.
+/// §FS-config-v2.reader.5.strings.multi-line: a `"""` string a line break runs through is the
+/// open line's construct, refused as an unclosed array with its multi-line parenthetical.
 #[test]
-fn a_triple_quoted_string_over_a_break_earns_only_the_open_line_warning() {
+#[ignore = "red until #1118 refuses the open line; implement removes this"]
+fn a_triple_quoted_string_over_a_break_is_refused_as_the_open_line() {
     let root = v2(
         "triple-break",
         "\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n]\n",
     );
-    let message = "grund.toml:10: unclosed array (a multi-line string opens on line 11, which \
-                   version 2 does not read), read for now with the line break as a space; \
-                   write the string on line 11 as one basic string; this warning becomes an \
-                   error in grund 0.22.0";
-    assert_eq!(
-        window_findings(&root),
-        vec![("config-multiline-string", Some(10), message.to_string())]
-    );
+    refused(&root, MULTI_LINE_OPEN);
 }
 
-/// §FS-config-v2.reader.6.multi-line: every `"""` string a line break runs through is
-/// #1089's construct, not only the one across the array's first open line, so two of them
-/// earn its one warning alone.
+/// §FS-config-v2.reader.5.strings.refusal: the first open line is the array's last, so of two
+/// `"""` strings over breaks the first is the one the refusal names.
 #[test]
-fn two_triple_quoted_strings_over_breaks_earn_only_the_open_line_warning() {
+#[ignore = "red until #1118 refuses the open line; implement removes this"]
+fn two_triple_quoted_strings_over_breaks_are_refused_at_the_first() {
     let root = v2(
         "two-triple-breaks",
         "\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n  \"\"\"c\nd\"\"\",\n]\n",
     );
-    let message = "grund.toml:10: unclosed array (a multi-line string opens on line 11, which \
-                   version 2 does not read), read for now with the line break as a space; \
-                   write the string on line 11 as one basic string; this warning becomes an \
-                   error in grund 0.22.0";
-    assert_eq!(
-        window_findings(&root),
-        vec![("config-multiline-string", Some(10), message.to_string())]
-    );
+    refused(&root, MULTI_LINE_OPEN);
 }
 
-/// §FS-config-v2.reader.6.multi-line: a `"""` string over a break after a plain open line
-/// is #1089's construct too, and earns nothing beyond that array's one warning.
+/// §FS-config-v2.reader.5.strings.refusal: a `"""` string over a break after a plain open line
+/// is never reached, so the plain open line is the refusal's.
 #[test]
-fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_earns_only_that_warning() {
+#[ignore = "red until #1118 refuses the open line; implement removes this"]
+fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_is_refused_as_that_line() {
     let root = v2(
         "plain-then-triple",
         "\n[schema.sources]\nexclude = [\n  \"a\nb\",\n  \"\"\"c\nd\"\"\",\n]\n",
     );
-    let open = "grund.toml:10: unclosed array (a string is still open at the end of line 11), \
-                read for now with the line break as a space; close the string on line 11; this \
-                warning becomes an error in grund 0.22.0";
-    assert_eq!(
-        window_findings(&root),
-        vec![("config-not-toml", Some(10), open.to_string())]
-    );
+    refused(&root, OPEN_LINE);
 }
 
 /// Guard, green today and kept: strings that close at their end, an escaped quote, an
