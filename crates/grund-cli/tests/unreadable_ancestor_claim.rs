@@ -224,21 +224,35 @@ fn an_unclosed_array_of_another_key_leaves_the_claim_answered() {
     }
 }
 
-/// Guard, green today and kept through grund 0.21.x (§FS-config-v2.reader.5.strings.window,
-/// §FS-workspace.6.1.7.5): a `members` list whose string runs over a line break gives the
-/// climb the entry the config reader loads, `project/packages/ hub`, which names no block
-/// here, so the absence is confirmed and the block is reported.
+/// §FS-config-v2.reader.5.strings.refusal, §FS-workspace.6.1.7.5: from grund 0.22.0 a `members`
+/// list whose string runs over a line break is not a list to the climb, exactly where the reader
+/// refuses it as `unclosed array` with 0.22.0's suffix, so the claim is undecidable whatever the
+/// list names: the quiet climb records nothing and leaves the block unreported.
 #[test]
-fn an_ancestor_members_string_over_a_break_is_the_entry_the_config_loads() {
-    let outer = Outer::listing("[\n  \"project/packages/\nhub\",\n]");
-    let (code, stdout, _) = outcome(&outer.check());
-    assert_eq!(code, Some(1), "{stdout}");
-    assert!(
-        stdout.starts_with(
-            "packages/hub/grund.toml:7: error: this [workspace] is listed by no enclosing workspace"
-        ),
-        "{stdout}"
-    );
+#[ignore = "red until #1118 refuses the open line; implement removes this"]
+fn an_ancestor_members_string_over_a_break_is_not_a_list() {
+    for members in [
+        "[\n  \"else\nwhere\",\n]",
+        "[\n  \"project/packages/\nhub\",\n]",
+    ] {
+        let outer = Outer::listing(members);
+        assert_eq!(
+            outcome(&outer.check()),
+            (Some(0), QUIET.to_string(), String::new()),
+            "an ancestor whose members = {members} is refused cannot say nobody lists packages/hub"
+        );
+        assert_eq!(
+            outcome(&outer.check_in(&outer.0)),
+            (
+                Some(2),
+                String::new(),
+                "error: grund.toml:5: unclosed array (a string is still open at the end of line \
+                 6); this became an error in grund 0.22.0\n"
+                    .to_string()
+            ),
+            "the ancestor's own load refuses members = {members}"
+        );
+    }
 }
 
 /// Guard, green today and kept (§FS-config-v2.reader.5.strings.refusal,

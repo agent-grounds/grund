@@ -61,6 +61,22 @@ fn a_multi_line_string_names_what_version_2_does_not_read() {
     );
 }
 
+/// §FS-config-v2.reader.5.strings: three quotes in a row open a multi-line string, read as
+/// TOML reads one, so `""""a` leaves line 3 open, where reading quote by quote closed two
+/// empty strings there and named line 4 (#1091's review, R1-04).
+#[test]
+#[ignore = "red until #1118 refuses the open line; implement removes this"]
+fn a_run_of_four_quotes_opens_a_multi_line_string_on_its_own_line() {
+    assert_eq!(
+        refusal("[\n\"\"\"\"a\nb\"\"\",\n\"c\",\n]\n"),
+        Some(
+            "grund.toml:2: unclosed array (a multi-line string opens on line 3, which \
+             version 2 does not read)"
+                .to_string()
+        )
+    );
+}
+
 /// Guard, green today and kept: an array whose strings all close on their own lines and
 /// whose `[` never closes is refused as before, with no parenthetical.
 #[test]
