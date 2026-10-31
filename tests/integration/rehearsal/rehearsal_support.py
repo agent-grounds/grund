@@ -95,6 +95,16 @@ def manifest():
     return json.loads((acquire() / "manifest.json").read_text(encoding="utf-8"))
 
 
+def version_answer(product):
+    """What `<product> --version` answers on this candidate, computed from its manifest and
+    never from another install (§FS-distribution-candidate.5.2): a development candidate's
+    `grund` adds the first ten digits of its source commit (§FS-distribution.4.1.1)."""
+    recorded = manifest()
+    if product == "grund" and recorded["version"].endswith("-dev"):
+        return f"grund {recorded['version']}+{recorded['source_sha'][:10]}"
+    return f"{product} {recorded['version']}"
+
+
 def manifest_sha256():
     return file_sha256(acquire() / "manifest.json")
 

@@ -109,7 +109,7 @@ Neither do queries, formatting, completion, or LSP requests
 
 ## 13. Anything that would let two `grund` installs disagree
 
-Above all: any feature that could cause two correctly-configured `grund` installs — same version, same `grund.toml` — to disagree on whether a given repo is well-formed, or on any output byte they produce from the same input, is permanently out of scope. This is the bright line.
+Above all: any feature that could cause two correctly-configured `grund` installs — same version (for a development build, the same source and build inputs, [§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit)), same `grund.toml` — to disagree on whether a given repo is well-formed, or on any output byte they produce from the same input, is permanently out of scope. This is the bright line.
 
 ## 14. Generated summaries; token-saving inside `check`
 
