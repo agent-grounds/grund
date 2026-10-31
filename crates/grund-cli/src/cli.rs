@@ -262,7 +262,8 @@ pub fn main_entry_from_args(args: Vec<String>) -> ExitCode {
 fn cli_entry(args: Vec<String>) -> ExitCode {
     restore_default_sigpipe();
     if args.iter().any(|arg| arg == "--version" || arg == "-V") {
-        println!("grund {}", env!("CARGO_PKG_VERSION"));
+        // This build's version, fixed at compile time; answering reads nothing (§FS-cli.2.1).
+        println!("grund {}", env!("GRUND_BUILD_VERSION"));
         return ExitCode::SUCCESS;
     }
     let first = args.first().map(|arg| arg.as_str());

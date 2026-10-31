@@ -13,6 +13,9 @@ fn main() -> ExitCode {
     let version = env::var("CARGO_PKG_VERSION").expect("Cargo sets CARGO_PKG_VERSION");
     let crate_dir = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").expect("Cargo sets it"));
     let commit = env::var_os("GRUND_BUILD_COMMIT");
+    // A changed variable reruns the script even where git wins, which still
+    // refuses a malformed one (§FS-distribution.4.1.1).
+    println!("cargo:rerun-if-env-changed=GRUND_BUILD_COMMIT");
     match build_identity::build_identity(&version, &crate_dir, commit.as_deref(), OsStr::new("git"))
     {
         Ok(identity) => {

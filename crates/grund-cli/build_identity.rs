@@ -3,9 +3,42 @@
 //! from. One function derives it, and both `build.rs` and the derivation tests
 //! include this file, so the label is worked out in one place.
 
+use std::collections::BTreeSet;
 use std::ffi::OsStr;
 use std::fmt;
 use std::path::{Path, PathBuf};
+use std::process::{Command, Output, Stdio};
+
+/// What `git rev-parse --show-prefix` prints from the crate directory in qualifying
+/// git: the crate is the tracked one, not a copy nested elsewhere in a checkout.
+const CRATE_PREFIX: &[u8] = b"crates/grund-cli/";
+
+/// The CLI's manifest, which qualifying git tracks.
+const MANIFEST: &str = "crates/grund-cli/Cargo.toml";
+
+/// The one path watched where no qualifying git exists. It never exists, so Cargo
+/// reruns the script on every build and a tree that gains git is noticed.
+const NO_GIT: &str = "no-qualifying-git-rerun-every-build";
+
+/// Git's local-environment variables (`git rev-parse --local-env-vars`). A hook
+/// sets them, and they would point git at another repository or index.
+const GIT_LOCAL_ENV: &[&str] = &[
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    "GIT_CONFIG",
+    "GIT_CONFIG_PARAMETERS",
+    "GIT_CONFIG_COUNT",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_IMPLICIT_WORK_TREE",
+    "GIT_GRAFT_FILE",
+    "GIT_INDEX_FILE",
+    "GIT_NO_REPLACE_OBJECTS",
+    "GIT_REPLACE_REF_BASE",
+    "GIT_PREFIX",
+    "GIT_SHALLOW_FILE",
+    "GIT_COMMON_DIR",
+];
 
 /// What a build records about itself.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -42,17 +75,235 @@ impl fmt::Display for MalformedCommit {
 /// version is `version`. `commit` is `GRUND_BUILD_COMMIT` as the build's
 /// environment gives it, and `git` the program run to read the tree.
 ///
-/// Scaffold for #1043: it returns the bare version and reads neither git nor
-/// the variable, which is what every build reported before §FS-distribution.4.1.1.
+/// A release version is the label, and nothing is read for it. A development
+/// version takes its commit from qualifying git, else from a well-formed
+/// variable, else stays bare; a set variable is held to its spelling either way,
+/// so no value suppresses the commit (§FS-distribution.4.1.1).
 pub fn build_identity(
     version: &str,
     crate_dir: &Path,
     commit: Option<&OsStr>,
     git: &OsStr,
 ) -> Result<BuildIdentity, MalformedCommit> {
-    let _ = (crate_dir, commit, git);
+    if !version.ends_with("-dev") {
+        return Ok(BuildIdentity {
+            version: version.to_string(),
+            watched: Vec::new(),
+        });
+    }
+    let given = commit.map(well_formed).transpose()?;
+    if let Some(tree) = read_git(crate_dir, git) {
+        let dirty = if tree.dirty { ".dirty" } else { "" };
+        return Ok(BuildIdentity {
+            version: format!("{version}+{}{dirty}", tree.commit),
+            watched: tree.watched,
+        });
+    }
+    let version = match given {
+        Some(given) => format!("{version}+{given}"),
+        None => version.to_string(),
+    };
     Ok(BuildIdentity {
-        version: version.to_string(),
-        watched: Vec::new(),
+        version,
+        watched: vec![crate_dir.join(NO_GIT)],
     })
+}
+
+/// `GRUND_BUILD_COMMIT` as given, when it is ten lowercase hexadecimal digits
+/// optionally followed by `.dirty` (§FS-distribution.4.1.1).
+fn well_formed(value: &OsStr) -> Result<&str, MalformedCommit> {
+    let refused = || MalformedCommit {
+        value: value.to_string_lossy().into_owned(),
+    };
+    let text = value.to_str().ok_or_else(refused)?;
+    let commit = text.strip_suffix(".dirty").unwrap_or(text);
+    if is_commit(commit) {
+        Ok(text)
+    } else {
+        Err(refused())
+    }
+}
+
+fn is_commit(text: &str) -> bool {
+    text.len() == 10 && text.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+}
+
+/// What qualifying git says about the tree.
+struct Tree {
+    /// The first ten digits of HEAD's full SHA, never git's own abbreviation.
+    commit: String,
+    /// Whether a tracked file differs from HEAD in the index or the working tree.
+    dirty: bool,
+    watched: Vec<PathBuf>,
+}
+
+/// Read qualifying git: the crate directory is `crates/grund-cli/` of a repository
+/// that tracks the manifest and has a commit. Git missing, refusing the checkout
+/// or failing any read counts as none, and `safe.directory` is never set here
+/// (§FS-distribution.4.1.1).
+fn read_git(crate_dir: &Path, git: &OsStr) -> Option<Tree> {
+    // An exact prefix rather than a comparison of paths, which differ in spelling
+    // on Windows; it also puts the top level two directories up.
+    let prefix = run(git, crate_dir, &["rev-parse", "--show-prefix"])?;
+    if line(&prefix) != CRATE_PREFIX {
+        return None;
+    }
+    let root = crate_dir.parent()?.parent()?;
+    run(git, root, &["ls-files", "--error-unmatch", "--", MANIFEST])?;
+    let head = run(
+        git,
+        root,
+        &["rev-parse", "--verify", "--quiet", "HEAD^{commit}"],
+    )?;
+    let commit = std::str::from_utf8(head.get(..10)?).ok()?;
+    if !is_commit(commit) {
+        return None;
+    }
+    let status = run(
+        git,
+        root,
+        &[
+            "status",
+            "--porcelain",
+            "-z",
+            "--no-renames",
+            "--untracked-files=no",
+        ],
+    )?;
+    // Each record is `XY <path>`; a deleted file is listed, and with renames
+    // off a rename is its two sides.
+    let changed: Vec<PathBuf> = status
+        .split(|&b| b == 0)
+        .filter(|record| record.len() > 3)
+        .map(|record| root.join(path_from(&record[3..])))
+        .collect();
+    let dirty = !changed.is_empty();
+    // A clean tree turns dirty at an edit to any tracked file; a dirty one turns
+    // clean only through a path it lists, HEAD or the index.
+    let tree = if dirty { changed } else { tracked(git, root)? };
+    let mut watched = head_paths(git, root)?;
+    watched.extend(tree.iter().map(|path| nearest_existing(path)));
+    Some(Tree {
+        commit: commit.to_string(),
+        dirty,
+        watched: watched.into_iter().collect(),
+    })
+}
+
+/// Every tracked file, as a path under `root`.
+fn tracked(git: &OsStr, root: &Path) -> Option<Vec<PathBuf>> {
+    let listed = run(git, root, &["ls-files", "-z"])?;
+    let paths = listed.split(|&b| b == 0).filter(|path| !path.is_empty());
+    Some(paths.map(|path| root.join(path_from(path))).collect())
+}
+
+/// What HEAD resolves through, the index and a linked worktree's `.git` file, each
+/// one present. In the files backend a branch is its loose ref while one exists:
+/// that file wins over `packed-refs`, so a packed-refs change cannot move HEAD
+/// until the loose ref is written or removed. A packed branch watches
+/// `packed-refs` and the directory its loose ref would be written into. In a
+/// reftable repository the tables hold every ref (§FS-distribution.4.1.1).
+fn head_paths(git: &OsStr, root: &Path) -> Option<BTreeSet<PathBuf>> {
+    // A git too old to answer echoes the option back: the files backend, because
+    // such a git cannot read a reftable repository at all.
+    let format = run(git, root, &["rev-parse", "--show-ref-format"]);
+    let reftable = format.is_some_and(|format| line(&format) == b"reftable");
+    let mut args = vec!["rev-parse", "--git-dir", "--git-common-dir"];
+    args.extend(["--git-path", "HEAD", "--git-path", "index"]);
+    args.extend(["--git-path", "packed-refs"]);
+    let branch = if reftable {
+        None
+    } else {
+        symbolic_head(git, root)?
+    };
+    let branch = branch.map(|name| String::from_utf8_lossy(&name).into_owned());
+    if let Some(branch) = &branch {
+        args.extend(["--git-path", branch.as_str()]);
+    }
+    let resolved = run(git, root, &args)?;
+    let paths: Vec<PathBuf> = resolved
+        .split(|&b| b == b'\n')
+        .filter(|path| !path.is_empty())
+        .map(|path| root.join(path_from(line(path))))
+        .collect();
+    let [git_dir, common_dir, head, index, packed_refs, loose @ ..] = paths.as_slice() else {
+        return None;
+    };
+    let mut watched = BTreeSet::new();
+    let dot_git = root.join(".git");
+    if dot_git.is_file() {
+        watched.insert(dot_git);
+    }
+    watched.insert(nearest_existing(head));
+    watched.insert(nearest_existing(index));
+    if reftable {
+        watched.insert(nearest_existing(&git_dir.join("reftable")));
+        watched.insert(nearest_existing(&common_dir.join("reftable")));
+    } else if let Some(loose) = loose.first() {
+        if !loose.exists() {
+            watched.insert(nearest_existing(packed_refs));
+        }
+        watched.insert(nearest_existing(loose));
+    }
+    Some(watched)
+}
+
+/// The ref HEAD names: `Some(None)` when HEAD is detached, and `None` when git
+/// fails otherwise, which the caller takes as no qualifying git.
+fn symbolic_head(git: &OsStr, root: &Path) -> Option<Option<Vec<u8>>> {
+    let output = git_output(git, root, &["symbolic-ref", "-q", "HEAD"])?;
+    match output.status.code() {
+        Some(0) => Some(Some(line(&output.stdout).to_vec())),
+        Some(1) => Some(None),
+        _ => None,
+    }
+}
+
+/// `path`, or its nearest ancestor that exists: Cargo reads a missing watched path
+/// as changed and would rerun the script on every build.
+fn nearest_existing(path: &Path) -> PathBuf {
+    path.ancestors()
+        .find(|ancestor| ancestor.exists())
+        .unwrap_or(path)
+        .to_path_buf()
+}
+
+/// Run git in `dir` and return its stdout when it exits 0.
+fn run(git: &OsStr, dir: &Path, args: &[&str]) -> Option<Vec<u8>> {
+    let output = git_output(git, dir, args)?;
+    output.status.success().then_some(output.stdout)
+}
+
+/// Run git in `dir` with its local environment cleared and without the optional
+/// locks, so reading the index never rewrites the file the script watches.
+fn git_output(git: &OsStr, dir: &Path, args: &[&str]) -> Option<Output> {
+    let mut command = Command::new(git);
+    for name in GIT_LOCAL_ENV {
+        command.env_remove(name);
+    }
+    command
+        .arg("--no-optional-locks")
+        .args(args)
+        .current_dir(dir)
+        .stdin(Stdio::null())
+        .stderr(Stdio::null())
+        .output()
+        .ok()
+}
+
+/// One line of git's output without its line ending.
+fn line(bytes: &[u8]) -> &[u8] {
+    let bytes = bytes.strip_suffix(b"\n").unwrap_or(bytes);
+    bytes.strip_suffix(b"\r").unwrap_or(bytes)
+}
+
+#[cfg(unix)]
+fn path_from(bytes: &[u8]) -> PathBuf {
+    use std::os::unix::ffi::OsStrExt;
+    PathBuf::from(OsStr::from_bytes(bytes))
+}
+
+#[cfg(not(unix))]
+fn path_from(bytes: &[u8]) -> PathBuf {
+    PathBuf::from(String::from_utf8_lossy(bytes).into_owned())
 }

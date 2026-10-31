@@ -232,7 +232,6 @@ fn write(path: &Path, text: &str) {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script names the commit and watches what changes it; implement removes this"]
 fn the_label_follows_head_and_the_dirty_state() {
     let ws = Workspace::new("head");
     let root = ws.root.clone();
@@ -348,7 +347,6 @@ fn the_label_follows_head_and_the_dirty_state() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script names the commit and watches what changes it; implement removes this"]
 fn a_tree_that_loses_its_git_builds_bare_until_the_variable_or_git_names_it() {
     let ws = Workspace::new("gitless");
     let root = ws.root.clone();
@@ -404,7 +402,6 @@ fn a_tree_that_loses_its_git_builds_bare_until_the_variable_or_git_names_it() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script names the commit and watches what changes it; implement removes this"]
 fn only_paths_that_exist_are_watched() {
     let ws = Workspace::new("existing");
     let root = ws.root.clone();
