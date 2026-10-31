@@ -18,13 +18,17 @@ pub(crate) struct Joined {
     /// The array's open line, the first that ends inside a string and its last
     /// (§FS-config-v2.reader.5.strings); `None` when every string closes on its line.
     pub(crate) open: Option<OpenLine>,
-    /// Whether the array's text read through a 0.21.x window, so its refusal names grund
-    /// 0.22.0: for an array that loads, whether taking off the whole run of commas before
-    /// its `]` would leave no empty element where the one trailing comma leaves one
-    /// (§FS-config-v2.reader.5.commas.refusal); for one refused at its open line, whether
-    /// the 0.21.x reading ran through an open line and closed it
-    /// (§FS-config-v2.reader.5.strings.refusal).
+    /// For an array that loads, whether its text read through the 0.21.x trailing-comma
+    /// window, so the refusal of its empty element names grund 0.22.0: whether taking off
+    /// the whole run of commas before its `]` would leave no empty element where the one
+    /// trailing comma leaves one (§FS-config-v2.reader.5.commas.refusal).
     pub(crate) through_window: bool,
+    /// For an array refused at its open line, its text as the readers before 0.22.0 read it,
+    /// where their join closed it: its lines joined a quote at a time, each break read as one
+    /// space, and the whole run of commas before its `]` taken off. Whether its elements then
+    /// read as they read them tells whether their window loaded the array, and so whether its
+    /// refusal names grund 0.22.0 (§FS-config-v2.reader.5.strings.refusal).
+    pub(crate) as_before: Option<String>,
 }
 
 /// A line of an array that ends inside a string (§FS-config-v2.reader.5.strings).
@@ -60,8 +64,8 @@ impl OpenLine {
 ///
 /// A line that ends inside a string is the array's open line and its last, so the array
 /// is refused there, and `lines` is left after it (§FS-config-v2.reader.5.strings.refusal).
-/// Only then are the lines read again from the key's, a quote at a time as the readers
-/// before 0.22.0 read them, to tell whether their window loaded the array.
+/// Only then are the lines read again from the key's, as the readers before 0.22.0 joined
+/// them, for the text whose elements tell whether their window loaded the array.
 pub(crate) fn joined_value<'a, I>(value: &str, line: usize, lines: &mut I) -> Joined
 where
     I: Iterator<Item = (usize, &'a str)> + Clone,
@@ -72,29 +76,33 @@ where
             value: Some(value.to_string()),
             open: None,
             through_window: false,
+            as_before: None,
         };
     }
     let mut before = lines.clone();
     match join(value, line, lines, Quotes::Toml) {
-        Join::Closed(value, _) => {
+        Join::Closed(value) => {
             let (value, through_window) = array_value(&value);
             Joined {
                 value: Some(value),
                 open: None,
                 through_window,
+                as_before: None,
             }
         }
         Join::Open(open) => {
-            // §FS-config-v2.reader.5.strings.window: the arrays 0.21.x read and warned for.
-            let through_window = open.is_some()
-                && matches!(
-                    join(value, line, &mut before, Quotes::OneAtATime),
-                    Join::Closed(_, Some(_))
-                );
+            // §FS-config-v2.reader.5.strings.refusal: the text 0.21.x read, whether or not
+            // their reading met an open line in it.
+            let read_before = open.map(|_| join(value, line, &mut before, Quotes::OneAtATime));
+            let as_before = match read_before {
+                Some(Join::Closed(value)) => Some(commas_off(&value)),
+                _ => None,
+            };
             Joined {
                 value: None,
                 open,
-                through_window,
+                through_window: false,
+                as_before,
             }
         }
     }
@@ -102,10 +110,8 @@ where
 
 /// How [`join`] ended.
 enum Join {
-    /// The array's `[` closed: its lines joined with one space, and the first that ended
-    /// inside a string, which only the 0.21.x reading reads past or a string after the `]`
-    /// leaves open.
-    Closed(String, Option<OpenLine>),
+    /// The array's `[` closed: its lines joined with one space.
+    Closed(String),
     /// The array is still open, at its open line or, with `None`, at the end of the text.
     Open(Option<OpenLine>),
 }
@@ -128,7 +134,7 @@ fn join<'a>(
     let mut open = brackets.open_line(line);
     loop {
         if brackets.depth <= 0 {
-            return Join::Closed(value, open);
+            return Join::Closed(value);
         }
         if open.is_some() && quotes == Quotes::Toml {
             return Join::Open(open);
@@ -251,8 +257,18 @@ fn array_value(value: &str) -> (String, bool) {
     if !before.trim_end().ends_with(['[', ',']) {
         return (format!("{before}]"), false);
     }
-    let run_off = format!("{}]", before.trim_end_matches(','));
-    let through_window = list_elements(&run_off)
+    let through_window = list_elements(&commas_off(value))
         .is_some_and(|elements| elements.iter().all(|element| !element.is_empty()));
     (value.to_string(), through_window)
+}
+
+/// An array's text with the whole run of adjacent commas before its `]` taken off, as the
+/// 0.18.0 to 0.21.x readers took it off (§FS-config-v2.reader.5.commas.window).
+fn commas_off(value: &str) -> String {
+    match value.strip_suffix(']') {
+        Some(inner) if value.starts_with('[') && inner.trim_end().ends_with(',') => {
+            format!("{}]", inner.trim_end().trim_end_matches(','))
+        }
+        _ => value.to_string(),
+    }
 }

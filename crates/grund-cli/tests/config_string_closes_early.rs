@@ -27,7 +27,7 @@ fn refusal(key: usize) -> String {
 }
 
 /// The 0.22.0 refusal of the array at line 10 whose string is open at the end of line 11,
-/// which a later line closed through the 0.21.x window (§FS-config-v2.reader.5.strings.refusal).
+/// which loaded through the 0.21.x window (§FS-config-v2.reader.5.strings.refusal).
 const OPEN_LINE: &str = "error: grund.toml:10: unclosed array (a string is still open at the \
                          end of line 11); this became an error in grund 0.22.0\n";
 

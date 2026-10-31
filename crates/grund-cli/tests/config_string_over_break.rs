@@ -1,12 +1,12 @@
 //! Black-box: a string in a version-2 array closes on the line it opens on
 //! (§FS-config-v2.reader.5.strings). Ports grund.160's reproducer (#1089) and #1118's: from
-//! grund 0.22.0 the open line is the array's last, so an array a later line would have closed
-//! is refused at its key's line as `unclosed array`, naming the open line and the release that
-//! made it one (§FS-config-v2.reader.5.strings.refusal); a `"""` string says version 2 does not
-//! read it (§FS-config-v2.reader.5.strings.multi-line); an array that never closes keeps its bare
-//! refusal; `config-not-toml` and `config-multiline-string` are spent
-//! (§FS-config-v2.checks.config-not-toml); and `config show` writes a line break inside a value
-//! as `\n`, so its output loads back (§FS-config.4.2).
+//! grund 0.22.0 the open line is the array's last, so an array is refused at its key's line as
+//! `unclosed array`, naming the open line, and the release that made it one where the readers
+//! before would have loaded it (§FS-config-v2.reader.5.strings.refusal); a `"""` string says
+//! version 2 does not read it (§FS-config-v2.reader.5.strings.multi-line); an array they refused
+//! too, one that never closes among them, keeps its bare refusal; `config-not-toml` and
+//! `config-multiline-string` are spent (§FS-config-v2.checks.config-not-toml); and `config show`
+//! writes a line break inside a value as `\n`, so its output loads back (§FS-config.4.2).
 
 use std::fs;
 use std::path::PathBuf;
@@ -21,8 +21,7 @@ const HEAD: &str = "grund_config_version = 2\n\n[schema.kinds.SPEC]\nfiles = [\"
                     [schema.kinds.code]\nfolders = [\"src\"]\n\n[schema.sources]\nexclude = ";
 
 /// The 0.22.0 refusal of the array at line 10 whose string is open at the end of line
-/// `open`, which a later line closed through the 0.21.x window
-/// (§FS-config-v2.reader.5.strings.refusal).
+/// `open`, which loaded through the 0.21.x window (§FS-config-v2.reader.5.strings.refusal).
 fn became(open: usize) -> String {
     format!(
         "error: grund.toml:10: unclosed array (a string is still open at the end of line \
@@ -30,8 +29,8 @@ fn became(open: usize) -> String {
     )
 }
 
-/// The refusal of the array at line 10 that no line closes, its string open at the end of
-/// line `open`.
+/// The refusal of the array at line 10 that the readers before refused too, its string open
+/// at the end of line `open`.
 fn unclosed(open: usize) -> String {
     format!(
         "error: grund.toml:10: unclosed array (a string is still open at the end of line \
@@ -177,6 +176,18 @@ fn a_run_of_four_quotes_opens_a_multi_line_string_on_its_own_line() {
     let refusal = "error: grund.toml:10: unclosed array (a multi-line string opens on line 11, \
                    which version 2 does not read)\n";
     Fixture::excluding("[\n\"\"\"\"a\nb\"\"\",\n\"c\",\n]\n").refused(refusal);
+}
+
+/// §FS-config-v2.reader.5.strings.refusal: the suffix says the readers before loaded the array,
+/// their reading decides it end to end, so `"""a"`, in which reading quote by quote met no open
+/// line, loaded as `""a` and names 0.22.0, and `"a` / `b", 1,`, which that reading closed and
+/// then refused for its `1`, claims no release.
+#[test]
+fn the_refusal_names_0_22_exactly_where_the_readers_before_loaded_the_array() {
+    let refusal = "error: grund.toml:10: unclosed array (a multi-line string opens on line 11, \
+                   which version 2 does not read); this became an error in grund 0.22.0\n";
+    Fixture::excluding("[\n  \"\"\"a\"\n]\n").refused(refusal);
+    Fixture::excluding("[\n  \"a\nb\", 1,\n]\n").refused(&unclosed(11));
 }
 
 /// §FS-config-v2.checks.config-not-toml, §FS-config-v2.checks.config-multiline-string: from
