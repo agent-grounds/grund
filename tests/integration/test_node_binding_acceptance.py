@@ -14,6 +14,7 @@ Exact-leaf proof routes, exercised by the suite below:
 §FS-distribution.3.2.4: executable acceptance and honest readiness.
 """
 
+import os
 import subprocess
 import sys
 import unittest
@@ -35,6 +36,24 @@ def build_lines(stderr):
 
 
 class NodeAcceptanceWorkflowTests(unittest.TestCase):
+    @unittest.skipUnless(
+        os.environ.get("GRUND_TEST_NODE_CACHE_PUBLICATION") == "1",
+        "red until #1122 dependency-only Node publication exists; implement removes this",
+    )
+    def test_ci_leg_publishes_dependencies_without_changing_live_targets(self):
+        """§AR-ci.3.4.1.5: the Linux/Windows publication retains dependencies and live output."""
+        from node_cache_publication_assertions import check_publication
+        check_publication(self, "ci-leg.yml")
+
+    @unittest.skipUnless(
+        os.environ.get("GRUND_TEST_NODE_CACHE_PUBLICATION") == "1",
+        "red until #1122 dependency-only Node publication exists; implement removes this",
+    )
+    def test_macos_suites_publishes_dependencies_without_changing_live_targets(self):
+        """§AR-ci.3.4.1.5: the macOS publication retains dependencies and live output."""
+        from node_cache_publication_assertions import check_publication
+        check_publication(self, "macos-suites.yml")
+
     def test_rehearsals_prepare_each_source_once_and_isolate_consumers(self):
         """§AR-ci.3.4.1.4: actual npm preparation, private bytes and same-version sources."""
         result = subprocess.run([sys.executable, str(Path(__file__).with_name(

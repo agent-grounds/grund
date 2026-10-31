@@ -363,7 +363,8 @@ oracle it is given must come back as that same file's absolute path.
 `GRUND_NODE_TARGET` is the fourth input: the root of the Cargo target that every
 build of the Node acceptance ([§AR-bindings.5](AR-bindings.md#5-grund-node-the-napi-rs-binding)) shares. Unset, the wrapper prepares
 `~/ag/tmp/grund-node-target`, outside the checkout and kept between runs, and CI
-restores that directory from a cache step of its own, so a job starts with the
+restores its dependency-only publication view ([§AR-ci.3.4.1.5](AR-ci.md#3415-a-dependency-only-publication-view-with-the-live-root-intact)) from a cache step
+of its own, so a job starts with the
 dependency tree already compiled. The acceptance's own helper reads the
 same variable and falls back to the same directory, so `tests/bindings/node/run.py`
 run on its own shares it too. What the root holds is one target per source
@@ -375,7 +376,7 @@ acceptance compares against is built once per run and reused by every test
 that needs it.
 
 That cache is not the cargo cache's. Its key is
-`<os>-node-target-v3-1.95.0-<manifest and lock hash>`: the runner's OS, a version to
+`<os>-node-target-<publication version>-1.95.0-<manifest and lock hash>`: the runner's OS, a version to
 bump when what it holds must be thrown away, the binding toolchain, and the
 workspace manifest with the lock file ([§AR-ci.13.4.1](AR-ci.md#1341-a-key-moves-with-the-profile)), with the same key less its
 hash as the restore prefix. A key of its own is
@@ -389,15 +390,15 @@ would never save. `v3` is the bump that came with the per-checkout targets of
 [§AR-ci.3.4.1.2](AR-ci.md#3412-one-target-per-source-checkout): a `v2` entry holds its artifacts at the root rather than in the
 checkout's directory under it, and an exact hit skips the save, so the
 per-checkout target would never be cached.
-It cannot leave that state out, because a cache archives a listed
-directory whole, so the builds never write it: the CLI builds with
+The builds never write incremental state: the CLI builds with
 `CARGO_INCREMENTAL=0`, and so do the dev builds of the binding, the release
 build is not incremental, and a fresh
 checkout's workspace crates could not reuse the state anyway. After one run on
 Linux the target is about 0.7 GB before compression, three caches in all,
 against a repository limit of 10 GB the other caches already crowd; the
 tarball's own crates are not worth caching, because they rebuild at their fresh
-paths every run anyway.
+paths every run anyway. The publication rule at [§AR-ci.3.4.1.5](AR-ci.md#3415-a-dependency-only-publication-view-with-the-live-root-intact) keeps those
+workspace artifacts out of the cache without deleting them from the live root.
 
 Sharing a target changes what is cached, not what is proven. The builds keep
 `--locked`, the bundled-sources closure, and the fallback
@@ -644,6 +645,59 @@ This regression runs on the Node side of the existing gate selection, so the
 Python jobs do not acquire its preparation cost. It supplements the unchanged
 real native-package acceptance; its small tarballs do not claim native proof.
 Full Windows job evidence remains required by [§AR-ci.requirements.1.verification](AR-ci.md#requirements1verification-a-cost-correction-measures-comparable-full-gates).
+
+##### 3.4.1.5 A dependency-only publication view, with the live root intact
+
+The Node cache publishes reusable third-party Cargo artifacts for both dev and
+release, including the fingerprints and build-script output they need for reuse.
+It excludes every workspace package's output: libraries and metadata, binaries,
+native bindings, build scripts and their output, fingerprints, tests and examples,
+as well as incremental state. Package identity comes from the workspace, including
+bundled source workspaces; a filename prefix is not the package boundary. The
+separately cached TypeScript input ([§AR-ci.3.4.1.3](AR-ci.md#3413-the-typescript-compiler-a-prepared-input)) is excluded too.
+
+This rule applies to every Node-root publication, in `ci-leg.yml` on Linux and
+Windows and in `macos-suites.yml`. Complete cache path selection may express it;
+otherwise preparation creates a separate filtered snapshot. Neither preparation
+nor archiving deletes or changes any live target's output or ownership record.
+The live-root reuse and reclamation promises of [§FS-repository-maintenance.2](../functional-spec/FS-repository-maintenance.md#2-external-node-acceptance-target-lifetime)
+remain intact, including other live checkouts and their nested targets. This is
+publication filtering, not a new cleanup in `node_target()`.
+
+The saved representation preserves each resolved checkout's target mapping
+([§AR-ci.3.4.1.2](AR-ci.md#3412-one-target-per-source-checkout)), its ownership record, profile directories and nested build
+targets. Restore, on every existing event, makes the selected dependencies
+available at those same target-relative paths before builds start; a separate
+snapshot requires materialization into the live root. Restore must not merge
+distinct checkout targets or replace an existing live workspace artifact.
+The Node restore and save select the same representation and key. The key keeps
+its OS, binding toolchain and manifest/lock identity ([§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target)); implementation
+records its representation and advances the version and restore prefix beyond
+`v3`, so an immutable whole-root entry cannot count as an exact filtered hit.
+Old whole-root entries are not fallback inputs to the new representation.
+
+Preparation and save run only under the existing main-push or scheduled-main
+publication conditions ([§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)), with the Node key's own miss condition,
+independently of whether the ordinary Cargo cache hits. Cache preparation,
+restore or save failure remains an optimization failure: warn, leave live output
+intact and run the actual checks. A failed preparation must not publish an
+unfiltered or incomplete snapshot. Source/fallback/CLI proof, build count
+([§AR-ci.3.4.1.1](AR-ci.md#3411-one-release-build-and-every-build-on-one-line)), toolchain pins and suite placement stay unchanged.
+
+`tests/integration/test_node_binding_acceptance.py` builds real offline Cargo
+fixtures in dev and release, executes the workflows' publication preparation and
+inspects their selected payloads. It checks dependency retention and warm reuse,
+workspace exclusion, TypeScript separation, live-root bytes and per-checkout
+restore mapping in both workflow copies. These run in the Node selection of the
+existing gate, so Python jobs acquire no new Cargo preparation. They are mechanism checks, not native
+performance evidence. Acceptance also requires [§AR-ci.requirements.1.verification](AR-ci.md#requirements1verification-a-cost-correction-measures-comparable-full-gates)
+for every affected full gate, including added copying, filtering, restore,
+recompilation and archive creation. Paired native samples include matched
+exact-hit and prefix/miss/save conditions; dispatches that skip the production
+save work cannot stand in for a save-path measurement. An isolated native harness
+may exercise equivalent complete archive work without publishing branch caches
+or changing production event guards. Smaller archives alone do not prove a
+fifteen-minute gate.
 
 #### 3.4.2 Per-test durations
 
@@ -1170,6 +1224,9 @@ registry (and the git checkouts, should `Cargo.lock` ever gain a git dependency)
 and the dependencies' compiled artifacts, and not the workspace crates' own
 artifacts, which every run rebuilds from its own sources, nor incremental state: a workflow that caches cargo sets `CARGO_INCREMENTAL: 0`,
 as the Node target's builds already do ([§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target)).
+The independently keyed Node cache follows the same dependency-only contents
+rule, through the non-destructive publication view of [§AR-ci.3.4.1.5](AR-ci.md#3415-a-dependency-only-publication-view-with-the-live-root-intact) rather than
+pruning its live root. Ordinary Cargo-cache pruning is unchanged.
 The `rust` shards' target also holds the command agreement's 1.95.0 target, nested
 under `agreement/` one per checkout, and `scripts/prune_cargo_cache.sh` prunes
 each of those the same way before the save.
