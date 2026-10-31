@@ -30,17 +30,15 @@ The stability analysis deliberately still assumes `0.002 s`, the step before it 
 tuned, producing the golden `value-mismatch` in [`expected.stdout`](expected.stdout):
 
 ```text
-docs/solver.md:7: error: value mismatch for CONST-time-step.1: bound `0.002`, declared `0.001` at values/time-step.md:2 — whole binding: value mismatch for CONST-time-step (component 1): bound `0.002 s`, declared `0.001 s` at values/time-step.md:2; this wording changes in grund 0.22.0; change the literal to the declared value, or the declaration to the bound one
+docs/solver.md:7: error: value mismatch for CONST-time-step (component 1): bound `0.002 s`, declared `0.001 s` at values/time-step.md:2; change the literal to the declared value, or the declaration to the bound one
 ```
 
-The part after ` — whole binding: ` names what the line wrote: the root it cites,
-the literal whole, and component 1 as the one that differs
+The line names what the site wrote: the root it cites, the literal whole, and
+component 1 as the one that differs
 ([§FS-values.5.2.2](../../docs/functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). The citation is right, so keep it and correct the literal:
 change it to `0.001 s` and the repository passes; its config is on version 1, so
 the run prints that caution where `success` would stand
-([§FS-check.checks.config-version-1](../../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)). The part before it is the message
-earlier releases printed, kept whole until grund 0.22.0 drops it
-([§FS-errors.3.9](../../docs/functional-spec/FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)).
+([§FS-check.checks.config-version-1](../../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)).
 
 The solver's limits live in [`values/limits.yaml`](repo/values/limits.yaml), a
 YAML value source beside the JSON one, read the same way and checked the same
