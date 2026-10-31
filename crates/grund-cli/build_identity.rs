@@ -211,13 +211,12 @@ fn head_paths(git: &OsStr, root: &Path) -> Option<BTreeSet<PathBuf>> {
     let mut args = vec!["rev-parse", "--git-dir", "--git-common-dir"];
     args.extend(["--git-path", "HEAD", "--git-path", "index"]);
     args.extend(["--git-path", "packed-refs"]);
-    let branch = if reftable {
-        None
+    let branches = if reftable {
+        Vec::new()
     } else {
-        symbolic_head(git, root)?
+        symbolic_refs(git, root)?
     };
-    let branch = branch.map(|name| String::from_utf8_lossy(&name).into_owned());
-    if let Some(branch) = &branch {
+    for branch in &branches {
         args.extend(["--git-path", branch.as_str()]);
     }
     let resolved = run(git, root, &args)?;
@@ -239,24 +238,44 @@ fn head_paths(git: &OsStr, root: &Path) -> Option<BTreeSet<PathBuf>> {
     if reftable {
         watched.insert(nearest_existing(&git_dir.join("reftable")));
         watched.insert(nearest_existing(&common_dir.join("reftable")));
-    } else if let Some(loose) = loose.first() {
-        if !loose.exists() {
-            watched.insert(nearest_existing(packed_refs));
+    } else {
+        for loose in loose {
+            if !loose.exists() {
+                watched.insert(nearest_existing(packed_refs));
+            }
+            watched.insert(nearest_existing(loose));
         }
-        watched.insert(nearest_existing(loose));
     }
     Some(watched)
 }
 
-/// The ref HEAD names: `Some(None)` when HEAD is detached, and `None` when git
-/// fails otherwise, which the caller takes as no qualifying git.
-fn symbolic_head(git: &OsStr, root: &Path) -> Option<Option<Vec<u8>>> {
-    let output = git_output(git, root, &["symbolic-ref", "-q", "HEAD"])?;
-    match output.status.code() {
-        Some(0) => Some(Some(line(&output.stdout).to_vec())),
-        Some(1) => Some(None),
-        _ => None,
+/// Every ref in HEAD's symbolic chain, including the final direct ref. Watching
+/// only the terminal ref misses an intermediate ref's retargeting
+/// (§FS-distribution.4.1.1). A detached HEAD returns an empty list. A cycle,
+/// excessive depth or failed read counts as no qualifying git; the bound also
+/// terminates a chain that another process keeps extending while it is read.
+fn symbolic_refs(git: &OsStr, root: &Path) -> Option<Vec<String>> {
+    let mut refs = Vec::new();
+    let mut seen = BTreeSet::new();
+    let mut name = String::from("HEAD");
+    for _ in 0..64 {
+        if !seen.insert(name.clone()) {
+            return None;
+        }
+        let output = git_output(git, root, &["symbolic-ref", "--no-recurse", "-q", &name])?;
+        match output.status.code() {
+            Some(0) => {
+                name = String::from_utf8(line(&output.stdout).to_vec()).ok()?;
+                if name.is_empty() {
+                    return None;
+                }
+                refs.push(name.clone());
+            }
+            Some(1) => return Some(refs),
+            _ => return None,
+        }
     }
+    None
 }
 
 /// `path`, or its nearest ancestor that exists: Cargo reads a missing watched path

@@ -441,3 +441,49 @@ fn only_paths_that_exist_are_watched() {
     ws.expect("a renamed tracked file", &root, &[], &dirty, Rerun::Must);
     ws.settled("a renamed tracked file", &root, &[], &dirty);
 }
+
+/// Retargeting an intermediate symbolic ref changes HEAD without changing HEAD's
+/// file or either terminal ref (§FS-distribution.4.1.1).
+#[test]
+fn retargeting_an_intermediate_symbolic_ref_updates_the_label() {
+    let ws = Workspace::new("symbolic-ref");
+    let root = &ws.root;
+    let first = ws.head(root);
+    ws.git(root, &["commit", "-q", "--allow-empty", "-m", "two"]);
+    let second = ws.head(root);
+    ws.git(root, &["branch", "other"]);
+    ws.git(root, &["reset", "--hard", "HEAD~1"]);
+    ws.git(
+        root,
+        &["symbolic-ref", "refs/heads/alias", "refs/heads/main"],
+    );
+    ws.git(root, &["symbolic-ref", "HEAD", "refs/heads/alias"]);
+    let first = format!("{DEV}+{first}");
+    let second = format!("{DEV}+{second}");
+    ws.expect("symbolic chain", root, &[], &first, Rerun::Must);
+    ws.settled("symbolic chain", root, &[], &first);
+
+    ws.git(
+        root,
+        &["symbolic-ref", "refs/heads/alias", "refs/heads/other"],
+    );
+    ws.expect("alias retargeted", root, &[], &second, Rerun::Must);
+    ws.settled("alias retargeted", root, &[], &second);
+
+    ws.git(root, &["pack-refs", "--all"]);
+    assert!(!root.join(".git/refs/heads/main").exists());
+    assert!(!root.join(".git/refs/heads/other").exists());
+    ws.expect("terminal refs packed", root, &[], &second, Rerun::Either);
+    ws.settled("terminal refs packed", root, &[], &second);
+    ws.git(
+        root,
+        &["symbolic-ref", "refs/heads/alias", "refs/heads/main"],
+    );
+    ws.expect("alias to packed main", root, &[], &first, Rerun::Must);
+    ws.settled("alias to packed main", root, &[], &first);
+
+    ws.git(root, &["commit", "-q", "--allow-empty", "-m", "three"]);
+    let third = format!("{DEV}+{}", ws.head(root));
+    ws.expect("packed terminal moves", root, &[], &third, Rerun::Must);
+    ws.settled("packed terminal moves", root, &[], &third);
+}
