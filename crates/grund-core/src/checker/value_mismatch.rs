@@ -1,16 +1,10 @@
 //! What a `value-mismatch` says: the coordinate or root it names, the canonical
 //! text, and the kind clause a mixed-kind pair appends (§FS-values.5.2,
-//! §FS-values.5.2.1, §FS-values.5.2.2), and the staged form a root-aimed one
-//! takes until its window closes (§FS-errors.3.9).
+//! §FS-values.5.2.1, §FS-values.5.2.2, §FS-errors.3.9.1).
 
 use crate::config::{Display, Schema};
 use crate::model::remedies;
 use crate::model::{Code, Diagnostic, Site, ValueBinding, ValueComponent, ValueComponentKind};
-
-/// §FS-errors.3.9: the suffix a staged root-aimed mismatch ends with, naming the
-/// release that drops the legacy prefix, on one line so the release guard reads
-/// it (§FS-distribution.4.2.2).
-const ROOT_WORDING_CLAUSE: &str = "; this wording changes in grund 0.22.0";
 
 /// A root or one coordinate as a finding names it: the qualified ID, then the
 /// separator and the section path when there is one (§FS-values.3.1.2,
@@ -85,8 +79,6 @@ pub(super) struct RootComponent<'a> {
     pub(super) root: &'a str,
     /// The first unequal component's section path after the ID.
     pub(super) section_path: &'a str,
-    /// That component by its own coordinate, as a component-aimed binding names it.
-    pub(super) coordinate: &'a str,
 }
 
 /// One `value-mismatch` at a root-aimed binding whose literal splits into as
@@ -95,9 +87,7 @@ pub(super) struct RootComponent<'a> {
 /// its section path and carrying that component's one declaration site
 /// (§FS-values.5.2.2). Its kind clause names that component, since the whole
 /// literal and the joined components can print the same bytes either way
-/// (§FS-values.5.2.1). Until 0.22.0 the component's canonical text stays whole
-/// in front of it, a verbatim prefix for a consumer that matches it
-/// (§FS-errors.3.9).
+/// (§FS-values.5.2.1). The message is §FS-errors.3.9.1's template alone.
 pub(super) fn root_value_mismatch(
     binding: &ValueBinding,
     at: RootComponent<'_>,
@@ -107,28 +97,16 @@ pub(super) fn root_value_mismatch(
     site: Site,
     display: Display<'_>,
 ) -> Diagnostic {
-    let legacy = value_mismatch(binding, at.coordinate, bound, declared, site, display);
     let kinds = mixed_kind_clause(Some(at.section_path), bound.kind, declared.kind);
-    let whole = mismatch_message(
+    value_mismatch_text(
+        binding,
         &format!("{} (component {})", at.root, at.section_path),
         &binding.authored.decoded,
         joined,
-        &legacy.sites[0],
         &kinds,
+        site,
         display,
-    );
-    // §FS-errors.5.5.1: the remedy closes the whole message, after the wording clause.
-    let remedy = format!("; {}", remedies::value_mismatch());
-    let component = legacy
-        .message
-        .strip_suffix(&remedy)
-        .unwrap_or(&legacy.message);
-    Diagnostic {
-        message: format!(
-            "{component} \u{2014} whole binding: {whole}{ROOT_WORDING_CLAUSE}{remedy}"
-        ),
-        ..legacy
-    }
+    )
 }
 
 /// The one shape every `value-mismatch` message takes: what it names, both

@@ -318,12 +318,10 @@ root the line cites and the literal it wrote:
 
 ```console
 $ grund check
-… whole binding: value mismatch for CONST-time-step (component 1): bound `0.002 s`, declared `0.001 s` …
+docs/solver.md:7: error: value mismatch for CONST-time-step (component 1): bound `0.002 s`, declared `0.001 s` …
 ```
 
 The citation is right and the literal is stale, so the fix is `0.001 s`, cited as before.
-Until grund 0.22.0 the line opens with the older component-only message, and from then
-it is the root's alone.
 
 The [values guide](docs/user-facing/values.md) covers JSON and YAML declarations, values inside
 prose specs, and bindings in code comments.
