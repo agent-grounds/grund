@@ -17,7 +17,8 @@ import unittest
 
 from rehearsal_support import (
     CASES, acquire, archive, artifact, bin_dir, cargo_install, command, fresh_env, interpreter,
-    keep, manifest, npm_install, pythons, registry, row, run_checked, venv, wheel_version,
+    keep, manifest, npm_install, pythons, registry, row, run_checked, venv, version_answer,
+    wheel_version,
 )
 
 FAMILIES = {"grund-cli": ("grund", "grund-lsp"), "grund-lsp": ("grund-lsp", "grund")}
@@ -31,7 +32,7 @@ class Rehearsed(unittest.TestCase):
 
     def assert_answers(self, binary, product, env=None):
         answer = run_checked([binary, "--version"], env=env).stdout.strip()
-        self.assertEqual(f"{product} {self.version}", answer)
+        self.assertEqual(version_answer(product), answer)
 
 
 class NpmInstallTests(Rehearsed):
@@ -59,7 +60,7 @@ class NpmInstallTests(Rehearsed):
                 self.assertTrue(npx, "environment prerequisite missing: npx")
                 ran = run_checked([npx, "--yes", "--package", f"{family}@{self.version}", "--",
                                    product, "--version"], cwd=home, env=env)
-                self.assertEqual(f"{product} {self.version}", ran.stdout.strip())
+                self.assertEqual(version_answer(product), ran.stdout.strip())
 
     def test_an_npm_install_builds_nothing(self):
         """§FS-distribution-candidate.4.1: no Rust on PATH, and no `native/` appears."""

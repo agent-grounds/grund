@@ -177,6 +177,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-refs-unused-note](DF-refs-unused-note.md#df-refs-unused-note-an-uncited-declarations-empty-refs-answer-points-at-grund-list---unused) — an uncited declaration's empty `refs` answer points at `grund list --unused`
 - [§DF-bare-grund-lands-on-an-error](DF-bare-grund-lands-on-an-error.md#df-bare-grund-lands-on-an-error-bare-grund-lands-on-a-cli-level-error-not-the-top-level-help-page) — bare `grund` lands on a CLI-level error, not the top-level help page
 - [§DF-schema-view](DF-schema-view.md#df-schema-view-the-schema-view-is-its-own-command-prints-no-json-yet-shows-a-workspaces-root-and-draws-an-any-of-entry-through-one-junction) — the schema view is its own command, prints no JSON yet, shows a workspace's root, and draws an any-of entry through one junction
+- [§DF-dev-build-names-its-commit](DF-dev-build-names-its-commit.md#df-dev-build-names-its-commit-a-development-builds---version-names-its-commit-and-what-a-development-build-prints-between-releases-was-never-a-promise) — a development build's `--version` names its commit, and what a development build prints between releases was never a promise
 
 ## Agent-facing surfaces
 

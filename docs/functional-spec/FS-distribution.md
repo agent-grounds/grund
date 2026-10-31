@@ -30,7 +30,7 @@ npm installs the one platform package matching the host's OS, CPU and libc at ex
 
 ### requirements.versions: What a distributed binary says about versions is true of it — realized
 
-A build from `main` reports the next version with its `-dev` suffix rather than the release it is ahead of ([§FS-distribution.4.1](FS-distribution.md#41-between-releases-main-carries-a-dev-version)); a released binary carries its tag's version, which every package of the release shares ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version), [§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package)); and no release is cut at a version that contradicts a release its own messages name ([§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)). The release named in a warning is what buys a repository its time, and it buys nothing if it is false. Serves [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
+A build from `main` reports the next version with its `-dev` suffix and its commit rather than the release it is ahead of ([§FS-distribution.4.1](FS-distribution.md#41-between-releases-main-carries-a-dev-version), [§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit)); a released binary carries its tag's version, which every package of the release shares ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version), [§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package)); and no release is cut at a version that contradicts a release its own messages name ([§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)). The release named in a warning is what buys a repository its time, and it buys nothing if it is false. Serves [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
 
 ### requirements.next-operation: The next operation reaches every binding, or is excluded there by name — directional
 
@@ -941,7 +941,23 @@ The implemented release workflow publishes the Cargo CLI today and builds downlo
 
 ### 4.1 Between releases, main carries a dev version
 
-A release leaves `main` holding the version it just published, so every build from `main` until the next release reports the tag it is already ahead of. Nothing then distinguishes a binary built from `main` from the released one, and a fix that is merged but not installed looks exactly like one that is installed. So the release advances `main` as its last act: after publishing `X.Y.Z` both helpers push `X.Y.(Z+1)-dev`, a commit they built over the release commit and ran CI on before either reached `main` ([§FS-distribution.4.4.1](FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). The suffix is what makes `grund --version` say which side of the tag a build came from. A `-dev` manifest is never publishable — `release.yml` still verifies that the selected commit carries the exact version being released ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)), and the helpers set that clean version on their candidate branch — so the rule that a released version matches its tag is unchanged.
+A release leaves `main` holding the version it just published, so every build from `main` until the next release reports the tag it is already ahead of. Nothing then distinguishes a binary built from `main` from the released one, and a fix that is merged but not installed looks exactly like one that is installed. So the release advances `main` as its last act: after publishing `X.Y.Z` both helpers push `X.Y.(Z+1)-dev`, a commit they built over the release commit and ran CI on before either reached `main` ([§FS-distribution.4.4.1](FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). The suffix is what makes `grund --version` say which side of the tag a build came from. A development build also names the commit it was built from, so two builds on the same side of the tag can be told apart ([§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit)). A `-dev` manifest is never publishable — `release.yml` still verifies that the selected commit carries the exact version being released ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)), and the helpers set that clean version on their candidate branch — so the rule that a released version matches its tag is unchanged.
+
+#### 4.1.1 A development build names its commit
+
+A development build — one whose version ends in the `-dev` suffix of [§FS-distribution.4.1](FS-distribution.md#41-between-releases-main-carries-a-dev-version) — reports that version with the commit it was built from as SemVer build metadata: `0.20.1-dev+41a08f39c2`, or `0.20.1-dev+41a08f39c2.dirty` when a tracked file differed from that commit in the index or the working tree. Untracked and ignored files never make it dirty. The commit is exactly the first ten lowercase hexadecimal digits of its full SHA, whatever abbreviation the clone would choose.
+
+The build takes the commit from the first of these it has:
+
+1. qualifying git: this source tree's own repository, whose top level is the workspace root, in which the crate's own directory is `crates/grund-cli/`, and which tracks the CLI's manifest there. A tree inside some other repository, a crate copy nested inside a checkout, one git refuses to read, and one with no commit have none;
+2. `GRUND_BUILD_COMMIT`: ten lowercase hexadecimal digits, optionally followed by `.dirty`, used as given, with nothing derived beside it;
+3. nothing: the build reports the bare version.
+
+A development build that finds `GRUND_BUILD_COMMIT` set to anything else, the empty string included, fails, whether or not git supplies the commit, so no spelling suppresses it. A release version reads neither git nor `GRUND_BUILD_COMMIT` and reports exactly its version.
+
+The commit and `.dirty` are those at this compile: when any input to them changes — HEAD, the dirty state (an unstaged edit to a tracked file included), whether qualifying git exists, or `GRUND_BUILD_COMMIT` — the next build reports the new value, and an earlier compile's value is never left embedded.
+
+The label names where a build came from; it is not a fingerprint of its source. For [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree), two development builds are the same version when they were built from the same source contents, uncommitted modifications included, with the same build inputs; equal labels alone do not establish it. Two builds of one dirty tree that disagree on an output byte from the same input cross the bright line although each says `.dirty`, and builds of two different patches over one commit are different versions although their labels match ([§DF-dev-build-names-its-commit](../decisions/functional/DF-dev-build-names-its-commit.md#df-dev-build-names-its-commit-a-development-builds---version-names-its-commit-and-what-a-development-build-prints-between-releases-was-never-a-promise)).
 
 ### 4.2 A release may not contradict the releases the tree's own messages name
 
@@ -1088,6 +1104,11 @@ In both helpers, including either manual version choice ([§FS-distribution.4.4.
   `tests/integration/command_agreement_facts/cli-version.json`. The same
   `candidate.py set-version` invocation owns both version-dependent writes, for
   release and development versions alike; repeating it leaves them consistent.
+  The golden holds the bare version for a development version too: a
+  development build's test expects that line followed by exactly this build's
+  recorded metadata, `+<commit>` or `+<commit>.dirty` ([§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit)),
+  compares it byte for byte, and writes the bare line back when it refreshes
+  the golden; separate tests hold how that metadata is derived.
   It preserves unrelated fixture inputs, fact inputs and independent expected
   answers ([§REQ-one-answer.proof.evidence](../requirements/REQ-one-answer.md#proofevidence-execution-and-independent-truth)), rather than rebuilding an inventory
   from observed files or execution. Both helpers stage the complete version

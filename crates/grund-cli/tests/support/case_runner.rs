@@ -289,7 +289,7 @@ fn run_prepared_case(
             case,
             name,
             actual_exit,
-            &actual_stdout,
+            &version_line_as_golden(actual_stdout),
             &actual_stderr,
         );
     }
@@ -299,7 +299,7 @@ fn run_prepared_case(
         .trim()
         .parse::<i32>()
         .unwrap_or_else(|err| panic!("{name}: parse expected.exit: {err}"));
-    let expected_stdout = read_expected_output(case.join("expected.stdout"));
+    let expected_stdout = version_line_as_built(read_expected_output(case.join("expected.stdout")));
     let expected_stderr = read_expected_output(case.join("expected.stderr"));
     assert_expected_errors_are_concise(case, name, execution, &expected_stderr);
 
@@ -347,6 +347,59 @@ fn should_update_expected(manifest_dir: &Path) -> bool {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/e2e-harness-tests");
     std::env::var_os("UPDATE_EXPECTED").is_some()
         && !manifest_dir.starts_with(synthetic_verdict_root)
+}
+
+/// A golden that is exactly `grund <CARGO_PKG_VERSION>` is this build's version line:
+/// compared, it expects the version followed by exactly this build's recorded
+/// metadata, and refreshed, it is written back bare (§FS-distribution.4.5).
+fn version_line_as_built(golden: String) -> String {
+    swap_version_line(
+        golden,
+        env!("CARGO_PKG_VERSION"),
+        env!("GRUND_BUILD_VERSION"),
+    )
+}
+
+/// The refresh direction of [`version_line_as_built`].
+fn version_line_as_golden(actual: String) -> String {
+    swap_version_line(
+        actual,
+        env!("GRUND_BUILD_VERSION"),
+        env!("CARGO_PKG_VERSION"),
+    )
+}
+
+/// `text`, with the one whole line `grund <from>` replaced by `grund <to>`.
+fn swap_version_line(text: String, from: &str, to: &str) -> String {
+    if text == format!("grund {from}\n") {
+        format!("grund {to}\n")
+    } else {
+        text
+    }
+}
+
+#[cfg(test)]
+mod version_line_tests {
+    use super::swap_version_line;
+
+    #[test]
+    fn only_the_exact_version_line_is_swapped_in_either_direction() {
+        let (bare, built) = ("1.2.3-dev", "1.2.3-dev+0123456789.dirty");
+        let golden = "grund 1.2.3-dev\n".to_string();
+        assert_eq!(
+            swap_version_line(golden, bare, built),
+            format!("grund {built}\n")
+        );
+        let actual = format!("grund {built}\n");
+        assert_eq!(swap_version_line(actual, built, bare), "grund 1.2.3-dev\n");
+        for other in [
+            "grund 1.2.3-dev\nmore\n",
+            "grund 1.2.3-dev",
+            "grund 1.2.3\n",
+        ] {
+            assert_eq!(swap_version_line(other.to_string(), bare, built), other);
+        }
+    }
 }
 
 fn case_name(case: &Path) -> &str {

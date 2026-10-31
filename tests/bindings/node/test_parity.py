@@ -11,7 +11,7 @@ import subprocess
 import sys
 import unittest
 
-from support import CASES, REPO, Rehearsal, checked, checkout_cli, command
+from support import CASES, REPO, Rehearsal, checked, checkout_cli, checkout_cli_version, command
 
 
 class NodeParityTests(unittest.TestCase):
@@ -159,7 +159,11 @@ class NodeParityTests(unittest.TestCase):
     def test_same_version_cli_check_stdout_stderr_and_status(self):
         cli = checkout_cli()  # §AR-ci.3.4.1: the run's one CLI build
         manifest = json.loads((self.r.package / "package.json").read_text())
-        self.assertEqual("grund " + manifest["version"], checked([cli, "--version"]).stdout.strip())
+        # §FS-distribution.4.1.1: the bare version, then exactly this build's recorded metadata.
+        bare, plus, metadata = checkout_cli_version().partition("+")
+        self.assertEqual(manifest["version"], bare)
+        self.assertEqual(f"grund {manifest['version']}{plus}{metadata}\n",
+                         checked([cli, "--version"]).stdout)
         shutil.copyfile(REPO / "tests/bindings/node/check-wire.mjs",
                         self.r.consumer / "check-wire.mjs")
         for case, suggestions in [

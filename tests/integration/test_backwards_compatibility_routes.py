@@ -220,6 +220,16 @@ class RequirementRouteTests(unittest.TestCase):
         self.assertIn("before `1.0`", exemption)
         self.assertIn("not a general escape", exemption)
 
+    def test_the_exemption_names_a_development_build_as_its_third_item(self):
+        # §REQ-backwards-compatibility.4: the third item, and its own decision record.
+        exemption = _section(self.text, 4)
+        self.assertIn("Three things sit outside the guarantee, and each must be argued", exemption)
+        self.assertIn("what a **development build** prints between releases", exemption)
+        self.assertIn("was never a promise", exemption)
+        self.assertIn("§DF-dev-build-names-its-commit", exemption)
+        self.assertIn("This does not expire at `1.0`", exemption)
+        self.assertIn("every release's own bytes stay covered", exemption)
+
     def test_unapproved_route_cannot_hide_from_the_exhaustive_check(self):
         mutated = self.text.replace(
             "or [\u00a7REQ-backwards-compatibility.5]",

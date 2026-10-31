@@ -24,7 +24,7 @@ from pathlib import Path
 from distribution_support import (
     REPO, candidate, candidate_json, expected_artifacts, expected_payloads, sha256,
 )
-from rehearsal_support import acquire, keep, manifest, row, run_checked
+from rehearsal_support import acquire, keep, manifest, row, run_checked, version_answer
 
 FLOORS = {"glibc": (2, 17), "macos": (11, 0)}
 # Debug or non-14 MSVC runtimes are not the Windows floor (§FS-distribution-candidate.1.3).
@@ -114,7 +114,6 @@ class InventoryTests(unittest.TestCase):
                         self.assertEqual(payload["build_sha256"], placement["sha256"])
 
     def test_the_payloads_are_real_executables_of_this_version(self):
-        version = manifest()["version"]
         for payload in row_payloads():
             if payload["product"] not in ("grund", "grund-lsp"):
                 continue
@@ -124,7 +123,7 @@ class InventoryTests(unittest.TestCase):
                 binary.write_bytes(member(placement["artifact"], placement["path"]))
                 binary.chmod(0o755)
                 answer = run_checked([binary, "--version"]).stdout.strip()
-                self.assertEqual(f"{payload['product']} {version}", answer)
+                self.assertEqual(version_answer(payload["product"]), answer)
 
 
 class FloorTests(unittest.TestCase):
@@ -167,7 +166,6 @@ class FloorTests(unittest.TestCase):
         docker = shutil.which("docker")
         self.assertTrue(docker, "environment prerequisite missing: docker")
         image = next(r["container"] for r in candidate_json("matrix") if r["row"] == row()["row"])
-        version = manifest()["version"]
         for payload, path in self.payload_files():
             if not payload.startswith(("grund-linux", "grund-lsp-linux")):
                 continue
@@ -176,7 +174,8 @@ class FloorTests(unittest.TestCase):
                 ran = subprocess.run([docker, "run", "--rm", "-v", f"{self.dump}:/p:ro", image,
                                       f"/p/{path.name}", "--version"], capture_output=True, text=True)
                 self.assertEqual(0, ran.returncode, ran.stderr)
-                self.assertIn(version, ran.stdout)
+                product = "grund-lsp" if payload.startswith("grund-lsp-") else "grund"
+                self.assertEqual(version_answer(product), ran.stdout.strip())
 
 
 if __name__ == "__main__":
