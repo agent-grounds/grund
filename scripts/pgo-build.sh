@@ -90,11 +90,16 @@ in_build() {
   local mounts=(-v "$repo:$repo" -v "$target_dir:$target_dir")
   case "$target_dir/" in "$repo"/*) mounts=(-v "$repo:$repo") ;; esac
   local user=()
+  # The candidate's commit reaches builds that cannot read git (§FS-distribution-candidate.6.1).
+  local commit=()
+  if [ "${GRUND_BUILD_COMMIT+x}" = x ]; then
+    commit=(-e "GRUND_BUILD_COMMIT=$GRUND_BUILD_COMMIT")
+  fi
   # A rootless daemon maps the container's root to the caller already.
   if ! docker info --format '{{.SecurityOptions}}' 2>/dev/null | grep -q rootless; then
     user=(--user "$(id -u):$(id -g)")
   fi
-  docker run --rm "${user[@]}" "${mounts[@]}" -w "$repo" \
+  docker run --rm "${user[@]}" "${mounts[@]}" "${commit[@]}" -w "$repo" \
     -e HOME="$home" -e CARGO_HOME="$home/cargo" -e RUSTUP_HOME="$home/rustup" \
     -e RUSTUP_TOOLCHAIN="$toolchain" -e RUSTFLAGS="${RUSTFLAGS:-}" \
     -e PYO3_PYTHON=/opt/python/cp310-cp310/bin/python3 \

@@ -24,9 +24,12 @@ PGO = matrix.REPO / "scripts" / "pgo-build.sh"
 CRATE = {"grund": "grund", "grund-lsp": "grund-lsp"}
 
 
-def environment(row=None):
+def environment(row=None, *, sha=None):
     """Rust 1.95.0 for every build (§FS-distribution-candidate.1.1), macOS 11.0 on its rows."""
     env = dict(os.environ, RUSTUP_TOOLCHAIN=matrix.RUST_TOOLCHAIN)
+    # The checked candidate supplies the commit where git cannot (§FS-distribution-candidate.6.1).
+    if sha is not None:
+        env["GRUND_BUILD_COMMIT"] = sha[:10]
     if row and row["row"].startswith("darwin"):
         env["MACOSX_DEPLOYMENT_TARGET"] = "11.0"
     return env
@@ -41,12 +44,12 @@ def bash():
     return "bash"
 
 
-def _exception(product, row, target_dir):
+def _exception(product, row, target_dir, sha):
     """§FS-distribution-candidate.7.4: the self-checked LTO build the exception packages."""
     if product not in CRATE:
         raise SystemExit(f"error: row {row['row']}: {product} has no LTO exception")
     subprocess.run(["cargo", "build", "--release", "--locked", "-p", CRATE[product],
-                    "--target-dir", str(target_dir)], env=environment(row), check=True)
+                    "--target-dir", str(target_dir)], env=environment(row, sha=sha), check=True)
     path = Path(target_dir) / "release" / matrix.exe(product, row["row"])
     check = subprocess.run([str(path), "--version"], capture_output=True, text=True)
     if check.returncode != 0:
@@ -64,11 +67,11 @@ def build(payload, sha, version, target_dir, work):
             "--evidence", str(evidence), "--sha", sha]
     if row["container"]:
         argv += ["--container", row["container"]]
-    status = subprocess.run(argv, env=environment(row)).returncode
+    status = subprocess.run(argv, env=environment(row, sha=sha)).returncode
     record = {key: payload[key] for key in ("id", "product", "target", "row")}
     record["engine_version"] = version
     if status == 3 and row["row"] == EXCEPTION_ROW:
-        built = _exception(product, row, target_dir)
+        built = _exception(product, row, target_dir, sha)
         record.update({"optimization": "lto-exception", "profile_sha256": None,
                        "training_sha256": None, "profile_key": None, "steps": None,
                        "exception": {"row": row["row"], "failure": COMPILER_CRASH}})

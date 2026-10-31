@@ -278,8 +278,10 @@ def cargo_install(crate):
             tar.extractall(root / "src", filter="data")
         unpacked[name] = root / "src" / f"{name}-{manifest()['version']}"
     patch = f'patch.crates-io.grund-core.path="{unpacked["grund-core"].as_posix()}"'
+    # A .crate has no git; its candidate names the commit (§FS-distribution-candidate.5.2).
+    env = dict(os.environ, GRUND_BUILD_COMMIT=manifest()["source_sha"][:10])
     run_checked(["cargo", "install", "--locked", "--path", unpacked[crate], "--root", root / "root",
-                 "--target-dir", root / "target", "--config", patch], timeout=7200)
+                 "--target-dir", root / "target", "--config", patch], env=env, timeout=7200)
     binary = "grund" if crate == "grund" else "grund-lsp"
     return root / "root" / "bin" / exe(binary, row()["row"])
 
