@@ -2,9 +2,9 @@
 
 Implements [§AR-ci.requirements.1.verification](../docs/architecture/AR-ci.md#requirements1verification-a-cost-correction-measures-comparable-full-gates)
 and the isolated-experiment boundary of [§AR-ci.3.4.1.5](../docs/architecture/AR-ci.md#3415-a-dependency-only-publication-view-with-the-live-root-intact).
-Fix round 3 repairs the harness tools-path context **without executing tests,
-native transactions or performance samples**. R3-03's hosted validation and
-elapsed-time acceptance remain outstanding.
+Fix round 4 recovers the cold metadata diagnostic and verifies the focused
+publication correction locally. R3-03's three-OS hosted validation and paired
+elapsed-time acceptance remain outstanding; no performance pass is claimed.
 
 ## Scope and transport
 
@@ -55,8 +55,8 @@ cost is part of every complete candidate gate; do not substitute the older suite
 
 ```bash
 base=d338c4814a095fef54708e83367597c4e7955aad
-candidate=b534ccbbadbd995998d0d39bf9ce57f894f9c4ae
-# The final fix-3 result records this separate, complete harness SHA literally.
+candidate=6fe17f9d51b666758df0d75f66ea689cffdc434b
+# The final fix-4 result records this separate, complete harness SHA literally.
 harness=$(git log -1 --format=%H -- scripts/node-cache-measurement.md)
 gh api repos/vjovanov/grund-fork/git/ref/heads/fix/issue-1122 --jq .object.sha
 mkdir -p /var/tmp/grund-1122-tmp
@@ -64,7 +64,7 @@ mkdir -p /var/tmp/grund-1122-tmp
 
 The candidate also includes the offline ledger safety tests, so their macOS
 suite cost stays in the source measurements. The fork ref must equal `$harness`
-and the fix-3 result. Source and harness are
+and the fix-4 result. Source and harness are
 separate identities; source builds are checked against the pinned source after
 checkout. Run focused regressions downstream before spending native repetitions:
 
@@ -82,6 +82,52 @@ jobs keep every source command, including all four macOS Python selections,
 Rust shards, watch proof, builds and self-check. Only source checkout, experimental
 transport/identities and experimental publication conditions change. `validate`
 is an explicitly separate transaction preflight, never a full-gate sample.
+
+## Cold publication regression and continuation evidence
+
+The previous Linux candidate seed failed because `--all-features` requested
+`bincode 1.3.3` from the unused CLI benchmark chain while publication was offline.
+A local cold reconstruction on source `b534ccbbadbd995998d0d39bf9ce57f894f9c4ae`
+matches all 194 native downloaded crate archives byte for byte and recovers that
+diagnostic. The correction is specified by
+[§AR-node-cache-metadata.resolution](../docs/architecture/AR-node-cache-metadata.md#resolution-locked-and-offline-with-observed-workspace-features) and [§AR-node-cache-metadata.failures](../docs/architecture/AR-node-cache-metadata.md#failures-cargo-diagnostics-explain-an-unready-publication).
+It keeps locked/offline resolution and source-qualified artifact identity.
+
+The focused publication command above exercises an unused optional registry
+archive that remains absent, a compiled optional dependency that must remain
+fresh after restore, and diagnostic/failure cleanup. For its independent negative
+control, use a disposable checkout of the new candidate with only the production
+helper replaced by the previous immutable candidate's helper:
+
+```bash
+negative="$HOME/ag/tmp/grund-1122-review4-negative"
+git worktree add --detach "$negative" "$candidate"
+git show b534ccbbadbd995998d0d39bf9ce57f894f9c4ae:scripts/node_cache_publication.py \
+  > "$negative/scripts/node_cache_publication.py"
+(cd "$negative" && TMPDIR=/var/tmp/grund-1122-tmp PYTHONDONTWRITEBYTECODE=1 \
+  RUSTUP_TOOLCHAIN=1.99.1 python3 -m unittest discover -s tests/integration \
+  -p test_node_binding_acceptance.py -k publishes_dependencies -v)
+```
+
+Expect exit 1 with eight unready-publication subcases; the corrected candidate
+must pass all four methods with their original semantic assertions. This is a
+mechanism regression, not native time evidence. Full cold seeds below run the
+unchanged source/fallback/CLI proof and all source suites on each native OS.
+
+Preserve the failed `runtime/native/` evidence and independent absence journals.
+Use a fresh `runtime/native-fix4/` continuation set for successful analysis inputs;
+retain failed continuation runs separately with complete collection and recovery.
+Do not mix old-source or failed seeds into the successful analyzer input. All
+seeds and samples must use the new source/harness pair, including the new fixture
+cost. The transaction, cleanup and performance criteria below are unchanged.
+
+The retained harness derives complete Node/macOS jobs from production workflows
+and measures actual cache-service transactions, provenance and exact-entry
+recovery. That gives subsequent Node-cache cost corrections the same executable
+full-gate comparison and cleanup procedure, instead of reconstructing this
+experiment from logs. It is scoped infrastructure, not a general benchmark:
+future comparisons must explicitly repin sources and authorization boundaries.
+Retention and that limited repository purpose must be stated in the PR description.
 
 ## Workflow context check
 
@@ -122,7 +168,7 @@ service availability and native hosted capacity. The fix state has not exercised
 those operations. Start a fresh session; never rerun an old seed attempt in place.
 
 ```bash
-session="fix3-$(date -u +%Y%m%dT%H%M%SZ)"
+session="fix4-$(date -u +%Y%m%dT%H%M%SZ)"
 evidence="$HOME/ag/tmp/grund-1122-native-$session"
 mkdir -p "$evidence"
 dispatch_one() {

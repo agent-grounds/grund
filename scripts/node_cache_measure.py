@@ -10,7 +10,7 @@ import subprocess
 from node_cache_experiment_ledger import REPOSITORY, REF, SYSTEMS, api, recover, write
 
 BASE = "d338c4814a095fef54708e83367597c4e7955aad"
-CANDIDATE = "b534ccbbadbd995998d0d39bf9ce57f894f9c4ae"
+CANDIDATE = "6fe17f9d51b666758df0d75f66ea689cffdc434b"
 
 
 def run(argv, **options):
