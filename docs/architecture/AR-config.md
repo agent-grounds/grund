@@ -412,13 +412,16 @@ for `[schema.*]`, `rules.rs` for `[rules.*]`, and `presentation.rs` for
 `[presentation.*]` and `[workspace]`. Each of them reads a string, a scalar, a
 list's element or a quoted key, through `strings.rs`, which refuses a string that
 closes early and records nothing. It keeps the reading of the readers before it
-for two callers and no more: the refusal's message, which ends with the release
+for three callers and no more: the refusal's message, which ends with the release
 that made it one where that reading loads the value and is the bare `expected
-string` where it does not ([§FS-config-v2.reader.6.refusal](../functional-spec/FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)), and `grund config migrate`,
+string` where it does not ([§FS-config-v2.reader.6.refusal](../functional-spec/FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)), the
+same question asked of an array refused at its open line, below, and `grund config migrate`,
 which names each string that closes early as version 1 reads it ([§FS-config-migrate.3.1.8](../functional-spec/FS-config-migrate.md#318-a-string-that-closes-early)). An array reaches them joined by
 `arrays.rs`, which refuses one whose line ends inside a string before any element is
-read, keeping the quote-at-a-time reading of the readers before it only to tell whether
-their window loaded the array ([§FS-config-v2.reader.5.strings.refusal](../functional-spec/FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array)), and with at
+read, keeping the quote-at-a-time join of the readers before it, with their whole run of
+commas taken off, only so that `walk.rs` can read its elements through `strings.rs` as
+they read them and tell whether their window loaded the array
+([§FS-config-v2.reader.5.strings.refusal](../functional-spec/FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array)), and with at
 most one comma before its `]` taken off, the one trailing comma after an
 element; any other comma stays for the element reader, whose refusal of the
 empty element it leaves carries 0.22.0's suffix where the whole run's removal

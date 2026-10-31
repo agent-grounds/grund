@@ -27,10 +27,13 @@ In 0.22.0 (agent-grounds/grund#1118):
   refused at its key's line as `unclosed array` with the parenthetical naming the open line
   ([§FS-config-v2.reader.5.strings.refusal](../../functional-spec/FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array)), so `check` and `config show` exit `2` and
   `config validate` exits `1`;
-- where the readers before 0.22.0 would have closed the array on a later line, so that its text
-  read through the window, the refusal ends `; this became an error in grund 0.22.0`; an array
-  they did not close either, such as `["a,b]` on the last line of the file, keeps the bare
-  refusal;
+- where the readers before 0.22.0 would have loaded the array, so that its text read through the
+  window, the refusal ends `; this became an error in grund 0.22.0`; an array they refused too,
+  such as `["a,b]` on the last line of the file, or `[` / `"a` / `b", 1,` / `]`, which they
+  joined and then refused for its `1`, keeps the bare refusal. Their reading decides it end to
+  end, quotes a quote at a time, the break as one space, the run of commas before the `]` taken
+  off and each element read as they read it, so `[` / `"""a"` / `]`, which loaded as `""a` with
+  no open line in it, takes the suffix;
 - a `"""` string open at the end of its line is refused with the parenthetical
   `(a multi-line string opens on line <n>, which version 2 does not read)` and the same suffix
   rule ([§FS-config-v2.reader.5.strings.multi-line](../../functional-spec/FS-config-v2.md#reader5stringsmulti-line-a-string-opened-with--is-one-version-2-does-not-read));
@@ -74,7 +77,7 @@ In 0.22.0 (agent-grounds/grund#1118):
   line 10); this became an error in grund 0.22.0`, and a string opened with `"""` there as
   `unclosed array (a multi-line string opens on line 10, which version 2 does not read)` with
   the same suffix; `check` and `config show` exit `2`, `config validate` exits `1`. An array that
-  never closed keeps its bare `unclosed array`, and where a string opens with four or more quotes
+  0.21.0 refused as well keeps its bare `unclosed array`, and where a string opens with four or more quotes
   in a row the refusal now names the line it opens on. `config-not-toml` and
   `config-multiline-string` no longer fire at all: `--only` and `--ignore` still accept them,
   and `--only` says the check is spent. Version-1 configs load exactly as before. **Who this
