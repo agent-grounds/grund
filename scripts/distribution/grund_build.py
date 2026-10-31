@@ -8,6 +8,7 @@ everything else to maturin. §FS-distribution-candidate.4.3: a missing Cargo is 
 line naming it. `scripts/distribution/pypi.py` copies this file into the sdist.
 """
 
+import json
 import os
 import shutil
 import subprocess
@@ -22,9 +23,12 @@ ROOT = HERE.parent
 
 def _build_cli():
     target = Path(os.environ.get("CARGO_TARGET_DIR") or ROOT / "target")
+    # Bundled sources name the candidate's commit without git (§FS-distribution-candidate.5.2).
+    recorded = json.loads((ROOT / "source-metadata.json").read_text(encoding="utf-8"))
+    env = dict(os.environ, GRUND_BUILD_COMMIT=recorded["sourceSha"][:10])
     try:
         subprocess.run(["cargo", "build", "--release", "--locked", "-p", "grund",
-                        "--target-dir", str(target)], cwd=ROOT, check=True)
+                        "--target-dir", str(target)], cwd=ROOT, check=True, env=env)
     except FileNotFoundError:
         raise SystemExit("error: cargo was not found: building grund from source needs "
                          "Rust 1.95.0 and Cargo (https://rustup.rs), a linker and the platform SDK")

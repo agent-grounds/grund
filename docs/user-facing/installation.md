@@ -131,6 +131,27 @@ payload, but only when asked: nothing compiles on install
 - **Cargo.** `cargo install grund` and `cargo install grund-lsp` always build
   from source.
 
+A checkout build (`cargo install --path crates/grund-cli`) records its commit in
+`grund --version` when its Cargo version ends in `-dev`. It adds `.dirty` for
+uncommitted changes to tracked files. Without readable git, `GRUND_BUILD_COMMIT`
+supplies ten lowercase hexadecimal digits, optionally followed by `.dirty`, at
+build time; without either source the version stays bare. Releases always report
+exactly their version
+([§FS-distribution.4.1.1](../functional-spec/FS-distribution.md#411-a-development-build-names-its-commit)):
+
+```console
+$ grund --version  # clean checkout at 41a08f39c2…
+grund 0.21.1-dev+41a08f39c2
+$ grund --version  # built with a tracked file changed
+grund 0.21.1-dev+41a08f39c2.dirty
+$ grund --version  # gitless build with GRUND_BUILD_COMMIT=41a08f39c2
+grund 0.21.1-dev+41a08f39c2
+$ grund --version  # gitless build without GRUND_BUILD_COMMIT
+grund 0.21.1-dev
+$ grund --version  # release build
+grund 0.21.0
+```
+
 A source build needs Rust and Cargo (the npm packages pin Rust 1.95.0), a linker
 and the platform SDK — Xcode's command-line tools on macOS, the MSVC build tools
 on Windows. It builds with LTO but no profile, so it behaves the same and runs

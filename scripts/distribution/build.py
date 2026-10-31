@@ -38,12 +38,12 @@ def _host():
                  if line.startswith("host:")), None)
 
 
-def _crates(version, target_dir, out):
+def _crates(version, target_dir, out, sha):
     """§FS-distribution-candidate.2.1: the three crates, as `cargo publish` would upload them."""
     argv = ["cargo", "package", "--locked", "--no-verify", "--target-dir", str(target_dir)]
     for name in CRATES:
         argv += ["-p", name]
-    subprocess.run(argv, cwd=matrix.REPO, check=True, env=payloads.environment())
+    subprocess.run(argv, cwd=matrix.REPO, check=True, env=payloads.environment(sha=sha))
     for name in CRATES:
         shutil.copyfile(Path(target_dir) / "package" / f"{name}-{version}.crate",
                         out / "cargo" / f"{name}-{version}.crate")
@@ -76,6 +76,13 @@ def build(row, sha, out, target_dir, products=None):
     `products`, only those payloads and the artifacts they alone fill are built."""
     if _git_head() != sha:
         raise SystemExit(f"error: --sha {sha} is not this checkout's HEAD {_git_head()}")
+    # A fallback commit is true only for these tracked bytes (§FS-distribution-candidate.6.1).
+    dirty = subprocess.run(["git", "--no-optional-locks", "status", "--porcelain",
+                            "--untracked-files=no"], cwd=matrix.REPO, check=True,
+                           capture_output=True).stdout
+    if dirty:
+        raise SystemExit("error: candidate checkout has uncommitted changes to tracked files; "
+                         "commit them before building")
     version = versions.check(matrix.REPO)
     host = _host()
     if host != row["rust_target"]:
@@ -112,7 +119,7 @@ def build(row, sha, out, target_dir, products=None):
     (out / "cargo").mkdir(parents=True, exist_ok=True)
     if not products:
         npm_trees.write(trees, version, sha=sha, bundle=True)
-        _crates(version, target_dir, out)
+        _crates(version, target_dir, out, sha)
     else:
         npm_trees.write(trees, version)
     artifacts = []

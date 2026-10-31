@@ -45,13 +45,16 @@ const target = targetDir(process.argv.slice(2));
 const native = path.join(root, 'native');
 if (crate === 'grund')
   run(process.execPath, [path.join(here, 'addon-source.mjs'), '--target-dir', target]);
+// Bundled sources use the candidate's commit without git (§FS-distribution-candidate.5.2).
+const recorded = JSON.parse(fs.readFileSync(path.join(sources, 'source-metadata.json'), 'utf8'));
+const env = crate === 'grund'
+  ? {...process.env, GRUND_BUILD_COMMIT: recorded.sourceSha.slice(0, 10)} : process.env;
 run('cargo', [`+${toolchain}`, 'build', '--manifest-path', path.join(sources, 'Cargo.toml'),
-  '-p', crate, '--release', '--locked', '--target', host, '--target-dir', target], {cwd: sources});
+  '-p', crate, '--release', '--locked', '--target', host, '--target-dir', target], {cwd: sources, env});
 const binary = command + (host.includes('windows') ? '.exe' : '');
 fs.mkdirSync(native, {recursive: true});
 fs.copyFileSync(path.join(target, host, 'release', binary), path.join(native, binary));
 if (crate === 'grund-lsp') {
-  const recorded = JSON.parse(fs.readFileSync(path.join(sources, 'source-metadata.json'), 'utf8'));
   fs.writeFileSync(path.join(native, 'metadata.json'), JSON.stringify({
     engineVersion: recorded.engineVersion, packageVersion: manifest.version, target: host,
     sourceSha: recorded.sourceSha}, null, 2) + '\n');
