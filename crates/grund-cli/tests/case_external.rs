@@ -115,7 +115,8 @@ fn external_grund_placeholder_names_this_builds_binary() {
     let fixture = Fixture::new("external-grund", r#"["{grund}","--version"]"#);
     fs::write(
         fixture.case.join("expected.stdout"),
-        format!("grund {}\n", env!("CARGO_PKG_VERSION")),
+        // This build's own recorded version line (§FS-distribution.4.1.1).
+        format!("grund {}\n", env!("GRUND_BUILD_VERSION")),
     )
     .unwrap();
     fixture.run();

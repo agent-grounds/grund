@@ -18,7 +18,7 @@ import unittest
 
 from rehearsal_support import (
     CASES, acquire, artifact, bin_dir, command, fresh_env, interpreter, keep, manifest, pythons,
-    registry, run_checked,
+    registry, run_checked, version_answer,
 )
 
 
@@ -55,7 +55,7 @@ class NpmSourceTests(unittest.TestCase):
         self.assertEqual(self.version, metadata["packageVersion"])
         self.assertTrue(list(native.glob("*.node")), "no addon was built")
         answer = run_checked([command(modules / ".bin", "grund"), "--version"], env=env)
-        self.assertEqual(f"grund {self.version}", answer.stdout.strip())
+        self.assertEqual(version_answer("grund"), answer.stdout.strip())
 
     def test_the_server_package_builds_only_the_server(self):
         env = build_env()
@@ -66,7 +66,7 @@ class NpmSourceTests(unittest.TestCase):
         self.assertEqual([], list(native.glob("*.node")))
         self.assertFalse(any(native.glob("grund")) or any(native.glob("grund.exe")))
         answer = run_checked([command(modules / ".bin", "grund-lsp"), "--version"], env=env)
-        self.assertEqual(f"grund-lsp {self.version}", answer.stdout.strip())
+        self.assertEqual(version_answer("grund-lsp"), answer.stdout.strip())
 
     def test_a_missing_rust_toolchain_is_named(self):
         """§FS-distribution-candidate.4.3: a line naming the missing prerequisite."""
@@ -84,7 +84,6 @@ class PythonSourceTests(unittest.TestCase):
 
     def setUp(self):
         acquire()
-        self.version = manifest()["version"]
 
     def install(self, dist):
         root = keep(f"grund-sdist-{dist}-")
@@ -97,7 +96,7 @@ class PythonSourceTests(unittest.TestCase):
     def test_the_api_sdist_builds_the_extension_and_the_command(self):
         environment = self.install("grund")
         answer = run_checked([command(bin_dir(environment), "grund"), "--version"])
-        self.assertEqual(f"grund {self.version}", answer.stdout.strip())
+        self.assertEqual(version_answer("grund"), answer.stdout.strip())
         probe = ("import grund, grund._native, sys; "
                  "assert [(f.code, f.line) for f in grund.check(sys.argv[1]).report] == [('dangling', 3)]")
         run_checked([interpreter(environment), "-c", probe, CASES / "json-report" / "repo"],
@@ -106,7 +105,7 @@ class PythonSourceTests(unittest.TestCase):
     def test_the_server_sdist_builds_only_the_server(self):
         environment = self.install("grund-lsp")
         answer = run_checked([command(bin_dir(environment), "grund-lsp"), "--version"])
-        self.assertEqual(f"grund-lsp {self.version}", answer.stdout.strip())
+        self.assertEqual(version_answer("grund-lsp"), answer.stdout.strip())
         self.assertFalse(any(bin_dir(environment).glob("grund")) or
                          any(bin_dir(environment).glob("grund.exe")))
 
