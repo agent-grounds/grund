@@ -1,11 +1,11 @@
 //! Test module: a version-2 string ends at its first unescaped quote
-//! (§FS-config-v2.reader.6). Through grund 0.21.x a string that closes early is read
-//! as before and earns one warning per value at its key's line, naming the string as
-//! written and the line it closes on (§FS-config-v2.reader.6.window,
-//! §FS-config-v2.checks.config-not-toml); a `"""` string on one line earns
-//! `config-multiline-string` instead (§FS-config-v2.reader.6.multi-line). A string
-//! that closes at its end, a value refused before, a `"""` string over a break and a
-//! version-1 file earn nothing new.
+//! (§FS-config-v2.reader.6). From grund 0.22.0 a string that closes early is refused at
+//! its key's line as `expected string`, ending with the release that made it one where
+//! it loaded through the 0.21.x window (§FS-config-v2.reader.6.refusal); a `"""` string
+//! on one line is refused with a parenthetical naming the form
+//! (§FS-config-v2.reader.6.multi-line). A string that closes at its end, a value refused
+//! before and a version-1 file keep what they had, and an array with an open line is refused
+//! for it first (§FS-config-v2.reader.5.strings.refusal).
 
 use std::path::{Path, PathBuf};
 
@@ -33,7 +33,8 @@ fn project(name: &str, config: &str) -> PathBuf {
     root
 }
 
-/// The window's findings the config at `root` carries: code, line and message.
+/// The open-line and multi-line findings the config at `root` carries: code, line and
+/// message.
 fn window_findings(root: &Path) -> Vec<(&'static str, Option<usize>, String)> {
     let config = load_config(root).expect("the config loads");
     config_diagnostics(&config, config.display())
@@ -42,244 +43,178 @@ fn window_findings(root: &Path) -> Vec<(&'static str, Option<usize>, String)> {
         .collect()
 }
 
-/// An element's warning at `key`, naming `text` and the line it closes on, `close`.
-fn element(key: usize, text: &str, close: usize) -> (&'static str, Option<usize>, String) {
-    let message = format!(
-        "grund.toml:{key}: expected string, read for now as the one string `{text}`; end the \
-         string on line {close} at its closing quote: write `\\\"` for a quote inside it, or a \
-         `,` between two strings; this warning becomes an error in grund 0.22.0"
-    );
-    ("config-not-toml", Some(key), message)
+/// Require the config at `root` to be refused, the load's error ending with `expected`.
+fn refused(root: &Path, expected: &str) {
+    let Err(err) = load_config(root) else {
+        panic!("the config is refused");
+    };
+    let err = format!("{err:#}");
+    assert!(err.ends_with(expected), "{err}");
 }
 
-/// A scalar's or a key's warning at `key`, naming `text`.
-fn scalar(key: usize, text: &str) -> (&'static str, Option<usize>, String) {
-    let message = format!(
-        "grund.toml:{key}: expected string, read for now as the one string `{text}`; end the \
-         string on line {key} at its closing quote: write `\\\"` for a quote inside it; this \
-         warning becomes an error in grund 0.22.0"
-    );
-    ("config-not-toml", Some(key), message)
+/// The 0.22.0 refusal of a string that closes early in the value at line `key`, which
+/// loaded through the 0.21.x window.
+fn suffixed(key: usize) -> String {
+    format!("grund.toml:{key}: expected string; this became an error in grund 0.22.0")
 }
 
-/// The SPEC kind's `fetch` and `title`, as the load reads them.
-fn spec_kind(root: &Path) -> (Option<String>, Option<String>) {
+/// The 0.22.0 refusal of a `"""` string on one line in the value at line `key`.
+fn multi_line(key: usize) -> String {
+    format!(
+        "grund.toml:{key}: expected string (a multi-line string, which version 2 does not \
+         read); this became an error in grund 0.22.0"
+    )
+}
+
+/// The 0.22.0 refusal of the array at line 10 whose string is open at the end of line 11,
+/// which loaded through the 0.21.x window (§FS-config-v2.reader.5.strings.refusal).
+const OPEN_LINE: &str = "grund.toml:10: unclosed array (a string is still open at the end of line \
+                         11); this became an error in grund 0.22.0";
+
+/// [`OPEN_LINE`] where the string open at line 11's end opened with `"""`
+/// (§FS-config-v2.reader.5.strings.multi-line).
+const MULTI_LINE_OPEN: &str = "grund.toml:10: unclosed array (a multi-line string opens on line \
+                               11, which version 2 does not read); this became an error in \
+                               grund 0.22.0";
+
+/// The SPEC kind's `fetch`, as the load reads it.
+fn spec_fetch(root: &Path) -> Option<String> {
     let config = load_config(root).expect("the config loads");
     let spec = config
         .kinds
         .iter()
         .find(|k| k.kind == "SPEC")
         .expect("SPEC");
-    (spec.fetch.clone(), spec.title.clone())
+    spec.fetch.clone()
 }
 
-/// §FS-config-v2.reader.6.window: a scalar that closes early is read as before, every
-/// quote kept, and earns one warning whose remedy is the `\"` half alone.
+/// §FS-config-v2.reader.6.refusal: a scalar that closes early is refused with the suffix.
 #[test]
-fn a_scalar_that_closes_early_is_read_as_before_and_warns_once() {
-    let root = v2("scalar", "fetch = \"one\" \"two\"\n");
-    assert_eq!(spec_kind(&root).0.as_deref(), Some("one\" \"two"));
-    assert_eq!(window_findings(&root), vec![scalar(8, "one\" \"two")]);
+fn a_scalar_that_closes_early_is_refused() {
+    refused(&v2("scalar", "fetch = \"one\" \"two\"\n"), &suffixed(8));
 }
 
-/// §FS-config-v2.reader.6.window: an element that closes early is read as the one
-/// element it is today, and earns one warning with both halves of the remedy.
+/// §FS-config-v2.reader.6.refusal: an element that closes early is refused with the
+/// suffix.
 #[test]
-fn an_element_that_closes_early_is_read_as_before_and_warns_once() {
+fn an_element_that_closes_early_is_refused() {
     let root = v2(
         "element",
         "\n[schema.sources]\nexclude = [\"docs\" \"specs\"]\n",
     );
-    let config = load_config(&root).expect("the config loads");
-    let model = config
-        .project()
-        .schema
-        .sources
-        .model
-        .as_ref()
-        .expect("a v2 model");
-    assert_eq!(model.exclude, vec!["docs\" \"specs".to_string()]);
-    assert_eq!(
-        window_findings(&root),
-        vec![element(10, "docs\" \"specs", 10)]
-    );
+    refused(&root, &suffixed(10));
 }
 
-/// §FS-config-v2.reader.6.window: a value earns one warning however many of its
-/// strings close early, naming the first.
+/// §FS-config-v2.reader.6.refusal: a value is refused once however many of its strings
+/// close early.
 #[test]
-fn a_value_with_two_early_closes_earns_one_warning_naming_the_first() {
+fn a_value_with_two_early_closes_is_refused() {
     let root = v2(
         "two",
         "\n[schema.sources]\nexclude = [\"a\" \"b\", \"c\" \"d\"]\n",
     );
-    assert_eq!(window_findings(&root), vec![element(10, "a\" \"b", 10)]);
+    refused(&root, &suffixed(10));
 }
 
-/// §FS-config-v2.reader.6.window: in an array written across lines the warning stays
-/// at the key's line and names the line the string closes on.
+/// §FS-config-v2.reader.6.refusal: in an array written across lines the refusal is at
+/// the key's line, as every value's is.
 #[test]
-fn an_element_on_a_later_line_names_the_line_it_closes_on() {
+fn an_element_on_a_later_line_is_refused_at_its_key() {
     let root = v2(
         "later",
         "\n[schema.sources]\nexclude = [\n  \"a\",\n  \"b\" \"c\",\n]\n",
     );
-    assert_eq!(window_findings(&root), vec![element(10, "b\" \"c", 12)]);
+    refused(&root, &suffixed(10));
 }
 
-/// §FS-config-v2.reader.6: a quoted key is a string of its own, read as before, and
-/// earns its own warning with the scalar's remedy.
+/// §FS-config-v2.reader.6.refusal: a quoted key is a string of its own, and is refused.
 #[test]
-fn a_quoted_key_that_closes_early_is_read_as_before_and_warns() {
+fn a_quoted_key_that_closes_early_is_refused() {
     let root = v2(
         "key",
         "\n[schema.sources.extensions]\n\"md\" \"x\" = \"markdown\"\n",
     );
-    let config = load_config(&root).expect("the config loads");
-    let model = config
-        .project()
-        .schema
-        .sources
-        .model
-        .as_ref()
-        .expect("a v2 model");
-    let extensions = &model.extensions;
-    assert!(
-        extensions.iter().any(|(suffix, _)| suffix == "md\" \"x"),
-        "{extensions:?}"
-    );
-    assert_eq!(window_findings(&root), vec![scalar(10, "md\" \"x")]);
+    refused(&root, &suffixed(10));
 }
 
-/// §FS-config-v2.reader.6: the text in backticks is the string as written, so an
-/// escape before the early close is shown as it is written, and `\\` closes nothing.
+/// §FS-config-v2.reader.6: an escaped quote before the early close, or an escaped
+/// backslash before the closing quote, leaves the string closing early, and refused.
 #[test]
-fn the_warning_shows_escapes_as_written() {
-    let escaped_quote = v2("escaped-quote", "fetch = \"a\\\"b\" \"c\"\n");
-    assert_eq!(
-        window_findings(&escaped_quote),
-        vec![scalar(8, "a\\\"b\" \"c")]
+fn escapes_before_an_early_close_are_refused() {
+    refused(
+        &v2("escaped-quote", "fetch = \"a\\\"b\" \"c\"\n"),
+        &suffixed(8),
     );
-    let escaped_backslash = v2("escaped-backslash", "fetch = \"a\\\\\" \"b\"\n");
-    assert_eq!(
-        window_findings(&escaped_backslash),
-        vec![scalar(8, "a\\\\\" \"b")]
-    );
+    let root = v2("escaped-backslash", "fetch = \"a\\\\\" \"b\"\n");
+    refused(&root, &suffixed(8));
 }
 
-/// §FS-config-v2.reader.6.multi-line: a `"""` string on one line is read as before,
-/// its quotes kept, and earns `config-multiline-string` in place of `config-not-toml`.
+/// §FS-config-v2.reader.6.multi-line: a `"""` string on one line is refused with the
+/// parenthetical, then the suffix.
 #[test]
-fn a_triple_quoted_string_on_one_line_warns_that_version_2_does_not_read_it() {
+fn a_triple_quoted_string_on_one_line_is_refused() {
     let root = v2(
         "triple",
         "\n[presentation.kinds.SPEC]\ntitle = \"\"\"one\"\"\"\n",
     );
-    assert_eq!(spec_kind(&root).1.as_deref(), Some("\"\"one\"\""));
-    let message = "grund.toml:10: expected string (a multi-line string, which version 2 does not \
-                   read), read for now as `\"\"one\"\"`, its quotes kept; write the string on \
-                   line 10 as one basic string; this warning becomes an error in grund 0.22.0";
-    assert_eq!(
-        window_findings(&root),
-        vec![("config-multiline-string", Some(10), message.to_string())]
-    );
+    refused(&root, &multi_line(10));
 }
 
-/// §FS-config-v2.reader.6.window: an array with an open line and an early close earns
-/// both warnings, the open line's first, and the early close names the joined text.
+/// §FS-config-v2.reader.5.strings.refusal, §FS-config-v2.reader.6.refusal: an array with an
+/// open line is refused for it before any element is read, so its string that closes early
+/// earns no refusal of its own.
 #[test]
-fn an_open_line_and_an_early_close_earn_both_warnings() {
+fn an_open_line_and_an_early_close_are_refused_as_the_open_line() {
     let root = v2(
         "both",
         "\n[schema.sources]\nexclude = [\n  \"a\nb\" \"c\",\n]\n",
     );
-    let open = "grund.toml:10: unclosed array (a string is still open at the end of line 11), \
-                read for now with the line break as a space; close the string on line 11; this \
-                warning becomes an error in grund 0.22.0";
-    assert_eq!(
-        window_findings(&root),
-        vec![
-            ("config-not-toml", Some(10), open.to_string()),
-            element(10, "a b\" \"c", 12)
-        ]
-    );
+    refused(&root, OPEN_LINE);
 }
 
-/// Guard, green today and kept: a `"""` string a line break runs through is one
-/// construct, warned for by §FS-config-v2.reader.5.strings.multi-line alone.
+/// §FS-config-v2.reader.5.strings: a `"""` run closes the multi-line string the one before it
+/// opened, so the `"` after it opens a plain string, and the line it leaves open is the plain
+/// open line the array is refused for (§FS-config-v2.reader.5.strings.refusal).
 #[test]
-fn a_triple_quoted_string_over_a_break_earns_only_the_open_line_warning() {
-    let root = v2(
-        "triple-break",
-        "\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n]\n",
-    );
-    let message = "grund.toml:10: unclosed array (a multi-line string opens on line 11, which \
-                   version 2 does not read), read for now with the line break as a space; \
-                   write the string on line 11 as one basic string; this warning becomes an \
-                   error in grund 0.22.0";
-    assert_eq!(
-        window_findings(&root),
-        vec![("config-multiline-string", Some(10), message.to_string())]
-    );
-}
-
-/// §FS-config-v2.reader.6.multi-line: every `"""` string a line break runs through is
-/// #1089's construct, not only the one across the array's first open line, so two of them
-/// earn its one warning alone.
-#[test]
-fn two_triple_quoted_strings_over_breaks_earn_only_the_open_line_warning() {
-    let root = v2(
-        "two-triple-breaks",
-        "\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n  \"\"\"c\nd\"\"\",\n]\n",
-    );
-    let message = "grund.toml:10: unclosed array (a multi-line string opens on line 11, which \
-                   version 2 does not read), read for now with the line break as a space; \
-                   write the string on line 11 as one basic string; this warning becomes an \
-                   error in grund 0.22.0";
-    assert_eq!(
-        window_findings(&root),
-        vec![("config-multiline-string", Some(10), message.to_string())]
-    );
-}
-
-/// §FS-config-v2.reader.6.multi-line: a `"""` string over a break after a plain open line
-/// is #1089's construct too, and earns nothing beyond that array's one warning.
-#[test]
-fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_earns_only_that_warning() {
-    let root = v2(
-        "plain-then-triple",
-        "\n[schema.sources]\nexclude = [\n  \"a\nb\",\n  \"\"\"c\nd\"\"\",\n]\n",
-    );
-    let open = "grund.toml:10: unclosed array (a string is still open at the end of line 11), \
-                read for now with the line break as a space; close the string on line 11; this \
-                warning becomes an error in grund 0.22.0";
-    assert_eq!(
-        window_findings(&root),
-        vec![("config-not-toml", Some(10), open.to_string())]
-    );
-}
-
-/// §FS-config-v2.reader.6.multi-line: the `"""` string is the one its third quote opens, so
-/// a break inside a plain string after it leaves the element's one-line `"""` warning.
-#[test]
-fn a_break_after_a_one_line_triple_quoted_string_keeps_its_warning() {
+fn a_break_after_a_one_line_triple_quoted_string_is_refused_as_a_plain_open_line() {
     let root = v2(
         "triple-then-break",
         "\n[schema.sources]\nexclude = [\n  \"\"\"a\"\"\" \"b\nc\",\n]\n",
     );
-    let open = "grund.toml:10: unclosed array (a string is still open at the end of line 11), \
-                read for now with the line break as a space; close the string on line 11; this \
-                warning becomes an error in grund 0.22.0";
-    let message = "grund.toml:10: expected string (a multi-line string, which version 2 does not \
-                   read), read for now as `\"\"a\"\"\" \"b c`, its quotes kept; write the string \
-                   on line 11 as one basic string; this warning becomes an error in grund 0.22.0";
-    assert_eq!(
-        window_findings(&root),
-        vec![
-            ("config-not-toml", Some(10), open.to_string()),
-            ("config-multiline-string", Some(10), message.to_string())
-        ]
+    refused(&root, OPEN_LINE);
+}
+
+/// §FS-config-v2.reader.5.strings.multi-line: a `"""` string a line break runs through is the
+/// open line's construct, refused as an unclosed array with its multi-line parenthetical.
+#[test]
+fn a_triple_quoted_string_over_a_break_is_refused_as_the_open_line() {
+    let root = v2(
+        "triple-break",
+        "\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n]\n",
     );
+    refused(&root, MULTI_LINE_OPEN);
+}
+
+/// §FS-config-v2.reader.5.strings.refusal: the first open line is the array's last, so of two
+/// `"""` strings over breaks the first is the one the refusal names.
+#[test]
+fn two_triple_quoted_strings_over_breaks_are_refused_at_the_first() {
+    let root = v2(
+        "two-triple-breaks",
+        "\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n  \"\"\"c\nd\"\"\",\n]\n",
+    );
+    refused(&root, MULTI_LINE_OPEN);
+}
+
+/// §FS-config-v2.reader.5.strings.refusal: a `"""` string over a break after a plain open line
+/// is never reached, so the plain open line is the refusal's.
+#[test]
+fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_is_refused_as_that_line() {
+    let root = v2(
+        "plain-then-triple",
+        "\n[schema.sources]\nexclude = [\n  \"a\nb\",\n  \"\"\"c\nd\"\"\",\n]\n",
+    );
+    refused(&root, OPEN_LINE);
 }
 
 /// Guard, green today and kept: strings that close at their end, an escaped quote, an
@@ -290,7 +225,7 @@ fn strings_that_close_at_their_end_earn_nothing() {
         "valid",
         "fetch = \"a\\\\\" # a comment\n\n[schema.sources]\nexclude = [\"a\\\"b\", \"c\\\\d\"]\n",
     );
-    assert_eq!(spec_kind(&root).0.as_deref(), Some("a\\"));
+    assert_eq!(spec_fetch(&root).as_deref(), Some("a\\"));
     assert_eq!(window_findings(&root), vec![]);
 }
 
@@ -302,11 +237,7 @@ fn a_value_refused_before_is_refused_as_before() {
         "target",
         "\n[schema.sources]\nexclude = [\"target\" \"a,b\"]\n",
     );
-    let Err(err) = load_config(&root) else {
-        panic!("the config is refused");
-    };
-    let err = format!("{err:#}");
-    assert!(err.ends_with("grund.toml:10: expected string"), "{err}");
+    refused(&root, "grund.toml:10: expected string");
 }
 
 /// Guard, green today and kept: version 1 keeps its reading for good and earns no

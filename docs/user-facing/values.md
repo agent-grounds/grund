@@ -388,19 +388,13 @@ kind, the kind clause names the component it is about, as
 ` — component 2: bound is a number, declared is a string; a number and a string are never equal`
 ([§FS-values.5.2.1](../functional-spec/FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind)).
 
-That line is the whole message from grund 0.22.0. In 0.21.0 the message earlier
-releases printed, which names the first unequal component by its own coordinate
-and quotes only its part, stays whole in front of it, followed by
-` — whole binding: `, and the line ends with
-`; this wording changes in grund 0.22.0` ([§FS-errors.3.9](../functional-spec/FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)):
-
-```text
-docs/offer.md:3: error: value mismatch for CONST-field-price.2: bound `EUR`, declared `USD` at values/field-price.md:3 — whole binding: value mismatch for CONST-field-price (component 2): bound `1200 EUR`, declared `1200 USD` at values/field-price.md:3; this wording changes in grund 0.22.0; change the literal to the declared value, or the declaration to the bound one
-```
-
-A script that matches a root-aimed line whole, or by the part before
-` — whole binding: `, should match `code == "value-mismatch"` instead, which
-does not move. A binding aimed at one component keeps the shorter message.
+That line is the whole message
+([§FS-errors.3.9.1](../functional-spec/FS-errors.md#391-the-final-templates)). grund 0.21.0 printed the message earlier releases
+printed, which names the first unequal component by its own coordinate and
+quotes only its part, whole in front of it, followed by ` — whole binding: `,
+and grund 0.22.0 dropped it ([§FS-errors.3.9](../functional-spec/FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)). A script that matches a root-aimed
+line should match `code == "value-mismatch"`, which does not move. A binding
+aimed at one component keeps the shorter message.
 
 When the literal splits into a different number of parts than the root has
 components, no component is at fault, so the finding names the root, quotes the

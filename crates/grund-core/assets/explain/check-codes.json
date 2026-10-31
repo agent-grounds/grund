@@ -225,104 +225,68 @@
  },
  {
   "code": "config-multiline-string",
-  "meaning": "A value in a version-2 config holds a multi-line string, which version 2 does not read; it is read for one more release as before, its quotes kept and a line break read as a space.",
-  "ramp": "grund 0.22.0, where a string across lines is refused as an unclosed array, and one on one line as expected string",
+  "meaning": "A value in a version-2 config held a multi-line string, which version 2 does not read, and was read for one more release as before; such a value is now refused when the config loads.",
+  "ramp": null,
   "2": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 0.22.0 and never fires"
    },
    "enabled": {
     "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "write the string on line {line} as one basic string"
+    "kind": "none",
+    "text": "it never fires"
    },
-   "note": "Until then the string is read as one line, its quotes kept, so the value is not the one TOML reads."
+   "note": null
   },
   "1": {
    "severity": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "spent",
+    "text": "spent from grund 0.22.0 and never fires"
    },
    "enabled": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "write the string on line {line} as one basic string"
+    "kind": "none",
+    "text": "it never fires"
    },
-   "note": "Until then the string is read as one line, its quotes kept, so the value is not the one TOML reads."
+   "note": null
   }
  },
  {
   "code": "config-not-toml",
-  "meaning": "A version-2 config holds text TOML refuses, such as a string in an array left open at the end of a line, or a string followed by more text after its closing quote, or a comma before an array's ] with no element before it, which grund still reads for one release.",
-  "ramp": "grund 0.22.0, where the array is refused as an unclosed array, and the string, or the array with a comma no element precedes, as expected string",
+  "meaning": "A version-2 config held text TOML refuses that grund read for one more release as the readers before it did; such text is now refused when the config loads.",
+  "ramp": null,
   "2": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 0.22.0 and never fires"
    },
    "enabled": {
     "kind": "always"
    },
    "fix": {
-    "kind": "cases",
-    "cases": [
-     {
-      "label": "open-line",
-      "text": "close the string on line {line}"
-     },
-     {
-      "label": "element",
-      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it, or a `,` between two strings"
-     },
-     {
-      "label": "scalar-or-key",
-      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it"
-     },
-     {
-      "label": "commas",
-      "text": "delete each comma on line {line} that has no element before it"
-     }
-    ]
+    "kind": "none",
+    "text": "it never fires"
    },
-   "note": "Until then the value is read as the readers before grund 0.21.0 read it, though every other tool that reads the file as TOML refuses it."
+   "note": null
   },
   "1": {
    "severity": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "spent",
+    "text": "spent from grund 0.22.0 and never fires"
    },
    "enabled": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "always"
    },
    "fix": {
-    "kind": "cases",
-    "cases": [
-     {
-      "label": "open-line",
-      "text": "close the string on line {line}"
-     },
-     {
-      "label": "element",
-      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it, or a `,` between two strings"
-     },
-     {
-      "label": "scalar-or-key",
-      "text": "end the string on line {line} at its closing quote: write `\\\"` for a quote inside it"
-     },
-     {
-      "label": "commas",
-      "text": "delete each comma on line {line} that has no element before it"
-     }
-    ]
+    "kind": "none",
+    "text": "it never fires"
    },
-   "note": "Until then the value is read as the readers before grund 0.21.0 read it, though every other tool that reads the file as TOML refuses it."
+   "note": null
   }
  },
  {

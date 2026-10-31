@@ -2,14 +2,15 @@
 //! (§FS-config-v2.reader.5.strings). An array the walk refuses as `unclosed array` names
 //! the first line that ended inside a string, whichever line of the array that is, and
 //! the four readers of a string agree on what a quote is (§FS-config.3.11); `config show`
-//! writes a line break inside a value as its escape (§FS-config.4.2). Through grund 0.21.x
-//! the run of commas before an array's `]` is taken off as before
-//! (§FS-config-v2.reader.5.commas.window).
+//! writes a line break inside a value as its escape (§FS-config.4.2). An array takes one
+//! trailing comma, after an element, and from grund 0.22.0 any other comma before its `]` is
+//! the element reader's to refuse (§FS-config-v2.reader.5.commas.refusal).
 
 use std::path::Path;
 
+use super::arrays::joined_value;
 use super::render;
-use super::walk::{Reader, joined_value, walk};
+use super::walk::{Reader, walk};
 
 /// The refusal the walk gives a `[schema.sources]` whose `exclude` is `value`, the key on
 /// line 2, or `None` when the walk reads it.
@@ -61,6 +62,21 @@ fn a_multi_line_string_names_what_version_2_does_not_read() {
     );
 }
 
+/// §FS-config-v2.reader.5.strings: three quotes in a row open a multi-line string, read as
+/// TOML reads one, so `""""a` leaves line 3 open, where reading quote by quote closed two
+/// empty strings there and named line 4 (#1091's review, R1-04).
+#[test]
+fn a_run_of_four_quotes_opens_a_multi_line_string_on_its_own_line() {
+    assert_eq!(
+        refusal("[\n\"\"\"\"a\nb\"\"\",\n\"c\",\n]\n"),
+        Some(
+            "grund.toml:2: unclosed array (a multi-line string opens on line 3, which \
+             version 2 does not read)"
+                .to_string()
+        )
+    );
+}
+
 /// Guard, green today and kept: an array whose strings all close on their own lines and
 /// whose `[` never closes is refused as before, with no parenthetical.
 #[test]
@@ -96,70 +112,74 @@ fn joined(text: &str) -> Option<String> {
     joined_value(first, 1, &mut lines).value
 }
 
-/// Guard, green today and kept through grund 0.21.x (§FS-config-v2.reader.5.commas.window):
-/// the whole run of adjacent commas before the `]` is taken off, as the readers before took
-/// it off, so every shape that loaded before reads the same value, and a run with whitespace
-/// inside it leaves the comma the element reader refuses (§FS-config-v2.reader.5.commas).
+/// §FS-config-v2.reader.5.commas: `joined_value` takes off at most one comma before the `]`,
+/// and only one with an element before it; every other comma stays for the element reader.
 #[test]
-fn the_run_of_commas_before_the_bracket_is_taken_off_as_before() {
-    for (text, value) in [
-        ("[\"ab\",,]", "[\"ab\"]"),
-        ("[\"ab\" ,, ]", "[\"ab\" ]"),
-        ("[\"ab\",,,]", "[\"ab\"]"),
-        ("[\n  \"ab\",,\n]", "[ \"ab\"]"),
-        ("[,]", "[]"),
-        ("[ , ]", "[ ]"),
-        ("[,,]", "[]"),
-        ("[\n  ,\n]", "[ ]"),
-        ("[\"ab\",]", "[\"ab\"]"),
-        ("[\"ab\" , ]", "[\"ab\" ]"),
-        ("[\n  \"ab\"\n  ,\n]", "[ \"ab\" ]"),
-        ("[]", "[]"),
-        ("[\"ab\", ,]", "[\"ab\", ]"),
-        ("[ , , ]", "[ , ]"),
-        ("[\n  \"ab\",\n  ,\n]", "[ \"ab\", ]"),
-        ("[,\"a\"]", "[,\"a\"]"),
-        ("[\"a\",,\"b\"]", "[\"a\",,\"b\"]"),
+fn only_one_trailing_comma_after_an_element_comes_off_before_the_bracket() {
+    for (text, off) in [
+        ("[\"ab\",,]", 0),
+        ("[\"ab\" ,, ]", 0),
+        ("[\"ab\",,,]", 0),
+        ("[\n  \"ab\",,\n]", 0),
+        ("[,]", 0),
+        ("[ , ]", 0),
+        ("[,,]", 0),
+        ("[\n  ,\n]", 0),
+        ("[\"ab\", ,]", 0),
+        ("[ , , ]", 0),
+        ("[\n  \"ab\",\n  ,\n]", 0),
+        ("[,\"a\"]", 0),
+        ("[\"a\",,\"b\"]", 0),
+        ("[\"ab\",]", 1),
+        ("[\"ab\" , ]", 1),
+        ("[\n  \"ab\"\n  ,\n]", 1),
+        ("[]", 0),
     ] {
-        assert_eq!(joined(text).as_deref(), Some(value), "{text:?}");
+        let value = joined(text).unwrap_or_else(|| panic!("{text:?} closes"));
+        let kept = value.matches(',').count();
+        assert_eq!(
+            kept + off,
+            text.matches(',').count(),
+            "{text:?} read as {value:?}"
+        );
     }
 }
 
-/// The line `joined_value` names for the first comma with no element before it in the run
-/// it takes off, for `text` read as the value of a key on line 1.
-fn commas(text: &str) -> Option<usize> {
-    let mut lines = text.lines().enumerate();
-    let (_, first) = lines.next().unwrap();
-    joined_value(first, 1, &mut lines).commas
-}
-
-/// §FS-config-v2.reader.5.commas.window: the run taken off names the line its first comma
-/// with no element before it stands on, which in an array written across lines is not the
-/// key's. The shapes the element reader refuses name one too: what keeps their warning from
-/// showing is that refusal, not this line.
+/// §FS-config-v2.reader.5.commas.refusal: the walk refuses each array whose text loaded through
+/// the window as `expected string` with 0.22.0's suffix, at its key's line, and each shape it
+/// refused before with the bare message.
 #[test]
-fn the_run_taken_off_names_the_line_of_its_first_comma_with_no_element_before_it() {
-    for (text, line) in [
-        ("[\"ab\",,]", 1),
-        ("[\"ab\" ,, ]", 1),
-        ("[\"ab\",,,]", 1),
-        ("[,]", 1),
-        ("[ , ]", 1),
-        ("[,,]", 1),
-        ("[\n  \"ab\",,\n]", 2),
-        ("[\n  ,\n]", 2),
-        ("[\"ab\", ,]", 1),
-        ("[ , , ]", 1),
-        ("[\n  \"ab\",\n  ,\n]", 3),
+fn a_comma_with_no_element_before_it_is_refused_naming_0_22_where_it_loaded_before() {
+    let became = "grund.toml:2: expected string; this became an error in grund 0.22.0";
+    for text in [
+        "[\"ab\",,]",
+        "[\"ab\" ,, ]",
+        "[\"ab\",,,]",
+        "[\n  \"ab\",,\n]",
+        "[,]",
+        "[ , ]",
+        "[,,]",
+        "[\n  ,\n]",
+        "[ # c\n  ,\n]",
     ] {
-        assert_eq!(commas(text), Some(line), "{text:?}");
+        assert_eq!(refusal(text).as_deref(), Some(became), "{text:?}");
+    }
+    for text in [
+        "[,\"a\"]",
+        "[\"a\",,\"b\"]",
+        "[\"ab\", ,]",
+        "[ , , ]",
+        "[\n  \"ab\",\n  ,\n]",
+    ] {
+        let bare = "grund.toml:2: expected string";
+        assert_eq!(refusal(text).as_deref(), Some(bare), "{text:?}");
     }
 }
 
-/// Guard (§FS-config-v2.reader.5.commas): the one trailing comma after an element, and an
-/// array with no comma before its `]`, name no line.
+/// Guard, green today and kept (§FS-config-v2.reader.5.commas): the one trailing comma after
+/// an element, and an array with no comma before its `]`, load.
 #[test]
-fn one_trailing_comma_after_an_element_names_no_line() {
+fn one_trailing_comma_after_an_element_loads() {
     for text in [
         "[]",
         "[ ]",
@@ -168,6 +188,6 @@ fn one_trailing_comma_after_an_element_names_no_line() {
         "[\"ab\" , ]",
         "[\n  \"ab\"\n  ,\n]",
     ] {
-        assert_eq!(commas(text), None, "{text:?}");
+        assert_eq!(refusal(text), None, "{text:?}");
     }
 }

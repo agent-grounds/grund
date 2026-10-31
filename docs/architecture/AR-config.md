@@ -410,12 +410,26 @@ this grund does not execute yet ([§FS-config-v2.rollout](../functional-spec/FS-
 moment it is met, by the file of its concern: `schema.rs` and `measures.rs`
 for `[schema.*]`, `rules.rs` for `[rules.*]`, and `presentation.rs` for
 `[presentation.*]` and `[workspace]`. Each of them reads a string, a scalar, a
-list's element or a quoted key, through `strings.rs`, which reads it as the
-readers before it did and records the first that closes early in each value for
-its warning ([§FS-config-v2.reader.6](../functional-spec/FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). An array reaches them with the run of
-commas before its `]` taken off by `walk.rs`, which names the first comma in
-that run with no element before it and records it once the elements load
-([§FS-config-v2.reader.5.commas.window](../functional-spec/FS-config-v2.md#reader5commaswindow-through-grund-021x-the-run-of-commas-before-the--is-taken-off-as-before-and-warns)). A key the table's handler does not admit
+list's element or a quoted key, through `strings.rs`, which refuses a string that
+closes early and records nothing. It keeps the reading of the readers before it
+for three callers and no more: the refusal's message, which ends with the release
+that made it one where that reading loads the value and is the bare `expected
+string` where it does not ([§FS-config-v2.reader.6.refusal](../functional-spec/FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)), the
+same question asked of an array refused at its open line, below, and `grund config migrate`,
+which names each string that closes early as version 1 reads it ([§FS-config-migrate.3.1.8](../functional-spec/FS-config-migrate.md#318-a-string-that-closes-early)). An array reaches them joined by
+`arrays.rs`, which refuses one whose line ends inside a string before any element is
+read, keeping the quote-at-a-time join of the readers before it, with their whole run of
+commas taken off, only so that `walk.rs` can read its elements through `strings.rs` as
+they read them and tell whether their window loaded the array
+([§FS-config-v2.reader.5.strings.refusal](../functional-spec/FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array)). Each line's comment is taken off a
+quote at a time before that, so only on a line holding a `"""` run, which version 2
+refuses on every reading, can comment text move which refusal is printed
+([§FS-config-v2.reader.5.strings](../functional-spec/FS-config-v2.md#reader5strings-a-string-closes-on-the-line-it-opens-on)). The array reaches the reader with at
+most one comma before its `]` taken off, the one trailing comma after an
+element; any other comma stays for the element reader, whose refusal of the
+empty element it leaves carries 0.22.0's suffix where the whole run's removal
+would have left none
+([§FS-config-v2.reader.5.commas.refusal](../functional-spec/FS-config-v2.md#reader5commasrefusal-from-grund-0220-a-comma-with-no-element-before-it-is-expected-string)). A key the table's handler does not admit
 is `unknown key`, and a repeated header or key is refused at its second line
 ([§FS-config-v2.reader.1](../functional-spec/FS-config-v2.md#reader1-tables-and-keys-are-closed), [§FS-config-v2.reader.2](../functional-spec/FS-config-v2.md#reader2-every-row-and-field-is-written-under-its-own-header)). Because every key is judged
 where it is written, the first refusal reported is the first one in the file

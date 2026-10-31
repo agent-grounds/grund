@@ -1,10 +1,12 @@
 //! Black-box: a version-2 string ends at its first unescaped quote (§FS-config-v2.reader.6).
-//! Ports grund.159's reproducer (#1088): through grund 0.21.x a scalar, an element or a quoted
-//! key whose string closes early is read as before and warns at its key's line, naming the
-//! string as written, the line it closes on and 0.22.0 (§FS-config-v2.reader.6.window,
-//! §FS-config-v2.checks.config-not-toml); a `"""` string on one line says version 2 does not
-//! read it (§FS-config-v2.reader.6.multi-line). Version 1 keeps its reading for good
-//! (§FS-config.5.2) and meets the rule at `config migrate` (§FS-config-migrate.3.1.8).
+//! Ports grund.159's reproducer (#1088) and #1094's: from grund 0.22.0 a scalar, an element or
+//! a quoted key whose string closes early is refused at its key's line as `expected string`,
+//! ending with the release that made it one, where it loaded through the 0.21.x window
+//! (§FS-config-v2.reader.6.refusal); a `"""` string on one line is refused with a parenthetical
+//! saying version 2 does not read it (§FS-config-v2.reader.6.multi-line). A value refused
+//! before keeps the bare message, and an array with an open line is refused for that line first
+//! (§FS-config-v2.reader.5.strings.refusal). Version 1 keeps its reading for good (§FS-config.5.2)
+//! and meets the rule at `config migrate` (§FS-config-migrate.3.1.8).
 
 use std::fs;
 use std::path::PathBuf;
@@ -18,30 +20,22 @@ const CODE: &str = "// Realizes \u{a7}SPEC-one.\nfn main() {}\n";
 const HEAD: &str = "grund_config_version = 2\n\n[schema.kinds.code]\nfolders = [\"src\"]\n\n\
                     [schema.kinds.SPEC]\nfiles = [\"specs/spec.md\"]\n";
 
-/// The `config-not-toml` warning for an element at the key on line `key`, whose string
-/// `text` closes early on line `close`.
-fn element(key: usize, text: &str, close: usize) -> String {
-    format!(
-        "warning: grund.toml:{key}: expected string, read for now as the one string `{text}`; \
-         end the string on line {close} at its closing quote: write `\\\"` for a quote inside \
-         it, or a `,` between two strings; this warning becomes an error in grund 0.22.0\n"
-    )
+/// The 0.22.0 refusal of a string that closes early in the value at line `key`, which
+/// loaded through the 0.21.x window (§FS-config-v2.reader.6.refusal).
+fn refusal(key: usize) -> String {
+    format!("error: grund.toml:{key}: expected string; this became an error in grund 0.22.0\n")
 }
 
-/// The `config-not-toml` warning for a scalar or a quoted key on line `key` whose string
-/// `text` closes early.
-fn scalar(key: usize, text: &str) -> String {
-    format!(
-        "warning: grund.toml:{key}: expected string, read for now as the one string `{text}`; \
-         end the string on line {key} at its closing quote: write `\\\"` for a quote inside \
-         it; this warning becomes an error in grund 0.22.0\n"
-    )
-}
+/// The 0.22.0 refusal of the array at line 10 whose string is open at the end of line 11,
+/// which loaded through the 0.21.x window (§FS-config-v2.reader.5.strings.refusal).
+const OPEN_LINE: &str = "error: grund.toml:10: unclosed array (a string is still open at the \
+                         end of line 11); this became an error in grund 0.22.0\n";
 
-/// The #1089 warning for the array at line 10 whose string is open at the end of line 11.
-const OPEN_LINE: &str = "warning: grund.toml:10: unclosed array (a string is still open at the \
-                         end of line 11), read for now with the line break as a space; close \
-                         the string on line 11; this warning becomes an error in grund 0.22.0\n";
+/// [`OPEN_LINE`] where the string open at line 11's end opened with `"""`
+/// (§FS-config-v2.reader.5.strings.multi-line).
+const MULTI_LINE_OPEN: &str = "error: grund.toml:10: unclosed array (a multi-line string opens \
+                               on line 11, which version 2 does not read); this became an error \
+                               in grund 0.22.0\n";
 
 /// The version-1 caution, the only finding a version-1 fixture here earns.
 const VERSION_1: &str = "warning: grund.toml is version 1; migrate it with grund config \
@@ -121,34 +115,14 @@ impl Fixture {
             .to_string()
     }
 
-    /// The window's whole contract for a config whose one finding is `warning`, code
-    /// `code` at line `line`: `check`, `config validate` and `config show` print it and
-    /// exit 0, `config show` prints `shown` under `[table]`, JSON carries the code, the
-    /// file and the line, and `--ignore` brings back `success`.
-    fn warns(&self, code: &str, line: usize, warning: &str, table: &str, shown: &str) {
-        self.expect(&["check"], 0, "", warning);
-        self.expect(&["config", "validate"], 0, "", warning);
-        let key = shown.split(" = ").next().unwrap();
-        assert_eq!(self.shown(table, key, warning), shown);
-        let run = self.run(&["check", "--format", "json"]);
-        assert_eq!(
-            (run.code, run.stdout.as_str()),
-            (Some(0), ""),
-            "{}",
-            run.stderr
-        );
-        let lines: Vec<&str> = run.stderr.lines().collect();
-        assert_eq!(lines.len(), 1, "{}", run.stderr);
-        for part in [
-            "\"severity\":\"warning\"".to_string(),
-            "\"path\":\"grund.toml\"".to_string(),
-            format!("\"line\":{line}"),
-            format!("\"code\":\"{code}\""),
-            "this warning becomes an error in grund 0.22.0".to_string(),
-        ] {
-            assert!(lines[0].contains(&part), "{part} missing from {}", lines[0]);
-        }
-        self.expect(&["check", "--ignore", code], 0, "success\n", "");
+    /// The refusal's whole contract for a config whose load fails with `refusal`: `check`
+    /// and `config show` exit 2, `config validate` 1, each printing it alone, and a JSON run
+    /// prints it as the same CLI-level error (§FS-config.4.3).
+    fn refuses(&self, refusal: &str) {
+        self.expect(&["check"], 2, "", refusal);
+        self.expect(&["config", "validate"], 1, "", refusal);
+        self.expect(&["config", "show"], 2, "", refusal);
+        self.expect(&["check", "--format", "json"], 2, "", refusal);
     }
 }
 
@@ -158,177 +132,87 @@ impl Drop for Fixture {
     }
 }
 
-/// grund.159's first case: `fetch = "one" "two"` still loads as the one string `one" "two`,
-/// and warns with the scalar's remedy, the `\"` half alone.
+/// grund.159's first case: `fetch = "one" "two"` loaded as the one string `one" "two` through
+/// 0.21.x, and is refused from 0.22.0 with the suffix.
 #[test]
-fn a_scalar_that_closes_early_warns_and_is_read_as_before() {
-    Fixture::v2("fetch = \"one\" \"two\"\n").warns(
-        "config-not-toml",
-        8,
-        &scalar(8, "one\" \"two"),
-        "schema.kinds.SPEC",
-        "fetch = \"one\\\" \\\"two\"",
-    );
+fn a_scalar_that_closes_early_is_refused() {
+    Fixture::v2("fetch = \"one\" \"two\"\n").refuses(&refusal(8));
 }
 
-/// grund.159's second case: `folders = ["a" "b"]`, a comma forgotten, still loads as the one
-/// folder `a" "b`, and warns with both halves of an element's remedy.
+/// grund.159's second case: `folders = ["a" "b"]`, a comma forgotten, is refused.
 #[test]
-fn an_element_that_closes_early_warns_and_is_read_as_before() {
-    Fixture::v2("folders = [\"a\" \"b\"]\n").warns(
-        "config-not-toml",
-        8,
-        &element(8, "a\" \"b", 8),
-        "schema.kinds.SPEC",
-        "folders = [\"a\\\" \\\"b\"]",
-    );
+fn an_element_that_closes_early_is_refused() {
+    Fixture::v2("folders = [\"a\" \"b\"]\n").refuses(&refusal(8));
 }
 
 /// grund.159's third case: a `[presentation.kinds]` title is a scalar like any other.
 #[test]
-fn a_presentation_title_that_closes_early_warns_and_is_read_as_before() {
-    Fixture::v2("\n[presentation.kinds.SPEC]\ntitle = \"one\" \"two\"\n").warns(
-        "config-not-toml",
-        10,
-        &scalar(10, "one\" \"two"),
-        "presentation.kinds.SPEC",
-        "title = \"one\\\" \\\"two\"",
-    );
+fn a_presentation_title_that_closes_early_is_refused() {
+    Fixture::v2("\n[presentation.kinds.SPEC]\ntitle = \"one\" \"two\"\n").refuses(&refusal(10));
 }
 
-/// §FS-config-v2.reader.6: a quoted key is a string of its own, and earns its own warning
-/// with the scalar's remedy.
+/// §FS-config-v2.reader.6.refusal: a quoted key is a string of its own, and is refused at
+/// its line.
 #[test]
-fn a_quoted_key_that_closes_early_warns_and_is_read_as_before() {
-    Fixture::v2("\n[schema.sources.extensions]\n\"md\" \"x\" = \"markdown\"\n").warns(
-        "config-not-toml",
-        10,
-        &scalar(10, "md\" \"x"),
-        "schema.sources.extensions",
-        "\"md\\\" \\\"x\" = \"markdown\"",
-    );
+fn a_quoted_key_that_closes_early_is_refused() {
+    Fixture::v2("\n[schema.sources.extensions]\n\"md\" \"x\" = \"markdown\"\n")
+        .refuses(&refusal(10));
 }
 
-/// §FS-config-v2.reader.6.multi-line: `title = """one"""` is TOML version 2 does not read;
-/// it loads as `""one""`, its quotes kept, and earns `config-multiline-string`.
+/// §FS-config-v2.reader.6.multi-line: `title = """one"""` is refused with the parenthetical
+/// that names the form, then the suffix.
 #[test]
-fn a_triple_quoted_string_on_one_line_warns_that_version_2_does_not_read_it() {
-    let warning = "warning: grund.toml:10: expected string (a multi-line string, which version 2 \
-                   does not read), read for now as `\"\"one\"\"`, its quotes kept; write the \
-                   string on line 10 as one basic string; this warning becomes an error in \
-                   grund 0.22.0\n";
-    Fixture::v2("\n[presentation.kinds.SPEC]\ntitle = \"\"\"one\"\"\"\n").warns(
-        "config-multiline-string",
-        10,
-        warning,
-        "presentation.kinds.SPEC",
-        "title = \"\\\"\\\"one\\\"\\\"\"",
-    );
+fn a_triple_quoted_string_on_one_line_is_refused_as_one_version_2_does_not_read() {
+    let refusal = "error: grund.toml:10: expected string (a multi-line string, which version 2 \
+                   does not read); this became an error in grund 0.22.0\n";
+    Fixture::v2("\n[presentation.kinds.SPEC]\ntitle = \"\"\"one\"\"\"\n").refuses(refusal);
 }
 
-/// §FS-config-v2.reader.6.window: in an array written across lines the warning stays at the
-/// key's line, and its remedy names line 12, where the string closes early.
+/// §FS-config-v2.reader.6.refusal: in an array written across lines the refusal stays at the
+/// key's line, as every value's does.
 #[test]
-fn an_element_on_a_later_line_names_the_line_it_closes_on() {
-    Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\",\n  \"b\" \"c\",\n]\n").warns(
-        "config-not-toml",
-        10,
-        &element(10, "b\" \"c", 12),
-        "schema.sources",
-        "exclude = [\"a\", \"b\\\" \\\"c\"]",
-    );
+fn an_element_on_a_later_line_is_refused_at_its_key() {
+    Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\",\n  \"b\" \"c\",\n]\n")
+        .refuses(&refusal(10));
 }
 
-/// §FS-config-v2.reader.6.window: a value earns one warning however many of its strings
-/// close early, naming the first.
+/// §FS-config-v2.reader.6.refusal: a value with two strings that close early is refused once.
 #[test]
-fn a_value_with_two_early_closes_earns_one_warning_naming_the_first() {
-    Fixture::v2("\n[schema.sources]\nexclude = [\"a\" \"b\", \"c\" \"d\"]\n").warns(
-        "config-not-toml",
-        10,
-        &element(10, "a\" \"b", 10),
-        "schema.sources",
-        "exclude = [\"a\\\" \\\"b\", \"c\\\" \\\"d\"]",
-    );
+fn a_value_with_two_early_closes_is_refused_once() {
+    Fixture::v2("\n[schema.sources]\nexclude = [\"a\" \"b\", \"c\" \"d\"]\n").refuses(&refusal(10));
 }
 
-/// §FS-config-v2.reader.6.window: an array with an open line and an early close earns both
-/// warnings, the early close naming the joined text and line 12. `config validate` and `config
-/// show` keep the config's order, the open line's first; `check` sorts them (§FS-errors.4.1).
+/// §FS-config-v2.reader.5.strings.refusal, §FS-config-v2.reader.6.refusal: an array with an
+/// open line ends there and is refused for it before any element is read, so its string that
+/// closes early earns no refusal of its own.
 #[test]
-fn an_open_line_and_an_early_close_earn_both_warnings() {
-    let fx = Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\nb\" \"c\",\n]\n");
-    let early = element(10, "a b\" \"c", 12);
-    fx.expect(&["check"], 0, "", &format!("{early}{OPEN_LINE}"));
-    let both = format!("{OPEN_LINE}{early}");
-    fx.expect(&["config", "validate"], 0, "", &both);
-    assert_eq!(
-        fx.shown("schema.sources", "exclude = ", &both),
-        "exclude = [\"a b\\\" \\\"c\"]"
-    );
-    let run = fx.run(&["check", "--format", "json"]);
-    let lines: Vec<&str> = run.stderr.lines().collect();
-    assert_eq!(lines.len(), 2, "{}", run.stderr);
-    assert!(
-        lines[0].contains("read for now as the one string"),
-        "{}",
-        lines[0]
-    );
-    assert!(
-        lines[1].contains("still open at the end of line 11"),
-        "{}",
-        lines[1]
-    );
-    for line in lines {
-        assert!(line.contains("\"code\":\"config-not-toml\""), "{line}");
-        assert!(line.contains("\"line\":10"), "{line}");
-    }
-    fx.expect(
-        &["check", "--ignore", "config-not-toml"],
-        0,
-        "success\n",
-        "",
-    );
+fn an_open_line_and_an_early_close_are_refused_as_the_open_line() {
+    Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\nb\" \"c\",\n]\n").refuses(OPEN_LINE);
 }
 
-/// Guard, green today and kept: a `"""` string a line break runs through is one construct,
-/// and earns #1089's warning alone once its lines are joined (§FS-config-v2.reader.6.multi-line).
+/// §FS-config-v2.reader.6.multi-line, §FS-config-v2.reader.5.strings.multi-line: a `"""` string
+/// a line break runs through is the open line's construct, refused as an unclosed array with
+/// its multi-line parenthetical, never as a string that closes early.
 #[test]
-fn a_triple_quoted_string_over_a_break_earns_only_the_open_line_warning() {
-    let fx = Fixture::v2("\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n]\n");
-    let warning = "warning: grund.toml:10: unclosed array (a multi-line string opens on line \
-                   11, which version 2 does not read), read for now with the line break as a \
-                   space; write the string on line 11 as one basic string; this warning \
-                   becomes an error in grund 0.22.0\n";
-    fx.expect(&["check"], 0, "", warning);
-    assert_eq!(
-        fx.shown("schema.sources", "exclude = ", warning),
-        "exclude = [\"\\\"\\\"a b\\\"\\\"\"]"
-    );
+fn a_triple_quoted_string_over_a_break_is_refused_as_the_open_line() {
+    Fixture::v2("\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n]\n")
+        .refuses(MULTI_LINE_OPEN);
 }
 
-/// §FS-config-v2.reader.6.multi-line: every `"""` string a line break runs through is #1089's
-/// construct, not only the one across the first open line, so two of them earn its one warning.
+/// §FS-config-v2.reader.5.strings.refusal: the first open line is the array's last, so of two
+/// `"""` strings over breaks the first is the one the refusal names.
 #[test]
-fn two_triple_quoted_strings_over_breaks_earn_only_the_open_line_warning() {
-    let fx = Fixture::v2(
-        "\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n  \"\"\"c\nd\"\"\",\n]\n",
-    );
-    let warning = "warning: grund.toml:10: unclosed array (a multi-line string opens on line \
-                   11, which version 2 does not read), read for now with the line break as a \
-                   space; write the string on line 11 as one basic string; this warning \
-                   becomes an error in grund 0.22.0\n";
-    fx.expect(&["check"], 0, "", warning);
-    fx.expect(&["config", "validate"], 0, "", warning);
+fn two_triple_quoted_strings_over_breaks_are_refused_at_the_first() {
+    Fixture::v2("\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n  \"\"\"c\nd\"\"\",\n]\n")
+        .refuses(MULTI_LINE_OPEN);
 }
 
-/// §FS-config-v2.reader.6.multi-line: a `"""` string over a break after a plain open line is
-/// #1089's construct too, and earns nothing beyond that array's one warning.
+/// §FS-config-v2.reader.5.strings.refusal: a `"""` string over a break after a plain open line
+/// is never reached, so the plain open line is the refusal's.
 #[test]
-fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_earns_only_that_warning() {
-    let fx = Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\nb\",\n  \"\"\"c\nd\"\"\",\n]\n");
-    fx.expect(&["check"], 0, "", OPEN_LINE);
-    fx.expect(&["config", "validate"], 0, "", OPEN_LINE);
+fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_is_refused_as_that_line() {
+    Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\nb\",\n  \"\"\"c\nd\"\"\",\n]\n")
+        .refuses(OPEN_LINE);
 }
 
 /// Guard, green today and kept: a value the readers before refused keeps its bare refusal

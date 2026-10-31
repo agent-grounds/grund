@@ -471,38 +471,32 @@ bound to it. A site binding `30 minutes` to the root `FS-session.1`, whose
 components are `45` and `minutes`, read exactly as a site binding `30` to the
 component `FS-session.1.1` does, so its author was sent to re-cite a citation
 that was right. The final message names the cited root and quotes the literal
-whole ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). Those are bytes a consumer may match, so the
-change takes the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather
+whole ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). Those were bytes a consumer may match, so the
+change took the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather
 than replacing the message outright (#1008).
 
-In `0.21.0` the complete legacy message stays a verbatim contiguous prefix: the
-component's canonical text, with its component-aimed [§FS-values.5.2.1](FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind) clause
-when the pair differs in kind. It is followed by ` — whole binding: `, the
-final message of [§FS-errors.3.9.1](FS-errors.md#391-the-final-templates), and the suffix `; this wording changes in
-grund 0.22.0`. For the site above:
+Its window opened in `0.21.0` and closed in `0.22.0` (#1118,
+[§DF-root-value-mismatch-wording-lands-in-0-22](../decisions/functional/DF-root-value-mismatch-wording-lands-in-0-22.md#df-root-value-mismatch-wording-lands-in-0-22-the-root-aimed-value-mismatch-wording-window-closes-in-0220)): through it the legacy message
+stood whole in front of the final one, joined by ` — whole binding: `, and the
+line ended `; this wording changes in grund 0.22.0` before its remedy. From
+`0.22.0` the message is [§FS-errors.3.9.1](FS-errors.md#391-the-final-templates)'s template alone. Two messages
+were never reworded, before, through or after the window: a component-aimed
+mismatch, and a root-aimed one whose part count differs from the component
+count, which already names the root and the literal as authored
+([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)).
 
-```text
-docs/operations.md:3: error: value mismatch for FS-session.1.1: bound `30`, declared `45` at requirements.md:11 — whole binding: value mismatch for FS-session.1 (component 1.1): bound `30 minutes`, declared `45 minutes` at requirements.md:11; this wording changes in grund 0.22.0; change the literal to the declared value, or the declaration to the bound one
-```
-
-In `0.22.0` the prefix and the suffix go, and the message is
-[§FS-errors.3.9.1](FS-errors.md#391-the-final-templates)'s template alone. Two messages are never reworded, before,
-through or after the window: a component-aimed mismatch, and a root-aimed one
-whose part count differs from the component count, which already names the root
-and the literal as authored ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)).
-
-Exact-line consumers migrate during the window to the stable
-`code == "value-mismatch"`; one that matches the legacy prefix reads what it read
-until `0.22.0`. The code, the error severity, the primary location, the one
-`sites` entry, the selectors and the exit verdict do not move, and the
-`--format json` `message` and the editor's diagnostic carry the bytes the text
-line carries ([§FS-errors.5.4](FS-errors.md#54-value-findings), [§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)).
+An exact-line consumer was to migrate during the window to the stable
+`code == "value-mismatch"`; one that matched the legacy prefix read what it
+read until `0.22.0`, and matches nothing from then on. The code, the error
+severity, the primary location, the one `sites` entry, the selectors and the
+exit verdict do not move, and the `--format json` `message` and the editor's
+diagnostic carry the bytes the text line carries ([§FS-errors.5.4](FS-errors.md#54-value-findings),
+[§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)).
 
 #### 3.9.1 The final templates
 
-From `0.22.0`, with the legacy prefix and the suffix gone, a root-aimed
-mismatch whose part count equals the component count is exactly the first line
-below, and the second where its one pair differs in kind:
+A root-aimed mismatch whose part count equals the component count is exactly
+the first line below, and the second where its one pair differs in kind:
 
 ```text
 value mismatch for <root> (component <section-path>): bound `<literal>`, declared `<joined>` at <site>; change the literal to the declared value, or the declaration to the bound one
@@ -510,7 +504,8 @@ value mismatch for <root> (component <section-path>): bound `<literal>`, declare
 ```
 
 [§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component) defines each slot and [§FS-values.5.2.1](FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind) the clause. For the site
-above:
+above, written at `docs/operations.md:3` with `45` declared at
+`requirements.md:11`:
 
 ```text
 docs/operations.md:3: error: value mismatch for FS-session.1 (component 1.1): bound `30 minutes`, declared `45 minutes` at requirements.md:11; change the literal to the declared value, or the declaration to the bound one
@@ -694,8 +689,8 @@ written and read is [§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read).
 | `broken-stub` | A stub's link does not lead to a declaration of its ID. | error | — | — | v2: one-home: {fix of `duplicate`, case `there`} ‖ excluded-pattern: move the target out of what {pattern} matches, or take {pattern} out of [schema.sources] exclude ‖ ignored: move the target out of what {file} ignores, or stop ignoring it there · v1: one-home: {fix of `duplicate`, case `there`} ‖ excluded-entry: move the target out of {entry}, or take {entry} out of [scan] exclude ‖ ignored: move the target out of what {file} ignores, or stop ignoring it there | — | [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) |
 | `chapter-cardinality` | A declaration has more or fewer chapters of a name than a rule's `have` sentence allows. | error, or a suggestion for a `should` or `should not` rule | — | v2: `form = "rule"` is set on a `[schema.kinds]` table or `--rule` is passed · v1: `rules = true` is set on a `[[kinds]]` row or `--rule` is passed | add, remove or retitle chapters until the count fits | — | [§FS-check.3.26](FS-check.md#326-chapter-cardinality) |
 | `citation-cardinality` | A declaration cites a target more or fewer times than a rule allows. | error, or a suggestion for a `should` or `should not` rule | — | v2: `form = "rule"` is set on a `[schema.kinds]` table or `--rule` is passed · v1: `rules = true` is set on a `[[kinds]]` row or `--rule` is passed | add or remove those citations until the count fits | — | [§FS-check.3.27](FS-check.md#327-citation-cardinality) |
-| `config-multiline-string` | A value in a version-2 config holds a multi-line string, which version 2 does not read; it is read for one more release as before, its quotes kept and a line break read as a space. | v2: warning · v1: not in version 1 | grund 0.22.0, where a string across lines is refused as an unclosed array, and one on one line as expected string | v2: — · v1: not in version 1 | write the string on line {line} as one basic string | Until then the string is read as one line, its quotes kept, so the value is not the one TOML reads. | [§FS-config-v2.checks.config-multiline-string](FS-config-v2.md#checksconfig-multiline-string-a-version-2-config-value-holds-a-multi-line-string) |
-| `config-not-toml` | A version-2 config holds text TOML refuses, such as a string in an array left open at the end of a line, or a string followed by more text after its closing quote, or a comma before an array's `]` with no element before it, which grund still reads for one release. | v2: warning · v1: not in version 1 | grund 0.22.0, where the array is refused as an unclosed array, and the string, or the array with a comma no element precedes, as expected string | v2: — · v1: not in version 1 | open-line: close the string on line {line} ‖ element: end the string on line {line} at its closing quote: write `\"` for a quote inside it, or a `,` between two strings ‖ scalar-or-key: end the string on line {line} at its closing quote: write `\"` for a quote inside it ‖ commas: delete each comma on line {line} that has no element before it | Until then the value is read as the readers before grund 0.21.0 read it, though every other tool that reads the file as TOML refuses it. | [§FS-config-v2.checks.config-not-toml](FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses) |
+| `config-multiline-string` | A value in a version-2 config held a multi-line string, which version 2 does not read, and was read for one more release as before; such a value is now refused when the config loads. | none — spent from grund 0.22.0 and never fires | — | — | none — it never fires | — | [§FS-config-v2.checks.config-multiline-string](FS-config-v2.md#checksconfig-multiline-string-a-version-2-config-value-holds-a-multi-line-string) |
+| `config-not-toml` | A version-2 config held text TOML refuses that grund read for one more release as the readers before it did; such text is now refused when the config loads. | none — spent from grund 0.22.0 and never fires | — | — | none — it never fires | — | [§FS-config-v2.checks.config-not-toml](FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses) |
 | `config-version-1` | A config file is read as version 1; the warning names the command that migrates it. | v2: not in version 2 · v1: warning | — | v2: not in version 2 · v1: a config file is read as version 1 | migrate {files} with grund config migrate --to 2 | — | [§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1) |
 | `conflict-marker` | A scanned file holds an unresolved merge-conflict block. | error | — | — | resolve it by hand | — | [§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict) |
 | `dangling` | A citation names an ID that no declaration declares. | error | — | — | near: did you mean {near}? ‖ near-escape: did you mean {near}? (or write {escape} if this is an illustration) ‖ escape: write {escape} if this is an illustration ‖ fetch: run grund fetch {id} ‖ pattern: a place is a path from the config root, not a pattern, so list each file or name the folder | — | [§FS-check.3.1](FS-check.md#31-dangling-citation) |

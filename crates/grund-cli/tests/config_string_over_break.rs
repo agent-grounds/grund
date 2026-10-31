@@ -1,11 +1,12 @@
 //! Black-box: a string in a version-2 array closes on the line it opens on
-//! (§FS-config-v2.reader.5.strings). Ports grund.160's reproducer (#1089): through grund
-//! 0.21.x an array a later line closes is read as before, the break as a space, and warns at
-//! its key's line naming the open line and 0.22.0 (§FS-config-v2.reader.5.strings.window,
-//! §FS-config-v2.checks.config-not-toml); a `"""` string says version 2 does not read it
-//! (§FS-config-v2.reader.5.strings.multi-line); an array that never closes names the open
-//! line in its `unclosed array` refusal (§FS-config-v2.reader.5); and `config show` writes a
-//! line break inside a value as `\n`, so its output loads back (§FS-config.4.2).
+//! (§FS-config-v2.reader.5.strings). Ports grund.160's reproducer (#1089) and #1118's: from
+//! grund 0.22.0 the open line is the array's last, so an array is refused at its key's line as
+//! `unclosed array`, naming the open line, and the release that made it one where the readers
+//! before would have loaded it (§FS-config-v2.reader.5.strings.refusal); a `"""` string says
+//! version 2 does not read it (§FS-config-v2.reader.5.strings.multi-line); an array they refused
+//! too, one that never closes among them, keeps its bare refusal; `config-not-toml` and
+//! `config-multiline-string` are spent (§FS-config-v2.checks.config-not-toml); and `config show`
+//! writes a line break inside a value as `\n`, so its output loads back (§FS-config.4.2).
 
 use std::fs;
 use std::path::PathBuf;
@@ -19,18 +20,17 @@ const CODE: &str = "// Realizes \u{a7}SPEC-one.\nfn main() {}\n";
 const HEAD: &str = "grund_config_version = 2\n\n[schema.kinds.SPEC]\nfiles = [\"specs/spec.md\"]\n\n\
                     [schema.kinds.code]\nfolders = [\"src\"]\n\n[schema.sources]\nexclude = ";
 
-/// The `config-not-toml` warning for the array at line 10 whose string is open at the end
-/// of line `open`.
-fn not_toml(open: usize) -> String {
+/// The 0.22.0 refusal of the array at line 10 whose string is open at the end of line
+/// `open`, which loaded through the 0.21.x window (§FS-config-v2.reader.5.strings.refusal).
+fn became(open: usize) -> String {
     format!(
-        "warning: grund.toml:10: unclosed array (a string is still open at the end of line \
-         {open}), read for now with the line break as a space; close the string on line {open}; \
-         this warning becomes an error in grund 0.22.0\n"
+        "error: grund.toml:10: unclosed array (a string is still open at the end of line \
+         {open}); this became an error in grund 0.22.0\n"
     )
 }
 
-/// The refusal of the array at line 10 that no line closes, its string open at the end of
-/// line `open`.
+/// The refusal of the array at line 10 that the readers before refused too, its string open
+/// at the end of line `open`.
 fn unclosed(open: usize) -> String {
     format!(
         "error: grund.toml:10: unclosed array (a string is still open at the end of line \
@@ -90,6 +90,17 @@ impl Fixture {
         );
     }
 
+    /// The refusal's whole contract (§FS-config.4.3): `check` and `config show` exit 2 and
+    /// `config validate` 1, each printing `refusal` alone, and neither `--format json` nor
+    /// `--ignore config-not-toml` changes it, because a refused load is no finding.
+    fn refused(&self, refusal: &str) {
+        self.expect(&["check"], 2, "", refusal);
+        self.expect(&["config", "validate"], 1, "", refusal);
+        self.expect(&["config", "show"], 2, "", refusal);
+        self.expect(&["check", "--format", "json"], 2, "", refusal);
+        self.expect(&["check", "--ignore", "config-not-toml"], 2, "", refusal);
+    }
+
     /// `config show`'s `exclude` line under `[schema.sources]`, requiring exit 0 and
     /// `stderr` exactly.
     fn shown_exclude(&self, stderr: &str) -> String {
@@ -115,106 +126,100 @@ impl Drop for Fixture {
     }
 }
 
-/// grund.160's first case: `"a` / `b",` still loads as `a b`, and every command that reports
-/// the config's own findings warns at the key's line, naming line 11 and 0.22.0.
+/// grund.160's first case, §FS-config-v2.reader.5.strings.refusal: `"a` / `b",` loaded as
+/// `a b` through 0.21.x, and from 0.22.0 its open line, line 11, ends the array, which is
+/// refused at its key's line, naming that line and 0.22.0, where `config-not-toml` warned
+/// (§FS-config-v2.checks.config-not-toml.1).
 #[test]
-fn a_string_over_a_break_warns_and_is_read_as_before() {
-    let fx = Fixture::excluding("[\n  \"a\nb\",\n]\n");
-    fx.expect(&["check"], 0, "", &not_toml(11));
-    fx.expect(&["config", "validate"], 0, "", &not_toml(11));
-    assert_eq!(fx.shown_exclude(&not_toml(11)), "exclude = [\"a b\"]");
+fn a_string_over_a_break_is_refused_naming_its_open_line() {
+    Fixture::excluding("[\n  \"a\nb\",\n]\n").refused(&became(11));
 }
 
-/// grund.160's second case: since #1083 kept a comma inside a string, `"a,` / `b",` loads
-/// too, as `a, b`, and warns the same way.
+/// grund.160's second case, §FS-config-v2.reader.5.strings.refusal: `"a,` / `b",`, which
+/// loaded as `a, b`, is refused the same way.
 #[test]
-fn a_string_holding_a_comma_over_a_break_warns_and_is_read_as_before() {
-    let fx = Fixture::excluding("[\n  \"a,\nb\",\n]\n");
-    fx.expect(&["check"], 0, "", &not_toml(11));
-    assert_eq!(fx.shown_exclude(&not_toml(11)), "exclude = [\"a, b\"]");
+fn a_string_holding_a_comma_over_a_break_is_refused() {
+    Fixture::excluding("[\n  \"a,\nb\",\n]\n").refused(&became(11));
 }
 
-/// The key's own line can be the open line, and only the first open line is named.
+/// §FS-config-v2.reader.5.strings: the key's own line can be the open line, and the first
+/// open line is the array's last, so it is the one named.
 #[test]
-fn the_warning_names_the_first_line_that_ends_inside_a_string() {
-    Fixture::excluding("[\"a\nb\"]\n").expect(&["check"], 0, "", &not_toml(10));
-    Fixture::excluding("[\n  \"a\n  b\n  c\",\n]\n").expect(&["check"], 0, "", &not_toml(11));
+fn the_refusal_names_the_first_line_that_ends_inside_a_string() {
+    Fixture::excluding("[\"a\nb\"]\n").refused(&became(10));
+    Fixture::excluding("[\n  \"a\n  b\n  c\",\n]\n").refused(&became(11));
 }
 
-/// A `\"` at a line's end escapes the quote, so the string is open there: `"a\"` / `b",`
-/// is read as `a" b` and warns at line 11.
+/// §FS-config-v2.reader.5.strings: a `\"` at a line's end escapes the quote, so the string
+/// is open there, and `"a\"` / `b",` is refused naming line 11.
 #[test]
 fn an_escaped_quote_at_a_line_end_leaves_the_string_open() {
-    let fx = Fixture::excluding("[\n  \"a\\\"\n  b\",\n]\n");
-    fx.expect(&["check"], 0, "", &not_toml(11));
-    assert_eq!(fx.shown_exclude(&not_toml(11)), "exclude = [\"a\\\" b\"]");
+    Fixture::excluding("[\n  \"a\\\"\n  b\",\n]\n").refused(&became(11));
 }
 
-/// §FS-config-v2.checks.config-not-toml: the warning is one JSON finding with its code, the
-/// config file and the key's line; `--ignore` brings back `success` and `--only` selects it.
-/// It names 0.22.0 as the release it becomes the refusal in (§FS-config-v2.checks.config-not-toml.1).
+/// §FS-config-v2.reader.5.strings.multi-line: a string opened with `"""` is TOML, so the
+/// refusal says version 2 does not read it, with the suffix, because it loaded through the
+/// window as `""a b""`.
 #[test]
-fn the_warning_is_a_selectable_finding_with_its_path_and_line() {
-    let fx = Fixture::excluding("[\n  \"a\nb\",\n]\n");
-    let run = fx.run(&["check", "--format", "json"]);
-    assert_eq!(
-        (run.code, run.stdout.as_str()),
-        (Some(0), ""),
-        "{}",
-        run.stderr
-    );
-    let lines: Vec<&str> = run.stderr.lines().collect();
-    assert_eq!(lines.len(), 1, "{}", run.stderr);
-    for part in [
-        "\"severity\":\"warning\"",
-        "\"path\":\"grund.toml\"",
-        "\"line\":10",
-        "\"code\":\"config-not-toml\"",
-        "a string is still open at the end of line 11",
-        "this warning becomes an error in grund 0.22.0",
-    ] {
-        assert!(lines[0].contains(part), "{part} missing from {}", lines[0]);
+fn a_multi_line_string_over_a_break_is_refused_as_one_version_2_does_not_read() {
+    let refusal = "error: grund.toml:10: unclosed array (a multi-line string opens on line 11, \
+                   which version 2 does not read); this became an error in grund 0.22.0\n";
+    Fixture::excluding("[\n  \"\"\"a\nb\"\"\",\n]\n").refused(refusal);
+}
+
+/// §FS-config-v2.reader.5.strings, §FS-config-v2.reader.5.strings.multi-line: three quotes in a
+/// row open a multi-line string, so `""""a` leaves line 11 open, the line TOML names, where
+/// reading quote by quote named line 12 (#1091's review, R1-04). The readers before did not
+/// close the array either, so the refusal claims no release.
+#[test]
+fn a_run_of_four_quotes_opens_a_multi_line_string_on_its_own_line() {
+    let refusal = "error: grund.toml:10: unclosed array (a multi-line string opens on line 11, \
+                   which version 2 does not read)\n";
+    Fixture::excluding("[\n\"\"\"\"a\nb\"\"\",\n\"c\",\n]\n").refused(refusal);
+}
+
+/// §FS-config-v2.reader.5.strings.refusal: the suffix says the readers before loaded the array,
+/// their reading decides it end to end, so `"""a"`, in which reading quote by quote met no open
+/// line, loaded as `""a` and names 0.22.0, and `"a` / `b", 1,`, which that reading closed and
+/// then refused for its `1`, claims no release.
+#[test]
+fn the_refusal_names_0_22_exactly_where_the_readers_before_loaded_the_array() {
+    let refusal = "error: grund.toml:10: unclosed array (a multi-line string opens on line 11, \
+                   which version 2 does not read); this became an error in grund 0.22.0\n";
+    Fixture::excluding("[\n  \"\"\"a\"\n]\n").refused(refusal);
+    Fixture::excluding("[\n  \"a\nb\", 1,\n]\n").refused(&unclosed(11));
+}
+
+/// §FS-config-v2.reader.5.strings: a line's `#` comment is found a quote at a time, so on a line
+/// holding a `"""` run comment text can move the refusal: in `"""a"b""", # "x` the `#` falls
+/// inside a string read quote by quote, and the comment's quote leaves line 11 open, where TOML
+/// reads the string `a"b` and a comment. The readers before refused it too.
+#[test]
+fn a_comment_beside_a_triple_quoted_string_is_found_a_quote_at_a_time() {
+    Fixture::excluding("[\n  \"\"\"a\"b\"\"\", # \"x\n]\n").refused(&unclosed(11));
+}
+
+/// §FS-config-v2.checks.config-not-toml, §FS-config-v2.checks.config-multiline-string: from
+/// 0.22.0 nothing fires either code, so each is spent and stays
+/// (§FS-config-v2.checks.config-not-toml.1): `--ignore` still accepts it and drops nothing, and
+/// `--only` judges nothing and says so, holding back `success` (§FS-check.1.4.1).
+#[test]
+fn both_codes_are_spent_and_say_so_when_selected() {
+    let fx = Fixture::excluding("[\n  \"a,b\",\n  \"c\",\n]\n");
+    for code in ["config-not-toml", "config-multiline-string"] {
+        fx.expect(&["check", "--ignore", code], 0, "success\n", "");
+        let off = format!(
+            "warning: --only {code} judged nothing \u{2014} the check is spent from grund 0.22.0 \
+             and never fires\n"
+        );
+        fx.expect(&["check", "--only", code], 0, "", &off);
     }
-    fx.expect(
-        &["check", "--ignore", "config-not-toml"],
-        0,
-        "success\n",
-        "",
-    );
-    fx.expect(
-        &["check", "--only", "config-not-toml"],
-        0,
-        "",
-        &not_toml(11),
-    );
 }
 
-/// §FS-config-v2.reader.5.strings.multi-line: a string opened with `"""` is TOML, so it
-/// is not `config-not-toml`; it says version 2 does not read it, and loads as before.
-/// Its code is its own (§FS-config-v2.checks.config-multiline-string).
-#[test]
-fn a_multi_line_string_warns_that_version_2_does_not_read_it() {
-    let fx = Fixture::excluding("[\n  \"\"\"a\nb\"\"\",\n]\n");
-    let warning = "warning: grund.toml:10: unclosed array (a multi-line string opens on line \
-                   11, which version 2 does not read), read for now with the line break as a \
-                   space; write the string on line 11 as one basic string; this warning \
-                   becomes an error in grund 0.22.0\n";
-    fx.expect(&["check"], 0, "", warning);
-    assert_eq!(
-        fx.shown_exclude(warning),
-        "exclude = [\"\\\"\\\"a b\\\"\\\"\"]"
-    );
-    let run = fx.run(&["check", "--format", "json"]);
-    assert!(
-        run.stderr.contains("\"code\":\"config-multiline-string\""),
-        "{}",
-        run.stderr
-    );
-}
-
-/// An array that never closes is refused as before, at its key's line, now naming its open
-/// line; the `#` on the line after it is never read as a comment that swallows the quote,
-/// and the refusal claims no release, because it was refused before.
+/// Guard, green today and kept (§FS-config-v2.reader.5.strings.refusal): an array the readers
+/// before never closed is refused as before, at its key's line, naming its open line; the `#`
+/// on the line after it is never read as a comment that swallows the quote, and the refusal
+/// claims no release, because it was refused before.
 #[test]
 fn an_array_that_never_closes_names_its_open_line() {
     let fx = Fixture::excluding("[\n  \"a\n#b\",\n]\n");

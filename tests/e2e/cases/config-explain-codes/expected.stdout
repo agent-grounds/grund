@@ -4,8 +4,8 @@ agents-init: An agent entrypoint such as AGENTS.md lacks the grund init block it
 broken-stub: A stub's link does not lead to a declaration of its ID.
 chapter-cardinality: A declaration has more or fewer chapters of a name than a rule's have sentence allows.
 citation-cardinality: A declaration cites a target more or fewer times than a rule allows.
-config-multiline-string: A value in a version-2 config holds a multi-line string, which version 2 does not read; it is read for one more release as before, its quotes kept and a line break read as a space.
-config-not-toml: A version-2 config holds text TOML refuses, such as a string in an array left open at the end of a line, or a string followed by more text after its closing quote, or a comma before an array's ] with no element before it, which grund still reads for one release.
+config-multiline-string: A value in a version-2 config held a multi-line string, which version 2 does not read, and was read for one more release as before; such a value is now refused when the config loads.
+config-not-toml: A version-2 config held text TOML refuses that grund read for one more release as the readers before it did; such text is now refused when the config loads.
 conflict-marker: A scanned file holds an unresolved merge-conflict block.
 dangling: A citation names an ID that no declaration declares.
 declaration-near-miss: A heading opens like a declaration, but its ID does not match its kind's ID format.

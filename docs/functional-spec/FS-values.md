@@ -196,7 +196,7 @@ docs/offer.md:3: error: invalid value binding: CONST-head-office cannot be bound
 
 The refusal belongs to the root-aimed spelling, never to the value: the declaration stays valid, and the component-aimed binding of the same component compares exactly as before. The cited root is rendered as a mismatch renders its coordinate ([§FS-values.5.2](FS-values.md#52-fixed-value-errors)), without a component.
 
-For a value of one component the two spellings are equivalent in verdict wherever the root-aimed one is admitted, and only in verdict: each finding names what its own site wrote. A literal with no ASCII space agrees or disagrees exactly as the `.1` spelling does, but a disagreement at the root names the root and its component apart, as `CONST-floor (component 1)`, where the `.1` spelling's names the coordinate `CONST-floor.1` ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). Until grund 0.22.0 the root's message carries the `.1` spelling's whole in front of that ([§FS-errors.3.9](FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)). A literal with a space gives the same verdict, but its two or more parts outnumber the one component, so the finding names the root:
+For a value of one component the two spellings are equivalent in verdict wherever the root-aimed one is admitted, and only in verdict: each finding names what its own site wrote. A literal with no ASCII space agrees or disagrees exactly as the `.1` spelling does, but a disagreement at the root names the root and its component apart, as `CONST-floor (component 1)`, where the `.1` spelling's names the coordinate `CONST-floor.1` ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). A literal with a space gives the same verdict, but its two or more parts outnumber the one component, so the finding names the root:
 
 ```text
 docs/offer.md:9: error: value mismatch for DOC-offer.1: bound `45 kg`, declared `45` at docs/offer.md:12; change the literal to the declared value, or the declaration to the bound one
@@ -232,7 +232,7 @@ Three fixed-severity errors are reported and exit `1`:
 - `invalid-value-binding` identifies an attempted delimited binding whose grammar or marked-root relationship is invalid.
 - `value-mismatch` identifies a valid binding whose authored and declared components are unequal under [§FS-values.4](FS-values.md#4-exact-equality).
 
-They are errors regardless of `strict` or `--suggestions` and are never suggestions. A component-aimed mismatch uses this canonical lowercase, no-period text, with the declaration site in both text and structured forms; a root-aimed one names its root around the same text, as [§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component) says:
+They are errors regardless of `strict` or `--suggestions` and are never suggestions. A component-aimed mismatch uses this canonical lowercase, no-period text, with the declaration site in both text and structured forms; a root-aimed one is the same text for the cited root in place of a component, quoting the literal and the joined components whole and, where each part has a component, naming the first unequal one, as [§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component) says:
 
 ```text
 docs/offer.md:7: error: value mismatch for CONST-field-price.1: bound `1250`, declared `1200` at values/field-price.md:2; change the literal to the declared value, or the declaration to the bound one
@@ -250,7 +250,7 @@ Neither component gains quotes its own source does not carry: the backticks keep
 
 A mismatch whose two components are the same kind appends no clause, and a component-aimed one prints the canonical text above unchanged, to the byte; naming `number` twice tells a reader nothing the two values do not already show. The clause is appended after a complete, unchanged message, so it ships in one release under [§FS-errors.3](FS-errors.md#3-message-text) and no [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) window is owed: the affected consumer is one matching a mixed-kind `value-mismatch` line whole, and its migration is the stable `code`.
 
-A component-aimed mismatch keeps this clause unchanged, to the byte: its line names one component, so the clause can only be about that pair. A root-aimed mismatch names a whole literal and a joined declaration beside the one component it reports ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)), and those two can print the same bytes, or differ, while the pair differs in kind. So its root form says which pair the kinds belong to: ` — component <section-path>: bound is a <kind>, declared is a <kind>; a number and a string are never equal`, where `<section-path>` is the one the line already names and the kinds are those of the first unequal component and the part bound to it. A JSON root `["2022", "AD"]` bound whole as `2022 AD` reads, in its final form:
+A component-aimed mismatch keeps this clause unchanged, to the byte: its line names one component, so the clause can only be about that pair. A root-aimed mismatch names a whole literal and a joined declaration beside the one component it reports ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)), and those two can print the same bytes, or differ, while the pair differs in kind. So its root form says which pair the kinds belong to: ` — component <section-path>: bound is a <kind>, declared is a <kind>; a number and a string are never equal`, where `<section-path>` is the one the line already names and the kinds are those of the first unequal component and the part bound to it. A JSON root `["2022", "AD"]` bound whole as `2022 AD` reads:
 
 ```text
 docs/record.md:9: error: value mismatch for QTY-era (component 1): bound `2022 AD`, declared `2022 AD` at values/era.json:2 — component 1: bound is a number, declared is a string; a number and a string are never equal; change the literal to the declared value, or the declaration to the bound one
@@ -268,12 +268,6 @@ value mismatch for <root> (component <section-path>): bound `<literal>`, declare
 
 ```text
 docs/offer.md:3: error: value mismatch for CONST-field-price (component 2): bound `1200 EUR`, declared `1200 USD` at values/field-price.md:3; change the literal to the declared value, or the declaration to the bound one
-```
-
-That line is the template alone from grund 0.22.0. Until then the message earlier releases printed stays whole in front of it ([§FS-errors.3.9](FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)). That message is the canonical text for the first unequal component by its own coordinate, with that pair's [§FS-values.5.2.1](FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind) clause in its component-aimed form when the kinds differ. It is followed by ` — whole binding: `, the template, and `; this wording changes in grund 0.22.0`. In 0.21.0 the line above reads:
-
-```text
-docs/offer.md:3: error: value mismatch for CONST-field-price.2: bound `EUR`, declared `USD` at values/field-price.md:3 — whole binding: value mismatch for CONST-field-price (component 2): bound `1200 EUR`, declared `1200 USD` at values/field-price.md:3; this wording changes in grund 0.22.0; change the literal to the declared value, or the declaration to the bound one
 ```
 
 When the part count differs from the component count no component is at fault, so the finding names the root as [§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root) renders it, quotes the literal as authored, and quotes the components joined by one ASCII space, each as the canonical text prints a declared component. It keeps the canonical shape word for word, carries component 1's declaration site, which every valid root has, and appends no kind clause:

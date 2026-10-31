@@ -1,12 +1,8 @@
 //! What a loaded config carries on its own (§AR-system.2.9): the redundant
 //! discovery pair (§FS-check.4.3), the deprecated `.agents/` location
-//! (§FS-check.4.11), a file read as version 1
-//! (§FS-check.checks.config-version-1), a version-2 array read across a
-//! string open at a line's end or with a comma with no element before it
-//! taken off (§FS-config-v2.reader.5.commas.window), and a version-2 string
-//! read past its closing quote (§FS-config-v2.checks.config-not-toml,
-//! §FS-config-v2.checks.config-multiline-string), all known from the file the
-//! run read rather than from the walk.
+//! (§FS-check.4.11) and a file read as version 1
+//! (§FS-check.checks.config-version-1), all known from the file the run read
+//! rather than from the walk.
 //!
 //! They are data because the published `config_warnings` reads them
 //! (§FS-config.4.1) and so does the run beside them. Neither prints: the
@@ -112,125 +108,13 @@ fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Dia
     })
 }
 
-/// §FS-config-v2.reader.5.strings.window, §FS-config-v2.reader.5.commas.window,
-/// §FS-config-v2.reader.6.window: the clause each window's warning ends with, naming the
-/// release from which the value is refused instead (§FS-config-v2.reader.5.strings.refusal,
-/// §FS-config-v2.reader.5.commas.refusal, §FS-config-v2.reader.6.refusal).
-const STRINGS_WINDOW_CLAUSE: &str = "this warning becomes an error in grund 0.22.0";
-
-/// §FS-config-v2.checks.config-not-toml, §FS-config-v2.checks.config-multiline-string:
-/// one warning per array the version-2 reader read across a string still open at a
-/// line's end. Its message is the refusal the array becomes, what it is read as
-/// until then, the remedy and the release (§REQ-backwards-compatibility.2), behind
-/// the `<config>:<line>:` breadcrumb that refusal prints (§FS-errors.2.2.1). It
-/// anchors at the same key's line, so JSON carries the line too.
-fn string_over_break_warnings(config: &Config) -> impl Iterator<Item = Diagnostic> + '_ {
-    config.project().strings_over_breaks.iter().map(|over| {
-        let (at, open) = (&over.at, over.open);
-        let (code, remedy) = if open.multi_line {
-            let remedy = remedies::config_multiline_string(open.line);
-            (Code::CONFIG_MULTILINE_STRING, remedy)
-        } else {
-            let remedy = remedies::config_not_toml_open_line(open.line);
-            (Code::CONFIG_NOT_TOML, remedy)
-        };
-        Diagnostic {
-            code,
-            path: Some(at.path.clone()),
-            line: Some(at.line),
-            column: None,
-            message: format!(
-                "{}:{}: unclosed array{}, read for now with the line break as a space; \
-                 {remedy}; {STRINGS_WINDOW_CLAUSE}",
-                format_path(&at.path),
-                at.line,
-                open.parenthetical()
-            ),
-            sites: Vec::new(),
-            authority: Vec::new(),
-        }
-    })
-}
-
-/// §FS-config-v2.checks.config-not-toml: one warning per array the version-2 reader read
-/// with a comma with no element before it taken off before its `]`
-/// (§FS-config-v2.reader.5.commas.window), at its key's line, naming the line of the first
-/// such comma. Pushed once the array's elements load, so after its open-line warning and
-/// before its early close's in the config's order.
-fn comma_without_element_warnings(config: &Config) -> impl Iterator<Item = Diagnostic> + '_ {
-    config
-        .project()
-        .commas_without_elements
-        .iter()
-        .map(|commas| {
-            let at = &commas.at;
-            Diagnostic {
-                code: Code::CONFIG_NOT_TOML,
-                path: Some(at.path.clone()),
-                line: Some(at.line),
-                column: None,
-                message: format!(
-                    "{}:{}: expected string, read for now with every comma before the `]` taken \
-                 off; {}; {STRINGS_WINDOW_CLAUSE}",
-                    format_path(&at.path),
-                    at.line,
-                    remedies::config_not_toml_commas(commas.line)
-                ),
-                sites: Vec::new(),
-                authority: Vec::new(),
-            }
-        })
-}
-
-/// §FS-config-v2.checks.config-not-toml, §FS-config-v2.checks.config-multiline-string:
-/// one warning per value, and per quoted key, the version-2 reader read past a string's
-/// closing quote (§FS-config-v2.reader.6.window), or whose `"""` string it read on one
-/// line (§FS-config-v2.reader.6.multi-line). Its message is the refusal the value
-/// becomes, the string as it is read until then, the remedy for the line the string
-/// closes on and the release, behind the `<config>:<line>:` breadcrumb of the key's
-/// line, which JSON carries too. Pushed after an array's open-line warning, as the
-/// reader meets the two (§FS-config-v2.reader.6.window).
-fn string_closes_early_warnings(config: &Config) -> impl Iterator<Item = Diagnostic> + '_ {
-    config.project().strings_closing_early.iter().map(|early| {
-        let (at, text, line) = (&early.at, &early.text, early.line);
-        let (code, refusal, read, remedy) = if early.multi_line {
-            let refusal = " (a multi-line string, which version 2 does not read)";
-            let read = format!("`{text}`, its quotes kept");
-            let remedy = remedies::config_multiline_string(line);
-            (Code::CONFIG_MULTILINE_STRING, refusal, read, remedy)
-        } else {
-            let read = format!("the one string `{text}`");
-            let remedy = if early.element {
-                remedies::config_not_toml_element(line)
-            } else {
-                remedies::config_not_toml_scalar_or_key(line)
-            };
-            (Code::CONFIG_NOT_TOML, "", read, remedy)
-        };
-        Diagnostic {
-            code,
-            path: Some(at.path.clone()),
-            line: Some(at.line),
-            column: None,
-            message: format!(
-                "{}:{}: expected string{refusal}, read for now as {read}; {remedy}; \
-                 {STRINGS_WINDOW_CLAUSE}",
-                format_path(&at.path),
-                at.line,
-            ),
-            sites: Vec::new(),
-            authority: Vec::new(),
-        }
-    })
-}
-
 /// The findings a loaded config carries on its own — the redundant discovery
-/// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11),
-/// a file read as version 1 (§FS-check.checks.config-version-1) and the
-/// version-2 window's warnings (§FS-config-v2.checks.config-not-toml), in that
+/// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11)
+/// and a file read as version 1 (§FS-check.checks.config-version-1), in that
 /// order, which the report then sorts (§FS-check.checks.config-version-1.1). All
 /// are known from the file the run read rather than from the walk, which is why
-/// they arrive together.
+/// they arrive together. The version-2 reader's window warnings are spent from
+/// grund 0.22.0 (§FS-config-v2.checks.config-not-toml).
 ///
 /// One list rather than a call each at each site: `grund check` names them per
 /// project and `grund config validate` and `grund config show` name them for
@@ -244,7 +128,4 @@ pub(super) fn config_diagnostics<'a>(
         .into_iter()
         .chain(deprecated_config_location_warning(config))
         .chain(config_version_1_warning(config, display))
-        .chain(string_over_break_warnings(config))
-        .chain(comma_without_element_warnings(config))
-        .chain(string_closes_early_warnings(config))
 }

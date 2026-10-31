@@ -224,21 +224,34 @@ fn an_unclosed_array_of_another_key_leaves_the_claim_answered() {
     }
 }
 
-/// Guard, green today and kept through grund 0.21.x (§FS-config-v2.reader.5.strings.window,
-/// §FS-workspace.6.1.7.5): a `members` list whose string runs over a line break gives the
-/// climb the entry the config reader loads, `project/packages/ hub`, which names no block
-/// here, so the absence is confirmed and the block is reported.
+/// §FS-config-v2.reader.5.strings.refusal, §FS-workspace.6.1.7.5: from grund 0.22.0 a `members`
+/// list whose string runs over a line break is not a list to the climb, exactly where the reader
+/// refuses it as `unclosed array` with 0.22.0's suffix, so the claim is undecidable whatever the
+/// list names: the quiet climb records nothing and leaves the block unreported.
 #[test]
-fn an_ancestor_members_string_over_a_break_is_the_entry_the_config_loads() {
-    let outer = Outer::listing("[\n  \"project/packages/\nhub\",\n]");
-    let (code, stdout, _) = outcome(&outer.check());
-    assert_eq!(code, Some(1), "{stdout}");
-    assert!(
-        stdout.starts_with(
-            "packages/hub/grund.toml:7: error: this [workspace] is listed by no enclosing workspace"
-        ),
-        "{stdout}"
-    );
+fn an_ancestor_members_string_over_a_break_is_not_a_list() {
+    for members in [
+        "[\n  \"else\nwhere\",\n]",
+        "[\n  \"project/packages/\nhub\",\n]",
+    ] {
+        let outer = Outer::listing(members);
+        assert_eq!(
+            outcome(&outer.check()),
+            (Some(0), QUIET.to_string(), String::new()),
+            "an ancestor whose members = {members} is refused cannot say nobody lists packages/hub"
+        );
+        assert_eq!(
+            outcome(&outer.check_in(&outer.0)),
+            (
+                Some(2),
+                String::new(),
+                "error: grund.toml:5: unclosed array (a string is still open at the end of line \
+                 6); this became an error in grund 0.22.0\n"
+                    .to_string()
+            ),
+            "the ancestor's own load refuses members = {members}"
+        );
+    }
 }
 
 /// Guard, green today and kept (§FS-config-v2.reader.5.strings.refusal,
@@ -258,24 +271,28 @@ fn an_ancestor_members_string_that_never_closes_is_not_a_list() {
     assert!(stderr.contains("unclosed array"), "{stderr}");
 }
 
-/// Guard, green today and kept through grund 0.21.x (§FS-config-v2.reader.5.commas.window,
-/// §FS-workspace.6.1.7.5): a `members` list ending in a doubled comma gives the climb the list
-/// the config reader loads, its one entry, so it answers the claim both ways and records
-/// nothing: naming elsewhere reports the block, and naming `packages/hub` leaves it unreported
-/// with nothing on stderr.
+/// §FS-config-v2.reader.5.commas.refusal, §FS-workspace.6.1.7.5: from grund 0.22.0 a `members`
+/// list ending in a doubled comma is not a list to the climb, exactly where the reader refuses
+/// it as `expected string` with 0.22.0's suffix, so the claim is undecidable whatever the list
+/// names: the quiet climb records nothing and leaves the block unreported.
 #[test]
-fn an_ancestor_members_list_with_a_doubled_comma_is_the_list_the_config_loads() {
-    let (code, stdout, _) = outcome(&Outer::listing("[\"elsewhere\",,]").check());
-    assert_eq!(code, Some(1), "{stdout}");
-    assert!(
-        stdout.starts_with(
-            "packages/hub/grund.toml:7: error: this [workspace] is listed by no enclosing workspace"
-        ),
-        "{stdout}"
-    );
-    assert_eq!(
-        outcome(&Outer::listing("[\"project/packages/hub\",,]").check()),
-        (Some(0), QUIET.to_string(), String::new()),
-        "an ancestor that lists packages/hub leaves the block unreported"
-    );
+fn an_ancestor_members_list_with_a_doubled_comma_is_not_a_list() {
+    for members in ["[\"elsewhere\",,]", "[\"project/packages/hub\",,]"] {
+        let outer = Outer::listing(members);
+        assert_eq!(
+            outcome(&outer.check()),
+            (Some(0), QUIET.to_string(), String::new()),
+            "an ancestor whose members = {members} is refused cannot say nobody lists packages/hub"
+        );
+        assert_eq!(
+            outcome(&outer.check_in(&outer.0)),
+            (
+                Some(2),
+                String::new(),
+                "error: grund.toml:5: expected string; this became an error in grund 0.22.0\n"
+                    .to_string()
+            ),
+            "the ancestor's own load refuses members = {members}"
+        );
+    }
 }
