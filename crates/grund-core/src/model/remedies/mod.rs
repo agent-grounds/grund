@@ -8,7 +8,6 @@
 //! re-exported here, so a caller names each as `remedies::<filler>`.
 
 mod check;
-mod config_v2;
 mod declarations;
 mod fields;
 mod rules;
@@ -17,7 +16,6 @@ mod section_lock;
 mod values;
 
 pub(crate) use check::*;
-pub(crate) use config_v2::*;
 pub(crate) use declarations::*;
 pub(crate) use fields::*;
 pub(crate) use rules::*;
