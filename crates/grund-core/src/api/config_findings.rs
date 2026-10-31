@@ -170,5 +170,4 @@ pub(super) fn config_diagnostics<'a>(
         .chain(deprecated_config_location_warning(config))
         .chain(config_version_1_warning(config, display))
         .chain(string_over_break_warnings(config))
-
 }
