@@ -7,6 +7,7 @@
 //! ``Running `…/build-script-build` `` line exactly when Cargo executes the script
 //! and prints nothing about it when the script's output is fresh.
 
+use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -84,7 +85,7 @@ impl Workspace {
         workspace
     }
 
-    fn git(&self, dir: &Path, args: &[&str]) -> String {
+    fn git(&self, dir: &Path, args: &[impl AsRef<OsStr> + std::fmt::Debug]) -> String {
         let mut command = Command::new("git");
         for name in GIT_LOCATION {
             command.env_remove(name);
@@ -487,6 +488,10 @@ fn retargeting_an_intermediate_symbolic_ref_updates_the_label() {
     ws.expect("packed terminal moves", root, &[], &third, Rerun::Must);
     ws.settled("packed terminal moves", root, &[], &third);
 }
+
+#[cfg(unix)]
+#[path = "support/build_identity_refs.rs"]
+mod non_utf8_refs;
 
 #[cfg(unix)]
 #[path = "support/build_identity_modes.rs"]
