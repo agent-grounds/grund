@@ -13,7 +13,7 @@ use super::arrays::{OpenLine, joined_value};
 use super::fields::FieldDraft;
 use super::schema::RowDraft;
 use super::sources::{self, SourcesDraft};
-use super::strings::WINDOW_CLOSED;
+use super::strings::{WINDOW_CLOSED, read_string_list_as_before};
 use super::tables::{self, Opened, Table};
 use super::{defaults, fields, front_matter, measures, presentation, rules, schema};
 use crate::config::fields::FRONT_MATTER;
@@ -247,13 +247,13 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
         // at the line of its key.
         let joined = joined_value(value, line_no, &mut lines);
         let Some(value) = joined.value else {
-            // §FS-config-v2.reader.5.strings.refusal: naming 0.22.0 where 0.21.x read it.
+            // §FS-config-v2.reader.5.strings.refusal: naming 0.22.0 where 0.21.x loaded it, its
+            // join closing the array and its elements reading as they read them.
             let open = joined.open.map(OpenLine::parenthetical).unwrap_or_default();
-            let release = if joined.through_window {
-                WINDOW_CLOSED
-            } else {
-                ""
-            };
+            let loaded = joined.as_before.is_some_and(|value| {
+                read_string_list_as_before(reader.path, line_no, &value).is_ok()
+            });
+            let release = if loaded { WINDOW_CLOSED } else { "" };
             return reader.fail(line_no, format!("unclosed array{open}{release}"));
         };
         reader.through_window = joined.through_window;
