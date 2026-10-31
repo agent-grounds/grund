@@ -229,7 +229,6 @@ fn an_unclosed_array_of_another_key_leaves_the_claim_answered() {
 /// refuses it as `unclosed array` with 0.22.0's suffix, so the claim is undecidable whatever the
 /// list names: the quiet climb records nothing and leaves the block unreported.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn an_ancestor_members_string_over_a_break_is_not_a_list() {
     for members in [
         "[\n  \"else\nwhere\",\n]",

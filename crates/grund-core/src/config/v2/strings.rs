@@ -15,9 +15,11 @@ use crate::config::v1::{
     bail_config, list_elements, parse_string, parse_string_list, string_close,
 };
 
-/// The clause the refusal of an array that read through the 0.21.x trailing-comma window
-/// ends with (§FS-config-v2.reader.5.commas.refusal).
-const COMMA_WINDOW_CLOSED: &str = "; this became an error in grund 0.22.0";
+/// The clause a refusal ends with where the text it refuses read through one of the 0.21.x
+/// windows: a string that closes early (§FS-config-v2.reader.6.refusal), a comma with no
+/// element before it (§FS-config-v2.reader.5.commas.refusal) and an array's open line
+/// (§FS-config-v2.reader.5.strings.refusal).
+pub(super) const WINDOW_CLOSED: &str = "; this became an error in grund 0.22.0";
 
 /// A string the readers before grund 0.22.0 read past its closing quote, the 0.21.x
 /// window's (§FS-config-v2.reader.6.window), which version 2 now refuses
@@ -28,8 +30,6 @@ pub(crate) struct EarlyClose<'a> {
     /// The string as written, from its opening quote to the last quote of its value or
     /// its element, both kept.
     pub(crate) written: &'a str,
-    /// Where `written` starts in the value, as a byte offset.
-    start: usize,
 }
 
 impl EarlyClose<'_> {
@@ -46,24 +46,18 @@ impl EarlyClose<'_> {
             true => " (a multi-line string, which version 2 does not read)",
             false => "",
         };
-        bail_config(
-            path,
-            line,
-            format!("expected string{form}; this became an error in grund 0.22.0"),
-        )
+        bail_config(path, line, format!("expected string{form}{WINDOW_CLOSED}"))
     }
 }
 
-/// `written`, a slice of `value` read as one string the way the readers before 0.22.0
-/// read it, when it closes before its last quote (§FS-config-v2.reader.6).
-fn closes_early<'a>(value: &'a str, written: &'a str) -> Option<EarlyClose<'a>> {
+/// `written` read as one string the way the readers before 0.22.0 read it, when it closes
+/// before its last quote (§FS-config-v2.reader.6).
+fn closes_early(written: &str) -> Option<EarlyClose<'_>> {
     if written.len() < 2 || !written.starts_with('"') || !written.ends_with('"') {
         return None;
     }
     let close = string_close(written.as_bytes(), 1)?;
-    // A slice of `value`, so its offset is the distance between the two.
-    let start = written.as_ptr() as usize - value.as_ptr() as usize;
-    (close + 1 < written.len()).then_some(EarlyClose { written, start })
+    (close + 1 < written.len()).then_some(EarlyClose { written })
 }
 
 /// A version-2 scalar value or quoted key read as the readers before grund 0.22.0 read it,
@@ -76,7 +70,7 @@ pub(crate) fn read_string_as_before<'a>(
     value: &'a str,
 ) -> Result<(String, Option<EarlyClose<'a>>)> {
     let read = basic_string(path, line, value)?;
-    Ok((read, closes_early(value, value)))
+    Ok((read, closes_early(value)))
 }
 
 /// A version-2 string list read as the readers before grund 0.22.0 read it, refused as
@@ -108,16 +102,13 @@ fn read_elements<'a>(
         .iter()
         .map(|element| {
             if element.is_empty() && through_window {
-                bail_config(path, line, format!("expected string{COMMA_WINDOW_CLOSED}"))
+                bail_config(path, line, format!("expected string{WINDOW_CLOSED}"))
             } else {
                 basic_string(path, line, element)
             }
         })
         .collect::<Result<_>>()?;
-    let early = elements
-        .into_iter()
-        .filter_map(|element| closes_early(value, element))
-        .collect();
+    let early = elements.into_iter().filter_map(closes_early).collect();
     Ok((read, early))
 }
 
@@ -132,23 +123,20 @@ pub(crate) fn read_string(path: &Path, line: usize, value: &str) -> Result<Strin
     }
 }
 
-/// §FS-config-v2.reader.6.refusal: a version-2 string list at `line`, written across
-/// `lines`, refused once at `line` for the first element that closes early, and its empty
-/// element naming grund 0.22.0 where its text read through the trailing-comma window
-/// (§FS-config-v2.reader.5.commas.refusal). A `"""` string a line break runs through is
-/// #1089's construct, still read through its own window (§FS-config-v2.reader.6.multi-line,
-/// §FS-config-v2.reader.5.strings.window).
+/// §FS-config-v2.reader.6.refusal: a version-2 string list at `line`, refused once at `line`
+/// for the first element that closes early, and its empty element naming grund 0.22.0 where
+/// `through_window` says its text read through the trailing-comma window
+/// (§FS-config-v2.reader.5.commas.refusal). No string in it runs over a line break: an array
+/// with an open line is refused before its elements are read
+/// (§FS-config-v2.reader.5.strings.refusal).
 pub(crate) fn read_string_list(
     path: &Path,
     line: usize,
     value: &str,
-    lines: &JoinedLines,
+    through_window: bool,
 ) -> Result<Vec<String>> {
-    let (read, early) = read_elements(path, line, value, lines.through_window)?;
-    match early
-        .iter()
-        .find(|early| !lines.is_multi_line_over_break(early))
-    {
+    let (read, early) = read_elements(path, line, value, through_window)?;
+    match early.first() {
         Some(early) => early.refuse(path, line),
         None => Ok(read),
     }
@@ -183,44 +171,6 @@ fn literal_form(written: &str) -> Option<&'static str> {
     }
 }
 
-/// The lines a value was written across, as `joined_value` joined them: its key's line
-/// and where each later one starts in the value (§FS-config-v2.reader.5), and whether its
-/// text read through the 0.21.x trailing-comma window (§FS-config-v2.reader.5.commas.refusal).
-#[derive(Default)]
-pub(crate) struct JoinedLines {
-    line: usize,
-    starts: Vec<usize>,
-    through_window: bool,
-}
-
-impl JoinedLines {
-    pub(crate) fn new(line: usize, starts: Vec<usize>, through_window: bool) -> Self {
-        Self {
-            line,
-            starts,
-            through_window,
-        }
-    }
-
-    /// The line the byte at `offset` in the value was written on.
-    fn line_at(&self, offset: usize) -> usize {
-        self.line + self.starts.partition_point(|&start| start <= offset)
-    }
-
-    /// Whether `early` opens with a `"""` string a joined line break runs through, at any
-    /// of the array's open lines: the one construct §FS-config-v2.reader.5.strings.multi-line
-    /// already warns for, which earns that warning alone (§FS-config-v2.reader.6.multi-line).
-    /// The string is the one its third quote opens, as the open line is read, so a break
-    /// inside a plain string after it, as in `"""a""" "b` / `c"`, is not one.
-    fn is_multi_line_over_break(&self, early: &EarlyClose) -> bool {
-        let close = string_close(early.written.as_bytes(), 3);
-        early.written.starts_with("\"\"\"")
-            && close.is_some_and(|close| {
-                self.line_at(early.start + 2) < self.line_at(early.start + close)
-            })
-    }
-}
-
 impl Reader<'_> {
     /// §FS-config-v2.reader.6.refusal: a scalar value or a quoted key at `line`, read as
     /// one basic string.
@@ -228,9 +178,9 @@ impl Reader<'_> {
         read_string(self.path, line, value)
     }
 
-    /// §FS-config-v2.reader.6.refusal: a string list at `line`, read across the lines the
-    /// value was written on.
+    /// §FS-config-v2.reader.6.refusal: a string list at `line`, its empty element naming
+    /// grund 0.22.0 where the array read through the trailing-comma window.
     pub(super) fn string_list(&mut self, line: usize, value: &str) -> Result<Vec<String>> {
-        read_string_list(self.path, line, value, &self.value)
+        read_string_list(self.path, line, value, self.through_window)
     }
 }

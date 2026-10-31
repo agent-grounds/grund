@@ -177,7 +177,6 @@ fn a_window_shape_names_0_22_whatever_its_key_would_have_said() {
 /// is the array's last, so the array is refused for it before its doubled comma is read, and
 /// that refusal is the one thing printed.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn an_open_line_and_a_doubled_comma_are_refused_as_the_open_line() {
     let refusal = "error: grund.toml:9: unclosed array (a string is still open at the end of line \
                    10); this became an error in grund 0.22.0\n";

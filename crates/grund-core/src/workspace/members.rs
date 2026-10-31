@@ -308,12 +308,15 @@ fn member_claims(root: &Path, entries: &[String]) -> Vec<MemberClaim> {
 /// A value is read as the config's own version reads it (§FS-workspace.6.1.7.5).
 /// A version-2 config's goes through its reader's own `joined_value`: one written
 /// across lines, or ending in the trailing comma TOML allows, is the list the
-/// config loads, and one still open at the end of the file is residue. Read one
+/// config loads, and one still open at the end of the file, or at a line that ends
+/// inside a string, is residue, as the load refuses it
+/// (§FS-config-v2.reader.5.strings.refusal). Read one
 /// line at a time, such a list was "not a list", and a workspace written that way
 /// silenced every unlisted block below it. Another key's array is joined only to
 /// be passed over; one that never closes swallows lines a claim may stand on, and
 /// taking it as residue silenced blocks no ancestor names, so the read goes on at
-/// the next line instead, as it did before arrays were joined. A version-1 value
+/// the next line instead, as it did before arrays were joined, and so it does after
+/// one refused at its open line. A version-1 value
 /// stays on its key's line, as the v1 reader reads every value (§FS-config.3), so
 /// a v1 list written across lines is not a list here either: joining it made it a
 /// claim, and the v1 reader's load error then failed a run below a stray config
@@ -352,9 +355,9 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
             "members" if in_workspace => (&mut entries, "members"),
             "optional_members" if in_workspace => (&mut optional, "optional_members"),
             _ => {
-                // Another key's array that closes is passed over whole, so no line in
-                // it reads as a header or a key; one that never closes holds no claim,
-                // so the read goes on at the next line (§FS-workspace.6.1.7.5).
+                // Another key's array that closes is passed over whole, so no line in it
+                // reads as a header or a key; one that never closes, or has an open line,
+                // holds no claim, so the read goes on at the next line (§FS-workspace.6.1.7.5).
                 if spans_lines {
                     let mut ahead = lines.clone();
                     if joined_value(value, idx + 1, &mut ahead).value.is_some() {
@@ -364,18 +367,14 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
                 continue;
             }
         };
-        // A version-2 claim still open at the end of the file is not a list; one read across
-        // an open string is the config's list (§FS-config-v2.reader.5.strings.window).
-        let (value, starts) = if spans_lines {
-            let joined = joined_value(value, idx + 1, &mut lines);
-            (joined.value, joined.starts)
-        } else {
-            (Some(value.trim().to_string()), Vec::new())
+        // A version-2 claim still open at the end of the file, or at its open line, is not a
+        // list, exactly where the load refuses it (§FS-config-v2.reader.5.strings.refusal).
+        let value = match spans_lines {
+            true => joined_value(value, idx + 1, &mut lines).value,
+            false => Some(value.trim().to_string()),
         };
         *slot = value
-            .and_then(|value| {
-                unloaded_string_list(spans_lines, config_path, idx + 1, &value, starts)
-            })
+            .and_then(|value| unloaded_string_list(spans_lines, config_path, idx + 1, &value))
             .ok_or_else(|| format!("`{name}` is not a list of strings"))?;
     }
     entries.extend(optional);

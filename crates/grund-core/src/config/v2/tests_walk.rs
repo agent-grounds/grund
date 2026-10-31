@@ -8,8 +8,9 @@
 
 use std::path::Path;
 
+use super::arrays::joined_value;
 use super::render;
-use super::walk::{Reader, joined_value, walk};
+use super::walk::{Reader, walk};
 
 /// The refusal the walk gives a `[schema.sources]` whose `exclude` is `value`, the key on
 /// line 2, or `None` when the walk reads it.
@@ -65,7 +66,6 @@ fn a_multi_line_string_names_what_version_2_does_not_read() {
 /// TOML reads one, so `""""a` leaves line 3 open, where reading quote by quote closed two
 /// empty strings there and named line 4 (#1091's review, R1-04).
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn a_run_of_four_quotes_opens_a_multi_line_string_on_its_own_line() {
     assert_eq!(
         refusal("[\n\"\"\"\"a\nb\"\"\",\n\"c\",\n]\n"),

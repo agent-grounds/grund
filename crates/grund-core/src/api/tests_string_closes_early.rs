@@ -164,7 +164,6 @@ fn a_triple_quoted_string_on_one_line_is_refused() {
 /// open line is refused for it before any element is read, so its string that closes early
 /// earns no refusal of its own.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn an_open_line_and_an_early_close_are_refused_as_the_open_line() {
     let root = v2(
         "both",
@@ -177,7 +176,6 @@ fn an_open_line_and_an_early_close_are_refused_as_the_open_line() {
 /// opened, so the `"` after it opens a plain string, and the line it leaves open is the plain
 /// open line the array is refused for (§FS-config-v2.reader.5.strings.refusal).
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn a_break_after_a_one_line_triple_quoted_string_is_refused_as_a_plain_open_line() {
     let root = v2(
         "triple-then-break",
@@ -189,7 +187,6 @@ fn a_break_after_a_one_line_triple_quoted_string_is_refused_as_a_plain_open_line
 /// §FS-config-v2.reader.5.strings.multi-line: a `"""` string a line break runs through is the
 /// open line's construct, refused as an unclosed array with its multi-line parenthetical.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn a_triple_quoted_string_over_a_break_is_refused_as_the_open_line() {
     let root = v2(
         "triple-break",
@@ -201,7 +198,6 @@ fn a_triple_quoted_string_over_a_break_is_refused_as_the_open_line() {
 /// §FS-config-v2.reader.5.strings.refusal: the first open line is the array's last, so of two
 /// `"""` strings over breaks the first is the one the refusal names.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn two_triple_quoted_strings_over_breaks_are_refused_at_the_first() {
     let root = v2(
         "two-triple-breaks",
@@ -213,7 +209,6 @@ fn two_triple_quoted_strings_over_breaks_are_refused_at_the_first() {
 /// §FS-config-v2.reader.5.strings.refusal: a `"""` string over a break after a plain open line
 /// is never reached, so the plain open line is the refusal's.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_is_refused_as_that_line() {
     let root = v2(
         "plain-then-triple",

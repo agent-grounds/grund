@@ -5,7 +5,8 @@
 //! validator, and v1 keeps every meaning it had (§FS-config.5.2).
 //!
 //! `walk.rs` is the line walk and the bookkeeping every table shares — explicit
-//! headers, duplicate keys, the strength-key collision; `tables.rs` names the
+//! headers, duplicate keys, the strength-key collision; `arrays.rs` joins an array
+//! written across lines into one value (§FS-config-v2.reader.5); `tables.rs` names the
 //! table a header opens, the keys each admits, and where a v1 table's settings
 //! went; `schema.rs`, `measures.rs`, `rules.rs` and
 //! `presentation.rs` read the keys of each concern, `fields.rs` a kind's
@@ -16,6 +17,7 @@
 //! rows; `defaults.rs` is the v2 epoch; and `render.rs` writes a project back
 //! out in v2 spelling.
 
+mod arrays;
 mod defaults;
 mod fields;
 mod finish;
@@ -36,14 +38,14 @@ mod tests_keys;
 mod tests_walk;
 mod walk;
 
+pub(crate) use arrays::joined_value;
 pub(crate) use sources::{holds_glob, literal_suffix};
 pub(super) use strings::{
-    JoinedLines, read_string, read_string_as_before, read_string_list, read_string_list_as_before,
+    read_string, read_string_as_before, read_string_list, read_string_list_as_before,
 };
 #[cfg(test)]
 pub(super) use tables::V1_TABLES;
 pub(super) use tables::{admitted, v1_homes};
-pub(crate) use walk::{OpenLine, joined_value};
 
 use anyhow::Result;
 use std::path::Path;

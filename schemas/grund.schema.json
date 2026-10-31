@@ -900,7 +900,7 @@
     },
     "v2": {
       "type": "object",
-      "description": "Version 2: keys grouped by concern — `[schema]` for what exists, `[rules]` for how it relates, `[presentation]` for what grund writes. Every constraint takes one strength: `must` is an error, `warn` a warning, `should` a suggestion shown by `grund check --suggestions`, and `may` is not checked. An array may be written across lines, but a string in it may not: a string left open at the end of a line is a warning until grund 0.22.0 and an error from then on. A string ends at its first unescaped `\"`: write `\\\"` for a quote inside one and a `,` between two; any other text after it is an error. An array takes one trailing comma, after its last element, and any other comma before its `]` is an error.",
+      "description": "Version 2: keys grouped by concern — `[schema]` for what exists, `[rules]` for how it relates, `[presentation]` for what grund writes. Every constraint takes one strength: `must` is an error, `warn` a warning, `should` a suggestion shown by `grund check --suggestions`, and `may` is not checked. An array may be written across lines, but a string in it may not: a string left open at the end of a line is an error. A string ends at its first unescaped `\"`: write `\\\"` for a quote inside one and a `,` between two; any other text after it is an error. An array takes one trailing comma, after its last element, and any other comma before its `]` is an error.",
       "properties": {
         "grund_config_version": {
           "type": "integer",
