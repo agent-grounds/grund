@@ -186,7 +186,6 @@ fn a_value_with_two_early_closes_is_refused_once() {
 /// open line ends there and is refused for it before any element is read, so its string that
 /// closes early earns no refusal of its own.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn an_open_line_and_an_early_close_are_refused_as_the_open_line() {
     Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\nb\" \"c\",\n]\n").refuses(OPEN_LINE);
 }
@@ -195,7 +194,6 @@ fn an_open_line_and_an_early_close_are_refused_as_the_open_line() {
 /// a line break runs through is the open line's construct, refused as an unclosed array with
 /// its multi-line parenthetical, never as a string that closes early.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn a_triple_quoted_string_over_a_break_is_refused_as_the_open_line() {
     Fixture::v2("\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n]\n")
         .refuses(MULTI_LINE_OPEN);
@@ -204,7 +202,6 @@ fn a_triple_quoted_string_over_a_break_is_refused_as_the_open_line() {
 /// §FS-config-v2.reader.5.strings.refusal: the first open line is the array's last, so of two
 /// `"""` strings over breaks the first is the one the refusal names.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn two_triple_quoted_strings_over_breaks_are_refused_at_the_first() {
     Fixture::v2("\n[schema.sources]\nexclude = [\n  \"\"\"a\nb\"\"\",\n  \"\"\"c\nd\"\"\",\n]\n")
         .refuses(MULTI_LINE_OPEN);
@@ -213,7 +210,6 @@ fn two_triple_quoted_strings_over_breaks_are_refused_at_the_first() {
 /// §FS-config-v2.reader.5.strings.refusal: a `"""` string over a break after a plain open line
 /// is never reached, so the plain open line is the refusal's.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn a_triple_quoted_string_over_a_break_after_a_plain_open_line_is_refused_as_that_line() {
     Fixture::v2("\n[schema.sources]\nexclude = [\n  \"a\nb\",\n  \"\"\"c\nd\"\"\",\n]\n")
         .refuses(OPEN_LINE);

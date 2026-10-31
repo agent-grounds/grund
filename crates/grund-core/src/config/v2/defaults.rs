@@ -101,7 +101,6 @@ pub(super) fn default_project() -> Project {
             },
             rules_at_root: false,
         },
-        strings_over_breaks: Vec::new(),
     }
 }
 

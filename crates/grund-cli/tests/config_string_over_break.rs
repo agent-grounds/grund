@@ -132,7 +132,6 @@ impl Drop for Fixture {
 /// refused at its key's line, naming that line and 0.22.0, where `config-not-toml` warned
 /// (§FS-config-v2.checks.config-not-toml.1).
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn a_string_over_a_break_is_refused_naming_its_open_line() {
     Fixture::excluding("[\n  \"a\nb\",\n]\n").refused(&became(11));
 }
@@ -140,7 +139,6 @@ fn a_string_over_a_break_is_refused_naming_its_open_line() {
 /// grund.160's second case, §FS-config-v2.reader.5.strings.refusal: `"a,` / `b",`, which
 /// loaded as `a, b`, is refused the same way.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn a_string_holding_a_comma_over_a_break_is_refused() {
     Fixture::excluding("[\n  \"a,\nb\",\n]\n").refused(&became(11));
 }
@@ -148,7 +146,6 @@ fn a_string_holding_a_comma_over_a_break_is_refused() {
 /// §FS-config-v2.reader.5.strings: the key's own line can be the open line, and the first
 /// open line is the array's last, so it is the one named.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn the_refusal_names_the_first_line_that_ends_inside_a_string() {
     Fixture::excluding("[\"a\nb\"]\n").refused(&became(10));
     Fixture::excluding("[\n  \"a\n  b\n  c\",\n]\n").refused(&became(11));
@@ -157,7 +154,6 @@ fn the_refusal_names_the_first_line_that_ends_inside_a_string() {
 /// §FS-config-v2.reader.5.strings: a `\"` at a line's end escapes the quote, so the string
 /// is open there, and `"a\"` / `b",` is refused naming line 11.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn an_escaped_quote_at_a_line_end_leaves_the_string_open() {
     Fixture::excluding("[\n  \"a\\\"\n  b\",\n]\n").refused(&became(11));
 }
@@ -166,7 +162,6 @@ fn an_escaped_quote_at_a_line_end_leaves_the_string_open() {
 /// refusal says version 2 does not read it, with the suffix, because it loaded through the
 /// window as `""a b""`.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn a_multi_line_string_over_a_break_is_refused_as_one_version_2_does_not_read() {
     let refusal = "error: grund.toml:10: unclosed array (a multi-line string opens on line 11, \
                    which version 2 does not read); this became an error in grund 0.22.0\n";
@@ -178,7 +173,6 @@ fn a_multi_line_string_over_a_break_is_refused_as_one_version_2_does_not_read() 
 /// reading quote by quote named line 12 (#1091's review, R1-04). The readers before did not
 /// close the array either, so the refusal claims no release.
 #[test]
-#[ignore = "red until #1118 refuses the open line; implement removes this"]
 fn a_run_of_four_quotes_opens_a_multi_line_string_on_its_own_line() {
     let refusal = "error: grund.toml:10: unclosed array (a multi-line string opens on line 11, \
                    which version 2 does not read)\n";
@@ -190,7 +184,6 @@ fn a_run_of_four_quotes_opens_a_multi_line_string_on_its_own_line() {
 /// (§FS-config-v2.checks.config-not-toml.1): `--ignore` still accepts it and drops nothing, and
 /// `--only` judges nothing and says so, holding back `success` (§FS-check.1.4.1).
 #[test]
-#[ignore = "red until #1118 renders both codes spent from the catalog; implement removes this"]
 fn both_codes_are_spent_and_say_so_when_selected() {
     let fx = Fixture::excluding("[\n  \"a,b\",\n  \"c\",\n]\n");
     for code in ["config-not-toml", "config-multiline-string"] {

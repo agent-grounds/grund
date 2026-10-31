@@ -58,21 +58,19 @@ pub(crate) fn unread_project_name(text: &str, path: &Path) -> Option<String> {
 }
 
 /// A string list read by a reader that reads one key of a config without loading it: as
-/// the load of a version-2 file reads it when `version_2`, its later lines starting at
-/// `starts` in `value`, of a version-1 file otherwise, `None` for a value the load
-/// refuses, and no finding recorded (§FS-config-v2.reader.6.refusal). The ancestor climb
-/// reads `[workspace] members` through this (§FS-workspace.6.1.7.5).
+/// the load of a version-2 file reads it when `version_2`, of a version-1 file otherwise,
+/// `None` for a value the load refuses, and no finding recorded
+/// (§FS-config-v2.reader.6.refusal). The ancestor climb reads `[workspace] members`
+/// through this (§FS-workspace.6.1.7.5).
 pub(crate) fn unloaded_string_list(
     version_2: bool,
     path: &Path,
     line: usize,
     value: &str,
-    starts: Vec<usize>,
 ) -> Option<Vec<String>> {
     if version_2 {
         // Only `Ok` and `Err` are read here, so the refusal's 0.22.0 clause is moot.
-        let lines = v2::JoinedLines::new(line, starts, false);
-        v2::read_string_list(path, line, value, &lines).ok()
+        v2::read_string_list(path, line, value, false).ok()
     } else {
         v1::parse_string_list(path, line, value).ok()
     }
