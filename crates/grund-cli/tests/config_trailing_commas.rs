@@ -194,6 +194,14 @@ fn an_early_close_beside_a_doubled_comma_is_refused_as_the_early_close() {
     fx.expect(&["check", "--format", "json"], 2, "", refusal);
 }
 
+/// §FS-config-v2.reader.5.commas.refusal: the elements are read before the suffix is earned, so
+/// where the run's removal leaves an element that is not a string, that element's bare refusal
+/// is the array's, as 0.21.x refused it (#1110's review, R1-01).
+#[test]
+fn an_element_refused_first_keeps_its_bare_refusal() {
+    Fixture::exclude("[1,,]").refused(REFUSAL);
+}
+
 /// Guard, green today and kept: a shape the readers before refused, because whitespace or an
 /// element stood between two commas, keeps its bare `expected string` and earns no warning
 /// (§FS-config-v2.reader.5.commas, §FS-config-v2.reader.5.commas.refusal).
