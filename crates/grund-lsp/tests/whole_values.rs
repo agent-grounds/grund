@@ -9,7 +9,6 @@ use std::fs;
 use support::*;
 
 #[test]
-#[ignore = "red until #1118 drops the root-aimed legacy prefix; implement removes this"]
 fn whole_value_bindings_navigate_to_the_declaration_and_match_the_cli() {
     let root = test_root("whole-values");
     fs::write(

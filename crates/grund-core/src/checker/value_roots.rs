@@ -70,11 +70,9 @@ pub(super) fn root_binding_finding(
     // beside the root as cited and the literal whole.
     let index = first_unequal_component(&parts, &declared)?;
     let (section_path, line, component) = &run[index];
-    let coordinate = rendered_value_path(schema, binding, spelling, Some(section_path));
     let at = RootComponent {
         root: &root,
         section_path,
-        coordinate: &coordinate,
     };
     Some(root_value_mismatch(
         binding,

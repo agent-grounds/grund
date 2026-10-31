@@ -113,7 +113,6 @@ fn a_root_literal_agrees_under_every_authority() {
 /// joins with a no-break space has fewer parts than the run, so it names the
 /// root (§FS-values.5.2.2, §FS-errors.3.9.1).
 #[test]
-#[ignore = "red until #1118 drops the root-aimed legacy prefix; implement removes this"]
 fn the_walk_stops_at_the_first_unequal_component() {
     let run = ["1200", "USD", "per\u{a0}year"].map(|text| authored_component(text, 1));
     let run = run.iter().collect::<Vec<_>>();
@@ -156,7 +155,6 @@ fn root_aimed(root: &str) -> String {
 /// component is the first or a later one; a mixed-kind clause names its pair
 /// (§FS-values.5.2.2, §FS-values.5.2.1, §FS-errors.3.9.1).
 #[test]
-#[ignore = "red until #1118 drops the root-aimed legacy prefix; implement removes this"]
 fn a_root_aimed_mismatch_names_the_root_the_literal_and_the_component() {
     let root = roots_repo(
         "value_roots_mismatch_names_the_root",

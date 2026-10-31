@@ -333,7 +333,6 @@ const REMEDY: &str =
 /// a two-part literal names the root because its part count differs
 /// (§FS-values.3.1.2, §FS-values.5.2.2, §FS-errors.3.9.1).
 #[test]
-#[ignore = "red until #1118 drops the root-aimed legacy prefix; implement removes this"]
 fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling_in_verdict() {
     let agrees = check_run(
         &value_repo(
