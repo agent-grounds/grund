@@ -179,7 +179,6 @@ fn assert_no_git(crate_dir: &Path, git: &OsStr) {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script reads qualifying git; implement removes this"]
 fn a_clean_checkout_names_the_first_ten_digits_of_its_commit() {
     let scratch = Scratch::new("clean");
     let root = scratch.checkout("ws");
@@ -187,7 +186,6 @@ fn a_clean_checkout_names_the_first_ten_digits_of_its_commit() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script reads qualifying git; implement removes this"]
 fn an_unstaged_or_a_staged_edit_to_a_tracked_file_is_dirty() {
     let scratch = Scratch::new("dirty");
     let root = scratch.checkout("ws");
@@ -199,7 +197,6 @@ fn an_unstaged_or_a_staged_edit_to_a_tracked_file_is_dirty() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script reads qualifying git; implement removes this"]
 fn untracked_and_ignored_files_leave_the_build_clean() {
     let scratch = Scratch::new("untracked");
     let root = scratch.checkout("ws");
@@ -209,7 +206,6 @@ fn untracked_and_ignored_files_leave_the_build_clean() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script reads qualifying git; implement removes this"]
 fn a_worktree_names_its_own_head_clean_and_dirty() {
     let scratch = Scratch::new("worktree");
     let root = scratch.checkout("ws");
@@ -235,7 +231,6 @@ fn a_worktree_names_its_own_head_clean_and_dirty() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script reads qualifying git; implement removes this"]
 fn a_repository_with_no_packed_refs_watches_only_paths_that_exist() {
     let scratch = Scratch::new("no-packed-refs");
     let root = scratch.checkout("ws");
@@ -244,7 +239,6 @@ fn a_repository_with_no_packed_refs_watches_only_paths_that_exist() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script reads qualifying git; implement removes this"]
 fn a_packed_branch_ref_names_its_commit_and_watches_only_paths_that_exist() {
     let scratch = Scratch::new("packed");
     let root = scratch.checkout("ws");
@@ -262,7 +256,6 @@ fn a_packed_branch_ref_names_its_commit_and_watches_only_paths_that_exist() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script reads qualifying git; implement removes this"]
 fn a_deleted_or_renamed_tracked_file_is_dirty_and_watches_only_paths_that_exist() {
     let scratch = Scratch::new("deleted");
     let root = scratch.checkout("ws");
@@ -275,7 +268,6 @@ fn a_deleted_or_renamed_tracked_file_is_dirty_and_watches_only_paths_that_exist(
 }
 
 #[test]
-#[ignore = "red until #1043 the build script takes GRUND_BUILD_COMMIT; implement removes this"]
 fn a_tree_with_no_git_takes_the_variable_or_reports_the_bare_version() {
     let scratch = Scratch::new("no-git");
     let root = scratch.workspace("ws");
@@ -283,7 +275,6 @@ fn a_tree_with_no_git_takes_the_variable_or_reports_the_bare_version() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script takes GRUND_BUILD_COMMIT; implement removes this"]
 fn an_unborn_head_has_no_qualifying_git() {
     let scratch = Scratch::new("unborn");
     let root = scratch.workspace("ws");
@@ -293,7 +284,6 @@ fn an_unborn_head_has_no_qualifying_git() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script takes GRUND_BUILD_COMMIT; implement removes this"]
 fn a_tree_inside_a_foreign_repository_has_no_qualifying_git() {
     let scratch = Scratch::new("foreign");
     let outer = scratch.0.join("outer");
@@ -307,7 +297,6 @@ fn a_tree_inside_a_foreign_repository_has_no_qualifying_git() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script reads qualifying git; implement removes this"]
 fn a_crate_copy_nested_inside_a_checkout_has_no_qualifying_git() {
     let scratch = Scratch::new("nested-copy");
     let root = scratch.checkout("ws");
@@ -320,7 +309,6 @@ fn a_crate_copy_nested_inside_a_checkout_has_no_qualifying_git() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script takes GRUND_BUILD_COMMIT; implement removes this"]
 fn missing_git_counts_as_no_qualifying_git() {
     let scratch = Scratch::new("missing-git");
     let root = scratch.checkout("ws");
@@ -346,7 +334,6 @@ fn refusing_git(scratch: &Scratch, log: &Path) -> PathBuf {
 
 #[cfg(unix)]
 #[test]
-#[ignore = "red until #1043 the build script takes GRUND_BUILD_COMMIT; implement removes this"]
 fn git_refusing_the_checkout_counts_as_no_qualifying_git() {
     let scratch = Scratch::new("refusing-git");
     let root = scratch.checkout("ws");
@@ -355,7 +342,6 @@ fn git_refusing_the_checkout_counts_as_no_qualifying_git() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script reads qualifying git; implement removes this"]
 fn qualifying_git_wins_over_a_well_formed_variable() {
     let scratch = Scratch::new("git-wins");
     let root = scratch.checkout("ws");
@@ -364,7 +350,6 @@ fn qualifying_git_wins_over_a_well_formed_variable() {
 }
 
 #[test]
-#[ignore = "red until #1043 the build script refuses a malformed GRUND_BUILD_COMMIT; implement removes this"]
 fn a_malformed_variable_fails_a_development_build_whether_or_not_git_wins() {
     let scratch = Scratch::new("malformed");
     let with_git = scratch.checkout("with-git");
