@@ -23,8 +23,9 @@ gh workflow run release-minor.yml --ref main \
 
 Replace `FULL_DISPATCH_MAIN_SHA` with the full 40-hex main tip at dispatch,
 which must match the dispatch SHA, checkout HEAD and fetched `origin/main`.
-It is not #467's freeze candidate; comparing it with that evidence remains
-the owner's responsibility. Omitting both inputs selects `next-minor`;
+It is not #467's freeze candidate; comparing it with that evidence, kept in
+the [1.0 freeze record](../releases/1.0-freeze.md), remains the owner's
+responsibility. Omitting both inputs selects `next-minor`;
 an optional `expected_main_sha` on that choice is checked too.
 
 First-stable selection refuses another ref, missing or mismatched SHA,
