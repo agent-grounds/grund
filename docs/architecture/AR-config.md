@@ -412,9 +412,10 @@ for `[schema.*]`, `rules.rs` for `[rules.*]`, and `presentation.rs` for
 `[presentation.*]` and `[workspace]`. Each of them reads a string, a scalar, a
 list's element or a quoted key, through `strings.rs`, which refuses a string that
 closes early and records nothing. It keeps the reading of the readers before it
-only to choose the refusal's message, which ends with the release that made it
-one where that reading loads the value and is the bare `expected string` where
-it does not ([§FS-config-v2.reader.6.refusal](../functional-spec/FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)). An array reaches them with the run of
+for two callers and no more: the refusal's message, which ends with the release
+that made it one where that reading loads the value and is the bare `expected
+string` where it does not ([§FS-config-v2.reader.6.refusal](../functional-spec/FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)), and `grund config migrate`,
+which names each string that closes early as version 1 reads it ([§FS-config-migrate.3.1.8](../functional-spec/FS-config-migrate.md#318-a-string-that-closes-early)). An array reaches them with the run of
 commas before its `]` taken off by `walk.rs`, which names the first comma in
 that run with no element before it and records it once the elements load
 ([§FS-config-v2.reader.5.commas.window](../functional-spec/FS-config-v2.md#reader5commaswindow-through-grund-021x-the-run-of-commas-before-the--is-taken-off-as-before-and-warns)). A key the table's handler does not admit
