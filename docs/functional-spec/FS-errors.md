@@ -471,38 +471,32 @@ bound to it. A site binding `30 minutes` to the root `FS-session.1`, whose
 components are `45` and `minutes`, read exactly as a site binding `30` to the
 component `FS-session.1.1` does, so its author was sent to re-cite a citation
 that was right. The final message names the cited root and quotes the literal
-whole ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). Those are bytes a consumer may match, so the
-change takes the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather
+whole ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). Those were bytes a consumer may match, so the
+change took the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather
 than replacing the message outright (#1008).
 
-In `0.21.0` the complete legacy message stays a verbatim contiguous prefix: the
-component's canonical text, with its component-aimed [§FS-values.5.2.1](FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind) clause
-when the pair differs in kind. It is followed by ` — whole binding: `, the
-final message of [§FS-errors.3.9.1](FS-errors.md#391-the-final-templates), and the suffix `; this wording changes in
-grund 0.22.0`. For the site above:
+Its window opened in `0.21.0` and closed in `0.22.0` (#1118,
+[§DF-root-value-mismatch-wording-lands-in-0-22](../decisions/functional/DF-root-value-mismatch-wording-lands-in-0-22.md#df-root-value-mismatch-wording-lands-in-0-22-the-root-aimed-value-mismatch-wording-window-closes-in-0220)): through it the legacy message
+stood whole in front of the final one, joined by ` — whole binding: `, and the
+line ended `; this wording changes in grund 0.22.0` before its remedy. From
+`0.22.0` the message is [§FS-errors.3.9.1](FS-errors.md#391-the-final-templates)'s template alone. Two messages
+were never reworded, before, through or after the window: a component-aimed
+mismatch, and a root-aimed one whose part count differs from the component
+count, which already names the root and the literal as authored
+([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)).
 
-```text
-docs/operations.md:3: error: value mismatch for FS-session.1.1: bound `30`, declared `45` at requirements.md:11 — whole binding: value mismatch for FS-session.1 (component 1.1): bound `30 minutes`, declared `45 minutes` at requirements.md:11; this wording changes in grund 0.22.0; change the literal to the declared value, or the declaration to the bound one
-```
-
-In `0.22.0` the prefix and the suffix go, and the message is
-[§FS-errors.3.9.1](FS-errors.md#391-the-final-templates)'s template alone. Two messages are never reworded, before,
-through or after the window: a component-aimed mismatch, and a root-aimed one
-whose part count differs from the component count, which already names the root
-and the literal as authored ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)).
-
-Exact-line consumers migrate during the window to the stable
-`code == "value-mismatch"`; one that matches the legacy prefix reads what it read
-until `0.22.0`. The code, the error severity, the primary location, the one
-`sites` entry, the selectors and the exit verdict do not move, and the
-`--format json` `message` and the editor's diagnostic carry the bytes the text
-line carries ([§FS-errors.5.4](FS-errors.md#54-value-findings), [§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)).
+An exact-line consumer was to migrate during the window to the stable
+`code == "value-mismatch"`; one that matched the legacy prefix read what it
+read until `0.22.0`, and matches nothing from then on. The code, the error
+severity, the primary location, the one `sites` entry, the selectors and the
+exit verdict do not move, and the `--format json` `message` and the editor's
+diagnostic carry the bytes the text line carries ([§FS-errors.5.4](FS-errors.md#54-value-findings),
+[§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)).
 
 #### 3.9.1 The final templates
 
-From `0.22.0`, with the legacy prefix and the suffix gone, a root-aimed
-mismatch whose part count equals the component count is exactly the first line
-below, and the second where its one pair differs in kind:
+A root-aimed mismatch whose part count equals the component count is exactly
+the first line below, and the second where its one pair differs in kind:
 
 ```text
 value mismatch for <root> (component <section-path>): bound `<literal>`, declared `<joined>` at <site>; change the literal to the declared value, or the declaration to the bound one
@@ -510,7 +504,8 @@ value mismatch for <root> (component <section-path>): bound `<literal>`, declare
 ```
 
 [§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component) defines each slot and [§FS-values.5.2.1](FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind) the clause. For the site
-above:
+above, written at `docs/operations.md:3` with `45` declared at
+`requirements.md:11`:
 
 ```text
 docs/operations.md:3: error: value mismatch for FS-session.1 (component 1.1): bound `30 minutes`, declared `45 minutes` at requirements.md:11; change the literal to the declared value, or the declaration to the bound one

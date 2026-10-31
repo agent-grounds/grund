@@ -111,8 +111,9 @@ fn a_root_literal_agrees_under_every_authority() {
 /// The walk compares in declared order and stops at the first inequality, so a
 /// literal wrong in two components reports the earlier one alone; a literal that
 /// joins with a no-break space has fewer parts than the run, so it names the
-/// root (§FS-values.5.2.2).
+/// root (§FS-values.5.2.2, §FS-errors.3.9.1).
 #[test]
+#[ignore = "red until #1118 drops the root-aimed legacy prefix; implement removes this"]
 fn the_walk_stops_at_the_first_unequal_component() {
     let run = ["1200", "USD", "per\u{a0}year"].map(|text| authored_component(text, 1));
     let run = run.iter().collect::<Vec<_>>();
@@ -127,8 +128,7 @@ fn the_walk_stops_at_the_first_unequal_component() {
     assert_eq!(
         errors(&root),
         [
-            staged(
-                "value mismatch for CONST-quota.2: bound `EUR`, declared `USD` at values/quota.md:3",
+            root_aimed(
                 "value mismatch for CONST-quota (component 2): bound `1200.0 EUR per\u{a0}month`, \
                  declared `1200 USD per\u{a0}year` at values/quota.md:3",
             ),
@@ -141,12 +141,11 @@ fn the_walk_stops_at_the_first_unequal_component() {
     let _ = std::fs::remove_dir_all(root);
 }
 
-/// What an equal-count root-aimed mismatch prints until 0.22.0: the legacy
-/// component text whole, then the root's message (§FS-errors.3.9).
-fn staged(legacy: &str, root: &str) -> String {
+/// What an equal-count root-aimed mismatch prints: the root's message alone, then the
+/// remedy (§FS-errors.3.9.1).
+fn root_aimed(root: &str) -> String {
     format!(
-        "value-mismatch: {legacy} \u{2014} whole binding: {root}; \
-         this wording changes in grund 0.22.0; change the literal to the declared value, \
+        "value-mismatch: {root}; change the literal to the declared value, \
          or the declaration to the bound one"
     )
 }
@@ -155,8 +154,9 @@ fn staged(legacy: &str, root: &str) -> String {
 /// written — its numeric spelling and its no-break spaces kept — and the first
 /// unequal component by its section path, under every authority, whether that
 /// component is the first or a later one; a mixed-kind clause names its pair
-/// (§FS-values.5.2.2, §FS-values.5.2.1, §FS-errors.3.9).
+/// (§FS-values.5.2.2, §FS-values.5.2.1, §FS-errors.3.9.1).
 #[test]
+#[ignore = "red until #1118 drops the root-aimed legacy prefix; implement removes this"]
 fn a_root_aimed_mismatch_names_the_root_the_literal_and_the_component() {
     let root = roots_repo(
         "value_roots_mismatch_names_the_root",
@@ -168,28 +168,19 @@ fn a_root_aimed_mismatch_names_the_root_the_literal_and_the_component() {
     assert_eq!(
         errors(&root),
         [
-            staged(
-                "value mismatch for CONST-quota.1: bound `1.25e3`, declared `1200` \
-                 at values/quota.md:2",
+            root_aimed(
                 "value mismatch for CONST-quota (component 1): bound `1.25e3 USD per\u{a0}year`, \
                  declared `1200 USD per\u{a0}year` at values/quota.md:2",
             ),
-            staged(
-                "value mismatch for CONST-limit.2: bound `per\u{a0}day`, declared `per\u{a0}hour` \
-                 at values/runtime.json:2",
+            root_aimed(
                 "value mismatch for CONST-limit (component 2): bound `25 per\u{a0}day`, \
                  declared `25 per\u{a0}hour` at values/runtime.json:2",
             ),
-            staged(
-                "value mismatch for DOC-offer.1.2: bound `per\u{a0}week`, declared `per\u{a0}year` \
-                 at docs/offer.md:5",
+            root_aimed(
                 "value mismatch for DOC-offer.1 (component 1.2): bound `1200 per\u{a0}week`, \
                  declared `1200 per\u{a0}year` at docs/offer.md:5",
             ),
-            staged(
-                "value mismatch for DOC-offer.values.rate.1: bound `x`, declared `3` \
-                 at docs/offer.md:21 \u{2014} bound is a string, declared is a number; \
-                 a number and a string are never equal",
+            root_aimed(
                 "value mismatch for DOC-offer.values.rate (component values.rate.1): \
                  bound `x per\u{a0}day`, declared `3 per\u{a0}day` at docs/offer.md:21 \
                  \u{2014} component values.rate.1: bound is a string, declared is a number; \
