@@ -190,6 +190,15 @@ fn the_refusal_names_0_22_exactly_where_the_readers_before_loaded_the_array() {
     Fixture::excluding("[\n  \"a\nb\", 1,\n]\n").refused(&unclosed(11));
 }
 
+/// §FS-config-v2.reader.5.strings: a line's `#` comment is found a quote at a time, so on a line
+/// holding a `"""` run comment text can move the refusal: in `"""a"b""", # "x` the `#` falls
+/// inside a string read quote by quote, and the comment's quote leaves line 11 open, where TOML
+/// reads the string `a"b` and a comment. The readers before refused it too.
+#[test]
+fn a_comment_beside_a_triple_quoted_string_is_found_a_quote_at_a_time() {
+    Fixture::excluding("[\n  \"\"\"a\"b\"\"\", # \"x\n]\n").refused(&unclosed(11));
+}
+
 /// §FS-config-v2.checks.config-not-toml, §FS-config-v2.checks.config-multiline-string: from
 /// 0.22.0 nothing fires either code, so each is spent and stays
 /// (§FS-config-v2.checks.config-not-toml.1): `--ignore` still accepts it and drops nothing, and

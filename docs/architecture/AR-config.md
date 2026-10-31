@@ -421,7 +421,10 @@ which names each string that closes early as version 1 reads it ([§FS-config-mi
 read, keeping the quote-at-a-time join of the readers before it, with their whole run of
 commas taken off, only so that `walk.rs` can read its elements through `strings.rs` as
 they read them and tell whether their window loaded the array
-([§FS-config-v2.reader.5.strings.refusal](../functional-spec/FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array)), and with at
+([§FS-config-v2.reader.5.strings.refusal](../functional-spec/FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array)). Each line's comment is taken off a
+quote at a time before that, so only on a line holding a `"""` run, which version 2
+refuses on every reading, can comment text move which refusal is printed
+([§FS-config-v2.reader.5.strings](../functional-spec/FS-config-v2.md#reader5strings-a-string-closes-on-the-line-it-opens-on)). The array reaches the reader with at
 most one comma before its `]` taken off, the one trailing comma after an
 element; any other comma stays for the element reader, whose refusal of the
 empty element it leaves carries 0.22.0's suffix where the whole run's removal
