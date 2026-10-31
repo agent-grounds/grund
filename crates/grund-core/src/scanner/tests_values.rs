@@ -329,10 +329,11 @@ const REMEDY: &str =
 
 /// A one-component value bound at its root is its `.1` spelling in verdict
 /// only: an agreeing literal is silent, a one-part disagreement names the root
-/// and its component apart — after the `.1` spelling's bytes until 0.22.0 — and
+/// and its component apart, with none of the `.1` spelling's bytes in front, and
 /// a two-part literal names the root because its part count differs
-/// (§FS-values.3.1.2, §FS-values.5.2.2, §FS-errors.3.9).
+/// (§FS-values.3.1.2, §FS-values.5.2.2, §FS-errors.3.9.1).
 #[test]
+#[ignore = "red until #1118 drops the root-aimed legacy prefix; implement removes this"]
 fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling_in_verdict() {
     let agrees = check_run(
         &value_repo(
@@ -365,10 +366,8 @@ fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling_in_verdict
     assert_eq!(
         at_root,
         vec![format!(
-            "{} \u{2014} whole binding: value mismatch for CONST-field-price (component 1): \
-             bound `1250`, declared `1200` at values/field-price.md:2; \
-             this wording changes in grund 0.22.0{REMEDY}",
-            at_coordinate[0].strip_suffix(REMEDY).unwrap()
+            "value mismatch for CONST-field-price (component 1): \
+             bound `1250`, declared `1200` at values/field-price.md:2{REMEDY}"
         )]
     );
 
