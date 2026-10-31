@@ -178,8 +178,8 @@ fn read_git(crate_dir: &Path, git: &OsStr) -> Option<Tree> {
         .map(|record| root.join(path_from(&record[3..])))
         .collect();
     let dirty = !changed.is_empty();
-    // A clean tree turns dirty at an edit to any tracked file; a dirty one turns
-    // clean only through a path it lists, HEAD or the index.
+    // Watch tracked paths while clean, changed paths while dirty. Cargo observes
+    // their mtimes; unchanged-mtime edits can need a forced rebuild (§FS-distribution.4.1.1).
     let tree = if dirty { changed } else { tracked(git, root)? };
     let mut watched = head_paths(git, root)?;
     watched.extend(tree.iter().map(|path| nearest_existing(path)));
