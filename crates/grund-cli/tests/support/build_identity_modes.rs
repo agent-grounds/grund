@@ -1,12 +1,12 @@
-//! A Git-visible executable-bit change must update the label even when chmod
-//! leaves the file's modification time unchanged (§FS-distribution.4.1.1).
-//! The two directions are separate tests so a stale clean label cannot hide a
-//! stale dirty label on reversal. These use the real-Cargo freshness harness.
+//! A forced rebuild derives the right label after an executable-bit change
+//! that leaves watched mtimes unchanged (§FS-distribution.4.1.1). Both directions
+//! leave the ordinary next build's label and rerun unasserted, then require a
+//! fresh derivation and two no-op builds through the real-Cargo harness.
 
 use super::*;
 use std::os::unix::fs::PermissionsExt;
 
-fn expect_mode_transition(initial: u32, changed: u32) {
+fn expect_forced_mode_transition(initial: u32, changed: u32) {
     let ws = Workspace::new("file-mode");
     let root = &ws.root;
     let path = root.join("docs/notes.md");
@@ -42,16 +42,19 @@ fn expect_mode_transition(initial: u32, changed: u32) {
         index_mtime,
         fs::metadata(&index).unwrap().modified().unwrap()
     );
-    ws.expect("after chmod, same mtime", root, &[], label, Rerun::Must);
-    ws.settled("after chmod", root, &[], label);
+    // No watched mtime moved: leave the next build's label and rerun unasserted.
+    let _ = ws.build(root, &[]);
+    ws.clean(root);
+    ws.expect("after chmod and clean", root, &[], label, Rerun::Must);
+    ws.settled("after chmod and clean", root, &[], label);
 }
 
 #[test]
-fn an_unstaged_executable_bit_change_updates_the_label() {
-    expect_mode_transition(0o644, 0o755);
+fn forcing_a_rebuild_after_an_unstaged_executable_bit_change_updates_the_label() {
+    expect_forced_mode_transition(0o644, 0o755);
 }
 
 #[test]
-fn reverting_an_unstaged_executable_bit_change_updates_the_label() {
-    expect_mode_transition(0o755, 0o644);
+fn forcing_a_rebuild_after_reverting_an_unstaged_executable_bit_change_updates_the_label() {
+    expect_forced_mode_transition(0o755, 0o644);
 }

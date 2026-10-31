@@ -152,6 +152,22 @@ $ grund --version  # release build
 grund 0.21.0
 ```
 
+Cargo caches the recorded label between builds. A Git-visible change that moves
+no watched modification time can keep the previous label: for example, changing
+only a tracked file's executable bit in either direction, or editing content and
+restoring its modification time. A fresh compile derives the correct state. To
+force it on Ubuntu, macOS or Windows, run these commands from the workspace root
+([§FS-distribution.4.1.1](../functional-spec/FS-distribution.md#411-a-development-build-names-its-commit)):
+
+```bash
+cargo clean -p grund
+cargo build -p grund --locked
+```
+
+Use the same target directory and profile as the build being replaced, including
+any `--target-dir` and `--profile` options or Cargo environment settings, for both
+commands. Otherwise the clean can leave that build's cached label in place.
+
 A source build needs Rust and Cargo (the npm packages pin Rust 1.95.0), a linker
 and the platform SDK — Xcode's command-line tools on macOS, the MSVC build tools
 on Windows. It builds with LTO but no profile, so it behaves the same and runs

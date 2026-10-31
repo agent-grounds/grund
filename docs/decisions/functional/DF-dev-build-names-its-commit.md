@@ -31,6 +31,12 @@ For [§FS-non-goals.13](../../functional-spec/FS-non-goals.md#13-anything-that-w
 - **No spelling suppresses the commit.** A suppressed development build prints exactly the ambiguous line this record exists to remove, and a golden kept exact by suppression would pass only for a builder that set it.
 - **A release reads nothing.** The `-dev` suffix is the only switch: a release version runs no git and reads no variable, so `release.yml`, `cargo install grund` and every PGO release build print `grund X.Y.Z` whatever the builder's environment says.
 
+### 2.4 Ordinary builds keep Cargo's cache
+
+The owner chose ordinary no-op caching in [the freshness ruling](https://github.com/agent-grounds/grund/issues/1043#issuecomment-6542202511). Unconditional development-build reruns would recompile the CLI on every ordinary build, every `cargo test` and every CI run to catch a mode-only change. That cost outweighs a stale label after such a change: the label identifies a build's origin and is not a source fingerprint. A signal before Cargo checks freshness would need a separate design; no watcher, wrapper or Cargo patch is approved.
+
+The precise unchanged-watched-mtime limitation and the portable forced-rebuild procedure are defined by [§FS-distribution.4.1.1](../../functional-spec/FS-distribution.md#411-a-development-build-names-its-commit). Fresh derivation remains correct, tracked mode differences still count as dirty, and release builds remain unchanged. The mode regressions exercise the forced procedure in both directions, then require two no-op builds without a script rerun.
+
 ## 3. Consequences
 
 - [§FS-distribution.4.1.1](../../functional-spec/FS-distribution.md#411-a-development-build-names-its-commit) defines the label once, and [§FS-cli.2.1](../../functional-spec/FS-cli.md#21---version), [§FS-distribution.requirements.versions](../../functional-spec/FS-distribution.md#requirementsversions-what-a-distributed-binary-says-about-versions-is-true-of-it--realized), [§FS-distribution.4.5](../../functional-spec/FS-distribution.md#45-what-the-version-bump-includes) and [§FS-distribution-candidate.5.2](../../functional-spec/FS-distribution-candidate.md#52-every-registry-row-installs-fresh-and-without-rust) cite it rather than restating it.
@@ -48,3 +54,5 @@ For [§FS-non-goals.13](../../functional-spec/FS-non-goals.md#13-anything-that-w
 | A separate `grund version --build-info` | Leaves `--version` ambiguous, and every tool that already records it would have to learn a second command. |
 | `GRUND_BUILD_COMMIT` as an override of git | A stale variable in a builder's environment would put one commit's name on another commit's code. |
 | Rest on the pre-1.0 licence alone | It expires at `1.0`, while the reason a development build's line was never a promise does not. |
+| Unconditional development-build reruns | Recompiles the CLI on every ordinary build, test and CI run; the owner chose caching with the limitation and forced rebuild defined above. |
+| A signal before Cargo checks freshness | Requires a separate design; the owner approved no watcher, wrapper or Cargo patch. |

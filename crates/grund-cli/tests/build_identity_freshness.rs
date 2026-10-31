@@ -1,7 +1,7 @@
-//! A build's label never names a stale state, and costs a rerun only when it has to
-//! (§FS-distribution.4.1.1). A temporary workspace laid out like this one carries
-//! the real build script; each step changes the tree, rebuilds it through Cargo
-//! and runs the binary it built.
+//! Watched input changes refresh the label; changes with no watched mtime change
+//! can require a forced rebuild (§FS-distribution.4.1.1). A temporary workspace
+//! carries the real build script; each step changes the tree, rebuilds it through
+//! Cargo and runs the binary it built.
 //!
 //! Whether the build script ran is read from `cargo build -v`, which prints a
 //! ``Running `…/build-script-build` `` line exactly when Cargo executes the script
@@ -130,6 +130,26 @@ impl Workspace {
 
     /// Build the workspace at `dir` through Cargo with `env` added.
     fn cargo(&self, dir: &Path, env: &[(&str, &str)]) -> Output {
+        self.cargo_command(dir, env)
+            .args(["build", "-v", "--offline"])
+            .output()
+            .expect("run cargo")
+    }
+
+    /// Force the next build in this fixture's target directory and default profile
+    /// to derive a fresh label (§FS-distribution.4.1.1).
+    #[cfg(unix)]
+    fn clean(&self, dir: &Path) {
+        let output = self
+            .cargo_command(dir, &[])
+            .args(["clean", "-p", "grund", "--offline"])
+            .output()
+            .expect("run cargo clean");
+        assert!(output.status.success(), "cargo clean -p grund: {output:?}");
+    }
+
+    /// Keep builds and cleans in the same target directory and isolated environment.
+    fn cargo_command(&self, dir: &Path, env: &[(&str, &str)]) -> Command {
         let cargo = std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
         let mut command = Command::new(cargo);
         for name in GIT_LOCATION
@@ -139,13 +159,11 @@ impl Workspace {
             command.env_remove(name);
         }
         command
-            .args(["build", "-v", "--offline"])
             .current_dir(dir)
             .env("CARGO_TARGET_DIR", dir.join("target"))
             .env("CARGO_LOG", "cargo::core::compiler::fingerprint=info")
-            .envs(env.iter().copied())
-            .output()
-            .expect("run cargo")
+            .envs(env.iter().copied());
+        command
     }
 
     /// Build `dir` with `env` added, then run it.
