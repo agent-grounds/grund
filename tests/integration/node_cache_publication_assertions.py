@@ -1,4 +1,4 @@
-"""Publication assertions for §AR-ci.3.4.1.5, run by the Node acceptance module."""
+"""Publication assertions for §AR-ci.3.4.1.5 and §AR-node-cache-metadata.regression."""
 
 import os
 from pathlib import Path
@@ -37,6 +37,13 @@ def check_publication(self, workflow, build_toolchain=None):
                 fixture.prepare(cargo_hit)
                 self.assertEqual(before, files(fixture.root),
                                  "cache preparation changed a live target or ownership record")
+                output = Path(fixture.environment["GITHUB_OUTPUT"])
+                self.assertEqual("ready=true\n", output.read_text() if output.exists() else "",
+                                 "cold publication unready:\n" + "".join(fixture.command_output))
+                self.assertTrue(fixture.identities["feature-only"],
+                                "fixture lost its compiled optional dependency")
+                self.assertFalse(list((fixture.base / "cold-registry").glob("*.crate")),
+                                 "fixture warmed its unused optional dependency")
                 payload = fixture.payload()
                 hashes = {digest(data) for data in payload.values()}
                 dependencies = fixture.artifacts["dependency"]
@@ -97,3 +104,19 @@ def check_publication(self, workflow, build_toolchain=None):
                 namespace = f"-node-target-v{version.group(1)}-"
                 for prefix in with_value(restore, "restore-keys").splitlines():
                     self.assertIn(namespace, prefix, "prefix admits an old whole-root entry")
+
+                # A required source still missing offline must warn with Cargo's
+                # diagnostic and retire the previous view without touching live bytes.
+                manifest = fixture.checkout / "grund/Cargo.toml"
+                manifest.write_text(manifest.read_text() + 'default=["dep:cold-unused"]\n')
+                output.unlink()
+                fixture.command_output.clear()
+                before = files(fixture.root)
+                fixture.prepare(cargo_hit)
+                self.assertEqual(before, files(fixture.root))
+                self.assertFalse(output.exists(), "failed metadata marked publication ready")
+                self.assertFalse(fixture.root.with_name(fixture.root.name + "-dependencies").exists())
+                warning = "".join(fixture.command_output)
+                for detail in ("::warning::", "owner checkout=", "stderr:", "cold-unused",
+                               "--locked", "--offline"):
+                    self.assertIn(detail, warning)

@@ -21,7 +21,7 @@ from test_release_workflow import REPO_ROOT, jobs, step_name, steps
 
 
 WORKSPACE = ("grund", "grund-core", "grund-node", "fixture-helper")
-DEPENDENCIES = ("vendor", "grund-vendor")
+DEPENDENCIES = ("vendor", "grund-vendor", "feature-only")
 
 
 def native_bash():
@@ -55,6 +55,7 @@ class PublicationFixture:
             GRUND_NODE_TARGET=str(self.root), CARGO_TARGET_DIR=str(self.checkout / "target"),
             GITHUB_WORKSPACE=str(self.checkout), PYTHONDONTWRITEBYTECODE="1",
             RUNNER_TEMP=str(base / "runner-temp"),
+            GITHUB_OUTPUT=str(base / "publication-output"),
         )
         self.build_toolchain = build_toolchain
         self.bash = native_bash()
@@ -73,6 +74,7 @@ class PublicationFixture:
         self.identities = {}
         self.targets = []
         self.owners = []
+        self.command_output = []
         self._build_checkouts()
 
     def index(self, name):
@@ -84,6 +86,7 @@ class PublicationFixture:
             environment["RUSTUP_TOOLCHAIN"] = self.build_toolchain
         result = subprocess.run(
             ["cargo", "build", "--offline", "--workspace", "--all-targets",
+             "--features", "grund/publication-probe",
              "--profile", profile, "--target-dir", str(target), "--message-format=json"],
             cwd=checkout, env=environment, capture_output=True, text=True,
         )
@@ -112,6 +115,19 @@ class PublicationFixture:
 
     def _workspace(self, checkout):
         checkout.mkdir(exist_ok=True)
+        # §AR-node-cache-metadata.regression: the lock/index know
+        # this optional package, but its source archive has never been fetched.
+        registry = self.base / "cold-registry"
+        index = registry / "index/co/ld"
+        index.mkdir(parents=True, exist_ok=True)
+        (index / "cold-unused").write_text(json.dumps({
+            "name": "cold-unused", "vers": "0.1.0", "deps": [],
+            "cksum": "0" * 64, "features": {}, "yanked": False,
+        }) + "\n")
+        (checkout / ".cargo").mkdir()
+        (checkout / ".cargo/config.toml").write_text(
+            '[source.crates-io]\nreplace-with="cold-fixture"\n'
+            f'[source.cold-fixture]\nlocal-registry={json.dumps(str(registry))}\n')
         (checkout / "Cargo.toml").write_text(
             f"[workspace]\nmembers={json.dumps(WORKSPACE)}\n"
             f"exclude={json.dumps(DEPENDENCIES)}\nresolver=\"2\"\n")
@@ -138,6 +154,9 @@ class PublicationFixture:
                     + (',package="vendor"' if dep == "fixture-helper" else
                        ',package="grund-core"' if dep == "grund-vendor" else '') + '}\n'
                     for dep in WORKSPACE[1:] + ("grund-vendor",))
+                manifest += ('feature-only={path="../feature-only",optional=true}\n'
+                             'cold-unused={version="=0.1.0",optional=true}\n'
+                             '[features]\npublication-probe=["dep:feature-only"]\n')
             (crate / "Cargo.toml").write_text(manifest)
             (crate / "src/lib.rs").write_text(f"pub fn answer()->usize {{ {index + 42} }}\n")
             # Both workspace and third-party build-script artifacts must be classified.
@@ -183,7 +202,7 @@ class PublicationFixture:
                 'name="vendor"', 'name="renamed-member"'))
             main = checkout / "grund/Cargo.toml"
             main.write_text(main.read_text().replace('package="vendor"', 'package="renamed-member"')
-                            + 'vendor={path="../vendor"}\n')
+                            .replace('[dependencies]\n', '[dependencies]\nvendor={path="../vendor"}\n'))
         for checkout, target in self.targets:
             for profile in ("dev", "release"):
                 for message in self.cargo(checkout, target, profile):
@@ -214,6 +233,7 @@ class PublicationFixture:
                 command = textwrap.dedent(step[match.end():]).strip()
             result = subprocess.run([self.bash, "-c", self.expand(command)], cwd=self.checkout,
                                     env=self.environment, capture_output=True, text=True)
+            self.command_output.append(result.stdout + result.stderr)
             if result.returncode:
                 raise AssertionError(f"publication command failed: {command}\n"
                                      f"{result.stdout}\n{result.stderr}")

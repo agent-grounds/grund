@@ -19,16 +19,17 @@ import tempfile
 
 
 def cargo(checkout, *arguments):
-    """Read package identities with locked inputs only (§AR-ci.3.4.1.5)."""
-    result = subprocess.run(
-        ["cargo", *map(str, arguments), "--locked", "--offline"], cwd=checkout,
-        capture_output=True, text=True, check=True,
-    )
+    """Read locked/offline metadata with Cargo's diagnostic (§AR-node-cache-metadata.failures)."""
+    command = ["cargo", *map(str, arguments), "--locked", "--offline"]
+    result = subprocess.run(command, cwd=checkout, capture_output=True, text=True)
+    if result.returncode:
+        raise ValueError(f"Cargo exited {result.returncode}; owner checkout={checkout}; "
+                         f"command={command!r}; stderr:\n{result.stderr}")
     return result.stdout
 
 
 def owner(target):
-    """Require the recorded source identity before selecting packages (§AR-ci.3.4.1.5)."""
+    """Resolve the owner's observed features (§AR-node-cache-metadata.resolution)."""
     checkout = Path(json.loads((target / "checkout.json").read_text(encoding="utf-8"))["checkout"])
     if (not checkout.is_absolute() or checkout.resolve() != checkout
             or hashlib.sha256(os.fsencode(checkout)).hexdigest()[:16] != target.name):
@@ -41,13 +42,18 @@ def owner(target):
     triples = {triple} | {p.parent.parent.name for p in target.rglob(".fingerprint")
                          if p.parent.parent.name in known_targets}
     platforms = [argument for value in sorted(triples) for argument in ("--filter-platform", value)]
-    metadata = json.loads(cargo(checkout, "metadata", "--all-features", "--format-version", "1", *platforms))
+    workspace = json.loads(cargo(checkout, "metadata", "--no-deps", "--format-version", "1"))
+    features = built_features(target, checkout, workspace)
+    selected = ["--features", ",".join(features)] if features else []
+    metadata = json.loads(cargo(checkout, "metadata", "--format-version", "1", *selected, *platforms))
+    return checkout, target_sources(metadata)
+
+
+def target_sources(metadata):
+    """Keep source-qualified Cargo identities for each target (§AR-ci.3.4.1.5)."""
     members = set(metadata["workspace_members"])
     if not members:
-        raise ValueError(f"no workspace packages: {checkout}")
-    # Keep Cargo's opaque package IDs, including source identity. Reading all
-    # resolved targets may fail offline; that invalidates publication, never
-    # licenses a name-based fallback or an incomplete ready snapshot.
+        raise ValueError("no workspace packages")
     sources = {}
     for package in metadata["packages"]:
         for unit in package["targets"]:
@@ -56,7 +62,26 @@ def owner(target):
             if source in sources and sources[source] != identity:
                 raise ValueError(f"ambiguous Cargo target source: {source}")
             sources[source] = identity
-    return checkout, sources
+    return sources
+
+
+def built_features(target, checkout, workspace):
+    """Resolve observed workspace features (§AR-node-cache-metadata.resolution)."""
+    packages = {p["id"]: p for p in workspace["packages"]}
+    profiles = {p.parent for p in target.rglob(".fingerprint")}
+    units = package_units(profiles, checkout, target_sources(workspace))
+    selected = set()
+    for profile in profiles:
+        for fingerprint in (profile / ".fingerprint").glob("*/*.json"):
+            unit_hash = fingerprint.parent.name.rsplit("-", 1)[-1]
+            package = packages.get(units[profile].get(unit_hash, (None, False))[0])
+            if package is None or fingerprint.name.startswith("run-build-script-"):
+                continue
+            features = json.loads(json.loads(fingerprint.read_text(encoding="utf-8"))["features"])
+            for feature in features:
+                if feature in package["features"]:
+                    selected.add(package["name"] + "/" + feature)
+    return sorted(selected)
 
 
 def unit_identity(depfile, checkout, sources):
@@ -221,7 +246,8 @@ def main():
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
         if arguments.operation == "prepare" and snapshot.exists():
             shutil.rmtree(snapshot, ignore_errors=True)
-        print(f"::warning::Node cache {arguments.operation} skipped: {error}")
+        diagnostic = str(error).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        print(f"::warning::Node cache {arguments.operation} skipped: {diagnostic}")
 
 
 if __name__ == "__main__":
