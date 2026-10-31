@@ -6,7 +6,7 @@
     "expected.exit": {"bytes":[48,10]},
     "expected.stderr": {"bytes":[10]},
     "expected.stdout": {"bytes":[103,114,117,110,100,32,48,46,50,49,46,49,45,100,101,118,10]},
-    "spec.refs": {"bytes":[70,83,45,99,108,105,10,70,83,45,99,108,105,46,50,46,49,10]}
+    "spec.refs": {"bytes":[70,83,45,99,108,105,10,70,83,45,99,108,105,46,50,46,49,10,70,83,45,100,105,115,116,114,105,98,117,116,105,111,110,46,52,46,49,46,49,10]}
   },
   "variants": {
     "whole-tree": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},

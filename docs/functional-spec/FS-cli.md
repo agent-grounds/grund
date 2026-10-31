@@ -86,7 +86,7 @@ Help is never an error: it goes to stdout, exit `0`, so `grund --help | …` wor
 
 ### 2.1 `--version`
 
-`grund --version` (alias `grund -V`) prints `grund <semver>` on stdout and exits `0`. Nothing else is printed; the output is one line and is deterministic for a given build. This is the affordance the [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) deprecation path relies on — a warning that names "the release in which the old form stops working" is only actionable if the user can ask which release they are on.
+`grund --version` (alias `grund -V`) prints `grund <semver>` on stdout and exits `0`. The `<semver>` is this build's version as [§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit) gives it, fixed when the binary was compiled; answering reads no git, environment or file. Nothing else is printed; the output is one line and is deterministic for a given build. This is the affordance the [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) deprecation path relies on — a warning that names "the release in which the old form stops working" is only actionable if the user can ask which release they are on.
 
 ### 2.2 The top-level help page
 

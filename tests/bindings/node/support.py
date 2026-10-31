@@ -158,17 +158,37 @@ def installed_consumer(tarball):
 
 
 @lru_cache(maxsize=1)
+def _checkout_cli_build():
+    """The one CLI build of a run, and Cargo's messages about it."""
+    target = node_target()
+    # No incremental state: the CI cache could not leave it out, and a fresh checkout
+    # cannot reuse it (§AR-ci.3.4.1).
+    built = checked(["cargo", "+1.95.0", "build", "-p", "grund", "--locked", "--target-dir", target,
+                     "--message-format=json-render-diagnostics"], env=dev_env())
+    return target / "debug" / ("grund.exe" if os.name == "nt" else "grund"), built.stdout
+
+
 def checkout_cli():
     """Independent same-source mutation byte oracle (§FS-distribution.3.2.3.1).
 
     Built once per run into this checkout's target, and reused by every test (§AR-ci.3.4.1).
     """
-    target = node_target()
-    # No incremental state: the CI cache could not leave it out, and a fresh checkout
-    # cannot reuse it (§AR-ci.3.4.1).
-    checked(["cargo", "+1.95.0", "build", "-p", "grund", "--locked", "--target-dir", target],
-            env=dev_env())
-    return target / "debug" / ("grund.exe" if os.name == "nt" else "grund")
+    return _checkout_cli_build()[0]
+
+
+def checkout_cli_version():
+    """The `GRUND_BUILD_VERSION` the build script recorded for `checkout_cli()`'s binary.
+
+    Read from that build's own `build-script-executed` message, so it is the value the
+    binary embedded rather than a second derivation of it (§FS-distribution.4.1.1).
+    """
+    recorded = []
+    for line in _checkout_cli_build()[1].splitlines():
+        message = json.loads(line) if line.startswith("{") else {}
+        if message.get("reason") == "build-script-executed":
+            recorded += [value for name, value in message["env"] if name == "GRUND_BUILD_VERSION"]
+    assert len(recorded) == 1, f"the CLI build recorded {len(recorded)} GRUND_BUILD_VERSION values"
+    return recorded[0]
 
 
 class Rehearsal:

@@ -144,7 +144,7 @@ fn reported_repository_gets_a_labelled_heading_beside_an_unchanged_refusal() {
     let version = run_grund(&["-V"], &target);
     assert_eq!(
         text(&version.stdout),
-        format!("grund {}\n", env!("CARGO_PKG_VERSION")),
+        format!("grund {}\n", env!("GRUND_BUILD_VERSION")),
         "`grund -V` is where the release is read"
     );
 
