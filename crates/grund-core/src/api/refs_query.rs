@@ -108,9 +108,8 @@ pub(super) fn refs_impl_with_annotations(
     index_entries: Option<&mut BTreeSet<(String, usize, usize)>>,
     set_aside: &mut Vec<String>,
 ) -> Result<RefsWithMetadata> {
-    // §AR-scanner.2.4.2: the classifying loader, not the plain one — `refs`
-    // publishes each hit's enclosing declaration and section (§FS-refs.3.2), and
-    // the plain wrapper is shared by the five queries that do not.
+    // §AR-scanner.2.4.2 / §FS-scan.path.refs: classify project-wide declarations and sites,
+    // retaining enclosing units (§FS-refs.3.2); the report scope filters sites below.
     let context = load_classifying_workspace_context(&opts.path, opts.path_provided)?;
     *cautions = context_run_warnings(&context);
     let current_config = context

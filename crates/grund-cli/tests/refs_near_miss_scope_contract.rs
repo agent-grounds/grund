@@ -8,7 +8,6 @@ use std::process::Command;
 use support::Repo;
 
 #[test]
-#[ignore = "red until #1126 resolves compatible IDs against the project; implement removes this"]
 fn refs_near_miss_scope_cli_text_and_json() {
     let repo = Repo::new();
     let selected = "hits/citer.md:1: \u{a7}FS-BadHaskell\nhits/citer.md:1: \u{a7}FS-BadHaskell.1\n";
