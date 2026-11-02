@@ -7,9 +7,10 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
+use crate::checker::ScanScope;
 use crate::grammar::{render_catalog_id, render_input_id};
 use crate::model::Id;
-use crate::queries::unused_leaves_out;
+use crate::queries::{reports, unused_leaves_out};
 use crate::resolver::WorkspaceProject;
 
 /// What an ID-mode query asked, beside the answer it got.
@@ -17,8 +18,10 @@ pub(super) struct NoteQuery<'a> {
     /// The explicit scan path, as supplied, when one was given: it scopes the typo
     /// note (§FS-refs.2.1) and withholds the pointer (§FS-refs.2.1.1).
     pub(super) path: Option<&'a Path>,
-    /// The selected project, whose declarations decide which note applies.
+    /// The selected project's full catalog, retained for rendering the note.
     pub(super) target: &'a WorkspaceProject,
+    /// Declaration visibility through the shared report scope (§AR-resolver.3.3).
+    pub(super) scope: Option<&'a ScanScope>,
     /// The ID as the operand spelled it, alias removed.
     pub(super) raw_id: &'a str,
     pub(super) id: &'a Id,
@@ -31,11 +34,22 @@ pub(super) struct NoteQuery<'a> {
 }
 
 /// The `note` of a `refs` answer that lists no site: the typo note when the
-/// target project declares the ID nowhere (§FS-refs.2.1), else the
+/// report scope declares the ID nowhere (§FS-refs.2.1), else the
 /// `list --unused` pointer where that listing answers the question asked, which
 /// is a whole-ID query with no path over a complete scan (§FS-refs.2.1.1).
 pub(super) fn empty_answer_note(query: &NoteQuery<'_>) -> Option<String> {
-    if !query.target.findings.declarations.contains_key(query.id) {
+    // §AR-resolver.3.3: reuse declaration visibility, including in-scope stubs.
+    let declared = query
+        .target
+        .findings
+        .declarations
+        .get(query.id)
+        .is_some_and(|decls| {
+            decls
+                .iter()
+                .any(|record| reports(query.scope, decls, record))
+        });
+    if !declared {
         return Some(typo_note(query));
     }
     (!query.section && query.path.is_none() && query.complete).then(|| unused_note(query))
