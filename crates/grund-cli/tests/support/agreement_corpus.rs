@@ -247,6 +247,8 @@ fn run(
         super::agreement_truth::bind(&mut context, facts);
         let attribution = json!({"case":name,"variant":variant,"base":context["base"],
             "saved":context["saved"],"cwd":context["cwd"],"path":context["path"]});
+        let prepared = (*variant == "whole-tree" && context["absent"].is_null())
+            .then(|| super::agreement_materialization::entries(&context));
         evidence::context(attribution, || {
             let verified = super::agreement_materialization::verify(&context);
             evidence::receipt(
@@ -282,8 +284,11 @@ fn run(
         if !context["absent"].is_null() {
             continue;
         }
-        // Recreate after a manifest that may write; no generic read sees its result.
-        let mut context = if *variant == "whole-tree" {
+        // Recreate after a manifest that wrote anything; no generic read sees its
+        // result. A copy it left entry for entry as prepared is that same copy.
+        let written = prepared
+            .is_some_and(|before| before != super::agreement_materialization::entries(&context));
+        let mut context = if written {
             host.request(json!({"op":"prepare","case":name,"variant":variant}))
         } else {
             context
