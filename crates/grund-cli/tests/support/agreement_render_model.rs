@@ -109,42 +109,23 @@ fn blank(line: &str) -> bool {
     line.bytes().all(|b| b.is_ascii_whitespace())
 }
 
-/// The comment prefixes a declaration's lines are written behind, the first
-/// that matches a line removed from it: one form, or several where a block
-/// comment's lines carry different wrappers, as a `/**` heading line inside a
-/// `/*` block whose other lines open ` * ` (§FS-languages.comment-wrapper).
-fn strips(facts: &Value) -> Vec<String> {
-    match &facts["strip"] {
-        Value::String(one) => vec![one.clone()],
-        Value::Array(many) => many
-            .iter()
-            .filter_map(Value::as_str)
-            .map(String::from)
-            .collect(),
-        _ => Vec::new(),
-    }
-}
-
-/// One line with the first of `strips` it is written behind removed, a bare
-/// prefix with nothing after it read as an empty line.
-fn unwrap_line(line: &str, strips: &[String]) -> String {
-    for strip in strips.iter().filter(|s| !s.is_empty()) {
-        if let Some(rest) = line.strip_prefix(strip.as_str()) {
-            return rest.to_string();
-        }
-        if line.trim_end() == strip.trim_end() {
-            return String::new();
-        }
-    }
-    line.to_string()
-}
-
 /// The lines `first..=last`, a comment `strip` prefix removed, outer blank
 /// lines trimmed, each kept line ending in LF; an empty span is "".
-fn span(text: &str, first: usize, last: usize, strips: &[String]) -> String {
+fn span(text: &str, first: usize, last: usize, strip: &str) -> String {
     let lines: Vec<String> = (first..=last)
         .filter(|_| first <= last)
-        .map(|n| unwrap_line(line_text(text, n), strips))
+        .map(|n| {
+            let line = line_text(text, n);
+            line.strip_prefix(strip)
+                .map(String::from)
+                .unwrap_or_else(|| {
+                    if !strip.is_empty() && line.trim_end() == strip.trim_end() {
+                        String::new()
+                    } else {
+                        line.to_string()
+                    }
+                })
+        })
         .collect();
     let start = lines.iter().position(|l| !blank(l));
     let end = lines.iter().rposition(|l| !blank(l));
@@ -312,7 +293,9 @@ impl Model {
                 model.decls[owner].line
             };
             let (line, column, _) = locate(text, heading, nth, from)?;
-            let raw = unwrap_line(line_text(text, line), &strips(&model.decls[owner].facts));
+            let strip = model.decls[owner].facts["strip"].as_str().unwrap_or("");
+            let raw = line_text(text, line);
+            let raw = raw.strip_prefix(strip).unwrap_or(raw).to_string();
             let parent = s["parent"].as_str().map(|p| {
                 model
                     .sections
@@ -387,7 +370,7 @@ impl Model {
         for index in 0..self.sections.len() {
             let s = &self.sections[index];
             let decl = &self.decls[s.owner];
-            let strip = strips(&decl.facts);
+            let strip = decl.facts["strip"].as_str().unwrap_or("");
             let text = self.text(&s.file)?;
             let children: Vec<_> = (0..self.sections.len())
                 .filter(|&o| self.descends(o, index))
@@ -405,8 +388,8 @@ impl Model {
                 // §FS-output-shapes.4.3: a JSON element reads as its exact slice.
                 Some(slice) => (slice.to_string(), slice.to_string(), slice.to_string()),
                 None => {
-                    let lead = flatten(&span(text, s.line, first - 1, &strip), marker, md);
-                    let full = flatten(&span(text, s.line, s.end, &strip), marker, md);
+                    let lead = flatten(&span(text, s.line, first - 1, strip), marker, md);
+                    let full = flatten(&span(text, s.line, s.end, strip), marker, md);
                     let toc = self.toc(&lead, &children);
                     (lead, full, toc)
                 }
@@ -439,7 +422,7 @@ impl Model {
                 body[0].as_u64().unwrap() as usize,
                 body[1].as_u64().unwrap() as usize,
             );
-            let strip = strips(&d.facts);
+            let strip = d.facts["strip"].as_str().unwrap_or("");
             let text = self.text(&d.file)?;
             // §FS-fields.front-matter.surfaces: the block neither cuts the lead
             // nor joins the whole declaration's --toc.
@@ -452,8 +435,8 @@ impl Model {
                 .min()
                 .unwrap_or(last + 1);
             let md = Self::markdown(&d.file);
-            let lead = flatten(&span(text, first, cut - 1, &strip), marker, md);
-            let full = flatten(&span(text, first, last, &strip), marker, md);
+            let lead = flatten(&span(text, first, cut - 1, strip), marker, md);
+            let full = flatten(&span(text, first, last, strip), marker, md);
             let toc = self.toc(&lead, &children);
             let d = &mut self.decls[index];
             (d.lead, d.full, d.toc) = (Some(lead), Some(full), Some(toc));
