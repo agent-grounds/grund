@@ -88,15 +88,36 @@ impl Host {
     pub fn call(&mut self, surface: &str, request: Value) -> Value {
         let start = std::time::Instant::now();
         let response = self.request(json!({"op":surface,"request":request}));
+        // §REQ-one-answer.proof.delivery: include IPC and first Node startup;
+        // the remote operation timer excludes these costs.
+        Self::receipt(surface, request, &response, start.elapsed().as_secs_f64())
+    }
+
+    /// One read-only question put to Python and Node at once: Node answers its
+    /// request while Python answers its own (§REQ-one-answer.proof.delivery.payment).
+    /// Each answer keeps its own receipt, Python's first, as `call` gives them;
+    /// Python's carries the pair's time with IPC, Node's its own operation time.
+    pub fn pair(&mut self, python: Value, node: Value) -> (Value, Value) {
+        let start = std::time::Instant::now();
+        let response = self.request(json!({"op":"pair","python":python,"node":node}));
+        let elapsed = start.elapsed().as_secs_f64();
+        let node_seconds = response["node"]["seconds"]
+            .as_f64()
+            .expect("Node operation time");
+        (
+            Self::receipt("python", python, &response["python"], elapsed),
+            Self::receipt("node", node, &response["node"], node_seconds),
+        )
+    }
+
+    fn receipt(surface: &str, request: Value, response: &Value, seconds: f64) -> Value {
         assert_eq!(
             response["request"], request,
             "host response belongs to another call"
         );
         let cwd = PathBuf::from(request["cwd"].as_str().unwrap());
         super::agreement_evidence::receipt(surface, &cwd, request, response["envelope"].clone());
-        // §REQ-one-answer.proof.delivery: include IPC and first Node startup;
-        // the remote operation timer excludes these costs.
-        super::agreement_evidence::seconds(start.elapsed().as_secs_f64());
+        super::agreement_evidence::seconds(seconds);
         response["envelope"].clone()
     }
 }

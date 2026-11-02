@@ -33,11 +33,12 @@ pub fn hosts(
 ) -> Value {
     let cwd = text(context, "cwd");
     let request = question.python_request(&cwd);
-    let python = host.call("python", request.clone());
+    let node_req = question.node_request(&cwd);
+    // Every question here only reads its tree; the writers keep their own
+    // isolated clones and order (`agreement_mutations`).
+    let (python, node) = host.pair(request.clone(), node_req.clone());
     let python_context = question.context(context, "python");
     super::agreement_truth::host(&python_context, question, "python", &python, errors);
-    let node_req = question.node_request(&cwd);
-    let node = host.call("node", node_req.clone());
     super::agreement_truth::host(
         &question.context(context, "node"),
         question,
