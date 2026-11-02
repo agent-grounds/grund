@@ -324,7 +324,8 @@ fn exercise(
     let mut tree_answers = std::collections::BTreeMap::new();
     for mut question in tree_questions(context) {
         if question.path != text(context, "path") {
-            let mut scope_context = context.clone();
+            // The host's scope question reads the invocation, never the truth.
+            let mut scope_context = Value::Object(super::agreement_questions::invocation(context));
             scope_context["explicit"] = json!(question.explicit);
             question.scopes =
                 host.request(json!({"op":"scope","context":scope_context,"path":question.path}));
