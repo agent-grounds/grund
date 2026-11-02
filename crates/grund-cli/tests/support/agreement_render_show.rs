@@ -209,18 +209,9 @@ impl View<'_> {
     pub fn refs(&self, coordinate: &str) -> Value {
         let partial = json!({"hits":[],"kind_title":null,"note":null,"output_format":"text",
             "scan_errors":self.scan_errors_in(false),"workspace":self.workspace()});
-        // §FS-scan.path.refs: a duplicate is judged over the path's tree, so a
-        // claimant outside it is no second home (§FS-refs.4).
-        let refused = self.refusal(coordinate, "refs").filter(|r| {
-            let sites = r["sites"].as_array().map_or(&[][..], Vec::as_slice);
-            sites.len() < 2
-                || sites
-                    .iter()
-                    .filter(|s| self.within(s["path"].as_str().unwrap()))
-                    .count()
-                    >= 2
-        });
-        if let Some(refusal) = refused {
+        // §FS-scan.path.refs: the selected project's homes decide ambiguity;
+        // the report path only selects sites (§FS-refs.4).
+        if let Some(refusal) = self.refusal(coordinate, "refs") {
             // §FS-workspace.8.1.3: an unknown alias is refused before any scan.
             let (causes, partial) = if refusal["beforeScan"] == true {
                 (json!([]), Value::Null)
@@ -246,7 +237,7 @@ impl View<'_> {
             .cites
             .iter()
             .filter(aimed)
-            .filter(|c| section.is_none_or(|s| c.section == s) && self.within(&c.file))
+            .filter(|c| section.is_none_or(|s| c.section == s) && self.refs_site_within(c))
             .collect();
         let mut files: Vec<(String, usize)> = Vec::new();
         for c in &hits {
@@ -284,6 +275,20 @@ impl View<'_> {
             "file_summaries":files.iter().map(|(f, n)| json!({"project":self.project_of(f),"path":self.raw(f),"sites":n}))
                 .collect::<Vec<_>>()}),
         )
+    }
+
+    /// §FS-scan.path.refs / §FS-declarations.stubs.target.5: a loaded site is
+    /// reported at its own file, or lent by an in-scope stub of its authored owner.
+    fn refs_site_within(&self, c: &super::agreement_render_model::Cite) -> bool {
+        self.loaded(&c.file)
+            && (self.within(&c.file)
+                || c.facts["enclosing"][0].as_str().is_some_and(|owner| {
+                    self.m.decls.iter().any(|d| {
+                        d.file == c.file
+                            && d.id == owner
+                            && d.via.iter().any(|(file, ..)| self.within(file))
+                    })
+                }))
     }
 
     /// The editor's `--toc` hover from the loaded snapshot (§FS-lsp.1.2.1).

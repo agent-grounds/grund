@@ -108,7 +108,7 @@ pub(super) fn refs_impl_with_annotations(
     index_entries: Option<&mut BTreeSet<(String, usize, usize)>>,
     set_aside: &mut Vec<String>,
 ) -> Result<RefsWithMetadata> {
-    // §AR-scanner.2.4.2 / §FS-scan.path.refs: classify project-wide declarations and sites,
+    // §AR-scanner.2.4.2 / §AR-resolver.3.3: classify project-wide declarations and sites,
     // retaining enclosing units (§FS-refs.3.2); the report scope filters sites below.
     let context = load_classifying_workspace_context(&opts.path, opts.path_provided)?;
     *cautions = context_run_warnings(&context);
@@ -300,6 +300,7 @@ pub(super) fn refs_impl_with_annotations(
             empty_answer_note(&NoteQuery {
                 path: opts.path_provided.then_some(opts.path.as_path()),
                 target: target_project,
+                scope: scope.as_ref(),
                 raw_id,
                 id: &id,
                 qualified: context.workspace_loaded && alias.is_some(),

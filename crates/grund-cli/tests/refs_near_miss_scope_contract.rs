@@ -40,7 +40,15 @@ fn refs_near_miss_scope_cli_text_and_json() {
                 ));
                 continue;
             }
-            assert!(stderr.is_empty(), "{stderr}");
+            // §FS-refs.2.1: resolution succeeds even when the note's scope
+            // contains neither the declaration nor a citation.
+            let expected_stderr = match path {
+                Some(path @ ("docs/FS-001-alpha.md" | "docs" | "empty")) => format!(
+                    "note: FS-BadHaskell is neither declared nor cited in scan path `{path}` — run `grund list` to see project declarations, including outside this scan\n"
+                ),
+                _ => String::new(),
+            };
+            assert_eq!(stderr, expected_stderr, "path={path:?} json={json}");
             let has_hits = matches!(path, None | Some("hits" | "hits/citer.md"));
             if json {
                 let hits = stdout

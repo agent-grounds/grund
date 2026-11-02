@@ -96,7 +96,7 @@ fn refs_sites_run(
             let selection = GlobSelection::new(&context, &globs)?;
             (glob_sites(&context, &selection), selection.note())
         }
-        // §FS-scan.path.refs: the same project catalog resolves operands in every mode.
+        // §AR-resolver.3.3: the same project catalog resolves operands in every mode.
         RefsSites::From(source) => (from_sites(&context, source, scope.as_ref())?, None),
     };
     // §AR-resolver.3.3: each mode lists the report scope's sites (§FS-refs.1.1).
@@ -184,7 +184,7 @@ fn glob_sites<'c>(context: &'c WorkspaceContext, selection: &GlobSelection) -> V
 }
 
 /// The sites the source's own body holds: resolved and refused as `grund <ID>`
-/// resolves it in the project catalog (§FS-scan.path.refs), then the edges the
+/// resolves it in the project catalog (§AR-resolver.3.3), then the edges the
 /// scan gives to what it owns (§FS-refs.from.owned), lent ones included
 /// (§FS-refs.from.stubs). The site's file must lie within the path's scope,
 /// even when a stub outside that path lends it (§FS-refs.from).
