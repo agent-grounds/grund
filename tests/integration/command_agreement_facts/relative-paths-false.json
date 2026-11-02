@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "case": "relative-paths-false",
+  "inputFiles": {
+    "command.args": {"bytes":[99,104,101,99,107,32,116,101,115,116,115,47,101,50,101,47,99,97,115,101,115,47,114,101,108,97,116,105,118,101,45,112,97,116,104,115,45,102,97,108,115,101,47,114,101,112,111,47,115,117,98,10]},
+    "expected.exit": {"bytes":[49,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,46,46,47,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,32,46,46,10]},
+    "expected.stdout": {"bytes":[100,111,99,115,47,115,112,101,99,46,109,100,58,51,58,32,101,114,114,111,114,58,32,117,110,107,110,111,119,110,32,114,101,102,101,114,101,110,99,101,32,70,83,45,57,57,57,45,98,97,114,10,100,111,99,115,47,115,112,101,99,46,109,100,58,49,58,32,119,97,114,110,105,110,103,58,32,100,101,99,108,97,114,101,100,32,98,117,116,32,110,101,118,101,114,32,99,105,116,101,100,58,32,70,83,45,48,48,49,45,102,111,111,59,32,99,105,116,101,32,105,116,10]},
+    "repo": {"directory":true},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,102,97,108,115,101,10,10,91,111,117,116,112,117,116,93,10,114,101,108,97,116,105,118,101,95,112,97,116,104,115,32,61,32,102,97,108,115,101,10]},
+    "repo/sub": {"directory":true},
+    "repo/sub/docs": {"directory":true},
+    "repo/sub/docs/spec.md": {"bytes":[35,32,70,83,45,48,48,49,45,102,111,111,58,32,70,111,111,10,10,77,101,110,116,105,111,110,115,32,194,167,70,83,45,57,57,57,45,98,97,114,32,104,101,114,101,46,10]},
+    "spec.refs": {"bytes":[70,83,45,48,48,54,45,99,111,110,102,105,103,46,51,46,54,10]}
+  },
+  "facts": {
+    "point": "§FS-config.3.6.1",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `strict = false`, default kinds and scan, `[output] relative_paths = false`) and sub/docs/spec.md. The default `[scan] include` is `[\"requirements.md\", \"docs\", \"e2e\", \"src\"]` from the config root (§FS-config.3.5), and sub/docs is under none of it, so a run given no path, from the root or from sub/docs, and the editor's run at the root read no file: the catalog is empty and FS-001-foo is absent. `check` then earns the empty-scan caution's repo-root message (§FS-check.2.2, §FS-check.2.2.2.1) beside the version caution (§FS-check.checks.config-version-1), both site-less CLI-level lines (§FS-check.2.1.1) in the report's bytewise (path, line, message) order (§FS-errors.4.1, §FS-check.checks.config-version-1.1), the version caution first. `cover --lines` reads the one file it is given (§FS-cover.6.1), so on every variant line 1 of sub/docs/spec.md is still FS-001-foo's. A path argument is read though it lies outside `include` (§FS-scan.path.check): there sub/docs/spec.md declares FS-001-foo, its body to line 3, outside the FS home, which does not exist, so no index rule applies (§FS-check.3.18.7); its marked §FS-999-bar dangles (§FS-check.3.1) and nothing cites FS-001-foo, so it is unused, and JSON findings keep the global path, line, message order (§FS-errors.4.1). Cross-reference emission wraps no unresolved citation (§FS-fmt.6.4), so `fmt` writes nothing. FS-404 is the absent control. Every report path is relative to the CLI base, the path argument's directory or else the working directory (§FS-config.3.6.1): a run from the root keeps the root's paths, while a run from sub/docs, by directory or by its file, names the config and its project as `../../grund.toml` and `../..` in the caution (§FS-check.checks.config-version-1).",
+    "scanned": [],
+    "declarations": [],
+    "sections": [],
+    "citations": [],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
+      {"severity":"warning","code":"empty-scan","path":null,"line":null,"message":"nothing to scan — grund looked under [scan] include = [\"requirements.md\", \"docs\", \"e2e\", \"src\"] and found no files. Run `grund init --scaffold` to scaffold the canonical docs/ and e2e/ trees, point `[scan] include` in `grund.toml` at your sources, or pass a path explicitly (`grund check <dir>`).","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [],
+      "writeChanges": [],
+      "written": {}
+    }
+  },
+  "variants": {
+    "whole-tree": {"coverLines":[{"project":null,"path":"<repo>/sub/docs/spec.md","start":1,"end":1,"owners":[{"declaration":"FS-001-foo","start":1,"end":1,"sections":[{"section":null,"start":1,"end":1}]}]}],"absent":null},
+    "narrowed": {"findings":[{"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"../../grund.toml is version 1; migrate it with grund config migrate --to 2 ../..","sites":[]},{"severity":"warning","code":"empty-scan","path":null,"line":null,"message":"nothing to scan — grund looked under [scan] include = [\"requirements.md\", \"docs\", \"e2e\", \"src\"] and found no files. Run `grund init --scaffold` to scaffold the canonical docs/ and e2e/ trees, point `[scan] include` in `grund.toml` at your sources, or pass a path explicitly (`grund check <dir>`).","sites":[]}],"coverLines":[{"project":null,"path":"<repo>/sub/docs/spec.md","start":1,"end":1,"owners":[{"declaration":"FS-001-foo","start":1,"end":1,"sections":[{"section":null,"start":1,"end":1}]}]}],"absent":null},
+    "path-argument": {"scanned":["sub/docs/spec.md"],"declarations":[{"id":"FS-001-foo","kind":"FS","file":"sub/docs/spec.md","heading":"FS-001-foo: Foo","title":"Foo","body":[2,3],"anchor":"fs-001-foo-foo"}],"citations":[{"file":"sub/docs/spec.md","token":"§FS-999-bar","enclosing":["FS-001-foo",null]}],"findings":[{"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"../../grund.toml is version 1; migrate it with grund config migrate --to 2 ../..","sites":[]},{"severity":"warning","code":"unused","path":"sub/docs/spec.md","line":1,"message":"declared but never cited: FS-001-foo; cite it","sites":[]},{"severity":"error","code":"dangling","path":"sub/docs/spec.md","line":3,"message":"unknown reference FS-999-bar","sites":[],"token":"§FS-999-bar"}],"absent":null},
+    "editor-overlay": {"coverLines":[{"project":null,"path":"<repo>/sub/docs/spec.md","start":1,"end":1,"owners":[{"declaration":"FS-001-foo","start":1,"end":1,"sections":[{"section":null,"start":1,"end":1}]}]}],"absent":null}
+  }
+}

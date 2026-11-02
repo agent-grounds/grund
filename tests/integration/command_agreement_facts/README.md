@@ -9,15 +9,25 @@ The loader and consumers are in the CLI test support modules. They follow
 
 **Construction status:** every case the acceptance asks has a manifest here:
 the seed's sampled first projects and every case of `basic`, `cover`, `scan` and
-`stub`, and of tranche 3's `agent`, `cross`, `declare`, `deterministic`, `guide`,
-`haskell`, `json`, `markdown`, `marked`, `named`, `report` and `rust`. The basic
-tranche and tranche 3 each add their dynamically
-discovered families whole
+`stub`, of tranche 3's `agent`, `cross`, `declare`, `deterministic`, `guide`,
+`haskell`, `json`, `markdown`, `marked`, `named`, `report` and `rust`, and of
+tranche 4's `block`, `e2e`, `line`, `marker`, `non`, `path`,
+`relative` and `remote`. The basic tranche and tranches 3 and 4 each add their
+dynamically discovered families whole
 ([§REQ-one-answer.proof.matrix.family](../../../docs/requirements/REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all)).
 `symlink` stays a row of `WIDENING`: its sampled project,
 `symlink-alias-read-once`, has facts, and its fourteen other cases do not yet.
-`line`, `e2e`, `remote`, `relative` and `path` stay rows of `WIDENING`
-because tranche 3 did not author their facts.
+`completions` stays a row because its `completions-bash` tree holds only
+`grund.toml`, so the path-argument variant asks `check`, `cover --lines` and
+`fmt` of an explicit file no walk reads. No point fixes what those calls answer
+for it: the empty scan's message "names that path"
+([§FS-check.2.2.2.2](../../../docs/functional-spec/FS-check.md#2222-an-explicit-path)),
+while every path inside a message is spelled from the report base
+([§FS-cli.3.4](../../../docs/functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from)).
+`section` stays a row because no point fixes the `causes` and `details` of the
+config failure every surface returns for `section-separator-collision-rejected`:
+[§FS-distribution.3.3.2](../../../docs/functional-spec/FS-distribution.md#332-operational-failures-and-invalid-arguments)
+lists both fields without fixing either for a configuration that does not load.
 `external` stays a row because no point fixes the `details` of an invalid-id
 failure at a workspace root:
 [§FS-distribution.3.3.1](../../../docs/functional-spec/FS-distribution.md#331-typed-immutable-results)

@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "case": "e2e-nested-fixtures-configured-kind",
+  "inputFiles": {
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-001-alpha.md": {"bytes":[35,32,70,83,45,48,48,49,45,97,108,112,104,97,58,32,65,108,112,104,97,32,98,101,104,97,118,105,111,114,10,10,65,108,112,104,97,32,99,105,116,101,115,32,194,167,70,83,45,48,48,50,45,98,101,116,97,32,115,111,32,98,111,116,104,32,111,117,116,101,114,32,100,101,99,108,97,114,97,116,105,111,110,115,32,97,114,101,32,117,115,101,100,46,10]},
+    "repo/docs/functional-spec/FS-002-beta.md": {"bytes":[35,32,70,83,45,48,48,50,45,98,101,116,97,58,32,66,101,116,97,32,98,101,104,97,118,105,111,114,10,10,66,101,116,97,32,99,105,116,101,115,32,194,167,70,83,45,48,48,49,45,97,108,112,104,97,32,115,111,32,116,104,101,32,111,117,116,101,114,32,102,105,120,116,117,114,101,32,104,97,115,32,110,111,32,117,110,117,115,101,100,32,100,101,99,108,97,114,97,116,105,111,110,115,46,10]},
+    "repo/docs/functional-spec/README.md": {"bytes":[35,32,70,83,32,105,110,100,101,120,10,10,69,118,101,114,121,32,96,70,83,96,32,100,101,99,108,97,114,97,116,105,111,110,32,105,110,32,116,104,105,115,32,102,111,108,100,101,114,44,32,111,110,101,32,108,105,110,107,101,100,32,101,110,116,114,121,32,101,97,99,104,46,10,10,45,32,91,194,167,70,83,45,48,48,49,45,97,108,112,104,97,93,40,70,83,45,48,48,49,45,97,108,112,104,97,46,109,100,35,102,115,45,48,48,49,45,97,108,112,104,97,45,97,108,112,104,97,45,98,101,104,97,118,105,111,114,41,10,45,32,91,194,167,70,83,45,48,48,50,45,98,101,116,97,93,40,70,83,45,48,48,50,45,98,101,116,97,46,109,100,35,102,115,45,48,48,50,45,98,101,116,97,45,98,101,116,97,45,98,101,104,97,118,105,111,114,41,10]},
+    "repo/e2e": {"directory":true},
+    "repo/e2e/cases": {"directory":true},
+    "repo/e2e/cases/001-inner-fixture": {"directory":true},
+    "repo/e2e/cases/001-inner-fixture/expected.exit": {"bytes":[49,10]},
+    "repo/e2e/cases/001-inner-fixture/expected.stderr": {"bytes":[100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,48,48,49,45,105,110,110,101,114,46,109,100,58,51,58,32,100,97,110,103,108,105,110,103,32,114,101,102,101,114,101,110,99,101,32,116,111,32,70,83,45,57,57,57,45,109,105,115,115,105,110,103,10]},
+    "repo/e2e/cases/001-inner-fixture/expected.stdout": {"bytes":[10]},
+    "repo/e2e/cases/001-inner-fixture/repo": {"directory":true},
+    "repo/e2e/cases/001-inner-fixture/repo/docs": {"directory":true},
+    "repo/e2e/cases/001-inner-fixture/repo/docs/functional-spec": {"directory":true},
+    "repo/e2e/cases/001-inner-fixture/repo/docs/functional-spec/FS-001-inner.md": {"bytes":[35,32,70,83,45,48,48,49,45,105,110,110,101,114,58,32,73,110,110,101,114,32,102,105,120,116,117,114,101,32,98,101,104,97,118,105,111,114,10,10,84,104,105,115,32,110,101,115,116,101,100,32,102,105,120,116,117,114,101,32,114,101,112,111,32,100,101,108,105,98,101,114,97,116,101,108,121,32,99,105,116,101,115,32,194,167,70,83,45,57,57,57,45,109,105,115,115,105,110,103,46,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,102,97,108,115,101,10,10,35,32,84,104,101,32,69,50,69,32,107,105,110,100,44,32,100,101,99,108,97,114,101,100,58,32,105,116,32,108,101,102,116,32,116,104,101,32,100,101,102,97,117,108,116,32,115,101,116,32,105,110,32,103,114,117,110,100,32,48,46,49,50,46,48,10,35,32,40,70,83,45,99,111,110,102,105,103,46,51,46,52,41,44,32,97,110,100,32,116,104,101,32,99,97,115,101,45,100,105,114,101,99,116,111,114,121,32,112,114,117,110,105,110,103,32,116,104,105,115,32,99,97,115,101,32,105,115,32,97,98,111,117,116,32,102,111,108,108,111,119,115,32,116,104,101,10,35,32,99,111,110,102,105,103,117,114,101,100,32,104,111,109,101,32,40,65,82,45,115,99,97,110,110,101,114,46,54,41,46,10,91,91,107,105,110,100,115,93,93,10,107,105,110,100,32,61,32,34,70,83,34,10,102,111,108,100,101,114,32,61,32,34,100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,34,10,10,91,91,107,105,110,100,115,93,93,10,107,105,110,100,32,61,32,34,69,50,69,34,10,102,111,108,100,101,114,32,61,32,34,101,50,101,47,99,97,115,101,115,34,10,105,110,100,101,120,32,61,32,102,97,108,115,101,10]},
+    "spec.refs": {"bytes":[70,83,45,99,111,110,102,105,103,46,51,46,53,10,65,82,45,115,99,97,110,110,101,114,46,54,10,70,83,45,100,101,99,108,97,114,97,116,105,111,110,115,46,101,50,101,45,99,97,115,101,46,119,97,108,107,10]}
+  },
+  "facts": {
+    "point": "§FS-declarations.e2e-case.walk",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `strict = false`, default scan and `[id] format`, and two configured kinds with no title: FS in docs/functional-spec, indexed by its README, and E2E in e2e/cases with `index = false`). E2E is a configured kind, not a default (§FS-config.3.4.4.3), so the case machinery follows its home (§FS-declarations.e2e-case). e2e/cases/001-inner-fixture sits directly in that folder, holds expected.exit and its name reads as an E2E ID under `{kind}-{number}-{slug}`, so it declares E2E-001-inner-fixture (§FS-declarations.e2e-case.id), located at the directory, line 1, with no sections and no title (§FS-list.3.2); its manifest has no command.args, so its args are empty and its invocation `grund check`, its expected exit the `1` of its expected.exit, and its fixtures the four files under it, relative and sorted (§FS-show.2.4, §FS-show.2.4.2, §AR-scanner.6.2); nothing cites it and a case is never unused (§FS-check.4.1.3). The walk does not enter the case directory, so its nested fixture repository, with its FS-001-inner and that file's dangling FS-999-missing, is no content of this project (§FS-declarations.e2e-case.walk, §AR-scanner.6.4): it declares and cites nothing and draws no finding. FS-001-alpha (body line 3) cites FS-002-beta and FS-002-beta (body line 3) cites FS-001-alpha, both marked, and the FS index lists both by full links with their anchors, so every outer declaration is used and listed, and the one finding is the site-less version caution (§FS-check.2.1.1). Cross-reference emission wraps each body's marked citation as a link to the other file's heading anchor (§FS-fmt.6.2, §FS-fmt.6.2.1) and leaves the index entries, already canonical, as written (§FS-fmt.6.3). The golden pins check: exit 0, an empty stdout and the version caution on stderr. FS-404 is the absent control.",
+    "kinds": [
+      {"kind":"FS","title":null,"home":"docs/functional-spec"},
+      {"kind":"E2E","title":null,"home":"e2e/cases","index":false}
+    ],
+    "scanned": ["docs/functional-spec/FS-001-alpha.md","docs/functional-spec/FS-002-beta.md","docs/functional-spec/README.md"],
+    "declarations": [
+      {"id":"E2E-001-inner-fixture","kind":"E2E","file":"e2e/cases/001-inner-fixture","case":{"args":[],"expected_exit":1,"fixtures":["expected.exit","expected.stderr","expected.stdout","repo/docs/functional-spec/FS-001-inner.md"]},"title":null,"anchor":null,"project":null},
+      {"id":"FS-001-alpha","kind":"FS","file":"docs/functional-spec/FS-001-alpha.md","heading":"FS-001-alpha: Alpha behavior","title":"Alpha behavior","body":[2,3],"anchor":"fs-001-alpha-alpha-behavior"},
+      {"id":"FS-002-beta","kind":"FS","file":"docs/functional-spec/FS-002-beta.md","heading":"FS-002-beta: Beta behavior","title":"Beta behavior","body":[2,3],"anchor":"fs-002-beta-beta-behavior"}
+    ],
+    "sections": [],
+    "citations": [
+      {"file":"docs/functional-spec/FS-001-alpha.md","token":"§FS-002-beta","enclosing":["FS-001-alpha",null]},
+      {"file":"docs/functional-spec/FS-002-beta.md","token":"§FS-001-alpha","enclosing":["FS-002-beta",null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-001-alpha","enclosing":[null,null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-002-beta","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "written": {"docs/functional-spec/FS-001-alpha.md":{"3":"Alpha cites [§FS-002-beta](FS-002-beta.md#fs-002-beta-beta-behavior) so both outer declarations are used."},"docs/functional-spec/FS-002-beta.md":{"3":"Beta cites [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha-behavior) so the outer fixture has no unused declarations."}}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}
