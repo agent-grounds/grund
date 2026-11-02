@@ -182,9 +182,15 @@ impl View<'_> {
     }
 
     /// Declarations and sections by coordinate, then physical site (§FS-list.2.7).
+    /// A member run loads its member alone (§FS-scan.projects.member), so no
+    /// question of it finds a declaration another project holds.
     pub fn order(&self) -> Vec<(usize, Option<usize>)> {
         let mut rows = Vec::new();
-        for d in 0..self.m.decls.len() {
+        let loaded = |d: usize| {
+            let decl = &self.m.decls[d];
+            self.loaded(&decl.file) || decl.via.iter().any(|(f, ..)| self.loaded(f))
+        };
+        for d in (0..self.m.decls.len()).filter(|&d| loaded(d)) {
             rows.push((d, None));
             rows.extend(
                 (0..self.m.sections.len())
@@ -194,9 +200,16 @@ impl View<'_> {
         }
         // §FS-list.2.7: duplicate homes interleave by coordinate, then site;
         // every claimant's measurement stays local to its own physical body.
+        // §FS-workspace.8.3.4: a workspace run sorts by the whole alias path.
         rows.sort_by(|&(a, sa), &(b, sb)| {
             let section = |s: Option<usize>| s.map(|s| self.m.sections[s].path.as_str());
-            natural(&self.m.decls[a].id, &self.m.decls[b].id)
+            let alias = |d: usize| match self.m.decls[d].project.as_str() {
+                Some(project) if self.workspace() => project,
+                _ => "",
+            };
+            alias(a)
+                .cmp(alias(b))
+                .then_with(|| natural(&self.m.decls[a].id, &self.m.decls[b].id))
                 .then_with(|| match (section(sa), section(sb)) {
                     (Some(a), Some(b)) => natural(a, b),
                     (a, b) => a.cmp(&b),
@@ -489,6 +502,15 @@ impl View<'_> {
     }
 
     pub fn cover(&self) -> Value {
+        // §FS-scan.path.cover: a path narrower than the config root is one
+        // narrowed scan, no workspace loaded and no `project` field.
+        let narrowed = self.selected != ".";
+        let unowned = |mut row: Value| {
+            if narrowed {
+                row["project"] = Value::Null;
+            }
+            row
+        };
         let entries: Vec<_> = self
             .scanned()
             .into_iter()
@@ -499,9 +521,10 @@ impl View<'_> {
                     .cites
                     .iter()
                     .filter(|c| c.file == f)
-                    .map(|c| self.citation(c, true))
+                    .map(|c| unowned(self.citation(c, true)))
                     .collect();
-                json!({"project":self.project_of(&f),"path":self.site(&f),"citations":cites})
+                unowned(json!({"project":self.project_of(&f),"path":self.site(&f),
+                    "citations":cites}))
             })
             .collect();
         // §FS-cover.globs: a run without globs prints no note.

@@ -52,6 +52,11 @@
       "changes": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
       "writeChanges": [{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
       "written": {"docs/functional-spec/FS-001-alpha.md":{"3":"Alpha cites [§FS-002-beta](FS-002-beta.md#fs-002-beta-beta-behavior) so both outer declarations are used."},"docs/functional-spec/FS-002-beta.md":{"3":"Beta cites [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha-behavior) so the outer fixture has no unused declarations."}}
+    },
+    "editor": {
+      "reads": ["e2e/cases/001-inner-fixture/expected.exit"],
+      "point": "§FS-declarations.e2e-case.id",
+      "authoredFrom": "A directory directly in the E2E folder is a case only when it contains expected.exit, so the editor's run reads e2e/cases/001-inner-fixture/expected.exit to register E2E-001-inner-fixture and its expected exit (§FS-declarations.e2e-case.id, §FS-show.2.4.2)."
     }
   },
   "variants": {

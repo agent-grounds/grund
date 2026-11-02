@@ -251,12 +251,19 @@ impl View<'_> {
             };
             let section = row.1.map(|s| &self.m.sections[s].path);
             let query = json!({"id":id,"section":section});
-            records.push(match self.refusal(&coordinate, "show") {
-                Some(refusal) => json!({"query":query,"result":null,
+            records.push((
+                id.clone(),
+                match self.refusal(&coordinate, "show") {
+                    Some(refusal) => json!({"query":query,"result":null,
                     "failure":self.failure(&refusal, json!([]), Value::Null)}),
-                None => json!({"query":query,"result":self.show_result(row),"failure":null}),
-            });
+                    None => json!({"query":query,"result":self.show_result(row),"failure":null}),
+                },
+            ));
         }
+        // §FS-show.2.6.2: generated queries sort bytewise by the ID as the run
+        // spells it (§FS-workspace.8.1.5), the current project's bare.
+        records.sort_by(|a, b| a.0.cmp(&b.0));
+        let records: Vec<_> = records.into_iter().map(|(_, record)| record).collect();
         ok(json!({"run_cautions":[],"records":records,"note":null}))
     }
 
