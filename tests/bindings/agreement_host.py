@@ -43,6 +43,19 @@ def python_call(api, request):
     return {'request': request, 'envelope': envelope}
 
 
+def send_node(node, request):
+    node.stdin.write(json.dumps(request) + '\n')
+    node.stdin.flush()
+
+
+def read_node(node, request):
+    response = node.stdout.readline()
+    assert response, f'Node host exited: {node.poll()}'
+    answer = json.loads(response)
+    assert answer['request'] == request
+    return answer
+
+
 def gate_time(text):
     """One line the cargo suite passes on from a green run (§AR-ci.requirements.5.1)."""
     print(f'gate time: agreement host {text}', file=sys.stderr, flush=True)
@@ -103,12 +116,17 @@ def main():
                 answer = python_call(api, request['request'])
                 answer['seconds'] = time.monotonic() - start
             elif op == 'node':
-                node.stdin.write(json.dumps(request['request']) + '\n')
-                node.stdin.flush()
-                response = node.stdout.readline()
-                assert response, f'Node host exited: {node.poll()}'
-                answer = json.loads(response)
-                assert answer['request'] == request['request']
+                send_node(node, request['request'])
+                answer = read_node(node, request['request'])
+            elif op == 'pair':
+                # §REQ-one-answer.proof.delivery.payment: Node works on its request
+                # while Python answers its own; both read one unchanged tree, and
+                # each answer is still read and returned whole.
+                send_node(node, request['node'])
+                start = time.monotonic()
+                python = python_call(api, request['python'])
+                python['seconds'] = time.monotonic() - start
+                answer = {'python': python, 'node': read_node(node, request['node'])}
             else:
                 raise ValueError(f'unknown agreement request: {op}')
             print(json.dumps(answer, ensure_ascii=False), flush=True)
