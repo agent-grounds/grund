@@ -171,13 +171,19 @@ anchored outside the report scope. Below a workspace root and outside every memb
 workspace run the root makes, its report narrowed by the same filter
 ([§FS-scan.projects.narrowed](../functional-spec/FS-scan.md#projectsnarrowed-a-path-below-the-config-root-loads-what-a-run-from-it-would-see)).
 
-`refs`, in every mode, and ID completion load through the `Project` selection instead, so their walk is
-the path in one project, and each project whole in a workspace run. What they print is bounded by the same
-report scope, through `reported_scope`, as `list`'s entries are: a site or a candidate the path does not hold
-is dropped, unless a stub under the path stands for it ([§FS-scan.path.refs](../functional-spec/FS-scan.md#pathrefs-refs-scans-the-paths-tree), [§FS-completions.2.1](../functional-spec/FS-completions.md#21-arguments-and-candidate-modes),
-[§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
-`refs --from` keeps fewer: it resolves its source as `show` does, through `load_reported_workspace_context`,
-and drops every site whose file the path does not hold, lent or not ([§FS-refs.from](../functional-spec/FS-refs.md#from---from-lists-what-one-point-cites)).
+`refs`, in all three modes, loads through `load_classifying_workspace_context` with the same `Check`
+selection. Operand resolution and compatible citation promotion read the selected project's declaration
+catalog; the explicit path filters only reported sites ([§FS-scan.path.refs](../functional-spec/FS-scan.md#pathrefs-refs-scans-the-paths-tree)).
+`reported_scope` supplies that filter: ID and glob modes use `reports_site`, which retains a site outside
+the path when a stub under the path lends it ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
+`refs --from` resolves its source as `show` does, but from this same classified context. Before applying
+`reports_site`, it also requires `ScanScope::contains` for the site's actual file, dropping every site
+whose file the path does not hold, lent or not ([§FS-refs.from](../functional-spec/FS-refs.md#from---from-lists-what-one-point-cites)).
+
+ID completion still loads through the `Project` selection, so its walk is the path in one project, and
+each project whole in a workspace run. Its candidates are bounded by `reported_scope`, as `list`'s
+entries are: a candidate the path does not hold is dropped, unless a stub under the path stands for it
+([§FS-completions.2.1](../functional-spec/FS-completions.md#21-arguments-and-candidate-modes), [§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
 
 So "a scope narrower than the root has to stay narrow" is a statement about which **projects** a walk covers
 and which **files** are reported. It is not a statement about which declarations resolution reads: widening
