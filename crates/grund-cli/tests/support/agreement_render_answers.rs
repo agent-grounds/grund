@@ -21,6 +21,18 @@ fn node(python: &Value, operation: &str) -> Result<Value, String> {
     }
 }
 
+/// §FS-distribution.3.3.1: the typed manifest Node's show answer carries for
+/// a case, from the same object and in the corpus's snake_case
+/// (§FS-distribution.3.2.2.2); null for a show of anything else. The renderer
+/// and the audit of a complete Node show both read it here.
+pub fn node_case_manifest(object: &Value) -> Value {
+    match object.get("args") {
+        Some(args) => json!({"kind":object["kind"],"args":args,
+            "expected_exit":object["expected_exit"],"fixtures":object["fixtures"]}),
+        None => Value::Null,
+    }
+}
+
 impl View<'_> {
     /// Node's metadata on a show answer: the query it resolved (§FS-distribution.3.3.1).
     fn show_metadata(&self, result: &mut Value) {
@@ -31,12 +43,7 @@ impl View<'_> {
         result["id"] = object["id"].clone();
         result["section"] = object["section"].clone();
         result["kind_title"] = object["kind_title"].clone();
-        // §FS-distribution.3.3.1: a case's typed manifest, from the same object.
-        result["manifest"] = match object.get("args") {
-            Some(args) => json!({"kind":object["kind"],"args":args,
-                "expected_exit":object["expected_exit"],"fixtures":object["fixtures"]}),
-            None => Value::Null,
-        };
+        result["manifest"] = node_case_manifest(&object);
     }
 
     /// §FS-refs.2: Node folds hits into per-file summaries, at reported paths.

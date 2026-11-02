@@ -155,9 +155,7 @@ pub fn complete_node_show(context: &Value, question: &Question) -> bool {
         keys(value, &shown.split(' ').collect::<Vec<_>>())
             && keys(&object, &fields)
             && object["anchor"].is_null()
-            && value["manifest"]
-                == json!({"kind":object["kind"],"args":object["args"],
-                    "expectedExit":object["expected_exit"],"fixtures":object["fixtures"]})
+            && value["manifest"] == super::agreement_render_answers::node_case_manifest(&object)
             && ["id", "path", "kind_title"]
                 .iter()
                 .all(|f| value[*f] == object[*f])

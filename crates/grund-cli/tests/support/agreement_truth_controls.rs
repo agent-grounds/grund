@@ -186,3 +186,37 @@ fn generic_writer_oracle_rejects_common_wrong_anchors_and_pins_unchanged_bytes()
         );
     }
 }
+
+/// §REQ-one-answer.proof.evidence: an end-to-end case's rendered Node show is a
+/// complete case-manifest envelope in every variant, so that envelope, not the
+/// extra native peer, holds Node's show and batch of the case; a wrong
+/// manifest field keeps the peer.
+#[test]
+fn a_rendered_case_show_replaces_the_native_peer() {
+    let file = super::agreement_families::cases_root()
+        .join("../../integration/command_agreement_facts/e2e-nested-fixtures-configured-kind.json");
+    let mut document: Value = serde_json::from_slice(&std::fs::read(file).unwrap()).unwrap();
+    super::agreement_render::expand(&mut document).unwrap();
+    let asked = json!({"path":"<repo>","explicit":false,"scopes":{}});
+    let show = super::agreement_questions::coordinate_questions(&asked, "E2E-001-inner-fixture")
+        .swap_remove(0);
+    let mut batch = show.clone();
+    batch.surface = "show-batch";
+    for (variant, facts) in document["variants"].as_object().unwrap() {
+        let mut context = json!({ "truth": facts });
+        for question in [&show, &batch] {
+            assert!(
+                truth::complete_node_show(&context, question),
+                "{variant} {}: the case-manifest envelope keeps the native peer",
+                question.surface
+            );
+        }
+        let node = &mut context["truth"]["calls"]["show:E2E-001-inner-fixture"]["node"];
+        node["result"]["manifest"]["expectedExit"] =
+            node["result"]["manifest"]["expected_exit"].take();
+        assert!(
+            !truth::complete_node_show(&context, &show),
+            "{variant}: a camelCase manifest passed"
+        );
+    }
+}
