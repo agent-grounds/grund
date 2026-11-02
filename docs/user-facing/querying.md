@@ -329,7 +329,11 @@ shorthand was ambiguous; route that status to ID repair, and reserve exit `2`
 for setup, configuration, I/O, or incomplete-scan failure
 ([§FS-refs.4](../functional-spec/FS-refs.md#4-exit-codes)).
 
-An explicit path limits the scan ([§FS-scan.path.refs](../functional-spec/FS-scan.md#pathrefs-refs-scans-the-paths-tree)). Suppose `FS-api-audit` is declared in `docs/` and cited nowhere. From the project root:
+An explicit path selects the reported sites; the ID still resolves against the
+selected project, including a declaration retained for read compatibility even
+when it lies outside the path
+([§FS-scan.path.refs](../functional-spec/FS-scan.md#pathrefs-refs-scans-the-paths-tree)).
+Suppose `FS-api-audit` is declared in `docs/` and cited nowhere. From the project root:
 
 ```console
 $ grund refs FS-api-audit src --total

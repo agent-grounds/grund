@@ -217,6 +217,8 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 
 The rulings the one-answer work is built from, one record per step family, each naming the compatibility route its rulings ship by.
 
+- [§DF-refs-compatible-id-project-scope](DF-refs-compatible-id-project-scope.md#df-refs-compatible-id-project-scope-a-refs-path-selects-sites-while-the-project-resolves-a-compatible-id) — a refs path selects sites while the project resolves a compatible ID
+
 - [§DF-one-answer-rulings-run](DF-one-answer-rulings-run.md#df-one-answer-rulings-run-a-path-narrows-the-report-a-stub-reads-what-the-walk-reads-and-a-file-is-one-file-however-it-is-spelled-or-held) — a path narrows the report, a stub reads what the walk reads, and a file is one file however it is spelled or held
 - [§DF-one-answer-rulings-parse](DF-one-answer-rulings-parse.md#df-one-answer-rulings-parse-one-parse-gives-every-command-the-same-extents-comment-blocks-anchors-and-title-citations) — one parse gives every command the same extents, comment blocks, anchors and title citations
 - [§DF-one-answer-rulings-stubs](DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is) — a stub is found by its home and shape, read as the scan reads, and shown where its target is
