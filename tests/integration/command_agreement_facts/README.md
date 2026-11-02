@@ -17,16 +17,17 @@ dynamically discovered families whole
 ([§REQ-one-answer.proof.matrix.family](../../../docs/requirements/REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all)).
 `symlink` stays a row of `WIDENING`: its sampled project,
 `symlink-alias-read-once`, has facts, and its fourteen other cases do not yet.
-`block` stays a row on a divergence, tool report grund.165: the engine gives the
+`block` stays a row on a divergence,
+[#1125](https://github.com/agent-grounds/grund/issues/1125): the engine gives the
 one-line `/** FS-b: Beta */` of `block-comment-javadoc-one-line-check` the title
 `Beta */` on every surface, while the closer is the C family's wrapper
 ([§FS-languages.comment-wrapper.headings](../../../docs/functional-spec/FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)).
 `line` stays a row for two reasons in `line-prefix-forms-near-miss`. No point
 places a number-less ID in the listing order
 ([§FS-list.2.4](../../../docs/functional-spec/FS-list.md#24-order)).
-And the engine's `refs` verdict on a near-miss ID changes with the scan path,
-tool report grund.166, while the operand is checked by the selected project's
-resolver ([§FS-refs.4](../../../docs/functional-spec/FS-refs.md#4-exit-codes)).
+And the engine's `refs` verdict on a near-miss ID changes with the scan path
+([#1126](https://github.com/agent-grounds/grund/issues/1126)), while the
+operand is checked by the selected project's resolver ([§FS-refs.4](../../../docs/functional-spec/FS-refs.md#4-exit-codes)).
 Both come back once those are settled; their manifests come back with them.
 `section` stays a row because no point fixes the `causes` and `details` of the
 config failure every surface returns for `section-separator-collision-rejected`:
