@@ -34,7 +34,7 @@ impl View<'_> {
         // §FS-distribution.3.3.1: a case's typed manifest, from the same object.
         result["manifest"] = match object.get("args") {
             Some(args) => json!({"kind":object["kind"],"args":args,
-                "expectedExit":object["expected_exit"],"fixtures":object["fixtures"]}),
+                "expected_exit":object["expected_exit"],"fixtures":object["fixtures"]}),
             None => Value::Null,
         };
     }
@@ -44,9 +44,10 @@ impl View<'_> {
         if let Some(out) = result.get_mut("result").filter(|v| v.is_object()) {
             let summaries: Vec<_> = python["result"]["file_summaries"].as_array().unwrap().iter()
                 .map(|s| {
-                    let lines: Vec<_> = python["result"]["hits"].as_array().unwrap().iter()
+                    // §FS-refs.3.3: a file's lines are the sorted, de-duplicated set.
+                    let lines: std::collections::BTreeSet<u64> = python["result"]["hits"].as_array().unwrap().iter()
                         .filter(|h| h["path"] == json!(self.reported_site(s["path"].as_str().unwrap())))
-                        .map(|h| h["line"].clone())
+                        .filter_map(|h| h["line"].as_u64())
                         .collect();
                     json!({"project":s["project"],"path":s["path"],"count":s["sites"],"lines":lines})
                 })

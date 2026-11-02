@@ -378,9 +378,11 @@ fn exercise(
                 );
             }
             if question.surface == "show" && loaded.is_some() {
+                // A declaration's show record carries its body; a case directory's
+                // is its manifest envelope, which has none (§FS-show.2.4.2).
                 let bodies: Vec<_> = actual
                     .iter()
-                    .filter(|row| row.get("body").is_some())
+                    .filter(|row| row.get("body").is_some() || row.get("expected_exit").is_some())
                     .cloned()
                     .collect();
                 editor::show(
