@@ -28,6 +28,20 @@ const TRANCHE_3: &[&str] = &[
     "report",
     "rust",
 ];
+/// The families tranche 4 delivers: the five tranche 3 left out once their
+/// divergences were fixed, and the next five by size.
+const TRANCHE_4: &[&str] = &[
+    "block",
+    "completions",
+    "e2e",
+    "line",
+    "marker",
+    "non",
+    "path",
+    "relative",
+    "remote",
+    "section",
+];
 
 fn members(cases: &BTreeSet<String>, family: &str) -> BTreeSet<String> {
     cases
@@ -45,6 +59,12 @@ fn s4_basic_family_runs_against_complete_authored_facts() {
 #[test]
 fn s4_tranche_3_families_run_against_complete_authored_facts() {
     assert_covered_whole(TRANCHE_3, &[TRANCHE_1, TRANCHE_2].concat());
+}
+
+#[test]
+#[ignore = "red until #674 batch 4; implement removes this"]
+fn s4_tranche_4_families_run_against_complete_authored_facts() {
+    assert_covered_whole(TRANCHE_4, &[TRANCHE_1, TRANCHE_2, TRANCHE_3].concat());
 }
 
 /// §REQ-one-answer.proof.matrix.family: every member of each `delivered` family
