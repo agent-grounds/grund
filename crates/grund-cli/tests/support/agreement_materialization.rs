@@ -7,6 +7,40 @@ use serde_json::{Value, json};
 use std::fs;
 use std::path::Path;
 
+/// Every entry of a variant's whole materialization, the directory that holds
+/// its `base/repo`: each file's bytes, each directory and each link's target.
+/// Equal before and after a call, the call left the copy as it was prepared
+/// (§REQ-one-answer.proof.delivery.payment).
+pub fn entries(context: &Value) -> std::collections::BTreeMap<String, Vec<u8>> {
+    fn walk(root: &Path, directory: &Path, out: &mut std::collections::BTreeMap<String, Vec<u8>>) {
+        for entry in fs::read_dir(directory).expect("materialization walk") {
+            let path = entry.unwrap().path();
+            let name = path
+                .strip_prefix(root)
+                .unwrap()
+                .to_string_lossy()
+                .replace('\\', "/");
+            if path.is_symlink() {
+                let target = fs::read_link(&path).unwrap();
+                out.insert(name, [b"l", target.to_string_lossy().as_bytes()].concat());
+            } else if path.is_dir() {
+                out.insert(name, b"d".to_vec());
+                walk(root, &path, out);
+            } else {
+                out.insert(name, [b"f".as_slice(), &fs::read(&path).unwrap()].concat());
+            }
+        }
+    }
+    let base = text(context, "base");
+    let root = Path::new(&base)
+        .parent()
+        .and_then(Path::parent)
+        .expect("base/repo");
+    let mut out = std::collections::BTreeMap::new();
+    walk(root, root, &mut out);
+    out
+}
+
 pub fn verify(context: &Value) -> Value {
     let original = text(context, "original");
     let original = Path::new(&original).join("repo");
