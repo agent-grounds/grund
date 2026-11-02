@@ -79,7 +79,7 @@ The command-agreement acceptance asks the seed and every case of each family
 Tranche 1 covers `cover`, `scan` and `stub`, tranche 2 `basic`, tranche 3
 `agent`, `cross`, `declare`, `deterministic`, `guide`, `haskell`, `json`,
 `markdown`, `marked`, `named`, `report` and `rust`, and tranche 4
-`completions`, `e2e`, `marker`, `non`, `path`, `relative` and `remote`;
+`completions`, `e2e`, `path`, `relative` and `remote`;
 the acceptance runs in the ordinary `cargo test`.
 Run `cargo test -p grund --test command_agreement agreement_acceptance::s4_executes_the_covered_families_and_the_seed -- --exact --nocapture`;
 set `GRUND_AGREEMENT_EVIDENCE` to a writable file to retain its full JSON receipts.
