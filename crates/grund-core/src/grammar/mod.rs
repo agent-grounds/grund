@@ -115,7 +115,9 @@ pub(crate) use comment_block::{
     CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
     declaration_id_on_source_line, first_content_line, is_bare_block_line,
 };
-pub(crate) use comment_line::{comment_envelope, comment_strip_prefixes, strip_block_closer};
+pub(crate) use comment_line::{
+    comment_envelope, comment_strip_prefixes, cut_at_block_closer, strip_block_closer,
+};
 pub(crate) use compiled::{
     QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, is_valid_project_alias, section_path,
 };
