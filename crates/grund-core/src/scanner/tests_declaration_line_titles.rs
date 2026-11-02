@@ -29,7 +29,6 @@ fn title(findings: &Catalog, slug: &str) -> Option<String> {
 /// the title either. Markdown and a docstring are not C-family block comments,
 /// so nothing on their declaration line is envelope.
 #[test]
-#[ignore = "red until #1125 strips the block closer from a declaration line's title; implement removes this"]
 fn a_declaration_on_a_one_line_block_comment_drops_the_closer() {
     let root = test_root("declaration_line_titles_block_closer");
     write(&root.join("src/control.rs"), "//! AR-001-control: Beta\n");

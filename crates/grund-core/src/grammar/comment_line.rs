@@ -236,6 +236,17 @@ pub(crate) fn strip_block_closer(line: &str) -> &str {
         .map_or(line, str::trim_end)
 }
 
+/// A line of a `/* … */` block read only up to its first `*/`, which is where the
+/// block ends (§FS-declarations.line.block-comment), with that closer and the
+/// whitespace before it taken off as [`strip_block_closer`] takes them: text after
+/// the closer is code, not the label (§FS-languages.comment-wrapper.headings). A
+/// line with no closer comes back unchanged. Callers apply it only to a line they
+/// know is inside a C-family block, so a `**/` glob in a `///` line is never cut.
+pub(crate) fn cut_at_block_closer(line: &str) -> &str {
+    line.find("*/")
+        .map_or(line, |at| strip_block_closer(&line[..at + 2]))
+}
+
 /// What one line of a comment block says once its envelope is off
 /// (§FS-languages.comment-wrapper), read by the block's form: behind a line
 /// marker, the whitespace before it, the marker and one space go; in a

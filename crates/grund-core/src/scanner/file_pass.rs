@@ -34,7 +34,9 @@ use super::extents::assign_extents;
 use super::qualified_citations::{
     scan_fallback_qualified_citations, scan_workspace_qualified_pass,
 };
-use super::record::{CommentFences, HeadingLine, bare_block_line, declaration_eligible, zone_of};
+use super::record::{
+    CommentFences, HeadingLine, bare_block_line, declaration_eligible, in_block_comment, zone_of,
+};
 use super::relative_sections::HeldHeadings;
 use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
@@ -217,6 +219,7 @@ pub(super) fn scan_file_text(
         let bare_block = !is_md && !scan.in_py_docstring && bare_block_line(&record, lineno);
         // §FS-config-v2.schema.sources.declarations.gate: one answer, before every recognizer.
         let eligible = declaration_eligible(&record, &reading, lineno);
+        let in_block = !is_md && !scan.in_py_docstring && in_block_comment(&record, lineno);
         let mut declared = false;
         if heading_position
             && eligible
@@ -234,7 +237,7 @@ pub(super) fn scan_file_text(
             close_declaration(&mut current, findings);
             // §FS-declarations.line.configured-slug: the matched delimiter belongs to the tail.
             let tail = &scan_line[caps.name("id").unwrap().end()..];
-            let (is_stub, defined_in, title) = stub_and_title(tail, stub_home);
+            let (is_stub, defined_in, title) = stub_and_title(tail, stub_home, in_block);
             let heading_level =
                 heading_level_for_line(scan_line, is_md || scan.in_py_docstring || bare, &caps);
             record.headings.push(heading.record(
@@ -308,7 +311,8 @@ pub(super) fn scan_file_text(
                 .find(text)
                 .map(|start| start + text.len())
                 .unwrap_or(0);
-            let (is_stub, defined_in, title) = stub_and_title(&scan_line[token_end..], stub_home);
+            let (is_stub, defined_in, title) =
+                stub_and_title(&scan_line[token_end..], stub_home, in_block);
             let heading_level = if is_md || scan.in_py_docstring || bare {
                 scan_line
                     .trim_start()
