@@ -83,12 +83,14 @@ Tranche 1 covers `cover`, `scan` and `stub`, tranche 2 `basic`, tranche 3
 the acceptance runs in the ordinary `cargo test`.
 Run `cargo test -p grund --test command_agreement agreement_acceptance::s4_executes_the_covered_families_and_the_seed -- --exact --nocapture`;
 set `GRUND_AGREEMENT_EVIDENCE` to a writable file to retain its full JSON receipts.
-The test asks its cases on up to four lanes, and each lane holds one host: one
-Python process and the one Node process it starts, which every request of that lane
+The test asks its cases on up to four lanes, longest first by the questions each
+case's authored facts pin, and adopts their receipts in discovery order. Each lane
+holds one host: one Python process and the one Node process it starts, which every request of that lane
 reuses ([§FS-distribution.3.0.3](../../docs/functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)). A read-only question goes to both at once: Node
 answers its request while Python answers its own. A whole-tree case's generic questions
 reuse the copy its manifest call left entry for entry as prepared, and only a call that
-wrote gets a fresh copy. Each host prepares actual mixed Python and Node
+wrote gets a fresh copy. A question and its receipts are judged by their own
+authored call, not by a copy of every call of the variant. Each host prepares actual mixed Python and Node
 packages from this checkout, using CPython, Node 22/24 and Rust 1.95.0, staged under
 `~/ag/tmp`. One 1.95.0 build compiles both natives into one target, nested in the
 workspace's cargo target under `agreement/` and keyed by the checkout; the first
