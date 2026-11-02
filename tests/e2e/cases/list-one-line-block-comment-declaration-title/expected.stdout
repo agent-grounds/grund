@@ -1,0 +1,6 @@
+{"id":"FS-b","kind":"FS","path":"src/lib.rs","line":1,"title":"Beta","stub":false,"defines":null,"refs":1,"duplicate":false}
+{"id":"FS-cline","kind":"FS","path":"src/cline.c","line":1,"title":"a C declaration on a one-line block comment","stub":false,"defines":null,"refs":1,"duplicate":false}
+{"id":"FS-control","kind":"FS","path":"src/control.rs","line":1,"title":"the same declaration as a line comment","stub":false,"defines":null,"refs":1,"duplicate":false}
+{"id":"FS-docstring","kind":"FS","path":"src/docstring.py","line":1,"title":"a docstring title that ends in */","stub":false,"defines":null,"refs":1,"duplicate":false}
+{"id":"FS-markdown","kind":"FS","path":"docs/fs/FS-markdown.md","line":1,"title":"a Markdown title that ends in */","stub":false,"defines":null,"refs":1,"duplicate":false}
+{"id":"FS-tail","kind":"FS","path":"src/tail.c","line":1,"title":"the first closer ends the title","stub":false,"defines":null,"refs":1,"duplicate":false}

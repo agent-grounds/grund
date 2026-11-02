@@ -151,6 +151,8 @@ mod tests_conflict_blocks;
 #[cfg(test)]
 mod tests_context_homes;
 #[cfg(test)]
+mod tests_declaration_line_titles;
+#[cfg(test)]
 mod tests_doc_comment_relative;
 #[cfg(test)]
 mod tests_embedded_value_boundaries;

@@ -93,8 +93,8 @@ block is the one [§FS-languages.comment-block.forms](FS-languages.md#comment-bl
 declaration position, once the wrapper of [§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper) is read off:
 
 - the opener line, behind any of the three openers: `/* FS-b: Beta`, `/** FS-b: Beta`,
-  `/*! FS-b: Beta`, and the one-line `/** FS-b: Beta */`, whose title is read as the
-  one-line `/* FS-b: Beta */` form's title is;
+  `/*! FS-b: Beta`, and the one-line `/** FS-b: Beta */` or `/* FS-b: Beta */`, titled `Beta`: the title stops before the block's first `*/` and the whitespace in front of it, which are the comment's envelope ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line), [§DF-one-answer-rulings-parse](../decisions/functional/DF-one-answer-rulings-parse.md#df-one-answer-rulings-parse-one-parse-gives-every-command-the-same-extents-comment-blocks-anchors-and-title-citations) D17d),
+  so `/** FS-b: Beta */ tail */` is titled `Beta` too;
 - a continuation line behind ` * `: ` * FS-b: Beta`;
 - a bare continuation line, with no ` * `, indented or not: `FS-b: Beta`. Only a block whose
   `*/` is found has bare lines in declaration position. In a block that runs to the end of
