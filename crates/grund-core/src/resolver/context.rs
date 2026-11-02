@@ -263,6 +263,9 @@ pub(crate) fn load_reported_workspace_context(
 
 /// The same load for a query that **publishes** citing-side attribution rather
 /// than only resolving targets — today `grund refs` alone (§FS-refs.3.2).
+/// Resolve operands and promote compatible citation sites against the project's
+/// declarations, with the path bounding only reported sites (§FS-scan.path.refs).
+/// `Check` supplies that resolution scope as it does for `show` and `list`.
 ///
 /// Separate from [`load_workspace_context`] on purpose, not folded into it:
 /// that wrapper is shared by `list`, `fmt`, `complete_ids`, `sizes` and `batch`,
@@ -274,7 +277,7 @@ pub(crate) fn load_classifying_workspace_context(
     path_provided: bool,
 ) -> Result<WorkspaceContext> {
     record_test_workspace_load();
-    load_invoked_workspace_context(&Invocation::new(path, path_provided, Selection::Project))
+    load_invoked_workspace_context(&Invocation::new(path, path_provided, Selection::Check))
 }
 
 /// The load for what one invocation decided, its buffers and its

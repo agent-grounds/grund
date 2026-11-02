@@ -45,7 +45,6 @@ const PATHS: [Option<&str>; 7] = [
 ];
 
 #[test]
-#[ignore = "red until #1126 resolves compatible IDs against the project; implement removes this"]
 fn refs_near_miss_scope_api_accepts_and_filters_sites() {
     let repo = Repo::new();
     let mut failures = Vec::new();
@@ -108,20 +107,17 @@ fn host_contract(python: bool) {
 }
 
 #[test]
-#[ignore = "red until #1126 resolves compatible IDs against the project; implement removes this"]
 fn refs_near_miss_scope_python_transport() {
     host_contract(true);
 }
 
 #[test]
-#[ignore = "red until #1126 resolves compatible IDs against the project; implement removes this"]
 fn refs_near_miss_scope_node_transport() {
     host_contract(false);
 }
 
 /// §FS-config.3.2.6: an inline section keeps its interpretation outside the path.
 #[test]
-#[ignore = "red until #1126 resolves compatible IDs against the project; implement removes this"]
 fn refs_near_miss_scope_inline_section() {
     let repo = Repo::new();
     let unscoped = query(&repo, None, "FS-BadHaskell.1");
@@ -135,7 +131,6 @@ fn refs_near_miss_scope_inline_section() {
 
 /// §FS-refs.4: duplicate project homes outside the path still refuse as ambiguous.
 #[test]
-#[ignore = "red until #1126 resolves compatible IDs against the project; implement removes this"]
 fn refs_near_miss_scope_duplicate_homes() {
     let repo = Repo::new();
     repo.write("docs/duplicate.md", "# FS-BadHaskell: Another home\n");

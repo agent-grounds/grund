@@ -17,9 +17,7 @@ use crate::checker::ScanScope;
 use crate::grammar::{path_at_or_under, render_catalog_id};
 use crate::model::{Citation, Declaration, Finding, Id, ShowRenderMode};
 use crate::queries::{GlobSelection, read_globs, reported_scope, reports_site};
-use crate::resolver::{
-    WorkspaceContext, load_classifying_workspace_context, load_reported_workspace_context,
-};
+use crate::resolver::{WorkspaceContext, load_classifying_workspace_context};
 use crate::sources::paths_same_location;
 
 /// What a `refs` run selects its sites by when it names no one ID (§FS-refs.1.1).
@@ -98,22 +96,8 @@ fn refs_sites_run(
             let selection = GlobSelection::new(&context, &globs)?;
             (glob_sites(&context, &selection), selection.note())
         }
-        RefsSites::From(source) => {
-            // §AR-resolver.3.3: reuse `show`'s resolution scope, keeping the scanned edges.
-            let source_context = scope
-                .as_ref()
-                .map(|_| load_reported_workspace_context(&opts.path, opts.path_provided))
-                .transpose()?;
-            (
-                from_sites(
-                    &context,
-                    source_context.as_ref().unwrap_or(&context),
-                    source,
-                    scope.as_ref(),
-                )?,
-                None,
-            )
-        }
+        // §FS-scan.path.refs: the same project catalog resolves operands in every mode.
+        RefsSites::From(source) => (from_sites(&context, source, scope.as_ref())?, None),
     };
     // §AR-resolver.3.3: each mode lists the report scope's sites (§FS-refs.1.1).
     sites.retain(|site| {
@@ -200,18 +184,17 @@ fn glob_sites<'c>(context: &'c WorkspaceContext, selection: &GlobSelection) -> V
 }
 
 /// The sites the source's own body holds: resolved and refused as `grund <ID>`
-/// resolves it in `source_context` (§FS-refs.from), then the edges the selected
+/// resolves it in the project catalog (§FS-scan.path.refs), then the edges the
 /// scan gives to what it owns (§FS-refs.from.owned), lent ones included
 /// (§FS-refs.from.stubs). The site's file must lie within the path's scope,
 /// even when a stub outside that path lends it (§FS-refs.from).
 fn from_sites<'c>(
     context: &'c WorkspaceContext,
-    source_context: &WorkspaceContext,
     source: &str,
     scope: Option<&ScanScope>,
 ) -> Result<Vec<Site<'c>>> {
-    let source = ShowSource::resolve(source_context, source, None)?;
-    let (_, home) = source.read(source_context, ShowRenderMode::Brief, false)?;
+    let source = ShowSource::resolve(context, source, None)?;
+    let (_, home) = source.read(context, ShowRenderMode::Brief, false)?;
     let project = context
         .projects
         .iter()
