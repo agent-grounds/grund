@@ -1,7 +1,7 @@
 //! Common-domain requests, through each answering entrypoint
 //! (§REQ-one-answer.proof.matrix). Paths retain explicit/implicit invocation.
 
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 
 #[derive(Clone)]
 pub struct Question {
@@ -51,8 +51,35 @@ impl Question {
         args
     }
 
+    /// The context `surface` answers this question in, under that surface's
+    /// scope. Of the variant's authored truth it carries the calls that judge
+    /// this question, its own and the editor's, rather than a copy of every call
+    /// of the variant per question (§REQ-one-answer.proof.delivery.payment); a
+    /// call it lacks still fails `agreement_truth::attach`'s preflight
+    /// (§REQ-one-answer.proof.evidence).
     pub fn context(&self, context: &Value, surface: &str) -> Value {
-        let mut scoped = context.clone();
+        let mut scoped = invocation(context);
+        match context.get("truth") {
+            Some(Value::Object(truth)) => {
+                let key = super::agreement_truth::key(self);
+                let calls: Map<String, Value> = [format!("editor:{key}"), key]
+                    .into_iter()
+                    .filter_map(|key| Some((key.clone(), truth.get("calls")?.get(&key)?.clone())))
+                    .collect();
+                let mut own: Map<String, Value> = truth
+                    .iter()
+                    .filter(|(name, _)| *name != "calls")
+                    .map(|(name, value)| (name.clone(), value.clone()))
+                    .collect();
+                own.insert("calls".into(), Value::Object(calls));
+                scoped.insert("truth".into(), Value::Object(own));
+            }
+            Some(truth) => {
+                scoped.insert("truth".into(), truth.clone());
+            }
+            None => {}
+        }
+        let mut scoped = Value::Object(scoped);
         if let Some(scope) = self.scopes[surface].as_object() {
             for (key, value) in scope {
                 scoped[key] = value.clone();
@@ -85,6 +112,18 @@ impl Question {
         };
         json!({"operation":self.node_operation,"cwd":cwd,"args":args,"scope":self.scopes["node"]})
     }
+}
+
+/// A variant's invocation facts, its authored truth left out: all that a scope
+/// question or a question's context takes from it.
+pub fn invocation(context: &Value) -> Map<String, Value> {
+    context
+        .as_object()
+        .unwrap()
+        .iter()
+        .filter(|(name, _)| *name != "truth")
+        .map(|(name, value)| (name.clone(), value.clone()))
+        .collect()
 }
 
 pub fn tree_questions(context: &Value) -> Vec<Question> {

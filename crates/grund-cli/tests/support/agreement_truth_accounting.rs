@@ -2,7 +2,7 @@
 //! (§REQ-one-answer.proof.evidence, §FS-distribution.3.3.1).
 
 use super::{agreement_evidence::Call, agreement_expectations};
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub type Obligation = (String, String, String, String);
@@ -29,8 +29,12 @@ pub fn observe(
     } else {
         producer == "cli" && !matches!(call.surface.as_str(), "python" | "node" | "editor")
     });
-    let mut facts = manifests[case]["variants"][variant].clone();
-    // §FS-refs.2.1: validate literal note paths with the execution truth's binding.
+    // §FS-refs.2.1: validate literal note paths with the execution truth's binding,
+    // which rewrites each call alone, so only this receipt's call is copied and
+    // bound (§REQ-one-answer.proof.delivery.payment).
+    let authored = &manifests[case]["variants"][variant];
+    let mut facts = json!({"context":authored["context"],"calls":{}});
+    facts["calls"][key] = authored["calls"][key].clone();
     super::agreement_render_show::bind_refs_path(
         &mut facts,
         call.context
