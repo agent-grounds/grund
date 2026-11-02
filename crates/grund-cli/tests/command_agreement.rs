@@ -300,10 +300,10 @@ const DEFERRED: &[(&str, &str, &str)] = &[];
 /// asks only a sampled project of some of them (§REQ-one-answer.proof.matrix.seed).
 const WIDENING: &[(&str, &str)] = &[
     ("bare", "S4"),
+    ("block", "S4"),
     ("check", "S4"),
     ("cli", "S4"),
     ("complete", "S4"),
-    ("completions", "S4"),
     ("config", "S4"),
     ("configured", "S4"),
     ("declarations", "S4"),
@@ -318,6 +318,7 @@ const WIDENING: &[(&str, &str)] = &[
     ("init", "S4"),
     ("inline", "S4"),
     ("integrations", "S4"),
+    ("line", "S4"),
     ("list", "S4"),
     ("refs", "S4"),
     ("schema", "S4"),
@@ -334,7 +335,7 @@ const WIDENING: &[(&str, &str)] = &[
 const COVERED: &[&str] = &[
     "agent",
     "basic",
-    "block",
+    "completions",
     "cover",
     "cross",
     "declare",
@@ -343,7 +344,6 @@ const COVERED: &[&str] = &[
     "guide",
     "haskell",
     "json",
-    "line",
     "markdown",
     "marked",
     "marker",
