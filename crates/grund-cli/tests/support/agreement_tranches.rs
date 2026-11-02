@@ -29,18 +29,10 @@ const TRANCHE_3: &[&str] = &[
     "rust",
 ];
 /// The families tranche 4 delivers: four of the five tranche 3 left out once
-/// their divergences were fixed, and three of the next five by size. `block`,
-/// `line` and `section` stay rows of `WIDENING`, for the reasons the facts
+/// their divergences were fixed, and `completions`. `block`, `line`, `marker`,
+/// `non` and `section` stay rows of `WIDENING`, for the reasons the facts
 /// README gives.
-const TRANCHE_4: &[&str] = &[
-    "completions",
-    "e2e",
-    "marker",
-    "non",
-    "path",
-    "relative",
-    "remote",
-];
+const TRANCHE_4: &[&str] = &["completions", "e2e", "path", "relative", "remote"];
 
 fn members(cases: &BTreeSet<String>, family: &str) -> BTreeSet<String> {
     cases
