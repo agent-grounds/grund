@@ -90,15 +90,6 @@ pub(super) fn bare_block_line(record: &FileRecord, lineno: usize) -> bool {
         })
 }
 
-/// Whether line `lineno` of a source file is inside a `/* … */` block, so its
-/// first `*/` is the block's envelope rather than text (§FS-declarations.line.block-comment).
-pub(super) fn in_block_comment(record: &FileRecord, lineno: usize) -> bool {
-    !record.markdown
-        && record
-            .block_at(lineno)
-            .is_some_and(|block| block.form == BlockForm::Block)
-}
-
 /// One line the loop recognized as a heading, located in the file's text.
 pub(super) struct HeadingLine<'a> {
     pub(super) text: &'a str,

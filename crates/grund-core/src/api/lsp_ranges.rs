@@ -9,10 +9,10 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::grammar::strip_block_closer;
+use crate::grammar::{cut_at_block_closer, strip_block_closer};
 use crate::model::{
-    Citation, Declaration, DeclarationSource, FileRecords, SectionInfo, StubResolution,
-    paired_declarations,
+    Citation, Declaration, DeclarationSource, FileRecords, HeadingKind, SectionInfo,
+    StubResolution, paired_declarations,
 };
 use crate::resolver::{WorkspaceContext, WorkspaceProject};
 use crate::scanner::without_value_tag;
@@ -145,12 +145,18 @@ pub(super) fn heading_span_parts(
             let scanned = &text[line_start..heading.span.end];
             let scanned = zone.map_or(scanned, |zone| &scanned[..zone.end.min(scanned.len())]);
             let scanned = scanned.trim_end();
-            let title_end = line_start
-                + if record.markdown || zone.is_some() {
-                    scanned.len()
-                } else {
-                    strip_block_closer(scanned).len()
-                };
+            let title_end = if heading.kind == HeadingKind::Declaration
+                && zone.is_none()
+                && record.in_block_comment(line)
+            {
+                // A declaration line ends at its block's first `*/`, where the scan cuts
+                // its title (§FS-declarations.line.block-comment); a section keeps #416's.
+                start + cut_at_block_closer(text.get(start..line_start + scanned.len())?).len()
+            } else if record.markdown || zone.is_some() {
+                line_start + scanned.len()
+            } else {
+                line_start + strip_block_closer(scanned).len()
+            };
             let title = text
                 .get(start..title_end)
                 .filter(|title| !title.is_empty())
