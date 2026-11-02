@@ -225,6 +225,17 @@ impl FileRecord {
         self.blocks.get(index).filter(|block| block.start <= line)
     }
 
+    /// Whether `line` of a source file is inside a `/* … */` block, so its first
+    /// `*/` is the block's envelope rather than text: the one gate the scan's
+    /// declaration title and the editor's declaration span both read
+    /// (§FS-declarations.line.block-comment, §FS-lsp.1.3.4).
+    pub(crate) fn in_block_comment(&self, line: usize) -> bool {
+        !self.markdown
+            && self
+                .block_at(line)
+                .is_some_and(|block| block.form == BlockForm::Block)
+    }
+
     /// A recorded heading's rendered text.
     pub(crate) fn heading_text(&self, heading: &RecordedHeading) -> &str {
         &self.text()[heading.text.clone()]

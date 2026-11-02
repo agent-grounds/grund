@@ -165,6 +165,8 @@ mod tests_init_allocation;
 #[cfg(test)]
 mod tests_init_guidance;
 #[cfg(test)]
+mod tests_lsp_block_closer_spans;
+#[cfg(test)]
 mod tests_multi_line_string;
 #[cfg(test)]
 mod tests_python_assigned_data;

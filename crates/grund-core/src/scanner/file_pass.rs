@@ -34,9 +34,7 @@ use super::extents::assign_extents;
 use super::qualified_citations::{
     scan_fallback_qualified_citations, scan_workspace_qualified_pass,
 };
-use super::record::{
-    CommentFences, HeadingLine, bare_block_line, declaration_eligible, in_block_comment, zone_of,
-};
+use super::record::{CommentFences, HeadingLine, bare_block_line, declaration_eligible, zone_of};
 use super::relative_sections::HeldHeadings;
 use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
@@ -219,7 +217,7 @@ pub(super) fn scan_file_text(
         let bare_block = !is_md && !scan.in_py_docstring && bare_block_line(&record, lineno);
         // §FS-config-v2.schema.sources.declarations.gate: one answer, before every recognizer.
         let eligible = declaration_eligible(&record, &reading, lineno);
-        let in_block = !is_md && !scan.in_py_docstring && in_block_comment(&record, lineno);
+        let in_block = !is_md && !scan.in_py_docstring && record.in_block_comment(lineno);
         let mut declared = false;
         if heading_position
             && eligible
