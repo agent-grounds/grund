@@ -2,11 +2,20 @@
 //! the server publishes (§FS-lsp.1.1), the declarations, sections and
 //! citations it navigates (§FS-lsp.1.3.1), and every file its run read
 //! (§FS-lsp.responsiveness.3). Site-less CLI-level config cautions are
-//! `check`'s alone (§FS-check.checks.config-version-1).
+//! `check`'s alone (§FS-check.checks.config-version-1, §FS-check.4.11.2);
+//! the site-less scope cautions are not (§DA-engine-renders-nothing).
 
 use super::agreement_render_model::Decl;
 use super::agreement_render_tree::View;
 use serde_json::{Value, json};
+
+/// The run-level scope cautions, built by the one function the CLI and the
+/// editor snapshot both read, so the snapshot's report keeps them, site-less,
+/// in report order (§DA-engine-renders-nothing): the empty scan
+/// (§FS-check.2.2), nothing recognized (§FS-check.4.5) and the redundant
+/// `--full` (§FS-check.1.3). Every other site-less finding is a CLI-level
+/// caution of `check` and no other command (§FS-check.4.11.2).
+const SCOPE_CAUTIONS: [&str; 3] = ["empty-scan", "nothing-recognized", "full-scope-ignored"];
 
 impl View<'_> {
     fn absolute(&self, file: &str) -> String {
@@ -43,7 +52,7 @@ impl View<'_> {
     fn editor_finding(&self, f: &Value) -> Value {
         json!({"authority":f.get("authority").cloned().unwrap_or(json!([])),"code":f["code"],
             "column":self.column(f),"line":f["line"],"message":f["message"],
-            "path":self.identity(f["path"].as_str().unwrap()),"severity":f["severity"],
+            "path":f["path"].as_str().map(|p| self.identity(p)),"severity":f["severity"],
             "sites":f["sites"].as_array().into_iter().flatten().map(|s|
                 json!({"path":self.identity(s["path"].as_str().unwrap()),"line":s["line"]}))
                 .collect::<Vec<_>>()})
@@ -56,7 +65,7 @@ impl View<'_> {
         let mut report = json!({"errors":[],"warnings":[],"suggestions":[]});
         // §FS-scan.path.check: an explicit path narrows the published report too.
         for f in &self.findings() {
-            if f["path"].is_null() {
+            if f["path"].is_null() && !SCOPE_CAUTIONS.iter().any(|c| f["code"] == *c) {
                 continue;
             }
             let key = if f["severity"] == "error" {
