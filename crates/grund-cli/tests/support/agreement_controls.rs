@@ -351,3 +351,52 @@ fn no_config_cli_and_editor_stay_in_the_disposable_input() {
         "isolated no-config entrypoints: {errors:?}"
     );
 }
+
+/// A paired question leaves each receipt with its own witness: Python's fact on
+/// Python's receipt, Node's on Node's (§REQ-one-answer.proof.evidence,
+/// §REQ-one-answer.proof.delivery.payment).
+#[test]
+fn a_paired_question_leaves_both_receipts_witnessed() {
+    use super::agreement_evidence::{capture, witness};
+    use super::agreement_host::Host;
+    let python = json!({"cwd":"/case/repo","args":["list"]});
+    let node = json!({"cwd":"/case/repo","operation":"list","args":[]});
+    let response = json!({
+        "python":{"request":python,"envelope":{"answer":"python"}},
+        "node":{"request":node,"envelope":{"answer":"node"},"seconds":0.25}});
+    let calls = capture(|| {
+        Host::paired(
+            python.clone(),
+            node.clone(),
+            &response,
+            1.5,
+            |surface, answer| {
+                witness(json!({"oracle":"control","surface":surface,"answer":answer}));
+            },
+        );
+    });
+    let seen: Vec<_> = calls
+        .iter()
+        .map(|call| {
+            (
+                call.surface.as_str(),
+                call.expected["surface"].as_str(),
+                call.seconds,
+            )
+        })
+        .collect();
+    assert_eq!(
+        seen,
+        [
+            ("python", Some("python"), Some(1.5)),
+            ("node", Some("node"), Some(0.25))
+        ]
+    );
+    for call in &calls {
+        assert_eq!(
+            call.expected["answer"], call.result,
+            "{} witness",
+            call.surface
+        );
+    }
+}

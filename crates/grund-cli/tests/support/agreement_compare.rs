@@ -36,16 +36,11 @@ pub fn hosts(
     let node_req = question.node_request(&cwd);
     // Every question here only reads its tree; the writers keep their own
     // isolated clones and order (`agreement_mutations`).
-    let (python, node) = host.pair(request.clone(), node_req.clone());
+    let (python, node) = host.pair(request.clone(), node_req.clone(), |surface, answer| {
+        let surface_context = question.context(context, surface);
+        super::agreement_truth::host(&surface_context, question, surface, answer, errors);
+    });
     let python_context = question.context(context, "python");
-    super::agreement_truth::host(&python_context, question, "python", &python, errors);
-    super::agreement_truth::host(
-        &question.context(context, "node"),
-        question,
-        "node",
-        &node,
-        errors,
-    );
     // §FS-distribution.3.2.1.1: Node's `cover` takes no `lines`, so its pinned
     // refusal is the whole of its answer and it shares no domain with the peers.
     let node_peer = question.surface != "cover-lines";
