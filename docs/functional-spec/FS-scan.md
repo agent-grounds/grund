@@ -72,6 +72,18 @@ The ID resolves against that project read as [§FS-scan.path.check](FS-scan.md#p
 
 ### path.refs: `refs` scans the path's tree
 
+An ID operand resolves against the selected project's declarations, read as
+[§FS-scan.path.check](FS-scan.md#pathcheck-check-reads-more-than-it-reports) reads
+them, including declarations retained for read compatibility under
+[§FS-config.3.2.6](FS-config.md#326-resolving-an-off-grammar-citation). A declaration
+outside the explicit path can therefore authorize that operand, but one in
+another project cannot. The path selects the reported sites, not whether the
+operand resolves: a compatible ID succeeds with exactly those sites, including
+an empty selection. Inline sections and ambiguity use the same project catalog
+([§FS-refs.4](FS-refs.md#4-exit-codes)).
+The correction to path-dependent compatibility refusal is recorded in
+[§DF-refs-compatible-id-project-scope](../decisions/functional/DF-refs-compatible-id-project-scope.md#df-refs-compatible-id-project-scope-a-refs-path-selects-sites-while-the-project-resolves-a-compatible-id).
+
 For `refs`, in each of its modes ([§FS-refs.1.1](FS-refs.md#11-three-modes-one-path)), `<path>` is the directory or file whose tree is scanned, the project's with none ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)), discovered as by every other subcommand ([§FS-config.1](FS-config.md#1-file-location-and-discovery)). A `--from` source resolves against the project the path discovers, as `show`'s ID does ([§FS-scan.path.show](FS-scan.md#pathshow-show-resolves-the-id-against-the-project-the-path-discovers)), and the sites it lists are those of the tree the path scans. A run that loads a workspace lists the sites of the path's tree too, not the workspace's: from a directory below the workspace root and outside every member, `--from` lists only the sites at or under it, as it does in one project ([§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites)), and every other mode those and the ones a stub there lends ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), as `list` bounds its entries there ([§FS-scan.path.list](FS-scan.md#pathlist-list-reports-the-paths-entries-and-resolves-against-the-project)).
 
 ### path.id: `id` numbers from the project the path discovers
