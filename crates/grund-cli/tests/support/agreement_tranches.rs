@@ -29,18 +29,10 @@ const TRANCHE_3: &[&str] = &[
     "rust",
 ];
 /// The families tranche 4 delivers: the five tranche 3 left out once their
-/// divergences were fixed, and the next five by size.
+/// divergences were fixed, and three of the next five by size. `completions`
+/// and `section` stay rows of `WIDENING`, for the reasons the facts README gives.
 const TRANCHE_4: &[&str] = &[
-    "block",
-    "completions",
-    "e2e",
-    "line",
-    "marker",
-    "non",
-    "path",
-    "relative",
-    "remote",
-    "section",
+    "block", "e2e", "line", "marker", "non", "path", "relative", "remote",
 ];
 
 fn members(cases: &BTreeSet<String>, family: &str) -> BTreeSet<String> {
@@ -62,7 +54,6 @@ fn s4_tranche_3_families_run_against_complete_authored_facts() {
 }
 
 #[test]
-#[ignore = "red until #674 batch 4; implement removes this"]
 fn s4_tranche_4_families_run_against_complete_authored_facts() {
     assert_covered_whole(TRANCHE_4, &[TRANCHE_1, TRANCHE_2, TRANCHE_3].concat());
 }

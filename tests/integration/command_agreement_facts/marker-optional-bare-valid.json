@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "case": "marker-optional-bare-valid",
+  "inputFiles": {
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-001-alpha.md": {"bytes":[35,32,70,83,45,48,48,49,45,97,108,112,104,97,58,32,65,108,112,104,97,10,10,82,101,102,101,114,101,110,99,101,115,32,70,83,45,48,48,50,45,98,101,116,97,46,10,10]},
+    "repo/docs/functional-spec/FS-002-beta.md": {"bytes":[35,32,70,83,45,48,48,50,45,98,101,116,97,58,32,66,101,116,97,10,10,82,101,102,101,114,101,110,99,101,115,32,70,83,45,48,48,49,45,97,108,112,104,97,46,10,10]},
+    "repo/docs/functional-spec/README.md": {"bytes":[35,32,70,83,32,105,110,100,101,120,10,10,69,118,101,114,121,32,96,70,83,96,32,100,101,99,108,97,114,97,116,105,111,110,32,105,110,32,116,104,105,115,32,102,111,108,100,101,114,44,32,111,110,101,32,108,105,110,107,101,100,32,101,110,116,114,121,32,101,97,99,104,46,10,10,45,32,91,194,167,70,83,45,48,48,49,45,97,108,112,104,97,93,40,70,83,45,48,48,49,45,97,108,112,104,97,46,109,100,35,102,115,45,48,48,49,45,97,108,112,104,97,45,97,108,112,104,97,41,10,45,32,91,194,167,70,83,45,48,48,50,45,98,101,116,97,93,40,70,83,45,48,48,50,45,98,101,116,97,46,109,100,35,102,115,45,48,48,50,45,98,101,116,97,45,98,101,116,97,41,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,102,97,108,115,101,10]},
+    "spec.refs": {"bytes":[70,83,45,48,48,49,45,99,104,101,99,107,46,49,46,49,10]}
+  },
+  "facts": {
+    "point": "§FS-citations.recognized",
+    "authoredFrom": "Read from the case's input bytes: grund.toml writes `grund_config_version = 1` and `[reference] strict = false` (the version-1 reader, §FS-config.5; the compatibility mode of §FS-config.3.1), with default marker `§`, kinds and scan, so docs/ is read (§FS-config.3.5). Under `strict = false` an unmarked ID token is a citation as well as a marked one (§FS-citations.recognized): FS-001-alpha's line 3 `References FS-002-beta.` cites FS-002-beta and FS-002-beta's line 3 `References FS-001-alpha.` cites FS-001-alpha, both bare, the sentence-final `.` being punctuation. The index README cites each with a marked token inside its authored link. The FS home is docs/functional-spec/ and its index the default README.md (§FS-config.3.4.2); it holds both entries as full links whose destinations already name each declaration's own heading anchor (§FS-check.3.18, §FS-fmt.6.2.1, §FS-fmt.6.2.2: `# FS-001-alpha: Alpha` slugifies to fs-001-alpha-alpha, `# FS-002-beta: Beta` to fs-002-beta-beta), so no index finding arises and the index pass re-derives nothing (§FS-fmt.6.3); the index's citations sit under no declaration (its `# FS index` heading declares nothing). The bare ID-shaped text inside each link destination is no citation (§FS-citations.recognized.link-destinations), a heading's own ID is no citation (§FS-citations.recognized.title-lines), and `FS` alone is no ID. Each declaration's body runs from line 2 to the file's last line 4, a blank one, with no section heading (§FS-show.2.1.2, §FS-list.3.4.1). Both declarations are cited, every citation resolves, so the only finding is the site-less version caution (§FS-check.checks.config-version-1, §FS-config.5.3). FS-404 is the absent control. Fmt rewrites bare citations to marked ones only with --marker (§FS-fmt.2.2), and the cross-reference pass wraps only marked citations, leaving bare ones bare and unwrapped (§FS-fmt.6.5, §FS-fmt.6.2); the only marked citations are the already-canonical index links, so both the dry run and the write change nothing, under every variant and with the overlay's newline edit.",
+    "scanned": ["docs/functional-spec/FS-001-alpha.md","docs/functional-spec/FS-002-beta.md","docs/functional-spec/README.md"],
+    "declarations": [
+      {"id":"FS-001-alpha","kind":"FS","file":"docs/functional-spec/FS-001-alpha.md","heading":"FS-001-alpha: Alpha","title":"Alpha","body":[2,4],"anchor":"fs-001-alpha-alpha"},
+      {"id":"FS-002-beta","kind":"FS","file":"docs/functional-spec/FS-002-beta.md","heading":"FS-002-beta: Beta","title":"Beta","body":[2,4],"anchor":"fs-002-beta-beta"}
+    ],
+    "sections": [],
+    "citations": [
+      {"file":"docs/functional-spec/FS-001-alpha.md","token":"FS-002-beta","enclosing":["FS-001-alpha",null]},
+      {"file":"docs/functional-spec/FS-002-beta.md","token":"FS-001-alpha","enclosing":["FS-002-beta",null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-001-alpha","enclosing":[null,null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-002-beta","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [],
+      "writeChanges": [],
+      "written": {}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

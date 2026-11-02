@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "case": "remote-projects-none-reads-nothing-new",
+  "inputFiles": {
+    "expected.exit": {"bytes":[49,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[46,103,114,117,110,100,47,110,111,116,101,115,46,109,100,58,51,58,32,101,114,114,111,114,58,32,117,110,107,110,111,119,110,32,114,101,102,101,114,101,110,99,101,32,71,79,65,76,45,103,111,110,101,10,100,111,99,115,47,102,115,46,109,100,58,53,58,32,101,114,114,111,114,58,32,117,110,107,110,111,119,110,32,114,101,102,101,114,101,110,99,101,32,71,79,65,76,45,120,10,100,111,99,115,47,102,115,46,109,100,58,51,58,32,119,97,114,110,105,110,103,58,32,100,101,99,108,97,114,101,100,32,98,117,116,32,110,101,118,101,114,32,99,105,116,101,100,58,32,70,83,45,97,59,32,99,105,116,101,32,105,116,10]},
+    "repo": {"directory":true},
+    "repo/.grund": {"directory":true},
+    "repo/.grund/notes.md": {"bytes":[35,32,78,111,116,101,115,10,10,65,110,32,101,120,112,108,105,99,105,116,108,121,32,115,99,97,110,110,101,100,32,110,111,116,101,32,117,110,100,101,114,32,96,46,103,114,117,110,100,47,96,32,115,116,105,108,108,32,99,105,116,101,115,32,194,167,71,79,65,76,45,108,111,99,97,108,32,97,110,100,32,194,167,71,79,65,76,45,103,111,110,101,46,10]},
+    "repo/.grund/remotes": {"directory":true},
+    "repo/.grund/remotes/x": {"directory":true},
+    "repo/.grund/remotes/x/docs": {"directory":true},
+    "repo/.grund/remotes/x/docs/goals.md": {"bytes":[35,32,71,111,97,108,115,10,10,35,35,32,71,79,65,76,45,120,58,32,97,32,103,111,97,108,32,111,110,108,121,32,116,104,101,32,99,111,112,121,32,100,101,99,108,97,114,101,115,10,10,35,35,32,71,79,65,76,45,108,111,99,97,108,58,32,97,32,100,117,112,108,105,99,97,116,101,32,111,102,32,116,104,101,32,99,111,110,115,117,109,101,114,32,103,111,97,108,10]},
+    "repo/.grund/remotes/x/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,112,114,111,106,101,99,116,95,110,97,109,101,32,61,32,34,120,34,10,10,91,105,100,93,10,102,111,114,109,97,116,32,61,32,34,123,107,105,110,100,125,45,123,115,108,117,103,125,34,10,10,91,91,107,105,110,100,115,93,93,10,107,105,110,100,32,61,32,34,71,79,65,76,34,10,102,105,108,101,32,61,32,34,100,111,99,115,47,103,111,97,108,115,46,109,100,34,10]},
+    "repo/docs": {"directory":true},
+    "repo/docs/fs.md": {"bytes":[35,32,83,112,101,99,115,10,10,35,35,32,70,83,45,97,58,32,97,32,99,111,110,115,117,109,101,114,32,115,112,101,99,10,10,83,101,114,118,101,115,32,194,167,71,79,65,76,45,108,111,99,97,108,44,32,97,110,100,32,99,105,116,101,115,32,194,167,71,79,65,76,45,120,44,32,119,104,105,99,104,32,111,110,108,121,32,116,104,101,32,117,110,114,101,97,100,32,99,111,112,121,32,117,110,100,101,114,32,96,46,103,114,117,110,100,47,114,101,109,111,116,101,115,47,120,47,96,32,100,101,99,108,97,114,101,115,46,10]},
+    "repo/docs/goals.md": {"bytes":[35,32,71,111,97,108,115,10,10,35,35,32,71,79,65,76,45,108,111,99,97,108,58,32,97,32,108,111,99,97,108,32,103,111,97,108,10,10,84,104,101,32,99,111,110,115,117,109,101,114,32,107,101,101,112,115,32,105,116,115,32,111,119,110,32,103,111,97,108,115,46,10]},
+    "repo/grund.lock": {"bytes":[35,32,78,111,116,32,97,32,103,114,117,110,100,32,108,111,99,107,58,32,110,111,32,91,119,111,114,107,115,112,97,99,101,46,114,101,109,111,116,101,115,93,32,116,97,98,108,101,32,97,115,107,115,32,102,111,114,32,111,110,101,44,32,115,111,32,105,116,32,105,115,32,110,101,118,101,114,32,112,97,114,115,101,100,46,10,91,91,112,97,99,107,97,103,101,93,93,10,110,97,109,101,32,61,32,34,117,110,114,101,108,97,116,101,100,34,10,118,101,114,115,105,111,110,32,61,32,34,48,46,49,46,48,34,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,112,114,111,106,101,99,116,95,110,97,109,101,32,61,32,34,99,111,110,115,117,109,101,114,34,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,116,114,117,101,10,10,91,105,100,93,10,102,111,114,109,97,116,32,61,32,34,123,107,105,110,100,125,45,123,115,108,117,103,125,34,10,10,91,91,107,105,110,100,115,93,93,10,107,105,110,100,32,61,32,34,71,79,65,76,34,10,102,105,108,101,32,61,32,34,100,111,99,115,47,103,111,97,108,115,46,109,100,34,10,10,91,91,107,105,110,100,115,93,93,10,107,105,110,100,32,61,32,34,70,83,34,10,102,105,108,101,32,61,32,34,100,111,99,115,47,102,115,46,109,100,34,10,10,91,115,99,97,110,93,10,105,110,99,108,117,100,101,32,61,32,91,34,100,111,99,115,34,44,32,34,46,103,114,117,110,100,47,110,111,116,101,115,46,109,100,34,93,10,10,91,119,111,114,107,115,112,97,99,101,93,10,109,101,109,98,101,114,115,32,61,32,91,93,10]},
+    "spec.refs": {"bytes":[70,83,45,114,101,109,111,116,101,45,112,114,111,106,101,99,116,115,46,100,101,99,108,97,114,97,116,105,111,110,46,110,111,110,101,10]}
+  },
+  "facts": {
+    "point": "§FS-remote-projects.declaration.none",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `project_name = \"consumer\"`, strict, `[id] format = \"{kind}-{slug}\"`, untitled GOAL homed at docs/goals.md and FS at docs/fs.md, `[scan] include = [\"docs\", \".grund/notes.md\"]`, `[workspace] members = []`), docs/fs.md, docs/goals.md and .grund/notes.md; grund.lock and .grund/remotes/x are bytes no table asks for. With no `[workspace.remotes]` table a run reads neither the lock nor the remotes directory (§FS-remote-projects.declaration.none), so GOAL-x, declared only in the unread copy, dangles at docs/fs.md:5 and GOAL-gone at the explicitly scanned note (§FS-check.3.1); the copy's duplicate GOAL-local is no second claimant. The `[workspace]` block makes every run a workspace run whose current project is the root, `consumer` (§FS-workspace.8.9): an unqualified ID resolves there and `consumer/<ID>` is the same query (§FS-workspace.8.2.2); a run below the root outside every member loads the same workspace and narrows its report (§FS-scan.projects.narrowed). Exhaustive batch discovery spells the current project's IDs unqualified (§FS-workspace.8.1.5), list qualifies every ID (§FS-workspace.8.3.1), and the editor asks a citation's question in its own project (§FS-lsp.1.2.5). FS-a is never cited (§FS-check.4.1); GOAL-local is cited twice. Findings are in path, line, message order (§FS-errors.4.1) beside the site-less version caution (§FS-check.2.1.1). Kinds without a title carry none (§FS-config.3.4.3). Cross-reference emission wraps the two resolving GOAL-local citations in Markdown and leaves the dangling ones bare (§FS-fmt.6, §FS-fmt.6.4). FS-404 is the absent control.",
+    "kinds": [
+      {"kind":"GOAL","title":null,"home":"docs/goals.md"},
+      {"kind":"FS","title":null,"home":"docs/fs.md"}
+    ],
+    "workspace": true,
+    "aliases": [
+      {"file":"grund.toml","alias":"consumer","project":"consumer"}
+    ],
+    "scanned": [".grund/notes.md","docs/fs.md","docs/goals.md"],
+    "declarations": [
+      {"id":"FS-a","kind":"FS","file":"docs/fs.md","heading":"FS-a: a consumer spec","title":"a consumer spec","body":[4,5],"anchor":"fs-a-a-consumer-spec","project":"consumer"},
+      {"id":"GOAL-local","kind":"GOAL","file":"docs/goals.md","heading":"GOAL-local: a local goal","title":"a local goal","body":[4,5],"anchor":"goal-local-a-local-goal","project":"consumer"}
+    ],
+    "sections": [],
+    "citations": [
+      {"file":"docs/fs.md","token":"§GOAL-local","enclosing":["FS-a",null]},
+      {"file":"docs/fs.md","token":"§GOAL-x","enclosing":["FS-a",null]},
+      {"file":".grund/notes.md","token":"§GOAL-local","enclosing":[null,null]},
+      {"file":".grund/notes.md","token":"§GOAL-gone","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
+      {"severity":"error","code":"dangling","path":".grund/notes.md","line":3,"message":"unknown reference GOAL-gone","sites":[],"token":"§GOAL-gone"},
+      {"severity":"warning","code":"unused","path":"docs/fs.md","line":3,"message":"declared but never cited: FS-a; cite it","sites":[]},
+      {"severity":"error","code":"dangling","path":"docs/fs.md","line":5,"message":"unknown reference GOAL-x","sites":[],"token":"§GOAL-x"}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [{"path":".grund/notes.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/fs.md","line":5,"label":"markdown link","counts":{"links_written":1}}],
+      "writeChanges": [{"path":".grund/notes.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/fs.md","line":5,"label":"markdown link","counts":{"links_written":1}}],
+      "written": {".grund/notes.md":{"3":"An explicitly scanned note under `.grund/` still cites [§GOAL-local](../docs/goals.md#goal-local-a-local-goal) and §GOAL-gone."},"docs/fs.md":{"5":"Serves [§GOAL-local](goals.md#goal-local-a-local-goal), and cites §GOAL-x, which only the unread copy under `.grund/remotes/x/` declares."}}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}
