@@ -95,19 +95,43 @@ impl Host {
 
     /// One read-only question put to Python and Node at once: Node answers its
     /// request while Python answers its own (§REQ-one-answer.proof.delivery.payment).
-    /// Each answer keeps its own receipt, Python's first, as `call` gives them;
-    /// Python's carries the pair's time with IPC, Node's its own operation time.
-    pub fn pair(&mut self, python: Value, node: Value) -> (Value, Value) {
+    /// `judge` witnesses each answer before the next receipt is recorded, so each
+    /// fact lands on its own receipt, Python's first (§REQ-one-answer.proof.evidence).
+    pub fn pair(
+        &mut self,
+        python: Value,
+        node: Value,
+        judge: impl FnMut(&str, &Value),
+    ) -> (Value, Value) {
         let start = std::time::Instant::now();
-        let response = self.request(json!({"op":"pair","python":python,"node":node}));
-        let elapsed = start.elapsed().as_secs_f64();
+        let response =
+            self.request(json!({"op":"pair","python":python.clone(),"node":node.clone()}));
+        Self::paired(
+            python,
+            node,
+            &response,
+            start.elapsed().as_secs_f64(),
+            judge,
+        )
+    }
+
+    /// Python's receipt carries the pair's time with IPC, Node's its own
+    /// operation time; each is judged before the next is recorded.
+    pub fn paired(
+        python: Value,
+        node: Value,
+        response: &Value,
+        elapsed: f64,
+        mut judge: impl FnMut(&str, &Value),
+    ) -> (Value, Value) {
         let node_seconds = response["node"]["seconds"]
             .as_f64()
             .expect("Node operation time");
-        (
-            Self::receipt("python", python, &response["python"], elapsed),
-            Self::receipt("node", node, &response["node"], node_seconds),
-        )
+        let python = Self::receipt("python", python, &response["python"], elapsed);
+        judge("python", &python);
+        let node = Self::receipt("node", node, &response["node"], node_seconds);
+        judge("node", &node);
+        (python, node)
     }
 
     fn receipt(surface: &str, request: Value, response: &Value, seconds: f64) -> Value {
