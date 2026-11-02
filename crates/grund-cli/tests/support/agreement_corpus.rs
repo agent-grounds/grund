@@ -138,10 +138,10 @@ type Captured = (Option<usize>, Vec<String>, Vec<evidence::Call>);
 
 /// Every case the acceptance asks is visited; preparation cannot return fewer
 /// cases than the independently discovered catalog it was taken from
-/// (§REQ-one-answer.proof.matrix.family). The cases run on lanes, each with its
-/// own same-source hosts and editor process, which pays for the time a tranche
-/// adds (§REQ-one-answer.proof.delivery.payment); the receipts are adopted in
-/// discovery order, as one lane would have recorded them.
+/// (§REQ-one-answer.proof.matrix.family). The cases run on lanes, longest first,
+/// each lane with its own same-source hosts and editor process, which pays for
+/// the time a tranche adds (§REQ-one-answer.proof.delivery.payment); the
+/// receipts are adopted in discovery order, as one lane would have recorded them.
 pub fn execute(manifests: &std::collections::BTreeMap<String, Value>) -> Vec<String> {
     let mut host = Host::new();
     evidence::receipt(
@@ -174,7 +174,12 @@ pub fn execute(manifests: &std::collections::BTreeMap<String, Value>) -> Vec<Str
         .map_or(1, std::num::NonZero::get)
         .clamp(1, 4)
         .min(asked.len().max(1));
-    let queue = std::sync::Mutex::new(asked.iter().enumerate());
+    // Longest first, so no lane ends alone on a long case
+    // (§REQ-one-answer.proof.delivery.payment); ties keep discovery order.
+    let mut schedule: Vec<_> = asked.iter().enumerate().collect();
+    schedule
+        .sort_by_cached_key(|&(index, name)| (std::cmp::Reverse(weight(&manifests[name])), index));
+    let queue = std::sync::Mutex::new(schedule.into_iter());
     let mut first = Some(host);
     let mut captured: Vec<Captured> = std::thread::scope(|scope| {
         let lanes: Vec<_> = (0..lanes)
@@ -200,7 +205,20 @@ pub fn execute(manifests: &std::collections::BTreeMap<String, Value>) -> Vec<Str
     errors
 }
 
-/// One lane: its hosts and editor, taking the next case asked until none is left.
+/// A case's weight on the lanes: the questions its authored facts pin over every
+/// variant, a static fact of its input. The receipts do not follow this order;
+/// they are adopted in discovery order.
+fn weight(document: &Value) -> usize {
+    VARIANTS
+        .iter()
+        .map(|variant| {
+            super::agreement_expectations::obligations(&document["variants"][*variant])
+                .map_or(0, |questions| questions.len())
+        })
+        .sum()
+}
+
+/// One lane: its hosts and editor, taking the next case scheduled until none is left.
 fn lane<'a>(
     host: Option<Host>,
     queue: &std::sync::Mutex<impl Iterator<Item = (usize, &'a String)>>,
