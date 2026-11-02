@@ -51,10 +51,9 @@ impl View<'_> {
         if let Some(out) = result.get_mut("result").filter(|v| v.is_object()) {
             let summaries: Vec<_> = python["result"]["file_summaries"].as_array().unwrap().iter()
                 .map(|s| {
-                    // §FS-refs.3.3: a file's lines are the sorted, de-duplicated set.
-                    let lines: std::collections::BTreeSet<u64> = python["result"]["hits"].as_array().unwrap().iter()
+                    let lines: Vec<_> = python["result"]["hits"].as_array().unwrap().iter()
                         .filter(|h| h["path"] == json!(self.reported_site(s["path"].as_str().unwrap())))
-                        .filter_map(|h| h["line"].as_u64())
+                        .map(|h| h["line"].clone())
                         .collect();
                     json!({"project":s["project"],"path":s["path"],"count":s["sites"],"lines":lines})
                 })
