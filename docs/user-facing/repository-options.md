@@ -49,6 +49,14 @@ validate the cross-project target; the root check can still report a missing
 declaration or section. A genuinely unknown alias needs correcting rather than
 being treated as the root project's name.
 
+`grund config validate` at the workspace root loads the root's config and every
+member's, and names the config findings of each in the words `grund check`
+uses: a config read as version 1, one read from the deprecated `.agents/`
+location, and an `.agents/grund.toml` that a `grund.toml` beside it outranks.
+`grund config show` prints one config, the root's, and names only that config's
+findings; to ask about the whole workspace, run `grund config validate`
+([§FS-config.4.1.1](../functional-spec/FS-config.md#411-at-a-workspace-root), [§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)).
+
 Every project's managed block lists the workspace's members, so changing the
 membership — adding or removing a member, or editing a `project_description` —
 makes the other projects' blocks stale too. Initializing a project does not:
