@@ -249,7 +249,7 @@ pub(super) fn write_folder_home(
             .and_then(|sites| sites.first())
         {
             return Err(fetch_operational(format!(
-                "cannot fetch {local}: value source {} already declares it; keep the fact in the value source or move it out of the value home before fetching",
+                "cannot fetch {local}: value source {} already declares it; keep the fact in the value source or move it outside the value home before fetching",
                 declaration.file.display()
             )));
         }
