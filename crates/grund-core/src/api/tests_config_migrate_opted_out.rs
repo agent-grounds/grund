@@ -177,3 +177,19 @@ fn strict_false_goes_conservative() {
     );
     assert_compact("strict-true", "[reference]\nstrict = true\n\n", &[]);
 }
+
+/// §FS-config-migrate.8.1.1: on a conservative block nobody reads its named
+/// sections either, so an omitted `[id] named_sections` is never refused there.
+#[test]
+fn a_conservative_block_is_never_refused_on_named_sections() {
+    let head = "[scan]\ninclude = [\"docs\"]\n\n";
+    let report = assert_conservative("named-conservative", head, &["docs/x.md"]);
+    assert!(
+        report
+            .refusals
+            .iter()
+            .all(|refusal| !refusal.what.contains("named_sections")),
+        "{:?}",
+        report.refusals
+    );
+}
