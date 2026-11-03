@@ -5,14 +5,13 @@
 //! each entry with is shared with the rules engine and stays in
 //! `config/citations.rs`.
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use std::path::Path;
 
 use super::values::{bail_config, parse_string, parse_string_list};
 use crate::config::citations::{
     CitationDisjunction, CitationLevel, CitationRules, CitationTarget, parse_citation_target_entry,
 };
-use crate::model::format_path;
 
 /// Parse one `[citations]` / `[citations.<KIND>]` key (§FS-config.3.9). The
 /// top-level table takes only `default`; a per-kind table takes `default` plus
@@ -107,7 +106,8 @@ fn parse_citation_disjunction(
     Ok(CitationDisjunction { targets })
 }
 
+/// Locate a target-grammar refusal at the config line that contains it, retaining
+/// that location for editor publication (§FS-lsp.2.2.4.1).
 fn parse_citation_target(path: &Path, line_no: usize, token: &str) -> Result<CitationTarget> {
-    parse_citation_target_entry(token)
-        .map_err(|message| anyhow!("{}:{line_no}: {message}", format_path(path)))
+    parse_citation_target_entry(token).or_else(|message| bail_config(path, line_no, message))
 }

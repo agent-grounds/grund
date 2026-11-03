@@ -15,11 +15,11 @@
 //! is the workspace component's (§AR-system.2.4), and it reads these rules
 //! downward so one entry is judged by one grammar wherever it is read.
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use std::path::Path;
 
 use super::project::Members;
-use crate::model::format_path;
+use super::v1::bail_config;
 
 /// §AR-workspace.5.2, §FS-workspace.2.2: both `[workspace]` member lists
 /// shape-checked, on every load and whichever sections the file declared. The
@@ -48,7 +48,8 @@ pub(super) fn validate_workspace_lists(members: &Members) -> Result<()> {
 /// §FS-workspace.2, §FS-config.3.8: the shape one `members` entry must have — a
 /// relative path inside the block, or that path with a trailing `/*` glob. Every
 /// refusal is a property of the entry text, so it is taken here rather than
-/// where the directory is looked for.
+/// where the directory is looked for. Its named line is preserved as structured
+/// metadata for editor publication (§FS-lsp.2.2.4.1).
 fn validate_workspace_member(path: &Path, line: usize, member: &str) -> Result<()> {
     let member_path = Path::new(member);
     if member.is_empty()
@@ -70,10 +71,13 @@ fn validate_workspace_member(path: &Path, line: usize, member: &str) -> Result<(
         || member.matches('*').count() > 1
         || (member.contains('*') && !member.ends_with("/*"))
     {
-        return Err(anyhow!(
-            "{}:{line}: invalid [workspace] member `{member}` (expected relative path or trailing /* glob)",
-            format_path(path),
-        ));
+        return bail_config(
+            path,
+            line,
+            format!(
+                "invalid [workspace] member `{member}` (expected relative path or trailing /* glob)"
+            ),
+        );
     }
     Ok(())
 }
@@ -161,7 +165,8 @@ pub(crate) fn both_member_lists_message(entry: &str) -> String {
 /// same in every checkout. The canonical comparison in the workspace component's
 /// `expand_optional_members` stays for the collisions no entry text shows: a
 /// `members` glob that expands onto this entry, or two paths that resolve to one
-/// directory.
+/// directory. Every refusal carries its named line through to the editor
+/// (§FS-lsp.2.2.4.1).
 fn validate_optional_workspace_member(
     path: &Path,
     line: usize,
@@ -175,29 +180,31 @@ fn validate_optional_workspace_member(
         .iter()
         .any(|entry| Path::new(entry) == Path::new(member))
     {
-        return Err(anyhow!(
-            "{}:{line}: {}",
-            format_path(path),
-            both_member_lists_message(member),
-        ));
+        return bail_config(path, line, both_member_lists_message(member));
     }
     // §FS-workspace.2.2.6: an absent parent directory names no namespaces, so a
     // glob here would appear to work and do nothing. The message names the shape
     // that works, because a user who has just been refused needs the form to write.
     if member.contains('*') {
-        return Err(anyhow!(
-            "{}:{line}: [workspace] optional_members may not use a glob: `{member}` — an absent \
-             parent names no namespaces; list one concrete entry per namespace instead",
-            format_path(path),
-        ));
+        return bail_config(
+            path,
+            line,
+            format!(
+                "[workspace] optional_members may not use a glob: `{member}` — an absent \
+                 parent names no namespaces; list one concrete entry per namespace instead"
+            ),
+        );
     }
     let alias = optional_member_alias_segment(member);
     if !is_valid_project_alias(alias) {
-        return Err(anyhow!(
-            "{}:{line}: {} for workspace member `{member}`",
-            format_path(path),
-            invalid_project_alias_message(alias),
-        ));
+        return bail_config(
+            path,
+            line,
+            format!(
+                "{} for workspace member `{member}`",
+                invalid_project_alias_message(alias),
+            ),
+        );
     }
     Ok(())
 }

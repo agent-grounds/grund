@@ -86,8 +86,10 @@ pub(crate) fn is_header(line: &str) -> bool {
     line.starts_with('[') && line.ends_with(']')
 }
 
-/// Fail config parsing with a `path:line: message` error — the located-finding
-/// shape applied to a malformed `grund.toml` (§FS-config.4.3, §FS-errors.2.1).
+/// Fail config parsing or validation with a `path:line: message` error — the
+/// located-finding shape applied to a malformed `grund.toml` (§FS-config.4.3,
+/// §FS-errors.2.1). Preserve that same path and one-based line as structured
+/// metadata so the editor marks the line the message names (§FS-lsp.2.2.4.1).
 pub(in crate::config) fn bail_config<T>(path: &Path, line: usize, message: String) -> Result<T> {
     // §FS-distribution.3.3.2: preserve the parser's location without parsing Display.
     let mut failure = crate::model::OperationDiagnostic::new(

@@ -14,6 +14,7 @@ use std::path::Path;
 use super::kind_defaults::default_kind_index;
 use super::kind_table::ParsedKind;
 use super::kind_values::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
+use super::values::bail_config;
 use crate::config::fields::Field;
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
 use crate::config::project::{KindGrounding, Project, Strength};
@@ -31,7 +32,8 @@ use crate::model::format_path;
 /// built-in rows entirely rather than merging into them.
 ///
 /// The entries then lower into `project`, in `lower_rows` below
-/// (§AR-config.3.1).
+/// (§AR-config.3.1). A refusal naming a line also carries that line for editor
+/// publication (§FS-lsp.2.2.4.1); unlocated refusals stay unlocated.
 pub(super) fn lower_parsed_kinds(
     path: &Path,
     root: &Path,
@@ -39,11 +41,11 @@ pub(super) fn lower_parsed_kinds(
     project: &mut Project,
 ) -> Result<()> {
     if let Some(nameless) = parsed.iter().find(|entry| entry.config.kind.is_empty()) {
-        return Err(anyhow!(
-            "{}:{}: every [[kinds]] entry must declare a `kind`",
-            format_path(path),
-            nameless.header_line
-        ));
+        return bail_config(
+            path,
+            nameless.header_line,
+            "every [[kinds]] entry must declare a `kind`".to_string(),
+        );
     }
     // §FS-config.3.4.4.5: no entries at all is `kinds = []`, the empty kind set,
     // and lowers to no rows below — the reader yields it for nothing else.

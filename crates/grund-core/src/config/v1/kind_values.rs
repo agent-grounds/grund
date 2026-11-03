@@ -8,12 +8,13 @@
 //! (§AR-config.4). The v2 reader asks the same ones of `form` and a values
 //! field, so one spelling has one set of prerequisites (§FS-fields.forms).
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use std::fs;
 use std::path::Path;
 
+use super::values::bail_config;
 use crate::config::kind::KindConfig;
-use crate::model::{format_path, normalize_path_lexically};
+use crate::model::normalize_path_lexically;
 
 /// The lines a row's value refusals are located at: the key that wrote each,
 /// or the row's header (§FS-config.4.3).
@@ -25,7 +26,8 @@ pub(in crate::config) struct ValueLines {
 
 /// Every relationship `values` and `value_chapter` need of their own row
 /// (§FS-config.3.4.9, §FS-config.3.4.13, §FS-fields.forms). Located at the
-/// key's own line, so the message opens the line that has to change.
+/// key's own line, so the message opens the line that has to change and the
+/// editor marks that same line (§FS-lsp.2.2.4.1).
 pub(in crate::config) fn validate_kind_value_keys(
     path: &Path,
     k: &KindConfig,
@@ -36,21 +38,27 @@ pub(in crate::config) fn validate_kind_value_keys(
     if k.values {
         let line = lines.values.unwrap_or(lines.header);
         if !k.citable {
-            return Err(anyhow!(
-                "{}:{line}: kind `{}` sets `values = true` with `citable = false`",
-                format_path(path),
-                k.kind
-            ));
+            return bail_config(
+                path,
+                line,
+                format!(
+                    "kind `{}` sets `values = true` with `citable = false`",
+                    k.kind
+                ),
+            );
         }
         let (home, expects_file) = match (&k.file, &k.folder) {
             (Some(home), None) => (home, true),
             (None, Some(home)) => (home, false),
             _ => {
-                return Err(anyhow!(
-                    "{}:{line}: kind `{}` sets `values = true` without exactly one `file` or `folder` home",
-                    format_path(path),
-                    k.kind
-                ));
+                return bail_config(
+                    path,
+                    line,
+                    format!(
+                        "kind `{}` sets `values = true` without exactly one `file` or `folder` home",
+                        k.kind
+                    ),
+                );
             }
         };
         validate_value_home(path, line, root, &k.kind, home, expects_file)?;
@@ -63,44 +71,57 @@ pub(in crate::config) fn validate_kind_value_keys(
         // §FS-config.3.2.7 is a prerequisite, not a consequence: without
         // named sections the handle this key names is not even a section.
         if !named_sections {
-            return Err(anyhow!(
-                "{}:{line}: [[kinds]] sets `value_chapter` but [id] named_sections is not true",
-                format_path(path)
-            ));
+            return bail_config(
+                path,
+                line,
+                "[[kinds]] sets `value_chapter` but [id] named_sections is not true".to_string(),
+            );
         }
         if !k.citable {
-            return Err(anyhow!(
-                "{}:{line}: kind `{}` sets `value_chapter` with `citable = false`",
-                format_path(path),
-                k.kind
-            ));
+            return bail_config(
+                path,
+                line,
+                format!(
+                    "kind `{}` sets `value_chapter` with `citable = false`",
+                    k.kind
+                ),
+            );
         }
         if !k.scan {
-            return Err(anyhow!(
-                "{}:{line}: kind `{}` sets `value_chapter` with `scan = false` (an unwalked place is never read, so its chapter could never be seen)",
-                format_path(path),
-                k.kind
-            ));
+            return bail_config(
+                path,
+                line,
+                format!(
+                    "kind `{}` sets `value_chapter` with `scan = false` (an unwalked place is never read, so its chapter could never be seen)",
+                    k.kind
+                ),
+            );
         }
         // §FS-values.2.1: a whole-declaration value's immediate children are
         // a contiguous numeric run, so a named chapter cannot legally exist
         // inside one — the pair is refused rather than merged.
         if k.values {
-            return Err(anyhow!(
-                "{}:{line}: kind `{}` sets `value_chapter` and `values = true` (a whole-declaration value admits no named chapter)",
-                format_path(path),
-                k.kind
-            ));
+            return bail_config(
+                path,
+                line,
+                format!(
+                    "kind `{}` sets `value_chapter` and `values = true` (a whole-declaration value admits no named chapter)",
+                    k.kind
+                ),
+            );
         }
         let (home, expects_file) = match (&k.file, &k.folder) {
             (Some(home), None) => (home, true),
             (None, Some(home)) => (home, false),
             _ => {
-                return Err(anyhow!(
-                    "{}:{line}: kind `{}` sets `value_chapter` without exactly one `file` or `folder` home",
-                    format_path(path),
-                    k.kind
-                ));
+                return bail_config(
+                    path,
+                    line,
+                    format!(
+                        "kind `{}` sets `value_chapter` without exactly one `file` or `folder` home",
+                        k.kind
+                    ),
+                );
             }
         };
         validate_value_home(path, line, root, &k.kind, home, expects_file)?;
@@ -132,7 +153,8 @@ pub(in crate::config) fn rule_kind_refusal(k: &KindConfig) -> Option<String> {
 
 /// A value home is mandatory, existing, and physically inside the project root
 /// (§FS-config.3.4.9, §FS-values.1). Resolving both paths closes `..`, absolute,
-/// and symlink escapes through the same located config error.
+/// and symlink escapes through the same located config error, with its named
+/// line preserved for the editor (§FS-lsp.2.2.4.1).
 fn validate_value_home(
     config_path: &Path,
     line: usize,
@@ -143,24 +165,27 @@ fn validate_value_home(
 ) -> Result<()> {
     let candidate = normalize_path_lexically(&root.join(home));
     let root = fs::canonicalize(root).unwrap_or_else(|_| normalize_path_lexically(root));
-    let resolved = fs::canonicalize(&candidate).map_err(|_| {
-        anyhow!(
-            "{}:{line}: value home for kind `{kind}` does not exist: {home}",
-            format_path(config_path)
+    let resolved = fs::canonicalize(&candidate).or_else(|_| {
+        bail_config(
+            config_path,
+            line,
+            format!("value home for kind `{kind}` does not exist: {home}"),
         )
     })?;
     if !resolved.starts_with(&root) {
-        return Err(anyhow!(
-            "{}:{line}: value home for kind `{kind}` must normalize inside the project root: {home}",
-            format_path(config_path)
-        ));
+        return bail_config(
+            config_path,
+            line,
+            format!("value home for kind `{kind}` must normalize inside the project root: {home}"),
+        );
     }
     if (expects_file && !resolved.is_file()) || (!expects_file && !resolved.is_dir()) {
         let expected = if expects_file { "file" } else { "folder" };
-        return Err(anyhow!(
-            "{}:{line}: value home for kind `{kind}` must be an existing {expected}: {home}",
-            format_path(config_path)
-        ));
+        return bail_config(
+            config_path,
+            line,
+            format!("value home for kind `{kind}` must be an existing {expected}: {home}"),
+        );
     }
     Ok(())
 }
