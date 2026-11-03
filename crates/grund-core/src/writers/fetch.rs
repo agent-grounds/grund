@@ -6,7 +6,7 @@
 use std::path::{Path, PathBuf};
 
 use super::fetch_write::{write_file_home, write_folder_home};
-use crate::config::{Config, run_warning_findings};
+use crate::config::{Config, KindConfig, run_warning_findings};
 use crate::grammar::{MarkdownBlocks, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
 use crate::resolver::settled_run_warnings;
@@ -138,6 +138,7 @@ fn fetch_run(
         *diagnostic = Some(err);
         fetch_operational(message)
     })?;
+    let report_base = root_config.display().base().to_path_buf();
     // §FS-fetch.1, §FS-workspace.8.11: the one alias-path splitter, so `fetch` refuses
     // a malformed path with the words `show` prints, still at the operational exit.
     let (namespace, local) =
@@ -182,6 +183,7 @@ fn fetch_run(
     let fetch = kind.fetch.as_deref().ok_or_else(|| {
         fetch_operational(format!("kind `{}` has no fetch integration", kind.kind))
     })?;
+    refuse_value_source_home(&selected, kind, &report_base)?;
     let integration = {
         let configured = Path::new(fetch);
         if configured.is_absolute() {
@@ -255,6 +257,29 @@ fn fetch_run(
 enum FetchHome {
     File(PathBuf),
     Folder(PathBuf),
+}
+
+/// §FS-fetch.4: a value source holds no Markdown declaration. The question is the
+/// one a value home asks of a file (§FS-values.terms), and the answer is spelled
+/// from the run's report base (§FS-errors.4), as `imported_fetch` spells its target.
+fn refuse_value_source_home(
+    selected: &Config,
+    kind: &KindConfig,
+    report_base: &Path,
+) -> std::result::Result<(), FetchFailure> {
+    let Some(file) = kind.file.as_deref().filter(|_| kind.values) else {
+        return Ok(());
+    };
+    let home = selected.root.join(file);
+    if selected.reading(&home).value_format().is_none() {
+        return Ok(());
+    }
+    let shown = format_path(&relative_from_base(report_base, &home));
+    Err(fetch_operational(format!(
+        "kind `{}` cannot fetch into {shown}: a value source holds no Markdown declaration; \
+         give the kind a Markdown file or a folder as its home, or remove its `fetch`",
+        kind.kind
+    )))
 }
 
 /// §FS-fetch.3: validate the complete stdout before any mutation.

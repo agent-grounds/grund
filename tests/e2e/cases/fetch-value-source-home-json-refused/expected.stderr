@@ -1,0 +1,1 @@
+error: kind `CONST` cannot fetch into values/limits.json: a value source holds no Markdown declaration; give the kind a Markdown file or a folder as its home, or remove its `fetch`
