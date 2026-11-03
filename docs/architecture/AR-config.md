@@ -491,8 +491,9 @@ reaches the same renderer from the other side: it converts a v1 `Project` into
 v2-shaped records and hands those to `v2_toml`, so `config show` and
 `config migrate` cannot disagree on v2 spelling
 ([§FS-config-migrate.2.1](../functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate)). The renderer has one selective mode, and only
-migration asks for it. It writes the envelope and the `[workspace]` table and
-leaves every other table to the v2 epoch. That is the candidate of a block with
+migration asks for it. It writes the envelope and the `[workspace]` table, and
+`[presentation] description` when one is set, and leaves every other table to
+the v2 epoch. That is the candidate of a block with
 `include_root = false` that migrates compactly ([§FS-config-migrate.8.1.3](../functional-spec/FS-config-migrate.md#813-what-a-compact-blocks-candidate-holds)).
 `config show` always renders every effective value.
 
