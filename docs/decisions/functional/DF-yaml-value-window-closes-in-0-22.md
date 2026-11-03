@@ -86,11 +86,16 @@ the release.
   `refs`, `cover` and `id` exit `2`. A source with an invalid member now keeps its valid members,
   and in a duplicate across a JSON and a YAML source both are declared, where the JSON value used
   to win. A kind that sets `fetch` now reads the YAML sources in its home, so a citation of one of
-  their IDs resolves instead of drawing `missing-snapshot` or `dangling`. A snapshot fetched under
-  0.21.x for an ID a YAML source in that home declares is now a `duplicate` at exit `1`, so delete
-  one of the two. `grund fetch` into a `file` home that is a value source is now refused at exit `2` and leaves the file byte-identical,
-  in either format, where it used to exit `0` and append Markdown, which broke a JSON source and
-  which a YAML source read as comments. The `yaml-value-source-deferred` code is spent: it never fires, and `--only` naming it says so.
+  their IDs resolves instead of drawing `missing-snapshot` or `dangling`. A snapshot file a
+  `folder` home gained under 0.21.x, for an ID a YAML source in that folder declares, is now a
+  `duplicate` at exit `1`, so delete one of the two. `grund fetch` into a `file` home that is a
+  value source is now refused at exit `2` and leaves the file byte-identical, in either format,
+  where it used to exit `0` and append Markdown. That broke a JSON source at the next `check`. A
+  YAML source was not read then; Markdown already appended to one now reads as comments, so
+  `check` passes on the source's own value: delete the block and write the value in the source.
+  The `yaml-value-source-deferred` code is spent: it never fires, and `--only` naming it says so.
   **Who this affects:** a repository with a YAML file in a value home that drew that warning in
   0.21.0, which should do what the warning named: correct the file, or move it out of the value
-  home. Closes [issue #1133](https://github.com/agent-grounds/grund/issues/1133).
+  home; and a kind that sets `fetch` on a `file` home that is a value source, in either format,
+  which should do what the refusal names: move to a Markdown file or a folder without the source,
+  or remove its `fetch`. Closes [issue #1133](https://github.com/agent-grounds/grund/issues/1133).
