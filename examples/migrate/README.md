@@ -2,7 +2,7 @@
 
 This runnable walkthrough moves a version-1 `grund.toml` to version 2 with `grund config migrate --to 2` ([§FS-config-migrate](../../docs/functional-spec/FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does)). It is for a repository `grund init` set up before version 2 existed. Its config is the one `grund init` writes, trimmed to two kinds and two languages, with four comments: a header block, one above the `FS` row, one above `[scan] include`, and one trailing `[scan] exclude`.
 
-The example pins four runs, one per step ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). The first two preview; the third writes with compact output and the fourth with complete output, each changing only the config in a disposable copy.
+The example pins five runs, one per step ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). The first two preview; the third writes with compact output and the fourth with complete output, each changing only the config in a disposable copy. The fifth migrates a different tree, a workspace block with `include_root = false`.
 
 ## Step 1: the preview refuses, and names the repairs
 
@@ -141,6 +141,43 @@ original order, then adds the write outcome, dropped ranges and advice. The
 refresh reminder still appears once and last. `--full` changes no refused
 write, and no preview except one only listed comments refuse, and both write
 modes make the same config-only change.
+
+## Step 5: a block with `include_root = false` migrates to its workspace table
+
+`migrate-5-block/repo/` is a version-2 workspace root that lists `group`. `group/grund.toml` is a version-1 block that only lists its member, `group/a`, and sets `include_root = false`, so no project reads its own files:
+
+```toml
+[workspace]
+include_root = false
+members = ["a"]
+```
+
+From the workspace root, migrate the block:
+
+```bash
+cd examples/migrate/migrate-5-block/repo
+grund config migrate --to 2 --write group
+echo $?    # 0
+```
+
+Neither the `named_sections` refusal nor the default-`include` refusal of step 1 applies here: nothing reads the block, and none of the default include entries or kind homes exist outside its member ([§FS-config-migrate.8.1.2](../../docs/functional-spec/FS-config-migrate.md#812-when-the-block-migrates-compactly)). The written file is the version line and the `[workspace]` table, and the report says the block takes version 2's defaults rather than writing version 1's out ([§FS-config-migrate.8.1.3](../../docs/functional-spec/FS-config-migrate.md#813-what-a-compact-blocks-candidate-holds)):
+
+```text
+wrote grund.toml: version 1 (3 lines) replaced by version 2
+dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults
+```
+
+`migrate-5-block/expected.repo/group/grund.toml` is the written file:
+
+```toml
+grund_config_version = 2
+
+[workspace]
+members = ["a"]
+include_root = false
+```
+
+Both gates still ran. Put a `README.md` or an `AGENTS.md` beside the block's config and the same command exits `1` at the report gate, because version 2 would read that file and warn that nobody scans the block; the block stays on version 1 until the file moves into a member ([§FS-config-migrate.8.1.4](../../docs/functional-spec/FS-config-migrate.md#814-both-gates-still-run)). The report names the file `grund.toml`, from the block's own directory, as every migration report does by default; pass `--path-base=invocation` to see `group/grund.toml`.
 
 ## Trade-offs
 

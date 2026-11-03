@@ -1,0 +1,3 @@
+[workspace]
+include_root = false
+members = ["a"]
