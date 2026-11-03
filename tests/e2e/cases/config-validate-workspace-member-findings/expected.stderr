@@ -1,0 +1,3 @@
+warning: packages/on-agents/.agents/grund.toml is a deprecated config location — move it to packages/on-agents/grund.toml
+warning: packages/on-pair/.agents/grund.toml is ignored — packages/on-pair/grund.toml takes precedence; delete one
+warning: packages/on-v1/grund.toml is version 1; migrate it with grund config migrate --to 2 packages/on-v1

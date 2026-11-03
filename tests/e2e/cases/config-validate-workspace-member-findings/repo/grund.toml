@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "root"
+
+[schema.kinds.FS]
+files = ["docs/notes.md"]
+
+[workspace]
+members = ["packages/on-v1", "packages/on-agents", "packages/on-pair"]
