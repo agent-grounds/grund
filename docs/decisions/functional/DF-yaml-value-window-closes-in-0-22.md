@@ -31,6 +31,12 @@ In 0.22.0 (agent-grounds/grund#1133) a YAML value source takes the path a JSON o
   declared, and a duplicate holds no source back, where 0.21.x let the JSON value win
   ([§FS-values.2.3](../../functional-spec/FS-values.md#23-duplicates-and-ownership));
 - a fetched kind's YAML source is read, so a citation of an ID it declares resolves;
+- `grund fetch` into a `file` home that is a value source is refused at exit `2` with the file
+  byte-identical, in either format ([§FS-fetch.4](../../functional-spec/FS-fetch.md#4-file-home-write)). Now that the source is read, the Markdown a fetch
+  appended would be comments to YAML, so the fetch would exit `0`, the fetched value would be
+  dropped and `check` would stay green on the old one. JSON takes the same refusal because the two
+  formats keep one path: its half refuses earlier a tree the next `check` already refuses at exit
+  `2`, and moves `fetch`'s own exit from `0` to `2`;
 - `yaml-value-source-deferred` is spent: it stays selectable, as a shipped code does, never fires,
   and `--only` says so ([§FS-errors.5.5](../../functional-spec/FS-errors.md#55-the-check-code-catalog), [§FS-check.1.4.1](../../functional-spec/FS-check.md#141-a-selected-check-the-run-leaves-off-says-so));
 - [§FS-values.2.2.4](../../functional-spec/FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings) keeps its coordinate, because a section name that has shipped is kept
@@ -61,6 +67,10 @@ the release.
 - **Promote only the findings' severity.** The findings would fail the run while a source with one
   still declared nothing, the other commands stayed silent and a fetched kind's source stayed
   unread, so the source would still be held apart from a JSON one.
+- **Refuse a fetch into a YAML home alone, or let the Markdown become YAML comments.** Refusing
+  YAML alone would put the two formats back on two paths and leave a JSON home taking an append
+  that breaks it. Letting the append stand, with the loss named in the spec, would keep a fetch
+  that exits `0` while nothing reads the value it fetched.
 
 ## release-note: Release note
 
@@ -75,8 +85,9 @@ the release.
   `refs`, `cover` and `id` exit `2`. A source with an invalid member now keeps its valid members,
   and in a duplicate across a JSON and a YAML source both are declared, where the JSON value used
   to win. A kind that sets `fetch` now reads the YAML sources in its home, so a citation of one of
-  their IDs resolves instead of drawing `missing-snapshot` or `dangling`. The
-  `yaml-value-source-deferred` code is spent: it never fires, and `--only` naming it says so.
+  their IDs resolves instead of drawing `missing-snapshot` or `dangling`. `grund fetch` into a `file` home that is a value source is now refused at exit `2` and leaves the file byte-identical,
+  in either format, where it used to exit `0` and append Markdown, which broke a JSON source and
+  which a YAML source read as comments. The `yaml-value-source-deferred` code is spent: it never fires, and `--only` naming it says so.
   **Who this affects:** a repository with a YAML file in a value home that drew that warning in
   0.21.0, which should do what the warning named: correct the file, or move it out of the value
   home. Closes [issue #1133](https://github.com/agent-grounds/grund/issues/1133).

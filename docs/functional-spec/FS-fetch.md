@@ -69,6 +69,11 @@ The final file is installed atomically only after the complete result is availab
 the home cannot be read, parsed unambiguously, or atomically replaced, the command emits
 an operational error, exits 2, and leaves it byte-identical.
 
+A home that is a value source ([§FS-values.terms](FS-values.md#terms-terms)), in either format, holds no Markdown
+declaration, so it is refused the same way. The refusal is decided by the home's path and
+its kind, not by what the file holds, and comes before the integration runs. A value kind
+whose `file` home is a Markdown file has no value source there, and takes the write above.
+
 ## 5. Folder-home write
 
 For `folder = "<home>"`, grund replaces the file that currently declares the requested
@@ -93,9 +98,10 @@ unused-snapshot exemption, or workspace-wide snapshot ownership behavior.
 ## 7. Output and exits
 
 Success writes nothing to stdout or stderr and exits 0. An unparseable ID is a query
-failure and exits 1. Missing fetch configuration, integration failure, rejected output,
-ambiguous existing content, and filesystem failure are CLI-level operational errors on
-stderr and exit 2, following [§FS-errors.2.2](FS-errors.md#22-cli-level-message).
+failure and exits 1. Missing fetch configuration, a `file` home that is a value source
+([§FS-fetch.4](FS-fetch.md#4-file-home-write)), integration failure, rejected output, ambiguous existing content, and
+filesystem failure are CLI-level operational errors on stderr and exit 2, following
+[§FS-errors.2.2](FS-errors.md#22-cli-level-message).
 
 Once it ships, `fetch --remote` exits 0 when the projection and lock are installed, and prints the
 remote's own content findings, which never block the pin
