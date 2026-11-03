@@ -168,7 +168,7 @@ pub(in crate::config) fn rule_kind_refusal(
 /// Markdown. In v2 the language decides, of the `file` home or of the `<ID>.md` a `folder`
 /// home gets (§FS-fetch.5), and a name no language claims is read by nothing. v1 has no
 /// language to ask: the name must be Markdown's, and its effective `[scan] extensions`
-/// must list `md`, or nothing reads the file (§FS-scan.scope.extensions).
+/// must list `md`, or nothing reads the file.
 fn snapshot_read_as_markdown(k: &KindConfig, sources: &Sources) -> bool {
     let Some(model) = &sources.model else {
         return file_home_is_named_markdown(k) && sources.extensions.iter().any(|ext| ext == "md");
