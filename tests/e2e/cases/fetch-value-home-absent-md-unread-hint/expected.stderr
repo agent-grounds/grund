@@ -1,0 +1,2 @@
+error: grund.toml:9: value home for kind `CONST` does not exist: values/limits.md
+hint: a value kind's home must exist; create the file

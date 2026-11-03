@@ -36,7 +36,8 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
     if let Some((line, message)) = late.into_iter().min_by_key(|(line, _)| *line) {
         return r.fail(line, message);
     }
-    // §FS-config-v2.schema.sources.rules: `form_prerequisites` asks the model.
+    // §FS-config-v2.schema.sources.rules: `form_prerequisites` asks the model, and
+    // §FS-fetch.4.1: so does an absent value home's hint, for how a snapshot is read.
     sources_model::lower(&mut r);
     for row in &r.rows {
         form_prerequisites(&r, row, root)?;
@@ -89,7 +90,8 @@ fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
         value_chapter: values_field.and_then(|field| field.content.map(|(_, line)| line)),
     };
     let named_sections = r.project.schema.ids.named_sections;
-    validate_kind_value_keys(r.path, &k, &lines, root, named_sections)
+    let model = r.project.schema.sources.model.as_ref();
+    validate_kind_value_keys(r.path, &k, &lines, root, named_sections, model)
 }
 
 /// §FS-config-v2.schema.sources.rules: whether every `file` place of `row` passes,

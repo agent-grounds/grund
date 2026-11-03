@@ -133,7 +133,14 @@ pub(super) fn lower_parsed_kinds(
             values: entry.values_line,
             value_chapter: entry.value_chapter_line,
         };
-        validate_kind_value_keys(path, k, &lines, root, project.schema.ids.named_sections)?;
+        validate_kind_value_keys(
+            path,
+            k,
+            &lines,
+            root,
+            project.schema.ids.named_sections,
+            None,
+        )?;
     }
     // §FS-config.3.4.7.6: an unwalked kind is a place and nothing more. A citable one
     // would have declarations nobody reads — the trap §FS-config.3.5.10 closes — and the

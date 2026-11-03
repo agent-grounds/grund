@@ -14,6 +14,7 @@ use std::path::Path;
 
 use super::values::bail_config;
 use crate::config::kind::KindConfig;
+use crate::config::sources::SourceModel;
 use crate::model::normalize_path_lexically;
 
 /// The lines a row's value refusals are located at: the key that wrote each,
@@ -27,13 +28,15 @@ pub(in crate::config) struct ValueLines {
 /// Every relationship `values` and `value_chapter` need of their own row
 /// (§FS-config.3.4.9, §FS-config.3.4.13, §FS-fields.forms). Located at the
 /// key's own line, so the message opens the line that has to change and the
-/// editor marks that same line (§FS-lsp.2.2.4.1).
+/// editor marks that same line (§FS-lsp.2.2.4.1). `model` is a v2 project's
+/// source model; v1 has none (§FS-config.5.2).
 pub(in crate::config) fn validate_kind_value_keys(
     path: &Path,
     k: &KindConfig,
     lines: &ValueLines,
     root: &Path,
     named_sections: bool,
+    model: Option<&SourceModel>,
 ) -> Result<()> {
     if k.values {
         let line = lines.values.unwrap_or(lines.header);
@@ -61,7 +64,7 @@ pub(in crate::config) fn validate_kind_value_keys(
                 );
             }
         };
-        validate_value_home(path, line, root, k, home, expects_file)?;
+        validate_value_home(path, line, root, k, home, expects_file, model)?;
     }
     // §FS-config.3.4.13: the chapter key's own relationships. Each is a
     // state in which no coordinate could ever exist, so the config is
@@ -124,7 +127,7 @@ pub(in crate::config) fn validate_kind_value_keys(
                 );
             }
         };
-        validate_value_home(path, line, root, k, home, expects_file)?;
+        validate_value_home(path, line, root, k, home, expects_file, model)?;
     }
     Ok(())
 }
@@ -161,10 +164,33 @@ pub(in crate::config) fn rule_kind_refusal(
     })
 }
 
-/// §FS-fetch.4.1: the one step past an absent home. `grund fetch` writes Markdown, so
-/// it is the way through only for a kind that sets it and a home that holds Markdown.
-fn absent_value_home_hint(k: &KindConfig, shape: &str) -> String {
-    if k.fetch.is_some() && file_home_is_named_markdown(k) {
+/// §FS-fetch.4.1: whether the project reads what `grund fetch` writes at this home as
+/// Markdown. In v2 the language decides, of the `file` home or of the `<ID>.md` a `folder`
+/// home gets (§FS-fetch.5), and a name no language claims is read by nothing.
+fn snapshot_read_as_markdown(k: &KindConfig, model: Option<&SourceModel>) -> bool {
+    let Some(model) = model else {
+        return file_home_is_named_markdown(k);
+    };
+    // Any stem will do: a language goes by the final extension.
+    let written = k.file.as_deref().unwrap_or("<ID>.md");
+    model
+        .language_of(Path::new(written))
+        .is_some_and(|language| language.reads_markdown())
+}
+
+/// §FS-fetch.4.1: the one step past an absent home. Outside the root no step helps, so
+/// that hint names another path. Inside it, `grund fetch` writes Markdown, so it is the
+/// way through only for a kind that sets it and a home whose snapshot is read as Markdown.
+fn absent_value_home_hint(
+    k: &KindConfig,
+    shape: &str,
+    inside_root: bool,
+    model: Option<&SourceModel>,
+) -> String {
+    if !inside_root {
+        "hint: a value kind's home must be inside the project root; name a path inside it"
+            .to_string()
+    } else if k.fetch.is_some() && snapshot_read_as_markdown(k, model) {
         format!(
             "hint: a value kind's home must exist; create the empty {shape}, then run `grund fetch <ID>` to write the first snapshot"
         )
@@ -184,19 +210,23 @@ fn validate_value_home(
     k: &KindConfig,
     home: &str,
     expects_file: bool,
+    model: Option<&SourceModel>,
 ) -> Result<()> {
     let kind = &k.kind;
     let shape = if expects_file { "file" } else { "folder" };
     let candidate = normalize_path_lexically(&root.join(home));
-    let root = fs::canonicalize(root).unwrap_or_else(|_| normalize_path_lexically(root));
-    // §FS-fetch.4.1: the first line stays as it is; the hint follows it.
+    let written_root = normalize_path_lexically(root);
+    let root = fs::canonicalize(root).unwrap_or_else(|_| written_root.clone());
+    // §FS-fetch.4.1: the first line stays as it is; the hint follows it. `candidate` is
+    // lexical, so it is held to the root as written as well as to the canonical one.
     let resolved = fs::canonicalize(&candidate).or_else(|_| {
+        let inside_root = candidate.starts_with(&written_root) || candidate.starts_with(&root);
         bail_config(
             config_path,
             line,
             format!(
                 "value home for kind `{kind}` does not exist: {home}\n{}",
-                absent_value_home_hint(k, shape)
+                absent_value_home_hint(k, shape, inside_root, model)
             ),
         )
     })?;

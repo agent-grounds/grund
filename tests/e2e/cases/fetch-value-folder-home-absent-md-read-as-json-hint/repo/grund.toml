@@ -1,0 +1,13 @@
+grund_config_version = 2
+project_name = "vals"
+
+[schema.sources]
+languages = ["markdown", "json"]
+
+[schema.sources.extensions]
+md = "json"
+
+[schema.kinds.CONST]
+folders = ["values"]
+form = "value"
+fetch = "scripts/fetch-const"

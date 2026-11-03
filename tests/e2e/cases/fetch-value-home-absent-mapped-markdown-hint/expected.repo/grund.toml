@@ -1,0 +1,10 @@
+grund_config_version = 2
+project_name = "vals"
+
+[schema.sources.extensions]
+markdown = "markdown"
+
+[schema.kinds.CONST]
+files = ["values/limits.markdown"]
+form = "value"
+fetch = "scripts/fetch-const"

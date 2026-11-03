@@ -1,0 +1,2 @@
+error: grund.toml:9: value home for kind `CONST` does not exist: values/limits.markdown
+hint: a value kind's home must exist; create the empty file, then run `grund fetch <ID>` to write the first snapshot
