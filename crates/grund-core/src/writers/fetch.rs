@@ -259,23 +259,22 @@ enum FetchHome {
     Folder(PathBuf),
 }
 
-/// §FS-fetch.4: a value source holds no Markdown declaration. The question is the
-/// one a value home asks of a file (§FS-values.terms), and the answer is spelled
-/// from the run's report base (§FS-errors.4), as `imported_fetch` spells its target.
-/// The way out names a folder without the source, since one kept beside a fetched
-/// snapshot of its own ID is a duplicate (§FS-values.2.3).
+/// §FS-fetch.4: a value source holds no Markdown declaration, and the answer is
+/// spelled from the run's report base (§FS-errors.4), as `imported_fetch` spells
+/// its target. The way out names a folder without the source, since one kept
+/// beside a fetched snapshot of its own ID is a duplicate (§FS-values.2.3).
 fn refuse_value_source_home(
     selected: &Config,
     kind: &KindConfig,
     report_base: &Path,
 ) -> std::result::Result<(), FetchFailure> {
-    let Some(file) = kind.file.as_deref().filter(|_| kind.values) else {
+    let Some(home) =
+        selected
+            .compiled()
+            .fetch_refused_home(selected.schema(), &selected.root, &kind.kind)
+    else {
         return Ok(());
     };
-    let home = selected.root.join(file);
-    if selected.reading(&home).value_format().is_none() {
-        return Ok(());
-    }
     let shown = format_path(&relative_from_base(report_base, &home));
     Err(fetch_operational(format!(
         "kind `{}` cannot fetch into {shown}: a value source holds no Markdown; \

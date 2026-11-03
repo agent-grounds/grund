@@ -32,7 +32,8 @@ In 0.22.0 (agent-grounds/grund#1133) a YAML value source takes the path a JSON o
   ([§FS-values.2.3](../../functional-spec/FS-values.md#23-duplicates-and-ownership));
 - a fetched kind's YAML source is read, so a citation of an ID it declares resolves;
 - `grund fetch` into a `file` home that is a value source is refused at exit `2` with the file
-  byte-identical, in either format ([§FS-fetch.4](../../functional-spec/FS-fetch.md#4-file-home-write)). Now that the source is read, the Markdown a fetch
+  byte-identical, in either format ([§FS-fetch.4](../../functional-spec/FS-fetch.md#4-file-home-write)), and `check` stops naming `grund fetch` for such a home
+  ([§FS-check.3.1.3.1](../../functional-spec/FS-check.md#3131-a-home-fetch-refuses)). Now that the source is read, the Markdown a fetch
   appended would be comments to YAML, so the fetch would exit `0`, the fetched value would be
   dropped and `check` would stay green on the old one. JSON takes the same refusal because the two
   formats keep one path: its half refuses earlier a tree the next `check` already refuses at exit

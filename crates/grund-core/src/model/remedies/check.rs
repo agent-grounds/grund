@@ -79,6 +79,12 @@ pub(crate) fn dangling_fetch(id: impl Display) -> String {
     fill(Code::DANGLING, 2, Some("fetch"), slots)
 }
 
+/// `dangling`'s *Fix*, case `value-source` (§FS-check.3.1).
+pub(crate) fn dangling_value_source() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::DANGLING, 2, Some("value-source"), slots)
+}
+
 /// `dangling`'s *Fix*, case `pattern` (§FS-check.3.1).
 pub(crate) fn dangling_pattern() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
@@ -317,6 +323,12 @@ pub(crate) fn missing_snapshot_escape(escape: impl Display) -> String {
 pub(crate) fn missing_snapshot_fetch(id: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("id", &id)];
     fill(Code::MISSING_SNAPSHOT, 2, Some("fetch"), slots)
+}
+
+/// `missing-snapshot`'s *Fix*, case `value-source` (§FS-check.4.12).
+pub(crate) fn missing_snapshot_value_source() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::MISSING_SNAPSHOT, 2, Some("value-source"), slots)
 }
 
 /// `nothing-recognized`'s *Fix* (§FS-check.4.5).

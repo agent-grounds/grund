@@ -1,0 +1,11 @@
+grund_config_version = 2
+project_name = "vals"
+
+[schema.kinds.CONST]
+files = ["values/limits.yaml"]
+form = "value"
+fetch = "scripts/fetch-const"
+
+[schema.kinds.page]
+citable = false
+files = ["docs/offer.md"]

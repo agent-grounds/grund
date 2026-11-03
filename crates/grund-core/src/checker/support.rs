@@ -111,7 +111,8 @@ fn missing_places(schema: &Schema, frame: Frame<'_>, kind: &str) -> Option<Strin
 
 /// §FS-check.3.1.3 / §FS-check.4.12.1: a missing declaration in a fetch-enabled
 /// home. Existing typo/illustration hints replace the fetch action while the
-/// snapshot-specific base and fixed finding class remain.
+/// snapshot-specific base and fixed finding class remain. `schema` and `frame` are
+/// the target's, so a home `fetch` refuses (§FS-check.3.1.3.1) is asked of it.
 pub(super) fn missing_snapshot_message(
     schema: &Schema,
     frame: Frame<'_>,
@@ -140,9 +141,18 @@ pub(super) fn missing_snapshot_message(
         (Some(near), None, false) => remedies::missing_snapshot_near(near),
         (None, Some(escape), true) => remedies::dangling_escape(escape),
         (None, Some(escape), false) => remedies::missing_snapshot_escape(escape),
-        (None, None, true) => return format!("{base} — {}", remedies::dangling_fetch(rendered)),
-        (None, None, false) => {
-            return format!("{base} — {}", remedies::missing_snapshot_fetch(rendered));
+        (None, None, must) => {
+            let refused = frame
+                .compiled
+                .fetch_refused_home(schema, frame.root(), &missing.kind)
+                .is_some();
+            let tail = match (refused, must) {
+                (true, true) => remedies::dangling_value_source(),
+                (true, false) => remedies::missing_snapshot_value_source(),
+                (false, true) => remedies::dangling_fetch(rendered),
+                (false, false) => remedies::missing_snapshot_fetch(rendered),
+            };
+            return format!("{base} — {tail}");
         }
     };
     format!("{base}; {remedy}")

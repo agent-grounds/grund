@@ -394,6 +394,10 @@
       "text": "run grund fetch {id}"
      },
      {
+      "label": "value-source",
+      "text": "declare it in that value source"
+     },
+     {
       "label": "pattern",
       "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
@@ -427,6 +431,10 @@
      {
       "label": "fetch",
       "text": "run grund fetch {id}"
+     },
+     {
+      "label": "value-source",
+      "text": "declare it in that value source"
      },
      {
       "label": "pattern",
@@ -1977,6 +1985,10 @@
      {
       "label": "fetch",
       "text": "run grund fetch {id}"
+     },
+     {
+      "label": "value-source",
+      "text": "declare it in that value source"
      }
     ]
    },
@@ -2014,6 +2026,10 @@
      {
       "label": "fetch",
       "text": "run grund fetch {id}"
+     },
+     {
+      "label": "value-source",
+      "text": "declare it in that value source"
      }
     ]
    },
@@ -2250,6 +2266,10 @@
       "text": "run grund fetch {id}"
      },
      {
+      "label": "value-source",
+      "text": "declare it in that value source"
+     },
+     {
       "label": "pattern",
       "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
@@ -2289,6 +2309,10 @@
      {
       "label": "fetch",
       "text": "run grund fetch {id}"
+     },
+     {
+      "label": "value-source",
+      "text": "declare it in that value source"
      },
      {
       "label": "pattern",
