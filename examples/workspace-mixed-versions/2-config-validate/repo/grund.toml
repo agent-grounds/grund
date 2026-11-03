@@ -1,0 +1,11 @@
+grund_config_version = 2
+project_name = "root"
+
+[workspace]
+members = ["packages/beta"]
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.kinds.FS]
+files = ["docs/requirements.md"]

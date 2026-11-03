@@ -6,7 +6,9 @@ Usage:  grund config <show | validate> [PATH]
 
   show       print the effective config as TOML in the file's own version (defaults filled in for keys you didn't set).
              It prints what applies, not an opt-in table that is off; `grund config explain` answers for every setting.
+             It warns only about the config it prints; at a workspace root, `grund config validate` names every member's.
   validate   parse the discovered config and report the first error; exit 0 if it's well-formed.
+             At a workspace root it loads every member's config too, and warns about each as `grund check` does.
   explain    say what a table, a key or a check code is, in the version the file is read as; with no target, list
              the tables. It reads the file's version and nothing else, so a config other commands refuse is answered.
              A dotted path with one reading, such as version 2's schema.sources, is answered as '[schema.sources]' is.
