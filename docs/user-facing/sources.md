@@ -236,9 +236,13 @@ keeps `grund fmt` from rewriting a file that the scan still reads.
 
 ## Moving a version-1 file
 
-`grund config migrate --to 2` is planned, not shipped (agent-grounds/grund#461);
-[§FS-config-v2.schema.sources.migration](../functional-spec/FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes) fixes what it will write. To keep the
-meaning when moving by hand:
+`grund config migrate --to 2` writes this out for you
+([§FS-config-v2.schema.sources.migration](../functional-spec/FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)):
+every version-1 source default that differs from version 2's is written into the
+candidate. A block with `include_root = false` that nothing would scan is the
+exception: it takes version 2's defaults, since no project reads its files
+([§FS-config-migrate.8.1.3](../functional-spec/FS-config-migrate.md#813-what-a-compact-blocks-candidate-holds)).
+To keep the meaning when moving by hand:
 
 1. Write `declarations = "any-comment"`. That is version 1's reading, and you
    can switch to `"doc-comments"` once the duplicates it would expose are fixed.

@@ -189,6 +189,57 @@ version 1 with the command that migrates it, and the members are migrated one at
 a time
 ([§FS-config-migrate.8](../functional-spec/FS-config-migrate.md#8-workspaces)).
 
+### A block with `include_root = false`
+
+A block whose `[workspace]` sets `include_root = false` only lists members:
+nobody reads its own files, so the settings version 1 gives a project have no
+reader there. Migrate it like any other config, with
+`grund config migrate --to 2 <block> --write`. On such a block `[id]
+named_sections` is never refused, whatever its value, and an authored one is
+dropped with a notice
+([§FS-config-migrate.8.1.1](../functional-spec/FS-config-migrate.md#811-named-sections)).
+
+When the block also has nothing for a project to read, it migrates
+**compactly**: none of the roots of its version-1 default scope (`[scan] include`
+and the kind homes) exists outside its members, and every key it writes is the
+envelope, `[workspace]`, `named_sections`, an `include` that is `[]` or exactly
+the default list `grund init` writes, `[output]`, or a key at version 1's
+default
+([§FS-config-migrate.8.1.2](../functional-spec/FS-config-migrate.md#812-when-the-block-migrates-compactly)).
+The candidate is then the version line and the `[workspace]` table, and nothing
+else; one notice says the block takes version 2's defaults
+([§FS-config-migrate.8.1.3](../functional-spec/FS-config-migrate.md#813-what-a-compact-blocks-candidate-holds)):
+
+```toml
+grund_config_version = 2
+
+[workspace]
+members = ["a"]
+include_root = false
+```
+
+```text
+wrote grund.toml: version 1 (3 lines) replaced by version 2
+dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults
+```
+
+A block with a `docs` or `src` of its own, a `[[kinds]]` table, or any other
+setting a project would read keeps the ordinary path, with its refusals and its
+defaults written out. Its `include` refusal is the one a project gets: version
+2's unread-file warning reads the block's scope, so the repair still matters
+([§FS-check.4.10](../functional-spec/FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)).
+
+Both gates still run on a compact block. The records gate compares what the
+candidate keeps, the workspace records, the project name and the description;
+the report gate is unchanged
+([§FS-config-migrate.8.1.4](../functional-spec/FS-config-migrate.md#814-both-gates-still-run)).
+So a block that holds a `README.md`, or the `AGENTS.md` that `grund init`
+writes there, is refused at the report gate: version 1's default scope never
+read that file, version 2's whole-root scope does, and the candidate's run warns
+that nobody reads the block. Such a block stays on version 1 until the file moves
+into a member or the block becomes a project. The runnable case is step 5 of
+[`examples/migrate/`](../../examples/migrate/README.md).
+
 ## Why grund tells you about version 1
 
 A `grund check`, `grund config validate` or `grund config show` on a config read
