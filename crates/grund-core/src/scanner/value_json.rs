@@ -16,6 +16,8 @@ use crate::model::sort_path_key;
 use crate::model::{Catalog, DeclarationSource, ValueFormat, normalize_path_lexically};
 use crate::sources::{paths_same_location, physical_path_key};
 
+/// Full-catalog enrollment through the same readers fetch uses for a selected
+/// home (§FS-values.2.2, §FS-fetch.5.1).
 pub(super) fn scan_value_sources(
     schema: &Schema,
     frame: Frame<'_>,
@@ -29,6 +31,37 @@ pub(super) fn scan_value_sources(
             return;
         }
     };
+    scan_sources(schema, frame, sources, findings, errors);
+}
+
+/// The catalog's value declarations for one selected folder home and owner
+/// (§FS-fetch.5.1). Other homes are neither enumerated nor read; content findings
+/// stay in the catalog while discovery and read failures prevent installation.
+pub(crate) fn folder_value_declarations(
+    schema: &Schema,
+    frame: Frame<'_>,
+    folder: &Path,
+    kind: &str,
+) -> std::result::Result<Catalog, ScanError> {
+    let sources = value_sources_in(schema, frame, Some((kind, folder)))?;
+    let mut findings = Catalog::default();
+    let mut errors = Vec::new();
+    scan_sources(schema, frame, sources, &mut findings, &mut errors);
+    if let Some(error) = errors.into_iter().next() {
+        return Err(error);
+    }
+    Ok(findings)
+}
+
+/// One enrollment path for catalog scans and folder-home fetch discovery
+/// (§FS-values.2.2, §FS-fetch.5.1), including the existing YAML deferrals.
+fn scan_sources(
+    schema: &Schema,
+    frame: Frame<'_>,
+    sources: Vec<(PathBuf, &str, ValueFormat)>,
+    findings: &mut Catalog,
+    errors: &mut Vec<ScanError>,
+) {
     let mut grouped = BTreeMap::<PathBuf, (Vec<PathBuf>, Vec<&str>)>::new();
     let mut formats = BTreeMap::new();
     for (path, kind, format) in sources {
@@ -118,18 +151,35 @@ fn duplicate_owned_source(path: &Path, findings: &mut Catalog) {
 }
 
 /// Every value source of every value home, with its owning kind and format
-/// (§FS-values.terms, §FS-values.2.2), in one bytewise path order across formats.
+/// (§FS-values.terms, §FS-values.2.2), in one bytewise path order across formats;
+/// the scoped fetch query shares this enumerator (§FS-fetch.5.1).
 pub(super) fn value_sources<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
 ) -> std::result::Result<Vec<(PathBuf, &'a str, ValueFormat)>, (PathBuf, String)> {
+    value_sources_in(schema, frame, None)
+}
+
+/// The single source enumerator, optionally restricted before any directory
+/// read to fetch's selected owner and folder (§FS-values.2.2, §FS-fetch.5.1).
+fn value_sources_in<'a>(
+    schema: &'a Schema,
+    frame: Frame<'a>,
+    selected: Option<(&str, &Path)>,
+) -> std::result::Result<Vec<(PathBuf, &'a str, ValueFormat)>, ScanError> {
     let mut sources = Vec::new();
     // §FS-config-v2.schema.sources.values: the home picks the files, their language the reader.
     let format_of = |path: &Path| frame.compiled.reading(schema, path).value_format();
     for row in schema.value_rows() {
         let kind = row.name.as_str();
+        if selected.is_some_and(|(owner, _)| owner != kind) {
+            continue;
+        }
         // §FS-config-v2.schema.places: every file and folder of the row is a value home.
         for file in row.files() {
+            if selected.is_some() {
+                continue;
+            }
             let path = normalize_path_lexically(&frame.root().join(file));
             if let Some(format) = format_of(&path) {
                 sources.push((path, kind, format));
@@ -137,6 +187,9 @@ pub(super) fn value_sources<'a>(
         }
         for folder in row.folders() {
             let folder = normalize_path_lexically(&frame.root().join(folder));
+            if selected.is_some_and(|(_, home)| !paths_same_location(home, &folder)) {
+                continue;
+            }
             // §FS-check.6.1.1: cover this effective input before its shared read.
             let disk = frame.sources();
             let entries = disk
