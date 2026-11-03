@@ -9,6 +9,7 @@
 //! `warning:` line a process frontend puts them on belongs to `grund-cli`
 //! (§AR-system.2.9.1, §AR-bindings.2).
 
+use crate::checker::sort_diagnostics;
 use crate::config::{Config, Display, config_file_under, home_form_of};
 /// §FS-check.4.3: the warning for a config root holding both discovery names —
 /// the bare `grund.toml` won, and the `.agents/grund.toml` beside it is read by
@@ -116,9 +117,9 @@ fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Dia
 /// they arrive together. The version-2 reader's window warnings are spent from
 /// grund 0.22.0 (§FS-config-v2.checks.config-not-toml).
 ///
-/// One list rather than a call each at each site: `grund check` names them per
-/// project and `grund config validate` and `grund config show` name them for
-/// one, and a finding that reached only some of those surfaces would be a
+/// One list rather than a call each at each site: `grund check` and `grund config
+/// validate` name them per project ([`workspace_config_diagnostics`]) and `grund
+/// config show` names them for the one config it prints, and a finding that reached only some of those surfaces would be a
 /// finding a repository can hide from by choosing a command.
 pub(super) fn config_diagnostics<'a>(
     config: &'a Config,
@@ -128,4 +129,36 @@ pub(super) fn config_diagnostics<'a>(
         .into_iter()
         .chain(deprecated_config_location_warning(config))
         .chain(config_version_1_warning(config, display))
+}
+
+/// The config findings a workspace names (§FS-check.4.11.3): the root's config
+/// and each project the workspace expansion returns, a member that is the root
+/// itself counted once, all spelled from the root's report base (§FS-errors.4)
+/// and in check's report order. One config, not one scope, and a workspace may
+/// mix the two discovery forms (§FS-workspace.2). `grund check` and `grund
+/// config validate` both name the set from here (§FS-config.4.1.1), so the two
+/// cannot disagree about which configs a workspace has.
+pub(super) fn workspace_config_diagnostics<'a>(
+    root_config: &Config,
+    projects: impl IntoIterator<Item = &'a Config>,
+) -> Vec<Diagnostic> {
+    let display = root_config.display();
+    let mut findings = config_diagnostics(root_config, display).collect::<Vec<_>>();
+    for project in projects {
+        if project.root != root_config.root {
+            findings.extend(config_diagnostics(project, display));
+        }
+    }
+    sort_diagnostics(&mut findings);
+    findings
+}
+
+/// The config findings the config a command holds names: the workspace's set
+/// where `grund config validate` stored one (§FS-config.4.1.1), else its own
+/// config's alone, which is all `grund config show` names (§FS-config.4.2).
+pub(super) fn held_config_diagnostics(config: &Config) -> Vec<Diagnostic> {
+    match config.workspace_config_findings() {
+        Some(findings) => findings.to_vec(),
+        None => config_diagnostics(config, config.display()).collect(),
+    }
 }

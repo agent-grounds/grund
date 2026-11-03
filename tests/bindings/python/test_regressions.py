@@ -164,8 +164,6 @@ class RegressionTests(unittest.TestCase):
         self.assertEqual(("folder", "specs"), (allocation.home.kind, allocation.home.path))
         self.assertFalse(allocation.home_exists)
 
-    # Red until #1134 names member config findings at a workspace root; implement removes this.
-    @unittest.expectedFailure
     def test_validate_config_names_member_config_findings_at_a_workspace_root(self):
         # §FS-config.4.1.1, §FS-check.4.11.3: the root's config plus each expanded project,
         # in check's order, as `warnings`; `run_cautions` carry no config finding, as before.

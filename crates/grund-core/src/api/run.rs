@@ -10,7 +10,7 @@ use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use super::config_findings::config_diagnostics;
+use super::config_findings::{config_diagnostics, workspace_config_diagnostics};
 use super::path_report::PathReport;
 use super::report::{complete_report, public_run_warnings};
 use super::reporting::{reporting, workspace_block_projects};
@@ -470,16 +470,12 @@ fn run_workspace_check(
         ));
     }
     report.errors.extend(out_of_scope);
-    // §FS-check.4.3, §FS-check.4.11.3: the root's config and every member's, each
-    // named where that project loaded it — one config, not one scope, and a
-    // workspace may mix the two discovery forms (§FS-workspace.2).
-    let mut config_warnings =
-        config_diagnostics(&root_config, root_config.display()).collect::<Vec<_>>();
-    for project in reporting(&projects) {
-        if project.config.root != root_config.root {
-            config_warnings.extend(config_diagnostics(&project.config, root_config.display()));
-        }
-    }
+    // §FS-check.4.3, §FS-check.4.11.3: the root's config and each expanded project's,
+    // named where that project loaded it — the set `config validate` names too.
+    let config_warnings = workspace_config_diagnostics(
+        &root_config,
+        reporting(&projects).map(|project| &*project.config),
+    );
     // §FS-check.1.3.6.1: the root run's report, narrowed to the path as the
     // single-project arm narrows it (§AR-resolver.3.3).
     narrowing.narrow(

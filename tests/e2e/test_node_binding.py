@@ -43,9 +43,7 @@ class NodeConsumerTests(unittest.TestCase):
     def test_input_query_and_config_failures(self):
         self.assertEqual("", self.rehearsal.run("failures.mjs"))
 
-    # §FS-config.4.1.1: red until #1134 names member config findings at a workspace root;
-    # implement removes the expectedFailure.
-    @unittest.expectedFailure
+    # §FS-config.4.1.1: member config findings at a workspace root land in runCautions.
     def test_workspace_root_config_findings(self):
         self.assertEqual("", self.rehearsal.run("workspace-config-findings.mjs"))
 

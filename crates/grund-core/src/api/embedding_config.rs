@@ -32,16 +32,19 @@ pub(super) fn load(path: &Path, validate: bool) -> (Vec<Finding>, anyhow::Result
 fn cautions(config: &Config) -> Vec<Finding> {
     let mut cautions = config_run_warnings(config);
     cautions.extend(
-        super::config_findings::config_diagnostics(config, config.display()).map(|d| Finding {
-            severity: "warning",
-            code: d.code.as_str(),
-            path: d.path.map(|p| crate::config::display_path(config, &p)),
-            line: d.line,
-            column: d.column,
-            message: d.message,
-            sites: Vec::new(),
-            authority: Vec::new(),
-        }),
+        // §FS-config.4.1.1: a validated workspace root's set, else this config's own.
+        super::config_findings::held_config_diagnostics(config)
+            .into_iter()
+            .map(|d| Finding {
+                severity: "warning",
+                code: d.code.as_str(),
+                path: d.path.map(|p| crate::config::display_path(config, &p)),
+                line: d.line,
+                column: d.column,
+                message: d.message,
+                sites: Vec::new(),
+                authority: Vec::new(),
+            }),
     );
     cautions
 }

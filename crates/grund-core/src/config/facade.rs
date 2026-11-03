@@ -27,6 +27,7 @@ use super::project::{Project, Rules, Schema};
 use super::record::{AbsentOptionalNamespace, Config};
 use super::run::Run;
 use super::run_warnings::RunWarning;
+use crate::model::Diagnostic;
 use crate::sources::Buffers;
 
 /// The records a façade was built from (§AR-config.1). Private, so no
@@ -267,6 +268,19 @@ impl Config {
     /// stamps on each project once the whole tree is loaded.
     pub(crate) fn set_imports_read(&mut self, read: Vec<ImportRead>) {
         self.records.run.workspace.imports_read = read;
+    }
+
+    /// The workspace's config findings, the root's and each expanded project's
+    /// (§FS-config.4.1.1, §FS-check.4.11.3), which `validate_config` records once
+    /// it holds the expanded tree, so every reader of the config it returns names
+    /// the same set.
+    pub(crate) fn set_workspace_config_findings(&mut self, findings: Vec<Diagnostic>) {
+        self.records.run.workspace.config_findings = Some(findings);
+    }
+
+    /// What [`Self::set_workspace_config_findings`] recorded, if anything.
+    pub(crate) fn workspace_config_findings(&self) -> Option<&[Diagnostic]> {
+        self.records.run.workspace.config_findings.as_deref()
     }
 
     /// What [`Self::set_workspace_lists_optional`] recorded; `false` in a run
