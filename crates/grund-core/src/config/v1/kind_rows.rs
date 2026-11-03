@@ -139,7 +139,7 @@ pub(super) fn lower_parsed_kinds(
             &lines,
             root,
             project.schema.ids.named_sections,
-            None,
+            &project.schema.sources,
         )?;
     }
     // §FS-config.3.4.7.6: an unwalked kind is a place and nothing more. A citable one
