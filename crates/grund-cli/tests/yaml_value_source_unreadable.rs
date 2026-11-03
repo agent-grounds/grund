@@ -109,7 +109,6 @@ fn an_unreadable_json_source_is_an_incomplete_scan_for_every_reader() {
 }
 
 #[test]
-#[ignore = "red until #1133 closes the YAML value-source window; implement removes this"]
 fn an_unreadable_yaml_source_is_an_incomplete_scan_for_every_reader() {
     let fixture = Fixture::new("yaml", "CONST-room-limit: [40]\n");
     if !fixture.is_unreadable() {

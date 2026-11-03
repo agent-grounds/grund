@@ -319,7 +319,6 @@ const SWITCHES: &[Switch] = &[
     Switch::Import,
     Switch::SnapshotWarning,
     Switch::KindHome,
-    Switch::ValueHome,
 ];
 
 /// §FS-check.1.4.1: every switch the catalog names is spelled under both config

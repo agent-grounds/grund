@@ -2,8 +2,8 @@
 //! parser, read against the source text, as documents, mappings, sequences,
 //! scalars and aliases with exact byte spans (§DA-yaml-value-reader.2.2). It
 //! applies no value rule: a value source's subset is a separate pass
-//! (`value_yaml.rs`), so a front-matter reader can read the same tree with the
-//! block scalars and nesting that pass refuses.
+//! (`value_yaml_subset.rs`), so a front-matter reader can read the same tree
+//! with the block scalars and nesting that pass refuses.
 
 use std::str::Chars;
 

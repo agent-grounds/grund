@@ -188,19 +188,20 @@ fn a_value_kind_arms_the_value_codes() {
     pinned(Switch::Values, "value-mismatch", off, on);
 }
 
-/// §FS-values.2.2.4: a whole-value kind arms the YAML window, whether or not its
-/// home holds a YAML source yet.
+/// §FS-values.2.2.4: the YAML window is closed, so its code is advised as spent
+/// from its *Severity* cell, with no switch to set, with or without a value kind
+/// (§FS-check.1.4.1).
 #[test]
-fn a_value_kind_arms_the_yaml_window() {
+fn the_spent_yaml_window_code_is_advised_as_spent_with_or_without_a_value_kind() {
     let value = "[schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\nindex = false\n";
     let root = v2("armed_value_home_on", "", value);
     write(&root.join("values/.keep"), "");
-    pinned(
-        Switch::ValueHome,
-        "yaml-value-source-deferred",
-        armed(v2("armed_value_home_off", "", "")),
-        armed(root),
-    );
+    for checks in [armed(v2("armed_value_home_off", "", "")), armed(root)] {
+        assert_eq!(
+            checks.off_advice("yaml-value-source-deferred").as_deref(),
+            Some("the check is spent from grund 0.22.0 and never fires"),
+        );
+    }
 }
 
 #[test]

@@ -38,7 +38,6 @@ const CASES: [&str; 28] = [
 ];
 
 #[test]
-#[ignore = "red until #1133 closes the YAML value-source window; implement removes this"]
 fn yaml_value_window_closed_contract() {
     let root = repo_root();
     let cases = root.join("tests/e2e/cases");

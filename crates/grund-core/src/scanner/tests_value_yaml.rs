@@ -1,11 +1,10 @@
-//! A value home's YAML sources (§FS-values.2.2, §FS-values.2.2.4): which files
-//! are sources in each config version, the one path order across formats, and
-//! a source the window keeps from enrolling.
+//! A value home's YAML sources (§FS-values.2.2): which files are sources in each
+//! config version, each read in its own format.
 
 use std::path::{Path, PathBuf};
 
 use crate::config::load_config;
-use crate::model::{Catalog, DeclarationSource, ValueFormat, YamlDeferred};
+use crate::model::{Catalog, DeclarationSource, ValueFormat};
 use crate::testing::{scan_tree, test_root, write};
 
 const KIND: &str =
@@ -67,8 +66,8 @@ fn slugs(findings: &Catalog) -> Vec<String> {
         .collect()
 }
 
-/// §FS-values.2.2: JSON and YAML sources at one folder home read in one path
-/// order, each in its own format.
+/// §FS-values.2.2: JSON and YAML sources at one folder home are each read in
+/// their own format.
 #[test]
 fn a_folder_home_reads_both_formats_in_one_path_order() {
     let root = v1("yaml_value_mixed_formats", KIND, "");
@@ -86,13 +85,6 @@ fn a_folder_home_reads_both_formats_in_one_path_order() {
             ("cat".into(), "c.yml".into(), ValueFormat::Yaml),
         ]
     );
-    let findings = scan(&root);
-    let order = findings
-        .yaml_value_sources
-        .iter()
-        .map(|path| path.file_name().unwrap().to_string_lossy().into_owned())
-        .collect::<Vec<_>>();
-    assert_eq!(order, ["b.yaml", "c.yml"]);
 }
 
 /// §FS-values.2.2: in version 1 the effective `[scan] extensions` claim a YAML
@@ -129,12 +121,10 @@ fn a_v2_yaml_file_is_read_by_its_language_or_its_extension() {
         "[schema.sources.extensions]\nyaml = \"json\"\n",
     );
     write(&mapped.join("values/a.yaml"), "{\"CONST-ant\": [1]}\n");
-    let findings = scan(&mapped);
     assert_eq!(
-        values(&findings),
+        values(&scan(&mapped)),
         [("ant".into(), "a.yaml".into(), ValueFormat::Json)]
     );
-    assert!(findings.yaml_value_sources.is_empty());
 }
 
 /// §FS-values.9: without a value kind no YAML file is opened as a value source.
@@ -146,41 +136,7 @@ fn no_yaml_file_is_read_without_a_value_kind() {
         "",
     );
     write(&root.join("values/a.yaml"), "CONST-ant: [1]\n");
-    let findings = scan(&root);
-    assert!(slugs(&findings).is_empty());
-    assert!(findings.yaml_value_sources.is_empty());
-}
-
-/// §FS-values.2.2.4: a source with any finding declares nothing, and one party
-/// to a duplicate leaves the JSON declaration the only one.
-#[test]
-fn a_yaml_source_with_a_finding_declares_nothing() {
-    let root = v1("yaml_value_window_holds_back", KIND, "");
-    write(&root.join("values/a.json"), "{\"CONST-ant\": [1]}\n");
-    write(
-        &root.join("values/b.yaml"),
-        "CONST-ant: [1]\nCONST-bee: [2]\n",
-    );
-    write(
-        &root.join("values/c.yaml"),
-        "CONST-cat: [true]\nCONST-cow: [3]\n",
-    );
-    write(&root.join("values/d.yaml"), "CONST-dog: [4\n");
-    let findings = scan(&root);
-    assert_eq!(slugs(&findings), ["ant"]);
-    assert_eq!(findings.invalid_value_declarations.len(), 1);
-    let deferred = findings
-        .yaml_deferred
-        .iter()
-        .map(|record| match record {
-            YamlDeferred::Duplicate { id, sites } => format!("duplicate {id:?} x{}", sites.len()),
-            YamlDeferred::Unread { line, .. } => format!("unread at {line}"),
-            YamlDeferred::Fetched { kind, .. } => format!("fetched {kind}"),
-        })
-        .collect::<Vec<_>>();
-    assert_eq!(deferred.len(), 2, "{deferred:?}");
-    assert!(deferred[0].starts_with("unread at "), "{deferred:?}");
-    assert!(deferred[1].starts_with("duplicate ") && deferred[1].ends_with("x2"));
+    assert!(slugs(&scan(&root)).is_empty());
 }
 
 /// §FS-values.2.2: a `file` home that is a YAML file is its kind's source, and

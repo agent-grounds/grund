@@ -1,7 +1,7 @@
 //! Discovery and one-read enrollment of a value home's value sources
-//! (§FS-values.2.2, §AR-scanner.2.1.3, §AR-scanner.3): a JSON source is read
-//! here, a YAML one by `value_yaml.rs`, and both enroll through
-//! `value_json_enrollment.rs`.
+//! (§FS-values.2.2, §AR-scanner.2.1.3, §AR-scanner.3): one loop reads a source of
+//! either format, its format picking only the reader (§FS-values.2.2.4), and both
+//! enroll through `value_json_enrollment.rs`.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -9,7 +9,8 @@ use std::path::{Path, PathBuf};
 use super::json::{JsonNode, JsonReader};
 use super::tree::ScanError;
 use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
-use super::value_yaml::enroll_yaml_sources;
+use super::value_yaml_subset::yaml_value_root;
+use super::yaml::parse_yaml;
 use crate::config::{Frame, Schema};
 use crate::model::sort_path_key;
 use crate::model::{Catalog, DeclarationSource, ValueFormat, normalize_path_lexically};
@@ -46,47 +47,53 @@ pub(super) fn scan_value_sources(
         owners.sort();
     }
     grouped.sort_by_key(|(paths, _)| sort_path_key(&paths[0]));
-    let mut yaml = Vec::new();
+    // §FS-values.2.2.4: one path for either format, which picks only the reader.
     for (paths, owners) in grouped {
         let path = &paths[0];
-        if formats.get(path) == Some(&ValueFormat::Yaml) {
-            yaml.push((path.clone(), owners));
-            continue;
-        }
+        let format = formats[path];
         // §AR-system.2.13: one location, one text, whichever spelling holds it.
         let text = match frame.sources().text(path) {
             Ok(text) => text.into_owned(),
             Err(error) => {
+                // §FS-values.5.3: what stops every reader of the catalog, in either format.
                 errors.push((
                     path.clone(),
-                    format!("could not read value JSON source: {error}"),
+                    format!("could not read value {} source: {error}", format.name()),
                 ));
                 continue;
             }
         };
-        match JsonReader::parse(&text) {
-            Ok(root) => enroll_value_root(
-                frame,
-                path,
-                &owners,
-                &text,
-                root,
-                ValueFormat::Json,
-                findings,
-            ),
-            Err(message) => errors.push((path.clone(), format!("invalid JSON: {message}"))),
+        match read_value_root(&text, format) {
+            Ok(root) => enroll_value_root(frame, path, &owners, &text, root, format, findings),
+            Err(message) => errors.push((path.clone(), message)),
         }
         if owners.len() > 1 {
             duplicate_owned_source(path, findings);
         }
     }
-    enroll_yaml_sources(schema, frame, yaml, findings);
+}
+
+/// A source's root by its format's reader, or the line a stream the reader
+/// rejects stops the scan on (§FS-values.2.2.4, §FS-values.5.3).
+fn read_value_root(text: &str, format: ValueFormat) -> std::result::Result<JsonNode, String> {
+    match format {
+        ValueFormat::Json => {
+            JsonReader::parse(text).map_err(|message| format!("invalid JSON: {message}"))
+        }
+        ValueFormat::Yaml => match parse_yaml(text) {
+            Ok(stream) => Ok(yaml_value_root(text, &stream)),
+            Err(error) => Err(format!(
+                "invalid YAML: {}:{}: {}",
+                error.line, error.column, error.message
+            )),
+        },
+    }
 }
 
 /// A source owned by two homes is ambiguous even after one read; duplicate each
 /// site so the ordinary duplicate rule stays the single winner (§FS-values.2.3,
 /// §FS-declarations.checks.duplicate).
-pub(super) fn duplicate_owned_source(path: &Path, findings: &mut Catalog) {
+fn duplicate_owned_source(path: &Path, findings: &mut Catalog) {
     let duplicated = findings
         .declarations
         .iter()
@@ -174,7 +181,7 @@ pub(super) fn a(noun: &str) -> String {
 }
 
 /// Enroll one source's root, read by either reader (§FS-values.2.2.1).
-pub(super) fn enroll_value_root(
+fn enroll_value_root(
     frame: Frame<'_>,
     path: &Path,
     owners: &[&str],

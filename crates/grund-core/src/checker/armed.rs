@@ -38,7 +38,6 @@ const SWITCH_CLAUSES: &[(Switch, Code, usize)] = &[
     (Switch::Import, Code::IMPORT_LIVE, 0),
     (Switch::SnapshotWarning, Code::MISSING_SNAPSHOT, 0),
     (Switch::KindHome, Code::MISPLACED_DECLARATION, 0),
-    (Switch::ValueHome, Code::YAML_VALUE_SOURCE_DEFERRED, 0),
 ];
 
 /// Why a version-1 config is answered by the migration alone (§FS-check.1.4.1).

@@ -61,29 +61,6 @@ impl ValueFormat {
     }
 }
 
-/// A finding at a YAML value source the scan holds back as data, for the checker
-/// to report as a `yaml-value-source-deferred` warning until grund 0.22.0
-/// (§FS-values.2.2.4). Each keeps the source from being enrolled.
-#[derive(Debug, Clone)]
-pub(crate) enum YamlDeferred {
-    /// The file could not be read, or the parser rejected the stream: the
-    /// incomplete input of §FS-values.5.3.
-    Unread {
-        file: PathBuf,
-        line: usize,
-        column: Option<usize>,
-        message: String,
-    },
-    /// An ID the source declares is also declared elsewhere: at `sites[0]`, the
-    /// source's own first one, naming every other (§FS-values.2.3).
-    Duplicate {
-        id: Id,
-        sites: Vec<(PathBuf, usize)>,
-    },
-    /// The source is in the home of a kind that sets `fetch`, and is not read.
-    Fetched { file: PathBuf, kind: String },
-}
-
 /// One authoritative component shared by Markdown and JSON value declarations
 /// (§FS-values.2, §FS-values.4).
 #[derive(Debug, Clone)]
