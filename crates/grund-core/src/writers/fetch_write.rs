@@ -11,7 +11,9 @@ use crate::grammar::{
     Grammar, MarkdownBlocks, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
 };
 use crate::model::{Id, OperationDiagnostic, format_path};
-use crate::scanner::{markdown_heading_level, walk_scannable_files_with_sources};
+use crate::scanner::{
+    folder_value_declarations, markdown_heading_level, walk_scannable_files_with_sources,
+};
 use crate::sources::{path_exists, path_is_dir, read_bytes};
 
 /// `ignore::Error` owns the I/O error but does not expose it through `source()`.
@@ -212,7 +214,8 @@ pub(super) fn write_file_home(
     install(path, &replacement, diagnostic)
 }
 
-/// §FS-fetch.5: replace the unique declaring file or create `<ID>.md`.
+/// §FS-fetch.5: replace the unique declaring file or create `<ID>.md`, after
+/// refusing existing value declarations (§FS-fetch.5.1).
 pub(super) fn write_folder_home(
     folder: &Path,
     config: &Config,
@@ -227,6 +230,27 @@ pub(super) fn write_folder_home(
             return Err(fetch_operational(format!(
                 "snapshot folder {} is not a directory",
                 folder.display()
+            )));
+        }
+        // §FS-fetch.5.1: value inputs bypass the general walk's scan filters.
+        // Consult their shared reader before any Markdown match can win.
+        let values =
+            folder_value_declarations(config.schema(), config.frame(), folder, &requested.kind)
+                .map_err(|(path, message)| {
+                    fetch_operational(format!(
+                        "cannot read snapshot folder {} at {}: {message}",
+                        folder.display(),
+                        path.display()
+                    ))
+                })?;
+        if let Some(declaration) = values
+            .declarations
+            .get(requested)
+            .and_then(|sites| sites.first())
+        {
+            return Err(fetch_operational(format!(
+                "cannot fetch {local}: value source {} already declares it; keep the fact in the value source or move it out of the value home before fetching",
+                declaration.file.display()
             )));
         }
         // §FS-fetch.5: discovery uses the scanner's recursive folder traversal,

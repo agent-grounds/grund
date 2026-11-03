@@ -135,6 +135,7 @@ pub(crate) use section_locks::{may_give_locked_heading, section_locks_present};
 pub(crate) use slices::{SliceMiss, SliceSink, record_slices, section_row_title};
 pub(crate) use stub_homes::lend_citations;
 pub(crate) use tree::{ScanError, scan_tree, scan_tree_strict, scan_tree_with_workspace};
+pub(crate) use value_json::folder_value_declarations;
 pub(crate) use walk::scan_roots_for;
 pub(crate) use walk_reporting::{
     walk_scannable_files, walk_scannable_files_reporting, walk_scannable_files_with_sources,
