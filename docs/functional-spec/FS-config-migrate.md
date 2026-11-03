@@ -270,7 +270,7 @@ The candidate is loaded through the v2 reader, the path a file on disk goes thro
 
 ### 5.2 The report gate
 
-`grund check --suggestions` runs twice in the same process, on the same root, members and invocation: once with the file as read, once with the candidate. It compares every finding's code, channel, path, line, column and message, the run warnings, the projects checked, and the exit status. It ignores only:
+`grund check --suggestions` runs twice in the same process, on the same root, members and invocation: once with the file as read, once with the candidate. It compares every finding's code, channel, path, line, column and message, the run warnings, the projects checked, and the exit status. Each finding is one line in its run, as many times as `check` would print it: a run warning `check` prints once is compared once, however many places the run carries it, so a candidate that adds one finding adds one `+ ` line. It ignores only:
 
 - a finding located in the config itself, whose line is mapped through the key map before comparing; a finding with no mapped line is a difference;
 - the config-table names inside messages, such as `[scan] exclude` against `[schema.sources] exclude`: both runs are spelled as v1;

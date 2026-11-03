@@ -366,3 +366,50 @@ fn a_block_init_wrote_passes_both_gates() {
         other => panic!("{other:?}"),
     }
 }
+
+/// #1146's tree: a v1 `include_root = false` grouping block under a v2 root,
+/// whose candidate run warns `unread-workspace-block` where the run as read
+/// does not.
+fn unread_grouping_block(name: &str) -> PathBuf {
+    let root = test_root(&format!("migrate-report-gate-{name}"));
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\n\n[workspace]\nmembers = [\"group\"]\n",
+    );
+    write(
+        &root.join("group/grund.toml"),
+        "[id]\nnamed_sections = true\n\n[scan]\ninclude = []\n\n\
+         [workspace]\ninclude_root = false\nmembers = [\"a\"]\n",
+    );
+    write(
+        &root.join("group/a/grund.toml"),
+        "grund_config_version = 2\n",
+    );
+    write(&root.join("group/README.md"), "Cites \u{a7}FS-x.\n");
+    root.join("group")
+}
+
+/// §FS-config-migrate.5.2: "a run warning `check` prints once is compared
+/// once" — the candidate's one `unread-workspace-block` is one `+ ` line, not
+/// one per list the run carries it in.
+#[test]
+#[ignore = "red until #1146 compares each run warning once; implement removes this"]
+fn report_gate_compares_a_run_warning_once() {
+    let group = unread_grouping_block("run-warning-once");
+    let lines = match config_migrate(&MigrateOpts {
+        path: group,
+        write: false,
+        drop_comments: false,
+    }) {
+        Ok(MigrateOutcome::Migrated(report)) => match report.gates {
+            Some(GateResult::Differs { lines, .. }) => lines,
+            other => panic!("the candidate adds a run warning: {other:?}"),
+        },
+        other => panic!("{other:?}"),
+    };
+    let unread: Vec<&String> = lines
+        .iter()
+        .filter(|line| line.starts_with("+ run-warning warning unread-workspace-block "))
+        .collect();
+    assert_eq!(unread.len(), 1, "one finding, one line: {lines:#?}");
+}
