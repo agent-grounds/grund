@@ -270,11 +270,12 @@ fn render_migrate_notices(
 ) -> std::io::Result<()> {
     for notice in &report.notices {
         let verb = if notice.dropped { "dropped" } else { "changed" };
-        writeln!(
-            out,
-            "{verb}: {}:{}: {}: {}",
-            report.config, notice.line, notice.key, notice.why
-        )?;
+        let config = &report.config;
+        // §FS-config-migrate.8.1.3: the defaults notice names no line.
+        let at = notice
+            .line
+            .map_or_else(|| config.clone(), |line| format!("{config}:{line}"));
+        writeln!(out, "{verb}: {at}: {}: {}", notice.key, notice.why)?;
     }
     Ok(())
 }

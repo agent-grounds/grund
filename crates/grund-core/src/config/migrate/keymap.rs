@@ -4,6 +4,7 @@
 
 use super::candidate::may_default;
 use super::keys::{Keys, unquote};
+use super::opted_out::{Block, UNREAD, kept};
 use super::places::Include;
 use super::record::{MappedKey, MigrateNotice};
 use crate::config::citations::CitationLevel;
@@ -181,25 +182,44 @@ fn spelling(
     }
 }
 
-/// The key map and the notices, both in file order.
+/// The key map and the notices, both in file order, and last the one notice
+/// for the defaults a compact block leaves unwritten (§FS-config-migrate.8.1.3).
 pub(super) fn map(
     keys: &Keys,
     v2: &Project,
     plan: &Include,
+    block: Block,
 ) -> (Vec<MappedKey>, Vec<MigrateNotice>) {
-    map_with_addresses(keys, v2, plan, false)
+    let (mapped, mut notices) = map_with_addresses(keys, v2, plan, block, false);
+    if block.compact() {
+        notices.push(MigrateNotice {
+            line: None,
+            dropped: true,
+            key: "version 1's defaults".into(),
+            why: format!("{UNREAD}; it takes version 2's defaults"),
+        });
+    }
+    (mapped, notices)
 }
 
 /// §FS-config-migrate.2.2: reuse the key map with fully addressed definitions.
-pub(super) fn comment_map(keys: &Keys, v2: &Project, plan: &Include) -> Vec<MappedKey> {
-    map_with_addresses(keys, v2, plan, true).0
+pub(super) fn comment_map(
+    keys: &Keys,
+    v2: &Project,
+    plan: &Include,
+    block: Block,
+) -> Vec<MappedKey> {
+    map_with_addresses(keys, v2, plan, block, true).0
 }
 
 /// §FS-config-migrate.2.2: one authored-key mapping supplies both presentations.
+/// §FS-config-migrate.8.1.1, §FS-config-migrate.8.1.3: a key with no reader on
+/// a block with `include_root = false` is dropped with a notice.
 fn map_with_addresses(
     keys: &Keys,
     v2: &Project,
     plan: &Include,
+    block: Block,
     full_addresses: bool,
 ) -> (Vec<MappedKey>, Vec<MigrateNotice>) {
     let mut mapped = Vec::new();
@@ -224,11 +244,22 @@ fn map_with_addresses(
             notices.push(output_notice(line, key, value));
             continue;
         }
+        let unread = (block.opted_out() && section == "id" && key == "named_sections")
+            || (block.compact() && !kept(section, key));
+        if unread {
+            notices.push(MigrateNotice {
+                line: Some(line),
+                dropped: true,
+                key: shown,
+                why: UNREAD.into(),
+            });
+            continue;
+        }
         if (section == "citations" || section.starts_with("citations.")) && key == "default" {
             let level = parse_level(&unquote(value));
             if level.is_some() && may_default(level) != level {
                 notices.push(MigrateNotice {
-                    line,
+                    line: Some(line),
                     dropped: false,
                     key: format!("{shown} = {value}"),
                     why: "version 1 gives a positive default no force, so it is written as may"
@@ -276,7 +307,7 @@ fn output_notice(line: usize, key: &str, value: &str) -> MigrateNotice {
         (key, _) => (format!("[output] {key}"), "nothing reads it".to_string()),
     };
     MigrateNotice {
-        line,
+        line: Some(line),
         dropped: true,
         key,
         why,

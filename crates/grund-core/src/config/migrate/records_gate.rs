@@ -1,13 +1,16 @@
 //! §FS-config-migrate.5.1: the records gate. The candidate, loaded through the
 //! v2 reader, and the v1 file's project are each reduced to the meanings the
 //! gate compares, one section at a time, ignoring only what §FS-config-migrate.5.1
-//! lists; a section that differs prints its two readings.
+//! lists; a section that differs prints its two readings. A block with
+//! `include_root = false` is compared as §FS-config-migrate.8.1.4 says, on the
+//! one answer `opted_out.rs` gives (§AR-config.8.4).
 
 use std::collections::BTreeSet;
 use std::fmt::Debug;
 use std::path::Path;
 
 use super::candidate::may_default;
+use super::opted_out::Block;
 use crate::config::grounding::configured_row_grounding;
 use crate::config::kind::KindResolution;
 use crate::config::project::{Project, Strength};
@@ -16,7 +19,7 @@ use crate::config::sources::DeclarationMode;
 use crate::grammar::{DocCommentRule, extension_rule};
 
 /// One section of the comparison, as a line per reading.
-type Section = (&'static str, String);
+pub(super) type Section = (&'static str, String);
 
 fn line(name: &'static str, value: impl Debug) -> Section {
     (name, format!("{value:?}"))
@@ -25,8 +28,8 @@ fn line(name: &'static str, value: impl Debug) -> Section {
 /// §FS-config-migrate.5.4: the differing sections as `- `/`+ ` lines, empty
 /// when the records are equal. It runs only when no two v1 homes nest, which
 /// refuses, so the nesting rule decides nothing and is not compared.
-pub(super) fn compare(v1: &Project, v2: &Project, root: &Path) -> Vec<String> {
-    let (old, new) = (reduce(v1, root), reduce(v2, root));
+pub(super) fn compare(v1: &Project, v2: &Project, root: &Path, block: Block) -> Vec<String> {
+    let (old, new) = (reduce(v1, root, block), reduce(v2, root, block));
     let mut out = Vec::new();
     for ((name, before), (_, after)) in old.iter().zip(&new) {
         if before != after {
@@ -51,9 +54,42 @@ fn bare(row: &Row) -> Row {
     row
 }
 
-fn reduce(p: &Project, root: &Path) -> Vec<Section> {
+/// §FS-config-migrate.8.1.4: what a compact block's candidate keeps, the
+/// workspace records, the project name and the description; the report gate
+/// holds everything else.
+fn kept(p: &Project) -> Vec<Section> {
+    let workspace = &p.workspace;
+    let imports: Vec<_> = workspace
+        .imports
+        .iter()
+        .map(|import| (&import.alias, &import.path, &import.project))
+        .collect();
+    vec![
+        line("project_name", &p.name),
+        line(
+            "workspace",
+            (
+                workspace.declared,
+                &workspace.members,
+                &workspace.optional_members,
+                workspace.include_root,
+                imports,
+            ),
+        ),
+        line("description", &p.presentation.description),
+    ]
+}
+
+/// The sections `p` is compared by, as `block` reads it.
+pub(super) fn reduce(p: &Project, root: &Path, block: Block) -> Vec<Section> {
+    if block.compact() {
+        return kept(p);
+    }
     let schema = &p.schema;
     let workspace = &p.workspace;
+    // §FS-config-migrate.8.1.1: no project reads the block's named sections.
+    let mut ids = schema.ids.clone();
+    ids.named_sections |= block.opted_out();
     let notes = &schema.notes;
     let mut lines: BTreeSet<(u8, usize)> = BTreeSet::new();
     lines.insert((Strength::Must as u8, notes.max_lines));
@@ -128,7 +164,7 @@ fn reduce(p: &Project, root: &Path) -> Vec<Section> {
             "citation syntax",
             (&schema.citation.marker, schema.citation.shorthand),
         ),
-        line("ids", &schema.ids),
+        line("ids", ids),
         line("sources", sources(p)),
         line("scan roots", scan_roots(p, root)),
         line(

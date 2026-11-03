@@ -15,7 +15,7 @@ fn report(name: &str, toml: &str) -> MigrateReport {
         root: root.clone(),
         config: "grund.toml".into(),
     };
-    let prepared = translate(&located, false, false).expect("translates");
+    let prepared = translate(&located, false, false, &|| true).expect("translates");
     let _ = std::fs::remove_dir_all(&root);
     match prepared {
         Prepared::Translated { report, .. } => *report,
@@ -120,7 +120,7 @@ fn value_form_carried_comment_reports_translated_vocabulary() {
                 let why = notice.why.to_lowercase();
                 let shown = format!("{} {}", notice.key, notice.why);
                 !notice.dropped
-                    && notice.line == 7
+                    && notice.line == Some(7)
                     && shown.contains("[[kinds]] values")
                     && shown.contains("[schema.kinds.FS] form")
                     && why.contains("comment")

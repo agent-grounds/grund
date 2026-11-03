@@ -37,16 +37,48 @@ pub(super) fn list(values: impl IntoIterator<Item = impl AsRef<str>>) -> String 
     format!("[{}]", values.join(", "))
 }
 
+/// §AR-config.7.4: how much of a project the renderer writes.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Emission {
+    /// Every effective value, what `grund config show` prints (§FS-config.4.2).
+    Every,
+    /// The envelope, the `[workspace]` table and the description, leaving every
+    /// other table to the v2 epoch: the candidate of a block with
+    /// `include_root = false` that migrates compactly (§FS-config-migrate.8.1.3).
+    /// Only migration asks for it.
+    Envelope,
+}
+
 impl Project {
     /// §FS-config.4.2: this project as a v2 `grund.toml`, or `None` when a v1
     /// file spelled it — a v1 config prints the bytes it always printed.
     pub fn v2_toml(&self) -> Option<String> {
+        self.v2_toml_as(Emission::Every)
+    }
+
+    /// [`Project::v2_toml`], writing what `emission` selects (§AR-config.7.4).
+    pub(crate) fn v2_toml_as(&self, emission: Emission) -> Option<String> {
         (self.version == 2).then(|| {
             let mut out = String::new();
             self.envelope(&mut out);
-            self.schema_tables(&mut out);
-            self.rules_tables(&mut out);
-            self.presentation_tables(&mut out);
+            match emission {
+                Emission::Every => {
+                    self.schema_tables(&mut out);
+                    self.rules_tables(&mut out);
+                    self.presentation_tables(&mut out);
+                }
+                // §FS-config-migrate.8.1.3: `project_description` is the one
+                // kept key whose v2 home is outside the envelope.
+                Emission::Envelope => {
+                    if let Some(description) = &self.presentation.description {
+                        let _ = writeln!(
+                            out,
+                            "\n[presentation]\ndescription = {}",
+                            string(description)
+                        );
+                    }
+                }
+            }
             out
         })
     }

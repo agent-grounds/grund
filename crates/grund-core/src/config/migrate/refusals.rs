@@ -5,6 +5,7 @@ use std::path::Path;
 
 use super::comments::v1_key;
 use super::keys::Keys;
+use super::opted_out::Block;
 use super::places::scanned_files;
 use super::record::{MigrateRefusal, RefusalAnchor};
 use crate::config::grounding::configured_row_grounding;
@@ -28,7 +29,12 @@ fn refusal(anchor: RefusalAnchor, what: String, repair: &str) -> MigrateRefusal 
 
 /// Every refusal of §FS-config-migrate.3.1 but the places', which `places.rs`
 /// finds, and the sources', which `languages.rs` finds.
-pub(super) fn settings(v1: &Project, keys: &Keys, root: &Path) -> Vec<MigrateRefusal> {
+pub(super) fn settings(
+    v1: &Project,
+    keys: &Keys,
+    root: &Path,
+    block: Block,
+) -> Vec<MigrateRefusal> {
     let mut out = Vec::new();
     let schema = &v1.schema;
     // §FS-config-migrate.3.1.2
@@ -39,8 +45,8 @@ pub(super) fn settings(v1: &Project, keys: &Keys, root: &Path) -> Vec<MigrateRef
             "run grund fmt --marker --write, then set [reference] strict = true under version 1",
         ));
     }
-    // §FS-config-migrate.3.1.1
-    if !schema.ids.named_sections {
+    // §FS-config-migrate.3.1.1, never on a block nobody reads (§FS-config-migrate.8.1.1)
+    if !schema.ids.named_sections && !block.opted_out() {
         out.push(match keys.line("id", "named_sections") {
             Some(line) => refusal(
                 RefusalAnchor::Line(line),

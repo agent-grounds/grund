@@ -114,7 +114,7 @@ fn translated_comment(record: &LineRecord, keys: &Keys) -> Option<MigrateNotice>
         return None;
     };
     Some(MigrateNotice {
-        line: record.line,
+        line: Some(record.line),
         dropped: false,
         key: v1_key(record),
         why: format!("value vocabulary translated to [{table}] {key}; check the carried comment"),
@@ -250,7 +250,10 @@ pub(super) fn carry(
             .filter(|(_, carried)| *carried)
             .filter_map(|(record, _)| translated_comment(record, keys)),
     );
-    report.notices.sort_by_key(|notice| notice.line);
+    // §FS-config-migrate.3.2: a notice with no line follows every one with a line.
+    report
+        .notices
+        .sort_by_key(|notice| notice.line.unwrap_or(usize::MAX));
     text
 }
 

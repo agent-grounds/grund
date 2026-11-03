@@ -35,8 +35,9 @@ pub fn config_migrate(opts: &MigrateOpts) -> Result<MigrateOutcome, MigrateFailu
             path: format_path(&opts.path),
         });
     };
-    let prepared =
-        translate(&located, opts.write, opts.drop_comments).map_err(MigrateFailure::Load)?;
+    let scope_on_disk = || default_scope_on_disk(&located);
+    let prepared = translate(&located, opts.write, opts.drop_comments, &scope_on_disk)
+        .map_err(MigrateFailure::Load)?;
     let (mut report, v1_text, v1, line_map, value_lines) = match prepared {
         Prepared::AlreadyV2 => {
             return Ok(MigrateOutcome::AlreadyV2 {
@@ -101,6 +102,23 @@ fn write(located: &Located, v1_text: &str, report: &MigrateReport) -> Result<(),
             reason,
         },
     })
+}
+
+/// §FS-config-migrate.8.1.2 item 1: whether a root of the block's version-1
+/// default scope exists outside its expanded member roots, asked through the
+/// unread-block probe's own scope and boundary (§FS-check.4.10.2,
+/// §AR-config.8.4). A block that does not load or expand keeps the conservative
+/// path, where the translation names what is wrong.
+fn default_scope_on_disk(located: &Located) -> bool {
+    let invocation = Invocation::new(&located.root, false, Selection::Project);
+    let Ok(mut config) = config_at(&located.root, &located.root, None, &invocation) else {
+        return true;
+    };
+    let Ok(roots) = crate::workspace::expand_workspace_members(&config) else {
+        return true;
+    };
+    config.set_workspace_boundary_roots(roots);
+    !crate::workspace::uncovered_block_scope_roots(&config).is_empty()
 }
 
 /// §FS-config-migrate.8: each member of the root's `[workspace]` still on

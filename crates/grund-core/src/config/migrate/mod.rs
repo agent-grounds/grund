@@ -15,6 +15,7 @@ mod comments;
 mod keymap;
 mod keys;
 mod languages;
+mod opted_out;
 mod places;
 mod record;
 mod records_gate;
@@ -36,6 +37,7 @@ use super::kind::KindResolution;
 use super::project::Project;
 use super::run::{Invocation, Selection};
 use super::v1::{LinePass, LineRecord};
+use super::v2::Emission;
 use super::{v1, v2, validate};
 use crate::model::{format_path, relative_from_base};
 pub use record::{
@@ -117,8 +119,15 @@ fn read_v1(text: &str, report: &Path, root: &Path) -> Result<(Project, Vec<LineR
 }
 
 /// §FS-config-migrate: translate the config at `located`, everything but the
-/// report gate, the members and the write.
-pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> Result<Prepared> {
+/// report gate, the members and the write. `scope_on_disk` says whether a root
+/// of the file's version-1 default scope exists outside its member roots, which
+/// only the surface above config can answer (§FS-config-migrate.8.1.2 item 1).
+pub(crate) fn translate(
+    located: &Located,
+    write: bool,
+    drop_comments: bool,
+    scope_on_disk: &dyn Fn() -> bool,
+) -> Result<Prepared> {
     let mut report = MigrateReport {
         config: located.config.clone(),
         write,
@@ -145,7 +154,20 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
     report.v1_lines = text.lines().count();
     let keys = keys::Keys::of(&lines);
     let root = &located.root;
-    let include = places::include(&project, &keys, root);
+    // §AR-config.8.4: the one answer every step below reads.
+    let block = opted_out::Block::of(&project, &keys, root, scope_on_disk);
+    // §FS-config-migrate.8.1.2: a compact block's include counts as omitted.
+    let include = if block.compact() {
+        places::Include::default()
+    } else {
+        places::include(&project, &keys, root)
+    };
+    // §FS-config-migrate.8.1.3: a compact block's candidate is its envelope.
+    let emission = if block.compact() {
+        Emission::Envelope
+    } else {
+        Emission::Every
+    };
     let values_home = project.schema.value_rows().next().is_some();
     let languages = languages::translate(
         &project,
@@ -153,7 +175,7 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
         keys.line("scan", "comment_prefixes"),
         values_home,
     );
-    let mut refusals = refusals::settings(&project, &keys, root);
+    let mut refusals = refusals::settings(&project, &keys, root, block);
     refusals.extend(places::nested_homes(&project, &keys, root));
     refusals.extend(include.refusals.iter().cloned());
     refusals.extend(languages.refusals.iter().cloned());
@@ -165,9 +187,9 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
     report.refusals = refusals;
     let records = candidate::records(&project, languages.model, include.places());
     let body = records
-        .v2_toml()
+        .v2_toml_as(emission)
         .expect("migration renders a version 2 project");
-    let (_, notices) = keymap::map(&keys, &records, &include);
+    let (_, notices) = keymap::map(&keys, &records, &include, block);
     report.notices = notices;
     // §FS-config-migrate.2.2: no promised destinations before a candidate loads.
     let unavailable = comment_guidance::Guidance {
@@ -198,19 +220,24 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
         .rules
         .resolution
         .retain(|_, resolution| *resolution != KindResolution::Must);
-    let body = shown.v2_toml().expect("a version 2 project renders");
+    let body = shown
+        .v2_toml_as(emission)
+        .expect("a version 2 project renders");
     // §FS-config-migrate.4.1.1: the rendered destinations decide which comments need review.
-    let comment_map = keymap::comment_map(&keys, &shown, &include);
+    let comment_map = keymap::comment_map(&keys, &shown, &include, block);
     let guidance = comment_guidance::Guidance {
         lines: &lines,
         mapped: &comment_map,
         available: true,
     };
     let carried = comments::carry(&body, &lines, &keys, &guidance, &mut report);
-    report.mapped = keymap::map(&keys, &shown, &include).0;
-    report.written = keymap::written(&keys, &project, &body);
+    report.mapped = keymap::map(&keys, &shown, &include, block).0;
+    // §FS-config-migrate.8.1.3: a compact block writes no default out.
+    if !block.compact() {
+        report.written = keymap::written(&keys, &project, &body);
+    }
     report.code_row_note = !include.places().is_empty();
-    let differences = records_gate::compare(&project, &loaded, root);
+    let differences = records_gate::compare(&project, &loaded, root, block);
     report.gates = Some(if differences.is_empty() {
         GateResult::Equal
     } else {
