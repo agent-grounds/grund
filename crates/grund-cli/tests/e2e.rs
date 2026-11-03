@@ -50,6 +50,10 @@ mod index_use_explanations;
 #[path = "support/isolated_member_example.rs"]
 mod isolated_member_example;
 
+// §FS-fields.forms.places: issue #1152's cases, run alone.
+#[path = "support/later_place.rs"]
+mod later_place;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,

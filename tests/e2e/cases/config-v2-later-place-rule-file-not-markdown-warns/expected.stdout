@@ -1,0 +1,1 @@
+grund.toml:5: warning: [schema.kinds.RULE] file `rules.json` is not read — no language in [schema.sources] languages reads `.json`, so nothing in it is checked. Give the file an extension a listed language reads.

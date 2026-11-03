@@ -154,7 +154,7 @@ A `content = "prose"` field, the default, holds any body. Its display name is ch
 
 ### content.values: A values field is the value chapter
 
-A field with `content = "values"` is the value chapter of [§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots): the same identity, the same value roots, the same `invalid-value-declaration` findings at the same lines, and the same prerequisites ([§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)). It is v1's `value_chapter` and nothing else, plus whatever presence, placement and title the field adds. A kind has at most one such field, and a second is refused with v1's one-chapter refusal at its `content` key.
+A field with `content = "values"` is the value chapter of [§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots): the same identity, the same value roots, the same `invalid-value-declaration` findings at the same lines, and the same prerequisites ([§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)). It is v1's `value_chapter` and nothing else, plus whatever presence, placement and title the field adds. A kind has at most one such field, and a second is refused with v1's one-chapter refusal at its `content` key. Every entry of the row is held to those prerequisites ([§FS-fields.forms.places](FS-fields.md#formsplaces-every-entry-of-a-row-is-held-to-what-its-form-asks-of-a-home)).
 
 ### content.one-of: A scalar's value is its display name
 
@@ -202,6 +202,38 @@ A kind whose declarations have no authored body to hold a field takes no fields 
 - `form = "value"`: `CONST is form = "value": its children are numbered components, so it takes no fields` (`… so it cannot be closed` at `closed`);
 - `citable = false`: `NOTES is not citable: it declares nothing, so it takes no fields` (`… so it cannot be closed`);
 - `fetch`: `TICKET is fetched: its declarations are a snapshot, so it takes no fields` (`… so it cannot be closed`).
+
+### forms.places: Every entry of a row is held to what its form asks of a home
+
+A version-2 row writes its homes as lists ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)), so a row with `form = "value"`, `form = "rule"` or a `content = "values"` field can name more than one, where a version-1 row's `file` and `folder` each name one. What the form or the field asks of a home it asks of every entry, in the words the first entry of that shape is refused in and at the same line, the `form` or `content` key. A value home must exist with the shape its key says and normalize inside the project root ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations), [§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)), and a rule kind's `files` home must be named `.md` ([§FS-config.3.4.12](FS-config.md#3412-rules--rule-declaration-kinds)). Nothing asks a rule kind's home to exist, so an absent entry on a rule row is quiet in every position ([§FS-config-v2.schema.places.boundaries.4](FS-config-v2.md#schemaplacesboundaries4-a-missing-place-is-quiet)). A `form = "rule"` row with a values field is asked both, each at its own key. This is still the one check of [§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts), asked again of each later entry rather than written twice, so what a later entry is asked cannot come apart from what the first is asked.
+
+What happens to an entry that fails depends on its position and on what the run already does with it, and [§DF-v2-later-place-window](../decisions/functional/DF-v2-later-place-window.md#df-v2-later-place-window-a-version-2-row-holds-every-entry-to-what-its-form-asks-of-a-home-warned-for-through-022x-and-refused-from-0230) gives the reasons. The first entry of its shape is refused ([§FS-fields.forms.places.first](FS-fields.md#formsplacesfirst-the-first-entry-of-a-shape-is-refused-at-load)). A later entry the scan already fails on is refused too ([§FS-fields.forms.places.unreadable](FS-fields.md#formsplacesunreadable-a-later-home-the-scan-already-fails-on-is-refused-at-load)). Any other later entry warns for one release and is then refused ([§FS-fields.forms.places.window](FS-fields.md#formsplaceswindow-through-grund-022x-any-other-later-entry-loads-and-warns)). Version 1 is unchanged: its row cannot name a second home of a shape.
+
+#### forms.places.several: Several homes of one shape load, and each is read
+
+A row whose entries all meet what is asked of them loads, however many it lists, and every one of them is read: `files = ["values/a.md", "values/b.md"]` and `folders = ["values/one", "values/two"]` on a `form = "value"` row each declare the values their homes hold, and `grund <ID>` resolves each. A kind may name several places ([§DISC-core-concerns.6.4](../discussions/proposals/2026-09-30-core-concerns.md#64-amended-after-the-verdict-v-a08-and-v-a14)), and such a row loaded and resolved before this point was written.
+
+#### forms.places.shapes: "Exactly one" counts the shapes of a row
+
+"Exactly one existing `file` or `folder`" in [§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations) and [§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values) counts shapes on a version-2 row, not entries. A `form = "value"` row or a values field that lists both `files` and `folders` is refused as it always was, with `` kind `CONST` sets `values = true` without exactly one `file` or `folder` home `` or `` kind `AR` sets `value_chapter` without exactly one `file` or `folder` home ``, and a `form = "rule"` row may list both. A row with `fetch` holds one place whatever its form, or it is refused with `` `[schema.kinds.CONST] fetch` needs one place to hold its snapshots ``, because a snapshot has one place to be written.
+
+#### forms.places.first: The first entry of a shape is refused at load
+
+The first entry of its shape that fails what is asked of it is refused at load, exit `2`, and exit `1` on `config validate`, as it was before any later entry was asked: `` error: grund.toml:6: value home for kind `CONST` does not exist: values/absent.md `` at the `form` key, the same at a values field's `content` key, and the rule refusal of [§FS-config.3.4.12](FS-config.md#3412-rules--rule-declaration-kinds) at the `form` key.
+
+#### forms.places.unreadable: A later home the scan already fails on is refused at load
+
+On a `form = "value"` row the scan reads a home's value sources ([§FS-config.3.4.9.2](FS-config.md#3492-the-home-is-the-boundary-of-its-value-sources)). A later `folders` entry that is absent or not a folder, and a later `files` entry named `.json` that is absent or not a file, fail that read: every command that scans exits `2` with an error that names no config line, `read value home` or `could not read value JSON source`, while `config validate` exits `0`. No tree that passes `check` holds such a row, so nothing that passes turns red, and the entry is refused at load with the first entry's message and no release clause, `` error: grund.toml:6: value home for kind `CONST` does not exist: values/absent ``, or `` must be an existing folder `` or `` must be an existing file ``, exit `2`, and exit `1` on `config validate`. What moves is the three commands that read the config and not the scan: `config validate`, `config show` and `schema` exit `0` on such a row today and refuse it now.
+
+#### forms.places.window: Through grund 0.22.x any other later entry loads and warns
+
+Through grund 0.22.x any other later entry that fails what is asked of it loads and is read as before, and the run earns one warning per entry, with code `config-later-place` ([§FS-config-v2.checks.config-later-place](FS-config-v2.md#checksconfig-later-place-a-later-entry-of-a-row-fails-what-its-form-asks-of-a-home)), at the line of the `form` or `content` key that asks, naming grund 0.23.0 as the release that refuses it ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)):
+
+- on a `form = "value"` row, a later `files` entry that is absent, is not a file or links out of the project root, other than the `.json` entries [§FS-fields.forms.places.unreadable](FS-fields.md#formsplacesunreadable-a-later-home-the-scan-already-fails-on-is-refused-at-load) refuses;
+- on a values field, a later entry of either shape that is absent, has the wrong shape or links out of the project root, because the scan reads no value source from a values field's home and so never fails on one;
+- on a `form = "rule"` row, a later `files` entry not named `.md`.
+
+Through this window the verdict on these entries still depends on the order of the list: the same entry is refused first and warned for later. grund 0.23.0 closes the window, and each such entry is refused with the first entry's message at the same line.
 
 ## rules: Fields beside chapter rules
 

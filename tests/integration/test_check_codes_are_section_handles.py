@@ -132,6 +132,7 @@ NOT_YET_MIGRATED = (
 # §DF-imports) adds it to the selector constant and strikes it off here.
 SPECIFIED_AHEAD = {
     "FS-remote-projects": ("remote-missing", "remote-modified", "remote-orphan", "remote-stale"),
+    "FS-config-v2": ("config-later-place",),
 }
 
 

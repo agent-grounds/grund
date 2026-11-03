@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "later-place"
+
+[schema.kinds.AR]
+files = ["absent.md", "a.md"]
+
+[schema.kinds.AR.fields.values]
+content = "values"

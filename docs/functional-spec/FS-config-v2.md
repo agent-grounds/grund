@@ -294,7 +294,7 @@ Ownership reads the path as written, not its link target, as a v1 home does ([§
 
 ##### schema.places.boundaries.4: A missing place is quiet
 
-A place that does not exist scans nothing and earns no finding, as a v1 home does ([§FS-config.3.5.8](FS-config.md#358-every-configured-kind-home-is-scanned)), so a fresh repository loads clean. A citation of a kind none of whose places exists says so at the citer ([§FS-check.3.1.4](FS-check.md#314-a-kind-none-of-whose-places-exists)).
+A place that does not exist scans nothing and earns no finding, as a v1 home does ([§FS-config.3.5.8](FS-config.md#358-every-configured-kind-home-is-scanned)), so a fresh repository loads clean. A row with `form = "value"` or a values field asks more of its own homes ([§FS-fields.forms.places](FS-fields.md#formsplaces-every-entry-of-a-row-is-held-to-what-its-form-asks-of-a-home)). A citation of a kind none of whose places exists says so at the citer ([§FS-check.3.1.4](FS-check.md#314-a-kind-none-of-whose-places-exists)).
 
 ##### schema.places.boundaries.5: Not inside a member
 
@@ -628,3 +628,19 @@ Three constructs were read and warned for through grund 0.21.x, and from grund 0
 A value in a version-2 config that held a string opened with `"""` earned one warning with code `config-multiline-string` at the line of its key, per construct, through grund 0.21.x: an array whose `"""` string opened on one line and that a later line closed ([§FS-config-v2.reader.5.strings.window](FS-config-v2.md#reader5stringswindow-through-grund-021x-an-array-a-later-line-closes-is-read-as-before-and-warns)), and a value, an element or a key whose `"""` string opened and closed on one line ([§FS-config-v2.reader.6.window](FS-config-v2.md#reader6window-through-grund-021x-a-string-that-closes-early-is-read-as-before-and-warns)). Such a file is TOML, which is why it was not `config-not-toml`: what is untrue of it is only that version 2 reads it. From grund 0.22.0 each is refused at load instead, with its multi-line parenthetical: the array as `unclosed array (a multi-line string opens on line <n>, which version 2 does not read)` ([§FS-config-v2.reader.5.strings.multi-line](FS-config-v2.md#reader5stringsmulti-line-a-string-opened-with--is-one-version-2-does-not-read)) and the string on one line as `expected string (a multi-line string, which version 2 does not read)` ([§FS-config-v2.reader.6.multi-line](FS-config-v2.md#reader6multi-line-a--string-on-one-line-is-one-version-2-does-not-read)), each ending `; this became an error in grund 0.22.0` where it loaded through its window.
 
 The code is spent as [§FS-config-v2.checks.config-not-toml](FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses) is, and stays for the same reason: `--only config-multiline-string` and `--ignore config-multiline-string` are still accepted and select nothing, and `--only` says `warning: --only config-multiline-string judged nothing — the check is spent from grund 0.22.0 and never fires`. Where a construct fires it, it is that finding in everything but its trigger and its text: the same surfaces, channel, exit code, selectors and JSON shape ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)).
+
+### checks.config-later-place: A later entry of a row fails what its form asks of a home
+
+A `files` or `folders` entry after the first of its shape that fails what its row's `form` or values field asks of a home, and that [§FS-fields.forms.places.window](FS-fields.md#formsplaceswindow-through-grund-022x-any-other-later-entry-loads-and-warns) still loads, earns one warning with code `config-later-place`, per entry, at the line of the `form` or `content` key that asks. The message is the refusal the first entry of that shape gets, then why this one still loads, then the remedy, then the release ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)):
+
+```text
+warning: grund.toml:6: value home for kind `CONST` does not exist: values/absent.md, loaded for now because it is not the row's first `files` entry; correct it or take it off the row; this warning becomes an error in grund 0.23.0
+```
+
+A value home's refusal already ends in the entry. A rule kind's does not, so its warning adds the entry where a value home's has it:
+
+```text
+warning: grund.toml:6: kind `RULE` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch`: rules.json, loaded for now because it is not the row's first `files` entry; correct it or take it off the row; this warning becomes an error in grund 0.23.0
+```
+
+It fires only for a config file read as version 2, whose rows are the ones that can list a later entry. It is the finding [§FS-config-v2.checks.config-not-toml](FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses) describes in everything but its trigger and its text: a CLI-level `warning:` on stderr whose text carries the config line, on `check`, `config validate` and `config show` and no other command, once per entry rather than once per scope, leaving the exit code alone and standing in place of the `success` line. `--ignore config-later-place` drops it and `--only config-later-place` selects it. Under `--format=json` it is one warning finding carrying the code, its `path` the config file as a report path and its `line` the key's. A `.yaml` entry keeps the value-source warning it already earns beside this one.

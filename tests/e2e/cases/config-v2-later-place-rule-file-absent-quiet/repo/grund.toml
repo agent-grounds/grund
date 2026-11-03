@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "later-place"
+
+[schema.kinds.RULE]
+files = ["rules.md", "absent.md"]
+form = "rule"
+
+[schema.kinds.DOC]
+files = ["doc.md"]

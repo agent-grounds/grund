@@ -1,0 +1,1 @@
+warning: grund.toml:6: kind `RULE` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch`: rules.json, loaded for now because it is not the row's first `files` entry; correct it or take it off the row; this warning becomes an error in grund 0.23.0

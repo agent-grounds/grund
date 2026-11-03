@@ -1,0 +1,6 @@
+grund_config_version = 2
+project_name = "later-place"
+
+[schema.kinds.CONST]
+folders = ["values/absent", "values/one"]
+form = "value"
