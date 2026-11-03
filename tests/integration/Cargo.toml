@@ -29,6 +29,10 @@ name = "lsp_cli_parity"
 path = "lsp_cli_parity.rs"
 
 [[test]]
+name = "lsp_config_refusal_locations"
+path = "lsp_config_refusal_locations.rs"
+
+[[test]]
 name = "lsp_unsaved_files"
 path = "lsp_unsaved_files.rs"
 
