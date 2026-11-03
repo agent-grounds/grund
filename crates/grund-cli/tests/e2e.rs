@@ -53,6 +53,9 @@ mod isolated_member_example;
 // §FS-config.4.1.1: issue #1134's workspace config findings, its cases run alone.
 #[path = "support/workspace_config_findings.rs"]
 mod workspace_config_findings;
+// §FS-fetch.4.1: issue #1141's absent value home hint, its cases run alone.
+#[path = "support/value_home_hint.rs"]
+mod value_home_hint;
 
 // §FS-check.4.11.3: issue #1138's grouping block config findings, its cases run alone.
 #[path = "support/grouping_block_config_findings.rs"]
