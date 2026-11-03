@@ -229,13 +229,17 @@ jobs:
       - uses: ./.github/actions/bench-cache
         id: cargo
 
+      # The container runs as root over a workspace the runner owns. Git must read it for
+      # every event, so the head's build names its commit and watches the paths a shard
+      # dates back, as the shard's own git does (§FS-distribution.4.1.1).
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       # §AR-ci.5.1: only the base *binary* comes from the base branch; its harness and
       # fixture generator never run, so a change to either cannot read as a code change.
       - name: Build the base branch's binary
         if: github.event_name == 'pull_request'
         run: |
-          # The container runs as root over a workspace the runner owns.
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git checkout --force "${{ github.event.pull_request.base.sha }}"
           cargo build --profile bench -p grund --features bench --bin grund --locked --quiet
           install -D target/release/grund bench-bin/base/grund

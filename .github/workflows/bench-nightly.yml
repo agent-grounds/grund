@@ -31,6 +31,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # The container runs as root over a workspace the runner owns. Git must read it, so
+      # the build names its commit and watches the paths a shard dates back
+      # (§FS-distribution.4.1.1).
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       # Read-only: ci.yml's push to main saves this key.
       - uses: ./.github/actions/bench-cache
 
