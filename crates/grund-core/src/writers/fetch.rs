@@ -262,6 +262,8 @@ enum FetchHome {
 /// §FS-fetch.4: a value source holds no Markdown declaration. The question is the
 /// one a value home asks of a file (§FS-values.terms), and the answer is spelled
 /// from the run's report base (§FS-errors.4), as `imported_fetch` spells its target.
+/// The way out names a folder without the source, since one kept beside a fetched
+/// snapshot of its own ID is a duplicate (§FS-values.2.3).
 fn refuse_value_source_home(
     selected: &Config,
     kind: &KindConfig,
@@ -276,8 +278,8 @@ fn refuse_value_source_home(
     }
     let shown = format_path(&relative_from_base(report_base, &home));
     Err(fetch_operational(format!(
-        "kind `{}` cannot fetch into {shown}: a value source holds no Markdown declaration; \
-         give the kind a Markdown file or a folder as its home, or remove its `fetch`",
+        "kind `{}` cannot fetch into {shown}: a value source holds no Markdown; \
+         move the kind to a Markdown file or a folder without it, or remove its `fetch`",
         kind.kind
     )))
 }
