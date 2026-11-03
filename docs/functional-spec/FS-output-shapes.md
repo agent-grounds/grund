@@ -318,8 +318,6 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 | `schema`, invalid config or usage error | empty | raw `error:` text, plus `known formats:` for an unknown format | `2` |
 | semantic value finding, text | located finding lines | empty | `1` |
 | semantic value finding, JSON | finding NDJSON with declaration `sites` | empty | `1` |
-| a value source that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete — a YAML one from grund 0.22.0 | partial findings if any | incomplete-scan finding | `2` |
-| a YAML value source's finding before grund 0.22.0 ([§FS-values.2.2.4](FS-values.md#224-yaml-findings-are-warnings-until-grund-0220)), text | one located `warning:` line in the warning group, at the wrapped finding's location, or at the file's line 1 for a fetched kind's skipped source | empty | `0`, unless another finding sets it |
-| a YAML value source's finding before grund 0.22.0, JSON | one ordinary located warning object, code `yaml-value-source-deferred`, at that same location, its `sites` the wrapped finding's, or `null` for a skipped source | empty | `0`, unless another finding sets it |
+| a value source that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete, whichever its format | partial findings if any | incomplete-scan finding | `2` |
 
 The three `refs --total` rows are the whole difference that flag makes to this table: the `refs` resolver-rejection rows above and the incomplete-scan row apply to a `--total` invocation unchanged, because it renders the same scan result rather than running a different query ([§FS-refs.3.4](FS-refs.md#34---total)).

@@ -254,12 +254,15 @@ from YAML's type resolution:
 Anchors, aliases, tags, merge keys, block scalars, multi-line scalars, nested
 collections and a second document are refused, each at its own line.
 
-Until grund 0.22.0 every finding at a YAML source is a
-`yaml-value-source-deferred` warning, so adopting YAML cannot fail a run that
-passed before ([§FS-values.2.2.4](../functional-spec/FS-values.md#224-yaml-findings-are-warnings-until-grund-0220)). The warning keeps the wrapped finding's words
-and says how to fix it; a source with any finding declares nothing until it is
-fixed. A kind that sets `fetch` skips its YAML sources in this release, with the
-same warning.
+A finding at a YAML source is reported as one at a JSON source is
+([§FS-values.2.2.4](../functional-spec/FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings)). A refused construct, a wrong shape or an invalid component
+is an `invalid-value-declaration` error at its own line, and the source's other
+members stay declared. A repeated key, or an ID another source also declares, is
+a `duplicate` error naming both sites. A source that cannot be read or parsed is
+an incomplete scan: `check`, `list`, `show`, `refs`, `cover` and `id` all exit
+`2`, as they do for a JSON one. So a YAML file that is not a value table, a stray
+`ci.yml` say, does not belong in a value home: move it out. A kind that sets
+`fetch` reads the YAML sources in its home as it reads the JSON ones.
 
 > [!NOTE]
 > A `§` citation written in a YAML comment is read by nothing: it neither

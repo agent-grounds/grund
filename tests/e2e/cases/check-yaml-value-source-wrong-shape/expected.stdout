@@ -1,0 +1,1 @@
+values/limits.yaml:1: error: invalid value declaration for CONST-room-limit: YAML value member must be a nonempty sequence; correct what the reason names

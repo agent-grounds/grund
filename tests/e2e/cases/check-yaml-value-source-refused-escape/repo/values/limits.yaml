@@ -1,0 +1,2 @@
+CONST-room-limit: ["\x41"]
+CONST-floor-limit: [3, "floors"]
