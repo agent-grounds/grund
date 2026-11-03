@@ -17,14 +17,14 @@ fn print_config_help() {
     );
     // §FS-config.4.2: show names its own config's findings; validate names the workspace's.
     println!(
-        "             It warns only about the config it prints; at a workspace root, `grund config validate` names every member's."
+        "             It warns only about the config it prints; at a workspace root, `grund config validate` warns about the root's config and each project the workspace expansion returns."
     );
     println!(
         "  validate   parse the discovered config and report the first error; exit 0 if it's well-formed."
     );
-    // §FS-config.4.1.1: at a workspace root, every member is loaded and named.
+    // §FS-config.4.1.1: at a workspace root, the root's and each expanded project's are named.
     println!(
-        "             At a workspace root it loads every member's config too, and warns about each as `grund check` does."
+        "             At a workspace root it loads every member's config too, and warns about the root's config and each project the workspace expansion returns, as `grund check` does."
     );
     println!(
         "  explain    say what a table, a key or a check code is, in the version the file is read as; with no target, list"

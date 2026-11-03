@@ -4,8 +4,8 @@ A two-project workspace whose root config is already on version 2 and whose
 one member, `packages/beta`, is still on version 1. `grund check` at the root
 passes, and says once which config is still on version 1 and the command that
 moves it ([§FS-check.checks.config-version-1](../../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)). `grund config validate` at the same
-root says the same line, because it names the config findings of every project
-the workspace has, as `check` does ([§FS-config.4.1.1](../../docs/functional-spec/FS-config.md#411-at-a-workspace-root)). The example pins the
+root says the same line, because it names the config findings of the root's
+config and each project the workspace expansion returns, as `check` does ([§FS-config.4.1.1](../../docs/functional-spec/FS-config.md#411-at-a-workspace-root)). The example pins the
 two runs, `1-check` and `2-config-validate`, each over its own copy of the
 same `repo/`.
 
@@ -40,8 +40,8 @@ include = ["docs"]
   ([§FS-config.5.3](../../docs/functional-spec/FS-config.md#53-a-version-1-config-is-cautioned-and-never-retired)).
   The line stands where `success` would have stood.
 - **Validating the config at the root names the member too.** `grund config
-  validate` loads every member's config to validate it, and names each one's
-  findings in `check`'s words; asking it about the root alone never hides the
+  validate` loads every member's config to validate it, and names the findings of
+  the root's config and each project the workspace expansion returns in `check`'s words; asking it about the root alone never hides the
   member still on version 1. `grund config show` prints only the root's config
   and names only that config's findings
   ([§FS-config.4.2](../../docs/functional-spec/FS-config.md#42-grund-config-show-path)).
