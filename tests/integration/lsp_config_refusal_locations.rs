@@ -95,7 +95,6 @@ fn startup(config: &str, expected: &str, located: bool, setup: impl FnOnce(&Path
 macro_rules! located_refusal {
     ($name:ident, $config:expr, $expected:expr) => {
         #[test]
-        #[ignore = "red until #1150 preserves config refusal location metadata; implement removes this"]
         fn $name() {
             startup(&$config, $expected, true, |_| {});
         }
@@ -109,7 +108,6 @@ located_refusal!(
 );
 
 #[test]
-#[ignore = "red until #1150 preserves config refusal location metadata; implement removes this"]
 fn file_instead_of_value_folder() {
     startup(
         &value_config("docs/limits.md"),
@@ -122,7 +120,6 @@ fn file_instead_of_value_folder() {
 }
 
 #[test]
-#[ignore = "red until #1150 preserves config refusal location metadata; implement removes this"]
 fn value_home_outside_root() {
     startup(
         &format!("{V1}[[kinds]]\nkind = \"CONST\"\nfolder = \"..\"\nvalues = true\n"),
@@ -133,7 +130,6 @@ fn value_home_outside_root() {
 }
 
 #[test]
-#[ignore = "red until #1150 preserves config refusal location metadata; implement removes this"]
 fn folder_instead_of_value_file() {
     startup(
         &format!("{V1}[[kinds]]\nkind = \"CONST\"\nfile = \"docs\"\nvalues = true\n"),
@@ -253,7 +249,6 @@ fn unlocated_refusal_keeps_first_line_fallback() {
 }
 
 #[test]
-#[ignore = "red until #1150 preserves config refusal location metadata; implement removes this"]
 fn semantic_refusal_reload_and_recovery() {
     let composition = Composition::new("1150-reload");
     let healthy = value_config("docs");

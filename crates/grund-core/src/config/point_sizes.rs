@@ -1,8 +1,7 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use std::path::Path;
 
 use super::v1::{bail_config, parse_string, parse_usize, split_outside_strings};
-use crate::model::format_path;
 
 /// The closed built-in point-size vocabulary, its opt-in warning policy and
 /// what counting in one of its units means (§FS-list.3.4.2, §FS-config.3.1.2).
@@ -70,6 +69,7 @@ pub(in crate::config) const LEAD_SIZE_MEMBERS: &[&str] = &["max", "unit"];
 /// Parse the one inline table in grund's line-oriented config surface
 /// (§FS-config.3.1.2). Keeping this parser specific makes duplicate, missing, and
 /// extra fields loud without silently widening the rest of the TOML subset.
+/// Contextual refusals preserve their named line for the editor (§FS-lsp.2.2.4.1).
 pub(super) fn parse_lead_size_warning(
     path: &Path,
     line: usize,
@@ -112,11 +112,11 @@ pub(super) fn parse_lead_size_warning(
                         "duplicate lead_size_warning field `max`".to_string(),
                     );
                 }
-                max = Some(parse_usize(path, line, raw).map_err(|_| {
-                    anyhow!(
-                        "{}:{}: lead_size_warning max must be a non-negative integer",
-                        format_path(path),
-                        line
+                max = Some(parse_usize(path, line, raw).or_else(|_| {
+                    bail_config(
+                        path,
+                        line,
+                        "lead_size_warning max must be a non-negative integer".to_string(),
                     )
                 })?);
             }
@@ -128,11 +128,11 @@ pub(super) fn parse_lead_size_warning(
                         "duplicate lead_size_warning field `unit`".to_string(),
                     );
                 }
-                let raw_unit = parse_string(path, line, raw).map_err(|_| {
-                    anyhow!(
-                        "{}:{}: lead_size_warning unit must be a string",
-                        format_path(path),
-                        line
+                let raw_unit = parse_string(path, line, raw).or_else(|_| {
+                    bail_config(
+                        path,
+                        line,
+                        "lead_size_warning unit must be a string".to_string(),
                     )
                 })?;
                 unit = PointSizeUnit::parse(&raw_unit);
