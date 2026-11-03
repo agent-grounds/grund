@@ -67,9 +67,9 @@ fn slugs(findings: &Catalog) -> Vec<String> {
 }
 
 /// §FS-values.2.2: JSON and YAML sources at one folder home are each read in
-/// their own format.
+/// their own format, and a nested file is no source.
 #[test]
-fn a_folder_home_reads_both_formats_in_one_path_order() {
+fn a_folder_home_reads_each_source_in_its_own_format() {
     let root = v1("yaml_value_mixed_formats", KIND, "");
     write(&root.join("values/b.yaml"), "CONST-bee: [2]\n");
     write(&root.join("values/a.json"), "{\"CONST-ant\": [1]}\n");
@@ -83,6 +83,25 @@ fn a_folder_home_reads_both_formats_in_one_path_order() {
             ("ant".into(), "a.json".into(), ValueFormat::Json),
             ("bee".into(), "b.yaml".into(), ValueFormat::Yaml),
             ("cat".into(), "c.yml".into(), ValueFormat::Yaml),
+        ]
+    );
+}
+
+/// §FS-values.2.2: a folder home's sources are read in one bytewise path order
+/// across both formats. Sites of one ID keep the order they were read in, which
+/// is the one place it shows, since every report of them sorts.
+#[test]
+fn one_id_across_formats_keeps_one_path_order() {
+    let root = v1("yaml_value_path_order", KIND, "");
+    write(&root.join("values/a.yaml"), "CONST-same: [1]\n");
+    write(&root.join("values/b.json"), "{\"CONST-same\": [2]}\n");
+    write(&root.join("values/c.yml"), "CONST-same: [3]\n");
+    assert_eq!(
+        values(&scan(&root)),
+        [
+            ("same".into(), "a.yaml".into(), ValueFormat::Yaml),
+            ("same".into(), "b.json".into(), ValueFormat::Json),
+            ("same".into(), "c.yml".into(), ValueFormat::Yaml),
         ]
     );
 }
