@@ -120,17 +120,21 @@ whose `file` home is a Markdown file has no value source there, and takes the wr
 
 An absent home file is not a failure: grund reads it as an empty file and creates it
 in the successful final installation, holding the accepted declaration alone. That
-holds for every kind but a value kind. A value kind's home must already exist
-([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations)), so an absent one is refused when the configuration loads, before any
-integration runs, and the refusal names the way through ([§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through)).
+holds for every kind but a value kind and a kind that sets `value_chapter`. Their homes
+must already exist ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations), [§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)), so an absent one is refused when
+the configuration loads, before any integration runs, and the refusal names the way
+through ([§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through)).
 
 ### 4.1. An absent value home is refused with the way through
 
 The refusal ``<config>:<line>: value home for kind `<KIND>` does not exist: <home>``
-keeps that text as its first line and is followed by one repair-hint line. For a kind
-that sets `fetch`, the hint names the one step that unblocks the first snapshot:
-create the empty file (a `file` home) or the empty folder (a `folder` home), then run
-`grund fetch <ID>`. For a file home it reads:
+keeps that text as its first line and is followed by one repair-hint line. A kind that
+sets `value_chapter` ([§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)) reaches the same refusal and the same hint as a
+value kind.
+
+For a kind that sets `fetch`, with a `folder` home or a `file` home named `.md`, the hint
+names the one step that unblocks the first snapshot: create the empty file or the empty
+folder, then run `grund fetch <ID>`. For a file home it reads:
 
 ```text
 hint: a value kind's home must exist; create the empty file, then run `grund fetch <ID>` to write the first snapshot
@@ -138,7 +142,19 @@ hint: a value kind's home must exist; create the empty file, then run `grund fet
 
 and for a folder home `create the empty folder` takes the place of `create the empty
 file`. `<ID>` is written as it stands, because the configuration is loaded before the
-requested ID is read. A value kind without `fetch` is never told to run `grund fetch`.
+requested ID is read.
+
+Every other absent home gets the shorter hint: a kind without `fetch`, which is never
+told to run `grund fetch`, and a `file` home with any other name, because fetch writes
+Markdown and so is not the way through for a value source. It does not say `empty`,
+because an empty `.json` is itself invalid. For a file home it reads:
+
+```text
+hint: a value kind's home must exist; create the file
+```
+
+and for a folder home `create the folder` takes the place of `create the file`.
+
 The hint changes no verdict: the exit stays 2, and a caller matching the first line
 still matches it. `grund check` and `grund list`, which load the same configuration,
 print the same two lines.
@@ -154,9 +170,9 @@ The replacement is atomic. A missing folder may be created only as part of the
 successful final installation; any discovery, validation, or write failure leaves the
 tree byte-identical and exits 2.
 
-That does not reach a value kind: its folder home must already exist
-([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations)), and an absent one is refused at configuration load with the
-hint of [§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through).
+That does not reach a value kind or a kind that sets `value_chapter`: its folder home
+must already exist ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations), [§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)), and an absent one is refused at
+configuration load with the hint of [§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through).
 
 ## 6. Stability and ownership
 
