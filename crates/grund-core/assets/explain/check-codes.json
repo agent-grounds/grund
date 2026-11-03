@@ -3679,73 +3679,35 @@
  },
  {
   "code": "yaml-value-source-deferred",
-  "meaning": "A finding that is an error at a YAML value source, or a YAML value source a fetched kind's home skips, is a warning for one release.",
-  "ramp": "grund 0.22.0, where each wrapped finding takes its own code and severity and a fetched kind's YAML source is read",
+  "meaning": "A finding at a YAML value source was a warning for one release, and a fetched kind's home skipped its YAML sources; such a source is now read, and each finding carries its own code and severity.",
+  "ramp": null,
   "2": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 0.22.0 and never fires"
    },
    "enabled": {
-    "kind": "clauses",
-    "clauses": [
-     {
-      "text": "form = \"value\" is set on a [schema.kinds] table",
-      "by": "setting"
-     },
-     {
-      "text": "a YAML value source is in its home",
-      "by": "condition"
-     }
-    ]
+    "kind": "always"
    },
    "fix": {
-    "kind": "cases",
-    "cases": [
-     {
-      "label": "wrapped",
-      "text": "{fix}, or move {file} out of the value home"
-     },
-     {
-      "label": "move",
-      "text": "move {file} out of the value home"
-     }
-    ]
+    "kind": "none",
+    "text": "it never fires"
    },
-   "note": "The wrapped finding's own words stand before the release clause; a source the wrapped finding keeps from being enrolled declares nothing until it is fixed."
+   "note": null
   },
   "1": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 0.22.0 and never fires"
    },
    "enabled": {
-    "kind": "clauses",
-    "clauses": [
-     {
-      "text": "values = true is set on a [[kinds]] row",
-      "by": "setting"
-     },
-     {
-      "text": "a YAML value source is in its home",
-      "by": "condition"
-     }
-    ]
+    "kind": "always"
    },
    "fix": {
-    "kind": "cases",
-    "cases": [
-     {
-      "label": "wrapped",
-      "text": "{fix}, or move {file} out of the value home"
-     },
-     {
-      "label": "move",
-      "text": "move {file} out of the value home"
-     }
-    ]
+    "kind": "none",
+    "text": "it never fires"
    },
-   "note": "The wrapped finding's own words stand before the release clause; a source the wrapped finding keeps from being enrolled declares nothing until it is fixed."
+   "note": null
   }
  }
 ]

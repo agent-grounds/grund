@@ -94,7 +94,6 @@ mod value_binding_split;
 mod value_context;
 mod value_json;
 mod value_json_enrollment;
-mod value_yaml;
 mod value_yaml_subset;
 mod values;
 mod walk;

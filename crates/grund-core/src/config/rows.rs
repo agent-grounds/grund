@@ -136,9 +136,8 @@ impl Schema {
 }
 
 impl Row {
-    /// Whether this row's kind keeps fetched snapshots (§FS-check.3.1.3): what
-    /// a missing snapshot and a value home's YAML source both ask
-    /// (§FS-values.2.2.4).
+    /// Whether this row's kind keeps fetched snapshots (§FS-check.3.1.3): what a
+    /// missing snapshot asks.
     pub(crate) fn fetches(&self) -> bool {
         self.kind
             .as_ref()

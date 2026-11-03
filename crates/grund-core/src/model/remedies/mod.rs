@@ -13,7 +13,6 @@ mod fields;
 mod rules;
 mod scan;
 mod section_lock;
-mod values;
 
 pub(crate) use check::*;
 pub(crate) use declarations::*;
@@ -21,4 +20,3 @@ pub(crate) use fields::*;
 pub(crate) use rules::*;
 pub(crate) use scan::*;
 pub(crate) use section_lock::*;
-pub(crate) use values::*;
