@@ -180,7 +180,7 @@ print the same two lines.
 
 ## 5. Folder-home write
 
-For `folder = "<home>"`, grund replaces the file that currently declares the requested
+For `folder = "<home>"`, grund replaces the Markdown file that currently declares the requested
 ID, or creates `<home>/<ID>.md` when no declaration exists. It never replaces a
 different-ID file. Multiple existing declarations for the requested ID are ambiguous
 and refused. The declaring file or new file contains the accepted stdout verbatim.
@@ -192,6 +192,29 @@ tree byte-identical and exits 2.
 That does not reach a value kind or a kind that sets `value_chapter`: its folder home
 must already exist ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations), [§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)), and an absent one is refused at
 configuration load with the hint of [§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through).
+
+### 5.1 Existing value-source declarations prevent installation
+
+A value source that the selected project's catalog recognizes as declaring the
+requested ID in this folder home is an existing declaration, not an absent snapshot.
+Before creating or replacing a Markdown snapshot, grund refuses this case on stderr
+with exit 2, identifying the requested ID and declaring source and advising the user
+to keep that fact in the value source or move it out of the value home before fetching.
+Stdout is empty and the entire tree, including the source's other members, the index
+and unrelated files, remains byte-identical. An additional Markdown declaration of
+the same ID does not permit installation.
+
+Discovery follows the existing value-source language, direct-child and ownership
+rules, independently of general scan filters
+([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources)). It does not turn an unread
+file into a declaration: in particular, the fetched-kind YAML policy remains
+[§FS-values.2.2.4](FS-values.md#224-yaml-findings-are-warnings-until-grund-0220)'s. A source declaring
+only other IDs does not prevent creation. Unrelated project findings do not gate
+fetch. Markdown discovery and replacement retain their existing traversal semantics.
+
+This refusal preserves [§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)'s ownership boundary;
+[§DF-fetch-folder-value-source](../decisions/functional/DF-fetch-folder-value-source.md#df-fetch-folder-value-source-folder-fetch-refuses-an-id-already-declared-by-a-value-source)
+records the compatibility correction.
 
 ## 6. Stability and ownership
 

@@ -48,6 +48,13 @@ snapshot. It preserves accepted bytes verbatim and inserts a new file-home
 declaration in ID order ([§FS-fetch.3](../functional-spec/FS-fetch.md#3-accepted-declaration),
 [§FS-fetch.4](../functional-spec/FS-fetch.md#4-file-home-write)).
 
+For a folder home, fetch replaces an existing Markdown snapshot even when its
+filename differs from the ID. If a recognized value source in that home already
+declares the requested ID, fetch instead exits 2 and names the source, leaving
+all files unchanged. Keep that fact in the value source, or move it out of the
+value home before fetching. A table holding only other IDs does not block fetching
+([§FS-fetch.5.1](../functional-spec/FS-fetch.md#51-existing-value-source-declarations-prevent-installation)).
+
 With `resolve = "must"`, a missing snapshot is the ordinary `dangling` error.
 With `resolve = "should"`, it is the fixed `missing-snapshot` warning and a
 warning-only check exits 0. Choose `must` when CI should enforce that every
