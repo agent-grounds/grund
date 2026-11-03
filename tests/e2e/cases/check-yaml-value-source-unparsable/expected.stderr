@@ -1,0 +1,1 @@
+error: values/limits.yaml: invalid YAML: 2:1: while parsing a flow sequence, expected ',' or ']'; make the path readable, or keep it out of the scan

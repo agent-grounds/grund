@@ -108,7 +108,7 @@ CONST-room-limit: [12, people]
 CONST-api-version: ['1.10']
 ```
 
-A `§` citation inside a YAML comment is read by nothing, so cite provenance from Markdown. Until grund 0.22.0 every finding at a YAML source is a `yaml-value-source-deferred` warning.
+A `§` citation inside a YAML comment is read by nothing, so cite provenance from Markdown. A finding at a YAML source is reported as one at a JSON source is, and a source that cannot be read or parsed exits `2`.
 
 ### `[scan]`
 

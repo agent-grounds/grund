@@ -1,0 +1,1 @@
+values/limits.yaml:1: error: invalid value declaration for CONST-room-limit: YAML value component must be a number or a nonempty edge-unspaced string without backticks or control characters; correct what the reason names

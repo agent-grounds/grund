@@ -1,0 +1,2 @@
+CONST-room-limit: 40
+CONST-floor-limit: [3, "floors"]

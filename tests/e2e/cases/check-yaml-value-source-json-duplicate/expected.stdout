@@ -1,0 +1,1 @@
+values/prices.json:2: error: duplicate declaration of CONST-field-price (also declared at values/prices.yaml:2)

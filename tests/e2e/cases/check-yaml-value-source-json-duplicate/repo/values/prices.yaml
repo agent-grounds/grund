@@ -1,0 +1,3 @@
+# Last year's price, kept by mistake.
+CONST-field-price: [1300, "USD"]
+CONST-floor-limit: [3, "floors"]

@@ -1,0 +1,1 @@
+{"severity":"error","path":"values/limits.yaml","line":2,"code":"missing-index-entry","message":"CONST-room-limit is not listed in values/README.md: an entry is a `§`-marked Markdown link to the declaration; write `[§CONST-room-limit](limits.yaml)` in values/README.md — became an error in grund 0.13.0","sites":null,"authority":null}
