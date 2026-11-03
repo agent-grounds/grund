@@ -16,7 +16,7 @@ The issue asks that "policy-changing repairs must be separately visible and auth
 
 ### 2.2 Two gates, records first
 
-[§FS-config-v2.mapping](../../functional-spec/FS-config-v2.md#mapping-what-the-records-keep-apart) says a report that matches on one tree is no proof of equivalence. The records are the proof, so the first gate compares them, independent of the tree. The report on this tree is the second gate, because the records comparison ignores stated differences and a mistake in what it ignores should still be caught where the user would see it ([§FS-config-migrate.5](../../functional-spec/FS-config-migrate.md#5-equivalence-two-gates)). Comparing reports alone was rejected for the reason the mapping gives.
+[§FS-config-v2.mapping](../../functional-spec/FS-config-v2.md#mapping-what-the-records-keep-apart) says a report that matches on one tree is no proof of equivalence. The records are the proof, so the first gate compares them, independent of the tree. The report on this tree is the second gate, because the records comparison ignores stated differences and a mistake in what it ignores should still be caught where the user would see it ([§FS-config-migrate.5](../../functional-spec/FS-config-migrate.md#5-equivalence-two-gates)). Comparing reports alone was rejected for the reason the mapping gives. **Amended by [§DF-config-migrate-opted-out-block](DF-config-migrate-opted-out-block.md#df-config-migrate-opted-out-block-a-version-1-block-with-include_root--false-migrates-to-its-envelope-and-workspace-table-held-by-the-report-gate)**, which accepts the report gate alone for what a compact block with `include_root = false` leaves unwritten, because the unread-block probe is that scope's only reader.
 
 ### 2.3 `--to` is required
 

@@ -490,7 +490,11 @@ v1 file in v2 spelling is migration and not this reader's. Migration (section 8)
 reaches the same renderer from the other side: it converts a v1 `Project` into
 v2-shaped records and hands those to `v2_toml`, so `config show` and
 `config migrate` cannot disagree on v2 spelling
-([§FS-config-migrate.2.1](../functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate)).
+([§FS-config-migrate.2.1](../functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate)). The renderer has one selective mode, and only
+migration asks for it. It writes the envelope and the `[workspace]` table and
+leaves every other table to the v2 epoch. That is the candidate of a block with
+`include_root = false` that migrates compactly ([§FS-config-migrate.8.1.3](../functional-spec/FS-config-migrate.md#813-what-a-compact-blocks-candidate-holds)).
+`config show` always renders every effective value.
 
 ## 8. Migration translates records
 
@@ -533,6 +537,19 @@ call, unchanged in behaviour for `fetch`, which maps each failure into its own
 refusal. It gains the concurrent-edit check migration needs: the bytes the run
 read are passed in and read again just before the rename ([§FS-config-migrate.6.2](../functional-spec/FS-config-migrate.md#62-atomic),
 [§FS-config-migrate.6.3](../functional-spec/FS-config-migrate.md#63-a-concurrent-edit)).
+
+### 8.4 One policy for a block with `include_root = false`
+
+Whether a version-1 file is a block with `include_root = false` that migrates
+compactly is decided once in the `migrate` module ([§FS-config-migrate.8.1.2](../functional-spec/FS-config-migrate.md#812-when-the-block-migrates-compactly)).
+Refusal collection, candidate construction, the key map and notices, and the
+records gate all read that one answer. None of them asks the question again.
+Its first item takes the block's default scope from `root_scope_roots` and the
+canonical expanded member roots, the same scope and boundary the unread-block
+probe uses ([§FS-check.4.10.2](../functional-spec/FS-check.md#4102-what-counts)). It does not compute a second notion of what the
+block would read. On that answer the records gate narrows its comparison to the
+records the compact candidate keeps ([§FS-config-migrate.8.1.4](../functional-spec/FS-config-migrate.md#814-both-gates-still-run)). The report gate
+and the guidance comparison run unchanged.
 
 ## 9. The answer reads the gates
 

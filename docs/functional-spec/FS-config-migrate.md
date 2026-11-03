@@ -84,7 +84,7 @@ refused: grund.toml:7: [id] named_sections = false turns named sections off, and
   repair: set [id] named_sections = true under version 1; grund check shows its effect
 ```
 
-When the key is omitted the block reads ``refused: grund.toml: [id] named_sections is not set, so version 1 reads no named sections, and version 2 always reads them`` and ``  repair: add [id] named_sections = true under version 1; grund check shows its effect``.
+When the key is omitted the block reads ``refused: grund.toml: [id] named_sections is not set, so version 1 reads no named sections, and version 2 always reads them`` and ``  repair: add [id] named_sections = true under version 1; grund check shows its effect``. A block with `include_root = false` is not refused here ([§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false)).
 
 #### 3.1.2 Bare citations
 
@@ -104,7 +104,7 @@ refused: grund.toml:12: [scan] include names `src`, which does not exist, and ve
   repair: create src, or remove it from include; grund check under version 1 shows the effect
 ```
 
-A file that omits `[scan] include` reads that same default list, and a missing default entry is refused too, never dropped: a `src` created later would be scanned under version 1 and not under version 2. One block names every missing default entry, and its repair authors the list without them:
+A file that omits `[scan] include` reads that same default list, and a missing default entry is refused too, never dropped: a `src` created later would be scanned under version 1 and not under version 2. One block names every missing default entry, and its repair authors the list without them, unless the file is a block with `include_root = false` that migrates compactly ([§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false)):
 
 ```text
 refused: grund.toml: [scan] include is not set, so version 1 reads its default, which names `e2e` and `src`, which do not exist, and version 2 must know whether each is a folder or a file
@@ -173,10 +173,11 @@ Some settings are written with a notice rather than refused, because version 1 g
 - A positive `[citations] default` creates no obligation in v1, and is written as `may` ([§FS-config-v2.rules.citations.default](FS-config-v2.md#rulescitationsdefault-a-default-may-forbid-never-oblige)): `` changed: grund.toml:20: [citations.FS] default = "must": version 1 gives a positive default no force, so it is written as may ``.
 - `[output] format` and `relative_paths` are dropped. At their defaults: `` dropped: grund.toml:22: [output] format = "text": the default of --format, nothing to add `` and `` dropped: grund.toml:24: [output] relative_paths = true: the default of --path-base, nothing to add ``. Otherwise the notice names the flag that keeps the behaviour: `` dropped: grund.toml:22: [output] format = "json": pass --format json to keep it `` and `` dropped: grund.toml:24: [output] relative_paths = false: pass --path-base=invocation to keep it ``.
 - `color` is dropped: `` dropped: grund.toml:23: [output] color: nothing reads it ``.
+- On a block with `include_root = false`, the keys [§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false) lists as without force are dropped, each with one line: `` dropped: grund.toml:2: [id] named_sections: include_root = false, so no project scans this block's own files ``. A block that migrates compactly also gets one line with no line number, after the others, for the defaults it does not write: `` dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults ``.
 
 ### 3.3 Defaults are written out
 
-Every v1 default that differs from version 2's is written out explicitly, so the file keeps v1's meaning after later edits ([§FS-config-v2.schema.sources.migration](FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)): the slug pattern, the ID format, the default exclusions as globs, `declarations = "any-comment"`, the explicit language list with its definitions, a suggested note length as the `may` rung of `[schema.notes.lines]`, and `[presentation] rules = "root"` ([§DF-scoped-guidance](../decisions/functional/DF-scoped-guidance.md#df-scoped-guidance-a-version-2-rows-guidance-is-written-above-its-places-with-a-root-pointer-for-agents-that-do-not-load-nested-files)). A file with no `[[kinds]]` gets every built-in row written out. Each one is a `written:` line of the complete report, in the candidate's order; compact success omits that narration, never the defaults in the candidate, and a refused run lists the defaults only beside its candidate on stdout ([§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report)).
+Every v1 default that differs from version 2's is written out explicitly, so the file keeps v1's meaning after later edits ([§FS-config-v2.schema.sources.migration](FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)): the slug pattern, the ID format, the default exclusions as globs, `declarations = "any-comment"`, the explicit language list with its definitions, a suggested note length as the `may` rung of `[schema.notes.lines]`, and `[presentation] rules = "root"` ([§DF-scoped-guidance](../decisions/functional/DF-scoped-guidance.md#df-scoped-guidance-a-version-2-rows-guidance-is-written-above-its-places-with-a-root-pointer-for-agents-that-do-not-load-nested-files)). A file with no `[[kinds]]` gets every built-in row written out. A block with `include_root = false` that migrates compactly writes none of them ([§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false)). Each one is a `written:` line of the complete report, in the candidate's order; compact success omits that narration, never the defaults in the candidate, and a refused run lists the defaults only beside its candidate on stdout ([§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report)).
 
 ## 4. Comments
 
@@ -257,7 +258,7 @@ The mapping table "is what a migration audits against, and tests on the records 
 
 ### 5.1 The records gate
 
-The candidate is loaded through the v2 reader, the path a file on disk goes through, and its project records are compared with the v1 file's by one comparison that ignores only:
+The candidate is loaded through the v2 reader, the path a file on disk goes through, and its project records are compared with the v1 file's by one comparison that ignores only the following, or, for a block with `include_root = false`, what [§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false) says it ignores:
 
 - the version, and where the config was found;
 - the dropped `[output]` preferences ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices));
@@ -373,9 +374,89 @@ A config that is already version 2 is reported as `` <config> is already version
 
 Only the file at `PATH` is migrated; mixed versions are legal ([§FS-config.5](FS-config.md#5-schema-versioning)). At a workspace root the report names each member still on version 1 and the command that migrates it, one line each: `` member: <member>/grund.toml is version 1; migrate it with grund config migrate --to 2 <member> ``. The complete report places these after the `written:` lines and before the gates' result; compact success retains them at the position defined in [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write), without requiring default narration before them. The report gate runs over the whole workspace as `check` would, each member read by its own reader. A member's config is migrated from the member's root, and the report gate runs from there. No member is written; there is no `--recursive`, because several files cannot be replaced atomically together.
 
+### 8.1 A block with `include_root = false`
+
+A version-1 file whose `[workspace]` sets `include_root = false` is not a project: nobody reads its own files ([§FS-check.4.10.1](FS-check.md#4101-nobody-reads-the-blocks-own-files)). The settings version 1 gives a project have one reader there, the probe that asks whether the block would have read a file had it been a project ([§FS-check.4.10.2](FS-check.md#4102-what-counts)). This point is the whole rule for such a block. The points that refer here do not restate it, and an ordinary project, or a block with `include_root = true`, migrates exactly as the rest of this specification says. Why the block may be held by the report gate alone is [§DF-config-migrate-opted-out-block](../decisions/functional/DF-config-migrate-opted-out-block.md#df-config-migrate-opted-out-block-a-version-1-block-with-include_root--false-migrates-to-its-envelope-and-workspace-table-held-by-the-report-gate).
+
+#### 8.1.1 Named sections
+
+`[id] named_sections` has no reader on such a block, whatever its value, so it is never refused there ([§FS-config-migrate.3.1.1](FS-config-migrate.md#311-named-sections-off)). An authored key is dropped with a notice ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)), and an omitted one adds nothing to the report.
+
+#### 8.1.2 When the block migrates compactly
+
+The block migrates **compactly** when both of these hold:
+
+1. **Its default scope is empty.** No root of its version-1 default scope exists on disk outside its expanded member roots. That scope is the one [§FS-check.4.10.2](FS-check.md#4102-what-counts) takes: the `[scan] include` entries and the scanned `[[kinds]]` homes, or the built-in rows' homes when it writes no `[[kinds]]`.
+2. **It authors nothing a project would read.** Each authored key is one of these:
+   - `grund_config_version`, `project_name`, `project_description`, or a key of the `[workspace]` table or its imports. These have force on any block, and they map as [§FS-config-migrate.mapping](FS-config-migrate.md#mapping-every-version-1-key-and-default) says.
+   - `[id] named_sections`, either value.
+   - `[scan] include`, when it counts as omitted: it is `[]`, or exactly version 1's default list `["requirements.md", "docs", "e2e", "src"]`, as `grund init` writes it. Item 1 has already found each of those entries missing.
+   - An `[output]` key, a notice on every file ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)).
+   - Any other key whose value is version 1's default for that key. Its omission would mean the same. A `[[kinds]]` entry and a `[citations]` table have no default, so either one takes the block off the compact path.
+
+A block for which either item fails migrates as a project does, with every other refusal of [§FS-config-migrate.3.1](FS-config-migrate.md#31-a-refusal-names-a-v1-repair) and every default of [§FS-config-migrate.3.3](FS-config-migrate.md#33-defaults-are-written-out). Its missing-`include` refusal keeps the bytes [§FS-config-migrate.3.1.3](FS-config-migrate.md#313-an-include-entry-that-does-not-exist) gives it.
+
+#### 8.1.3 What a compact block's candidate holds
+
+The candidate is the version line, then what the keys of item 2's first bullet map to, and nothing else. No `[schema]`, `[rules]` or `[presentation]` default is written, no built-in row, and no `written:` line. The block takes version 2's defaults. Every other authored key is dropped with a notice, an `[output]` key with its own, and one more notice names the defaults left unwritten. Their lines are in [§FS-config-migrate.3.2](FS-config-migrate.md#32-notices). The reported block, `[workspace] include_root = false` and `members = ["a"]` on lines 2 and 3, becomes:
+
+```toml
+grund_config_version = 2
+
+[workspace]
+members = ["a"]
+include_root = false
+```
+
+#### 8.1.4 Both gates still run
+
+The records gate compares what the candidate keeps: the workspace records (members, optional members, `include_root` and imports), the project name and the description. Everything else that tells this version-1 file from its candidate is ignored there and left to the report gate ([§FS-config-migrate.5.1](FS-config-migrate.md#51-the-records-gate)). The report gate runs unchanged ([§FS-config-migrate.5.2](FS-config-migrate.md#52-the-report-gate)). A block whose root holds a file version 1's default scope never read, but version 2's whole-root scope does, therefore stops there, in one run. That file is usually a `README.md`, or the `AGENTS.md` `grund init` writes. Its candidate's run reports that nobody reads the block ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)). Such a block stays on version 1 until the file moves into a member or the block becomes a project.
+
+#### 8.1.5 The reports for the reported tree
+
+The reported tree is a version-2 root listing `group`, the block above at `group/grund.toml`, and a version-2 member at `group/a/grund.toml`. `grund config migrate --to 2 group` prints the candidate above on stdout, exits `0`, and reports:
+
+```text
+grund.toml: version 1 → 2, preview, nothing written
+dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults
+mapped: grund.toml:2: [workspace] include_root → [workspace] include_root
+mapped: grund.toml:3: [workspace] members → [workspace] members
+compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
+```
+
+With `--write` it writes those bytes, exits `0`, and reports:
+
+```text
+wrote grund.toml: version 1 (3 lines) replaced by version 2
+dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults
+to get version 1 back: it is in version control, e.g. git restore grund.toml
+to see this candidate again: restore version 1 and run grund config migrate --to 2
+note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
+```
+
+The block that the two old repairs produced also adds `[id] named_sections = true` on line 2 and `[scan] include = []` on line 5. It writes the same candidate, with two more lines after `wrote`:
+
+```text
+dropped: grund.toml:2: [id] named_sections: include_root = false, so no project scans this block's own files
+dropped: grund.toml:5: [scan] include: include_root = false, so no project scans this block's own files
+```
+
+The same reported block with a `README.md` beside its config is refused by `--write` at the report gate, exit `1`. The `differs:` lines are the unread-block warning as this grund prints it:
+
+```text
+grund.toml: version 1 → 2, --write
+dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults
+mapped: grund.toml:2: [workspace] include_root → [workspace] include_root
+mapped: grund.toml:3: [workspace] members → [workspace] members
+differs: grund check --suggestions on this tree
++ run-warning warning unread-workspace-block grund.toml:2:- grund.toml:2: no project scans ``, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.
++ run-warning warning unread-workspace-block grund.toml:2:- grund.toml:2: no project scans ``, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.
+not written: grund check --suggestions differs (inspect the comparison above); grund.toml is unchanged
+```
+
 ## mapping: Every version-1 key and default
 
-**Outcome:** *mapped* is written in v2; *written* is a v1 default written out; *notice* is dropped or changed and reported ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)); *refused* names its repair ([§FS-config-migrate.3.1](FS-config-migrate.md#31-a-refusal-names-a-v1-repair)). Each row has a mapping case, and a test fails when a row of the v1 lowering table has none. The ground of a row is [§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart) unless it names another point of FS-config-v2.
+**Outcome:** *mapped* is written in v2; *written* is a v1 default written out; *notice* is dropped or changed and reported ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)); *refused* names its repair ([§FS-config-migrate.3.1](FS-config-migrate.md#31-a-refusal-names-a-v1-repair)). Each row has a mapping case, and a test fails when a row of the v1 lowering table has none. The ground of a row is [§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart) unless it names another point of FS-config-v2. On a block with `include_root = false`, [§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false) decides which rows apply.
 
 | v1 key | v2 spelling | Outcome |
 |---|---|---|
