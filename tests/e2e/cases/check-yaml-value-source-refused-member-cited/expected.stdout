@@ -1,0 +1,2 @@
+docs/offer.md:3: error: unknown reference CONST-bad; did you mean CONST-good?
+values/limits.yaml:1: error: invalid value declaration for CONST-bad: a YAML value source refuses an anchor; correct what the reason names
