@@ -163,3 +163,30 @@ class RegressionTests(unittest.TestCase):
         self.assertEqual("SPEC", allocation.kind)
         self.assertEqual(("folder", "specs"), (allocation.home.kind, allocation.home.path))
         self.assertFalse(allocation.home_exists)
+
+    # Red until #1134 names member config findings at a workspace root; implement removes this.
+    @unittest.expectedFailure
+    def test_validate_config_names_member_config_findings_at_a_workspace_root(self):
+        # §FS-config.4.1.1, §FS-check.4.11.3: the root's config plus each expanded project,
+        # in check's order, as `warnings`; `run_cautions` carry no config finding, as before.
+        with temporary() as temp:
+            result = self.module.validate_config(
+                root=fixture(temp, "config-validate-workspace-member-findings"))
+        self.assertEqual((
+            "packages/on-agents/.agents/grund.toml is a deprecated config location"
+            " — move it to packages/on-agents/grund.toml",
+            "packages/on-pair/.agents/grund.toml is ignored"
+            " — packages/on-pair/grund.toml takes precedence; delete one",
+            "packages/on-v1/grund.toml is version 1;"
+            " migrate it with grund config migrate --to 2 packages/on-v1",
+        ), result.warnings)
+        self.assertEqual((), result.run_cautions)
+        with temporary() as temp:
+            result = self.module.validate_config(
+                root=fixture(temp, "config-validate-workspace-ok"))
+        self.assertEqual((
+            "grund.toml is version 1; migrate it with grund config migrate --to 2",
+            "packages/alpha/grund.toml is version 1;"
+            " migrate it with grund config migrate --to 2 packages/alpha",
+        ), result.warnings)
+        self.assertEqual((), result.run_cautions)

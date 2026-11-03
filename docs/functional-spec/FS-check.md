@@ -1592,7 +1592,7 @@ This is [§FS-check.4.3](FS-check.md#43-redundant-config-pair)'s finding in ever
 
 #### 4.11.3 Once per config, not once per scope
 
-A workspace names the root's config and every member's, each at the path that project's config was loaded under ([§FS-errors.4](FS-errors.md#4-determinism)) — `packages/beta/.agents/grund.toml`, moving to `packages/beta/grund.toml`. Root and member are separate configs and a workspace may mix the two forms ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)), so a member on the old path earns its own line while a member on the bare form earns none, and a root and a member both on the old path earn one line each.
+A workspace names the root's config and each project the workspace expansion returns, each at the path that project's config was loaded under ([§FS-errors.4](FS-errors.md#4-determinism)) — `packages/beta/.agents/grund.toml`, moving to `packages/beta/grund.toml`. Root and member are separate configs and a workspace may mix the two forms ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)), so a member on the old path earns its own line while a member on the bare form earns none, and a root and a member both on the old path earn one line each. That set is what `grund check` and `grund config validate` name at a workspace root ([§FS-config.4.1.1](FS-config.md#411-at-a-workspace-root)); `grund config show` names only the config it prints, the root's there ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)), and a path inside a member names that member's alone on all three.
 
 #### 4.11.4 A directory carrying both names earns [§FS-check.4.3](FS-check.md#43-redundant-config-pair) and not this
 
