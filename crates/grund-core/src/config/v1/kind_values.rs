@@ -61,7 +61,7 @@ pub(in crate::config) fn validate_kind_value_keys(
                 );
             }
         };
-        validate_value_home(path, line, root, &k.kind, home, expects_file)?;
+        validate_value_home(path, line, root, k, home, expects_file)?;
     }
     // §FS-config.3.4.13: the chapter key's own relationships. Each is a
     // state in which no coordinate could ever exist, so the config is
@@ -124,7 +124,7 @@ pub(in crate::config) fn validate_kind_value_keys(
                 );
             }
         };
-        validate_value_home(path, line, root, &k.kind, home, expects_file)?;
+        validate_value_home(path, line, root, k, home, expects_file)?;
     }
     Ok(())
 }
@@ -161,6 +161,18 @@ pub(in crate::config) fn rule_kind_refusal(
     })
 }
 
+/// §FS-fetch.4.1: the one step past an absent home. `grund fetch` writes Markdown, so
+/// it is the way through only for a kind that sets it and a home that holds Markdown.
+fn absent_value_home_hint(k: &KindConfig, shape: &str) -> String {
+    if k.fetch.is_some() && file_home_is_named_markdown(k) {
+        format!(
+            "hint: a value kind's home must exist; create the empty {shape}, then run `grund fetch <ID>` to write the first snapshot"
+        )
+    } else {
+        format!("hint: a value kind's home must exist; create the {shape}")
+    }
+}
+
 /// A value home is mandatory, existing, and physically inside the project root
 /// (§FS-config.3.4.9, §FS-values.1). Resolving both paths closes `..`, absolute,
 /// and symlink escapes through the same located config error, with its named
@@ -169,17 +181,23 @@ fn validate_value_home(
     config_path: &Path,
     line: usize,
     root: &Path,
-    kind: &str,
+    k: &KindConfig,
     home: &str,
     expects_file: bool,
 ) -> Result<()> {
+    let kind = &k.kind;
+    let shape = if expects_file { "file" } else { "folder" };
     let candidate = normalize_path_lexically(&root.join(home));
     let root = fs::canonicalize(root).unwrap_or_else(|_| normalize_path_lexically(root));
+    // §FS-fetch.4.1: the first line stays as it is; the hint follows it.
     let resolved = fs::canonicalize(&candidate).or_else(|_| {
         bail_config(
             config_path,
             line,
-            format!("value home for kind `{kind}` does not exist: {home}"),
+            format!(
+                "value home for kind `{kind}` does not exist: {home}\n{}",
+                absent_value_home_hint(k, shape)
+            ),
         )
     })?;
     if !resolved.starts_with(&root) {
@@ -190,11 +208,10 @@ fn validate_value_home(
         );
     }
     if (expects_file && !resolved.is_file()) || (!expects_file && !resolved.is_dir()) {
-        let expected = if expects_file { "file" } else { "folder" };
         return bail_config(
             config_path,
             line,
-            format!("value home for kind `{kind}` must be an existing {expected}: {home}"),
+            format!("value home for kind `{kind}` must be an existing {shape}: {home}"),
         );
     }
     Ok(())

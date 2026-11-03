@@ -1,0 +1,2 @@
+error: grund.toml:10: value home for kind `AR` does not exist: docs/arch.md
+hint: a value kind's home must exist; create the empty file, then run `grund fetch <ID>` to write the first snapshot
