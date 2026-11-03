@@ -90,8 +90,8 @@ fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
         value_chapter: values_field.and_then(|field| field.content.map(|(_, line)| line)),
     };
     let named_sections = r.project.schema.ids.named_sections;
-    let model = r.project.schema.sources.model.as_ref();
-    validate_kind_value_keys(r.path, &k, &lines, root, named_sections, model)
+    let sources = &r.project.schema.sources;
+    validate_kind_value_keys(r.path, &k, &lines, root, named_sections, sources)
 }
 
 /// §FS-config-v2.schema.sources.rules: whether every `file` place of `row` passes,

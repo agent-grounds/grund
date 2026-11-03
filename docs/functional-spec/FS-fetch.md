@@ -138,7 +138,8 @@ empty folder, then run `grund fetch <ID>`. In a version-2 file the language deci
 one a name resolves to ([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)) is of class `document`,
 where the name is the `file` home's own or, for a `folder` home, the `<ID>.md` fetch writes
 there ([§FS-fetch.5](FS-fetch.md#5-folder-home-write)). A version-1 file has no language to ask, so it is a `file` home named
-`.md` or a `folder` home. For a file home it reads:
+`.md` or a `folder` home, with `md` in its effective `[scan] extensions`
+([§FS-scan.scope.extensions](FS-scan.md#scopeextensions-an-extension-makes-a-file-readable-not-declarable)). For a file home it reads:
 
 ```text
 hint: a value kind's home must exist; create the empty file, then run `grund fetch <ID>` to write the first snapshot
@@ -151,9 +152,9 @@ requested ID is read.
 Every other absent home inside the project root gets the shorter hint: a kind without
 `fetch`, which is never told to run `grund fetch`, and a home whose snapshot the project
 does not read as Markdown, because fetch writes Markdown and so is not the way through
-there: a value source's reader refuses it, and under a name no language reads nothing
-ever sees it. It does not say `empty`, because an empty `.json` is itself invalid. For a
-file home it reads:
+there: a value source's reader refuses it, and under a name no language or `[scan]
+extensions` list reads nothing ever sees it. It does not say `empty`, because an empty
+`.json` is itself invalid. For a file home it reads:
 
 ```text
 hint: a value kind's home must exist; create the file

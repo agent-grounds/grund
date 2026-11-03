@@ -1,0 +1,11 @@
+grund_config_version = 1
+project_name = "vals"
+
+[scan]
+extensions = ["rs"]
+
+[[kinds]]
+kind = "CONST"
+folder = "values"
+values = true
+fetch = "scripts/fetch-const"
