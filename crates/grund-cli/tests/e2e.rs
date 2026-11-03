@@ -62,6 +62,10 @@ mod grouping_block_config_findings;
 #[path = "support/fetch_subsection_headings.rs"]
 mod fetch_subsection_headings;
 
+// §FS-config-v2.schema.sources.rules: issue #1149's v2 rule home cases, run alone.
+#[path = "support/v2_rule_home.rs"]
+mod v2_rule_home;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
