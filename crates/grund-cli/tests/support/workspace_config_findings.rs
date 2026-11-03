@@ -13,7 +13,6 @@ const CASES: [&str; 3] = [
 ];
 
 #[test]
-#[ignore = "red until #1134 names member config findings under config validate; implement removes this"]
 fn workspace_config_findings_contract() {
     let root = repo_root();
     let cases = root.join("tests/e2e/cases");

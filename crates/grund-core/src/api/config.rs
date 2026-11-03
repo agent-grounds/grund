@@ -7,7 +7,7 @@
 use anyhow::Result;
 use std::path::Path;
 
-use super::config_findings::config_diagnostics;
+use super::config_findings::{held_config_diagnostics, workspace_config_diagnostics};
 use super::report::public_run_warnings;
 use crate::config::explain::{ExplainAsk, Explained};
 use crate::config::{
@@ -68,11 +68,18 @@ pub fn schema_view(path: &Path) -> Result<SchemaView> {
 /// `members` list itself, is validated here exactly as `expand_workspace_tree`
 /// validates it for `grund check` — no tree scan. Returns the resolved config
 /// so a caller can also report the non-fatal findings [`config_warnings`]
-/// carries.
+/// carries: at a workspace root, the root's config's and each expanded
+/// project's, the set `grund check` names (§FS-config.4.1.1, §FS-check.4.11.3),
+/// recorded on the returned config's run from the projects expansion already
+/// loaded, so no member is walked twice. A path inside a member resolves to that
+/// member and names its findings alone.
 pub fn validate_config(path: &Path) -> Result<Config> {
     let mut config = resolve_workspace_config(path)?;
     if config.workspace_declared {
-        expand_workspace_tree(&mut config)?;
+        let projects = expand_workspace_tree(&mut config)?;
+        let findings =
+            workspace_config_diagnostics(&config, projects.iter().map(|entry| &entry.config));
+        config.set_workspace_config_findings(findings);
     }
     Ok(config)
 }
@@ -81,9 +88,12 @@ pub fn validate_config(path: &Path) -> Result<Config> {
 /// module doc of `api/config_findings.rs` lists, which is the one list of them.
 /// Message text only, so `grund config validate` and `grund config show` print
 /// the same sentences `grund check` does (§FS-check.4.11.2) without depending on
-/// the checker's report type.
+/// the checker's report type. For a config [`validate_config`] returned at a
+/// workspace root that is every expanded project's (§FS-config.4.1.1); for any
+/// other, its own alone (§FS-config.4.2).
 pub fn config_warnings(config: &Config) -> Vec<String> {
-    config_diagnostics(config, config.display())
+    held_config_diagnostics(config)
+        .into_iter()
         .map(|diagnostic| diagnostic.message)
         .collect()
 }

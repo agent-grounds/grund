@@ -15,6 +15,7 @@ use super::kinds::KindTable;
 use super::mount_edge::{ImportRead, MountEdge};
 use super::record::AbsentOptionalNamespace;
 use super::run_warnings::RunWarning;
+use crate::model::Diagnostic;
 use crate::sources::Buffers;
 
 /// §AR-config.1.5: one invocation's facts about one project.
@@ -98,6 +99,11 @@ pub struct RunWorkspace {
     /// Every import edge the run reached, the whole tree's, stamped on each
     /// project's run once the mounts are loaded (§FS-imports.checks).
     pub(crate) imports_read: Vec<ImportRead>,
+    /// The config findings of the root's config and of each project expansion
+    /// returned, in check's report order, which `grund config validate` stores
+    /// once it has expanded the tree (§FS-config.4.1.1, §FS-check.4.11.3); `None`
+    /// in a run that stored none, whose findings are its one config's.
+    pub(crate) config_findings: Option<Vec<Diagnostic>>,
 }
 
 impl Default for RunScope {
