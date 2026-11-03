@@ -3,6 +3,7 @@
 Why `grund` behaves the way it does. Each file here is one product-behavior decision: the context that forced it, the call, the alternatives that lost, and what the call costs. The H1 declares a `DF-<slug>` ID, and the spec point a decision settles cites it — so a rule in `docs/functional-spec/` is always one hop from its argument. Each record's first chapter is `## status:`, holding `Accepted` or `Superseded`; its `Date`, `Superseded by` and other prose lines stay above it, in the lead ([§DISC-core-concerns.10.2](../../discussions/proposals/2026-09-30-core-concerns.md#102-the-five-decisions-the-plan-makes-one-way)).
 
 - [§DF-watch-terminal-loop](DF-watch-terminal-loop.md#df-watch-terminal-loop-a-terminal-watch-loop-preserves-ordinary-check-reports) — Preserve ordinary reports in the terminal watch loop, including recovery, interruption and screen ownership.
+- [§DF-fetch-folder-value-source](DF-fetch-folder-value-source.md#df-fetch-folder-value-source-folder-fetch-refuses-an-id-already-declared-by-a-value-source) — Refuse folder-home fetch when a value source already declares the ID.
 
 Read a decision when the spec tells you *what* and you need *why*. Do not read them for the current behavior: a decision records the state of the argument on its date, and a superseded one is kept for its reasoning, not its verdict.
 
