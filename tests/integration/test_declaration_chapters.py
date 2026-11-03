@@ -149,7 +149,10 @@ CITED = (
 
 # FS-fmt.md grew by 42 bytes in §FS-fmt.2.4, .2.4.1.2, .2.4.2, .2.4.3, .2.4.6 and .3.6: its
 # shorthand illustrations take the <§> escape, so none is an off-format citation (grund#1073).
-BASELINES = {"FS-show.md": 71777, "FS-fmt.md": 103210}
+
+# FS-show.md grew by 185 bytes in §FS-show.3.5: its `grund fetch` hint excepts a kind whose
+# `file` home §FS-fetch.4 refuses, citing §FS-check.3.1.3.1 rather than restating it (grund#1133).
+BASELINES = {"FS-show.md": 71962, "FS-fmt.md": 103210}
 
 
 def _flat(text):
