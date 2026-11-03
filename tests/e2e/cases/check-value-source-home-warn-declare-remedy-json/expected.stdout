@@ -1,0 +1,1 @@
+{"severity":"warning","path":"docs/offer.md","line":3,"code":"missing-snapshot","message":"no snapshot for CONST-other in values/limits.yaml — declare it in that value source","sites":null,"authority":null}

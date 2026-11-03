@@ -3,7 +3,7 @@
 //! either is built, so a grammar cannot disagree with the schema it came from.
 
 use std::collections::BTreeSet;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
@@ -71,6 +71,22 @@ impl Compiled {
     /// one resolver every consumer asks for a file's language, hosts and gate.
     pub(crate) fn reading<'a>(&'a self, schema: &'a Schema, path: &'a Path) -> FileReading<'a> {
         FileReading::of(self, schema, path)
+    }
+
+    /// The `file` home of `kind` under `root` that `fetch` refuses, `None` where it
+    /// writes (§FS-fetch.4): a whole-value kind's first place, when a value home reads
+    /// that file as a value source (§FS-values.terms). What the refusal and the
+    /// remedy that must not name the refused command both ask (§FS-check.3.1.3.1).
+    pub(crate) fn fetch_refused_home(
+        &self,
+        schema: &Schema,
+        root: &Path,
+        kind: &str,
+    ) -> Option<PathBuf> {
+        let row = schema.value_rows().find(|row| row.name == kind)?;
+        let home = root.join(row.file()?);
+        self.reading(schema, &home).value_format()?;
+        Some(home)
     }
 
     /// The grammar a file of a language with these `comment_prefixes` reads with:

@@ -1,0 +1,1 @@
+{"severity":"error","path":"docs/offer.md","line":3,"code":"dangling","message":"unknown reference CONST-other; no snapshot in values/limits.json — declare it in that value source","sites":null,"authority":null}
