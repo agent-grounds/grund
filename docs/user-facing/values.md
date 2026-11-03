@@ -265,7 +265,8 @@ an incomplete scan: `check`, `list`, `show`, `refs`, `cover` and `id` all exit
 `fetch` reads the YAML sources in its home as it reads the JSON ones. `grund fetch`
 writes Markdown, so it refuses a `file` home that is a value source, in either
 format, at exit `2` and with the file untouched
-([§FS-fetch.4](../functional-spec/FS-fetch.md#4-file-home-write)): give such a kind a Markdown file or a folder as its home.
+([§FS-fetch.4](../functional-spec/FS-fetch.md#4-file-home-write)): move such a kind to a Markdown file or a folder without
+the source, or remove its `fetch`.
 
 > [!NOTE]
 > A `§` citation written in a YAML comment is read by nothing: it neither
