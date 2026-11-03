@@ -47,13 +47,13 @@ fn successful_report() -> MigrateReport {
         ],
         notices: vec![
             MigrateNotice {
-                line: 3,
+                line: Some(3),
                 dropped: true,
                 key: "[output] color".into(),
                 why: "use --color instead".into(),
             },
             MigrateNotice {
-                line: 4,
+                line: Some(4),
                 dropped: false,
                 key: "[reference] inline_style".into(),
                 why: "check the carried comment: vocabulary translated to [schema.notes.text] must"

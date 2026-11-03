@@ -39,6 +39,7 @@ mod tests_walk;
 mod walk;
 
 pub(crate) use arrays::joined_value;
+pub(super) use render::Emission;
 pub(crate) use sources::{holds_glob, literal_suffix};
 pub(super) use strings::{
     read_string, read_string_as_before, read_string_list, read_string_list_as_before,

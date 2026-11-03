@@ -109,7 +109,9 @@ pub struct ListedComment {
 /// §FS-config-migrate.3.2: one setting dropped, or written differently.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MigrateNotice {
-    pub line: usize,
+    /// The v1 line of the key, or `None` for the one notice about no key, the
+    /// defaults a compact block leaves unwritten (§FS-config-migrate.8.1.3).
+    pub line: Option<usize>,
     /// `dropped` when nothing is written for it, else `changed`.
     pub dropped: bool,
     pub key: String,
