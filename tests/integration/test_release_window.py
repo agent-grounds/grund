@@ -5,6 +5,7 @@ that the Python pull-request gate discovers (§AR-ci.7, §FS-distribution.4.2.6)
 exercise source and golden scans without copying the bound calculation.
 """
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -202,6 +203,91 @@ class EveryCeilingLineIsNamedTests(unittest.TestCase):
 
     def test_release_refusal_at_the_ceiling_names_each_pending_line_once(self):
         self.assert_names_every_ceiling_line_once(run_guard(self.root, "0.22.0"))
+
+
+@unittest.skipUnless(
+    os.environ.get("GRUND_1132_RUN_RED_TESTS") == "1",
+    "red until #1132 reads the pending warning-window clause; implement removes this",
+)
+class WarningWindowCommandTests(unittest.TestCase):
+    """Isolated report fixtures survive the YAML closing. §FS-distribution.4.2.2"""
+
+    GOLDENS = (
+        ("check-yaml-value-source-anchor-deferred", 1),
+        ("check-yaml-value-source-issue-example", 2),
+        ("check-yaml-value-source-json-duplicate-deferred", 1),
+        ("check-yaml-value-source-nested-too-deep", 1),
+    )
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="grund-1132-warning-window-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+
+    def write(self, path, text):
+        target = self.root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8")
+
+    def messages(self, clause, grund="grund "):
+        # Like the report's template, the release is interpolated in source;
+        # only the goldens carry a complete, readable pending claim.
+        self.write("crates/a/src/window.rs",
+                   'const RELEASE: &str = "0.22.0";\n'
+                   f'const MESSAGE: &str = "findings {clause} {grund}{{RELEASE}}";\n')
+        for case, line in self.GOLDENS:
+            self.write(f"tests/e2e/cases/{case}/expected.stdout",
+                       "intro\n" * (line - 1)
+                       + f"values/limits.yaml:2: warning: findings {clause} {grund}0.22.0\n")
+
+    def assert_refused_with_every_golden(self, result, clause):
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertEqual(result.stdout, "")
+        for case, line in self.GOLDENS:
+            location = f"tests/e2e/cases/{case}/expected.stdout:{line}: `{clause} 0.22.0`"
+            self.assertEqual(result.stderr.count(location), 1, result.stderr)
+
+    def test_warning_window_accepts_below_but_refuses_deadline_and_later(self):
+        self.write(FLOOR, "0.19.0\n")
+        for grund in ("", "grund "):
+            # The same paths and line numbers work with an existing clause.
+            self.messages("becomes an error in", grund)
+            for release in ("0.22.0", "1.0.0"):
+                self.assert_refused_with_every_golden(
+                    run_guard(self.root, release), "becomes an error in",
+                )
+            self.messages("are warnings until", grund)
+            below = run_guard(self.root, "0.21.1")
+            self.assertEqual(below.returncode, 0, below.stdout + below.stderr)
+            self.assertEqual(below.stderr, "")
+            version_free = run_guard(self.root)
+            self.assertEqual(version_free.returncode, 0, version_free.stdout + version_free.stderr)
+            self.assertEqual(version_free.stderr, "")
+            for release in ("0.22.0", "1.0.0"):
+                with self.subTest(grund=grund, release=release):
+                    result = run_guard(self.root, release)
+                    self.assert_refused_with_every_golden(result, "are warnings until")
+                    self.assertIn("at or above 0.19.0 and below 0.22.0", result.stderr)
+
+    def test_warning_window_conflicts_with_shared_or_landed_floor(self):
+        """Equal and crossed bounds have no release. §FS-distribution.4.2.5"""
+        self.messages("are warnings until")
+        for source in ("shared", "landed"):
+            for floor in ("0.22.0", "0.23.0"):
+                self.write(FLOOR, floor + "\n" if source == "shared" else "0.19.0\n")
+                self.write(LANDED, f'const T: &str = "was removed in grund {floor}";\n'
+                           if source == "landed" else "")
+                for arguments in ((), ("0.22.0",), ("1.0.0",)):
+                    with self.subTest(source=source, floor=floor, arguments=arguments):
+                        result = run_guard(self.root, *arguments)
+                        self.assert_refused_with_every_golden(result, "are warnings until")
+                        self.assertIn("no release at all", result.stderr)
+                        self.assertIn(f"at or above {floor}", result.stderr)
+                        self.assertIn("below 0.22.0", result.stderr)
+                        lower = (f"{FLOOR}:1: minimum publishable release is {floor}."
+                                 if source == "shared"
+                                 else f"{LANDED}:1: `was removed in {floor}`")
+                        self.assertIn(lower, result.stderr)
 
 
 class ThisRepositoryReleaseWindowTests(unittest.TestCase):

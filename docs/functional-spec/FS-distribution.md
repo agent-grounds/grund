@@ -978,6 +978,7 @@ The release path asks directly: the release guard, `scripts/check_release_ramps.
 | clause | what the line claims | the version being cut |
 |---|---|---|
 | `becomes an error in <release>` | the change has not been made yet | must be **below** that release |
+| `are warnings until <release>` | the warning window has not closed yet | must be **below** that release |
 | `became an error in <release>` | the change has been made | must be **at or above** it |
 | `was removed in <release>` | the change has been made | must be **at or above** it |
 | `is removed in <release>` | a named removal has not been made yet | must be **below** that release |
@@ -986,6 +987,10 @@ The release path asks directly: the release guard, `scripts/check_release_ramps.
 | `an error in <release>` | the change has been made | must be **at or above** it |
 | `will exit <status> ... in <release>` | a scalar exit-status change has not been made yet | must be **below** that release |
 | `wording changes in <release>` | the message wording has not changed yet | must be **below** that release |
+
+`are warnings until <release>` is a pending claim, including the spelling
+`are warnings until grund <release>`: the named release closes the window,
+so a cut must be strictly below it.
 
 ##### 4.2.2.1 The preflight reads the plan as the release would record it
 

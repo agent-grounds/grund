@@ -5,6 +5,7 @@ vocabulary; `ThisRepositoryTests` runs the gate against this repository, because
 a gate wired to text nobody writes any more would pass everything in silence."""
 
 import importlib.util
+import os
 import unittest
 from pathlib import Path
 
@@ -168,6 +169,29 @@ class ClauseReadingTests(unittest.TestCase):
             with self.subTest(text=text):
                 landed = [c for c in claims(text) if c.direction == ramps.LANDED]
                 self.assertEqual(landed, [], "a promise not yet made was read as landed")
+
+
+@unittest.skipUnless(
+    os.environ.get("GRUND_1132_RUN_RED_TESTS") == "1",
+    "red until #1132 reads the pending warning-window clause; implement removes this",
+)
+class WarningWindowClauseTests(unittest.TestCase):
+    """The warning window is a pending ceiling. §FS-distribution.4.2.2"""
+
+    def test_warning_window_names_one_pending_claim_with_optional_grund_and_bold(self):
+        path = "tests/e2e/cases/window/expected.stdout"
+        for release in ("0.22.0", "grund 0.22.0", "**0.22.0**", "grund **0.22.0**"):
+            with self.subTest(release=release):
+                found = claims(f"intro\nwarning: findings are warnings until {release}\n", path)
+                self.assertEqual(
+                    found,
+                    [ramps.Claim(path, 2, "are warnings until", "0.22.0", ramps.PENDING)],
+                )
+
+    def test_warning_window_sets_an_exclusive_ceiling_with_a_shared_floor(self):
+        """Version-free bounds retain the deadline. §FS-distribution.4.2.5"""
+        found = claims("findings are warnings until grund 0.22.0")
+        self.assertEqual(ramps.release_window(found, "0.19.0"), ("0.19.0", "0.22.0"))
 
 
 class VerdictTests(unittest.TestCase):
