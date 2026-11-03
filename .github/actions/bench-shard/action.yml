@@ -53,11 +53,14 @@ runs:
         path: bench-bin
 
     # The checkout is dated back and the archive keeps its own times, so cargo finds every
-    # build output newer than its sources and runs the harness without building again.
+    # build output newer than its sources and runs the harness without building again. That
+    # includes `.git`: a development build watches HEAD, the refs and the index
+    # (§FS-distribution.4.1.1), which this fresh checkout has just written.
     - name: Unpack the build job's binaries
       shell: bash
       run: |
         git ls-files -z | xargs -0 touch -h -d 2000-01-01T00:00:00Z
+        find .git -exec touch -h -d 2000-01-01T00:00:00Z {} +
         tar -xf bench-bin/target.tar
         # An artifact drops the mode bits, so the loose base binary is made executable again.
         find bench-bin -type f ! -name target.tar ! -name '*.sha256' -exec chmod +x {} +
