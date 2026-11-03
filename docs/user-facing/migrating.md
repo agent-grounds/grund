@@ -206,8 +206,9 @@ envelope, `[workspace]`, `named_sections`, an `include` that is `[]` or exactly
 the default list `grund init` writes, `[output]`, or a key at version 1's
 default
 ([§FS-config-migrate.8.1.2](../functional-spec/FS-config-migrate.md#812-when-the-block-migrates-compactly)).
-The candidate is then the version line and the `[workspace]` table, and nothing
-else; one notice says the block takes version 2's defaults
+The candidate is then the version line and the `[workspace]` table, plus
+`[presentation] description` when the block wrote a `project_description`, and
+nothing else; one notice says the block takes version 2's defaults
 ([§FS-config-migrate.8.1.3](../functional-spec/FS-config-migrate.md#813-what-a-compact-blocks-candidate-holds)):
 
 ```toml

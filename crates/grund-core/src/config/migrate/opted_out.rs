@@ -86,7 +86,8 @@ fn include_omitted(v1: &Project, keys: &Keys) -> bool {
 /// §FS-config-migrate.8.1.2 item 2: every authored key is kept, named sections,
 /// an omitted include, `[output]`, or at version 1's default. The last is read
 /// as the records gate reads a project (§FS-config-migrate.5.1): the file means
-/// what version 1's defaults mean once the other keys are put back.
+/// what version 1's defaults mean once the other keys are put back. That reading
+/// leaves out `[reference] strict`, which is held to version 1's default directly.
 fn authors_nothing_read(v1: &Project, keys: &Keys, root: &Path) -> bool {
     let citations = |name: &str| name == "citations" || name.starts_with("citations.");
     for record in keys.lines {
@@ -112,6 +113,10 @@ fn authors_nothing_read(v1: &Project, keys: &Keys, root: &Path) -> bool {
         }
     }
     let mut defaults = v1::default_project();
+    // The records gate's reduction cannot see `[reference] strict`, so it is compared here.
+    if v1.schema.citation.strict != defaults.schema.citation.strict {
+        return false;
+    }
     defaults.name.clone_from(&v1.name);
     defaults.workspace.clone_from(&v1.workspace);
     defaults
