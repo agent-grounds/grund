@@ -85,7 +85,9 @@ the release.
   `refs`, `cover` and `id` exit `2`. A source with an invalid member now keeps its valid members,
   and in a duplicate across a JSON and a YAML source both are declared, where the JSON value used
   to win. A kind that sets `fetch` now reads the YAML sources in its home, so a citation of one of
-  their IDs resolves instead of drawing `missing-snapshot` or `dangling`. `grund fetch` into a `file` home that is a value source is now refused at exit `2` and leaves the file byte-identical,
+  their IDs resolves instead of drawing `missing-snapshot` or `dangling`. A snapshot fetched under
+  0.21.x for an ID a YAML source in that home declares is now a `duplicate` at exit `1`, so delete
+  one of the two. `grund fetch` into a `file` home that is a value source is now refused at exit `2` and leaves the file byte-identical,
   in either format, where it used to exit `0` and append Markdown, which broke a JSON source and
   which a YAML source read as comments. The `yaml-value-source-deferred` code is spent: it never fires, and `--only` naming it says so.
   **Who this affects:** a repository with a YAML file in a value home that drew that warning in
