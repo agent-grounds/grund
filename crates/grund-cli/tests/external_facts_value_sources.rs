@@ -340,3 +340,89 @@ fn folder_value_source_control_unread_yaml_and_yml_allow_creation() {
         assert_usable(&fixture.0);
     }
 }
+
+fn add_alias_home(fixture: &Fixture, index_target: &str) {
+    write(
+        &fixture.0,
+        "grund.toml",
+        &format!("{CONFIG}\n[schema.kinds.OTHER]\nfolders = [\"a\"]\nform = \"value\"\n"),
+    );
+    write(
+        &fixture.0,
+        "a/README.md",
+        &format!(
+            "# Values\n\n- [§CONST-room-limit]({index_target})\n\
+             - [§CONST-floor-limit]({index_target})\n"
+        ),
+    );
+}
+
+/// §FS-fetch.5.1: the catalog's first YAML alias defers even the selected JSON spelling.
+#[test]
+fn folder_value_source_yaml_alias_preserves_catalog_deferral() {
+    let fixture = Fixture::new();
+    fixture.json();
+    add_alias_home(&fixture, "limits.yaml");
+    let alias = fixture.0.join("a/limits.yaml");
+    let target = Path::new("../values/limits.json");
+    std::os::unix::fs::symlink(target, &alias).expect("link YAML alias");
+
+    let check = run(&fixture.0, &["check"]);
+    assert_code(&check, 0, "aliased YAML only warns");
+    assert!(stdout(&check).contains("a/limits.yaml is not read, because CONST sets fetch"));
+    let show = run(&fixture.0, &["show", ID]);
+    assert_code(&show, 1, "catalog defers the physical source");
+    assert!(stderr(&show).contains("ID not found: CONST-room-limit"));
+
+    let mut expected = tree_with_directories(&fixture.0);
+    expected.insert(
+        "values/CONST-room-limit.md".into(),
+        Some(SNAPSHOT.as_bytes().to_vec()),
+    );
+    let output = run(&fixture.0, &["fetch", ID]);
+    assert_code(&output, 0, "catalog-absent ID permits creation");
+    assert!(output.stdout.is_empty() && output.stderr.is_empty());
+    assert_eq!(tree_with_directories(&fixture.0), expected);
+    assert_eq!(fs::read_link(&alias).unwrap(), target);
+    assert_usable(&fixture.0);
+}
+
+/// §FS-fetch.5.1: the catalog's first JSON alias enrolls with all owners before refusal.
+#[test]
+fn folder_value_source_json_alias_refuses_creation_and_replacement() {
+    let fixture = Fixture::new();
+    fixture.source(
+        "a/limits.json",
+        TABLE,
+        "# Values\n\n- [§CONST-room-limit](limits.yaml)\n- [§CONST-floor-limit](limits.yaml)\n",
+    );
+    add_alias_home(&fixture, "limits.json");
+    let alias = fixture.0.join("values/limits.yaml");
+    let target = Path::new("../a/limits.json");
+    std::os::unix::fs::symlink(target, &alias).expect("link selected YAML spelling");
+
+    let check = run(&fixture.0, &["check"]);
+    assert_code(
+        &check,
+        1,
+        "catalog recognizes the multiply owned JSON source",
+    );
+    assert!(stdout(&check).contains("declares kind CONST inside OTHER home a"));
+    assert!(stdout(&check).contains("duplicate declaration of CONST-room-limit"));
+    let show = run(&fixture.0, &["show", ID]);
+    assert_code(&show, 1, "recognized source is already ambiguous");
+    assert!(stderr(&show).contains("a/limits.json:2"));
+    assert_refused(&fixture.0, "a/limits.json", false);
+    assert_eq!(run(&fixture.0, &["check"]).stdout, check.stdout);
+    assert_eq!(run(&fixture.0, &["show", ID]).stderr, show.stderr);
+    assert!(!fixture.0.join("values/CONST-room-limit.md").exists());
+
+    // The same recognized group must also prevent replacement of authored Markdown.
+    write(
+        &fixture.0,
+        "values/room-limit-notes.md",
+        "# CONST-room-limit: Authored\n\n## 1. 39\n\n## 2. rooms\n",
+    );
+    assert_refused(&fixture.0, "a/limits.json", false);
+    assert_eq!(fs::read_link(&alias).unwrap(), target);
+}

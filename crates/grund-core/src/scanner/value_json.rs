@@ -3,7 +3,7 @@
 //! either format, its format picking only the reader (§FS-values.2.2.4), and both
 //! enroll through `value_json_enrollment.rs`.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::json::{JsonNode, JsonReader};
@@ -35,8 +35,9 @@ pub(super) fn scan_value_sources(
 }
 
 /// The catalog's value declarations for one selected folder home and owner
-/// (§FS-fetch.5.1). Other homes are neither enumerated nor read; content findings
-/// stay in the catalog while discovery and read failures prevent installation.
+/// (§FS-fetch.5.1). Alias metadata from other homes preserves the catalog's
+/// reader and ownership decisions, but unrelated bodies are not read. Content
+/// findings stay in the catalog; selected-home discovery/read failures prevent installation.
 pub(crate) fn folder_value_declarations(
     schema: &Schema,
     frame: Frame<'_>,
@@ -160,26 +161,22 @@ pub(super) fn value_sources<'a>(
     value_sources_in(schema, frame, None)
 }
 
-/// The single source enumerator, optionally restricted before any directory
-/// read to fetch's selected owner and folder (§FS-values.2.2, §FS-fetch.5.1).
+/// The single source enumerator (§FS-values.2.2, §FS-fetch.5.1). A selected home
+/// retains all spellings and owners of its physical inputs before shared grouping
+/// chooses a reader. Failures discovering unrelated homes do not gate fetch.
 fn value_sources_in<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
     selected: Option<(&str, &Path)>,
 ) -> std::result::Result<Vec<(PathBuf, &'a str, ValueFormat)>, ScanError> {
     let mut sources = Vec::new();
+    let mut selected_keys = BTreeSet::new();
     // §FS-config-v2.schema.sources.values: the home picks the files, their language the reader.
     let format_of = |path: &Path| frame.compiled.reading(schema, path).value_format();
     for row in schema.value_rows() {
         let kind = row.name.as_str();
-        if selected.is_some_and(|(owner, _)| owner != kind) {
-            continue;
-        }
         // §FS-config-v2.schema.places: every file and folder of the row is a value home.
         for file in row.files() {
-            if selected.is_some() {
-                continue;
-            }
             let path = normalize_path_lexically(&frame.root().join(file));
             if let Some(format) = format_of(&path) {
                 sources.push((path, kind, format));
@@ -187,21 +184,33 @@ fn value_sources_in<'a>(
         }
         for folder in row.folders() {
             let folder = normalize_path_lexically(&frame.root().join(folder));
-            if selected.is_some_and(|(_, home)| !paths_same_location(home, &folder)) {
-                continue;
-            }
+            let selected_home = selected
+                .is_some_and(|(owner, home)| owner == kind && paths_same_location(home, &folder));
+            let required = selected.is_none() || selected_home;
             // §FS-check.6.1.1: cover this effective input before its shared read.
             let disk = frame.sources();
-            let entries = disk
-                .read_dir(&folder)
-                .map_err(|error| (folder.clone(), format!("read value home: {error}")))?;
+            let entries = match disk.read_dir(&folder) {
+                Ok(entries) => entries,
+                Err(error) if required => {
+                    return Err((folder.clone(), format!("read value home: {error}")));
+                }
+                Err(_) => continue,
+            };
             for entry in entries {
-                let entry =
-                    entry.map_err(|error| (folder.clone(), format!("read value home: {error}")))?;
+                let entry = match entry {
+                    Ok(entry) => entry,
+                    Err(error) if required => {
+                        return Err((folder.clone(), format!("read value home: {error}")));
+                    }
+                    Err(_) => continue,
+                };
                 let path = normalize_path_lexically(&entry.path());
                 if let Some(format) = format_of(&path)
                     && disk.is_file(&path)
                 {
+                    if selected_home {
+                        selected_keys.insert(physical_path_key(&path));
+                    }
                     sources.push((path, kind, format));
                 }
             }
@@ -211,10 +220,17 @@ fn value_sources_in<'a>(
                     .is_some_and(|parent| paths_same_location(parent, &folder))
                     && let Some(format) = format_of(&path)
                 {
+                    if selected_home {
+                        selected_keys.insert(physical_path_key(&path));
+                    }
                     sources.push((path, kind, format));
                 }
             }
         }
+    }
+    if selected.is_some() {
+        // §FS-fetch.5.1: filter physical groups, never the aliases deciding their recognition.
+        sources.retain(|(path, _, _)| selected_keys.contains(&physical_path_key(path)));
     }
     sources.sort_by(|(left, left_kind, _), (right, right_kind, _)| {
         (sort_path_key(left), left_kind).cmp(&(sort_path_key(right), right_kind))
