@@ -1,0 +1,8 @@
+grund_config_version = 1
+project_name = "vals"
+
+[[kinds]]
+kind = "CONST"
+file = "../outside-limits.md"
+values = true
+fetch = "scripts/fetch-const"

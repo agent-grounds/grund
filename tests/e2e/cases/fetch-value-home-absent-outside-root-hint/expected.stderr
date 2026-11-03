@@ -1,0 +1,2 @@
+error: grund.toml:7: value home for kind `CONST` does not exist: ../outside-limits.md
+hint: a value kind's home must be inside the project root; name a path inside it

@@ -132,9 +132,13 @@ keeps that text as its first line and is followed by one repair-hint line. A kin
 sets `value_chapter` ([§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)) reaches the same refusal and the same hint as a
 value kind.
 
-For a kind that sets `fetch`, with a `folder` home or a `file` home named `.md`, the hint
-names the one step that unblocks the first snapshot: create the empty file or the empty
-folder, then run `grund fetch <ID>`. For a file home it reads:
+For a kind that sets `fetch`, with a home whose snapshot the project reads as Markdown, the
+hint names the one step that unblocks the first snapshot: create the empty file or the
+empty folder, then run `grund fetch <ID>`. In a version-2 file the language decides: the
+one a name resolves to ([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)) is of class `document`,
+where the name is the `file` home's own or, for a `folder` home, the `<ID>.md` fetch writes
+there ([§FS-fetch.5](FS-fetch.md#5-folder-home-write)). A version-1 file has no language to ask, so it is a `file` home named
+`.md` or a `folder` home. For a file home it reads:
 
 ```text
 hint: a value kind's home must exist; create the empty file, then run `grund fetch <ID>` to write the first snapshot
@@ -144,16 +148,30 @@ and for a folder home `create the empty folder` takes the place of `create the e
 file`. `<ID>` is written as it stands, because the configuration is loaded before the
 requested ID is read.
 
-Every other absent home gets the shorter hint: a kind without `fetch`, which is never
-told to run `grund fetch`, and a `file` home with any other name, because fetch writes
-Markdown and so is not the way through for a value source. It does not say `empty`,
-because an empty `.json` is itself invalid. For a file home it reads:
+Every other absent home inside the project root gets the shorter hint: a kind without
+`fetch`, which is never told to run `grund fetch`, and a home whose snapshot the project
+does not read as Markdown, because fetch writes Markdown and so is not the way through
+there: a value source's reader refuses it, and under a name no language reads nothing
+ever sees it. It does not say `empty`, because an empty `.json` is itself invalid. For a
+file home it reads:
 
 ```text
 hint: a value kind's home must exist; create the file
 ```
 
 and for a folder home `create the folder` takes the place of `create the file`.
+
+A home outside the project root, written with `..` or as an absolute path, gets a third
+hint whether or not the kind sets `fetch`, because creating it only reaches the refusal
+that a value home must lie inside the root ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations)):
+
+```text
+hint: a value kind's home must be inside the project root; name a path inside it
+```
+
+Outside is read from the path as written, so a dangling symlink inside the root takes the
+hint of a home inside it. A version-2 file does not reach this hint, because it refuses
+such a place first ([§FS-config-v2.schema.places.boundaries.1](FS-config-v2.md#schemaplacesboundaries1-normalized-before-compared)).
 
 The hint changes no verdict: the exit stays 2, and a caller matching the first line
 still matches it. `grund check` and `grund list`, which load the same configuration,
