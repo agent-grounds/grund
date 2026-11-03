@@ -161,6 +161,8 @@ impl Workspace {
         command
             .current_dir(dir)
             .env("CARGO_TARGET_DIR", dir.join("target"))
+            // `build` matches `Running` at the start of a line, which colour would hide.
+            .env("CARGO_TERM_COLOR", "never")
             .env("CARGO_LOG", "cargo::core::compiler::fingerprint=info")
             .envs(env.iter().copied());
         command
