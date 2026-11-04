@@ -49,9 +49,10 @@ requested local ID, with no sibling declaration:
 
 The declaration may contain ordinary prose, fenced blocks, and subsections exactly one
 heading depth below its native declaration depth ([§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)). Its title must be
-non-empty. A malformed heading, wrong ID or kind, wrong native depth, duplicate
-declaration, sibling declaration, invalid subsection depth, invalid UTF-8, or trailing content outside the
-one declaration is refused on stderr with exit 2.
+non-empty. A malformed heading, a heading with no text ([§FS-fetch.3.3](FS-fetch.md#33-a-heading-with-no-text-is-still-a-heading)), wrong ID or kind,
+wrong native depth, duplicate declaration, sibling declaration, invalid subsection depth,
+invalid UTF-8, or trailing content outside the one declaration is refused on stderr with
+exit 2.
 
 The whole output is validated before any filesystem mutation. Accepted bytes are
 preserved verbatim; grund does not add timestamps, normalize whitespace, run `fmt`, or
@@ -101,6 +102,35 @@ error: fetch output line <n>: heading `<heading>` is not a section of `<ID>`; nu
 trailing whitespace removed. A `file` home's H3 and a `folder` home's H2 are held
 alike. A heading inside a fenced block is content and a bold label is no heading, so
 both stay accepted, as they are on the next scan.
+
+### 3.3. A heading with no text is still a heading
+
+A bare heading is hashes that end the line, as in `##`, `#` or `   ##`. It is read the way
+the next ordinary scan reads it ([§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate)): as a heading,
+never as prose. One at or above the native depth would end the declaration there
+([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)) and take everything after it out of the declaration, while
+`grund check` stays green, so nothing would ever report the loss. One deeper than subsection
+depth keeps the text after it and turns a green tree red on the next `grund check`.
+
+A bare heading in the fetched declaration is therefore a malformed heading: the fetch is
+refused on stderr with exit 2 and the tree stays byte-identical. A `file` home and a `folder`
+home are held alike. The refusal names the heading and its line in the output and says how
+to keep the text after it:
+
+```text
+error: fetch output line <n>: heading `<heading>` has no text and cannot stay in `<ID>`; fence it or drop it to keep the text after it
+```
+
+`<n>` and `<heading>` are those of [§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section), whose own refusal a bare heading at
+subsection depth keeps. A bare heading ahead of the declaration is leading content, refused
+with `error: fetch output must begin with one Markdown declaration`.
+
+Only what the next scan reads as a heading is held to this. A line indented four spaces or
+by a tab (`    ##`), seven hashes (`#######`), hashes running into text (`##foo`) and a bare
+heading inside a fenced block are content to it, so they stay accepted and the text after
+them stays in the declaration. This widens what is refused and nothing else: hashes followed
+only by whitespace (`## `) and a line [§FS-fetch.3](FS-fetch.md#3-accepted-declaration) refuses though the scan reads it as prose
+(`    #### Foo`, `####### foo`) stay refused as they were.
 
 ## 4. File-home write
 

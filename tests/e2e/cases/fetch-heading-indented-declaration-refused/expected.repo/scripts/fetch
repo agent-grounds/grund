@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+cat <<'OUT'
+## AR-001-thing: Thing
+kept
+    ## AR-002-other: Other
+prose after a bare closer
+OUT

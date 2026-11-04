@@ -187,6 +187,8 @@ mod tests_agent_entrypoints;
 #[cfg(test)]
 mod tests_atomic_install;
 #[cfg(test)]
+mod tests_fetch_bare_headings;
+#[cfg(test)]
 mod tests_fetch_nested;
 #[cfg(test)]
 mod tests_fetch_subsections;
