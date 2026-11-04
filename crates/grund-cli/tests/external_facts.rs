@@ -149,6 +149,48 @@ fn external_facts_missing_snapshot_text_and_json_have_fixed_identities() {
     }
 }
 
+/// §FS-check.4.12.3: a fetched kind whose home is the config root — v1
+/// `folder = "."`, which v2 cannot spell — names that home `.`, never an empty
+/// path, in the `should` warning of §FS-check.4.12 and the `must` error of
+/// §FS-check.3.1.3 alike.
+#[test]
+#[ignore = "red until #1170 spells a home at the report base `.`; implement removes this"]
+fn external_facts_missing_snapshot_names_a_root_home_dot() {
+    for (resolve, severity, text, exit) in [
+        (
+            "must",
+            "error",
+            "unknown reference TICKET-1; no snapshot in . — run grund fetch TICKET-1",
+            1,
+        ),
+        (
+            "should",
+            "warning",
+            "no snapshot for TICKET-1 in . — run grund fetch TICKET-1",
+            0,
+        ),
+    ] {
+        let root = root(&format!("root-home-{resolve}"));
+        write(
+            &root,
+            "grund.toml",
+            &format!(
+                "grund_config_version = 1\nproject_name = \"facts\"\n\n\
+                 [[kinds]]\nkind = \"TICKET\"\nfolder = \".\"\nformat = \"{{kind}}-{{number}}\"\n\
+                 resolve = \"{resolve}\"\nfetch = \"scripts/fetch-ticket\"\n"
+            ),
+        );
+        write(&root, "README.md", "# Readme\n\nSee \u{a7}TICKET-1.\n");
+
+        let output = run(&root, &["check", "."]);
+        assert_code(&output, exit, resolve);
+        assert_eq!(
+            stdout(&output),
+            format!("README.md:3: {severity}: {text}\n")
+        );
+    }
+}
+
 #[test]
 fn external_facts_should_snapshot_is_a_full_scope_error_in_text_json_and_workspaces() {
     let standalone = root("full-scope-should-standalone");

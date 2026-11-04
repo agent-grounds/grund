@@ -520,7 +520,7 @@ When the dangling citation sits inside a Markdown inline-code span ([§FS-fmt.2.
 
 #### 3.1.3 A kind that fetches
 
-This is also the fixed finding for a fetch-enabled kind whose effective target-side resolution is `must` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)). In that case the exact message is `unknown reference <qualified-ID>; no snapshot in <home> — run grund fetch <qualified-ID>`, or the other tail at a home `fetch` refuses ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)), its JSON code remains `dangling`, its severity is `error`, and it contributes exit 1. For a kind without `fetch`, the historical `unknown reference <qualified-ID>` bytes remain unchanged.
+This is also the fixed finding for a fetch-enabled kind whose effective target-side resolution is `must` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)). In that case the exact message is `unknown reference <qualified-ID>; no snapshot in <home> — run grund fetch <qualified-ID>`, or the other tail at a home `fetch` refuses ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)), its JSON code remains `dangling`, its severity is `error`, and it contributes exit 1. `<home>` is never empty: a home that is the report base itself reads `.` ([§FS-check.4.12.3](FS-check.md#4123-a-home-at-the-report-base-reads-)). For a kind without `fetch`, the historical `unknown reference <qualified-ID>` bytes remain unchanged.
 
 The near-ID and escaped-inline-code hints ([§FS-check.3.1.1](FS-check.md#311-a-near-id), [§FS-check.3.1.2](FS-check.md#312-an-illustration-in-inline-code)) take precedence over the fetch action. The message retains `unknown reference <qualified-ID>; no snapshot in <home>` and substitutes the existing conditional tail for the em-dash fetch tail: `; did you mean <candidate>?`, `; write <§><qualified-ID> if this is an illustration`, or their existing combined form. One citation site still produces one finding.
 
@@ -1622,7 +1622,7 @@ A recognized citation has no declaration and targets a fetch-enabled kind whose 
 <path>:<line>: no snapshot for <qualified-ID> in <home> — run grund fetch <qualified-ID>
 ```
 
-The em-dash remedy tail is exactly `— run grund fetch <qualified-ID>`, with no inner backticks, except at a home `fetch` refuses ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)). The JSON code is `missing-snapshot`, severity is `warning`, and the message field is the text after `<path>:<line>: `. A warning-only run exits 0 and prints no `success` line. Every site gets one finding, remains in what `refs` and `cover` report, and may resolve after an explicit [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot), or, at a home `fetch` refuses, once the source declares it. The hints that take the fetch tail's place are [§FS-check.4.12.1](FS-check.md#4121-a-hint-takes-the-fetch-tails-place), and its workspace spelling is [§FS-check.4.12.2](FS-check.md#4122-in-a-workspace).
+The em-dash remedy tail is exactly `— run grund fetch <qualified-ID>`, with no inner backticks, except at a home `fetch` refuses ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)). The JSON code is `missing-snapshot`, severity is `warning`, and the message field is the text after `<path>:<line>: `. A warning-only run exits 0 and prints no `success` line. Every site gets one finding, remains in what `refs` and `cover` report, and may resolve after an explicit [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot), or, at a home `fetch` refuses, once the source declares it. The hints that take the fetch tail's place are [§FS-check.4.12.1](FS-check.md#4121-a-hint-takes-the-fetch-tails-place), and its workspace spelling is [§FS-check.4.12.2](FS-check.md#4122-in-a-workspace). How `<home>` is spelled is [§FS-check.4.12.3](FS-check.md#4123-a-home-at-the-report-base-reads-).
 
 Under v2 the same warning is selected by `[rules.resolution] <KIND> = "warn"`, and `must` selects the error; v1's `resolve = "should"` keeps selecting it. An explicit v2 entry needs `fetch` on the kind's row ([§FS-config-v2.rules.resolution](FS-config-v2.md#rulesresolution-rulesresolution)).
 
@@ -1634,6 +1634,10 @@ The near-ID and escaped-inline-code hints of [§FS-check.3.1.1](FS-check.md#311-
 #### 4.12.2 In a workspace
 
 In a workspace, the ID and remedy use the complete alias-qualified spelling while `<home>` is rendered from the run's report base ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)).
+
+#### 4.12.3 A home at the report base reads `.`
+
+`<home>` is the kind's configured `file` or `folder` home, spelled from the report base as every other path of the run is ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)). It is never empty: a home that is the report base itself, such as a v1 `folder = "."` read from the config root, reads `.`, the spelling [§FS-workspace.5.3](FS-workspace.md#53-the-empty-scan-caution-names-each-project-from-the-report-base) gives the base, so the warning is `no snapshot for TICKET-1 in . — run grund fetch TICKET-1`. The same spelling holds for the `must` message's `no snapshot in <home>` ([§FS-check.3.1.3](FS-check.md#313-a-kind-that-fetches)) and under every hint of [§FS-check.4.12.1](FS-check.md#4121-a-hint-takes-the-fetch-tails-place).
 
 ### 4.13 Oversized lead *(opt-in)*
 
