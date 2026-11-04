@@ -58,7 +58,7 @@ pub(crate) fn unread_block_scope_root(
     uncovered_block_scope_roots(block)
         .into_iter()
         .find(|root| walk_reads_any_file(block.schema(), walk, root))
-        .map(|root| format_path(block_relative_root(block, &root)))
+        .map(|root| format_path(&block_relative_root(block, &root)))
 }
 
 /// §FS-check.4.10.11, §FS-workspace.6.1, §FS-distribution.3.1: the

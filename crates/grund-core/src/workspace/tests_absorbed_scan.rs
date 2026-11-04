@@ -64,3 +64,24 @@ fn the_documented_message_is_the_shipped_message() {
         "{SPEC} does not show the error {GOLDEN} pins:\n{shipped}"
     );
 }
+
+/// §FS-check.3.30.1: a scope root is named by its lexically folded path under the
+/// block root — `.` for the block root itself, the folded subtree otherwise, and
+/// the climb kept for a root that folds to somewhere outside the block.
+#[test]
+fn a_scope_root_is_named_by_its_folded_path_under_the_block() {
+    let block = Path::new("/w/group");
+    let named = |entry: &str| {
+        crate::model::format_path(&super::findings::root_under_block(
+            block,
+            &block.join(entry),
+        ))
+    };
+    assert_eq!(named("docs/.."), ".");
+    assert_eq!(named("../group"), ".");
+    assert_eq!(named("./docs/.."), ".");
+    assert_eq!(named("."), ".");
+    assert_eq!(named("docs/../src"), "src");
+    assert_eq!(named("./docs/"), "docs");
+    assert_eq!(named("../sibling"), "../sibling");
+}
