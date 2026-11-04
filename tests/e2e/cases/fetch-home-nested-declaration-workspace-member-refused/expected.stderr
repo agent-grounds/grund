@@ -1,0 +1,1 @@
+error: alpha/docs/arch.md:4: fetching `alpha/AR-001-thing` would delete `AR-002-other`, declared inside it; move `AR-002-other` to its own H2 or delete it, then fetch again

@@ -48,6 +48,18 @@ snapshot. It preserves accepted bytes verbatim and inserts a new file-home
 declaration in ID order ([§FS-fetch.3](../functional-spec/FS-fetch.md#3-accepted-declaration),
 [§FS-fetch.4](../functional-spec/FS-fetch.md#4-file-home-write)).
 
+A later fetch replaces the old body whole, subsections included, but never a
+declaration of another ID written inside it. If `grund list` shows one there, the
+fetch exits 2, changes nothing, and names it:
+
+```text
+error: docs/tickets.md:9: fetching `GH-1234` would delete `GH-2000`, declared inside it; move `GH-2000` to its own H2 or delete it, then fetch again
+```
+
+To keep it, make it a sibling at the home's depth, or give it its own file in a
+`folder` home, where the message says `to its own file`. Then fetch again
+([§FS-fetch.6.nested](../functional-spec/FS-fetch.md#6nested-a-declaration-inside-what-a-fetch-replaces-is-refused)).
+
 With `resolve = "must"`, a missing snapshot is the ordinary `dangling` error.
 With `resolve = "should"`, it is the fixed `missing-snapshot` warning and a
 warning-only check exits 0. Choose `must` when CI should enforce that every

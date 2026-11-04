@@ -60,11 +60,13 @@ on the next ordinary scan ([§FS-check.1.1](FS-check.md#11-recognized-citations)
 
 ### 3.1 A nested declaration is refused
 
-"Exactly one declaration" counts every heading the next scan would read as a
-declaration, not only those at the native depth. A heading inside the fetched
-declaration whose text declares an ID of any configured kind, under the project's ID
-grammar, is refused on stderr with exit 2 and the tree byte-identical, whatever its
-depth below the native one and whichever ID it carries: an unrequested ID, the
+"Exactly one declaration" counts every line the next scan would record as a
+declaration, not only the headings at the native depth. A line inside the fetched
+declaration that the scan records as declaring an ID of any configured kind, conforming
+or a near miss ([§FS-declarations.checks.declaration-near-miss.1](FS-declarations.md#checksdeclaration-near-miss1-what-counts)), is refused on stderr
+with exit 2 and the tree byte-identical, whatever its form (a heading at any depth below
+the native one, indented or not, or a line behind a comment prefix, such as
+`// AR-002-other: Other`) and whichever ID it carries: an unrequested ID, the
 requested ID a second time, an ID the snapshot home already declares, or another
 kind's ID. The refusal names the nested ID. It holds under config version 1 and 2 and
 for `file` and `folder` homes alike, because `fetch` owns only the requested
@@ -73,7 +75,9 @@ declaration and one `fetch <ID>` fetches one ID ([§FS-fetch.6](FS-fetch.md#6-st
 A subsection heading ([§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)), which carries a numbered or named section path rather than an
 ID, stays accepted, as does any heading inside a fenced block, which declares nothing.
 The rule binds only what `fetch` accepts: a nested declaration written by hand into a
-scanned file stays legal.
+scanned file stays legal, and a fetch that would replace one is refused in its turn
+([§FS-fetch.6.nested](FS-fetch.md#6nested-a-declaration-inside-what-a-fetch-replaces-is-refused)). The two refusals ask the scanner the same question, so output a
+fetch accepts is output it can fetch again.
 
 ### 3.2. A subsection is a heading the next scan reads as a section
 
@@ -107,7 +111,9 @@ both stay accepted, as they are on the next scan.
 For `file = "<home>"`, grund replaces only the H2 declaration whose ID exactly matches
 the requested ID. If it is absent, grund inserts the declaration among sibling H2
 declarations in ID order. The file's preamble, other declarations, line endings, and
-all bytes outside the owned declaration remain unchanged.
+all bytes outside the owned declaration remain unchanged. A declaration nested inside
+the requested one is another declaration, so the write is refused rather than replacing
+it ([§FS-fetch.6.nested](FS-fetch.md#6nested-a-declaration-inside-what-a-fetch-replaces-is-refused)).
 
 The final file is installed atomically only after the complete result is available. If
 the home cannot be read, parsed unambiguously, or atomically replaced, the command emits
@@ -123,7 +129,9 @@ whose `file` home is a Markdown file has no value source there, and takes the wr
 For `folder = "<home>"`, grund replaces the file that currently declares the requested
 ID, or creates `<home>/<ID>.md` when no declaration exists. It never replaces a
 different-ID file. Multiple existing declarations for the requested ID are ambiguous
-and refused. The declaring file or new file contains the accepted stdout verbatim.
+and refused. The declaring file or new file contains the accepted stdout verbatim. That
+deletes no other declaration, because a declaring file with one nested inside the
+requested declaration is refused ([§FS-fetch.6.nested](FS-fetch.md#6nested-a-declaration-inside-what-a-fetch-replaces-is-refused)).
 
 The replacement is atomic. A missing folder may be created only as part of the
 successful final installation; any discovery, validation, or write failure leaves the
@@ -139,11 +147,49 @@ configured snapshot home, extending [§REQ-no-data-loss.2](../requirements/REQ-n
 One `fetch <ID>` fetches one ID. There is no `--refresh`, generated timestamp,
 unused-snapshot exemption, or workspace-wide snapshot ownership behavior.
 
+### 6.nested: A declaration inside what a fetch replaces is refused
+
+What `fetch` owns ends at another declaration, wherever it sits. The body rule
+([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)) keeps a deeper heading inside the requested declaration's body,
+yet `grund list` reports it as a declaration of its own, `grund <ID>` reads it, and it is
+legal ([§FS-fetch.3.1](FS-fetch.md#31-a-nested-declaration-is-refused)). So where the bytes a fetch would replace hold, after the requested
+declaration's heading line, a line the next ordinary scan records as a declaration, the
+fetch is refused on stderr with exit 2 and the tree byte-identical, in a `file` home and a
+`folder` home alike and under config version 1 and 2.
+
+Whether a line is one is the scanner's answer, read with the selected project's
+configuration and never by a second heading test: a conforming declaration or a near miss
+([§FS-declarations.checks.declaration-near-miss.1](FS-declarations.md#checksdeclaration-near-miss1-what-counts)), at any depth, indented or behind a
+comment prefix, whichever ID it carries, the requested one a second time included. The
+home is read after the output is validated ([§FS-fetch.3](FS-fetch.md#3-accepted-declaration)), so the integration has run by
+then and a refusal of its output comes first.
+
+The refusal names the first such line in the file and says how to keep the declaration:
+
+```text
+error: <path>:<n>: fetching `<ID>` would delete `<nested>`, declared inside it; move `<nested>` to its own H2 or delete it, then fetch again
+```
+
+A `folder` home says `to its own file` in place of `to its own H2`. `<path>` is the file,
+spelled from the report base ([§FS-errors.terms](FS-errors.md#terms-terms)), `<n>` the line's 1-based number in that
+file, `<nested>` the token as written there, and `<ID>` the requested ID as the command
+named it ([§FS-fetch.1](FS-fetch.md#1-input-and-project-selection)).
+
+Everything else in those bytes belongs to the requested declaration and is replaced with
+exit 0: a numbered, named or relative section heading; a heading inside a fenced block or
+a raw-text HTML block; a bold label; a citation of another ID in prose; and a line the
+scan records no declaration on, such as an escaped `<§>` heading or one whose ID shape no
+configured kind spells, which the next `grund check` would have called unmarked. A
+declaration under a sibling of the requested one is outside those bytes, and an ID the
+home does not yet declare has none, so inserting it beside such a declaration is not
+refused.
+
 ## 7. Output and exits
 
 Success writes nothing to stdout or stderr and exits 0. An unparseable ID is a query
 failure and exits 1. Missing fetch configuration, a `file` home that is a value source
-([§FS-fetch.4](FS-fetch.md#4-file-home-write)), integration failure, rejected output, ambiguous existing content, and
+([§FS-fetch.4](FS-fetch.md#4-file-home-write)), integration failure, rejected output, ambiguous existing content, a
+declaration nested in what the fetch would replace ([§FS-fetch.6.nested](FS-fetch.md#6nested-a-declaration-inside-what-a-fetch-replaces-is-refused)), and
 filesystem failure are CLI-level operational errors on stderr and exit 2, following
 [§FS-errors.2.2](FS-errors.md#22-cli-level-message).
 

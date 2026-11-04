@@ -1,0 +1,1 @@
+error: docs/arch.md:4: fetching `AR-001-thing` would delete `AR-Bad_Slug`, declared inside it; move `AR-Bad_Slug` to its own H2 or delete it, then fetch again
