@@ -253,8 +253,8 @@ pub(crate) fn declaration_captures<'a>(
 }
 
 /// The ID token, as written, that a Markdown line declares by
-/// §FS-declarations.line, were no fence open: the one reading the conflict-block owners
-/// (§FS-declarations.body.conflict.where) and [`markdown_line_records`] share with
+/// §FS-declarations.line, were no fence open: the one reading the conflict-block owner
+/// reader (`scanner::conflict_blocks`) and [`markdown_line_records`] share with
 /// the scanner, so neither re-derives it. Conforming only: a conflict block's owner is
 /// a declaration by §FS-declarations.line, which a near miss is not.
 pub(crate) fn markdown_line_declares<'a>(grammar: &Grammar, line: &'a str) -> Option<&'a str> {
