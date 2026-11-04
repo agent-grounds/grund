@@ -341,7 +341,7 @@ pub(super) fn expand_workspace_projects(
     // §FS-check.4.10.7: every block below the run's root is posed the question down
     // there and answered below, once this run knows where its projects are.
     let mut mounts = Vec::new();
-    let unread_blocks = collect_workspace_members(
+    let opted_out_blocks = collect_workspace_members(
         &members,
         root_config,
         root_config,
@@ -404,13 +404,17 @@ pub(super) fn expand_workspace_projects(
     root_config.set_workspace_lists_optional(lists_optional);
     // §FS-check.4.10.7: the blocks that opted out, posed now that `project_roots`
     // exists — see this function's docs. The walk that answers one is the
-    // resolver's, so the channel carries the block (§AR-resolver.placement).
+    // resolver's, so the channel carries the block (§AR-resolver.placement). A block
+    // whose only members are absent optional ones has no tree to hold anything.
     let project_roots = root_config.workspace_project_roots.clone();
     root_config.extend_run_warnings(
-        unread_blocks
+        opted_out_blocks
             .iter()
+            .filter(|block| !block.workspace_boundary_roots.is_empty())
             .filter_map(|block| RunWarning::unread_block(block, project_roots.clone())),
     );
+    // §FS-check.4.11.3: every block that opted out, the run's to name the findings of.
+    root_config.set_workspace_opted_out_blocks(opted_out_blocks);
     Ok(entries)
 }
 
@@ -437,10 +441,11 @@ pub(super) fn expand_workspace_projects(
 /// second name — one citation text has to name one namespace in a full checkout and
 /// in a partial one.
 ///
-/// Returns the §FS-check.4.10 blocks this subtree earned, in the order it reached
-/// them, for the caller to pose once it knows where the run's projects are
-/// (§FS-check.2.1). A block whose own members swallow its scan is refused here
-/// instead, at its own `members` line (§FS-check.3.30.2).
+/// Returns every `include_root = false` block this subtree reached, in the order it
+/// reached them: the run names each one's config findings (§FS-check.4.11.3), and
+/// poses §FS-check.4.10 to those with a present member once it knows where the run's
+/// projects are (§FS-check.2.1). A block whose own members swallow its scan is
+/// refused here instead, at its own `members` line (§FS-check.3.30.2).
 #[allow(clippy::too_many_arguments)]
 fn collect_workspace_members(
     members: &[WorkspaceMember],
@@ -455,7 +460,7 @@ fn collect_workspace_members(
     lists_optional: &mut bool,
     mounts: &mut Vec<MountEdge>,
 ) -> Result<Vec<Config>> {
-    let mut unread = Vec::new();
+    let mut opted_out = Vec::new();
     for member in members {
         let member_root = &member.root;
         // §FS-workspace.6.1.4: an **unreachable backstop**, kept because it is the one
@@ -533,11 +538,12 @@ fn collect_workspace_members(
         reject_absorbed_scan(&member_config, &nested.members)?;
         member_config
             .set_workspace_boundary_roots(nested.members.iter().map(|m| m.root.clone()).collect());
-        // §FS-check.4.10.7: and whether its own tree holds anything unread, at the
-        // same line — no outermost-block privilege either way. The boundary above
-        // is set first: the block is what the question travels as.
-        if !member_config.workspace_include_root && !nested.members.is_empty() {
-            unread.push(member_config.clone());
+        // §FS-check.4.11.3, §FS-check.4.10.7: a block that is not a project is kept
+        // for its config findings and whether its own tree holds anything unread —
+        // no outermost-block privilege either way. The boundary above is set first:
+        // the block is what the question travels as.
+        if !member_config.workspace_include_root {
+            opted_out.push(member_config.clone());
         }
         // §FS-check.4.9: and its absent optional entries, at its own
         // `optional_members` line, under the alias path this run reaches it by —
@@ -562,7 +568,7 @@ fn collect_workspace_members(
                 config: member_config.clone(),
             });
         }
-        let nested_unread = collect_workspace_members(
+        let nested_opted_out = collect_workspace_members(
             &nested.members,
             &member_config,
             top_config,
@@ -575,7 +581,7 @@ fn collect_workspace_members(
             lists_optional,
             mounts,
         )?;
-        unread.extend(nested_unread);
+        opted_out.extend(nested_opted_out);
         collect_imports(
             &member_config,
             top_config,
@@ -589,7 +595,7 @@ fn collect_workspace_members(
             return Err(empty_workspace_error(&member_config));
         }
     }
-    Ok(unread)
+    Ok(opted_out)
 }
 
 /// §AR-workspace.5.3: a member's alias, with the error anchored where the bad

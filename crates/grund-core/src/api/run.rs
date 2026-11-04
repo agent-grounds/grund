@@ -470,8 +470,8 @@ fn run_workspace_check(
         ));
     }
     report.errors.extend(out_of_scope);
-    // §FS-check.4.3, §FS-check.4.11.3: the root's config and each expanded project's,
-    // named where that project loaded it — the set `config validate` names too.
+    // §FS-check.4.3, §FS-check.4.11.3: the root's config, each expanded project's and
+    // each opted-out block's, named where each was loaded; `config validate` names it too.
     let config_warnings = workspace_config_diagnostics(
         &root_config,
         reporting(&projects).map(|project| &*project.config),

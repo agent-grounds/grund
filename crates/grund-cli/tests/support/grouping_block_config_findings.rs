@@ -19,7 +19,6 @@ const CASES: [&str; 8] = [
 ];
 
 #[test]
-#[ignore = "red until #1138 names a grouping block's config findings at a workspace root; implement removes this"]
 fn grouping_block_config_findings_contract() {
     let root = repo_root();
     let cases = root.join("tests/e2e/cases");

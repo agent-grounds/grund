@@ -68,10 +68,10 @@ pub fn schema_view(path: &Path) -> Result<SchemaView> {
 /// `members` list itself, is validated here exactly as `expand_workspace_tree`
 /// validates it for `grund check` — no tree scan. Returns the resolved config
 /// so a caller can also report the non-fatal findings [`config_warnings`]
-/// carries: at a workspace root, the root's config's and each expanded
-/// project's, the set `grund check` names (§FS-config.4.1.1, §FS-check.4.11.3),
-/// recorded on the returned config's run from the projects expansion already
-/// loaded, so no member is walked twice. A path inside a member resolves to that
+/// carries: at a workspace root, the root's config's, each expanded project's
+/// and each `include_root = false` block's, the set `grund check` names
+/// (§FS-config.4.1.1, §FS-check.4.11.3), recorded on the returned config's run
+/// from the configs expansion already loaded, so no member is walked twice. A path inside a member resolves to that
 /// member and names its findings alone.
 pub fn validate_config(path: &Path) -> Result<Config> {
     let mut config = resolve_workspace_config(path)?;
@@ -89,7 +89,7 @@ pub fn validate_config(path: &Path) -> Result<Config> {
 /// Message text only, so `grund config validate` and `grund config show` print
 /// the same sentences `grund check` does (§FS-check.4.11.2) without depending on
 /// the checker's report type. For a config [`validate_config`] returned at a
-/// workspace root that is every expanded project's (§FS-config.4.1.1); for any
+/// workspace root that is every config the workspace reads (§FS-config.4.1.1); for any
 /// other, its own alone (§FS-config.4.2).
 pub fn config_warnings(config: &Config) -> Vec<String> {
     held_config_diagnostics(config)
