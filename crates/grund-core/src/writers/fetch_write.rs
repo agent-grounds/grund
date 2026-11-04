@@ -12,7 +12,7 @@ use crate::grammar::{
 };
 use crate::model::{Id, OperationDiagnostic, format_path};
 use crate::scanner::{markdown_heading_level, walk_scannable_files_with_sources};
-use crate::sources::{path_exists, path_is_dir, read_bytes};
+use crate::sources::{path_exists, path_is_dir, path_is_file, path_is_symlink, read_bytes};
 
 /// `ignore::Error` owns the I/O error but does not expose it through `source()`.
 /// Retain both its original context and that original I/O cause for embedders
@@ -229,7 +229,7 @@ pub(super) fn write_folder_home(
                 folder.display()
             )));
         }
-        // §FS-fetch.5: discovery uses the scanner's recursive folder traversal,
+        // §FS-fetch.5.1: discovery uses the scanner's recursive folder traversal,
         // including its ignore, exclusion, hidden-file, and symlink semantics.
         let mut sources = std::collections::BTreeMap::new();
         let walked = walk_scannable_files_with_sources(
@@ -265,41 +265,10 @@ pub(super) fn write_folder_home(
             if path.extension().and_then(|extension| extension.to_str()) != Some("md") {
                 continue;
             }
-            let bytes = read_bytes(&path).map_err(|err| {
-                fetch_io(
-                    diagnostic,
-                    &path,
-                    err,
-                    format!("cannot read {}", path.display()),
-                )
-            })?;
-            let declarations = declarations_at_depth(&bytes, &config.grammar, 1)?;
-            let contains_requested = declarations
-                .iter()
-                .any(|declaration| declaration.id == *requested);
-            if contains_requested {
-                let declaration = declarations
-                    .iter()
-                    .find(|declaration| declaration.id == *requested)
-                    .expect("contains requested declaration");
-                let has_content_before = bytes[..declaration.start]
-                    .iter()
-                    .any(|byte| !byte.is_ascii_whitespace());
-                let has_content_after = bytes[declaration.end..]
-                    .iter()
-                    .any(|byte| !byte.is_ascii_whitespace());
-                if declarations.len() != 1 || has_content_before || has_content_after {
-                    return Err(fetch_operational(format!(
-                        "snapshot file {} contains the requested ID beside other content",
-                        path.display()
-                    )));
-                }
-            }
-            for mut declaration in declarations {
-                if declaration.id == *requested {
-                    declaration.path = Some(path.clone());
-                    matches.push(declaration);
-                }
+            if let SnapshotFile::Declares(declaration) =
+                read_snapshot_file(&path, config, requested, diagnostic)?
+            {
+                matches.push(declaration);
             }
         }
     }
@@ -312,13 +281,87 @@ pub(super) fn write_folder_home(
         .first()
         .and_then(|declaration| declaration.path.clone())
         .unwrap_or_else(|| folder.join(format!("{local}.md")));
+    // §FS-fetch.5.2: with no declaring file found, what stands at `<home>/<ID>.md` is
+    // judged by what it holds, whether or not the walk admitted it.
     if matches.is_empty() && path_exists(&target) {
-        return Err(fetch_operational(format!(
-            "snapshot file {} already exists for a different ID",
-            target.display()
-        )));
+        if path_is_symlink(&target) || !path_is_file(&target) {
+            return Err(fetch_operational(format!(
+                "snapshot file {} is not a regular file",
+                target.display()
+            )));
+        }
+        match read_snapshot_file(&target, config, requested, diagnostic)? {
+            SnapshotFile::Declares(_) => {}
+            SnapshotFile::Other => {
+                return Err(fetch_operational(format!(
+                    "snapshot file {} already exists for a different ID",
+                    target.display()
+                )));
+            }
+            SnapshotFile::Nothing => {
+                return Err(fetch_operational(format!(
+                    "snapshot file {} already exists and does not declare {local}",
+                    target.display()
+                )));
+            }
+        }
     }
     install(&target, snapshot, diagnostic)
+}
+
+/// What one Markdown file in a folder home holds for the requested ID.
+enum SnapshotFile {
+    /// It declares the requested ID alone, so it is the declaring file.
+    Declares(SnapshotDeclaration),
+    /// It declares other IDs and not the requested one.
+    Other,
+    /// It declares nothing.
+    Nothing,
+}
+
+/// §FS-fetch.5 / §FS-fetch.5.2: read one folder-home file the way the walk's files are
+/// read, refusing one that holds the requested ID beside other content. The walk and the
+/// read of `<home>/<ID>.md` both ask this, so they cannot disagree on what a file holds.
+fn read_snapshot_file(
+    path: &Path,
+    config: &Config,
+    requested: &Id,
+    diagnostic: &mut Option<anyhow::Error>,
+) -> std::result::Result<SnapshotFile, FetchFailure> {
+    let bytes = read_bytes(path).map_err(|err| {
+        fetch_io(
+            diagnostic,
+            path,
+            err,
+            format!("cannot read {}", path.display()),
+        )
+    })?;
+    let declarations = declarations_at_depth(&bytes, &config.grammar, 1)?;
+    let Some(declaration) = declarations
+        .iter()
+        .find(|declaration| declaration.id == *requested)
+    else {
+        return Ok(if declarations.is_empty() {
+            SnapshotFile::Nothing
+        } else {
+            SnapshotFile::Other
+        });
+    };
+    let has_content_before = bytes[..declaration.start]
+        .iter()
+        .any(|byte| !byte.is_ascii_whitespace());
+    let has_content_after = bytes[declaration.end..]
+        .iter()
+        .any(|byte| !byte.is_ascii_whitespace());
+    if declarations.len() != 1 || has_content_before || has_content_after {
+        return Err(fetch_operational(format!(
+            "snapshot file {} contains the requested ID beside other content",
+            path.display()
+        )));
+    }
+    let mut declaration = declarations.into_iter().next().expect("one declaration");
+    declaration.path = Some(path.to_path_buf());
+    Ok(SnapshotFile::Declares(declaration))
 }
 
 /// §FS-fetch.4 / §FS-fetch.5: install complete bytes through the shared writer,

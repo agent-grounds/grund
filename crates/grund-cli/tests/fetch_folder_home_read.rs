@@ -1,8 +1,7 @@
 //! What is refused at `<home>/<ID>.md` when the scan's walk found no declaring file
 //! (§FS-fetch.5.2), which the e2e goldens cannot pin: the refusal prints the absolute path
 //! and a `command.cwd` case's stderr golden has no spelling for it that holds on another
-//! machine. A guard here holds today and after the fix, on the exit and the bytes; an
-//! ignored test is what the message must become.
+//! machine. A guard here holds the exit and the bytes; a test of the words holds the message.
 #![cfg(unix)]
 
 #[path = "support/external_facts.rs"]
@@ -199,7 +198,6 @@ fn a_link_the_walk_reads_through_is_replaced_and_what_it_led_to_left_alone() {
 }
 
 #[test]
-#[ignore = "red until #1185 says what the file holds; implement removes this"]
 fn a_file_declaring_nothing_is_told_it_does_not_declare_the_id() {
     for (name, sources) in EVERY {
         for (shape, body) in [("empty", ""), ("prose", "Notes kept by hand.\n")] {
@@ -216,7 +214,6 @@ fn a_file_declaring_nothing_is_told_it_does_not_declare_the_id() {
 }
 
 #[test]
-#[ignore = "red until #1185 says what the unread file holds; implement removes this"]
 fn an_unread_file_holding_the_id_beside_other_content_is_told_so() {
     for (name, sources) in UNREAD {
         let at = root(&format!("words-beside-{name}"));
@@ -231,7 +228,6 @@ fn an_unread_file_holding_the_id_beside_other_content_is_told_so() {
 }
 
 #[test]
-#[ignore = "red until #1185 says what stands at the path; implement removes this"]
 fn a_refused_link_is_told_it_is_not_a_regular_file() {
     for (name, sources) in UNREAD {
         let (at, _outside) = linked_out(&format!("words-link-{name}"), sources);
@@ -244,7 +240,6 @@ fn a_refused_link_is_told_it_is_not_a_regular_file() {
 }
 
 #[test]
-#[ignore = "red until #1185 says what stands at the path; implement removes this"]
 fn a_refused_directory_is_told_it_is_not_a_regular_file() {
     for (name, sources) in [("ordinary", ORDINARY), ("md-as-json", MD_AS_JSON)] {
         let at = root(&format!("words-directory-{name}"));
