@@ -5,7 +5,6 @@ vocabulary; `ThisRepositoryTests` runs the gate against this repository, because
 a gate wired to text nobody writes any more would pass everything in silence."""
 
 import importlib.util
-import os
 import unittest
 from pathlib import Path
 
@@ -171,10 +170,6 @@ class ClauseReadingTests(unittest.TestCase):
                 self.assertEqual(landed, [], "a promise not yet made was read as landed")
 
 
-@unittest.skipUnless(
-    os.environ.get("GRUND_1132_RUN_RED_TESTS") == "1",
-    "red until #1132 reads the pending warning-window clause; implement removes this",
-)
 class WarningWindowClauseTests(unittest.TestCase):
     """The warning window is a pending ceiling. §FS-distribution.4.2.2"""
 
