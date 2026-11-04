@@ -49,7 +49,7 @@ the built binary and released Grund 0.16.1 for the co-change compatibility cases
 Node parity tests ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)), and the shared build target of the Node
 acceptance, the inputs of [§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs), then runs unittest discovery of `tests/integration`
 with the pattern `test_*.py` and that environment from the repository root, timing
-each test ([§AR-ci.3.4.2](AR-ci.md#342-per-test-durations)). The parity test checks the shared wrapper invocation,
+each test ([§AR-ci.3.4.2](AR-ci.md#342-per-test-durations)). Both suite wrappers take git's repository variables off what they start ([§AR-ci-suite-environment](AR-ci-suite-environment.md#ar-ci-suite-environment-a-suite-wrapper-hands-its-tests-no-repository-location)). The parity test checks the shared wrapper invocation,
 the four selections CI passes it, and its discovery directory and pattern.
 
 ### 3.1 Citations and links
@@ -343,7 +343,7 @@ wrapper builds it with the plain `cargo` its other build uses, because the
 workflow's toolchain pin is CI's, and a local gate must not fail for want of it.
 It prepares the oracle on every run that is not given one, and the build is
 incremental, so a run after a new commit meets an oracle of that commit rather
-than a stale one.
+than a stale one. The rest of what it hands on is its own environment, less what [§AR-ci-suite-environment](AR-ci-suite-environment.md#ar-ci-suite-environment-a-suite-wrapper-hands-its-tests-no-repository-location) takes off.
 
 Preparing an input never turns into skipping the tests that need it. A build
 that fails, or an executable missing where its build put it, fails the gate:
@@ -1371,7 +1371,7 @@ Nothing else: no line per passing test, no `unittest` dot stream, no other outpu
 
 #### requirements.5.2: The cargo suites go through one wrapper
 
-`scripts/run_cargo_suite.py` takes `cargo test`'s arguments, runs `cargo test` with them over libtest's stable output, and prints what requirements.5.1 asks. Both kinds of `ci.yml` step that run a cargo suite, `native watch contract` and each shard's `cargo test`, call it, and so does the `cargo-test` hook, so the hook and the workflow still spell one command, the workflow's with `--shard <k>/<n>` before it ([§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards), [§AR-ci.1.2](AR-ci.md#12-the-parity-test)). It needs Python's standard library and the toolchain the repository already uses and nothing else: no test runner a contributor must install. It builds the tests before it runs them, as quietly as requirements.5.4 asks, so a compile error is printed in full and a green build prints only its `gate time: build` line.
+`scripts/run_cargo_suite.py` takes `cargo test`'s arguments, runs `cargo test` with them over libtest's stable output, and prints what requirements.5.1 asks. Both kinds of `ci.yml` step that run a cargo suite, `native watch contract` and each shard's `cargo test`, call it, and so does the `cargo-test` hook, so the hook and the workflow still spell one command, the workflow's with `--shard <k>/<n>` before it ([§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards), [§AR-ci.1.2](AR-ci.md#12-the-parity-test)). It needs Python's standard library and the toolchain the repository already uses and nothing else: no test runner a contributor must install. It builds the tests before it runs them, as quietly as requirements.5.4 asks, so a compile error is printed in full and a green build prints only its `gate time: build` line. Every cargo run it starts gets its environment less what [§AR-ci-suite-environment](AR-ci-suite-environment.md#ar-ci-suite-environment-a-suite-wrapper-hands-its-tests-no-repository-location) takes off.
 
 The focused Windows ownership verification of [§FS-examples.5.6.1](../functional-spec/FS-examples.md#561-one-owner-lasts-through-every-use-of-the-copy) runs the exact
 regression directly through cargo/libtest with `--nocapture`. Its raw output and

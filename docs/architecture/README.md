@@ -290,6 +290,7 @@ What measures the system:
 | [§AR-ci](AR-ci.md#ar-ci-ci-mirrors-the-local-pre-commit-gate) | CI mirrors the local pre-commit gate |
 | [§AR-ci-self-links](AR-ci-self-links.md#ar-ci-self-links-the-link-gate-resolves-both-self-link-forms-in-the-checkout) | The link gate resolves both self-link forms in the checkout |
 | [§AR-ci-terminal-inputs](AR-ci-terminal-inputs.md#ar-ci-terminal-inputs-the-terminal-watch-acceptance-selects-this-checkouts-cli) | The terminal watch acceptance selects this checkout's CLI |
+| [§AR-ci-suite-environment](AR-ci-suite-environment.md#ar-ci-suite-environment-a-suite-wrapper-hands-its-tests-no-repository-location) | A suite wrapper hands its tests no repository location |
 | [§AR-benchmarks](AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) | instruction-counting benchmarks for the hot CLI commands |
 | [§AR-goal-measurement](AR-goal-measurement.md#ar-goal-measurement-goal-and-requirement-meters-live-outside-goals) | goal and requirement meters live outside goals |
 
