@@ -129,18 +129,27 @@ pub(in crate::config) fn validate_kind_value_keys(
     Ok(())
 }
 
+/// §FS-config-v2.schema.sources.rules: version 1's answer to whether a row's
+/// `file` home is Markdown, its name, because `.md` is the one suffix it reads so.
+pub(in crate::config) fn file_home_is_named_markdown(k: &KindConfig) -> bool {
+    k.file
+        .as_deref()
+        .is_none_or(|file| Path::new(file).extension().and_then(|ext| ext.to_str()) == Some("md"))
+}
+
 /// §FS-config.3.4.12, §FS-fields.forms: why a rule kind's row cannot hold
 /// rules, if it cannot — the refusal v1 writes unlocated and v2 at `form`.
-pub(in crate::config) fn rule_kind_refusal(k: &KindConfig) -> Option<String> {
-    let rule_file_is_markdown = k
-        .file
-        .as_deref()
-        .is_none_or(|file| Path::new(file).extension().and_then(|ext| ext.to_str()) == Some("md"));
+/// `file_homes_are_markdown` is the reader's answer for the row's `file` homes,
+/// which each version gives its own way (§FS-config-v2.schema.sources.rules).
+pub(in crate::config) fn rule_kind_refusal(
+    k: &KindConfig,
+    file_homes_are_markdown: bool,
+) -> Option<String> {
     let refused = k.rules
         && (!k.citable
             || !k.scan
             || (k.folder.is_none() && k.file.is_none())
-            || !rule_file_is_markdown
+            || !file_homes_are_markdown
             || k.values
             || k.fetch.is_some());
     refused.then(|| {

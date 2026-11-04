@@ -3,6 +3,7 @@
 //! `[schema.sources]` maps it to in version 2 — refused at `form` with the
 //! message of §FS-config.3.4.12 when the answer is no.
 
+use super::migrate::{GateResult, Located, Prepared, translate};
 use super::*;
 use crate::testing::{test_root, write};
 
@@ -61,7 +62,6 @@ fn v2_rule_home_read_as_json_is_refused() {
 /// §FS-config-v2.schema.sources.rules: issue #1149 — a `.md` home `md = "json"` reads as JSON
 /// is refused exactly like the `.json` control.
 #[test]
-#[ignore = "red until #1149 asks [schema.sources] whether a v2 rule home is Markdown; implement removes this"]
 fn v2_rule_home_md_read_as_json_is_refused() {
     let toml = v2(MD_AS_JSON, "rules/rules.md");
     assert_refused_at_form("v2_rule_home_md_as_json", &toml, "rules/rules.md");
@@ -69,7 +69,6 @@ fn v2_rule_home_md_read_as_json_is_refused() {
 
 /// §FS-config-v2.schema.sources.rules: a `.md` home no admitted language reads is refused.
 #[test]
-#[ignore = "red until #1149 asks [schema.sources] whether a v2 rule home is Markdown; implement removes this"]
 fn v2_rule_home_md_read_by_no_language_is_refused() {
     let toml = v2("languages = [\"json\"]\n", "rules/rules.md");
     assert_refused_at_form("v2_rule_home_md_unread", &toml, "rules/rules.md");
@@ -78,7 +77,6 @@ fn v2_rule_home_md_read_by_no_language_is_refused() {
 /// §FS-config-v2.schema.sources.rules: the converse — a `.txt` home `txt = "markdown"` reads as
 /// Markdown is a rule kind.
 #[test]
-#[ignore = "red until #1149 asks [schema.sources] whether a v2 rule home is Markdown; implement removes this"]
 fn v2_rule_home_txt_read_as_markdown_loads() {
     let sources = "languages = [\"markdown\"]\n[schema.sources.extensions]\ntxt = \"markdown\"\n";
     let toml = v2(sources, "rules/rules.txt");
@@ -90,6 +88,60 @@ fn v2_rule_home_txt_read_as_markdown_loads() {
 fn v2_rule_home_md_read_as_markdown_loads() {
     let toml = v2("languages = [\"markdown\"]\n", "rules/rules.md");
     assert_rule_kind_loads("v2_rule_home_md", &toml, "rules/rules.md");
+}
+
+/// §FS-config-v2.schema.sources.rules: a `document` definition takes the Markdown reader, so a
+/// home it reads is a rule kind though `v1_markdown` is no built-in language.
+#[test]
+fn v2_rule_home_read_by_a_document_definition_loads() {
+    let sources = "languages = [\"v1_markdown\"]\n\
+                   [schema.sources.extensions]\nmd = \"v1_markdown\"\n\
+                   [schema.sources.definitions.v1_markdown]\nclass = \"document\"\n";
+    let toml = v2(sources, "rules/rules.md");
+    assert_rule_kind_loads("v2_rule_home_document_definition", &toml, "rules/rules.md");
+}
+
+/// §FS-config-v2.schema.sources.rules: each entry of `files` is asked, not only the first, so a
+/// second entry read as JSON is refused at `form` though the first is Markdown.
+#[test]
+fn v2_rule_home_second_file_read_as_json_is_refused() {
+    let toml = "grund_config_version = 2\nproject_name = \"g179\"\n\
+                [schema.sources]\nlanguages = [\"markdown\", \"json\"]\n\
+                [schema.kinds.RULE]\nfiles = [\"rules/rules.md\", \"rules/other.json\"]\n\
+                form = \"rule\"\n";
+    assert_refused_at_form("v2_rule_home_second_file", toml, "rules/other.json");
+}
+
+/// §FS-config-v2.schema.sources.rules, §FS-config-v2.schema.sources.migration: what the real
+/// migration writes for a v1 rule kind's `.md` `file` home, `md = "v1_markdown"`, stays one.
+#[test]
+fn v1_rule_home_carried_through_migration_loads() {
+    let home = "rules/rules.md";
+    let root = test_root("v1_rule_home_migrating");
+    write(&root.join(home), "");
+    write(&root.join("docs/a.md"), "");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n[[kinds]]\nkind = \"RULE\"\nfile = \"rules/rules.md\"\n\
+         rules = true\n[scan]\ninclude = [\"docs\"]\n[id]\nnamed_sections = true\n",
+    );
+    let located = Located {
+        file: root.join("grund.toml"),
+        root: root.clone(),
+        config: "grund.toml".into(),
+    };
+    let Prepared::Translated { report, .. } =
+        translate(&located, false, false, &|| true).expect("the v1 file reads")
+    else {
+        panic!("read as version 2");
+    };
+    assert_eq!(report.gates, Some(GateResult::Equal), "{report:#?}");
+    let candidate = report.candidate.expect("a candidate");
+    assert!(
+        candidate.contains("md = \"v1_markdown\""),
+        "the migration should map `.md` to its definition: {candidate}"
+    );
+    assert_rule_kind_loads("v1_rule_home_migrated", &candidate, home);
 }
 
 /// §FS-config-v2.schema.sources.rules: version 1 keeps the name test — `.md` loads, `.json`

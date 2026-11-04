@@ -13,7 +13,9 @@ use std::path::Path;
 
 use super::kind_defaults::default_kind_index;
 use super::kind_table::ParsedKind;
-use super::kind_values::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
+use super::kind_values::{
+    ValueLines, file_home_is_named_markdown, rule_kind_refusal, validate_kind_value_keys,
+};
 use super::values::bail_config;
 use crate::config::fields::Field;
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
@@ -51,7 +53,7 @@ pub(super) fn lower_parsed_kinds(
     // and lowers to no rows below — the reader yields it for nothing else.
     for entry in &parsed {
         let k = &entry.config;
-        if let Some(refusal) = rule_kind_refusal(k) {
+        if let Some(refusal) = rule_kind_refusal(k, file_home_is_named_markdown(k)) {
             return Err(anyhow!("{}: {refusal}", format_path(path)));
         }
         // §FS-config.3.4.10: an override belongs only to an ID namespace; an

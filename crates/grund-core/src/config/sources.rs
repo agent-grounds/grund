@@ -64,6 +64,12 @@ pub(crate) struct Language {
 }
 
 impl Language {
+    /// §FS-config-v2.schema.sources.definitions: whether this language's files take
+    /// the Markdown reader, which is what the class `document` means.
+    pub(crate) fn reads_markdown(&self) -> bool {
+        self.class == LanguageClass::Document
+    }
+
     /// The recognizer the inline-style measurement asks (§FS-inline-citation-style.1.1.2):
     /// a built-in row keeps the v1 table's for its own suffix, which may widen, and a
     /// definition takes its profile's.

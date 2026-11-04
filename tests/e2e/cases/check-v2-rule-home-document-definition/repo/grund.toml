@@ -1,0 +1,15 @@
+grund_config_version = 2
+project_name = "g179"
+
+[schema.sources]
+languages = ["markdown", "asciidoc"]
+
+[schema.sources.extensions]
+adoc = "asciidoc"
+
+[schema.sources.definitions.asciidoc]
+class = "document"
+
+[schema.kinds.RULE]
+files = ["rules/rules.adoc"]
+form = "rule"

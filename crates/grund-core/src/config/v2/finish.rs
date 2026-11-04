@@ -13,6 +13,7 @@ use crate::config::kind::{KindConfig, KindIndex, KindResolution};
 use crate::config::project::{Project, Strength};
 use crate::config::record::{CODE_SOURCE_KIND, ConfigLocation};
 use crate::config::rows::{Extent, Form, Kind, Origin, Place, Row};
+use crate::config::sources::Language;
 use crate::config::v1::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
 
 use super::schema::RowDraft;
@@ -33,11 +34,12 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
     if let Some((line, message)) = late.into_iter().min_by_key(|(line, _)| *line) {
         return r.fail(line, message);
     }
+    // §FS-config-v2.schema.sources.rules: `form_prerequisites` asks the model.
+    sources_model::lower(&mut r);
     for row in &r.rows {
         form_prerequisites(&r, row, root)?;
     }
     lower(&mut r);
-    sources_model::lower(&mut r);
     Ok(r.project)
 }
 
@@ -76,7 +78,7 @@ fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
         fetch: row.fetch.as_ref().map(|(fetch, _)| fetch.clone()),
     };
     let form_line = row.form.map_or(row.line, |(_, line)| line);
-    if let Some(refusal) = rule_kind_refusal(&k) {
+    if let Some(refusal) = rule_kind_refusal(&k, file_homes_are_markdown(r, row)) {
         return r.fail(form_line, refusal);
     }
     let lines = ValueLines {
@@ -86,6 +88,19 @@ fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
     };
     let named_sections = r.project.schema.ids.named_sections;
     validate_kind_value_keys(r.path, &k, &lines, root, named_sections)
+}
+
+/// §FS-config-v2.schema.sources.rules: whether every `file` place of `row` is read
+/// by the Markdown reader, which is the language's answer and never the name's. One
+/// no admitted language reads is not, and a row's `folder` places are not asked.
+fn file_homes_are_markdown(r: &Reader, row: &RowDraft) -> bool {
+    let model = r.project.schema.sources.model.as_ref();
+    row.places.iter().all(|place| match &place.extent {
+        Extent::File(path) => model
+            .and_then(|model| model.language_of(Path::new(path)))
+            .is_some_and(Language::reads_markdown),
+        Extent::Folder(_) | Extent::Complement => true,
+    })
 }
 
 /// §FS-config-v2.schema.places: what one row's keys must say together, each

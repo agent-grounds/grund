@@ -1,0 +1,1 @@
+error: grund.toml:9: kind `RULE` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch`

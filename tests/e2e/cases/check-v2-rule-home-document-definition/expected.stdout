@@ -1,0 +1,2 @@
+rules/rules.adoc:1: warning: declared but never cited: RULE-cite; cite it
+rules/rules.adoc:1: suggestion: RULE-cite should cite RULE (RULE-cite); add such a citation within it

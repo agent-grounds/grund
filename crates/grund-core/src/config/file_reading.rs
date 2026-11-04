@@ -51,7 +51,7 @@ impl<'a> FileReading<'a> {
                 lexical.docstring_python = language.docstrings;
                 lexical.grammar = compiled.grammar_for(&language.comment_prefixes);
                 Self {
-                    markdown: language.class == LanguageClass::Document,
+                    markdown: language.reads_markdown(),
                     python: language.docstrings,
                     language: Some(language),
                     declarations: Some(model.declarations),
