@@ -79,29 +79,63 @@ impl<'a> Owners<'a> {
         scanned_path_key(&self.configured_root.join(written))
     }
 
-    /// Every place that holds the file at `path` with no deeper place holding it, ties
-    /// included: which homes a file is read from (§AR-scanner.1.6). Not [`Schema::owner`],
-    /// which says whose citation rules apply: in version 1 a file two homes hold has no owner,
-    /// and its rule is in force all the same (§FS-scan.checks.unread-scan-root.rule-folder).
-    pub(crate) fn deepest_holders(&self, path: &Path) -> Vec<&'a Place> {
-        let file = self.key(path);
-        let holders: Vec<(usize, &'a Place)> = self
-            .schema
+    /// What a plain relative path must start with for the folder at `key` to hold the file it
+    /// names, `None` when no such file can lie under it: the folder's own path inside the config
+    /// root, and nothing at all for a folder at or above it, which holds every one (§AR-scanner.1.6).
+    pub(crate) fn plain_prefix(&self, key: &Path) -> Option<PathBuf> {
+        if self.configured_root.starts_with(key) {
+            return Some(PathBuf::new());
+        }
+        key.strip_prefix(&self.configured_root)
+            .ok()
+            .map(Path::to_path_buf)
+    }
+
+    /// Every place naming a path, with its key and depth worked out once (§AR-scanner.1.6).
+    pub(crate) fn keyed_places(&self) -> Vec<KeyedPlace<'a>> {
+        self.schema
             .rows
             .iter()
-            .flat_map(|row| &row.places)
-            .filter_map(|place| {
+            .flat_map(|row| row.places.iter().map(move |place| (row, place)))
+            .filter_map(|(row, place)| {
                 let key = self.home_key(place.path()?);
-                place
-                    .holds_at(&key, &file)
-                    .then(|| (key.components().count(), place))
+                let depth = key.components().count();
+                Some(KeyedPlace {
+                    row,
+                    place,
+                    key,
+                    depth,
+                })
             })
-            .collect();
-        let deepest = holders.iter().map(|(depth, _)| *depth).max();
+            .collect()
+    }
+}
+
+/// A place under the key [`Owners::key`] spells a file by, so a reader asking per file joins
+/// nothing per place (§AR-scanner.1.6).
+pub(crate) struct KeyedPlace<'a> {
+    pub(crate) row: &'a Row,
+    pub(crate) place: &'a Place,
+    pub(crate) key: PathBuf,
+    depth: usize,
+}
+
+impl KeyedPlace<'_> {
+    /// Whether this place holds `file`, spelled as [`Owners::key`] spells it.
+    pub(crate) fn holds(&self, file: &Path) -> bool {
+        self.place.holds_at(&self.key, file)
+    }
+
+    /// Every one of `places` that holds `file` with no deeper one holding it, ties included:
+    /// which homes a file is read from (§AR-scanner.1.6). Not [`Schema::owner`], which says whose
+    /// citation rules apply: in version 1 a file two homes hold has no owner, and its rule is in
+    /// force all the same (§FS-scan.checks.unread-scan-root.rule-folder).
+    pub(crate) fn deepest_holders<'p>(places: &'p [Self], file: &Path) -> Vec<&'p Self> {
+        let holders: Vec<&Self> = places.iter().filter(|place| place.holds(file)).collect();
+        let deepest = holders.iter().map(|place| place.depth).max();
         holders
             .into_iter()
-            .filter(|(depth, _)| Some(*depth) == deepest)
-            .map(|(_, place)| place)
+            .filter(|place| Some(place.depth) == deepest)
             .collect()
     }
 }

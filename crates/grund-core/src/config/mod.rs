@@ -111,7 +111,7 @@ pub use kind::{KindConfig, KindIndex, KindResolution};
 pub(crate) use mount_edge::{ImportRead, MountEdge};
 #[allow(unused_imports)]
 pub use places::Owner;
-pub(crate) use places::Owners;
+pub(crate) use places::{KeyedPlace, Owners};
 pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
 #[allow(unused_imports)]
 pub use project::{

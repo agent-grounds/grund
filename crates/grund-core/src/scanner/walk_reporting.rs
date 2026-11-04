@@ -138,8 +138,8 @@ pub(crate) fn walk_scannable_files_with_sources(
     let mut unread_roots = Vec::new();
     let mut file_rows = None;
     let mut value_homes: Option<Option<Vec<PathBuf>>> = None;
-    // §FS-scan.checks.unread-scan-root.rule-folder: what the loop below answered of the
-    // files each rule folder home owns, for a verdict after every root.
+    // §FS-scan.checks.unread-scan-root.rule-folder: what the loop below answered of the files
+    // that count for each rule folder home, for a verdict after every root.
     let mut rule_folders = RuleFolderTally::of(schema, frame);
     for scan_root in roots {
         // §FS-check.6.1.1: the actual walk roots are covered before traversal.

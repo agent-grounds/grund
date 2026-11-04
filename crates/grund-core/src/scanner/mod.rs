@@ -218,6 +218,10 @@ mod tests_walk_rule_folder;
 #[cfg(test)]
 mod tests_walk_rule_folder_holders;
 #[cfg(test)]
+mod tests_walk_rule_folder_own_row;
+#[cfg(test)]
+mod tests_walk_rule_folder_spellings;
+#[cfg(test)]
 mod tests_word_character_marker;
 #[cfg(test)]
 mod tests_yaml;

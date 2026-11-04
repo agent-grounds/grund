@@ -207,71 +207,62 @@ fn load_refuses_a_rule_folder_one_row_writes_twice() {
 }
 
 /// A version-1 project in `<root>/proj` whose rule folder is the one `folder` names from there,
-/// with a rule at `<root>/shared/rules.md`. `<root>` is handed to `folder` to spell it.
+/// with a rule at `<root>/shared/rules.md`. `<root>` is handed to `folder` to spell it, and that
+/// spelling comes back with the project, because the config root is canonical and it need not be.
 fn outside_root_project(
     name: &str,
     folder: impl Fn(&std::path::Path) -> String,
     extensions: &str,
-) -> crate::config::Config {
+) -> (crate::config::Config, String) {
     let root = test_root(name);
     let project = root.join("proj");
     write(&root.join("shared/rules.md"), "# RULE-a: A rule.\n");
     write(&project.join("src/a.rs"), "pub fn a() {}\n");
+    let written = folder(&root);
     let toml = v1_rows(
         &[
-            &format!(
-                "kind = \"RULE\"\nfolder = \"{}\"\nrules = true",
-                folder(&root)
-            ),
+            &format!("kind = \"RULE\"\nfolder = \"{written}\"\nrules = true"),
             "kind = \"FS\"\nfolder = \"src\"\nindex = false",
         ],
         &format!("include = [\"src\"]\nextensions = {extensions}"),
     );
     write(&project.join("grund.toml"), &toml);
-    crate::config::load_config_at(&project, &project).expect("load the project")
+    let config = crate::config::load_config_at(&project, &project).expect("load the project");
+    (config, written)
 }
 
 /// §FS-scan.checks.unread-scan-root.rule-folder: a version-1 folder outside the config root is
 /// read when its extension is listed, so it is named when it is not, as a `file` home is.
 #[test]
 fn a_rule_folder_outside_the_config_root_is_recorded() {
-    let dotted = outside_root_project(
+    let (dotted, written) = outside_root_project(
         "a_rule_folder_through_dots",
         |_| "../shared".to_string(),
         "[\"rs\"]",
     );
     assert_eq!(
         recorded(&dotted),
-        vec![("../shared".to_string(), 6)],
+        vec![(written, 6)],
         "§FS-scan.checks.unread-scan-root.message: as the configuration wrote it"
     );
-    let absolute = outside_root_project(
+    let (absolute, written) = outside_root_project(
         "a_rule_folder_absolute",
         |root| format_path(&root.join("shared")),
         "[\"rs\"]",
     );
-    let written = absolute
-        .root
-        .parent()
-        .expect("the project is under its test root")
-        .join("shared");
-    assert_eq!(
-        recorded(&absolute),
-        vec![(format_path(&written), 6)],
-        "an absolute path"
-    );
+    assert_eq!(recorded(&absolute), vec![(written, 6)], "an absolute path");
 }
 
 /// §FS-scan.checks.unread-scan-root.rule-folder: the controls, where the folder's rule is read.
 #[test]
 fn a_read_rule_folder_outside_the_config_root_is_not_recorded() {
-    let dotted = outside_root_project(
+    let (dotted, _) = outside_root_project(
         "a_read_rule_folder_through_dots",
         |_| "../shared".to_string(),
         "[\"rs\", \"md\"]",
     );
     assert_eq!(recorded(&dotted), Vec::new(), "through `..`");
-    let absolute = outside_root_project(
+    let (absolute, _) = outside_root_project(
         "a_read_rule_folder_absolute",
         |root| format_path(&root.join("shared")),
         "[\"rs\", \"md\"]",

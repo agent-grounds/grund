@@ -7,7 +7,7 @@ use super::case_runner::{assert_every_case_passed, run_case};
 use super::repo_root;
 
 /// The folders the run reads no file of: each one earns the warning.
-const UNREAD: [&str; 11] = [
+const UNREAD: [&str; 13] = [
     "check-v2-rule-folder-md-read-as-json",
     "check-v2-rule-folder-md-read-as-json-cited",
     "check-v2-rule-folder-md-read-by-no-language",
@@ -19,10 +19,12 @@ const UNREAD: [&str; 11] = [
     "check-v2-rule-folder-only-home",
     "check-v2-rule-folder-two-entries",
     "check-full-rule-folder-unread",
+    "check-v2-rule-folder-own-nested-entry-unread",
+    "check-v2-rule-folder-own-nested-entry-only",
 ];
 
 /// The controls: each of these earns no warning.
-const CONTROLS: [&str; 11] = [
+const CONTROLS: [&str; 13] = [
     "check-v2-rule-folder-read-as-markdown",
     "check-rule-folder-shared-read",
     "check-v2-rule-folder-absent",
@@ -34,6 +36,8 @@ const CONTROLS: [&str; 11] = [
     "check-v2-rule-folder-read-as-rust",
     "check-v2-folder-home-reads-nothing",
     "list-v2-rule-folder-unread",
+    "check-v2-rule-folder-own-file-read",
+    "check-v2-rule-folder-own-nested-entry-read",
 ];
 
 #[test]
