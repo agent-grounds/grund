@@ -357,7 +357,7 @@ The final `note:` line appears on stderr after every successful version-1-to-ver
 
 ### 6.6 A second run is a no-op
 
-A config that is already version 2 is reported as `` <config> is already version 2; nothing to migrate ``, exit `0`, empty stdout, with or without `--write`. The file, its modification time included, is left alone.
+A config that is already version 2 is reported as `` <config> is already version 2; nothing to migrate ``, exit `0`, empty stdout, with or without `--write`. The file, its modification time included, is left alone. The line speaks of that one file: at a workspace root no `member:` line follows it ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)), and the configs below still on version 1 are named by `grund check` there ([§FS-check.4.11.3](FS-check.md#4113-once-per-config-not-once-per-scope)).
 
 ## 7. Outcomes
 
@@ -372,7 +372,7 @@ A config that is already version 2 is reported as `` <config> is already version
 
 ## 8. Workspaces
 
-Only the file at `PATH` is migrated; mixed versions are legal ([§FS-config.5](FS-config.md#5-schema-versioning)). At a workspace root the report names each member still on version 1 and the command that migrates it, one line each: `` member: <member>/grund.toml is version 1; migrate it with grund config migrate --to 2 <member> ``. The complete report places these after the `written:` lines and before the gates' result; compact success retains them at the position defined in [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write), without requiring default narration before them. The report gate runs over the whole workspace as `check` would, each member read by its own reader. A member's config is migrated from the member's root, and the report gate runs from there. No member is written; there is no `--recursive`, because several files cannot be replaced atomically together.
+Only the file at `PATH` is migrated; mixed versions are legal ([§FS-config.5](FS-config.md#5-schema-versioning)). At a workspace root whose own config is on version 1, the report names each member the root's own `[workspace]` lists that is still on version 1, and the command that migrates it, one line each: `` member: <member>/grund.toml is version 1; migrate it with grund config migrate --to 2 <member> ``. The complete report places these after the `written:` lines and before the gates' result; compact success retains them at the position defined in [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write), without requiring default narration before them. The report gate runs over the whole workspace as `check` would, each member read by its own reader. A member's config is migrated from the member's root, and the report gate runs from there. No member is written; there is no `--recursive`, because several files cannot be replaced atomically together. A config further down, a nested member's or an `include_root = false` block's below a listed one, earns no `member:` line; `grund check` at the root names it ([§FS-check.4.11.3](FS-check.md#4113-once-per-config-not-once-per-scope)).
 
 ### 8.1 A block with `include_root = false`
 

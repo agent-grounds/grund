@@ -1,0 +1,1 @@
+check --ignore config-version-1 {repo}

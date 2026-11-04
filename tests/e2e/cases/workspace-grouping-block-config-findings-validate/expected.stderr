@@ -1,0 +1,6 @@
+warning: legacy/.agents/grund.toml is a deprecated config location — move it to legacy/grund.toml
+warning: legacy/.agents/grund.toml is version 1; migrate it with grund config migrate --to 2 legacy
+warning: outer/grund.toml is version 1; migrate it with grund config migrate --to 2 outer
+warning: outer/inner/grund.toml is version 1; migrate it with grund config migrate --to 2 outer/inner
+warning: paired/.agents/grund.toml is ignored — paired/grund.toml takes precedence; delete one
+warning: sparse/grund.toml is version 1; migrate it with grund config migrate --to 2 sparse

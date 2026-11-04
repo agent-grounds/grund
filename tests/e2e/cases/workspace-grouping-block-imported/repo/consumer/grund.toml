@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "consumer"
+
+[schema.kinds.FS]
+files = ["docs/notes.md"]
+
+[workspace.imports.lib]
+path = "../lib"
+project = "lib"
