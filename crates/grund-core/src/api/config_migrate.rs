@@ -16,7 +16,9 @@ use crate::config::migrate::{
     member_on_v1, translate,
 };
 use crate::config::{Invocation, PathBase, Project, Selection, config_at, with_report_path_base};
-use crate::model::{Code, Finding, GENERATED_SECTIONS, format_path, relative_from_base};
+use crate::model::{
+    Code, Finding, GENERATED_SECTIONS, base_reads_dot, format_path, relative_from_base,
+};
 use crate::writers::{Install, InstallFailure, atomic_install};
 
 /// The options of one `grund config migrate --to 2` run (§FS-config-migrate.1).
@@ -241,7 +243,7 @@ fn lines(
         Ok((output, projects)) => {
             out.extend(projects.iter().map(|root| {
                 let shown = format_path(&relative_from_base(root_dir, root));
-                format!("project {}", if shown.is_empty() { "." } else { &shown })
+                format!("project {}", base_reads_dot(shown))
             }));
             let report = &output.report;
             out.extend(

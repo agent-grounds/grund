@@ -96,10 +96,10 @@ pub(crate) fn format_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 
-/// A path a report already spelled from its base, for a message that names a place:
-/// the base itself reads `.`, since the empty string it spells as names nothing
-/// (§FS-check.4.12.3, §FS-workspace.5.3). Over the spelled string because other
-/// readers of that spelling ask whether it is empty (§FS-config.3.6).
+/// A path already spelled relative to the directory it is read from, for a message
+/// that names a place: that directory reads `.`, since the empty string it spells as
+/// names nothing (§FS-check.4.12.3, §FS-workspace.5.3). Over the spelled string because
+/// other readers of that spelling ask whether it is empty (§FS-check.checks.config-version-1).
 pub(crate) fn base_reads_dot(spelled: String) -> String {
     if spelled.is_empty() {
         ".".to_owned()
