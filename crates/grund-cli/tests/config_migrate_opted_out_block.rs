@@ -142,7 +142,7 @@ dropped: grund.toml:5: [scan] include: include_root = false, so no project scans
 /// reads, and version 1's default scope never did, reaches the report gate in one
 /// run (§FS-check.4.10) rather than an `include` repair. The `differs:` lines are
 /// the unread-block warning, its unread tree the block root named `.`
-/// (§FS-check.4.10.5, agent-grounds/grund#1145), and twice included.
+/// (§FS-check.4.10.5, agent-grounds/grund#1145).
 #[test]
 fn block_holding_a_readme_or_agents_md_stops_at_the_report_gate_in_one_run() {
     let warning = "+ run-warning warning unread-workspace-block grund.toml:2:- grund.toml:2: \
@@ -154,7 +154,7 @@ or configure another project's source scope to read it.\n";
         let write = migrate(&root, true);
         let report = format!(
             "grund.toml: version 1 → 2, --write\n{DEFAULTS}{MAPPED}\
-differs: grund check --suggestions on this tree\n{warning}{warning}\
+differs: grund check --suggestions on this tree\n{warning}\
 not written: grund check --suggestions differs (inspect the comparison above); grund.toml is unchanged\n"
         );
         assert_run(&write, 1, "", &report);
