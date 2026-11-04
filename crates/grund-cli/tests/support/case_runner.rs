@@ -92,24 +92,9 @@ include!("case_refresh_tests.rs");
 // (§AR-core-module-layout.3).
 include!("case_args_tests.rs");
 
-/// Cases red until #1155 refuses a nested declaration in fetch output (§FS-fetch.3.1).
-/// `fetch_nested_cases::e2e_fetch_nested_declaration_refusals` runs them under `--ignored`; implement
-/// deletes this list, its filter and that test's `#[ignore]` together.
-pub const RED_UNTIL_1155: &[&str] = &[
-    "fetch-nested-declaration-collides",
-    "fetch-nested-declaration-duplicate",
-    "fetch-nested-declaration-file",
-    "fetch-nested-declaration-folder",
-    "fetch-nested-declaration-other-kind",
-    "fetch-nested-declaration-v2",
-];
-
 pub fn discover_e2e_cases(manifest_dir: &Path) -> Vec<PathBuf> {
     let cases_dir = manifest_dir.join("tests/e2e/cases");
-    let cases = discover_case_dirs(&cases_dir, |case| {
-        let name = case.file_name().unwrap_or_default().to_string_lossy();
-        !RED_UNTIL_1155.contains(&name.as_ref())
-    });
+    let cases = discover_case_dirs(&cases_dir, |_| true);
     assert!(
         !cases.is_empty(),
         "expected at least one e2e case under {}",

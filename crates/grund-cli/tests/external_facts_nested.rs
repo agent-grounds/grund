@@ -50,7 +50,6 @@ fn external_facts_nested_declaration_two_depths_below_is_refused() {
 /// refused, and the tree is still green and byte-identical after it.
 #[cfg(unix)]
 #[test]
-#[ignore = "red until #1155 refuses a nested declaration in fetch output; implement removes this"]
 fn external_facts_nested_declaration_never_turns_a_green_tree_red() {
     let root = ar_project(
         "nested-collides",

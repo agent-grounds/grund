@@ -252,6 +252,16 @@ pub(crate) fn declaration_captures<'a>(
     Some(captures)
 }
 
+/// The ID token, as written, that a Markdown line declares by
+/// §FS-declarations.line, were no fence open: the one reading the conflict-block owners
+/// (§FS-declarations.body.conflict.where) and fetch's nested-declaration refusal
+/// (§FS-fetch.3.1) share with the scanner, so none of them re-derives it.
+pub(crate) fn markdown_line_declares<'a>(grammar: &Grammar, line: &'a str) -> Option<&'a str> {
+    let caps = declaration_captures(grammar, line, false, true)?;
+    parse_id(&caps, grammar)?;
+    Some(caps.name("id")?.as_str())
+}
+
 fn legacy_declaration_captures<'a>(
     grammar: &Grammar,
     line: &'a str,
