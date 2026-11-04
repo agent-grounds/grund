@@ -70,7 +70,6 @@ fn assert_refused_with_the_fix(root: &Path, args: &[&str]) {
 }
 
 #[test]
-#[ignore = "red until #1189 has scan_tree_strict render through scan_error_message; implement removes this"]
 fn id_refuses_an_unreadable_directory_with_the_fix_check_prints() {
     let fixture = Fixture::new("locked");
     if !fixture.is_unreadable() {
@@ -99,7 +98,6 @@ fn id_refuses_an_unreadable_directory_with_the_fix_check_prints() {
 
 /// The same refusal for a file the walk opens and cannot decode, which no user's mode can read.
 #[test]
-#[ignore = "red until #1189 has scan_tree_strict render through scan_error_message; implement removes this"]
 fn id_refuses_an_undecodable_file_with_the_fix_check_prints() {
     let root = std::env::temp_dir().join(format!("grund-1189-utf8-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);

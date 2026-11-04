@@ -286,7 +286,9 @@ pub(super) fn path_starts_with(path: &Path, root: &Path) -> bool {
 
 /// Scan helper for point-query subcommands (`show`, `id`): any unreadable file
 /// is fatal — a partial view of the tree could miss the declaration entirely or
-/// allocate a colliding number (§FS-show.3, §FS-id.4).
+/// allocate a colliding number (§FS-show.3, §FS-id.4). The refusal is the line
+/// `check` prints for the same failure, `io`'s *Fix* included, rendered by the
+/// one helper every printer shares (§FS-check.2.4, §FS-workspace.8.7.3).
 pub(crate) fn scan_tree_strict(
     schema: &Schema,
     frame: Frame<'_>,
@@ -295,7 +297,8 @@ pub(crate) fn scan_tree_strict(
 ) -> Result<Catalog> {
     let (findings, errors) = scan_tree(schema, frame, scope, explicit_scope)?;
     if let Some((path, message)) = errors.into_iter().next() {
-        return Err(anyhow!("{}: {}", frame.display_path(&path), message));
+        let message = super::scan_error_message(&message);
+        return Err(anyhow!("{}: {message}", frame.display_path(&path)));
     }
     Ok(findings)
 }

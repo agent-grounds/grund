@@ -79,7 +79,6 @@ fn scan_publishes_the_message_every_other_operation_publishes() {
 /// `io`'s Fix included, because a strict scan is one more place the line is
 /// printed (§FS-check.2.4, §FS-workspace.8.7.3).
 #[test]
-#[ignore = "red until #1189 has scan_tree_strict render through scan_error_message; implement removes this"]
 fn the_library_scan_refuses_with_the_fix_check_prints() {
     let root = test_root("the_library_scan_refuses_with_the_fix_check_prints");
     write(
