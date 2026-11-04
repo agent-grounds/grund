@@ -1,15 +1,13 @@
 //! Issue #1183's cases, run alone: a rule kind's folder home the run reads no file of earns
-//! the located `unread-scan-root` warning (§FS-scan.checks.unread-scan-root.rule-folder). The
-//! controls are also in the full pass; the red cases are held out of it until the fix lands,
-//! and implement removes the hold and the mark.
+//! the located `unread-scan-root` warning (§FS-scan.checks.unread-scan-root.rule-folder). Both
+//! lists are also in the full pass.
 
 use super::case_runner::CaseKind::E2e;
 use super::case_runner::{assert_every_case_passed, run_case};
 use super::repo_root;
-use std::path::PathBuf;
 
-/// The red cases, until #1183: the full pass skips them; implement removes this.
-pub const RED_UNTIL_1183: [&str; 9] = [
+/// The folders the run reads no file of: each one earns the warning.
+const UNREAD: [&str; 9] = [
     "check-v2-rule-folder-md-read-as-json",
     "check-v2-rule-folder-md-read-as-json-cited",
     "check-v2-rule-folder-md-read-by-no-language",
@@ -21,15 +19,7 @@ pub const RED_UNTIL_1183: [&str; 9] = [
     "check-full-rule-folder-unread",
 ];
 
-/// The full pass's cases without the red ones, until #1183: implement removes this.
-pub fn without_red(cases: Vec<PathBuf>) -> Vec<PathBuf> {
-    cases
-        .into_iter()
-        .filter(|case| !RED_UNTIL_1183.iter().any(|red| case.ends_with(red)))
-        .collect()
-}
-
-/// The controls: they pass before and after the fix, so they carry no mark.
+/// The controls: each of these earns no warning.
 const CONTROLS: [&str; 10] = [
     "check-v2-rule-folder-read-as-markdown",
     "check-v2-rule-folder-absent",
@@ -44,11 +34,10 @@ const CONTROLS: [&str; 10] = [
 ];
 
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn unread_rule_folder_contract() {
     let root = repo_root();
     let cases = root.join("tests/e2e/cases");
-    let outcomes = RED_UNTIL_1183
+    let outcomes = UNREAD
         .iter()
         .chain(CONTROLS.iter())
         .map(|name| run_case(&root, &cases.join(name), E2e))

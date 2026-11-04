@@ -106,9 +106,9 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    // Red until #1183: its red cases run alone in the ignored contract; implement removes this.
-    let cases = unread_rule_folder::without_red(discover_e2e_cases(&manifest_dir));
-    let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
+    let outcomes = ordered_pool::in_order(&discover_e2e_cases(&manifest_dir), |case| {
+        run_case(&manifest_dir, case, E2e)
+    });
     let compared = outcomes
         .iter()
         .filter(|outcome| matches!(outcome, CaseOutcome::Ran | CaseOutcome::Failed { .. }))

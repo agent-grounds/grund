@@ -241,6 +241,23 @@ the Project map says so with `scan = false`. `--ignore
 unread-scan-root` drops the warning
 ([§FS-scan.checks.unread-scan-root](../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-or-rule-folder-is-not-read)).
 
+A rule kind's folder gets the same answer as a whole. A row that says rules live
+in a folder means nothing if the run reads none of its files, because a rule
+nobody reads fires nowhere. So when the run reads no file the folder holds and
+refuses at least one by its extension, `check` says so at the `folder` or
+`folders` key, one warning per folder, with the exit code still 0 and `success`
+withheld:
+
+```text
+grund.toml:10: warning: [[kinds]] RULE home `rules` is not read — `md` is not in [scan] extensions, so nothing in it is checked. Add "md" to [scan] extensions, or give its files an extension the list holds.
+grund.toml:14: warning: [schema.kinds.RULE] folder `rules` is not read — no language in [schema.sources] languages reads `.md`, so nothing in it is checked. Give its files an extension a listed language reads.
+```
+
+Reading any one file of the folder clears it, in any language. So does a folder
+that is empty or absent, or whose files are all hidden, ignored or in a
+subdirectory `exclude` prunes, and a folder home of any other kind earns nothing
+([§FS-scan.checks.unread-scan-root.rule-folder](../functional-spec/FS-scan.md#checksunread-scan-rootrule-folder-a-rule-kinds-folder-the-run-reads-no-file-of)).
+
 `grund check --watch` checks immediately and updates the terminal after saves;
 Ctrl-C restores an owned alternate screen and returns the last completed status.
 Redirected output appends ordinary reports, and clean JSON runs have no visible

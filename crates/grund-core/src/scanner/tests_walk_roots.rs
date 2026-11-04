@@ -5,7 +5,8 @@
 //! a root written *below* one is canonicalized before the walk begins and is
 //! ordinary scope (§DF-undeclared-blind-spots). The gate also records a file root
 //! the extension filter or the hidden-file rule refuses, with its row, for `check`
-//! to name (§FS-scan.checks.unread-scan-root).
+//! to name (§FS-scan.checks.unread-scan-root). A rule folder is recorded by the walk's
+//! loop rather than this gate, and `tests_walk_rule_folder.rs` holds its tests.
 
 use crate::model::{Refused, RootOrigin};
 use crate::testing::{

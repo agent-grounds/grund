@@ -6,10 +6,11 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use super::read_predicate::{Unread, extension_refusal, name_refusal};
+use super::rule_folders::RuleFolderTally;
 use super::tree::ScanError;
 use super::value_json::value_sources;
 use super::walk::{scan_roots, scannable_walker};
-use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
+use super::walk_boundaries::{outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{symlink_loop_report, walk_error_report};
 use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
@@ -63,8 +64,8 @@ pub(crate) struct WalkedTree {
     /// (§FS-section-lock.write).
     pub(crate) root_scope: bool,
     /// The configured file roots a name rule refused, each with the row that made it
-    /// a root and the rules that refused it, for `check`'s report (§AR-scanner.1.6,
-    /// §FS-scan.checks.unread-scan-root).
+    /// a root and the rules that refused it, then the rule folders the walk read no file
+    /// of, for `check`'s report (§AR-scanner.1.6, §FS-scan.checks.unread-scan-root).
     pub(crate) unread_roots: Vec<RootRow>,
 }
 
@@ -137,6 +138,9 @@ pub(crate) fn walk_scannable_files_with_sources(
     let mut unread_roots = Vec::new();
     let mut file_rows = None;
     let mut value_homes: Option<Option<Vec<PathBuf>>> = None;
+    // §FS-scan.checks.unread-scan-root.rule-folder: what the loop below answered of the
+    // files each rule folder home owns, for a verdict after every root.
+    let mut rule_folders = RuleFolderTally::of(schema, frame);
     for scan_root in roots {
         // §FS-check.6.1.1: the actual walk roots are covered before traversal.
         if !crate::config::observe_input(&scan_root, true) {
@@ -180,6 +184,11 @@ pub(crate) fn walk_scannable_files_with_sources(
                     if root_is_aliased {
                         aliasable.insert(scan_root.clone());
                     }
+                    // §FS-scan.checks.unread-scan-root.rule-folder: a read is a read, even
+                    // of a file the folder's own walk prunes.
+                    if let Some(tally) = rule_folders.as_mut() {
+                        tally.count(&scan_root, None);
+                    }
                     files.push(scan_root);
                 }
                 // §AR-scanner.1.13: the predicate's own answer, kept with the row
@@ -212,6 +221,9 @@ pub(crate) fn walk_scannable_files_with_sources(
                 }
             }
             continue;
+        }
+        if let Some(tally) = rule_folders.as_mut() {
+            tally.walking(&scan_root);
         }
         // The directory links the filter met, shared with the loop below: a file
         // under one of them is reached under a spelling that is not its own, the
@@ -254,8 +266,15 @@ pub(crate) fn walk_scannable_files_with_sources(
             if !entry
                 .file_type()
                 .is_some_and(|file_type| is_regular_file(file_type))
-                || !is_scannable(entry.path(), schema)
             {
+                continue;
+            }
+            // §AR-scanner.1.13: the one answer, read here and counted for a rule folder home.
+            let refusal = name_refusal(entry.path(), schema);
+            if let Some(tally) = rule_folders.as_mut() {
+                tally.count(entry.path(), refusal);
+            }
+            if refusal.is_some() {
                 continue;
             }
             if root_is_aliased || entry.path_is_symlink() || under_link(&link_roots, entry.path()) {
@@ -290,6 +309,8 @@ pub(crate) fn walk_scannable_files_with_sources(
         sort_paths(&mut root_files);
         files.append(&mut root_files);
     }
+    // §AR-scanner.1.6: every root has answered, so each rule folder gets its one verdict.
+    unread_roots.extend(rule_folders.into_iter().flat_map(RuleFolderTally::unread));
     // One file, one read (§FS-check.1.3.2, §FS-config.3.5.4). Two spellings first,
     // while the list is still in walk order and first-seen wins; then the
     // byte-identical ones, which the sort has just brought together.

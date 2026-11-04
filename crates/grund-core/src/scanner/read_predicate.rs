@@ -6,7 +6,8 @@
 //! ignore files, so the rules have one copy rather than one per reader.
 //!
 //! Four readers ask it. The walk asks the name test of each entry and the
-//! filter of each directory. A file that exists only as a buffer, which the
+//! filter of each directory, and counts the name test's answers for a rule
+//! folder home (§AR-scanner.1.6). A file that exists only as a buffer, which the
 //! walk never meets on disk, is read or skipped by `unread`, exactly as the
 //! saved file would be (§AR-system.2.13). A stub's target asks
 //! `name_refusal` then `excluding_rule` for its verdict, retaining the first

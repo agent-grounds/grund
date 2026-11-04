@@ -1,23 +1,17 @@
 //! The warning a configured file root earns when its hidden name or the extension list
-//! keeps it out of the walk (§FS-scan.checks.unread-scan-root): built from the rows and
-//! refusals the root gate recorded (§AR-scanner.1.6), so the report asks no name
-//! question of its own (§AR-scanner.1.13). `grund check` and the LSP snapshot both build it here, so an
+//! keeps it out of the walk, and a rule folder earns when the walk read no file of it
+//! (§FS-scan.checks.unread-scan-root): built from the rows and refusals the walk
+//! recorded (§AR-scanner.1.6), so the report asks no name question of its own
+//! (§AR-scanner.1.13). `grund check` and the LSP snapshot both build it here, so an
 //! editor and a terminal over one tree say the same thing (§FS-lsp.4.1).
 
-use crate::model::remedies;
+use crate::model::{remedies, spelled_extension};
 use std::path::Path;
 
 use crate::config::Config;
 use crate::model::{Catalog, Code, Diagnostic, RootOrigin, RootRow};
 
-// Red until #1183: the rule folder's fix cases are rendered from their catalog row
-// (§FS-errors.5.5) ahead of the code that fills them. `implement` calls them and removes this.
-const _: fn(u32) -> String = remedies::unread_scan_root_folder_language;
-const _: fn(u32, &'static str) -> String = remedies::unread_scan_root_add_any;
-const _: fn(u32) -> String = remedies::unread_scan_root_folder_rename;
-const _: fn(u32) -> String = remedies::unread_scan_root_folder_give;
-
-/// One located warning per unread root, at the line of the key that named it
+/// One located warning per unread root or rule folder, at the line of the key that named it
 /// (§FS-scan.checks.unread-scan-root.location). A warning, so the exit code stays
 /// and `success` is withheld (§FS-scan.checks.unread-scan-root.channel); it is a
 /// finding about the configured scope, so the caller asks it before the empty-scan
@@ -37,7 +31,7 @@ pub(super) fn unread_root_warnings(config: &Config, findings: &Catalog) -> Vec<D
             authority: Vec::new(),
         })
         .collect();
-    // §FS-errors.4: two entries of one `include` share its line and sort by message.
+    // §FS-errors.4: two entries of one array share its line and sort by message.
     warnings.sort_by(|a, b| (a.line, &a.message).cmp(&(b.line, &b.message)));
     warnings
 }
@@ -45,18 +39,17 @@ pub(super) fn unread_root_warnings(config: &Config, findings: &Catalog) -> Vec<D
 /// `<row> is not read — <reason>, so nothing in it is checked. <fix>.`, in the exact
 /// bytes of §FS-scan.checks.unread-scan-root.message.
 pub(super) fn unread_root_message(row: &RootRow, v2: bool) -> String {
-    // The part of the file name after its last `.`, as the name spells it.
-    let ext = Path::new(&row.written)
-        .extension()
-        .and_then(|ext| ext.to_str())
-        .filter(|ext| !ext.is_empty());
+    let ext = spelled_extension(Path::new(&row.written));
     let label = match (&row.origin, v2) {
         (RootOrigin::Include, _) => format!("[scan] include entry `{}`", row.written),
-        (RootOrigin::Home { kind, .. }, false) => {
+        (RootOrigin::Home { kind, .. } | RootOrigin::RuleFolder { kind, .. }, false) => {
             format!("[[kinds]] {kind} home `{}`", row.written)
         }
         (RootOrigin::Home { kind, .. }, true) => {
             format!("[schema.kinds.{kind}] file `{}`", row.written)
+        }
+        (RootOrigin::RuleFolder { kind, .. }, true) => {
+            format!("[schema.kinds.{kind}] folder `{}`", row.written)
         }
     };
     let version = if v2 { 2 } else { 1 };
@@ -65,7 +58,11 @@ pub(super) fn unread_root_message(row: &RootRow, v2: bool) -> String {
     } else {
         "[scan] extensions"
     };
-    let (reason, mut fixes) = if row.refused.hidden {
+    // §FS-scan.checks.unread-scan-root.message: a folder's reason is what the walk refused
+    // in it, never its own name, so `rules.d` does not report `d`.
+    let (reason, mut fixes) = if let RootOrigin::RuleFolder { extensions, .. } = &row.origin {
+        rule_folder_reason_and_fixes(extensions, v2, list)
+    } else if row.refused.hidden {
         hidden_reason_and_fixes(row, ext, v2, list)
     } else {
         extension_reason_and_fixes(row, ext, v2, list)
@@ -95,23 +92,71 @@ fn extension_reason_and_fixes(
     };
     // Listing the extension is offered only where there is one to list. Each fix is a
     // case of the row's Fix, on the version's side (§FS-errors.5.5.1).
-    let fixes: Vec<String> = match (&row.origin, ext, v2) {
+    let fixes: Vec<String> = match (row.origin == RootOrigin::Include, ext, v2) {
         (_, _, true) => vec![remedies::unread_scan_root_language(2)],
-        (RootOrigin::Include, Some(ext), false) => vec![
+        (true, Some(ext), false) => vec![
             remedies::unread_scan_root_add(1, ext),
             remedies::unread_scan_root_drop(1),
         ],
-        (RootOrigin::Include, None, false) => vec![
+        (true, None, false) => vec![
             remedies::unread_scan_root_rename(1),
             remedies::unread_scan_root_drop(1),
         ],
-        (RootOrigin::Home { .. }, Some(ext), false) => vec![
+        (false, Some(ext), false) => vec![
             remedies::unread_scan_root_add(1, ext),
             remedies::unread_scan_root_give(1),
         ],
-        (RootOrigin::Home { .. }, None, false) => vec![remedies::unread_scan_root_rename(1)],
+        (false, None, false) => vec![remedies::unread_scan_root_rename(1)],
     };
     (reason, fixes)
+}
+
+/// The reason, then the fixes, for a rule folder, from the extensions the walk refused in
+/// it: the folder tables of §FS-scan.checks.unread-scan-root.message. Listing one extension
+/// is enough to read a file, so several are offered as alternatives.
+fn rule_folder_reason_and_fixes(
+    extensions: &[String],
+    v2: bool,
+    list: &str,
+) -> (String, Vec<String>) {
+    let quoted = |open: &str, close: &str| -> Vec<String> {
+        let each = extensions.iter();
+        each.map(|ext| format!("{open}{ext}{close}")).collect()
+    };
+    let reason = match (extensions.len(), v2) {
+        (0, _) => {
+            format!("its files have no extension, and {list} reads a file only by its extension")
+        }
+        (_, true) => format!(
+            "no language in {list} reads {}",
+            series(&quoted("`.", "`"), "or")
+        ),
+        (1, false) => format!("{} is not in {list}", series(&quoted("`", "`"), "and")),
+        (_, false) => format!("{} are not in {list}", series(&quoted("`", "`"), "and")),
+    };
+    let fixes = match (extensions, v2) {
+        (_, true) => vec![remedies::unread_scan_root_folder_language(2)],
+        ([], false) => vec![remedies::unread_scan_root_folder_rename(1)],
+        ([only], false) => vec![
+            remedies::unread_scan_root_add(1, only),
+            remedies::unread_scan_root_folder_give(1),
+        ],
+        (_, false) => vec![
+            remedies::unread_scan_root_add_any(1, series(&quoted("\"", "\""), "or")),
+            remedies::unread_scan_root_folder_give(1),
+        ],
+    };
+    (reason, fixes)
+}
+
+/// `a`, `a <word> b`, `a, b, <word> c`: the extensions a folder's reason and fix name.
+fn series(items: &[String], word: &str) -> String {
+    match items {
+        [] => String::new(),
+        [only] => only.clone(),
+        [first, second] => format!("{first} {word} {second}"),
+        [init @ .., last] => format!("{}, {word} {last}", init.join(", ")),
+    }
 }
 
 /// The reason, then the fixes, for a root whose name begins with `.`: the hidden

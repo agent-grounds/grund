@@ -285,6 +285,10 @@ the same messages at the `form` key ([§FS-fields.forms](../functional-spec/FS-f
 children are numbered components, so it takes no fields and cannot be closed;
 neither can a kind that is not citable or one whose declarations are fetched.
 A rule kind takes fields like any prose kind, including a values field.
+A rule kind's folder the run reads no file of, because no language in
+`[schema.sources]` reads what it holds, earns a warning at its `folders` key
+rather than leaving its rules out of force in silence
+([§FS-scan.checks.unread-scan-root.rule-folder](../functional-spec/FS-scan.md#checksunread-scan-rootrule-folder-a-rule-kinds-folder-the-run-reads-no-file-of)).
 
 ## Strengths and channels
 

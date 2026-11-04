@@ -1,7 +1,6 @@
 //! A rule kind's folder home the run reads no file of (§FS-scan.checks.unread-scan-root.rule-folder):
 //! the walk's own loop credits each file to the home that holds it, whichever root reached it,
-//! and the verdict comes after every root (§AR-scanner.1.6, §AR-scanner.1.13). The marked tests
-//! are red until #1183 and implement removes the marks; the rest are controls.
+//! and the verdict comes after every root (§AR-scanner.1.6, §AR-scanner.1.13).
 
 use crate::testing::{scan_tree, test_root, write};
 
@@ -39,7 +38,6 @@ fn recorded(config: &crate::config::Config) -> Vec<(String, usize)> {
 /// §FS-scan.checks.unread-scan-root.rule-folder: nothing in the folder was read and one file
 /// was refused by its extension, in the walk's own loop (§AR-scanner.1.13).
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn an_unread_rule_folder_is_recorded_with_its_key_line() {
     let v2 = rule_folder_project(
         "an_unread_rule_folder_is_recorded_v2",
@@ -66,7 +64,6 @@ fn an_unread_rule_folder_is_recorded_with_its_key_line() {
 /// §AR-scanner.1.6: a file is credited to the home that holds it, so a folder under an
 /// `include` root, reached by that root and as a root of its own, is one folder.
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn a_rule_folder_under_an_include_root_is_recorded_once() {
     let config = rule_folder_project(
         "a_rule_folder_under_an_include_root_is_recorded_once",
@@ -82,7 +79,6 @@ fn a_rule_folder_under_an_include_root_is_recorded_once() {
 
 /// §AR-scanner.1.6: `--full` adds the config root, where a double count or warning would show.
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn a_rule_folder_under_full_is_recorded_once() {
     let mut v1 = rule_folder_project(
         "a_rule_folder_under_full_is_recorded_once_v1",
@@ -111,7 +107,6 @@ fn a_rule_folder_under_full_is_recorded_once() {
 /// §FS-scan.scope.roots: every walked home is a root, and `exclude` never prunes a root, so
 /// naming the folder itself in `exclude` stops nothing, in either version.
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn a_rule_folder_exclude_names_is_still_recorded_in_both_versions() {
     let v1 = rule_folder_project(
         "a_rule_folder_exclude_names_v1",
@@ -141,7 +136,6 @@ fn a_rule_folder_exclude_names_is_still_recorded_in_both_versions() {
 /// §FS-scan.checks.unread-scan-root.rule-folder: a file a nested home owns counts for that
 /// home, so reading it does not clear the rule folder around it.
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn a_file_a_nested_home_owns_does_not_clear_the_rule_folder() {
     let config = rule_folder_project(
         "a_file_a_nested_home_owns_does_not_clear_the_rule_folder",
@@ -235,4 +229,67 @@ fn a_refused_file_a_nested_home_owns_is_not_the_rule_folders() {
         Vec::new(),
         "`rules/notes/a.txt` is NOTE's"
     );
+}
+
+/// §AR-scanner.1.6: the tally is one per home, so a read file in one entry of `folders` does
+/// not clear another.
+#[test]
+fn a_read_entry_of_folders_does_not_clear_another() {
+    let config = rule_folder_project(
+        "a_read_entry_of_folders_does_not_clear_another",
+        "grund_config_version = 2\nproject_name = \"demo\"\n\n[schema.sources]\n\
+         languages = [\"markdown\"]\n\n[schema.kinds.RULE]\nfolders = [\"alpha\", \"zeta\"]\n\
+         form = \"rule\"\n",
+        &["alpha/a.md", "zeta/z.txt"],
+    );
+    assert_eq!(
+        recorded(&config),
+        vec![("zeta".to_string(), 8)],
+        "`alpha/a.md` is read, and it is `alpha`'s alone"
+    );
+}
+
+/// §AR-lsp.5.1.1: an editor in a project that declares `[workspace]` walks only the path it
+/// names. Part of a folder can refuse a file without the folder being unread, so only a home
+/// some walked root is at or above gets a verdict.
+#[test]
+fn a_walk_of_part_of_a_rule_folder_takes_no_verdict() {
+    let config = rule_folder_project(
+        "a_walk_of_part_of_a_rule_folder_takes_no_verdict",
+        &RULE_FOLDER_V2.replace("\"rust\"", "\"markdown\""),
+        &["rules/a.md", "rules/sub/b.txt"],
+    );
+    let sub = config.root.join("rules/sub");
+    let (findings, _) = scan_tree(&config, Some(&sub), true).expect("scan");
+    assert_eq!(
+        findings.unread_roots,
+        Vec::new(),
+        "§FS-scan.checks.unread-scan-root.rule-folder: `rules/a.md` is read, out of this walk"
+    );
+    let whole = rule_folder_project(
+        "a_walk_of_a_whole_rule_folder_takes_its_verdict",
+        RULE_FOLDER_V2,
+        &["rules/a.md"],
+    );
+    let rules = whole.root.join("rules");
+    let (findings, _) = scan_tree(&whole, Some(&rules), true).expect("scan");
+    assert_eq!(
+        findings.unread_roots.len(),
+        1,
+        "§AR-scanner.1.6: a root at the folder walks all of it"
+    );
+}
+
+/// §FS-scan.checks.unread-scan-root.rule-folder: the run read no file the folder holds is what
+/// earns the warning, so a file root's read counts where the folder's own walk prunes the file.
+#[test]
+fn a_rule_folder_a_file_root_read_a_file_of_is_not_recorded() {
+    let config = rule_folder_project(
+        "a_rule_folder_a_file_root_read_a_file_of_is_not_recorded",
+        "[id]\nformat = \"{kind}-{slug}\"\n\n[[kinds]]\nkind = \"RULE\"\nfolder = \"rules\"\n\
+         rules = true\n\n[scan]\ninclude = [\"rules/drafts/a.md\"]\nextensions = [\"md\"]\n\
+         exclude = [\"drafts\"]\n",
+        &["rules/drafts/a.md", "rules/b.txt"],
+    );
+    assert_eq!(recorded(&config), Vec::new(), "credited at the root gate");
 }

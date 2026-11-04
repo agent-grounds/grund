@@ -28,6 +28,10 @@ This keeps requirements tied to authority, because §GOAL-grounded-rules.
 The title is a grammar island: formatting never inserts markers, links, or
 expanded shorthand into it. The rationale remains ordinary grounded Markdown.
 
+Rules are only in force where the run reads them, so `[scan] extensions` has to
+list `md`. A rule folder it reads no file of earns a warning at the `folder` key
+([§FS-scan.checks.unread-scan-root.rule-folder](../functional-spec/FS-scan.md#checksunread-scan-rootrule-folder-a-rule-kinds-folder-the-run-reads-no-file-of)).
+
 The shared guide below explains handle selection ([§FS-rules.2](../functional-spec/FS-rules.md#2-subject-selectors)),
 display-name matching ([§FS-rules.3.1](../functional-spec/FS-rules.md#31-chapter-presence)),
 comparison diagnostics ([§FS-rules.7.2.1](../functional-spec/FS-rules.md#721-display-name-comparison-context))

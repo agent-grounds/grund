@@ -219,7 +219,6 @@ fn rule_folder_warnings(name: &str, toml: &str, files: &[&str]) -> Vec<(usize, S
 }
 
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn a_rule_folder_refusing_one_extension_is_named_in_version_1() {
     assert_eq!(
         rule_folder_warnings(
@@ -239,7 +238,6 @@ fn a_rule_folder_refusing_one_extension_is_named_in_version_1() {
 }
 
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn a_rule_folder_refusing_one_extension_is_named_in_version_2() {
     assert_eq!(
         rule_folder_warnings(
@@ -259,7 +257,6 @@ fn a_rule_folder_refusing_one_extension_is_named_in_version_2() {
 }
 
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn a_rule_folder_refusing_several_extensions_names_them_in_order_in_version_1() {
     assert_eq!(
         rule_folder_warnings(
@@ -294,7 +291,6 @@ fn a_rule_folder_refusing_several_extensions_names_them_in_order_in_version_1() 
 }
 
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn a_rule_folder_refusing_several_extensions_names_them_in_order_in_version_2() {
     assert_eq!(
         rule_folder_warnings(
@@ -329,7 +325,6 @@ fn a_rule_folder_refusing_several_extensions_names_them_in_order_in_version_2() 
 }
 
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn a_rule_folder_whose_refused_files_have_no_extension_says_so_in_version_1() {
     assert_eq!(
         rule_folder_warnings(
@@ -349,7 +344,6 @@ fn a_rule_folder_whose_refused_files_have_no_extension_says_so_in_version_1() {
 }
 
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn a_rule_folder_whose_refused_files_have_no_extension_says_so_in_version_2() {
     assert_eq!(
         rule_folder_warnings(
@@ -369,7 +363,6 @@ fn a_rule_folder_whose_refused_files_have_no_extension_says_so_in_version_2() {
 }
 
 #[test]
-#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
 fn a_rule_folder_with_and_without_extensions_names_only_the_extensions() {
     assert_eq!(
         rule_folder_warnings(
@@ -385,5 +378,42 @@ fn a_rule_folder_with_and_without_extensions_names_only_the_extensions() {
                 .to_string()
         )],
         "§FS-scan.checks.unread-scan-root.message: reading one file clears the warning"
+    );
+}
+
+/// §FS-scan.checks.unread-scan-root.message: a folder's reason is what the walk refused in it,
+/// so the folder's own name, which reads like a file's, reports no extension.
+#[test]
+fn a_rule_folder_with_a_dot_in_its_name_does_not_report_its_own_extension() {
+    let toml = RULE_FOLDER_V1.replace("\"rules\"", "\"rules.d\"");
+    assert_eq!(
+        rule_folder_warnings(
+            "a_rule_folder_with_a_dot_in_its_name_no_extension",
+            &toml,
+            &["rules.d/NOTES"],
+        ),
+        vec![(
+            6,
+            "[[kinds]] RULE home `rules.d` is not read — its files have no extension, and [scan] \
+             extensions reads a file only by its extension, so nothing in it is checked. Rename \
+             its files to an extension the list holds."
+                .to_string()
+        )],
+        "§FS-scan.checks.unread-scan-root.message: `d` is no refused extension"
+    );
+    assert_eq!(
+        rule_folder_warnings(
+            "a_rule_folder_with_a_dot_in_its_name_one_extension",
+            &toml,
+            &["rules.d/a.md"],
+        ),
+        vec![(
+            6,
+            "[[kinds]] RULE home `rules.d` is not read — `md` is not in [scan] extensions, so \
+             nothing in it is checked. Add \"md\" to [scan] extensions, or give its files an \
+             extension the list holds."
+                .to_string()
+        )],
+        "§FS-scan.checks.unread-scan-root.message: only what the walk refused"
     );
 }
