@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 
 use super::atomic_install::{Install, InstallFailure, atomic_install};
 use super::fetch::{FetchFailure, fetch_io, fetch_operational};
+use super::fetch_owned::{Output, is_blank, owned};
 use crate::config::Config;
 use crate::grammar::{
     Grammar, MarkdownBlocks, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
@@ -56,10 +57,12 @@ fn fetch_walk_failure(
 }
 
 #[derive(Clone)]
-struct SnapshotDeclaration {
+pub(super) struct SnapshotDeclaration {
     id: Id,
-    start: usize,
-    end: usize,
+    pub(super) start: usize,
+    pub(super) end: usize,
+    /// The next heading at the declaration's depth, or the end of the file.
+    pub(super) next: usize,
     path: Option<PathBuf>,
 }
 
@@ -126,27 +129,28 @@ fn declarations_at_depth(
             let id = id.as_ref()?;
             // The blank separator before the next sibling is outside the
             // declaration-local replacement and therefore remains byte-for-byte.
-            let end = headings.get(index + 1).map_or(bytes.len(), |next| {
-                let end = next.0;
-                if bytes[..end].ends_with(b"\r\n\r\n") {
-                    end - 2
-                } else if bytes[..end].ends_with(b"\n\n") {
-                    end - 1
-                } else {
-                    end
-                }
-            });
+            let next = headings.get(index + 1).map(|next| next.0);
+            let end = match next {
+                None => bytes.len(),
+                Some(end) if bytes[..end].ends_with(b"\r\n\r\n") => end - 2,
+                Some(end) if bytes[..end].ends_with(b"\n\n") => end - 1,
+                Some(end) => end,
+            };
+            let next = next.unwrap_or(bytes.len());
             Some(SnapshotDeclaration {
                 id: id.clone(),
                 start: *start,
                 end,
+                next,
                 path: None,
             })
         })
         .collect())
 }
 
-/// §FS-fetch.4: replace only the named H2 or insert it in ID order.
+/// §FS-fetch.4: replace only the named H2 or insert it in ID order; a home that already
+/// holds the output is left as it is, and the output's lead is the declaration's own
+/// (§FS-fetch.6.1).
 pub(super) fn write_file_home(
     path: &Path,
     grammar: &Grammar,
@@ -176,8 +180,13 @@ pub(super) fn write_file_home(
             "snapshot home has multiple declarations for requested ID",
         ));
     }
+    let output = Output::new(snapshot);
     let (start, end) = if let Some(existing) = matching.first() {
-        (existing.start, existing.end)
+        let owned = owned(&original, existing, &output);
+        if owned.holds {
+            return Ok(());
+        }
+        (owned.start, owned.end)
     } else {
         let requested = grammar.render(requested, 3);
         let start = declarations
@@ -187,7 +196,13 @@ pub(super) fn write_file_home(
         (start, start)
     };
     let mut replacement = Vec::with_capacity(original.len() + snapshot.len());
-    let line_ending: &[u8] = if original.windows(2).any(|pair| pair == b"\r\n") {
+    // §FS-fetch.6.1: the home's line endings are the bytes outside the owned declaration, so
+    // a bare final CR the output wrote last time never decides them.
+    let outside = [&original[..start], &original[end..]];
+    let line_ending: &[u8] = if outside
+        .iter()
+        .any(|bytes| bytes.windows(2).any(|pair| pair == b"\r\n"))
+    {
         b"\r\n"
     } else {
         b"\n"
@@ -282,12 +297,9 @@ pub(super) fn write_folder_home(
                     .iter()
                     .find(|declaration| declaration.id == *requested)
                     .expect("contains requested declaration");
-                let has_content_before = bytes[..declaration.start]
-                    .iter()
-                    .any(|byte| !byte.is_ascii_whitespace());
-                let has_content_after = bytes[declaration.end..]
-                    .iter()
-                    .any(|byte| !byte.is_ascii_whitespace());
+                // §FS-fetch.6.1: whitespace is what the heading reader skips, U+00A0 included.
+                let has_content_before = !is_blank(&bytes[..declaration.start]);
+                let has_content_after = !is_blank(&bytes[declaration.end..]);
                 if declarations.len() != 1 || has_content_before || has_content_after {
                     return Err(fetch_operational(format!(
                         "snapshot file {} contains the requested ID beside other content",

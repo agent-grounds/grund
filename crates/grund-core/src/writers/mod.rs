@@ -76,6 +76,7 @@
 mod atomic_install;
 mod expected;
 mod fetch;
+mod fetch_owned;
 mod fetch_write;
 mod fmt_anchor_row;
 mod fmt_complete_findings;

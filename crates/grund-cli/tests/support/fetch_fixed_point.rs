@@ -3,8 +3,6 @@
 //! (§FS-fetch.6.1). Each shape fetches the same output three times and compares the home's bytes
 //! after every fetch with the bytes the first one left. `.gitattributes` holds the e2e corpus to
 //! LF, so the CR shapes live here as table rows; the fetcher is a POSIX script.
-//! `RED_UNTIL_1180`, in `fetch_fixed_point_red.rs`, names the rows that fail today; implement
-//! empties it and removes the ignored test's marker.
 
 #![cfg(unix)]
 
@@ -13,9 +11,6 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
-
-// Red until #1180: the unmarked test skips these and the ignored one runs them.
-include!("fetch_fixed_point_red.rs");
 
 const MID: &str = "AR-002-mid";
 const AFTER: &str = "AR-003-after";
@@ -357,43 +352,11 @@ fn sequence_failure(sequence: &Sequence) -> Option<String> {
     result.err().map(|err| format!("{}: {err}", sequence.name))
 }
 
-fn failures(red: bool) -> Vec<String> {
-    let is_red = |name: &str| RED_UNTIL_1180.contains(&name);
-    let rows = rows();
-    let mut failures = rows
-        .iter()
-        .filter(|row| is_red(&row.name) == red)
-        .filter_map(row_failure)
-        .collect::<Vec<_>>();
-    failures.extend(
-        SEQUENCES
-            .iter()
-            .filter(|sequence| is_red(sequence.name) == red)
-            .filter_map(sequence_failure),
-    );
-    failures
-}
-
-/// Every shape that holds today keeps holding; the red list names only shapes that exist.
+/// Every row and every sequence reaches its fixed point on the first fetch.
 #[test]
 fn fetch_fixed_point_holds() {
-    let rows = rows();
-    let unknown = RED_UNTIL_1180
-        .iter()
-        .filter(|red| {
-            !rows.iter().any(|row| row.name == **red)
-                && !SEQUENCES.iter().any(|sequence| sequence.name == **red)
-        })
-        .collect::<Vec<_>>();
-    assert!(unknown.is_empty(), "red list names no shape: {unknown:?}");
-    let failures = failures(false);
-    assert!(failures.is_empty(), "{}", failures.join("\n"));
-}
-
-#[test]
-#[ignore = "red until #1180 makes a re-fetch of unchanged output leave the home as it is; implement removes this"]
-fn fetch_fixed_point_red() {
-    let failures = failures(true);
+    let mut failures = rows().iter().filter_map(row_failure).collect::<Vec<_>>();
+    failures.extend(SEQUENCES.iter().filter_map(sequence_failure));
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
