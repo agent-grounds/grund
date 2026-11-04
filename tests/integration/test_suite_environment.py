@@ -72,6 +72,13 @@ subprocess.run = run
 gate.inputs()
 print(json.dumps(builds))
 """
+NO_GIT_CHILD = """
+import json, os, sys
+sys.dont_write_bytecode = True
+sys.path.insert(0, sys.argv[1])
+import suite_environment
+print(json.dumps(suite_environment.without_repository_variables(os.environ)))
+"""
 PYTHON_PROBE = f"""
 import os
 import subprocess
@@ -257,8 +264,6 @@ class HookedWorktree:
                 self.assertEqual(AUTHOR, variables.get("GIT_AUTHOR_NAME"))
 
 
-@unittest.skip("red until #1158 the suite wrappers remove git's repository variables; "
-               "implement removes this")
 class PythonGateTests(HookedWorktree, unittest.TestCase):
     """§AR-ci.3.4: the gate's own `inputs()` and `run_tests`, on a `unittest` tree of its own."""
 
@@ -314,8 +319,6 @@ class PythonGateTests(HookedWorktree, unittest.TestCase):
                              "a build inputs() starts inherited these repository variables")
 
 
-@unittest.skip("red until #1158 the suite wrappers remove git's repository variables; "
-               "implement removes this")
 class CargoSuiteTests(HookedWorktree, unittest.TestCase):
     """§AR-ci.requirements.5.2: `scripts/run_cargo_suite.py` on a crate of its own."""
 
@@ -337,6 +340,21 @@ class CargoSuiteTests(HookedWorktree, unittest.TestCase):
                                str(self.crate / "Cargo.toml"), "--test", "probe"],
                               cwd=REPO, env=environment, capture_output=True,
                               encoding="utf-8", errors="replace", timeout=600)
+
+
+class NoGitTests(unittest.TestCase):
+    """§AR-ci-suite-environment.1: with no `git` to start, nothing is removed and nothing raises."""
+
+    def test_with_no_git_to_start_the_environment_stands_and_nothing_raises(self):
+        empty = tempfile.TemporaryDirectory()
+        self.addCleanup(empty.cleanup)
+        # Only the child loses git: this process keeps its own PATH.
+        given = str(Path(empty.name) / "hooked")
+        environment = dict(os.environ, PATH=empty.name, GIT_DIR=given)
+        result = subprocess.run([sys.executable, "-c", NO_GIT_CHILD, str(SCRIPTS)], cwd=empty.name,
+                                env=environment, capture_output=True, text=True, timeout=60)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(given, json.loads(result.stdout).get("GIT_DIR"), result.stdout)
 
 
 if __name__ == "__main__":
