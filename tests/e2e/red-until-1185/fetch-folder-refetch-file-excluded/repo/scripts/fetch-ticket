@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+
+printf '# %s: The fetched ticket\n\nThe fetched body.\n' "$1"

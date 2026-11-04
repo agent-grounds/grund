@@ -1,0 +1,17 @@
+grund_config_version = 1
+
+[id]
+format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z-]*"
+
+[[kinds]]
+kind = "TICKET"
+folder = "docs/tickets"
+index = false
+format = "{kind}-{number}"
+fetch = "scripts/fetch-ticket"
+
+[scan]
+include = ["docs"]
+extensions = ["rs"]
+respect_gitignore = false

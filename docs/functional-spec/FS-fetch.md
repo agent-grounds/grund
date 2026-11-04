@@ -129,6 +129,46 @@ The replacement is atomic. A missing folder may be created only as part of the
 successful final installation; any discovery, validation, or write failure leaves the
 tree byte-identical and exits 2.
 
+### 5.1 The declaring file is found by the scan's walk
+
+grund looks for the declaring file by walking `<home>` recursively the way a scan does, so
+it reads only what that walk admits: a `.md` file the project's sources read as text
+([§FS-config-v2.schema.sources.languages](FS-config-v2.md#schemasourceslanguages-languages-admits-languages-and-only-it-does), [§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language), version
+1's `extensions` in [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)), with no hidden name, ignore-file rule or exclusion
+keeping it out. A file the walk skips is not found, so under any name but `<home>/<ID>.md`
+it is neither replaced nor in the way: grund writes `<home>/<ID>.md` beside it. A rule
+that covers `<home>` itself keeps nothing out, because the walk starts there.
+
+A link is followed as a scan follows it ([§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)), so a link the walk admits
+and that declares the requested ID is the declaring file: its path is replaced by a
+regular file, and what it led to is left alone.
+
+### 5.2 `<home>/<ID>.md` is read whatever the walk admits
+
+When the walk finds no declaring file the write would land on `<home>/<ID>.md`, so what
+already stands at that one path is judged by what it holds, whether or not the walk
+admitted it. `md = "json"`, a `languages` list without Markdown, a version 1 `extensions`
+list without `md`, an ignore-file rule and an exclusion can each keep the file from the
+walk, and none of them says anything about what it declares. It is read as the walk's
+files are, and what it holds decides:
+
+- A file declaring the requested ID alone is the declaring file and is replaced, so a
+  second `grund fetch` of one ID rewrites the snapshot the first wrote under any of those
+  configurations.
+- A file declaring the requested ID beside anything else is refused:
+  `snapshot file <path> contains the requested ID beside other content`.
+- A file declaring another ID is refused:
+  `snapshot file <path> already exists for a different ID`.
+- A file declaring nothing, empty or prose alike, is refused:
+  `snapshot file <path> already exists and does not declare <ID>`. It holds no different
+  ID, and `fetch` owns only the requested declaration ([§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)).
+- A link that leads anywhere and a directory are refused and left as they are:
+  `snapshot file <path> is not a regular file`. What a link leads to is not read here,
+  so this read can never replace a link.
+
+Reading the file here admits it to nothing else: a scan still skips it, and so does every
+command that scans.
+
 ## 6. Stability and ownership
 
 Fetching unchanged output is idempotent: it leaves the same file set and bytes. Stable

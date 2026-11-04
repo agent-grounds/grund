@@ -1,0 +1,14 @@
+grund_config_version = 2
+project_name = "tickets"
+
+[schema.sources]
+languages = ["markdown", "json"]
+
+[schema.sources.extensions]
+md = "json"
+
+[schema.kinds.TICKET]
+folders = ["docs/tickets"]
+id_format = "{kind}-{number}"
+index = false
+fetch = "scripts/fetch-ticket"

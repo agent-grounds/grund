@@ -66,6 +66,10 @@ mod fetch_subsection_headings;
 #[path = "support/dotdot_scope_root_names.rs"]
 mod dotdot_scope_root_names;
 
+// §FS-fetch.5.2: issue #1185's read of `<home>/<ID>.md`, its cases run alone.
+#[path = "support/fetch_folder_home_read.rs"]
+mod fetch_folder_home_read;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
