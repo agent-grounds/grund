@@ -188,3 +188,21 @@ class RegressionTests(unittest.TestCase):
             " migrate it with grund config migrate --to 2 packages/alpha",
         ), result.warnings)
         self.assertEqual((), result.run_cautions)
+
+    # Red until #1138 names a grouping block's config findings; implement removes this.
+    @unittest.expectedFailure
+    def test_check_and_validate_config_name_a_grouping_blocks_config_findings(self):
+        # §FS-check.4.11.3: each include_root = false block the workspace expansion reaches,
+        # in check's report.warnings and in validate_config's warnings, as a member's are.
+        line = ("group/grund.toml is version 1;"
+                " migrate it with grund config migrate --to 2 group")
+        with temporary() as temp:
+            report = self.module.check(
+                fixture(temp, "workspace-grouping-block-version-1-check")).report
+        self.assertEqual((("config-version-1", line),),
+                         tuple((f.code, f.message) for f in report.warnings))
+        self.assertEqual((), report.errors)
+        with temporary() as temp:
+            result = self.module.validate_config(
+                root=fixture(temp, "workspace-grouping-block-version-1-validate"))
+        self.assertEqual((line,), result.warnings)

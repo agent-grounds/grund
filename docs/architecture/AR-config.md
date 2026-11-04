@@ -112,7 +112,9 @@ warnings }` carries what one invocation decided and what workspace expansion
 learned about this checkout. Its `scope` holds the full-tree and wide-resolution
 flags, the citing-side classification switch and the `cover --lines` ranges; its
 `workspace` holds the boundary roots, project roots, scope path and absent
-optional members, and the run's kind table: one row per project the config
+optional members, the configs of the `include_root = false` blocks expansion
+loaded to read their members — no project, but each named by the config
+findings ([§FS-check.4.11.3](../functional-spec/FS-check.md#4113-once-per-config-not-once-per-scope)) — and the run's kind table: one row per project the config
 declares, holding that project's kinds, its named-sections setting and each
 kind's scalar fields with their `one_of` values, built,
 judged against the pinned `[citations]` targets and held by one call into

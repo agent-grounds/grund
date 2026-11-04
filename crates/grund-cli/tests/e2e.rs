@@ -54,6 +54,10 @@ mod isolated_member_example;
 #[path = "support/workspace_config_findings.rs"]
 mod workspace_config_findings;
 
+// §FS-check.4.11.3: issue #1138's grouping block config findings, its cases run alone.
+#[path = "support/grouping_block_config_findings.rs"]
+mod grouping_block_config_findings;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
