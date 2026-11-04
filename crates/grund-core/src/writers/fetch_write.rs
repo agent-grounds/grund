@@ -1,17 +1,16 @@
-//! Snapshot-home discovery and declaration ownership for the explicit
-//! materializer (§FS-fetch.4, §FS-fetch.5); the shared writer in
-//! `atomic_install.rs` installs what they decide (§REQ-no-data-loss.2).
+//! Snapshot-home discovery for the explicit materializer (§FS-fetch.4, §FS-fetch.5), deciding from
+//! what `fetch_home.rs` reads; the shared writer in `atomic_install.rs` installs what they decide
+//! (§REQ-no-data-loss.2).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::atomic_install::{Install, InstallFailure, atomic_install};
 use super::fetch::{FetchFailure, fetch_io, fetch_operational};
+use super::fetch_home::{Requested, declarations_at_depth, refuse_nested_declaration};
 use crate::config::Config;
-use crate::grammar::{
-    Grammar, MarkdownBlocks, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
-};
-use crate::model::{Id, OperationDiagnostic, format_path};
-use crate::scanner::{markdown_heading_level, walk_scannable_files_with_sources};
+use crate::grammar::Grammar;
+use crate::model::{OperationDiagnostic, format_path};
+use crate::scanner::walk_scannable_files_with_sources;
 use crate::sources::{path_exists, path_is_dir, read_bytes};
 
 /// `ignore::Error` owns the I/O error but does not expose it through `source()`.
@@ -55,102 +54,11 @@ fn fetch_walk_failure(
     fetch_operational(message)
 }
 
-#[derive(Clone)]
-struct SnapshotDeclaration {
-    id: Id,
-    start: usize,
-    end: usize,
-    path: Option<PathBuf>,
-}
-
-fn declarations_at_depth(
-    bytes: &[u8],
-    grammar: &Grammar,
-    depth: usize,
-) -> std::result::Result<Vec<SnapshotDeclaration>, FetchFailure> {
-    let text = std::str::from_utf8(bytes)
-        .map_err(|_| fetch_operational("snapshot home is not UTF-8 Markdown"))?;
-    let mut headings = Vec::<(usize, Option<Id>)>::new();
-    let mut offset = 0usize;
-    // §FS-check.1.1.5.2: the whole snapshot home, so its front matter holds no heading.
-    let mut blocks = MarkdownBlocks::file(text);
-    for line in text.split_inclusive('\n') {
-        let without_newline = line.strip_suffix('\n').unwrap_or(line);
-        let content = without_newline
-            .strip_suffix('\r')
-            .unwrap_or(without_newline);
-        let trimmed = content.trim_start();
-        // §FS-check.1.1.5.1, §FS-check.1.1.5.2: neither a fence, a raw-text HTML block
-        // nor front matter holds a heading.
-        if !blocks.line(content).may_be_heading() {
-            offset += line.len();
-            continue;
-        }
-        let hashes = trimmed.bytes().take_while(|byte| *byte == b'#').count();
-        if markdown_heading_level(trimmed) == Some(depth) {
-            let start = offset + content.len() - trimmed.len();
-            let tail = trimmed[hashes..].trim_start();
-            let id = match tail.split_once(':') {
-                Some((raw, title)) => match parse_id_arg(raw.trim(), grammar) {
-                    Ok((id, None)) if !title.trim().is_empty() => Some(id),
-                    Ok((_, None)) => {
-                        return Err(fetch_operational(format!(
-                            "snapshot home has malformed declaration heading `{}`",
-                            tail.trim()
-                        )));
-                    }
-                    _ if near_miss_heading(grammar, trimmed, false, true).is_some() => {
-                        return Err(fetch_operational(format!(
-                            "snapshot home has malformed declaration heading `{}`",
-                            tail.trim()
-                        )));
-                    }
-                    _ => None,
-                },
-                None if parse_longest_id_prefix(tail, grammar).is_some() => {
-                    return Err(fetch_operational(format!(
-                        "snapshot home has malformed declaration heading `{}`",
-                        tail.trim()
-                    )));
-                }
-                None => None,
-            };
-            headings.push((start, id));
-        }
-        offset += line.len();
-    }
-    Ok(headings
-        .iter()
-        .enumerate()
-        .filter_map(|(index, (start, id))| {
-            let id = id.as_ref()?;
-            // The blank separator before the next sibling is outside the
-            // declaration-local replacement and therefore remains byte-for-byte.
-            let end = headings.get(index + 1).map_or(bytes.len(), |next| {
-                let end = next.0;
-                if bytes[..end].ends_with(b"\r\n\r\n") {
-                    end - 2
-                } else if bytes[..end].ends_with(b"\n\n") {
-                    end - 1
-                } else {
-                    end
-                }
-            });
-            Some(SnapshotDeclaration {
-                id: id.clone(),
-                start: *start,
-                end,
-                path: None,
-            })
-        })
-        .collect())
-}
-
 /// §FS-fetch.4: replace only the named H2 or insert it in ID order.
 pub(super) fn write_file_home(
     path: &Path,
     grammar: &Grammar,
-    requested: &Id,
+    requested: &Requested<'_>,
     snapshot: &[u8],
     diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
@@ -169,7 +77,7 @@ pub(super) fn write_file_home(
     let declarations = declarations_at_depth(&original, grammar, 2)?;
     let matching = declarations
         .iter()
-        .filter(|declaration| &declaration.id == requested)
+        .filter(|declaration| &declaration.id == requested.id)
         .collect::<Vec<_>>();
     if matching.len() > 1 {
         return Err(fetch_operational(
@@ -177,9 +85,17 @@ pub(super) fn write_file_home(
         ));
     }
     let (start, end) = if let Some(existing) = matching.first() {
+        refuse_nested_declaration(
+            &original,
+            existing,
+            path,
+            grammar,
+            requested,
+            "to its own H2",
+        )?;
         (existing.start, existing.end)
     } else {
-        let requested = grammar.render(requested, 3);
+        let requested = grammar.render(requested.id, 3);
         let start = declarations
             .iter()
             .find(|declaration| grammar.render(&declaration.id, 3) > requested)
@@ -216,12 +132,13 @@ pub(super) fn write_file_home(
 pub(super) fn write_folder_home(
     folder: &Path,
     config: &Config,
-    requested: &Id,
+    requested: &Requested<'_>,
     local: &str,
     snapshot: &[u8],
     diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
     let mut matches = Vec::new();
+    let mut nested = None;
     if path_exists(folder) {
         if !path_is_dir(folder) {
             return Err(fetch_operational(format!(
@@ -276,11 +193,11 @@ pub(super) fn write_folder_home(
             let declarations = declarations_at_depth(&bytes, &config.grammar, 1)?;
             let contains_requested = declarations
                 .iter()
-                .any(|declaration| declaration.id == *requested);
+                .any(|declaration| declaration.id == *requested.id);
             if contains_requested {
                 let declaration = declarations
                     .iter()
-                    .find(|declaration| declaration.id == *requested)
+                    .find(|declaration| declaration.id == *requested.id)
                     .expect("contains requested declaration");
                 let has_content_before = bytes[..declaration.start]
                     .iter()
@@ -296,7 +213,16 @@ pub(super) fn write_folder_home(
                 }
             }
             for mut declaration in declarations {
-                if declaration.id == *requested {
+                if declaration.id == *requested.id {
+                    nested = refuse_nested_declaration(
+                        &bytes,
+                        &declaration,
+                        &path,
+                        &config.grammar,
+                        requested,
+                        "to its own file",
+                    )
+                    .err();
                     declaration.path = Some(path.clone());
                     matches.push(declaration);
                 }
@@ -307,6 +233,9 @@ pub(super) fn write_folder_home(
         return Err(fetch_operational(
             "snapshot folder has multiple declarations for requested ID",
         ));
+    }
+    if let Some(refusal) = nested {
+        return Err(refusal);
     }
     let target = matches
         .first()

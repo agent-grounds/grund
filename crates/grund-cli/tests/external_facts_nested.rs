@@ -76,7 +76,6 @@ fn external_facts_nested_declaration_never_turns_a_green_tree_red() {
 /// §FS-fetch.3.1: every form of line the next scan records is refused in the output, where a
 /// heading test would pass all three and the near miss would turn a green tree red.
 #[test]
-#[ignore = "red until #1182 refuses every output line the next scan records; implement removes this"]
 fn external_facts_output_line_the_scan_records_is_refused_in_every_form() {
     for (name, line, nested) in [
         ("output-comment", "// AR-002-other: Other", "`AR-002-other`"),
@@ -124,7 +123,6 @@ fn external_facts_accepted_output_fetches_again() {
 
 /// §FS-fetch.6.nested on a CRLF home: `<n>` counts the file's lines and no byte moves.
 #[test]
-#[ignore = "red until #1182 refuses a fetch whose replaced bytes hold a declaration; implement removes this"]
 fn external_facts_home_nested_declaration_in_a_crlf_home_is_refused() {
     let root = ar_project(
         "home-nested-crlf",

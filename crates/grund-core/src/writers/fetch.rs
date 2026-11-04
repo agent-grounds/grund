@@ -5,6 +5,7 @@
 
 use std::path::{Path, PathBuf};
 
+use super::fetch_home::Requested;
 use super::fetch_write::{write_file_home, write_folder_home};
 use crate::config::{Config, KindConfig, run_warning_findings};
 use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
@@ -236,18 +237,23 @@ fn fetch_run(
         }
     };
     validate_fetched_declaration(snapshot, local, depth, &selected.grammar)?;
+    let requested = Requested {
+        id: &id,
+        raw,
+        report_base: &report_base,
+    };
     match home {
         FetchHome::File(path) => write_file_home(
             &path,
             &selected.grammar,
-            &id,
+            &requested,
             snapshot.as_bytes(),
             diagnostic,
         ),
         FetchHome::Folder(path) => write_folder_home(
             &path,
             &selected,
-            &id,
+            &requested,
             local,
             snapshot.as_bytes(),
             diagnostic,
@@ -306,11 +312,11 @@ pub(super) fn validate_fetched_declaration(
         }
         let hashes = trimmed.bytes().take_while(|byte| *byte == b'#').count();
         // §FS-fetch.3.1: a line below the requested declaration that the scanner would record
-        // as a declaration, conforming or near miss, is refused at any depth before the depth
-        // limit, by the scanner's own reading rather than this validator's heading test.
+        // as a declaration, conforming or near miss, by the scanner's own reading. A heading at
+        // the native depth or shallower keeps the depth messages below; any other form is here.
         if declaration_count == 1
             && block.may_be_heading()
-            && hashes > native_depth
+            && !(1..=native_depth).contains(&hashes)
             && let Some(nested) = markdown_line_records(grammar, line)
         {
             return Err(fetch_operational(format!(
