@@ -1,0 +1,1 @@
+error: grund.toml:12: `[schema.kinds.FS] index` must name a Markdown file (`index.txt` is not a `.md` file)

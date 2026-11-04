@@ -74,8 +74,6 @@ const CITES_ALPHA: &str = "# FS-b: Beta\n\nBeta cites \u{a7}FS-a.\n";
 /// message that names the value and the `.md` suffix it lacks, though `[schema.sources]`
 /// reads `.txt` as Markdown; `check` and `config show` exit 2, `config validate` 1.
 #[test]
-#[ignore = "red until #1184 appends the name-test parenthetical to the v2 index refusal; \
-            implement removes this"]
 fn a_v2_index_failing_the_name_test_is_refused_naming_the_name() {
     let fixture = Fixture::new(
         &index_config("index.txt"),

@@ -393,8 +393,11 @@ catalog lists every finding code, its severity, and the setting that turns it on
   Markdown and in every doc-comment form: Rustdoc, Javadoc, Python docstrings,
   Go, JSDoc and the rest ([§GOAL-polyglot-citation](../goals.md#goal-polyglot-citation-ids-cite-cleanly-from-anywhere-they-are-useful)). It names an ID, not a path,
   so it survives a moved file and a reworded heading.
-- **Clickable in Markdown.** In a `.md` file, `grund fmt --write` wraps each
-  citation in a link to its declaration. It computes the anchor exactly as
+- **Clickable in Markdown.** In a file grund reads as Markdown, `grund fmt --write`
+  wraps each citation in a link to its declaration. Under a version 1 config that
+  is a `.md` file. Under version 2 it is any file `[schema.sources]` gives a
+  `document` language, whatever its name, such as `notes.txt` under
+  `txt = "markdown"` ([§FS-fmt.6.1](../functional-spec/FS-fmt.md#61-scope)). It computes the anchor exactly as
   GitHub does ([§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)) and rewrites the link when the target
   moves or its heading changes. Generated configs turn this on with
   `[fmt.cross_refs]`, and a kind's index is always linked ([§FS-fmt.6](../functional-spec/FS-fmt.md#6-cross-reference-emission)). Source

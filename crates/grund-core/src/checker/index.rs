@@ -42,10 +42,13 @@ pub(super) struct KindIndexTarget<'a> {
 /// therefore invisible to every rule below.
 ///
 /// Why a non-`.md` `index` is dropped rather than reported: every rule below is
-/// stated in terms of what `grund fmt --cross-refs` would write, and that pass
-/// runs on `.md` files only (§FS-fmt.6.1). A non-Markdown index is a file the
-/// formatter can never repair, and the honest report about one is no report at
-/// all rather than a finding with no fix.
+/// stated in terms of what `grund fmt --cross-refs` would write. In version 1 that
+/// pass reads a file as Markdown by its `.md` extension (§FS-fmt.6.1), so a non-`.md`
+/// index is a file the formatter can never repair, and the honest report about one
+/// is no report at all rather than a finding with no fix. In version 2 the pass goes
+/// by the language `[schema.sources]` gives the file, so the suffix says nothing about
+/// what it reaches: this is only the name test version 2 carries over, and an
+/// `index.md` read as another language stays a target (§FS-config.3.4.2.3.2).
 pub(super) fn kind_index_targets<'a>(
     schema: &'a Schema,
     frame: Frame<'_>,
@@ -59,9 +62,9 @@ pub(super) fn kind_index_targets<'a>(
                 .map(move |(folder, index)| (row, folder, index))
         })
         .filter_map(|(row, folder, index)| {
-            // §FS-config.3.4 rejects an `index` that does not name a `.md` file,
-            // so this filter never fires on a config that loaded; it states the
-            // Markdown assumption every rule below rests on.
+            // §FS-config.3.4.2.3 refuses an `index` that does not name a `.md` file, so
+            // this filter never fires on a config that loaded; it states the name every
+            // rule below rests on, which only in version 1 settles how the file is read.
             if index.extension().and_then(|ext| ext.to_str()) != Some("md") {
                 return None;
             }

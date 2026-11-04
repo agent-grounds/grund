@@ -289,19 +289,24 @@ pub(super) fn normalize_place(written: &str) -> Option<String> {
     Some(parts.join("/"))
 }
 
-/// Why an `index` value cannot name the folder's index: it must be a Markdown
-/// file inside the folder, as v1's is (§FS-config.3.4).
-fn index_name_error(name: &str) -> Option<&'static str> {
+/// Why an `index` value cannot name the folder's index: it must name a file inside
+/// the folder whose name ends in `.md`, as v1's must (§FS-config.3.4.2.3). The suffix
+/// is a test of the name carried over from v1, which never asks the language
+/// `[schema.sources]` reads the file as (§FS-config.3.4.2.3.2), so the refusal says
+/// that the name is what failed (§FS-config.3.4.2.3.1).
+fn index_name_error(name: &str) -> Option<String> {
     let inside = !name.is_empty()
         && !name.contains('\\')
         && Path::new(name)
             .components()
             .all(|component| matches!(component, Component::Normal(_)));
     if !inside {
-        return Some("must name a file inside the folder");
+        return Some("must name a file inside the folder".to_string());
     }
     if Path::new(name).extension().and_then(|ext| ext.to_str()) != Some("md") {
-        return Some("must name a Markdown file");
+        return Some(format!(
+            "must name a Markdown file (`{name}` is not a `.md` file)"
+        ));
     }
     None
 }

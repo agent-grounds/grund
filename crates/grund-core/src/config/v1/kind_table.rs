@@ -377,7 +377,8 @@ pub(super) fn parse_kinds_key(
 ///   `grund fmt --write` would then rewrite, a file outside the tree the config
 ///   describes (§FS-non-goals.11). `.` is rejected with them: it names the same
 ///   file by a path no message should have to print.
-/// * **It names a Markdown file.** `--cross-refs` runs on `.md` files only
+/// * **It names a Markdown file.** `--cross-refs` runs on the files a run reads as
+///   Markdown, and version 1 reads a file so by its `.md` extension alone
 ///   (§FS-fmt.6.1), so an index with any other extension is one the formatter can
 ///   never linkify — and §FS-check.3.17.3, whose whole licence is that
 ///   `grund fmt --write` fixes it, would be an error no command could clear
