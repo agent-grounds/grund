@@ -7,13 +7,16 @@
 
 use std::collections::BTreeMap;
 
-use super::context::section_path_is_numeric;
+use super::context::{markdown_heading_level, section_path_is_numeric};
 use super::embedded_value_context::{MISPLACED_MARKER, invalid_embedded_marker};
 use super::extents::{DeclarationBodies, body_end, declaration_bodies};
 use super::record::record_doc_comment_plain_headings;
 use super::section_record::section_value_root;
 use crate::config::Schema;
-use crate::grammar::{named_mode_section_path, reduce_heading_text, relative_heading_form};
+use crate::grammar::{
+    Grammar, atx_heading_text, named_mode_section_path, reduce_heading_text, relative_heading_form,
+    section_path,
+};
 use crate::model::{
     Catalog, Declaration, EmbeddedValueRoot, FileRecord, HeadingKind, InvalidValueSite,
     RecordedHeading, RelativeSectionParent, SectionInfo, UnmarkedHeadingCandidate,
@@ -321,9 +324,16 @@ pub(crate) fn relative_answer(
     let Some(parent) = parent_path(record, decl, end, line, level) else {
         return RelativeAnswer::NoParent;
     };
-    let Some(form) = relative_heading_form(title) else {
-        return RelativeAnswer::Refused;
-    };
+    relative_section_path(&parent, title, named_sections)
+        .map_or(RelativeAnswer::Refused, RelativeAnswer::Section)
+}
+
+/// The canonical path of the relative heading titled `title` under a parent at `parent`,
+/// empty for the declaration itself, or `None` where the form's rules refuse it
+/// (§FS-declarations.section.relative.form). What needs no record of the file: the one
+/// reading the parent pass and [`unmarked_below_declaration`] share.
+fn relative_section_path(parent: &str, title: &str, named_sections: bool) -> Option<String> {
+    let form = relative_heading_form(title)?;
     let canonical = if parent.is_empty() {
         form.component.to_string()
     } else {
@@ -338,10 +348,23 @@ pub(crate) fn relative_answer(
             && named_mode_section_path(&canonical, |part| {
                 part.bytes().all(|byte| byte.is_ascii_digit())
             }));
-    if !shaped || !form.fits(numeric) {
-        return RelativeAnswer::Refused;
+    (shaped && form.fits(numeric)).then_some(canonical)
+}
+
+/// Whether the scan reads this Markdown line, directly below a declaration one level up, as an
+/// unmarked heading (§FS-declarations.checks.unmarked-heading): an ATX heading at `level` that
+/// is neither a complete section path, by the pattern the file pass asks, nor a relative heading
+/// whose parent is that declaration (§FS-declarations.section.relative.parent). The answer for a
+/// reader holding no record yet: fetch's subsection refusal asks it of output it has not written
+/// (§FS-fetch.3.2), so it refuses what the next scan would find.
+pub(crate) fn unmarked_below_declaration(grammar: &Grammar, line: &str, level: usize) -> bool {
+    if markdown_heading_level(line) != Some(level) {
+        return false;
     }
-    RelativeAnswer::Section(canonical)
+    let complete = grammar.section_re.captures(line);
+    let title = atx_heading_text(line.trim_start(), level);
+    complete.as_ref().and_then(section_path).is_none()
+        && relative_section_path("", title, grammar.named_sections).is_none()
 }
 
 /// Whether `heading` is one a body's section reading sees: an ATX heading in

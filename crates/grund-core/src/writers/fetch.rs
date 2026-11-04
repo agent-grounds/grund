@@ -10,6 +10,7 @@ use crate::config::{Config, KindConfig, run_warning_findings};
 use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
 use crate::resolver::settled_run_warnings;
+use crate::scanner::unmarked_below_declaration;
 use crate::workspace::{expand_workspace_tree, resolve_workspace_config, split_qualified_id_arg};
 
 /// Which public CLI exit class a fetch refusal belongs to (§FS-fetch.7).
@@ -296,7 +297,7 @@ pub(super) fn validate_fetched_declaration(
     let mut blocks = MarkdownBlocks::default();
     let mut declaration_count = 0usize;
     let mut first_content = true;
-    for line in text.lines() {
+    for (index, line) in text.lines().enumerate() {
         let trimmed = line.trim_start();
         let block = blocks.line(line);
         if block.in_fence() {
@@ -315,6 +316,18 @@ pub(super) fn validate_fetched_declaration(
             return Err(fetch_operational(format!(
                 "fetch output nests declaration `{nested}` inside requested `{requested}`; \
                  fetch output must hold only the requested declaration"
+            )));
+        }
+        // §FS-fetch.3.2: at subsection depth, a heading the next scan would call unmarked.
+        if declaration_count == 1
+            && block.may_be_heading()
+            && unmarked_below_declaration(grammar, line, native_depth + 1)
+        {
+            return Err(fetch_operational(format!(
+                "fetch output line {}: heading `{}` is not a section of `{requested}`; \
+                 number it, fence it, or make it a bold label",
+                index + 1,
+                line.trim_end()
             )));
         }
         // An ATX heading's `#`s end at a space or a tab, as the scanner reads them

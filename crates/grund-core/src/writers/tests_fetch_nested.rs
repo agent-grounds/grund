@@ -1,7 +1,7 @@
 //! Focused tests for the nested-declaration refusal of fetch's output
 //! validator (§FS-fetch.3.1): a heading the scanner would read as a declaration
 //! is refused by its ID at any depth below the requested one, independent of
-//! the one-depth heading limit, while plain and fenced subsections stay accepted.
+//! the one-depth heading limit, while numbered and fenced subsections stay accepted.
 
 use super::fetch::validate_fetched_declaration;
 use crate::testing::{numbered_config, test_root};
@@ -40,12 +40,12 @@ fn nested_requested_id_is_refused() {
 }
 
 #[test]
-fn plain_and_fenced_subsections_stay_accepted() {
+fn numbered_and_fenced_subsections_stay_accepted() {
     validate(
         "nested_subsection_accepted",
-        "## AR-001-thing: Thing\n\n### notes: Notes\n\nprose\n",
+        "## AR-001-thing: Thing\n\n### 1. Notes\n\nprose\n",
     )
-    .expect("a named subsection is not a declaration");
+    .expect("a numbered subsection is not a declaration");
     validate(
         "nested_fenced_heading_accepted",
         "## AR-001-thing: Thing\n\n```\n### AR-002-other: Other\n```\n",

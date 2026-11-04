@@ -38,6 +38,11 @@ A heading anywhere below the declaration that would itself declare an ID, of
 any kind and at any depth, is refused, so a fetcher that copies provider
 headings must fence them as the example does
 ([§FS-fetch.3.1](../functional-spec/FS-fetch.md#31-a-nested-declaration-is-refused)).
+A heading one level below the declaration must also carry a section path the
+project's configuration admits, such as `### 1. Notes`, or `### notes: Notes`
+with named sections on. Any other is refused rather than left for the next
+`grund check` to reject, so number it, fence it, or make it a bold label
+([§FS-fetch.3.2](../functional-spec/FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)).
 Grund validates the complete output before atomically replacing only that ID's
 snapshot. It preserves accepted bytes verbatim and inserts a new file-home
 declaration in ID order ([§FS-fetch.3](../functional-spec/FS-fetch.md#3-accepted-declaration),
