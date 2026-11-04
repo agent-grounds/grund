@@ -1,10 +1,12 @@
 //! Focused tests for the bare-heading refusal of fetch's output validator (§FS-fetch.3.3): hashes
 //! that end the line are a heading to the next scan (§FS-declarations.checks.unmarked-heading.1),
 //! so each case asks the validator and the scanner about the same bytes, and shows what the scan
-//! would do with the text after the line.
+//! would do with the text after the line. The last tests ask the write path about such lines.
 
 use super::fetch::validate_fetched_declaration;
+use super::fetch_write::{write_file_home, write_folder_home};
 use crate::config::load_config;
+use crate::grammar::parse_id_arg;
 use crate::testing::{scan_findings, test_root, write};
 
 #[derive(Clone, Copy, Debug)]
@@ -123,7 +125,6 @@ fn the_next_scan_reads_each_bare_heading_as_a_heading() {
 
 /// Every row is asked before deciding, so a failure lists each line the validator gets wrong.
 #[test]
-#[ignore = "red until #1163 refuses a bare heading in fetch output; implement removes this"]
 fn a_bare_heading_is_refused_naming_its_line_and_the_way_to_keep_the_text() {
     let wrong = CLOSERS
         .into_iter()
@@ -144,7 +145,6 @@ fn a_bare_heading_is_refused_naming_its_line_and_the_way_to_keep_the_text() {
 /// The slice that reads a declaration's title starts one byte past the hashes, which a bare
 /// heading at the native depth does not have: reaching it would be a panic and not a refusal.
 #[test]
-#[ignore = "red until #1163 refuses a bare heading in fetch output; implement removes this"]
 fn a_bare_heading_that_ends_the_output_is_refused_without_a_panic() {
     assert_eq!(
         validate(
@@ -272,4 +272,77 @@ fn a_bare_heading_ahead_of_the_declaration_stays_refused_without_a_panic() {
             "{text:?}"
         );
     }
+}
+
+/// §FS-fetch.5, §FS-fetch.3.3: the write path reads these as the next scan does, so a `folder`
+/// home's own declaration is replaced whole, and not refused as beside other content.
+#[test]
+fn a_folder_home_replaces_a_declaration_holding_a_line_the_next_scan_reads_as_content() {
+    for (index, line) in ["    #", "\t#"].into_iter().enumerate() {
+        let root = test_root(&format!("fetch_bare_refetch_folder_{index}"));
+        write(
+            &root.join("grund.toml"),
+            "grund_config_version = 1\n\n[id]\nnamed_sections = true\n\n\
+             [[kinds]]\nkind = \"AR\"\nfolder = \"docs/arch\"\n\n\
+             [scan]\ninclude = [\"docs\"]\nrespect_gitignore = false\n",
+        );
+        let home = root.join("docs/arch/AR-001-thing.md");
+        write(
+            &home,
+            &format!("# AR-001-thing: Thing\nkept\n{line}\nprose after\n"),
+        );
+        let config = load_config(&root).expect("load config");
+        let (id, _) = parse_id_arg("AR-001-thing", &config.grammar).expect("parse the ID");
+        let snapshot = "# AR-001-thing: Thing\nreplaced\n";
+        let written = write_folder_home(
+            &root.join("docs/arch"),
+            &config,
+            &id,
+            "AR-001-thing",
+            snapshot.as_bytes(),
+            &mut None,
+        );
+        assert_eq!(
+            written.map_err(|failure| failure.message),
+            Ok(()),
+            "{line:?}"
+        );
+        assert_eq!(
+            std::fs::read_to_string(&home).expect("read the home"),
+            snapshot,
+            "{line:?}"
+        );
+    }
+}
+
+/// §FS-fetch.4: only a line with no ID is narrowed to the next scan's heading reading. The
+/// scanner's declaration pattern takes an indented ID, so that line still ends the declaration
+/// a fetch replaces, and the sibling it declares is not replaced with it.
+#[test]
+fn an_indented_sibling_declaration_still_ends_the_replaced_declaration() {
+    let root = test_root("fetch_bare_refetch_indented_sibling");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n[id]\nnamed_sections = true\n\n\
+         [[kinds]]\nkind = \"AR\"\nfile = \"docs/arch.md\"\n",
+    );
+    let home = root.join("docs/arch.md");
+    write(
+        &home,
+        "# Architecture\n\n## AR-001-thing: Thing\nold\n\n    ## AR-002-other: Other\nother\n",
+    );
+    let config = load_config(&root).expect("load config");
+    let (id, _) = parse_id_arg("AR-001-thing", &config.grammar).expect("parse the ID");
+    let written = write_file_home(
+        &home,
+        &config.grammar,
+        &id,
+        b"## AR-001-thing: Thing\nnew\n",
+        &mut None,
+    );
+    assert_eq!(written.map_err(|failure| failure.message), Ok(()));
+    let after = std::fs::read_to_string(&home).expect("read the home");
+    assert!(after.contains("## AR-001-thing: Thing\nnew\n"), "{after}");
+    assert!(after.contains("## AR-002-other: Other\nother\n"), "{after}");
+    assert!(!after.contains("old"), "{after}");
 }

@@ -10,7 +10,7 @@ use crate::config::{Config, KindConfig, run_warning_findings};
 use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
 use crate::resolver::settled_run_warnings;
-use crate::scanner::unmarked_below_declaration;
+use crate::scanner::{markdown_heading_level, unmarked_below_declaration};
 use crate::workspace::{expand_workspace_tree, resolve_workspace_config, split_qualified_id_arg};
 
 /// Which public CLI exit class a fetch refusal belongs to (§FS-fetch.7).
@@ -330,8 +330,21 @@ pub(super) fn validate_fetched_declaration(
                 line.trim_end()
             )));
         }
-        // An ATX heading's `#`s end at a space or a tab, as the scanner reads them
-        // (§FS-declarations.checks.unmarked-heading.1).
+        // §FS-fetch.3.3: hashes ending the line are a heading to the next scan, asked of its own
+        // reading. Ahead of the declaration they are leading content, refused below.
+        if declaration_count == 1
+            && block.may_be_heading()
+            && trimmed.len() == hashes
+            && markdown_heading_level(line).is_some()
+        {
+            return Err(fetch_operational(format!(
+                "fetch output line {}: heading `{line}` has no text and cannot stay in \
+                 `{requested}`; fence it or drop it to keep the text after it",
+                index + 1,
+            )));
+        }
+        // Past the bare heading above, `#`s end at a space or a tab. Indented or over-long lines
+        // are read here too, though `markdown_heading_level` would not, so they stay refused.
         if block.may_be_heading()
             && hashes > 0
             && matches!(trimmed.as_bytes().get(hashes), Some(b' ' | b'\t'))

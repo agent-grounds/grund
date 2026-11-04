@@ -115,7 +115,12 @@ fn declarations_at_depth(
                 }
                 None => None,
             };
-            headings.push((start, id));
+            // §FS-fetch.4, §FS-fetch.3.3: an ID is read past any indent, as the scanner's
+            // declaration pattern does. A line with no ID ends the owned declaration only
+            // where the next scan reads a heading as written, so `    ##` stays inside it.
+            if id.is_some() || markdown_heading_level(content).is_some() {
+                headings.push((start, id));
+            }
         }
         offset += line.len();
     }

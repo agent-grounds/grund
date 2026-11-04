@@ -43,6 +43,9 @@ project's configuration admits, such as `### 1. Notes`, or `### notes: Notes`
 with named sections on. Any other is refused rather than left for the next
 `grund check` to reject, so number it, fence it, or make it a bold label
 ([§FS-fetch.3.2](../functional-spec/FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)).
+A line of hashes with nothing after them, such as `##`, is a heading too, and is
+refused: the next scan would end the declaration there or reject the line, so
+fence it or drop it to keep the text after it ([§FS-fetch.3.3](../functional-spec/FS-fetch.md#33-a-heading-with-no-text-is-still-a-heading)).
 Grund validates the complete output before atomically replacing only that ID's
 snapshot. It preserves accepted bytes verbatim and inserts a new file-home
 declaration in ID order ([§FS-fetch.3](../functional-spec/FS-fetch.md#3-accepted-declaration),
