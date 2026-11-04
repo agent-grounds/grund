@@ -153,3 +153,53 @@ fn every_command_names_an_ambiguous_site_at_the_base_dot() {
         "ambiguous ID: E2E-login (declared at ../dup.md:1, .:1)\n"
     );
 }
+
+/// The fixture with a broken stub for `E2E-login` beside the case.
+fn with_broken_stub(name: &str) -> Fixture {
+    let fixture = Fixture::new(name);
+    fs::write(
+        fixture.root.join("e2e/cases/s.md"),
+        "# E2E-login: [x](missing.md)\n",
+    )
+    .expect("write the stub");
+    fixture
+}
+
+/// A broken stub adds a repair to the refusal, and the repair names the record as the sites do.
+#[test]
+fn a_broken_stub_refusal_names_its_one_home_at_the_base_dot() {
+    let fixture = with_broken_stub("stub-one");
+    let text = fixture.run(&fixture.root.join(CASE), &["show", "E2E-login", AT_BASE]);
+    assert!(
+        text.starts_with("ambiguous ID: E2E-login (declared at ../s.md:1, .:1); "),
+        "{text}"
+    );
+    assert!(text.contains("; E2E-login is declared at .:1; "), "{text}");
+    let control = fixture.run(&fixture.root, &["show", "E2E-login", FROM_ROOT]);
+    assert!(
+        control.contains("; E2E-login is declared at e2e/cases/login:1; "),
+        "{control}"
+    );
+}
+
+#[test]
+fn a_broken_stub_refusal_names_several_homes_at_the_base_dot() {
+    let fixture = with_broken_stub("stub-several");
+    fs::write(
+        fixture.root.join("e2e/cases/dup.md"),
+        "# E2E-login: A duplicate\n\nBody.\n",
+    )
+    .expect("write the duplicate");
+    let text = fixture.run(&fixture.root.join(CASE), &["show", "E2E-login", AT_BASE]);
+    assert!(
+        text.contains("; E2E-login has several real declaration homes: ../dup.md:1, .:1"),
+        "{text}"
+    );
+    let control = fixture.run(&fixture.root, &["show", "E2E-login", FROM_ROOT]);
+    assert!(
+        control.contains(
+            "; E2E-login has several real declaration homes: e2e/cases/dup.md:1, e2e/cases/login:1"
+        ),
+        "{control}"
+    );
+}
