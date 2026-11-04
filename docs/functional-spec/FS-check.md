@@ -1546,7 +1546,7 @@ Name the config line to open, unread tree, cost and two remedies. Use the same s
 warning: group/grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.
 ```
 
-Never prescribe `[scan] include` for another project. Anchor at the block's `include_root` line, falling back to `[workspace]` if absent (unreachable with the default `true`). Render the location from this run's root ([§FS-errors.3](FS-errors.md#3-message-text)), and the unread tree as a normalized path under the block root, never a resolved path ([§FS-check.3.30.1](FS-check.md#3301-the-message)).
+Never prescribe `[scan] include` for another project. Anchor at the block's `include_root` line, falling back to `[workspace]` if absent (unreachable with the default `true`). Render the location from this run's root ([§FS-errors.3](FS-errors.md#3-message-text)), and the unread tree as a normalized path under the block root, never a resolved path ([§FS-check.3.30.1](FS-check.md#3301-the-message)). When the unread tree is the block root itself — a grouping block keeping a README of its own beside its members — that path is `.`, never an empty span, whatever directory the run starts from: the path is relative to the block root, not to the run's root.
 
 #### 4.10.6 One root, not every root
 

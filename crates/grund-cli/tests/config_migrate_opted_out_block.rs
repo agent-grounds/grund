@@ -141,11 +141,13 @@ dropped: grund.toml:5: [scan] include: include_root = false, so no project scans
 /// §FS-config-migrate.8.1.4: a block holding a file version 2's whole-root scope
 /// reads, and version 1's default scope never did, reaches the report gate in one
 /// run (§FS-check.4.10) rather than an `include` repair. The `differs:` lines are
-/// the unread-block warning as main prints it, empty path and twice included.
+/// the unread-block warning, its unread tree the block root named `.`
+/// (§FS-check.4.10.5, agent-grounds/grund#1145), and twice included.
 #[test]
+#[ignore = "red until #1145 names a block root that is the unread tree `.`; implement removes this"]
 fn block_holding_a_readme_or_agents_md_stops_at_the_report_gate_in_one_run() {
     let warning = "+ run-warning warning unread-workspace-block grund.toml:2:- grund.toml:2: \
-no project scans ``, so its citations are never checked. Set include_root = true, \
+no project scans `.`, so its citations are never checked. Set include_root = true, \
 or configure another project's source scope to read it.\n";
     for file in ["README.md", "AGENTS.md"] {
         let root = tree("unread-file", BARE);
