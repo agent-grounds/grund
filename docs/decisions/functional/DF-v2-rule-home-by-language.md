@@ -75,16 +75,21 @@ left out. `rules/rules.rs` alone stays refused, and so does
 
 The reason is what was reported: a rules file that loads and is never read. A
 `source` language does read its file, through its comment hosts, and a rule
-declared in a doc-comment there is in force and fires. So nothing goes unread, no
-requirement forbids the verdict, and the correction route in section 3 has no
-prior prohibition to prove for it. Refusing it would move a healthy project from
-`0` to `2` over something this report does not ask to refuse.
+declared in a doc-comment there is in force and fires. This change leaves the
+row's verdict where it was, so it is no verdict move and owes no route under
+[§REQ-backwards-compatibility](../../requirements/REQ-backwards-compatibility.md#req-backwards-compatibility-an-upgrade-never-changes-a-verdict-quietly). Refusing the row would take a project whose
+doc-comment rules are in force from `0` to `2`, which this report does not ask
+for.
 
 What that leaves standing is the name test for this one class of language:
 `rules/rules.rs` is refused where `md = "rust"` loads. That is the same intent
-with two verdicts, though here the rules are enforced rather than skipped.
-Whether a rule may live in a doc-comment at all, which a `folder` home already
-lets through, is a question for its own ticket.
+with two verdicts, though here a doc-comment rule is enforced rather than
+skipped. It also leaves a gap this record names and does not settle: a rule
+written in a form the language does not declare, under `md = "rust"` a Markdown
+`# RULE-x:` heading or, under the default `doc-comments`, a `//` comment, is
+dropped on a green run, with no warning. That gap belongs to the same ticket as
+the question it turns on: whether a rule may live outside Markdown at all, which
+a `folder` home already lets through.
 
 ## 3. Consequences
 
@@ -103,8 +108,9 @@ lets through, is a question for its own ticket.
   definition, now loads, and its rules apply, so the run reports what they find.
   No tree that passed stops passing: such a row was refused before anything was
   read.
-- **A home a `source` language reads does not move.** Its rules were read and in
-  force, and they still are ([§DF-v2-rule-home-by-language.2.3](DF-v2-rule-home-by-language.md#23-a-home-a-source-language-reads-keeps-the-answer-it-had)).
+- **A home a `source` language reads does not move.** A rule in a form that
+  language declares was in force and still is, and one in any other form declared
+  nothing and still does not ([§DF-v2-rule-home-by-language.2.3](DF-v2-rule-home-by-language.md#23-a-home-a-source-language-reads-keeps-the-answer-it-had)).
 
 **Which clause licenses the `0` to `2` moves.** [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids)
 does, and each of its conditions is met:
@@ -126,7 +132,7 @@ does, and each of its conditions is met:
 4. *Actionable findings.* The replacing finding is the existing refusal, located
    at the row's `form` key, which states what the row must be, a Markdown kind.
    It names neither the entry nor the mapping, and spells `rules = true`,
-   version 1's key, so the release note carries the two edits that clear it.
+   version 1's key, so the release note gives two examples of an edit that clears it.
 5. *No new licence.* Nothing is newly prohibited: the prerequisite is the one
    [§FS-config.3.4.12](../../functional-spec/FS-config.md#3412-rules--rule-declaration-kinds)
    already stated, now asked of the file the way the reader asks it. This
@@ -139,7 +145,7 @@ path: for one release the refusal is a warning beside the existing one, and a
 note names the release in which it becomes the error.
 
 Condition 4 holds at the level of the prerequisite and no finer. Neither edit
-that clears the refusal is at `form`, and the message alone does not tell a
+the release note gives is at `form`, and the message alone does not tell a
 reader which entry is at fault or that a mapping is why. It stays as it is
 because the report asks for this case to be refused exactly like the `.json`
 control, and [§FS-fields.forms](../../functional-spec/FS-fields.md#forms-form-lowers-to-the-version-1-contracts)
@@ -147,4 +153,4 @@ promises version 1's messages at the version-2 key.
 
 ## release-note: Release note
 
-- [§FS-config-v2.schema.sources.rules](../../functional-spec/FS-config-v2.md#schemasourcesrules-a-rule-kinds-file-home-is-markdown-by-its-language), [§DF-v2-rule-home-by-language](DF-v2-rule-home-by-language.md#df-v2-rule-home-by-language-a-version-2-rule-kinds-file-home-is-markdown-by-the-language-schemasources-reads-it-as), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-missed-citation.1](../../requirements/REQ-no-missed-citation.md#1-no-silent-skips): **a version-2 rule kind's `file` home is Markdown by the language `[schema.sources]` reads it as, not by its name.** **Who this breaks:** a version-2 project whose `form = "rule"` kind names a home that a `data` language reads (`md = "json"`) or that no admitted language reads (`languages = ["json"]`), or whose `files` lists such a home after a Markdown one (`files = ["rules/rules.md", "rules/other.json"]`), loaded with that home's rules unread; it is now refused at the row's `form` key with ``kind `RULE` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch` ``, exit `2`, the refusal the same row already drew under a `.json` name. The verdict moves from `0` to `2`, or from `1` where a rule in another home of the row fired, and every finding that replaces it gives its location, the row's `form` key, and the action it states, that the row be a Markdown kind. The message names neither the entry nor the mapping, so the edit is one of these: map `.md` back to a `document` language, or give the rules file a name a `document` language reads. Conversely, a home with another name that `[schema.sources]` reads with a `document` language (`txt = "markdown"`, or a `document` definition) was refused and now loads, so its rules apply. A home a `source` language reads is unchanged: `md = "rust"`, or a later `rules/more.rs` after a `.md` first entry, still loads with its rules enforced, and `rules/rules.rs` alone is still refused. Version 1 and `folder` homes are unchanged too. Closes [issue #1149](https://github.com/agent-grounds/grund/issues/1149).
+- [§FS-config-v2.schema.sources.rules](../../functional-spec/FS-config-v2.md#schemasourcesrules-a-rule-kinds-file-home-is-markdown-by-its-language), [§DF-v2-rule-home-by-language](DF-v2-rule-home-by-language.md#df-v2-rule-home-by-language-a-version-2-rule-kinds-file-home-is-markdown-by-the-language-schemasources-reads-it-as), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-missed-citation.1](../../requirements/REQ-no-missed-citation.md#1-no-silent-skips): **a version-2 rule kind's `file` home is Markdown by the language `[schema.sources]` reads it as, not by its name.** **Who this breaks:** a version-2 project whose `form = "rule"` kind names a home that a `data` language reads (`md = "json"`) or that no admitted language reads (`languages = ["json"]`), or whose `files` lists such a home after a Markdown one (`files = ["rules/rules.md", "rules/other.json"]`), loaded with that home's rules unread; it is now refused at the row's `form` key with ``kind `RULE` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch` ``, exit `2`, the refusal the same row already drew under a `.json` name. The verdict moves to `2` from whatever the run gave, `0`, or `1` where it had any finding, and every finding that replaces it gives its location, the row's `form` key, and the action it states, that the row be a Markdown kind. The message names neither the entry nor the mapping, so the edit is the author's; for example, map `.md` back to a `document` language, or give the rules file a name a `document` language reads. Conversely, a home with another name that `[schema.sources]` reads with a `document` language (`txt = "markdown"`, or a `document` definition) was refused and now loads, so its rules apply. A home a `source` language reads is unchanged: `md = "rust"`, or a later `rules/more.rs` after a `.md` first entry, still loads, and `rules/rules.rs` alone is still refused; a rule in a doc-comment there still fires, and a rule in a form that language does not declare, such as a Markdown `# RULE-x:` heading under `md = "rust"`, still declares nothing, with no warning. Version 1 and `folder` homes are unchanged too. Closes [issue #1149](https://github.com/agent-grounds/grund/issues/1149).
