@@ -14,7 +14,7 @@ use std::path::Path;
 
 use super::lsp_ranges::absolutize_path;
 use crate::checker::sort_diagnostics;
-use crate::config::{Config, display_path, published_finding, run_warning_findings};
+use crate::config::{Config, display_location, published_finding, run_warning_findings};
 use crate::model::{CheckReport, Diagnostic, Finding, FindingSite, Report, json_escape};
 use crate::resolver::WorkspaceContext;
 
@@ -129,8 +129,10 @@ pub(super) fn public_lsp_run_warnings(config: &Config, warnings: Vec<Diagnostic>
         .collect()
 }
 
+/// A finding's `path` and `sites[].path` as the report prints them, the report base
+/// `.` (§FS-cli.3.4); a finding with no path stays without one.
 fn public_path(config: &Config, path: &Path) -> String {
-    display_path(config, path)
+    display_location(config, path)
 }
 
 /// The `sites` value of a query-refusal JSON diagnostic (§FS-errors.5.2): `null`

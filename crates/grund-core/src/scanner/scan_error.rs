@@ -26,10 +26,10 @@ pub struct ApiScanError {
 
 /// Render one [`ScanError`](super::tree::ScanError) for a caller: the same path
 /// spelling `check` prints, so an embedder and the terminal name one file the
-/// same way (§FS-errors.4).
+/// same way (§FS-errors.4), and the report base `.` (§FS-cli.3.4).
 pub(crate) fn api_scan_error(frame: Frame<'_>, path: &Path, message: &str) -> ApiScanError {
     ApiScanError {
-        path: frame.display_path(path),
+        path: frame.display_location(path),
         message: scan_error_message(message),
     }
 }

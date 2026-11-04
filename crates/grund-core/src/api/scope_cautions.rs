@@ -20,7 +20,9 @@ use super::unread_configs::UnreadConfigs;
 use crate::checker::{ScanScope, scope_read_any_file};
 use crate::config::{Config, Display, format_guidance, kind_prefixes, source_scope_name};
 use crate::grammar::id_shape;
-use crate::model::{Catalog, Code, Diagnostic, format_path, normalize_path_lexically};
+use crate::model::{
+    Catalog, Code, Diagnostic, base_reads_dot, format_path, normalize_path_lexically,
+};
 use crate::scanner::{Unread, extension_refusal, name_refusal, pruning_pattern};
 use crate::workspace::scope_is_config_root;
 
@@ -346,9 +348,5 @@ pub(super) fn display_scope(display: Display<'_>, path: &Path) -> String {
         .find(|ancestor| canonical_path(ancestor).is_ok_and(|resolved| resolved == base))
         .map(|ancestor| format_path(path.strip_prefix(ancestor).unwrap_or(path)))
         .unwrap_or_else(|| display.path(path));
-    if shown.is_empty() {
-        ".".to_owned()
-    } else {
-        shown
-    }
+    base_reads_dot(shown)
 }

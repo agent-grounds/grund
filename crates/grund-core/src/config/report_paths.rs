@@ -46,6 +46,13 @@ pub(crate) fn display_path(config: &Config, path: &Path) -> String {
     config.display().path(path)
 }
 
+/// `path` as a report names a place: [`display_path`], with the report base itself
+/// reading `.` (§FS-cli.3.4). What a finding's `path`, its `sites[].path` and a scan
+/// failure's `<path>` are spelled through.
+pub(crate) fn display_location(config: &Config, path: &Path) -> String {
+    config.display().location(path)
+}
+
 /// A `Diagnostic` in the published shape (§FS-distribution.3.1), its anchor and
 /// every site spelled by `render_path`. `check`'s report passes the run's path
 /// spelling, or an absolute one for an editor (§FS-lsp.1.1), and `fmt`'s
@@ -92,7 +99,7 @@ pub(crate) fn run_warning_findings(config: &Config, warnings: Vec<Diagnostic>) -
         .map(|warning| Finding {
             severity: "warning",
             code: warning.code.as_str(),
-            path: warning.path.map(|path| display_path(config, &path)),
+            path: warning.path.map(|path| display_location(config, &path)),
             line: warning.line,
             column: None,
             message: warning.message,

@@ -12,7 +12,7 @@
 
 use anyhow::{Result, anyhow};
 
-use crate::config::display_path;
+use crate::config::{display_location, display_path};
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Declaration, Finding, Id, ShowOutput, ShowRenderMode};
 use crate::queries::{
@@ -207,10 +207,11 @@ impl<'c, 'a> ShowSource<'c, 'a> {
             })?,
         };
         // §FS-workspace.8.7.3: rendered against the run's config, not the target
-        // project's — the same spelling `check` uses for the same tree.
+        // project's — the same spelling `check` uses for the same tree, the base `.`
+        // (§FS-cli.3.4).
         if let Some((file, message)) = project.scan_errors.first() {
             // §FS-distribution.3.3.2: scan failures are located filesystem outcomes.
-            let path = display_path(context.render_config(), file);
+            let path = display_location(context.render_config(), file);
             let mut failure = crate::model::OperationDiagnostic::new(
                 "filesystem",
                 "io",
@@ -218,7 +219,7 @@ impl<'c, 'a> ShowSource<'c, 'a> {
             );
             failure.path = Some(path);
             failure.details = serde_json::json!({"scan_errors": project.scan_errors.iter()
-                .map(|(path,message)| serde_json::json!({"path": display_path(context.render_config(),path),"message":crate::scanner::scan_error_message(message)}))
+                .map(|(path,message)| serde_json::json!({"path": display_location(context.render_config(),path),"message":crate::scanner::scan_error_message(message)}))
                 .collect::<Vec<_>>()});
             return Err(failure.into());
         }

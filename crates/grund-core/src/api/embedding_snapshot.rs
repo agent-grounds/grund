@@ -2,7 +2,7 @@
 use super::embedding::EmbeddingRequest;
 use super::embedding_data::Data;
 use super::embedding_failure::{error_data, failure};
-use crate::config::{Config, display_path};
+use crate::config::{Config, display_location, display_path};
 use crate::grammar::{
     BindingSpellings, render_catalog_id, render_citation_id, render_declaration_id,
 };
@@ -20,7 +20,8 @@ pub(super) fn scan(r: &EmbeddingRequest) -> Result<Value, Value> {
     let snapshot = snapshot(&config, &findings);
     if !errors.is_empty() {
         let mut f = failure("io", "filesystem", errors[0].1.clone(), &cautions);
-        f["path"] = json!(display_path(&config, &errors[0].0));
+        // §FS-cli.3.4: a scan failure at the report base names it `.`.
+        f["path"] = json!(display_location(&config, &errors[0].0));
         f["partial_output"] = snapshot;
         return Err(f);
     }

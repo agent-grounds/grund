@@ -4,7 +4,7 @@ use super::batch_generation::exhaustive_batch_queries;
 use super::glob_scope::{GlobSelection, read_globs};
 use super::show::{render_show_output_json, show_declaration_with_home};
 use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
-use crate::config::{display_path, run_warning_findings};
+use crate::config::{display_location, display_path, run_warning_findings};
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Finding, FindingSite, ShowOutput};
 use crate::resolver::{
@@ -84,7 +84,8 @@ pub(crate) fn show_batch_data(
                 "io",
                 crate::scanner::scan_error_message(message),
             );
-            diagnostic.path = Some(display_path(context.render_config(), file));
+            // §FS-cli.3.4: a scan failure at the report base names it `.`.
+            diagnostic.path = Some(display_location(context.render_config(), file));
             return Err(diagnostic.into());
         }
         let queries = match queries {
@@ -221,9 +222,10 @@ fn show_batch_run(
         .iter()
         .find_map(|project| project.scan_errors.first())
     {
+        // §FS-cli.3.4: a scan failure at the report base names it `.`.
         return Err(anyhow!(
             "{}: {}",
-            display_path(context.render_config(), file),
+            display_location(context.render_config(), file),
             crate::scanner::scan_error_message(message)
         ));
     }

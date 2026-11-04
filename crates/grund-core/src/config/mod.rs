@@ -158,7 +158,9 @@ pub(crate) use record::{
     DEFAULT_GROUNDING_LEVEL, any_kind_holds_values, guided_kind, kind_front_matter, kind_prefixes,
     kind_uses_values, kind_value_chapter,
 };
-pub(crate) use report_paths::{display_path, published_finding, run_warning_findings};
+pub(crate) use report_paths::{
+    display_location, display_path, published_finding, run_warning_findings,
+};
 pub(crate) use run_warnings::RunWarning;
 pub(crate) use scope_roots::{
     canonical_config_root, file_root_rows, root_scope_roots, unwalked_home_roots, unwalked_homes,
