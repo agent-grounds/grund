@@ -22,7 +22,8 @@ use super::members::{WorkspaceMember, canonical_workspace_path};
 use super::scope::{config_location_message, workspace_members_error};
 use crate::config::{Config, ConfigLocation, config_file_in, root_scope_roots};
 use crate::model::{
-    Code, Diagnostic, LANDED_CLAUSE, format_path, normalize_path_lexically, relative_from_base,
+    Code, Diagnostic, LANDED_CLAUSE, base_reads_dot, format_path, normalize_path_lexically,
+    relative_from_base,
 };
 use anyhow::Result;
 
@@ -63,7 +64,7 @@ pub(crate) fn absorbed_scan_roots(config: &Config, members: &[WorkspaceMember]) 
         };
         covered.push(format!(
             "`{}` in `{}`",
-            format_path(&block_relative_root(config, &root)),
+            block_relative_root(config, &root),
             member.written
         ));
     }
@@ -121,22 +122,17 @@ pub(crate) fn block_scope_roots<'a>(
 /// `group/`). Both sides are folded before the block root is taken off, because
 /// a remainder folded on its own would lose the `..` that climbs back in. A root
 /// that folds to somewhere outside the block keeps the climb, `../sibling`.
-pub(crate) fn block_relative_root(config: &Config, root: &Path) -> PathBuf {
+pub(crate) fn block_relative_root(config: &Config, root: &Path) -> String {
     root_under_block(&config.root, root)
 }
 
 /// [`block_relative_root`] on the two paths alone, so a test can fold a spelling
 /// without building a `Config`.
-pub(super) fn root_under_block(block_root: &Path, root: &Path) -> PathBuf {
-    let relative = relative_from_base(
+pub(super) fn root_under_block(block_root: &Path, root: &Path) -> String {
+    base_reads_dot(format_path(&relative_from_base(
         &normalize_path_lexically(block_root),
         &normalize_path_lexically(root),
-    );
-    if relative.as_os_str().is_empty() {
-        PathBuf::from(".")
-    } else {
-        relative
-    }
+    )))
 }
 
 /// The sentence §FS-check.3.30.1 carries, built apart from the error that

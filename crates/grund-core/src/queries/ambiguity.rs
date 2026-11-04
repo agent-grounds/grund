@@ -6,7 +6,7 @@
 
 use super::show::broken_stub_message;
 use super::show_query::ShowQueryError;
-use crate::config::{Config, display_path};
+use crate::config::{Config, display_location, display_path};
 use crate::grammar::render_declaration_id;
 use crate::model::{
     Catalog, Declaration, FindingSite, Id, MissingStubRepair, Paired, PairedDeclarations,
@@ -104,12 +104,12 @@ pub(super) fn ambiguous_id_refusal(
     }
     // §FS-declarations.stubs.pairing.3: a declaration a stub stands for is at its
     // target, at each line there that declares the ID (§AR-scanner.4.6).
-    // §FS-errors.3.1: every site is spelled from the effective report root.
+    // §FS-errors.3.1, §FS-cli.3.4, §FS-errors.5.2.1: spelled from the report root, `.` at it.
     let mut sites: Vec<(String, String, usize)> = paired
         .iter()
         .map(|declaration| {
             let (path, line) = (
-                display_path(path_config, &declaration.record.file),
+                display_location(path_config, &declaration.record.file),
                 declaration.record.line,
             );
             (format!("{path}:{line}"), path, line)

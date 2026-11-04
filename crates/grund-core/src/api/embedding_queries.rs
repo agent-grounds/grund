@@ -4,7 +4,7 @@ use super::cover::cover_text_with_globs;
 use super::embedding::EmbeddingRequest;
 use super::embedding_data::Data;
 use super::embedding_failure::{error_data, failure};
-use crate::config::display_path;
+use crate::config::{display_location, display_path};
 use crate::*;
 use serde_json::{Value, json};
 
@@ -63,9 +63,10 @@ pub(super) fn scan_data(r: &EmbeddingRequest) -> Result<Value, Value> {
         crate::scanner::scan_tree(config.schema(), config.frame(), Some(&r.root), true)
             .map_err(|e| error_data(e, &config_run_warnings(&config)))?;
     // §FS-config.3.2.8: a declaration's spelling can differ from its numeric map key.
+    // §FS-cli.3.4: a record at the report base, an E2E case's directory, reads `.`.
     let catalog = findings.declarations.values().flat_map(|decls| {
         decls.iter().map(|d| json!({"id": crate::grammar::render_declaration_id(&config.grammar, d),
-            "path": display_path(&config, &d.file), "line": d.line,
+            "path": display_location(&config, &d.file), "line": d.line,
             "heading_level": d.heading_level, "title": d.title, "stub": d.is_stub,
             "defines": d.defined_in.as_ref().map(|p| crate::model::format_path(p)),
             "body_start": d.body_start, "body_end": d.body_end,
@@ -125,9 +126,10 @@ pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
             let output = result.map_err(|e| error_data(e, &cautions))?;
             let mut data = output.data();
             // §FS-distribution.3.3.3: output paths are logical, never native absolutes.
+            // §FS-cli.3.4: a record at the report base, an E2E case's directory, reads `.`.
             let config = crate::workspace::resolve_workspace_config(&r.root)
                 .map_err(|e| error_data(e, &cautions))?;
-            data["path"] = json!(display_path(&config, &output.path));
+            data["path"] = json!(display_location(&config, &output.path));
             data["run_cautions"] = cautions.data();
             Ok(data)
         }

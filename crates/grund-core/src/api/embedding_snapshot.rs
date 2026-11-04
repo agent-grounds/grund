@@ -38,9 +38,10 @@ fn snapshot(c: &Config, f: &Catalog) -> Value {
         v
     };
     // §FS-config.3.2.8: each declaration owns its spelling, not the grouping key.
+    // §FS-cli.3.4: a record at the report base, an E2E case's directory, reads `.`.
     let mut declarations = f.declarations.iter().flat_map(|(i,ds)|ds.iter().map(|d|
         json!({"id":render_declaration_id(&c.grammar,d),"kind":i.kind,"number":i.num,"slug":i.slug,
-            "path":path(&d.file),"line":d.line,"heading_level":d.heading_level,"title":d.title,
+            "path":display_location(c,&d.file),"line":d.line,"heading_level":d.heading_level,"title":d.title,
             "sections":d.sections.iter().map(|(p,s)|section(p,s)).collect::<Vec<_>>(),
             "duplicate_sections":d.duplicate_sections.iter().map(|(p,s)|section(p,s)).collect::<Vec<_>>(),
             "stub":d.is_stub,"defines":d.defined_in.as_ref().map(|p|path(p)),

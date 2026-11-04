@@ -12,7 +12,7 @@
 
 use anyhow::{Result, anyhow};
 
-use crate::config::{display_location, display_path};
+use crate::config::display_location;
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Declaration, Finding, Id, ShowOutput, ShowRenderMode};
 use crate::queries::{
@@ -153,7 +153,8 @@ fn show_answer(
         );
         output.json = Some(json);
     }
-    metadata["path"] = serde_json::json!(display_path(context.render_config(), &output.path));
+    // §FS-cli.3.4: a record at the report base, an E2E case's directory, reads `.`.
+    metadata["path"] = serde_json::json!(display_location(context.render_config(), &output.path));
     Ok(output)
 }
 

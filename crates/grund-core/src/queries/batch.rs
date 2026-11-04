@@ -4,7 +4,7 @@ use super::batch_generation::exhaustive_batch_queries;
 use super::glob_scope::{GlobSelection, read_globs};
 use super::show::{render_show_output_json, show_declaration_with_home};
 use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
-use crate::config::{display_location, display_path, run_warning_findings};
+use crate::config::{display_location, run_warning_findings};
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Finding, FindingSite, ShowOutput};
 use crate::resolver::{
@@ -111,7 +111,9 @@ pub(crate) fn show_batch_data(
                 );
                 match result {
                     Ok(mut output) => {
-                        output.path = display_path(context.render_config(), &output.path).into();
+                        // §FS-cli.3.4: a record at the report base reads `.`.
+                        output.path =
+                            display_location(context.render_config(), &output.path).into();
                         Ok(BatchDataRecord {
                             query,
                             result: Ok(output),

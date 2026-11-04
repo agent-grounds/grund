@@ -71,12 +71,7 @@ fn the_documented_message_is_the_shipped_message() {
 #[test]
 fn a_scope_root_is_named_by_its_folded_path_under_the_block() {
     let block = Path::new("/w/group");
-    let named = |entry: &str| {
-        crate::model::format_path(&super::findings::root_under_block(
-            block,
-            &block.join(entry),
-        ))
-    };
+    let named = |entry: &str| super::findings::root_under_block(block, &block.join(entry));
     assert_eq!(named("docs/.."), ".");
     assert_eq!(named("../group"), ".");
     assert_eq!(named("./docs/.."), ".");

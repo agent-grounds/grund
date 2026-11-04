@@ -83,10 +83,10 @@ pub(crate) fn show_e2e_case(
     let json = format!(
         "{{\"id\":\"{}\",\"kind\":\"E2E\",\"path\":\"{}\",\"args\":[{}],\"expected_exit\":{},\"fixtures\":[{}],\"anchor\":null{}}}",
         json_escape(id),
-        // The frame's display is the report root's: an `<alias>/E2E-x` shown from a
-        // workspace root must report the same root-relative path as every other kind
-        // (§FS-workspace.8.1.2) — this baked JSON bypasses render_show_output_json.
-        json_escape(&frame.display_path(&case.dir)),
+        // The frame's display is the report root's: an `<alias>/E2E-x` from a workspace root
+        // reports a root-relative path like every other kind (§FS-workspace.8.1.2), `.` at
+        // that root (§FS-cli.3.4). This baked JSON bypasses render_show_output_json.
+        json_escape(&frame.display_location(&case.dir)),
         args_json,
         case.expected_exit,
         fixtures_json,
