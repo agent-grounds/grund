@@ -58,6 +58,23 @@ preserved verbatim; grund does not add timestamps, normalize whitespace, run `fm
 sanitize marked citations. A marked citation in the body is therefore a live citation
 on the next ordinary scan ([§FS-check.1.1](FS-check.md#11-recognized-citations)).
 
+### 3.1 A nested declaration is refused
+
+"Exactly one declaration" counts every heading the next scan would read as a
+declaration, not only those at the native depth. A heading inside the fetched
+declaration whose text declares an ID of any configured kind, under the project's ID
+grammar, is refused on stderr with exit 2 and the tree byte-identical, whatever its
+depth below the native one and whichever ID it carries: an unrequested ID, the
+requested ID a second time, an ID the snapshot home already declares, or another
+kind's ID. The refusal names the nested ID. It holds under config version 1 and 2 and
+for `file` and `folder` homes alike, because `fetch` owns only the requested
+declaration and one `fetch <ID>` fetches one ID ([§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)).
+
+A subsection heading, which carries a numbered or named section path rather than an
+ID, stays accepted, as does any heading inside a fenced block, which declares nothing.
+The rule binds only what `fetch` accepts: a nested declaration written by hand into a
+scanned file stays legal.
+
 ## 4. File-home write
 
 For `file = "<home>"`, grund replaces only the H2 declaration whose ID exactly matches
