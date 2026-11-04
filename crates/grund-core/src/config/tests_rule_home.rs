@@ -121,7 +121,7 @@ fn v2_rule_home_rs_alone_is_refused() {
 }
 
 /// §FS-config-v2.schema.sources.rules: a `.md` home `md = "rust"` reads as source keeps loading:
-/// its rules are read, so nothing goes unread.
+/// a rule in a block eligible to declare is in force there.
 #[test]
 fn v2_rule_home_md_read_as_rust_loads() {
     let sources = "languages = [\"markdown\", \"rust\"]\n\
