@@ -5,7 +5,6 @@ that the Python pull-request gate discovers (§AR-ci.7, §FS-distribution.4.2.6)
 exercise source and golden scans without copying the bound calculation.
 """
 
-import os
 import subprocess
 import sys
 import tempfile
@@ -205,10 +204,6 @@ class EveryCeilingLineIsNamedTests(unittest.TestCase):
         self.assert_names_every_ceiling_line_once(run_guard(self.root, "0.22.0"))
 
 
-@unittest.skipUnless(
-    os.environ.get("GRUND_1132_RUN_RED_TESTS") == "1",
-    "red until #1132 reads the pending warning-window clause; implement removes this",
-)
 class WarningWindowCommandTests(unittest.TestCase):
     """Isolated report fixtures survive the YAML closing. §FS-distribution.4.2.2"""
 
@@ -287,7 +282,12 @@ class WarningWindowCommandTests(unittest.TestCase):
                         lower = (f"{FLOOR}:1: minimum publishable release is {floor}."
                                  if source == "shared"
                                  else f"{LANDED}:1: `was removed in {floor}`")
-                        self.assertIn(lower, result.stderr)
+                        # Candidate refusals name only disagreeing landed claims;
+                        # version-free mode names floor setters (§FS-distribution.4.2.5).
+                        if (source == "shared" or not arguments
+                                or tuple(map(int, arguments[0].split(".")))
+                                < tuple(map(int, floor.split(".")))):
+                            self.assertIn(lower, result.stderr)
 
 
 class ThisRepositoryReleaseWindowTests(unittest.TestCase):

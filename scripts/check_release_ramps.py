@@ -56,6 +56,9 @@ CLAUSES = (
     # message promising its own wording changes at a named release is rewritten
     # by then, and what replaces it says nothing about when it changed.
     ("wording changes in", PENDING),
+    # A warning window has only the pending tense too (§FS-distribution.4.2.2): the
+    # named release closes it, so a tree still saying this cannot be cut at or past it.
+    ("are warnings until", PENDING),
 )
 
 PATTERNS = tuple(
