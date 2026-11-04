@@ -104,7 +104,6 @@ fn the_project_base_names_the_unreadable_directory() {
 }
 
 #[test]
-#[ignore = "red until #1178 spells the report base `.` in a scan failure; implement removes this"]
 fn check_names_an_unreadable_invocation_base_dot() {
     let fixture = Fixture::new("check");
     fixture.lock(&fixture.locked, 0o000);
@@ -116,7 +115,6 @@ fn check_names_an_unreadable_invocation_base_dot() {
 }
 
 #[test]
-#[ignore = "red until #1178 spells the report base `.` in a scan failure; implement removes this"]
 fn json_path_of_an_unreadable_invocation_base_is_dot() {
     let fixture = Fixture::new("json");
     fixture.lock(&fixture.locked, 0o000);
@@ -135,7 +133,6 @@ fn json_path_of_an_unreadable_invocation_base_is_dot() {
 /// Every command that meets the failure prints the line `check` prints (§FS-workspace.8.7.3),
 /// so a fix at the `check` site alone stays red here.
 #[test]
-#[ignore = "red until #1178 spells the report base `.` in a scan failure; implement removes this"]
 fn every_command_names_an_unreadable_invocation_base_dot() {
     let fixture = Fixture::new("commands");
     fixture.lock(&fixture.locked, 0o000);
@@ -177,7 +174,6 @@ fn every_command_names_an_unreadable_invocation_base_dot() {
 /// No flag: the config root is the default report base, so an unlistable config root is the
 /// base itself and reads `.` too.
 #[test]
-#[ignore = "red until #1178 spells the report base `.` in a scan failure; implement removes this"]
 fn check_names_an_unlistable_config_root_dot() {
     let fixture = Fixture::new("root");
     fixture.lock(&fixture.root, 0o311);

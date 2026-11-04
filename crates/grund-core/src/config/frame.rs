@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use super::compiled::Compiled;
 use super::run::Run;
 use crate::grammar::Grammar;
-use crate::model::{format_path, relative_from_base};
+use crate::model::{base_reads_dot, format_path, relative_from_base};
 
 /// §AR-checker.1: the frame a stage runs in. `Copy`, so a stage hands it down
 /// as freely as it would a reference.
@@ -83,6 +83,11 @@ impl<'a> Frame<'a> {
     pub fn display_path(&self, path: &Path) -> String {
         self.display.path(path)
     }
+
+    /// `path` as this run's report names a place, the report base `.` (§FS-cli.3.4).
+    pub fn display_location(&self, path: &Path) -> String {
+        self.display.location(path)
+    }
 }
 
 impl Display<'_> {
@@ -99,6 +104,9 @@ impl Display<'_> {
     /// default, or relative to the CLI base directory under
     /// `--path-base=invocation` or `[output] relative_paths = false`
     /// (§FS-config.3.6.1 — an in-root target outside that base uses bounded `..`).
+    /// The base itself spells as the empty string, which a message asks of a place
+    /// to tell whether it has a name in the report (§FS-config.3.6); a report that
+    /// names the place reads [`Self::location`] instead.
     pub fn path(&self, path: &Path) -> String {
         let base = self.base();
         let relative = path
@@ -116,5 +124,12 @@ impl Display<'_> {
                 }
             });
         format_path(&relative)
+    }
+
+    /// `path` as a report names a place: [`Self::path`], with the report base itself
+    /// reading `.` rather than nothing (§FS-cli.3.4), so a finding or a scan failure
+    /// at that directory still says which one it means.
+    pub fn location(&self, path: &Path) -> String {
+        base_reads_dot(self.path(path))
     }
 }

@@ -16,7 +16,7 @@ use super::init_template::{
     StarterWrite, lay_starter_files, resolve_template, template_config_note,
 };
 use crate::checker::{configured_rule_sentences, declared_workspace_vocabulary};
-use crate::config::{Config, config_file_in, display_path};
+use crate::config::{Config, config_file_in, display_location};
 use crate::model::{Catalog, Diagnostic, Finding, FindingSite, format_path};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file, scan_tree,
@@ -518,11 +518,13 @@ fn init_run(
     })
 }
 
+/// A refusal's finding in the published shape, its locations spelled as a report's
+/// (§FS-cli.3.4).
 fn init_finding(config: &Config, diagnostic: Diagnostic) -> Finding {
     Finding {
         severity: "error",
         code: diagnostic.code.as_str(),
-        path: diagnostic.path.map(|path| display_path(config, &path)),
+        path: diagnostic.path.map(|path| display_location(config, &path)),
         line: diagnostic.line,
         column: diagnostic.column,
         message: diagnostic.message,
@@ -530,7 +532,7 @@ fn init_finding(config: &Config, diagnostic: Diagnostic) -> Finding {
             .sites
             .into_iter()
             .map(|site| FindingSite {
-                path: display_path(config, &site.path),
+                path: display_location(config, &site.path),
                 line: site.line,
             })
             .collect(),
