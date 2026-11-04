@@ -10,7 +10,7 @@
 
 use std::path::Path;
 
-use crate::grammar::{Grammar, declaration_captures, parse_id};
+use crate::grammar::{Grammar, markdown_line_declares};
 use crate::model::{BlockForm, Catalog, ConflictBlock, FileRecord, Id};
 
 /// The marker lines of one file, each with its character, in line order.
@@ -71,8 +71,7 @@ impl MarkerLines {
 /// Whether a raw Markdown line would declare an ID by §FS-declarations.line, were
 /// no fence open (§FS-declarations.body.conflict.where).
 fn declares(grammar: &Grammar, line: &str) -> bool {
-    declaration_captures(grammar, line, false, true)
-        .is_some_and(|caps| parse_id(&caps, grammar).is_some())
+    markdown_line_declares(grammar, line).is_some()
 }
 
 /// The marker character of a marker line: column 0, exactly seven of one of

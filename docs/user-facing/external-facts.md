@@ -34,6 +34,10 @@ subsections must be exactly one level deeper than that declaration. The example
 computes an outer backtick fence one character longer than any run in the
 provider body, so its own Markdown headings remain content but are not citable
 child headings; raw issue Markdown is not a declaration body.
+A heading anywhere below the declaration that would itself declare an ID, of
+any kind and at any depth, is refused, so a fetcher that copies provider
+headings must fence them as the example does
+([§FS-fetch.3.1](../functional-spec/FS-fetch.md#31-a-nested-declaration-is-refused)).
 Grund validates the complete output before atomically replacing only that ID's
 snapshot. It preserves accepted bytes verbatim and inserts a new file-home
 declaration in ID order ([§FS-fetch.3](../functional-spec/FS-fetch.md#3-accepted-declaration),

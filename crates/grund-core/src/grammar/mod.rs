@@ -169,7 +169,7 @@ pub use managed_block::INTEGRATIONS_BLOCK_VERSION;
 // record, so only the grammar's own tests still parse one through this.
 #[cfg(test)]
 pub(crate) use near_miss::declaration_id_on_line;
-pub(crate) use near_miss::{declaration_captures, near_miss_heading};
+pub(crate) use near_miss::{declaration_captures, markdown_line_declares, near_miss_heading};
 #[cfg(test)]
 pub(crate) use never_rewrite::is_inside_markdown_link_destination;
 pub(crate) use never_rewrite::{

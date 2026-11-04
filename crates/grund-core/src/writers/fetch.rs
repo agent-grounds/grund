@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use super::fetch_write::{write_file_home, write_folder_home};
 use crate::config::{Config, KindConfig, run_warning_findings};
-use crate::grammar::{MarkdownBlocks, parse_id_arg};
+use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_declares, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
 use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, resolve_workspace_config, split_qualified_id_arg};
@@ -234,7 +234,7 @@ fn fetch_run(
             )));
         }
     };
-    validate_fetched_declaration(snapshot, local, depth)?;
+    validate_fetched_declaration(snapshot, local, depth, &selected.grammar)?;
     match home {
         FetchHome::File(path) => write_file_home(
             &path,
@@ -284,10 +284,11 @@ fn refuse_value_source_home(
 }
 
 /// §FS-fetch.3: validate the complete stdout before any mutation.
-fn validate_fetched_declaration(
+pub(super) fn validate_fetched_declaration(
     text: &str,
     requested: &str,
     native_depth: usize,
+    grammar: &Grammar,
 ) -> std::result::Result<(), FetchFailure> {
     // §FS-check.1.1.5.1: the output is read by the one fence and raw-text block
     // machine the scanner reads its snapshot with, so a heading shown inside
@@ -326,6 +327,16 @@ fn validate_fetched_declaration(
                 if title.trim().is_empty() {
                     return Err(fetch_operational("fetch output declaration title is empty"));
                 }
+            } else if declaration_count == 1
+                && hashes > native_depth
+                && let Some(nested) = markdown_line_declares(grammar, line)
+            {
+                // §FS-fetch.3.1: a heading the scanner would read as a declaration is
+                // refused at any depth below the requested one, before the depth limit.
+                return Err(fetch_operational(format!(
+                    "fetch output nests declaration `{nested}` inside requested `{requested}`; \
+                     fetch output must hold only the requested declaration"
+                )));
             } else if declaration_count == 0 || hashes != native_depth + 1 {
                 return Err(fetch_operational(format!(
                     "fetch output heading depth {hashes} is invalid for a depth-{native_depth} declaration"
