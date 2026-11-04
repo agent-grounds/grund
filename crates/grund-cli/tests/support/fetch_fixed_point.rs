@@ -12,6 +12,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+#[path = "fetch_fixed_point_ownership.rs"]
+mod ownership;
+
 const MID: &str = "AR-002-mid";
 const AFTER: &str = "AR-003-after";
 

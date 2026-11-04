@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 
 use super::atomic_install::{Install, InstallFailure, atomic_install};
 use super::fetch::{FetchFailure, fetch_io, fetch_operational};
-use super::fetch_owned::{Output, is_blank, owned};
+use super::fetch_owned::{Output, before, is_blank, owned};
 use crate::config::Config;
 use crate::grammar::{
     Grammar, MarkdownBlocks, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
@@ -60,7 +60,6 @@ fn fetch_walk_failure(
 pub(super) struct SnapshotDeclaration {
     id: Id,
     pub(super) start: usize,
-    pub(super) end: usize,
     /// The next heading at the declaration's depth, or the end of the file.
     pub(super) next: usize,
     path: Option<PathBuf>,
@@ -127,20 +126,10 @@ fn declarations_at_depth(
         .enumerate()
         .filter_map(|(index, (start, id))| {
             let id = id.as_ref()?;
-            // The blank separator before the next sibling is outside the
-            // declaration-local replacement and therefore remains byte-for-byte.
-            let next = headings.get(index + 1).map(|next| next.0);
-            let end = match next {
-                None => bytes.len(),
-                Some(end) if bytes[..end].ends_with(b"\r\n\r\n") => end - 2,
-                Some(end) if bytes[..end].ends_with(b"\n\n") => end - 1,
-                Some(end) => end,
-            };
-            let next = next.unwrap_or(bytes.len());
+            let next = headings.get(index + 1).map_or(bytes.len(), |next| next.0);
             Some(SnapshotDeclaration {
                 id: id.clone(),
                 start: *start,
-                end,
                 next,
                 path: None,
             })
@@ -192,7 +181,9 @@ pub(super) fn write_file_home(
         let start = declarations
             .iter()
             .find(|declaration| grammar.render(&declaration.id, 3) > requested)
-            .map_or(original.len(), |declaration| declaration.start);
+            .map_or(original.len(), |declaration| {
+                before(&original, declaration.start)
+            });
         (start, start)
     };
     let mut replacement = Vec::with_capacity(original.len() + snapshot.len());
@@ -208,7 +199,9 @@ pub(super) fn write_file_home(
         b"\n"
     };
     replacement.extend_from_slice(&original[..start]);
-    if !replacement.is_empty()
+    // §FS-fetch.6.1: replacement keeps the existing left separator; only insertion pads it.
+    if matching.is_empty()
+        && !replacement.is_empty()
         && !replacement.ends_with(b"\n\n")
         && !replacement.ends_with(b"\r\n\r\n")
     {
@@ -299,7 +292,7 @@ pub(super) fn write_folder_home(
                     .expect("contains requested declaration");
                 // §FS-fetch.6.1: whitespace is what the heading reader skips, U+00A0 included.
                 let has_content_before = !is_blank(&bytes[..declaration.start]);
-                let has_content_after = !is_blank(&bytes[declaration.end..]);
+                let has_content_after = !is_blank(&bytes[declaration.next..]);
                 if declarations.len() != 1 || has_content_before || has_content_after {
                     return Err(fetch_operational(format!(
                         "snapshot file {} contains the requested ID beside other content",
