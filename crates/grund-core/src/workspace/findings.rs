@@ -21,7 +21,9 @@ use std::path::{Path, PathBuf};
 use super::members::{WorkspaceMember, canonical_workspace_path};
 use super::scope::{config_location_message, workspace_members_error};
 use crate::config::{Config, ConfigLocation, config_file_in, root_scope_roots};
-use crate::model::{Code, Diagnostic, LANDED_CLAUSE, format_path, relative_from_base};
+use crate::model::{
+    Code, Diagnostic, LANDED_CLAUSE, format_path, normalize_path_lexically, relative_from_base,
+};
 use anyhow::Result;
 
 /// §FS-workspace.2.1.1: each of the block's own walk roots that a member root
@@ -61,7 +63,7 @@ pub(crate) fn absorbed_scan_roots(config: &Config, members: &[WorkspaceMember]) 
         };
         covered.push(format!(
             "`{}` in `{}`",
-            format_path(block_relative_root(config, &root)),
+            format_path(&block_relative_root(config, &root)),
             member.written
         ));
     }
@@ -112,10 +114,26 @@ pub(crate) fn block_scope_roots<'a>(
 /// `docs` and the block root itself is named `.`, never an empty path
 /// (§FS-check.4.10.5) — because a canonical root renders as nothing when it equals
 /// the render base and as an absolute path when it does not (§FS-errors.4).
-pub(crate) fn block_relative_root<'a>(config: &Config, root: &'a Path) -> &'a Path {
-    let relative = root.strip_prefix(&config.root).unwrap_or(root);
+///
+/// §FS-check.3.30.1: normalizing folds `.` and `..` lexically, on the spelling
+/// and never by reading the disk, so `docs/../src` is `src` and a root that folds
+/// to the block root itself is `.` (`docs/..`, or `../group` in a block at
+/// `group/`). Both sides are folded before the block root is taken off, because
+/// a remainder folded on its own would lose the `..` that climbs back in. A root
+/// that folds to somewhere outside the block keeps the climb, `../sibling`.
+pub(crate) fn block_relative_root(config: &Config, root: &Path) -> PathBuf {
+    root_under_block(&config.root, root)
+}
+
+/// [`block_relative_root`] on the two paths alone, so a test can fold a spelling
+/// without building a `Config`.
+pub(super) fn root_under_block(block_root: &Path, root: &Path) -> PathBuf {
+    let relative = relative_from_base(
+        &normalize_path_lexically(block_root),
+        &normalize_path_lexically(root),
+    );
     if relative.as_os_str().is_empty() {
-        Path::new(".")
+        PathBuf::from(".")
     } else {
         relative
     }
