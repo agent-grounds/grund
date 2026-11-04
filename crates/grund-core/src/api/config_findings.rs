@@ -131,13 +131,15 @@ pub(super) fn config_diagnostics<'a>(
         .chain(config_version_1_warning(config, display))
 }
 
-/// The config findings a workspace names (§FS-check.4.11.3): the root's config
-/// and each project the workspace expansion returns, a member that is the root
-/// itself counted once, all spelled from the root's report base (§FS-errors.4)
-/// and in check's report order. One config, not one scope, and a workspace may
-/// mix the two discovery forms (§FS-workspace.2). `grund check` and `grund
-/// config validate` both name the set from here (§FS-config.4.1.1), so the two
-/// cannot disagree about which configs a workspace has.
+/// The config findings a workspace names (§FS-check.4.11.3): the root's config,
+/// each project the workspace expansion returns, a member that is the root itself
+/// counted once, and each `include_root = false` block the expansion reached, which
+/// expansion keeps on the root's run since it returns no project for one
+/// (§AR-config.1.5). All are spelled from the root's report base (§FS-errors.4) and
+/// in check's report order. One config, not one scope, and a workspace may mix the
+/// two discovery forms (§FS-workspace.2). `grund check` and `grund config validate`
+/// both name the set from here (§FS-config.4.1.1), so the two cannot disagree about
+/// which configs a workspace has.
 pub(super) fn workspace_config_diagnostics<'a>(
     root_config: &Config,
     projects: impl IntoIterator<Item = &'a Config>,
@@ -148,6 +150,9 @@ pub(super) fn workspace_config_diagnostics<'a>(
         if project.root != root_config.root {
             findings.extend(config_diagnostics(project, display));
         }
+    }
+    for block in root_config.workspace_opted_out_blocks() {
+        findings.extend(config_diagnostics(block, display));
     }
     sort_diagnostics(&mut findings);
     findings

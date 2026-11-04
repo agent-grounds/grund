@@ -1,4 +1,7 @@
 warning: grund.toml is version 1; migrate it with grund config migrate --to 2
+warning: hardware/grund.toml is version 1; migrate it with grund config migrate --to 2 hardware
 warning: hardware/sprayer/grund.toml is version 1; migrate it with grund config migrate --to 2 hardware/sprayer
 warning: left/api/grund.toml is version 1; migrate it with grund config migrate --to 2 left/api
+warning: left/grund.toml is version 1; migrate it with grund config migrate --to 2 left
 warning: right/api/grund.toml is version 1; migrate it with grund config migrate --to 2 right/api
+warning: right/grund.toml is version 1; migrate it with grund config migrate --to 2 right

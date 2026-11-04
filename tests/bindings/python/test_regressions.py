@@ -189,8 +189,6 @@ class RegressionTests(unittest.TestCase):
         ), result.warnings)
         self.assertEqual((), result.run_cautions)
 
-    # Red until #1138 names a grouping block's config findings; implement removes this.
-    @unittest.expectedFailure
     def test_check_and_validate_config_name_a_grouping_blocks_config_findings(self):
         # §FS-check.4.11.3: each include_root = false block the workspace expansion reaches,
         # in check's report.warnings and in validate_config's warnings, as a member's are.

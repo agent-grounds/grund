@@ -270,10 +270,10 @@ impl Config {
         self.records.run.workspace.imports_read = read;
     }
 
-    /// The workspace's config findings, the root's and each expanded project's
-    /// (§FS-config.4.1.1, §FS-check.4.11.3), which `validate_config` records once
-    /// it holds the expanded tree, so every reader of the config it returns names
-    /// the same set.
+    /// The workspace's config findings, the root's, each expanded project's and
+    /// each `include_root = false` block's (§FS-config.4.1.1, §FS-check.4.11.3),
+    /// which `validate_config` records once it holds the expanded tree, so every
+    /// reader of the config it returns names the same set.
     pub(crate) fn set_workspace_config_findings(&mut self, findings: Vec<Diagnostic>) {
         self.records.run.workspace.config_findings = Some(findings);
     }
@@ -281,6 +281,18 @@ impl Config {
     /// What [`Self::set_workspace_config_findings`] recorded, if anything.
     pub(crate) fn workspace_config_findings(&self) -> Option<&[Diagnostic]> {
         self.records.run.workspace.config_findings.as_deref()
+    }
+
+    /// The `include_root = false` blocks expansion reached below the run's root
+    /// (§AR-config.1.5, §FS-check.4.11.3).
+    pub(crate) fn set_workspace_opted_out_blocks(&mut self, blocks: Vec<Config>) {
+        self.records.run.workspace.opted_out_blocks = blocks;
+    }
+
+    /// What [`Self::set_workspace_opted_out_blocks`] recorded; empty in a run
+    /// that expanded no workspace.
+    pub(crate) fn workspace_opted_out_blocks(&self) -> &[Config] {
+        &self.records.run.workspace.opted_out_blocks
     }
 
     /// What [`Self::set_workspace_lists_optional`] recorded; `false` in a run

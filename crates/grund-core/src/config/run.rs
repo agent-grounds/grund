@@ -13,7 +13,7 @@ use std::sync::Arc;
 use super::call_scope::{PathBase, report_path_base};
 use super::kinds::KindTable;
 use super::mount_edge::{ImportRead, MountEdge};
-use super::record::AbsentOptionalNamespace;
+use super::record::{AbsentOptionalNamespace, Config};
 use super::run_warnings::RunWarning;
 use crate::model::Diagnostic;
 use crate::sources::Buffers;
@@ -99,11 +99,19 @@ pub struct RunWorkspace {
     /// Every import edge the run reached, the whole tree's, stamped on each
     /// project's run once the mounts are loaded (§FS-imports.checks).
     pub(crate) imports_read: Vec<ImportRead>,
-    /// The config findings of the root's config and of each project expansion
-    /// returned, in check's report order, which `grund config validate` stores
+    /// The config findings of the set §FS-check.4.11.3 names — the root's config,
+    /// each project expansion returned and each `include_root = false` block it
+    /// reached — in check's report order, which `grund config validate` stores
     /// once it has expanded the tree (§FS-config.4.1.1, §FS-check.4.11.3); `None`
     /// in a run that stored none, whose findings are its one config's.
     pub(crate) config_findings: Option<Vec<Diagnostic>>,
+    /// The config of each `include_root = false` block expansion reached below
+    /// the run's root, in the order it reached them (§AR-config.1.5). Not a
+    /// project, so expansion returns none of them; it loads each to read its
+    /// members, and keeps it here for the two questions asked of a block itself:
+    /// its config findings (§FS-check.4.11.3) and whether its tree holds files
+    /// nothing reads (§FS-check.4.10.7).
+    pub(crate) opted_out_blocks: Vec<Config>,
 }
 
 impl Default for RunScope {

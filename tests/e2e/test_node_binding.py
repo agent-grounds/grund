@@ -47,9 +47,8 @@ class NodeConsumerTests(unittest.TestCase):
     def test_workspace_root_config_findings(self):
         self.assertEqual("", self.rehearsal.run("workspace-config-findings.mjs"))
 
-    # §FS-check.4.11.3: red until #1138 names a grouping block's config findings at a
-    # workspace root; implement removes the expectedFailure.
-    @unittest.expectedFailure
+    # §FS-check.4.11.3: a grouping block's config findings at a workspace root land in
+    # check's report.warnings and validateConfig's runCautions.
     def test_grouping_block_config_findings(self):
         self.assertEqual("", self.rehearsal.run("grouping-block-config-findings.mjs"))
 
