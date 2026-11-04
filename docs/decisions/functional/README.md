@@ -236,6 +236,7 @@ The rulings the one-answer work is built from, one record per step family, each 
 - [§DF-whose-clause-window-closes-in-0-22](DF-whose-clause-window-closes-in-0-22.md#df-whose-clause-window-closes-in-0-22-the-whose-clause-wording-window-closes-in-0220) — the whose-clause wording window closes in 0.22.0
 - [§DF-unread-scan-root](DF-unread-scan-root.md#df-unread-scan-root-a-configured-file-root-whose-extension-is-unlisted-is-named-not-read) — a configured file root whose extension is unlisted is named, not read
 - [§DF-unread-hidden-root](DF-unread-hidden-root.md#df-unread-hidden-root-a-configured-file-root-with-a-hidden-name-is-named-not-read) — a configured file root with a hidden name is named, not read
+- [§DF-unread-rule-folder](DF-unread-rule-folder.md#df-unread-rule-folder-a-rule-kinds-folder-home-the-run-reads-no-file-of-is-named-not-refused) — a rule kind's folder home the run reads no file of is named, not refused
 
 - [§DF-global-excludes-literal-tilde](DF-global-excludes-literal-tilde.md#df-global-excludes-literal-tilde-preserve-literal-tildes-in-the-global-excludes-pathname) — preserve literal tildes in the global excludes pathname
 - [§DF-release-candidates-follow-main](DF-release-candidates-follow-main.md#df-release-candidates-follow-main-a-release-helper-follows-a-main-the-merge-queue-moves-rebuilding-and-re-running-its-candidates) — a release helper follows a main the merge queue moves, rebuilding and re-running its candidates

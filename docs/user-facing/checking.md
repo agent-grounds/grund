@@ -239,7 +239,7 @@ file, so a dotfile is renamed rather than listed, and a file refused by both
 rules gets one warning naming both. A row that names the file only as a place in
 the Project map says so with `scan = false`. `--ignore
 unread-scan-root` drops the warning
-([§FS-scan.checks.unread-scan-root](../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)).
+([§FS-scan.checks.unread-scan-root](../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-or-rule-folder-is-not-read)).
 
 `grund check --watch` checks immediately and updates the terminal after saves;
 Ctrl-C restores an owned alternate screen and returns the last completed status.

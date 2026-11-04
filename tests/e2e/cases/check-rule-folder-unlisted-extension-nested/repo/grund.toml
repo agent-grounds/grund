@@ -1,0 +1,14 @@
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+file = "src/a.rs"
+
+[[kinds]]
+kind = "RULE"
+folder = "docs/rules"
+rules = true
+
+[scan]
+extensions = ["rs"]

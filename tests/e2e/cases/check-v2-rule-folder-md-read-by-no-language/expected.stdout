@@ -1,0 +1,2 @@
+grund.toml:11: warning: [schema.kinds.RULE] folder `rules` is not read — no language in [schema.sources] languages reads `.md`, so nothing in it is checked. Give its files an extension a listed language reads.
+src/a.rs:1: warning: declared but never cited: FS-a; cite it

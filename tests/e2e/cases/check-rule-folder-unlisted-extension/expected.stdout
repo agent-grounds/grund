@@ -1,0 +1,2 @@
+grund.toml:10: warning: [[kinds]] RULE home `rules` is not read — `md` is not in [scan] extensions, so nothing in it is checked. Add "md" to [scan] extensions, or give its files an extension the list holds.
+src/a.rs:1: warning: declared but never cited: FS-a; cite it

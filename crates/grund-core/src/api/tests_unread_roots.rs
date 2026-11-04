@@ -6,10 +6,10 @@
 use std::path::PathBuf;
 
 use super::report::public_lsp_report;
-use super::unread_roots::unread_root_message;
+use super::unread_roots::{unread_root_message, unread_root_warnings};
 use crate::config::{Invocation, Selection, config_at, load_config_at};
 use crate::model::{CheckReport, Code, Diagnostic, Refused, RootOrigin, RootRow};
-use crate::testing::{test_root, write};
+use crate::testing::{scan_tree, test_root, write};
 
 /// A row the root gate recorded for `written`, refused by the hidden rule and, where
 /// `extension` says so, by the extension list too.
@@ -187,5 +187,203 @@ fn an_editor_marks_a_members_warning_at_the_members_config() {
     assert_eq!(
         PathBuf::from(published.warnings[0].path.as_deref().unwrap()),
         member.join("grund.toml").canonicalize().unwrap()
+    );
+}
+
+/// A version-1 project with one rule kind, its `folder` key on line 6.
+const RULE_FOLDER_V1: &str = "[id]\nformat = \"{kind}-{slug}\"\n\n[[kinds]]\nkind = \"RULE\"\n\
+                              folder = \"rules\"\nrules = true\n\n[scan]\nextensions = [\"rs\"]\n";
+/// A version-2 project with one rule kind, its `folders` key on line 8.
+const RULE_FOLDER_V2: &str = "grund_config_version = 2\nproject_name = \"demo\"\n\n\
+                              [schema.sources]\nlanguages = [\"rust\"]\n\n\
+                              [schema.kinds.RULE]\nfolders = [\"rules\"]\nform = \"rule\"\n";
+
+/// The located warnings a run of `toml` over `files` earns, through the walk, the record and
+/// the message, so these pin the bytes of §FS-scan.checks.unread-scan-root.message whatever
+/// shape the record takes.
+fn rule_folder_warnings(name: &str, toml: &str, files: &[&str]) -> Vec<(usize, String)> {
+    let root = test_root(name);
+    write(&root.join("grund.toml"), toml);
+    for file in files {
+        write(
+            &root.join(file),
+            "# RULE-a: Each FS must cite at least one RULE.\n",
+        );
+    }
+    let config = load_config_at(&root, &root).expect("load the project");
+    let (findings, _) = scan_tree(&config, None, false).expect("scan");
+    unread_root_warnings(&config, &findings)
+        .into_iter()
+        .map(|warning| (warning.line.expect("located"), warning.message))
+        .collect()
+}
+
+#[test]
+#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
+fn a_rule_folder_refusing_one_extension_is_named_in_version_1() {
+    assert_eq!(
+        rule_folder_warnings(
+            "a_rule_folder_refusing_one_extension_is_named_in_version_1",
+            RULE_FOLDER_V1,
+            &["rules/a.md", "rules/b.md"],
+        ),
+        vec![(
+            6,
+            "[[kinds]] RULE home `rules` is not read — `md` is not in [scan] extensions, so \
+             nothing in it is checked. Add \"md\" to [scan] extensions, or give its files an \
+             extension the list holds."
+                .to_string()
+        )],
+        "§FS-scan.checks.unread-scan-root.message: one refused extension, once however many files"
+    );
+}
+
+#[test]
+#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
+fn a_rule_folder_refusing_one_extension_is_named_in_version_2() {
+    assert_eq!(
+        rule_folder_warnings(
+            "a_rule_folder_refusing_one_extension_is_named_in_version_2",
+            RULE_FOLDER_V2,
+            &["rules/a.md", "rules/b.md"],
+        ),
+        vec![(
+            8,
+            "[schema.kinds.RULE] folder `rules` is not read — no language in [schema.sources] \
+             languages reads `.md`, so nothing in it is checked. Give its files an extension a \
+             listed language reads."
+                .to_string()
+        )],
+        "§FS-scan.checks.unread-scan-root.message: one refused extension, version 2"
+    );
+}
+
+#[test]
+#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
+fn a_rule_folder_refusing_several_extensions_names_them_in_order_in_version_1() {
+    assert_eq!(
+        rule_folder_warnings(
+            "a_rule_folder_refusing_two_extensions_in_version_1",
+            RULE_FOLDER_V1,
+            &["rules/a.md", "rules/b.json"],
+        ),
+        vec![(
+            6,
+            "[[kinds]] RULE home `rules` is not read — `json` and `md` are not in [scan] \
+             extensions, so nothing in it is checked. Add \"json\" or \"md\" to [scan] extensions, \
+             or give its files an extension the list holds."
+                .to_string()
+        )],
+        "§FS-scan.checks.unread-scan-root.message: two extensions, in byte order"
+    );
+    assert_eq!(
+        rule_folder_warnings(
+            "a_rule_folder_refusing_three_extensions_in_version_1",
+            RULE_FOLDER_V1,
+            &["rules/a.txt", "rules/b.md", "rules/c.json"],
+        ),
+        vec![(
+            6,
+            "[[kinds]] RULE home `rules` is not read — `json`, `md`, and `txt` are not in [scan] \
+             extensions, so nothing in it is checked. Add \"json\", \"md\", or \"txt\" to [scan] \
+             extensions, or give its files an extension the list holds."
+                .to_string()
+        )],
+        "§FS-scan.checks.unread-scan-root.message: three or more, the last alone takes the `and`"
+    );
+}
+
+#[test]
+#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
+fn a_rule_folder_refusing_several_extensions_names_them_in_order_in_version_2() {
+    assert_eq!(
+        rule_folder_warnings(
+            "a_rule_folder_refusing_two_extensions_in_version_2",
+            RULE_FOLDER_V2,
+            &["rules/a.md", "rules/b.json"],
+        ),
+        vec![(
+            8,
+            "[schema.kinds.RULE] folder `rules` is not read — no language in [schema.sources] \
+             languages reads `.json` or `.md`, so nothing in it is checked. Give its files an \
+             extension a listed language reads."
+                .to_string()
+        )],
+        "§FS-scan.checks.unread-scan-root.message: two extensions, in byte order"
+    );
+    assert_eq!(
+        rule_folder_warnings(
+            "a_rule_folder_refusing_three_extensions_in_version_2",
+            RULE_FOLDER_V2,
+            &["rules/a.txt", "rules/b.md", "rules/c.json"],
+        ),
+        vec![(
+            8,
+            "[schema.kinds.RULE] folder `rules` is not read — no language in [schema.sources] \
+             languages reads `.json`, `.md`, or `.txt`, so nothing in it is checked. Give its \
+             files an extension a listed language reads."
+                .to_string()
+        )],
+        "§FS-scan.checks.unread-scan-root.message: three or more, the last alone takes the `or`"
+    );
+}
+
+#[test]
+#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
+fn a_rule_folder_whose_refused_files_have_no_extension_says_so_in_version_1() {
+    assert_eq!(
+        rule_folder_warnings(
+            "a_rule_folder_whose_refused_files_have_no_extension_says_so_in_version_1",
+            RULE_FOLDER_V1,
+            &["rules/NOTES"],
+        ),
+        vec![(
+            6,
+            "[[kinds]] RULE home `rules` is not read — its files have no extension, and [scan] \
+             extensions reads a file only by its extension, so nothing in it is checked. Rename \
+             its files to an extension the list holds."
+                .to_string()
+        )],
+        "§FS-scan.checks.unread-scan-root.message: a file with none is never told to add it"
+    );
+}
+
+#[test]
+#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
+fn a_rule_folder_whose_refused_files_have_no_extension_says_so_in_version_2() {
+    assert_eq!(
+        rule_folder_warnings(
+            "a_rule_folder_whose_refused_files_have_no_extension_says_so_in_version_2",
+            RULE_FOLDER_V2,
+            &["rules/NOTES"],
+        ),
+        vec![(
+            8,
+            "[schema.kinds.RULE] folder `rules` is not read — its files have no extension, and \
+             [schema.sources] languages reads a file only by its extension, so nothing in it is \
+             checked. Give its files an extension a listed language reads."
+                .to_string()
+        )],
+        "§FS-scan.checks.unread-scan-root.message: no extension, version 2"
+    );
+}
+
+#[test]
+#[ignore = "red until #1183 names a rule folder the run reads no file of; implement removes this"]
+fn a_rule_folder_with_and_without_extensions_names_only_the_extensions() {
+    assert_eq!(
+        rule_folder_warnings(
+            "a_rule_folder_with_and_without_extensions_names_only_the_extensions",
+            RULE_FOLDER_V1,
+            &["rules/NOTES", "rules/a.md"],
+        ),
+        vec![(
+            6,
+            "[[kinds]] RULE home `rules` is not read — `md` is not in [scan] extensions, so \
+             nothing in it is checked. Add \"md\" to [scan] extensions, or give its files an \
+             extension the list holds."
+                .to_string()
+        )],
+        "§FS-scan.checks.unread-scan-root.message: reading one file clears the warning"
     );
 }

@@ -13,6 +13,12 @@ pub(crate) fn unread_scan_root_language(version: u32) -> String {
     fill(Code::UNREAD_SCAN_ROOT, version, Some("language"), slots)
 }
 
+/// `unread-scan-root`'s *Fix*, case `folder-language` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_folder_language(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("folder-language"), slots)
+}
+
 /// `unread-scan-root`'s *Fix*, case `hidden` (§FS-scan.checks.unread-scan-root).
 pub(crate) fn unread_scan_root_hidden(version: u32) -> String {
     let slots: &[(&str, &dyn Display)] = &[];
@@ -43,16 +49,34 @@ pub(crate) fn unread_scan_root_add(version: u32, ext: impl Display) -> String {
     fill(Code::UNREAD_SCAN_ROOT, version, Some("add"), slots)
 }
 
+/// `unread-scan-root`'s *Fix*, case `add-any` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_add_any(version: u32, exts: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("exts", &exts)];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("add-any"), slots)
+}
+
 /// `unread-scan-root`'s *Fix*, case `rename` (§FS-scan.checks.unread-scan-root).
 pub(crate) fn unread_scan_root_rename(version: u32) -> String {
     let slots: &[(&str, &dyn Display)] = &[];
     fill(Code::UNREAD_SCAN_ROOT, version, Some("rename"), slots)
 }
 
+/// `unread-scan-root`'s *Fix*, case `folder-rename` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_folder_rename(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("folder-rename"), slots)
+}
+
 /// `unread-scan-root`'s *Fix*, case `give` (§FS-scan.checks.unread-scan-root).
 pub(crate) fn unread_scan_root_give(version: u32) -> String {
     let slots: &[(&str, &dyn Display)] = &[];
     fill(Code::UNREAD_SCAN_ROOT, version, Some("give"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `folder-give` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_folder_give(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("folder-give"), slots)
 }
 
 /// `unread-scan-root`'s *Fix*, case `hidden-list` (§FS-scan.checks.unread-scan-root).

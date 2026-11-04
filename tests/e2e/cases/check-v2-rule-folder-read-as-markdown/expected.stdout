@@ -1,0 +1,4 @@
+rules/rules.md:1: error: RULE-cites is not listed in rules/README.md (the index file does not exist): an entry is a `§`-marked Markdown link to the declaration; write `[§RULE-cites](rules.md#rule-cites-each-fs-must-cite-at-least-one-rule)` in rules/README.md — became an error in grund 0.13.0
+src/a.rs:1: error: FS-a must cite RULE (RULE-cites); add such a citation within it
+rules/rules.md:1: warning: declared but never cited: RULE-cites; cite it
+src/a.rs:1: warning: declared but never cited: FS-a; cite it

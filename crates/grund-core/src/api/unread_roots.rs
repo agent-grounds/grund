@@ -10,6 +10,13 @@ use std::path::Path;
 use crate::config::Config;
 use crate::model::{Catalog, Code, Diagnostic, RootOrigin, RootRow};
 
+// Red until #1183: the rule folder's fix cases are rendered from their catalog row
+// (§FS-errors.5.5) ahead of the code that fills them. `implement` calls them and removes this.
+const _: fn(u32) -> String = remedies::unread_scan_root_folder_language;
+const _: fn(u32, &'static str) -> String = remedies::unread_scan_root_add_any;
+const _: fn(u32) -> String = remedies::unread_scan_root_folder_rename;
+const _: fn(u32) -> String = remedies::unread_scan_root_folder_give;
+
 /// One located warning per unread root, at the line of the key that named it
 /// (§FS-scan.checks.unread-scan-root.location). A warning, so the exit code stays
 /// and `success` is withheld (§FS-scan.checks.unread-scan-root.channel); it is a

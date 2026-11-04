@@ -1,0 +1,2 @@
+grund.toml:14: warning: [schema.kinds.RULE] folder `alpha` is not read — no language in [schema.sources] languages reads `.md`, so nothing in it is checked. Give its files an extension a listed language reads.
+grund.toml:14: warning: [schema.kinds.RULE] folder `zeta` is not read — no language in [schema.sources] languages reads `.md`, so nothing in it is checked. Give its files an extension a listed language reads.

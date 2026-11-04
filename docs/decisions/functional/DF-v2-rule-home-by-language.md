@@ -62,7 +62,7 @@ report does not ask about one: deciding at load that a folder holds no Markdown
 would be a new rule. That leaves a gap this record does not close. Which of a
 folder's files are read is up to the scan, and the scan does not always say when
 it reads none of them: a folder rule home it reads nothing from draws no warning
-when anything else in the project is read.
+when anything else in the project is read. [§DF-unread-rule-folder](DF-unread-rule-folder.md#df-unread-rule-folder-a-rule-kinds-folder-home-the-run-reads-no-file-of-is-named-not-refused) later closes that gap with a warning.
 
 ### 2.3 A home a `source` language reads keeps the answer it had
 

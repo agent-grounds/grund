@@ -774,7 +774,9 @@ are Markdown. It is invalid on a non-citable, homeless, unscanned, external-
 snapshot, or value-source kind: each either declares no IDs, supplies no scanned
 rule catalog, or gives its title another source contract. These relationships
 are config validation; sentence titles are scanned declaration data and are
-validated later as located findings ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
+validated later as located findings ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)). A `folder` home is
+accepted on its presence, and `check` names one whose files the run reads none of
+([§FS-scan.checks.unread-scan-root.rule-folder](FS-scan.md#checksunread-scan-rootrule-folder-a-rule-kinds-folder-the-run-reads-no-file-of)).
 
 The key is optional and additive, so `grund_config_version` remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)).
 An older binary rejects the unknown key loudly rather than silently ignoring a

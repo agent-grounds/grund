@@ -213,6 +213,8 @@ mod tests_walk_errors;
 #[cfg(all(test, unix))]
 mod tests_walk_roots;
 #[cfg(test)]
+mod tests_walk_rule_folder;
+#[cfg(test)]
 mod tests_word_character_marker;
 #[cfg(test)]
 mod tests_yaml;

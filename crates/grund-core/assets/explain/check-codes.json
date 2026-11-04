@@ -3425,7 +3425,7 @@
  },
  {
   "code": "unread-scan-root",
-  "meaning": "A file the config names as a scan root is not read, because its name is hidden or its extension is not scanned.",
+  "meaning": "A file the config names as a scan root is not read, because its name is hidden or its extension is not scanned, or a rule kind's folder has no file read, because the extensions of its files are not scanned.",
   "ramp": null,
   "2": {
    "severity": {
@@ -3439,7 +3439,8 @@
       "text": "a files entry of a [schema.kinds] table names a file that is not read for its name",
       "by": "condition"
      }
-    ]
+    ],
+    "remark": "or a folders entry of a rule kind names a folder with no file read, one refused for its extension"
    },
    "fix": {
     "kind": "cases",
@@ -3447,6 +3448,10 @@
      {
       "label": "language",
       "text": "Give the file an extension a listed language reads"
+     },
+     {
+      "label": "folder-language",
+      "text": "Give its files an extension a listed language reads"
      },
      {
       "label": "hidden",
@@ -3480,7 +3485,8 @@
       "text": "a [[kinds]] file home or a [scan] include entry names a file that is not read for its name",
       "by": "condition"
      }
-    ]
+    ],
+    "remark": "or the folder home of a rule kind names a folder with no file read, one refused for its extension"
    },
    "fix": {
     "kind": "cases",
@@ -3488,6 +3494,10 @@
      {
       "label": "add",
       "text": "Add \"{ext}\" to [scan] extensions"
+     },
+     {
+      "label": "add-any",
+      "text": "Add {exts} to [scan] extensions"
      },
      {
       "label": "drop",
@@ -3498,8 +3508,16 @@
       "text": "Rename the file to an extension the list holds"
      },
      {
+      "label": "folder-rename",
+      "text": "Rename its files to an extension the list holds"
+     },
+     {
       "label": "give",
       "text": "give the file an extension the list holds"
+     },
+     {
+      "label": "folder-give",
+      "text": "give its files an extension the list holds"
      },
      {
       "label": "hidden",
