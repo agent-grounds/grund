@@ -13,8 +13,10 @@ use crate::config::kind::{KindConfig, KindIndex, KindResolution};
 use crate::config::project::{Project, Strength};
 use crate::config::record::{CODE_SOURCE_KIND, ConfigLocation};
 use crate::config::rows::{Extent, Form, Kind, Origin, Place, Row};
-use crate::config::sources::Language;
-use crate::config::v1::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
+use crate::config::sources::LanguageClass;
+use crate::config::v1::{
+    ValueLines, file_home_is_named_markdown, rule_kind_refusal, validate_kind_value_keys,
+};
 
 use super::schema::RowDraft;
 use super::{places, sources, sources_model};
@@ -78,7 +80,7 @@ fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
         fetch: row.fetch.as_ref().map(|(fetch, _)| fetch.clone()),
     };
     let form_line = row.form.map_or(row.line, |(_, line)| line);
-    if let Some(refusal) = rule_kind_refusal(&k, file_homes_are_markdown(r, row)) {
+    if let Some(refusal) = rule_kind_refusal(&k, file_homes_are_markdown(r, row, &k)) {
         return r.fail(form_line, refusal);
     }
     let lines = ValueLines {
@@ -90,15 +92,20 @@ fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
     validate_kind_value_keys(r.path, &k, &lines, root, named_sections)
 }
 
-/// §FS-config-v2.schema.sources.rules: whether every `file` place of `row` is read
-/// by the Markdown reader, which is the language's answer and never the name's. One
-/// no admitted language reads is not, and a row's `folder` places are not asked.
-fn file_homes_are_markdown(r: &Reader, row: &RowDraft) -> bool {
+/// §FS-config-v2.schema.sources.rules: whether every `file` place of `row` passes,
+/// asked of its language. A `document` language's entry does, and a `data` language's
+/// or one no admitted language reads does not. A `source` language's entry is read, so
+/// it keeps the name test on the row's first `files` entry (§DF-v2-rule-home-by-language.2.3),
+/// the one case the name still answers here. A row's `folder` places are not asked.
+fn file_homes_are_markdown(r: &Reader, row: &RowDraft, k: &KindConfig) -> bool {
     let model = r.project.schema.sources.model.as_ref();
     row.places.iter().all(|place| match &place.extent {
         Extent::File(path) => model
             .and_then(|model| model.language_of(Path::new(path)))
-            .is_some_and(Language::reads_markdown),
+            .is_some_and(|language| {
+                language.reads_markdown()
+                    || (language.class == LanguageClass::Source && file_home_is_named_markdown(k))
+            }),
         Extent::Folder(_) | Extent::Complement => true,
     })
 }

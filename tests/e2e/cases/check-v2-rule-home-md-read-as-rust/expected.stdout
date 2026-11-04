@@ -1,0 +1,2 @@
+fs/spec.fsdoc:1: error: FS-a must cite RULE (RULE-cite); add such a citation within it
+rules/rules.md:1: warning: declared but never cited: RULE-cite; cite it
