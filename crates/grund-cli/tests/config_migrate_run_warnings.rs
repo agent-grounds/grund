@@ -57,7 +57,6 @@ fn grund(dir: &Path, args: &[&str]) -> Output {
 /// line" — check on the hand-written v2 tree prints the warning once, so the
 /// comparison lists it once.
 #[test]
-#[ignore = "red until #1146 compares each run warning once; implement removes this"]
 fn migrate_lists_an_unread_workspace_block_warning_once() {
     let fixture = Fixture::new("migrate");
     let output = grund(&fixture.group(), &["config", "migrate", "--to", "2"]);

@@ -232,6 +232,7 @@ fn lines(
     // difference the candidate makes, so neither run carries it; nor a stale block
     // outside the generated sections, which the guidance gate passes (.5.3).
     let compared = |f: &&Finding| f.code != CONFIG_VERSION_1.as_str() && !describes_config(f);
+    // §FS-config-migrate.5.2: one line per run warning; `output.warnings` repeats these.
     let mut out: Vec<String> = warnings
         .iter()
         .filter(compared)
@@ -264,13 +265,6 @@ fn lines(
                     .iter()
                     .filter(compared)
                     .map(|f| finding("suggestion", f)),
-            );
-            out.extend(
-                output
-                    .warnings
-                    .iter()
-                    .filter(compared)
-                    .map(|f| finding("run-warning", f)),
             );
             let failed = report.errors.iter().any(|f| compared(&f)) || output.had_scan_errors;
             out.push(format!("exit {}", u8::from(failed)));

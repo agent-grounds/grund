@@ -450,7 +450,6 @@ mapped: grund.toml:2: [workspace] include_root → [workspace] include_root
 mapped: grund.toml:3: [workspace] members → [workspace] members
 differs: grund check --suggestions on this tree
 + run-warning warning unread-workspace-block grund.toml:2:- grund.toml:2: no project scans `.`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.
-+ run-warning warning unread-workspace-block grund.toml:2:- grund.toml:2: no project scans `.`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.
 not written: grund check --suggestions differs (inspect the comparison above); grund.toml is unchanged
 ```
 

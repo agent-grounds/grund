@@ -393,7 +393,6 @@ fn unread_grouping_block(name: &str) -> PathBuf {
 /// once" — the candidate's one `unread-workspace-block` is one `+ ` line, not
 /// one per list the run carries it in.
 #[test]
-#[ignore = "red until #1146 compares each run warning once; implement removes this"]
 fn report_gate_compares_a_run_warning_once() {
     let group = unread_grouping_block("run-warning-once");
     let lines = match config_migrate(&MigrateOpts {
