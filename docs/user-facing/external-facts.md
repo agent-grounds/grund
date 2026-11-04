@@ -38,6 +38,13 @@ A heading anywhere below the declaration that would itself declare an ID, of
 any kind and at any depth, is refused, so a fetcher that copies provider
 headings must fence them as the example does
 ([§FS-fetch.3.1](../functional-spec/FS-fetch.md#31-a-nested-declaration-is-refused)).
+Section paths must also satisfy the project's ordinary structural checks: duplicate
+paths and enabled name-bearing paths with missing prefixes are refused, as are
+heading-depth mismatches configured as errors. Warning, suggestion, and disabled
+heading-depth modes keep their meaning. A refusal exits 2 and preserves the complete
+tree, including the previous snapshot and absent destination directories. Repair
+the fetcher's paths or fence provider headings as the example does
+([§FS-fetch.3.sections](../functional-spec/FS-fetch.md#3sections-section-structure-is-validated-before-writing)).
 Grund validates the complete output before atomically replacing only that ID's
 snapshot. It preserves accepted bytes verbatim and inserts a new file-home
 declaration in ID order ([§FS-fetch.3](../functional-spec/FS-fetch.md#3-accepted-declaration),

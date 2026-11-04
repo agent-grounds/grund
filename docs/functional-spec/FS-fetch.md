@@ -75,6 +75,32 @@ ID, stays accepted, as does any heading inside a fenced block, which declares no
 The rule binds only what `fetch` accepts: a nested declaration written by hand into a
 scanned file stays legal.
 
+### 3.sections: Section structure is validated before writing
+
+Before either home writer runs, `fetch` judges the fetched declaration's sections
+by the same scanner records and structural rules as `check`:
+[§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch),
+[§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path), and
+[§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path).
+Any error from those rules refuses the snapshot on stderr with exit 2, naming the
+offending coordinate, its line in the fetched output, and how to repair it. The
+complete tree remains byte-identical: an existing snapshot is preserved, and an
+absent destination file or directory stays absent. This applies to file and folder
+homes under config versions 1 and 2 alike.
+
+The selected project's configuration keeps its meaning. Heading-depth warnings,
+suggestions, and disabled checks do not become refusals; duplicate paths remain
+errors independently of that strength. Named-section enablement governs which
+paths the scanner records and whether the orphan rule applies. Paths are canonical,
+prefix presence is judged over the complete recorded path set rather than heading
+order, and purely numeric prefix gaps remain outside the orphan rule. Fenced
+headings remain content. Valid snapshots retain their exact bytes, including the
+single numbered, two distinct numbered, and single named subsection forms.
+
+This does not widen the one-subsection-depth limit, change `check`'s verdicts, or
+require body citations to resolve before writing. The compatibility correction is
+recorded in [§DF-fetch-section-structure](../decisions/functional/DF-fetch-section-structure.md#df-fetch-section-structure-fetch-refuses-section-structure-that-check-already-rejects).
+
 ## 4. File-home write
 
 For `file = "<home>"`, grund replaces only the H2 declaration whose ID exactly matches
