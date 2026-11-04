@@ -212,6 +212,11 @@ pub(super) fn write_file_home(
     install(path, &replacement, diagnostic)
 }
 
+/// §FS-fetch.5: the `<ID>.md` a folder home creates when no file there declares the ID.
+pub(super) fn created_folder_snapshot(folder: &Path, local: &str) -> PathBuf {
+    folder.join(format!("{local}.md"))
+}
+
 /// §FS-fetch.5: replace the unique declaring file or create `<ID>.md`.
 pub(super) fn write_folder_home(
     folder: &Path,
@@ -311,7 +316,7 @@ pub(super) fn write_folder_home(
     let target = matches
         .first()
         .and_then(|declaration| declaration.path.clone())
-        .unwrap_or_else(|| folder.join(format!("{local}.md")));
+        .unwrap_or_else(|| created_folder_snapshot(folder, local));
     if matches.is_empty() && path_exists(&target) {
         return Err(fetch_operational(format!(
             "snapshot file {} already exists for a different ID",

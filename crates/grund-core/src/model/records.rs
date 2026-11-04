@@ -40,11 +40,12 @@ pub struct Declaration {
     /// span (§AR-scanner.2.2.3).
     ///
     /// Nothing *resolves* through it: a `§<ID>.<path>` citation, the completion
-    /// candidates, and §FS-declarations.checks.section-heading-level all read the map. It exists for the two
+    /// candidates, and §FS-declarations.checks.section-heading-level all read the map. It exists for the
     /// commands that have to say the coordinate is ambiguous — §FS-declarations.checks.duplicate-section
-    /// names each colliding line, and §FS-show.2.2.2 refuses a query for a path
-    /// it holds. `--toc` reads neither: it re-scans the source, which is what
-    /// §FS-show.2.2.2.3 exempts it for.
+    /// names each colliding line, §FS-show.2.2.2 refuses a query for a path it
+    /// holds, and §FS-fetch.3.sections refuses a snapshot that holds one. `--toc`
+    /// reads neither: it re-scans the source, which is what §FS-show.2.2.2.3
+    /// exempts it for.
     pub duplicate_sections: Vec<(String, SectionInfo)>,
     pub is_stub: bool,
     pub defined_in: Option<PathBuf>,
@@ -85,24 +86,6 @@ pub struct Declaration {
     /// The front-matter field, on a declaration whose kind declares it and that
     /// is no stub (§FS-fields.front-matter); `None` everywhere else.
     pub(crate) front_matter: Option<FrontMatterField>,
-}
-
-impl Declaration {
-    /// The first proper prefix of `path` that this declaration's section map
-    /// lacks, where `path` bears a name: what makes the section an orphan
-    /// (§FS-declarations.checks.orphan-section). `None` for a numeric path, which
-    /// needs no parent recorded, and for a path whose every prefix is. The
-    /// orphan-section check reports it, and the parent pass refuses an orphan as a
-    /// relative heading's parent, so the two never disagree on which is one.
-    pub(crate) fn missing_section_prefix(&self, path: &str) -> Option<String> {
-        let parts = path.split('.').collect::<Vec<_>>();
-        if !super::named_section_path(path) {
-            return None;
-        }
-        (1..parts.len())
-            .map(|end| parts[..end].join("."))
-            .find(|prefix| !self.sections.contains_key(prefix))
-    }
 }
 
 /// One numeric or explicitly named subsection heading recorded inside a

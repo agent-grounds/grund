@@ -254,10 +254,6 @@ pub(super) fn edit_distance(left: &str, right: &str) -> usize {
     previous[right_chars.len()]
 }
 
-pub(super) fn section_depth(section_path: &str) -> usize {
-    section_path.split('.').count()
-}
-
 pub(super) fn heading_marks(level: usize) -> String {
     "#".repeat(level)
 }

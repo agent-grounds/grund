@@ -11,17 +11,16 @@
 //!   by the scanner's body-span post-pass is a located hard finding.
 //!
 //! They sit beside `report.rs` as one family because they read the same two
-//! things and nothing else does: the recorded section map, and the
-//! `duplicate_sections` list the scanner keeps beside it (§AR-scanner.2.2,
-//! §AR-core-module-layout.1).
-
-use crate::model::remedies;
-use std::collections::BTreeMap;
+//! things: the recorded section map, and the `duplicate_sections` list the scanner
+//! keeps beside it (§AR-scanner.2.2, §AR-core-module-layout.1). The predicates over
+//! those records are `model/section_structure.rs`, shared with fetch
+//! (§FS-fetch.3.sections); strength and wording stay here.
 
 use super::reference_scope::ScanScope;
-use super::support::{heading_marks, section_depth};
+use super::support::heading_marks;
 use crate::config::{Frame, Schema};
 use crate::grammar::render_catalog_id;
+use crate::model::remedies;
 use crate::model::{
     Catalog, CheckReport, Code, Diagnostic, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
     Switch, UnmarkedHeading, named_section_path, paired_declarations,
@@ -46,8 +45,8 @@ use crate::scanner::section_path_is_numeric;
 /// Why the anchor does not hang on the section map: the same insert that starts a
 /// collision list fills that map, so the lookup always hits — but the finding is
 /// written not to depend on it (§REQ-no-missed-citation). `lines` is non-empty
-/// either way, since a path is in `colliding` only because a heading claimed it
-/// twice.
+/// either way, since a path is in `section_collisions` only because a heading
+/// claimed it twice.
 pub(super) fn check_section_headings(
     findings: &Catalog,
     schema: &Schema,
@@ -163,13 +162,10 @@ pub(super) fn check_section_headings(
         for (id, decls) in &findings.declarations {
             for decl in decls {
                 for (section_path, section) in &decl.sections {
-                    // §FS-config.3.3.3: a relative heading's depth is its parent's plus one.
-                    // §FS-fields.front-matter.coordinates: a front-matter coordinate has none.
-                    if section.relative || section.in_front_matter() {
-                        continue;
-                    }
-                    let expected_level = decl.heading_level + section_depth(section_path);
-                    if section.heading_level != expected_level {
+                    // §FS-declarations.checks.section-heading-level: shared with fetch.
+                    if let Some(expected_level) =
+                        decl.section_heading_mismatch(section_path, section)
+                    {
                         target.push(Diagnostic {
                             code: Code::SECTION_HEADING_LEVEL,
                             path: Some(decl.file.clone()),
@@ -232,16 +228,7 @@ pub(super) fn check_section_headings(
         // at their lines; a scanned target is one record (§FS-declarations.stubs.target.5).
         for paired in paired_declarations(decls).iter() {
             let decl = paired.record;
-            let mut colliding: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
-            for (path, info) in &decl.duplicate_sections {
-                colliding.entry(path.as_str()).or_default().push(info.line);
-            }
-            for (path, mut lines) in colliding {
-                // The map holds the first heading (§AR-scanner.2.2.3), which is where
-                // the finding anchors; the rest are named in the message. With no map
-                // entry the earliest recorded claimant anchors it instead.
-                lines.extend(decl.sections.get(path).map(|first| first.line));
-                lines.sort_unstable();
+            for (path, lines) in decl.section_collisions() {
                 let sites: Vec<Site> = lines
                     .iter()
                     .map(|line| Site {

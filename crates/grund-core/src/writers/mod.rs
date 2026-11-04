@@ -13,7 +13,7 @@
 //! `fmt_*` files are the formatter — the rewrite walk, the plan it leaves and
 //! writes, the link pass, the lock pass, the value-binding protection, the
 //! workspace pass, the completeness proof and the one refusal it carries out —
-//! `id.rs` is the ID proposal, the `fetch*` pair is
+//! `id.rs` is the ID proposal, the `fetch*` files are
 //! the snapshot, `atomic_install.rs` the atomic replace it shares with
 //! `config migrate` (§AR-config.8.3), the `init_*` files are the scaffold (the run and its report,
 //! the plan one run makes, the block splice, what this run renders the block
@@ -76,6 +76,7 @@
 mod atomic_install;
 mod expected;
 mod fetch;
+mod fetch_sections;
 mod fetch_write;
 mod fmt_anchor_row;
 mod fmt_complete_findings;

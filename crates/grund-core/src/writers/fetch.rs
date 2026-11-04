@@ -1,11 +1,13 @@
 //! The explicit external-snapshot materializer (§FS-fetch). This module owns
 //! integration execution and output validation; every scanner and query remains
-//! a reader under §REQ-runs-offline. The snapshot-home discovery and the atomic
-//! install it ends in are `fetch_write.rs`.
+//! a reader under §REQ-runs-offline. The output's section structure is judged in
+//! `fetch_sections.rs`; the snapshot-home discovery and the atomic install it
+//! ends in are `fetch_write.rs`.
 
 use std::path::{Path, PathBuf};
 
-use super::fetch_write::{write_file_home, write_folder_home};
+use super::fetch_sections::validate_fetched_sections;
+use super::fetch_write::{created_folder_snapshot, write_file_home, write_folder_home};
 use crate::config::{Config, KindConfig, run_warning_findings};
 use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
@@ -235,6 +237,13 @@ fn fetch_run(
         }
     };
     validate_fetched_declaration(snapshot, local, depth, &selected.grammar)?;
+    // §FS-fetch.3.sections: scan provider bytes before either writer can create a home.
+    // The path only selects the reading, and a folder home's every target is `.md` in it.
+    let snapshot_path = match &home {
+        FetchHome::File(path) => path.clone(),
+        FetchHome::Folder(path) => created_folder_snapshot(path, local),
+    };
+    validate_fetched_sections(snapshot, &id, &snapshot_path, &selected)?;
     match home {
         FetchHome::File(path) => write_file_home(
             &path,

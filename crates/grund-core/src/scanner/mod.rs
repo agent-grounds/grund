@@ -84,6 +84,7 @@ mod scope_probe;
 mod section_locks;
 mod section_record;
 mod slices;
+mod snapshot;
 mod stub_homes;
 mod toml;
 mod tree;
@@ -132,6 +133,7 @@ pub(crate) use scope_probe::{
 };
 pub(crate) use section_locks::{may_give_locked_heading, section_locks_present};
 pub(crate) use slices::{SliceMiss, SliceSink, record_slices, section_row_title};
+pub(crate) use snapshot::scan_snapshot_text;
 pub(crate) use stub_homes::lend_citations;
 pub(crate) use tree::{ScanError, scan_tree, scan_tree_strict, scan_tree_with_workspace};
 pub(crate) use walk::scan_roots_for;

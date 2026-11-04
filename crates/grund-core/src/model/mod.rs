@@ -53,6 +53,7 @@ mod records;
 pub(crate) mod remedies;
 mod report;
 mod section_lock;
+mod section_structure;
 mod stub_resolution;
 mod text;
 mod unread_roots;

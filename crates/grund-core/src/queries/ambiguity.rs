@@ -156,18 +156,8 @@ pub(super) fn ambiguous_section_refusal(
     _id: &Id,
     section: &str,
 ) -> Option<ShowQueryError> {
-    let mut lines: Vec<usize> = body_decl
-        .duplicate_sections
-        .iter()
-        .filter(|(path, _)| path == section)
-        .map(|(_, info)| info.line)
-        .collect();
-    if lines.is_empty() {
-        return None;
-    }
-    // §AR-scanner.2.2.3: the map holds the first claimant, the list the rest.
-    lines.extend(body_decl.sections.get(section).map(|first| first.line));
-    lines.sort_unstable();
+    // §FS-declarations.checks.duplicate-section: the claimant lines check reports.
+    let lines = body_decl.section_collisions().remove(section)?;
     let rendered = display_path(path_config, &body_decl.file);
     let sites_text = lines
         .iter()

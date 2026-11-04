@@ -166,13 +166,11 @@ fn reported_shape(headings: &str, diagnostic: &str, coordinate: &str) {
 }
 
 #[test]
-#[ignore = "red until #1162 fetch shares section heading-depth validation; implement removes this"]
 fn numbered_path_deeper_than_heading_is_refused() {
     reported_shape("1.2. Deep", "heading level mismatch", "AR-001-thing.1.2");
 }
 
 #[test]
-#[ignore = "red until #1162 fetch shares section heading-depth validation; implement removes this"]
 fn named_path_deeper_than_heading_is_refused() {
     // Supply the prefix so this tests the level rule independently of orphans.
     reported_shape(
@@ -183,13 +181,11 @@ fn named_path_deeper_than_heading_is_refused() {
 }
 
 #[test]
-#[ignore = "red until #1162 fetch shares duplicate-section validation; implement removes this"]
 fn duplicate_numbered_path_is_refused() {
     reported_shape("1. One\n1. Again", "duplicate section", "AR-001-thing.1");
 }
 
 #[test]
-#[ignore = "red until #1162 fetch shares duplicate-section validation; implement removes this"]
 fn duplicate_named_path_is_refused() {
     reported_shape(
         "notes: Notes\nnotes: Again",
@@ -199,7 +195,6 @@ fn duplicate_named_path_is_refused() {
 }
 
 #[test]
-#[ignore = "red until #1162 fetch shares orphan-section validation; implement removes this"]
 fn name_bearing_orphan_is_refused_even_when_depth_is_not_an_error() {
     for (version, folder, mode) in [
         (1, false, "loose"),
@@ -220,7 +215,6 @@ fn name_bearing_orphan_is_refused_even_when_depth_is_not_an_error() {
 }
 
 #[test]
-#[ignore = "red until #1162 fetch shares duplicate-section validation in every depth mode; implement removes this"]
 fn duplicates_are_errors_in_every_heading_depth_mode() {
     for (version, mode) in [
         (1, "strict"),
@@ -242,7 +236,6 @@ fn duplicates_are_errors_in_every_heading_depth_mode() {
 }
 
 #[test]
-#[ignore = "red until #1162 fetch validates canonical duplicate paths; implement removes this"]
 fn relative_and_complete_paths_claiming_one_coordinate_are_refused() {
     reported_shape(
         "notes: First\n.notes: Again",
@@ -252,7 +245,6 @@ fn relative_and_complete_paths_claiming_one_coordinate_are_refused() {
 }
 
 #[test]
-#[ignore = "red until #1162 fetch preserves existing folder snapshots on structural errors; implement removes this"]
 fn invalid_sections_preserve_an_existing_folder_snapshot() {
     let fixture = Fixture::new(2, true, true, "must", true);
     fixture.refused(
@@ -263,7 +255,6 @@ fn invalid_sections_preserve_an_existing_folder_snapshot() {
 }
 
 #[test]
-#[ignore = "red until #1162 fetch refuses structural errors before creating missing homes; implement removes this"]
 fn invalid_sections_preserve_absent_file_and_folder_destinations() {
     for (version, folder, mode) in [(2, false, "must"), (1, true, "strict")] {
         let fixture = Fixture::new(version, folder, false, mode, true);
