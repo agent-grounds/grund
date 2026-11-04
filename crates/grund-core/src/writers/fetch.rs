@@ -5,7 +5,7 @@
 
 use std::path::{Path, PathBuf};
 
-use super::fetch_write::{write_file_home, write_folder_home};
+use super::fetch_write::{fetch_lines, write_file_home, write_folder_home};
 use crate::config::{Config, KindConfig, run_warning_findings};
 use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
@@ -297,7 +297,7 @@ pub(super) fn validate_fetched_declaration(
     let mut blocks = MarkdownBlocks::default();
     let mut declaration_count = 0usize;
     let mut first_content = true;
-    for (index, line) in text.lines().enumerate() {
+    for (index, (_, line)) in fetch_lines(text).enumerate() {
         let trimmed = line.trim_start();
         let block = blocks.line(line);
         if block.in_fence() {

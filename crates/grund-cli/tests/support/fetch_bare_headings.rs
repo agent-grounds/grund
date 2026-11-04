@@ -21,8 +21,9 @@ const REFUSED: [&str; 6] = [
 
 /// Content to the next scan though they look like a bare heading, so each stays accepted and
 /// the fetched text after it stays in the declaration.
-const STAY_ACCEPTED: [&str; 5] = [
+const STAY_ACCEPTED: [&str; 6] = [
     "fetch-bare-heading-four-space-indent-accepted",
+    "fetch-bare-heading-folder-home-four-space-indent-accepted",
     "fetch-bare-heading-tab-indent-accepted",
     "fetch-bare-heading-seven-hashes-accepted",
     "fetch-bare-heading-run-into-text-accepted",
@@ -78,9 +79,9 @@ fn fetch_lines_the_next_scan_reads_as_content_stay_in_the_declaration() {
     assert_every_case_passed("fetch bare heading lookalikes", &outcomes);
 }
 
-/// §FS-fetch.4: a second fetch replaces the declaration and nothing else. The write path has to
-/// read these lines as the next scan does (§FS-fetch.3.3): `    ##` ending the owned declaration
-/// would leave a column-0 `##` and a second copy of the text after the replacement.
+/// §FS-fetch.4, §FS-fetch.5: a second fetch replaces the declaration and nothing else. The write
+/// path has to read these lines as the next scan does (§FS-fetch.3.3): `    ##` ending the owned
+/// declaration would leave a column-0 `##` and a second copy of the text after the replacement.
 #[test]
 fn fetching_a_line_the_next_scan_reads_as_content_twice_changes_nothing() {
     let root = repo_root();
@@ -89,7 +90,11 @@ fn fetching_a_line_the_next_scan_reads_as_content_twice_changes_nothing() {
         .iter()
         .map(|name| {
             run_case_inspecting(&root, &cases.join(name), E2e, |repo| {
-                let home = repo.join("docs/arch.md");
+                let home = ["docs/arch.md", "docs/arch/AR-001-thing.md"]
+                    .map(|home| repo.join(home))
+                    .into_iter()
+                    .find(|home| home.exists())
+                    .expect("the first fetch wrote a home");
                 let first = std::fs::read_to_string(&home).expect("read the first fetch's home");
                 let again = grund(repo, &["fetch", "AR-001-thing"]);
                 assert_eq!(again.status.code(), Some(0), "{name}: {again:?}");

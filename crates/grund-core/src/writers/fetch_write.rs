@@ -8,10 +8,13 @@ use super::atomic_install::{Install, InstallFailure, atomic_install};
 use super::fetch::{FetchFailure, fetch_io, fetch_operational};
 use crate::config::Config;
 use crate::grammar::{
-    Grammar, MarkdownBlocks, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
+    Grammar, MarkdownBlocks, markdown_line_records, near_miss_heading, parse_id_arg,
+    parse_longest_id_prefix,
 };
 use crate::model::{Id, OperationDiagnostic, format_path};
-use crate::scanner::{markdown_heading_level, walk_scannable_files_with_sources};
+use crate::scanner::{
+    heading_ends_body, markdown_heading_level, walk_scannable_files_with_sources,
+};
 use crate::sources::{path_exists, path_is_dir, read_bytes};
 
 /// `ignore::Error` owns the I/O error but does not expose it through `source()`.
@@ -63,6 +66,21 @@ struct SnapshotDeclaration {
     path: Option<PathBuf>,
 }
 
+/// Each line of fetched text or of a snapshot home, whole and without its line ending: the one
+/// split of fetch's validator and write path, to both of which a final `\r` ends a line as a
+/// `\r\n` does (§FS-fetch.3.3).
+pub(super) fn fetch_lines(text: &str) -> impl Iterator<Item = (&str, &str)> {
+    text.split_inclusive('\n').map(|line| {
+        let without_newline = line.strip_suffix('\n').unwrap_or(line);
+        (
+            line,
+            without_newline
+                .strip_suffix('\r')
+                .unwrap_or(without_newline),
+        )
+    })
+}
+
 fn declarations_at_depth(
     bytes: &[u8],
     grammar: &Grammar,
@@ -74,11 +92,7 @@ fn declarations_at_depth(
     let mut offset = 0usize;
     // §FS-check.1.1.5.2: the whole snapshot home, so its front matter holds no heading.
     let mut blocks = MarkdownBlocks::file(text);
-    for line in text.split_inclusive('\n') {
-        let without_newline = line.strip_suffix('\n').unwrap_or(line);
-        let content = without_newline
-            .strip_suffix('\r')
-            .unwrap_or(without_newline);
+    for (line, content) in fetch_lines(text) {
         let trimmed = content.trim_start();
         // §FS-check.1.1.5.1, §FS-check.1.1.5.2: neither a fence, a raw-text HTML block
         // nor front matter holds a heading.
@@ -121,6 +135,13 @@ fn declarations_at_depth(
             if id.is_some() || markdown_heading_level(content).is_some() {
                 headings.push((start, id));
             }
+        } else if markdown_heading_level(content)
+            .is_some_and(|level| heading_ends_body(level, depth))
+            || ((1..depth).contains(&hashes) && markdown_line_records(grammar, content).is_some())
+        {
+            // §FS-fetch.4: above this depth, a heading or a declaration the scan records however
+            // indented ends the owned declaration, at the line's start.
+            headings.push((offset, None));
         }
         offset += line.len();
     }

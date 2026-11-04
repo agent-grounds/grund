@@ -7,6 +7,13 @@ use std::collections::BTreeMap;
 
 use crate::model::{Catalog, Declaration, FileRecord, HeadingKind};
 
+/// Whether an ATX heading at `level` ends the body of a declaration at `declaration_level`
+/// (§FS-declarations.body): one at its level or above does, declaring or not. Fetch's write
+/// path asks the same, so a re-fetch and the next scan end a declaration alike (§FS-fetch.4).
+pub(crate) fn heading_ends_body(level: usize, declaration_level: usize) -> bool {
+    level <= declaration_level
+}
+
 /// Where `decl`'s body ends (§FS-declarations.body, §AR-scanner.2.4.1): in
 /// Markdown, before the next ATX heading of its level or above, declaring or not;
 /// in a source file, at the end of the comment block its line opens, capped before
@@ -20,7 +27,7 @@ pub(super) fn body_end(record: &FileRecord, decl: &Declaration, next_decl: Optio
         return record
             .headings_between(decl.line + 1, usize::MAX)
             .iter()
-            .find(|heading| heading.atx && heading.level <= decl.heading_level)
+            .find(|heading| heading.atx && heading_ends_body(heading.level, decl.heading_level))
             .map_or(record.total_lines, |heading| heading.line - 1)
             .max(decl.line);
     }

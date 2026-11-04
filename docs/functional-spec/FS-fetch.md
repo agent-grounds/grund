@@ -137,7 +137,9 @@ only by whitespace (`## `) and a line [§FS-fetch.3](FS-fetch.md#3-accepted-decl
 For `file = "<home>"`, grund replaces only the H2 declaration whose ID exactly matches
 the requested ID. If it is absent, grund inserts the declaration among sibling H2
 declarations in ID order. The file's preamble, other declarations, line endings, and
-all bytes outside the owned declaration remain unchanged.
+all bytes outside the owned declaration remain unchanged. The owned declaration ends where
+its body does ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)) or, if it comes first, at the next line the scan
+records as a declaration at H2 depth or above, indented or not.
 
 The final file is installed atomically only after the complete result is available. If
 the home cannot be read, parsed unambiguously, or atomically replaced, the command emits
