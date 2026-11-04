@@ -379,7 +379,7 @@ Under the default `enabled = true` nothing is scoped, because the pass was alrea
 
 #### 6.1.3 The carve-out follows the pass's own gate
 
-The dry run previews the index-entry wraps that `--write` applies, even when `[fmt.cross_refs] enabled = false`. The carve-out needs no Markdown test of its own: it is the pass's own, run on the index file through the gate of [§FS-fmt.6.1](FS-fmt.md#61-scope), so it acts on an index exactly where the pass would. In version 1 that is every named index, because `index` must name a `.md` file ([§FS-config.3.4.2.3](FS-config.md#3423-a-named-index-is-a-markdown-file-inside-folder)), and this scope clause is the reason for that rule. Version 2 keeps the name test, but this clause is not its reason there ([§FS-config.3.4.2.3.2](FS-config.md#34232-version-2-keeps-the-name-test)).
+The dry run previews the index-entry wraps that `--write` applies, even when `[fmt.cross_refs] enabled = false`. The carve-out needs no Markdown test of its own: it is the pass's own, run on the index file through the gate of [§FS-fmt.6.1](FS-fmt.md#61-scope), so it acts on an index exactly where the pass would. In version 1 that is every named index the run walks, because `index` must name a `.md` file ([§FS-config.3.4.2.3](FS-config.md#3423-a-named-index-is-a-markdown-file-inside-folder)), and this scope clause is the reason for that rule. Version 2 keeps the name test, but this clause is not its reason there ([§FS-config.3.4.2.3.2](FS-config.md#34232-version-2-keeps-the-name-test)).
 
 ### 6.2 Form
 

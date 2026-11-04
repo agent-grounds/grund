@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use super::record::Config;
 
 /// One `[[kinds]]` entry: the kind name plus the folder its declarations live in
@@ -83,6 +85,20 @@ pub enum KindIndex {
 
 /// The index file a kind carries when `index` is left unset (§FS-config.3.4).
 pub(super) const DEFAULT_KIND_INDEX: &str = "README.md";
+
+/// The name test on a named `index`, in both config versions: its final extension
+/// is `md` (§FS-config.3.4.2.3). It never asks how the file is read, which the name
+/// settles only in version 1 (§FS-config.3.4.2.3.2).
+pub(crate) fn index_is_named_markdown(index: &Path) -> bool {
+    index.extension().and_then(|ext| ext.to_str()) == Some("md")
+}
+
+/// The refusal of an `index` value that fails that test, which each version opens
+/// with its own clause (§FS-config.3.4.2.3.1).
+pub(super) fn index_name_refusal(name: &str) -> Option<String> {
+    (!index_is_named_markdown(Path::new(name)))
+        .then(|| format!("must name a Markdown file (`{name}` is not a `.md` file)"))
+}
 
 impl KindConfig {
     /// This row's ID template, falling back to the repository default

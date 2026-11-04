@@ -16,7 +16,7 @@ use super::index_form::{
     IndexCitationForm, IndexEntryState, index_citation_form, index_citation_form_at,
 };
 use super::index_mention::index_mentions;
-use crate::config::{Frame, Owners, Schema};
+use crate::config::{Frame, Owners, Schema, index_is_named_markdown};
 use crate::grammar::{MarkdownLinks, front_matter_extent, render_catalog_id};
 use crate::model::{
     Catalog, CheckReport, Citation, Code, Declaration, Diagnostic, Id, paired_declarations,
@@ -65,7 +65,7 @@ pub(super) fn kind_index_targets<'a>(
             // §FS-config.3.4.2.3 refuses an `index` that does not name a `.md` file, so
             // this filter never fires on a config that loaded; it states the name every
             // rule below rests on, which only in version 1 settles how the file is read.
-            if index.extension().and_then(|ext| ext.to_str()) != Some("md") {
+            if !index_is_named_markdown(&index) {
                 return None;
             }
             Some(KindIndexTarget {

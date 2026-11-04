@@ -12,7 +12,7 @@ use std::path::{Component, Path};
 
 use super::grounding::ParsedGrounding;
 use super::values::{bail_config, parse_bool, parse_string};
-use crate::config::kind::{KindConfig, KindIndex, KindResolution};
+use crate::config::kind::{KindConfig, KindIndex, KindResolution, index_name_refusal};
 use crate::grammar::id_grammar_literal_slash_error;
 use crate::grammar::named_section_component;
 
@@ -382,7 +382,8 @@ pub(super) fn parse_kinds_key(
 ///   (§FS-fmt.6.1), so an index with any other extension is one the formatter can
 ///   never linkify — and §FS-check.3.17.3, whose whole licence is that
 ///   `grund fmt --write` fixes it, would be an error no command could clear
-///   (§DF-index-entry-form.2.3).
+///   (§DF-index-entry-form.2.3). The test and its refusal are one with version 2's;
+///   only the clause opening the message is this version's (§FS-config.3.4.2.3.1).
 fn kind_index_name_error(name: &str) -> Option<String> {
     if name.is_empty() {
         return Some("[[kinds]] `index` must name a file (use `false` to opt out)".to_string());
@@ -396,10 +397,5 @@ fn kind_index_name_error(name: &str) -> Option<String> {
             "[[kinds]] `index` must be a relative path inside `folder` (`{name}` is not)"
         ));
     }
-    if Path::new(name).extension().and_then(|ext| ext.to_str()) != Some("md") {
-        return Some(format!(
-            "[[kinds]] `index` must name a Markdown file (`{name}` is not a `.md` file)"
-        ));
-    }
-    None
+    index_name_refusal(name).map(|why| format!("[[kinds]] `index` {why}"))
 }

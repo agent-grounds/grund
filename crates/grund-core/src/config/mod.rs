@@ -148,7 +148,7 @@ pub(crate) use grounding::{
     any_place_grounded, grounding_level_for_kind, grounding_setting, homeless_row_grounding,
     row_grounding, row_grounds_at_any_strength, soft_grounding_rungs,
 };
-pub(crate) use kind::escape_toml_basic;
+pub(crate) use kind::{escape_toml_basic, index_is_named_markdown};
 pub(crate) use kinds::{
     KindEntry, KindField, KindScope, KindTable, KindVerdict, Quote, install_kind_table,
     known_kinds_line, unverifiable_reason,

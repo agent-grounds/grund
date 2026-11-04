@@ -8,7 +8,7 @@ use std::path::{Component, Path};
 
 use super::fields::bodiless;
 use super::walk::Reader;
-use crate::config::kind::KindIndex;
+use crate::config::kind::{KindIndex, index_name_refusal};
 use crate::config::project::Strength;
 use crate::config::record::CODE_SOURCE_KIND;
 use crate::config::record::ShorthandPolicy;
@@ -290,10 +290,11 @@ pub(super) fn normalize_place(written: &str) -> Option<String> {
 }
 
 /// Why an `index` value cannot name the folder's index: it must name a file inside
-/// the folder whose name ends in `.md`, as v1's must (§FS-config.3.4.2.3). The suffix
-/// is a test of the name carried over from v1, which never asks the language
-/// `[schema.sources]` reads the file as (§FS-config.3.4.2.3.2), so the refusal says
-/// that the name is what failed (§FS-config.3.4.2.3.1).
+/// the folder and pass the name test, as v1's must (§FS-config.3.4.2.3). That test is
+/// carried over from v1 and never asks the language `[schema.sources]` reads the file
+/// as (§FS-config.3.4.2.3.2), so the refusal says that the name is what failed, and
+/// only the clause opening the message, at the call site, is this version's
+/// (§FS-config.3.4.2.3.1).
 fn index_name_error(name: &str) -> Option<String> {
     let inside = !name.is_empty()
         && !name.contains('\\')
@@ -303,10 +304,5 @@ fn index_name_error(name: &str) -> Option<String> {
     if !inside {
         return Some("must name a file inside the folder".to_string());
     }
-    if Path::new(name).extension().and_then(|ext| ext.to_str()) != Some("md") {
-        return Some(format!(
-            "must name a Markdown file (`{name}` is not a `.md` file)"
-        ));
-    }
-    None
+    index_name_refusal(name)
 }

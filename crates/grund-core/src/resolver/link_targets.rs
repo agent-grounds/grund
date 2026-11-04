@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 
 use super::anchor_numbering::numbered_anchor;
 use super::settled_headings::SettledHeadings;
-use crate::config::{Frame, Owners, Presentation, Schema};
+use crate::config::{Frame, Owners, Presentation, Schema, index_is_named_markdown};
 use crate::grammar::{
     Grammar, anchor_slug, reduce_heading_text, render_declaration_id, without_closing_sequence,
 };
@@ -70,9 +70,10 @@ pub(crate) fn markdown_link_target(
 /// it compares a page against `fmt`'s destination, and names the entry a
 /// not-listed declaration owes, without the checker reading the anchor profile
 /// (§AR-checker.1.3, §AR-checker.2.16, §FS-check.3.18.3, §FS-check.3.18.5.2).
-/// An index is a citable folder row's Markdown `index`, and an ID is looked up
-/// under the first row of its own kind that keeps that file, as the kind-index
-/// pass looks it up. Two sets of IDs, and no more: every ID the index cites,
+/// An index is a citable folder row's `index` that passes the name test, which says
+/// the file is read as Markdown only in version 1 (§FS-config.3.4.2.3.2), and an ID
+/// is looked up under the first row of its own kind that keeps that file, as the
+/// kind-index pass looks it up. Two sets of IDs, and no more: every ID the index cites,
 /// which external enrollment compares, and every declaration of the kind under
 /// a folder that index lists, the only ones the finding can call not listed
 /// there. Linking every declaration of the kind from every index instead costs
@@ -108,7 +109,7 @@ pub(crate) fn index_link_targets_for<'c>(
                 .into_iter()
                 .map(move |(folder, index)| (row, folder, index))
         })
-        .filter(|(_, _, index)| index.extension().and_then(|ext| ext.to_str()) == Some("md"))
+        .filter(|(_, _, index)| index_is_named_markdown(index))
         .map(|(row, folder, index)| {
             let file = frame.root().join(&index);
             (row.name.as_str(), folder, scanned_path_key(&index), file)
