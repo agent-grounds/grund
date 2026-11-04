@@ -275,6 +275,26 @@ fn a_file_with_no_h1_of_the_id_is_told_what_it_holds_at_any_depth() {
         ("other-nested", "## TICKET-2: b\n", DIFFERENT),
         ("fenced", "```\n## TICKET-1234: a\n```\n", NOTHING),
         ("prose-heading", "## Notes: x\n\nProse.\n", NOTHING),
+        (
+            "h1-with-a-later-colon",
+            "# TICKET-1234 x: y\n\nBody.\n",
+            "malformed declaration heading `TICKET-1234 x: y`",
+        ),
+        (
+            "h1-with-a-titled-colon",
+            "# TICKET-1234 Fix: the thing\n\nBody.\n",
+            "malformed declaration heading `TICKET-1234 Fix: the thing`",
+        ),
+        (
+            "nested-above-h1-with-a-later-colon",
+            "## TICKET-1234: a\n\n# TICKET-1234 x: y\n",
+            "malformed declaration heading `TICKET-1234 x: y`",
+        ),
+        (
+            "other-h1-with-a-later-colon",
+            "# TICKET-2 x: y\n",
+            DIFFERENT,
+        ),
     ];
     for (name, sources) in [("ordinary", ORDINARY), ("md-as-json", MD_AS_JSON)] {
         for (shape, body, words) in shapes {

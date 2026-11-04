@@ -64,6 +64,15 @@ struct SnapshotDeclaration {
     path: Option<PathBuf>,
 }
 
+/// The refusal of a heading a fetch cannot take as a declaration, quoting its text after the
+/// hashes. `heading` is the line with its indentation trimmed.
+fn malformed_heading(heading: &str) -> String {
+    format!(
+        "snapshot home has malformed declaration heading `{}`",
+        heading.trim_start_matches('#').trim()
+    )
+}
+
 fn declarations_at_depth(
     bytes: &[u8],
     grammar: &Grammar,
@@ -95,24 +104,15 @@ fn declarations_at_depth(
                 Some((raw, title)) => match parse_id_arg(raw.trim(), grammar) {
                     Ok((id, None)) if !title.trim().is_empty() => Some(id),
                     Ok((_, None)) => {
-                        return Err(fetch_operational(format!(
-                            "snapshot home has malformed declaration heading `{}`",
-                            tail.trim()
-                        )));
+                        return Err(fetch_operational(malformed_heading(trimmed)));
                     }
                     _ if near_miss_heading(grammar, trimmed, false, true).is_some() => {
-                        return Err(fetch_operational(format!(
-                            "snapshot home has malformed declaration heading `{}`",
-                            tail.trim()
-                        )));
+                        return Err(fetch_operational(malformed_heading(trimmed)));
                     }
                     _ => None,
                 },
                 None if parse_longest_id_prefix(tail, grammar).is_some() => {
-                    return Err(fetch_operational(format!(
-                        "snapshot home has malformed declaration heading `{}`",
-                        tail.trim()
-                    )));
+                    return Err(fetch_operational(malformed_heading(trimmed)));
                 }
                 None => None,
             };
@@ -303,9 +303,10 @@ pub(super) fn write_folder_home(
     install(&target, snapshot, diagnostic)
 }
 
-/// §FS-fetch.5.2: what `<home>/<ID>.md` is told when no H1 of it declares the requested ID,
-/// by what a scan records there at any depth. This reads for the words alone: the file is
-/// refused whatever it finds, and the walk's search for a declaring file does not ask it.
+/// §FS-fetch.5.2: what `<home>/<ID>.md` is told when `fetch` takes no H1 of it as declaring the
+/// requested ID, by what a scan records there at any depth, the whole file read before a nested
+/// record is believed. This reads for the words alone: the file is refused whatever it finds,
+/// and the walk's search for a declaring file does not ask it.
 fn undeclared_target_refusal(
     path: &Path,
     bytes: &[u8],
@@ -318,6 +319,7 @@ fn undeclared_target_refusal(
     let text = String::from_utf8_lossy(bytes);
     let mut blocks = MarkdownBlocks::file(&text);
     let mut another = another_h1;
+    let mut nested = false;
     for line in text.lines() {
         if !blocks.line(line).may_be_heading() {
             continue;
@@ -325,12 +327,19 @@ fn undeclared_target_refusal(
         let Some(token) = markdown_line_records(&config.grammar, line) else {
             continue;
         };
-        if matches!(parse_id_arg(token, &config.grammar), Ok((id, None)) if id == *requested) {
-            return format!("snapshot file {path_shown} declares {local} only in a nested heading");
+        if !matches!(parse_id_arg(token, &config.grammar), Ok((id, None)) if id == *requested) {
+            another = true;
+            continue;
         }
-        another = true;
+        let trimmed = line.trim_start();
+        if markdown_heading_level(trimmed) == Some(1) {
+            return malformed_heading(trimmed);
+        }
+        nested = true;
     }
-    if another {
+    if nested {
+        format!("snapshot file {path_shown} declares {local} only in a nested heading")
+    } else if another {
         format!("snapshot file {path_shown} already exists for a different ID")
     } else {
         format!("snapshot file {path_shown} already exists and does not declare {local}")

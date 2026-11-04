@@ -152,7 +152,7 @@ list without `md`, an ignore-file rule and an exclusion can each keep the file f
 walk, and none of them says anything about what it declares. It is read as the walk's
 files are, and what it holds decides. Only a declaration at the home's native depth, an H1,
 can make it the declaring file; the refusals below count declarations at any depth, as a
-scan reads them, so a fence, an HTML block or front matter holds none:
+scan reads them, so a fence, a raw-text HTML block or front matter holds none:
 
 - A file whose H1 declares the requested ID alone, with no other H1 and nothing before
   it, is the declaring file and is replaced, so a second `grund fetch` of one ID rewrites
@@ -169,7 +169,10 @@ scan reads them, so a fence, an HTML block or front matter holds none:
   ID, and `fetch` owns only the requested declaration ([§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)).
 - A file that is not UTF-8, or whose H1 is a malformed declaration heading, is refused
   before any of those: `snapshot home is not UTF-8 Markdown` or
-  `snapshot home has malformed declaration heading ...`.
+  `snapshot home has malformed declaration heading ...`. That covers an H1 a scan reads
+  as declaring the requested ID but that is not written `# <ID>: <title>`, such as
+  `# <ID> words: title` or `# <ID>`: a scan reads the declaration, but `fetch` does not
+  take that H1 as the declaring file.
 - A link that leads anywhere and a directory are refused and left as they are:
   `snapshot file <path> is not a regular file`. What a link leads to is not read here,
   so this read can never replace a link.
