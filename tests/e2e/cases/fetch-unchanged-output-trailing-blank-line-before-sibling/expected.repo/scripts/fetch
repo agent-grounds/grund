@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+
+printf '## AR-001-thing: Thing\nkept\n\n'

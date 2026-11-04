@@ -139,6 +139,30 @@ configured snapshot home, extending [§REQ-no-data-loss.2](../requirements/REQ-n
 One `fetch <ID>` fetches one ID. There is no `--refresh`, generated timestamp,
 unused-snapshot exemption, or workspace-wide snapshot ownership behavior.
 
+### 6.1. A home that already holds the output is left as it is
+
+Output [§FS-fetch.3](FS-fetch.md#3-accepted-declaration) accepts is accepted whatever it opens or closes with: blank or
+whitespace-only lines ahead of the heading, U+00A0 among them, trailing blank lines, a
+last line with no line feed or ending in a bare CR, and CR LF or LF endings of its own.
+The first fetch writes it verbatim, and every later fetch of the same output exits 0,
+prints nothing, and leaves the same file set and bytes. That holds for a `file` home
+with LF or CR LF endings, with or without a final newline, the declaration first, last
+or between siblings, and for a `folder` home, whose file a later fetch replaces rather
+than refusing for the whitespace ahead of its heading.
+
+The home holds the output when the output's bytes, its lead included, stand at the
+requested declaration followed by nothing but blank lines up to the next declaration or
+the end of the file. A declaration that holds more than that is replaced as
+[§FS-fetch.4](FS-fetch.md#4-file-home-write) and [§FS-fetch.5](FS-fetch.md#5-folder-home-write) say, and content other than whitespace ahead of a `folder`
+file's heading is still refused.
+
+The lead the output prints belongs to the fetched declaration. A fetcher that prints
+the same lead and changed text leaves one copy of the lead, so a refresh does not grow
+the home, and fetching one ID never takes or adds a blank line at another declaration,
+its lead included. A bare CR at the end of the output is not the home's line ending: the
+separators grund adds follow the bytes outside the fetched declaration ([§FS-fetch.4](FS-fetch.md#4-file-home-write)).
+A home an earlier fetch already grew is not repaired; its extra blank lines stay.
+
 ## 7. Output and exits
 
 Success writes nothing to stdout or stderr and exits 0. An unparseable ID is a query

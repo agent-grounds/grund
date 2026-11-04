@@ -62,6 +62,12 @@ mod grouping_block_config_findings;
 #[path = "support/fetch_subsection_headings.rs"]
 mod fetch_subsection_headings;
 
+// §FS-fetch.6.1: issue #1180's re-fetch fixed point, fetched three times and compared.
+#[path = "support/fetch_fixed_point.rs"]
+mod fetch_fixed_point;
+#[path = "support/fetch_fixed_point_cases.rs"]
+mod fetch_fixed_point_cases;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
@@ -102,9 +108,9 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    let outcomes = ordered_pool::in_order(&discover_e2e_cases(&manifest_dir), |case| {
-        run_case(&manifest_dir, case, E2e)
-    });
+    // Red until #1180: its cases run alone in the ignored contract; implement removes this.
+    let cases = fetch_fixed_point_cases::without_red(discover_e2e_cases(&manifest_dir));
+    let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
     let compared = outcomes
         .iter()
         .filter(|outcome| matches!(outcome, CaseOutcome::Ran | CaseOutcome::Failed { .. }))
