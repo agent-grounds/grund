@@ -1,0 +1,3 @@
+warning: grund.toml:8: no project scans `src`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
+warning: nothing to scan — no files under `a` matched grund's extensions (md, rs, c, cpp, java, kt, scala, swift, js, ts, tsx, cs, php, py, go, rb, sql, lua, hs, lhs, lisp, scm, clj, ada, adb, ads).
