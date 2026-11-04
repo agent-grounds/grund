@@ -18,6 +18,10 @@ mod chapter_diagnostics;
 #[path = "support/configured_star_slug.rs"]
 mod configured_star_slug;
 
+// §FS-fetch.3.1: the nested-declaration refusals, red until #1155 is implemented.
+#[path = "support/fetch_nested_cases.rs"]
+mod fetch_nested_cases;
+
 // §FS-declarations.stubs.target.3: the extension-refusal explanation and its controls.
 #[path = "support/stub_extension_diagnostic.rs"]
 mod stub_extension_diagnostic;
