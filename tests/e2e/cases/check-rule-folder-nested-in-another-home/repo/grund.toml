@@ -1,0 +1,16 @@
+[id]
+format = "{kind}-{slug}"
+
+[scan]
+include = ["docs"]
+extensions = ["rs"]
+
+[[kinds]]
+kind = "FS"
+folder = "docs"
+index = false
+
+[[kinds]]
+kind = "RULE"
+folder = "docs/rules"
+rules = true

@@ -5,7 +5,7 @@ use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use super::read_predicate::{Unread, extension_refusal, name_refusal};
+use super::read_predicate::{Unread, descent_refusal, extension_refusal, name_refusal};
 use super::rule_folders::RuleFolderTally;
 use super::tree::ScanError;
 use super::value_json::value_sources;
@@ -147,6 +147,10 @@ pub(crate) fn walk_scannable_files_with_sources(
             return Err(anyhow!("watch input coverage failed"));
         }
         if !path_exists(&scan_root) {
+            // §AR-scanner.1.6: nothing is there yet, and a buffer can be.
+            if let Some(tally) = rule_folders.as_mut() {
+                tally.walking(&scan_root);
+            }
             continue;
         }
         let canonical_scan_root =
@@ -309,6 +313,10 @@ pub(crate) fn walk_scannable_files_with_sources(
         sort_paths(&mut root_files);
         files.append(&mut root_files);
     }
+    // §AR-scanner.1.6: a buffer the walk never met counts as the saved file would.
+    if let Some(tally) = rule_folders.as_mut() {
+        count_buffers(tally, schema, frame, scope, explicit_scope)?;
+    }
     // §AR-scanner.1.6: every root has answered, so each rule folder gets its one verdict.
     unread_roots.extend(rule_folders.into_iter().flat_map(RuleFolderTally::unread));
     // One file, one read (§FS-check.1.3.2, §FS-config.3.5.4). Two spellings first,
@@ -367,6 +375,29 @@ pub(crate) fn walk_scannable_files_with_sources(
         root_scope,
         unread_roots,
     })
+}
+
+/// Credit each buffer with no file behind it as the walk's loop would credit the saved file
+/// (§AR-scanner.1.6): the descent rules decide whether it is yielded at all, and only then the
+/// name test answers. A run with no buffer resolves no roots.
+fn count_buffers(
+    tally: &mut RuleFolderTally<'_>,
+    schema: &Schema,
+    frame: Frame<'_>,
+    scope: Option<&Path>,
+    explicit_scope: bool,
+) -> Result<()> {
+    let buffer_only = frame.sources().buffer_only_files();
+    if buffer_only.is_empty() {
+        return Ok(());
+    }
+    let (roots, _) = scan_roots(schema, frame, scope, explicit_scope)?;
+    for path in &buffer_only {
+        if descent_refusal(schema, frame, &roots, path).is_none() {
+            tally.count(path, name_refusal(path, schema));
+        }
+    }
+    Ok(())
 }
 
 /// Record the row that made `scan_root` a root, once however many roots spell it:

@@ -1,5 +1,5 @@
 //! A rule kind's folder home the run reads no file of (§FS-scan.checks.unread-scan-root.rule-folder):
-//! the walk's own loop credits each file to the home that holds it, whichever root reached it,
+//! the walk's own loop credits each file to the homes that hold it, whichever root reached it,
 //! and the verdict comes after every root (§AR-scanner.1.6, §AR-scanner.1.13).
 
 use crate::testing::{scan_tree, test_root, write};
@@ -8,12 +8,12 @@ use crate::testing::{scan_tree, test_root, write};
 const RULE_FOLDER_V1: &str = "[id]\nformat = \"{kind}-{slug}\"\n\n[[kinds]]\nkind = \"RULE\"\n\
                               folder = \"rules\"\nrules = true\n\n[scan]\nextensions = [\"rs\"]\n";
 /// A version-2 project whose rule kind's `folders` key is on line 8.
-const RULE_FOLDER_V2: &str = "grund_config_version = 2\nproject_name = \"demo\"\n\n\
+pub(super) const RULE_FOLDER_V2: &str = "grund_config_version = 2\nproject_name = \"demo\"\n\n\
                               [schema.sources]\nlanguages = [\"rust\"]\n\n\
                               [schema.kinds.RULE]\nfolders = [\"rules\"]\nform = \"rule\"\n";
 
 /// `toml` over `files`, each file holding a rule heading.
-fn rule_folder_project(name: &str, toml: &str, files: &[&str]) -> crate::config::Config {
+pub(super) fn rule_folder_project(name: &str, toml: &str, files: &[&str]) -> crate::config::Config {
     let root = test_root(name);
     write(&root.join("grund.toml"), toml);
     for file in files {
@@ -26,7 +26,7 @@ fn rule_folder_project(name: &str, toml: &str, files: &[&str]) -> crate::config:
 }
 
 /// What the run records, as the configuration wrote it and at which line.
-fn recorded(config: &crate::config::Config) -> Vec<(String, usize)> {
+pub(super) fn recorded(config: &crate::config::Config) -> Vec<(String, usize)> {
     let (findings, _) = scan_tree(config, None, false).expect("scan");
     findings
         .unread_roots

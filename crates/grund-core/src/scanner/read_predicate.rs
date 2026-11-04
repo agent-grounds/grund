@@ -208,9 +208,19 @@ pub(super) fn unread(
     roots: &[PathBuf],
     path: &Path,
 ) -> Option<Unread> {
-    if let Some(reason) = name_refusal(path, schema) {
-        return Some(reason);
-    }
+    name_refusal(path, schema).or_else(|| descent_refusal(schema, frame, roots, path))
+}
+
+/// The half of `unread` the walker applies before it yields a file: whether the descent from
+/// `roots` reaches `path` at all, whatever its name. The walk's loop asks the name test only of
+/// what this keeps, so a reader tallying the loop's answers asks in the loop's order
+/// (§AR-scanner.1.6).
+pub(super) fn descent_refusal(
+    schema: &Schema,
+    frame: Frame<'_>,
+    roots: &[PathBuf],
+    path: &Path,
+) -> Option<Unread> {
     let file = canonicalize_existing_prefix(path);
     let physical_root = canonical_config_root(frame.root());
     let mut refusal = Some(Unread::OutsideRoots);

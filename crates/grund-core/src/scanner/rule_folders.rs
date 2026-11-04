@@ -2,17 +2,17 @@
 //! (§FS-scan.checks.unread-scan-root.rule-folder, §AR-scanner.1.6). A rule folder is read or
 //! not file by file, and more than one root can reach its files, so no root gate can judge it.
 //! The walk's own loop hands over what the one predicate answered of each file it yields
-//! (§AR-scanner.1.13), each answer is credited to the home that owns the file, and the verdict
-//! is taken once, after every root. There is no second listing whose rules could drift.
+//! (§AR-scanner.1.13), each answer is credited to the homes that hold the file with no deeper
+//! place holding it, and the verdict is taken once, after every root. That is not ownership: a
+//! file version 1 leaves to the complement for citing is read, and its rule is in force. There
+//! is no second listing whose rules could drift.
 
 use std::collections::BTreeSet;
 use std::path::Path;
 
 use super::read_predicate::Unread;
 use crate::config::{ConfigLocation, Extent, Form, Frame, Owners, Place, Schema};
-use crate::model::{
-    Refused, RootOrigin, RootRow, configured_home_path_key, scanned_path_key, spelled_extension,
-};
+use crate::model::{Refused, RootOrigin, RootRow, spelled_extension};
 
 /// One scanned folder place of a rule kind, and what the walk has said of its files so far.
 /// One per place rather than per kind, so a read file in one entry of `folders` clears that
@@ -68,7 +68,7 @@ impl<'a> Home<'a> {
     }
 }
 
-/// What one walk has answered of the files its rule folder homes own (§AR-scanner.1.6).
+/// What one walk has answered of the files its rule folder homes hold (§AR-scanner.1.6).
 pub(super) struct RuleFolderTally<'a> {
     owners: Owners<'a>,
     homes: Vec<Home<'a>>,
@@ -102,41 +102,39 @@ impl<'a> RuleFolderTally<'a> {
     /// a folder can answer for its files but not for the folder, so only a home some walked
     /// root is at or above gets a verdict.
     pub(super) fn walking(&mut self, root: &Path) {
-        let Some(root) = self.owners.relative(root) else {
-            return;
-        };
-        let root = scanned_path_key(&root);
+        let root = self.owners.key(root);
         for home in &mut self.homes {
-            home.whole |= configured_home_path_key(home.written).starts_with(&root);
+            home.whole |= self.owners.home_key(home.written).starts_with(&root);
         }
     }
 
-    /// Credit `answer`, the predicate's answer about `file`, to the home that owns the file,
-    /// whichever root reached it (§FS-config-v2.schema.places.ownership). A file a nested home
-    /// owns counts for that home, and a hidden name counts as neither a read nor an extension
-    /// refusal (§AR-scanner.1.13).
+    /// Credit `answer`, the predicate's answer about `file`, to each rule folder home that
+    /// holds the file with no deeper place holding it, whichever root reached it
+    /// (§FS-scan.checks.unread-scan-root.rule-folder). No answer is a read and an extension is
+    /// a refusal; a hidden name, or any other reason, counts as neither (§AR-scanner.1.13).
     pub(super) fn count(&mut self, file: &Path, answer: Option<Unread>) {
-        if answer == Some(Unread::HiddenName) {
-            return;
-        }
-        let Some(owner) = self.owners.of(file) else {
-            return;
+        let read = match answer {
+            None => true,
+            Some(Unread::Extension) => false,
+            Some(_) => return,
         };
-        // The very place `Schema::owner` chose, so a folder written twice has one answer.
-        let home = self
-            .homes
-            .iter_mut()
-            .find(|home| std::ptr::eq(home.place, owner.place));
-        let Some(home) = home else {
-            return;
-        };
-        if answer.is_none() {
-            home.read = true;
-            return;
-        }
-        home.refused = true;
-        if let Some(extension) = spelled_extension(file) {
-            home.extensions.insert(extension.to_string());
+        for place in self.owners.deepest_holders(file) {
+            let home = self
+                .homes
+                .iter_mut()
+                .find(|home| std::ptr::eq(home.place, place));
+            // A holder that is no rule folder home has no tally to credit.
+            let Some(home) = home else {
+                continue;
+            };
+            if read {
+                home.read = true;
+                continue;
+            }
+            home.refused = true;
+            if let Some(extension) = spelled_extension(file) {
+                home.extensions.insert(extension.to_string());
+            }
         }
     }
 

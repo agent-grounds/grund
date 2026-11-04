@@ -1,0 +1,1 @@
+grund.toml:15: warning: [[kinds]] RULE home `docs` is not read — `md` is not in [scan] extensions, so nothing in it is checked. Add "md" to [scan] extensions, or give its files an extension the list holds.

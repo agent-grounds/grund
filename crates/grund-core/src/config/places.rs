@@ -64,6 +64,46 @@ impl<'a> Owners<'a> {
         self.relative(path)
             .is_some_and(|relative| self.schema.in_some_home(&relative))
     }
+
+    /// `path` under the lexical key of the configured root's spelling, whether it lies inside
+    /// the project or, for a version-1 home written through `..` or as an absolute path, not.
+    pub(crate) fn key(&self, path: &Path) -> PathBuf {
+        match self.relative(path) {
+            Some(relative) => self.home_key(&relative),
+            None => scanned_path_key(path),
+        }
+    }
+
+    /// The key of a path a place writes, which [`Owners::key`] spells a file under it by.
+    pub(crate) fn home_key(&self, written: impl AsRef<Path>) -> PathBuf {
+        scanned_path_key(&self.configured_root.join(written))
+    }
+
+    /// Every place that holds the file at `path` with no deeper place holding it, ties
+    /// included: which homes a file is read from (§AR-scanner.1.6). Not [`Schema::owner`],
+    /// which says whose citation rules apply: in version 1 a file two homes hold has no owner,
+    /// and its rule is in force all the same (§FS-scan.checks.unread-scan-root.rule-folder).
+    pub(crate) fn deepest_holders(&self, path: &Path) -> Vec<&'a Place> {
+        let file = self.key(path);
+        let holders: Vec<(usize, &'a Place)> = self
+            .schema
+            .rows
+            .iter()
+            .flat_map(|row| &row.places)
+            .filter_map(|place| {
+                let key = self.home_key(place.path()?);
+                place
+                    .holds_at(&key, &file)
+                    .then(|| (key.components().count(), place))
+            })
+            .collect();
+        let deepest = holders.iter().map(|(depth, _)| *depth).max();
+        holders
+            .into_iter()
+            .filter(|(depth, _)| Some(*depth) == deepest)
+            .map(|(_, place)| place)
+            .collect()
+    }
 }
 
 impl Owner<'_> {
@@ -96,9 +136,15 @@ impl Place {
     /// scanner's lexical key: a file place by equality, a folder by prefix, on the
     /// path as written rather than its link target (§FS-config.3.4.11).
     fn holds(&self, relative: &Path) -> bool {
+        self.path()
+            .is_some_and(|path| self.holds_at(&configured_home_path_key(path), relative))
+    }
+
+    /// The one test behind [`Place::holds`]: `file`, spelled as this place's `key` is.
+    fn holds_at(&self, key: &Path, file: &Path) -> bool {
         match &self.extent {
-            Extent::File(file) => relative == configured_home_path_key(file),
-            Extent::Folder(folder) => relative.starts_with(configured_home_path_key(folder)),
+            Extent::File(_) => file == key,
+            Extent::Folder(_) => file.starts_with(key),
             Extent::Complement => false,
         }
     }
