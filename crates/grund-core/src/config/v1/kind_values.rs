@@ -129,8 +129,9 @@ pub(in crate::config) fn validate_kind_value_keys(
     Ok(())
 }
 
-/// §FS-config-v2.schema.sources.rules: version 1's answer to whether a row's
-/// `file` home is Markdown, its name, because `.md` is the one suffix it reads so.
+/// §FS-config-v2.schema.sources.rules: the name test on a row's first `file` home:
+/// version 1's whole answer, because `.md` is the one suffix it reads as Markdown, and
+/// version 2's only for an entry a `source` language reads (§DF-v2-rule-home-by-language.2.3).
 pub(in crate::config) fn file_home_is_named_markdown(k: &KindConfig) -> bool {
     k.file
         .as_deref()

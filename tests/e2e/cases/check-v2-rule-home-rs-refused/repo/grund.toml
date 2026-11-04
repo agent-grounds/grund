@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "g179"
+
+[schema.sources]
+languages = ["markdown", "rust"]
+
+[schema.kinds.RULE]
+files = ["rules/rules.rs"]
+form = "rule"

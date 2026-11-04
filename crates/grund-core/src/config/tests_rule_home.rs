@@ -112,6 +112,49 @@ fn v2_rule_home_second_file_read_as_json_is_refused() {
     assert_refused_at_form("v2_rule_home_second_file", toml, "rules/other.json");
 }
 
+/// §FS-config-v2.schema.sources.rules: a `source` language's entry keeps the name test on the
+/// first entry — a `.rs` home alone is refused, whatever reads it.
+#[test]
+fn v2_rule_home_rs_alone_is_refused() {
+    let toml = v2("languages = [\"markdown\", \"rust\"]\n", "rules/rules.rs");
+    assert_refused_at_form("v2_rule_home_rs", &toml, "rules/rules.rs");
+}
+
+/// §FS-config-v2.schema.sources.rules: a `.md` home `md = "rust"` reads as source keeps loading:
+/// its rules are read, so nothing goes unread.
+#[test]
+fn v2_rule_home_md_read_as_rust_loads() {
+    let sources = "languages = [\"markdown\", \"rust\"]\n\
+                   [schema.sources.extensions]\nmd = \"rust\"\n";
+    let toml = v2(sources, "rules/rules.md");
+    assert_rule_kind_loads("v2_rule_home_md_as_rust", &toml, "rules/rules.md");
+}
+
+/// §FS-config-v2.schema.sources.rules: a later entry a `source` language reads keeps loading
+/// after a `.md` first entry, with `[schema.sources]` written or left out.
+#[test]
+fn v2_rule_home_second_file_read_as_rust_loads() {
+    let row = "[schema.kinds.RULE]\nfiles = [\"rules/rules.md\", \"rules/more.rs\"]\n\
+               form = \"rule\"\n";
+    let head = "grund_config_version = 2\nproject_name = \"g179\"\n";
+    let listed = format!("{head}[schema.sources]\nlanguages = [\"markdown\", \"rust\"]\n{row}");
+    assert_rule_kind_loads("v2_rule_home_second_rs", &listed, "rules/more.rs");
+    let unwritten = format!("{head}{row}");
+    assert_rule_kind_loads("v2_rule_home_second_rs_bare", &unwritten, "rules/more.rs");
+}
+
+/// §FS-config-v2.schema.sources.rules: the name test a `source` entry takes is the first entry's,
+/// so a later `.rs` after a `.txt` first entry stays refused though `txt = "markdown"` reads it.
+#[test]
+fn v2_rule_home_second_file_read_as_rust_after_txt_is_refused() {
+    let toml = "grund_config_version = 2\nproject_name = \"g179\"\n\
+                [schema.sources]\nlanguages = [\"markdown\", \"rust\"]\n\
+                [schema.sources.extensions]\ntxt = \"markdown\"\n\
+                [schema.kinds.RULE]\nfiles = [\"rules/rules.txt\", \"rules/more.rs\"]\n\
+                form = \"rule\"\n";
+    assert_refused_at_form("v2_rule_home_txt_then_rs", toml, "rules/more.rs");
+}
+
 /// §FS-config-v2.schema.sources.rules, §FS-config-v2.schema.sources.migration: what the real
 /// migration writes for a v1 rule kind's `.md` `file` home, `md = "v1_markdown"`, stays one.
 #[test]
