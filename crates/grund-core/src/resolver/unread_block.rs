@@ -17,7 +17,7 @@
 use std::path::PathBuf;
 
 use crate::config::{Frame, ProjectRecords, Run, RunWarning, canonical_config_root};
-use crate::model::{Diagnostic, format_path};
+use crate::model::Diagnostic;
 use crate::scanner::walk_reads_any_file;
 use crate::workspace::{block_relative_root, uncovered_block_scope_roots, unread_block_diagnostic};
 
@@ -58,7 +58,7 @@ pub(crate) fn unread_block_scope_root(
     uncovered_block_scope_roots(block)
         .into_iter()
         .find(|root| walk_reads_any_file(block.schema(), walk, root))
-        .map(|root| format_path(&block_relative_root(block, &root)))
+        .map(|root| block_relative_root(block, &root))
 }
 
 /// §FS-check.4.10.11, §FS-workspace.6.1, §FS-distribution.3.1: the

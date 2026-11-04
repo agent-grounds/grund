@@ -4,7 +4,7 @@ use super::expand::enclosing_workspace_of;
 use super::members::AncestorWorkspaces;
 use super::scope::{RootMode, derive_alias};
 use crate::config::Run;
-use crate::model::{format_path, relative_from_base};
+use crate::model::{base_reads_dot, format_path, relative_from_base};
 
 /// §FS-workspace.5.1.1: verified root-project identity and a location usable
 /// from the invocation CWD, independent of the report's path-base setting.
@@ -50,11 +50,6 @@ pub(crate) fn member_root_guidance(run: &Run) -> Option<MemberRootGuidance> {
     }
     let alias = derive_alias(&root, None, RootMode::Root).ok()?;
     let cwd = crate::sources::canonical_path(&std::env::current_dir().ok()?).ok()?;
-    let relative = relative_from_base(&cwd, &root.root);
-    let location = if relative.as_os_str().is_empty() {
-        ".".to_string()
-    } else {
-        format_path(&relative)
-    };
+    let location = base_reads_dot(format_path(&relative_from_base(&cwd, &root.root)));
     Some(MemberRootGuidance { alias, location })
 }
