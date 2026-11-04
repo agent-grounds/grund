@@ -2,13 +2,13 @@
 //! byte-identical ([§FS-fetch.3.1](../../docs/functional-spec/FS-fetch.md#31-a-nested-declaration-is-refused)). The e2e cases `fetch-nested-*` pin each shape's
 //! exact message; these pin what must hold whichever refusal fires first, so a change to
 //! the subsection depth limit (#1148) cannot hide or fake the nested-ID refusal.
+#![cfg(unix)]
 
 #[path = "support/external_facts.rs"]
 mod support;
 
 use support::*;
 
-#[cfg(unix)]
 fn ar_project(name: &str, existing: &str, fetched: &str) -> std::path::PathBuf {
     let root = root(name);
     write(
@@ -30,7 +30,6 @@ fn ar_project(name: &str, existing: &str, fetched: &str) -> std::path::PathBuf {
 
 /// Two depths below the native H2: refused today by the depth limit alone, and still
 /// refused, naming the ID, once that limit no longer applies.
-#[cfg(unix)]
 #[test]
 fn external_facts_nested_declaration_two_depths_below_is_refused() {
     let root = ar_project(
@@ -48,7 +47,6 @@ fn external_facts_nested_declaration_two_depths_below_is_refused() {
 
 /// An ID the home already declares: the tree is green before the fetch, the fetch is
 /// refused, and the tree is still green and byte-identical after it.
-#[cfg(unix)]
 #[test]
 fn external_facts_nested_declaration_never_turns_a_green_tree_red() {
     let root = ar_project(
