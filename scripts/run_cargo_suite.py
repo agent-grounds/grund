@@ -8,7 +8,9 @@ in its own binary with cargo's environment and threads (§AR-ci.3.3).
 Three cargo runs, all with the same arguments: `cargo test --no-run --quiet` builds the
 tests and prints only what the compiler says; `cargo test -- --list` counts the suite up
 front, binary by binary; `cargo test` runs it, and its libtest output is read line by
-line and reduced to what §AR-ci.requirements.5.1 asks. The exit status is cargo's.
+line and reduced to what §AR-ci.requirements.5.1 asks. The exit status is cargo's. All
+three get an environment holding no repository location, so a test's own `git` cannot
+reach a hook's worktree (§AR-ci-suite-environment.4).
 
 A test's time is estimated, because stable libtest reports when a test ends and not when
 it starts. libtest starts tests in the order `--list` names them, as many at once as it
@@ -38,6 +40,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cargo_shards  # noqa: E402
+import suite_environment  # noqa: E402
 import suite_progress  # noqa: E402
 
 # Every CSI sequence, private ones such as a child's `\x1b[?1049l` included, an OSC, and
@@ -87,13 +90,13 @@ def plain(line):
     return ANSI.sub('', line).rstrip()
 
 
-def build(cargo):
+def build(cargo, environment):
     """§AR-ci.requirements.5.4: build quietly; a failure prints in full, a warning stays.
 
     A green build ends with one `gate time: build` line, its compile as a phase of its own.
     """
     started = time.perf_counter()
-    result = subprocess.run(['cargo', 'test', '--no-run', '--quiet', *cargo],
+    result = subprocess.run(['cargo', 'test', '--no-run', '--quiet', *cargo], env=environment,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     text = result.stdout.decode('utf-8', errors='replace')
     if result.returncode != 0:
@@ -107,9 +110,9 @@ def build(cargo):
     return result.returncode
 
 
-def listing(cargo, libtest):
+def listing(cargo, libtest, environment):
     """The tests of each binary, in libtest's order, keyed by cargo's `Running` line."""
-    result = subprocess.run(['cargo', 'test', *cargo, '--', '--list', *libtest],
+    result = subprocess.run(['cargo', 'test', *cargo, '--', '--list', *libtest], env=environment,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     text = result.stdout.decode('utf-8', errors='replace')
     if result.returncode != 0:
@@ -191,7 +194,7 @@ class Binary:
                 yield outcome
 
 
-def run(cargo, libtest, binaries, progress, config=()):
+def run(cargo, libtest, binaries, progress, environment, config=()):
     """Run the suite and print only its failures, its check-ins and what a red binary wrote.
 
     `config` is cargo's `--config` for a shard's runner; a binary outside `binaries` then
@@ -199,7 +202,8 @@ def run(cargo, libtest, binaries, progress, config=()):
     """
     slots = threads(libtest)
     command = ['cargo', 'test', *config, *cargo] + (['--', *libtest] if libtest else [])
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    process = subprocess.Popen(command, env=environment, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT)
     binary, failures, held = None, False, []
 
     def stray(lines):
@@ -290,28 +294,30 @@ def main(argv):
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(errors='replace')
     cargo, libtest = split(argv)
-    status = build(cargo)
+    environment = suite_environment.without_repository_variables(os.environ)
+    status = build(cargo, environment)
     if status != 0:
         return status
-    status, binaries = listing(cargo, libtest)
+    status, binaries = listing(cargo, libtest, environment)
     if status != 0:
         return status
     if shard is None:
-        return suite(cargo, libtest, binaries, started)
+        return suite(cargo, libtest, binaries, started, environment)
     index, count = shard
     keys = cargo_shards.deal(binaries, count)[index - 1]
     if not keys:
         print(f'shard {index}/{count} selects no target of {len(binaries)}', file=sys.stderr)
         return cargo_shards.NO_TARGET
     with cargo_shards.runner(keys) as config:
-        return suite(cargo, libtest, {key: binaries[key] for key in keys}, started, config)
+        return suite(cargo, libtest, {key: binaries[key] for key in keys}, started, environment,
+                     config)
 
 
-def suite(cargo, libtest, binaries, started, config=()):
+def suite(cargo, libtest, binaries, started, environment, config=()):
     """Run `binaries` and print one summary counting their tests alone."""
     total = sum(len(names) for names in binaries.values())
     progress = suite_progress.Progress(total, sys.stdout, start=started)
-    status = run(cargo, libtest, binaries, progress, config)
+    status = run(cargo, libtest, binaries, progress, environment, config)
     progress.summary()
     return status
 

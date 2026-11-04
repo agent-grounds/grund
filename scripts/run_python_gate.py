@@ -12,6 +12,9 @@ wrote it keeps only the lines that point lists, the Node acceptance's `node buil
 (§AR-ci.requirements.5.4).
 `--only-node-acceptance`, `--only-python-acceptance` and `--only-slow` run their modules
 alone, `--rest` all the others; no argument runs everything (§AR-ci.3.4.3).
+Everything it starts, its builds and the tests alike, gets an environment holding no
+repository location, so a test's own `git` cannot reach a hook's worktree
+(§AR-ci-suite-environment.4).
 """
 import io
 import os
@@ -22,6 +25,7 @@ import tempfile
 import time
 import unittest
 
+import suite_environment
 import suite_progress
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -55,7 +59,7 @@ def parse_selection(argv):
 
 def inputs():
     """Fresh-checkout built, released, oracle and Node target inputs (§AR-ci.3.4)."""
-    environment = dict(os.environ)
+    environment = suite_environment.without_repository_variables(os.environ)
     suffix = '.exe' if os.name == 'nt' else ''
     scratch = Path.home() / 'ag/tmp'
     scratch.mkdir(parents=True, exist_ok=True)
@@ -63,7 +67,7 @@ def inputs():
     target = Path(environment.get('CARGO_TARGET_DIR', str(ROOT / 'target'))).expanduser().resolve()
     if not environment.get('GRUND_BUILT'):
         subprocess.run(['cargo', 'build', '--quiet', '-p', 'grund', '--locked',
-                        '--target-dir', str(target)], cwd=ROOT, check=True)
+                        '--target-dir', str(target)], cwd=ROOT, env=environment, check=True)
         environment['GRUND_BUILT'] = str(target / ('debug/grund' + suffix))
     if not environment.get('GRUND_RELEASED'):
         release = scratch / 'grund-cochange-release-0.16.1'
@@ -71,12 +75,12 @@ def inputs():
         if not executable.is_file():
             subprocess.run(['cargo', 'install', '--quiet', 'grund', '--version', '0.16.1', '--locked',
                             '--root', str(release), '--target-dir', str(scratch / 'grund-release-build')],
-                           cwd=ROOT, check=True)
+                           cwd=ROOT, env=environment, check=True)
         environment['GRUND_RELEASED'] = str(executable)
     if not environment.get('GRUND_BINDINGS_ORACLE'):
         # §AR-ci.3.4: built from HEAD each run, as the workflow builds it; cargo is incremental.
-        head = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True,
-                              text=True, check=True).stdout.strip()
+        head = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, env=environment,
+                              capture_output=True, text=True, check=True).stdout.strip()
         subprocess.run(['cargo', 'build', '--quiet', '--locked', '-p', 'grund-core', '--example',
                         'grund-binding-oracle', '--target-dir', str(target)], cwd=ROOT,
                        env=dict(environment, GRUND_BINDINGS_SOURCE_SHA=head), check=True)
@@ -90,7 +94,7 @@ def inputs():
     Path(environment['GRUND_NODE_TARGET']).expanduser().mkdir(parents=True, exist_ok=True)
     for key in ('GRUND_BUILT', 'GRUND_RELEASED', 'GRUND_BINDINGS_ORACLE', 'GRUND_NODE_TARGET'):
         environment[key] = str(Path(environment[key]).expanduser().resolve())
-    version = subprocess.run([environment['GRUND_RELEASED'], '--version'],
+    version = subprocess.run([environment['GRUND_RELEASED'], '--version'], env=environment,
                              capture_output=True, text=True, check=True).stdout
     if version != 'grund 0.16.1\n':
         raise ValueError('GRUND_RELEASED must be released Grund 0.16.1')

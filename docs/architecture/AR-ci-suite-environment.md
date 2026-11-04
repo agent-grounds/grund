@@ -85,4 +85,6 @@ commit must land in the repository the test made. A second case gives the wrappe
 every repository variable, and what each of its children saw must hold none of them
 and still hold `GIT_CONFIG_GLOBAL` and `GIT_AUTHOR_NAME`. A third runs `inputs()` with
 cargo answered in-process, so its own two builds and the commit it hands the oracle
-are checked without building anything.
+are checked without building anything. A fourth, `NoGitTests`, asks the helper in a
+child whose `PATH` is an empty directory, and what comes back must still hold
+`GIT_DIR`, with nothing raised.
