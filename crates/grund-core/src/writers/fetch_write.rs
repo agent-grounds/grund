@@ -8,7 +8,8 @@ use super::atomic_install::{Install, InstallFailure, atomic_install};
 use super::fetch::{FetchFailure, fetch_io, fetch_operational};
 use crate::config::Config;
 use crate::grammar::{
-    Grammar, MarkdownBlocks, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
+    Grammar, MarkdownBlocks, markdown_line_records, near_miss_heading, parse_id_arg,
+    parse_longest_id_prefix,
 };
 use crate::model::{Id, OperationDiagnostic, format_path};
 use crate::scanner::{markdown_heading_level, walk_scannable_files_with_sources};
@@ -290,32 +291,60 @@ pub(super) fn write_folder_home(
                 target.display()
             )));
         }
-        match read_snapshot_file(&target, config, requested, diagnostic)? {
-            SnapshotFile::Declares(_) => {}
-            SnapshotFile::Other => {
-                return Err(fetch_operational(format!(
-                    "snapshot file {} already exists for a different ID",
-                    target.display()
-                )));
-            }
-            SnapshotFile::Nothing => {
-                return Err(fetch_operational(format!(
-                    "snapshot file {} already exists and does not declare {local}",
-                    target.display()
-                )));
-            }
+        let bytes = read_snapshot_bytes(&target, diagnostic)?;
+        let held = snapshot_file_holds(&bytes, &target, config, requested)?;
+        if !matches!(held, SnapshotFile::Declares(_)) {
+            let another_h1 = matches!(held, SnapshotFile::Other);
+            return Err(fetch_operational(undeclared_target_refusal(
+                &target, &bytes, config, requested, local, another_h1,
+            )));
         }
     }
     install(&target, snapshot, diagnostic)
 }
 
-/// What one Markdown file in a folder home holds for the requested ID.
+/// §FS-fetch.5.2: what `<home>/<ID>.md` is told when no H1 of it declares the requested ID,
+/// by what a scan records there at any depth. This reads for the words alone: the file is
+/// refused whatever it finds, and the walk's search for a declaring file does not ask it.
+fn undeclared_target_refusal(
+    path: &Path,
+    bytes: &[u8],
+    config: &Config,
+    requested: &Id,
+    local: &str,
+    another_h1: bool,
+) -> String {
+    let path_shown = path.display();
+    let text = String::from_utf8_lossy(bytes);
+    let mut blocks = MarkdownBlocks::file(&text);
+    let mut another = another_h1;
+    for line in text.lines() {
+        if !blocks.line(line).may_be_heading() {
+            continue;
+        }
+        let Some(token) = markdown_line_records(&config.grammar, line) else {
+            continue;
+        };
+        if matches!(parse_id_arg(token, &config.grammar), Ok((id, None)) if id == *requested) {
+            return format!("snapshot file {path_shown} declares {local} only in a nested heading");
+        }
+        another = true;
+    }
+    if another {
+        format!("snapshot file {path_shown} already exists for a different ID")
+    } else {
+        format!("snapshot file {path_shown} already exists and does not declare {local}")
+    }
+}
+
+/// What one Markdown file in a folder home holds at the home's native depth, an H1, for the
+/// requested ID.
 enum SnapshotFile {
-    /// It declares the requested ID alone, so it is the declaring file.
+    /// An H1 declares the requested ID alone, so it is the declaring file.
     Declares(SnapshotDeclaration),
-    /// It declares other IDs and not the requested one.
+    /// H1s declare other IDs and not the requested one.
     Other,
-    /// It declares nothing.
+    /// No H1 declares anything.
     Nothing,
 }
 
@@ -328,15 +357,31 @@ fn read_snapshot_file(
     requested: &Id,
     diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<SnapshotFile, FetchFailure> {
-    let bytes = read_bytes(path).map_err(|err| {
+    let bytes = read_snapshot_bytes(path, diagnostic)?;
+    snapshot_file_holds(&bytes, path, config, requested)
+}
+
+fn read_snapshot_bytes(
+    path: &Path,
+    diagnostic: &mut Option<anyhow::Error>,
+) -> std::result::Result<Vec<u8>, FetchFailure> {
+    read_bytes(path).map_err(|err| {
         fetch_io(
             diagnostic,
             path,
             err,
             format!("cannot read {}", path.display()),
         )
-    })?;
-    let declarations = declarations_at_depth(&bytes, &config.grammar, 1)?;
+    })
+}
+
+fn snapshot_file_holds(
+    bytes: &[u8],
+    path: &Path,
+    config: &Config,
+    requested: &Id,
+) -> std::result::Result<SnapshotFile, FetchFailure> {
+    let declarations = declarations_at_depth(bytes, &config.grammar, 1)?;
     let Some(declaration) = declarations
         .iter()
         .find(|declaration| declaration.id == *requested)

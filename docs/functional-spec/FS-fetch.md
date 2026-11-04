@@ -150,18 +150,26 @@ already stands at that one path is judged by what it holds, whether or not the w
 admitted it. `md = "json"`, a `languages` list without Markdown, a version 1 `extensions`
 list without `md`, an ignore-file rule and an exclusion can each keep the file from the
 walk, and none of them says anything about what it declares. It is read as the walk's
-files are, and what it holds decides:
+files are, and what it holds decides. Only a declaration at the home's native depth, an H1,
+can make it the declaring file; the refusals below count declarations at any depth, as a
+scan reads them, so a fence, an HTML block or front matter holds none:
 
-- A file declaring the requested ID alone is the declaring file and is replaced, so a
-  second `grund fetch` of one ID rewrites the snapshot the first wrote under any of those
-  configurations.
-- A file declaring the requested ID beside anything else is refused:
+- A file whose H1 declares the requested ID alone, with no other H1 and nothing before
+  it, is the declaring file and is replaced, so a second `grund fetch` of one ID rewrites
+  the snapshot the first wrote under any of those configurations.
+- A file whose H1 declares the requested ID beside anything else is refused:
   `snapshot file <path> contains the requested ID beside other content`.
-- A file declaring another ID is refused:
+- A file that declares the requested ID only below its H1s, alone or beside anything, is
+  refused: `snapshot file <path> declares <ID> only in a nested heading`. A scan reads
+  that declaration, so the file does hold the ID, but it is not the H1 a fetch replaces.
+- A file declaring another ID at any level is refused:
   `snapshot file <path> already exists for a different ID`.
 - A file declaring nothing, empty or prose alike, is refused:
   `snapshot file <path> already exists and does not declare <ID>`. It holds no different
   ID, and `fetch` owns only the requested declaration ([§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)).
+- A file that is not UTF-8, or whose H1 is a malformed declaration heading, is refused
+  before any of those: `snapshot home is not UTF-8 Markdown` or
+  `snapshot home has malformed declaration heading ...`.
 - A link that leads anywhere and a directory are refused and left as they are:
   `snapshot file <path> is not a regular file`. What a link leads to is not read here,
   so this read can never replace a link.

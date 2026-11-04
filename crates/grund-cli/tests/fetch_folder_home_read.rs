@@ -252,3 +252,45 @@ fn a_refused_directory_is_told_it_is_not_a_regular_file() {
         );
     }
 }
+
+/// §FS-fetch.5.2: the refusals count declarations at any depth as a scan reads them, so these
+/// words stay true of what `grund list` shows, and a fence or a prose heading declares nothing.
+#[test]
+fn a_file_with_no_h1_of_the_id_is_told_what_it_holds_at_any_depth() {
+    const NESTED: &str = "declares TICKET-1234 only in a nested heading";
+    const DIFFERENT: &str = "already exists for a different ID";
+    const NOTHING: &str = "already exists and does not declare TICKET-1234";
+    let shapes = [
+        ("nested-alone", "## TICKET-1234: a\n\nBody.\n", NESTED),
+        (
+            "nested-under-title",
+            "# Group\n\n## TICKET-1234: a\n",
+            NESTED,
+        ),
+        (
+            "nested-under-other",
+            "# TICKET-2: b\n\n## TICKET-1234: a\n",
+            NESTED,
+        ),
+        ("other-nested", "## TICKET-2: b\n", DIFFERENT),
+        ("fenced", "```\n## TICKET-1234: a\n```\n", NOTHING),
+        ("prose-heading", "## Notes: x\n\nProse.\n", NOTHING),
+    ];
+    for (name, sources) in [("ordinary", ORDINARY), ("md-as-json", MD_AS_JSON)] {
+        for (shape, body, words) in shapes {
+            let at = root(&format!("words-depth-{shape}-{name}"));
+            project(&at, sources);
+            write(&at, TARGET, body);
+            let before = tree(&at);
+            let output = run(&at, &["fetch", "TICKET-1234"]);
+            assert_code(&output, 2, shape);
+            assert_eq!(
+                tree(&at),
+                before,
+                "{name}, {shape}: the refusal moved bytes"
+            );
+            let message = stderr(&output);
+            assert!(message.contains(words), "{name}, {shape}: {message}");
+        }
+    }
+}
