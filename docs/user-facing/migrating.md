@@ -251,10 +251,15 @@ says so on stderr, once per such config, where a clean `check` printed `success`
 warning: grund.toml is version 1; migrate it with grund config migrate --to 2
 ```
 
-In a workspace each member still on version 1 gets its own line, ending with the
+In a workspace each config still on version 1 gets its own line, ending with the
 directory to pass, and a config on version 2 or a project with no config file
 gets none
 ([§FS-check.checks.config-version-1](../functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)).
+At the workspace root, `grund check` and `grund config validate` name every
+config the workspace reads that is still on version 1: the root's, each
+member's, and each `include_root = false` block's, which groups members without
+being a project itself
+([§FS-check.4.11.3](../functional-spec/FS-check.md#4113-once-per-config-not-once-per-scope)).
 The line is a caution and never becomes an error: the exit code does not move,
 no release is named in which version 1 stops loading, and the file keeps meaning
 what it means
