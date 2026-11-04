@@ -245,7 +245,7 @@ fn sources(p: &Project) -> (Vec<SuffixReading>, Vec<String>, bool) {
                 };
                 suffixes.push((
                     suffix,
-                    language.class == crate::config::sources::LanguageClass::Document,
+                    language.reads_markdown(),
                     language.comment_prefixes.clone(),
                     language.docstrings,
                     language.measurement_rule(),
