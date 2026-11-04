@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use super::fetch_write::{write_file_home, write_folder_home};
 use crate::config::{Config, KindConfig, run_warning_findings};
-use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_declares, parse_id_arg};
+use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
 use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, resolve_workspace_config, split_qualified_id_arg};
@@ -304,7 +304,25 @@ pub(super) fn validate_fetched_declaration(
             continue;
         }
         let hashes = trimmed.bytes().take_while(|byte| *byte == b'#').count();
-        if block.may_be_heading() && hashes > 0 && trimmed.as_bytes().get(hashes) == Some(&b' ') {
+        // §FS-fetch.3.1: a line below the requested declaration that the scanner would record
+        // as a declaration, conforming or near miss, is refused at any depth before the depth
+        // limit, by the scanner's own reading rather than this validator's heading test.
+        if declaration_count == 1
+            && block.may_be_heading()
+            && hashes > native_depth
+            && let Some(nested) = markdown_line_records(grammar, line)
+        {
+            return Err(fetch_operational(format!(
+                "fetch output nests declaration `{nested}` inside requested `{requested}`; \
+                 fetch output must hold only the requested declaration"
+            )));
+        }
+        // An ATX heading's `#`s end at a space or a tab, as the scanner reads them
+        // (§FS-declarations.checks.unmarked-heading.1).
+        if block.may_be_heading()
+            && hashes > 0
+            && matches!(trimmed.as_bytes().get(hashes), Some(b' ' | b'\t'))
+        {
             if hashes == native_depth {
                 let tail = &trimmed[hashes + 1..];
                 let Some((id, title)) = tail.split_once(':') else {
@@ -327,16 +345,6 @@ pub(super) fn validate_fetched_declaration(
                 if title.trim().is_empty() {
                     return Err(fetch_operational("fetch output declaration title is empty"));
                 }
-            } else if declaration_count == 1
-                && hashes > native_depth
-                && let Some(nested) = markdown_line_declares(grammar, line)
-            {
-                // §FS-fetch.3.1: a heading the scanner would read as a declaration is
-                // refused at any depth below the requested one, before the depth limit.
-                return Err(fetch_operational(format!(
-                    "fetch output nests declaration `{nested}` inside requested `{requested}`; \
-                     fetch output must hold only the requested declaration"
-                )));
             } else if declaration_count == 0 || hashes != native_depth + 1 {
                 return Err(fetch_operational(format!(
                     "fetch output heading depth {hashes} is invalid for a depth-{native_depth} declaration"
