@@ -1,0 +1,1 @@
+Keeps `docs/` in the fixture, so `docs/..` names a directory on disk.

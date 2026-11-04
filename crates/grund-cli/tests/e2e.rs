@@ -62,6 +62,10 @@ mod grouping_block_config_findings;
 #[path = "support/fetch_subsection_headings.rs"]
 mod fetch_subsection_headings;
 
+// §FS-check.3.30.1: issue #1169's `..` scope roots, its cases run alone.
+#[path = "support/dotdot_scope_root_names.rs"]
+mod dotdot_scope_root_names;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
@@ -102,9 +106,16 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    let outcomes = ordered_pool::in_order(&discover_e2e_cases(&manifest_dir), |case| {
-        run_case(&manifest_dir, case, E2e)
-    });
+    // Red until #1169: its cases run alone in the ignored contract; implement removes this.
+    let cases = discover_e2e_cases(&manifest_dir)
+        .into_iter()
+        .filter(|case| {
+            !dotdot_scope_root_names::RED_UNTIL_1169
+                .iter()
+                .any(|red| case.ends_with(red))
+        })
+        .collect::<Vec<_>>();
+    let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
     let compared = outcomes
         .iter()
         .filter(|outcome| matches!(outcome, CaseOutcome::Ran | CaseOutcome::Failed { .. }))

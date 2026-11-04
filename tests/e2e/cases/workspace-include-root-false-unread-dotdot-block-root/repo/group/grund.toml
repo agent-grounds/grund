@@ -1,0 +1,9 @@
+[id]
+named_sections = true
+
+[scan]
+include = ["docs/.."]
+
+[workspace]
+include_root = false
+members = ["a"]
