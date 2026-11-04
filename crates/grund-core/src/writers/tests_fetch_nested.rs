@@ -52,3 +52,48 @@ fn plain_and_fenced_subsections_stay_accepted() {
     )
     .expect("a fenced heading is content");
 }
+
+#[test]
+fn nested_declaration_after_a_tab_is_refused() {
+    let refusal = validate(
+        "nested_declaration_after_tab",
+        "## AR-001-thing: Thing\n\n###\tAR-002-other: Other\n",
+    )
+    .expect_err("a tab ends the hashes for the scanner, so this heading declares");
+    assert!(
+        refusal.contains("nests declaration `AR-002-other`"),
+        "{refusal}"
+    );
+}
+
+#[test]
+fn sibling_declaration_after_a_tab_is_refused_as_a_second_declaration() {
+    let refusal = validate(
+        "sibling_declaration_after_tab",
+        "## AR-001-thing: Thing\n\n##\tAR-002-other: Other\n",
+    )
+    .expect_err("a same-depth sibling after a tab is a second declaration");
+    assert_eq!(
+        refusal,
+        "fetch output must contain exactly one declaration and no leading content"
+    );
+}
+
+#[test]
+fn nested_near_miss_declarations_are_refused() {
+    for (name, heading, token) in [
+        (
+            "nested_near_miss_case",
+            "### AR-002-Other: Other",
+            "AR-002-Other",
+        ),
+        ("nested_near_miss_short", "### AR-002: Other", "AR-002"),
+    ] {
+        let refusal = validate(name, &format!("## AR-001-thing: Thing\n\n{heading}\n"))
+            .expect_err("the scanner records a near miss as a declaration");
+        assert!(
+            refusal.contains(&format!("nests declaration `{token}`")),
+            "{heading}: {refusal}"
+        );
+    }
+}
