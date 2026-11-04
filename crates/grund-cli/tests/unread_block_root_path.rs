@@ -64,7 +64,6 @@ fn check(cwd: &Path) -> (Option<i32>, String, String) {
 /// §FS-check.4.10.5: run from the block, the location is the block's own
 /// `grund.toml` and the unread tree, the block root, is `.`.
 #[test]
-#[ignore = "red until #1145 names a block root that is the unread tree `.`; implement removes this"]
 fn block_root_is_named_dot_from_the_block() {
     let root = tree("from-block");
     let stderr = format!("warning: grund.toml:4: no project scans `.`{TAIL}");
@@ -74,7 +73,6 @@ fn block_root_is_named_dot_from_the_block() {
 /// §FS-check.4.10.5: run from the workspace root, the location moves to the
 /// run's root and the unread tree stays `.`, because it is named under the block root.
 #[test]
-#[ignore = "red until #1145 names a block root that is the unread tree `.`; implement removes this"]
 fn block_root_is_named_dot_from_the_workspace_root() {
     let root = tree("from-root");
     let stderr = format!("warning: group/grund.toml:4: no project scans `.`{TAIL}");

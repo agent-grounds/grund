@@ -144,7 +144,6 @@ dropped: grund.toml:5: [scan] include: include_root = false, so no project scans
 /// the unread-block warning, its unread tree the block root named `.`
 /// (§FS-check.4.10.5, agent-grounds/grund#1145), and twice included.
 #[test]
-#[ignore = "red until #1145 names a block root that is the unread tree `.`; implement removes this"]
 fn block_holding_a_readme_or_agents_md_stops_at_the_report_gate_in_one_run() {
     let warning = "+ run-warning warning unread-workspace-block grund.toml:2:- grund.toml:2: \
 no project scans `.`, so its citations are never checked. Set include_root = true, \

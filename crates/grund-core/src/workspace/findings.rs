@@ -109,10 +109,16 @@ pub(crate) fn block_scope_roots<'a>(
 
 /// A scope root named by its path **under the block root** — the config's
 /// spelling normalized rather than the spelling itself, so `./docs/` is named
-/// `docs` — because a canonical root renders as nothing when it equals the render
-/// base and as an absolute path when it does not (§FS-errors.4).
+/// `docs` and the block root itself is named `.`, never an empty path
+/// (§FS-check.4.10.5) — because a canonical root renders as nothing when it equals
+/// the render base and as an absolute path when it does not (§FS-errors.4).
 pub(crate) fn block_relative_root<'a>(config: &Config, root: &'a Path) -> &'a Path {
-    root.strip_prefix(&config.root).unwrap_or(root)
+    let relative = root.strip_prefix(&config.root).unwrap_or(root);
+    if relative.as_os_str().is_empty() {
+        Path::new(".")
+    } else {
+        relative
+    }
 }
 
 /// The sentence §FS-check.3.30.1 carries, built apart from the error that
