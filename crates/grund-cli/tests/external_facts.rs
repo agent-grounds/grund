@@ -154,7 +154,6 @@ fn external_facts_missing_snapshot_text_and_json_have_fixed_identities() {
 /// path, in the `should` warning of §FS-check.4.12 and the `must` error of
 /// §FS-check.3.1.3 alike.
 #[test]
-#[ignore = "red until #1170 spells a home at the report base `.`; implement removes this"]
 fn external_facts_missing_snapshot_names_a_root_home_dot() {
     for (resolve, severity, text, exit) in [
         (
@@ -188,6 +187,55 @@ fn external_facts_missing_snapshot_names_a_root_home_dot() {
             stdout(&output),
             format!("README.md:3: {severity}: {text}\n")
         );
+    }
+}
+
+/// §FS-check.4.12.3, §FS-cli.3.4: the home is `.` wherever it is the report base,
+/// not only at the config root: `--path-base=invocation` over the home's own
+/// directory reaches it under version 2, while the project base keeps naming the home.
+#[test]
+fn external_facts_missing_snapshot_names_a_home_at_the_invocation_base_dot() {
+    for (resolve, severity, before_home, exit) in [
+        (
+            "must",
+            "error",
+            "unknown reference TICKET-1; no snapshot in",
+            1,
+        ),
+        ("warn", "warning", "no snapshot for TICKET-1 in", 0),
+    ] {
+        let root = root(&format!("invocation-base-home-{resolve}"));
+        write(
+            &root,
+            "grund.toml",
+            &format!(
+                "grund_config_version = 2\nproject_name = \"facts\"\n\n\
+                 [schema]\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
+                 [schema.sources]\nrespect_gitignore = false\n\n\
+                 [schema.kinds.TICKET]\nfolders = [\"docs/tickets\"]\n\
+                 id_format = \"{{kind}}-{{number}}\"\nfetch = \"scripts/fetch-ticket\"\n\n\
+                 [schema.kinds.code]\nfolders = [\"docs\"]\n\n\
+                 [rules.resolution]\nTICKET = \"{resolve}\"\n"
+            ),
+        );
+        write(
+            &root,
+            "docs/tickets/note.md",
+            "# Note\n\nSee \u{a7}TICKET-1.\n",
+        );
+
+        for (base, path, home) in [
+            ("invocation", "note.md", "."),
+            ("project", "docs/tickets/note.md", "docs/tickets"),
+        ] {
+            let flag = format!("--path-base={base}");
+            let output = run(&root, &["check", "docs/tickets", &flag]);
+            assert_code(&output, exit, &format!("{resolve} from the {base} base"));
+            assert_eq!(
+                stdout(&output),
+                format!("{path}:3: {severity}: {before_home} {home} — run grund fetch TICKET-1\n")
+            );
+        }
     }
 }
 

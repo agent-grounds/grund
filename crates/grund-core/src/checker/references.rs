@@ -22,7 +22,7 @@ use super::{mounted_citation::report_mounted_duplicate, reference_scope::ScanSco
 use crate::config::{Frame, Schema};
 use crate::grammar::{render_catalog_id, render_citation_id};
 use crate::model::remedies;
-use crate::model::{Catalog, CheckReport, Code, Diagnostic, section_resolves};
+use crate::model::{Catalog, CheckReport, Code, Diagnostic, base_reads_dot, section_resolves};
 use crate::resolver::{
     LockJudgement, WorkspaceCheckTarget, join_alternatives, recorded_text_now_at,
     target_for_citation,
@@ -276,7 +276,8 @@ pub(super) fn check_citation_resolution(
                     .file()
                     .or(row.folder())
                     .expect("fetch-enabled kind has exactly one home after config validation");
-                let home = frame.display_path(&target.run.root.join(home));
+                // §FS-check.4.12.3: named from the report base, which reads `.`.
+                let home = base_reads_dot(frame.display_path(&target.run.root.join(home)));
                 let message = missing_snapshot_message(
                     target.schema,
                     target.frame(),
