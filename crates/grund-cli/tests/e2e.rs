@@ -58,6 +58,10 @@ mod workspace_config_findings;
 #[path = "support/grouping_block_config_findings.rs"]
 mod grouping_block_config_findings;
 
+// §FS-fetch.4.1: issue #1177's whole-line boundaries, its cases run alone.
+#[path = "support/fetch_line_boundaries.rs"]
+mod fetch_line_boundaries;
+
 // §FS-fetch.3.2: issue #1159's fetched subsection headings, its cases run alone.
 #[path = "support/fetch_subsection_headings.rs"]
 mod fetch_subsection_headings;
@@ -102,9 +106,16 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    let outcomes = ordered_pool::in_order(&discover_e2e_cases(&manifest_dir), |case| {
-        run_case(&manifest_dir, case, E2e)
-    });
+    // Red until #1177: its cases run alone in the ignored contract; implement removes this.
+    let cases = discover_e2e_cases(&manifest_dir)
+        .into_iter()
+        .filter(|case| {
+            !fetch_line_boundaries::RED_UNTIL_1177
+                .iter()
+                .any(|red| case.ends_with(red))
+        })
+        .collect::<Vec<_>>();
+    let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
     let compared = outcomes
         .iter()
         .filter(|outcome| matches!(outcome, CaseOutcome::Ran | CaseOutcome::Failed { .. }))

@@ -118,6 +118,29 @@ declaration, so it is refused the same way. The refusal is decided by the home's
 its kind, not by what the file holds, and comes before the integration runs. A value kind
 whose `file` home is a Markdown file has no value source there, and takes the write above.
 
+### 4.1. A boundary is a whole line
+
+The write measures the home in whole lines, because an indent belongs to the line it
+opens: it is a byte outside any declaration that ends before that line ([§FS-fetch.4](FS-fetch.md#4-file-home-write),
+[§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)). So a declaration starts at the first byte of its heading's line, and
+the range it owns ends no later than the first byte of the line of the heading that
+follows it. Three things follow from that:
+
+- The line after a replaced declaration keeps its indent. Any blank separator the write
+  keeps or adds, in the home's line ending, goes ahead of that indent, as it goes ahead of
+  an unindented line.
+- A declaration inserted ahead of an indented line goes ahead of that line's indent, and
+  the line keeps it.
+- A replaced declaration that was itself indented takes its indent with it, and comes out
+  as the fetcher printed it ([§FS-fetch.3](FS-fetch.md#3-accepted-declaration)).
+
+None of these leaves a whitespace-only line behind, and fetching output the home already
+holds leaves the same bytes ([§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)).
+
+A `##` line indented four spaces or by a tab, below the fetched declaration's heading, is
+not rewritten by this write: it comes out byte-identical. How a scan reads such a line is
+not this point's to say.
+
 ## 5. Folder-home write
 
 For `folder = "<home>"`, grund replaces the file that currently declares the requested

@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+cat <<'OUT'
+## AR-002-other: Other
+new
+OUT
