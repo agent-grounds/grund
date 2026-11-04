@@ -2,7 +2,7 @@ grund_config_version = 2
 project_name = "root"
 
 [workspace]
-members = ["packages/beta"]
+members = ["packages"]
 
 [schema.sources]
 languages = ["markdown"]

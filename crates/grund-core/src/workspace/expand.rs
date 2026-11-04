@@ -402,10 +402,9 @@ pub(super) fn expand_workspace_projects(
     // where the announcement is read back off (`run_workspace_check`).
     root_config.set_workspace_absent_optional(absent_optional);
     root_config.set_workspace_lists_optional(lists_optional);
-    // §FS-check.4.10.7: the blocks that opted out, posed now that `project_roots`
+    // §FS-check.4.10.7: the blocks with a present member, posed now that `project_roots`
     // exists — see this function's docs. The walk that answers one is the
-    // resolver's, so the channel carries the block (§AR-resolver.placement). A block
-    // whose only members are absent optional ones has no tree to hold anything.
+    // resolver's, so the channel carries the block (§AR-resolver.placement).
     let project_roots = root_config.workspace_project_roots.clone();
     root_config.extend_run_warnings(
         opted_out_blocks
@@ -538,10 +537,9 @@ fn collect_workspace_members(
         reject_absorbed_scan(&member_config, &nested.members)?;
         member_config
             .set_workspace_boundary_roots(nested.members.iter().map(|m| m.root.clone()).collect());
-        // §FS-check.4.11.3, §FS-check.4.10.7: a block that is not a project is kept
-        // for its config findings and whether its own tree holds anything unread —
-        // no outermost-block privilege either way. The boundary above is set first:
-        // the block is what the question travels as.
+        // §FS-check.4.11.3, §FS-check.4.10.7: a block that is not a project is kept for
+        // its config findings and its tree's unread files, no outermost-block privilege
+        // either way. The boundary above is set first: the block is what both travel as.
         if !member_config.workspace_include_root {
             opted_out.push(member_config.clone());
         }

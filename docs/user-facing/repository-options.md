@@ -50,8 +50,10 @@ declaration or section. A genuinely unknown alias needs correcting rather than
 being treated as the root project's name.
 
 `grund config validate` at the workspace root loads the root's config and every
-member's, and names the config findings of the root's config and of each project
-the workspace expansion returns, the set `grund check` names and in its words: a
+member's, and names the config findings of the root's config, of each project
+the workspace expansion returns, and of each `include_root = false` block it
+reaches, which is no project but whose config the run reads
+([§FS-check.4.11.3](../functional-spec/FS-check.md#4113-once-per-config-not-once-per-scope)) — the set `grund check` names and in its words: a
 config read as version 1, one read from the deprecated `.agents/`
 location, and an `.agents/grund.toml` that a `grund.toml` beside it outranks.
 `grund config show` prints one config, the root's, and names only that config's
