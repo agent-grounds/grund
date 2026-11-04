@@ -74,3 +74,24 @@ fn scan_publishes_the_message_every_other_operation_publishes() {
         "{check}"
     );
 }
+
+/// The library `scan` refuses an incomplete walk with the line `check` prints,
+/// `io`'s Fix included, because a strict scan is one more place the line is
+/// printed (§FS-check.2.4, §FS-workspace.8.7.3).
+#[test]
+#[ignore = "red until #1189 has scan_tree_strict render through scan_error_message; implement removes this"]
+fn the_library_scan_refuses_with_the_fix_check_prints() {
+    let root = test_root("the_library_scan_refuses_with_the_fix_check_prints");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\n[schema.kinds.FS]\nfolders = [\"docs\"]\n",
+    );
+    write(&root.join("docs/FS-a.md"), "# FS-a: A\n\nLead.\n");
+    symlink("missing.md", &root.join("docs/FS-b.md"));
+    let error = match scan(&root) {
+        Ok(_) => panic!("a broken link left the library scan complete"),
+        Err(error) => error.to_string(),
+    };
+    let fix = crate::scanner::scan_error_message("broken symlink: the target does not exist");
+    assert!(error.ends_with(&format!(": {fix}")), "{error}");
+}

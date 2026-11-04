@@ -113,7 +113,7 @@ Under `slug_pattern = "[a-z][a-z0-9-]*"`, `3D printing` derives `3d-printing`, w
 
 Holes below the maximum are **not** filled: with `FS-001`, `FS-002` and `FS-004` declared, `FS-003` is never issued. Numbers are issued strictly above the maximum, because an ID once removed may still be cited from outside the tree — PRs, chat, mirrored repos — and filling its hole would silently change what those citations point at. This is [§FS-non-goals.4](FS-non-goals.md#4-cross-workspace-id-renaming) (no rename) applied to allocation.
 
-A failed scan (I/O, a malformed file) exits `2` with the underlying error and never falls back to a guess: a number allocated against an incomplete view of the tree could collide.
+A failed scan (I/O, a malformed file) exits `2` with the underlying error and never falls back to a guess: a number allocated against an incomplete view of the tree could collide. A path the walk could not read is that error's one line, the same line `check` prints for the same tree, `io`'s *Fix* included ([§FS-check.2.4](FS-check.md#24-an-incomplete-run), [§FS-workspace.8.7.3](FS-workspace.md#873-paths)).
 
 ### 4.1 Number-less ID formats
 
