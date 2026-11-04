@@ -1,0 +1,12 @@
+grund_config_version = 2
+
+[schema]
+id_format = "{kind}-{number}-{slug}"
+number_pattern = "\\d+"
+
+[schema.kinds.AR]
+files = ["docs/arch.md"]
+fetch = "scripts/fetch"
+
+[schema.sources]
+respect_gitignore = false

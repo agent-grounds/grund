@@ -48,9 +48,9 @@ requested local ID, with no sibling declaration:
 - a `folder` home accepts one H1 declaration (`# TICKET-1234: Title`).
 
 The declaration may contain ordinary prose, fenced blocks, and subsections exactly one
-heading depth below its native declaration depth. Its title must be non-empty. A malformed
-heading, wrong ID or kind, wrong native depth, duplicate declaration, sibling
-declaration, invalid subsection depth, invalid UTF-8, or trailing content outside the
+heading depth below its native declaration depth ([§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)). Its title must be
+non-empty. A malformed heading, wrong ID or kind, wrong native depth, duplicate
+declaration, sibling declaration, invalid subsection depth, invalid UTF-8, or trailing content outside the
 one declaration is refused on stderr with exit 2.
 
 The whole output is validated before any filesystem mutation. Accepted bytes are
@@ -70,10 +70,37 @@ kind's ID. The refusal names the nested ID. It holds under config version 1 and 
 for `file` and `folder` homes alike, because `fetch` owns only the requested
 declaration and one `fetch <ID>` fetches one ID ([§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)).
 
-A subsection heading, which carries a numbered or named section path rather than an
+A subsection heading ([§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)), which carries a numbered or named section path rather than an
 ID, stays accepted, as does any heading inside a fenced block, which declares nothing.
 The rule binds only what `fetch` accepts: a nested declaration written by hand into a
 scanned file stays legal.
+
+### 3.2. A subsection is a heading the next scan reads as a section
+
+A subsection is a heading one depth below the declaration that the next ordinary scan
+reads as a section of it, so the one rule that decides it is the scanner's
+([§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)): a numeric section path (`### 1. Notes`),
+a named one where `[id] named_sections` enables names (`### notes: Notes`), or a
+relative heading ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)) the same configuration admits
+(`### .notes: Notes`). Whether a heading qualifies is read with the selected project's
+configuration, never by matching its text again, so with `named_sections` unset
+`### notes: Notes` is not a subsection while `### 1. Notes` still is.
+
+Any other heading at subsection depth — a prose heading (`### Other`), an ID of a kind
+the project does not configure (`### XX-002-other: Other`), or an escaped one
+(`### <§>AR-002-other: Other`) — is a malformed heading: the fetch is refused on stderr
+with exit 2 and the tree stays byte-identical, rather than accepted and turned red by
+the next `grund check`. The refusal names the heading and its line in the output and
+says how to keep it:
+
+```text
+error: fetch output line <n>: heading `<heading>` is not a section of `<ID>`; number it, fence it, or make it a bold label
+```
+
+`<n>` is the heading's 1-based line in the output and `<heading>` that line as written,
+trailing whitespace removed. A `file` home's H3 and a `folder` home's H2 are held
+alike. A heading inside a fenced block is content and a bold label is no heading, so
+both stay accepted, as they are on the next scan.
 
 ## 4. File-home write
 

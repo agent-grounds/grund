@@ -1,0 +1,10 @@
+grund_config_version = 1
+
+[[kinds]]
+kind = "AR"
+file = "docs/arch.md"
+fetch = "scripts/fetch"
+
+[scan]
+include = ["docs"]
+respect_gitignore = false

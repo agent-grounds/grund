@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+cat <<'OUT'
+## AR-001-thing: Thing
+
+**XX-002-other: Other**
+
+prose
+OUT
