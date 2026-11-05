@@ -76,7 +76,7 @@ The string-literal exclusion is deterministic, not heuristic. For every candidat
 2. Track an open-quote state per `'`, `"`, and `` ` ``. Toggling rules: an unescaped (no immediately preceding `\`) quote of a given kind toggles its state, but only when no other kind is currently open.
 3. If any quote state is open at the candidate's start column, the candidate is inside a string literal and is **not** rewritten.
 
-Markdown files (`.md`) are not subject to this rule — they have no string literals; every other scanned file is. In a Python docstring the scan runs over the docstring's content rather than the raw line ([§FS-fmt.2.3.1.1](FS-fmt.md#2311-a-python-docstring-is-scanned-for-its-content)).
+A file read as Markdown is not subject to this rule — it has no string literals; every other scanned file is, whatever its name. In version 2 a file is read as Markdown when its language is of class `document` ([§FS-config-v2.schema.sources.definitions](FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language)); in version 1, when its final extension is `md`. In a Python docstring the scan runs over the docstring's content rather than the raw line ([§FS-fmt.2.3.1.1](FS-fmt.md#2311-a-python-docstring-is-scanned-for-its-content)).
 
 This gives two correctly-configured installs identical output on identical input ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 

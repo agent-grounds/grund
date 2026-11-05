@@ -1,0 +1,15 @@
+grund_config_version = 2
+project_name = "fixture"
+
+[schema.sources]
+languages = ["notes", "rust"]
+
+[schema.sources.definitions.notes]
+class = "document"
+
+[schema.sources.extensions]
+txt = "notes"
+
+[schema.kinds.FS]
+folders = ["fs"]
+index = false
