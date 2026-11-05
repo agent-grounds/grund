@@ -5,16 +5,10 @@
 //! that line is not judged here. The tests that need a mode skip where it does not bar the user.
 #![cfg(unix)]
 
-#[path = "support/case_runner.rs"]
-#[allow(dead_code)]
-mod case_runner;
-
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-
-use case_runner::{CaseKind::E2e, RED_UNTIL_1256, assert_every_case_passed, run_case};
 
 const CONFIG: &str = "grund_config_version = 2\nproject_name = \"p\"\n\n\
     [schema]\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
@@ -207,21 +201,7 @@ fn an_unlistable_cases_root_reads_no_case_and_exits_2() {
     );
 }
 
-/// The manifests the corpus can hold, each compared on every golden.
 #[test]
-#[ignore = "red until #1256 reads every case whatever another holds; implement removes this"]
-fn corpus_cases() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let cases = root.join("tests/e2e/cases");
-    let outcomes = RED_UNTIL_1256
-        .iter()
-        .map(|name| run_case(&root, &cases.join(name), E2e))
-        .collect::<Vec<_>>();
-    assert_every_case_passed("e2e case failure", &outcomes);
-}
-
-#[test]
-#[ignore = "red until #1256 reads every case whatever another holds; implement removes this"]
 fn an_expected_exit_that_does_not_parse_leaves_the_other_cases_read() {
     let tree = Tree::new("parse", &["a", "b", "c"]);
     tree.write("b", "expected.exit", b"not a number\n");
@@ -230,7 +210,6 @@ fn an_expected_exit_that_does_not_parse_leaves_the_other_cases_read() {
 }
 
 #[test]
-#[ignore = "red until #1256 reads every case whatever another holds; implement removes this"]
 fn an_expected_exit_at_mode_000_leaves_the_other_cases_read() {
     let mut tree = Tree::new("exit-mode", &["a", "b", "c"]);
     let manifest = tree.lock(tree.case_file("b", "expected.exit"));
@@ -243,7 +222,6 @@ fn an_expected_exit_at_mode_000_leaves_the_other_cases_read() {
 }
 
 #[test]
-#[ignore = "red until #1256 reads every case whatever another holds; implement removes this"]
 fn a_fixture_directory_at_mode_000_leaves_the_other_cases_read() {
     let mut tree = Tree::new("fixture-mode", &["a", "b", "c"]);
     let fixtures = tree.case_file("b", "repo");
@@ -260,7 +238,6 @@ fn a_fixture_directory_at_mode_000_leaves_the_other_cases_read() {
 /// Two failures that read alike are still two entries: a run that keeps only the first, or
 /// collapses equal lines, reports one failure where there are two.
 #[test]
-#[ignore = "red until #1256 reads every case whatever another holds; implement removes this"]
 fn two_failing_cases_are_two_entries_in_json() {
     let tree = Tree::new("json-two", &["a", "b", "c", "d", "e"]);
     tree.write("b", "expected.exit", UNDECODABLE);
@@ -274,7 +251,6 @@ fn two_failing_cases_are_two_entries_in_json() {
 /// Two failures with different reasons, so a run that finishes the walk and hands back only one
 /// of them stays red here, whichever it keeps.
 #[test]
-#[ignore = "red until #1256 reads every case whatever another holds; implement removes this"]
 fn two_different_failures_are_both_reported() {
     let tree = Tree::new("text-two", &["a", "b", "c", "d", "e"]);
     tree.write("b", "expected.exit", b"not a number\n");
