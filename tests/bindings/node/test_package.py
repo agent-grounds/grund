@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from launch import cargo_probe
+from launch import cargo_probe, npm_env
 from support import (CASES, NODE, REPO, SCRATCH, Rehearsal, checked, dev_env, node_target,
                      typescript_compiler)
 
@@ -155,9 +155,10 @@ class NodePackageTests(unittest.TestCase):
         self.strict_typescript_check(self.r)
         cache = tempfile.TemporaryDirectory(prefix="grund-node-npm-cache-", dir=SCRATCH)
         self.addCleanup(cache.cleanup)
-        offline = {"npm_config_registry": "https://registry.invalid/",
-                   "npm_config_cache": cache.name}
-        with mock.patch.dict(os.environ, offline):
+        # §AR-ci-npm-cache.1.1: left in, an exported spelling would beat this dead registry.
+        offline = npm_env(npm_config_registry="https://registry.invalid/",
+                          npm_config_cache=cache.name)
+        with mock.patch.dict(os.environ, offline, clear=True):
             rehearsal = Rehearsal()
             self.addCleanup(rehearsal.close)
             self.strict_typescript_check(rehearsal)

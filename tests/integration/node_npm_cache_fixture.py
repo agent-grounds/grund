@@ -107,11 +107,6 @@ asked("npm", "pack", "--json", cwd=sys.argv[2])
 print(json.dumps(report))
 """
 
-RED_UNTIL_1235 = unittest.skipUnless(
-    os.environ.get("GRUND_1235_RUN_RED_TESTS") == "1",
-    "red until #1235 has each site drop every spelling of a setting it names; implement removes "
-    "this")
-
 
 def both_spellings(setting, lower, upper):
     """A setting exported twice, lower-case first, as bash, fish and a pyenv shim hand it on."""
@@ -227,7 +222,6 @@ class NpmCacheContract(unittest.TestCase):
         self.finish(PLAIN_INSTALL, REHEARSAL, self.source, offline=False)
         self.assert_something_left("a plain npm install from the loopback registry")
 
-    @RED_UNTIL_1235
     def test_a_test_process_beats_both_exported_spellings_of_the_cache(self):
         """§AR-ci-npm-cache.1.1: `source_package`'s pack and `installed_consumer`'s install."""
         printed = self.finish(TEST_PROCESS, NODE_HARNESS, exported=self.exported_caches())
@@ -236,14 +230,12 @@ class NpmCacheContract(unittest.TestCase):
             self.assertIn(call, report["ran"], "the site was not reached with real npm")
         self.assert_nothing_left("a test process that inherited both spellings of the cache")
 
-    @RED_UNTIL_1235
     def test_the_source_install_beats_both_exported_spellings_of_the_cache(self):
         """§AR-ci-npm-cache.1.1: `consumer` under `build_env`, from a port no later run has."""
         self.finish(SOURCE_INSTALL, REHEARSAL, self.source, offline=False,
                     exported=self.exported_caches())
         self.assert_nothing_left("a source install that inherited both spellings of the cache")
 
-    @RED_UNTIL_1235
     def test_the_source_install_beats_both_exported_spellings_of_the_registry(self):
         """§AR-ci-npm-cache.1.1: `build_env`'s registry, or the install cannot reach `LoopbackNpm`.
 

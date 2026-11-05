@@ -14,12 +14,17 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import unittest
 
 from rehearsal_support import (
-    CASES, acquire, artifact, bin_dir, command, fresh_env, interpreter, keep, manifest, pythons,
-    registry, run_checked, version_answer,
+    CASES, REPO, acquire, artifact, bin_dir, command, fresh_env, interpreter, keep, manifest,
+    pythons, registry, run_checked, version_answer,
 )
+
+# No gate test imports this module in its own process, so the Node harness stays out of discovery.
+sys.path.insert(0, str(REPO / "tests" / "bindings" / "node"))
+from launch import npm_env  # noqa: E402
 
 
 def consumer(family, env):
@@ -35,10 +40,11 @@ def consumer(family, env):
 def build_env(**extra):
     """This host's environment, Rust included, with the npm registry on loopback.
 
-    The loopback's port goes with the process, so its npm cache does too (§AR-ci-npm-cache.1).
+    The loopback's port goes with the process, so its npm cache does too (§AR-ci-npm-cache.1), and
+    both beat every spelling exported here, or the install never reaches it (§AR-ci-npm-cache.1.1).
     """
-    return dict(os.environ, npm_config_registry=registry().url,
-                npm_config_cache=str(keep("grund-source-npm-cache-")),
+    return dict(npm_env(npm_config_registry=registry().url,
+                        npm_config_cache=str(keep("grund-source-npm-cache-"))),
                 CARGO_TARGET_DIR=str(keep("grund-source-target-")), **extra)
 
 
