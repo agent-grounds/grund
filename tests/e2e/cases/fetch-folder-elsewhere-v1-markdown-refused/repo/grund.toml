@@ -1,0 +1,12 @@
+grund_config_version = 1
+project_name = "demo"
+
+[[kinds]]
+kind = "FS"
+folder = "fs"
+index = false
+fetch = "scripts/fetch"
+
+[scan]
+include = ["fs", "other"]
+extensions = ["md", "py"]

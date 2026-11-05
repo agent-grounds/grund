@@ -293,7 +293,8 @@ that declares only other IDs, that only cites the ID, or that holds the ID's tex
 nothing declares does not stop the fetch, nor does a file the walk does not yield, because
 no admitted language or `[scan] extensions` entry reads it or `[scan] exclude` keeps it
 out. Findings the pass or a later `grund check` reports against another file do not gate
-fetch. Discovery asks only the home's own files.
+fetch. This pass asks only the home's own files, and a declaration outside them is
+[§FS-fetch.5.3](FS-fetch.md#53-a-declaration-outside-the-home-prevents-installation)'s to refuse.
 
 A file the pass cannot read or decode may hold the declaration, so it is a discovery
 failure under [§FS-fetch.5](FS-fetch.md#5-folder-home-write) whatever else the home holds: exit 2, empty stdout, the tree
@@ -301,6 +302,70 @@ byte-identical, and on stderr the line `grund check` prints for that file ([§FS
 spelled from the same base.
 
 [§DF-fetch-folder-declaring-file](../decisions/functional/DF-fetch-folder-declaring-file.md#df-fetch-folder-declaring-file-a-folder-home-fetch-refuses-an-id-a-file-it-does-not-replace-already-declares) records why this refusal is a compatibility correction.
+
+### 5.3 A declaration outside the home prevents installation
+
+"When no declaration exists" is the selected project's scan's answer, not the home's.
+Discovery asks that scan for the requested ID, with the ID's stubs paired by their verdicts
+([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), and a declaration whose record is in a file outside the
+home is an existing declaration, not an absent snapshot. Fetch can neither create beside it,
+which leaves a duplicate, nor replace it, which overwrites a fact that was written somewhere
+fetch does not own ([§FS-fetch.6](FS-fetch.md#6-stability-and-ownership), [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)). So before creating or replacing
+anything grund refuses, with exit 2, empty stdout and the whole tree byte-identical, an absent
+home still absent, on stderr:
+
+```text
+error: cannot fetch <ID>: <file> already declares it; keep the fact in that file, or take the declaration out of it and fetch again
+```
+
+`<ID>` is the local ID and `<file>` is spelled from the report base ([§FS-errors.terms](FS-errors.md#terms-terms)). A
+declaration reached through a stub is named at its target, never at the stub
+([§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)). Where several files outside the home declare it, `<file>`
+is the first in `path:line` order.
+
+Which declarations those are is read from the one pairing every command reads, and fetch
+keeps no second reader of comments or stubs:
+
+- A comment declaration in a source file and a Markdown declaration outside the home each
+  refuse.
+- A healthy stub in the home whose target outside it declares the ID refuses, whether or not
+  the scan reaches that target. It is the pointer to that declaration, not a declaration of
+  the home's ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so it is not the file [§FS-fetch.5](FS-fetch.md#5-folder-home-write) replaces.
+  It stays as it was, and `grund show` answers as it did.
+- A healthy stub outside the home whose target in the home declares the ID does not refuse:
+  the declaration is the home's, and it is replaced where it is, under the stub. Such a stub
+  sits in another kind's home. A heading of that shape outside every home is a declaration
+  titled with a link ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)), and refuses, named at its own file.
+- A broken stub outside the home is a declaration of its own
+  ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so it refuses, named at its own file.
+- A declaration in the home beside one outside it does not permit installation. This refusal
+  comes ahead of every judgement of the home's contents, so a Markdown file holding the ID
+  beside other content takes this refusal rather than its own, and so do a value source
+  ([§FS-fetch.5.1](FS-fetch.md#51-existing-value-source-declarations-prevent-installation)) and a file [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation) would refuse. A stub the pass reads under a name
+  other than `.md`, whose target outside the home declares the ID, is therefore named at that
+  target. [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation) names such a stub only when nothing outside the home declares the ID.
+- A broken stub in the home, with nothing declared outside the home, stays the home's own
+  declaration. In a file named `.md` it is replaced, and under another name
+  [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation) refuses it. That is also the way through for a healthy one in a `.md` file: with the
+  declaration taken out of the target the stub is broken, and the fetch replaces it.
+
+What the scan does not read cannot refuse: a file in a language the project does not admit or
+under an extension `[scan] extensions` does not list, one under an excluded directory, and one
+`[scan] include` does not reach and no stub points at. A file that only cites the ID, or holds
+its text in a fence, declares nothing. In a workspace the scan asked is the selected
+project's ([§FS-fetch.1](FS-fetch.md#1-input-and-project-selection)), so another project declaring the same local ID does not count, and
+`<file>` is still spelled from the report base.
+
+Only the requested ID's declarations are read from that scan. No finding gates fetch, and
+neither does a per-file failure ([§FS-check.2.4](FS-check.md#24-an-incomplete-run)) outside the home: a file the scan cannot read
+or decode, a directory it cannot list, the config root included, and a link it cannot resolve.
+Such a path may hold the declaration, and the fetch goes ahead regardless, because it is
+unrelated to the request until shown otherwise and `grund check` already exits 2 on that tree,
+so an exit 0 turns nothing red. It hides nothing either: a declaration another file holds still
+refuses. Inside the home a file discovery cannot read stays a discovery failure under
+[§FS-fetch.5](FS-fetch.md#5-folder-home-write), and so does a scan that could not run at all, which has no answer for any ID.
+
+[§DF-fetch-declaration-outside-home](../decisions/functional/DF-fetch-declaration-outside-home.md#df-fetch-declaration-outside-home-a-folder-home-fetch-refuses-an-id-declared-outside-the-home) records why this refusal is a compatibility correction.
 
 ## 6. Stability and ownership
 
@@ -321,6 +386,7 @@ ambiguous existing content, a folder-home file that already declares the ID
 ([§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)), and filesystem failure are CLI-level operational errors on
 stderr and exit 2, following
 [§FS-errors.2.2](FS-errors.md#22-cli-level-message).
+A folder-home fetch of an ID declared outside the home ([§FS-fetch.5.3](FS-fetch.md#53-a-declaration-outside-the-home-prevents-installation)) is refused the same way.
 
 Once it ships, `fetch --remote` exits 0 when the projection and lock are installed, and prints the
 remote's own content findings, which never block the pin

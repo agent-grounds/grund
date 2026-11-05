@@ -1,0 +1,14 @@
+grund_config_version = 2
+project_name = "demo"
+
+[schema.sources]
+languages = ["markdown", "python"]
+
+[schema.kinds.FS]
+folders = ["fs"]
+index = false
+fetch = "scripts/fetch"
+
+[schema.kinds.AR]
+folders = ["ar"]
+index = false

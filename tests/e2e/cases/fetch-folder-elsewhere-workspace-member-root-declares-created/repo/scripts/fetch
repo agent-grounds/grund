@@ -1,0 +1,2 @@
+#!/bin/sh
+printf "# FS-a: Alpha\n\nFetched body.\n"

@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "root"
+
+[schema.sources]
+languages = ["markdown", "python"]
+
+[workspace]
+members = ["packages/alpha", "packages/beta"]
