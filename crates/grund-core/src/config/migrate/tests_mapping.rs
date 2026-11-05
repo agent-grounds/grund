@@ -199,6 +199,20 @@ fn every_mapping_case_holds_its_outcome() {
     assert!(failures.is_empty(), "{}", failures.join("\n\n"));
 }
 
+/// §FS-config-migrate.3.1.7.1: the one case `CASES` cannot hold yet, run alone.
+#[test]
+#[ignore = "red until #1156 gives a fetched row's value_chapter refusal its own words; implement removes this"]
+fn a_fetched_value_chapter_holds_its_outcome() {
+    let case = tests_rows::RED_UNTIL_1156;
+    let report = translate_case(0, &case);
+    let failures: Vec<String> = case
+        .expect
+        .iter()
+        .filter_map(|outcome| missed(outcome, &report))
+        .collect();
+    assert!(failures.is_empty(), "{}", failures.join("\n\n"));
+}
+
 /// §FS-config-migrate.mapping: "a test fails when a row of the v1 lowering
 /// table has none" — each row of `KEYS` and `DEFAULTS` has a case.
 #[test]

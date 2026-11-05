@@ -601,7 +601,7 @@ Both readers lower into the same records, so the records hold every state either
 | A complement renamed by a non-citable homeless row | none: the complement is `code`, titled by `[presentation.kinds.code] title` | the complement's row name |
 | Every row's guidance renders in the root entrypoint | `[presentation] rules = "root"`, which a migrated file writes explicitly; a v2 file that omits it renders scoped guidance ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)) | the layout of the generated guidance, so a migrated config writes the files its v1 config wrote |
 | `[scan] include`, separate from the homes | none: the scan is the places and the complement's extent | the derived scan roots |
-| A row's `value_chapter` | a field, which adds a "Declaration shapes" section to the generated guidance | the chapter's value roots, apart from the field model |
+| A row's `value_chapter` | a field, which adds a "Declaration shapes" section to the generated guidance; on a row that sets `fetch`, none ([§FS-config-migrate.3.1.7.1](FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)) | the chapter's value roots, apart from the field model |
 | `lead_size_warning` counted in lines or bytes | `[schema.leads.words]` only | the lead budget and its unit |
 | `[fmt.cross_refs] enabled = false`, or an `anchor_format` other than `"github"` | none in this grund ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)) | the formatter's link policy |
 | An `include` entry that does not exist | none: a place is a file or a folder | the authored scan root, of no known type |

@@ -153,6 +153,22 @@ refused: grund.toml:8: [fmt.cross_refs] enabled = false has no version 2 spellin
 
 The same `lead_size_warning` line reads `counts bytes` for a byte budget, and `anchor_format` other than `"github"` reads `` [fmt.cross_refs] anchor_format = "<value>" has no version 2 spelling in this grund ``.
 
+##### 3.1.7.1 A `value_chapter` on a fetched kind
+
+A row that sets `fetch` as well as `value_chapter` is refused at the same line, in words of its own:
+
+```text
+refused: grund.toml:9: [[kinds]] `AR` value_chapter has no version 2 spelling on a fetched kind, because a fetched kind takes no fields
+  repair: none yet; keep version 1, or under version 1 rewrite its roots as marked sections, remove value_chapter and cite the new paths
+```
+
+The words of [§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet) stay for a row without `fetch`, and are true of it: version 2 loads that field. On this row neither of their lines holds.
+
+- **The obstacle is another one.** [§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts) gives a fetched kind no fields, so the key cannot become one and no "Declaration shapes" section can appear. The refusal names what actually stops the row.
+- **Removing the key is not the way through.** Removed alone, it ends the value comparison for every binding that quoted the chapter, so a wrong literal goes from an error to exit `0`. The gates of [§FS-config-migrate.5](FS-config-migrate.md#5-equivalence-two-gates) cannot say so: they compare the tree with the key already gone, and truthfully report no difference. The repair is the only place left to say it, so it names the rewrite that keeps the values compared.
+
+A root rewritten as a marked section ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) is judged the same under both versions, whatever the row's `fetch`: a wrong literal bound to it fails `grund check` before the migration and after it, and with the key gone nothing here refuses the row. The repair speaks of the tree `grund check` and this command read; what `grund fetch` may write into that home is [§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)'s to say.
+
 #### 3.1.8 A string that closes early
 
 Version 1 reads a string from its opening quote to the last quote of its value or its element, every quote between kept, and keeps that reading for good ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)); version 2 ends a string at its first unescaped quote ([§FS-config-v2.reader.6](FS-config-v2.md#reader6-a-string-ends-at-its-first-unescaped-quote)). Writing the value out would carry the same string into version 2 escaped, `"docs\" \"x"`, so a forgotten comma or a stray quote would become valid TOML that means what the typo meant. Migration refuses instead, at the key's line, naming the string as version 1 reads it, with the repair version 2's warning gave through grund 0.21.x ([§FS-config-v2.reader.6.window](FS-config-v2.md#reader6window-through-grund-021x-a-string-that-closes-early-is-read-as-before-and-warns)), made under version 1: the first half alone for a scalar, and both halves for a list element.
@@ -497,7 +513,7 @@ not written: grund check --suggestions differs (inspect the comparison above); g
 | `[[kinds]] rules` | `form = "rule"` | mapped |
 | `[[kinds]] scan` | `scan = false` | mapped |
 | `[[kinds]] title` | `[presentation.kinds.<NAME>] title` | mapped |
-| `[[kinds]] value_chapter` | a field, which would add a section `check` compares | refused ([§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet)) |
+| `[[kinds]] value_chapter` | a field, which would add a section `check` compares; on a row that sets `fetch`, none ([§FS-config-migrate.3.1.7.1](FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)) | refused ([§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet)) |
 | `[[kinds]] values` | `form = "value"` | refused by the guidance comparison ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)): version 2 gives every value row a declaration shape |
 | `[scan] comment_prefixes` | each definition's `comment_prefixes`, the whole list | mapped |
 | `[scan] docstring_python` | `.py`'s definition, `docstrings` python or off | mapped |
