@@ -180,8 +180,11 @@ def fresh_env(home, **extra):
         if d:
             path.append(d)
     env = {k: v for k, v in os.environ.items()
-           if not k.startswith(("CARGO", "RUSTUP", "RUST", "PIP_", "PIPX_", "npm_config_",
-                                "NPM_CONFIG_", "VIRTUAL_ENV", "PYTHON", "NODE_"))}
+           if not k.startswith(("CARGO", "RUSTUP", "RUST", "PIP_", "PIPX_", "VIRTUAL_ENV",
+                                "PYTHON", "NODE_"))
+           # npm reads `npm_config_` in any case, so every case goes
+           # (§FS-distribution-candidate.5.2.2).
+           and not k.lower().startswith("npm_config_")}
     env.update({
         "PATH": os.pathsep.join(path), "HOME": str(home), "USERPROFILE": str(home),
         "XDG_CONFIG_HOME": str(home / ".config"), "XDG_CACHE_HOME": str(home / ".cache"),

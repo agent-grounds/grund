@@ -28,17 +28,13 @@ TOOLCHAIN = ("rustdoc", "rustfmt", "cargo-clippy", "clippy-driver", "rls", "rust
 OWN_COMMANDS = ("grund", "grund-lsp")
 NAMED_REGISTRY = "http://named.invalid/"
 # §FS-distribution-candidate.5.2.2: spellings npm reads, of a setting `fresh_env` does not name
-# and of two it does. On Windows `os.environ` folds names to upper case, so they arrive as
-# `NPM_CONFIG_*`, are dropped already and the test passes there before and after the fix.
+# and of two it does. On Windows `os.environ` folds names to upper case, so there they arrive as
+# `NPM_CONFIG_*` and the test holds that one spelling.
 MIXED_CASE = {"Npm_Config_Offline": "true", "NPM_Config_Offline": "true",
               "npm_Config_offline": "true", "nPm_CoNfIg_oFfLiNe": "true",
               "Npm_Config_Cache": "inherited-cache", "Npm_Config_Registry": "http://mixed.invalid/"}
 EXACT_CASE = {"npm_config_offline": "true", "NPM_CONFIG_OFFLINE": "true",
               "npm_config_cache": "inherited-cache", "NPM_CONFIG_REGISTRY": "http://exact.invalid/"}
-RED_UNTIL_1257 = unittest.skipUnless(
-    os.environ.get("GRUND_1257_RUN_RED_TESTS") == "1",
-    "red until #1257 has fresh_env drop every spelling of an npm setting, in any case; implement "
-    "removes this")
 # Asks in a process of its own, whose exit removes what `keep` made, from a cwd of its choosing.
 CHILD = """
 import json, shutil, subprocess, sys
@@ -296,15 +292,14 @@ class InheritedNpmSettingTests(unittest.TestCase):
         self.assertEqual(str(self.home / "npm-cache"), own.get("npm_config_cache"), own)
         return own
 
-    @RED_UNTIL_1257
     def test_no_mixed_case_spelling_the_contributor_exported_survives(self):
-        """The ticket's case: today the exact prefixes let every one of `MIXED_CASE` through."""
+        """No spelling in `MIXED_CASE` survives, and what `fresh_env` names keeps its value."""
         own, settings = self.own(), self.fresh(MIXED_CASE)
         self.assertEqual([], sorted(set(settings) - set(own)),
                          "npm settings the contributor exported survived fresh_env")
         self.assertEqual(own, settings)
 
     def test_the_two_usual_spellings_are_dropped(self):
-        """A guard: today's exact prefixes drop these, and a fix must not bring them back."""
+        """The two usual spellings go too, and what `fresh_env` names keeps its value."""
         own = self.own()
         self.assertEqual(own, self.fresh(EXACT_CASE))
