@@ -1,0 +1,9 @@
+grund_config_version = 1
+
+[scan]
+extensions = ["md", "yaml"]
+
+[[kinds]]
+kind = "FS"
+file = "fs.yaml"
+fetch = "scripts/fetch-fs"

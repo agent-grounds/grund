@@ -92,9 +92,34 @@ include!("case_refresh_tests.rs");
 // (§AR-core-module-layout.3).
 include!("case_args_tests.rs");
 
+/// Cases red until #1224 refuses a `file` home read as source (§FS-fetch.4.2, §FS-check.3.1.3.1).
+/// `source_home_e2e_cases` in `tests/fetch_source_home.rs` runs them under `--ignored`; implement
+/// deletes this list, its filter and that test's `#[ignore]` together.
+pub const RED_UNTIL_1224: &[&str] = &[
+    "check-source-home-declare-remedy",
+    "check-source-home-v1-yaml-scanned-declare-remedy",
+    "check-source-home-warn-declare-remedy",
+    "check-source-home-workspace-target-asked",
+    "fetch-source-home-excluded-refused",
+    "fetch-source-home-md-read-as-python-refused",
+    "fetch-source-home-python-absent-refused",
+    "fetch-source-home-python-declares-nothing-refused",
+    "fetch-source-home-python-declares-other-refused",
+    "fetch-source-home-python-declares-refused",
+    "fetch-source-home-rust-refused",
+    "fetch-source-home-txt-read-as-python-refused",
+    "fetch-source-home-v1-python-refused",
+    "fetch-source-home-v1-yaml-scanned-refused",
+    "fetch-source-home-value-kind-refused",
+    "fetch-source-home-workspace-member-refused",
+];
+
 pub fn discover_e2e_cases(manifest_dir: &Path) -> Vec<PathBuf> {
     let cases_dir = manifest_dir.join("tests/e2e/cases");
-    let cases = discover_case_dirs(&cases_dir, |_| true);
+    let cases = discover_case_dirs(&cases_dir, |case| {
+        let name = case.file_name().unwrap_or_default().to_string_lossy();
+        !RED_UNTIL_1224.contains(&name.as_ref())
+    });
     assert!(
         !cases.is_empty(),
         "expected at least one e2e case under {}",

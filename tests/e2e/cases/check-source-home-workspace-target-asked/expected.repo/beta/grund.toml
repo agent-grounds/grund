@@ -1,0 +1,6 @@
+grund_config_version = 2
+project_name = "offers"
+
+[schema.kinds.page]
+citable = false
+files = ["docs/offer.md"]

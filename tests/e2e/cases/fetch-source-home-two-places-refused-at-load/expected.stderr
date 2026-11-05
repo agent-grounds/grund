@@ -1,0 +1,1 @@
+error: grund.toml:9: `[schema.kinds.FS] fetch` needs one place to hold its snapshots

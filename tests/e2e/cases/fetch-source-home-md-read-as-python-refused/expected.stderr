@@ -1,0 +1,1 @@
+error: kind `FS` cannot fetch into fs.md: a file read as source holds no Markdown; move the kind and its declarations to a Markdown file or a folder, or remove its `fetch`

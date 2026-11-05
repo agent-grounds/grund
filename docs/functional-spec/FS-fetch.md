@@ -123,7 +123,8 @@ in the successful final installation, holding the accepted declaration alone. Th
 holds for every kind but a value kind and a kind that sets `value_chapter`. Their homes
 must already exist ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations), [§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)), so an absent one is refused when
 the configuration loads, before any integration runs, and the refusal names the way
-through ([§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through)).
+through ([§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through)). Nor does it hold for a home the text scan reads as source, which is
+refused whether or not it exists ([§FS-fetch.4.2](FS-fetch.md#42-a-home-read-as-source-is-refused)).
 
 ### 4.1. An absent value home is refused with the way through
 
@@ -152,8 +153,9 @@ requested ID is read.
 Every other absent home inside the project root gets the shorter hint: a kind without
 `fetch`, which is never told to run `grund fetch`, and a home whose snapshot the project
 does not read as Markdown, because fetch writes Markdown and so is not the way through
-there: a value source's reader refuses it, and under a name no language or `[scan]
-extensions` list reads nothing ever sees it. It does not say `empty`, because an empty
+there: a value source's reader refuses it, [§FS-fetch.4.2](FS-fetch.md#42-a-home-read-as-source-is-refused) refuses a home read as source, and
+under a name no language or `[scan] extensions` list reads nothing ever sees it. It does
+not say `empty`, because an empty
 `.json` is itself invalid. For a file home it reads:
 
 ```text
@@ -177,6 +179,43 @@ such a place first ([§FS-config-v2.schema.places.boundaries.1](FS-config-v2.md#
 The hint changes no verdict: the exit stays 2, and a caller matching the first line
 still matches it. `grund check` and `grund list`, which load the same configuration,
 print the same two lines.
+
+### 4.2. A home read as source is refused
+
+A `file` home the text scan reads as source holds no Markdown declaration either. The scan
+reads that file through its language's comments, so a heading `fetch` wrote there would
+never be read back: every read of the ID would go on answering with what the file already
+declares, or with nothing, while the file carried text its language was never meant to
+hold. So `fetch` refuses it, with exit 2, empty stdout and the whole tree byte-identical, on
+stderr:
+
+```text
+error: kind `<KIND>` cannot fetch into <home>: a file read as source holds no Markdown; move the kind and its declarations to a Markdown file or a folder, or remove its `fetch`
+```
+
+`<home>` is spelled from the report base ([§FS-errors.terms](FS-errors.md#terms-terms)).
+
+The refusal is decided by the home's path and its kind, not by what the file holds, and
+comes before the integration runs, as the value-source refusal does. A home that declares
+the requested ID, one that declares only other IDs, one that declares nothing and an absent
+one are all refused, and an absent one is not created.
+
+In a version-2 file a home is read as source when the language its name resolves to
+([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)) is of class `source`, whatever the name: `fs.py`,
+and equally `fs.txt` under `txt = "python"` or `fs.md` under `md = "python"`. A version-1
+file has no language to ask, so there it is a home not named `.md` whose extension is in the
+effective `[scan] extensions` ([§FS-scan.scope.extensions](FS-scan.md#scopeextensions-an-extension-makes-a-file-readable-not-declarable)). The name decides: an `exclude` or
+`include` entry that keeps the home out of the walk does not change the answer.
+
+A home the scan reads as Markdown goes on being written, whatever its name, `fs.txt` under
+`txt = "markdown"` included. So does a home the text scan does not read: a name no language
+or `[scan] extensions` list claims, such as `fs.dat`, where `check` already warns that the
+file is not read. Such a file is not read two ways, and this refusal says nothing about it.
+
+The refusal is `fetch`'s alone. The configuration still loads, and `check`, `list`, `show`
+and `refs` keep their verdicts on such a project, reading what the file declares; only the
+remedy `check` names moves ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)). [§DF-fetch-source-home](../decisions/functional/DF-fetch-source-home.md#df-fetch-source-home-fetch-refuses-a-file-home-the-text-scan-reads-as-source) records the
+compatibility correction.
 
 ## 5. Folder-home write
 
@@ -272,9 +311,10 @@ unused-snapshot exemption, or workspace-wide snapshot ownership behavior.
 
 Success writes nothing to stdout or stderr and exits 0. An unparseable ID is a query
 failure and exits 1. Missing fetch configuration, a `file` home that is a value source
-([§FS-fetch.4](FS-fetch.md#4-file-home-write)), integration failure, rejected output, ambiguous existing content, a
-folder-home file that already declares the ID ([§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)), and filesystem failure are
-CLI-level operational errors on stderr and exit 2, following
+([§FS-fetch.4](FS-fetch.md#4-file-home-write)) or is read as source ([§FS-fetch.4.2](FS-fetch.md#42-a-home-read-as-source-is-refused)), integration failure, rejected output,
+ambiguous existing content, a folder-home file that already declares the ID
+([§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)), and filesystem failure are CLI-level operational errors on
+stderr and exit 2, following
 [§FS-errors.2.2](FS-errors.md#22-cli-level-message).
 
 Once it ships, `fetch --remote` exits 0 when the projection and lock are installed, and prints the
