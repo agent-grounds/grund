@@ -132,6 +132,10 @@ The fresh environment's `PATH` finds no command of the Rust toolchain and loses 
 
 A prior install of the candidate's own `grund` or `grund-lsp` in such a directory is not found either, and it is the one exception to keeping everything else. `cargo install` puts those commands exactly there, so the host's copy could otherwise answer for an install that failed to put its command on `PATH`, which is what [§FS-distribution-candidate.5.2](FS-distribution-candidate.md#52-every-registry-row-installs-fresh-and-without-rust) rehearses.
 
+#### 5.2.2 No npm setting the contributor exported reaches an install, whatever the case of its name
+
+The fresh environment carries no npm setting from the environment the rehearsal was started in, under any spelling of its name. npm takes a setting from every variable whose name begins `npm_config_` in any mix of upper and lower case, so `Npm_Config_Offline=true` turns npm offline exactly as `npm_config_offline=true` does. Every such variable is dropped, and the only npm settings the fresh environment holds are the ones the rehearsal sets itself, each in one spelling and with the value the rehearsal gave it. A spelling left behind would decide the install, and the rehearsal's verdict would then depend on the shell of whoever ran it rather than on the candidate.
+
 ### 5.3 Every install of the CLI answers alike
 
 The rehearsal replays the read-only e2e cases against every installed `grund` — Cargo, npm, wheel and archive — with the tree, configuration, invocation and environment held fixed, and compares standard output, standard error and exit status byte for byte against the checked goldens. The cases cover a clean tree, findings, JSON, selectors, a failed ID query, both path bases, and a copy of a case under a directory whose name has spaces and non-ASCII text. A row passes only when every install matches every golden ([§FS-distribution.2](FS-distribution.md#2-cli-parity)).
