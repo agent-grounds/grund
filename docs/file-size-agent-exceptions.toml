@@ -259,7 +259,7 @@ path = "docs/architecture/AR-ci.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 1117, unit = "lines" }
+max_accepted = { value = 1140, unit = "lines" }
 until = "§AR-ci.5 and §AR-ci.3.4 leave for declarations of their own with their existing section citations migrated"
 reason = """
 Over the soft budget at 790 non-blank lines before issue #696 touched it, and promoted by the count of soft edits, so any staged edit is refused. Missing boundary: §AR-ci.5, the benchmark jobs, is a subject of its own with its own sub-structure (5.1 to 5.5, and the store's five children #696 adds), and it is the part #696 grows, by 19 lines to 809. Giving it a declaration of its own is a mapped migration of 171 citing sites across 37 files, which is outside #696. It alone would not bring the file under budget: §AR-ci.5 is 46 non-blank lines, and the bulk is §AR-ci.3.4, the Python gate's inputs, at 245, and §AR-ci.3.1, citations and links, at 199. So the entry retires once §AR-ci.5 and §AR-ci.3.4 have left.
@@ -276,6 +276,7 @@ Issue #1104 says in §AR-ci.3.4.1.1 how the deadline test's controlled child is 
 Issue #1019 adds one paragraph at §AR-ci.7 naming the unfiltered repository release-window test and its existing Python gate route. The ceiling accepts exactly 1098 non-blank lines, with no growth allowance. The extraction boundary and retirement condition remain unchanged: migrating the benchmark and Python-input section citations is outside this bounded guard change.
 Issue #1144 adds §AR-ci.12.1, the concurrency group that cancels a replaced pull-request run, beside the merge-queue cost §AR-ci.12 already names. Main already measured 1106 non-blank lines; the ten this adds take the ceiling to exactly 1116, with no growth allowance. The extraction boundary and retirement condition remain unchanged: migrating the benchmark and Python-input section citations is outside this CI change.
 Issue #1144's review round adds one non-blank line at §AR-ci.13.2, naming the cancelled pull-request run a required check does not judge (§AR-ci.12.1). The ceiling accepts exactly 1117 non-blank lines, with no growth allowance.
+Issue #1261 adds §AR-ci.3.1.4.1 under the changed-line scope it sharpens: a file's name does not decide whether the gate checks its changed lines, the one name lychee's dump cannot carry is left to the sweep, and its tests are named. Main already measured 1117 non-blank lines; the 23 this adds take the ceiling to exactly 1140, with no growth allowance. The extraction boundary and retirement condition remain unchanged: migrating the benchmark and Python-input section citations is outside this link-gate correction.
 """
 [[exceptions]]
 path = "scripts/bench_record.py"
