@@ -12,8 +12,8 @@ use crate::grammar::{
 };
 use crate::model::{Id, OperationDiagnostic, format_path, relative_from_base};
 use crate::scanner::{
-    folder_value_declarations, markdown_heading_level, scan_error_message, scan_unwalked_file,
-    walk_scannable_files_with_sources,
+    folder_value_declarations, markdown_heading_level, scan_error_message, scan_error_reason,
+    scan_unwalked_file, walk_scannable_files_with_sources,
 };
 use crate::sources::{path_exists, path_is_dir, read_bytes};
 
@@ -239,7 +239,11 @@ fn refuse_declaring_file(
             }
             Ok(_) => {}
             Err(error) => {
-                let message = format!("{shown}: {}", scan_error_message(&format!("{error:#}")));
+                // §FS-check.2.4.1: publish the shared reason, retaining the raw cause below.
+                let message = format!(
+                    "{shown}: {}",
+                    scan_error_message(&scan_error_reason(&error))
+                );
                 return Err(fetch_walk_failure(diagnostic, path, error, message));
             }
         }
