@@ -1,0 +1,25 @@
+grund_config_version = 1
+project_name = "example"
+
+[id]
+format = "{kind}-{slug}"
+named_sections = true
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[workspace]
+members = ["missing/*"]
+
+[[kinds]]
+kind = "FS"
+folder = "docs"
+index = false
+
+[[kinds]]
+kind = "AR"
+folder = "docs/gone"
+index = false
+
+[scan]
+include = ["docs"]
+exclude = ["nowhere/y"]
+extensions = ["md"]

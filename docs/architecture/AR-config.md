@@ -535,8 +535,9 @@ the notices, the refusals, the listed comments and both gates' results, and
   path-shaped `[scan] exclude` entries stay in it, because the scan compares an
   entry with one directory's name and they match nothing, which is what removing
   them keeps. One walk serves every detail of a run, the member roots kept out as
-  `grund list` keeps them, and a run that has no such refusal walks nothing. A
-  walk that cannot run at all fails the run, since `grund list` fails there too.
+  `grund list` keeps them, and a run that has no such refusal, or whose refusals
+  name only paths not on disk, walks nothing. A walk that cannot run at all fails
+  the run, since `grund list` fails there too.
 
 ### 8.2 The lowering table is its checklist
 

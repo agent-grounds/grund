@@ -45,6 +45,11 @@ impl<'a> Reads<'a> {
     /// (§FS-config-migrate.3.1.9).
     pub(super) fn under(&self, path: &str) -> Result<Vec<String>> {
         let at = normalize_path_lexically(&self.root.join(path));
+        // §FS-config-migrate.3.1.4.1: nobody reads a path not on disk (§FS-check.4.10.2),
+        // so it names nothing, and a walk that cannot run does not fail the run for it.
+        if !at.exists() {
+            return Ok(Vec::new());
+        }
         let mut out: Vec<String> = self
             .files()?
             .iter()
