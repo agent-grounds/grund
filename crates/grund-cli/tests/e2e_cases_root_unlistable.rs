@@ -184,7 +184,6 @@ fn assert_one_io_entry(dir: &Path, path: &str) {
 
 /// The report's tree, as its steps build it, under every command its reproducer judged.
 #[test]
-#[ignore = "red until #1262 reports an unlistable cases root once; implement removes this"]
 fn an_unlistable_cases_root_is_one_line_from_every_command() {
     let mut scratch = Scratch::new("report");
     scratch.write("grund.toml", &config("e2e/cases"));
@@ -208,7 +207,6 @@ fn an_unlistable_cases_root_is_one_line_from_every_command() {
 }
 
 #[test]
-#[ignore = "red until #1262 reports an unlistable cases root once; implement removes this"]
 fn an_unlistable_cases_root_is_one_io_entry_in_check_json() {
     let mut scratch = Scratch::new("json");
     scratch.write("grund.toml", &config("e2e/cases"));
@@ -222,7 +220,6 @@ fn an_unlistable_cases_root_is_one_io_entry_in_check_json() {
 
 /// With the folder elsewhere, the one line names the folder, never a directory the tree lacks.
 #[test]
-#[ignore = "red until #1262 reports an unlistable cases root once; implement removes this"]
 fn a_cases_root_elsewhere_is_one_line_naming_its_folder() {
     let mut scratch = Scratch::new("elsewhere");
     scratch.write("grund.toml", &config("tests/e2e"));
@@ -241,7 +238,6 @@ fn a_cases_root_elsewhere_is_one_line_naming_its_folder() {
 
 /// A workspace root reports its member's failure once, spelled from the report base.
 #[test]
-#[ignore = "red until #1262 reports an unlistable cases root once; implement removes this"]
 fn a_members_unlistable_cases_root_is_one_line_from_the_workspace_root() {
     let mut scratch = Scratch::new("workspace");
     scratch.write(
@@ -261,7 +257,6 @@ fn a_members_unlistable_cases_root_is_one_line_from_the_workspace_root() {
 /// Under a path scope the one line is the caution outside the report scope (§FS-check.1.3.6.3)
 /// and the error inside it, never one of each.
 #[test]
-#[ignore = "red until #1262 reports an unlistable cases root once; implement removes this"]
 fn under_a_path_scope_the_one_line_keeps_the_severity_its_location_earns() {
     let mut scratch = Scratch::new("scoped");
     scratch.write("grund.toml", &config("tests/e2e"));
@@ -290,7 +285,6 @@ fn under_a_path_scope_the_one_line_keeps_the_severity_its_location_earns() {
 /// line would leave the failure unreported (§REQ-no-missed-citation.1), and it names the folder,
 /// not a hard-coded `e2e/cases` (§AR-scanner.6.unlistable-root).
 #[test]
-#[ignore = "red until #1262 names the folder when the pass alone reports it; implement removes this"]
 fn a_cases_root_only_the_manifest_pass_meets_is_one_line_naming_its_folder() {
     let mut scratch = Scratch::new("linked");
     scratch.write(
