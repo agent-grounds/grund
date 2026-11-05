@@ -100,6 +100,26 @@ class RegressionTests(unittest.TestCase):
                 home.chmod(permissions)
             self.assertEqual(before, tree_bytes(root), "failed traversal must preserve bytes")
 
+    @unittest.skipUnless(os.name == "posix", "requires POSIX file read permissions")
+    def test_denied_read_of_a_file_fetch_does_not_replace_retains_io_source(self):
+        # §FS-fetch.5.2: the scan's pass reads it, and the embedder keeps the filesystem class.
+        if os.geteuid() == 0:
+            self.skipTest("root bypasses file read permissions; run as an unprivileged user")
+        with temporary() as temp:
+            root = self.fetch_fixture(temp)
+            source = root / "packages/alpha/docs/tickets/a.py"
+            source.write_text("x = 1\n")
+            before = tree_bytes(root)
+            permissions = source.stat().st_mode
+            source.chmod(0o000)
+            try:
+                # Inspect bytes only after restoring the unreadable file.
+                self.assert_fetch_filesystem_failure(
+                    root, source, errno.EACCES, check_bytes=False)
+            finally:
+                source.chmod(permissions)
+            self.assertEqual(before, tree_bytes(root), "failed read must preserve bytes")
+
     @unittest.skipUnless(os.name == "posix", "requires POSIX directory symlink semantics")
     def test_explicit_symlink_parent_root_matches_engine(self):
         with temporary() as first, temporary() as second:
