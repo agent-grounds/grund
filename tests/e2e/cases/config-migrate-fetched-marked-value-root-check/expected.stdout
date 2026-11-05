@@ -1,0 +1,1 @@
+docs/arch.md:10: error: value mismatch for AR-001-power.1.1: bound `48`, declared `24` at docs/arch.md:5; change the literal to the declared value, or the declaration to the bound one

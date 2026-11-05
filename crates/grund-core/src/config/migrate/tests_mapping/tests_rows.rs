@@ -373,6 +373,16 @@ pub(super) const CASES: &[Case] = &[
     ),
 ];
 
+/// §FS-config-migrate.3.1.7.1: `[[kinds]] value_chapter` on a row that also sets `fetch`. Red until
+/// #1156, so outside `CASES`; implement moves it beside that row and removes the hold.
+pub(super) const RED_UNTIL_1156: Case = case(
+    "[[kinds]] value_chapter",
+    fs_with!("value_chapter = \"values\"\nfetch = \"scripts/fetch\"\n"),
+    &[Refused(
+        "value_chapter has no version 2 spelling on a fetched kind, because a fetched kind takes no fields",
+    )],
+);
+
 const CITATIONS_KIND: &str = concat!(
     "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n",
     "[[kinds]]\nkind = \"A\"\nfolder = \"a\"\n[[kinds]]\nkind = \"B\"\nfolder = \"b\"\n",

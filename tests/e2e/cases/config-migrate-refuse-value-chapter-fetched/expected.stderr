@@ -1,0 +1,4 @@
+grund.toml: version 1 → 2, --write
+refused: grund.toml:9: [[kinds]] `AR` value_chapter has no version 2 spelling on a fetched kind, because a fetched kind takes no fields
+  repair: none yet; keep version 1, or under version 1 rewrite its roots as marked sections, remove value_chapter and cite the new paths
+not written: 1 refusal (follow the repairs above); grund.toml is unchanged
