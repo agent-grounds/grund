@@ -134,7 +134,6 @@ class MergeQueueRunTests(unittest.TestCase):
         triggers = self.text.split("\non:\n", 1)[1].split("\nenv:", 1)[0]
         self.assertRegex(triggers, r"(?m)^  merge_group:", "ci.yml does not run on merge-queue groups")
 
-    @unittest.skip("red until #1144 ci.yml declares the group; implement removes this")
     def test_only_a_replaced_pull_request_run_is_cancelled(self):
         # §AR-ci.12.1: a run nobody will read takes no runner from a group behind it.
         self.assertEqual([], concurrency_problems(self.written))
