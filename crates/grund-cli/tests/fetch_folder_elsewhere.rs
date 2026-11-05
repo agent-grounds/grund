@@ -99,7 +99,6 @@ fn mode_bars(path: &Path) -> bool {
 }
 
 #[test]
-#[ignore = "red until #1214 refuses an ID declared outside the home; implement removes this"]
 fn elsewhere_a_refused_fetch_leaves_a_green_tree_green() {
     for (case, id, file) in REFUSED_GREEN {
         let name = format!("{case}-refused");
@@ -134,7 +133,6 @@ fn elsewhere_a_refused_fetch_leaves_a_green_tree_green() {
 /// The shape that never went red: the stub's target is outside `[scan] include`, so nothing
 /// collides, and only the refusal keeps the stub and what `grund show` answers.
 #[test]
-#[ignore = "red until #1214 refuses an ID declared outside the home; implement removes this"]
 fn elsewhere_a_stub_to_an_unscanned_target_keeps_its_text_and_its_answer() {
     let project = copy_of("show", "v1-stub-target-unscanned-refused");
     let stub = fs::read(project.join("fs/FS-001-a.md")).expect("read stub");
@@ -162,7 +160,6 @@ fn elsewhere_a_stub_to_an_unscanned_target_keeps_its_text_and_its_answer() {
 /// The refusal's second answer works: with the declaration taken out of the file named, the same
 /// fetch installs, and through a stub it does so because the stub is then broken.
 #[test]
-#[ignore = "red until #1214 refuses an ID declared outside the home; implement removes this"]
 fn elsewhere_taking_the_declaration_out_lets_the_fetch_through() {
     let shapes = [
         ("source-python-refused", "src/a.py", "fs/FS-a.md"),
@@ -196,7 +193,6 @@ fn elsewhere_taking_the_declaration_out_lets_the_fetch_through() {
 /// §FS-fetch.5.3: `<file>` is spelled from the report base, wherever the command was run. Fetch
 /// takes no `--path-base`, so the version 1 key is the one way to move that base.
 #[test]
-#[ignore = "red until #1214 refuses an ID declared outside the home; implement removes this"]
 fn elsewhere_the_refusal_spells_the_file_from_the_report_base() {
     let project = copy_of("base", "source-python-refused");
     let from_home = run(&project.join("fs"), &["fetch", "FS-a"]);
