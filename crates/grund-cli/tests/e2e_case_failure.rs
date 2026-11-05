@@ -181,7 +181,7 @@ fn healthy_manifests_read_every_case() {
     );
 }
 
-/// A guard that passes today (§AR-scanner.6.6): a cases root that cannot be listed leaves nothing
+/// A guard (§AR-scanner.6.6): a cases root that cannot be listed leaves nothing
 /// to continue over. Its line count is not judged, because the ordinary walk reports it as well.
 #[test]
 fn an_unlistable_cases_root_reads_no_case_and_exits_2() {

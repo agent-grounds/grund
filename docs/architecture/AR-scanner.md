@@ -646,7 +646,7 @@ Citations of an `E2E` ID resolve like any other: an `E2E-<name>` cite from a spe
 
 ### 6.6 A failed case read ends that case, not the pass
 
-The pass realizes [§FS-declarations.e2e-case.failure](../functional-spec/FS-declarations.md#e2e-casefailure-a-case-that-cannot-be-read-fails-alone) by collecting its failures rather than returning at the first. A case that fails to read records its failure and registers no declaration, and the walk goes on to the next directory; an entry of the cases root that cannot be read is recorded the same way. Its caller publishes each failure it is handed as a scan failure ([§FS-check.2.4](../functional-spec/FS-check.md#24-an-incomplete-run)), and nothing between them collapses two into one, even where the two read alike. A failure to list the cases root is one failure and ends the pass, since nothing is left to read.
+The pass realizes [§FS-declarations.e2e-case.failure](../functional-spec/FS-declarations.md#e2e-casefailure-a-case-that-cannot-be-read-fails-alone) by collecting its failures rather than returning at the first. A case that fails to read records its failure and registers no declaration, and the walk goes on to the next directory; an entry of the cases root that cannot be read is recorded too and ends the listing, since nothing promises a listing moves on after an error; the cases already listed are still read. Its caller publishes each failure it is handed as a scan failure ([§FS-check.2.4](../functional-spec/FS-check.md#24-an-incomplete-run)), and nothing between them collapses two into one, even where the two read alike. A failure to list the cases root is one failure and ends the pass, since nothing is left to read.
 
 ## 7. The entrypoint probe is handed presentation
 
