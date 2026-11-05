@@ -706,9 +706,9 @@ is read.
 A failure reading one case directory belongs to that case alone: a `command.args`,
 `expected.exit` or `spec.refs` that cannot be read or decoded, an `expected.exit` that does not
 parse as an exit code, or fixtures that cannot be listed. It is a per-file failure of [§FS-check.2.4](FS-check.md#24-an-incomplete-run),
-so the walk over the cases continues, wherever the failing case sorts; decided in [§DF-e2e-case-read-failure-fails-alone](../decisions/functional/DF-e2e-case-read-failure-fails-alone.md#df-e2e-case-read-failure-fails-alone-a-failure-reading-one-e2e-case-is-that-cases-alone-and-two-path-scoped-exits-move-with-it). Every other case declares
+so the walk over the cases continues, wherever the failing case sorts; decided in [§DF-e2e-case-read-failure-fails-alone](../decisions/functional/DF-e2e-case-read-failure-fails-alone.md#df-e2e-case-read-failure-fails-alone-a-failure-reading-one-e2e-case-is-that-cases-alone-and-path-scoped-exits-move-with-it-in-both-directions). Every other case declares
 its ID as usual: a citation of it resolves, its findings print and `grund list` names it. Each
-failing case is reported, so two are two reports in one run, and the run exits as [§FS-check.2.4](FS-check.md#24-an-incomplete-run) says. What a citation
+failing case is reported, so two are two reports in one run, and the run exits as [§FS-check.2.4](FS-check.md#24-an-incomplete-run) says, and as [§FS-check.1.3.6.3](FS-check.md#1363-a-file-the-wider-walk-could-not-read-is-said-out-loud) says when it is narrowed to a path. What a citation
 of the failing case itself does is not specified here.
 
 ## checks: Checks
