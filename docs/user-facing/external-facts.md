@@ -61,6 +61,8 @@ changes nothing, because a new `<ID>.md` beside it would be a duplicate and
 replacing it would overwrite what it holds around the declaration. Keep the fact
 in that file, or take the declaration out of it and fetch again
 ([§FS-fetch.5.2](../functional-spec/FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)).
+Where the scan does not read `<ID>.md` as Markdown, taking the declaration out leaves
+the ID declared nowhere until it does, so change both together.
 
 With `resolve = "must"`, a missing snapshot is the ordinary `dangling` error.
 With `resolve = "should"`, it is the fixed `missing-snapshot` warning and a

@@ -240,9 +240,9 @@ this refusal comes ahead of every judgement of that Markdown file: it names the 
 file whichever the walk reaches first, a Markdown file holding the ID beside other content
 and a stub whose target is that file included. What the first paragraph of [§FS-fetch.5](FS-fetch.md#5-folder-home-write)
 replaces is a file named `.md`, so a file the scan reads as Markdown under another name
-takes this refusal rather than a replacement. The refusal holds whether or not any language
+takes this refusal rather than a replacement. The refusal holds whether or not the scan
 reads `<ID>.md` as Markdown, and a stub the pass records under a name other than `.md` counts
-as declaring, whatever its target.
+as declaring, whatever its target, including one that does not exist yet.
 
 What declares is the scan's answer, and fetch keeps no second reader of comments. A file
 that declares only other IDs, that only cites the ID, or that holds the ID's text where
