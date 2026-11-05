@@ -127,7 +127,7 @@ pub(crate) use legacy::{
 pub(crate) use off_format::record_off_format_citations;
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
 pub(crate) use relative_sections::unmarked_below_declaration;
-pub(crate) use scan_error::{api_scan_error, scan_error_message};
+pub(crate) use scan_error::{api_scan_error, scan_error_message, scan_error_reason};
 pub(crate) use scope_probe::{
     effective_scope_reads_any_file, project_configs_below, pruning_pattern, walk_reads_any_file,
 };

@@ -58,7 +58,7 @@ pub(super) fn scan_io_reason(error: &Error) -> String {
 /// Keep a scan failure's context and non-I/O descriptions while deriving its
 /// typed I/O causes' public reasons in one place (§FS-check.2.4.1). This builds
 /// only the published text; it never replaces the original error chain.
-pub(super) fn scan_error_reason(error: &anyhow::Error) -> String {
+pub(crate) fn scan_error_reason(error: &anyhow::Error) -> String {
     error
         .chain()
         .map(|cause| match cause.downcast_ref::<Error>() {
