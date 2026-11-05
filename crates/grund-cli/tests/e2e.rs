@@ -66,10 +66,6 @@ mod fetch_subsection_headings;
 #[path = "support/dotdot_scope_root_names.rs"]
 mod dotdot_scope_root_names;
 
-// §FS-config-migrate.3.1.9: issue #1237's empty string in [scan] extensions, its cases run alone.
-#[path = "support/empty_extension_entry.rs"]
-mod empty_extension_entry;
-
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
@@ -110,9 +106,9 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    // Red until #1237: its cases run alone in the ignored contract; implement removes this.
-    let cases = empty_extension_entry::without_red(discover_e2e_cases(&manifest_dir));
-    let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
+    let outcomes = ordered_pool::in_order(&discover_e2e_cases(&manifest_dir), |case| {
+        run_case(&manifest_dir, case, E2e)
+    });
     let compared = outcomes
         .iter()
         .filter(|outcome| matches!(outcome, CaseOutcome::Ran | CaseOutcome::Failed { .. }))

@@ -331,8 +331,10 @@ pub(super) fn parse_config_file(
                 let tolerant = pass.tolerant;
                 project.schema.sources.exclude = parse_scan_exclude(path, line_no, value, tolerant)?
             }
+            // §FS-config.requirements.5: version 1 keeps reading an empty string in the list.
             ("scan", "extensions") => {
-                project.schema.sources.extensions = parse_string_list(path, line_no, value)?
+                let list = parse_string_list(path, line_no, value)?;
+                project.schema.sources.set_extensions(list);
             }
             ("scan", "comment_prefixes") => {
                 project.schema.sources.comment_prefixes = parse_string_list(path, line_no, value)?;

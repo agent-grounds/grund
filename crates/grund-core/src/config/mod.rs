@@ -114,6 +114,7 @@ pub(crate) use mount_edge::{ImportRead, MountEdge};
 pub use places::Owner;
 pub(crate) use places::Owners;
 pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
+pub(crate) use project::file_extension;
 #[allow(unused_imports)]
 pub use project::{
     CitationSyntax, Citations, FmtPresentation, Grounding, IdGrammar, Import, KindGrounding,

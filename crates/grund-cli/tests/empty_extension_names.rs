@@ -119,7 +119,6 @@ fn without_the_entry_a_walked_file_whose_extension_is_not_utf8_is_not_read() {
 /// test has to see the path itself: the name a report prints has its bad byte replaced, and what
 /// follows the last dot of that spelling is a valid extension the list does not hold.
 #[test]
-#[ignore = "red until #1237 has scanned_files ask the walk's test of the path; implement removes this"]
 fn a_refusal_detail_names_what_the_walk_reads_under_the_entry() {
     let project = root("empty-extension-detail");
     let config = format!(

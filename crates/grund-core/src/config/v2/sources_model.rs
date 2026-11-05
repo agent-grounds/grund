@@ -48,7 +48,7 @@ pub(super) fn lower(r: &mut Reader) {
         exclude: draft.exclude,
     };
     let sources = &mut r.project.schema.sources;
-    sources.extensions = model.text_suffixes();
+    sources.set_extensions(model.text_suffixes());
     sources.comment_prefixes = Vec::new();
     sources.docstring_python = false;
     sources.exclude = Vec::new();

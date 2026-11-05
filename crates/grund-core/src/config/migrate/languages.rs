@@ -75,14 +75,7 @@ pub(super) fn translate(
     let mut extensions = Vec::new();
     for suffix in &sources.extensions {
         if !literal_suffix(suffix) {
-            refusals.push(MigrateRefusal {
-                anchor: anchor(extensions_line),
-                what: format!(
-                    "[scan] extensions names `{suffix}`, which is not a final extension version 2 can map"
-                ),
-                details: Vec::new(),
-                repair: format!("remove `{suffix}` from extensions under version 1"),
-            });
+            refusals.push(unmappable_suffix(suffix, anchor(extensions_line)));
             continue;
         }
         if suffix == "json" && values_home {
@@ -144,6 +137,28 @@ pub(super) fn translate(
             .collect(),
     };
     Languages { model, refusals }
+}
+
+/// An entry no version 2 mapping can hold. Of these only the empty string reads anything under
+/// version 1, so only its two lines go on to say what it reads and what the repair costs
+/// (§FS-config-migrate.3.1.9).
+fn unmappable_suffix(suffix: &str, anchor: RefusalAnchor) -> MigrateRefusal {
+    let (reads, costs) = if suffix.is_empty() {
+        (
+            "; version 1 reads every file with no extension through it, and version 2 reads none",
+            ", and give any such file you want read an extension the list holds; grund check shows its effect",
+        )
+    } else {
+        ("", "")
+    };
+    MigrateRefusal {
+        anchor,
+        what: format!(
+            "[scan] extensions names `{suffix}`, which is not a final extension version 2 can map{reads}"
+        ),
+        details: Vec::new(),
+        repair: format!("remove `{suffix}` from extensions under version 1{costs}"),
+    }
 }
 
 /// A v1 component name as a literal gitignore-style glob (§FS-config-v2.schema.sources.migration).

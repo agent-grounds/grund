@@ -59,7 +59,8 @@ impl Config {
         schema.ids.section_heading_levels = self.section_heading_levels.clone();
         schema.sources.include = self.include.clone();
         schema.sources.exclude = self.exclude.clone();
-        schema.sources.extensions = self.extensions.clone();
+        // §AR-config.5: a rebuilt list brings what it reads with it.
+        schema.sources.set_extensions(self.extensions.clone());
         schema.sources.comment_prefixes = self.comment_prefixes.clone();
         schema.sources.docstring_python = self.docstring_python;
         schema.sources.respect_gitignore = self.respect_gitignore;

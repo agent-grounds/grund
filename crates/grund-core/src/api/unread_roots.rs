@@ -7,7 +7,7 @@
 use crate::model::remedies;
 use std::path::Path;
 
-use crate::config::Config;
+use crate::config::{Config, file_extension};
 use crate::model::{Catalog, Code, Diagnostic, RootOrigin, RootRow};
 
 /// One located warning per unread root, at the line of the key that named it
@@ -39,10 +39,7 @@ pub(super) fn unread_root_warnings(config: &Config, findings: &Catalog) -> Vec<D
 /// bytes of §FS-scan.checks.unread-scan-root.message.
 pub(super) fn unread_root_message(row: &RootRow, v2: bool) -> String {
     // The part of the file name after its last `.`, as the name spells it.
-    let ext = Path::new(&row.written)
-        .extension()
-        .and_then(|ext| ext.to_str())
-        .filter(|ext| !ext.is_empty());
+    let ext = file_extension(Path::new(&row.written));
     let label = match (&row.origin, v2) {
         (RootOrigin::Include, _) => format!("[scan] include entry `{}`", row.written),
         (RootOrigin::Home { kind, .. }, false) => {

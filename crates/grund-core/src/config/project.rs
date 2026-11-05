@@ -127,6 +127,9 @@ pub struct Sources {
     pub include_source: Option<ConfigLocation>,
     pub exclude: Vec<String>,
     pub extensions: Vec<String>,
+    /// Whether `extensions` holds the empty string, which reads a file with no extension
+    /// (§FS-scan.scope.extensions.empty). `set_extensions` keeps the two together.
+    pub(super) reads_no_extension: bool,
     pub comment_prefixes: Vec<String>,
     pub docstring_python: bool,
     pub respect_gitignore: bool,
@@ -135,14 +138,37 @@ pub struct Sources {
     pub(crate) model: Option<SourceModel>,
 }
 
+/// The final extension of a file's own name, `None` for a missing, empty or non-UTF-8 one: `NOTES`,
+/// `FACTS.`, and a name in which what follows the last dot is not UTF-8
+/// (§FS-scan.scope.extensions.empty).
+pub(crate) fn file_extension(path: &Path) -> Option<&str> {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .filter(|ext| !ext.is_empty())
+}
+
 impl Sources {
-    /// Whether the effective `[scan] extensions` list `path`'s final extension, a name
-    /// with none asking for the empty string: the one copy of the extension test, which
-    /// the walk and every other reader of a name ask (§FS-scan.scope.extensions,
-    /// §AR-scanner.1.12, §AR-scanner.1.13).
+    /// Hold `extensions` as the effective list, and with it what the list says of a file with no
+    /// extension, so no record holds one without the other (§FS-scan.scope.extensions.empty). Every
+    /// writer of the list comes through here. It records what the list holds and names no version:
+    /// only a version 1 file can hand it the empty string, because version 2 refuses that suffix at
+    /// its line (§FS-config-v2.schema.sources.extensions), so the carve-out stays version 1's
+    /// (§AR-config.2).
+    pub(super) fn set_extensions(&mut self, extensions: Vec<String>) {
+        self.reads_no_extension = extensions.iter().any(String::is_empty);
+        self.extensions = extensions;
+    }
+
+    /// Whether the effective `[scan] extensions` list `path`'s final extension: the one copy of the
+    /// extension test, which the walk and every other reader of a name ask
+    /// (§FS-scan.scope.extensions, §AR-scanner.1.12, §AR-scanner.1.13). A file with no extension
+    /// has none to list, and is read only where the list holds the empty string
+    /// (§FS-scan.scope.extensions.empty).
     pub(crate) fn lists_extension(&self, path: &Path) -> bool {
-        let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-        self.extensions.iter().any(|allowed| allowed == ext)
+        match file_extension(path) {
+            Some(ext) => self.extensions.iter().any(|allowed| allowed == ext),
+            None => self.reads_no_extension,
+        }
     }
 }
 

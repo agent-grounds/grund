@@ -205,7 +205,9 @@ pub(super) fn nested_homes(v1: &Project, keys: &Keys, root: &Path) -> Vec<Migrat
 }
 
 /// The files under `root/path` the v1 walk reads by their extension, skipping
-/// the excluded names, as sorted paths from the root.
+/// the excluded names, as sorted paths from the root. It asks the walk's own test of the path
+/// itself and not of the name it prints, in which a byte that is not UTF-8 is replaced by a
+/// character that would count as an extension (§FS-config-migrate.3.1.9).
 pub(super) fn scanned_files(v1: &Project, root: &Path, path: &str) -> Vec<String> {
     let sources = &v1.schema.sources;
     let mut out = Vec::new();
@@ -229,11 +231,7 @@ pub(super) fn scanned_files(v1: &Project, root: &Path, path: &str) -> Vec<String
             };
             if kind.is_dir() {
                 stack.push((entry.path(), child));
-            } else if Path::new(&name)
-                .extension()
-                .and_then(|ext| ext.to_str())
-                .is_some_and(|ext| sources.extensions.iter().any(|e| e == ext))
-            {
+            } else if sources.lists_extension(&entry.path()) {
                 out.push(child);
             }
         }

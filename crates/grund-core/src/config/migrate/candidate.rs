@@ -29,7 +29,8 @@ pub(super) fn records(v1: &Project, model: SourceModel, code: Vec<Place>) -> Pro
     sources.include = None;
     sources.include_source = None;
     sources.exclude = Vec::new();
-    sources.extensions = model.text_suffixes();
+    // §FS-config-migrate.3.1.9: `p` is a clone of `v1`, so this clears what the entry read.
+    sources.set_extensions(model.text_suffixes());
     sources.comment_prefixes = Vec::new();
     sources.docstring_python = false;
     sources.model = Some(model);

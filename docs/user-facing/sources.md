@@ -261,3 +261,7 @@ thing:
   file has one class.
 - an extension or prefix outside what a mapping or definition accepts, or a
   source extension that would read no comment.
+- an empty string in `[scan] extensions`, which version 1 keeps reading for
+  compatibility: it reads every file with no extension, and version 2 has no such
+  entry. Remove it under version 1, and give any such file you want read an
+  extension the list holds. `grund check` shows the effect.
