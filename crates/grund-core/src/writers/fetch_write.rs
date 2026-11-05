@@ -10,9 +10,10 @@ use crate::config::Config;
 use crate::grammar::{
     Grammar, MarkdownBlocks, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
 };
-use crate::model::{Id, OperationDiagnostic, format_path};
+use crate::model::{Id, OperationDiagnostic, format_path, relative_from_base};
 use crate::scanner::{
-    folder_value_declarations, markdown_heading_level, walk_scannable_files_with_sources,
+    folder_value_declarations, markdown_heading_level, scan_error_message, scan_unwalked_file,
+    walk_scannable_files_with_sources,
 };
 use crate::sources::{path_exists, path_is_dir, read_bytes};
 
@@ -214,13 +215,47 @@ pub(super) fn write_file_home(
     install(path, &replacement, diagnostic)
 }
 
-/// §FS-fetch.5: replace the unique declaring file or create `<ID>.md`, after
-/// refusing existing value declarations (§FS-fetch.5.1).
+/// §FS-fetch.5.2: ask the scan's own pass about each file the Markdown branch would not
+/// replace, so which forms declare stays the scan's answer and fetch keeps no second reader
+/// of comments. In the walk's sorted order, the first file that declares the ID or that the
+/// pass cannot read decides, spelled from the report base. A file the pass cannot read gets
+/// the line `grund check` prints for it (§FS-check.2.4).
+fn refuse_declaring_file(
+    files: &[PathBuf],
+    config: &Config,
+    requested: &Id,
+    local: &str,
+    report_base: &Path,
+    diagnostic: &mut Option<anyhow::Error>,
+) -> std::result::Result<(), FetchFailure> {
+    for path in files {
+        let shown = format_path(&relative_from_base(report_base, path));
+        match scan_unwalked_file(path, config.schema(), config.frame(), &[]) {
+            Ok(findings) if findings.declarations.contains_key(requested) => {
+                return Err(fetch_operational(format!(
+                    "cannot fetch {local}: {shown} already declares it; keep the fact in that \
+                     file, or take the declaration out of it and fetch again"
+                )));
+            }
+            Ok(_) => {}
+            Err(error) => {
+                let message = format!("{shown}: {}", scan_error_message(&format!("{error:#}")));
+                return Err(fetch_walk_failure(diagnostic, path, error, message));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// §FS-fetch.5: replace the unique declaring file or create `<ID>.md`, after refusing
+/// existing value declarations (§FS-fetch.5.1) and a file it would not replace that already
+/// declares the ID (§FS-fetch.5.2).
 pub(super) fn write_folder_home(
     folder: &Path,
     config: &Config,
     requested: &Id,
     local: &str,
+    report_base: &Path,
     snapshot: &[u8],
     diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
@@ -285,10 +320,13 @@ pub(super) fn write_folder_home(
                 None => fetch_operational(message),
             });
         }
-        for path in walked.files {
-            if path.extension().and_then(|extension| extension.to_str()) != Some("md") {
-                continue;
-            }
+        let (markdown, others): (Vec<_>, Vec<_>) = walked
+            .files
+            .into_iter()
+            .partition(|path| path.extension().and_then(|ext| ext.to_str()) == Some("md"));
+        // §FS-fetch.5.2: ahead of every judgement of a Markdown file below.
+        refuse_declaring_file(&others, config, requested, local, report_base, diagnostic)?;
+        for path in markdown {
             let bytes = read_bytes(&path).map_err(|err| {
                 fetch_io(
                     diagnostic,
