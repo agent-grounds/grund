@@ -21,12 +21,11 @@ use crate::sources::{paths_same_location, physical_path_key};
 /// (§FS-check.2.4.1).
 const HOME_CONTEXT: &str = "read value home";
 
-/// A value home the enumerator could not read: the home as the config spells it, the
-/// error, and whether the listing itself failed rather than one entry of it.
+/// A value home the enumerator could not list, at open or partway through: the home as
+/// the config spells it, and the listing's one error (§AR-scanner.1.relisted).
 struct UnreadHome {
     folder: PathBuf,
     error: std::io::Error,
-    listing: bool,
 }
 
 impl UnreadHome {
@@ -50,13 +49,8 @@ pub(super) fn scan_value_sources(
         Ok(sources) => sources,
         // §AR-scanner.1.relisted: the walk lists a home too, so its listing failure is
         // published only where the scan has not reported it already (§FS-check.2.4.2).
-        Err(unread) if unread.listing => {
-            let UnreadHome { folder, error, .. } = unread;
+        Err(UnreadHome { folder, error }) => {
             publish_unlisted(&folder, folder.clone(), &error, Some(HOME_CONTEXT), errors);
-            return;
-        }
-        Err(unread) => {
-            errors.push(unread.into_scan_error());
             return;
         }
     };
@@ -188,8 +182,8 @@ fn duplicate_owned_source(path: &Path, findings: &mut Catalog) {
 /// Every value source of every value home, with its owning kind and format
 /// (§FS-values.terms, §FS-values.2.2), in one bytewise path order across formats;
 /// the scoped fetch query shares this enumerator (§FS-fetch.5.1).
-/// Both directory-read failures retain home context around the shared I/O reason
-/// (§FS-check.2.4.1).
+/// A home's listing failure, at open or partway through, retains home context around
+/// the shared I/O reason (§FS-check.2.4.1).
 pub(super) fn value_sources<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
@@ -225,30 +219,13 @@ fn value_sources_in<'a>(
             let required = selected.is_none() || selected_home;
             // §FS-check.6.1.1: cover this effective input before its shared read.
             let disk = frame.sources();
-            let entries = match disk.read_dir(&folder) {
-                Ok(entries) => entries,
-                Err(error) if required => {
-                    return Err(UnreadHome {
-                        folder,
-                        error,
-                        listing: true,
-                    });
-                }
-                Err(_) => continue,
-            };
-            for entry in entries {
-                let entry = match entry {
-                    Ok(entry) => entry,
-                    Err(error) if required => {
-                        return Err(UnreadHome {
-                            folder,
-                            error,
-                            listing: false,
-                        });
-                    }
-                    Err(_) => continue,
-                };
-                let path = normalize_path_lexically(&entry.path());
+            let listing = disk.list_dir(&folder);
+            if required && let Some(error) = listing.failure {
+                return Err(UnreadHome { folder, error });
+            }
+            // §FS-fetch.5.1: a home fetch does not select is read as far as it lists.
+            for listed in listing.entries {
+                let path = normalize_path_lexically(&listed);
                 if let Some(format) = format_of(&path)
                     && disk.is_file(&path)
                 {

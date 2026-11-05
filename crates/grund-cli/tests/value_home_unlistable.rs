@@ -187,7 +187,11 @@ fn an_unlistable_value_home_is_one_io_entry_in_check_json() {
 /// The home links to a hidden directory the walk never descends into, so no walk report names the
 /// home and the value pass's own line is the one that does. Dropping it would leave the failure
 /// unreported (§REQ-no-missed-citation.1). The walk's report of the link's target lands at its
-/// walk root today (#1266), so only the lines naming the home are read.
+/// walk root today (#1266), so only the lines naming the home are read. That is also the only
+/// reason this layout leaves the home to the pass: no layout does so by design, since both config
+/// versions refuse a home linking out of the project. Once #1266 is fixed the walk's line names
+/// the home, this test still passes on it, and pins only the plain case; move the pin then to
+/// whatever leaves a home to the pass alone, if anything does.
 #[test]
 fn a_value_home_only_the_value_pass_meets_keeps_its_line() {
     let mut scratch = Scratch::new("value-home-linked", ".store/real");

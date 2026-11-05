@@ -51,9 +51,10 @@ pub(super) fn e2e_cases_folder(schema: &Schema) -> Option<&str> {
 /// `grund check` sees `§E2E-…` citations resolve and `grund refs` finds e2e tests.
 ///
 /// `reported` is the scan's failures so far, the walk's among them. A failure to list the
-/// directory the pass reads is published there, once (§AR-scanner.6.unlistable-root). Every other
-/// failure is handed back rather than stopping at the first (§AR-scanner.6.6). They stay errors
-/// because the caller derives each published reason from the error's kind (§FS-check.2.4.1).
+/// directory the pass reads, at open or partway through, is published there, once
+/// (§AR-scanner.6.unlistable-root). A failure reading a case is handed back rather than stopping
+/// at the first (§AR-scanner.6.6). They stay errors because the caller derives each published
+/// reason from the error's kind (§FS-check.2.4.1).
 pub(super) fn scan_e2e_cases(
     schema: &Schema,
     frame: Frame<'_>,
@@ -102,27 +103,16 @@ pub(super) fn scan_e2e_cases(
         case_dirs.push(scan_root);
     } else {
         // §FS-check.6.1.1: cover this effective input before its shared read.
-        // §AR-scanner.6.unlistable-root: attempted whatever the walk reported here.
-        let entries = match Sources::on_disk().read_dir(&scan_root) {
-            Ok(entries) => entries,
-            // §AR-scanner.6.6: a root that cannot be listed leaves nothing to read.
-            Err(err) => {
-                let spelled = spelled_below(&spelled_root, &cases_root, &scan_root);
-                publish_unlisted(&scan_root, spelled, &err, None, reported);
-                return Vec::new();
-            }
-        };
-        for entry in entries {
-            // §AR-scanner.6.6: recorded, then the listing stops: nothing promises a `ReadDir`
-            // moves on after an `Err`. The cases already listed are still read.
-            let entry = match entry {
-                Ok(entry) => entry,
-                Err(err) => {
-                    failures.push(err.into());
-                    break;
-                }
-            };
-            let path = entry.path();
+        // §AR-scanner.6.unlistable-root: attempted whatever the walk reported here; failing at
+        // open or partway through is the one listing's one failure.
+        let listing = Sources::on_disk().list_dir(&scan_root);
+        if let Some(err) = &listing.failure {
+            let spelled = spelled_below(&spelled_root, &cases_root, &scan_root);
+            publish_unlisted(&scan_root, spelled, err, None, reported);
+        }
+        // §AR-scanner.6.6: the cases listed before a failure are still read; none, where the
+        // root could not be opened, so nothing is left to read.
+        for path in listing.entries {
             if path_is_dir(&path) && path_is_file(&path.join("expected.exit")) {
                 case_dirs.push(path);
             }

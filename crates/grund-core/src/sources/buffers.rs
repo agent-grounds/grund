@@ -138,6 +138,24 @@ pub(crate) struct Sources<'a> {
     buffers: Option<&'a Buffers>,
 }
 
+/// One listing of a directory (§AR-scanner.1.relisted): the paths of the entries read, and
+/// the one failure that ended it early, at open or partway through. What a pass does with
+/// the entries read before a failure is the pass's own decision.
+pub(crate) struct Listing {
+    pub(crate) entries: Vec<PathBuf>,
+    pub(crate) failure: Option<std::io::Error>,
+}
+
+impl Listing {
+    /// A listing `error` ended, after `entries`.
+    fn ended(entries: Vec<PathBuf>, error: std::io::Error) -> Self {
+        Self {
+            entries,
+            failure: Some(error),
+        }
+    }
+}
+
 impl<'a> Sources<'a> {
     /// The view over `buffers`: what a save would write (§FS-scan.text.buffer).
     pub(crate) fn of(buffers: &'a Buffers) -> Self {
@@ -202,6 +220,29 @@ impl<'a> Sources<'a> {
     /// buffers with no file behind them are `buffer_only_files`.
     pub(crate) fn read_dir(self, path: impl AsRef<Path>) -> std::io::Result<std::fs::ReadDir> {
         input_read_dir(path)
+    }
+
+    /// The directory's entries on disk, observed first (§FS-check.6.1.3), as one listing.
+    /// Opening the directory and reading it are one step, so a failure partway through is
+    /// the directory's, as a failure to open it is: the listing's one failure, which ends
+    /// it, since nothing promises a `ReadDir` moves on after an error. The entries read
+    /// before it are handed back with it (§FS-check.2.4.2, §AR-scanner.1.relisted).
+    pub(crate) fn list_dir(self, path: impl AsRef<Path>) -> Listing {
+        let mut entries = Vec::new();
+        let read = match self.read_dir(path) {
+            Ok(read) => read,
+            Err(error) => return Listing::ended(entries, error),
+        };
+        for entry in read {
+            match entry {
+                Ok(entry) => entries.push(entry.path()),
+                Err(error) => return Listing::ended(entries, error),
+            }
+        }
+        Listing {
+            entries,
+            failure: None,
+        }
     }
 
     /// Whether the file is there: on disk, or open in a buffer with nothing
