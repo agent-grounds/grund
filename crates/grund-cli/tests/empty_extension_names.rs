@@ -2,7 +2,7 @@
 //! (§FS-scan.scope.extensions.empty): a name ending in a dot, which Git for Windows refuses to check
 //! out, and a name whose extension is not UTF-8, which some filesystems refuse to hold. Both are
 //! made at run time. Under `["md", ""]` each is read, and under `["md"]` neither is
-//! (§FS-scan.scope.extensions.root), so these pass today and keep what version 1 reads in place.
+//! (§FS-scan.scope.extensions.root), and these tests keep what version 1 reads in place.
 #![cfg(unix)]
 
 #[path = "support/external_facts.rs"]
@@ -114,12 +114,13 @@ fn without_the_entry_a_walked_file_whose_extension_is_not_utf8_is_not_read() {
     assert!(listed.contains("FS-002-b"), "{listed}");
 }
 
-/// Under the entry, what a refusal says the walk reads is what the walk reads, so its detail names
-/// a name whose extension is not UTF-8 as it names `FACTS.` (§FS-config-migrate.3.1.9). The walk's
-/// test has to see the path itself: the name a report prints has its bad byte replaced, and what
-/// follows the last dot of that spelling is a valid extension the list does not hold.
+/// Under the entry, a refusal's detail asks the scan's extension test of each file migration's own
+/// walk finds, so it names a name whose extension is not UTF-8 as it names `FACTS.`
+/// (§FS-config-migrate.3.1.9). The test has to see the path itself: the name a report prints has
+/// its bad byte replaced, and what follows the last dot of that spelling is a valid extension the
+/// list does not hold.
 #[test]
-fn a_refusal_detail_names_what_the_walk_reads_under_the_entry() {
+fn a_refusal_detail_asks_the_extension_test_under_the_entry() {
     let project = root("empty-extension-detail");
     let config = format!(
         "project_name = \"r\"\n\n[id]\nnamed_sections = true\n\n[scan]\ninclude = [\"docs\"]\nexclude = [\"docs/x\"]\nextensions = {WITH_ENTRY}\n"

@@ -230,7 +230,7 @@ That report is owed only where the scan would otherwise have read through the li
 
 #### scope.links.blind-spot: A broken link with no extension is a declared blind spot
 
-A broken link with **no extension at all** is silent for the same reason and is worth naming, because it is the one case where that answer can be wrong: `docs/shared -> ../nonexistent-dir` would have been a directory to descend into had it resolved. Nothing on disk distinguishes it from `bin/tool -> nowhere`, since the target does not exist and only the target could have said which it was, and reporting every extensionless dangling link is the noise this gate exists to prevent. That is a declared, bounded blind spot ([§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded)) and not a silent one: a link you need scanned is one you need to resolve.
+A broken link with **no extension at all** is silent for the same reason, unless a version 1 list holds the empty string ([§FS-scan.scope.extensions.empty](FS-scan.md#scopeextensionsempty-in-version-1-an-empty-string-in-the-list-reads-a-file-with-no-extension)), and is worth naming, because it is the one case where that answer can be wrong: `docs/shared -> ../nonexistent-dir` would have been a directory to descend into had it resolved. Nothing on disk distinguishes it from `bin/tool -> nowhere`, since the target does not exist and only the target could have said which it was, and reporting every extensionless dangling link is the noise this gate exists to prevent. That is a declared, bounded blind spot ([§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded)) and not a silent one: a link you need scanned is one you need to resolve.
 
 ## identity: Which path names a file a run read
 
@@ -307,14 +307,14 @@ For a root whose name begins with `.`, the reason says so first, and names the e
 
 | The hidden file | Reason |
 |---|---|
-| has an extension the list holds | `` its name begins with `.`, and grund reads no hidden file `` |
+| has an extension the list holds, or has none and the list holds the empty string ([§FS-scan.scope.extensions.empty](FS-scan.md#scopeextensionsempty-in-version-1-an-empty-string-in-the-list-reads-a-file-with-no-extension)) | `` its name begins with `.`, and grund reads no hidden file `` |
 | has one it does not, version 1 | ``its name begins with `.`, and `<ext>` is not in [scan] extensions`` |
 | has one it does not, version 2 | ``its name begins with `.`, and no language in [schema.sources] languages reads `.<ext>` `` |
-| has none, such as `.notes` | `` its name begins with `.`, and it has no extension `` |
+| has none, such as `.notes`, and the list does not hold the empty string | `` its name begins with `.`, and it has no extension `` |
 
 Its fix is one edit, the rename, and it names everything the new name must satisfy, because renaming the file alone would leave the extension refusal standing and listing the extension alone changes nothing:
 
-| Root | Only the name refuses it | The extension refuses it too, or it has none |
+| Root | Only the name refuses it | The list refuses it too, whether it has an extension or none |
 |---|---|---|
 | a version-1 `[[kinds]]` home | `Rename the file to a name that is not hidden` | `Rename the file to a name that is not hidden and an extension the list holds` |
 | an `[scan] include` entry | `Rename the file to a name that is not hidden, or drop the entry` | `Rename the file to a name that is not hidden and an extension the list holds, or drop the entry` |
