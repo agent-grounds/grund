@@ -398,6 +398,10 @@
       "text": "declare it in that value source"
      },
      {
+      "label": "source-file",
+      "text": "declare it in that source file"
+     },
+     {
       "label": "pattern",
       "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
@@ -435,6 +439,10 @@
      {
       "label": "value-source",
       "text": "declare it in that value source"
+     },
+     {
+      "label": "source-file",
+      "text": "declare it in that source file"
      },
      {
       "label": "pattern",
@@ -1989,6 +1997,10 @@
      {
       "label": "value-source",
       "text": "declare it in that value source"
+     },
+     {
+      "label": "source-file",
+      "text": "declare it in that source file"
      }
     ]
    },
@@ -2030,6 +2042,10 @@
      {
       "label": "value-source",
       "text": "declare it in that value source"
+     },
+     {
+      "label": "source-file",
+      "text": "declare it in that source file"
      }
     ]
    },
@@ -2270,6 +2286,10 @@
       "text": "declare it in that value source"
      },
      {
+      "label": "source-file",
+      "text": "declare it in that source file"
+     },
+     {
       "label": "pattern",
       "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
@@ -2313,6 +2333,10 @@
      {
       "label": "value-source",
       "text": "declare it in that value source"
+     },
+     {
+      "label": "source-file",
+      "text": "declare it in that source file"
      },
      {
       "label": "pattern",

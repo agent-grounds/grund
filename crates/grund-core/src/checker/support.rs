@@ -1,4 +1,4 @@
-use crate::config::{Extent, Frame, Schema, holds_glob};
+use crate::config::{Extent, Frame, RefusedHome, Schema, holds_glob};
 #[cfg(test)]
 use crate::grammar::render_id;
 use crate::grammar::{is_inside_inline_code, render_catalog_id};
@@ -145,12 +145,16 @@ pub(super) fn missing_snapshot_message(
             let refused = frame
                 .compiled
                 .fetch_refused_home(schema, frame.root(), &missing.kind)
-                .is_some();
+                .map(|(_, reason)| reason);
             let tail = match (refused, must) {
-                (true, true) => remedies::dangling_value_source(),
-                (true, false) => remedies::missing_snapshot_value_source(),
-                (false, true) => remedies::dangling_fetch(rendered),
-                (false, false) => remedies::missing_snapshot_fetch(rendered),
+                (Some(RefusedHome::ValueSource), true) => remedies::dangling_value_source(),
+                (Some(RefusedHome::ValueSource), false) => {
+                    remedies::missing_snapshot_value_source()
+                }
+                (Some(RefusedHome::SourceFile), true) => remedies::dangling_source_file(),
+                (Some(RefusedHome::SourceFile), false) => remedies::missing_snapshot_source_file(),
+                (None, true) => remedies::dangling_fetch(rendered),
+                (None, false) => remedies::missing_snapshot_fetch(rendered),
             };
             return format!("{base} — {tail}");
         }

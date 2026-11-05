@@ -4,16 +4,12 @@
 //! and the tail offer ends green, and that each comment form is refused alike.
 #![cfg(unix)]
 
-#[path = "support/case_runner.rs"]
-#[allow(dead_code)]
-mod case_runner;
 #[path = "support/external_facts.rs"]
 mod support;
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use case_runner::{CaseKind::E2e, RED_UNTIL_1224, assert_every_case_passed, run_case};
 use support::{assert_code, executable, root, run, stderr, stdout, tree, write};
 
 const MARK: &str = "fetcher-ran";
@@ -81,19 +77,6 @@ fn assert_fetch_lands(dir: &Path) {
 }
 
 #[test]
-#[ignore = "red until #1224 refuses a file home read as source; implement removes this"]
-fn source_home_e2e_cases() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let cases = root.join("tests/e2e/cases");
-    let outcomes = RED_UNTIL_1224
-        .iter()
-        .map(|name| run_case(&root, &cases.join(name), E2e))
-        .collect::<Vec<_>>();
-    assert_every_case_passed("source home", &outcomes);
-}
-
-#[test]
-#[ignore = "red until #1224 refuses a file home read as source; implement removes this"]
 fn moving_the_kind_and_its_declarations_to_a_markdown_file_is_a_way_out() {
     let dir = python_project("source-home-way-out-markdown");
     assert_refused(&dir, "FS-a", "fs.py");
@@ -110,7 +93,6 @@ fn moving_the_kind_and_its_declarations_to_a_markdown_file_is_a_way_out() {
 }
 
 #[test]
-#[ignore = "red until #1224 refuses a file home read as source; implement removes this"]
 fn moving_the_kind_and_its_declarations_to_a_folder_is_a_way_out() {
     let dir = python_project("source-home-way-out-folder");
     assert_refused(&dir, "FS-a", "fs.py");
@@ -137,7 +119,6 @@ fn moving_the_kind_and_its_declarations_to_a_folder_is_a_way_out() {
 }
 
 #[test]
-#[ignore = "red until #1224 refuses a file home read as source; implement removes this"]
 fn removing_fetch_is_a_way_out() {
     let dir = python_project("source-home-way-out-no-fetch");
     assert_refused(&dir, "FS-a", "fs.py");
@@ -161,7 +142,6 @@ fn removing_fetch_is_a_way_out() {
 }
 
 #[test]
-#[ignore = "red until #1224 refuses a file home read as source; implement removes this"]
 fn declaring_it_in_that_source_file_answers_the_check_tail() {
     let dir = python_project("source-home-tail-way-through");
     let languages = "\"markdown\", \"python\"";
@@ -198,7 +178,6 @@ fn declaring_it_in_that_source_file_answers_the_check_tail() {
 /// The comment forms no e2e case holds. Each home declares the requested ID its own way,
 /// and none of them is a Markdown reader's business.
 #[test]
-#[ignore = "red until #1224 refuses a file home read as source; implement removes this"]
 fn every_comment_form_is_refused_alike() {
     let forms = [
         (
