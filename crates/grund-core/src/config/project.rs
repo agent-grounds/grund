@@ -138,8 +138,8 @@ pub struct Sources {
 impl Sources {
     /// Whether the effective `[scan] extensions` list `path`'s final extension, a name
     /// with none asking for the empty string: the one copy of the extension test, which
-    /// the walk and every other reader of a name ask (§AR-scanner.1.12,
-    /// §AR-scanner.1.13).
+    /// the walk and every other reader of a name ask (§FS-scan.scope.extensions,
+    /// §AR-scanner.1.12, §AR-scanner.1.13).
     pub(crate) fn lists_extension(&self, path: &Path) -> bool {
         let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
         self.extensions.iter().any(|allowed| allowed == ext)
