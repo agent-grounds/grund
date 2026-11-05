@@ -41,7 +41,6 @@ class NodeAcceptanceWorkflowTests(unittest.TestCase):
             "node_consumer_fixture.py"))], cwd=REPO, capture_output=True, text=True)
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
-    @unittest.skip("red until #1218 gives each npm call its own cache; implement removes this")
     def test_a_throwaway_package_leaves_nothing_in_any_npm_cache(self):
         """§AR-ci-npm-cache.4: the real call sites and real npm, read after their process exits."""
         result = subprocess.run([sys.executable, str(Path(__file__).with_name(

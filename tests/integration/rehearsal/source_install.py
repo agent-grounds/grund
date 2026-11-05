@@ -33,8 +33,12 @@ def consumer(family, env):
 
 
 def build_env(**extra):
-    """This host's environment, Rust included, with the npm registry on loopback."""
+    """This host's environment, Rust included, with the npm registry on loopback.
+
+    The loopback's port goes with the process, so its npm cache does too (§AR-ci-npm-cache.1).
+    """
     return dict(os.environ, npm_config_registry=registry().url,
+                npm_config_cache=str(keep("grund-source-npm-cache-")),
                 CARGO_TARGET_DIR=str(keep("grund-source-target-")), **extra)
 
 
