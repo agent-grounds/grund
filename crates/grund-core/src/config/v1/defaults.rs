@@ -88,6 +88,7 @@ pub(in crate::config) fn default_project() -> Project {
                 include_source: None,
                 exclude: strings(DEFAULT_EXCLUDE),
                 extensions: default_scan_extensions(),
+                reads_no_extension: false,
                 comment_prefixes: strings(DEFAULT_COMMENT_PREFIXES),
                 docstring_python: true,
                 respect_gitignore: true,

@@ -49,6 +49,7 @@ pub(super) fn default_project() -> Project {
                 // §FS-config-v2.defaults.1: `exclude = []`; v1's names are not v2's.
                 exclude: Vec::new(),
                 extensions: Vec::new(),
+                reads_no_extension: false,
                 comment_prefixes: Vec::new(),
                 docstring_python: false,
                 respect_gitignore: true,

@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 use super::read_predicate::{Unread, excluding_rule, name_refusal};
 use super::tree::scan_unwalked_file;
-use crate::config::{Frame, Run, Schema};
+use crate::config::{Frame, Run, Schema, file_extension};
 use crate::grammar::{Grammar, resolve_shorthands};
 use crate::model::{
     Catalog, Citation, ConflictBlock, Declaration, ExcludingRule, FileRecord, Id, StubResolution,
@@ -141,13 +141,7 @@ fn resolve_stub(
     // judged by the name the stub wrote, so a hidden or unlisted symlink never pairs.
     if let Some(reason) = name_refusal(&resolved, targets.schema) {
         return Some(if reason == Unread::Extension {
-            StubResolution::UnlistedExtension(
-                resolved
-                    .extension()
-                    .and_then(|ext| ext.to_str())
-                    .unwrap_or("")
-                    .to_string(),
-            )
+            StubResolution::UnlistedExtension(file_extension(&resolved).unwrap_or("").to_string())
         } else {
             StubResolution::NotRead
         });

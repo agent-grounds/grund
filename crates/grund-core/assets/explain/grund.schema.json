@@ -347,7 +347,7 @@
               "items": {
                 "type": "string"
               },
-              "description": "The file extensions the scan reads. The default is `md` plus every extension grund's built-in language table names, so a language grund learns is read without a config change.",
+              "description": "The file extensions the scan reads. The default is `md` plus every extension grund's built-in language table names, so a language grund learns is read without a config change. An empty string, which version 1 keeps for compatibility, also reads every file with no extension. Version 2 has no such entry and `grund config migrate` refuses it, so give such a file an extension instead.",
               "default": [
                 "md",
                 "rs",

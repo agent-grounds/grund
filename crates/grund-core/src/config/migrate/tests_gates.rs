@@ -4,14 +4,15 @@
 //! `api/tests_config_migrate_gates.rs`.
 
 use std::fmt::Debug;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use super::opted_out::Block;
 use super::records_gate::compare;
-use super::{GateResult, Located, Prepared, translate};
+use super::{GateResult, Located, Prepared, candidate, languages, translate};
 use crate::config::discovery::pending_config;
 use crate::config::project::Project;
 use crate::config::run::{Invocation, Selection};
+use crate::config::v1::default_project;
 use crate::testing::{test_root, write};
 
 const FS: &str = "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n";
@@ -177,4 +178,19 @@ fn records_gate_compares_a_positive_default_as_may() {
         compare(&v1, &v2, &root, Block::Project),
         Vec::<String>::new()
     );
+}
+
+/// §FS-scan.scope.extensions.empty: the candidate starts from a clone of a version 1 project that
+/// holds the entry, and keeps neither the entry nor what it reads, as version 2 has no such entry.
+#[test]
+fn a_candidate_keeps_neither_the_empty_string_nor_what_it_reads() {
+    let mut v1 = default_project();
+    v1.schema
+        .sources
+        .set_extensions(vec!["md".into(), String::new()]);
+    let model = languages::translate(&v1, None, None, false).model;
+    let sources = candidate::records(&v1, model, Vec::new()).schema.sources;
+    assert!(!sources.reads_no_extension);
+    assert!(!sources.extensions.iter().any(String::is_empty));
+    assert!(!sources.lists_extension(Path::new("FACTS")));
 }
