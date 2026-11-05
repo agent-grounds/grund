@@ -11,9 +11,9 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use support::*;
 
-/// The reproducer's nine cases, each with one comment declaration in the home, then the two trees
-/// that stayed green on the old success (§DF-fetch-folder-declaring-file.3). Each starts green.
-const REFUSED: [(&str, &str); 11] = [
+/// The reproducer's nine cases, each with one comment declaration in the home, then the trees that
+/// stayed green on the old success (§DF-fetch-folder-declaring-file.3). Each starts green.
+const REFUSED: [(&str, &str); 12] = [
     ("fetch-folder-source-v2-python-refused", "FS-a"),
     ("fetch-folder-source-v2-python-nested-refused", "FS-a"),
     ("fetch-folder-source-v2-python-function-refused", "FS-a"),
@@ -24,6 +24,7 @@ const REFUSED: [(&str, &str); 11] = [
     ("fetch-folder-source-v1-python-refused", "FS-001-a"),
     ("fetch-folder-source-v1-rust-refused", "FS-001-a"),
     ("fetch-folder-source-markdown-not-read-refused", "FS-a"),
+    ("fetch-folder-source-snapshot-excluded-refused", "FS-a"),
     (
         "fetch-folder-source-stub-under-another-name-refused",
         "FS-a",
@@ -156,6 +157,34 @@ fn taking_the_declaration_out_of_the_file_is_the_way_through() {
         &run(&project, &["check"]),
         0,
         "check where Markdown is not read",
+    );
+
+    // §DF-fetch-folder-declaring-file.3: the way to the fetched fact on that tree, in one change:
+    // take the declaration out and have the scan read the snapshot as Markdown.
+    let project = copy_of(
+        "way-through-markdown",
+        "fetch-folder-source-markdown-not-read-refused",
+    );
+    write(&project, "fs/a.py", "x = 1\n");
+    let config = fs::read_to_string(project.join("grund.toml")).expect("read the config");
+    let read_as_markdown = config.replace(
+        "languages = [\"python\"]",
+        "languages = [\"markdown\", \"python\"]",
+    );
+    assert_ne!(read_as_markdown, config, "the config admits Markdown");
+    write(&project, "grund.toml", &read_as_markdown);
+    assert_code(
+        &run(&project, &["fetch", "FS-a"]),
+        0,
+        "fetch once Markdown is read",
+    );
+    assert_code(&run(&project, &["check"]), 0, "check once Markdown is read");
+    let show = run(&project, &["FS-a", "--full"]);
+    assert_code(&show, 0, "show once Markdown is read");
+    assert_eq!(
+        stdout(&show).trim_end(),
+        "Fetched body.",
+        "the fetched fact"
     );
 
     // §FS-fetch.5.2: a stub holds nothing but the declaration, so it goes whole, and the fetch
