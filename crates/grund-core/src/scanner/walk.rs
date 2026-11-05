@@ -164,8 +164,8 @@ pub(super) struct WalkDirFilter {
 
 impl WalkDirFilter {
     /// The filter one scan root is walked with, and the one the read predicate
-    /// asks of a single path (§AR-scanner.1.13): the same fields from the same
-    /// frame, so the two cannot prune differently.
+    /// and walk-error reporting ask of a single path (§AR-scanner.1.13): the same
+    /// fields from the same frame, so they cannot prune differently.
     pub(super) fn new(
         schema: &Schema,
         frame: Frame<'_>,
@@ -322,7 +322,10 @@ impl WalkDirFilter {
     /// A link-reached directory outside the canonical project root is out of
     /// bounds (§FS-config.3.5.1, §AR-scanner.1.2). Loaded-workspace ownership is
     /// stronger: another project remains out of bounds even when it lies inside
-    /// this project's physical root (§FS-workspace.6.2, §AR-workspace.6.2).
+    /// this project's physical root (§FS-workspace.6.2, §AR-workspace.6.2). Both are
+    /// judged on the canonical target, which `realpath` works out without opening it,
+    /// so walk-error reporting asks the same of a link whose target cannot be opened
+    /// (§FS-scan.scope.links.owed.fence).
     fn crosses_a_scan_boundary(&self, path: &Path, resolved: Option<&Path>) -> bool {
         if let Ok(relative) = path.strip_prefix(&self.scan_root)
             && self
