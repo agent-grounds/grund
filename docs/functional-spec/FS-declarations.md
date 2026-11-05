@@ -701,6 +701,16 @@ would enter a case, not one that starts below it: a path argument naming a file 
 inside a case directory is where that run's walk starts ([§FS-scan.path.discovery](FS-scan.md#pathdiscovery-a-path-is-where-discovery-starts)), and it
 is read.
 
+### e2e-case.failure: A case that cannot be read fails alone
+
+A failure reading one case directory belongs to that case alone: a `command.args`,
+`expected.exit` or `spec.refs` that cannot be read or decoded, an `expected.exit` that does not
+parse as an exit code, or fixtures that cannot be listed. It is a per-file failure of [§FS-check.2.4](FS-check.md#24-an-incomplete-run),
+so the walk over the cases continues, wherever the failing case sorts. Every other case declares
+its ID as usual: a citation of it resolves, its findings print and `grund list` names it. Each
+failing case is reported, so two are two reports in one run, and the run exits `2`. What a citation
+of the failing case itself does is not specified here.
+
 ## checks: Checks
 
 Each section below is one check `grund check` enforces about a declaration, and its name
