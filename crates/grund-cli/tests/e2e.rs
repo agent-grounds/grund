@@ -66,6 +66,10 @@ mod fetch_subsection_headings;
 #[path = "support/dotdot_scope_root_names.rs"]
 mod dotdot_scope_root_names;
 
+// §FS-fetch.5.2: issue #1213's file in a folder home that declares the ID, its cases run alone.
+#[path = "support/fetch_folder_declaring_file.rs"]
+mod fetch_folder_declaring_file;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
@@ -106,9 +110,16 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    let outcomes = ordered_pool::in_order(&discover_e2e_cases(&manifest_dir), |case| {
-        run_case(&manifest_dir, case, E2e)
-    });
+    // Red until #1213: its cases run alone in the ignored contract; implement removes this.
+    let cases = discover_e2e_cases(&manifest_dir)
+        .into_iter()
+        .filter(|case| {
+            !fetch_folder_declaring_file::RED_UNTIL_1213
+                .iter()
+                .any(|red| case.ends_with(red))
+        })
+        .collect::<Vec<_>>();
+    let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
     let compared = outcomes
         .iter()
         .filter(|outcome| matches!(outcome, CaseOutcome::Ran | CaseOutcome::Failed { .. }))
