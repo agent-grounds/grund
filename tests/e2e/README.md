@@ -64,7 +64,9 @@ The harness exempts only valid location/range, attachment and guidance records
 under that command's exact comment-list heading from the ordinary 180-byte line
 cap; the first other line ends the block. Ordinary errors and hints retain the
 cap before, beside and after the listing, and aggregate summaries remain
-forbidden throughout. Output and final-tree goldens still compare byte-for-byte.
+forbidden throughout. The refusal of an empty string in `[scan] extensions` keeps
+the bytes [§FS-config-migrate.3.1.9](../../docs/functional-spec/FS-config-migrate.md#319-an-empty-string-in-scan-extensions) fixes past the cap, and no other refusal does.
+Output and final-tree goldens still compare byte-for-byte.
 
 ### Refreshing the goldens
 

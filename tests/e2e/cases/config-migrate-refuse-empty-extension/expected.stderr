@@ -1,0 +1,4 @@
+grund.toml: version 1 → 2, --write
+refused: grund.toml:4: [scan] extensions names ``, which is not a final extension version 2 can map; version 1 reads every file with no extension through it, and version 2 reads none
+  repair: remove `` from extensions under version 1, and give any such file you want read an extension the list holds; grund check shows its effect
+not written: 1 refusal (follow the repairs above); grund.toml is unchanged

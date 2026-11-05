@@ -182,6 +182,24 @@ refused: grund.toml:12: [scan] include reads the one string `a"b`, and version 2
 
 A key earns one block, naming the first string in its value that closes early, and the text in backticks is that string as written from its opening quote to the last quote, as version 1 reads it. The refusal stays after grund 0.22.0 refuses such a string in version 2 ([§FS-config-v2.reader.6.refusal](FS-config-v2.md#reader6refusal-from-grund-0220-a-string-that-closes-early-is-expected-string)): a version-1 file reads it for good, and only its migration meets the rule.
 
+#### 3.1.9 An empty string in `[scan] extensions`
+
+Version 1 reads each file with no extension through an empty string in `[scan] extensions`, for good ([§FS-scan.scope.extensions.empty](FS-scan.md#scopeextensionsempty-in-version-1-an-empty-string-in-the-list-reads-a-file-with-no-extension)), and version 2 has no such entry ([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)). Removing the entry is the repair, and it costs those reads, so this refusal says what the entry reads and what the repair costs.
+
+```text
+refused: grund.toml:4: [scan] extensions names ``, which is not a final extension version 2 can map; version 1 reads every file with no extension through it, and version 2 reads none
+  repair: remove `` from extensions under version 1, and give any such file you want read an extension the list holds; grund check shows its effect
+```
+
+The longer lines are for this entry alone, because their added clauses are true of no other. Every other entry a version 2 mapping cannot hold, `tar.gz` or `*.md` for example, keeps its two lines as they stand:
+
+```text
+refused: grund.toml:4: [scan] extensions names `tar.gz`, which is not a final extension version 2 can map
+  repair: remove `tar.gz` from extensions under version 1
+```
+
+Under the entry, the files [§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry) and [§FS-config-migrate.3.1.5](FS-config-migrate.md#315-nested-homes) name are the ones the walk reads, so a file with no extension is among them. Under a list without it, those details are as they were.
+
 ### 3.2 Notices
 
 Some settings are written with a notice rather than refused, because version 1 gave them no force ([§DISC-core-concerns.7.5](../discussions/proposals/2026-09-30-core-concerns.md#75-what-has-no-v2-spelling-and-how-migrate-reports-it)):
@@ -518,7 +536,7 @@ not written: grund check --suggestions differs (inspect the comparison above); g
 | `[scan] comment_prefixes` | each definition's `comment_prefixes`, the whole list | mapped |
 | `[scan] docstring_python` | `.py`'s definition, `docstrings` python or off | mapped |
 | `[scan] exclude` | `[schema.sources] exclude`, each name as the escaped glob `<name>/` | mapped; a path-shaped entry refused ([§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry)) |
-| `[scan] extensions` | `languages`, `[schema.sources.definitions.v1_<profile>]` and `[schema.sources.extensions]` | mapped; JSON mixed with value authority, unreachable profiles and out-of-domain suffixes refused as [§FS-config-v2.schema.sources.migration](FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes) says |
+| `[scan] extensions` | `languages`, `[schema.sources.definitions.v1_<profile>]` and `[schema.sources.extensions]` | mapped; JSON mixed with value authority, unreachable profiles and out-of-domain suffixes refused as [§FS-config-v2.schema.sources.migration](FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes) says, and the empty string with [§FS-config-migrate.3.1.9](FS-config-migrate.md#319-an-empty-string-in-scan-extensions)'s lines |
 | `[scan] include` | `[schema.kinds.code] files` and `folders`, by what each entry is on disk | mapped; an entry at or inside a scanned home dropped as a duplicate; refused when missing, the default list's entries included ([§FS-config-migrate.3.1.3](FS-config-migrate.md#313-an-include-entry-that-does-not-exist)), outside the root, inside a member, or inside an unscanned home |
 | `[scan] respect_gitignore` | `[schema.sources] respect_gitignore` | mapped |
 | `[output] color` | none | notice: nothing reads it |

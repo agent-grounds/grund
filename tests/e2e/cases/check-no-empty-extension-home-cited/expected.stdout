@@ -1,0 +1,2 @@
+docs/a.md:1: error: unknown reference FS-001-a
+grund.toml:8: warning: [[kinds]] FS home `FACTS` is not read — it has no extension, and [scan] extensions reads a file only by its extension, so nothing in it is checked. Rename the file to an extension the list holds.

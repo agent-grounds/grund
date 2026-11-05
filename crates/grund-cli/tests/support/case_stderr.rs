@@ -131,6 +131,12 @@ const PROMOTED_LOAD_WARNING_SUFFIX: &str = "; this became an error in grund 0.19
 /// so they keep the bytes the candidate fixes rather than the cap.
 const MIGRATE_DEFAULT_WRITTEN_SUFFIX: &str = ": version 1's default, written out";
 
+/// The refusal of an empty string in `[scan] extensions` says what the entry reads, which runs it
+/// past the cap (§FS-config-migrate.3.1.9), so it keeps the bytes that point fixes rather than the
+/// cap. Every other entry's refusal stops before this clause and keeps the cap.
+const MIGRATE_EMPTY_EXTENSION_SUFFIX: &str =
+    "; version 1 reads every file with no extension through it, and version 2 reads none";
+
 /// The judgement, isolated from the filesystem. A `--format json` case's
 /// stderr is not uniformly JSON (§FS-errors.5.2.2): a launch-time `error: …`
 /// line stays text and keeps the plain 180-byte cap, while a carried text
@@ -158,6 +164,7 @@ fn assert_stderr_is_concise(name: &str, json_case: bool, migration_case: bool, s
             || (line.starts_with("error: ") && line.contains(ABSORBED_SCAN_SENTENCE))
             || (line.starts_with("error: ") && line.ends_with(PROMOTED_LOAD_WARNING_SUFFIX))
             || (line.starts_with("written: ") && line.ends_with(MIGRATE_DEFAULT_WRITTEN_SUFFIX))
+            || (line.starts_with("refused: ") && line.ends_with(MIGRATE_EMPTY_EXTENSION_SUFFIX))
         {
             continue;
         } else if json_case && line.starts_with('{') {
@@ -406,6 +413,18 @@ mod stderr_concise_tests {
             "error: grund.toml: [citations.API] should names {}",
             "x".repeat(180)
         );
+        let panic_message = rejects(false, &other);
+        assert!(panic_message.contains("too long"), "{panic_message}");
+    }
+
+    #[test]
+    fn nonzero_case_preserves_the_empty_extension_refusal_and_nothing_beside_it() {
+        let refused = "refused: grund.toml:4: [scan] extensions names ``, which is not a final \
+                       extension version 2 can map; version 1 reads every file with no extension \
+                       through it, and version 2 reads none";
+        assert!(refused.len() > 180, "fixture line no longer exceeds the cap");
+        assert_stderr_is_concise("case", false, false, refused);
+        let other = format!("refused: grund.toml:4: {}", "x".repeat(180));
         let panic_message = rejects(false, &other);
         assert!(panic_message.contains("too long"), "{panic_message}");
     }
