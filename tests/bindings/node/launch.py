@@ -11,6 +11,18 @@ REPO = Path(__file__).resolve().parents[3]
 _AUTOMATIC_TIMEOUT = object()
 
 
+def npm_env(**settings):
+    """This process's environment, naming each npm setting in one spelling (§AR-ci-npm-cache.1.1).
+
+    npm reads every case of a setting's variable and the last one wins, so a key set on a copy of
+    `os.environ` can lose to a spelling after it. Every spelling of a named setting goes first;
+    a setting not named here stays, and so does the order of what stays.
+    """
+    named = {key.lower() for key in settings}
+    kept = {key: value for key, value in os.environ.items() if key.lower() not in named}
+    return {**kept, **settings}
+
+
 def command(argv, cwd=REPO, env=None, timeout=_AUTOMATIC_TIMEOUT):
     """Apply the build deadline unless the caller supplies one (§AR-ci.3.4.1.1)."""
     args = [str(arg) for arg in argv]

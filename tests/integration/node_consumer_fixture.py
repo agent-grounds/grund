@@ -79,12 +79,14 @@ class ConsumerPreparationContract(unittest.TestCase):
                 return real_command(argv, *args, **kwargs)
 
             # Local-only packages; a regression must not silently fetch from a registry.
-            env = {"npm_config_offline": "true", "npm_config_cache": str(root / "npm-cache"),
-                   "npm_config_update_notifier": "false"}
+            # §AR-ci-npm-cache.1.1: left in, an exported spelling would turn this guard off.
+            env = launch.npm_env(npm_config_offline="true",
+                                 npm_config_cache=str(root / "npm-cache"),
+                                 npm_config_update_notifier="false")
             with patch.object(support, "SCRATCH", root), \
                     patch.object(support, "source_package", side_effect=lambda: selected[0]), \
                     patch.object(launch, "command", side_effect=observed), \
-                    patch.dict(os.environ, env):
+                    patch.dict(os.environ, env, clear=True):
                 paths = []
                 for source in (first_source, second_source):
                     selected[0] = source

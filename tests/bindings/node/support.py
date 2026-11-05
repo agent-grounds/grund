@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 from functools import lru_cache
 
-from launch import checked, command
+from launch import checked, command, npm_env
 
 REPO = Path(__file__).resolve().parents[3]
 SCRATCH = Path.home() / "ag" / "tmp"
@@ -105,10 +105,11 @@ def throwaway_npm_env(temp):
     """An npm call's environment, with a cache that goes with `temp` (§AR-ci-npm-cache.1).
 
     `temp` is the temporary directory holding what the call packs or installs into, so the
-    cache sits beside that and never inside it. `os.environ` is read here, at the call, because
-    a caller may have patched it around the call.
+    cache sits beside that and never inside it. `os.environ` is read at the call, because a caller
+    may have patched it around the call, and this cache beats every spelling exported in it
+    (§AR-ci-npm-cache.1.1).
     """
-    return {**os.environ, "npm_config_cache": str(Path(temp) / "npm-cache")}
+    return npm_env(npm_config_cache=str(Path(temp) / "npm-cache"))
 
 
 @lru_cache(maxsize=1)
