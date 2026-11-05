@@ -244,6 +244,7 @@ fn fetch_run(
             snapshot.as_bytes(),
             diagnostic,
         ),
+        // §FS-fetch.5.3: a member's refusal still names the file from the run's report base.
         FetchHome::Folder(path) => write_folder_home(
             &path,
             &selected,

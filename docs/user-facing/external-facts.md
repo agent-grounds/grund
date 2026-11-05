@@ -72,6 +72,15 @@ in that file, or take the declaration out of it and fetch again
 Where the scan does not read `<ID>.md` as Markdown, taking the declaration out leaves
 the ID declared nowhere until it does, so change both together.
 
+A folder-home fetch also refuses when the selected project's scan finds the ID
+declared outside that home, in Markdown or a source comment. It exits 2, names
+the declaring file and leaves the entire tree unchanged. A stub pointing there
+stays intact, even when the scan reaches the target only through that stub.
+Keep the existing fact in its file, or remove its declaration and fetch again
+to install the snapshot. Moving a value source out of its home therefore only
+permits fetching if the scan no longer reads it as declaring that ID
+([§FS-fetch.5.3](../functional-spec/FS-fetch.md#53-a-declaration-outside-the-home-prevents-installation)).
+
 With `resolve = "must"`, a missing snapshot is the ordinary `dangling` error.
 With `resolve = "should"`, it is the fixed `missing-snapshot` warning and a
 warning-only check exits 0. Choose `must` when CI should enforce that every

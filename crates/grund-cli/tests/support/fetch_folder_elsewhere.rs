@@ -1,22 +1,10 @@
 //! Issue #1214's cases, run alone: a `folder`-home fetch of an ID declared in a file outside that
 //! home refuses, with exit 2, the file named from the report base and the tree byte-identical
-//! (§FS-fetch.5.3). The refused ones are held out of the full pass until the fix lands. Implement
-//! removes the hold, and with it `without_red_until_1214`, its call in `e2e.rs` and the contract's
-//! ignore, because the full pass then runs them. The guards pass today and stay in the full pass.
-
-use std::path::PathBuf;
+//! (§FS-fetch.5.3). Refusal and guard cases also run in the full pass.
 
 use super::case_runner::CaseKind::E2e;
 use super::case_runner::{assert_every_case_passed, run_case};
 use super::repo_root;
-
-/// Red until #1214: the full pass skips the refused cases; implement removes this.
-pub fn without_red_until_1214(cases: Vec<PathBuf>) -> Vec<PathBuf> {
-    cases
-        .into_iter()
-        .filter(|case| !REFUSED.iter().any(|red| case.ends_with(red)))
-        .collect()
-}
 
 const REFUSED: [&str; 26] = [
     "fetch-folder-elsewhere-beside-home-declaration-refused",
@@ -78,7 +66,6 @@ fn run_alone(label: &str, names: &[&str]) {
 }
 
 #[test]
-#[ignore = "red until #1214 refuses an ID declared outside the home; implement removes this"]
 fn fetch_folder_elsewhere_contract() {
     run_alone("fetch folder elsewhere", &REFUSED);
 }

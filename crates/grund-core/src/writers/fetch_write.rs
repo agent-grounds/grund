@@ -10,10 +10,12 @@ use crate::config::Config;
 use crate::grammar::{
     Grammar, MarkdownBlocks, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
 };
-use crate::model::{Id, OperationDiagnostic, format_path, relative_from_base};
+use crate::model::{
+    Id, OperationDiagnostic, format_path, paired_declarations, relative_from_base, scanned_path_key,
+};
 use crate::scanner::{
     folder_value_declarations, markdown_heading_level, scan_error_message, scan_error_reason,
-    scan_unwalked_file, walk_scannable_files_with_sources,
+    scan_tree, scan_unwalked_file, walk_scannable_files_with_sources,
 };
 use crate::sources::{path_exists, path_is_dir, read_bytes};
 
@@ -215,6 +217,15 @@ pub(super) fn write_file_home(
     install(path, &replacement, diagnostic)
 }
 
+/// §FS-fetch.5.2, §FS-fetch.5.3: the one refusal of an ID another file already declares, the
+/// file spelled from the report base.
+fn already_declared(local: &str, shown: &str) -> FetchFailure {
+    fetch_operational(format!(
+        "cannot fetch {local}: {shown} already declares it; keep the fact in that file, or take \
+         the declaration out of it and fetch again"
+    ))
+}
+
 /// §FS-fetch.5.2: ask the scan's own pass about each file the Markdown branch would not
 /// replace, so which forms declare stays the scan's answer and fetch keeps no second reader
 /// of comments. In the walk's sorted order, the first file that declares the ID or that the
@@ -232,10 +243,7 @@ fn refuse_declaring_file(
         let shown = format_path(&relative_from_base(report_base, path));
         match scan_unwalked_file(path, config.schema(), config.frame(), &[]) {
             Ok(findings) if findings.declarations.contains_key(requested) => {
-                return Err(fetch_operational(format!(
-                    "cannot fetch {local}: {shown} already declares it; keep the fact in that \
-                     file, or take the declaration out of it and fetch again"
-                )));
+                return Err(already_declared(local, &shown));
             }
             Ok(_) => {}
             Err(error) => {
@@ -251,9 +259,9 @@ fn refuse_declaring_file(
     Ok(())
 }
 
-/// §FS-fetch.5: replace the unique declaring file or create `<ID>.md`, after refusing
-/// existing value declarations (§FS-fetch.5.1) and a file it would not replace that already
-/// declares the ID (§FS-fetch.5.2).
+/// §FS-fetch.5: replace the unique declaring file or create `<ID>.md`, after refusing a
+/// declaration outside the home (§FS-fetch.5.3), existing value declarations (§FS-fetch.5.1)
+/// and a file it would not replace that already declares the ID (§FS-fetch.5.2).
 pub(super) fn write_folder_home(
     folder: &Path,
     config: &Config,
@@ -263,6 +271,29 @@ pub(super) fn write_folder_home(
     snapshot: &[u8],
     diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
+    // §FS-fetch.5.3: only a whole-scan failure gates discovery here; per-path
+    // failures outside the home cannot hide declarations another file supplies.
+    let (catalog, _) = scan_tree(config.schema(), config.frame(), None, false).map_err(|err| {
+        let message = format!("cannot discover declarations for {local}: {err:#}");
+        fetch_walk_failure(diagnostic, &config.root, err, message)
+    })?;
+    let declarations = paired_declarations(
+        catalog
+            .declarations
+            .get(requested)
+            .map(Vec::as_slice)
+            .unwrap_or_default(),
+    );
+    let home = scanned_path_key(folder);
+    // §FS-fetch.5.3: pairing supplies targets even when unscanned, in path:line
+    // order. This refusal precedes every judgement of the home's contents.
+    if let Some(declaration) = declarations
+        .records()
+        .find(|record| !scanned_path_key(&record.file).starts_with(&home))
+    {
+        let file = format_path(&relative_from_base(report_base, &declaration.file));
+        return Err(already_declared(local, &file));
+    }
     let mut matches = Vec::new();
     if path_exists(folder) {
         if !path_is_dir(folder) {
