@@ -101,6 +101,16 @@ def dev_env(base=None):
     return {**(os.environ if base is None else base), "CARGO_INCREMENTAL": "0"}
 
 
+def throwaway_npm_env(temp):
+    """An npm call's environment, with a cache that goes with `temp` (§AR-ci-npm-cache.1).
+
+    `temp` is the temporary directory holding what the call packs or installs into, so the
+    cache sits beside that and never inside it. `os.environ` is read here, at the call, because
+    a caller may have patched it around the call.
+    """
+    return {**os.environ, "npm_config_cache": str(Path(temp) / "npm-cache")}
+
+
 @lru_cache(maxsize=1)
 def source_package():
     """Build once per suite; each test still gets a fresh installed consumer."""
@@ -121,7 +131,8 @@ def source_package():
     # §AR-ci.3.4.1.1: the source closure is proven by a dev build, without incremental state.
     checked(["npm", "run", "build:source", "--", "--target-dir", target, "--profile", "dev"],
             cwd=stage, env=dev_env())
-    packed = checked(["npm", "pack", "--json"], cwd=stage)
+    # §AR-ci-npm-cache.1: the pack's key names this temporary directory, which no later run has.
+    packed = checked(["npm", "pack", "--json"], cwd=stage, env=throwaway_npm_env(temp.name))
     tarball = stage / json.loads(packed.stdout)[0]["filename"]
     return stage, target, tarball
 
@@ -147,8 +158,9 @@ def installed_consumer(tarball):
             (consumer / "package.json").write_text(
                 '{"private":true,"type":"module"}\n', encoding="utf-8",
             )
+            # §AR-ci-npm-cache.1: the install's keys name the tarball's temporary directory.
             checked(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund",
-                     tarball], cwd=consumer)
+                     tarball], cwd=consumer, env=throwaway_npm_env(temp.name))
         except BaseException:
             temp.cleanup()
             raise
