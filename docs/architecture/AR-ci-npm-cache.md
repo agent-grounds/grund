@@ -6,7 +6,8 @@ every other project they have, and nothing in this repository reclaims it, so wh
 writes there stays until a person removes it. [§AR-ci.3.4.1.4](AR-ci.md#3414-one-pristine-installed-consumer-per-staged-source) says the consumer installed from
 such a tarball is discarded with the run and is no new persistent cache, and
 [§FS-repository-maintenance.2.2](../functional-spec/FS-repository-maintenance.md#22-automatic-reclamation) says of the Node target that contributors need no separate
-prune command. This is that rule for a store the repository does not own.
+prune command. This is that rule for a store the repository does not own, and [§AR-ci-pip-cache](AR-ci-pip-cache.md#ar-ci-pip-cache-a-tests-pip-install-leaves-no-built-wheel-in-the-users-pip-cache)
+is its sibling for pip's wheel cache.
 
 ## placement: Where the rule applies
 
@@ -30,6 +31,8 @@ Leans on [§FS-terms.terms.8](../functional-spec/FS-terms.md#terms8-the-architec
   Windows.
 - **Throwaway key**: a key in that cache naming something no later run can ask for again: a
   temporary path that has been deleted, or the port of a server that has stopped.
+- **Spelling**: one of the environment variables npm reads for a setting, which are every case
+  of `npm_config_<setting>`.
 
 ## 1. The calls it covers
 
@@ -50,9 +53,10 @@ temporary directory of its own run:
   environment rather than `fresh_env`'s, so its cache is the contributor's.
 
 The two calls in `support.py` read one helper for that environment. It starts from the
-environment they already run under, because `launch.command` reads `PATH` from a given
-environment on Windows and `node_consumer_fixture.py` keeps npm offline through it, and it is
-not `dev_env`, because these calls build nothing.
+environment they already run under, less the spellings [§AR-ci-npm-cache.1.1](AR-ci-npm-cache.md#11-a-setting-a-site-names-beats-every-spelling-the-contributor-exported) drops, because
+`launch.command` reads `PATH` from a given environment on Windows and
+`node_consumer_fixture.py` keeps npm offline through it, and it is not `dev_env`, because these
+calls build nothing.
 
 Each cache sits beside `package` and `consumer` in their temporary directories, never inside
 them. Inside the stage, a package that lists no `files` packs npm's logs into its tarball, and
@@ -60,6 +64,36 @@ a second pack the cache itself; inside the consumer every `Rehearsal`'s copy of 
 would copy the tarball with it. Both directories are already removed at exit, and the
 consumer's on a failed install too, so nothing new has to be reclaimed. `build_env`'s cache
 takes a `keep` directory, as its Cargo target does.
+
+### 1.1 A setting a site names beats every spelling the contributor exported
+
+What a site names is what npm uses, whatever the contributor exported. npm reads every variable
+matching `/^npm_config_/i`, walking the environment in order, and the last spelling of a setting
+with a value wins (`loadEnv` in npm 10.9.8's `@npmcli/config`). A site that sets the lower-case key
+on a copy of `os.environ` overwrites an exported `npm_config_cache` where it stands, so an
+`NPM_CONFIG_CACHE` after it stays after it and wins. Measured on that npm with a tiny package:
+under `throwaway_npm_env`, a pack and an install filed 3 index entries and 1 blob in the directory
+exported as `NPM_CONFIG_CACHE` and nothing in the one the site named, and `consumer` under
+`build_env` filed 2 and 2 in that exported directory. With one spelling exported, or the
+upper-case one first, the site's wins. Lower-case first is the order bash 5.2.21, fish 3.7.1 and
+a pyenv shim hand on, whichever order the two were written in.
+
+So a site drops every spelling of a setting it names, in any case, before naming it, and exactly
+one spelling reaches npm. It drops no setting it does not name, for the reason [§AR-ci-npm-cache.1](AR-ci-npm-cache.md#1-the-calls-it-covers)
+gives. One function does this for every site ([§AR-system.principle](README.md#principle-one-fact-one-point-one-implementation)):
+
+- `throwaway_npm_env`'s cache.
+- `build_env`'s cache and its registry. The registry is the same rule: under the same order the
+  install goes to the exported registry and never reaches `LoopbackNpm`.
+- What `test_strict_typescript_check_needs_no_registry_once_prepared`, in
+  `tests/bindings/node/test_package.py`, and `test_preparation_and_isolation`, in
+  `tests/integration/node_consumer_fixture.py`, patch into `os.environ`. With both spellings
+  exported, a `patch.dict` built like each of theirs left npm answering `registry`, `cache`,
+  `offline` and `update-notifier` from the exported upper-case spelling.
+
+`fresh_env` reads no such function. It removes the two usual spellings, and what it names lands
+after whatever spelling slipped through: with `Npm_Config_Cache` exported as well, npm still used
+the cache it named.
 
 ## 2. The calls it leaves out
 
@@ -96,7 +130,8 @@ is to send the cache somewhere that goes away.
 normally before anything is read, since the temporary directories are removed at exit. The
 child's every home and scratch directory, `HOME`, `USERPROFILE`, `APPDATA`, `LOCALAPPDATA`,
 `XDG_CACHE_HOME`, the temporary directory and `GRUND_NODE_TARGET`, sits under one throwaway
-root, and it inherits no `npm_config_*`.
+root. It inherits none of the contributor's `npm_config_*`, so what they exported decides no
+verdict, and the only ones it starts with are what a case below exports.
 
 The sites are the real ones with real npm. The real `Rehearsal` reaches the real
 `source_package` and `installed_consumer`, with only what compiles stubbed: `node stage.mjs`
@@ -107,6 +142,26 @@ candidate replaced.
 The verdict is every `_cacache` under that whole root: no index entry and no content blob. It
 does not look only at `~/.npm`, or a cache kept under the Node target root would pass. It names
 no setting: what counts is what npm did with what the site gave it. Two controls keep the read
-honest: in the same environment, a plain `npm pack` and a plain install from `LoopbackNpm` must
-each show up in that read. So a default cache that lies somewhere this read does not reach, or an
-npm that stopped caching one of these, fails a control rather than turning a site green.
+honest: in the same environment, exporting nothing, a plain `npm pack` and a plain install from
+`LoopbackNpm` must each show up in that read. So a default cache that lies somewhere this read
+does not reach, or an npm that stopped caching one of these, fails a control rather than turning
+a site green.
+
+Three cases hold [§AR-ci-npm-cache.1.1](AR-ci-npm-cache.md#11-a-setting-a-site-names-beats-every-spelling-the-contributor-exported) by exporting both spellings, lower-case first, after
+everything else in the environment the child starts with. The test process and the source install
+each inherit both spellings of the cache, naming directories under the root, so the same read
+sees what lands there. The source install also runs with both spellings of the registry naming a
+loopback port that refuses, with npm's retries off, so an install that obeys either fails at once
+and the verdict is whether it reached `LoopbackNpm`.
+
+A third control runs with both spellings of each setting and no site in the way. The order must
+reach the child's Python and node as it was written, `npm config get` must answer with the
+upper-case spelling of each, and a plain `npm pack` must file under the upper-case directory and
+nothing under the lower-case one. So a launcher that reorders the environment, or an npm that
+changes its walk, fails this control rather than turning those three cases green. The child is
+started with `sys.executable` for this reason: a `python3` on `PATH` can be a shim written in bash,
+which re-exports the environment in its own order.
+
+`os.environ` folds names on Windows, so two spellings cannot be inherited there. The three cases
+still run, as one exported name against the one the site names, and both values of each pair
+would fail a site that obeyed them, so neither depends on which survives. The control skips there.
