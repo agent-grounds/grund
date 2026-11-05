@@ -1,10 +1,51 @@
-use crate::sources::{canonical_path, link_metadata};
+use crate::sources::{Sources, canonical_path, link_metadata, open_for_reading, path_is_dir};
 use std::path::{Path, PathBuf};
 
 use super::read_predicate::{directory_refusal, ignored, name_refusal};
 use super::scan_error::scan_io_reason;
 use super::tree::ScanError;
+use super::walk::WalkDirFilter;
 use crate::config::{Frame, Schema};
+
+/// The scan failures one walker error becomes (§FS-check.2.4), each beside the
+/// error it is reported from, which the caller retains (§FS-distribution.3.3.2).
+///
+/// One error is one failure, located by `walk_error_report`, except the error
+/// the walker raises about a directory link whose target cannot be opened: that
+/// one names no entry, so the links it can be about are recovered first and each
+/// is reported at its own path, never at the walk root (§AR-scanner.1.9). Each recovered
+/// link is handed on as an error that names it, carrying the failure its own
+/// target opens with, so it takes the branch every link with a path takes.
+///
+/// `filter` is the walk's own directory filter for this root, and `listing` the
+/// directory the walk last descended into under it, `None` before the first.
+pub(super) fn walk_error_reports(
+    err: ignore::Error,
+    filter: &WalkDirFilter,
+    listing: Option<&Path>,
+    schema: &Schema,
+    frame: Frame<'_>,
+    scan_root: &Path,
+) -> Vec<(ScanError, ignore::Error)> {
+    let links = unopenable_links(&err, listing, scan_root);
+    if links.is_empty() {
+        return walk_error_report(&err, filter, schema, frame, scan_root)
+            .map(|report| (report, err))
+            .into_iter()
+            .collect();
+    }
+    links
+        .into_iter()
+        .map(|(path, io)| ignore::Error::WithPath {
+            path,
+            err: Box::new(ignore::Error::Io(io)),
+        })
+        .filter_map(|located| {
+            walk_error_report(&located, filter, schema, frame, scan_root)
+                .map(|report| (report, located))
+        })
+        .collect()
+}
 
 /// The per-file scan failure a walker error becomes (§FS-check.2.4), or `None` when
 /// the walk was never going to read through the path it names (§FS-config.3.5.6).
@@ -17,20 +58,26 @@ use crate::config::{Frame, Schema};
 /// handling here — and the two meet only at the error list one hands the other.
 ///
 /// `follow_links` hands back an error in place of the entry for a link it cannot
-/// resolve — a broken target, or a loop, which the `ignore` crate detects and
-/// reports rather than recursing into. The walker applies neither its directory
-/// filter nor its ignore files to an error entry, so the tests the link would
-/// have faced are asked of the one read predicate instead (§AR-scanner.1.13):
-/// the hidden-name and `[scan] exclude` tests for a looping directory, the ignore
-/// files for either kind, and the name test as well for a broken link, which
-/// names a file where a loop names a directory. That is what keeps a dangling `docs/logo.png`, and a link
-/// of either kind that `.gitignore` covers, silent — the walk was never going to
-/// read them. Anything else — an unreadable directory, a malformed ignore file —
-/// is reported as it stands, at the walk root when the error names no path of its
-/// own: it is a hole in the walk either way, and a silent one is what
+/// resolve — a broken target, a loop, which the `ignore` crate detects and
+/// reports rather than recursing into, or a directory whose target cannot be
+/// opened, which `walk_error_reports` has already located at the link. The
+/// walker applies neither its directory filter nor its ignore files to an error
+/// entry, so the tests the link would have faced are asked of the one read
+/// predicate instead (§AR-scanner.1.13): the hidden-name and `[scan] exclude`
+/// tests for a looping directory, the ignore files for every kind, the name test
+/// as well for a broken link, which names a file where a loop names a directory,
+/// and the walk's own directory filter for a link whose target is a directory,
+/// the project-root fence and the ownership boundaries on its canonical target
+/// included (§AR-scanner.1.13). That is what keeps a dangling
+/// `docs/logo.png`, a link of any kind that `.gitignore` covers, and a link out
+/// of the project, silent — the walk was never going to read them. Anything else
+/// — an unreadable directory, a malformed ignore file — is reported as it stands,
+/// at the path the error names, and at the walk root only when the error names
+/// no entry at all: it is a hole in the walk either way, and a silent one is what
 /// §REQ-no-missed-citation.1 rules out.
-pub(super) fn walk_error_report(
+fn walk_error_report(
     err: &ignore::Error,
+    filter: &WalkDirFilter,
     schema: &Schema,
     frame: Frame<'_>,
     scan_root: &Path,
@@ -50,7 +97,7 @@ pub(super) fn walk_error_report(
     if !link_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
         return Some((path.to_path_buf(), walk_error_reason(err)));
     }
-    if name_refusal(path, schema).is_some() || walk_ignores(path, false, schema, frame) {
+    if walk_skips_link(path, filter, schema, frame, scan_root) {
         return None;
     }
     let reason = match err.io_error().map(std::io::Error::kind) {
@@ -60,6 +107,90 @@ pub(super) fn walk_error_report(
         _ => format!("unreadable symlink: {}", walk_error_reason(err)),
     };
     Some((path.to_path_buf(), reason))
+}
+
+/// Whether the walk was never going to read through the link at `path`, judged
+/// by the rules any other entry faces (§FS-config.3.5.6). A link whose
+/// target is a directory is asked what the walk asks a directory: the ignore
+/// files, then the walk's own filter, whose `refusal` is the one copy of the name,
+/// `[scan] exclude`, unwalked-home and E2E-case tests and of the project-root fence
+/// and ownership boundaries, which it judges on the link's canonical target
+/// whether or not that target opens (§AR-scanner.1.9, §AR-scanner.1.13). Any other link, broken, is asked the name tests and the
+/// ignore files, as the file it names would be.
+///
+/// The walker never drops its own root, so a link that is the walk root is asked
+/// no ignore file, and the filter answers for it as it does for the root.
+fn walk_skips_link(
+    path: &Path,
+    filter: &WalkDirFilter,
+    schema: &Schema,
+    frame: Frame<'_>,
+    scan_root: &Path,
+) -> bool {
+    if !path_is_dir(path) {
+        return name_refusal(path, schema).is_some() || walk_ignores(path, false, schema, frame);
+    }
+    let depth = path
+        .strip_prefix(scan_root)
+        .map_or(0, |relative| relative.components().count());
+    (depth > 0 && walk_ignores(path, true, schema, frame))
+        || filter.refusal(path, depth, true, true).is_some()
+}
+
+/// The directory links a walker error that names no entry is about, each with
+/// the failure its target opens with (§AR-scanner.1.9, §FS-check.2.4).
+/// Empty for any other error, and where no link explains it.
+///
+/// The walker opens a directory link's target for its loop check before the entry
+/// is anything it hands over, and the error that open raises carries no path
+/// (§AR-scanner.1.9). The link is an entry of the directory the walk was listing,
+/// and that is `listing` or a directory above it: the sequential walk hands a
+/// directory over before anything under it and leaves it only once its listing is
+/// done, so every directory handed over since is inside it. Those directories, up
+/// to the walk root, are listed again, and each directory link there whose target
+/// fails to open the way the error did is one this error can be about. The walker
+/// lists every entry of each of them and fails on each such link in turn, so a
+/// link named here before its own error comes is still reported once, by the
+/// dedup, and several links in one directory are each named. A target that opens,
+/// or fails another way, is not what this error is about.
+///
+/// Only the error path pays: the walk records `listing` among the directories it
+/// already collects, and nothing here runs until an error names no entry.
+fn unopenable_links(
+    err: &ignore::Error,
+    listing: Option<&Path>,
+    scan_root: &Path,
+) -> Vec<(PathBuf, std::io::Error)> {
+    let (Some(kind), Some(listing)) = (pathless_io_kind(err), listing) else {
+        return Vec::new();
+    };
+    let disk = Sources::on_disk();
+    listing
+        .ancestors()
+        .take_while(|dir| dir.starts_with(scan_root))
+        .filter_map(|dir| disk.read_dir(dir).ok())
+        .flatten()
+        .filter_map(Result::ok)
+        .filter(|entry| {
+            entry
+                .file_type()
+                .is_ok_and(|file_type| file_type.is_symlink())
+        })
+        .map(|entry| entry.path())
+        .filter(|link| path_is_dir(link))
+        .filter_map(|link| open_for_reading(&link).err().map(|error| (link, error)))
+        .filter(|(_, error)| error.kind() == kind)
+        .collect()
+}
+
+/// The I/O error kind of a walker error that names no entry, the form `ignore`
+/// gives the error walkdir raises with no path; `None` for every other error.
+fn pathless_io_kind(err: &ignore::Error) -> Option<std::io::ErrorKind> {
+    match err {
+        ignore::Error::Io(io) => Some(io.kind()),
+        ignore::Error::WithDepth { err, .. } => pathless_io_kind(err),
+        _ => None,
+    }
 }
 
 /// The scan error a looping directory link earns (§FS-config.3.5.5), or `None`

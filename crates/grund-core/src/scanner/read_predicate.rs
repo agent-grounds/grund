@@ -11,9 +11,10 @@
 //! saved file would be (§AR-system.2.13). A stub's target asks
 //! `name_refusal` then `excluding_rule` for its verdict, retaining the first
 //! refusing rule (§FS-declarations.stubs.target.3). And a link the walker could
-//! not resolve asks `name_refusal` or
-//! `directory_refusal`, with `ignored`, whether the walk would have read it
-//! (§FS-config.3.5.6), since the walker filters no error entry itself.
+//! not resolve asks `name_refusal`, `directory_refusal` or, for a directory whose
+//! target cannot be opened, `WalkDirFilter::refusal`, with `ignored`, whether the
+//! walk would have read it (§FS-config.3.5.6, §FS-scan.scope.links.owed.fence),
+//! since the walker filters no error entry itself.
 
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;

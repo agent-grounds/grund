@@ -31,8 +31,8 @@ pub(crate) use buffers::{Buffers, Sources};
 pub(crate) use digest::sha256_hex;
 pub(crate) use disk::{
     canonical_path, input_read_to_string, is_directory, is_regular_file, link_metadata,
-    path_exists, path_is_dir, path_is_entry, path_is_file, path_is_symlink, path_metadata,
-    read_bytes, read_git_metadata, read_link,
+    open_for_reading, path_exists, path_is_dir, path_is_entry, path_is_file, path_is_symlink,
+    path_metadata, read_bytes, read_git_metadata, read_link,
 };
 pub(crate) use identity::{canonicalize_existing_prefix, paths_same_location, physical_path_key};
 pub(crate) use observe::{check_input_observer, observe_input, record_test_workspace_load};

@@ -149,7 +149,6 @@ fn an_unreadable_directory_is_reported_once_at_its_own_path() {
 /// `docs/ext -> ../real` with `real` unreadable: the link is one failure, met by the walk from
 /// the config root and the walk from the home `docs`, and `real` is a second one of its own.
 #[test]
-#[ignore = "red until #1266 locates a link whose target cannot be opened at the link; implement removes this"]
 fn an_inward_link_is_reported_at_the_link_and_its_target_once_each() {
     let mut tree = Tree::new("inward");
     tree.dir("p/real");
@@ -169,7 +168,6 @@ fn an_inward_link_is_reported_at_the_link_and_its_target_once_each() {
 /// The link's own path as the scope: the run still fails, and it names no walk root, in scope or
 /// out of it.
 #[test]
-#[ignore = "red until #1266 locates a link whose target cannot be opened at the link; implement removes this"]
 fn an_inward_link_scoped_to_its_path_names_no_walk_root() {
     let mut tree = Tree::new("inward-scoped");
     tree.dir("p/real");
@@ -196,7 +194,6 @@ fn an_inward_link_scoped_to_its_path_names_no_walk_root() {
 
 /// Two such links in one directory are two places, each named, not one line for the directory.
 #[test]
-#[ignore = "red until #1266 locates a link whose target cannot be opened at the link; implement removes this"]
 fn several_links_in_one_directory_are_each_reported_at_their_own_path() {
     let mut tree = Tree::new("several");
     tree.dir("p/ra");
@@ -241,7 +238,6 @@ fn an_outward_link_whose_target_cannot_be_opened_is_pruned_in_silence() {
 /// The outward link named as the scope is the root gate's to judge; whatever that says of the
 /// link, no walk root is where anything failed.
 #[test]
-#[ignore = "red until #1266 asks the project-root fence of a link whose target cannot be opened; implement removes this"]
 fn an_outward_link_scoped_to_its_path_names_no_walk_root() {
     let mut tree = Tree::new("outward-scoped");
     tree.dir("outside");
@@ -260,7 +256,6 @@ fn an_outward_link_scoped_to_its_path_names_no_walk_root() {
 /// A version-1 E2E folder that is itself a link out of the project: the walk from the config
 /// root names no `.`. The E2E pass's own `e2e/cases` line is #1253's, and is not judged here.
 #[test]
-#[ignore = "red until #1266 asks the project-root fence of a link whose target cannot be opened; implement removes this"]
 fn a_version_1_e2e_folder_linking_out_names_no_config_root() {
     let mut tree = Tree::new("v1-e2e");
     fs::write(tree.base.join("p/grund.toml"), V1_CONFIG).expect("write the config");

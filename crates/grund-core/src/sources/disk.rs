@@ -69,6 +69,13 @@ pub(crate) fn canonical_path(path: impl AsRef<Path>) -> std::io::Result<PathBuf>
     std::fs::canonicalize(path)
 }
 
+/// Opens what `path` names for reading, links followed, and closes it again: the
+/// open the walker makes of a directory link's target for its loop check, asked
+/// again of the link that open failed on (§AR-scanner.1.9). Nothing is read.
+pub(crate) fn open_for_reading(path: impl AsRef<Path>) -> std::io::Result<()> {
+    std::fs::File::open(path).map(drop)
+}
+
 /// What the disk says of the entry at `path`, links followed.
 pub(crate) fn path_metadata(path: impl AsRef<Path>) -> std::io::Result<std::fs::Metadata> {
     std::fs::metadata(path)
