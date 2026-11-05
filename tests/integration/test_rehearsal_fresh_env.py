@@ -1,7 +1,8 @@
-"""§FS-distribution-candidate.5.2.1: the rehearsal's fresh `PATH` hides Rust and keeps the rest.
+"""§FS-distribution-candidate.5.2.1: the rehearsal's fresh `PATH` hides Rust and keeps the rest;
+§FS-distribution-candidate.5.2.2: it carries no npm setting the contributor exported, in any case.
 
-Each test makes up a `PATH` and asks the real `fresh_env` about it, so what this host has
-installed does not matter. `fresh_env` needs no candidate, so although the rehearsal itself is
+Each test makes up a `PATH`, or the npm settings exported, and asks the real `fresh_env` about
+it, so what this host has installed or exported does not matter. `fresh_env` needs no candidate, so although the rehearsal itself is
 manual (§AR-ci.6) this is one of the cheap, offline tests the Python gate collects, on every
 operating system a pull request runs on. A tool is judged by whether it is found and what it
 prints when run, never by how `fresh_env` kept it.
@@ -25,6 +26,19 @@ RUST = ("cargo", "rustc", "rustup")
 TOOLCHAIN = ("rustdoc", "rustfmt", "cargo-clippy", "clippy-driver", "rls", "rust-gdb",
              "cargo-1.75", "rustc-1.75", "rust-lld", "rust-analyzer", "cargo-nextest")
 OWN_COMMANDS = ("grund", "grund-lsp")
+NAMED_REGISTRY = "http://named.invalid/"
+# §FS-distribution-candidate.5.2.2: spellings npm reads, of a setting `fresh_env` does not name
+# and of two it does. On Windows `os.environ` folds names to upper case, so they arrive as
+# `NPM_CONFIG_*`, are dropped already and the test passes there before and after the fix.
+MIXED_CASE = {"Npm_Config_Offline": "true", "NPM_Config_Offline": "true",
+              "npm_Config_offline": "true", "nPm_CoNfIg_oFfLiNe": "true",
+              "Npm_Config_Cache": "inherited-cache", "Npm_Config_Registry": "http://mixed.invalid/"}
+EXACT_CASE = {"npm_config_offline": "true", "NPM_CONFIG_OFFLINE": "true",
+              "npm_config_cache": "inherited-cache", "NPM_CONFIG_REGISTRY": "http://exact.invalid/"}
+RED_UNTIL_1257 = unittest.skipUnless(
+    os.environ.get("GRUND_1257_RUN_RED_TESTS") == "1",
+    "red until #1257 has fresh_env drop every spelling of an npm setting, in any case; implement "
+    "removes this")
 # Asks in a process of its own, whose exit removes what `keep` made, from a cwd of its choosing.
 CHILD = """
 import json, shutil, subprocess, sys
@@ -252,3 +266,45 @@ class FreshPathTests(unittest.TestCase):
                                         capture_output=True, text=True)
                 self.assertEqual(0, result.returncode, result.stderr)
                 self.assertIn("ran", result.stdout.splitlines())
+
+
+def npm_settings(env):
+    """Every variable npm reads a setting from: its match ignores case."""
+    return {key: value for key, value in env.items() if key.lower().startswith("npm_config_")}
+
+
+class InheritedNpmSettingTests(unittest.TestCase):
+    """§FS-distribution-candidate.5.2.2, with npm settings exported in the spellings npm reads."""
+
+    def setUp(self):
+        temp = scratch("grund-fresh-env-npm-")
+        self.addCleanup(temp.cleanup)
+        self.home = Path(temp.name) / "home"
+
+    def fresh(self, exported):
+        """`fresh_env`'s npm settings when `exported` are the only ones the shell holds."""
+        unset = {k: v for k, v in os.environ.items() if not k.lower().startswith("npm_config_")}
+        with mock.patch.dict(os.environ, {**unset, **exported}, clear=True):
+            return npm_settings(rehearsal_support.fresh_env(
+                self.home, npm_config_registry=NAMED_REGISTRY))
+
+    def own(self):
+        """What `fresh_env` sets itself, each once, when the shell exports no npm setting."""
+        own = self.fresh({})
+        self.assertEqual(len(own), len({key.lower() for key in own}), own)
+        self.assertEqual(NAMED_REGISTRY, own.get("npm_config_registry"), own)
+        self.assertEqual(str(self.home / "npm-cache"), own.get("npm_config_cache"), own)
+        return own
+
+    @RED_UNTIL_1257
+    def test_no_mixed_case_spelling_the_contributor_exported_survives(self):
+        """The ticket's case: today the exact prefixes let every one of `MIXED_CASE` through."""
+        own, settings = self.own(), self.fresh(MIXED_CASE)
+        self.assertEqual([], sorted(set(settings) - set(own)),
+                         "npm settings the contributor exported survived fresh_env")
+        self.assertEqual(own, settings)
+
+    def test_the_two_usual_spellings_are_dropped(self):
+        """A guard: today's exact prefixes drop these, and a fix must not bring them back."""
+        own = self.own()
+        self.assertEqual(own, self.fresh(EXACT_CASE))
