@@ -293,7 +293,7 @@ success and failure. Preserve POSIX acceptance coverage; a Linux-only validation
 instrument or a blanket skip cannot replace it. These are private test mechanics,
 not a public testing API or a change to the Rust return boundary.
 
-#### 6.2.2 Every step fails with its output, and the one fetch is retried
+#### 6.2.2 Every step fails with its output, and the harness's one fetch is retried
 
 "With its output" holds for every command the Python acceptance runs, not only the
 install of [§AR-bindings.6.2](AR-bindings.md#62-the-python-acceptance-runs-in-the-gate). `tests/bindings/support.py` has one helper, `checked`, that
@@ -304,14 +304,21 @@ it, the oracle call of `rust_call` included; none passes `check=True`, whose
 `CalledProcessError` prints the exit status and drops what the command said. A failed
 step on a CI runner is then diagnosable from the job log alone.
 
-The acceptance has one registry fetch: `test_build`'s `pip install build`, the build
-frontend its sdist check needs. `test_build.install_build` makes it, and retries it
+The acceptance makes one registry fetch of its own: `test_build`'s `pip install build`, the
+build frontend its sdist check needs. `test_build.install_build` makes it, and retries it
 only for what a retry can cure, as [§AR-ci.3.4.1.3](AR-ci.md#3413-the-typescript-compiler-a-prepared-input) does for npm. An install whose pip
 output names a broken or refused connection, a timeout or a failed name resolution is
 tried again after a short pause, up to three attempts in all. Any other failure, and a
 third network failure, fails the test at once with pip's own output and never turns into
 a skip ([§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs)). pip's own `--retries` does not replace this: it had already run on
 the CI attempt that failed.
+
+The isolated builds reach the registry too, and those requests are pip's rather than the
+harness's. `crates/grund-py/pyproject.toml` requires maturin of its build system, so the
+module's install, the clean checkout's, the sdist's build and the sdist's install each ask
+the index for it, from inside the one command the harness runs. None of them is retried:
+pip's own `--retries` is all they have, and a failure there fails the test with pip's output
+as any other step does.
 
 `tests/integration/test_python_acceptance_steps.py` holds the harness to this without
 the network: each helper's failure carries a failing command's stdout and stderr, no

@@ -763,7 +763,7 @@ so what [§AR-bindings.6.2](AR-bindings.md#62-the-python-acceptance-runs-in-the-
 holds as written; a warm target no longer repeats the third-party dependency tree.
 Because those paths are fresh on every run, each would leave another copy of the
 workspace crates in a kept target, so the module removes them from its target when
-the run ends, for the size of the target and its cache alone.
+the run ends, for the size of the target and its cache alone; [§AR-ci-pip-cache](AR-ci-pip-cache.md#ar-ci-pip-cache-a-tests-pip-install-leaves-no-built-wheel-in-the-users-pip-cache) keeps their wheels out of pip's.
 `tests/integration/test_python_shared_target.py` holds this: with the variable set,
 the module's install and the clean checkout's name a `CARGO_TARGET_DIR` under it;
 unset, they name one under `~/ag/tmp/grund-python-target`; two checkouts get two

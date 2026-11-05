@@ -1,5 +1,5 @@
 """§AR-bindings.6.2.2 — every step of the Python acceptance fails with its output, and
-its one registry fetch is retried only for a network failure.
+the one registry fetch it makes itself is retried only for a network failure.
 
 The harness runs in a child, so no `support` leaks into this run. Its helpers are made to
 fail on a command that says something; the fetch runs a real pip against a local index
