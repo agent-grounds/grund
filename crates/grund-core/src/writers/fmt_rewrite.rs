@@ -56,7 +56,7 @@ pub(super) fn rewrite_file(
     opts: &FmtLineOpts<'_>,
     changes: &mut Vec<FmtRow>,
 ) -> RewrittenFile {
-    // §FS-config-v2.schema.sources: the file is rewritten as the scan reads it.
+    // §FS-config-v2.schema.sources, §FS-fmt.2.3.1: the file is rewritten as the scan reads it.
     let (is_md, is_py) = (reading.markdown, reading.python);
     // §FS-check.1.1.5.2: the whole file, so its front matter is known.
     let mut markdown_blocks = MarkdownBlocks::file(original);
@@ -380,8 +380,8 @@ fn replace_trigger(
 /// Prefix `§` onto bare ID-shaped tokens that lack it — the `--marker` upgrade
 /// (§FS-fmt.2.2) — skipping tokens already marked, Markdown inline-code examples,
 /// Markdown link destinations and the other never-rewrite zones, and source-code
-/// string literals (§FS-fmt.2.3). Returns the line and how many citations it
-/// marked (§FS-fmt.3.7).
+/// string literals (§FS-fmt.2.3, §FS-fmt.2.3.1). Returns the line and how many
+/// citations it marked (§FS-fmt.3.7).
 pub(super) fn add_markers(
     line: &str,
     docstring: DocstringContent<'_>,
