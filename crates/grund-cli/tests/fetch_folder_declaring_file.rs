@@ -11,8 +11,9 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use support::*;
 
-/// The reproducer's nine cases: each starts green, with one comment declaration in the home.
-const REFUSED: [(&str, &str); 9] = [
+/// The reproducer's nine cases, each with one comment declaration in the home, then the two trees
+/// that stayed green on the old success (§DF-fetch-folder-declaring-file.3). Each starts green.
+const REFUSED: [(&str, &str); 11] = [
     ("fetch-folder-source-v2-python-refused", "FS-a"),
     ("fetch-folder-source-v2-python-nested-refused", "FS-a"),
     ("fetch-folder-source-v2-python-function-refused", "FS-a"),
@@ -22,6 +23,11 @@ const REFUSED: [(&str, &str); 9] = [
     ("fetch-folder-source-v1-txt-refused", "FS-001-a"),
     ("fetch-folder-source-v1-python-refused", "FS-001-a"),
     ("fetch-folder-source-v1-rust-refused", "FS-001-a"),
+    ("fetch-folder-source-markdown-not-read-refused", "FS-a"),
+    (
+        "fetch-folder-source-stub-under-another-name-refused",
+        "FS-a",
+    ),
 ];
 
 /// The controls: nothing in these homes declares the ID, so `<ID>.md` is created and is green.
@@ -132,6 +138,43 @@ fn taking_the_declaration_out_of_the_file_is_the_way_through() {
     assert!(
         project.join("fs/FS-a.md").is_file(),
         "the snapshot is created"
+    );
+
+    // §DF-fetch-folder-declaring-file.3: no language reads the snapshot this creates, as on
+    // 0.21.0, and the ID is declared nowhere after it. #1206 owns that, and meets this test.
+    let project = copy_of(
+        "way-through",
+        "fetch-folder-source-markdown-not-read-refused",
+    );
+    write(&project, "fs/a.py", "x = 1\n");
+    assert_code(
+        &run(&project, &["fetch", "FS-a"]),
+        0,
+        "fetch where Markdown is not read",
+    );
+    assert_code(
+        &run(&project, &["check"]),
+        0,
+        "check where Markdown is not read",
+    );
+
+    // §FS-fetch.5.2: a stub holds nothing but the declaration, so it goes whole, and the fetch
+    // then replaces the target it pointed at.
+    let project = copy_of(
+        "way-through",
+        "fetch-folder-source-stub-under-another-name-refused",
+    );
+    fs::remove_file(project.join("fs/a.txt")).expect("take the stub out");
+    assert_code(
+        &run(&project, &["fetch", "FS-a"]),
+        0,
+        "fetch once the stub is out",
+    );
+    assert_code(&run(&project, &["check"]), 0, "check once the stub is out");
+    assert_eq!(
+        fs::read_to_string(project.join("fs/t.md")).expect("read the target"),
+        "# FS-a: Alpha\n\nFetched body.\n",
+        "the fetch replaces the target"
     );
 }
 
