@@ -224,9 +224,17 @@ The directory rules of [§FS-scan.scope](FS-scan.md#scope-which-files-a-run-read
 
 A link the scan cannot resolve is not a silent skip: a broken target, or a loop such as `docs/self -> .`, is the per-file scan failure of [§FS-check.2](FS-check.md#2-outputs) — reported at the link's own path, the scan continuing past it, the run exiting `2` ([§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips)). Past it, and never *into* it: a loop is pruned where it is met, including the kind whose target reaches back over the scan root itself (`docs/up -> ..`), so the run never reports findings out of a tree it has just called unreadable and `include` still bounds what was read.
 
+##### scope.links.unresolvable.unopenable: A directory link whose target cannot be opened fails at the link, once
+
+A directory link whose target exists but cannot be opened, because this user may not list it (a target at mode `000`), is a link the scan cannot resolve too. Its failure is located the way any other is: at the link's own path, where the same unreadable directory would be reported had it stood there in place of the link ([§FS-check.2.4](FS-check.md#24-an-incomplete-run)). It is never located at the scan root or the home the walk happened to start from, because neither of those is what failed. One link is one place, so the failure is reported once, however many walk roots reach it: the config root, and each home the link lies under. A target that the scan also reaches inside the project is a second unreadable directory, with a line of its own. With `docs/ext -> ../real` and `real` unreadable, the run reports `docs/ext` and `real`, and nothing else.
+
 #### scope.links.owed: Which unresolvable links are owed a report
 
 That report is owed only where the scan would otherwise have read through the link, judged by the same rules as any other entry: the ignore files for both kinds, and `extensions` as well for a broken link, which names a file where a loop names a directory. So a dangling `docs/logo.png -> nowhere`, and a link of either kind that `.gitignore` covers, stay silent — the scan was never going to read them.
+
+##### scope.links.owed.fence: The project-root fence is judged on the target, opened or not
+
+The rules a directory link answers to include the project-root fence of [§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed) and the ownership boundary of [§FS-workspace.6](FS-workspace.md#6-nested-project-boundary). Both are judged on the link's canonical target. That target is worked out from the directories on the way to it, never from the target's own contents, so it is known whether or not the target can be opened. So a directory link out of the project whose target cannot be opened is pruned in silence, as it would be if the target were readable: the scan was never going to read through it, and the failure to open it is not a hole in what was scanned. That holds whichever walk root meets the link. An inward link whose target cannot be opened is inside the fence and is owed its report ([§FS-scan.scope.links.unresolvable.unopenable](FS-scan.md#scopelinksunresolvableunopenable-a-directory-link-whose-target-cannot-be-opened-fails-at-the-link-once)). A link named as the scan root itself is the root's gate, as [§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed) says, not this one.
 
 #### scope.links.blind-spot: A broken link with no extension is a declared blind spot
 
