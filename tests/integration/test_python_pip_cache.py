@@ -194,9 +194,6 @@ class PipCacheTests(unittest.TestCase):
                                  "empty cache below says nothing about the installs")
         self.assertEqual([], list(elsewhere.iterdir()))
 
-    @unittest.skipUnless(os.environ.get("GRUND_1209_RUN_RED_TESTS") == "1",
-                         "red until #1209 turns pip's wheel cache off at each install that "
-                         "builds grund; implement removes this")
     def test_every_install_that_builds_grund_leaves_no_wheel_in_the_pip_cache(self):
         for site in SITES:
             for install in self.recorded(site):

@@ -73,7 +73,8 @@ class BuildTests(unittest.TestCase):
             # §AR-ci.3.4.5: both installs build into the shared target, from their own sources.
             env = dict(os.environ, CARGO_TARGET_DIR=str(python_target()),
                        GRUND_ACCEPTANCE_SOURCE=str(crate))
-            run([python, "-m", "pip", "install", str(crate)], source, env)
+            # §AR-ci-pip-cache.1: this install leaves no wheel in the user's pip cache.
+            run([python, "-m", "pip", "install", "--no-cache-dir", str(crate)], source, env)
             smoke = ('import grund; r=grund.check("tests/e2e/cases/json-report/repo"); '
                      'assert [(f.code,f.line) for f in r.report.errors]==[("dangling",3)]; '
                      'assert "FS-999-missing" in grund.show("FS-001-alpha", '
@@ -107,7 +108,8 @@ class BuildTests(unittest.TestCase):
             # Install while clean checkout is absent: no accidental workspace reach-through.
             shutil.rmtree(source)
             other_env = dict(env, GRUND_ACCEPTANCE_SOURCE=str(sdist))
-            run([other, "-m", "pip", "install", str(sdist)], separate, other_env)
+            # §AR-ci-pip-cache.1: this install leaves no wheel in the user's pip cache either.
+            run([other, "-m", "pip", "install", "--no-cache-dir", str(sdist)], separate, other_env)
             run([other, "-c", 'import grund, grund._native; assert grund.agent_setup_instructions()'],
                 separate, other_env)
 

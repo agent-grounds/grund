@@ -53,8 +53,9 @@ class PythonAcceptanceWorkflowTests(unittest.TestCase):
                          GRUND_PYTHON_TARGET=str(support.python_root()),
                          CARGO_TARGET_DIR=str(target))
             try:
+                # §AR-ci-pip-cache.1: this install leaves no wheel in the user's pip cache.
                 install = subprocess.run([str(python), "-m", "pip", "install", "--quiet",
-                                          str(SOURCE)], cwd=REPO, env=build,
+                                          "--no-cache-dir", str(SOURCE)], cwd=REPO, env=build,
                                          capture_output=True, text=True)
                 self.assertEqual(0, install.returncode, install.stdout + install.stderr)
                 # §FS-distribution.3.0.3: the corpus writes and pipes UTF-8, on Windows too.

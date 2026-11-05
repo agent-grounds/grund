@@ -88,8 +88,10 @@ class PythonSourceTests(unittest.TestCase):
     def install(self, dist):
         root = keep(f"grund-sdist-{dist}-")
         run_checked([pythons()[0], "-m", "venv", root / "venv"])
-        run_checked([interpreter(root / "venv"), "-m", "pip", "install", "--no-binary=:all:",
-                     "--only-binary=maturin", artifact(dist, "sdist", for_row=False)],
+        # §AR-ci-pip-cache.1: `build_env` is this host's, so its pip cache is the contributor's.
+        run_checked([interpreter(root / "venv"), "-m", "pip", "install", "--no-cache-dir",
+                     "--no-binary=:all:", "--only-binary=maturin",
+                     artifact(dist, "sdist", for_row=False)],
                     env=build_env(), timeout=7200)
         return root / "venv"
 
