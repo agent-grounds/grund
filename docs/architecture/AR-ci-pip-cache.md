@@ -43,6 +43,13 @@ Four `pip install` calls build grund, and each runs with pip's wheel cache off:
   lane ([§AR-ci.6](AR-ci.md#6-pgo-stays-out-of-development-ci)), never in the Python gate. The rule reaches it because its builds run in
   this host's own environment rather than `fresh_env`'s, so its cache is the contributor's.
 
+Each passes `--no-cache-dir` on its own command rather than `PIP_NO_CACHE_DIR` in its
+environment. pip's nested build-environment install inherits the environment and is not given
+the option, so the variable would also turn off the cache that the isolated builds' fetches of
+maturin read: measured from cold on a tiny source, on pip 23.2.1 and 26.3, four downloads of its
+wheel across the acceptance where the option leaves one, each outside the harness's one retried
+fetch ([§AR-bindings.6.2.2](AR-bindings.md#622-every-step-fails-with-its-output-and-the-harnesss-one-fetch-is-retried)).
+
 No other pip call a test makes builds a grund wheel. `rehearsal_support.venv` and the pipx
 install in `candidate_install.py` install a wheel file as it stands, under a `fresh_env`
 whose cache sits in a throwaway home. `test_build.install_build` fetches the build frontend,
@@ -75,8 +82,7 @@ settings, so neither a `PIP_NO_CACHE_DIR` exported as a workaround nor an export
 `PIP_CACHE_DIR` decides the verdict. A real pip with no index then runs with exactly those
 options and that environment on a tiny sdist, with `PIP_CACHE_DIR` naming an empty directory
 so that the test reads a cache of its own on every operating system, and must leave no wheel
-there. How a site turns the cache off is the site's: the verdict is what pip did with what
-the site gave it.
+there. The test names no option: the verdict is what pip did with what the site gave it.
 
 The source is an sdist for every call, the directories included, because on a directory a
 pip from 26.2 on would pass whatever the call said. The same sdist with the cache left on
