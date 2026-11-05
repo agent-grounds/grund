@@ -2,6 +2,7 @@
 //! reader of the catalog, whichever its format (§FS-values.2.2.4, §FS-values.5.3). Git carries no
 //! mode a fixture could keep unreadable, so this is the one row of that table's first line the
 //! e2e corpus cannot hold; its malformed UTF-8 and its parse failure are cases there.
+//! The contextual I/O reason is shared with ordinary reads (§FS-check.2.4.1).
 #![cfg(unix)]
 
 use std::fs;
@@ -60,6 +61,20 @@ impl Fixture {
         let code = output.status.code().expect("exited with a status");
         (code, String::from_utf8_lossy(&output.stderr).into_owned())
     }
+
+    /// The existing parity tests compare every reader with check; the new reason
+    /// regressions below pin its bytes independently, without preserving Rust's spelling.
+    fn read_failure(&self, format: &str) -> String {
+        let (code, stderr) = self.ask(&["check"]);
+        assert_eq!(code, 2, "{stderr}");
+        let line = stderr.trim().strip_prefix("error: ").unwrap();
+        let line = line
+            .strip_suffix("; make the path readable, or keep it out of the scan")
+            .unwrap();
+        let path = self.source.strip_prefix(&self.root).unwrap().display();
+        assert!(line.starts_with(&format!("{path}: could not read value {format} source: ")));
+        line.to_string()
+    }
 }
 
 impl Drop for Fixture {
@@ -102,10 +117,7 @@ fn an_unreadable_json_source_is_an_incomplete_scan_for_every_reader() {
         eprintln!("skipped: the mode does not bar this user, so nothing here can be unreadable");
         return;
     }
-    assert_incomplete_for_every_reader(
-        &fixture,
-        "values/limits.json: could not read value JSON source: Permission denied (os error 13)",
-    );
+    assert_incomplete_for_every_reader(&fixture, &fixture.read_failure("JSON"));
 }
 
 #[test]
@@ -115,8 +127,49 @@ fn an_unreadable_yaml_source_is_an_incomplete_scan_for_every_reader() {
         eprintln!("skipped: the mode does not bar this user, so nothing here can be unreadable");
         return;
     }
+    assert_incomplete_for_every_reader(&fixture, &fixture.read_failure("YAML"));
+}
+
+#[test]
+#[ignore = "red until #1223 normalizes JSON value-source I/O reasons; implement removes this"]
+fn json_value_source_uses_the_shared_permission_reason() {
+    let fixture = Fixture::new("json-reason.json", "{\"CONST-room-limit\": [40]}\n");
+    assert!(fixture.is_unreadable(), "run as an unprivileged user");
     assert_incomplete_for_every_reader(
         &fixture,
-        "values/limits.yaml: could not read value YAML source: Permission denied (os error 13)",
+        "values/limits.json-reason.json: could not read value JSON source: permission denied",
+    );
+    assert_json_reason(&fixture, "values/limits.json-reason.json", "JSON");
+}
+
+#[test]
+#[ignore = "red until #1223 normalizes YAML value-source I/O reasons; implement removes this"]
+fn yaml_value_source_uses_the_shared_permission_reason() {
+    let fixture = Fixture::new("yaml-reason.yaml", "CONST-room-limit: [40]\n");
+    assert!(fixture.is_unreadable(), "run as an unprivileged user");
+    assert_incomplete_for_every_reader(
+        &fixture,
+        "values/limits.yaml-reason.yaml: could not read value YAML source: permission denied",
+    );
+    assert_json_reason(&fixture, "values/limits.yaml-reason.yaml", "YAML");
+}
+
+fn assert_json_reason(fixture: &Fixture, path: &str, format: &str) {
+    let (code, stderr) = fixture.ask(&["check", "--format", "json"]);
+    assert_eq!(code, 2, "{stderr}");
+    let records: Vec<serde_json::Value> = stderr
+        .lines()
+        .map(|line| serde_json::from_str(line).expect("NDJSON record"))
+        .collect();
+    let record = records
+        .iter()
+        .find(|record| record["path"] == path && record["code"] == "io")
+        .unwrap_or_else(|| panic!("missing value-source I/O failure:\n{stderr}"));
+    assert_eq!(
+        record["message"],
+        format!(
+            "could not read value {format} source: permission denied; make the path readable, or keep it out of the scan"
+        ),
+        "{stderr}"
     );
 }

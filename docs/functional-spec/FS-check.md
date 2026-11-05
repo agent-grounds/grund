@@ -488,15 +488,15 @@ An escape of a section that does not exist — `<§>FS-orders.9.9` where `FS-ord
 
 `grund gap` ([§RM-gap-report](../roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports)) is the standing home for these records once it ships — a should-level miss is precisely "the graph is thinner than recommended," and gap is exit-code-neutral by design.
 
-Chapter-rule `should` and `should not` results use this same opt-in channel
-([§FS-rules.7](FS-rules.md#7-findings-and-channels)). They are withheld without
-`--suggestions`, carry the suggestion channel in text and JSON, and never affect
-the exit code. This adds no suppression mechanism and does not change why the
-channel is opt-in.
+Chapter-rule `should` and `should not` results use this same opt-in channel ([§FS-rules.7](FS-rules.md#7-findings-and-channels)). They are withheld without `--suggestions`, carry the suggestion channel in text and JSON, and never affect the exit code. This adds no suppression mechanism and does not change why the channel is opt-in.
 
 ### 2.4 An incomplete run
 
 An invalid `grund.toml` aborts before any file is read ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)): exit `2`, a single `error:` line on stderr, nothing on stdout. A per-file failure *during* the scan — a file that cannot be read or decoded, an unreadable directory, or a link the scan cannot resolve ([§FS-config.3.5.5](FS-config.md#355-a-link-the-scan-cannot-resolve-is-reported-and-not-scanned-into)) — does not abort: the offending path is reported as `error: <path>: <reason>` on stderr, the reason followed by `; ` and `io`'s *Fix* ([§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read)) wherever the line is printed, in the CLI-level shape of [§FS-errors.2.2](FS-errors.md#22-cli-level-message) because the path has no line to point at and "I could not read this" is about the run, not a finding about the graph; the scan continues over the remaining files; every finding collected from the readable files is still printed to stdout in the normal located `check` form; and the run exits `2` because the view of the tree was incomplete. A `2` therefore always means "do not trust this report as complete"; the printed findings are still real. Malformed input is answered with a finding naming the path and a truthful code, never an abort ([§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)).
+
+#### 2.4.1 One reason for one scan I/O failure
+
+The reason for a scan I/O failure is derived from its I/O error kind, without an OS error number. The same kind has the same reason for a file read, a directory walk, a value-source read and a value-home read: `PermissionDenied` is `permission denied`. Value reads retain their context around that reason: `could not read value JSON source: permission denied`, `could not read value YAML source: permission denied`, or `read value home: permission denied`. Every consumer of the scan failure publishes that reason, including the embedding API, every CLI command that reports it, and the `message` in JSON. The derivation is shared at the typed I/O error, before diagnostic text is assembled; it is not a rewrite of completed messages. The path, remedy, fields, error classification and exit status keep their existing contracts. Useful non-I/O reasons, including parse/decode failures and symlink loops, keep their descriptions. The original error and its raw I/O cause remain available to callers that expose causes, including their OS error number. Config-load CLI messages ([§FS-errors.2.2.1](FS-errors.md#221-a-location-inside-the-message-text)) are outside this scan reason rule.
 
 ## 3. Errors detected
 

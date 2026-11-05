@@ -285,6 +285,9 @@ Either way the finding carries exactly one declaration site, so the structured `
 
 ### 5.3 Incomplete input and deterministic output
 
+I/O failures reading a value source or listing its home use the shared scan
+reason of [§FS-check.2.4.1](FS-check.md#241-one-reason-for-one-scan-io-failure), retaining the JSON/YAML source or value-home context.
+
 Invalid config stops before scanning. A missing, unreadable, malformed-UTF-8, or syntactically incomplete JSON value source preserves the existing incomplete-scan exit `2`; readable semantic JSON errors use exit `1`. A YAML value source is reported by the same classes ([§FS-values.2.2.4](FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings)):
 
 | A YAML value source's failure | Exit |
