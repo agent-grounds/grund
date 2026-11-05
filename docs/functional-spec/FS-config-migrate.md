@@ -130,7 +130,9 @@ refused: grund.toml:16: [scan] exclude entry `docs/data.txt` contains `/`, so ve
   repair: remove `docs/data.txt` from exclude under version 1, which keeps what is scanned exactly as it is
 ```
 
-Where the version 1 scan cannot walk this tree at all, nothing can say what it reads. A `[workspace]` member glob that names no directory is one such tree, where `grund list` fails too. Migration then fails with the same error and exit `2`, as it does for a config that does not load ([§FS-config-migrate.7](FS-config-migrate.md#7-outcomes)), and prints no count it could not take. The same holds for the detail of [§FS-config-migrate.3.1.5.1](FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads). A path the scan cannot read inside a tree it walks is not read, so it is not named, and its error is not printed with the refusal.
+On a block with `include_root = false`, nobody reads the block's own files, and the scan meant here and in [§FS-config-migrate.3.1.5.1](FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads) is the one [§FS-config-migrate.8.1](FS-config-migrate.md#81-a-block-with-include_root--false) names: the block's settings read as a project's, which is the probe's reading.
+
+A path that is not on disk is read by nobody ([§FS-check.4.10.2](FS-check.md#4102-what-counts)), so an entry naming one names nothing and counts `0 files` without the scan being asked. Where the entry's path is on disk and the version 1 scan cannot walk this tree at all, nothing can say what it reads there. A `[workspace]` member glob that names no directory is one such tree, and `grund list` fails on it with that glob's error and exit `2`. Migration then fails with the same error and exit `2` rather than print a count it could not take ([§FS-config-migrate.7](FS-config-migrate.md#7-outcomes)). The config itself loads, and only a refusal that needs what the scan reads asks for the walk, so on that tree a run with no such refusal goes on as on any other. The same holds for the detail of [§FS-config-migrate.3.1.5.1](FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads): an inner home that is not on disk names nothing, and one that is fails the run where the scan cannot walk the tree. A path the scan cannot read inside a tree it walks is not read, so it is not named, and its error is not printed with the refusal.
 
 #### 3.1.5 Nested homes
 
@@ -414,7 +416,7 @@ A config that is already version 2 is reported as `` <config> is already version
 |---|---|
 | No config found | Exit `2`: `` error: no grund.toml at <path> or above it; grund init writes one ``. Creating a config is not migrating one. |
 | Unreadable, malformed, or failing v1 validation | Exit `2`, with the error `config validate` gives ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). |
-| A path-shaped `[scan] exclude` | Read tolerantly for diagnosis only; exit `1` with each entry's reach ([§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry)). |
+| A path-shaped `[scan] exclude` | Read tolerantly for diagnosis only; exit `1` with each entry's reach ([§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry)). Where an entry's path is on disk and the version 1 scan cannot walk the tree, exit `2` with the scan's error instead ([§FS-config-migrate.3.1.4.1](FS-config-migrate.md#3141-the-files-named-are-the-ones-version-1-reads)). |
 | `grund_config_version` above 2 | Exit `2`, with today's unsupported-version error ([§FS-config.5](FS-config.md#5-schema-versioning)). |
 | Already version 2 | Exit `0`, nothing to migrate ([§FS-config-migrate.6.6](FS-config-migrate.md#66-a-second-run-is-a-no-op)). |
 | A symbolic link | Exit `1` ([§FS-config-migrate.6.4](FS-config-migrate.md#64-a-symbolic-link-and-nothing-else-written)). |
