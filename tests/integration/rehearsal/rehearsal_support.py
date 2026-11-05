@@ -118,13 +118,67 @@ def artifact(package, kind, for_row=True):
     return acquire() / found[0]["path"]
 
 
+def _hidden(entry):
+    """Whether a directory holding Rust keeps `entry` off the fresh `PATH`: the toolchain and the
+    candidate's own commands (§FS-distribution-candidate.5.2.1), by the name `PATH` finds them
+    under. On Windows that has no case and no `PATHEXT` suffix, and `Path.stem` will not do: it
+    reads `cargo-1.75` as `cargo-1`."""
+    name = entry
+    if os.name == "nt":
+        name = entry.lower()
+        for suffix in os.environ.get("PATHEXT", "").lower().split(os.pathsep):
+            if suffix and name.endswith(suffix):
+                name = name[:-len(suffix)]
+                break
+    return (name in ("cargo", "clippy-driver", "rls", "grund", "grund-lsp")
+            or name.startswith(("cargo-", "rust")))
+
+
+@functools.lru_cache(maxsize=None)
+def _shadow(directory):
+    """A directory of links to all that the absolute `directory` holds but what `_hidden` names, or
+    `None` with nothing left, so that case makes no scratch and no link
+    (§FS-distribution-candidate.5.2.1). Made once per directory, because `/usr/bin` holds thousands
+    of entries and every subtest asks. A link keeps the entry's name, for a multi-call binary that
+    reads its own, and targets the entry's absolute path, never what a link there says, whose
+    relative target would leave the shadow. Directories are linked too, because a Windows `.cmd`
+    shim looks beside itself."""
+    kept = [entry for entry in os.listdir(directory) if not _hidden(entry)]
+    if not kept:
+        return None
+    shadow = keep("grund-fresh-path-")
+    for entry in kept:
+        target = os.path.join(directory, entry)
+        try:
+            os.symlink(target, shadow / entry, target_is_directory=os.path.isdir(target))
+        except OSError as error:
+            raise OSError(f"{entry}: {error}") from error
+    return str(shadow)
+
+
+def _without_rust(directory):
+    """What stands on the fresh `PATH` for a directory holding Rust, or `None`. A command it cannot
+    keep fails the rehearsal, naming the directory as `PATH` gave it, because running on without
+    the command reads as a broken candidate (§FS-distribution-candidate.5.2.1)."""
+    try:
+        return _shadow(os.path.abspath(directory))
+    except OSError as error:
+        raise AssertionError(
+            f"cannot keep {directory} on the fresh PATH without its Rust: {error}") from error
+
+
 def fresh_env(home, **extra):
-    """§FS-distribution-candidate.5.2: no Rust on `PATH`, no cache, no index, own home."""
+    """§FS-distribution-candidate.5.2: no Rust on `PATH`, and nothing else lost from it
+    (§FS-distribution-candidate.5.2.1), no cache, no index, own home."""
     home = Path(home)
     home.mkdir(parents=True, exist_ok=True)
     rust = ("cargo", "rustc", "rustup")
-    path = [d for d in os.environ.get("PATH", "").split(os.pathsep)
-            if d and not any(shutil.which(tool, path=d) for tool in rust)]
+    path = []
+    for d in os.environ.get("PATH", "").split(os.pathsep):
+        if d and any(shutil.which(tool, path=d) for tool in rust):
+            d = _without_rust(d)
+        if d:
+            path.append(d)
     env = {k: v for k, v in os.environ.items()
            if not k.startswith(("CARGO", "RUSTUP", "RUST", "PIP_", "PIPX_", "npm_config_",
                                 "NPM_CONFIG_", "VIRTUAL_ENV", "PYTHON", "NODE_"))}

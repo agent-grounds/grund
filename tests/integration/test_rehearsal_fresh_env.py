@@ -25,10 +25,6 @@ RUST = ("cargo", "rustc", "rustup")
 TOOLCHAIN = ("rustdoc", "rustfmt", "cargo-clippy", "clippy-driver", "rls", "rust-gdb",
              "cargo-1.75", "rustc-1.75", "rust-lld", "rust-analyzer", "cargo-nextest")
 OWN_COMMANDS = ("grund", "grund-lsp")
-RED_UNTIL_1234 = unittest.skipUnless(
-    os.environ.get("GRUND_1234_RUN_RED_TESTS") == "1",
-    "red until #1234 has fresh_env hide only Rust from a directory that holds it; implement "
-    "removes this")
 # Asks in a process of its own, whose exit removes what `keep` made, from a cwd of its choosing.
 CHILD = """
 import json, shutil, subprocess, sys
@@ -104,7 +100,6 @@ class FreshPathTests(unittest.TestCase):
             cwd=cwd, env={**os.environ, "PATH": path})
         return json.loads(result.stdout)
 
-    @RED_UNTIL_1234
     def test_rust_beside_a_tool_answers_as_rust_in_a_directory_of_its_own(self):
         """The ticket's example, for each of the three names that mark a toolchain."""
         wanted = {"sh": True, "cargo": False, "rustc": False, "rustup": False}
@@ -118,7 +113,6 @@ class FreshPathTests(unittest.TestCase):
             with self.subTest("beside sh", rust=rust):
                 self.assertEqual(wanted, answers(self.fresh(beside), *wanted))
 
-    @RED_UNTIL_1234
     def test_rust_beside_sh_and_node_leaves_every_one_of_them_found(self):
         """The ticket's host B, where today nothing at all is left on `PATH`."""
         installed(self.usr, "cargo", "sh", "node", "npx", "npm")
@@ -127,7 +121,6 @@ class FreshPathTests(unittest.TestCase):
         self.assertEqual({"sh": True, "node": True, "npx": True, "npm": True, "cargo": False},
                          answers(env, "sh", "node", "npx", "npm", "cargo"))
 
-    @RED_UNTIL_1234
     def test_the_command_found_first_stays_the_one_found_first(self):
         """A tool in two directories, the one holding Rust first and then last."""
         rust, plain = self.root / "rust", self.root / "plain"
@@ -153,7 +146,6 @@ class FreshPathTests(unittest.TestCase):
         self.assertEqual({name: False for name in OWN_COMMANDS},
                          answers(self.fresh(self.usr), *OWN_COMMANDS))
 
-    @RED_UNTIL_1234
     def test_an_unrelated_tool_beside_the_candidates_own_commands_is_found(self):
         """Hiding `grund` hides nothing else `cargo install` put in the same directory."""
         installed(self.usr, "cargo", "just", *OWN_COMMANDS)
@@ -172,14 +164,12 @@ class FreshPathTests(unittest.TestCase):
         symlink.assert_not_called()
         link.assert_not_called()
 
-    @RED_UNTIL_1234
     def test_a_tool_beside_cargo_runs_through_the_fresh_path(self):
         """Being found is not enough: it has to start and print what it prints."""
         installed(self.usr, "cargo")
         saying(self.usr, "tool", "ran")
         self.assertEqual("ran", self.answer(self.fresh(self.usr), "tool"))
 
-    @RED_UNTIL_1234
     def test_a_shim_beside_cargo_reaches_what_sits_beside_it(self):
         """A Windows npm shim finds its `node_modules` beside itself, so directories stay too."""
         installed(self.usr, "cargo")
@@ -190,7 +180,6 @@ class FreshPathTests(unittest.TestCase):
         self.assertEqual("reached", self.answer(self.fresh(self.usr), "tool"))
 
     @unittest.skipIf(WINDOWS, "the fixture's own symlink needs a privilege Windows may not grant")
-    @RED_UNTIL_1234
     def test_a_relative_link_beside_cargo_answers_by_its_own_name(self):
         """`npm -> ../lib/node_modules/npm/bin/npm-cli.js` leaves the directory; busybox reads `$0`."""
         installed(self.usr, "cargo")
@@ -198,7 +187,6 @@ class FreshPathTests(unittest.TestCase):
         (self.usr / "applet").symlink_to(Path("..") / "opt" / "multi")
         self.assertEqual("applet", self.answer(self.fresh(self.usr), "applet"))
 
-    @RED_UNTIL_1234
     def test_a_relative_path_entry_holding_cargo_still_runs_from_elsewhere(self):
         """The rehearsal starts its commands from a consumer, not from where `PATH` was read."""
         installed(self.usr, "cargo")
@@ -207,7 +195,6 @@ class FreshPathTests(unittest.TestCase):
         self.assertTrue(tool, "the tool is not on the fresh PATH")
         self.assertEqual("ran", heard)
 
-    @RED_UNTIL_1234
     def test_the_processs_scratch_goes_and_the_original_directory_stays(self):
         """Removing the scratch must not follow a link into `/usr/bin`, nor outlive the process."""
         installed(self.usr, "cargo")
@@ -221,7 +208,6 @@ class FreshPathTests(unittest.TestCase):
         self.assertEqual(before, tree(self.usr))
         self.assertFalse(os.path.lexists(tool), f"{tool} outlived the process that made it")
 
-    @RED_UNTIL_1234
     def test_a_command_that_cannot_be_kept_fails_the_run_and_never_vanishes(self):
         """A silent drop is the defect: with no link to be had, keep it some other way or refuse."""
         installed(self.usr, "cargo")
@@ -238,7 +224,6 @@ class FreshPathTests(unittest.TestCase):
         self.assertTrue(found(env, "tool"), "tool was dropped from the fresh PATH without a word")
 
     @unittest.skipIf(WINDOWS, "`sh` is the POSIX symptom: npm starts a script through it")
-    @RED_UNTIL_1234
     def test_npm_run_starts_its_script_under_the_fresh_env(self):
         """The shape of `test_a_missing_rust_toolchain_is_named`, with no candidate.
 
