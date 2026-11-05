@@ -116,11 +116,10 @@ fn without_the_entry_a_walked_file_whose_extension_is_not_utf8_is_not_read() {
     assert!(listed.contains("FS-002-b"), "{listed}");
 }
 
-/// Under the entry, a refusal's detail asks the scan's extension test of each file migration's own
-/// walk finds, so it names a name whose extension is not UTF-8 as it names `FACTS.`
-/// (§FS-config-migrate.3.1.9). The test has to see the path itself: the name a report prints has
-/// its bad byte replaced, and what follows the last dot of that spelling is a valid extension the
-/// list does not hold.
+/// Under the entry, a refusal's detail names the files the scan reads, so it names a name whose
+/// extension is not UTF-8 as it names `FACTS.` (§FS-config-migrate.3.1.9). The scan's extension
+/// test has to see the path itself: the name a report prints has its bad byte replaced, and what
+/// follows the last dot of that spelling is a valid extension the list does not hold.
 #[test]
 fn a_refusal_detail_asks_the_extension_test_under_the_entry() {
     let project = root("empty-extension-detail");

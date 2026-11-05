@@ -526,6 +526,17 @@ the notices, the refusals, the listed comments and both gates' results, and
   through `pending_config`, the path `init` uses for config text not yet on
   disk, so the records gate compares what the v2 reader really makes of it
   ([§FS-config-migrate.5.1](../functional-spec/FS-config-migrate.md#51-the-records-gate)).
+- **The tree, as the version 1 scan reads it.** A refusal's detail names the
+  files the version 1 scan reads ([§FS-config-migrate.3.1.4.1](../functional-spec/FS-config-migrate.md#3141-the-files-named-are-the-ones-version-1-reads),
+  [§FS-config-migrate.3.1.5.1](../functional-spec/FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads)), and config may not read the scanner
+  ([§AR-system.4](README.md#4-dependency-direction)). So the surface above config hands `translate` the scan's own
+  walk, as it hands it the answer of section 8.4's first item, and the `migrate`
+  module builds that walk its façade from the file it read tolerantly. The
+  path-shaped `[scan] exclude` entries stay in it, because the scan compares an
+  entry with one directory's name and they match nothing, which is what removing
+  them keeps. One walk serves every detail of a run, the member roots kept out as
+  `grund list` keeps them, and a run that has no such refusal walks nothing. A
+  walk that cannot run at all fails the run, since `grund list` fails there too.
 
 ### 8.2 The lowering table is its checklist
 

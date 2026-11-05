@@ -343,6 +343,20 @@ pub(crate) fn pending_config(text: &str, root: &Path, invocation: &Invocation) -
     config_from_text(text, Path::new("grund.toml"), root, run, invocation)
 }
 
+/// The façade over `project`, a file already read and judged, as the config at
+/// `root`: how migration hands the scan the version 1 file it read tolerantly,
+/// which `pending_config` would refuse to read again, to learn what that file
+/// reads (§AR-config.8.1, §FS-config-migrate.3.1.4.1).
+pub(super) fn project_config(
+    project: &Project,
+    root: &Path,
+    invocation: &Invocation,
+) -> Result<Config> {
+    let run = Run::of(root.to_path_buf(), root.to_path_buf(), invocation);
+    let compiled = compile(project).context("invalid [id] grammar")?;
+    Ok(settled(project, &compiled, run, invocation))
+}
+
 /// The façade `text` loads to as the config at `root`, judged and compiled as
 /// a file read from disk is (§AR-config.2).
 fn config_from_text(

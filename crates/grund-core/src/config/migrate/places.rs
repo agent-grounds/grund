@@ -5,11 +5,12 @@
 //! a missing entry (§FS-config-migrate.3.1.3) and nested homes
 //! (§FS-config-migrate.3.1.5).
 
-use std::fs;
+use anyhow::Result;
 use std::path::Path;
 
 use super::keymap::joined;
 use super::keys::Keys;
+use super::reads::Reads;
 use super::record::{MigrateRefusal, RefusalAnchor};
 use crate::config::project::Project;
 use crate::config::rows::{Extent, Place};
@@ -170,8 +171,13 @@ fn missing_defaults(entries: &[String], missing: &[String]) -> MigrateRefusal {
 }
 
 /// §FS-config-migrate.3.1.5: a home inside another row's folder home, with
-/// every file whose owner would change.
-pub(super) fn nested_homes(v1: &Project, keys: &Keys, root: &Path) -> Vec<MigrateRefusal> {
+/// every file whose owner would change: the ones version 1 reads in the inner
+/// home (§FS-config-migrate.3.1.5.1). The refusal stands when it names none.
+pub(super) fn nested_homes(
+    v1: &Project,
+    keys: &Keys,
+    reads: &Reads<'_>,
+) -> Result<Vec<MigrateRefusal>> {
     let homes = homes(v1);
     let mut out = Vec::new();
     for (inner_row, inner, _) in &homes {
@@ -186,7 +192,7 @@ pub(super) fn nested_homes(v1: &Project, keys: &Keys, root: &Path) -> Vec<Migrat
         let line = keys
             .row_line(inner_row, "folder")
             .or_else(|| keys.row_line(inner_row, "file"));
-        let files = scanned_files(v1, root, inner);
+        let files = reads.under(inner)?;
         let details = if files.is_empty() {
             Vec::new()
         } else {
@@ -201,43 +207,5 @@ pub(super) fn nested_homes(v1: &Project, keys: &Keys, root: &Path) -> Vec<Migrat
             repair: "un-nest the two homes under version 1".into(),
         });
     }
-    out
-}
-
-/// The files migration's own walk finds under `root/path`, skipping the excluded names, as sorted
-/// paths from the root. Of each file under a directory it asks the scan's extension test, and it
-/// applies neither the hidden rule nor the ignore files, so it can name a file the scan does not
-/// read (§FS-config-migrate.3.1.9). A `path` that is itself a file comes back without being asked.
-/// The test sees the path itself and not the name this prints, in which a byte that is not UTF-8
-/// is replaced by a character that would count as an extension.
-pub(super) fn scanned_files(v1: &Project, root: &Path, path: &str) -> Vec<String> {
-    let sources = &v1.schema.sources;
-    let mut out = Vec::new();
-    let start = root.join(path);
-    if start.is_file() {
-        return vec![path.to_string()];
-    }
-    let mut stack = vec![(start, path.to_string())];
-    while let Some((dir, rel)) = stack.pop() {
-        let Ok(entries) = fs::read_dir(&dir) else {
-            continue;
-        };
-        for entry in entries.flatten() {
-            let name = entry.file_name().to_string_lossy().into_owned();
-            if sources.exclude.contains(&name) {
-                continue;
-            }
-            let child = format!("{rel}/{name}");
-            let Ok(kind) = entry.file_type() else {
-                continue;
-            };
-            if kind.is_dir() {
-                stack.push((entry.path(), child));
-            } else if sources.lists_extension(&entry.path()) {
-                out.push(child);
-            }
-        }
-    }
-    out.sort();
-    out
+    Ok(out)
 }

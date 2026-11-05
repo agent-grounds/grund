@@ -15,10 +15,13 @@ use crate::config::migrate::{
     Gate, GateResult, Located, MigrateFailure, MigrateOutcome, MigrateReport, Prepared, locate,
     member_on_v1, translate,
 };
-use crate::config::{Invocation, PathBase, Project, Selection, config_at, with_report_path_base};
+use crate::config::{
+    Config, Invocation, PathBase, Project, Selection, config_at, with_report_path_base,
+};
 use crate::model::{
     Code, Finding, GENERATED_SECTIONS, base_reads_dot, format_path, relative_from_base,
 };
+use crate::scanner::walk_scannable_files;
 use crate::writers::{Install, InstallFailure, atomic_install};
 
 /// The options of one `grund config migrate --to 2` run (§FS-config-migrate.1).
@@ -38,8 +41,14 @@ pub fn config_migrate(opts: &MigrateOpts) -> Result<MigrateOutcome, MigrateFailu
         });
     };
     let scope_on_disk = || default_scope_on_disk(&located);
-    let prepared = translate(&located, opts.write, opts.drop_comments, &scope_on_disk)
-        .map_err(MigrateFailure::Load)?;
+    let prepared = translate(
+        &located,
+        opts.write,
+        opts.drop_comments,
+        &scope_on_disk,
+        &v1_reads,
+    )
+    .map_err(MigrateFailure::Load)?;
     let (mut report, v1_text, v1, line_map, value_lines) = match prepared {
         Prepared::AlreadyV2 => {
             return Ok(MigrateOutcome::AlreadyV2 {
@@ -121,6 +130,19 @@ fn default_scope_on_disk(located: &Located) -> bool {
     };
     config.set_workspace_boundary_roots(roots);
     !crate::workspace::uncovered_block_scope_roots(&config).is_empty()
+}
+
+/// §FS-config-migrate.3.1.4.1, §FS-config-migrate.3.1.5.1: the files the version 1
+/// scan of `v1` reads, by the scan's own walk (§AR-scanner.1), kept
+/// out of the member roots as `grund list` keeps the root's scan (§FS-workspace.6.2).
+/// A path the walk cannot read is not read, so it is not named, and raising its
+/// error is the report gate's `check`, not a detail's. A walk that cannot run at
+/// all, as where a member glob names no directory, is the run's error, since
+/// `grund list` would fail there too (§AR-config.8.1).
+fn v1_reads(mut v1: Config) -> anyhow::Result<Vec<PathBuf>> {
+    let members = crate::workspace::expand_workspace_members(&v1)?;
+    v1.set_workspace_boundary_roots(members);
+    walk_scannable_files(v1.schema(), v1.frame(), None, false)
 }
 
 /// §FS-config-migrate.8: each member of the root's `[workspace]` still on

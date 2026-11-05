@@ -133,8 +133,8 @@ fn translate_case(index: usize, case: &Case) -> Result<MigrateReport, String> {
         root: root.clone(),
         config: "grund.toml".into(),
     };
-    let prepared =
-        translate(&located, false, false, &|| true).map_err(|error| format!("{error:#}"));
+    let prepared = translate(&located, false, false, &|| true, &|_| Ok(Vec::new()))
+        .map_err(|error| format!("{error:#}"));
     let _ = std::fs::remove_dir_all(&root);
     match prepared? {
         Prepared::Translated { report, .. } => Ok(*report),

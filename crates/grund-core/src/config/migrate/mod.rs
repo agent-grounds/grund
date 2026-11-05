@@ -17,6 +17,7 @@ mod keys;
 mod languages;
 mod opted_out;
 mod places;
+mod reads;
 mod record;
 mod records_gate;
 mod refusals;
@@ -40,6 +41,7 @@ use super::v1::{LinePass, LineRecord};
 use super::v2::Emission;
 use super::{v1, v2, validate};
 use crate::model::{format_path, relative_from_base};
+use reads::V1Walk;
 pub use record::{
     Gate, GateResult, ListedComment, MappedKey, MigrateFailure, MigrateNotice, MigrateOutcome,
     MigrateRefusal, MigrateReport, RefusalAnchor,
@@ -122,11 +124,15 @@ fn read_v1(text: &str, report: &Path, root: &Path) -> Result<(Project, Vec<LineR
 /// report gate, the members and the write. `scope_on_disk` says whether a root
 /// of the file's version-1 default scope exists outside its member roots, which
 /// only the surface above config can answer (§FS-config-migrate.8.1.2 item 1).
+/// `v1_walk` is the scan's walk of the version 1 façade, which only that surface
+/// can run, for the files a refusal's detail names (§FS-config-migrate.3.1.4.1,
+/// §FS-config-migrate.3.1.5.1).
 pub(crate) fn translate(
     located: &Located,
     write: bool,
     drop_comments: bool,
     scope_on_disk: &dyn Fn() -> bool,
+    v1_walk: &V1Walk<'_>,
 ) -> Result<Prepared> {
     let mut report = MigrateReport {
         config: located.config.clone(),
@@ -175,8 +181,10 @@ pub(crate) fn translate(
         keys.line("scan", "comment_prefixes"),
         values_home,
     );
-    let mut refusals = refusals::settings(&project, &keys, root, block);
-    refusals.extend(places::nested_homes(&project, &keys, root));
+    // §AR-config.8.1: one read set for both details, walked only if one asks.
+    let reads = reads::Reads::new(&project, root, v1_walk);
+    let mut refusals = refusals::settings(&project, &keys, &reads, block)?;
+    refusals.extend(places::nested_homes(&project, &keys, &reads)?);
     refusals.extend(include.refusals.iter().cloned());
     refusals.extend(languages.refusals.iter().cloned());
     refusals.extend(refusals::strings_closing_early(&keys, shown));
