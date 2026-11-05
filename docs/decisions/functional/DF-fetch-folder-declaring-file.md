@@ -42,8 +42,9 @@ Markdown declaration of the same ID cannot hide it. Replacing that Markdown file
 would leave the duplicate standing and exit 0. A stub in the home whose target is
 the declaring file is the same case: replacing it would turn a green tree red.
 
-A declaration outside the home is a separate question. Discovery still asks only
-the home's own files, and this record does not move that.
+A declaration outside the home is a separate question. This refusal still asks only
+the home's own files, and this record does not move that;
+[§DF-fetch-declaration-outside-home](DF-fetch-declaration-outside-home.md#df-fetch-declaration-outside-home-a-folder-home-fetch-refuses-an-id-declared-outside-the-home) answers it.
 
 ## 3. Compatibility
 

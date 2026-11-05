@@ -1,0 +1,13 @@
+grund_config_version = 2
+project_name = "root"
+
+[schema.sources]
+languages = ["markdown", "python"]
+
+[schema.kinds.FS]
+folders = ["fs"]
+index = false
+fetch = "scripts/fetch"
+
+[workspace]
+members = ["packages/alpha"]
