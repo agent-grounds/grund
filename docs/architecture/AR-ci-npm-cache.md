@@ -91,9 +91,10 @@ gives. One function does this for every site ([§AR-system.principle](README.md#
   exported, a `patch.dict` built like each of theirs left npm answering `registry`, `cache`,
   `offline` and `update-notifier` from the exported upper-case spelling.
 
-`fresh_env` reads no such function. It removes the two usual spellings, and what it names lands
-after whatever spelling slipped through: with `Npm_Config_Cache` exported as well, npm still used
-the cache it named.
+`fresh_env` reads no such function, because it drops more than a site does: every npm setting
+the contributor exported, in any case, whether it names the setting or not
+([§FS-distribution-candidate.5.2.2](../functional-spec/FS-distribution-candidate.md#522-no-npm-setting-the-contributor-exported-reaches-an-install-whatever-the-case-of-its-name)).
+Nothing slips through, so what it names is the only spelling npm sees.
 
 ## 2. The calls it leaves out
 
