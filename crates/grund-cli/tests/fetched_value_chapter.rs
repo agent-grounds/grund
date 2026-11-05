@@ -1,32 +1,13 @@
-//! Issue #1156's cases: a `value_chapter` on a row that also sets `fetch` is refused in words of
-//! its own, and the way through those words name is a real one (§FS-config-migrate.3.1.7.1).
+//! §FS-config-migrate.3.1.7.1: the way through a fetched `value_chapter`'s refusal is a real one.
 //!
-//! The refusal's case is held out of the full pass until the fix lands, and implement removes the
-//! hold. The repair's two cases stay in the full pass and are green before the fix on purpose: the
-//! fix changes no behaviour they read, and they are what makes the new words true.
-#![allow(dead_code)]
-#[path = "support/case_runner.rs"]
-mod case_runner;
-
+//! The refusal's case and the repair's two cases run in the full pass. What the pass cannot see is
+//! whether the tree the repair's check case reads is the one its write case leaves, so this ties
+//! the two together.
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use case_runner::CaseKind::E2e;
-use case_runner::{assert_every_case_passed, run_case};
-
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
-}
-
-#[test]
-#[ignore = "red until #1156 gives a fetched row's value_chapter refusal its own words; implement removes this"]
-fn fetched_value_chapter_refusal_contract() {
-    let root = repo_root();
-    let case = root.join("tests/e2e/cases/config-migrate-refuse-value-chapter-fetched");
-    assert_every_case_passed(
-        "fetched value_chapter refusal",
-        &[run_case(&root, &case, E2e)],
-    );
 }
 
 /// The check case proves a wrong literal still fails on the migrated tree only while its fixture

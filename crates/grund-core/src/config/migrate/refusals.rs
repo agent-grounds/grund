@@ -112,13 +112,22 @@ pub(super) fn settings(
             .as_ref()
             .is_some_and(|kind| kind.value_chapter().is_some())
         {
+            // §FS-config-migrate.3.1.7.1: a fetched kind takes no field, so neither line holds.
+            let (reason, repair) = if row.fetches() {
+                (
+                    "has no version 2 spelling on a fetched kind, because a fetched kind takes no fields",
+                    "none yet; keep version 1, or under version 1 rewrite its roots as marked sections, remove value_chapter and cite the new paths",
+                )
+            } else {
+                (
+                    "would become a field, which adds a \"Declaration shapes\" section grund check compares",
+                    "none keeps the generated guidance; remove value_chapter under version 1 only if that section may change",
+                )
+            };
             out.push(refusal(
                 at(keys.row_line(&row.name, "value_chapter")),
-                format!(
-                    "[[kinds]] `{}` value_chapter would become a field, which adds a \"Declaration shapes\" section grund check compares",
-                    row.name
-                ),
-                "none keeps the generated guidance; remove value_chapter under version 1 only if that section may change",
+                format!("[[kinds]] `{}` value_chapter {reason}", row.name),
+                repair,
             ));
         }
     }

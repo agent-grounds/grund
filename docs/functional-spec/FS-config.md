@@ -819,7 +819,9 @@ violation above is a located config error. Validation checks these structural
 relationships without parsing declaration content; a chapter that a declaration
 fills wrongly is scanned data and is reported later as a located finding ([§FS-check.3.20](FS-check.md#320-invalid-value-declaration)).
 Its version-2 spelling is a field with `content = "values"`, which means the
-same and lowers to the same record ([§FS-fields.content.values](FS-fields.md#contentvalues-a-values-field-is-the-value-chapter)).
+same and lowers to the same record ([§FS-fields.content.values](FS-fields.md#contentvalues-a-values-field-is-the-value-chapter)). A row that also
+sets `fetch` has no version-2 spelling, because a fetched kind takes no fields
+([§FS-config-migrate.3.1.7.1](FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)).
 
 ### 3.5 `[scan]` — what gets scanned
 

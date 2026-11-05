@@ -153,6 +153,11 @@ or `title` the field adds ([§FS-fields.content.values](../functional-spec/FS-fi
 content = "values"
 ```
 
+A kind that also sets `fetch` has no such field, because a fetched kind takes no
+fields. Its roots are marked sections instead, written under version 1 with
+citations to the new paths, and removing `value_chapter` alone stops comparing
+what bound to it ([§FS-config-migrate.3.1.7.1](../functional-spec/FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)).
+
 Four things decide what the key does and do not bend:
 
 - **`[id] named_sections = true` is a prerequisite**, not a consequence. Setting

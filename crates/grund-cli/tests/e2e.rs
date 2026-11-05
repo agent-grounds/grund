@@ -106,10 +106,9 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    let mut cases = discover_e2e_cases(&manifest_dir);
-    // Red until #1156: tests/fetched_value_chapter.rs runs it alone; implement removes this.
-    cases.retain(|case| !case.ends_with("config-migrate-refuse-value-chapter-fetched"));
-    let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
+    let outcomes = ordered_pool::in_order(&discover_e2e_cases(&manifest_dir), |case| {
+        run_case(&manifest_dir, case, E2e)
+    });
     let compared = outcomes
         .iter()
         .filter(|outcome| matches!(outcome, CaseOutcome::Ran | CaseOutcome::Failed { .. }))
