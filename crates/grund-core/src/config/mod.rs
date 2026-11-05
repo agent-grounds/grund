@@ -95,6 +95,7 @@ pub use citations::{
 };
 pub(crate) use citations::{parse_citation_target_entry, render_citation_target};
 pub use compiled::Compiled;
+pub(crate) use compiled::RefusedHome;
 pub use frame::{Display, Frame};
 pub(crate) use guidance::{format_guidance, kind_format_guidance, source_scope_name};
 pub(crate) use project_records::ProjectRecords;

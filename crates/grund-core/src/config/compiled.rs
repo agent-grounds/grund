@@ -50,6 +50,16 @@ impl ScanDemand {
     }
 }
 
+/// Why `fetch` refuses a `file` home, which picks the refusal's text and `check`'s tail
+/// (§FS-check.3.1.3.1).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum RefusedHome {
+    /// A whole-value kind's value source (§FS-fetch.4).
+    ValueSource,
+    /// A file the text scan reads as source, whatever the kind (§FS-fetch.4.2).
+    SourceFile,
+}
+
 impl Compiled {
     /// The lexical settings of `project` under this grammar — what a scan and a
     /// rendered note sentence read, without the façade (§AR-config.5).
@@ -73,20 +83,31 @@ impl Compiled {
         FileReading::of(self, schema, path)
     }
 
-    /// The `file` home of `kind` under `root` that `fetch` refuses, `None` where it
-    /// writes (§FS-fetch.4): a whole-value kind's first place, when a value home reads
-    /// that file as a value source (§FS-values.terms). What the refusal and the
-    /// remedy that must not name the refused command both ask (§FS-check.3.1.3.1).
+    /// The `file` home of `kind` under `root` that `fetch` refuses and why, `None` where
+    /// it writes: a whole-value kind's first place, when a value home reads that file as
+    /// a value source (§FS-fetch.4, §FS-values.terms), and any kind's, when the text scan
+    /// reads it as source (§FS-fetch.4.2). The path and the kind decide, and no file is
+    /// read. What the refusal and the remedy that must not name the refused command both
+    /// ask (§FS-check.3.1.3.1).
     pub(crate) fn fetch_refused_home(
         &self,
         schema: &Schema,
         root: &Path,
         kind: &str,
-    ) -> Option<PathBuf> {
-        let row = schema.value_rows().find(|row| row.name == kind)?;
+    ) -> Option<(PathBuf, RefusedHome)> {
+        let row = schema.rows.iter().find(|row| row.name == kind)?;
         let home = root.join(row.file()?);
-        self.reading(schema, &home).value_format()?;
-        Some(home)
+        let reading = self.reading(schema, &home);
+        let reason = if schema.value_rows().any(|row| row.name == kind)
+            && reading.value_format().is_some()
+        {
+            RefusedHome::ValueSource
+        } else if reading.read_as_source() {
+            RefusedHome::SourceFile
+        } else {
+            return None;
+        };
+        Some((home, reason))
     }
 
     /// The grammar a file of a language with these `comment_prefixes` reads with:

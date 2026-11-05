@@ -6,7 +6,7 @@
 use std::path::{Path, PathBuf};
 
 use super::fetch_write::{write_file_home, write_folder_home};
-use crate::config::{Config, KindConfig, run_warning_findings};
+use crate::config::{Config, KindConfig, RefusedHome, run_warning_findings};
 use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
 use crate::resolver::settled_run_warnings;
@@ -184,7 +184,7 @@ fn fetch_run(
     let fetch = kind.fetch.as_deref().ok_or_else(|| {
         fetch_operational(format!("kind `{}` has no fetch integration", kind.kind))
     })?;
-    refuse_value_source_home(&selected, kind, &report_base)?;
+    refuse_home_without_markdown(&selected, kind, &report_base)?;
     let integration = {
         let configured = Path::new(fetch);
         if configured.is_absolute() {
@@ -261,16 +261,18 @@ enum FetchHome {
     Folder(PathBuf),
 }
 
-/// §FS-fetch.4: a value source holds no Markdown declaration, and the answer is
-/// spelled from the run's report base (§FS-errors.4), as `imported_fetch` spells
-/// its target. The way out names a folder without the source, since one kept
-/// beside a fetched snapshot of its own ID is a duplicate (§FS-values.2.3).
-fn refuse_value_source_home(
+/// §FS-fetch.4, §FS-fetch.4.2: a value source and a file read as source hold no
+/// Markdown declaration, and the answer is spelled from the run's report base
+/// (§FS-errors.4), as `imported_fetch` spells its target. A value source's way out
+/// names a folder without it, since one kept beside a fetched snapshot of its own ID
+/// is a duplicate (§FS-values.2.3); a source file's moves its declarations too, since
+/// one left there is what the scan goes on reading.
+fn refuse_home_without_markdown(
     selected: &Config,
     kind: &KindConfig,
     report_base: &Path,
 ) -> std::result::Result<(), FetchFailure> {
-    let Some(home) =
+    let Some((home, reason)) =
         selected
             .compiled()
             .fetch_refused_home(selected.schema(), &selected.root, &kind.kind)
@@ -278,9 +280,19 @@ fn refuse_value_source_home(
         return Ok(());
     };
     let shown = format_path(&relative_from_base(report_base, &home));
+    let why = match reason {
+        RefusedHome::ValueSource => {
+            "a value source holds no Markdown; \
+             move the kind to a Markdown file or a folder without it, or remove its `fetch`"
+        }
+        RefusedHome::SourceFile => {
+            "a file read as source holds no Markdown; \
+             move the kind and its declarations to a Markdown file or a folder, \
+             or remove its `fetch`"
+        }
+    };
     Err(fetch_operational(format!(
-        "kind `{}` cannot fetch into {shown}: a value source holds no Markdown; \
-         move the kind to a Markdown file or a folder without it, or remove its `fetch`",
+        "kind `{}` cannot fetch into {shown}: {why}",
         kind.kind
     )))
 }

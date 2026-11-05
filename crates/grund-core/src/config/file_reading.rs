@@ -93,6 +93,21 @@ impl<'a> FileReading<'a> {
         }
     }
 
+    /// Whether the text scan reads this file as source (§FS-fetch.4.2), which asks the
+    /// name and not the walk: a v2 file by its language's class, whatever the name; a v1
+    /// file when it is not named `.md` and the effective `[scan] extensions` list its
+    /// extension. A v2 file no language claims has no suffix in that list, which is the
+    /// text scan's own, so it is not claimed here.
+    pub(crate) fn read_as_source(&self) -> bool {
+        match (self.language, self.extension) {
+            (Some(language), _) => language.class == LanguageClass::Source,
+            (None, Some(extension)) => {
+                !self.markdown && self.scanned_extensions.iter().any(|ext| ext == extension)
+            }
+            (None, None) => false,
+        }
+    }
+
     /// The recognizer the inline-style measurement asks
     /// (§FS-inline-citation-style.1.1.2): a v2 file's language's, a v1 file's
     /// extension's.
