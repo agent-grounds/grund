@@ -7,13 +7,31 @@ subprocess result is mocked, so a request count of zero means the wrapper made
 no network request at all.
 """
 
+import importlib.util
+import os
 import re
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from link_gate_fixture import LYCHEE, ROOT, LinkFixture  # noqa: E402
+from link_gate_fixture import LYCHEE, ROOT, LinkFixture, isolated_env  # noqa: E402
+
+SPEC = importlib.util.spec_from_file_location("link_scope", ROOT / "scripts" / "link_scope.py")
+link_scope = importlib.util.module_from_spec(SPEC)
+assert SPEC.loader is not None
+SPEC.loader.exec_module(link_scope)
+
+WINDOWS = os.name == "nt"
+POSIX_NAME = unittest.skipIf(WINDOWS, "Windows allows no such character in a file name")
+RED_UNTIL_1261 = unittest.skipUnless(
+    os.environ.get("GRUND_1261_RUN_RED_TESTS") == "1",
+    "red until #1261 has the link gate read each changed file by the name the file system "
+    "holds; implement removes this",
+)
+LINE = "See [a page](https://example.invalid/page)."
+KEPT = "one\ntwo\n"
 
 
 MAIN = {
@@ -128,6 +146,199 @@ class ChangedLineGateTests(unittest.TestCase):
         self.assertEqual({}, gate.requested(), output)
         self.assertEqual(0, code, output)
         self.assertEqual(1, len(re.findall(r"(?m)^no diff base:", output)), output)
+
+
+class ChangedLinesWhateverTheNameTests(unittest.TestCase):
+    """§AR-ci.3.1.4.1 — the scope returns a changed file with exactly its changed lines, and
+    every line of a new or untracked one, whatever its name holds. Each test makes one change,
+    so that one file is the whole scope."""
+
+    def scope(self, change, files=None):
+        gate = LinkFixture()
+        self.addCleanup(gate.close)
+        base = gate.commit_main(files or {"docs/kept.md": KEPT})
+        change(gate)
+        with mock.patch.dict(os.environ, isolated_env(), clear=True):
+            return link_scope.changed_lines(gate.root, base, ["docs"])
+
+    def assert_new(self, name, state="committed"):
+        """A new file of one line: committed since the base, staged, or untracked."""
+        def change(gate):
+            gate.write(name, LINE + "\n")
+            if state != "untracked":
+                gate.git("add", "-A")
+            if state == "committed":
+                gate.commit()
+        self.assertEqual({os.path.normpath(name): {1: LINE}}, self.scope(change))
+
+    def assert_edited(self, name, state):
+        """`one`, `two` in the base, the second line replaced: only line 2 changed."""
+        def change(gate):
+            gate.write(name, "one\n" + LINE + "\n")
+            if state != "unstaged":
+                gate.git("add", "-A")
+            if state == "committed":
+                gate.commit()
+        self.assertEqual({os.path.normpath(name): {2: LINE}}, self.scope(change, {name: KEPT}))
+
+    def assert_deleted(self, name):
+        def change(gate):
+            (gate.root / name).unlink()
+            gate.commit()
+        self.assertEqual({}, self.scope(change, {name: LINE + "\n", "docs/kept.md": KEPT}))
+
+    def test_a_plain_name_new_edited_and_untracked(self):
+        for state in ("committed", "staged", "untracked"):
+            with self.subTest(new=state):
+                self.assert_new("docs/plain.md", state)
+        for state in ("committed", "staged", "unstaged"):
+            with self.subTest(edited=state):
+                self.assert_edited("docs/plain.md", state)
+
+    @unittest.skipIf(WINDOWS, "on Windows the scope may decode git's UTF-8 by the code page")
+    def test_a_non_ascii_name(self):
+        self.assert_new("docs/été.md")
+
+    def test_a_deleted_file_yields_nothing(self):
+        self.assert_deleted("docs/gone.md")
+
+    @POSIX_NAME
+    def test_a_deleted_file_named_with_a_space_and_a_double_quote_yields_nothing(self):
+        self.assert_deleted('docs/gone "q.md')
+
+    def test_an_untracked_name_with_a_space(self):
+        self.assert_new("docs/u b.md", "untracked")
+
+    @RED_UNTIL_1261
+    def test_a_new_file_named_with_a_space(self):
+        for state in ("committed", "staged"):
+            with self.subTest(state=state):
+                self.assert_new("docs/a b.md", state)
+
+    @RED_UNTIL_1261
+    def test_an_edited_file_named_with_a_space_gives_only_its_changed_line(self):
+        for state in ("committed", "staged", "unstaged"):
+            with self.subTest(state=state):
+                self.assert_edited("docs/kept space.md", state)
+
+    @POSIX_NAME
+    @RED_UNTIL_1261
+    def test_a_name_ending_in_a_space(self):
+        self.assert_new("docs/trailing .md")
+
+    @POSIX_NAME
+    @RED_UNTIL_1261
+    def test_a_name_with_a_double_quote(self):
+        self.assert_new('docs/a"b.md')
+
+    @POSIX_NAME
+    @RED_UNTIL_1261
+    def test_a_name_with_a_space_and_a_double_quote(self):
+        self.assert_new('docs/a "b.md')
+
+    @POSIX_NAME
+    @RED_UNTIL_1261
+    def test_a_name_with_a_tab(self):
+        self.assert_new("docs/a\tb.md")
+
+    @POSIX_NAME
+    @RED_UNTIL_1261
+    def test_a_name_with_a_backslash(self):
+        self.assert_new("docs/a\\b.md")
+
+    @POSIX_NAME
+    @RED_UNTIL_1261
+    def test_a_name_with_a_newline(self):
+        self.assert_new("docs/a\nb.md")
+
+    @POSIX_NAME
+    @RED_UNTIL_1261
+    def test_a_name_with_a_carriage_return(self):
+        self.assert_new("docs/a\rb.md")
+
+    @POSIX_NAME
+    @RED_UNTIL_1261
+    def test_a_name_with_another_control_character(self):
+        self.assert_new("docs/a\x01b.md")
+
+    @unittest.skipIf(WINDOWS, "on Windows the scope may decode git's UTF-8 by the code page")
+    @RED_UNTIL_1261
+    def test_a_name_with_non_ascii_text_and_a_space(self):
+        self.assert_new("docs/été b.md")
+
+    @unittest.skipIf(WINDOWS, "on Windows the scope may decode git's UTF-8 by the code page")
+    @RED_UNTIL_1261
+    def test_a_name_with_a_line_separator(self):
+        self.assert_new("docs/a b.md")
+
+    @POSIX_NAME
+    @RED_UNTIL_1261
+    def test_an_untracked_name_with_a_double_quote(self):
+        self.assert_new('docs/u"b.md', "untracked")
+
+    @POSIX_NAME
+    @RED_UNTIL_1261
+    def test_an_untracked_name_with_a_newline(self):
+        self.assert_new("docs/u\nb.md", "untracked")
+
+    @POSIX_NAME
+    @RED_UNTIL_1261
+    def test_an_untracked_name_with_a_carriage_return(self):
+        self.assert_new("docs/u\rb.md", "untracked")
+
+    @unittest.skipIf(WINDOWS, "on Windows the scope may decode git's UTF-8 by the code page")
+    @RED_UNTIL_1261
+    def test_an_untracked_name_with_a_line_separator(self):
+        self.assert_new("docs/u b.md", "untracked")
+
+
+@unittest.skipUnless(LYCHEE, "Link gate fixture requires CI-pinned lychee 0.23.0 on PATH")
+@unittest.skipIf(WINDOWS, "Windows allows none of these names but the space, and has no lychee")
+class ChangedLineGateWhateverTheNameTests(unittest.TestCase):
+    """§AR-ci.3.1.4.1 — a dead URL added on a changed line fails the gate, and is the one URL
+    requested, whatever the name of the file that carries it, as it does in `docs/a.md`."""
+
+    def gate_on(self, name, path, *flags):
+        gate = LinkFixture()
+        self.addCleanup(gate.close)
+        gate.commit_main(MAIN)
+        gate.write(name, f"# Named\n\nSee [a dead page](<{{host}}{path}>).\n")
+        gate.commit()
+        code, output = gate.run(*flags, "docs")
+        return (sorted(gate.requested()), code), output
+
+    def assert_fails(self, name, path):
+        verdict, output = self.gate_on(name, path)
+        self.assertEqual(([path], 2), verdict, output)
+
+    def test_the_sweep_requests_a_dead_url_in_a_file_named_with_a_newline(self):
+        """The newline the gate cannot follow is left to the sweep, which does (§AR-ci.3.1.5)."""
+        (requested, code), output = self.gate_on("docs/a\nb.md", "/dead-newline", "--all")
+        self.assertEqual((True, 2), ("/dead-newline" in requested, code), output)
+
+    @RED_UNTIL_1261
+    def test_a_space(self):
+        self.assert_fails("docs/a b.md", "/dead-space")
+
+    @RED_UNTIL_1261
+    def test_a_double_quote(self):
+        self.assert_fails('docs/a"b.md', "/dead-quote")
+
+    @RED_UNTIL_1261
+    def test_a_tab(self):
+        self.assert_fails("docs/a\tb.md", "/dead-tab")
+
+    @RED_UNTIL_1261
+    def test_a_backslash(self):
+        self.assert_fails("docs/a\\b.md", "/dead-backslash")
+
+    @RED_UNTIL_1261
+    def test_a_carriage_return(self):
+        self.assert_fails("docs/a\rb.md", "/dead-return")
+
+    @RED_UNTIL_1261
+    def test_a_line_separator(self):
+        self.assert_fails("docs/a b.md", "/dead-separator")
 
 
 class CiGivesTheGateItsBaseTests(unittest.TestCase):

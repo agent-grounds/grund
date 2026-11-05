@@ -286,6 +286,33 @@ builds an upstream, a fork whose `main` is stale and a runner checked out from
 the fork, and holds a dispatch to the URL its change added, an unresolvable
 upstream to no request, and `ci.yml` to wiring the dispatch base.
 
+##### 3.1.4.1 A file's name does not decide whether its changed lines are checked
+
+The gate reads the changed lines of every file the change touches, and sends
+the external URLs on them to the network, whatever characters the file's name
+holds: a space anywhere in it, the last place included, a double quote, a
+backslash, a tab, a newline or another control character, a line or paragraph
+separator, non-ASCII text. A file yields the same changed lines and the same
+requests as it would under a plain name. The name is the one the file system
+holds, however a tool the gate reads it from writes it for display.
+
+One name stops short of the network: a name holding a newline. Its changed
+lines are read, but lychee's `--dump --verbose`, the gate's only report of
+which file carries which URL, writes that name across two lines, so none of
+its URLs is requested. The sweep of [§AR-ci.3.1.5](AR-ci.md#315-a-scheduled-sweep-checks-every-external-url) requests them.
+
+`tests/integration/test_check_links_scope.py` asks the changed-line scope
+directly for a file under each such name. A space is held in a new file,
+committed or staged, and in an edited one, committed, staged or not, which
+yields its changed line alone. A double quote, a newline, a carriage return
+and a line separator are held in an untracked file as well. A plain name, a
+non-ASCII name, a deleted file and an untracked name with a space are the
+controls. The module runs the wrapper with the real lychee on a dead URL on a
+changed line of a file named with a space, a double quote, a tab, a backslash,
+a carriage return or a line separator, and holds each to a failed gate that
+requested that URL alone. It holds the sweep to requesting one in a file named
+with a newline.
+
 #### 3.1.5 A scheduled sweep checks every external URL
 
 `.github/workflows/links-nightly.yml` runs on a `schedule:` once a day and on
