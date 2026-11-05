@@ -91,6 +91,12 @@ pub(crate) fn dangling_source_file() -> String {
     fill(Code::DANGLING, 2, Some("source-file"), slots)
 }
 
+/// `dangling`'s *Fix*, case `source-file-value` (§FS-check.3.1).
+pub(crate) fn dangling_source_file_value() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::DANGLING, 2, Some("source-file-value"), slots)
+}
+
 /// `dangling`'s *Fix*, case `pattern` (§FS-check.3.1).
 pub(crate) fn dangling_pattern() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
@@ -341,6 +347,12 @@ pub(crate) fn missing_snapshot_value_source() -> String {
 pub(crate) fn missing_snapshot_source_file() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
     fill(Code::MISSING_SNAPSHOT, 2, Some("source-file"), slots)
+}
+
+/// `missing-snapshot`'s *Fix*, case `source-file-value` (§FS-check.4.12).
+pub(crate) fn missing_snapshot_source_file_value() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::MISSING_SNAPSHOT, 2, Some("source-file-value"), slots)
 }
 
 /// `nothing-recognized`'s *Fix* (§FS-check.4.5).

@@ -56,8 +56,11 @@ impl ScanDemand {
 pub(crate) enum RefusedHome {
     /// A whole-value kind's value source (§FS-fetch.4).
     ValueSource,
-    /// A file the text scan reads as source, whatever the kind (§FS-fetch.4.2).
+    /// A file the text scan reads as source (§FS-fetch.4.2), of a non-value kind.
     SourceFile,
+    /// The same file of a whole-value kind, which no comment there can declare, so
+    /// only `check`'s tail differs (§FS-check.3.1.3.1).
+    SourceFileValue,
 }
 
 impl Compiled {
@@ -98,14 +101,15 @@ impl Compiled {
         let row = schema.rows.iter().find(|row| row.name == kind)?;
         let home = root.join(row.file()?);
         let reading = self.reading(schema, &home);
-        let reason = if schema.value_rows().any(|row| row.name == kind)
-            && reading.value_format().is_some()
-        {
+        let value_kind = schema.value_rows().any(|row| row.name == kind);
+        let reason = if value_kind && reading.value_format().is_some() {
             RefusedHome::ValueSource
-        } else if reading.read_as_source() {
-            RefusedHome::SourceFile
-        } else {
+        } else if !reading.read_as_source() {
             return None;
+        } else if value_kind {
+            RefusedHome::SourceFileValue
+        } else {
+            RefusedHome::SourceFile
         };
         Some((home, reason))
     }

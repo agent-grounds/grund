@@ -11,10 +11,10 @@
 use std::path::Path;
 
 use super::compiled::Compiled;
-use super::project::Schema;
+use super::project::{Schema, Sources};
 use super::sources::{DeclarationMode, Language, LanguageClass};
 use crate::grammar::{DocCommentRule, LexicalSettings, MultiLineStrings, extension_rule};
-use crate::model::ValueFormat;
+use crate::model::{ValueFormat, is_hidden};
 
 /// How the text scan, the value homes, the formatter, the editor, the checker and
 /// `show` read one file (§FS-config-v2.schema.sources).
@@ -31,9 +31,11 @@ pub(crate) struct FileReading<'a> {
     declarations: Option<DeclarationMode>,
     /// The final extension, which keys a v1 file's recognizer and string forms.
     extension: Option<&'a str>,
-    /// The effective `[scan] extensions`, whose claim on a YAML file comes before
-    /// a value home's (§FS-values.2.2).
-    scanned_extensions: &'a [String],
+    /// The path, which the name rules below ask.
+    path: &'a Path,
+    /// What the walk reads, whose `[scan] extensions` claim on a YAML file comes
+    /// before a value home's (§FS-values.2.2).
+    sources: &'a Sources,
     /// The marker, the hosts, the docstring reading and the grammar built over
     /// those hosts: a v2 file's are its language's, never another's
     /// (§FS-languages.prefixes).
@@ -56,7 +58,8 @@ impl<'a> FileReading<'a> {
                     language: Some(language),
                     declarations: Some(model.declarations),
                     extension,
-                    scanned_extensions: &schema.sources.extensions,
+                    path,
+                    sources: &schema.sources,
                     lexical,
                 }
             }
@@ -66,7 +69,8 @@ impl<'a> FileReading<'a> {
                 language: None,
                 declarations: None,
                 extension,
-                scanned_extensions: &schema.sources.extensions,
+                path,
+                sources: &schema.sources,
                 lexical,
             },
         }
@@ -84,28 +88,27 @@ impl<'a> FileReading<'a> {
                 (language.class == LanguageClass::Data).then_some(ValueFormat::Json)
             }
             (None, Some("json")) => Some(ValueFormat::Json),
-            (None, Some(extension @ ("yaml" | "yml"))) => (!self
-                .scanned_extensions
-                .iter()
-                .any(|listed| listed == extension))
-            .then_some(ValueFormat::Yaml),
+            (None, Some("yaml" | "yml")) => {
+                (!self.sources.lists_extension(self.path)).then_some(ValueFormat::Yaml)
+            }
             (None, _) => None,
         }
     }
 
     /// Whether the text scan reads this file as source (§FS-fetch.4.2), which asks the
-    /// name and not the walk: a v2 file by its language's class, whatever the name; a v1
-    /// file when it is not named `.md` and the effective `[scan] extensions` list its
-    /// extension. A v2 file no language claims has no suffix in that list, which is the
-    /// text scan's own, so it is not claimed here.
+    /// file's own name and not the walk, since a `file` home is a scan root no descent
+    /// rule prunes (§AR-scanner.1.7). A hidden own name is not read, in either version,
+    /// as the walk's name test says (§AR-scanner.1.5). Past that, a v2 file
+    /// goes by its language's class, whatever its suffix, and a v1 file is read as source
+    /// when it is not named `.md` and the effective `[scan] extensions` list its extension.
+    /// A v2 file no language claims has no suffix in that list, which is the text scan's
+    /// own, so it is not claimed here.
     pub(crate) fn read_as_source(&self) -> bool {
-        match (self.language, self.extension) {
-            (Some(language), _) => language.class == LanguageClass::Source,
-            (None, Some(extension)) => {
-                !self.markdown && self.scanned_extensions.iter().any(|ext| ext == extension)
+        !is_hidden(self.path)
+            && match self.language {
+                Some(language) => language.class == LanguageClass::Source,
+                None => !self.markdown && self.sources.lists_extension(self.path),
             }
-            (None, None) => false,
-        }
     }
 
     /// The recognizer the inline-style measurement asks

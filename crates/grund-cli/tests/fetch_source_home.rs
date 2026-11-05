@@ -18,6 +18,8 @@ const FILE_FETCHER: &str =
     "#!/bin/sh\ntouch fetcher-ran\nprintf '## %s: Fetched\\n\\nFetched body.\\n' \"$1\"\n";
 const FOLDER_FETCHER: &str =
     "#!/bin/sh\ntouch fetcher-ran\nprintf '# %s: Fetched\\n\\nFetched body.\\n' \"$1\"\n";
+const VALUE_FETCHER: &str = "#!/bin/sh\nprintf '## %s: Fetched\\n\\n### 1. 99\\n' \"$1\"\n";
+const VALUE_FOLDER_FETCHER: &str = "#!/bin/sh\nprintf '# %s: Fetched\\n\\n## 1. 99\\n' \"$1\"\n";
 
 fn config(place: &str, languages: &str, fetch: bool) -> String {
     let fetch = if fetch {
@@ -173,6 +175,60 @@ fn declaring_it_in_that_source_file_answers_the_check_tail() {
          \"\"\"FS-other: Other\n\n    Other body.\n    \"\"\"\n",
     );
     assert_code(&run(&dir, &["check"]), 0, "check after the declaration");
+}
+
+/// No comment in a source file is a valid value declaration, so §FS-check.3.1.3.1 sends a
+/// value kind to Markdown instead, and each home the tail names ends green. A value file
+/// home must exist before its first snapshot (§FS-fetch.4.1); a folder needs its index
+/// (§FS-check.3.18) and takes an H1 (§FS-fetch.3).
+#[test]
+fn moving_a_value_kind_to_markdown_answers_the_check_tail() {
+    let index = "# Facts\n\n- [\u{a7}FS-other](FS-other.md)\n";
+    let homes = [
+        ("files = [\"fs.md\"]", "fs.md", "", VALUE_FETCHER),
+        (
+            "folders = [\"src\"]",
+            "src/README.md",
+            index,
+            VALUE_FOLDER_FETCHER,
+        ),
+    ];
+    for (place, made, made_body, fetcher) in homes {
+        let dir = root(&format!(
+            "source-home-value-tail-{}",
+            made.replace('/', "-")
+        ));
+        let config_at = |place: &str| {
+            format!(
+                "{}form = \"value\"\n\n[schema.kinds.page]\ncitable = false\n\
+                 files = [\"docs/offer.md\"]\n",
+                config(place, "\"markdown\", \"python\"", true)
+            )
+        };
+        write(&dir, "grund.toml", &config_at("files = [\"fs.py\"]"));
+        write(&dir, "fs.py", "x = 1\n");
+        write(
+            &dir,
+            "docs/offer.md",
+            "# Offer\n\nThe fact is \u{a7}FS-other.\n",
+        );
+        executable(&dir, "scripts/fetch-fs", fetcher);
+
+        let dangling = run(&dir, &["check"]);
+        assert_code(&dangling, 1, "check before the move");
+        assert!(
+            stdout(&dangling)
+                .contains("no snapshot in fs.py — move the kind to a Markdown file or folder"),
+            "the tail must name what works: {:?}",
+            stdout(&dangling)
+        );
+
+        write(&dir, "grund.toml", &config_at(place));
+        write(&dir, made, made_body);
+        assert_code(&run(&dir, &["fetch", "FS-other"]), 0, place);
+        assert_code(&run(&dir, &["check"]), 0, place);
+        assert_eq!(fs::read_to_string(dir.join("fs.py")).unwrap(), "x = 1\n");
+    }
 }
 
 /// The comment forms no e2e case holds. Each home declares the requested ID its own way,

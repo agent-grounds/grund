@@ -402,6 +402,10 @@
       "text": "declare it in that source file"
      },
      {
+      "label": "source-file-value",
+      "text": "move the kind to a Markdown file or folder"
+     },
+     {
       "label": "pattern",
       "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
@@ -443,6 +447,10 @@
      {
       "label": "source-file",
       "text": "declare it in that source file"
+     },
+     {
+      "label": "source-file-value",
+      "text": "move the kind to a Markdown file or folder"
      },
      {
       "label": "pattern",
@@ -2001,6 +2009,10 @@
      {
       "label": "source-file",
       "text": "declare it in that source file"
+     },
+     {
+      "label": "source-file-value",
+      "text": "move the kind to a Markdown file or folder"
      }
     ]
    },
@@ -2046,6 +2058,10 @@
      {
       "label": "source-file",
       "text": "declare it in that source file"
+     },
+     {
+      "label": "source-file-value",
+      "text": "move the kind to a Markdown file or folder"
      }
     ]
    },
@@ -2290,6 +2306,10 @@
       "text": "declare it in that source file"
      },
      {
+      "label": "source-file-value",
+      "text": "move the kind to a Markdown file or folder"
+     },
+     {
       "label": "pattern",
       "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
@@ -2337,6 +2357,10 @@
      {
       "label": "source-file",
       "text": "declare it in that source file"
+     },
+     {
+      "label": "source-file-value",
+      "text": "move the kind to a Markdown file or folder"
      },
      {
       "label": "pattern",

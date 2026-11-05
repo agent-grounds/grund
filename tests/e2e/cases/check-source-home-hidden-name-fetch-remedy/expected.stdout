@@ -1,0 +1,2 @@
+docs/offer.md:3: error: unknown reference FS-other; no snapshot in .fs.py — run grund fetch FS-other
+grund.toml:8: warning: [schema.kinds.FS] file `.fs.py` is not read — its name begins with `.`, and grund reads no hidden file, so nothing in it is checked. Rename the file to a name that is not hidden.

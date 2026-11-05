@@ -285,7 +285,7 @@ fn refuse_home_without_markdown(
             "a value source holds no Markdown; \
              move the kind to a Markdown file or a folder without it, or remove its `fetch`"
         }
-        RefusedHome::SourceFile => {
+        RefusedHome::SourceFile | RefusedHome::SourceFileValue => {
             "a file read as source holds no Markdown; \
              move the kind and its declarations to a Markdown file or a folder, \
              or remove its `fetch`"
