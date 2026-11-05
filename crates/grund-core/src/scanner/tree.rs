@@ -222,8 +222,8 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         }
     }
     findings.files = records.into_iter().collect();
-    // §AR-scanner.6.unlistable-root: the pass reads the reports so far, the walk's among them,
-    // so a cases root both met is one line, and one only the pass met still is (§FS-check.2.4.2).
+    // §AR-scanner.1.relisted: the E2E and value passes read the reports so far, the walk's among
+    // them, so a directory both list is one line, and one only a pass met still is.
     // §AR-scanner.6.6: every other failure is handed back, and two that read alike stay two.
     let failures = scan_e2e_cases(
         schema,
