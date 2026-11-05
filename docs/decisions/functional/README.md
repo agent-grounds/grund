@@ -188,6 +188,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-bare-grund-lands-on-an-error](DF-bare-grund-lands-on-an-error.md#df-bare-grund-lands-on-an-error-bare-grund-lands-on-a-cli-level-error-not-the-top-level-help-page) — bare `grund` lands on a CLI-level error, not the top-level help page
 - [§DF-schema-view](DF-schema-view.md#df-schema-view-the-schema-view-is-its-own-command-prints-no-json-yet-shows-a-workspaces-root-and-draws-an-any-of-entry-through-one-junction) — the schema view is its own command, prints no JSON yet, shows a workspace's root, and draws an any-of entry through one junction
 - [§DF-dev-build-names-its-commit](DF-dev-build-names-its-commit.md#df-dev-build-names-its-commit-a-development-builds---version-names-its-commit-and-what-a-development-build-prints-between-releases-was-never-a-promise) — a development build's `--version` names its commit, and what a development build prints between releases was never a promise
+- [§DF-fetch-folder-declaring-file](DF-fetch-folder-declaring-file.md#df-fetch-folder-declaring-file-a-folder-home-fetch-refuses-an-id-a-file-it-does-not-replace-already-declares) — a folder-home fetch refuses an ID a file it does not replace already declares.
 
 ## Agent-facing surfaces
 

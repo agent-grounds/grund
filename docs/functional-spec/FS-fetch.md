@@ -218,6 +218,44 @@ This refusal preserves [§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)'s o
 [§DF-fetch-folder-value-source](../decisions/functional/DF-fetch-folder-value-source.md#df-fetch-folder-value-source-folder-fetch-refuses-an-id-already-declared-by-a-value-source)
 records the compatibility correction.
 
+### 5.2 A file it does not replace that declares the ID prevents installation
+
+Discovery walks the home as the scan does, and reads every file the walk yields under a
+name other than `.md` through the scan's own pass, in whichever language that file is
+read. A file in which that pass records a declaration of the requested ID is an existing
+declaration, not an absent snapshot. Fetch can neither create beside it, which leaves a
+duplicate, nor replace it, which overwrites what the file holds around the declaration
+([§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)). So before creating or replacing anything grund refuses, with exit 2, empty
+stdout and the whole tree byte-identical, on stderr:
+
+```text
+error: cannot fetch <ID>: <file> already declares it; keep the fact in that file, or take the declaration out of it and fetch again
+```
+
+`<ID>` is the local ID and `<file>` is spelled from the report base ([§FS-errors.terms](FS-errors.md#terms-terms)).
+Where several such files declare it, `<file>` is the first in the walk's sorted order.
+
+A Markdown file in the home that also declares the ID does not permit installation, and
+this refusal comes ahead of every judgement of that Markdown file: it names the other
+file whichever the walk reaches first, a Markdown file holding the ID beside other content
+and a stub whose target is that file included. What the first paragraph of [§FS-fetch.5](FS-fetch.md#5-folder-home-write)
+replaces is a file named `.md`, so a file the scan reads as Markdown under another name
+takes this refusal rather than a replacement.
+
+What declares is the scan's answer, and fetch keeps no second reader of comments. A file
+that declares only other IDs, that only cites the ID, or that holds the ID's text where
+nothing declares does not stop the fetch, nor does a file the walk does not yield, because
+no admitted language or `[scan] extensions` entry reads it or `[scan] exclude` keeps it
+out. Findings the pass or a later `grund check` reports against another file do not gate
+fetch. Discovery asks only the home's own files.
+
+A file the pass cannot read or decode may hold the declaration, so it is a discovery
+failure under [§FS-fetch.5](FS-fetch.md#5-folder-home-write) whatever else the home holds: exit 2, empty stdout, the tree
+byte-identical, and on stderr the line `grund check` prints for that file ([§FS-check.2.4](FS-check.md#24-an-incomplete-run)),
+spelled from the same base.
+
+[§DF-fetch-folder-declaring-file](../decisions/functional/DF-fetch-folder-declaring-file.md#df-fetch-folder-declaring-file-a-folder-home-fetch-refuses-an-id-a-file-it-does-not-replace-already-declares) records why this refusal is a compatibility correction.
+
 ## 6. Stability and ownership
 
 Fetching unchanged output is idempotent: it leaves the same file set and bytes. Stable
@@ -232,8 +270,9 @@ unused-snapshot exemption, or workspace-wide snapshot ownership behavior.
 
 Success writes nothing to stdout or stderr and exits 0. An unparseable ID is a query
 failure and exits 1. Missing fetch configuration, a `file` home that is a value source
-([§FS-fetch.4](FS-fetch.md#4-file-home-write)), integration failure, rejected output, ambiguous existing content, and
-filesystem failure are CLI-level operational errors on stderr and exit 2, following
+([§FS-fetch.4](FS-fetch.md#4-file-home-write)), integration failure, rejected output, ambiguous existing content, a
+folder-home file that already declares the ID ([§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)), and filesystem failure are
+CLI-level operational errors on stderr and exit 2, following
 [§FS-errors.2.2](FS-errors.md#22-cli-level-message).
 
 Once it ships, `fetch --remote` exits 0 when the projection and lock are installed, and prints the

@@ -1,0 +1,10 @@
+grund_config_version = 2
+project_name = "demo"
+
+[schema.sources]
+languages = ["markdown", "ruby"]
+
+[schema.kinds.FS]
+folders = ["fs"]
+index = false
+fetch = "scripts/fetch"
