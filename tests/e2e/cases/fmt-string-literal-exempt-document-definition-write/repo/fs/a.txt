@@ -1,0 +1,5 @@
+# FS-a: Alpha
+
+Quoted "$$FS-b" trigger and quoted "FS-b" bare.
+
+Outside the quotes, $$FS-b trigger and FS-b bare.

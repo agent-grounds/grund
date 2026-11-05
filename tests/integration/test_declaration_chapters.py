@@ -152,7 +152,10 @@ CITED = (
 
 # FS-show.md grew by 185 bytes in §FS-show.3.5: its `grund fetch` hint excepts a kind whose
 # `file` home §FS-fetch.4 refuses, citing §FS-check.3.1.3.1 rather than restating it (grund#1133).
-BASELINES = {"FS-show.md": 71962, "FS-fmt.md": 103210}
+
+# FS-fmt.md grew by 282 bytes in §FS-fmt.2.3.1: the string-literal rule follows how a file
+# is read, not its name, citing §FS-config-v2.schema.sources.definitions (grund#1208).
+BASELINES = {"FS-show.md": 71962, "FS-fmt.md": 103492}
 
 
 def _flat(text):

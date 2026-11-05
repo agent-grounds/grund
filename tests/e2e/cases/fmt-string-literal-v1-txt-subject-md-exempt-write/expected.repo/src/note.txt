@@ -1,0 +1,3 @@
+Quoted "$$FS-001-a" trigger and quoted "FS-001-a" bare.
+
+Outside the quotes, §FS-001-a trigger and §FS-001-a bare.

@@ -1,0 +1,5 @@
+# FS-a: Alpha
+
+Quoted "[§FS-b](b.rs)" trigger and quoted "[§FS-b](b.rs)" bare.
+
+Outside the quotes, [§FS-b](b.rs) trigger and [§FS-b](b.rs) bare.
