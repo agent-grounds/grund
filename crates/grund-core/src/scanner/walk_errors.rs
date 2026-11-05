@@ -2,6 +2,7 @@ use crate::sources::{canonical_path, link_metadata};
 use std::path::{Path, PathBuf};
 
 use super::read_predicate::{directory_refusal, ignored, name_refusal};
+use super::scan_error::scan_io_reason;
 use super::tree::ScanError;
 use crate::config::{Frame, Schema};
 
@@ -170,9 +171,10 @@ fn walk_error_path(err: &ignore::Error) -> Option<&Path> {
 /// A walker error's reason, without the path `ignore` writes into its own text:
 /// the diagnostic already carries the path (§FS-errors.2.2.1), and the one `ignore`
 /// writes is absolute, which a report may not contain (§FS-errors.4).
+/// Its typed I/O reason is the same as a file read's (§FS-check.2.4.1).
 fn walk_error_reason(err: &ignore::Error) -> String {
     match err.io_error() {
-        Some(io) => std::io::Error::from(io.kind()).to_string(),
+        Some(io) => scan_io_reason(io),
         None => match err {
             ignore::Error::WithPath { err, .. } => err.to_string(),
             other => other.to_string(),
