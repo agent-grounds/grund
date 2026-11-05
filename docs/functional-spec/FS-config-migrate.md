@@ -121,6 +121,15 @@ refused: grund.toml:10: [scan] exclude entry `docs/drafts` contains `/`, so vers
   repair: remove `docs/drafts` from exclude under version 1, which keeps what is scanned exactly as it is
 ```
 
+##### 3.1.4.1 The files named are the ones version 1 reads
+
+The files named and counted are the ones the version 1 scan of this tree reads at the entry's path or below it ([§FS-scan.scope](FS-scan.md#scope-which-files-a-run-reads)). Version 1 never matched the entry, so that scan is the one its removal keeps. A file it does not read has no reading for a glob to stop, so it is neither named nor counted. Such a file can lie outside `[scan] include` and every home, or have a hidden name or a hidden directory above it ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)). It can be a file the ignore files name while `respect_gitignore` holds ([§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)), or have an extension the list does not hold ([§FS-scan.scope.extensions](FS-scan.md#scopeextensions-an-extension-makes-a-file-readable-not-declarable)). An entry is not a scan root, so the same holds when it names one file. The refusal stands when no file is named, because the entry is still a path version 2 would read as a glob. The count is then `0 files` and the `would stop reading:` line is absent:
+
+```text
+refused: grund.toml:16: [scan] exclude entry `docs/data.txt` contains `/`, so version 1 never matched it; as a version 2 glob it would stop reading 0 files
+  repair: remove `docs/data.txt` from exclude under version 1, which keeps what is scanned exactly as it is
+```
+
 #### 3.1.5 Nested homes
 
 A v1 file inside two nested homes belongs to the complement; in version 2 the deepest place owns it ([§DF-v2-place-ownership](../decisions/functional/DF-v2-place-ownership.md#df-v2-place-ownership-in-v2-the-row-named-code-is-the-complement-and-a-file-belongs-to-its-listed-row-or-else-its-deepest-folder)). Migration refuses and names every file whose owner would change, even when no finding on this tree would differ.
@@ -130,6 +139,10 @@ refused: grund.toml:15: [[kinds]] `AR` home `docs/arch` is inside `FS` home `doc
   would change owner: docs/arch/store.md
   repair: un-nest the two homes under version 1
 ```
+
+##### 3.1.5.1 The files named are the ones version 1 reads
+
+The files named are the ones the version 1 scan of this tree reads in the inner home ([§FS-scan.scope](FS-scan.md#scope-which-files-a-run-reads)). A file it does not read has no owner to change, so it is not named. The home is a scan root, which outruns every rule about descent ([§FS-scan.scope.roots](FS-scan.md#scoperoots-a-scan-root-outruns-every-rule-about-descent)). A folder home is walked even when it is hidden, lies below a hidden directory or is named by the ignore files, and a `file` home the ignore files name is read. Below a folder home the scan's rules apply as usual. A file there is not named when it is hidden or below a hidden directory ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), named by the ignore files while `respect_gitignore` holds ([§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)), or of an extension the list does not hold. A `file` home whose name is hidden, or whose extension the list does not hold, is not read either, so it names nothing ([§FS-scan.scope.extensions.root](FS-scan.md#scopeextensionsroot-a-file-root-whose-extension-is-unlisted-is-not-read-and-check-says-so)). The refusal stands when no file is named, because the two homes still nest. The `would change owner:` line is then absent.
 
 #### 3.1.6 A renamed complement
 
@@ -198,7 +211,7 @@ refused: grund.toml:4: [scan] extensions names `tar.gz`, which is not a final ex
   repair: remove `tar.gz` from extensions under version 1
 ```
 
-The files [§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry) and [§FS-config-migrate.3.1.5](FS-config-migrate.md#315-nested-homes) name come from migration's own walk. Of each file it finds under a directory it asks the scan's extension test ([§FS-scan.scope.extensions.empty](FS-scan.md#scopeextensionsempty-in-version-1-an-empty-string-in-the-list-reads-a-file-with-no-extension)), and it applies neither the hidden rule ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)) nor the ignore files ([§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)). So under the entry those details name each file with no extension that walk finds, and such a file can be one the scan does not read: it can have a hidden name, lie below a hidden directory or, where the scan honours the ignore files, be one they name. A hidden or ignored directory that is itself a scan root is still walked ([§FS-scan.scope.roots](FS-scan.md#scoperoots-a-scan-root-outruns-every-rule-about-descent)), so the same details can be right about a file below one. [§DF-v1-empty-extension-reading.4](../decisions/functional/DF-v1-empty-extension-reading.md#4-what-this-leaves-as-it-is) says why this change leaves that walk as it is. Under a list without the entry those details are as they were, with one exception: beside a file whose extension is not UTF-8, a list naming an extension spelled with U+FFFD no longer has that file named or counted, because the test is asked of the path and not of the printed name. The scan does not read that file under such a list either.
+Under the entry, the files [§FS-config-migrate.3.1.4.1](FS-config-migrate.md#3141-the-files-named-are-the-ones-version-1-reads) and [§FS-config-migrate.3.1.5.1](FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads) name are still the ones version 1 reads. So they include each file with no extension that the scan reads through it ([§FS-scan.scope.extensions.empty](FS-scan.md#scopeextensionsempty-in-version-1-an-empty-string-in-the-list-reads-a-file-with-no-extension)), `Makefile` for one, and leave out one it does not read, such as a hidden `.gitkeep`. Those details ask the scan itself, so a file whose extension is not UTF-8 is named exactly when the scan reads it. Under a list naming an extension spelled with U+FFFD it is not read, because the scan asks the path and not the printed name, so it is neither named nor counted.
 
 ### 3.2 Notices
 
