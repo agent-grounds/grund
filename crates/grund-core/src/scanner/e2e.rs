@@ -1,7 +1,12 @@
-use crate::sources::{Sources, canonical_path, path_exists, path_is_dir, path_is_file};
+use crate::sources::{
+    Sources, canonical_path, path_exists, path_is_dir, path_is_file, paths_same_location,
+};
 use anyhow::{Context, Result};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+
+use super::scan_error::scan_io_reason;
+use super::tree::ScanError;
 
 use crate::config::{Frame, Schema, root_scope_roots};
 use crate::grammar::{Grammar, literal_after_kind_placeholder, parse_id_arg, split_alias_path};
@@ -47,23 +52,27 @@ pub(super) fn e2e_cases_folder(schema: &Schema) -> Option<&str> {
 /// declaration whose body is the case manifest (§AR-scanner.6, §FS-show.2.4) — so
 /// `grund check` sees `§E2E-…` citations resolve and `grund refs` finds e2e tests.
 ///
-/// Hands back every failure it met rather than stopping at the first (§AR-scanner.6.6). They stay
-/// errors because the caller derives each published reason from the error's kind (§FS-check.2.4.1).
+/// `reported` is the scan's failures so far, the walk's among them. A failure to list the
+/// directory the pass reads is published there, once (§AR-scanner.6.unlistable-root). Every other
+/// failure is handed back rather than stopping at the first (§AR-scanner.6.6). They stay errors
+/// because the caller derives each published reason from the error's kind (§FS-check.2.4.1).
 pub(super) fn scan_e2e_cases(
     schema: &Schema,
     frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
+    reported: &mut Vec<ScanError>,
     findings: &mut Catalog,
 ) -> Vec<anyhow::Error> {
     let Some(folder) = e2e_cases_folder(schema) else {
         return Vec::new();
     };
-    let cases_root = frame.root().join(folder);
-    if !path_exists(&cases_root) || !path_is_dir(&cases_root) {
+    // §FS-check.2.4.2: the folder as the tree spells it, which a failure is published at.
+    let spelled_root = frame.root().join(folder);
+    if !path_exists(&spelled_root) || !path_is_dir(&spelled_root) {
         return Vec::new();
     }
-    let cases_root = canonical_path(&cases_root).unwrap_or(cases_root);
+    let cases_root = canonical_path(&spelled_root).unwrap_or_else(|_| spelled_root.clone());
     let mut scan_root = cases_root.clone();
 
     // §FS-check.1.3.6.1: a path-scoped run reads the cases the ordinary run reads —
@@ -95,10 +104,15 @@ pub(super) fn scan_e2e_cases(
         case_dirs.push(scan_root);
     } else {
         // §FS-check.6.1.1: cover this effective input before its shared read.
+        // §AR-scanner.6.unlistable-root: attempted whatever the walk reported here.
         let entries = match Sources::on_disk().read_dir(&scan_root) {
             Ok(entries) => entries,
             // §AR-scanner.6.6: a root that cannot be listed leaves nothing to read.
-            Err(err) => return vec![err.into()],
+            Err(err) => {
+                let spelled = spelled_below(&spelled_root, &cases_root, &scan_root);
+                publish_unlisted(&scan_root, spelled, &err, reported);
+                return Vec::new();
+            }
         };
         for entry in entries {
             // §AR-scanner.6.6: recorded, then the listing stops: nothing promises a `ReadDir`
@@ -161,6 +175,41 @@ pub(super) fn scan_e2e_cases(
             });
     }
     failures
+}
+
+/// The failure to list `listed`, the directory the pass read, published unless the scan
+/// already reported the same failure (§FS-check.2.4.2, §AR-scanner.6.unlistable-root).
+///
+/// The same failure is the same physical location and the same reason. Locations compare
+/// physically because the pass holds a canonical path and the walk its own spelling. The
+/// reason is the one §FS-check.2.4.1 derives from the error's kind, as the walk derives its
+/// own, so a walk report at this path for another reason, a malformed ignore file at its
+/// walk root among them, is a different failure and stands in for nothing. The walk can
+/// miss the root, so its reports are consulted, never assumed. Only this one failure is
+/// compared: nothing here deduplicates the list.
+fn publish_unlisted(
+    listed: &Path,
+    spelled: PathBuf,
+    error: &std::io::Error,
+    reported: &mut Vec<ScanError>,
+) {
+    let reason = scan_io_reason(error);
+    let already = reported
+        .iter()
+        .any(|(path, said)| *said == reason && paths_same_location(path, listed));
+    if !already {
+        reported.push((spelled, reason));
+    }
+}
+
+/// `listed`, a canonical directory at or below the canonical `cases_root`, spelled as the
+/// tree spells it: under the configured folder, never at its resolved target, which may lie
+/// outside the project (§FS-check.2.4.2).
+fn spelled_below(spelled_root: &Path, cases_root: &Path, listed: &Path) -> PathBuf {
+    match listed.strip_prefix(cases_root) {
+        Ok(below) if !below.as_os_str().is_empty() => spelled_root.join(below),
+        _ => spelled_root.to_path_buf(),
+    }
 }
 
 /// Map an `e2e/cases/<name>/` directory name to its `E2E-<name>` `Id` under the
