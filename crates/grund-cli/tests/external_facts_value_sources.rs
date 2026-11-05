@@ -309,35 +309,88 @@ fn folder_value_source_control_other_project_does_not_block_creation() {
     assert_usable(&fixture.0);
 }
 
-/// §FS-values.2.2.4: unread YAML/YML does not declare an ID; preserve creation.
+/// §FS-fetch.5.1, §FS-values.2.2.4: a fetched kind's YAML source declares its IDs, so it refuses.
 #[test]
-fn folder_value_source_control_unread_yaml_and_yml_allow_creation() {
+fn folder_value_source_yaml_and_yml_refuse_without_changing_tree() {
     for extension in ["yaml", "yml"] {
         let fixture = Fixture::new();
         let source = format!("values/limits.{extension}");
         fixture.source(
             &source,
             "CONST-room-limit: [40, rooms]\nCONST-floor-limit: [7, floors]\n",
-            "# Values\n\n- [§CONST-room-limit](CONST-room-limit.md)\n",
+            &format!(
+                "# Values\n\n- [§CONST-room-limit](limits.{extension})\n\
+                 - [§CONST-floor-limit](limits.{extension})\n"
+            ),
         );
-        let check = run(&fixture.0, &["check"]);
-        assert_code(&check, 0, "unread YAML only warns");
-        assert!(stdout(&check).contains("is not read, because CONST sets fetch"));
-        assert_code(
-            &run(&fixture.0, &["show", ID]),
-            1,
-            "unread YAML declares nothing",
+        assert_refused(&fixture.0, &source, true);
+    }
+}
+
+/// §FS-fetch.5.1: a YAML source declaring only other IDs does not prevent creation.
+#[test]
+fn folder_value_source_control_yaml_and_yml_with_other_ids_allow_creation() {
+    for extension in ["yaml", "yml"] {
+        let fixture = Fixture::new();
+        fixture.source(
+            &format!("values/limits.{extension}"),
+            "CONST-floor-limit: [7, floors]\n",
+            &format!(
+                "# Values\n\n- [§CONST-floor-limit](limits.{extension})\n\
+                 - [§CONST-room-limit](CONST-room-limit.md)\n"
+            ),
         );
+        assert_code(&run(&fixture.0, &["check"]), 0, "no YAML finding");
+        assert_code(&run(&fixture.0, &["show", ID]), 1, "ID is absent");
         let mut expected = tree_with_directories(&fixture.0);
         expected.insert(
             "values/CONST-room-limit.md".into(),
             Some(SNAPSHOT.as_bytes().to_vec()),
         );
         let output = run(&fixture.0, &["fetch", ID]);
-        assert_code(&output, 0, "unread YAML permits creation");
+        assert_code(&output, 0, "other IDs permit creation");
         assert!(output.stdout.is_empty() && output.stderr.is_empty());
         assert_eq!(tree_with_directories(&fixture.0), expected);
         assert_usable(&fixture.0);
+    }
+}
+
+/// §FS-fetch.5, §FS-values.2.2.4: an unparsable source stops fetch as it stops every reader.
+#[test]
+fn folder_value_source_unparsable_yaml_and_yml_refuse_without_changing_tree() {
+    for extension in ["yaml", "yml"] {
+        let fixture = Fixture::new();
+        let source = format!("values/limits.{extension}");
+        fixture.source(
+            &source,
+            "CONST-room-limit: [40, rooms\n",
+            &format!("# Values\n\n- [§CONST-room-limit](limits.{extension})\n"),
+        );
+        assert_code(&run(&fixture.0, &["check"]), 2, "check stops on the source");
+        assert_code(
+            &run(&fixture.0, &["show", ID]),
+            2,
+            "show stops on the source",
+        );
+        let before = tree_with_directories(&fixture.0);
+        let output = run(&fixture.0, &["fetch", ID]);
+        assert_code(&output, 2, "fetch stops on the source");
+        assert!(
+            output.stdout.is_empty(),
+            "fetch stdout: {}",
+            stdout(&output)
+        );
+        let message = stderr(&output);
+        assert!(message.contains(&source), "missing source: {message}");
+        assert!(
+            message.contains("invalid YAML"),
+            "missing reason: {message}"
+        );
+        assert_eq!(
+            tree_with_directories(&fixture.0),
+            before,
+            "refusal changed tree"
+        );
     }
 }
 
@@ -357,9 +410,10 @@ fn add_alias_home(fixture: &Fixture, index_target: &str) {
     );
 }
 
-/// §FS-fetch.5.1: the catalog's first YAML alias defers even the selected JSON spelling.
+/// §FS-fetch.5.1: fetch and the catalog agree on an aliased source. Its first spelling picks
+/// the reader, here YAML, which takes this JSON text and so declares the IDs for both.
 #[test]
-fn folder_value_source_yaml_alias_preserves_catalog_deferral() {
+fn folder_value_source_yaml_alias_refuses_as_the_catalog_recognizes_it() {
     let fixture = Fixture::new();
     fixture.json();
     add_alias_home(&fixture, "limits.yaml");
@@ -368,23 +422,20 @@ fn folder_value_source_yaml_alias_preserves_catalog_deferral() {
     std::os::unix::fs::symlink(target, &alias).expect("link YAML alias");
 
     let check = run(&fixture.0, &["check"]);
-    assert_code(&check, 0, "aliased YAML only warns");
-    assert!(stdout(&check).contains("a/limits.yaml is not read, because CONST sets fetch"));
-    let show = run(&fixture.0, &["show", ID]);
-    assert_code(&show, 1, "catalog defers the physical source");
-    assert!(stderr(&show).contains("ID not found: CONST-room-limit"));
-
-    let mut expected = tree_with_directories(&fixture.0);
-    expected.insert(
-        "values/CONST-room-limit.md".into(),
-        Some(SNAPSHOT.as_bytes().to_vec()),
+    assert_code(&check, 1, "catalog recognizes the multiply owned source");
+    assert!(
+        stdout(&check).contains("a/limits.yaml:2: error: CONST-room-limit declares kind CONST")
     );
-    let output = run(&fixture.0, &["fetch", ID]);
-    assert_code(&output, 0, "catalog-absent ID permits creation");
-    assert!(output.stdout.is_empty() && output.stderr.is_empty());
-    assert_eq!(tree_with_directories(&fixture.0), expected);
+    assert!(stdout(&check).contains("duplicate declaration of CONST-room-limit"));
+    let show = run(&fixture.0, &["show", ID]);
+    assert_code(&show, 1, "recognized source is already ambiguous");
+    assert!(stderr(&show).contains("a/limits.yaml:2"));
+
+    assert_refused(&fixture.0, "a/limits.yaml", false);
+    assert_eq!(run(&fixture.0, &["check"]).stdout, check.stdout);
+    assert_eq!(run(&fixture.0, &["show", ID]).stderr, show.stderr);
+    assert!(!fixture.0.join("values/CONST-room-limit.md").exists());
     assert_eq!(fs::read_link(&alias).unwrap(), target);
-    assert_usable(&fixture.0);
 }
 
 /// §FS-fetch.5.1: the catalog's first JSON alias enrolls with all owners before refusal.

@@ -19,9 +19,11 @@ table with Markdown.
 [§FS-fetch.5.1](../../functional-spec/FS-fetch.md#51-existing-value-source-declarations-prevent-installation)
 requires operational refusal at exit 2, naming the ID and source, with no stdout
 and no tree changes. A Markdown match cannot hide a matching value source. The
-existing catalog decides which sources declare IDs, including the fetched-kind
-YAML warning window; this correction neither closes that window nor adds a data
-writer. A table containing only other IDs still permits snapshot creation.
+existing catalog decides which sources declare IDs, so the correction applies to a
+recognized source of either format
+([§FS-values.2.2.4](../../functional-spec/FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings)),
+and it adds no data writer. A table containing only other IDs still permits snapshot
+creation.
 
 The prior verdict violated [§REQ-no-data-loss.2](../../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own): fetch may replace
 or insert only its validated named declaration. When that declaration already
@@ -45,12 +47,16 @@ correction; it is not a licence for new refusals for unread files or unrelated f
 ## release-note: Release note
 
 - In grund 0.22.0, `grund fetch <ID>` refuses with exit 2 when a recognized value
-  source in the selected folder home already declares the ID. Previously it could
-  exit 0 and create a second declaration, breaking subsequent check and show. The
-  refusal names the ID and source and leaves every file unchanged. Keep the fact in
-  that value source, or move it out of the value home before fetching. Tables that
-  declare only other IDs and ordinary Markdown snapshot replacement keep working.
-  The YAML recognition policy is unchanged by this correction
+  source in the selected folder home, JSON or YAML, already declares the ID.
+  Previously it could exit 0 and create a second declaration, breaking subsequent
+  check and show. The refusal names the ID and source and leaves every file unchanged.
+  Keep the fact in that value source, or move it out of the value home before fetching.
+  A source in that home that cannot be read or parsed stops the fetch the same way.
+  Tables that declare only other IDs and ordinary Markdown snapshot replacement keep
+  working. A snapshot already beside a source that declares its ID remains the
+  `duplicate`
+  [§DF-yaml-value-window-closes-in-0-22](DF-yaml-value-window-closes-in-0-22.md#df-yaml-value-window-closes-in-0-22-the-yaml-value-source-warning-window-closes-in-0220)
+  names, and a fetch refuses rather than repair it
   ([§FS-fetch.5.1](../../functional-spec/FS-fetch.md#51-existing-value-source-declarations-prevent-installation)).
   This verdict changes under [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids):
   the prior success violated [§REQ-no-data-loss.2](../../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own),

@@ -206,9 +206,11 @@ the same ID does not permit installation.
 
 Discovery follows the existing value-source language, direct-child and ownership
 rules, independently of general scan filters
-([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources)). It does not turn an unread
-file into a declaration: in particular, the fetched-kind YAML policy remains
-[§FS-values.2.2.4](FS-values.md#224-yaml-findings-are-warnings-until-grund-0220)'s. A source declaring
+([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources)). It does not turn a file the
+catalog leaves unread into a declaration. A source of either format is read and
+declares its IDs ([§FS-values.2.2.4](FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings)),
+so a YAML source refuses as a JSON one does, and a source in this home that cannot
+be read or parsed is a discovery failure under [§FS-fetch.5](FS-fetch.md#5-folder-home-write). A source declaring
 only other IDs does not prevent creation. Unrelated project findings do not gate
 fetch. Markdown discovery and replacement retain their existing traversal semantics.
 
