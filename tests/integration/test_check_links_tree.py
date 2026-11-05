@@ -33,7 +33,7 @@ class SelfLinkFormsTests(unittest.TestCase):
         tree = f"{SELF}/tree/main/{ADDED}"
         other = "https://github.com/agent-grounds/rhei/tree/main/docs"
         self.assertEqual(
-            sorted([blob, tree]), check_links.self_links(f"{blob}\n{tree}\n{other}\n")
+            sorted([blob, tree]), check_links.self_links(f"{blob}\n{tree}\n{other}\n".encode())
         )
 
     def test_a_tree_link_maps_to_its_directory(self):

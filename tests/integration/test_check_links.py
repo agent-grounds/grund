@@ -42,7 +42,7 @@ class CheckLinksTests(unittest.TestCase):
             source.write_text(f"See [the new guide]({url}).\n", encoding="utf-8")
             runner = Mock(
                 side_effect=[
-                    CompletedProcess(args=[], returncode=0, stdout=f"{url}\n"),
+                    CompletedProcess(args=[], returncode=0, stdout=f"{url}\n".encode()),
                     CompletedProcess(args=[], returncode=0),
                     CompletedProcess(args=[], returncode=0),
                     CompletedProcess(args=[], returncode=0),
@@ -72,7 +72,8 @@ class CheckLinksTests(unittest.TestCase):
                 encoding="utf-8",
             )
             url = "https://github.com/agent-grounds/grund/blob/main/docs/missing.md"
-            runner = Mock(return_value=CompletedProcess(args=[], returncode=0, stdout=f"{url}\n"))
+            dumped = CompletedProcess(args=[], returncode=0, stdout=f"{url}\n".encode())
+            runner = Mock(return_value=dumped)
 
             with self.assertRaisesRegex(check_links.SelfLinkError, "target is missing"):
                 check_links.check_links(["SKILL.md"], root, runner=runner)
@@ -93,7 +94,7 @@ class CheckLinksTests(unittest.TestCase):
             url = "https://github.com/agent-grounds/grund/blob/main/docs/guide.md#absent"
             runner = Mock(
                 side_effect=[
-                    CompletedProcess(args=[], returncode=0, stdout=f"{url}\n"),
+                    CompletedProcess(args=[], returncode=0, stdout=f"{url}\n".encode()),
                     CompletedProcess(args=[], returncode=2),
                 ]
             )
@@ -197,7 +198,7 @@ class StubbedGate:
             return answer
         if "--dump" in command or "--offline" in command:
             # The dump and the internal pass (§AR-ci.3.1) find nothing.
-            return CompletedProcess(args=command, returncode=0, stdout="")
+            return CompletedProcess(args=command, returncode=0, stdout=b"")
         output = next(
             (command[i + 1] for i, part in enumerate(command) if part in ("-o", "--output")),
             None,
