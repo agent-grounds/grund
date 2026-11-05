@@ -31,7 +31,7 @@ pub(super) fn scan_value_sources(
             return;
         }
     };
-    scan_sources(schema, frame, sources, findings, errors);
+    scan_sources(frame, sources, findings, errors);
 }
 
 /// The catalog's value declarations for one selected folder home and owner
@@ -47,7 +47,7 @@ pub(crate) fn folder_value_declarations(
     let sources = value_sources_in(schema, frame, Some((kind, folder)))?;
     let mut findings = Catalog::default();
     let mut errors = Vec::new();
-    scan_sources(schema, frame, sources, &mut findings, &mut errors);
+    scan_sources(frame, sources, &mut findings, &mut errors);
     if let Some(error) = errors.into_iter().next() {
         return Err(error);
     }
@@ -55,9 +55,8 @@ pub(crate) fn folder_value_declarations(
 }
 
 /// One enrollment path for catalog scans and folder-home fetch discovery
-/// (§FS-values.2.2, §FS-fetch.5.1), including the existing YAML deferrals.
+/// (§FS-values.2.2, §FS-fetch.5.1), in either format (§FS-values.2.2.4).
 fn scan_sources(
-    schema: &Schema,
     frame: Frame<'_>,
     sources: Vec<(PathBuf, &str, ValueFormat)>,
     findings: &mut Catalog,
