@@ -46,19 +46,22 @@ pub(super) fn e2e_cases_folder(schema: &Schema) -> Option<&str> {
 /// Discover `e2e/cases/<name>/` directories and register each as an `E2E-<name>`
 /// declaration whose body is the case manifest (§AR-scanner.6, §FS-show.2.4) — so
 /// `grund check` sees `§E2E-…` citations resolve and `grund refs` finds e2e tests.
+///
+/// Hands back every failure it met rather than stopping at the first (§AR-scanner.6.6). They stay
+/// errors because the caller derives each published reason from the error's kind (§FS-check.2.4.1).
 pub(super) fn scan_e2e_cases(
     schema: &Schema,
     frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
     findings: &mut Catalog,
-) -> Result<()> {
+) -> Vec<anyhow::Error> {
     let Some(folder) = e2e_cases_folder(schema) else {
-        return Ok(());
+        return Vec::new();
     };
     let cases_root = frame.root().join(folder);
     if !path_exists(&cases_root) || !path_is_dir(&cases_root) {
-        return Ok(());
+        return Vec::new();
     }
     let cases_root = canonical_path(&cases_root).unwrap_or(cases_root);
     let mut scan_root = cases_root.clone();
@@ -72,27 +75,41 @@ pub(super) fn scan_e2e_cases(
     if narrowed_to_path {
         let scope = scope.unwrap_or(Path::new("."));
         if path_is_file(&scope) {
-            return Ok(());
+            return Vec::new();
         }
         let scope = canonical_path(scope).unwrap_or_else(|_| scope.to_path_buf());
         if scope.starts_with(&cases_root) {
             scan_root = scope;
         } else if !cases_root.starts_with(&scope) {
-            return Ok(());
+            return Vec::new();
         }
     } else if !frame.run.scope.full && !cases_root_in_ordinary_scope(schema, frame, &cases_root) {
         // §FS-check.1.3: `--full` cancels `include`, so the e2e cases are in the
         // walk whether or not `include` happens to name their folder.
-        return Ok(());
+        return Vec::new();
     }
 
+    let mut failures = Vec::new();
     let mut case_dirs = Vec::new();
     if path_is_file(&scan_root.join("expected.exit")) {
         case_dirs.push(scan_root);
     } else {
         // §FS-check.6.1.1: cover this effective input before its shared read.
-        for entry in Sources::on_disk().read_dir(&scan_root)? {
-            let entry = entry?;
+        let entries = match Sources::on_disk().read_dir(&scan_root) {
+            Ok(entries) => entries,
+            // §AR-scanner.6.6: a root that cannot be listed leaves nothing to read.
+            Err(err) => return vec![err.into()],
+        };
+        for entry in entries {
+            // §AR-scanner.6.6: recorded, then the listing stops: nothing promises a `ReadDir`
+            // moves on after an `Err`. The cases already listed are still read.
+            let entry = match entry {
+                Ok(entry) => entry,
+                Err(err) => {
+                    failures.push(err.into());
+                    break;
+                }
+            };
             let path = entry.path();
             if path_is_dir(&path) && path_is_file(&path.join("expected.exit")) {
                 case_dirs.push(path);
@@ -108,7 +125,14 @@ pub(super) fn scan_e2e_cases(
         let Some(id) = e2e_id_from_case_dir_name(&schema.ids.format, frame.grammar(), name) else {
             continue;
         };
-        let case = read_e2e_case(schema, frame, &dir)?;
+        // §FS-declarations.e2e-case.failure: the failure is this case's alone; the walk goes on.
+        let case = match read_e2e_case(schema, frame, &dir) {
+            Ok(case) => case,
+            Err(err) => {
+                failures.push(err);
+                continue;
+            }
+        };
         findings
             .declarations
             .entry(id.clone())
@@ -136,7 +160,7 @@ pub(super) fn scan_e2e_cases(
                 front_matter: None,
             });
     }
-    Ok(())
+    failures
 }
 
 /// Map an `e2e/cases/<name>/` directory name to its `E2E-<name>` `Id` under the

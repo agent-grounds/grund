@@ -222,7 +222,8 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         }
     }
     findings.files = records.into_iter().collect();
-    if let Err(err) = scan_e2e_cases(schema, frame, scope, explicit_scope, &mut findings) {
+    // §AR-scanner.6.6: each failure is published, and two that read alike stay two.
+    for err in scan_e2e_cases(schema, frame, scope, explicit_scope, &mut findings) {
         // §FS-check.2.4.1: manifest and fixture reads share the ordinary scan reason.
         errors.push((frame.root().join("e2e/cases"), scan_error_reason(&err)));
     }
