@@ -201,16 +201,19 @@ the requested ID, one that declares only other IDs, one that declares nothing an
 one are all refused, and an absent one is not created.
 
 In a version-2 file a home is read as source when the language its name resolves to
-([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)) is of class `source`, whatever the name: `fs.py`,
+([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)) is of class `source`, whatever the suffix: `fs.py`,
 and equally `fs.txt` under `txt = "python"` or `fs.md` under `md = "python"`. A version-1
 file has no language to ask, so there it is a home not named `.md` whose extension is in the
-effective `[scan] extensions` ([§FS-scan.scope.extensions](FS-scan.md#scopeextensions-an-extension-makes-a-file-readable-not-declarable)). The name decides: an `exclude` or
-`include` entry that keeps the home out of the walk does not change the answer.
+effective `[scan] extensions` ([§FS-scan.scope.extensions](FS-scan.md#scopeextensions-an-extension-makes-a-file-readable-not-declarable)). The name decides, and an `exclude`
+or `include` entry does not change the answer: a `file` home is a scan root, read whether or
+not `include` names it ([§FS-scan.scope.homes](FS-scan.md#scopehomes-every-configured-kind-home-is-scanned)), and neither `exclude` nor a hidden directory prunes
+it ([§FS-scan.scope.roots](FS-scan.md#scoperoots-a-scan-root-outruns-every-rule-about-descent)), so `.x/fs.py` is read and refused too.
 
 A home the scan reads as Markdown goes on being written, whatever its name, `fs.txt` under
 `txt = "markdown"` included. So does a home the text scan does not read: a name no language
-or `[scan] extensions` list claims, such as `fs.dat`, where `check` already warns that the
-file is not read. Such a file is not read two ways, and this refusal says nothing about it.
+or `[scan] extensions` list claims, such as `fs.dat`, or a hidden name of its own, such as
+`.fs.py` ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), where `check` already warns that the file is not read. Such a
+file is not read two ways, and this refusal says nothing about it.
 
 The refusal is `fetch`'s alone. The configuration still loads, and `check`, `list`, `show`
 and `refs` keep their verdicts on such a project, reading what the file declares; only the

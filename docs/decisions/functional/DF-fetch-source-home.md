@@ -44,13 +44,14 @@ integration runs. Four answers lose.
 - **Replace the doc-comment in place.** That is a new writer for every comment form the
   scan reads, with its own rules for markers, indentation and the shape of a fetched
   body. Nothing asks for it, and the refusal leaves it open.
-- **Refuse a home no reader reads as well.** `fs.dat`, a non-value kind's `fs.json` and an
-  unscanned `fs.yaml` take the same write and no read returns it, but they are not read
-  two ways: `check` already says the file `is not read`, and a tool other than grund may
+- **Refuse a home no reader reads as well.** `fs.dat`, a hidden `.fs.py`, a non-value kind's
+  `fs.json` and an unscanned `fs.yaml` take the same write and no read returns it, but they
+  are not read two ways: `check` already says the file `is not read`, and a tool other than grund may
   be what reads them. That is a different question and a different ticket.
 
 `check` must not send a reader to a command that refuses, so at such a home its tail
-becomes `— declare it in that source file`
+becomes `— declare it in that source file`, or `— move the kind to a Markdown file or folder` for
+a value kind, which no comment can declare
 ([§FS-check.3.1.3.1](../../functional-spec/FS-check.md#3131-a-home-fetch-refuses)). The message's
 base, its code, its severity and the exit stay what they are.
 
@@ -135,9 +136,14 @@ offers was run on this tree.
   A `[rules.resolution]` entry, or a version-1 `resolve`, needs `fetch`, so it goes too, and
   the configuration refusal names it.
 
-The `check` tail names the same home, and it works: with `fs.py` declaring the ID in a
-docstring, a citation that failed with that tail resolves and check exits 0. It is a change
-to an existing finding's text, which [§FS-errors.3](../../functional-spec/FS-errors.md#3-message-text) sends through a deprecation path. A window
+The `check` tail names the same home, and it works. For a non-value kind, with `fs.py` declaring
+the ID in a docstring, a citation that failed with that tail resolves and check exits 0. For a
+value kind, with the kind moved to a `fs.md` that exists, or to a folder whose index lists the
+snapshot, fetch exits 0 and check exits 0: only a move to Markdown gets a value kind to green,
+because a comment in `fs.py` is refused as `value declarations in text homes must be Markdown headings`, and without `fetch` the
+citation still dangles.
+
+Either tail is a change to an existing finding's text, which [§FS-errors.3](../../functional-spec/FS-errors.md#3-message-text) sends through a deprecation path. A window
 here would have `check` name a command that now refuses, so the tail moves with the
 refusal in one release, as the value-source tail did. The message's base survives as a
 verbatim prefix, so only a consumer of the tail's own words sees it. Its migration is the
@@ -157,8 +163,8 @@ project does not read as Markdown that fetch "writes Markdown and so is not the 
 - In grund 0.22.0, `grund fetch <ID>` refuses with exit 2 when the kind's `file` home is
   one the text scan reads as source: `fs.py`, or `fs.txt` under `txt = "python"`. In a
   version-2 file the language its name resolves to decides. In a version-1 file it is a
-  name other than `.md` whose extension is in the effective `[scan] extensions`. Previously
-  it exited 0 and appended a Markdown heading to that file, or created the file holding only
+  name other than `.md` whose extension is in the effective `[scan] extensions`. A hidden name
+  such as `.fs.py` is not read, so it is no such home. Previously it exited 0 and appended a Markdown heading to that file, or created the file holding only
   that heading, which no command ever read back and which left a Python file unparsable. The
   refusal comes before the integration runs, whatever the file holds and whether or not it
   exists, names the home, and leaves every file unchanged. Move the kind and its declarations
@@ -166,8 +172,8 @@ project does not read as Markdown that fetch "writes Markdown and so is not the 
   keeps what was written, so restore it from version control. A home read as Markdown under any
   name, and a home the scan does not read, are written as before, and `check`, `list`, `show`
   and `refs` keep their verdicts. The `dangling` and `missing-snapshot` messages at such a home
-  now end `— declare it in that source file` in place of `— run grund fetch <ID>`. This verdict
-  changes under [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids):
+  now end `— declare it in that source file`, or `— move the kind to a Markdown file or folder`
+  for a value kind, in place of `— run grund fetch <ID>`. This verdict changes under [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids):
   the prior success violated [§REQ-no-data-loss.2](../../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own),
   and every finding names its location and the action to take
   ([§DF-fetch-source-home](DF-fetch-source-home.md#df-fetch-source-home-fetch-refuses-a-file-home-the-text-scan-reads-as-source)).

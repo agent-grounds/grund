@@ -69,16 +69,10 @@ pub(crate) fn name_refusal(path: &Path, schema: &Schema) -> Option<Unread> {
 }
 
 /// The extension reason alone, for the reader that has to know whether the list
-/// would have read a file the hidden rule refused (§FS-check.2.2.2): the one copy of
-/// the extension test.
+/// would have read a file the hidden rule refused (§FS-check.2.2.2): the answer of
+/// `Sources::lists_extension`, the one copy of the extension test.
 pub(crate) fn extension_refusal(path: &Path, schema: &Schema) -> Option<Unread> {
-    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-    let listed = schema
-        .sources
-        .extensions
-        .iter()
-        .any(|allowed| allowed == ext);
-    (!listed).then_some(Unread::Extension)
+    (!schema.sources.lists_extension(path)).then_some(Unread::Extension)
 }
 
 /// The name reasons a directory is not descended: a hidden name, or one

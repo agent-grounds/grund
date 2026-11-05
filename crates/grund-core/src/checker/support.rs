@@ -153,6 +153,12 @@ pub(super) fn missing_snapshot_message(
                 }
                 (Some(RefusedHome::SourceFile), true) => remedies::dangling_source_file(),
                 (Some(RefusedHome::SourceFile), false) => remedies::missing_snapshot_source_file(),
+                (Some(RefusedHome::SourceFileValue), true) => {
+                    remedies::dangling_source_file_value()
+                }
+                (Some(RefusedHome::SourceFileValue), false) => {
+                    remedies::missing_snapshot_source_file_value()
+                }
                 (None, true) => remedies::dangling_fetch(rendered),
                 (None, false) => remedies::missing_snapshot_fetch(rendered),
             };

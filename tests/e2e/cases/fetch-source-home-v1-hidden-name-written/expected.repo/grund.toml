@@ -1,0 +1,9 @@
+grund_config_version = 1
+
+[scan]
+extensions = ["md", "py"]
+
+[[kinds]]
+kind = "FS"
+file = ".fs.py"
+fetch = "scripts/fetch-fs"
