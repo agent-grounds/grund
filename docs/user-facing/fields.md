@@ -263,7 +263,9 @@ content = "values"
 A `content = "values"` field is the version-2 spelling of v1's
 `value_chapter`: every named child of that chapter is a value root, with the
 same coordinates, the same `invalid-value-declaration` findings and the same
-prerequisites ([§FS-fields.content.values](../functional-spec/FS-fields.md#contentvalues-a-values-field-is-the-value-chapter)). What the field adds is optional: a
+prerequisites ([§FS-fields.content.values](../functional-spec/FS-fields.md#contentvalues-a-values-field-is-the-value-chapter)). A fetched kind
+[takes no field](#rule-and-value-kinds), so its `value_chapter` has no such
+spelling ([§FS-config-migrate.3.1.7.1](../functional-spec/FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)). What the field adds is optional: a
 `presence`, a `position` or a `title`. A kind has at most one values field. The
 [values guide](values.md) covers writing the values themselves.
 
