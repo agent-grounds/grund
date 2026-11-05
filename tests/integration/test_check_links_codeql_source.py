@@ -41,7 +41,8 @@ class LicenseTransport:
             raise AssertionError(f"Unexpected transport request: {command!r}")
         if "--dump" in command:
             suffix = f" ({SOURCE})" if "--verbose" in command else ""
-            return subprocess.CompletedProcess(command, 0, stdout=self.url + suffix + "\n")
+            dumped = (self.url + suffix + "\n").encode()
+            return subprocess.CompletedProcess(command, 0, stdout=dumped)
         if "--offline" in command:
             return subprocess.CompletedProcess(command, 0)
         if "--output" not in command:

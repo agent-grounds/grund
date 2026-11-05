@@ -25,11 +25,6 @@ SPEC.loader.exec_module(link_scope)
 
 WINDOWS = os.name == "nt"
 POSIX_NAME = unittest.skipIf(WINDOWS, "Windows allows no such character in a file name")
-RED_UNTIL_1261 = unittest.skipUnless(
-    os.environ.get("GRUND_1261_RUN_RED_TESTS") == "1",
-    "red until #1261 has the link gate read each changed file by the name the file system "
-    "holds; implement removes this",
-)
 LINE = "See [a page](https://example.invalid/page)."
 KEPT = "one\ntwo\n"
 
@@ -209,85 +204,69 @@ class ChangedLinesWhateverTheNameTests(unittest.TestCase):
     def test_an_untracked_name_with_a_space(self):
         self.assert_new("docs/u b.md", "untracked")
 
-    @RED_UNTIL_1261
     def test_a_new_file_named_with_a_space(self):
         for state in ("committed", "staged"):
             with self.subTest(state=state):
                 self.assert_new("docs/a b.md", state)
 
-    @RED_UNTIL_1261
     def test_an_edited_file_named_with_a_space_gives_only_its_changed_line(self):
         for state in ("committed", "staged", "unstaged"):
             with self.subTest(state=state):
                 self.assert_edited("docs/kept space.md", state)
 
     @POSIX_NAME
-    @RED_UNTIL_1261
     def test_a_name_ending_in_a_space(self):
         self.assert_new("docs/trailing .md")
 
     @POSIX_NAME
-    @RED_UNTIL_1261
     def test_a_name_with_a_double_quote(self):
         self.assert_new('docs/a"b.md')
 
     @POSIX_NAME
-    @RED_UNTIL_1261
     def test_a_name_with_a_space_and_a_double_quote(self):
         self.assert_new('docs/a "b.md')
 
     @POSIX_NAME
-    @RED_UNTIL_1261
     def test_a_name_with_a_tab(self):
         self.assert_new("docs/a\tb.md")
 
     @POSIX_NAME
-    @RED_UNTIL_1261
     def test_a_name_with_a_backslash(self):
         self.assert_new("docs/a\\b.md")
 
     @POSIX_NAME
-    @RED_UNTIL_1261
     def test_a_name_with_a_newline(self):
         self.assert_new("docs/a\nb.md")
 
     @POSIX_NAME
-    @RED_UNTIL_1261
     def test_a_name_with_a_carriage_return(self):
         self.assert_new("docs/a\rb.md")
 
     @POSIX_NAME
-    @RED_UNTIL_1261
     def test_a_name_with_another_control_character(self):
         self.assert_new("docs/a\x01b.md")
 
     @unittest.skipIf(WINDOWS, "on Windows the scope may decode git's UTF-8 by the code page")
-    @RED_UNTIL_1261
     def test_a_name_with_non_ascii_text_and_a_space(self):
         self.assert_new("docs/été b.md")
 
     @unittest.skipIf(WINDOWS, "on Windows the scope may decode git's UTF-8 by the code page")
-    @RED_UNTIL_1261
     def test_a_name_with_a_line_separator(self):
         self.assert_new("docs/a b.md")
 
     @POSIX_NAME
-    @RED_UNTIL_1261
     def test_an_untracked_name_with_a_double_quote(self):
         self.assert_new('docs/u"b.md', "untracked")
 
     @POSIX_NAME
-    @RED_UNTIL_1261
     def test_an_untracked_name_with_a_newline(self):
         self.assert_new("docs/u\nb.md", "untracked")
 
     @POSIX_NAME
-    @RED_UNTIL_1261
     def test_an_untracked_name_with_a_carriage_return(self):
         self.assert_new("docs/u\rb.md", "untracked")
 
     @unittest.skipIf(WINDOWS, "on Windows the scope may decode git's UTF-8 by the code page")
-    @RED_UNTIL_1261
     def test_an_untracked_name_with_a_line_separator(self):
         self.assert_new("docs/u b.md", "untracked")
 
@@ -316,27 +295,21 @@ class ChangedLineGateWhateverTheNameTests(unittest.TestCase):
         (requested, code), output = self.gate_on("docs/a\nb.md", "/dead-newline", "--all")
         self.assertEqual((True, 2), ("/dead-newline" in requested, code), output)
 
-    @RED_UNTIL_1261
     def test_a_space(self):
         self.assert_fails("docs/a b.md", "/dead-space")
 
-    @RED_UNTIL_1261
     def test_a_double_quote(self):
         self.assert_fails('docs/a"b.md', "/dead-quote")
 
-    @RED_UNTIL_1261
     def test_a_tab(self):
         self.assert_fails("docs/a\tb.md", "/dead-tab")
 
-    @RED_UNTIL_1261
     def test_a_backslash(self):
         self.assert_fails("docs/a\\b.md", "/dead-backslash")
 
-    @RED_UNTIL_1261
     def test_a_carriage_return(self):
         self.assert_fails("docs/a\rb.md", "/dead-return")
 
-    @RED_UNTIL_1261
     def test_a_line_separator(self):
         self.assert_fails("docs/a b.md", "/dead-separator")
 

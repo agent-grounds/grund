@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Callable, Sequence
 from urllib.parse import urlsplit
 
-from link_scope import carries
+from link_scope import carries, dump_lines
 
 
 GITHUB_ENDPOINTS = (
@@ -228,9 +228,10 @@ def write_report(
     file that carries a kept failure's URL (§AR-ci.3.1.5)."""
     listed = subprocess.run(
         [lychee, "--dump-inputs", *inputs],
-        cwd=repo_root, capture_output=True, text=True, check=False,
+        cwd=repo_root, capture_output=True, check=False,
     )
-    files = sorted({os.path.normpath(name) for name in listed.stdout.splitlines() if name})
+    # lychee's lines read as the gate reads them: a name keeps a \r or U+2028 (§AR-ci.3.1.5).
+    files = sorted({os.path.normpath(name) for name in dump_lines(listed.stdout) if name})
     texts = {}
     for name in files:
         try:

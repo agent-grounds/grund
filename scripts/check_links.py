@@ -21,7 +21,7 @@ from typing import Callable, Sequence
 from urllib.parse import unquote, urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from link_scope import changed_lines, changed_urls, diff_base  # noqa: E402
+from link_scope import changed_lines, changed_urls, diff_base, dump_lines  # noqa: E402
 from link_settle import check_urls, report_failures, settle, write_report  # noqa: E402
 
 
@@ -38,9 +38,10 @@ class SelfLinkError(Exception):
     pass
 
 
-def self_links(dumped: str) -> list[str]:
-    """Every self-link of a `lychee --dump`, in either form (§AR-ci-self-links.1)."""
-    return sorted({line for line in dumped.splitlines() if line.startswith(SELF_PREFIXES)})
+def self_links(dumped: bytes) -> list[str]:
+    """Every self-link of a `lychee --dump`, in either form (§AR-ci-self-links.1), read as the
+    gate reads every dump (§AR-ci.3.1.4.1)."""
+    return sorted({line for line in dump_lines(dumped) if line.startswith(SELF_PREFIXES)})
 
 
 def self_link_target(url: str, repo_root: Path) -> Path:
@@ -110,7 +111,6 @@ def internal_pass(
         [lychee, "--dump", *inputs],
         cwd=repo_root,
         stdout=subprocess.PIPE,
-        text=True,
         check=False,
     )
     if dumped.returncode != 0:
@@ -188,12 +188,11 @@ def check_changed(
     changed = changed_lines(repo_root, base, inputs)
     if not changed:
         return 0
-    dumped = runner(
+    dumped = runner(  # bytes: text mode would turn a \r in a file name into \n (§AR-ci.3.1.4.1)
         [lychee, "--dump", "--verbose", *inputs],
         cwd=repo_root,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
-        text=True,
         check=False,
     )
     if dumped.returncode != 0:
