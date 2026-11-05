@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "r"
+
+[schema.sources.extensions]
+"" = "python"
+
+[schema.kinds.FS]
+files = ["FACTS"]

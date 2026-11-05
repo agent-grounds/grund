@@ -1,0 +1,8 @@
+project_name = "r"
+
+[scan]
+extensions = ["md"]
+
+[[kinds]]
+kind = "FS"
+file = "docs/fs.md"

@@ -1,0 +1,1 @@
+error: grund.toml:5: invalid suffix `` in [schema.sources.extensions] (expected a final extension with no dot, separator or glob)
