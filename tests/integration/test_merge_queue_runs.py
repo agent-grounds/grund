@@ -13,7 +13,7 @@ import unittest
 
 from ci_workflow import (CALL, CI, aggregate_fails, commands, field, header, holds, needs,
                          step_if, with_called_workflows)
-from test_ci_language_jobs import EVENTS, job_env
+from test_ci_language_jobs import CHECK_IF, EVENTS, check_if_problems, job_env
 from test_release_workflow import jobs, squash, step_name, steps
 
 # §AR-ci.5: the build job, the shard matrix and the record job.
@@ -40,6 +40,11 @@ def measures_head(step):
         command.startswith("cargo bench") for command in commands(step))
 
 
+def is_required_check(body):
+    """Whether a job carries a required `cargo test (<os>)` check (§AR-ci.13.2)."""
+    return re.search(r"(?m)^    name:\s*cargo test \(", body) is not None
+
+
 def judged_jobs(text, called=None):
     """Each job a required `cargo test (<os>)` check judges, by id: the check, each job it
     needs and, for a need that calls the leg, every `<call>/<job>` the call runs (§AR-ci.13.2).
@@ -47,7 +52,7 @@ def judged_jobs(text, called=None):
     written, read = jobs(text), jobs(with_called_workflows(text, called))
     judged = {}
     for job, body in written.items():
-        if not re.search(r"(?m)^    name:\s*cargo test \(", body):
+        if not is_required_check(body):
             continue
         judged[job] = body
         for need in needs(header(body)):
@@ -59,7 +64,8 @@ def judged_jobs(text, called=None):
 
 def every_event_problems(text, called=None):
     """The jobs a required check judges that some event skips (§AR-ci.12, §AR-ci.13.2). A leg's
-    job is one: a skipped job does not fail the call it runs in, so the check would pass it."""
+    job is one: a skipped job does not fail the call it runs in, so the check would pass it. A
+    check takes the `if:` of §AR-ci.12.1 and no other; a job it judges, `always()` or none."""
     judged = judged_jobs(text, called)
     problems = [] if judged else ["no job carries a required `cargo test (<os>)` check"]
     for job, body in sorted(judged.items()):
@@ -67,7 +73,9 @@ def every_event_problems(text, called=None):
             problems.append(f"a required check needs `{job}`, which is no job")
             continue
         condition = field(header(body), "if")
-        if condition and condition.replace("${{", "").replace("}}", "").strip() != "always()":
+        if is_required_check(body):
+            problems += check_if_problems(job, condition, needs(header(body)))
+        elif condition and condition.replace("${{", "").replace("}}", "").strip() != "always()":
             problems.append(f"`{job}` runs only `if: {condition}`; its required check must "
                             "report on a queue group too")
     return problems
@@ -107,18 +115,19 @@ def concurrency_workflow(group=GROUP, cancel=CANCELS):
             f"concurrency:\n{keys}\njobs:\n  a:\n    runs-on: ubuntu-latest\n")
 
 
-def leg_fixture(guarded=None, call_guarded=False):
+def leg_fixture(guarded=None, call_guarded=False, guard="github.event_name != 'merge_group'",
+                check_if=CHECK_IF):
     """A `ci.yml` whose Windows check needs its leg's call, and the leg it calls, for
-    `every_event_problems`: `guarded` names a leg job, and `call_guarded` the call, that a
-    merge-queue group skips (§AR-ci.13.5)."""
-    skip = "    if: github.event_name != 'merge_group'\n"
+    `every_event_problems`: `guarded` names a leg job, and `call_guarded` the call, that `guard`
+    keeps from a run, and `check_if` is the check's own `if:` (§AR-ci.13.5)."""
+    skip = f"    if: {guard}\n"
     leg = "jobs:\n" + "".join(
         f"  {job}:\n    runs-on: ${{{{ inputs.os }}}}\n" + (skip if job == guarded else "")
         + "    steps:\n      - run: exit 0\n" for job in ("rust", "python", "python-acceptance"))
     text = ("jobs:\n  leg-windows:\n    name: windows-latest\n" + (skip if call_guarded else "")
             + f"    uses: {CALL}\n    with:\n      os: windows-latest\n"
             "  test-windows:\n    name: cargo test (windows-latest)\n    runs-on: ubuntu-latest\n"
-            "    needs: [leg-windows]\n    if: always()\n    steps:\n      - run: exit 1\n")
+            f"    needs: [leg-windows]\n    if: {check_if}\n    steps:\n      - run: exit 1\n")
     return text, {CALL: leg}
 
 
@@ -135,8 +144,18 @@ class MergeQueueRunTests(unittest.TestCase):
         self.assertRegex(triggers, r"(?m)^  merge_group:", "ci.yml does not run on merge-queue groups")
 
     def test_only_a_replaced_pull_request_run_is_cancelled(self):
-        # §AR-ci.12.1: a run nobody will read takes no runner from a group behind it.
+        # §AR-ci.12.1: a replaced run is cancelled, so it stops taking runners from a group.
         self.assertEqual([], concurrency_problems(self.written))
+
+    def test_a_required_check_stays_off_a_runner_on_a_cancelled_pull_request_run_alone(self):
+        # §AR-ci.12.1: so the group frees as the suites stop; §AR-ci.13.2: elsewhere it judges.
+        checks = {field(header(body), "name"): body for body in self.jobs.values()
+                  if is_required_check(body)}
+        self.assertEqual({"cargo test (ubuntu-latest)", "cargo test (windows-latest)"}, set(checks))
+        for name, body in sorted(checks.items()):
+            with self.subTest(check=name):
+                self.assertEqual([], check_if_problems(name, field(header(body), "if"),
+                                                       needs(header(body))))
 
     def test_the_required_checks_and_the_jobs_they_judge_run_on_every_event(self):
         # §AR-ci.13.2: a required check is an aggregate, so the jobs it needs must run here too.
@@ -226,6 +245,63 @@ class EveryEventCheckTests(unittest.TestCase):
         problems = every_event_problems(*leg_fixture(call_guarded=True))
         self.assertEqual(1, len(problems), problems)
         self.assertIn("`leg-windows`", problems[0])
+
+    def test_a_judged_job_on_the_checks_condition_is_caught(self):
+        # §AR-ci.12.1: that a cancelled run skips it is a check's exception, not a judged job's.
+        problems = every_event_problems(*leg_fixture(guarded="rust", guard=CHECK_IF))
+        self.assertEqual(1, len(problems), problems)
+        self.assertIn("`leg-windows/rust`", problems[0])
+
+    def test_a_check_off_its_condition_is_caught(self):
+        # §AR-ci.12.1: `always()` skips no event, and still holds a replaced run's group.
+        for check_if in ("always()", "!cancelled()", "success()",
+                         "github.event_name != 'merge_group'"):
+            with self.subTest(check_if=check_if):
+                self.assertTrue(every_event_problems(*leg_fixture(check_if=check_if)))
+
+
+class RequiredCheckConditionTests(unittest.TestCase):
+    """§AR-ci.12.1: the table passes the point's `if:` and fails each way off it."""
+
+    def test_the_points_condition_passes(self):
+        self.assertEqual([], check_if_problems("c", CHECK_IF, ["a"]))
+
+    def test_always_is_caught_for_holding_the_group(self):
+        for condition in ("always()", "${{ always() }}"):
+            with self.subTest(condition=condition):
+                problems = check_if_problems("c", condition, ["a"])
+                self.assertEqual(1, len(problems), problems)
+                self.assertIn("not hold on a cancelled pull_request run", problems[0])
+
+    def test_plain_not_cancelled_is_caught_for_changing_the_queues_condition(self):
+        problems = check_if_problems("c", "!cancelled()", ["a"])
+        self.assertEqual(3, len(problems), problems)
+        for event, problem in zip(("push", "merge_group", "workflow_dispatch"), problems):
+            self.assertIn(f"hold on a cancelled {event} run", problem)
+
+    def test_success_is_caught(self):
+        problems = check_if_problems("c", "success()", ["a"])
+        self.assertEqual(1, len(problems), problems)
+        self.assertIn("does not read as", problems[0])
+
+    def test_no_condition_is_caught(self):
+        problems = check_if_problems("c", None, ["a"])
+        self.assertEqual(1, len(problems), problems)
+        self.assertIn("no `if:`", problems[0])
+
+    def test_a_condition_off_the_table_is_caught(self):
+        # §AR-ci.13.2: a check skipped over a failed need reads as passed.
+        for condition in (
+                "${{ github.event_name != 'pull_request' || !contains(needs.*.result, 'failure') }}",
+                "${{ github.event_name != 'pull_request' || !cancelled() && "
+                "!contains(needs.*.result, 'failure') }}",
+                "${{ github.event_name != 'pull_request' || needs.a.result == 'success' }}",
+                "${{ github.event_name != 'pull_request' && !cancelled() }}",
+                "${{ github.event_name != 'merge_group' || !cancelled() }}",
+                "${{ github.event_name != 'pull_request' }}",
+                "${{ github.event_name != 'pull_request' || !cancelled() || needs.b.result == 'x' }}"):
+            with self.subTest(condition=condition):
+                self.assertTrue(check_if_problems("c", condition, ["a"]))
 
 
 class ConcurrencyCheckTests(unittest.TestCase):

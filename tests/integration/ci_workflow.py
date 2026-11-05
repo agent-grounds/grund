@@ -120,10 +120,11 @@ def step_if(step):
     return found.group(1) if found else None
 
 
-def holds(condition, event, results=None):
-    """Whether an `if:` holds on `event` when the needs ended with `results` (§AR-ci.12). It
-    reads `github.event_name`, `github.ref` and `needs.<job>.result` against a literal,
-    `contains(needs.*.result, …)`, `always()`, `!`, `&&`, `||` and parentheses, and no more."""
+def holds(condition, event, results=None, cancelled=False):
+    """Whether an `if:` holds on `event` when the needs ended with `results`, in a live run or,
+    with `cancelled`, one being cancelled (§AR-ci.12, §AR-ci.12.1). It reads `github.event_name`,
+    `github.ref` and `needs.<job>.result` against a literal, `contains(needs.*.result, …)`,
+    `always()`, `cancelled()`, `!`, `&&`, `||` and parentheses, and no more."""
     # `ci.yml` runs a push on main alone; every other event runs on a ref of its own (§AR-ci.11).
     values = {"github.event_name": event,
               "github.ref": "refs/heads/main" if event == "push" else f"refs/{event}"}
@@ -134,7 +135,8 @@ def holds(condition, event, results=None):
                   compare, (condition or "always()").replace("${{", "").replace("}}", ""))
     text = re.sub(r"contains\(needs\.\*\.result,\s*'(\w+)'\)",
                   lambda found: f" {found[1] in (results or {}).values()} ", text)
-    text = text.replace("always()", " True ").replace("&&", " and ").replace("||", " or ")
+    text = text.replace("always()", " True ").replace("cancelled()", f" {bool(cancelled)} ")
+    text = text.replace("&&", " and ").replace("||", " or ")
     text = text.replace("!", " not ")
     if re.sub(r"\b(?:True|False|and|or|not)\b|[()\s]", "", text):
         raise ValueError(f"cannot read `if: {condition}`")
