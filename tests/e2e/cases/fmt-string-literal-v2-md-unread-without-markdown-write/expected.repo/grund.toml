@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "fixture"
+
+[schema.sources]
+languages = ["rust"]
+
+[schema.kinds.FS]
+folders = ["fs"]
+index = false

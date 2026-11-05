@@ -1,0 +1,11 @@
+# FS-002-beta: Beta
+
+## 1. One
+
+A quoted shorthand, "§FS-001" here.
+
+A quoted local section, "§1" here.
+
+Outside the quotes, a shorthand §FS-001 here.
+
+Outside the quotes, a local section §1 here.
