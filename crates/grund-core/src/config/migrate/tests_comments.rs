@@ -15,7 +15,8 @@ fn report(name: &str, toml: &str) -> MigrateReport {
         root: root.clone(),
         config: "grund.toml".into(),
     };
-    let prepared = translate(&located, false, false, &|| true).expect("translates");
+    let prepared =
+        translate(&located, false, false, &|| true, &|_| Ok(Vec::new())).expect("translates");
     let _ = std::fs::remove_dir_all(&root);
     match prepared {
         Prepared::Translated { report, .. } => *report,

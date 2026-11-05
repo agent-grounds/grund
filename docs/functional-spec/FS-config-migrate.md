@@ -130,6 +130,8 @@ refused: grund.toml:16: [scan] exclude entry `docs/data.txt` contains `/`, so ve
   repair: remove `docs/data.txt` from exclude under version 1, which keeps what is scanned exactly as it is
 ```
 
+Where the version 1 scan cannot walk this tree at all, nothing can say what it reads. A `[workspace]` member glob that names no directory is one such tree, where `grund list` fails too. Migration then fails with the same error and exit `2`, as it does for a config that does not load ([§FS-config-migrate.7](FS-config-migrate.md#7-outcomes)), and prints no count it could not take. The same holds for the detail of [§FS-config-migrate.3.1.5.1](FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads). A path the scan cannot read inside a tree it walks is not read, so it is not named, and its error is not printed with the refusal.
+
 #### 3.1.5 Nested homes
 
 A v1 file inside two nested homes belongs to the complement; in version 2 the deepest place owns it ([§DF-v2-place-ownership](../decisions/functional/DF-v2-place-ownership.md#df-v2-place-ownership-in-v2-the-row-named-code-is-the-complement-and-a-file-belongs-to-its-listed-row-or-else-its-deepest-folder)). Migration refuses and names every file whose owner would change, even when no finding on this tree would differ.

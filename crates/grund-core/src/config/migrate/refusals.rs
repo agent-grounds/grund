@@ -1,12 +1,13 @@
 //! §FS-config-migrate.3.1: the v1 settings version 2 cannot spell with the same
 //! meaning, each with the v1 repair that gets to one. Never approximated.
 
+use anyhow::Result;
 use std::path::Path;
 
 use super::comments::v1_key;
 use super::keys::Keys;
 use super::opted_out::Block;
-use super::places::scanned_files;
+use super::reads::Reads;
 use super::record::{MigrateRefusal, RefusalAnchor};
 use crate::config::grounding::configured_row_grounding;
 use crate::config::point_sizes::PointSizeUnit;
@@ -32,9 +33,9 @@ fn refusal(anchor: RefusalAnchor, what: String, repair: &str) -> MigrateRefusal 
 pub(super) fn settings(
     v1: &Project,
     keys: &Keys,
-    root: &Path,
+    reads: &Reads<'_>,
     block: Block,
-) -> Vec<MigrateRefusal> {
+) -> Result<Vec<MigrateRefusal>> {
     let mut out = Vec::new();
     let schema = &v1.schema;
     // §FS-config-migrate.3.1.2
@@ -132,8 +133,8 @@ pub(super) fn settings(
         }
     }
     out.extend(grounding(v1, keys));
-    out.extend(path_shaped_excludes(v1, keys, root));
-    out
+    out.extend(path_shaped_excludes(v1, keys, reads)?);
+    Ok(out)
 }
 
 /// §FS-config-migrate.3.1.8: each key whose value holds a string that closes early, at
@@ -222,17 +223,18 @@ fn grounding(v1: &Project, keys: &Keys) -> Vec<MigrateRefusal> {
 }
 
 /// §FS-config-migrate.3.1.4: each path-shaped exclude entry, with the files the
-/// glob it resembles would stop reading on this tree.
-fn path_shaped_excludes(v1: &Project, keys: &Keys, root: &Path) -> Vec<MigrateRefusal> {
+/// glob it resembles would stop reading on this tree: the ones version 1 reads at
+/// its path or below it, counted as `0 files` where there are none, when the
+/// refusal still stands (§FS-config-migrate.3.1.4.1).
+fn path_shaped_excludes(
+    v1: &Project,
+    keys: &Keys,
+    reads: &Reads<'_>,
+) -> Result<Vec<MigrateRefusal>> {
     let line = keys.line("scan", "exclude");
     let mut out = Vec::new();
     for entry in v1.schema.sources.exclude.iter().filter(|e| e.contains('/')) {
-        let path = entry.trim_matches('/');
-        let files = if root.join(path).exists() {
-            scanned_files(v1, root, path)
-        } else {
-            Vec::new()
-        };
+        let files = reads.under(entry.trim_matches('/'))?;
         let count = match files.len() {
             1 => "1 file".to_string(),
             n => format!("{n} files"),
@@ -253,5 +255,5 @@ fn path_shaped_excludes(v1: &Project, keys: &Keys, root: &Path) -> Vec<MigrateRe
             ),
         });
     }
-    out
+    Ok(out)
 }

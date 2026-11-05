@@ -43,7 +43,8 @@ fn prepared(root: &Path) -> (Located, Project, String, Vec<(usize, usize)>) {
         v1,
         line_map,
         ..
-    } = translate(&located, false, false, &|| true).expect("the v1 file reads")
+    } = translate(&located, false, false, &|| true, &|_| Ok(Vec::new()))
+        .expect("the v1 file reads")
     else {
         panic!("read as version 2");
     };

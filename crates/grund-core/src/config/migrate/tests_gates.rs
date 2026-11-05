@@ -41,7 +41,8 @@ fn translated(name: &str, toml: &str, paths: &[&str]) -> (Project, Project, Path
         config: "grund.toml".into(),
     };
     let Prepared::Translated { report, v1, .. } =
-        translate(&located, false, false, &|| true).expect("the v1 file reads")
+        translate(&located, false, false, &|| true, &|_| Ok(Vec::new()))
+            .expect("the v1 file reads")
     else {
         panic!("read as version 2");
     };

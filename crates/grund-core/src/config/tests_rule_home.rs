@@ -174,7 +174,8 @@ fn v1_rule_home_carried_through_migration_loads() {
         config: "grund.toml".into(),
     };
     let Prepared::Translated { report, .. } =
-        translate(&located, false, false, &|| true).expect("the v1 file reads")
+        translate(&located, false, false, &|| true, &|_| Ok(Vec::new()))
+            .expect("the v1 file reads")
     else {
         panic!("read as version 2");
     };
