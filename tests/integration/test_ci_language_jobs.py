@@ -63,6 +63,16 @@ BENCH_ENV = {"LC_ALL": "C.UTF-8", "TZ": "UTC", "RAYON_NUM_THREADS": "4",
              "CARGO_INCREMENTAL": "0", "RUSTFLAGS": ""}
 # §AR-ci.12, §AR-ci.11: the events `ci.yml` runs on.
 EVENTS = ("pull_request", "push", "workflow_dispatch", "merge_group")
+# §AR-ci.13.2: what a need can end with.
+RESULTS = ("success", "failure", "cancelled", "skipped")
+# §AR-ci.12.1: a required check's `if:`, and whether it holds, by event and cancelled run.
+CHECK_IF = "${{ github.event_name != 'pull_request' || !cancelled() }}"
+CHECK_IF_HOLDS = {
+    ("pull_request", False): True, ("pull_request", True): False,
+    ("push", False): True, ("push", True): True,
+    ("merge_group", False): True, ("merge_group", True): True,
+    ("workflow_dispatch", False): True, ("workflow_dispatch", True): True,
+}
 
 
 def leg_commands(system):
@@ -139,15 +149,35 @@ def required_check_problems(text):
     return problems
 
 
+def check_if_problems(name, condition, needed):
+    """What keeps a required check's `if:` from the table of §AR-ci.12.1, whatever its needs ended
+    with: skipped over a failed need it would read as passed (§AR-ci.13.2), and asking a runner on
+    a cancelled pull-request run it would hold its group."""
+    if not condition:
+        return [f"{name!r} has no `if:`, so a failed need skips it and a skipped required check "
+                "passes"]
+    problems = []
+    for (event, cancelled), expected in CHECK_IF_HOLDS.items():
+        try:
+            read = {holds(condition, event, dict.fromkeys(needed, result), cancelled)
+                    for result in RESULTS}
+        except (KeyError, ValueError):
+            return [f"{name!r} has `if: {condition}`, which does not read as `{CHECK_IF}`"]
+        if read != {expected}:
+            problems.append(f"{name!r} has `if: {condition}`, which must "
+                            f"{'hold' if expected else 'not hold'} on a "
+                            f"{'cancelled' if cancelled else 'live'} {event} run, whatever its "
+                            "needs ended with")
+    return problems
+
+
 def guard_problems(text):
-    """§AR-ci.13.2: the aggregate runs `always()` and fails on any need that did not succeed."""
+    """§AR-ci.13.2: the aggregate runs whatever its needs ended with, but on the cancelled run of
+    §AR-ci.12.1, and fails on any need that did not succeed."""
     problems = []
     for aggregate in (i for i in instances(text) if i["aggregate"]):
         name = aggregate["name"]
-        condition = (aggregate["if"] or "").replace("${{", "").replace("}}", "").strip()
-        if condition != "always()":
-            problems.append(f"{name!r} has `if: {aggregate['if']}`, not `always()`, so a failed "
-                            "need skips it and a skipped required check passes")
+        problems += check_if_problems(name, aggregate["if"], aggregate["needs"])
         flat = squash(aggregate["text"])
         named = all(f"contains(needs.*.result, '{result}')" in flat
                     for result in ("failure", "cancelled", "skipped"))
@@ -165,8 +195,7 @@ def bench_guard_problems(text):
     problems = []
     for aggregate in (i for i in found if i["aggregate"] and i["system"] == "ubuntu-latest"):
         for job in sorted(benches & set(aggregate["needs"])):
-            for event, result in itertools.product(
-                    EVENTS, ("success", "failure", "cancelled", "skipped")):
+            for event, result in itertools.product(EVENTS, RESULTS):
                 results = dict(dict.fromkeys(aggregate["needs"], "success"), **{job: result})
                 if aggregate_fails(aggregate["steps"], event, results) != (result != "success"):
                     verdict = "fails" if result == "success" else "passes"
@@ -252,7 +281,7 @@ def leg(job_id, system, *runs_, extra=""):
     return f"  {job_id}:\n    runs-on: {system}\n{extra}    steps:\n{lines}"
 
 
-def aggregate(system, needed, guard=True, condition="always()", skipped_in_queue=()):
+def aggregate(system, needed, guard=True, condition=CHECK_IF, skipped_in_queue=()):
     check = ("      - if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, "
              "'cancelled') || contains(needs.*.result, 'skipped') }}\n        run: exit 1\n"
              if guard else "      - run: echo done\n")
@@ -278,7 +307,7 @@ def cache(key, action="cache", condition=None):
 
 
 def fixture(cache_key="${{ runner.os }}-cargo-${{ github.job }}", node_rust_merged=False,
-            guard=True, condition="always()", needs_pre_commit=True, needs_bench=True,
+            guard=True, condition=CHECK_IF, needs_pre_commit=True, needs_bench=True,
             bench_skip_in_queue=False, every_shard_saves=False):
     """A workflow laid out as §AR-ci.13 asks, its jobs written out, with one knob per way it
     can go wrong; the first shard alone saves the cargo cache the others restore."""
@@ -418,8 +447,11 @@ class LanguageJobsCheckTests(unittest.TestCase):
     def test_two_suites_in_one_split_job_are_caught(self):
         self.assertTrue(split_problems(fixture(node_rust_merged=True)))
 
-    def test_an_aggregate_without_always_or_without_a_guard_is_caught(self):
-        self.assertTrue(guard_problems(fixture(condition=None)))
+    def test_an_aggregate_off_the_condition_or_without_a_guard_is_caught(self):
+        # §AR-ci.13.2, §AR-ci.12.1: `always()` would hold a replaced run's group.
+        for condition in (None, "always()", "!cancelled()", "success()"):
+            with self.subTest(condition=condition):
+                self.assertTrue(guard_problems(fixture(condition=condition)))
         self.assertTrue(guard_problems(fixture(guard=False)))
 
     def test_an_unjudged_pre_commit_job_is_caught(self):
