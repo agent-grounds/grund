@@ -10,10 +10,12 @@
 //! live here beside the walk that raises it (§AR-scanner.1).
 
 use std::io::{Error, ErrorKind};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
+use super::tree::ScanError;
 use crate::config::Frame;
 use crate::model::remedies;
+use crate::sources::paths_same_location;
 
 /// One file the walk could not read, as a caller of the embedding API sees it:
 /// the path rendered against the run's report base (§FS-config.3.6) and the
@@ -52,6 +54,32 @@ pub(super) fn scan_io_reason(error: &Error) -> String {
             error.to_string()
         }
         kind => Error::from(kind).to_string(),
+    }
+}
+
+/// A pass's failure to list `listed`, a directory the walk lists too, published at `spelled`
+/// unless the scan's reports so far already hold the same failure (§FS-check.2.4.2,
+/// §AR-scanner.1.relisted): the same physical location and the bare reason derived from the
+/// error's kind, as the walk derives its own. `context`, the pass's words around that reason,
+/// is published with it and never compared (§FS-check.2.4.1). Only this one failure is
+/// compared: nothing here deduplicates the list.
+pub(super) fn publish_unlisted(
+    listed: &Path,
+    spelled: PathBuf,
+    error: &Error,
+    context: Option<&str>,
+    reported: &mut Vec<ScanError>,
+) {
+    let reason = scan_io_reason(error);
+    let already = reported
+        .iter()
+        .any(|(path, said)| *said == reason && paths_same_location(path, listed));
+    if !already {
+        let message = match context {
+            Some(context) => format!("{context}: {reason}"),
+            None => reason,
+        };
+        reported.push((spelled, message));
     }
 }
 

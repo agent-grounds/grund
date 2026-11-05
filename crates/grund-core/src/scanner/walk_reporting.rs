@@ -316,9 +316,9 @@ pub(crate) fn walk_scannable_files_with_sources(
     // twice, and under `--full` every `include` root is walked beside the config root
     // containing it (§FS-check.1.3.2). A file read twice duplicates its own declaration.
     files.dedup();
-    // §FS-errors.4.1: the walk meets its unreadable paths in readdir order, so they
-    // are sorted once here for both surfaces, then deduplicated — one failure is
-    // one line, however many roots met it (§FS-check.2.4.2).
+    // §FS-errors.4.1: the walk meets its unreadable paths in readdir order, so they are
+    // sorted once here for both surfaces, then deduplicated byte-wise: overlapping roots
+    // that meet one failure under one spelling print it once; two spellings stay two.
     errors.sort_by_key(|(path, message)| (sort_path_key(path), message.clone()));
     errors.dedup();
     // §FS-fmt.2.3.2: a file whose physical path is not under the config root is in

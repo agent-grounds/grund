@@ -169,6 +169,9 @@ command_regression!(
     &["id", "FS", "new-thing"]
 );
 
+/// The home links to a hidden directory the walk never descends into, so the value pass is what
+/// reports it and its line keeps the home's context. Where the walk reports the home too, the one
+/// line is the walk's (§FS-check.2.4.2).
 #[test]
 fn value_home_read_retains_context_with_the_shared_permission_reason() {
     let mut fixture = Fixture::new("value-home");
@@ -177,7 +180,9 @@ fn value_home_read_retains_context_with_the_shared_permission_reason() {
         format!("{CONFIG}\n[schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\n"),
     )
     .unwrap();
-    fixture.lock("values", true);
+    fs::create_dir(fixture.root.join(".store")).unwrap();
+    fixture.lock(".store/home", true);
+    std::os::unix::fs::symlink(".store/home", fixture.root.join("values")).unwrap();
     let stderr = fixture.run(&["check"]);
     let expected =
         "read value home: permission denied; make the path readable, or keep it out of the scan";

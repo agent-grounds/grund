@@ -1,11 +1,9 @@
-use crate::sources::{
-    Sources, canonical_path, path_exists, path_is_dir, path_is_file, paths_same_location,
-};
+use crate::sources::{Sources, canonical_path, path_exists, path_is_dir, path_is_file};
 use anyhow::{Context, Result};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use super::scan_error::scan_io_reason;
+use super::scan_error::publish_unlisted;
 use super::tree::ScanError;
 
 use crate::config::{Frame, Schema, root_scope_roots};
@@ -110,7 +108,7 @@ pub(super) fn scan_e2e_cases(
             // §AR-scanner.6.6: a root that cannot be listed leaves nothing to read.
             Err(err) => {
                 let spelled = spelled_below(&spelled_root, &cases_root, &scan_root);
-                publish_unlisted(&scan_root, spelled, &err, reported);
+                publish_unlisted(&scan_root, spelled, &err, None, reported);
                 return Vec::new();
             }
         };
@@ -175,31 +173,6 @@ pub(super) fn scan_e2e_cases(
             });
     }
     failures
-}
-
-/// The failure to list `listed`, the directory the pass read, published unless the scan
-/// already reported the same failure (§FS-check.2.4.2, §AR-scanner.6.unlistable-root).
-///
-/// The same failure is the same physical location and the same reason. Locations compare
-/// physically because the pass holds a canonical path and the walk its own spelling. The
-/// reason is the one §FS-check.2.4.1 derives from the error's kind, as the walk derives its
-/// own, so a walk report at this path for another reason, a malformed ignore file at its
-/// walk root among them, is a different failure and stands in for nothing. The walk can
-/// miss the root, so its reports are consulted, never assumed. Only this one failure is
-/// compared: nothing here deduplicates the list.
-fn publish_unlisted(
-    listed: &Path,
-    spelled: PathBuf,
-    error: &std::io::Error,
-    reported: &mut Vec<ScanError>,
-) {
-    let reason = scan_io_reason(error);
-    let already = reported
-        .iter()
-        .any(|(path, said)| *said == reason && paths_same_location(path, listed));
-    if !already {
-        reported.push((spelled, reason));
-    }
 }
 
 /// `listed`, a canonical directory at or below the canonical `cases_root`, spelled as the

@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::json::{JsonNode, JsonReader};
-use super::scan_error::scan_io_reason;
+use super::scan_error::{publish_unlisted, scan_io_reason};
 use super::tree::ScanError;
 use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
 use super::value_yaml_subset::yaml_value_root;
@@ -17,6 +17,27 @@ use crate::model::sort_path_key;
 use crate::model::{Catalog, DeclarationSource, ValueFormat, normalize_path_lexically};
 use crate::sources::{paths_same_location, physical_path_key};
 
+/// The words a value home's read failure keeps around the shared I/O reason
+/// (§FS-check.2.4.1).
+const HOME_CONTEXT: &str = "read value home";
+
+/// A value home the enumerator could not read: the home as the config spells it, the
+/// error, and whether the listing itself failed rather than one entry of it.
+struct UnreadHome {
+    folder: PathBuf,
+    error: std::io::Error,
+    listing: bool,
+}
+
+impl UnreadHome {
+    /// The failure as it is published where nothing else could have reported it, the home's
+    /// context around the shared I/O reason (§FS-check.2.4.1).
+    fn into_scan_error(self) -> ScanError {
+        let reason = scan_io_reason(&self.error);
+        (self.folder, format!("{HOME_CONTEXT}: {reason}"))
+    }
+}
+
 /// Full-catalog enrollment through the same readers fetch uses for a selected
 /// home (§FS-values.2.2, §FS-fetch.5.1).
 pub(super) fn scan_value_sources(
@@ -25,10 +46,17 @@ pub(super) fn scan_value_sources(
     findings: &mut Catalog,
     errors: &mut Vec<ScanError>,
 ) {
-    let sources = match value_sources(schema, frame) {
+    let sources = match value_sources_in(schema, frame, None) {
         Ok(sources) => sources,
-        Err((path, message)) => {
-            errors.push((path, message));
+        // §AR-scanner.1.relisted: the walk lists a home too, so its listing failure is
+        // published only where the scan has not reported it already (§FS-check.2.4.2).
+        Err(unread) if unread.listing => {
+            let UnreadHome { folder, error, .. } = unread;
+            publish_unlisted(&folder, folder.clone(), &error, Some(HOME_CONTEXT), errors);
+            return;
+        }
+        Err(unread) => {
+            errors.push(unread.into_scan_error());
             return;
         }
     };
@@ -45,7 +73,9 @@ pub(crate) fn folder_value_declarations(
     folder: &Path,
     kind: &str,
 ) -> std::result::Result<Catalog, ScanError> {
-    let sources = value_sources_in(schema, frame, Some((kind, folder)))?;
+    // §FS-fetch.5.1: fetch runs no walk, so a home it cannot read is its failure as it stands.
+    let sources = value_sources_in(schema, frame, Some((kind, folder)))
+        .map_err(UnreadHome::into_scan_error)?;
     let mut findings = Catalog::default();
     let mut errors = Vec::new();
     scan_sources(frame, sources, &mut findings, &mut errors);
@@ -164,7 +194,7 @@ pub(super) fn value_sources<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
 ) -> std::result::Result<Vec<(PathBuf, &'a str, ValueFormat)>, (PathBuf, String)> {
-    value_sources_in(schema, frame, None)
+    value_sources_in(schema, frame, None).map_err(UnreadHome::into_scan_error)
 }
 
 /// The single source enumerator (§FS-values.2.2, §FS-fetch.5.1). A selected home
@@ -174,7 +204,7 @@ fn value_sources_in<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
     selected: Option<(&str, &Path)>,
-) -> std::result::Result<Vec<(PathBuf, &'a str, ValueFormat)>, ScanError> {
+) -> std::result::Result<Vec<(PathBuf, &'a str, ValueFormat)>, UnreadHome> {
     let mut sources = Vec::new();
     let mut selected_keys = BTreeSet::new();
     // §FS-config-v2.schema.sources.values: the home picks the files, their language the reader.
@@ -198,10 +228,11 @@ fn value_sources_in<'a>(
             let entries = match disk.read_dir(&folder) {
                 Ok(entries) => entries,
                 Err(error) if required => {
-                    return Err((
-                        folder.clone(),
-                        format!("read value home: {}", scan_io_reason(&error)),
-                    ));
+                    return Err(UnreadHome {
+                        folder,
+                        error,
+                        listing: true,
+                    });
                 }
                 Err(_) => continue,
             };
@@ -209,10 +240,11 @@ fn value_sources_in<'a>(
                 let entry = match entry {
                     Ok(entry) => entry,
                     Err(error) if required => {
-                        return Err((
-                            folder.clone(),
-                            format!("read value home: {}", scan_io_reason(&error)),
-                        ));
+                        return Err(UnreadHome {
+                            folder,
+                            error,
+                            listing: false,
+                        });
                     }
                     Err(_) => continue,
                 };
