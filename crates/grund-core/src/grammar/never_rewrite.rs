@@ -123,7 +123,9 @@ impl<'a> DocstringContent<'a> {
 /// verdict per site.
 ///
 /// `links` places a Markdown line in its document (§FS-citations.zones); a source
-/// line ignores it.
+/// line ignores it. `is_md` is how the file is read and not its name: it is what
+/// chooses the string-literal test here, so a file read as Markdown is exempt from
+/// that rule and every other scanned file is subject to it (§FS-fmt.2.3.1).
 pub(crate) fn never_rewrite_context_in(
     docstring: DocstringContent<'_>,
     links: LineLinks<'_>,

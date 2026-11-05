@@ -14,7 +14,8 @@ use crate::model::{
 /// they are scanning (§FS-fmt.2.3, §FS-check.3.13.1). One place asks it, so the
 /// qualified pass, the unqualified one and the shorthand pass can never reach
 /// different verdicts about one site; the recorded column stays a raw-file column
-/// either way (§AR-scanner.2.6.10).
+/// either way (§AR-scanner.2.6.10). `line.is_md` is how the scan reads the file and
+/// not its name, so the string-literal rule follows the reading (§FS-fmt.2.3.1).
 pub(super) fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> bool {
     !never_rewrite_context_in(
         line.docstring,

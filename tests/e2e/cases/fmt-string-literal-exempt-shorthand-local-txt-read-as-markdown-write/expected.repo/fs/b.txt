@@ -1,0 +1,11 @@
+# FS-002-beta: Beta
+
+## 1. One
+
+A quoted shorthand, "[§FS-001-alpha](a.rs)" here.
+
+A quoted local section, "[§FS-002-beta.1](b.txt#1-one)" here.
+
+Outside the quotes, a shorthand [§FS-001-alpha](a.rs) here.
+
+Outside the quotes, a local section [§FS-002-beta.1](b.txt#1-one) here.
