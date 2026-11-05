@@ -218,7 +218,7 @@ path = "docs/functional-spec/FS-declarations.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 794, unit = "lines" }
+max_accepted = { value = 802, unit = "lines" }
 until = "the stubs and checks chapters of the declarations specification move into their own declarations with existing FS-declarations section citations migrated"
 issue = "agent-grounds/grund#650"
 reason = """
@@ -227,6 +227,8 @@ Missing boundary: what a stub is (§FS-declarations.stubs) and the finding catal
 The file arrived at issue #1027 measuring 782 non-blank lines, ten above this ceiling; #1027 rewrites five lines of §FS-declarations.checks in place and adds none. The declaration grammar and the finding catalog still share one declaration; the mapped migration above retires that debt and is outside a message change. The ceiling accepts exactly the measured 782 non-blank lines, with no growth allowance.
 
 Main reached 785 non-blank lines before issue #1048 touched it. #1048 extends §FS-declarations.section, §FS-declarations.section.map, §FS-declarations.body, §FS-declarations.checks.duplicate-section and its second point in place, because each said a section is a heading inside the body and a front-matter key is now a section that is neither; that adds nine lines. The mapped migration above still retires this debt and is outside a field change. The ceiling accepts exactly the measured 794 non-blank lines, with no growth allowance.
+
+Main sat at that ceiling before issue #1256 touched it. #1256 adds §FS-declarations.e2e-case.failure beside its two siblings, because what a failing case directory declares belongs with what a case directory declares; that adds eight lines. The mapped migration above still retires this debt and is outside a defect fix. The ceiling accepts exactly the measured 802 non-blank lines, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-distribution.md"

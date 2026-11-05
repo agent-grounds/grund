@@ -92,9 +92,26 @@ include!("case_refresh_tests.rs");
 // (§AR-core-module-layout.3).
 include!("case_args_tests.rs");
 
+/// Cases red until #1256 reads every case whatever another holds
+/// (§FS-declarations.e2e-case.failure). `corpus_cases` in `tests/e2e_case_failure.rs` runs them
+/// under `--ignored`; implement deletes this list, its filter and that test together.
+pub const RED_UNTIL_1256: &[&str] = &[
+    "check-e2e-case-two-undecodable",
+    "check-e2e-case-undecodable-command-args",
+    "check-e2e-case-undecodable-expected-exit",
+    "check-e2e-case-undecodable-sorts-first",
+    "check-e2e-case-undecodable-spec-refs",
+    "check-e2e-case-undecodable-unknown-reference-stays",
+    "list-e2e-case-undecodable-expected-exit",
+    "list-e2e-case-undecodable-sorts-first",
+];
+
 pub fn discover_e2e_cases(manifest_dir: &Path) -> Vec<PathBuf> {
     let cases_dir = manifest_dir.join("tests/e2e/cases");
-    let cases = discover_case_dirs(&cases_dir, |_| true);
+    let cases = discover_case_dirs(&cases_dir, |case| {
+        let name = case.file_name().unwrap_or_default().to_string_lossy();
+        !RED_UNTIL_1256.contains(&name.as_ref())
+    });
     assert!(
         !cases.is_empty(),
         "expected at least one e2e case under {}",
