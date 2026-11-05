@@ -615,7 +615,7 @@ consumer, including its package metadata, bundled sources and native artifact;
 it never shares writable files, links back to the template or another consumer,
 or adopts another source's installation merely because its version matches.
 The template belongs to the staged tarball and this run, outside the checkout,
-and is discarded with the run. It is not a new persistent or forge cache.
+and is discarded with the run. It is not a new persistent or forge cache; [§AR-ci-npm-cache](AR-ci-npm-cache.md#ar-ci-npm-cache-a-tests-throwaway-npm-package-leaves-nothing-in-the-users-npm-cache) keeps its tarball out of npm's.
 
 The first consumer still comes through the real local `npm install`, with
 `--ignore-scripts`, `--no-audit` and `--no-fund`, and must load through bare

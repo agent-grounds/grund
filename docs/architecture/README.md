@@ -292,6 +292,7 @@ What measures the system:
 | [§AR-ci-terminal-inputs](AR-ci-terminal-inputs.md#ar-ci-terminal-inputs-the-terminal-watch-acceptance-selects-this-checkouts-cli) | The terminal watch acceptance selects this checkout's CLI |
 | [§AR-ci-suite-environment](AR-ci-suite-environment.md#ar-ci-suite-environment-a-suite-wrapper-hands-its-tests-no-repository-location) | A suite wrapper hands its tests no repository location |
 | [§AR-ci-pip-cache](AR-ci-pip-cache.md#ar-ci-pip-cache-a-tests-pip-install-leaves-no-built-wheel-in-the-users-pip-cache) | A test's pip install leaves no built wheel in the user's pip cache |
+| [§AR-ci-npm-cache](AR-ci-npm-cache.md#ar-ci-npm-cache-a-tests-throwaway-npm-package-leaves-nothing-in-the-users-npm-cache) | A test's throwaway npm package leaves nothing in the user's npm cache |
 | [§AR-benchmarks](AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) | instruction-counting benchmarks for the hot CLI commands |
 | [§AR-goal-measurement](AR-goal-measurement.md#ar-goal-measurement-goal-and-requirement-meters-live-outside-goals) | goal and requirement meters live outside goals |
 
