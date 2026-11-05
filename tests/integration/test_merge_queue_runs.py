@@ -21,6 +21,12 @@ BENCH_JOBS = ("bench-build", "bench", "bench-record")
 # §AR-ci.5.1: the head's run, on its own binary, with no base and no baseline.
 HEAD_RUN = ("cargo bench -p grund --features bench --locked --quiet --bench instructions"
             " -- --save-summary=json")
+# §AR-ci.12.1: the group a pull request's run shares, the one any other run has to itself, and
+# the one condition under which a run cancels.
+PULL_REQUEST_KEY = "github.event.pull_request.number"
+OWN_RUN_KEY = "github.run_id"
+GROUP = f"ci-${{{{ {PULL_REQUEST_KEY} || {OWN_RUN_KEY} }}}}"
+CANCELS = "${{ github.event_name == 'pull_request' }}"
 
 
 def runs(job_body, step, event):
@@ -67,6 +73,40 @@ def every_event_problems(text, called=None):
     return problems
 
 
+def concurrency_problems(text):
+    """What keeps a workflow's own `concurrency:` from §AR-ci.12.1: one group per pull request,
+    a group of its own for every other run, and only a pull request's run cancelling."""
+    block = re.search(r"(?m)^concurrency:[ \t]*\n((?:  .*\n)+)", text)
+    if not block:
+        return ["no workflow-level `concurrency:` block: a replaced pull-request run keeps its "
+                "runners"]
+    def value(key):
+        found = re.search(rf"(?m)^  {key}:[ \t]*(.*?)[ \t]*$", block.group(1))
+        return found.group(1) if found else None
+    group, cancel = value("group"), value("cancel-in-progress")
+    expression = re.fullmatch(r"[\w-]*\$\{\{([^}]*)\}\}", group or "")
+    keys = [key.strip() for key in expression.group(1).split("||")] if expression else []
+    problems = []
+    if keys[:1] != [PULL_REQUEST_KEY]:
+        problems.append(f"`group: {group}` is not one group per pull request: use "
+                        f"`{PULL_REQUEST_KEY}`, since two forks can share a branch name")
+    if keys[1:] != [OWN_RUN_KEY]:
+        problems.append(f"`group: {group}` gives another event's run no group of its own: fall "
+                        f"back to `{OWN_RUN_KEY}`, since a newer run displaces a waiting one")
+    if cancel != CANCELS:
+        problems.append(f"`cancel-in-progress: {cancel}` must be `{CANCELS}`: only a pull "
+                        "request's run is replaced")
+    return problems
+
+
+def concurrency_workflow(group=GROUP, cancel=CANCELS):
+    """A workflow whose `concurrency:` block is `group` and `cancel`, for
+    `concurrency_problems`; `cancel=None` leaves that key out (§AR-ci.12.1)."""
+    keys = f"  group: {group}\n" + (f"  cancel-in-progress: {cancel}\n" if cancel else "")
+    return ("name: CI\n\non:\n  pull_request:\n\n"
+            f"concurrency:\n{keys}\njobs:\n  a:\n    runs-on: ubuntu-latest\n")
+
+
 def leg_fixture(guarded=None, call_guarded=False):
     """A `ci.yml` whose Windows check needs its leg's call, and the leg it calls, for
     `every_event_problems`: `guarded` names a leg job, and `call_guarded` the call, that a
@@ -93,6 +133,11 @@ class MergeQueueRunTests(unittest.TestCase):
     def test_ci_runs_on_merge_queue_groups(self):
         triggers = self.text.split("\non:\n", 1)[1].split("\nenv:", 1)[0]
         self.assertRegex(triggers, r"(?m)^  merge_group:", "ci.yml does not run on merge-queue groups")
+
+    @unittest.skip("red until #1144 ci.yml declares the group; implement removes this")
+    def test_only_a_replaced_pull_request_run_is_cancelled(self):
+        # §AR-ci.12.1: a run nobody will read takes no runner from a group behind it.
+        self.assertEqual([], concurrency_problems(self.written))
 
     def test_the_required_checks_and_the_jobs_they_judge_run_on_every_event(self):
         # §AR-ci.13.2: a required check is an aggregate, so the jobs it needs must run here too.
@@ -182,6 +227,59 @@ class EveryEventCheckTests(unittest.TestCase):
         problems = every_event_problems(*leg_fixture(call_guarded=True))
         self.assertEqual(1, len(problems), problems)
         self.assertIn("`leg-windows`", problems[0])
+
+
+class ConcurrencyCheckTests(unittest.TestCase):
+    """§AR-ci.12.1: the concurrency check passes the point's block and fails each way a block
+    could keep a replaced run, or cancel or displace a run nobody replaced."""
+
+    def test_the_points_block_passes(self):
+        self.assertEqual([], concurrency_problems(concurrency_workflow()))
+
+    def test_no_workflow_level_block_is_caught(self):
+        absent = concurrency_workflow().replace("concurrency:\n", "# concurrency:\n")
+        job_level = ("on:\n  pull_request:\n\njobs:\n  a:\n    runs-on: ubuntu-latest\n"
+                     f"    concurrency:\n      group: {GROUP}\n"
+                     f"      cancel-in-progress: {CANCELS}\n")
+        for label, text in (("absent", absent), ("on a job", job_level)):
+            with self.subTest(label):
+                problems = concurrency_problems(text)
+                self.assertEqual(1, len(problems), problems)
+                self.assertIn("no workflow-level `concurrency:` block", problems[0])
+
+    def test_a_cancel_that_is_not_the_pull_requests_alone_is_caught(self):
+        for cancel in ("true", "false", None, "${{ github.event_name != 'push' }}"):
+            with self.subTest(cancel=cancel):
+                problems = concurrency_problems(concurrency_workflow(cancel=cancel))
+                self.assertEqual(1, len(problems), problems)
+                self.assertIn(f"`cancel-in-progress: {cancel}`", problems[0])
+
+    def test_a_group_not_one_per_pull_request_is_caught(self):
+        for group in ("ci-${{ github.head_ref || github.run_id }}",
+                      "ci-${{ github.sha || github.run_id }}"):
+            with self.subTest(group=group):
+                problems = concurrency_problems(concurrency_workflow(group=group))
+                self.assertEqual(1, len(problems), problems)
+                self.assertIn("is not one group per pull request", problems[0])
+
+    def test_a_group_another_event_shares_is_caught(self):
+        # §AR-ci.5.5.3: a shared group holds one waiting run, so a third push cancels the second.
+        for group in ("ci-${{ github.event.pull_request.number || github.ref }}",
+                      "ci-${{ github.event.pull_request.number }}"):
+            with self.subTest(group=group):
+                problems = concurrency_problems(concurrency_workflow(group=group))
+                self.assertEqual(1, len(problems), problems)
+                self.assertIn("no group of its own", problems[0])
+
+    def test_a_group_with_neither_key_is_caught(self):
+        for group in ("ci", "ci-${{ github.run_id }}", "ci-${{ github.ref }}",
+                      "ci-${{ github.run_id || github.event.pull_request.number }}",
+                      f"{GROUP}-${{{{ github.sha }}}}"):
+            with self.subTest(group=group):
+                problems = concurrency_problems(concurrency_workflow(group=group))
+                self.assertEqual(2, len(problems), problems)
+                self.assertIn("is not one group per pull request", problems[0])
+                self.assertIn("no group of its own", problems[1])
 
 
 if __name__ == "__main__":
