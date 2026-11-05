@@ -171,7 +171,10 @@ command_regression!(
 
 /// The home links to a hidden directory the walk never descends into, so the value pass is what
 /// reports it and its line keeps the home's context. Where the walk reports the home too, the one
-/// line is the walk's (§FS-check.2.4.2).
+/// line is the walk's (§FS-check.2.4.2). This layout leaves the home to the pass only while the
+/// walk reports a link whose target it cannot open at its walk root rather than at the link
+/// (#1266); no layout does so by design. Once that is fixed the one line here is the walk's and
+/// this test goes, the fetch test below keeping the pin of the home's context.
 #[test]
 fn value_home_read_retains_context_with_the_shared_permission_reason() {
     let mut fixture = Fixture::new("value-home");
@@ -197,6 +200,42 @@ fn value_home_read_retains_context_with_the_shared_permission_reason() {
         io_records(&stderr)
             .iter()
             .any(|record| record["path"] == "values" && record["message"] == expected),
+        "{stderr}"
+    );
+}
+
+/// Fetch's selected-home discovery runs no walk, so its failure to list the home is its own and
+/// keeps the home's context around the shared reason (§FS-check.2.4.1, §FS-fetch.5.1). No walk
+/// report can take this line over, so it is the durable pin of that context.
+#[test]
+fn fetch_of_an_unreadable_value_home_retains_context_with_the_shared_permission_reason() {
+    let mut fixture = Fixture::new("fetch-value-home");
+    fs::write(
+        fixture.root.join("grund.toml"),
+        format!(
+            "{CONFIG}\n[schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\n\
+             fetch = \"scripts/fetch-const\"\n"
+        ),
+    )
+    .unwrap();
+    let script = fixture.root.join("scripts/fetch-const");
+    fs::create_dir(fixture.root.join("scripts")).unwrap();
+    fs::write(
+        &script,
+        "#!/bin/sh\nprintf '%b' \"# $1: Fetched\\n\\n## 1. 99\\n\"\n",
+    )
+    .unwrap();
+    fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).unwrap();
+    fixture.lock("values", true);
+    let stderr = fixture.run(&["fetch", "CONST-room-limit"]);
+    let failures: Vec<_> = stderr
+        .lines()
+        .filter(|line| line.starts_with("error: "))
+        .collect();
+    assert_eq!(failures.len(), 1, "{stderr}");
+    assert!(
+        failures[0].starts_with("error: cannot read snapshot folder ")
+            && failures[0].ends_with(&format!("values: read value home: {REASON}")),
         "{stderr}"
     );
 }
