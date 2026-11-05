@@ -55,6 +55,13 @@ all files unchanged. Keep that fact in the value source, or move it out of the
 value home before fetching. A table holding only other IDs does not block fetching
 ([§FS-fetch.5.1](../functional-spec/FS-fetch.md#51-existing-value-source-declarations-prevent-installation)).
 
+In a `folder` home, a file the scan reads under a name other than `.md` that
+already declares the ID stops the fetch: grund exits 2, names that file and
+changes nothing, because a new `<ID>.md` beside it would be a duplicate and
+replacing it would overwrite what it holds around the declaration. Keep the fact
+in that file, or take the declaration out of it and fetch again
+([§FS-fetch.5.2](../functional-spec/FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)).
+
 With `resolve = "must"`, a missing snapshot is the ordinary `dangling` error.
 With `resolve = "should"`, it is the fixed `missing-snapshot` warning and a
 warning-only check exits 0. Choose `must` when CI should enforce that every

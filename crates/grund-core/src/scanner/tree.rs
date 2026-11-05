@@ -61,34 +61,39 @@ fn scan_one_file(
     frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> FileScanResult {
+    let result = pass_over_file(file, schema, frame, workspace_targets);
+    (file.to_path_buf(), result.map_err(|err| format!("{err:#}")))
+}
+
+/// [`scan_one_file`]'s pass, its failure still holding the I/O error a caller outside
+/// the walk classifies by (§FS-distribution.3.3.2).
+fn pass_over_file(
+    file: &Path,
+    schema: &Schema,
+    frame: Frame<'_>,
+    workspace_targets: &[WorkspaceCitationTarget],
+) -> Result<Catalog> {
     let mut findings = Catalog::default();
     // §FS-check.6.1.1: `sources` observes this input before its shared read.
-    let result = match frame.sources().shared_text(file) {
-        Ok(text) => scan_file_text(file, text, schema, frame, &mut findings, workspace_targets),
-        Err(err) => Err(err.into()),
-    };
-    match result {
-        Ok(()) => {
-            findings.scanned_files.push(file.to_path_buf());
-            (file.to_path_buf(), Ok(findings))
-        }
-        Err(err) => (file.to_path_buf(), Err(format!("{err:#}"))),
-    }
+    let text = frame.sources().shared_text(file)?;
+    scan_file_text(file, text, schema, frame, &mut findings, workspace_targets)?;
+    findings.scanned_files.push(file.to_path_buf());
+    Ok(findings)
 }
 
 /// One file's pass outside any walk (§AR-scanner.2), its overlay first: the
 /// records of a file the walk did not reach, for a stub whose target lies
 /// outside scan scope and still reads as the scanned file would (§FS-show.2.3.7),
 /// its qualified citations recognized against the workspace's projects as the
-/// walk's are (§FS-declarations.stubs.target.5).
-pub(super) fn scan_unwalked_file(
+/// walk's are (§FS-declarations.stubs.target.5). Fetch asks it of the files its
+/// own walk of a home does not replace (§FS-fetch.5.2).
+pub(crate) fn scan_unwalked_file(
     file: &Path,
     schema: &Schema,
     frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<Catalog> {
-    let (_, result) = scan_one_file(file, schema, frame, workspace_targets);
-    let mut findings = result.map_err(|message| anyhow!(message))?;
+    let mut findings = pass_over_file(file, schema, frame, workspace_targets)?;
     // §FS-workspace.1.2: the two passes' sites, back in the single-project scan's order.
     if !workspace_targets.is_empty() {
         findings

@@ -64,7 +64,6 @@ fn copy_of(test: &str, case: &str) -> PathBuf {
 }
 
 #[test]
-#[ignore = "red until #1213 refuses a file in the home that declares the ID; implement removes this"]
 fn a_refused_fetch_leaves_a_green_tree_green() {
     for (case, id) in REFUSED {
         let project = copy_of("green", case);
@@ -116,7 +115,6 @@ fn a_created_snapshot_leaves_the_tree_green_and_fetches_again() {
 }
 
 #[test]
-#[ignore = "red until #1213 refuses a file in the home that declares the ID; implement removes this"]
 fn taking_the_declaration_out_of_the_file_is_the_way_through() {
     let project = copy_of("way-through", "fetch-folder-source-v2-python-refused");
     assert_code(
@@ -138,7 +136,6 @@ fn taking_the_declaration_out_of_the_file_is_the_way_through() {
 }
 
 #[test]
-#[ignore = "red until #1213 refuses a file in the home that declares the ID; implement removes this"]
 fn the_refusal_spells_the_file_from_the_report_base() {
     // §FS-cli.3.4: the default base is the config root, wherever the run stands.
     let project = copy_of("base", "fetch-folder-source-v2-python-refused");
@@ -160,7 +157,6 @@ fn the_refusal_spells_the_file_from_the_report_base() {
 }
 
 #[test]
-#[ignore = "red until #1213 refuses a file in the home that declares the ID; implement removes this"]
 fn a_file_it_cannot_read_is_a_discovery_failure() {
     let project = copy_of("unreadable", "fetch-folder-source-v2-python-refused");
     let before = tree_with_directories(&project);

@@ -249,6 +249,7 @@ fn fetch_run(
             &selected,
             &id,
             local,
+            &report_base,
             snapshot.as_bytes(),
             diagnostic,
         ),
