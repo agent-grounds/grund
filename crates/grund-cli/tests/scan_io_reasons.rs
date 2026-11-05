@@ -100,7 +100,6 @@ fn io_records(stderr: &str) -> Vec<serde_json::Value> {
 }
 
 #[test]
-#[ignore = "red until #1223 shares kind-based scan I/O reasons; implement removes this"]
 fn check_text_gives_file_and_directory_one_permission_reason() {
     let mut fixture = Fixture::new("check-text");
     fixture.lock("docs/FS-a.md", false);
@@ -119,7 +118,6 @@ fn check_text_gives_file_and_directory_one_permission_reason() {
 }
 
 #[test]
-#[ignore = "red until #1223 shares kind-based scan I/O reasons; implement removes this"]
 fn check_json_gives_file_and_directory_one_permission_reason() {
     let mut fixture = Fixture::new("check-json");
     fixture.lock("docs/FS-a.md", false);
@@ -142,7 +140,6 @@ fn check_json_gives_file_and_directory_one_permission_reason() {
 macro_rules! command_regression {
     ($name:ident, $args:expr) => {
         #[test]
-        #[ignore = "red until #1223 shares kind-based scan I/O reasons; implement removes this"]
         fn $name() {
             let mut file = Fixture::new(concat!(stringify!($name), "-file"));
             file.lock("docs/FS-a.md", false);
@@ -173,7 +170,6 @@ command_regression!(
 );
 
 #[test]
-#[ignore = "red until #1223 normalizes value-home I/O reasons; implement removes this"]
 fn value_home_read_retains_context_with_the_shared_permission_reason() {
     let mut fixture = Fixture::new("value-home");
     fs::write(

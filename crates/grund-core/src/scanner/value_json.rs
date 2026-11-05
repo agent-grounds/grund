@@ -7,6 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::json::{JsonNode, JsonReader};
+use super::scan_error::scan_io_reason;
 use super::tree::ScanError;
 use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
 use super::value_yaml_subset::yaml_value_root;
@@ -88,10 +89,14 @@ fn scan_sources(
         let text = match frame.sources().text(path) {
             Ok(text) => text.into_owned(),
             Err(error) => {
-                // §FS-values.5.3: what stops every reader of the catalog, in either format.
+                // §FS-check.2.4.1: retain the format context around the shared I/O reason.
                 errors.push((
                     path.clone(),
-                    format!("could not read value {} source: {error}", format.name()),
+                    format!(
+                        "could not read value {} source: {}",
+                        format.name(),
+                        scan_io_reason(&error)
+                    ),
                 ));
                 continue;
             }
@@ -153,6 +158,8 @@ fn duplicate_owned_source(path: &Path, findings: &mut Catalog) {
 /// Every value source of every value home, with its owning kind and format
 /// (§FS-values.terms, §FS-values.2.2), in one bytewise path order across formats;
 /// the scoped fetch query shares this enumerator (§FS-fetch.5.1).
+/// Both directory-read failures retain home context around the shared I/O reason
+/// (§FS-check.2.4.1).
 pub(super) fn value_sources<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
@@ -191,7 +198,10 @@ fn value_sources_in<'a>(
             let entries = match disk.read_dir(&folder) {
                 Ok(entries) => entries,
                 Err(error) if required => {
-                    return Err((folder.clone(), format!("read value home: {error}")));
+                    return Err((
+                        folder.clone(),
+                        format!("read value home: {}", scan_io_reason(&error)),
+                    ));
                 }
                 Err(_) => continue,
             };
@@ -199,7 +209,10 @@ fn value_sources_in<'a>(
                 let entry = match entry {
                     Ok(entry) => entry,
                     Err(error) if required => {
-                        return Err((folder.clone(), format!("read value home: {error}")));
+                        return Err((
+                            folder.clone(),
+                            format!("read value home: {}", scan_io_reason(&error)),
+                        ));
                     }
                     Err(_) => continue,
                 };

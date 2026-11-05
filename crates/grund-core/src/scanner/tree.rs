@@ -7,6 +7,7 @@ use super::file_pass::scan_file_text;
 use super::legacy::promote_local_legacy_citations;
 use super::merge::merge_findings;
 use super::read_predicate::unread;
+use super::scan_error::scan_error_reason;
 use super::section_locks::read_section_locks;
 use super::stub_homes::resolve_stubs;
 use super::value_json::{scan_value_sources, value_sources};
@@ -54,7 +55,7 @@ type FileScanResult = (PathBuf, std::result::Result<Catalog, String>);
 
 /// One file's pass on the text a save would write: the editor's unsaved text where
 /// the file is open in one, the disk only where it is not
-/// (§AR-system.2.13).
+/// (§AR-system.2.13), with the shared scan I/O reason (§FS-check.2.4.1).
 fn scan_one_file(
     file: &Path,
     schema: &Schema,
@@ -62,7 +63,10 @@ fn scan_one_file(
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> FileScanResult {
     let result = pass_over_file(file, schema, frame, workspace_targets);
-    (file.to_path_buf(), result.map_err(|err| format!("{err:#}")))
+    (
+        file.to_path_buf(),
+        result.map_err(|err| scan_error_reason(&err)),
+    )
 }
 
 /// [`scan_one_file`]'s pass, its failure still holding the I/O error a caller outside
@@ -219,7 +223,8 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     }
     findings.files = records.into_iter().collect();
     if let Err(err) = scan_e2e_cases(schema, frame, scope, explicit_scope, &mut findings) {
-        errors.push((frame.root().join("e2e/cases"), format!("{err:#}")));
+        // §FS-check.2.4.1: manifest and fixture reads share the ordinary scan reason.
+        errors.push((frame.root().join("e2e/cases"), scan_error_reason(&err)));
     }
     scan_value_sources(schema, frame, &mut findings, &mut errors);
     read_section_locks(frame, &mut findings, &mut errors);

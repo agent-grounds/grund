@@ -4,6 +4,7 @@
 
 use std::path::{Path, PathBuf};
 
+use super::scan_error::scan_io_reason;
 use crate::config::Frame;
 use crate::grammar::{STUB_LINK_HEADING, may_hold_relative_heading, mixed_heading_path};
 use crate::model::{Catalog, SECTION_LOCK_DIR, SectionLockFile};
@@ -73,7 +74,8 @@ fn is_mixed_heading_line(line: &str) -> bool {
 /// every one under a directory there named by an alias, for the citations into
 /// that project (§FS-section-lock.file.members), sorted by path. A tree with no
 /// such directory costs one failed listing. A file that cannot be read joins the
-/// run's unreadable paths (§FS-check.2.4).
+/// run's unreadable paths (§FS-check.2.4), with the shared I/O reason and its
+/// section-lock context (§FS-check.2.4.1).
 pub(super) fn read_section_locks(
     frame: Frame<'_>,
     findings: &mut Catalog,
@@ -104,7 +106,10 @@ pub(super) fn read_section_locks(
                 id: id.to_string(),
                 text: text.into_owned(),
             }),
-            Err(error) => errors.push((path, format!("could not read section lock: {error}"))),
+            Err(error) => errors.push((
+                path,
+                format!("could not read section lock: {}", scan_io_reason(&error)),
+            )),
         }
     }
 }

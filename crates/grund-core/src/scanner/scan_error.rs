@@ -9,6 +9,7 @@
 //! readers sit above the scanner, so the record and the one line that renders it
 //! live here beside the walk that raises it (§AR-scanner.1).
 
+use std::io::{Error, ErrorKind};
 use std::path::Path;
 
 use crate::config::Frame;
@@ -39,4 +40,31 @@ pub(crate) fn api_scan_error(frame: Frame<'_>, path: &Path, message: &str) -> Ap
 /// `check`'s own report, print the same bytes (§FS-check.2.4, §FS-workspace.8.7.3).
 pub(crate) fn scan_error_message(reason: &str) -> String {
     format!("{reason}; {}", remedies::io())
+}
+
+/// One scan I/O kind, one reason without an OS number (§FS-check.2.4.1).
+/// Decode and input-observation failures use I/O errors to carry non-I/O
+/// descriptions; keep those details. Borrow the error so its original source
+/// and OS number remain available to callers that publish raw causes.
+pub(super) fn scan_io_reason(error: &Error) -> String {
+    match error.kind() {
+        ErrorKind::InvalidData | ErrorKind::Other if error.raw_os_error().is_none() => {
+            error.to_string()
+        }
+        kind => Error::from(kind).to_string(),
+    }
+}
+
+/// Keep a scan failure's context and non-I/O descriptions while deriving its
+/// typed I/O causes' public reasons in one place (§FS-check.2.4.1). This builds
+/// only the published text; it never replaces the original error chain.
+pub(super) fn scan_error_reason(error: &anyhow::Error) -> String {
+    error
+        .chain()
+        .map(|cause| match cause.downcast_ref::<Error>() {
+            Some(io) => scan_io_reason(io),
+            None => cause.to_string(),
+        })
+        .collect::<Vec<_>>()
+        .join(": ")
 }

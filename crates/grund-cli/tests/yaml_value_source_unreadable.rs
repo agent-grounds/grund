@@ -131,7 +131,6 @@ fn an_unreadable_yaml_source_is_an_incomplete_scan_for_every_reader() {
 }
 
 #[test]
-#[ignore = "red until #1223 normalizes JSON value-source I/O reasons; implement removes this"]
 fn json_value_source_uses_the_shared_permission_reason() {
     let fixture = Fixture::new("json-reason.json", "{\"CONST-room-limit\": [40]}\n");
     assert!(fixture.is_unreadable(), "run as an unprivileged user");
@@ -143,7 +142,6 @@ fn json_value_source_uses_the_shared_permission_reason() {
 }
 
 #[test]
-#[ignore = "red until #1223 normalizes YAML value-source I/O reasons; implement removes this"]
 fn yaml_value_source_uses_the_shared_permission_reason() {
     let fixture = Fixture::new("yaml-reason.yaml", "CONST-room-limit: [40]\n");
     assert!(fixture.is_unreadable(), "run as an unprivileged user");
