@@ -52,7 +52,8 @@ A snapshot is Markdown, so fetch refuses a `file` home the scan reads as source,
 such as `fs.py`, or `fs.txt` under `txt = "python"`. It exits 2 before running the
 integration and leaves every file unchanged, whatever the file holds and whether
 or not it exists. Move the kind and its declarations to a Markdown file or a
-folder, or remove its `fetch` and keep the declarations in the source file
+folder, or, for a kind that is not a value kind, remove its `fetch` and keep the
+declarations in the source file
 ([§FS-fetch.4.2](../functional-spec/FS-fetch.md#42-a-home-read-as-source-is-refused)).
 
 For a folder home, fetch replaces an existing Markdown snapshot even when its

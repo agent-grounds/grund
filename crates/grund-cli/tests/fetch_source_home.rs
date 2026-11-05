@@ -20,6 +20,10 @@ const FOLDER_FETCHER: &str =
     "#!/bin/sh\ntouch fetcher-ran\nprintf '# %s: Fetched\\n\\nFetched body.\\n' \"$1\"\n";
 const VALUE_FETCHER: &str = "#!/bin/sh\nprintf '## %s: Fetched\\n\\n### 1. 99\\n' \"$1\"\n";
 const VALUE_FOLDER_FETCHER: &str = "#!/bin/sh\nprintf '# %s: Fetched\\n\\n## 1. 99\\n' \"$1\"\n";
+const DOCSTRING_FETCHER: &str = "#!/bin/sh\ntouch fetcher-ran\nprintf '## %s: Alpha\\n\\n\
+     \"\"\"%s: Alpha\\n\\nFetched body citing \u{a7}DOC-one.\\n\"\"\"\\n' \"$1\" \"$1\"\n";
+const LEFT_BY_THE_OLD_FETCH: &str =
+    "x = 1\n\n## FS-a: Alpha\n\n\"\"\"FS-a: Alpha\n\nFetched body citing \u{a7}DOC-one.\n\"\"\"\n";
 
 fn config(place: &str, languages: &str, fetch: bool) -> String {
     let fetch = if fetch {
@@ -229,6 +233,65 @@ fn moving_a_value_kind_to_markdown_answers_the_check_tail() {
         assert_code(&run(&dir, &["check"]), 0, place);
         assert_eq!(fs::read_to_string(dir.join("fs.py")).unwrap(), "x = 1\n");
     }
+}
+
+/// Every read of the tree `LEFT_BY_THE_OLD_FETCH` holds, which the refusal does not move.
+fn assert_docstring_reads(dir: &Path) {
+    let listed = stdout(&run(dir, &["list"]));
+    assert!(
+        listed
+            .lines()
+            .any(|line| line.starts_with("FS-a ") && line.contains("fs.py:5 ")),
+        "list must name the docstring's line: {listed:?}"
+    );
+    let shown = run(dir, &["FS-a", "--full"]);
+    assert_code(&shown, 0, "show");
+    assert_eq!(stdout(&shown), "Fetched body citing \u{a7}DOC-one.\n");
+    let refs = stdout(&run(dir, &["refs", "DOC-one"]));
+    assert!(refs.contains("fs.py:7"), "the body cites: {refs:?}");
+    assert_code(&run(dir, &["check"]), 0, "check");
+}
+
+/// The one tree whose old success was real (§DF-fetch-source-home.3.6): an integration printing
+/// a docstring under its H2 left a `fs.py` the scan reads. The refusal takes its fetch and none
+/// of its reads, and each way out the record names ends green.
+#[test]
+fn a_fetched_docstring_keeps_its_reads_and_each_way_out_ends_green() {
+    let dir = root("source-home-fetched-docstring");
+    let config_at = |place: &str, fetch: bool| {
+        format!(
+            "{}\n[schema.kinds.DOC]\nfiles = [\"docs/doc.md\"]\n",
+            config(place, "\"markdown\", \"python\"", fetch)
+        )
+    };
+    write(&dir, "grund.toml", &config_at("files = [\"fs.py\"]", true));
+    write(&dir, "docs/doc.md", "# DOC-one: Doc\n\nCites \u{a7}FS-a.\n");
+    write(&dir, "fs.py", LEFT_BY_THE_OLD_FETCH);
+    executable(&dir, "scripts/fetch-fs", DOCSTRING_FETCHER);
+    assert_docstring_reads(&dir);
+    assert_refused(&dir, "FS-a", "fs.py");
+
+    write(&dir, "grund.toml", &config_at("files = [\"fs.py\"]", false));
+    assert_docstring_reads(&dir);
+
+    write(&dir, "grund.toml", &config_at("files = [\"fs.md\"]", true));
+    write(&dir, "fs.py", "x = 1\n");
+    assert_code(
+        &run(&dir, &["fetch", "FS-a"]),
+        0,
+        "fetch, integration as it was",
+    );
+    assert_code(&run(&dir, &["check"]), 0, "check, integration as it was");
+    assert_eq!(
+        stdout(&run(&dir, &["FS-a", "--full"])),
+        "\"\"\"FS-a: Alpha\n\nFetched body citing \u{a7}DOC-one.\n\"\"\"\n",
+        "the integration has to change with the move, or the read returns the docstring's form"
+    );
+
+    fs::remove_file(dir.join(MARK)).unwrap();
+    executable(&dir, "scripts/fetch-fs", FILE_FETCHER);
+    assert_fetch_lands(&dir);
+    assert_eq!(fs::read_to_string(dir.join("fs.py")).unwrap(), "x = 1\n");
 }
 
 /// The comment forms no e2e case holds. Each home declares the requested ID its own way,

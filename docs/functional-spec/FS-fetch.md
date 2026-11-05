@@ -182,12 +182,12 @@ print the same two lines.
 
 ### 4.2. A home read as source is refused
 
-A `file` home the text scan reads as source holds no Markdown declaration either. The scan
-reads that file through its language's comments, so a heading `fetch` wrote there would
-never be read back: every read of the ID would go on answering with what the file already
-declares, or with nothing, while the file carried text its language was never meant to
-hold. So `fetch` refuses it, with exit 2, empty stdout and the whole tree byte-identical, on
-stderr:
+A `file` home the text scan reads as source holds no Markdown declaration either. `fetch`
+validates the integration's output as Markdown and finds the ID by a heading, and the scan
+reads that file through its language's comments: a heading introduces nothing there, and what
+lies under it counts only as far as it is a comment that language reads. One file would be read
+two ways, and `fetch` would report success whatever the scan made of what it wrote. So `fetch`
+refuses it, with exit 2, empty stdout and the whole tree byte-identical, on stderr:
 
 ```text
 error: kind `<KIND>` cannot fetch into <home>: a file read as source holds no Markdown; move the kind and its declarations to a Markdown file or a folder, or remove its `fetch`
@@ -195,8 +195,9 @@ error: kind `<KIND>` cannot fetch into <home>: a file read as source holds no Ma
 
 `<home>` is spelled from the report base ([§FS-errors.terms](FS-errors.md#terms-terms)).
 
-The refusal is decided by the home's path and its kind, not by what the file holds, and
-comes before the integration runs, as the value-source refusal does. A home that declares
+The refusal is decided by the home's path and its kind, not by what the file holds or what the
+integration would print, and comes before the integration runs, as the value-source refusal
+does. A home that declares
 the requested ID, one that declares only other IDs, one that declares nothing and an absent
 one are all refused, and an absent one is not created.
 
@@ -218,7 +219,8 @@ file is not read two ways, and this refusal says nothing about it.
 The refusal is `fetch`'s alone. The configuration still loads, and `check`, `list`, `show`
 and `refs` keep their verdicts on such a project, reading what the file declares; only the
 remedy `check` names moves ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)). [§DF-fetch-source-home](../decisions/functional/DF-fetch-source-home.md#df-fetch-source-home-fetch-refuses-a-file-home-the-text-scan-reads-as-source) records the
-compatibility correction.
+compatibility correction, and names as a judgement the one tree on which this refusal takes away a
+fetch that worked.
 
 ## 5. Folder-home write
 
