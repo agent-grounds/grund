@@ -1,0 +1,13 @@
+grund_config_version = 2
+project_name = "r"
+
+[schema.sources]
+languages = ["markdown", "python"]
+
+[schema.kinds.FS]
+files = ["fs.py"]
+fetch = "scripts/fetch-fs"
+
+[schema.kinds.page]
+citable = false
+files = ["docs/offer.md"]

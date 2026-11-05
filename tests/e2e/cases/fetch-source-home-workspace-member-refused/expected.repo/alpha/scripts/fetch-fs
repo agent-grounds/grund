@@ -1,0 +1,3 @@
+#!/bin/sh
+touch fetcher-must-not-run
+printf '## %s: Fetched\n\nFetched body.\n' "$1"

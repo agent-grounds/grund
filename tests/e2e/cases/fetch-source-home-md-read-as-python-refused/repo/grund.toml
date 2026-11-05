@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "r"
+
+[schema.sources]
+languages = ["markdown", "python"]
+
+[schema.sources.extensions]
+md = "python"
+
+[schema.kinds.FS]
+files = ["fs.md"]
+fetch = "scripts/fetch-fs"
