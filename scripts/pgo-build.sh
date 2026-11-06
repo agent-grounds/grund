@@ -82,24 +82,23 @@ cargo_target="$target_dir"
 [ -z "$container" ] || cargo_target="$target_dir/container"
 
 # Runs one command where the payload is built: here, or in the pinned image.
+# §FS-distribution-candidate.6.1.1: keep Docker argv nonempty under Bash 3.2 nounset.
 in_build() {
   if [ -z "$container" ]; then
     "$@"
     return
   fi
-  local mounts=(-v "$repo:$repo" -v "$target_dir:$target_dir")
-  case "$target_dir/" in "$repo"/*) mounts=(-v "$repo:$repo") ;; esac
-  local user=()
-  # The candidate's commit reaches builds that cannot read git (§FS-distribution-candidate.6.1).
-  local commit=()
+  local docker_args=(run --rm -v "$repo:$repo" -v "$target_dir:$target_dir")
+  case "$target_dir/" in "$repo"/*) docker_args=(run --rm -v "$repo:$repo") ;; esac
+  # The candidate's commit reaches builds that cannot read git.
   if [ "${GRUND_BUILD_COMMIT+x}" = x ]; then
-    commit=(-e "GRUND_BUILD_COMMIT=$GRUND_BUILD_COMMIT")
+    docker_args+=(-e "GRUND_BUILD_COMMIT=$GRUND_BUILD_COMMIT")
   fi
   # A rootless daemon maps the container's root to the caller already.
   if ! docker info --format '{{.SecurityOptions}}' 2>/dev/null | grep -q rootless; then
-    user=(--user "$(id -u):$(id -g)")
+    docker_args+=(--user "$(id -u):$(id -g)")
   fi
-  docker run --rm "${user[@]}" "${mounts[@]}" "${commit[@]}" -w "$repo" \
+  docker "${docker_args[@]}" -w "$repo" \
     -e HOME="$home" -e CARGO_HOME="$home/cargo" -e RUSTUP_HOME="$home/rustup" \
     -e RUSTUP_TOOLCHAIN="$toolchain" -e RUSTFLAGS="${RUSTFLAGS:-}" \
     -e PYO3_PYTHON=/opt/python/cp310-cp310/bin/python3 \
