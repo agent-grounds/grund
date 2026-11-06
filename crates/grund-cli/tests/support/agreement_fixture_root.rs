@@ -5,6 +5,10 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
+#[cfg(test)]
+#[path = "agreement_fixture_parents.rs"]
+mod parents;
+
 /// Only a successful exclusive claimant owns cleanup, including on unwind (§AR-ci.10.2).
 #[derive(Debug)]
 pub(crate) struct FixtureRoot(PathBuf);
