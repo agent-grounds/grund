@@ -82,7 +82,9 @@ Empty stdout, exit `2` — a CLI-level error like any other unknown subcommand (
 
 `--version` ([§FS-cli.2.1](FS-cli.md#21---version)) and `--help` ([§FS-cli.2.2](FS-cli.md#22-the-top-level-help-page), [§FS-cli.2.3](FS-cli.md#23-a-subcommands-help-page)) are recognised regardless of subcommand and are handled *before* any tree scan or file write. When both a global flag and a subcommand are present, the global flag wins: `grund check --version` prints the version and exits `0` without scanning. `--version` outranks everything — with any subcommand present it is the version line, not that command's help page.
 
-Help is never an error: it goes to stdout, exit `0`, so `grund --help | …` works.
+Help goes to stdout, exit `0`, so `grund --help | …` works. The process-argument
+boundary ([§FS-cli.5.1](FS-cli.md#51-non-utf-8-process-arguments-are-refused-before-dispatch)) is checked before help dispatch;
+only the literal version flags outrank an argument-encoding refusal.
 
 ### 2.1 `--version`
 
@@ -287,6 +289,31 @@ For `show --batch`, `1` is the aggregate failed-query verdict: all valid query
 records are emitted before the process returns it. Exit `2` is reserved for a
 malformed invocation or input stream, configuration failure, or scan failure that
 prevents the batch from running ([§FS-show.2.6](FS-show.md#26-batch-resolution)).
+
+### 5.1 Non-UTF-8 process arguments are refused before dispatch
+
+The CLI takes the operating system's arguments without assuming they are UTF-8.
+A literal `--version` or `-V` anywhere among them wins even when another argument
+is not UTF-8: print exactly the normal compiled version line, empty stderr, exit
+`0`, as [§FS-cli.2.1](FS-cli.md#21---version) specifies.
+
+Otherwise, if any argument is not valid UTF-8, refuse the invocation before
+command dispatch, config discovery, scanning, or writing: empty stdout, one
+stderr line beginning `error: `, exit `2`. The diagnostic identifies the argument
+as invalid UTF-8 and includes its offending value with invalid units and control
+characters escaped, so it stays one safe line. Never silently drop the argument,
+convert it lossily to a replacement-character path, use that substituted file, or
+report that substituted path as missing. Valid UTF-8 invocations are unchanged.
+
+This is a CLI-level refusal ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)),
+including for the hidden completion helper: its quiet config/scan-failure rule
+([§FS-completions.2](FS-completions.md#2-internal-dynamic-helper)) starts only after
+this boundary accepts the arguments. Help does not override this refusal
+([§FS-cli.2](FS-cli.md#2-global-flags)). This realizes the diagnostic contract of
+[§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)
+without extending accepted paths to arbitrary operating-system strings. The
+refusal choice and compatibility proof are recorded in
+[§DF-cli-non-utf8-arguments](../decisions/functional/DF-cli-non-utf8-arguments.md#df-cli-non-utf8-arguments-refuse-non-utf-8-argv-before-dispatch-while-preserving-version-precedence).
 
 ## 6. What is deliberately absent
 
