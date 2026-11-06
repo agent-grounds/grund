@@ -981,6 +981,19 @@ Two things follow. A fixture removes only a tree it created, because a `Drop` th
 
 For the agreement fixtures, this applies before writing any files, including an ordinary Tree with an empty file list and the no-config control's nested directories. An occupied candidate's claim fails without changing its sentinel bytes; unwinding or dropping a failed claimant cannot remove that root. A caller may choose a distinct candidate, but must still claim that candidate exclusively. Tests pin the shared claim operation's refusal directly as well as the constructors' independent lifetimes.
 
+A caller name may contain native path separators, including the escaped held/saved
+names used by the snapshot controls. The shared agreement allocator prepares the
+candidate's intermediate parent directories even on a clean filesystem, then
+exclusively claims the final leaf; recursively creating the leaf would adopt an
+occupied root and is forbidden. Cleanup belongs only to the successfully claimed
+leaf, never to its intermediate parents or their pre-existing contents. Tests use
+a fresh, exclusively owned outer root with an initially absent intermediate
+directory, so restored target-cache state cannot make the clean-parent regression
+pass; warm-parent controls preserve a pre-existing sentinel through allocation
+and leaf cleanup. Native separator nesting is exercised on every platform,
+including the reported backslash names on Windows, with literal backslash names
+also retained as a Unix control.
+
 ### 10.3 A fixture root inherits no config from above it
 
 Discovery climbs from the path it is given to the filesystem root, probing both config names at every level ([§FS-config.1](../functional-spec/FS-config.md#1-file-location-and-discovery)), and a fixture root is no exception: a `grund.toml` anywhere above it, bare or under `.agents/`, becomes that fixture's config. A root built under the system temp directory therefore belongs to whatever tree `TMPDIR` happens to sit in, and a scratch directory inside a grounded project is an ordinary place for it to sit. A case asserting the zero-config fallback ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)) then fails as though discovery had regressed, when what moved is the environment, and a contributor reads it as a regression in whatever change is under test. The walk is right and stays as it is; the rule is on the fixture: the root a fixture helper hands out is one that no config covers, under either name, at the root or through any of its ancestors.
