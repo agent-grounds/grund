@@ -90,38 +90,87 @@ class SourceIdentityTests(unittest.TestCase):
     def setUp(self):
         scratch = Path.home() / "ag" / "tmp"
         scratch.mkdir(parents=True, exist_ok=True)
-        temp = tempfile.TemporaryDirectory(prefix="grund-1043-source-identity-", dir=scratch)
+        temp = tempfile.TemporaryDirectory(prefix="grund-1175-source-identity-", dir=scratch)
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)
 
     @unittest.skipIf(os.name == "nt", "the manylinux container route runs on Linux")
     def test_the_container_receives_only_a_set_commit_variable(self):
+        """§FS-distribution-candidate.6.1.1: optional Docker argv survives Bash 3.2.
+
+        §AR-ci.6: the real entrypoint stops at a stand-in, before any PGO build.
+        The interpreter is the builder's normal Bash, including macOS's Bash 3.2.
+        """
         tools = self.root / "tools"
         tools.mkdir()
         docker = tools / "docker"
         docker.write_text("#!/bin/sh\n"
-                          "if [ \"$1\" = info ]; then echo rootless; exit 0; fi\n"
-                          "printf '%s\\n' \"$@\" > \"$GRUND_TEST_DOCKER_LOG\"\n"
+                          "if [ \"$1\" = info ]; then\n"
+                          "  echo \"$GRUND_TEST_DOCKER_MODE\"; exit 0\n"
+                          "fi\n"
+                          "printf '%s\\0' \"$@\" > \"$GRUND_TEST_DOCKER_LOG\"\n"
                           "exit 43\n")
         docker.chmod(0o755)
         log = self.root / "docker-args"
+        target = self.root / "target with spaces"
+        home = target / "pgo-container-home"
+        rustflags = "-C opt-level=2 -C link-arg=a b\n-C debuginfo=1"
         env = dict(os.environ, PATH=str(tools) + os.pathsep + os.environ["PATH"],
-                   GRUND_TEST_DOCKER_LOG=str(log))
+                   GRUND_TEST_DOCKER_LOG=str(log), RUSTFLAGS=rustflags,
+                   RUSTUP_TOOLCHAIN="1.95.0")
+        for name in ("BASH_ENV", "ENV", "SHELLOPTS", "BASHOPTS", "GRUND_BUILD_COMMIT"):
+            env.pop(name, None)
         # The first container exits before setup or compilation. Its argv is
         # the one all subsequent container builds receive from in_build.
-        for given in (None, SHA[:10], ""):
-            with self.subTest(commit=given):
-                env.pop("GRUND_BUILD_COMMIT", None)
-                if given is not None:
-                    env["GRUND_BUILD_COMMIT"] = given
-                result = subprocess.run([payloads.bash(), str(REPO / "scripts" / "pgo-build.sh"),
-                                         "--sha", SHA, "--target-dir", str(self.root / "target"),
-                                         "--container", "stand-in"], env=env,
-                                        capture_output=True, text=True)
-                self.assertEqual(43, result.returncode, result.stderr)
-                args = log.read_text().splitlines()
-                values = [arg for arg in args if arg.startswith("GRUND_BUILD_COMMIT=")]
-                self.assertEqual([] if given is None else [f"GRUND_BUILD_COMMIT={given}"], values)
+        for mode in ("rootless", "rootful"):
+            for given in (None, SHA[:10], ""):
+                with self.subTest(mode=mode, commit=given):
+                    log.unlink(missing_ok=True)
+                    env["GRUND_TEST_DOCKER_MODE"] = mode
+                    env.pop("GRUND_BUILD_COMMIT", None)
+                    if given is not None:
+                        env["GRUND_BUILD_COMMIT"] = given
+                    result = subprocess.run([payloads.bash(), str(REPO / "scripts" / "pgo-build.sh"),
+                                             "--sha", SHA, "--target-dir", str(target),
+                                             "--container", "stand-in"], env=env,
+                                            capture_output=True, text=True)
+                    self.assertEqual(43, result.returncode, result.stderr)
+                    recorded = log.read_bytes()
+                    self.assertTrue(recorded.endswith(b"\0"))
+                    args = os.fsdecode(recorded[:-1]).split("\0")
+                    self.assertEqual("run", args[0])
+                    image = args.index("stand-in")
+                    actual = {}
+                    index = 1
+                    while index < image:
+                        option = args[index]
+                        if option == "--rm":
+                            actual.setdefault(option, []).append(None)
+                            index += 1
+                        else:
+                            self.assertLess(index + 1, image, args)
+                            actual.setdefault(option, []).append(args[index + 1])
+                            index += 2
+                    expected = {
+                        "--rm": [None],
+                        "-v": [f"{REPO}:{REPO}", f"{target}:{target}"],
+                        "-w": [str(REPO)],
+                        "-e": [f"HOME={home}", f"CARGO_HOME={home}/cargo",
+                               f"RUSTUP_HOME={home}/rustup", "RUSTUP_TOOLCHAIN=1.95.0",
+                               f"RUSTFLAGS={rustflags}",
+                               "PYO3_PYTHON=/opt/python/cp310-cp310/bin/python3"],
+                    }
+                    if mode == "rootful":
+                        expected["--user"] = [f"{os.getuid()}:{os.getgid()}"]
+                    if given is not None:
+                        expected["-e"].insert(0, f"GRUND_BUILD_COMMIT={given}")
+                    self.assertEqual(expected.keys(), actual.keys())
+                    for option, values in expected.items():
+                        self.assertCountEqual(values, actual[option], option)
+                    self.assertEqual(["bash", "-c"], args[image + 1:image + 3])
+                    self.assertEqual(["bash", "bash", "-c"], args[image + 4:image + 7])
+                    self.assertEqual(image + 8, len(args))
+                    self.assertIn("rustup toolchain install", args[-1])
 
     def test_the_sdist_cli_build_uses_the_bundled_commit(self):
         script = REPO / "scripts" / "distribution" / "grund_build.py"
