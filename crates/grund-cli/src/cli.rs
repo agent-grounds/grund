@@ -239,33 +239,45 @@ fn restore_default_sigpipe() {}
 /// return its `ExitCode` (§FS-cli). `grund <ID>` is the default ID query
 /// (§FS-cli.1); `grund` with no arguments is a CLI-level error naming the
 /// removal of the `check .` fallback — empty stdout, exit 2 (§FS-cli.4);
-/// `--version`/`--help` short-circuits to stdout, exit 0 (§FS-cli.2); help on an
+/// `--version` short-circuits to stdout, exit 0; `--help` does so after argument
+/// encoding is accepted (§FS-cli.5.1, §FS-cli.2). Help on an
 /// unknown command exits 2 and lists the known ones rather than hiding a typo
 /// behind generic help (§FS-cli.4). The exit-code mapping (0/1/2) is fixed
 /// (§FS-cli.5).
 pub fn main_entry() -> ExitCode {
-    cli_entry(std::env::args().skip(1).collect())
+    cli_entry(std::env::args_os().skip(1).collect())
 }
 
 /// `main_entry` with `argv` (program name dropped) given rather than read, for a
 /// test that re-spawns its own executable into the CLI so the workspace-load
 /// observer it reads is the one its own featured build compiled in, never an
-/// uplifted binary another build re-links (§AR-ci.3.3.1). Compiled only under
+/// uplifted binary another build re-links (§AR-ci.3.3.1). It shares the process
+/// entry's version and argument policy (§FS-cli.5.1). Compiled only under
 /// that test-only feature, so no distributed library surface carries it.
 #[cfg(feature = "test-workspace-load-count")]
 #[doc(hidden)]
 pub fn main_entry_from_args(args: Vec<String>) -> ExitCode {
-    cli_entry(args)
+    cli_entry(args.into_iter().map(std::ffi::OsString::from).collect())
 }
 
-/// The body of `main_entry`, over `argv` without the program name (§FS-cli).
-fn cli_entry(args: Vec<String>) -> ExitCode {
+/// The shared OS-argument boundary, without the program name (§FS-cli.5.1):
+/// version wins before checked conversion into the existing string parsers.
+/// Rejection precedes help and dispatch; OS-string debug formatting escapes
+/// invalid units and controls in the diagnostic without substituting a path.
+fn cli_entry(args: Vec<std::ffi::OsString>) -> ExitCode {
     restore_default_sigpipe();
     if args.iter().any(|arg| arg == "--version" || arg == "-V") {
         // This build's version, fixed at compile time; answering reads nothing (§FS-cli.2.1).
         println!("grund {}", env!("GRUND_BUILD_VERSION"));
         return ExitCode::SUCCESS;
     }
+    let args: Vec<String> = match args.into_iter().map(std::ffi::OsString::into_string).collect() {
+        Ok(args) => args,
+        Err(arg) => {
+            eprintln!("error: argument is not valid UTF-8: {arg:?}");
+            return ExitCode::from(2);
+        }
+    };
     let first = args.first().map(|arg| arg.as_str());
     // `grund help [<subcommand>]` — the top-level page with no argument, that
     // subcommand's page with one, an error for an unknown name (§FS-cli.2.3).

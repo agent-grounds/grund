@@ -86,7 +86,6 @@ fn refused(output: &Output, value_fragment: &str) {
 }
 
 #[test]
-#[ignore = "red until #1259 OS argv is checked before dispatch; implement removes this"]
 fn existing_non_utf8_path_is_refused() {
     let fixture = Fixture::new("existing", Some("\"md\", \"\""));
     let path = bad(b"docs/FACTS.\xff");
@@ -98,7 +97,6 @@ fn existing_non_utf8_path_is_refused() {
 }
 
 #[test]
-#[ignore = "red until #1259 OS argv is checked before dispatch; implement removes this"]
 fn missing_non_utf8_path_is_refused() {
     let fixture = Fixture::new("missing", Some("\"md\""));
     let control = fixture.run(&["check".as_ref(), "nope.X".as_ref()]);
@@ -111,7 +109,6 @@ fn missing_non_utf8_path_is_refused() {
 }
 
 #[test]
-#[ignore = "red until #1259 OS argv is checked before dispatch; implement removes this"]
 fn non_utf8_default_id_is_refused_without_config() {
     let fixture = Fixture::new("id", None);
     status(&fixture.run(&["FS-X".as_ref()]), 1);
@@ -119,7 +116,6 @@ fn non_utf8_default_id_is_refused_without_config() {
 }
 
 #[test]
-#[ignore = "red until #1259 OS argv is checked before dispatch; implement removes this"]
 fn non_utf8_flag_values_are_refused() {
     let fixture = Fixture::new("flag", Some("\"md\""));
     for separate in [false, true] {
@@ -164,7 +160,6 @@ fn version_wins(name: &str, alias: &str, first: bool) {
 macro_rules! version_case {
     ($name:ident, $alias:literal, $first:literal) => {
         #[test]
-        #[ignore = "red until #1259 version is checked in OS argv; implement removes this"]
         fn $name() {
             version_wins(stringify!($name), $alias, $first);
         }
@@ -177,7 +172,6 @@ version_case!(short_version_before_non_utf8, "-V", true);
 version_case!(short_version_after_non_utf8, "-V", false);
 
 #[test]
-#[ignore = "red until #1259 OS argv is checked before dispatch; implement removes this"]
 fn non_utf8_refusal_precedes_help() {
     let fixture = Fixture::new("help", None);
     let control = fixture.run(&["--help".as_ref(), "X".as_ref()]);
@@ -190,7 +184,6 @@ fn non_utf8_refusal_precedes_help() {
 }
 
 #[test]
-#[ignore = "red until #1259 OS argv is checked before dispatch; implement removes this"]
 fn non_utf8_completion_argument_is_not_a_quiet_scan_failure() {
     let fixture = Fixture::new("completion", None);
     let control = fixture.run(&["complete".as_ref(), "ids".as_ref(), "missingX".as_ref()]);
@@ -203,7 +196,6 @@ fn non_utf8_completion_argument_is_not_a_quiet_scan_failure() {
 }
 
 #[test]
-#[ignore = "red until #1259 OS argv is checked before dispatch; implement removes this"]
 fn non_utf8_argument_diagnostic_escapes_controls() {
     let fixture = Fixture::new("escaping", None);
     status(
@@ -217,7 +209,6 @@ fn non_utf8_argument_diagnostic_escapes_controls() {
 }
 
 #[test]
-#[ignore = "red until #1259 OS argv is checked before dispatch; implement removes this"]
 fn non_utf8_path_never_reads_replacement_character_file() {
     let fixture = Fixture::new("replacement", Some("\"md\""));
     let invalid = bad(b"docs/notes\xff.md");
@@ -248,7 +239,6 @@ fn snapshot(root: &Path) -> BTreeMap<PathBuf, Option<Vec<u8>>> {
 }
 
 #[test]
-#[ignore = "red until #1259 OS argv is checked before dispatch; implement removes this"]
 fn non_utf8_mutating_invocation_changes_no_files() {
     let fixture = Fixture::new("mutation", Some("\"md\""));
     let invalid = bad(b"docs/notes\xff.md");
