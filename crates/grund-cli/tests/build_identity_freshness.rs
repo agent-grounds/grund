@@ -516,3 +516,7 @@ mod non_utf8_refs;
 #[cfg(unix)]
 #[path = "support/build_identity_modes.rs"]
 mod mode_changes;
+
+#[cfg(target_os = "linux")]
+#[path = "support/non_utf8_ref_contract.rs"]
+mod fixture_portability;
