@@ -5,6 +5,21 @@
 use super::*;
 use std::os::unix::ffi::OsStrExt;
 
+#[path = "non_utf8_names.rs"]
+mod non_utf8_names;
+
+/// Probe both Git's ref and lock basename on its filesystem (§AR-ci.10.6).
+/// Git itself remains responsible for every subsequent ref operation.
+fn can_store_ref(root: &Path, name: &OsStr) -> bool {
+    let path = root.join(".git").join(name);
+    fs::create_dir_all(path.parent().unwrap()).expect("create fixture ref parent");
+    let mut lock = path.as_os_str().to_os_string();
+    lock.push(".lock");
+    let coverage = "non-UTF-8 Git ref transitions and build-freshness assertions";
+    non_utf8_names::can_store(&path, coverage)
+        && non_utf8_names::can_store(Path::new(&lock), coverage)
+}
+
 fn assert_clean(ws: &Workspace) {
     assert_eq!(
         ws.git(
@@ -26,6 +41,10 @@ fn a_git_valid_non_utf8_branch_keeps_its_commit() {
     let root = &ws.root;
     let branch = OsStr::from_bytes(b"refs/heads/nonutf/branch-\xff");
     ws.git(root, &[OsStr::new("check-ref-format"), branch]);
+    // §AR-ci.10.6: ref-format validation needs no on-disk invalid-byte name.
+    if !can_store_ref(root, branch) {
+        return;
+    }
     ws.git(
         root,
         &[OsStr::new("update-ref"), branch, OsStr::new("HEAD")],
@@ -70,6 +89,10 @@ fn retargeting_a_non_utf8_symbolic_ref_updates_the_label() {
     ws.git(root, &["reset", "--hard", "HEAD~1"]);
     let alias = OsStr::from_bytes(b"refs/heads/aliases/alias-\xff");
     ws.git(root, &[OsStr::new("check-ref-format"), alias]);
+    // §AR-ci.10.6: only ref storage and its dependent transitions are unavailable.
+    if !can_store_ref(root, alias) {
+        return;
+    }
     ws.git(
         root,
         &[
