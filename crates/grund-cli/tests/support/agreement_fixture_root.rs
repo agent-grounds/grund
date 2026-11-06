@@ -18,12 +18,15 @@ impl FixtureRoot {
     pub(crate) fn new(parent: &Path, name: &str) -> io::Result<Self> {
         static NEXT: AtomicU64 = AtomicU64::new(0);
         let serial = NEXT.fetch_add(1, Ordering::Relaxed);
-        fs::create_dir_all(parent)?;
         Self::claim(parent.join(format!("{name}-{}-{serial}", std::process::id())))
     }
 
     /// Refuse an occupied leaf without touching it; install cleanup before more work (§AR-ci.10.2).
     fn claim(path: PathBuf) -> io::Result<Self> {
+        // Prepare only the candidate's parents; the leaf stays an exclusive claim (§AR-ci.10.2).
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
         fs::create_dir(&path)?;
         let mut owner = Self(path);
         owner.0 = owner.0.canonicalize()?;

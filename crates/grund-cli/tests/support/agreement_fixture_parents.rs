@@ -33,14 +33,12 @@ fn clean_parent(leaf: &str) {
 
 /// A fresh outer root prevents cache warmth from hiding a missing parent (§AR-ci.10.2).
 #[test]
-#[ignore = "red until #1279 prepares intermediate candidate parents; implement removes this"]
 fn grund_1279_clean_held_parent() {
     clean_parent("held");
 }
 
 /// Saved roots independently require the same clean-parent preparation (§AR-ci.10.2).
 #[test]
-#[ignore = "red until #1279 prepares intermediate candidate parents; implement removes this"]
 fn grund_1279_clean_saved_parent() {
     clean_parent("saved");
 }
