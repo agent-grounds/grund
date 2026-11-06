@@ -175,6 +175,8 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 
 ## The command surface
 
+- [§DF-cli-non-utf8-arguments](DF-cli-non-utf8-arguments.md#df-cli-non-utf8-arguments-refuse-non-utf-8-argv-before-dispatch-while-preserving-version-precedence) — refuse non-UTF-8 argv before dispatch while preserving version precedence
+
 - [§DF-configured-title-metadata](DF-configured-title-metadata.md#df-configured-title-metadata-kind-titles-are-separate-target-metadata) — kind titles are separate target metadata
 
 - [§DF-show-default-token-cheap](DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in) — grund show defaults to the cheap read; the full body is opt-in
