@@ -1042,6 +1042,36 @@ remains [§AR-ci.10.4](AR-ci.md#104-git-descendants-stay-inside-the-fixture-life
 copied bytes, the complete input set and the actual copy operations; the
 existing version tests keep every behavioral assertion.
 
+### 10.6 Non-UTF-8 disk names are a filesystem capability
+
+Unix process arguments can contain bytes that the fixture filesystem refuses to
+store. Rust fixtures that create non-UTF-8 disk names use one shared test-support
+capability mechanism on the actual fixture directory. It checks creation and
+byte-for-byte preservation of the directory entry, including names needed for
+Git refs and their lock files. An operating-system name alone is not evidence of
+support. Refusal of the invalid name, or storage under a different spelling,
+makes only the disk-dependent part unavailable, with an explicit explanation in
+the test's output. Unrelated I/O errors, directory-enumeration errors and Git
+failures remain test failures; they are not evidence of unsupported names.
+
+On supporting filesystems every existing disk-dependent assertion still runs.
+On refusing filesystems the same cases still execute every independent assertion:
+invalid-argument refusal, version precedence, replacement-character controls and
+no-write snapshots need no invalid-byte file. In particular, the CLI cases of
+[§FS-cli.5.1](../functional-spec/FS-cli.md#51-non-utf-8-process-arguments-are-refused-before-dispatch) must reach the process boundary even when fixture creation is refused.
+The Git-ref fixtures retain ref-format checks independent of disk storage and
+exercise all transitions and build-freshness checks of [§FS-distribution.4.1.1](../functional-spec/FS-distribution.md#411-a-development-build-names-its-commit)
+where the names can be stored. The empty-extension fixtures use the same
+capability mechanism. No whole-platform skip or ignored existing case replaces
+these checks.
+
+Regression coverage forces name refusal independently of the host filesystem,
+checks that the limitation is reported and observes the independent CLI
+invocations, so an early return cannot masquerade as coverage. Unexpected errors
+are exercised separately and must fail. This controlled refusal supplements
+native macOS coverage under [§AR-ci.14.1](AR-ci.md#141-one-job-runs-every-suite); a Linux pass cannot establish a green
+native run. These are fixture obligations, not changes to either product contract.
+
 ## 11. A release candidate is dispatched the same CI
 
 Beside push, pull request and merge-queue group ([§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request)), the workflow runs on `workflow_dispatch`, and that trigger is the release helpers': each dispatches it on its release commit and on the `-dev` advance built over it, and pushes neither to `main` until both have passed ([§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). A dispatched run is the CI a push to `main` gets and the macOS suites besides ([§AR-ci.14.2](AR-ci.md#142-a-release-candidate-runs-them-too)), never a narrower one, because the commit it judges is about to become `main`. It behaves as a push does: the benchmark job records counts without comparing ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)), and the commit-message job, given no `before` to scan from, narrows to the tip commit ([§AR-ci.8.2](AR-ci.md#82-the-scanned-range)). It records as a push does but stores nothing: the store of [§AR-ci.5.5](AR-ci.md#55-the-store-keeps-a-pushs-record) keeps a push's record alone, so a candidate's lasts as long as its artifact. `tests/integration/test_release_candidate_runs.py` holds the trigger to the helpers that use it.

@@ -8,6 +8,10 @@
 #[path = "support/external_facts.rs"]
 mod support;
 
+#[cfg(target_os = "linux")]
+#[path = "support/non_utf8_extension_contract.rs"]
+mod fixture_portability;
+
 use std::ffi::OsStr;
 use std::fs;
 use std::os::unix::ffi::OsStrExt;
