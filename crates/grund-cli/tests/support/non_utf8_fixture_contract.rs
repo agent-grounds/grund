@@ -5,7 +5,6 @@
 mod refusal;
 
 #[test]
-#[ignore = "red until #1281 portable fixtures retain independent assertions; implement removes this"]
 fn refused_names_retain_cli_contract() {
     cli_contract("encoding");
     let probe = refusal::Probe::new();
@@ -25,7 +24,6 @@ fn refused_names_retain_cli_contract() {
 }
 
 #[test]
-#[ignore = "red until #1281 capability checks verify stored name bytes; implement removes this"]
 fn rewritten_names_retain_cli_contract() {
     cli_contract("spelling");
 }

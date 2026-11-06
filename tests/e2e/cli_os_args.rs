@@ -8,6 +8,9 @@ use std::os::unix::ffi::OsStringExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+#[path = "../../crates/grund-cli/tests/support/non_utf8_names.rs"]
+mod non_utf8_names;
+
 struct Fixture(PathBuf);
 
 impl Fixture {
@@ -40,6 +43,15 @@ impl Fixture {
 
     fn write(&self, path: &OsStr, body: &str) {
         fs::write(self.0.join(path), body).unwrap();
+    }
+
+    /// Keep argv assertions even without an invalid-byte file (§AR-ci.10.6).
+    fn write_non_utf8(&self, path: &OsStr, body: &str, coverage: &str) -> bool {
+        if !non_utf8_names::can_store(&self.0.join(path), coverage) {
+            return false;
+        }
+        self.write(path, body);
+        true
     }
 }
 
@@ -89,7 +101,7 @@ fn refused(output: &Output, value_fragment: &str) {
 fn existing_non_utf8_path_is_refused() {
     let fixture = Fixture::new("existing", Some("\"md\", \"\""));
     let path = bad(b"docs/FACTS.\xff");
-    fixture.write(&path, "x\n");
+    fixture.write_non_utf8(&path, "x\n", "refusal with an existing invalid-byte file");
     let control = fixture.run(&["check".as_ref(), "docs/FACTS.X".as_ref()]);
     status(&control, 2);
     assert!(String::from_utf8_lossy(&control.stderr).contains("path does not exist: docs/FACTS.X"));
@@ -212,15 +224,21 @@ fn non_utf8_argument_diagnostic_escapes_controls() {
 fn non_utf8_path_never_reads_replacement_character_file() {
     let fixture = Fixture::new("replacement", Some("\"md\""));
     let invalid = bad(b"docs/notes\xff.md");
-    fixture.write(&invalid, "See \u{a7}FS-001-zz.\n");
+    let stored = fixture.write_non_utf8(
+        &invalid,
+        "See \u{a7}FS-001-zz.\n",
+        "directory scan of the distinct invalid-byte file",
+    );
     fixture.write("docs/notes\u{fffd}.md".as_ref(), "See \u{a7}FS-001-a.\n");
     status(
         &fixture.run(&["check".as_ref(), "docs/notes\u{fffd}.md".as_ref()]),
         0,
     );
-    let scan = fixture.run(&["check".as_ref(), "docs".as_ref()]);
-    status(&scan, 1);
-    assert!(String::from_utf8_lossy(&scan.stdout).contains("unknown reference FS-001-zz"));
+    if stored {
+        let scan = fixture.run(&["check".as_ref(), "docs".as_ref()]);
+        status(&scan, 1);
+        assert!(String::from_utf8_lossy(&scan.stdout).contains("unknown reference FS-001-zz"));
+    }
     refused(&fixture.run(&["check".as_ref(), &invalid]), "docs/notes");
 }
 
@@ -243,7 +261,11 @@ fn non_utf8_mutating_invocation_changes_no_files() {
     let fixture = Fixture::new("mutation", Some("\"md\""));
     let invalid = bad(b"docs/notes\xff.md");
     let body = "See $$FS-001-a.\n";
-    fixture.write(&invalid, body);
+    fixture.write_non_utf8(
+        &invalid,
+        body,
+        "no-write snapshot including an invalid-byte file",
+    );
     fixture.write("docs/notes\u{fffd}.md".as_ref(), body);
     fixture.write("docs/notesX.md".as_ref(), body);
     let control = fixture.run(&[

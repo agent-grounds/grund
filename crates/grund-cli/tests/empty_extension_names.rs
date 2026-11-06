@@ -8,6 +8,9 @@
 #[path = "support/external_facts.rs"]
 mod support;
 
+#[path = "support/non_utf8_names.rs"]
+mod non_utf8_names;
+
 #[cfg(target_os = "linux")]
 #[path = "support/non_utf8_extension_contract.rs"]
 mod fixture_portability;
@@ -35,25 +38,22 @@ fn project(test: &str, extensions: &str, home: &str) -> PathBuf {
     project
 }
 
-/// A home `docs/fs.md` and, walked beside it, a file named [`NOT_UTF8`] declaring FS-001-a. `None`
-/// where the filesystem will not hold that name.
-fn beside_a_name_not_utf8(test: &str, extensions: &str) -> Option<PathBuf> {
+/// Keep the ordinary home even when the invalid-byte neighbor is unavailable (§AR-ci.10.6).
+fn beside_a_name_not_utf8(test: &str, extensions: &str) -> (PathBuf, bool) {
     let project = project(test, extensions, "docs/fs.md");
     write(&project, "docs/fs.md", "# FS-002-b: Beta\n\nLocal body.\n");
-    holds_a_name_not_utf8(&project.join("docs")).then_some(project)
+    let stored = write_a_name_not_utf8(&project.join("docs"));
+    (project, stored)
 }
 
-/// Whether `dir` now holds a file named [`NOT_UTF8`], byte for byte: a filesystem may refuse the
-/// name, as macOS does, or keep it under another spelling.
-fn holds_a_name_not_utf8(dir: &Path) -> bool {
-    if let Err(error) = fs::write(dir.join(OsStr::from_bytes(NOT_UTF8)), DECLARATION) {
-        eprintln!("skipped: this filesystem refuses a name that is not UTF-8: {error}");
+/// Create the neighbor only after the shared byte-preservation probe (§AR-ci.10.6).
+fn write_a_name_not_utf8(dir: &Path) -> bool {
+    let path = dir.join(OsStr::from_bytes(NOT_UTF8));
+    if !non_utf8_names::can_store(&path, "scanning a file whose extension is not UTF-8") {
         return false;
     }
-    fs::read_dir(dir)
-        .expect("read the fixture directory")
-        .flatten()
-        .any(|entry| entry.file_name().as_bytes() == NOT_UTF8)
+    fs::write(path, DECLARATION).expect("write the invalid-byte extension fixture");
+    true
 }
 
 #[test]
@@ -96,21 +96,19 @@ fn without_the_entry_a_home_whose_name_ends_in_a_dot_is_named_not_read() {
 
 #[test]
 fn the_entry_reads_a_walked_file_whose_extension_is_not_utf8() {
-    let Some(project) = beside_a_name_not_utf8("not-utf8-with", WITH_ENTRY) else {
-        return;
-    };
+    let (project, stored) = beside_a_name_not_utf8("not-utf8-with", WITH_ENTRY);
     let list = run(&project, &["list"]);
     assert_code(&list, 0, "list");
     let listed = stdout(&list);
-    assert!(listed.contains("FS-001-a"), "{listed}");
+    if stored {
+        assert!(listed.contains("FS-001-a"), "{listed}");
+    }
     assert!(listed.contains("FS-002-b"), "{listed}");
 }
 
 #[test]
 fn without_the_entry_a_walked_file_whose_extension_is_not_utf8_is_not_read() {
-    let Some(project) = beside_a_name_not_utf8("not-utf8-without", WITHOUT_ENTRY) else {
-        return;
-    };
+    let (project, _) = beside_a_name_not_utf8("not-utf8-without", WITHOUT_ENTRY);
     let list = run(&project, &["list"]);
     assert_code(&list, 0, "list");
     let listed = stdout(&list);
@@ -132,20 +130,31 @@ fn a_refusal_detail_asks_the_extension_test_under_the_entry() {
     write(&project, "grund.toml", &config);
     write(&project, "docs/x/a.md", "plain\n");
     write(&project, "docs/x/FACTS.", "plain\n");
-    if !holds_a_name_not_utf8(&project.join("docs/x")) {
-        return;
-    }
+    let stored = write_a_name_not_utf8(&project.join("docs/x"));
 
     let migrate = run(&project, &["config", "migrate", "--to", "2"]);
     assert_code(&migrate, 1, "config migrate");
     let report = stderr(&migrate);
-    assert!(
-        report.contains("it would stop reading 3 files\n"),
-        "{report}"
-    );
-    assert!(
-        report
-            .contains("  would stop reading: docs/x/FACTS., docs/x/FACTS.\u{fffd}, docs/x/a.md\n"),
-        "{report}"
-    );
+    if stored {
+        assert!(
+            report.contains("it would stop reading 3 files\n"),
+            "{report}"
+        );
+        assert!(
+            report.contains(
+                "  would stop reading: docs/x/FACTS., docs/x/FACTS.\u{fffd}, docs/x/a.md\n"
+            ),
+            "{report}"
+        );
+    } else {
+        // §AR-ci.10.6: migration still reports the two ordinary control files.
+        assert!(
+            report.contains("it would stop reading 2 files\n"),
+            "{report}"
+        );
+        assert!(
+            report.contains("  would stop reading: docs/x/FACTS., docs/x/a.md\n"),
+            "{report}"
+        );
+    }
 }

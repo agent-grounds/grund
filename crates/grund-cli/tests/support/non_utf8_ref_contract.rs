@@ -27,7 +27,6 @@ fn survives_refusal(test: &str, checked_ref: &[u8]) {
 }
 
 #[test]
-#[ignore = "red until #1281 ref fixtures handle filesystem refusal; implement removes this"]
 fn refused_names_retain_branch_contract() {
     survives_refusal(
         "non_utf8_refs::a_git_valid_non_utf8_branch_keeps_its_commit",
@@ -36,7 +35,6 @@ fn refused_names_retain_branch_contract() {
 }
 
 #[test]
-#[ignore = "red until #1281 ref fixtures handle filesystem refusal; implement removes this"]
 fn refused_names_retain_symbolic_ref_contract() {
     survives_refusal(
         "non_utf8_refs::retargeting_a_non_utf8_symbolic_ref_updates_the_label",

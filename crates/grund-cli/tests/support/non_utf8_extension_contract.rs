@@ -4,7 +4,6 @@
 mod refusal;
 
 #[test]
-#[ignore = "red until #1281 capability checks propagate unrelated errors; implement removes this"]
 fn refused_names_retain_extension_contract() {
     let probe = refusal::Probe::new();
     // Includes the ordinary trailing-dot control alongside the invalid-name case.
