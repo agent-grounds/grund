@@ -160,6 +160,18 @@ The record of a candidate that the publisher trusts and nothing else.
 
 The candidate's `manifest.json` records: its schema version and scope; the package version and engine version; the commit SHA it was built from; the matrix rows; the Rust toolchain and the container image digests; every artifact the plan names, with its registry, package, version, file name and SHA-256; and every payload, with its product, target, build digest, optimization (`pgo` or `lto-exception`), profile and training digests, and each placement with the artifact, the path inside it, the digest there and the transformations between — repair, stripping — that the build applied. A row's candidate is built from a checkout whose HEAD is that commit and which has no uncommitted change to a tracked file; the builder refuses any other, because it hands that commit to every build that cannot read git ([§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit)). The manifest's own SHA-256 is the candidate's identity. Every `manifest.json` the tool writes — a row's, the assembled candidate's and each row's share — is UTF-8 with LF line endings on every runner, and its digest is taken over those bytes on disk, so it does not depend on the runner that wrote it.
 
+#### 6.1.1 Container setup preserves optional arguments on the suite's Bash
+
+The PGO build's container setup works with the Bash supplied by the macOS suite
+runner, including Bash 3.2, with unset-variable checking enabled. For either a
+rootless or a rootful Docker daemon, an unset `GRUND_BUILD_COMMIT` adds no commit
+environment option; a set value adds exactly one `-e` option whose value is
+`GRUND_BUILD_COMMIT=<value>`, including `GRUND_BUILD_COMMIT=` when set empty.
+A rootless daemon gets no `--user` option; a rootful daemon gets the caller's
+UID:GID. Omitting either optional argument adds no empty placeholder. Mounts,
+working directory, other environment values, image and command arguments retain
+their values and argument boundaries, including spaces and newlines in values.
+
 ### 6.2 One version across every package
 
 A full release carries one version in every crate, npm package and Python distribution, and one engine version in every payload. Python spells it in PEP 440, so a development version `X.Y.Z-dev` is `X.Y.Z.dev0` there and a release `X.Y.Z` is `X.Y.Z` everywhere. `scripts/distribution/candidate.py versions` reads every version source — the Cargo manifests, `Cargo.lock` and `crates/grund-py/pyproject.toml` — and fails when they disagree. At a ref from before the binding moved, where `crates/grund-py/pyproject.toml` is absent, the Python version source is the root `pyproject.toml` that ref carries, so checking an old release still reads its Python version; only a ref with neither file has no Python version source to read; `candidate.py set-version` writes all of them, and both bump helpers use it ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)).
