@@ -6,14 +6,28 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 
+/// Claim a distinct root for each allocation, including child processes (§AR-ci.10.2).
 pub fn root(name: &str) -> PathBuf {
+    static NEXT: AtomicUsize = AtomicUsize::new(0);
+    let allocation = format!(
+        "{}-{}-{}",
+        std::process::id(),
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("fixture allocation time")
+            .as_nanos(),
+        NEXT.fetch_add(1, Ordering::Relaxed)
+    );
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .join("target/external-facts")
+        .join(allocation)
         .join(name);
-    let _ = fs::remove_dir_all(&dir);
-    fs::create_dir_all(&dir).expect("create fixture root");
+    fs::create_dir_all(dir.parent().expect("fixture root parent")).expect("create fixture parents");
+    fs::create_dir(&dir).expect("claim fixture root exclusively");
     dir
 }
 
