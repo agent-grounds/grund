@@ -18,23 +18,6 @@ pub(crate) fn paths_same_location(left: &Path, right: &Path) -> bool {
     physical_path_key(left) == physical_path_key(right)
 }
 
-/// Whether two paths name one directory entry: one name in one physical directory, whatever links
-/// lead to that directory. A link is an entry of its own, so it is not the file it points at, which
-/// is what keeps a failure at the link from reading as a failure at its target
-/// (§AR-scanner.1.relisted).
-pub(crate) fn paths_same_entry(left: &Path, right: &Path) -> bool {
-    // A bare file name has the empty parent, which names no directory to resolve.
-    fn directory(path: &Path) -> &Path {
-        match path.parent() {
-            Some(parent) if !parent.as_os_str().is_empty() => parent,
-            _ => Path::new("."),
-        }
-    }
-    left.file_name().is_some()
-        && left.file_name() == right.file_name()
-        && paths_same_location(directory(left), directory(right))
-}
-
 /// The key a *location* is compared by: the resolved path where it exists, the
 /// lexical form where it does not, so a path that has yet to be written still
 /// has a key.
