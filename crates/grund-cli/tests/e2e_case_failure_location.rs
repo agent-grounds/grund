@@ -309,4 +309,107 @@ fn a_linked_cases_folder_locates_the_failure_under_its_configured_spelling() {
         ),
         "{target:#?}"
     );
+    // §FS-declarations.e2e-case.failure: standing in the case through the link, the working
+    // directory is the target, so this path is the other spelling too.
+    let standing = tree.run_in("e2e/cases/b", &["check", "."]);
+    assert_eq!(standing.code, 0, "{standing:#?}");
+    assert!(
+        standing.stderr.lines().any(|line| line
+            .starts_with("warning: e2e/cases/b/expected.exit: ")
+            && line.contains(OUTSIDE)),
+        "{standing:#?}"
+    );
+}
+
+/// A tree whose extensions send `spec.refs` and `expected.exit` through the walk as well.
+fn tree_scanning_manifests(test: &str) -> Tree {
+    let tree = Tree::new(test);
+    let config = format!(
+        "{CONFIG}\n[schema.sources]\nlanguages = [\"markdown\"]\n\n\
+         [schema.sources.extensions]\nrefs = \"markdown\"\nexit = \"markdown\"\n"
+    );
+    tree.write("grund.toml", config.as_bytes());
+    tree
+}
+
+/// §FS-check.2.4.2: the walk and the pass meet one unreadable manifest, so it is one line.
+#[test]
+fn a_manifest_at_mode_000_the_walk_also_reads_is_one_line() {
+    let mut tree = tree_scanning_manifests("scanned-mode");
+    tree.write("e2e/cases/b/spec.refs", b"E2E-a\n");
+    if !tree.lock("e2e/cases/b/spec.refs") {
+        eprintln!("{SKIP}");
+        return;
+    }
+    let line = "error: e2e/cases/b/spec.refs: permission denied; ";
+    for args in [
+        &["check", "e2e/cases/b"][..],
+        &["check", "e2e/cases/b/spec.refs"],
+    ] {
+        let run = tree.run(args);
+        assert_holds(&run, line);
+        assert_eq!(failure_lines(&run).len(), 1, "{run:#?}");
+    }
+    let json = tree.run(&["check", "e2e/cases/b", "--format", "json"]);
+    assert_eq!(json_failures(&json).len(), 1, "{json:#?}");
+}
+
+/// §AR-scanner.6.6: the walk reads the same file and finds nothing wrong with its bytes, so the
+/// value only the pass can judge keeps its one line.
+#[test]
+fn an_expected_exit_that_does_not_parse_the_walk_also_reads_is_one_line() {
+    let tree = tree_scanning_manifests("scanned-parse");
+    tree.write("e2e/cases/b/expected.exit", b"not-an-exit\n");
+    let line = "error: e2e/cases/b/expected.exit: parse ";
+    for args in [
+        &["check", "e2e/cases/b"][..],
+        &["check", "e2e/cases/b/expected.exit"],
+    ] {
+        let run = tree.run(args);
+        assert_holds(&run, line);
+        assert_eq!(failure_lines(&run).len(), 1, "{run:#?}");
+    }
+}
+
+/// §AR-scanner.1.relisted: a manifest that is a link is an entry of its own, so the walk's report
+/// of the file behind it does not stand in for it, and the run naming the case still holds it.
+#[test]
+fn a_manifest_linked_to_a_file_the_walk_reported_keeps_its_own_line() {
+    let tree = Tree::new("linked-manifest");
+    tree.write("notes.md", UNDECODABLE);
+    symlink(
+        Path::new("../../../notes.md"),
+        tree.root.join("e2e/cases/b/spec.refs"),
+    )
+    .expect("link the manifest");
+    let run = tree.run(&["check", "e2e/cases/b"]);
+    assert_eq!(run.code, 2, "{run:#?}");
+    let lines = failure_lines(&run);
+    assert_eq!(lines.len(), 2, "{run:#?}");
+    assert!(
+        lines[0].starts_with("error: e2e/cases/b/spec.refs: "),
+        "{run:#?}"
+    );
+    assert!(lines[1].starts_with("warning: notes.md: "), "{run:#?}");
+}
+
+/// §AR-scanner.1.relisted: two cases' entries are two locations even where one links to the other,
+/// or the second case named on the command line would go green.
+#[test]
+fn a_manifest_linked_to_another_cases_manifest_is_held_by_its_own_case() {
+    let tree = Tree::new("linked-sibling");
+    tree.write("e2e/cases/b/spec.refs", UNDECODABLE);
+    symlink(
+        Path::new("../b/spec.refs"),
+        tree.root.join("e2e/cases/c/spec.refs"),
+    )
+    .expect("link the manifest");
+    let run = tree.run(&["check", "e2e/cases/c"]);
+    assert_eq!(run.code, 2, "{run:#?}");
+    assert!(
+        run.stderr
+            .lines()
+            .any(|line| line.starts_with("error: e2e/cases/c/spec.refs: ")),
+        "{run:#?}"
+    );
 }
