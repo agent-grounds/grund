@@ -102,3 +102,7 @@ path = "lsp_guide.rs"
 [[test]]
 name = "integrations_answer"
 path = "integrations_answer.rs"
+
+[[test]]
+name = "lsp_snapshot_unread_file_by_other_name"
+path = "lsp_snapshot_unread_file_by_other_name.rs"
