@@ -188,6 +188,8 @@ mod tests_scope_cautions;
 mod tests_shorthand_docstring;
 #[cfg(test)]
 mod tests_shorthand_surfaces;
+#[cfg(all(test, unix))]
+mod tests_snapshot_path_text;
 #[cfg(test)]
 mod tests_string_closes_early;
 #[cfg(test)]
