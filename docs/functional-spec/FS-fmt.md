@@ -117,6 +117,16 @@ The dry run refuses the same file, with the same `warning:` line, and does not l
 
 A link whose target is **inside** the config root is written through, and one consequence of that is named here rather than fixed. One physical file reached under two spellings is read once, under the surviving spelling ([§FS-scan.identity.read-once](FS-scan.md#identityread-once-one-physical-file-is-read-once)), so `--cross-refs` computes every relative target from *that* spelling: the link it writes is correct when the file is opened where grund read it and wrong when it is opened at its other name. No rewrite can be right both ways — a single relative path is resolved against whichever directory the reader opened the file from — so the fix is not a better anchor but not giving one file two names.
 
+##### 2.3.2.3 A file two names read differently is not written
+
+A file refused because two names read it differently ([§FS-scan.checks.reading-conflict](FS-scan.md#checksreading-conflict-two-names-of-one-file-read-it-differently)) is left alone by `fmt --write` and by `fmt --check`, narrowed or not, and each run names it once on stderr, exit code unchanged:
+
+```text
+warning: docs/license.md: not rewritten: docs/license.md and docs/license.rs read this file differently
+```
+
+The shape and the reasoning are those of [§FS-fmt.2.3.2.1](FS-fmt.md#2321-the-dry-run-refuses-the-same-file): `check` is the gate, and `fmt --check` must not report a rewrite that will never happen. Where the file is also behind a link that leaves the config root, this line stands in place of that link's, so one warning is printed.
+
 #### 2.3.3 A fenced code block is an illustration
 
 Every pass stops at a Markdown fence — trigger-to-marker ([§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker)), bare-to-marker ([§FS-fmt.2.2](FS-fmt.md#22-bare-to-marker-with---marker)), shorthand-to-canonical ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)), and the cross-reference wrap ([§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)) alike — because a fence is where a grounded repository writes an ID as an *illustration*: `check` reads nothing there ([§FS-check.1.1](FS-check.md#11-recognized-citations)), so an edit inside one would turn text that makes no claim into text that makes one, and turn a sample of what an author should type into a sample of what `fmt` already typed. What opens and closes a fence is the rule of [§FS-check.1.1](FS-check.md#11-recognized-citations), stated there once and not restated here.

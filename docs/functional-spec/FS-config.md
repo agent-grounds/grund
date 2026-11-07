@@ -1017,7 +1017,7 @@ The per-file obligation of a non-citable kind and of the homeless kind judges on
 
 #### 3.9.2 The homeless kind
 
-Every citation site that no single configured kind home claims — outside every home, or in a file two overlapping homes contain — resolves to one citing kind ([§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as)). That kind is the **complement** of the whole `[[kinds]]` table: it is the one kind that is not a place, which is why it has no `folder` and no `file` and why there is exactly one of it. Its name is `code` by default, and a project may name it something truer by declaring it ([§FS-config.3.9.2.1](FS-config.md#3921-declaring-it)).
+Every citation site that no single configured kind home claims — outside every home, or in a file two overlapping homes contain — resolves to one citing kind ([§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as)). That kind is the **complement** of the whole `[[kinds]]` table: it is the one kind that is not a place, which is why it has no `folder` and no `file` and why there is exactly one of it. Its name is `code` by default, and a project may name it something truer by declaring it ([§FS-config.3.9.2.1](FS-config.md#3921-declaring-it)). A file here is a spelling, as it is in every v1 home rule: a physical file reached through a home and from outside it answers at each path by what that path is in ([§FS-scan.identity.findings.place](FS-scan.md#identityfindingsplace-a-place-finding-is-judged-at-each-spelling)).
 
 ##### 3.9.2.1 Declaring it
 

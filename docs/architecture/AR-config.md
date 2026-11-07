@@ -159,6 +159,12 @@ over the `Project` value. `Compiled { grammar, demand }` is `compile(&Project)`:
 the ID grammar, and the `ScanDemand` that tells the scanner which rows' files
 to record grounding structure for ([§AR-config.6.1](AR-config.md#61-scandemand-names-the-rows-that-record-structure)). It replaces `rebuild_grammar`.
 
+### 1.6 A file's reading is asked through one rule
+
+`config` holds the one function that picks the name a reading is taken from, the rule of [§FS-scan.identity.reading](../functional-spec/FS-scan.md#identityreading-how-a-file-is-read-belongs-to-the-file-not-to-the-name-that-reached-it): it takes a spelling and the `Spellings` table `sources` publishes, and returns the name to read or the refusal. No caller can get a reading from a bare spelling without going through it. That is the guard, and it is not the visibility of `FileReading::of`, which is `pub(super)` already, so nothing outside `config` calling it proves nothing. Every caller of the reading is routed here: the text scan and the value reader, the checker, the formatter, the queries and the editor, and whichever of this change and [issue #1206](https://github.com/agent-grounds/grund/issues/1206) lands second routes the index check and fetch's folder walk.
+
+Scan entry stays on the spelling ([§FS-scan.identity.reading.entry](../functional-spec/FS-scan.md#identityreadingentry-whether-a-spelling-enters-the-scan-is-judged-by-the-name-met)). The hidden and listed tests in `read_as_source` and `value_format`, and `lists_extension` in the walk's filter, decide whether a file enters the scan and keep asking the path they were handed; only the reading moves to the chosen name. `language_of` at config load and the config-load `.md` tests judge a name written in the config, not a file, and stay as they are.
+
 ## 2. The v1 reader and its isolation
 
 Discovery, which decides which file governs ([§FS-config.1](../functional-spec/FS-config.md#1-file-location-and-discovery)), stays in

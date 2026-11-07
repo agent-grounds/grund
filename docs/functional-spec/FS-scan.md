@@ -18,7 +18,7 @@ One requirement on what a run reads as a whole, carrying a mark of [§FS-config.
 
 ### requirements.spelling: How a tree is reached changes neither what is read nor what a finding names — realized
 
-A repository reads the same however a run arrives at it. A file reached through a link is named by the path the run met — the in-tree link, the explicit argument, the root as handed — never by its physical target, even where that target lies outside the config root ([§FS-scan.identity.link-path](FS-scan.md#identitylink-path-a-finding-names-the-in-tree-link-path), [§FS-scan.identity.root-path](FS-scan.md#identityroot-path-the-scan-root-keeps-the-path-the-run-was-handed)); a physical file reached by two spellings is read once, under the spelling a written rule picks ([§FS-scan.identity.read-once](FS-scan.md#identityread-once-one-physical-file-is-read-once)), and an editor buffer is that file whichever spelling it was opened under ([§FS-scan.identity.buffers](FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)); and which directory links are followed is decided by the project's canonical root, which stays the fence when the repository itself was reached through a link ([§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)). So a checkout reached through a symlinked directory, as macOS reaches `/private/var` through `/var`, reads the files and reports the findings it does at its physical path, each spelled as its reader wrote it. Serves [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements), whose `path:line` is one a reader can act on, and [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree).
+A repository reads the same however a run arrives at it. A file reached through a link is named by the path the run met — the in-tree link, the explicit argument, the root as handed — never by its physical target, even where that target lies outside the config root ([§FS-scan.identity.link-path](FS-scan.md#identitylink-path-a-finding-names-the-in-tree-link-path), [§FS-scan.identity.root-path](FS-scan.md#identityroot-path-the-scan-root-keeps-the-path-the-run-was-handed)); a physical file reached by two spellings is read once, and the reading belongs to the physical file while the reported path belongs to the spelling, so sort order and the name a run was handed decide neither what the file is read as nor which names a finding carries ([§FS-scan.identity.read-once](FS-scan.md#identityread-once-one-physical-file-is-read-once), [§FS-scan.identity.reading](FS-scan.md#identityreading-how-a-file-is-read-belongs-to-the-file-not-to-the-name-that-reached-it), [§FS-scan.identity.findings](FS-scan.md#identityfindings-a-finding-about-a-file-with-two-names-names-each-spelling-once)), and an editor buffer is that file whichever spelling it was opened under ([§FS-scan.identity.buffers](FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)); and which directory links are followed is decided by the project's canonical root, which stays the fence when the repository itself was reached through a link ([§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)). So a checkout reached through a symlinked directory, as macOS reaches `/private/var` through `/var`, reads the files and reports the findings it does at its physical path, each spelled as its reader wrote it. Serves [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements), whose `path:line` is one a reader can act on, and [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree).
 
 ## path: What a path argument means
 
@@ -234,11 +234,11 @@ A broken link with **no extension at all** is silent for the same reason, unless
 
 ## identity: Which path names a file a run read
 
-A file a run reaches through a link is named by the path the run met, and a physical file is read once.
+A file a run reaches through a link is named by the path the run met, and a physical file is read once, one way.
 
 ### identity.link-path: A finding names the in-tree link path
 
-Every finding from a link met **inside a scanned tree** is reported at the in-tree link path, never the target's: that is the path a reader can act on, and it is what keeps `relative_paths` output ([§FS-config.3.6](FS-config.md#36-output--report-format)) and the additivity rule of [§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full) meaningful. An explicit path argument follows the same reporting rule: resolving `grund check docs/beta.md` identifies and reads the target, but every text and JSON report names `docs/beta.md` as reached through the configured CLI base. This remains true when the target resolves outside the config root — the in-tree link is the bounded, actionable spelling and the external physical path never becomes report output.
+Every finding from a link met **inside a scanned tree** is reported at the in-tree link path, never the target's: that is the path a reader can act on, and it is what keeps `relative_paths` output ([§FS-config.3.6](FS-config.md#36-output--report-format)) and the additivity rule of [§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full) meaningful. An explicit path argument follows the same reporting rule: resolving `grund check docs/beta.md` identifies and reads the target, but every text and JSON report names `docs/beta.md` as reached through the configured CLI base. This remains true when the target resolves outside the config root — the in-tree link is the bounded, actionable spelling and the external physical path never becomes report output. Named is not the same as named first: where the run also reaches the file by another name, a finding about the file's content is the whole run's one line, so `grund check notes/link.md` may print `notes/link.md` as the second name on it ([§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name)).
 
 ### identity.root-path: The scan root keeps the path the run was handed
 
@@ -246,11 +246,63 @@ The same rule reaches the **scan root itself**: a repository whose own path is r
 
 ### identity.read-once: One physical file is read once
 
-One **physical** file is read once however many spellings reach it; when two do, the surviving spelling is the earlier root's, and within a single root the lexicographically first one ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full), [§FS-errors.4](FS-errors.md#4-determinism)).
+One **physical** file is read once however many spellings reach it, and the run keeps every spelling that reached it. Spellings are listed the earlier root's first, and within a single root lexicographically ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full), [§FS-errors.4](FS-errors.md#4-determinism)). That order picks only the name listed first: not what the file is read as ([§FS-scan.identity.reading](FS-scan.md#identityreading-how-a-file-is-read-belongs-to-the-file-not-to-the-name-that-reached-it)), not the homes it is judged in ([§FS-config-v2.schema.places.ownership](FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder), [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)), and not which names a finding carries ([§FS-scan.identity.findings](FS-scan.md#identityfindings-a-finding-about-a-file-with-two-names-names-each-spelling-once)). Two names are one file exactly where they resolve to one path, a file link and anything below a directory link alike. Hard links resolve to two paths and are two files, so a declaration in one is a duplicate of itself in the other ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)).
+
+### identity.reading: How a file is read belongs to the file, not to the name that reached it
+
+A file inside the config root is read as its own name reads, when that name claims a reading. Any other file keeps the reading of the name that reached it. If two in-tree names of such a file read differently, it is refused ([§FS-scan.checks.reading-conflict](FS-scan.md#checksreading-conflict-two-names-of-one-file-read-it-differently)).
+
+So with `txt` configured as Rust, `fs/m-real.md` and a link `fs/a-link.txt -> m-real.md` both read as Markdown, because the file's own name says so: the same declarations and the same `fmt` bytes under any name the link is given, in a whole run and in a run naming either spelling. Conversely `fs/m.md -> z.txt` reads as Rust, so a link named `.md` never gets a Rust file's string literals rewritten ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten)). Decided in [§DF-one-file-one-reading](../decisions/functional/DF-one-file-one-reading.md#df-one-file-one-reading-a-file-reached-by-two-names-is-read-as-its-own-name-reads-and-judged-and-reported-at-each-name).
+
+#### identity.reading.claims: A name claims a reading when the configuration admits and reads that name
+
+Under version 2 a name claims a reading when an admitted language reads it ([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)). Under version 1 it does when the extension list holds its extension. So `LICENSE` claims nothing, and neither does `real.txt` where `txt` is not admitted, and each keeps the reading of the name that reached it: `docs/license.md -> ../LICENSE` stays Markdown. A version 1 list holding the empty string reads `LICENSE` ([§FS-scan.scope.extensions.empty](FS-scan.md#scopeextensionsempty-in-version-1-an-empty-string-in-the-list-reads-a-file-with-no-extension)), so there `LICENSE` does claim a reading and that link stops being Markdown.
+
+Only the name counts. A file whose own spelling is ignored, excluded, hidden or under no source still claims by its name, so `docs/fs/gen.md -> ../../build/gen.rs` reads as Rust with `build/` ignored.
+
+#### identity.reading.outside: An outside name has no say
+
+A target outside the config root is in the tree only through its link ([§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through)), and its name decides the reading no more than it decides a reported path ([§FS-scan.identity.link-path](FS-scan.md#identitylink-path-a-finding-names-the-in-tree-link-path)). Under `txt = "rust"`, `fs/spec.md -> /elsewhere/spec.txt` reads as Markdown and keeps its declarations.
+
+#### identity.reading.entry: Whether a spelling enters the scan is judged by the name met
+
+The hidden-file rule and the extension list decide whether a spelling enters the scan, and they ask the spelling ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent), [§FS-scan.scope.extensions.root](FS-scan.md#scopeextensionsroot-a-file-root-whose-extension-is-unlisted-is-not-read-and-check-says-so)). Only what the file is read as moves. With `txt` not admitted, `notes.txt -> spec.md` stays unread and no finding names it.
+
+#### identity.reading.every-caller: Every run and every reader gets the one answer
+
+Whole runs and runs naming any spelling agree. `check`, `list`, `show` and `id` already read the whole project and the path narrows only the report ([§FS-scan.path](FS-scan.md#path-what-a-path-argument-means)). A narrow `fmt`, `cover` or `refs` run that meets a link to a file whose own name claims nothing does one project walk to collect the file's other names, so `fmt docs/license.rs --write` cannot rewrite a file another name reads as Markdown. A tree with no link pays nothing for this.
+
+Every reader of the file asks the same rule: the text scan, the value reader, the checker, the formatter, `show` and the editor. The value reader takes JSON or YAML from it, so `values/a.json -> limits.yaml` is YAML. A text-named link to a value source is still read by the value reader, once ([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources)). A stub's written name is still judged as written ([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)), and its target's text is read through this rule.
+
+### identity.findings: A finding about a file with two names names each spelling once
+
+A file reached by two names has one set of declarations and citations, and a finding about it repeats no line and names no spelling twice. How it names them depends on whether the finding depends on where the file sits. `decl.file` and `cite.file` hold the name listed first, and `list`, `refs` and `show` print one row at that name, while an ambiguous `show` names both ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)). The editor maps a diagnostic onto whichever name is open.
+
+#### identity.findings.place: A place finding is judged at each spelling
+
+A rule that asks which row owns a file asks it of every spelling at its own path: misplaced declarations, citation directions, grounding, indexes and stubs ([§FS-config-v2.schema.places.ownership](FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder), [§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)). Each finding is located at the spelling it holds at. So `docs/ar/x.md -> ../fs/x.md` holding `# FS-x` gets one error at `docs/ar/x.md:1` and none at `docs/fs/x.md:1`, whichever directory sorts first. A link in a second folder of the same row owes that folder's index an entry, which `fmt --write` repairs.
+
+#### identity.findings.content: A content finding is one line naming every name
+
+A finding about what the file holds, with `notes/link.md -> ../docs/fs/a.md`, is one line at the name listed first, the others in a closing clause, and JSON carries them all in `sites`:
+
+```text
+docs/fs/a.md:5: error: unknown reference FS-gone (also at notes/link.md:5)
+```
+
+```json
+{"severity":"error","path":"docs/fs/a.md","line":5,"code":"dangling","message":"unknown reference FS-gone (also at notes/link.md:5)","sites":[{"path":"docs/fs/a.md","line":5},{"path":"notes/link.md","line":5}],"authority":null}
+```
+
+Those sites keep the finding in scope ([§FS-check.1.3.6.2](FS-check.md#1362-a-finding-that-spans-several-sites-is-in-scope-at-any-of-them)), and it names only the spellings the plain run reaches ([§FS-check.1.3.2](FS-check.md#132-the-wider-scan-reads-a-superset-each-file-once)).
+
+#### identity.findings.judged: A finding that resolves from the file's directory names the spelling it was judged at
+
+A finding that resolves a relative path from the file's directory, such as a stub's link, can hold at one spelling and fail at the other. It carries no closing clause and names only the spelling it was judged at, the name listed first. That is the limit [§FS-fmt.2.3.2.2](FS-fmt.md#2322-a-link-inside-the-config-root-is-written-through) names, which stays.
 
 ### identity.buffers: A buffer is the file at its physical location
 
-An editor buffer is the file at the physical location its path resolves to, under whatever spelling the editor opened it and whatever spelling a stub or the walk reaches that file by. Where `alias -> notes`, a buffer the editor opened as `notes/a.md` is the text of `alias/a.md`, and one opened as `alias/a.md` is the text of `notes/a.md`, so a stub that writes `../alias/a.md` reads the buffer either way, as it would read the saved file ([§FS-scan.text.buffer](FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write)). Identity decides which text a spelling reads, and nothing else: the name a stub wrote is still judged as written ([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)), a finding still names the in-tree link path ([§FS-scan.identity.link-path](FS-scan.md#identitylink-path-a-finding-names-the-in-tree-link-path)), and the file is read once ([§FS-scan.identity.read-once](FS-scan.md#identityread-once-one-physical-file-is-read-once)). Decided in [§DF-a-buffer-is-the-file](../decisions/functional/DF-a-buffer-is-the-file.md#df-a-buffer-is-the-file-an-editor-buffer-is-the-file-it-names-under-every-spelling-and-with-no-file-saved-behind-it).
+An editor buffer is the file at the physical location its path resolves to, under whatever spelling the editor opened it and whatever spelling a stub or the walk reaches that file by. Where `alias -> notes`, a buffer the editor opened as `notes/a.md` is the text of `alias/a.md`, and one opened as `alias/a.md` is the text of `notes/a.md`, so a stub that writes `../alias/a.md` reads the buffer either way, as it would read the saved file ([§FS-scan.text.buffer](FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write)). Identity decides which text a spelling reads and what that text is read as ([§FS-scan.identity.reading](FS-scan.md#identityreading-how-a-file-is-read-belongs-to-the-file-not-to-the-name-that-reached-it)), and nothing else: the name a stub wrote is still judged as written ([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)), a finding still names the in-tree link path ([§FS-scan.identity.link-path](FS-scan.md#identitylink-path-a-finding-names-the-in-tree-link-path)), and the file is read once ([§FS-scan.identity.read-once](FS-scan.md#identityread-once-one-physical-file-is-read-once)). Where the run holds a refusal for the file ([§FS-scan.checks.reading-conflict](FS-scan.md#checksreading-conflict-two-names-of-one-file-read-it-differently)), the editor offers no on-type edit in it. Decided in [§DF-a-buffer-is-the-file](../decisions/functional/DF-a-buffer-is-the-file.md#df-a-buffer-is-the-file-an-editor-buffer-is-the-file-it-names-under-every-spelling-and-with-no-file-saved-behind-it).
 
 ## text: Which text a file has
 
@@ -265,6 +317,34 @@ A file's text is what saving it would write: the editor's open buffer where ther
 A buffer with no file on disk behind it, a new file the editor has not saved, is a file of the run. It exists for a stub, so a stub to it is never `stub link target missing` and is judged on the buffer's text ([§FS-declarations.stubs.target.1](FS-declarations.md#stubstarget1-the-target-is-read-as-a-save-would-write-it)). The walk reads it or skips it by the rules of [§FS-scan.scope](FS-scan.md#scope-which-files-a-run-reads) exactly as it would the saved file: `include` and the kind homes bring it in, and a hidden name, an unlisted extension, `exclude`, an ignore file of any form [§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files) names, a `scan = false` home and another project's root keep it out. Where the editor holds a buffer for a file the walk skips, the walk's rule wins: the buffer is the file, and the file is not read. A stub's target outside `include` is read as if it were scanned ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), a buffer as much as a saved file, and only by the name and extension rules of [§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing).
 
 ## checks: Checks
+
+### checks.reading-conflict: Two names of one file read it differently
+
+Two in-tree names of a file whose own name claims no reading, or whose own name lies outside the config root, that read it differently leave nothing to decide by ([§FS-scan.identity.reading](FS-scan.md#identityreading-how-a-file-is-read-belongs-to-the-file-not-to-the-name-that-reached-it)). The run refuses the file, with code `reading-conflict`, one finding, located at the name listed first:
+
+```text
+docs/license.md:1: error: docs/license.md and docs/license.rs are one file that reads two ways, as markdown and as rust; keep one name, or give the file a name that claims a reading
+```
+
+The readings are named in the names' order, and the name of a reading is its language's under version 2. Under version 1 it is the extension, `markdown` for `md`, and `source with no extension` for a name with none. Two names of one language, or a name and a file whose own name claims a reading, are no conflict.
+
+JSON `sites` names both spellings, each once, and the finding is in scope at either ([§FS-check.1.3.6.2](FS-check.md#1362-a-finding-that-spans-several-sites-is-in-scope-at-any-of-them)), so a whole run and a run naming either spelling print the same line. The file is read under neither name, because reading it under both would duplicate its declarations against themselves, so a citation elsewhere to what it declares is also reported as `unknown reference`.
+
+Neither selection axis hides it ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)), and it contributes exit `1`. `fmt` leaves the file alone ([§FS-fmt.2.3.2.3](FS-fmt.md#2323-a-file-two-names-read-differently-is-not-written)). Decided in [§DF-one-file-one-reading](../decisions/functional/DF-one-file-one-reading.md#df-one-file-one-reading-a-file-reached-by-two-names-is-read-as-its-own-name-reads-and-judged-and-reported-at-each-name).
+
+### checks.reading-moved: A link is read as its target's own name reads
+
+A link whose reading moved under [§FS-scan.identity.reading](FS-scan.md#identityreading-how-a-file-is-read-belongs-to-the-file-not-to-the-name-that-reached-it) earns one warning with code `reading-moved`. A reading moved where the name listed first is a link, and the reading of that name differs from what the file is now read as. That name is the one that decided the file before grund 0.22.0, so a link listed after its target earns nothing, and a file earns at most one:
+
+```text
+docs/fs/gen.md:1: warning: read as rust, as its target's own name reads, not as markdown (since 0.22.0); rename the target or copy the file
+```
+
+The name of a reading is the one [§FS-scan.checks.reading-conflict](FS-scan.md#checksreading-conflict-two-names-of-one-file-read-it-differently) gives. It leaves the exit code alone and stands in place of the `success` line. `--only reading-moved` and `--ignore reading-moved` select it by the ordinary rules ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)). It is what makes a declaration that drops out of a green tree a located finding, which is the finding [§DF-one-file-one-reading](../decisions/functional/DF-one-file-one-reading.md#df-one-file-one-reading-a-file-reached-by-two-names-is-read-as-its-own-name-reads-and-judged-and-reported-at-each-name) owes.
+
+#### checks.reading-moved.1: A warning in 0.22.x, and gone in 0.23.0
+
+The warning stands for one minor release. grund 0.23.0 removes it: from there the code is spent, as the catalog says of a spent code, and the rule of [§FS-scan.identity.reading](FS-scan.md#identityreading-how-a-file-is-read-belongs-to-the-file-not-to-the-name-that-reached-it) stands alone.
 
 ### checks.unread-scan-root: A configured file root is not read
 
