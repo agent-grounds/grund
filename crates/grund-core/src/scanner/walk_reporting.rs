@@ -10,7 +10,7 @@ use super::tree::ScanError;
 use super::value_json::value_sources;
 use super::walk::{WalkDirFilter, scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
-use super::walk_errors::{symlink_loop_report, walk_error_reports};
+use super::walk_errors::{LinkRecovery, symlink_loop_report, walk_error_reports};
 use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
 use crate::model::{Refused, RootRow, sort_path_key};
@@ -231,11 +231,11 @@ pub(crate) fn walk_scannable_files_with_sources(
             &looping_links,
         )?;
         let mut root_files = Vec::new();
-        // §AR-scanner.1.9: the last of this root's `dirs` is the directory the walk is inside
-        // when an error names no entry, and the filter is the walk's own, built on the first
-        // error and sharing its link lists, so the success path pays for neither.
+        // §AR-scanner.1.9: the last of this root's `dirs` is the directory the walk is inside when
+        // an error names no entry. The walk's own filter and the once-per-directory recovery are
+        // both built on the first error, so the success path pays for neither.
         let first_dir = dirs.len();
-        let mut error_filter = None;
+        let mut error_state = None;
         for entry in walker {
             let entry = match entry {
                 Ok(entry) => entry,
@@ -243,8 +243,8 @@ pub(crate) fn walk_scannable_files_with_sources(
                 // cannot read — reported at its own path, the walk continuing past it
                 // (§FS-check.2.4). Failing the scan would let it take the whole report.
                 Err(err) => {
-                    let filter = error_filter.get_or_insert_with(|| {
-                        WalkDirFilter::new(
+                    let (filter, recovery) = error_state.get_or_insert_with(|| {
+                        let filter = WalkDirFilter::new(
                             schema,
                             frame,
                             &scan_root,
@@ -252,12 +252,13 @@ pub(crate) fn walk_scannable_files_with_sources(
                             &physical_root,
                             &link_roots,
                             &looping_links,
-                        )
+                        );
+                        (filter, LinkRecovery::default())
                     });
                     let listing = dirs[first_dir..].last().map(PathBuf::as_path);
-                    for (report, source) in
-                        walk_error_reports(err, filter, listing, schema, frame, &scan_root)
-                    {
+                    for (report, source) in walk_error_reports(
+                        err, filter, recovery, listing, schema, frame, &scan_root,
+                    ) {
                         on_error(&report, source);
                         errors.push(report);
                     }

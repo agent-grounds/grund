@@ -1,4 +1,6 @@
 use crate::sources::{Sources, canonical_path, link_metadata, open_for_reading, path_is_dir};
+use std::collections::HashMap;
+use std::io;
 use std::path::{Path, PathBuf};
 
 use super::read_predicate::{directory_refusal, ignored, name_refusal};
@@ -15,25 +17,27 @@ use crate::config::{Frame, Schema};
 /// one names no entry, so the links it can be about are recovered first and each
 /// is reported at its own path, never at the walk root (§AR-scanner.1.9). Each recovered
 /// link is handed on as an error that names it, carrying the failure its own
-/// target opens with, so it takes the branch every link with a path takes.
+/// target opens with, so it takes the branch every link with a path takes. An
+/// error about a link already recovered adds nothing, and reaches no fallback.
 ///
-/// `filter` is the walk's own directory filter for this root, and `listing` the
-/// directory the walk last descended into under it, `None` before the first.
+/// `filter` is the walk's own directory filter for this root, `recovery` what this
+/// root has recovered so far, and `listing` the directory the walk last descended
+/// into under it, `None` before the first.
 pub(super) fn walk_error_reports(
     err: ignore::Error,
     filter: &WalkDirFilter,
+    recovery: &mut LinkRecovery,
     listing: Option<&Path>,
     schema: &Schema,
     frame: Frame<'_>,
     scan_root: &Path,
 ) -> Vec<(ScanError, ignore::Error)> {
-    let links = unopenable_links(&err, listing, scan_root);
-    if links.is_empty() {
+    let Some(links) = recovery.unopenable_links(&err, listing, scan_root) else {
         return walk_error_report(&err, filter, schema, frame, scan_root)
             .map(|report| (report, err))
             .into_iter()
             .collect();
-    }
+    };
     links
         .into_iter()
         .map(|(path, io)| ignore::Error::WithPath {
@@ -137,38 +141,75 @@ fn walk_skips_link(
         || filter.refusal(path, depth, true, true).is_some()
 }
 
-/// The directory links a walker error that names no entry is about, each with
-/// the failure its target opens with (§AR-scanner.1.9, §FS-check.2.4).
-/// Empty for any other error, and where no link explains it.
-///
-/// The walker opens a directory link's target for its loop check before the entry
-/// is anything it hands over, and the error that open raises carries no path
-/// (§AR-scanner.1.9). The link is an entry of the directory the walk was listing,
-/// and that is `listing` or a directory above it: the sequential walk hands a
-/// directory over before anything under it and leaves it only once its listing is
-/// done, so every directory handed over since is inside it. Those directories, up
-/// to the walk root, are listed again, and each directory link there whose target
-/// fails to open the way the error did is one this error can be about. The walker
-/// lists every entry of each of them and fails on each such link in turn, so a
-/// link named here before its own error comes is still reported once, by the
-/// dedup, and several links in one directory are each named. A target that opens,
-/// or fails another way, is not what this error is about.
-///
-/// Only the error path pays: the walk records `listing` among the directories it
-/// already collects, and nothing here runs until an error names no entry.
-fn unopenable_links(
-    err: &ignore::Error,
-    listing: Option<&Path>,
-    scan_root: &Path,
-) -> Vec<(PathBuf, std::io::Error)> {
-    let (Some(kind), Some(listing)) = (pathless_io_kind(err), listing) else {
-        return Vec::new();
-    };
-    let disk = Sources::on_disk();
-    listing
-        .ancestors()
-        .take_while(|dir| dir.starts_with(scan_root))
-        .filter_map(|dir| disk.read_dir(dir).ok())
+/// The directory links one walk root has recovered, by the directory listed again
+/// to find them and the kind of failure their targets open with (§AR-scanner.1.9).
+/// A directory is here once it has been listed, so it is listed once per walk root
+/// however many errors it explains, and a link is handed out once. The walk builds
+/// this on a root's first error, so a run with no walker error pays nothing for it.
+#[derive(Default)]
+pub(super) struct LinkRecovery {
+    listed: HashMap<PathBuf, UnreportedLinks>,
+}
+
+/// The links of one directory not yet handed out. An emptied entry stays: a kind
+/// with an entry here is one this directory explains, whatever is left under it.
+type UnreportedLinks = HashMap<io::ErrorKind, Vec<(PathBuf, io::Error)>>;
+
+impl LinkRecovery {
+    /// The links a walker error that names no entry brings to light, each with the
+    /// failure its target opens with (§AR-scanner.1.9, §FS-check.2.4). `None` where
+    /// no link explains the error, which any other error is; an empty list where a
+    /// link does and every such link has already been handed out.
+    ///
+    /// The walker opens a directory link's target for its loop check before the entry
+    /// is anything it hands over, and the error that open raises carries no path
+    /// (§AR-scanner.1.9). The link is an entry of the directory the walk was listing,
+    /// and that is `listing` or a directory above it: the sequential walk hands a
+    /// directory over before anything under it and leaves it only once its listing is
+    /// done, so every directory handed over since is inside it. Those directories, up
+    /// to the walk root, are listed again, and each directory link there whose target
+    /// fails to open the way the error did is one this error can be about. The walker
+    /// lists every entry of each of them and fails on each such link in turn, so a
+    /// link named here before its own error comes finds nothing more to add when that
+    /// error does, and several links in one directory are each named. A target that
+    /// opens, or fails another way, is not what this error is about. Nothing tells
+    /// such an error from another pathless one of the same kind, so one raised beside
+    /// a barred link is reported as that link.
+    ///
+    /// Only the error path pays: the walk records `listing` among the directories it
+    /// already collects, and nothing here runs until an error names no entry.
+    pub(super) fn unopenable_links(
+        &mut self,
+        err: &ignore::Error,
+        listing: Option<&Path>,
+        scan_root: &Path,
+    ) -> Option<Vec<(PathBuf, io::Error)>> {
+        let kind = pathless_io_kind(err)?;
+        let mut links = None;
+        for dir in listing?
+            .ancestors()
+            .take_while(|dir| dir.starts_with(scan_root))
+        {
+            let unreported = self
+                .listed
+                .entry(dir.to_path_buf())
+                .or_insert_with(|| unopenable_links_of(dir));
+            if let Some(found) = unreported.get_mut(&kind) {
+                links.get_or_insert_with(Vec::new).append(found);
+            }
+        }
+        links
+    }
+}
+
+/// The directory links directly in `dir` whose targets exist and fail to open, by
+/// the kind of that failure. A directory that cannot be listed holds none: it
+/// fails on its own path.
+fn unopenable_links_of(dir: &Path) -> UnreportedLinks {
+    let mut links = UnreportedLinks::new();
+    Sources::on_disk()
+        .read_dir(dir)
+        .into_iter()
         .flatten()
         .filter_map(Result::ok)
         .filter(|entry| {
@@ -179,13 +220,15 @@ fn unopenable_links(
         .map(|entry| entry.path())
         .filter(|link| path_is_dir(link))
         .filter_map(|link| open_for_reading(&link).err().map(|error| (link, error)))
-        .filter(|(_, error)| error.kind() == kind)
-        .collect()
+        .for_each(|(link, error)| {
+            links.entry(error.kind()).or_default().push((link, error));
+        });
+    links
 }
 
 /// The I/O error kind of a walker error that names no entry, the form `ignore`
 /// gives the error walkdir raises with no path; `None` for every other error.
-fn pathless_io_kind(err: &ignore::Error) -> Option<std::io::ErrorKind> {
+fn pathless_io_kind(err: &ignore::Error) -> Option<io::ErrorKind> {
     match err {
         ignore::Error::Io(io) => Some(io.kind()),
         ignore::Error::WithDepth { err, .. } => pathless_io_kind(err),

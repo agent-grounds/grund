@@ -173,6 +173,8 @@ mod tests_front_matter;
 mod tests_inline_site;
 #[cfg(test)]
 mod tests_line_owners;
+#[cfg(all(test, unix))]
+mod tests_link_recovery;
 #[cfg(test)]
 mod tests_local_section_citations;
 #[cfg(test)]
