@@ -19,8 +19,8 @@ use super::unread_roots::unread_root_warnings;
 use crate::checker::{
     CheckWorkspace, check_chapter_rules, check_project, configured_scope, name_every_spelling,
     out_of_scope_references, out_of_scope_section_headings, parse_ad_hoc,
-    parse_ad_hoc_with_workspace, path_report_scope, repair_index_citations,
-    retain_diagnostics_in_report_scope, retain_findings_in_scope,
+    parse_ad_hoc_with_workspace, partition_scan_failures, path_report_scope,
+    repair_index_citations, retain_diagnostics_in_report_scope, retain_findings_in_scope,
     workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
@@ -134,7 +134,7 @@ pub(super) fn run_check_with_run_warnings(
         .map(|sentence| parse_ad_hoc(config.schema(), config.rules(), config.frame(), sentence))
         .transpose()?;
 
-    let (mut findings, mut scan_errors) =
+    let (mut findings, scan_errors) =
         scan_tree(config.schema(), config.frame(), Some(path), path_provided)?;
     // §FS-check.1.3.6.1: exactly the path, and `None` over the config root.
     let report_scope = path_report_scope(config.schema(), config.frame(), path, path_provided)?;
@@ -161,14 +161,8 @@ pub(super) fn run_check_with_run_warnings(
     // §FS-check.1.3.6.1: a file the wider walk could not read is outside the report
     // scope like anything else about it, and it is the exit code as well as a line
     // (§FS-check.2.4) — so it leaves both here, and §FS-check.1.3.6.3 says it below.
-    let mut unread_outside_report_scope = Vec::new();
-    if let Some(report_scope) = report_scope.as_ref() {
-        let (inside, outside): (Vec<_>, Vec<_>) = std::mem::take(&mut scan_errors)
-            .into_iter()
-            .partition(|(file, _)| report_scope.holds_unread(file));
-        scan_errors = inside;
-        unread_outside_report_scope = outside;
-    }
+    let (scan_errors, unread_outside_report_scope) =
+        partition_scan_failures(scan_errors, &findings.failure_names, report_scope.as_ref());
     // §FS-check.1.3.6.3: the chapter rules are asked whether the **resolution** scope
     // was read in full. The narrowed list would have a run that could not read half
     // its tree assert the absence facts anyway (§FS-rules.4.1).
@@ -421,11 +415,11 @@ fn run_workspace_check(
         // §FS-check.1.4.1: a check any project armed is armed in the run.
         report.armed.absorb(&mut project_report.armed);
         // §FS-check.1.3.6.3: as the single-project arm partitions them.
-        let (inside, outside): (Vec<_>, Vec<_>) = project
-            .scan_errors
-            .iter()
-            .cloned()
-            .partition(|(file, _)| report_scope.is_none_or(|scope| scope.holds_unread(file)));
+        let (inside, outside) = partition_scan_failures(
+            project.scan_errors.iter().cloned(),
+            &project.findings.failure_names,
+            report_scope,
+        );
         unread_outside_report_scope.extend(outside);
         had_scan_errors |= append_scan_errors(&mut report, inside);
         // §FS-check.2.2 / §FS-check.4.5.3 / §FS-workspace.5: the single-project cautions,

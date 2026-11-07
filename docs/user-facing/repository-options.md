@@ -111,6 +111,13 @@ hides, and `fmt` leaves the file alone with one warning ([§FS-scan.checks.readi
 docs/license.md:1: error: docs/license.md and docs/license.rs are one file that reads two ways, as markdown and as rust; keep one name, or give the file a name that claims a reading
 ```
 
+An entry reached through an in-root link fails once. With `e2e -> realE` and
+`realE/cases` unreadable, `check` prints one line, `e2e/cases`, because both names
+are one directory entry ([§FS-check.2.4.2](../functional-spec/FS-check.md#242-one-failure-one-line)).
+A link and its target are two entries, so a link to an unreadable directory the
+scan also walks prints a line for each
+([§FS-scan.scope.links.unresolvable.unopenable](../functional-spec/FS-scan.md#scopelinksunresolvableunopenable-a-directory-link-whose-target-cannot-be-opened-fails-at-the-link-once)).
+
 ### A sibling project the build places beside you
 
 When the build checks out another repository beside yours, at a path it fixes, cite it

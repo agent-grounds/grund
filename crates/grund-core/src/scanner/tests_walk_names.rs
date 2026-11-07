@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 use super::walk_scannable_files;
 use crate::config::load_config;
-use crate::sources::resolved_paths;
+use crate::sources::realpaths_during;
 use crate::testing::{physical_test_root, write};
 
 /// The paths this thread resolved over a walk and over reading each file the walk found, on a
@@ -19,21 +19,18 @@ fn resolved_over(case: &str, files: usize) -> (usize, usize, usize) {
     }
     let config = load_config(&root).expect("the project loads");
     let (schema, frame) = (config.schema(), config.frame());
-    let before = resolved_paths();
-    let walked: Vec<PathBuf> = walk_scannable_files(schema, frame, None, false).expect("a walk");
-    let after_walk = resolved_paths();
-    for file in &walked {
-        let _ = frame.reading(schema, file).markdown;
-    }
-    (
-        walked.len(),
-        after_walk - before,
-        resolved_paths() - after_walk,
-    )
+    let (walked, walk): (Vec<PathBuf>, usize) =
+        realpaths_during(|| walk_scannable_files(schema, frame, None, false).expect("a walk"));
+    let ((), reads) = realpaths_during(|| {
+        for file in &walked {
+            let _ = frame.reading(schema, file).markdown;
+        }
+    });
+    (walked.len(), walk, reads)
 }
 
-/// The count is of `physical_path_key` on this thread, and nothing wider: a scan's rayon workers
-/// and `canonical_path` go past it, so this pins the walk and the rule, not a run's every realpath.
+/// The count is of `physical_path_key` and `canonical_path` on this thread, and nothing wider: a
+/// scan's rayon workers go past it, so this pins the walk and the rule, not a run's every realpath.
 #[test]
 fn a_linkless_tree_resolves_no_more_for_more_files() {
     let (small_files, small_walk, small_reads) = resolved_over("names_count_small", 2);
@@ -52,7 +49,7 @@ fn a_linkless_tree_resolves_no_more_for_more_files() {
 
 /// The route `check <value source>` takes on a linkless tree: the value scan asks where the source
 /// is, a whole walk then publishes, and the scan asks again. A run resolves a spelling once, so the
-/// second ask costs nothing. This thread's `physical_path_key` count is all that sees it; the
+/// second ask costs nothing. This thread's realpath count is all that sees it; the
 /// route's whole `readlink` count was measured under `strace` and is not something a test can pin.
 #[test]
 fn a_whole_walk_keeps_where_a_spelling_was_resolved() {
@@ -66,11 +63,7 @@ fn a_whole_walk_keeps_where_a_spelling_was_resolved() {
 
     let first = spellings.resolve(&source);
     walk_scannable_files(schema, frame, None, false).expect("a walk");
-    let before = resolved_paths();
-    assert_eq!(spellings.resolve(&source), first);
-    assert_eq!(
-        resolved_paths(),
-        before,
-        "the walk forgot what was resolved"
-    );
+    let (again, spent) = realpaths_during(|| spellings.resolve(&source));
+    assert_eq!(again, first);
+    assert_eq!(spent, 0, "the walk forgot what was resolved");
 }

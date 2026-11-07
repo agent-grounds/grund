@@ -13,11 +13,13 @@ use super::sections::retain_heading_findings_in_scope;
 use crate::config::{Frame, Schema, WalkBounds, source_scope_name, unwalked_home_roots};
 use crate::grammar::Grammar;
 use crate::model::{
-    Catalog, CheckReport, Code, DeclarationSource, Diagnostic, paired_declarations, sort_path_key,
+    Catalog, CheckReport, Code, DeclarationSource, Diagnostic, FailureNames, paired_declarations,
+    sort_path_key,
 };
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject, judge_section_locks};
 use crate::scanner::{
-    CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, lend_citations, scan_roots_for,
+    CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, ScanError, lend_citations,
+    scan_roots_for,
 };
 use crate::sources::Spellings;
 use crate::workspace::scope_is_config_root;
@@ -36,7 +38,8 @@ pub(crate) struct ScanScope {
     /// The run's table of a file's names, which settles a path whose other name is in scope.
     spellings: Spellings,
     /// The report scope's roots as the run wrote them inside the config root: where the file has a
-    /// name there, that name is the one a finding about where it sits is reported at.
+    /// name there, that name is the one a finding about where it sits is reported at, and a scan
+    /// failure's name is preferred under them too (§FS-check.2.4.2).
     handed: Vec<PathBuf>,
 }
 
@@ -48,10 +51,8 @@ impl ScanScope {
     pub(crate) fn contains_any_name(&self, path: &Path) -> bool {
         self.contains(path)
             || self
-                .spellings
-                .names_of(path)
-                .iter()
-                .any(|name| self.contains(name))
+                .held_name(self.spellings.names_of(path).iter().map(PathBuf::as_path))
+                .is_some()
     }
 
     /// Whether a finding about where a file sits is in scope: it is about one spelling, so the path
@@ -62,21 +63,64 @@ impl ScanScope {
         if names.is_empty() {
             return self.contains(path);
         }
-        let handed = |name: &Path| self.handed.iter().any(|root| name.starts_with(root));
-        handed(path) || (self.contains(path) && !names.iter().any(|name| handed(name)))
+        self.is_handed(path)
+            || (self.contains(path) && !names.iter().any(|name| self.is_handed(name)))
     }
 
     pub(crate) fn contains(&self, path: &Path) -> bool {
         self.bounds.contains(path)
     }
 
-    /// §FS-check.1.3.6.3: whether a file the walk could not read is at or under the path, the one
-    /// answer both the split of the scan failures and the report's narrowing of their `io`
-    /// finding ask. Any name of it counts, as for a finding (§FS-check.1.3.6.2), so a link sorting
-    /// first cannot turn the error into a caution, nor drop it from the report.
-    pub(crate) fn holds_unread(&self, file: &Path) -> bool {
-        self.contains_any_name(file)
+    /// The one answer to whether a scan failure is inside this scope, as the name to report it
+    /// under where it is (§FS-check.1.3.6.3, §AR-scanner.1.entry). It is inside when any of its
+    /// names is, and is then named by the first under the path as given, else the first the
+    /// scope holds (§FS-check.2.4.2). Names and never a resolved path: the name the whole run
+    /// keeps can be under the path neither as written nor resolved. No filesystem call.
+    pub(crate) fn holds_failure(
+        &self,
+        (path, reason): &ScanError,
+        names: &FailureNames,
+    ) -> Option<PathBuf> {
+        self.held_name(names.of(path, reason))
+            .map(Path::to_path_buf)
     }
+
+    /// The one "any name" answer [`Self::contains_any_name`] and [`Self::holds_failure`] share,
+    /// which differ only in where the names come from: the first of `names` under the path as
+    /// handed, else the first the scope holds, and `None` when it holds none. A handed root is
+    /// one of the scope's roots, so a handed name is always held.
+    fn held_name<'a>(&self, mut names: impl Iterator<Item = &'a Path> + Clone) -> Option<&'a Path> {
+        names
+            .clone()
+            .find(|name| self.is_handed(name))
+            .or_else(|| names.find(|name| self.contains(name)))
+    }
+
+    /// Whether `name` is under the report scope's roots as the run wrote them.
+    fn is_handed(&self, name: &Path) -> bool {
+        self.handed.iter().any(|root| name.starts_with(root))
+    }
+}
+
+/// §FS-check.1.3.6.3: a run's failures, split into those inside the report scope, each under the
+/// name [`ScanScope::holds_failure`] gives it, and those outside, under the whole run's. A run
+/// over the config root narrows nothing. The report sorts what this hands it (§FS-errors.4.1).
+pub(crate) fn partition_scan_failures(
+    failures: impl IntoIterator<Item = ScanError>,
+    names: &FailureNames,
+    scope: Option<&ScanScope>,
+) -> (Vec<ScanError>, Vec<ScanError>) {
+    let Some(scope) = scope else {
+        return (failures.into_iter().collect(), Vec::new());
+    };
+    let (mut inside, mut outside) = (Vec::new(), Vec::new());
+    for failure in failures {
+        match scope.holds_failure(&failure, names) {
+            Some(name) => inside.push((name, failure.1)),
+            None => outside.push(failure),
+        }
+    }
+    (inside, outside)
 }
 
 /// §FS-check.1.3: the configured scope of this run, or `None` when the walk was
@@ -190,8 +234,6 @@ pub(crate) fn retain_diagnostics_in_report_scope(
         None => true,
         Some(path) => {
             let in_scope = match Side::of_finding(diagnostic) {
-                // §FS-check.1.3.6.3: as the run's split of its scan failures asks.
-                _ if diagnostic.code == Code::IO => scope.holds_unread(path),
                 Some(Side::Place) => scope.contains_place(path),
                 // §AR-scanner.1.8: it stands at the name the plain run reaches.
                 Some(Side::Content) => scope.contains_any_name(path),

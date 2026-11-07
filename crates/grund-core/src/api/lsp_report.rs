@@ -16,7 +16,8 @@ use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
     CheckWorkspace, ScanScope, check_chapter_rules, check_project, name_every_spelling,
-    path_report_scope, repair_index_citations, retain_diagnostics_in_report_scope,
+    partition_scan_failures, path_report_scope, repair_index_citations,
+    retain_diagnostics_in_report_scope,
 };
 use crate::config::Config;
 use crate::model::{CheckReport, Code, Diagnostic};
@@ -192,11 +193,11 @@ fn check_workspace_context(
             .extend(unread_root_warnings(&config, &project.findings));
         // §FS-check.1.3.6.1: a file the wider walk could not read outside the anchor
         // leaves the errors; §FS-check.1.3.6.3 says it once the report is narrowed.
-        let (inside, unread_outside): (Vec<_>, Vec<_>) = project
-            .scan_errors
-            .iter()
-            .cloned()
-            .partition(|(file, _)| report_scope.is_none_or(|scope| scope.holds_unread(file)));
+        let (inside, unread_outside) = partition_scan_failures(
+            project.scan_errors.iter().cloned(),
+            &project.findings.failure_names,
+            report_scope,
+        );
         append_lsp_scan_errors(&mut project_report, inside);
         for channel in [&mut project_report.errors, &mut project_report.warnings] {
             retain_diagnostics_in_report_scope(

@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use super::conflict_block::ConflictBlock;
 use super::e2e::E2eCase;
+use super::failure_names::FailureNames;
 use super::file_record::FileRecords;
 use super::front_matter::{FrontMatterField, FrontMatterSlice};
 use super::headings::{
@@ -392,6 +393,9 @@ pub struct Catalog {
     /// with the row that made it a root, as the root gate recorded them
     /// (§AR-scanner.1.6, §FS-scan.checks.unread-scan-root).
     pub(crate) unread_roots: Vec<RootRow>,
+    /// The names each of the walk's surviving failures also answered to, for the one
+    /// question a narrowed run asks of them (§AR-scanner.1.entry, §FS-check.1.3.6.3).
+    pub(crate) failure_names: FailureNames,
     /// Per-file heading and doc-comment structure, for the files a grounding
     /// unit finer than the file is asked of (§AR-scanner.2.7, §FS-check.3.6.2).
     /// Empty — and never collected — unless `ScanDemand` names a row (§AR-config.6.1).

@@ -23,21 +23,8 @@ pub(crate) fn paths_same_location(left: &Path, right: &Path) -> bool {
 /// is one key with `notes/new.md` (§FS-scan.identity.buffers).
 pub(crate) fn physical_path_key(path: &Path) -> PathBuf {
     #[cfg(test)]
-    RESOLVED.with(|count| count.set(count.get() + 1));
+    super::realpath_count::note_realpath();
     canonicalize_existing_prefix(path)
-}
-
-#[cfg(test)]
-thread_local! {
-    /// How many keys this thread resolved, for the test that a linkless tree pays no new
-    /// `realpath` (§FS-scan.identity.read-once).
-    static RESOLVED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
-/// See [`RESOLVED`]. Gated as its only reader, `scanner/tests_walk_names.rs`, is.
-#[cfg(all(test, unix))]
-pub(crate) fn resolved_paths() -> usize {
-    RESOLVED.with(std::cell::Cell::get)
 }
 
 /// `path` absolutized and resolved as far as the filesystem can: the canonical

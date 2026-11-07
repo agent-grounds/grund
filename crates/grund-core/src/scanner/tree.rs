@@ -181,6 +181,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         unread_roots: walked.unread_roots,
         reading_conflicts: walked.reading_conflicts,
         reading_moves: walked.reading_moves,
+        failure_names: walked.failure_names,
         ..Catalog::default()
     };
     let (mut files, mut errors) = (walked.files, walked.errors);

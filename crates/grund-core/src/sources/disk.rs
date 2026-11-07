@@ -67,6 +67,8 @@ pub(crate) fn read_git_metadata(path: &Path) -> std::io::Result<String> {
 /// The path with every link resolved, as the disk answers it: the physical
 /// identity a reader compares locations by (§FS-scan.identity.buffers).
 pub(crate) fn canonical_path(path: impl AsRef<Path>) -> std::io::Result<PathBuf> {
+    #[cfg(test)]
+    super::realpath_count::note_realpath();
     std::fs::canonicalize(path)
 }
 
