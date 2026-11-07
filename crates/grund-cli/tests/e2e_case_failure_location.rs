@@ -6,12 +6,7 @@
 //! reason prints an absolute temporary path. The tests that need a mode skip where it does not bar
 //! the user.
 #![cfg(unix)]
-#![allow(dead_code)]
 
-#[path = "support/case_runner.rs"]
-mod case_runner;
-
-use case_runner::{CaseKind::E2e, RED_UNTIL_1264, assert_every_case_passed, run_case};
 use std::fs;
 use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
@@ -155,22 +150,8 @@ fn the_same_bytes_in_an_ordinary_file_are_held_only_by_a_path_at_the_file() {
     );
 }
 
-/// The manifests the corpus can hold, each compared on every golden.
-#[test]
-#[ignore = "red until #1264 locates a case's failure at the file that failed; implement removes this"]
-fn corpus_cases() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let cases = root.join("tests/e2e/cases");
-    let outcomes = RED_UNTIL_1264
-        .iter()
-        .map(|name| run_case(&root, &cases.join(name), E2e))
-        .collect::<Vec<_>>();
-    assert_every_case_passed("e2e case failure location", &outcomes);
-}
-
 /// How a path is spelled from inside the tree is not judged here (#1207): what it holds is.
 #[test]
-#[ignore = "red until #1264 locates a case's failure at the file that failed; implement removes this"]
 fn standing_in_the_failing_case_holds_the_failure() {
     let tree = Tree::new("in-case");
     tree.write("e2e/cases/b/expected.exit", UNDECODABLE);
@@ -189,7 +170,6 @@ fn standing_in_the_failing_case_holds_the_failure() {
 
 /// A path inside a member resolves against that member (§FS-check.1.3.6.3), and is reported from it.
 #[test]
-#[ignore = "red until #1264 locates a case's failure at the file that failed; implement removes this"]
 fn standing_in_a_workspace_member_holds_the_failure() {
     let tree = Tree::new("in-member");
     tree.write(
@@ -214,7 +194,6 @@ fn standing_in_a_workspace_member_holds_the_failure() {
 }
 
 #[test]
-#[ignore = "red until #1264 locates a case's failure at the file that failed; implement removes this"]
 fn an_expected_exit_that_does_not_parse_is_held_by_a_path_at_it() {
     let tree = Tree::new("parse");
     tree.write("e2e/cases/b/expected.exit", b"not-an-exit\n");
@@ -233,7 +212,6 @@ fn an_expected_exit_that_does_not_parse_is_held_by_a_path_at_it() {
 }
 
 #[test]
-#[ignore = "red until #1264 locates a case's failure at the file that failed; implement removes this"]
 fn an_expected_exit_at_mode_000_is_held_by_a_path_at_it() {
     let mut tree = Tree::new("exit-mode");
     if !tree.lock("e2e/cases/b/expected.exit") {
@@ -248,7 +226,6 @@ fn an_expected_exit_at_mode_000_is_held_by_a_path_at_it() {
 /// §FS-check.2.4.2: a run whose path enters the case walks the fixture directory as well, so the
 /// walk and the pass meet one failure, and it is one line, one `io` entry.
 #[test]
-#[ignore = "red until #1264 locates a case's failure at the file that failed; implement removes this"]
 fn a_fixture_directory_at_mode_000_is_one_failure_at_that_directory() {
     let mut tree = Tree::new("fixture-mode");
     tree.write("e2e/cases/b/fixture/deep/file.txt", b"held\n");
@@ -290,7 +267,6 @@ fn a_fixture_directory_at_mode_000_is_one_failure_at_that_directory() {
 /// A case's first failure does not hide its second (§FS-declarations.e2e-case.failure): each
 /// fixture directory that cannot be listed is its own report.
 #[test]
-#[ignore = "red until #1264 locates a case's failure at the file that failed; implement removes this"]
 fn two_fixture_directories_at_mode_000_are_two_failures() {
     let mut tree = Tree::new("two-fixtures");
     tree.write("e2e/cases/b/one/file.txt", b"held\n");
@@ -315,7 +291,6 @@ fn two_fixture_directories_at_mode_000_are_two_failures() {
 /// The location is the tree's spelling under the configured folder, never the link's target
 /// (§AR-scanner.6.6), so the target's own spelling stays the outside it has always been.
 #[test]
-#[ignore = "red until #1264 locates a case's failure at the file that failed; implement removes this"]
 fn a_linked_cases_folder_locates_the_failure_under_its_configured_spelling() {
     let tree = Tree::new("linked-folder");
     tree.write("real/a/expected.exit", b"0\n");

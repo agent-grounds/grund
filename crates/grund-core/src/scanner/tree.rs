@@ -224,7 +224,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     findings.files = records.into_iter().collect();
     // §AR-scanner.1.relisted: the E2E and value passes read the reports so far, the walk's among
     // them, so a directory both list is one line, and one only a pass met still is.
-    // §AR-scanner.6.6: every other failure is handed back, and two that read alike stay two.
+    // §AR-scanner.6.6: every other failure comes back at its path; two that read alike stay two.
     let failures = scan_e2e_cases(
         schema,
         frame,
@@ -233,9 +233,9 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         &mut errors,
         &mut findings,
     );
-    for err in failures {
-        // §FS-check.2.4.1: manifest and fixture reads share the ordinary scan reason.
-        errors.push((frame.root().join("e2e/cases"), scan_error_reason(&err)));
+    for (path, err) in failures {
+        // §FS-check.2.4.1: manifest reads share the ordinary scan reason.
+        errors.push((path, scan_error_reason(&err)));
     }
     scan_value_sources(schema, frame, &mut findings, &mut errors);
     read_section_locks(frame, &mut findings, &mut errors);
