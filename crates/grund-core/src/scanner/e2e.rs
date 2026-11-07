@@ -3,7 +3,7 @@ use anyhow::Context;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use super::scan_error::{publish_unlisted, publish_unread, scan_error_reason};
+use super::scan_error::{publish_case_failure, publish_unlisted, scan_error_reason};
 use super::tree::ScanError;
 use super::walk_order::sort_paths;
 
@@ -135,11 +135,8 @@ pub(super) fn scan_e2e_cases(
                 for failure in case_failures {
                     let spelled = spelled_below(&spelled_root, &cases_root, failure.path());
                     match failure {
-                        CaseFailure::Unread(path, err) => {
-                            publish_unread(&path, spelled, &err, reported);
-                        }
-                        CaseFailure::Unlisted(path, err) => {
-                            publish_unlisted(&path, spelled, &err, None, reported);
+                        CaseFailure::Unread(_, err) => {
+                            publish_case_failure(spelled, &err, reported);
                         }
                         CaseFailure::Unparsed(_, err) => {
                             reported.push((spelled, scan_error_reason(&err)));
@@ -227,12 +224,9 @@ pub(crate) fn e2e_case_dir_name(schema: &Schema, rendered: &str) -> String {
 
 /// One failure reading a case, with the path that failed (§AR-scanner.6.6).
 enum CaseFailure {
-    /// A file of the case that could not be read or decoded, which the walk reads too where the
-    /// scan's extensions reach it, so it goes through the one comparison (§AR-scanner.1.relisted).
+    /// A file of the case that could not be read or decoded, or a fixture directory that could not
+    /// be listed, either of which the walk may have failed on too (§AR-scanner.1.relisted).
     Unread(PathBuf, std::io::Error),
-    /// A fixture directory that could not be listed, which the walk may have failed on too, so
-    /// it goes through the one comparison (§AR-scanner.1.relisted).
-    Unlisted(PathBuf, std::io::Error),
     /// An `expected.exit` that does not parse, which only this pass can say, so nothing is
     /// compared (§AR-scanner.6.6).
     Unparsed(PathBuf, anyhow::Error),
@@ -241,7 +235,7 @@ enum CaseFailure {
 impl CaseFailure {
     fn path(&self) -> &Path {
         match self {
-            Self::Unread(path, _) | Self::Unlisted(path, _) | Self::Unparsed(path, _) => path,
+            Self::Unread(path, _) | Self::Unparsed(path, _) => path,
         }
     }
 }
@@ -367,7 +361,7 @@ fn collect_relative_fixture_files(
     // §FS-check.6.1.1: cover this effective input before its shared read.
     let mut listing = Sources::on_disk().list_dir(dir);
     if let Some(err) = listing.failure {
-        failed.push(CaseFailure::Unlisted(dir.to_path_buf(), err));
+        failed.push(CaseFailure::Unread(dir.to_path_buf(), err));
     }
     sort_paths(&mut listing.entries);
     for path in listing.entries {

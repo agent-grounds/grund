@@ -12,6 +12,9 @@ use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+#[path = "e2e_case_failure_location/spellings.rs"]
+mod spellings;
+
 const CONFIG: &str = "grund_config_version = 2\nproject_name = \"p\"\n\n\
     [schema]\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
     [schema.kinds.E2E]\nfolders = [\"e2e/cases\"]\n";
@@ -24,6 +27,7 @@ const OUTSIDE: &str = "outside the report scope";
 struct Tree {
     root: PathBuf,
     locked: Vec<PathBuf>,
+    links: Vec<PathBuf>,
 }
 
 #[derive(Debug)]
@@ -42,6 +46,7 @@ impl Tree {
         let tree = Self {
             root,
             locked: Vec::new(),
+            links: Vec::new(),
         };
         for case in ["a", "b", "c"] {
             tree.write(&format!("e2e/cases/{case}/expected.exit"), b"0\n");
@@ -90,6 +95,9 @@ impl Drop for Tree {
     fn drop(&mut self) {
         for path in &self.locked {
             let _ = fs::set_permissions(path, fs::Permissions::from_mode(0o755));
+        }
+        for path in &self.links {
+            let _ = fs::remove_file(path);
         }
         let _ = fs::remove_dir_all(&self.root);
     }
@@ -371,7 +379,7 @@ fn an_expected_exit_that_does_not_parse_the_walk_also_reads_is_one_line() {
     }
 }
 
-/// §AR-scanner.1.relisted: a manifest that is a link is an entry of its own, so the walk's report
+/// §AR-scanner.1.relisted: a manifest that is a link is a spelling of its own, so the walk's report
 /// of the file behind it does not stand in for it, and the run naming the case still holds it.
 #[test]
 fn a_manifest_linked_to_a_file_the_walk_reported_keeps_its_own_line() {
@@ -393,7 +401,7 @@ fn a_manifest_linked_to_a_file_the_walk_reported_keeps_its_own_line() {
     assert!(lines[1].starts_with("warning: notes.md: "), "{run:#?}");
 }
 
-/// §AR-scanner.1.relisted: two cases' entries are two locations even where one links to the other,
+/// §AR-scanner.1.relisted: two cases' manifests are two spellings even where one links to the other,
 /// or the second case named on the command line would go green.
 #[test]
 fn a_manifest_linked_to_another_cases_manifest_is_held_by_its_own_case() {

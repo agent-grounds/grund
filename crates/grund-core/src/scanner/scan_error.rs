@@ -14,8 +14,8 @@ use std::path::{Path, PathBuf};
 
 use super::tree::ScanError;
 use crate::config::Frame;
-use crate::model::remedies;
-use crate::sources::{paths_same_entry, paths_same_location};
+use crate::model::{remedies, scanned_path_key};
+use crate::sources::paths_same_location;
 
 /// One file the walk could not read, as a caller of the embedding API sees it:
 /// the path rendered against the run's report base (§FS-config.3.6) and the
@@ -75,17 +75,14 @@ pub(super) fn publish_unlisted(
     });
 }
 
-/// A pass's failure to read `read`, a file the walk may read too, through the same comparison.
-/// The location is the directory entry and not the file behind it, so a file that is a link keeps
-/// its own line beside the walk's report of the target (§AR-scanner.1.relisted).
-pub(super) fn publish_unread(
-    read: &Path,
-    spelled: PathBuf,
-    error: &Error,
-    reported: &mut Vec<ScanError>,
-) {
+/// A case's failure to read a file or list a fixture directory, published at `spelled` unless a
+/// report already says it there: the same path as the tree spells it and the same bare reason. The
+/// walk spells below the canonical root as the pass does, so a plain tree meets here, and a report
+/// at another spelling of the file answers no run holding this one (§AR-scanner.1.relisted).
+pub(super) fn publish_case_failure(spelled: PathBuf, error: &Error, reported: &mut Vec<ScanError>) {
+    let at = scanned_path_key(&spelled);
     publish_unless_reported(spelled, error, None, reported, |path| {
-        paths_same_entry(path, read)
+        scanned_path_key(path) == at
     });
 }
 
