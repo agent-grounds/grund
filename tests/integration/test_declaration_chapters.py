@@ -155,7 +155,10 @@ CITED = (
 
 # FS-fmt.md grew by 282 bytes in §FS-fmt.2.3.1: the string-literal rule follows how a file
 # is read, not its name, citing §FS-config-v2.schema.sources.definitions (grund#1208).
-BASELINES = {"FS-show.md": 71962, "FS-fmt.md": 103492}
+
+# FS-fmt.md grew by 2080 bytes in §FS-fmt.7.4.4 and §FS-fmt.3.2: a rewrite into another project
+# needs that project's proof, citing §REQ-no-wrong-citation.3 rather than restating it (grund#1266).
+BASELINES = {"FS-show.md": 71962, "FS-fmt.md": 105572}
 
 
 def _flat(text):

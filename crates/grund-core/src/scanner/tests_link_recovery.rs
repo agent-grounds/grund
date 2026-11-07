@@ -1,6 +1,7 @@
-//! Test module: what one walk root remembers of the directory links it has recovered, which keeps
-//! "nothing new" apart from "no link at all" (§AR-scanner.1.9). Only the second may reach the
-//! walk root as a location, and each directory is listed once per walk root.
+//! Test module: what one walk root remembers of the directory links it has recovered
+//! (§AR-scanner.1.9). Each link hands out its path once and explains one walker error of its kind;
+//! an error with no link left to explain it is the walk root's to report, so it never disappears.
+//! Each directory is listed once per walk root.
 
 use std::fs;
 use std::io;
@@ -50,8 +51,10 @@ fn free(root: &Path) {
     fs::set_permissions(root.join("real"), fs::Permissions::from_mode(0o755)).expect("free it");
 }
 
+/// Two links explain two errors: the first names both, the second adds nothing, and a third is a
+/// failure no link accounts for. It must reach the walk root rather than vanish as "nothing new".
 #[test]
-fn a_recovered_link_is_handed_out_once_and_then_nothing_new_is_still_an_answer() {
+fn each_recovered_link_explains_one_error_and_an_error_past_them_explains_nothing() {
     let Some(root) = barred_tree("link-recovery-once") else {
         return;
     };
@@ -60,9 +63,11 @@ fn a_recovered_link_is_handed_out_once_and_then_nothing_new_is_still_an_answer()
     let denied = io::ErrorKind::PermissionDenied;
     let first = recovered(&mut recovery, denied, &docs, &root);
     let second = recovered(&mut recovery, denied, &docs, &root);
+    let third = recovered(&mut recovery, denied, &docs, &root);
     free(&root);
     assert_eq!(first, Some(vec![docs.join("a"), docs.join("b")]));
     assert_eq!(second, Some(vec![]));
+    assert_eq!(third, None, "a failure with no link left was dropped");
 }
 
 #[test]
@@ -90,6 +95,7 @@ fn a_directory_is_listed_once_per_walk_root() {
     let first = recovered(&mut recovery, denied, &docs, &root);
     symlink("../real", docs.join("later")).expect("create the link");
     let second = recovered(&mut recovery, denied, &docs, &root);
+    let third = recovered(&mut recovery, denied, &docs, &root);
     let fresh = recovered(&mut LinkRecovery::default(), denied, &docs, &root);
     free(&root);
     assert!(first.is_some_and(|links| links.len() == 2));
@@ -97,6 +103,10 @@ fn a_directory_is_listed_once_per_walk_root() {
         second,
         Some(vec![]),
         "the directory was listed a second time"
+    );
+    assert_eq!(
+        third, None,
+        "a later link earned a credit it was not listed for"
     );
     assert!(fresh.is_some_and(|links| links.len() == 3));
 }

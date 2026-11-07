@@ -61,6 +61,13 @@ impl WorkspaceProject {
     pub(crate) fn reports_sites(&self) -> bool {
         self.mount.as_ref().is_none_or(|mounted| mounted.canonical)
     }
+
+    /// Whether this project's scan met no error: the half of the proof of §FS-fmt.7.4
+    /// a rewrite into this project needs from another's walk (§FS-fmt.7.4.4), since a
+    /// set short of a declaration can make a token look unique when it is not.
+    pub(crate) fn read_in_full(&self) -> bool {
+        self.scan_errors.is_empty()
+    }
 }
 
 /// Everything a workspace-aware query command needs (§FS-workspace.8 intro,
@@ -505,16 +512,26 @@ pub(super) fn load_projects_with(
     } else {
         root_config.root.clone()
     };
-    let entries = expand_workspace_tree_with_report_base(root_config.facade_mut(), &report_base)?
-        .into_iter()
-        .map(|entry| (entry.alias, ProjectRecords::of(entry.config)))
-        .collect::<Vec<_>>();
+    let mut entries =
+        expand_workspace_tree_with_report_base(root_config.facade_mut(), &report_base)?
+            .into_iter()
+            .map(|entry| (entry.alias, ProjectRecords::of(entry.config)))
+            .collect::<Vec<_>>();
 
     // §AR-scanner.2.4.2, §FS-check.1.3.8: each member's run was built carrying the
     // root's classification and `--full` (`Run::members`), so nothing is set here.
 
     // §FS-remote-projects.mount.rule: every mount this tree declares, loaded natively.
     let (grafted, mounted_roots) = mounts.graft_all(root_config)?;
+    // §FS-scan.scope.links.owed.fence: a walk tells a link into an import from one
+    // out of the run, so each knows the import trees before its scan below.
+    if !mounted_roots.is_empty() {
+        for (_, records) in &mut entries {
+            records
+                .facade_mut()
+                .set_mounted_roots(mounted_roots.clone());
+        }
+    }
 
     // Stage 2: build the target list up-front so each project's scan can
     // parse `§<alias>/<ID>` citations with the target's grammar inline —

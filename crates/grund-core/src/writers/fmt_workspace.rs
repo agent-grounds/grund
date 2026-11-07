@@ -126,9 +126,11 @@ pub(crate) fn fmt_workspace_projects(
         }
     }
     if strict_abort || !conflicts.is_empty() && !preflight_scan_errors.is_empty() {
+        // §FS-fmt.3.3: one project's refusal can name another's path (§FS-fmt.7.4.4).
         return Err(FmtScanAbort {
             scan_errors: preflight_scan_errors,
         }
+        .named_once()
         .into());
     }
     if !conflicts.is_empty() {

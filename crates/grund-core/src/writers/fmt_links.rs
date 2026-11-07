@@ -69,10 +69,13 @@ pub(crate) fn wrap_markdown_links(
 /// One line after the link pass, and what the pass wrote on it (§FS-fmt.3.7): the
 /// wraps it made fresh, and the `(old, new)` destination of each wrap it
 /// re-pointed. A wrap whose destination was already right is in neither.
+/// `unproven_aliases` names each project a link was withheld from, its scan having
+/// met an error (§FS-fmt.7.4.4).
 pub(super) struct WrappedLine {
     pub(super) line: String,
     pub(super) fresh: usize,
     pub(super) repointed: Vec<(String, String)>,
+    pub(super) unproven_aliases: BTreeSet<String>,
 }
 
 impl WrappedLine {
@@ -104,6 +107,7 @@ pub(super) fn wrap_markdown_links_with_targets(
     let mut binding_end = 0;
     let mut fresh = 0;
     let mut repointed = Vec::new();
+    let mut unproven_aliases = BTreeSet::new();
     for citation in
         markdown_link_citations(line, links, config, findings, workspace, shorthand_targets)
     {
@@ -166,6 +170,17 @@ pub(super) fn wrap_markdown_links_with_targets(
         let Some(target) = target else {
             continue;
         };
+        // §FS-fmt.7.4.4: a link is a write, so it needs the project it resolves against
+        // to have been read in full. A wrap already right writes nothing, and asks nothing.
+        let already_right = matches!(reading, CitationLink::Wrap(wrap)
+            if line[wrap.url_start..wrap.close] == target);
+        if let Some(namespace) = &citation.namespace
+            && !already_right
+            && !shorthand_targets.alias_is_proven(namespace)
+        {
+            unproven_aliases.insert(namespace.clone());
+            continue;
+        }
         let marked_end = citation.token_end;
         let marker_start = citation.marker_start;
         // §FS-citations.wrap.recognized: a wrap's whole destination is re-derived,
@@ -196,6 +211,7 @@ pub(super) fn wrap_markdown_links_with_targets(
         line: output,
         fresh,
         repointed,
+        unproven_aliases,
     }
 }
 

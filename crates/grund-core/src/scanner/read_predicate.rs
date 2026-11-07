@@ -14,7 +14,8 @@
 //! not resolve asks `name_refusal`, `directory_refusal` or, for a directory whose
 //! target cannot be opened, `WalkDirFilter::refusal`, with `ignored`, whether the
 //! walk would have read it (§FS-config.3.5.6, §FS-scan.scope.links.owed.fence),
-//! since the walker filters no error entry itself.
+//! since the walker filters no error entry itself. That last reader is the one that
+//! tells `Unread::AnotherProject` from `Unread::OutsideProject`.
 
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
@@ -48,8 +49,12 @@ pub(crate) enum Unread {
     OutsideRoots,
     /// Inside a home the config lists without walking (§AR-scanner.1.4).
     UnwalkedHome,
-    /// Inside another project's root (§AR-scanner.1.3).
+    /// Inside a tree this walk leaves to another reader of the run: another project's
+    /// root (§AR-scanner.1.3), or an import's (§FS-scan.scope.links.owed.fence).
     AnotherProject,
+    /// Behind a link out of the project, to a target in no tree the run reads
+    /// (§AR-scanner.1.2, §FS-scan.scope.links.owed.fence).
+    OutsideProject,
     /// Inside an end-to-end case directory, which the manifest pass owns
     /// (§AR-scanner.6.4).
     E2eCase,

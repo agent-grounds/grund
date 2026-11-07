@@ -1,9 +1,9 @@
-use crate::sources::{canonical_path, is_directory, path_exists, path_is_file};
+use crate::sources::{canonical_path, is_directory, path_exists};
 use anyhow::{Result, anyhow};
 use ignore::WalkBuilder;
 use std::path::{Path, PathBuf};
 
-use super::e2e::{e2e_cases_folder, e2e_id_from_case_dir_name};
+use super::e2e::{e2e_cases_folder, is_direct_e2e_case_dir};
 use super::exclude_globs::ExcludeGlobs;
 use super::global_excludes::GlobalExcludes;
 use super::mounted_ignore::{mounted_ignore_mode, rules_above};
@@ -156,6 +156,10 @@ pub(super) struct WalkDirFilter {
     /// outlives the walk's borrow of it (§AR-scanner.1).
     root: PathBuf,
     project_roots: Vec<PathBuf>,
+    /// The roots of the trees this run imports, which tell a link out of the project
+    /// that lands in one from one that lands nowhere the run reads
+    /// (§FS-scan.scope.links.owed.fence).
+    mounted_roots: Vec<PathBuf>,
     id_format: String,
     grammar: Grammar,
     link_roots: std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
@@ -198,6 +202,7 @@ impl WalkDirFilter {
             unwalked_homes: walk_pruned_home_keys(schema, frame, scan_root, physical_root),
             root: frame.root().to_path_buf(),
             project_roots: frame.run.workspace.project_roots.clone(),
+            mounted_roots: frame.run.workspace.mounted_roots.clone(),
             id_format: schema.ids.format.clone(),
             grammar: frame.grammar().clone(),
             link_roots: std::sync::Arc::clone(link_roots),
@@ -275,10 +280,12 @@ impl WalkDirFilter {
         }
         let resolved = self.resolved_link_dir(path, is_link);
         let resolved = resolved.as_deref();
-        if self.crosses_a_scan_boundary(path, resolved) {
-            return Some(Unread::AnotherProject);
-        }
+        // §FS-scan.scope.links.unresolvable.unopenable: the link's own name first, so a
+        // link kept out by it answers as kept out wherever it points.
         if let Some(reason) = directory_refusal(path, &self.excluded) {
+            return Some(reason);
+        }
+        if let Some(reason) = self.scan_boundary_crossed(path, resolved) {
             return Some(reason);
         }
         if self.is_e2e_case_dir(path) || resolved.is_some_and(|path| self.is_e2e_case_dir(path)) {
@@ -324,24 +331,38 @@ impl WalkDirFilter {
     /// stronger: another project remains out of bounds even when it lies inside
     /// this project's physical root (§FS-workspace.6.2, §AR-workspace.6.2). Both are
     /// judged on the canonical target, which `realpath` works out without opening it,
-    /// so walk-error reporting asks the same of a link whose target cannot be opened
+    /// so walk-error reporting asks the same of a link whose target cannot be opened,
+    /// and reads from the answer whether anything in the run reads that tree
     /// (§FS-scan.scope.links.owed.fence).
-    fn crosses_a_scan_boundary(&self, path: &Path, resolved: Option<&Path>) -> bool {
+    fn scan_boundary_crossed(&self, path: &Path, resolved: Option<&Path>) -> Option<Unread> {
         if let Ok(relative) = path.strip_prefix(&self.scan_root)
             && self
                 .boundary_suffixes
                 .iter()
                 .any(|suffix| relative == suffix.as_path())
         {
-            return true;
+            return Some(Unread::AnotherProject);
         }
-        resolved.is_some_and(|resolved| {
-            !resolved.starts_with(&self.physical_root)
-                || self
-                    .boundary_roots
-                    .iter()
-                    .any(|root| resolved.starts_with(root))
-                || owned_by_another_project(&self.project_roots, &self.physical_root, resolved)
+        let resolved = resolved?;
+        if self
+            .boundary_roots
+            .iter()
+            .any(|root| resolved.starts_with(root))
+            || owned_by_another_project(&self.project_roots, &self.physical_root, resolved)
+        {
+            return Some(Unread::AnotherProject);
+        }
+        if resolved.starts_with(&self.physical_root) {
+            return None;
+        }
+        let imported = self
+            .mounted_roots
+            .iter()
+            .any(|root| resolved.starts_with(root));
+        Some(if imported {
+            Unread::AnotherProject
+        } else {
+            Unread::OutsideProject
         })
     }
 
@@ -353,26 +374,6 @@ impl WalkDirFilter {
             &self.grammar,
         )
     }
-}
-
-/// Direct `e2e/cases/<name>/` directories are E2E manifest declarations
-/// (§AR-scanner.6.1), so the ordinary file walk must not scan their fixture repos.
-pub(super) fn is_direct_e2e_case_dir(
-    path: &Path,
-    cases_root: Option<&Path>,
-    id_format: &str,
-    grammar: &Grammar,
-) -> bool {
-    let Some(cases_root) = cases_root else {
-        return false;
-    };
-    if path.parent() != Some(cases_root) || !path_is_file(&path.join("expected.exit")) {
-        return false;
-    }
-    path.file_name()
-        .and_then(|name| name.to_str())
-        .and_then(|name| e2e_id_from_case_dir_name(id_format, grammar, name))
-        .is_some()
 }
 
 /// The directories (or single file) the walk starts from, and so which files a run

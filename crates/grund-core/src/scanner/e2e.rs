@@ -198,6 +198,26 @@ fn e2e_source_id(id_format: &str, name: &str) -> Option<String> {
     Some(format!("E2E{separator}{name}"))
 }
 
+/// Direct `e2e/cases/<name>/` directories are E2E manifest declarations
+/// (§AR-scanner.6.1), so the ordinary file walk must not scan their fixture repos.
+pub(super) fn is_direct_e2e_case_dir(
+    path: &Path,
+    cases_root: Option<&Path>,
+    id_format: &str,
+    grammar: &Grammar,
+) -> bool {
+    let Some(cases_root) = cases_root else {
+        return false;
+    };
+    if path.parent() != Some(cases_root) || !path_is_file(&path.join("expected.exit")) {
+        return false;
+    }
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .and_then(|name| e2e_id_from_case_dir_name(id_format, grammar, name))
+        .is_some()
+}
+
 /// Inverse of `e2e_id_from_case_dir_name`: strip the `E2E` prefix off a rendered ID
 /// to get the `e2e/cases/<name>/` directory `grund id` tells the author to create
 /// (§FS-id.2, §AR-scanner.6.1).

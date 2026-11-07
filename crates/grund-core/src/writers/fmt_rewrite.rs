@@ -36,11 +36,13 @@ use crate::scanner::DeclarationLines;
 
 /// One file's rewritten lines plus what the walk needs to decide afterwards:
 /// whether anything changed, and whether a shorthand expansion was wanted but
-/// could not be performed for lack of the declaration set (§FS-fmt.2.4.5).
+/// could not be performed for lack of the declaration set (§FS-fmt.2.4.5), and which
+/// aliased projects a rewrite was withheld from for lack of their proof (§FS-fmt.7.4.4).
 pub(super) struct RewrittenFile {
     pub(super) lines: Vec<String>,
     pub(super) changed: bool,
     pub(super) saw_shorthand_candidate: bool,
+    pub(super) unproven_aliases: BTreeSet<String>,
 }
 
 /// Apply `fmt_line` to every rewritable line of one file, appending each changed
@@ -63,6 +65,7 @@ pub(super) fn rewrite_file(
     let mut lines = Vec::new();
     let mut changed = false;
     let mut saw_shorthand_candidate = false;
+    let mut unproven_aliases = BTreeSet::new();
     // §FS-fmt.2.5.2.1: every file starts with the rewrite on — a region never
     // carries across files.
     let mut directives = FmtDirectives::new(reading.lexical, is_md);
@@ -132,6 +135,7 @@ pub(super) fn rewrite_file(
             opts,
             suppressed,
             &mut saw_shorthand_candidate,
+            &mut unproven_aliases,
         );
         // §FS-fmt.3.6.1: one row per changed line, however many rewrites it holds.
         if new_line != line {
@@ -150,6 +154,7 @@ pub(super) fn rewrite_file(
         lines,
         changed,
         saw_shorthand_candidate,
+        unproven_aliases,
     }
 }
 
@@ -219,6 +224,7 @@ fn fmt_line_at(
     opts: &FmtLineOpts<'_>,
     suppressed: bool,
     saw_shorthand_candidate: &mut bool,
+    unproven_aliases: &mut BTreeSet<String>,
 ) -> (String, LineRewrite) {
     if suppressed {
         return suppressed_line(line, links, path, config, is_md, opts);
@@ -268,6 +274,7 @@ fn fmt_line_at(
         &trigger_marker_starts,
         saw_shorthand_candidate,
         &mut expansions,
+        unproven_aliases,
     );
     rewrite.counts.shorthands_expanded = expansions.len() - rewrite.counts.local_sections_expanded;
     let mut final_line = expansion.unwrap_or(marked);
@@ -291,6 +298,7 @@ fn fmt_line_at(
         );
         rewrite.counts.links_written = wrapped.written();
         rewrite.anchor_detail = anchor_detail(&wrapped.repointed);
+        unproven_aliases.extend(wrapped.unproven_aliases);
         final_line = wrapped.line;
     }
     // §FS-fmt.3.6: whichever label leads, an expansion names the text it writes
@@ -328,6 +336,7 @@ pub(crate) fn fmt_line(
         opts,
         suppressed,
         saw_shorthand_candidate,
+        &mut BTreeSet::new(),
     );
     (line, rewrite.label())
 }
