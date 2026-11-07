@@ -196,37 +196,31 @@ fn snapshot(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
 }
 
 #[test]
-#[ignore = "red until #1284 migration uses lexical path coordinates; implement removes this"]
 fn exclude_include_parent_after_child() {
     Fixture::new("docs/x/..", "docs", false).assert_detail(1);
 }
 
 #[test]
-#[ignore = "red until #1284 migration uses lexical path coordinates; implement removes this"]
 fn exclude_include_parent_before_home() {
     Fixture::new("docs/../docs", "docs", false).assert_detail(1);
 }
 
 #[test]
-#[ignore = "red until #1284 migration uses lexical path coordinates; implement removes this"]
 fn exclude_home_parent_after_child() {
     Fixture::new("other", "docs/x/..", false).assert_detail(1);
 }
 
 #[test]
-#[ignore = "red until #1284 migration uses lexical path coordinates; implement removes this"]
 fn exclude_home_parent_before_home() {
     Fixture::new("other", "docs/../docs", false).assert_detail(1);
 }
 
 #[test]
-#[ignore = "red until #1284 migration uses lexical path coordinates; implement removes this"]
 fn nested_include_parent_after_child() {
     Fixture::new("docs/x/..", "docs", true).assert_detail(1);
 }
 
 #[test]
-#[ignore = "red until #1284 migration uses lexical path coordinates; implement removes this"]
 fn nested_include_parent_before_home() {
     Fixture::new("docs/../docs", "docs", true).assert_detail(1);
 }

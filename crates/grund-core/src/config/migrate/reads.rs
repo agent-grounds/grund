@@ -20,26 +20,34 @@ use crate::model::normalize_path_lexically;
 /// that scan reads, each spelled from the façade's root (§AR-config.8.1).
 pub(crate) type V1Walk<'a> = dyn Fn(Config) -> Result<Vec<PathBuf>> + 'a;
 
-/// What the version 1 scan of the tree at `root` reads, walked on first ask.
+/// What the version 1 scan reads, walked on first ask and cached as lexical paths
+/// for both refusal details (§FS-config-migrate.3.1.4.1, §FS-config-migrate.3.1.5.1).
 pub(super) struct Reads<'a> {
     v1: &'a Project,
-    root: &'a Path,
-    scan_roots: &'a [PathBuf],
+    walk_root: &'a Path,
+    root: PathBuf,
+    scan_roots: Vec<PathBuf>,
     walk: &'a V1Walk<'a>,
     files: OnceCell<Vec<PathBuf>>,
 }
 
 impl<'a> Reads<'a> {
+    /// §FS-config-migrate.3.1.4.1: compare and name paths in lexical coordinates,
+    /// including candidate scan roots; keep the original root for the v1 walk.
     pub(super) fn new(
         v1: &'a Project,
         root: &'a Path,
-        scan_roots: &'a [PathBuf],
+        scan_roots: &[PathBuf],
         walk: &'a V1Walk<'a>,
     ) -> Self {
         Self {
             v1,
-            root,
-            scan_roots,
+            walk_root: root,
+            root: normalize_path_lexically(root),
+            scan_roots: scan_roots
+                .iter()
+                .map(|path| normalize_path_lexically(path))
+                .collect(),
             walk,
             files: OnceCell::new(),
         }
@@ -62,14 +70,15 @@ impl<'a> Reads<'a> {
         };
         let stopped = files.iter().filter(|file| {
             globs
-                .excluding_below(self.root, self.scan_root(file), file)
+                .excluding_below(&self.root, self.scan_root(file), file)
                 .is_some()
         });
         Ok(self.named(stopped))
     }
 
     /// The files read at the literal `path` or below it: a home is a literal path,
-    /// not a glob (§FS-config-migrate.3.1.5.1). Named as [`Self::named`] names them.
+    /// not a glob (§FS-config-migrate.3.1.5.1). Both sides use lexical coordinates
+    /// (§FS-config-migrate.3.1.4.1). Named as [`Self::named`] names them.
     pub(super) fn under(&self, path: &str) -> Result<Vec<String>> {
         // §FS-config-migrate.3.1.5.1: an inner home not on disk names nothing, and a walk
         // that cannot run does not fail the run for it.
@@ -91,15 +100,16 @@ impl<'a> Reads<'a> {
             .iter()
             .filter(|place| file.starts_with(place))
             .max_by_key(|place| place.components().count())
-            .map_or(self.root, PathBuf::as_path)
+            .map_or(self.root.as_path(), PathBuf::as_path)
     }
 
-    /// `files` from the root and with `/`, sorted as the printed names sort. A name
-    /// that is not UTF-8 is printed with its bad bytes replaced, though the scan asked
-    /// the path itself (§FS-config-migrate.3.1.9).
+    /// Lexical `files` from the lexical root (§FS-config-migrate.3.1.4.1), with `/`
+    /// and sorted as the printed names sort. A name that is not UTF-8 is printed
+    /// with its bad bytes replaced, though the scan asked the path itself
+    /// (§FS-config-migrate.3.1.9).
     fn named<'f>(&self, files: impl Iterator<Item = &'f PathBuf>) -> Vec<String> {
         let mut out: Vec<String> = files
-            .filter_map(|file| file.strip_prefix(self.root).ok())
+            .filter_map(|file| file.strip_prefix(&self.root).ok())
             .map(|relative| {
                 let names: Vec<_> = relative
                     .components()
@@ -117,13 +127,18 @@ impl<'a> Reads<'a> {
     /// own name, which holds no `/`, so they match nothing, as removing them keeps
     /// it (§FS-config.3.5.16, §FS-config-migrate.3.1.4). A walk that fails as a
     /// whole fails the run, since nothing can then say what version 1 reads.
+    /// Cache its paths in lexical coordinates for both refusal details, without
+    /// changing read membership or resolving symlinks (§FS-config-migrate.3.1.4.1).
     fn files(&self) -> Result<&[PathBuf]> {
         if let Some(files) = self.files.get() {
             return Ok(files);
         }
-        let invocation = Invocation::new(self.root, false, Selection::Project);
-        let facade = project_config(self.v1, self.root, &invocation)?;
-        let files = (self.walk)(facade)?;
+        let invocation = Invocation::new(self.walk_root, false, Selection::Project);
+        let facade = project_config(self.v1, self.walk_root, &invocation)?;
+        let files = (self.walk)(facade)?
+            .iter()
+            .map(|path| normalize_path_lexically(path))
+            .collect();
         Ok(self.files.get_or_init(|| files))
     }
 }
