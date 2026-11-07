@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-use super::disk::{input_read_dir, input_read_to_string, path_exists, path_is_file};
+use super::disk::{input_read_dir, input_read_to_string, path_exists, path_metadata};
 use super::identity::canonicalize_existing_prefix;
 use super::observe::observe_input;
 use crate::model::{FileText, normalize_path_lexically};
@@ -253,7 +253,17 @@ impl<'a> Sources<'a> {
 
     /// Whether `path` is a file, a buffer being one (§FS-scan.text.buffer-only).
     pub(crate) fn is_file(self, path: &Path) -> bool {
-        self.buffer(path).is_some() || path_is_file(path)
+        self.try_is_file(path).unwrap_or(false)
+    }
+
+    /// Whether `path` is an effective file, retaining metadata failures for value
+    /// candidate discovery (§FS-values.5.3.1). An open buffer is a file without
+    /// consulting the disk (§FS-scan.text.buffer, §FS-scan.identity.buffers).
+    pub(crate) fn try_is_file(self, path: &Path) -> std::io::Result<bool> {
+        if self.buffer(path).is_some() {
+            return Ok(true);
+        }
+        path_metadata(path).map(|metadata| metadata.is_file())
     }
 
     /// The buffers with no file behind them, each under the path the editor

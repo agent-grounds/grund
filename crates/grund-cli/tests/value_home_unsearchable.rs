@@ -174,13 +174,11 @@ fn regression(name: &str, commands: &[&[&str]], cited: bool) {
 }
 
 #[test]
-#[ignore = "red until #1289 reports failed candidate metadata; implement removes this"]
 fn list_reports_an_unsearchable_value_home() {
     regression("list", &[&["list"]], false);
 }
 
 #[test]
-#[ignore = "red until #1289 reports failed candidate metadata; implement removes this"]
 fn check_reports_an_unsearchable_value_home_without_a_citation() {
     regression(
         "uncited",
@@ -190,7 +188,6 @@ fn check_reports_an_unsearchable_value_home_without_a_citation() {
 }
 
 #[test]
-#[ignore = "red until #1289 reports failed candidate metadata; implement removes this"]
 fn check_reports_an_unsearchable_value_home_with_a_citation() {
     regression("cited", &[&["check"]], true);
 }
