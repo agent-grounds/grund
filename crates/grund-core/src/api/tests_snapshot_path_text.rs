@@ -59,7 +59,6 @@ fn an_existing_path_reads_as_its_canonical_text() {
 }
 
 #[test]
-#[ignore = "red until #1300 stops joining an empty path; implement removes this"]
 fn a_path_with_one_missing_component_ends_in_that_component() {
     let root = project("a_path_with_one_missing_component_ends_in_that_component");
     let path = root.join("real/unsaved.md");
@@ -67,7 +66,6 @@ fn a_path_with_one_missing_component_ends_in_that_component() {
 }
 
 #[test]
-#[ignore = "red until #1300 stops joining an empty path; implement removes this"]
 fn a_path_with_several_missing_components_ends_in_the_last() {
     let root = project("a_path_with_several_missing_components_ends_in_the_last");
     let path = root.join("real/a/b/unsaved.md");
@@ -75,7 +73,6 @@ fn a_path_with_several_missing_components_ends_in_the_last() {
 }
 
 #[test]
-#[ignore = "red until #1300 stops joining an empty path; implement removes this"]
 fn a_broken_link_finding_reads_as_the_link_path() {
     let root = project("a_broken_link_finding_reads_as_the_link_path");
     symlink("nowhere.md", &root.join("real/broken.md"));
@@ -89,7 +86,6 @@ fn a_broken_link_finding_reads_as_the_link_path() {
 }
 
 #[test]
-#[ignore = "red until #1300 stops joining an empty path; implement removes this"]
 fn an_unsearchable_entry_finding_reads_as_the_entry_path() {
     let root = project("an_unsearchable_entry_finding_reads_as_the_entry_path");
     let dir = root.join("d");
@@ -114,7 +110,6 @@ fn an_unsearchable_entry_finding_reads_as_the_entry_path() {
 /// component is missing, so this reaches the final join with nothing to append, and needs no race.
 #[cfg(target_os = "linux")]
 #[test]
-#[ignore = "red until #1300 stops joining an empty path; implement removes this"]
 fn an_existing_path_with_no_canonical_form_keeps_its_lexical_text() {
     use std::os::fd::AsRawFd;
 
