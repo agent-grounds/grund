@@ -28,7 +28,7 @@ What does move is a verdict: a config holding such an entry stopped loading, so 
 
 ### 2.3 No deprecation window and no migration command
 
-A warning would leave the meaningless value in place for a window and fix nothing, and the repair is not mechanical: the two available fixes mean different things, so the user must choose. Removing the entry keeps the previous scan scope. Writing its last component (`plans`) excludes that name at every depth, which is a new policy, not a translation. A path-specific exclusion is not expressible in v1 at all; it is the v2 sources contract's, whose exclusions are globs.
+A warning would leave the meaningless value in place for a window and fix nothing, and the repair is not mechanical: the two available fixes mean different things, so the user must choose. Removing the entry keeps the previous scan scope. Writing its last component (`plans`) excludes every directory of that name at every depth, which is a new policy, not a translation. A path-specific exclusion is not expressible in v1 at all; it is the v2 sources contract's, whose exclusions are globs.
 
 ### 2.4 What this leaves to the v2 migration
 

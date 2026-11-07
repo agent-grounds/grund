@@ -23,6 +23,11 @@ version-neutral clause to the 25 v1 records at capture lines 933, 1010-1011,
 repair clauses in validate[2] change; all other captured bytes, statuses and
 digests remain the #453 reference.
 
+Issue #1212's wording-only exception changes only the name repair clause of
+show[2] and validate[2] for the seven config-scan-exclude-slash-* records at
+capture lines 334-340, as §FS-config.3.5.16 requires: the clause now says the
+repair is for a directory. All other captured bytes, statuses and digests remain.
+
 Issue #881 ends the one-grammar window (§RM-one-grammar-flip), after which the
 canonical config of §DF-directions-render.3 no longer loads: it pinned `api/AR`
 in a project with no `[workspace]`. The fixture changed rather than the reader,

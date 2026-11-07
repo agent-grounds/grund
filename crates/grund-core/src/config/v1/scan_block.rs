@@ -31,8 +31,10 @@ pub(super) fn parse_scan_exclude(
 
 /// The message for the first entry containing `/` (§FS-config.3.5.16): it names
 /// the entry and both repairs — removal, which keeps the scan as it was, and the
-/// last non-empty component, which excludes that name at every depth. An entry
-/// with no non-empty component, such as `/`, is offered removal alone.
+/// last non-empty component, which excludes every directory of that name at every
+/// depth. A file's name would load and exclude nothing, and loading does not look at
+/// the tree, so the message states that repair's condition. An entry with no
+/// non-empty component, such as `/`, is offered removal alone.
 fn scan_exclude_slash_error(exclude: &[String]) -> Option<String> {
     let entry = exclude.iter().find(|entry| entry.contains('/'))?;
     let removal = format!(
@@ -41,7 +43,10 @@ fn scan_exclude_slash_error(exclude: &[String]) -> Option<String> {
     );
     Some(
         match entry.rsplit('/').find(|component| !component.is_empty()) {
-            Some(name) => format!("{removal}, or use `{name}` to exclude that name at any depth"),
+            Some(name) => format!(
+                "{removal}, or, if `{name}` is a directory, use `{name}` to exclude \
+                 every directory of that name at any depth"
+            ),
             None => removal,
         },
     )

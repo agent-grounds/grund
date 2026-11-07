@@ -70,10 +70,6 @@ mod dotdot_scope_root_names;
 #[path = "support/fetch_folder_elsewhere.rs"]
 mod fetch_folder_elsewhere;
 
-// §FS-config.3.5.16: issue #1212's `[scan] exclude` repair wording, its cases run alone.
-#[path = "support/scan_exclude_repair_wording.rs"]
-mod scan_exclude_repair_wording;
-
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
@@ -114,15 +110,7 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    // Red until #1212: its cases run alone in the ignored contract; implement removes this.
-    let cases = discover_e2e_cases(&manifest_dir)
-        .into_iter()
-        .filter(|case| {
-            !scan_exclude_repair_wording::RED_UNTIL_1212
-                .iter()
-                .any(|red| case.ends_with(red))
-        })
-        .collect::<Vec<_>>();
+    let cases = discover_e2e_cases(&manifest_dir);
     let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
     let compared = outcomes
         .iter()

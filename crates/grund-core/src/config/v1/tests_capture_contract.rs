@@ -182,7 +182,8 @@ fn migration_tolerance_does_not_relax_ordinary_exclusions() {
     assert_eq!(
         error.to_string(),
         "grund.toml:2: [scan] exclude entry `docs/plans` contains `/`, not a directory name; \
-         remove it to keep the scan unchanged, or use `plans` to exclude that name at any depth"
+         remove it to keep the scan unchanged, or, if `plans` is a directory, use `plans` to \
+         exclude every directory of that name at any depth"
     );
     let mut pass = LinePass::tolerant();
     let read = read_sections_with(text, path, &mut pass).expect("migration diagnoses it later");

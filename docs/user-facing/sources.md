@@ -31,7 +31,7 @@ The differences that change what a tree reads:
 | Comment syntax | one global `comment_prefixes` list | each language's own hosts |
 | Which comments declare | any comment in declaration position | only doc comments, by default |
 | Built-in exclusions | `target`, `node_modules`, `.git`, `dist`, `build`, `.venv` | none |
-| `exclude` entries | directory or file names | gitignore-style globs from the config root |
+| `exclude` entries | directory names | gitignore-style globs from the config root |
 
 ## The smallest table
 
