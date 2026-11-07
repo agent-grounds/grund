@@ -302,16 +302,17 @@ pub(super) fn symlink_loop_report(
 /// config root, and never the name a walk root or a link gave it on the way. `frame` is
 /// the walk's, so a workspace member or an import spells the location from its own root
 /// even where the line's path is spelled from the workspace root, unless the run reports
-/// from the invocation. That root, or a report base at the directory, renders empty,
-/// which the caller reads as having no name.
+/// from the invocation. The directory it is spelled from renders empty, which the caller
+/// reads as having no name.
 ///
 /// The config root is re-joined because it may itself be spelled through a link, and
-/// the report strips that spelling, not the physical one. A location outside the
-/// config root keeps the walker's spelling, which is relative for an included root,
-/// and has one spelling: a link out of the project is fenced, so only a walk root
-/// reaches that tree, and the filter's prune never hands one in (§AR-scanner.1.2). Where the directory has gone since the walk met it, the
-/// comparison is lexical (`physical_path_key`), the same comparison a path that has
-/// no resolved form gets everywhere else.
+/// the report strips that spelling, not the physical one. Outside the config root there
+/// is no such location, so the name keeps each walk root's own spelling, which is
+/// relative for an included root: a link out of the project is fenced, so only a walk
+/// root reaches that tree, and the filter's prune never hands one in (§AR-scanner.1.2).
+/// Where the directory has gone since the walk met it, the comparison is lexical
+/// (`physical_path_key`), the same comparison a path that has no resolved form gets
+/// everywhere else.
 fn loop_ancestor_name(ancestor: &Path, frame: Frame<'_>) -> String {
     let root = frame.root();
     let location = physical_path_key(ancestor);

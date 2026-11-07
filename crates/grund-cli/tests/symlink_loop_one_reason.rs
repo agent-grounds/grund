@@ -379,8 +379,9 @@ fn a_target_at_the_config_root_keeps_its_wording() {
     assert_eq!(run.code, 2, "{}", run.report());
 }
 
-/// Outside the config root the walk reaches the ancestor under one name only, because a link out
-/// is fenced, and that name stays relative: a report does not grow an absolute path (§FS-errors.4).
+/// A link out is fenced, so `../alias -> outer` is silent here and only the real directory named
+/// as a walk root is reported, and its name stays relative: a report does not grow an absolute
+/// path (§FS-errors.4).
 #[test]
 fn an_ancestor_outside_the_config_root_keeps_its_relative_word() {
     let config =
