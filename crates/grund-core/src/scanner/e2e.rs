@@ -1,15 +1,16 @@
 use crate::sources::{Sources, canonical_path, path_exists, path_is_dir, path_is_file};
-use anyhow::{Context, Result};
+use anyhow::Context;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use super::scan_error::publish_unlisted;
+use super::scan_error::{publish_case_failure, publish_unlisted, scan_error_reason};
 use super::tree::ScanError;
+use super::walk_order::sort_paths;
 
 use crate::config::{Frame, Schema, root_scope_roots};
 use crate::grammar::{Grammar, literal_after_kind_placeholder, parse_id_arg, split_alias_path};
 use crate::model::{Catalog, Declaration, DeclarationSource, E2eCase, E2eSpecRef, Id};
-use crate::model::{format_path, sort_path_key};
+use crate::model::{configured_home_path_key, format_path, sort_path_key};
 
 /// §FS-config.3.5.8, §FS-check.1.3.6.1: whether the project's *ordinary* walk reads
 /// the E2E case root at all. A path-scoped run's resolution scope is that ordinary
@@ -52,9 +53,9 @@ pub(super) fn e2e_cases_folder(schema: &Schema) -> Option<&str> {
 ///
 /// `reported` is the scan's failures so far, the walk's among them. A failure to list the
 /// directory the pass reads, at open or partway through, is published there, once
-/// (§AR-scanner.6.unlistable-root). A failure reading a case is handed back rather than stopping
-/// at the first (§AR-scanner.6.6). They stay errors because the caller derives each published
-/// reason from the error's kind (§FS-check.2.4.1).
+/// (§AR-scanner.6.unlistable-root), and so are a case's fixture directory and a case's file
+/// (§AR-scanner.1.relisted). Each is at the path that failed, spelled under the configured folder,
+/// and the first hides none after it (§AR-scanner.6.6).
 pub(super) fn scan_e2e_cases(
     schema: &Schema,
     frame: Frame<'_>,
@@ -62,16 +63,18 @@ pub(super) fn scan_e2e_cases(
     explicit_scope: bool,
     reported: &mut Vec<ScanError>,
     findings: &mut Catalog,
-) -> Vec<anyhow::Error> {
+) {
     let Some(folder) = e2e_cases_folder(schema) else {
-        return Vec::new();
+        return;
     };
-    // §FS-check.2.4.2: the folder as the tree spells it, which a failure is published at.
-    let spelled_root = frame.root().join(folder);
-    if !path_exists(&spelled_root) || !path_is_dir(&spelled_root) {
-        return Vec::new();
+    let home = frame.root().join(folder);
+    if !path_exists(&home) || !path_is_dir(&home) {
+        return;
     }
-    let cases_root = canonical_path(&spelled_root).unwrap_or_else(|_| spelled_root.clone());
+    let cases_root = canonical_path(&home).unwrap_or_else(|_| home.clone());
+    // §FS-check.2.4.2: a failure is published at the folder as the tree spells it, the one lexical
+    // path a run can name, whatever `..` a version 1 folder keeps.
+    let spelled_root = frame.root().join(configured_home_path_key(folder));
     let mut scan_root = cases_root.clone();
 
     // §FS-check.1.3.6.1: a path-scoped run reads the cases the ordinary run reads —
@@ -83,21 +86,20 @@ pub(super) fn scan_e2e_cases(
     if narrowed_to_path {
         let scope = scope.unwrap_or(Path::new("."));
         if path_is_file(&scope) {
-            return Vec::new();
+            return;
         }
         let scope = canonical_path(scope).unwrap_or_else(|_| scope.to_path_buf());
         if scope.starts_with(&cases_root) {
             scan_root = scope;
         } else if !cases_root.starts_with(&scope) {
-            return Vec::new();
+            return;
         }
     } else if !frame.run.scope.full && !cases_root_in_ordinary_scope(schema, frame, &cases_root) {
         // §FS-check.1.3: `--full` cancels `include`, so the e2e cases are in the
         // walk whether or not `include` happens to name their folder.
-        return Vec::new();
+        return;
     }
 
-    let mut failures = Vec::new();
     let mut case_dirs = Vec::new();
     if path_is_file(&scan_root.join("expected.exit")) {
         case_dirs.push(scan_root);
@@ -130,8 +132,19 @@ pub(super) fn scan_e2e_cases(
         // §FS-declarations.e2e-case.failure: the failure is this case's alone; the walk goes on.
         let case = match read_e2e_case(schema, frame, &dir) {
             Ok(case) => case,
-            Err(err) => {
-                failures.push(err);
+            Err(case_failures) => {
+                // §AR-scanner.6.6: each failure at its own path, the case's first hiding nothing.
+                for failure in case_failures {
+                    let spelled = spelled_below(&spelled_root, &cases_root, failure.path());
+                    match failure {
+                        CaseFailure::Unread(_, err) => {
+                            publish_case_failure(spelled, &err, reported);
+                        }
+                        CaseFailure::Unparsed(_, err) => {
+                            reported.push((spelled, scan_error_reason(&err)));
+                        }
+                    }
+                }
                 continue;
             }
         };
@@ -162,14 +175,13 @@ pub(super) fn scan_e2e_cases(
                 front_matter: None,
             });
     }
-    failures
 }
 
-/// `listed`, a canonical directory at or below the canonical `cases_root`, spelled as the
-/// tree spells it: under the configured folder, never at its resolved target, which may lie
-/// outside the project (§FS-check.2.4.2).
-fn spelled_below(spelled_root: &Path, cases_root: &Path, listed: &Path) -> PathBuf {
-    match listed.strip_prefix(cases_root) {
+/// `failed`, a canonical path at or below the canonical `cases_root`, spelled as the tree
+/// spells it: under the configured folder, never at its resolved target, which may lie
+/// outside the project (§FS-check.2.4.2, §FS-declarations.e2e-case.failure).
+fn spelled_below(spelled_root: &Path, cases_root: &Path, failed: &Path) -> PathBuf {
+    match failed.strip_prefix(cases_root) {
         Ok(below) if !below.as_os_str().is_empty() => spelled_root.join(below),
         _ => spelled_root.to_path_buf(),
     }
@@ -212,57 +224,102 @@ pub(crate) fn e2e_case_dir_name(schema: &Schema, rendered: &str) -> String {
         .to_string()
 }
 
+/// One failure reading a case, with the path that failed (§AR-scanner.6.6).
+enum CaseFailure {
+    /// A file of the case that could not be read or decoded, or a fixture directory that could not
+    /// be listed, either of which the walk may have failed on too (§AR-scanner.1.relisted).
+    Unread(PathBuf, std::io::Error),
+    /// An `expected.exit` that does not parse, which only this pass can say, so nothing is
+    /// compared (§AR-scanner.6.6).
+    Unparsed(PathBuf, anyhow::Error),
+}
+
+impl CaseFailure {
+    fn path(&self) -> &Path {
+        match self {
+            Self::Unread(path, _) | Self::Unparsed(path, _) => path,
+        }
+    }
+}
+
 /// Read one e2e case directory into an `E2eCase` — the words of `command.args`
 /// (none when absent) and whether it is present (§AR-scanner.6.2), `expected.exit`, `spec.refs`, and the recursive fixture file list —
-/// the data `grund E2E-<name>` renders or checks (§FS-show.2.4, §FS-config.3.9).
-fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCase> {
-    // §AR-system.2.13: the manifest as a save would write it.
-    let sources = frame.sources();
+/// the data `grund E2E-<name>` renders or checks (§FS-show.2.4, §FS-config.3.9). A failure does
+/// not end the read: every file and fixture directory is attempted, and a case with any failure
+/// hands them all back and declares nothing (§AR-scanner.6.6).
+fn read_e2e_case(
+    schema: &Schema,
+    frame: Frame<'_>,
+    dir: &Path,
+) -> Result<E2eCase, Vec<CaseFailure>> {
+    let mut failed = Vec::new();
     let command_args = dir.join("command.args");
     // §AR-scanner.6.2: the record keeps the manifest; the implicit `check` is the text form's.
     let has_command_args = path_is_file(&command_args);
     let args = if has_command_args {
-        // §FS-check.6.1.1: cover this effective input before its shared read.
-        sources
-            .text(&command_args)?
-            .split_whitespace()
-            .map(str::to_string)
-            .collect()
+        read_case_file(frame, &command_args, &mut failed)
+            .map(|text| text.split_whitespace().map(str::to_string).collect())
+            .unwrap_or_default()
     } else {
         Vec::new()
     };
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    let expected_exit = sources
-        .text(&dir.join("expected.exit"))?
-        .trim()
-        .parse::<i32>()
-        .with_context(|| format!("parse {}/expected.exit", format_path(dir)))?;
+    let exit_path = dir.join("expected.exit");
+    let expected_exit = read_case_file(frame, &exit_path, &mut failed).and_then(|text| {
+        let parsed = text
+            .trim()
+            .parse::<i32>()
+            .with_context(|| format!("parse {}/expected.exit", format_path(dir)));
+        parsed
+            .map_err(|err| failed.push(CaseFailure::Unparsed(exit_path, err)))
+            .ok()
+    });
     let mut fixtures = Vec::new();
-    collect_relative_fixture_files(dir, dir, &mut fixtures)?;
+    collect_relative_fixture_files(dir, dir, &mut fixtures, &mut failed);
     fixtures.sort_by_key(|path| sort_path_key(path));
-    let spec_refs = read_e2e_spec_refs(schema, frame, dir)?;
-    Ok(E2eCase {
-        dir: dir.to_path_buf(),
-        args,
-        has_command_args,
-        expected_exit,
-        fixtures,
-        spec_refs,
-    })
+    let spec_refs = read_e2e_spec_refs(schema, frame, dir, &mut failed);
+    match expected_exit {
+        Some(expected_exit) if failed.is_empty() => Ok(E2eCase {
+            dir: dir.to_path_buf(),
+            args,
+            has_command_args,
+            expected_exit,
+            fixtures,
+            spec_refs,
+        }),
+        _ => Err(failed),
+    }
 }
 
-fn read_e2e_spec_refs(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<Vec<E2eSpecRef>> {
+/// One file of a case as a save would write it (§AR-system.2.13), its failure recorded at that
+/// file (§FS-declarations.e2e-case.failure).
+fn read_case_file(frame: Frame<'_>, path: &Path, failed: &mut Vec<CaseFailure>) -> Option<String> {
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    match frame.sources().text(path) {
+        Ok(text) => Some(text.into_owned()),
+        Err(err) => {
+            failed.push(CaseFailure::Unread(path.to_path_buf(), err));
+            None
+        }
+    }
+}
+
+fn read_e2e_spec_refs(
+    schema: &Schema,
+    frame: Frame<'_>,
+    dir: &Path,
+    failed: &mut Vec<CaseFailure>,
+) -> Vec<E2eSpecRef> {
     let path = dir.join("spec.refs");
     if !path_is_file(&path) {
-        return Ok(Vec::new());
+        return Vec::new();
     }
-    // §FS-check.6.1.1: cover this effective input before its shared read, as a
-    // save would write it (§AR-system.2.13).
-    let text = frame.sources().text(&path)?;
-    Ok(text
-        .lines()
-        .filter_map(|line| e2e_spec_ref_from_line(schema, frame, line.trim()))
-        .collect())
+    read_case_file(frame, &path, failed)
+        .map(|text| {
+            text.lines()
+                .filter_map(|line| e2e_spec_ref_from_line(schema, frame, line.trim()))
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 fn e2e_spec_ref_from_line(schema: &Schema, frame: Frame<'_>, line: &str) -> Option<E2eSpecRef> {
@@ -294,16 +351,26 @@ fn e2e_spec_ref_from_line(schema: &Schema, frame: Frame<'_>, line: &str) -> Opti
     })
 }
 
-fn collect_relative_fixture_files(root: &Path, dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
+/// The fixture files below `dir`. A directory that cannot be listed is recorded at that directory
+/// and the rest are still listed (§AR-scanner.6.6), in the report's order, so two failures print
+/// alike on every filesystem (§FS-errors.4.1).
+fn collect_relative_fixture_files(
+    root: &Path,
+    dir: &Path,
+    files: &mut Vec<PathBuf>,
+    failed: &mut Vec<CaseFailure>,
+) {
     // §FS-check.6.1.1: cover this effective input before its shared read.
-    for entry in Sources::on_disk().read_dir(dir)? {
-        let entry = entry?;
-        let path = entry.path();
+    let mut listing = Sources::on_disk().list_dir(dir);
+    if let Some(err) = listing.failure {
+        failed.push(CaseFailure::Unread(dir.to_path_buf(), err));
+    }
+    sort_paths(&mut listing.entries);
+    for path in listing.entries {
         if path_is_dir(&path) {
-            collect_relative_fixture_files(root, &path, files)?;
+            collect_relative_fixture_files(root, &path, files, failed);
         } else {
             files.push(path.strip_prefix(root).unwrap_or(&path).to_path_buf());
         }
     }
-    Ok(())
 }

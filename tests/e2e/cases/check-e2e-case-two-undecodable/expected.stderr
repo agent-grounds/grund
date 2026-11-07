@@ -1,2 +1,2 @@
-error: e2e/cases: stream did not contain valid UTF-8; make the path readable, or keep it out of the scan
-error: e2e/cases: stream did not contain valid UTF-8; make the path readable, or keep it out of the scan
+error: e2e/cases/b/expected.exit: stream did not contain valid UTF-8; make the path readable, or keep it out of the scan
+error: e2e/cases/d/expected.exit: stream did not contain valid UTF-8; make the path readable, or keep it out of the scan

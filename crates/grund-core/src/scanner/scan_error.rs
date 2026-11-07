@@ -70,10 +70,31 @@ pub(super) fn publish_unlisted(
     context: Option<&str>,
     reported: &mut Vec<ScanError>,
 ) {
+    publish_unless_reported(spelled, error, context, reported, |path| {
+        paths_same_location(path, listed)
+    });
+}
+
+/// A case's failure to read a file or list a fixture directory, published at `spelled` unless a
+/// report already says it there: the same path as the tree spells it and the same bare reason. The
+/// walk spells below the canonical root as the pass does, so a plain tree meets here, and a report
+/// at another spelling of the file answers no run holding this one (§AR-scanner.1.relisted).
+pub(super) fn publish_case_failure(spelled: PathBuf, error: &Error, reported: &mut Vec<ScanError>) {
+    let at = spelled.clone();
+    publish_unless_reported(spelled, error, None, reported, |path| path == at);
+}
+
+fn publish_unless_reported(
+    spelled: PathBuf,
+    error: &Error,
+    context: Option<&str>,
+    reported: &mut Vec<ScanError>,
+    same_location: impl Fn(&Path) -> bool,
+) {
     let reason = scan_io_reason(error);
     let already = reported
         .iter()
-        .any(|(path, said)| *said == reason && paths_same_location(path, listed));
+        .any(|(path, said)| *said == reason && same_location(path));
     if !already {
         let message = match context {
             Some(context) => format!("{context}: {reason}"),
