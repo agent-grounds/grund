@@ -8,8 +8,8 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use super::finding_sides::Side;
-use super::reference_scope::{ScanScope, plain_walk_scope};
-use crate::config::{Frame, Schema};
+use super::reference_scope::tag_out_of_scope_for_version;
+use crate::config::{Frame, Schema, WalkBounds};
 use crate::model::remedies;
 use crate::model::{
     Catalog, CheckReport, Citation, Code, Diagnostic, ReadingConflict, ReadingMove, Site,
@@ -22,7 +22,7 @@ use crate::sources::Spellings;
 pub(super) struct PlaceNames<'a> {
     spellings: &'a Spellings,
     active: bool,
-    plain: Option<ScanScope>,
+    plain: Option<WalkBounds>,
 }
 
 impl<'a> PlaceNames<'a> {
@@ -30,9 +30,7 @@ impl<'a> PlaceNames<'a> {
         let spellings = &frame.run.spellings;
         let active = spellings.has_second_names();
         // §FS-check.1.3.2: the configured roots, whichever path this run was handed.
-        let plain = active
-            .then(|| plain_walk_scope(schema, frame).ok())
-            .flatten();
+        let plain = active.then(|| WalkBounds::plain(schema, frame.root()));
         Self {
             spellings,
             active,
@@ -40,20 +38,57 @@ impl<'a> PlaceNames<'a> {
         }
     }
 
-    /// Every name of the file at `file` the plain run reaches, in listing order; empty where it
-    /// has fewer than two (§FS-scan.identity.findings).
-    fn reached(&self, file: &Path) -> Vec<PathBuf> {
+    /// Every name of the file at `file` the plain run reaches, in listing order. Empty where the
+    /// table knows no second name, or where the plain run reaches none of them.
+    fn plain_names(&self, file: &Path) -> Vec<PathBuf> {
         if !self.active {
             return Vec::new();
         }
         let mut names = self.spellings.names_of(file);
         if let Some(plain) = &self.plain {
-            names.retain(|name| plain.contains(name));
+            names.retain(|name| {
+                plain.contains(name) && self.spellings.plain_name_of(name).is_none()
+            });
         }
+        names
+    }
+
+    /// Those names, where there are two to speak of: empty otherwise
+    /// (§FS-scan.identity.findings).
+    fn reached(&self, file: &Path) -> Vec<PathBuf> {
+        let mut names = self.plain_names(file);
         if names.len() < 2 {
             names.clear();
         }
         names
+    }
+
+    /// The name a whole run's report gives the file at `file`: the first the plain run reaches, or
+    /// `file` where it reaches none (§FS-scan.identity.findings.content). A run naming a path holds
+    /// the name it was handed, so a rule that writes a path into a message asks this first.
+    pub(super) fn first(&self, file: &Path) -> PathBuf {
+        let mut names = self.plain_names(file);
+        if names.is_empty() {
+            file.to_path_buf()
+        } else {
+            names.swap_remove(0)
+        }
+    }
+
+    /// `sites` at the names of [`Self::first`], so a rule renders the whole run's text from them
+    /// and sorts them as it does. A value source's declaration is copied per spelling
+    /// (§FS-values.2.3), so a site whose first name is already a site keeps its own.
+    pub(super) fn settle(&self, sites: &mut [Site]) {
+        let held: BTreeSet<(PathBuf, usize)> = sites
+            .iter()
+            .map(|site| (site.path.clone(), site.line))
+            .collect();
+        for site in sites {
+            let first = self.first(&site.path);
+            if !held.contains(&(first.clone(), site.line)) {
+                site.path = first;
+            }
+        }
     }
 
     /// The spellings a place rule judges `file` at (§FS-scan.identity.findings.place): every name
@@ -65,6 +100,21 @@ impl<'a> PlaceNames<'a> {
         } else {
             names
         }
+    }
+
+    /// What makes a citation-direction finding about a declaration a content finding
+    /// (§FS-scan.identity.findings.content): its one site, at the name a whole run gives the file,
+    /// which the finishing pass grows into every name ([`Side::of_finding`]). Nothing where no other
+    /// name reaches the report, so that file keeps the bytes it had and goes by the code's side.
+    pub(super) fn subject_sites(&self, file: &Path, line: usize) -> Vec<Site> {
+        let names = self.plain_names(file);
+        if names.len() < 2 && names.first().is_none_or(|first| first == file) {
+            return Vec::new();
+        }
+        vec![Site {
+            path: self.first(file),
+            line,
+        }]
     }
 
     /// [`Self::other_sites`] of every citation of the project.
@@ -110,12 +160,33 @@ impl<'a> PlaceNames<'a> {
 
 /// The findings of the two codes the walk's verdicts earn (§FS-scan.checks.reading-conflict,
 /// §FS-scan.checks.reading-moved).
-pub(super) fn check_reading_names(catalog: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
+pub(super) fn check_reading_names(
+    catalog: &Catalog,
+    schema: &Schema,
+    frame: Frame<'_>,
+    report: &mut CheckReport,
+) {
+    if catalog.reading_conflicts.is_empty() && catalog.reading_moves.is_empty() {
+        return;
+    }
+    // §FS-scan.identity.reading.plain: where the plain run reaches no name, the line is the tier's.
+    let plain = WalkBounds::plain(schema, frame.root());
+    let tiered = |finding: Diagnostic, names: &[PathBuf]| {
+        if names.iter().any(|name| plain.contains(name)) {
+            finding
+        } else {
+            tag_out_of_scope_for_version(finding, frame.version)
+        }
+    };
     for conflict in &catalog.reading_conflicts {
-        report.errors.push(conflict_finding(conflict, frame));
+        let finding = conflict_finding(conflict, frame);
+        report.errors.push(tiered(finding, &conflict.names));
     }
     for moved in &catalog.reading_moves {
-        report.warnings.push(moved_finding(moved));
+        let finding = moved_finding(moved);
+        report
+            .warnings
+            .push(tiered(finding, std::slice::from_ref(&moved.file)));
     }
 }
 
@@ -203,28 +274,31 @@ fn finish_channel(channel: &mut Vec<Diagnostic>, names: &PlaceNames<'_>, frame: 
     // can arrive once per copy: one file, one line, one line of report.
     let mut seen = BTreeSet::new();
     channel.retain_mut(|finding| {
-        if Side::of(finding.code) != Some(Side::Content) {
+        if Side::of_finding(finding) != Some(Side::Content) {
             return true;
         }
         let (Some(path), Some(line)) = (finding.path.clone(), finding.line) else {
             return true;
         };
+        let first = names.first(&path);
         let reached = names.reached(&path);
-        if let Some(first) = reached.first() {
+        if !reached.is_empty() {
             let key = (finding.code, first.clone(), line, finding.message.clone());
             if !seen.insert(key) {
                 return false;
             }
-            finding.path = Some(first.clone());
         }
+        finding.path = Some(first);
         name_every_site(finding, &reached, line, names, frame);
         true
     });
 }
 
-/// The clause names the other spellings of the line the finding stands at, unless its message
-/// already does, and `sites` holds every spelling of every line it speaks of, once. A finding's own
-/// sites are kept: they are other lines of the same text, or other files (§FS-check.1.3.6.2).
+/// The clause names the other spellings of the line the finding stands at, except one its rule
+/// already has as a site of that line, and `sites` holds every spelling of every line it speaks of,
+/// once. A finding's own sites are kept: they are other lines of the same text, or other files
+/// (§FS-check.1.3.6.2). The rule wrote its message from first names ([`PlaceNames::settle`]), so
+/// this pass reads no message and edits none of it but the clause it adds.
 fn name_every_site(
     finding: &mut Diagnostic,
     reached: &[PathBuf],
@@ -233,20 +307,14 @@ fn name_every_site(
     frame: Frame<'_>,
 ) {
     let own = std::mem::take(&mut finding.sites);
-    // A run naming a path recorded another line under the name it was handed, and the whole run's
-    // line says the name listed first. Names of this very line are the message's own list.
-    for site in &own {
-        let same_line = site.line == line && reached.contains(&site.path);
-        if let (false, Some(first)) = (same_line, names.reached(&site.path).first()) {
-            let at = |path: &Path| format!("{}:{}", frame.display_path(path), site.line);
-            finding.message = finding.message.replace(&at(&site.path), &at(first));
-        }
-    }
     let others: Vec<String> = reached
         .iter()
         .skip(1)
+        .filter(|name| {
+            !own.iter()
+                .any(|site| site.line == line && site.path == **name)
+        })
         .map(|name| format!("{}:{line}", frame.display_path(name)))
-        .filter(|name| !finding.message.contains(name.as_str()))
         .collect();
     if !others.is_empty() {
         finding.message = format!("{} (also at {})", finding.message, others.join(", "));
@@ -261,7 +329,7 @@ fn name_every_site(
     for site in own {
         let line = site.line;
         let spellings = names.reached(&site.path);
-        for path in spellings.into_iter().chain([site.path]) {
+        for path in spellings.into_iter().chain([names.first(&site.path)]) {
             if !sites.iter().any(|s| s.path == path && s.line == line) {
                 sites.push(Site { path, line });
             }

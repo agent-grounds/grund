@@ -85,6 +85,7 @@ mod v1;
 mod v2;
 mod validate;
 mod vocabulary;
+mod walk_bounds;
 mod workspace_block;
 
 pub(crate) use crate::sources::{
@@ -137,6 +138,7 @@ pub use schema_view::{
 };
 #[allow(unused_imports)]
 pub use slots::{Content, Handle, Slot};
+pub(crate) use walk_bounds::WalkBounds;
 
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the

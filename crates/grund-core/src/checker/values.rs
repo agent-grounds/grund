@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use super::spellings_report::PlaceNames;
 use super::value_mismatch::{rendered_value_path, value_mismatch};
 use super::value_roots::root_binding_finding;
 use crate::config::{Frame, Schema, any_kind_holds_values, kind_uses_values, kind_value_chapter};
@@ -121,7 +122,8 @@ pub(super) fn check_values(
                     &binding.authored,
                     declared,
                     Site {
-                        path: declaration.file.clone(),
+                        // §AR-scanner.1.8: the name a whole run gives it.
+                        path: PlaceNames::new(target.schema, target_frame).first(&declaration.file),
                         line: info.line,
                     },
                     frame.display,

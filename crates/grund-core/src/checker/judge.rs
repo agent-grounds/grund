@@ -17,6 +17,7 @@ use super::off_format_citations::check_off_format_citations;
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::section_lock::check_section_locks;
 use super::snapshots::arm_missing_snapshot;
+use super::spellings_report::PlaceNames;
 use super::values::check_values;
 use crate::config::{Frame, KindResolution, Rules, Schema};
 use crate::grammar::render_catalog_id;
@@ -109,7 +110,7 @@ pub(crate) fn judge(
     // focused pass suppresses comparison at every unresolved or ambiguous site.
     check_values(findings, schema, frame, targets, &mut report);
     // §FS-section-lock.checks: the lock against the tree, in `section_lock.rs`.
-    check_section_locks(&locks, frame, &mut report);
+    check_section_locks(&locks, schema, frame, &mut report);
 
     // §FS-check.2.3.1 / §AR-checker.2.11: a `<§>`-escaped illustration whose coordinate
     // resolves is likely a live citation bracketed by mistake; its live form keeps the
@@ -164,7 +165,14 @@ pub(crate) fn judge(
     // One read of every index for the unused rule, which tells an entry apart
     // (§AR-checker.2.6).
     let index_entries = KindIndexEntries::new(findings, schema, frame, &expected.index_targets);
-    check_unused(findings, frame, &index_entries, targets, &mut report);
+    check_unused(
+        findings,
+        schema,
+        frame,
+        &index_entries,
+        targets,
+        &mut report,
+    );
 
     // §FS-init.2.3.5.11: a scoped `AGENTS.md` no row's `files` lists is not a
     // unit, so neither pass below holds it to its directory's rules.
@@ -215,11 +223,13 @@ pub(crate) fn judge(
 /// stub's target lends is use (§FS-refs.2, §FS-declarations.stubs.target.5).
 fn check_unused(
     findings: &Catalog,
+    schema: &Schema,
     frame: Frame<'_>,
     index_entries: &KindIndexEntries,
     targets: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     report: &mut CheckReport,
 ) {
+    let spellings = PlaceNames::new(schema, frame);
     // §FS-check.4.1.2: retain the discounted sites for the warning's explanation.
     let mut excluded: BTreeMap<&Id, Vec<_>> = BTreeMap::new();
     let mut cited = BTreeSet::new();
@@ -272,7 +282,7 @@ fn check_unused(
                         };
                         message.push_str(&format!(
                             " (its index entry at {}:{}{more} does not count as a use)",
-                            frame.display_path(&first.file),
+                            frame.display_path(&spellings.first(&first.file)),
                             first.line
                         ));
                     }

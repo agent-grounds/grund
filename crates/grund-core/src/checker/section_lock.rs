@@ -4,7 +4,8 @@
 //! The lock files are read by the scan, beside the walk, so no rule here reads
 //! a file (§AR-checker.placement).
 
-use crate::config::Frame;
+use super::spellings_report::PlaceNames;
+use crate::config::{Frame, Schema};
 use crate::model::remedies;
 use crate::model::{CheckReport, Code, Diagnostic, Site};
 use crate::resolver::{EntryVerdict, LockJudgement};
@@ -16,9 +17,11 @@ use crate::resolver::{EntryVerdict, LockJudgement};
 /// address.
 pub(super) fn check_section_locks(
     judgements: &[LockJudgement<'_>],
+    schema: &Schema,
     frame: Frame<'_>,
     report: &mut CheckReport,
 ) {
+    let spellings = PlaceNames::new(schema, frame);
     for judgement in judgements {
         // §FS-section-lock.checks: named as the report names every path.
         let lock = frame.display_path(&judgement.path);
@@ -75,20 +78,23 @@ pub(super) fn check_section_locks(
             // §FS-section-lock.checks.section-address-changed: the finding's own words
             // after the remedy name each line still citing `at`; `sites` holds the same.
             if !sites.is_empty() {
-                let named = sites
-                    .iter()
-                    .map(|(path, line)| format!("{}:{line}", frame.display_path(path)))
-                    .collect::<Vec<_>>();
-                finding
-                    .message
-                    .push_str(&format!("; {at} is cited at {}", named.join(", ")));
-                finding.sites = sites
+                // §AR-scanner.1.8: the names a whole run gives them.
+                let mut sites: Vec<Site> = sites
                     .iter()
                     .map(|(path, line)| Site {
                         path: path.clone(),
                         line: *line,
                     })
                     .collect();
+                spellings.settle(&mut sites);
+                let named = sites
+                    .iter()
+                    .map(|site| format!("{}:{}", frame.display_path(&site.path), site.line))
+                    .collect::<Vec<_>>();
+                finding
+                    .message
+                    .push_str(&format!("; {at} is cited at {}", named.join(", ")));
+                finding.sites = sites;
             }
             report.errors.push(finding);
         }

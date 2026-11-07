@@ -28,8 +28,8 @@ use crate::model::{
 /// Unsorted: the merge sorts (§AR-checker.1.4).
 pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> CheckReport {
     let mut report = CheckReport::default();
-    check_reading_names(catalog, frame, &mut report);
-    check_declaration_homes(catalog, frame, &mut report);
+    check_reading_names(catalog, schema, frame, &mut report);
+    check_declaration_homes(catalog, schema, frame, &mut report);
     check_misplaced(catalog, schema, frame, &mut report);
     // §FS-declarations.checks.misplaced-declaration.unlisted-project: all placement forms.
     explain_unlisted_project_placement(schema, frame, &mut report);
@@ -61,7 +61,13 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
 /// Its declarations are counted once its stubs are paired by their verdicts
 /// (§AR-scanner.4.6). Both findings share one missing-target repair derivation
 /// per ID (§AR-system.2.2).
-fn check_declaration_homes(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
+fn check_declaration_homes(
+    findings: &Catalog,
+    schema: &Schema,
+    frame: Frame<'_>,
+    report: &mut CheckReport,
+) {
+    let spellings = PlaceNames::new(schema, frame);
     for (id, decls) in &findings.declarations {
         // §FS-declarations.stubs.pairing.3: a stub's home is named at its target, at
         // each line there that declares the ID (§FS-declarations.stubs.pairing.1).
@@ -75,6 +81,8 @@ fn check_declaration_homes(findings: &Catalog, frame: Frame<'_>, report: &mut Ch
                     line: declaration.record.line,
                 })
                 .collect();
+            // §AR-scanner.1.8: settled on the names a whole run gives them.
+            spellings.settle(&mut sites);
             sites.sort_by(|a, b| {
                 (sort_path_key(&a.path), a.line).cmp(&(sort_path_key(&b.path), b.line))
             });
@@ -93,7 +101,9 @@ fn check_declaration_homes(findings: &Catalog, frame: Frame<'_>, report: &mut Ch
             };
             let rendered_id = render_catalog_id(frame.grammar(), &findings.declarations, id);
             let mut message = format!("duplicate declaration of {rendered_id}{suffix}");
-            message.push_str(&repair.located_suffix(&rendered_id, |path| frame.display_path(path)));
+            message.push_str(&repair.located_suffix(&rendered_id, |path| {
+                frame.display_path(&spellings.first(path))
+            }));
             report.errors.push(Diagnostic {
                 code: Code::DUPLICATE,
                 path: Some(primary.path),

@@ -145,7 +145,7 @@ fn an_editor_marks_the_warning_at_the_config_not_under_its_working_directory() {
         warnings: vec![warning],
         ..CheckReport::default()
     };
-    let published = public_lsp_report(&config, report);
+    let published = public_lsp_report(&config, &[], report);
     assert_eq!(
         PathBuf::from(published.warnings[0].path.as_deref().unwrap()),
         root.join("grund.toml").canonicalize().unwrap()
@@ -183,7 +183,7 @@ fn an_editor_marks_a_members_warning_at_the_members_config() {
         warnings: vec![warning],
         ..CheckReport::default()
     };
-    let published = public_lsp_report(&config, report);
+    let published = public_lsp_report(&config, &[], report);
     assert_eq!(
         PathBuf::from(published.warnings[0].path.as_deref().unwrap()),
         member.join("grund.toml").canonicalize().unwrap()

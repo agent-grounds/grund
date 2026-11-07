@@ -10,17 +10,16 @@ use super::finding_sides::Side;
 use super::off_format_citations::check_off_format_citations;
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::sections::retain_heading_findings_in_scope;
-use crate::config::{Frame, Nesting, Schema, source_scope_name, unwalked_home_roots};
+use crate::config::{Frame, Schema, WalkBounds, source_scope_name, unwalked_home_roots};
 use crate::grammar::Grammar;
 use crate::model::{
-    Catalog, CheckReport, Code, DeclarationSource, Diagnostic, paired_declarations,
-    scanned_decl_relative_path, scanned_path_key, sort_path_key,
+    Catalog, CheckReport, Code, DeclarationSource, Diagnostic, paired_declarations, sort_path_key,
 };
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject, judge_section_locks};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, lend_citations, scan_roots_for,
 };
-use crate::sources::{Spellings, physical_path_key};
+use crate::sources::Spellings;
 use crate::workspace::scope_is_config_root;
 
 /// The roots a run *without* `--full` walks: the explicit path argument, or
@@ -33,13 +32,7 @@ use crate::workspace::scope_is_config_root;
 /// canonicalized directories (§AR-scanner.6.2), and a scope test has to answer the
 /// same for both.
 pub(crate) struct ScanScope {
-    roots: Vec<PathBuf>,
-    /// The `scan = false` homes under those roots (§FS-config.3.4.7.5): listed by
-    /// the config, and read by this run only because `--full` widened the walk.
-    unwalked: Vec<PathBuf>,
-    /// v2 only: the schema whose ownership rule settles a path under an unwalked
-    /// place, and the config root's two spellings to ask it relative to.
-    owners: Option<PlaceOwners>,
+    bounds: WalkBounds,
     /// The run's table of a file's names, which settles a path whose other name is in scope.
     spellings: Spellings,
     /// The report scope's roots as the run wrote them inside the config root: where the file has a
@@ -47,17 +40,11 @@ pub(crate) struct ScanScope {
     handed: Vec<PathBuf>,
 }
 
-/// [`Schema::owner_walked`] kept with the scope (§FS-config-v2.schema.places.boundaries.6).
-struct PlaceOwners {
-    schema: Schema,
-    configured_root: PathBuf,
-    physical_root: PathBuf,
-}
-
 impl ScanScope {
     /// §AR-scanner.1.8: a file a query reports is at or under the path when
-    /// any of its names is, so which name sorts first decides nothing about a narrow `list` or `refs`.
-    /// `check` keeps [`Self::contains`]: its findings carry their own sites (§FS-check.1.3.6.2).
+    /// any of its names is, so which name sorts first decides nothing about a narrow `list` or
+    /// `refs`, nor about a `check` whose finding stands at the name the plain run reaches
+    /// (§FS-check.1.3.6.2).
     pub(crate) fn contains_any_name(&self, path: &Path) -> bool {
         self.contains(path)
             || self
@@ -80,43 +67,8 @@ impl ScanScope {
     }
 
     pub(crate) fn contains(&self, path: &Path) -> bool {
-        // §FS-config.3.4.7.5: a file in a home the config lists without walking is
-        // outside the configured scope even when a root above it is inside — the
-        // scope is a set of roots, less the homes a run without `--full` never reads.
-
-        // In v2 the place that owns the file decides, so a scanned place under an
-        // unscanned one stays in scope (§FS-config-v2.schema.places.boundaries.6).
-        if self.unwalked.iter().any(|home| path.starts_with(home)) {
-            let walked = self.owners.as_ref().is_some_and(|owners| {
-                let roots = (&owners.configured_root, &owners.physical_root);
-                scanned_decl_relative_path(path, roots.0, roots.1)
-                    .is_some_and(|relative| owners.schema.owner_walked(&relative))
-            });
-            if !walked {
-                return false;
-            }
-        }
-        self.roots
-            .iter()
-            .any(|root| path == root || path.starts_with(root))
+        self.bounds.contains(path)
     }
-}
-
-/// §AR-scanner.1.8: the names a plain run walks, as written. Unlike
-/// [`configured_scope`] it holds no canonical form, which would count `real/a.md` as reached where
-/// only `include = ["link"]` reaches that file (§FS-check.1.3.2).
-pub(super) fn plain_walk_scope(schema: &Schema, frame: Frame<'_>) -> Result<ScanScope> {
-    Ok(ScanScope {
-        roots: scan_roots_for(schema, frame, Some(frame.root()), false, false, false)?,
-        unwalked: unwalked_home_roots(schema, frame.root()),
-        owners: (schema.nesting == Nesting::DeepestPlaceWins).then(|| PlaceOwners {
-            schema: schema.clone(),
-            configured_root: scanned_path_key(frame.root()),
-            physical_root: physical_path_key(frame.root()),
-        }),
-        spellings: frame.run.spellings.clone(),
-        handed: Vec::new(),
-    })
 }
 
 /// §FS-check.1.3: the configured scope of this run, or `None` when the walk was
@@ -150,17 +102,8 @@ pub(crate) fn configured_scope(
     unwalked.extend(canonical);
     unwalked.sort_by_key(|home| sort_path_key(home));
     unwalked.dedup();
-    let owners = (schema.nesting == Nesting::DeepestPlaceWins && !unwalked.is_empty()).then(|| {
-        PlaceOwners {
-            schema: schema.clone(),
-            configured_root: scanned_path_key(frame.root()),
-            physical_root: physical_path_key(frame.root()),
-        }
-    });
     Ok(Some(ScanScope {
-        roots,
-        unwalked,
-        owners,
+        bounds: WalkBounds::new(schema, frame.root(), roots, unwalked),
         spellings: frame.run.spellings.clone(),
         handed: Vec::new(),
     }))
@@ -201,9 +144,7 @@ pub(crate) fn path_report_scope(
     roots.sort_by_key(|root| sort_path_key(root));
     roots.dedup();
     Ok(Some(ScanScope {
-        roots,
-        unwalked: Vec::new(),
-        owners: None,
+        bounds: WalkBounds::new(schema, frame.root(), roots, Vec::new()),
         spellings: frame.run.spellings.clone(),
         handed,
     }))
@@ -240,14 +181,15 @@ pub(crate) fn retain_diagnostics_in_report_scope(
     diagnostics.retain(|diagnostic| match &diagnostic.path {
         None => true,
         Some(path) => {
-            let in_scope = if Side::of(diagnostic.code) == Some(Side::Place) {
-                scope.contains_place(path)
-            } else {
-                scope.contains(path)
+            let in_scope = match Side::of_finding(diagnostic) {
+                Some(Side::Place) => scope.contains_place(path),
+                // §AR-scanner.1.8: it stands at the name the plain run reaches.
+                Some(Side::Content) => scope.contains_any_name(path),
+                _ => scope.contains(path),
             };
             in_scope
                 // §FS-check.1.3.6.2: the anchor may be the site the caller did not type.
-                || diagnostic.sites.iter().any(|site| scope.contains(&site.path))
+                || diagnostic.sites.iter().any(|site| scope.contains_any_name(&site.path))
                 // §FS-rules.9.1.1: a stale block, chapter rules included, reaches a narrowed run.
                 || (diagnostic.code == Code::AGENTS_INIT
                     && entrypoints.iter().any(|entrypoint| entrypoint == path))
@@ -470,7 +412,7 @@ pub(crate) fn tag_out_of_scope(diagnostic: Diagnostic) -> Diagnostic {
 /// usually to widen `[scan] include`, so a rule's own fix-it hint ("did you
 /// mean …?") is the fact most likely to be wrong and least deserving of being
 /// read first.
-fn tag_out_of_scope_for_version(mut diagnostic: Diagnostic, version: u32) -> Diagnostic {
+pub(super) fn tag_out_of_scope_for_version(mut diagnostic: Diagnostic, version: u32) -> Diagnostic {
     // `check_citation_resolution` emits exactly the six families the catalog pairs;
     // anything else would be a new rule joining the family without a tier code.
     diagnostic.code = diagnostic.code.out_of_scope().unwrap_or(diagnostic.code);

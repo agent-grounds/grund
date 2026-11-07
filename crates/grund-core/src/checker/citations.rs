@@ -125,7 +125,8 @@ pub(super) fn check_citation_obligations(
     let owners = Owners::new(schema, frame);
     // §AR-scanner.1.8: a citation no declaration owns is a site of the place it
     // sits in, so a file with two names is a unit of each.
-    let other_sites = PlaceNames::new(schema, frame).all_other_sites(findings, schema, frame);
+    let spellings = PlaceNames::new(schema, frame);
+    let other_sites = spellings.all_other_sites(findings, schema, frame);
     // §FS-declarations.stubs.target.5: a declaration's citations are its edges, those a
     // stub's target lends included; a file's are the ones the walk found in it.
     for cite in findings.edges() {
@@ -212,8 +213,14 @@ pub(super) fn check_citation_obligations(
         for unit in units {
             for entry in &kind_rules.must {
                 if !entry.targets.iter().any(|t| unit.satisfies(t)) {
-                    let diagnostic =
-                        obligation_diagnostic(Code::MISSING_CITATION, frame, &unit, entry, "must");
+                    let diagnostic = obligation_diagnostic(
+                        Code::MISSING_CITATION,
+                        frame,
+                        &unit,
+                        entry,
+                        "must",
+                        &spellings,
+                    );
                     report.push(
                         DirectionChannel::Errors,
                         citing_kind,
@@ -232,7 +239,14 @@ pub(super) fn check_citation_obligations(
                         citing_kind,
                         CitationLevel::Warn,
                         &[entry],
-                        obligation_diagnostic(Code::MISSING_CITATION, frame, &unit, entry, "must"),
+                        obligation_diagnostic(
+                            Code::MISSING_CITATION,
+                            frame,
+                            &unit,
+                            entry,
+                            "must",
+                            &spellings,
+                        ),
                     );
                 }
             }
@@ -249,6 +263,7 @@ pub(super) fn check_citation_obligations(
                             &unit,
                             entry,
                             "should",
+                            &spellings,
                         ),
                     );
                 }
@@ -394,6 +409,7 @@ fn obligation_diagnostic(
     unit: &ObligationUnit<'_>,
     entry: &CitationDisjunction,
     verb_level: &str,
+    spellings: &PlaceNames<'_>,
 ) -> Diagnostic {
     Diagnostic {
         code,
@@ -410,7 +426,11 @@ fn obligation_diagnostic(
                 remedies::suggested_citation()
             }
         ),
-        sites: Vec::new(),
+        // §AR-scanner.1.8: its obligation follows the declaration's own kind.
+        sites: match unit.declaration {
+            Some(_) => spellings.subject_sites(&unit.path, unit.line),
+            None => Vec::new(),
+        },
         authority: Vec::new(),
     }
 }

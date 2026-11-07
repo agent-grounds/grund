@@ -3,11 +3,11 @@
 //! (§FS-scan.checks.reading-conflict, §FS-scan.checks.reading-moved).
 
 use anyhow::Result;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use super::walk_reporting::walk_scannable_files_with_sources;
-use crate::config::{Frame, NamesVerdict, Schema};
+use crate::config::{Frame, NamesVerdict, Schema, WalkBounds};
 use crate::model::{ReadingConflict, ReadingMove};
 
 /// What the names of one walk came to.
@@ -67,10 +67,31 @@ pub(super) fn settle_names(
     {
         walk_scannable_files_with_sources(schema, frame, None, false, &mut |_, _| {})?;
     }
+    // §FS-scan.identity.reading.plain: a handed path can sit under a plain root and be ignored
+    // there, so what a plain walk met is asked too: past the handed files, or that one walk's.
+    let plain_walk: Option<HashSet<PathBuf>> = if !whole_project {
+        Some(
+            groups
+                .iter()
+                .flat_map(|(physical, _)| spellings.names_at(physical))
+                .collect(),
+        )
+    } else if handed > 0 && !groups.is_empty() {
+        Some(files[handed..].iter().cloned().collect())
+    } else {
+        None
+    };
     spellings.publish_walk(&groups, whole_project);
     let mut verdicts = NameVerdicts::default();
+    if groups.is_empty() {
+        return Ok(verdicts);
+    }
+    let bounds = WalkBounds::plain(schema, frame.root());
+    let reaches = |name: &Path| {
+        bounds.contains(name) && plain_walk.as_ref().is_none_or(|walk| walk.contains(name))
+    };
     for (physical, _) in &groups {
-        let names = spellings.names_at(physical);
+        let names = frame.names_with_a_say(physical, reaches);
         match frame.judge_names(schema, &names) {
             NamesVerdict::Agree => {}
             NamesVerdict::Conflict { readings } => {

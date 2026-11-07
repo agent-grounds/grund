@@ -124,3 +124,72 @@ fn a_link_in_a_second_folder_is_located_at_the_link() {
     );
     assert_eq!(tree.grund(&["check"]).stdout, "success\n");
 }
+
+const TWO_FOLDERS: &str = "grund_config_version = 2\nproject_name = \"n\"\n\
+    [schema.kinds.FS]\nfolders = [\"aa\", \"zz\"]\n";
+
+/// One file is the index of two folders. Listing the first folder's declaration discharges nothing
+/// of the second's, as the record names (§DF-one-file-one-reading.5): the tree is red where it was
+/// green, at the declaration that owes the entry, and goes green once the entry is written.
+#[test]
+fn a_shared_index_owes_each_folder_its_own_entry() {
+    let tree = Tree::new("shared-index", TWO_FOLDERS);
+    tree.put("aa/a.md", "# FS-a: A\n\nb \u{a7}FS-b\n");
+    tree.put("zz/b.md", "# FS-b: B\n\nb \u{a7}FS-a\n");
+    tree.put(
+        "shared/README.md",
+        "# Index\n\n[\u{a7}FS-a](../aa/a.md#fs-a-a)\n",
+    );
+    tree.link("aa/README.md", "../shared/README.md");
+    tree.link("zz/README.md", "../shared/README.md");
+    let check = tree.grund(&["check"]);
+    assert_eq!(
+        check.stdout,
+        "zz/b.md:1: error: FS-b is not listed in zz/README.md: an entry is a `\u{a7}`-marked \
+         Markdown link to the declaration; write `[\u{a7}FS-b](../zz/b.md#fs-b-b)` in \
+         zz/README.md \u{2014} became an error in grund 0.13.0\n"
+    );
+    assert_eq!(check.code, 1);
+
+    tree.put(
+        "shared/README.md",
+        "# Index\n\n[\u{a7}FS-a](../aa/a.md#fs-a-a)\n\n[\u{a7}FS-b](../zz/b.md#fs-b-b)\n",
+    );
+    let written = tree.grund(&["check"]);
+    assert_eq!(written.code, 0, "{}{}", written.stdout, written.stderr);
+    assert_eq!(written.stdout, "success\n", "{}", written.stderr);
+}
+
+/// `aa` declares nothing, so `aa/README.md` owes nothing, whichever spelling is listed first and
+/// whichever of the two is the file: the one true line is the folder that declares.
+fn only_the_declaring_folder_owes(tree: &Tree) {
+    let check = tree.grund(&["check"]);
+    assert_eq!(
+        check.stdout,
+        "zz/b.md:1: error: FS-b is not listed in zz/README.md: an entry is a `\u{a7}`-marked \
+         Markdown link to the declaration; write `[\u{a7}FS-b](../zz/b.md#fs-b-b)` in \
+         zz/README.md \u{2014} became an error in grund 0.13.0\n"
+    );
+    assert_eq!(check.code, 1);
+}
+
+/// The index asks for the target's own key, not the first alias holding a set.
+#[test]
+fn a_folder_that_declares_nothing_lends_no_finding_through_a_shared_index() {
+    let tree = Tree::new("shared-empty", TWO_FOLDERS);
+    tree.put("zz/b.md", "# FS-b: B\n\nb \u{a7}FS-b\n");
+    tree.put("shared/README.md", "# Index\n\nnone\n");
+    tree.link("aa/README.md", "../shared/README.md");
+    tree.link("zz/README.md", "../shared/README.md");
+    only_the_declaring_folder_owes(&tree);
+}
+
+/// The same, with the shared index a real file of the folder that declares nothing.
+#[test]
+fn a_folder_whose_index_is_another_folders_file_lends_no_finding() {
+    let tree = Tree::new("shared-real", TWO_FOLDERS);
+    tree.put("aa/README.md", "# Index\n\nnone\n");
+    tree.put("zz/b.md", "# FS-b: B\n\nb \u{a7}FS-b\n");
+    tree.link("zz/README.md", "../aa/README.md");
+    only_the_declaring_folder_owes(&tree);
+}

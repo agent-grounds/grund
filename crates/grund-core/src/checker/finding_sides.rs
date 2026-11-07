@@ -2,7 +2,7 @@
 //! catalog fails the test beside this file until someone says which side it is on (§AR-scanner.1.8).
 //! Only a file reached by two names ever asks, so a linkless tree pays nothing for the lookup.
 
-use crate::model::Code;
+use crate::model::{Code, Diagnostic};
 
 /// What a finding of a code says of a file reached by two names.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -25,7 +25,26 @@ impl Side {
             .find(|(_, codes)| codes.contains(&code))
             .map(|(side, _)| *side)
     }
+
+    /// The side of one finding. A citation-direction code has two forms. Its file-unit form is
+    /// asked of the row that owns the spelling, so it is Place. Its declaration-subject form holds
+    /// at any spelling, because the obligation follows the declaration's own kind, so it is Content,
+    /// and it is the form that carries a site ([`super::spellings_report::PlaceNames::subject_sites`]).
+    pub(super) fn of_finding(finding: &Diagnostic) -> Option<Self> {
+        if DIRECTION.contains(&finding.code) && !finding.sites.is_empty() {
+            return Some(Self::Content);
+        }
+        Self::of(finding.code)
+    }
 }
+
+/// The citation-direction codes, which alone speak of either a file or a declaration.
+const DIRECTION: &[Code] = &[
+    Code::DISCOURAGED_CITATION,
+    Code::FORBIDDEN_CITATION,
+    Code::MISSING_CITATION,
+    Code::SUGGESTED_CITATION,
+];
 
 const SIDES: &[(Side, &[Code])] = &[
     (Side::Content, CONTENT),

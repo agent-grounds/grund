@@ -188,6 +188,12 @@ impl KindIndexEntries {
             .find_map(|key| self.owed.get(key))
     }
 
+    /// What the index `key` itself owes, and not what another name of its file owes: a README two
+    /// folders share owes each folder its own (§AR-scanner.1.8).
+    pub(super) fn owed_by(&self, key: &Path) -> Option<&BTreeSet<Id>> {
+        self.owed.get(key)
+    }
+
     /// §FS-check.4.1.2 / §DF-index-not-an-inbound-citation.2.2: folder-owned IDs
     /// keep PR #134's accounting. For an external ID only the canonical link site
     /// is navigation; a second same-ID citation in the index is ordinary use.
