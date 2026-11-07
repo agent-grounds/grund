@@ -93,7 +93,7 @@ pub(super) fn check_grounding(
         }
     }
 
-    // §FS-scan.identity.findings.place: asked of each spelling at its own path, over the citations
+    // §AR-scanner.1.8: asked of each spelling at its own path, over the citations
     // and structure its one read recorded at the name listed first.
     let spellings = PlaceNames::new(schema, frame);
     let judged = findings.scanned_files.iter().flat_map(|file| {

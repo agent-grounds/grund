@@ -907,10 +907,12 @@ impl Server {
         if self.import_owns(&path) {
             return Ok(Some(Vec::new()));
         }
-        let declared_ids = self
-            .snapshot_for_path(&path)
-            .map(Self::declared_ids)
-            .unwrap_or_default();
+        let snapshot = self.snapshot_for_path(&path);
+        // §AR-scanner.1.8: a refused file takes no edit, by the run's own answer.
+        if snapshot.is_some_and(|snapshot| snapshot.reading_refused(&path)) {
+            return Ok(Some(Vec::new()));
+        }
+        let declared_ids = snapshot.map(Self::declared_ids).unwrap_or_default();
         on_type_replacement_for_line(&path, &text, position, &declared_ids)
     }
 

@@ -32,6 +32,8 @@ fn resolved_over(case: &str, files: usize) -> (usize, usize, usize) {
     )
 }
 
+/// The count is of `physical_path_key` on this thread, and nothing wider: a scan's rayon workers
+/// and `canonical_path` go past it, so this pins the walk and the rule, not a run's every realpath.
 #[test]
 fn a_linkless_tree_resolves_no_more_for_more_files() {
     let (small_files, small_walk, small_reads) = resolved_over("names_count_small", 2);

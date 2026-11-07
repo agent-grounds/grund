@@ -7,7 +7,7 @@ use crate::grammar::{
     MarkdownLinks, MultiLineStrings, front_matter_extent, id_token_end_at,
     never_rewrite_context_in, string_literal_in,
 };
-use crate::scanner::{DeclarationLines, walk_scannable_files};
+use crate::scanner::DeclarationLines;
 use crate::sources::canonical_snapshot_path;
 
 use crate::resolver::shorthand_token_expansion;
@@ -74,7 +74,7 @@ fn can_replace_trigger_with_config(
     if id_token_end_at(line, after, &config.grammar) != Some(token_end) {
         return false;
     }
-    // §FS-config-v2.schema.sources: the file is read as `grund fmt` reads it.
+    // §FS-config-v2.schema.sources, §AR-scanner.1.8: the file is read as `grund fmt` reads it.
     // §FS-lsp.1.4: every zone the bulk pass refuses (§FS-fmt.2.3), a reference key
     // and an HTML tag included.
     if config.reading(path).markdown {
@@ -82,22 +82,6 @@ fn can_replace_trigger_with_config(
     } else {
         !string_literal_in(docstring, line, trigger_start)
     }
-}
-
-/// Whether the run holds a refusal for this buffer's file, which then takes no on-type edit
-/// (§FS-scan.identity.buffers). A keystroke has no walk behind it: only a buffer reached by a link
-/// to a file whose own name claims nothing pays for the one project walk that collects the names
-/// (§FS-scan.identity.reading.every-caller), and every other keystroke asks no more than the rule.
-fn reading_refused(config: &Config, path: &Path) -> bool {
-    let frame = config.frame();
-    let spellings = &frame.run.spellings;
-    let Some(physical) = spellings.physical(path) else {
-        return false;
-    };
-    if physical == path || frame.own_name_decides(config.schema(), &physical) {
-        return false;
-    }
-    walk_scannable_files(config.schema(), frame, None, false).is_ok() && spellings.is_refused(path)
 }
 
 /// One replacement on the edited line: the byte span to replace, and the text to
@@ -144,9 +128,6 @@ pub fn on_type_line_edits(
     let Some(line) = text.lines().nth(line_index) else {
         return Ok(Vec::new());
     };
-    if reading_refused(&config, path) {
-        return Ok(Vec::new());
-    }
     let cursor = cursor_byte.min(line.len());
     if let Some(edit) = trigger_marker_edit(&config, path, text, line_index, line, cursor) {
         return Ok(vec![edit]);

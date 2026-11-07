@@ -405,10 +405,7 @@ fn reading_refusal(render: &Config, conflict: &ReadingConflict) -> Diagnostic {
         .map(|name| display_path(render, name))
         .collect();
     let first = names.first().cloned().unwrap_or_default();
-    let spelled = match names.split_last() {
-        Some((last, rest)) if !rest.is_empty() => format!("{} and {last}", rest.join(", ")),
-        _ => first.clone(),
-    };
+    let spelled = ReadingConflict::joined(&names);
     Diagnostic {
         code: Code::READING_CONFLICT,
         path: None,

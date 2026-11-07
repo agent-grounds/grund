@@ -2,8 +2,10 @@
 //! name the editor opened it under, and takes no on-type edit where the run refuses the file.
 //! Unix-only: the cases are about links.
 
+use super::LspSnapshotOpts;
 use super::tests_editor_completion::Fixture;
 use super::{DeclaredId, on_type_line_edits};
+use crate::api::lsp_snapshot;
 use crate::testing::symlink;
 
 const CONFIG: &str = "grund_config_version = 2\nproject_name = \"names\"\n\
@@ -50,13 +52,29 @@ fn a_buffer_under_a_link_is_read_as_its_file() {
     );
 }
 
+/// The refusal is the run's, read off the snapshot a keystroke already holds, and no name of the
+/// file escapes it: not the links, and not the target's own name, which no finding lists
+/// (§FS-scan.identity.buffers).
 #[test]
-fn a_refused_file_takes_no_on_type_edit_under_either_name() {
+fn the_snapshot_says_a_file_is_refused_under_every_name() {
     let f = fixture();
     f.put("LICENSE", "\n");
+    f.put("docs/other.md", "\n");
     symlink("../LICENSE", &f.0.join("docs/license.md"));
-    assert_eq!(edits_in(&f, "docs/license.md"), 1, "one name is no refusal");
+    let refused = |name: &str| {
+        let snapshot = lsp_snapshot(LspSnapshotOpts {
+            path: f.0.clone(),
+            path_provided: true,
+            ..LspSnapshotOpts::default()
+        })
+        .expect("snapshot");
+        snapshot.reading_refused(&f.0.join(name))
+    };
+    assert!(!refused("docs/license.md"), "one name is no refusal");
+    assert!(!refused("LICENSE"), "one name is no refusal");
     symlink("../LICENSE", &f.0.join("docs/license.rs"));
-    assert_eq!(edits_in(&f, "docs/license.md"), 0);
-    assert_eq!(edits_in(&f, "docs/license.rs"), 0);
+    for name in ["docs/license.md", "docs/license.rs", "LICENSE"] {
+        assert!(refused(name), "{name}");
+    }
+    assert!(!refused("docs/other.md"), "another file is not refused");
 }

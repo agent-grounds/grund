@@ -111,7 +111,7 @@ fn check_declaration_homes(findings: &Catalog, frame: Frame<'_>, report: &mut Ch
 /// §FS-declarations.checks.misplaced-declaration: declarations must respect configured kind
 /// homes. A single-file kind must live in its exact `file`, which is physical, so a link to it is
 /// that document; any declaration inside a unique configured home must match that home's kind,
-/// asked of each spelling at its own path (§FS-scan.identity.findings.place).
+/// asked of each spelling at its own path (§AR-scanner.1.8).
 fn check_misplaced(
     findings: &Catalog,
     schema: &Schema,

@@ -12,11 +12,12 @@
 //! stay `pub` — `grund-lsp` marshals exactly these fields (§AR-lsp).
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-use crate::model::{Finding, Report};
+use crate::model::{Code, Finding, Report};
 use crate::resolver::WorkspaceContext;
 use crate::scanner::ApiScanError;
+use crate::sources::canonical_snapshot_path;
 
 /// One snapshot request (§AR-lsp.5.1): the anchor folder, whether the editor named
 /// it explicitly (§FS-lsp.2.2.1), and the buffers it holds unsaved.
@@ -76,6 +77,28 @@ pub struct LspSnapshot {
     /// go silent on files the CLI checks (§FS-lsp.2.2.2, §AR-lsp.2.2).
     pub scanned_files: BTreeSet<PathBuf>,
     pub scan_errors: Vec<ApiScanError>,
+}
+
+impl LspSnapshot {
+    /// Whether this run refused the file `path` reaches, which then takes no on-type edit under any
+    /// name, its own included (§AR-scanner.1.8, §FS-scan.checks.reading-conflict). The
+    /// answer is the snapshot's, so a keystroke walks nothing, and a run with no refusal resolves
+    /// no path to give it (§GOAL-fast-feedback).
+    pub fn reading_refused(&self, path: &Path) -> bool {
+        let code = Code::READING_CONFLICT.as_str();
+        let mut refusals = self
+            .report
+            .errors
+            .iter()
+            .filter(|finding| finding.code == code)
+            .flat_map(|finding| &finding.sites)
+            .peekable();
+        if refusals.peek().is_none() {
+            return false;
+        }
+        let buffer = canonical_snapshot_path(path);
+        refusals.any(|site| canonical_snapshot_path(&self.root.join(&site.path)) == buffer)
+    }
 }
 
 /// One declaration-side title an editor can navigate from (§FS-lsp.1.3).
