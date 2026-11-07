@@ -18,7 +18,7 @@
 //! The finding a shorthand site earns is not here either: that is a rule, and
 //! rules are the checker's (`checker/shorthand.rs`, §FS-check.3.13).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::context::{WorkspaceContext, WorkspaceProject};
 use crate::config::{Compiled, Frame, Schema, ShorthandPolicy};
@@ -48,8 +48,13 @@ pub(crate) struct ShorthandTargets<'a> {
 /// One aliased project's half of `ShorthandTargets`: its declarations, and the
 /// schema and grammar the canonical ID renders under (a workspace may mix
 /// `[id] format`s).
+///
+/// `declarations` is what a canonical ID renders from, and it is only ever there for
+/// a project whose scan met no error, so no rewrite into a failed project can be
+/// rendered (§FS-fmt.7.4.4). `index` keeps the partial set: it is what says a rewrite
+/// was about to be made, which is what the run has to refuse.
 pub(crate) struct ShorthandAliasTarget<'a> {
-    declarations: &'a BTreeMap<Id, Vec<Declaration>>,
+    declarations: Option<&'a BTreeMap<Id, Vec<Declaration>>>,
     pub(crate) schema: &'a Schema,
     pub(crate) compiled: &'a Compiled,
     pub(crate) index: ShorthandIndex<'a>,
@@ -74,7 +79,9 @@ impl<'a> ShorthandTargets<'a> {
                             (
                                 project.alias.as_str(),
                                 ShorthandAliasTarget {
-                                    declarations: &project.findings.declarations,
+                                    declarations: project
+                                        .read_in_full()
+                                        .then_some(&project.findings.declarations),
                                     schema: project.config.schema(),
                                     compiled: project.config.compiled(),
                                     index: ShorthandIndex::build(
@@ -88,6 +95,15 @@ impl<'a> ShorthandTargets<'a> {
                 })
                 .unwrap_or_default(),
         }
+    }
+
+    /// Whether a rewrite resolved against the project `alias` names may be made, its
+    /// scan having met no error (§FS-fmt.7.4.4). The alias of no project answers
+    /// `true`: there is nothing to resolve against, so nothing to prove.
+    pub(crate) fn alias_is_proven(&self, alias: &str) -> bool {
+        self.by_alias
+            .get(alias)
+            .is_none_or(|target| target.declarations.is_some())
     }
 }
 
@@ -148,6 +164,7 @@ pub(crate) fn expand_shorthand_citations(
         &[],
         saw_candidate,
         &mut placed,
+        &mut BTreeSet::new(),
     );
     expansions.extend(
         placed
@@ -161,7 +178,10 @@ pub(crate) fn expand_shorthand_citations(
 /// markers produced from triggers so accepted persisted forms and authoring
 /// sugar remain distinct even when they share one line. Each expansion carries
 /// its marker's byte offset in `line`, so a caller can merge it with the details
-/// of another rewrite on the same line in source order (§FS-fmt.3.6.1).
+/// of another rewrite on the same line in source order (§FS-fmt.3.6.1). A token this
+/// would have expanded against an aliased project whose scan met an error stays as
+/// written and adds the alias to `unproven_aliases`, for the walk to refuse the run
+/// on (§FS-fmt.7.4.4).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn expand_shorthand_citations_with_origins(
     line: &str,
@@ -174,6 +194,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
     trigger_marker_starts: &[usize],
     saw_candidate: &mut bool,
     expansions: &mut Vec<(usize, String, String)>,
+    unproven_aliases: &mut BTreeSet<String>,
 ) -> Option<String> {
     // The local grammar is only one of the grammars in play: a qualified citation
     // is parsed with the *target's*, so a citing project with no shorthand of its
@@ -294,6 +315,17 @@ pub(crate) fn expand_shorthand_citations_with_origins(
             continue;
         }
         let namespace = alias.map(|(alias, _)| alias);
+        // The ID renders under the *target* project's `[id] format`, which is what
+        // makes the rewrite correct in a mixed-format workspace. §FS-fmt.7.4.4: only
+        // a project read in full has declarations to render it from.
+        let declarations = match target {
+            Some(target) => target.declarations,
+            None => targets.local_declarations,
+        };
+        let Some(declarations) = declarations else {
+            unproven_aliases.extend(namespace.map(str::to_string));
+            continue;
+        };
         let match_end = alias_len + match_end;
         output.push_str(&line[cursor..token_start]);
         // §FS-fmt.3.6: the written and canonical forms are recorded as the line is
@@ -304,12 +336,6 @@ pub(crate) fn expand_shorthand_citations_with_origins(
             output.push_str(alias);
             output.push('/');
         }
-        // The ID renders under the *target* project's `[id] format`, which is what
-        // makes the rewrite correct in a mixed-format workspace.
-        let declarations = target
-            .map(|target| target.declarations)
-            .or(targets.local_declarations)
-            .expect("an indexed target has declarations");
         output.push_str(&render_catalog_id(target_grammar, declarations, unique));
         if let Some(section) = caps.name("sec") {
             // The target's separator, matching the form §FS-check.3.13 names —

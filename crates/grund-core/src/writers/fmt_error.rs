@@ -16,6 +16,17 @@ pub struct FmtScanAbort {
     pub scan_errors: Vec<ApiScanError>,
 }
 
+impl FmtScanAbort {
+    /// The same refusal with each path named once (§FS-fmt.3.3), the first mention
+    /// keeping its place, for a refusal assembled from more than one walk.
+    pub(super) fn named_once(mut self) -> Self {
+        let mut seen = std::collections::BTreeSet::new();
+        self.scan_errors
+            .retain(|error| seen.insert((error.path.clone(), error.message.clone())));
+        self
+    }
+}
+
 impl std::fmt::Display for FmtScanAbort {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.scan_errors.is_empty() {

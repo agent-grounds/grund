@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use super::read_predicate::{directory_refusal, ignored, name_refusal};
+use super::read_predicate::{Unread, directory_refusal, ignored, name_refusal};
 use super::scan_error::scan_io_reason;
 use super::tree::ScanError;
 use super::walk::WalkDirFilter;
@@ -18,7 +18,9 @@ use crate::config::{Frame, Schema};
 /// is reported at its own path, never at the walk root (§AR-scanner.1.9). Each recovered
 /// link is handed on as an error that names it, carrying the failure its own
 /// target opens with, so it takes the branch every link with a path takes. An
-/// error about a link already recovered adds nothing, and reaches no fallback.
+/// error that a recovered link explains and that has no link left to name adds
+/// nothing; one no link explains reaches the walk-root fallback, so a failure may
+/// land at a walk root and never disappears.
 ///
 /// `filter` is the walk's own directory filter for this root, `recovery` what this
 /// root has recovered so far, and `listing` the directory the walk last descended
@@ -74,7 +76,10 @@ pub(super) fn walk_error_reports(
 /// the project-root fence and the ownership boundaries on its canonical target
 /// included (§AR-scanner.1.13). That is what keeps a dangling
 /// `docs/logo.png`, a link of any kind that `.gitignore` covers, and a link out
-/// of the project, silent — the walk was never going to read them. Anything else
+/// of the project to a target in no tree the run reads, silent — the walk was never
+/// going to read them, and nothing else in the run reads through them. A directory
+/// link into a tree another reader of the run holds is pruned from this walk and is
+/// still reported (§AR-scanner.1.9). Anything else
 /// — an unreadable directory, a malformed ignore file — is reported as it stands,
 /// at the path the error names, and at the walk root only when the error names
 /// no entry at all: it is a hole in the walk either way, and a silent one is what
@@ -119,8 +124,14 @@ fn walk_error_report(
 /// files, then the walk's own filter, whose `refusal` is the one copy of the name,
 /// `[scan] exclude`, unwalked-home and E2E-case tests and of the project-root fence
 /// and ownership boundaries, which it judges on the link's canonical target
-/// whether or not that target opens (§AR-scanner.1.9, §AR-scanner.1.13). Any other link, broken, is asked the name tests and the
-/// ignore files, as the file it names would be.
+/// whether or not that target opens (§AR-scanner.1.9, §AR-scanner.1.13). Two of its
+/// answers are not silence. `Unread::AnotherProject`: the walk does not read
+/// through such a link, but the run reads the tree it lands in, so a failure there
+/// is a hole in what the run answers from (§AR-scanner.1.9).
+/// `Unread::UnwalkedHome`: a link standing at a home the config lists without walking
+/// is in no declared blind spot (§AR-scanner.1.9). Any
+/// other link, broken, is asked the name tests and the ignore files, as the file it
+/// names would be.
 ///
 /// The walker never drops its own root, so a link that is the walk root is asked
 /// no ignore file, and the filter answers for it as it does for the root.
@@ -138,7 +149,9 @@ fn walk_skips_link(
         .strip_prefix(scan_root)
         .map_or(0, |relative| relative.components().count());
     (depth > 0 && walk_ignores(path, true, schema, frame))
-        || filter.refusal(path, depth, true, true).is_some()
+        || filter
+            .refusal(path, depth, true, true)
+            .is_some_and(|reason| !matches!(reason, Unread::AnotherProject | Unread::UnwalkedHome))
 }
 
 /// The directory links one walk root has recovered, by the directory listed again
@@ -148,18 +161,24 @@ fn walk_skips_link(
 /// this on a root's first error, so a run with no walker error pays nothing for it.
 #[derive(Default)]
 pub(super) struct LinkRecovery {
-    listed: HashMap<PathBuf, UnreportedLinks>,
+    listed: HashMap<PathBuf, HashMap<io::ErrorKind, ListedLinks>>,
 }
 
-/// The links of one directory not yet handed out. An emptied entry stays: a kind
-/// with an entry here is one this directory explains, whatever is left under it.
-type UnreportedLinks = HashMap<io::ErrorKind, Vec<(PathBuf, io::Error)>>;
+/// One directory's links of one failure kind: those not yet handed out, and how many
+/// walker errors they can still explain, one per link (§AR-scanner.1.9). The two
+/// differ because several links can be handed out on one error, and it is the credits
+/// that tell an error with nothing new to name from an error no link explains.
+#[derive(Default)]
+struct ListedLinks {
+    unreported: Vec<(PathBuf, io::Error)>,
+    credits: usize,
+}
 
 impl LinkRecovery {
     /// The links a walker error that names no entry brings to light, each with the
     /// failure its target opens with (§AR-scanner.1.9, §FS-check.2.4). `None` where
-    /// no link explains the error, which any other error is; an empty list where a
-    /// link does and every such link has already been handed out.
+    /// no link is left to explain the error, which any other error is; an empty list
+    /// where one is and every such link has already been handed out.
     ///
     /// The walker opens a directory link's target for its loop check before the entry
     /// is anything it hands over, and the error that open raises carries no path
@@ -172,9 +191,12 @@ impl LinkRecovery {
     /// lists every entry of each of them and fails on each such link in turn, so a
     /// link named here before its own error comes finds nothing more to add when that
     /// error does, and several links in one directory are each named. A target that
-    /// opens, or fails another way, is not what this error is about. Nothing tells
-    /// such an error from another pathless one of the same kind, so one raised beside
-    /// a barred link is reported as that link.
+    /// opens, or fails another way, is not what this error is about.
+    ///
+    /// Nothing tells such an error from another pathless one of the same kind, so each
+    /// link answers for one error, whichever comes first. The error beyond the last
+    /// credit returns `None` and reaches the walk-root fallback, which keeps it from
+    /// disappearing beside a link the rules silence (§REQ-no-missed-citation.1).
     ///
     /// Only the error path pays: the walk records `listing` among the directories it
     /// already collects, and nothing here runs until an error names no entry.
@@ -185,28 +207,34 @@ impl LinkRecovery {
         scan_root: &Path,
     ) -> Option<Vec<(PathBuf, io::Error)>> {
         let kind = pathless_io_kind(err)?;
-        let mut links = None;
+        let mut links = Vec::new();
+        let mut explained = false;
         for dir in listing?
             .ancestors()
             .take_while(|dir| dir.starts_with(scan_root))
         {
-            let unreported = self
+            let listed = self
                 .listed
                 .entry(dir.to_path_buf())
                 .or_insert_with(|| unopenable_links_of(dir));
-            if let Some(found) = unreported.get_mut(&kind) {
-                links.get_or_insert_with(Vec::new).append(found);
+            let Some(found) = listed.get_mut(&kind) else {
+                continue;
+            };
+            links.append(&mut found.unreported);
+            if !explained && found.credits > 0 {
+                found.credits -= 1;
+                explained = true;
             }
         }
-        links
+        explained.then_some(links)
     }
 }
 
 /// The directory links directly in `dir` whose targets exist and fail to open, by
 /// the kind of that failure. A directory that cannot be listed holds none: it
 /// fails on its own path.
-fn unopenable_links_of(dir: &Path) -> UnreportedLinks {
-    let mut links = UnreportedLinks::new();
+fn unopenable_links_of(dir: &Path) -> HashMap<io::ErrorKind, ListedLinks> {
+    let mut links = HashMap::<io::ErrorKind, ListedLinks>::new();
     Sources::on_disk()
         .read_dir(dir)
         .into_iter()
@@ -221,7 +249,9 @@ fn unopenable_links_of(dir: &Path) -> UnreportedLinks {
         .filter(|link| path_is_dir(link))
         .filter_map(|link| open_for_reading(&link).err().map(|error| (link, error)))
         .for_each(|(link, error)| {
-            links.entry(error.kind()).or_default().push((link, error));
+            let listed = links.entry(error.kind()).or_default();
+            listed.unreported.push((link, error));
+            listed.credits += 1;
         });
     links
 }

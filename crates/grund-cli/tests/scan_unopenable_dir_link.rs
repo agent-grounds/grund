@@ -1,6 +1,7 @@
 //! Black-box: a directory link whose target cannot be opened fails at the link, once, and never
-//! at a walk root that met it (§FS-scan.scope.links.unresolvable.unopenable). A link out of the
-//! project is pruned in silence whether or not its target can be opened
+//! at a walk root that met it (§FS-scan.scope.links.unresolvable.unopenable). A link to a target
+//! in no tree the run reads, and a link the walk is told not to read, stay silent whether or not
+//! the target can be opened; a link into a project or an import the run reads does not
 //! (§FS-scan.scope.links.owed.fence). What is judged is the `path` of every `io` diagnostic in
 //! `--format json`, and the exit code, not the wording. Git carries no mode, so the e2e corpus
 //! cannot hold these trees, and every test skips where mode 000 does not bar the user (root).
@@ -18,6 +19,13 @@ const CONFIG: &str = "grund_config_version = 2\nproject_name = \"p\"\n\n\
 /// A version-1 config whose E2E folder is `e2e`, the shape the ticket's last run used.
 const V1_CONFIG: &str = "grund_config_version = 1\nproject_name = \"p\"\n\n\
     [[kinds]]\nkind = \"E2E\"\nfolder = \"e2e\"\ntitle = \"Executable user scenarios\"\n";
+
+/// A clean version-2 project named `name`, for a member or an import.
+fn project_config(name: &str) -> String {
+    CONFIG
+        .replace("\"p\"", &format!("\"{name}\""))
+        .replace("docs", "spec")
+}
 
 /// Where no walk root may ever be the location: the config root and the home.
 const WALK_ROOTS: [&str; 2] = [".", "docs"];
@@ -40,6 +48,18 @@ struct Run {
 impl Run {
     fn paths(&self) -> Vec<&str> {
         let mut paths: Vec<&str> = self.io.iter().map(|(_, path)| path.as_str()).collect();
+        paths.sort_unstable();
+        paths
+    }
+
+    /// The paths reported at `severity`, sorted.
+    fn at(&self, severity: &str) -> Vec<&str> {
+        let mut paths: Vec<&str> = self
+            .io
+            .iter()
+            .filter(|(reported, _)| reported == severity)
+            .map(|(_, path)| path.as_str())
+            .collect();
         paths.sort_unstable();
         paths
     }
@@ -81,6 +101,21 @@ impl Tree {
     /// Creates the link `p/<link>` pointing at `target`, written relative to the link.
     fn link(&self, link: &str, target: &str) {
         symlink(target, self.base.join("p").join(link)).expect("create the link");
+    }
+
+    /// Appends `text` to the project's config.
+    fn configure(&self, text: &str) {
+        let path = self.base.join("p/grund.toml");
+        let config = fs::read_to_string(&path).expect("read the config");
+        fs::write(&path, format!("{config}\n{text}")).expect("write the config");
+    }
+
+    /// A clean project at `rel`, relative to the base, with an unreadable-to-be `secret` in it.
+    fn project(&self, rel: &str, name: &str) {
+        let root = self.base.join(rel);
+        fs::create_dir_all(root.join("spec")).expect("create the home");
+        fs::create_dir_all(root.join("secret")).expect("create the directory");
+        fs::write(root.join("grund.toml"), project_config(name)).expect("write the config");
     }
 
     /// Bars the directory `rel` and says whether the mode bars this user: it does not bar root,
@@ -293,4 +328,218 @@ fn a_version_1_e2e_folder_linking_out_names_no_config_root() {
         "the config root named in:\n{}",
         run.stderr
     );
+}
+
+/// Asserts that a run over the tree reports no failure, for `check` and for the home.
+fn assert_silent(tree: &Tree) {
+    for args in [&[][..], &["docs"]] {
+        let run = tree.check(args);
+        assert_eq!(
+            (run.code, run.paths()),
+            (0, vec![]),
+            "grund check {args:?}:\n{}",
+            run.stderr
+        );
+    }
+}
+
+/// A link and its target both covered by `.gitignore`: no walk reaches either, so nothing is owed.
+#[test]
+fn a_link_and_target_gitignore_covers_stay_silent() {
+    let mut tree = Tree::new("kept-out-gitignore");
+    let init = Command::new("git")
+        .args(["init", "-q", "."])
+        .current_dir(tree.base.join("p"))
+        .status()
+        .expect("run git");
+    assert!(init.success());
+    fs::write(tree.base.join("p/.gitignore"), "docs/ext\nreal/\n").expect("write the ignore file");
+    tree.dir("p/real");
+    tree.link("docs/ext", "../real");
+    if !tree.bar("p/real") {
+        return;
+    }
+    assert_silent(&tree);
+}
+
+/// The same under `exclude`, naming the link and the target.
+#[test]
+fn a_link_and_target_exclude_names_stay_silent() {
+    let mut tree = Tree::new("kept-out-exclude");
+    tree.configure("[schema.sources]\nexclude = [\"ext/\", \"real/\"]\n");
+    tree.dir("p/real");
+    tree.link("docs/ext", "../real");
+    if !tree.bar("p/real") {
+        return;
+    }
+    assert_silent(&tree);
+}
+
+/// The same with a hidden link name, which keeps the link out with no exclude naming it.
+#[test]
+fn a_hidden_link_with_an_excluded_target_stays_silent() {
+    let mut tree = Tree::new("kept-out-hidden");
+    tree.configure("[schema.sources]\nexclude = [\"real/\"]\n");
+    tree.dir("p/real");
+    tree.link("docs/.ext", "../real");
+    if !tree.bar("p/real") {
+        return;
+    }
+    assert_silent(&tree);
+}
+
+/// Only the link is kept out, and the target is read another way: the target keeps its own line
+/// and the link adds none, so the run reports what it reports with no link at all.
+#[test]
+fn a_kept_out_link_leaves_a_target_read_another_way_its_own_line() {
+    let mut tree = Tree::new("kept-out-link-only");
+    tree.configure("[schema.sources]\nexclude = [\"ext/\"]\n");
+    tree.dir("p/real");
+    tree.link("docs/ext", "../real");
+    if !tree.bar("p/real") {
+        return;
+    }
+    let run = tree.check(&[]);
+    assert_eq!((run.code, run.paths()), (2, vec!["real"]), "{}", run.stderr);
+}
+
+/// `docs/ext -> ../m/secret` into a loaded member: the walk from `docs` does not read through it,
+/// but the run's project-wide resolution reads that tree, so the failure is a hole in what the run
+/// answers from. It is reported at the link and the exit stays 2.
+#[test]
+fn a_link_into_a_loaded_member_is_reported_at_the_link() {
+    let mut tree = Tree::new("member");
+    tree.configure("[workspace]\nmembers = [\"m\"]\n");
+    tree.project("p/m", "m");
+    tree.link("docs/ext", "../m/secret");
+    if !tree.bar("p/m/secret") {
+        return;
+    }
+    let whole = tree.check(&[]);
+    assert_eq!(
+        (whole.code, whole.at("error")),
+        (2, vec!["docs/ext", "m/secret"]),
+        "{}",
+        whole.stderr
+    );
+    let narrowed = tree.check(&["docs"]);
+    assert_eq!(
+        (narrowed.code, narrowed.at("error")),
+        (2, vec!["docs/ext"]),
+        "{}",
+        narrowed.stderr
+    );
+    assert!(!narrowed.names_a_walk_root(), "{}", narrowed.stderr);
+}
+
+/// The ownership boundary between members answers the same way: `a/spec/ext -> ../../b/secret`.
+#[test]
+fn a_link_into_a_sibling_member_is_reported_at_the_link() {
+    let mut tree = Tree::new("sibling");
+    tree.configure("[workspace]\nmembers = [\"a\", \"b\"]\n");
+    tree.project("p/a", "a");
+    tree.project("p/b", "b");
+    tree.link("a/spec/ext", "../../b/secret");
+    if !tree.bar("p/b/secret") {
+        return;
+    }
+    let run = tree.check(&[]);
+    assert_eq!(
+        (run.code, run.at("error")),
+        (2, vec!["a/spec/ext", "b/secret"]),
+        "{}",
+        run.stderr
+    );
+}
+
+/// A kept-out link into a member adds no line of its own, and the member keeps the one it earns:
+/// a whole run fails at the member's directory and the narrowed run keeps its caution about it.
+#[test]
+fn a_kept_out_link_into_a_member_adds_nothing_to_what_the_member_reports() {
+    let mut tree = Tree::new("member-kept-out");
+    tree.configure("[schema.sources]\nexclude = [\"ext/\"]\n\n[workspace]\nmembers = [\"m\"]\n");
+    tree.project("p/m", "m");
+    tree.link("docs/ext", "../m/secret");
+    if !tree.bar("p/m/secret") {
+        return;
+    }
+    let whole = tree.check(&[]);
+    assert_eq!(
+        (whole.code, whole.at("error")),
+        (2, vec!["m/secret"]),
+        "{}",
+        whole.stderr
+    );
+    let narrowed = tree.check(&["docs"]);
+    assert_eq!(
+        (narrowed.code, narrowed.at("error")),
+        (0, vec![]),
+        "{}",
+        narrowed.stderr
+    );
+    assert_eq!(
+        narrowed.at("warning"),
+        vec!["m/secret"],
+        "{}",
+        narrowed.stderr
+    );
+}
+
+/// §FS-imports.mount: an import's tree is a tree the run reads, outside the project root though it
+/// is, so a link into it is no outward link. It is reported at the link and the exit stays 2.
+#[test]
+fn a_link_into_an_imported_tree_is_reported_at_the_link() {
+    let mut tree = Tree::new("import");
+    tree.configure("[workspace.imports.lib]\npath = \"../lib\"\nproject = \"lib\"\n");
+    tree.project("lib", "lib");
+    tree.link("docs/ext", "../../lib/secret");
+    if !tree.bar("lib/secret") {
+        return;
+    }
+    for args in [&[][..], &["docs"]] {
+        let run = tree.check(args);
+        assert_eq!(
+            (run.code, run.at("error")),
+            (2, vec!["docs/ext"]),
+            "grund check {args:?}:\n{}",
+            run.stderr
+        );
+    }
+}
+
+/// A link standing at a home the config lists without walking is not kept out as a hidden name is:
+/// no declared blind spot covers it, so its exit stays 2 and the line moves to the link, even with
+/// a target nothing else reads (§FS-scan.scope.links.unresolvable.unopenable).
+#[test]
+fn a_link_standing_at_an_unwalked_home_is_reported_at_the_link() {
+    let mut tree = Tree::new("unwalked-home");
+    tree.configure("[schema.kinds.AR]\nfolders = [\"docs/ext\"]\nscan = false\ncitable = false\n");
+    tree.dir("p/.real");
+    tree.link("docs/ext", "../.real");
+    if !tree.bar("p/.real") {
+        return;
+    }
+    let run = tree.check(&[]);
+    assert_eq!(
+        (run.code, run.at("error")),
+        (2, vec!["docs/ext"]),
+        "{}",
+        run.stderr
+    );
+}
+
+/// Under `include_root = false` the root's tree is read by nobody, so a member's link into it lands
+/// in no tree the run reads, and it stays silent as any other outward link does.
+#[test]
+fn a_link_into_a_root_the_run_does_not_read_stays_silent() {
+    let mut tree = Tree::new("root-not-read");
+    tree.configure("[workspace]\nmembers = [\"m\"]\ninclude_root = false\n");
+    tree.project("p/m", "m");
+    tree.dir("p/shared");
+    tree.link("m/spec/ext", "../../shared");
+    if !tree.bar("p/shared") {
+        return;
+    }
+    let run = tree.check(&[]);
+    assert_eq!((run.code, run.paths()), (0, vec![]), "{}", run.stderr);
 }

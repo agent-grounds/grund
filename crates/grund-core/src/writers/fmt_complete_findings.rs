@@ -1,10 +1,11 @@
 use anyhow::Result;
+use std::collections::BTreeSet;
 
 use super::fmt_error::{FmtConflictAbort, FmtScanAbort};
 use crate::checker::{conflict_marker_finding, sort_diagnostics};
 use crate::config::{Config, display_location, published_finding};
 use crate::model::{Catalog, Diagnostic};
-use crate::resolver::WorkspaceProject;
+use crate::resolver::{WorkspaceContext, WorkspaceProject};
 use crate::scanner::{ApiScanError, api_scan_error, scan_tree};
 
 /// The one place a declaration set is proven complete (§FS-fmt.7.4).
@@ -40,6 +41,14 @@ use crate::scanner::{ApiScanError, api_scan_error, scan_tree};
 ///
 /// Neither takes an error list from its caller. A constructor that did could be
 /// satisfied with an empty one, which is the bypass again with more ceremony.
+///
+/// A proof covers the project it was made of, and a qualified citation resolves
+/// against another (§FS-fmt.7.4.4). That half of the proof is carried where the
+/// rewrite reads the other project's set: `ShorthandTargets` holds an aliased
+/// project's declarations only where `WorkspaceProject::read_in_full` says so, so a
+/// canonical ID cannot be rendered from an unproven set, and the link pass asks the
+/// same answer before it writes. Each reports the alias, and `unproven_alias_abort`
+/// makes the one refusal.
 mod complete_findings {
     use super::{
         ApiScanError, Catalog, Config, FmtScanAbort, Result, WorkspaceProject, api_scan_error,
@@ -135,7 +144,7 @@ mod complete_findings {
         /// run that needs the set builds its refusal, so the refusal is made in
         /// one place, as an unreadable path's is.
         pub(crate) fn complete_findings(&self) -> Option<CompleteFindings<'_>> {
-            (self.scan_errors.is_empty() && self.findings.conflict_blocks.is_empty()).then_some(
+            (self.read_in_full() && self.findings.conflict_blocks.is_empty()).then_some(
                 CompleteFindings {
                     findings: &self.findings,
                 },
@@ -145,6 +154,28 @@ mod complete_findings {
 }
 
 pub(super) use complete_findings::{CompleteFindings, CompleteScan};
+
+/// The refusal a rewrite into a project whose scan met an error earns (§FS-fmt.7.4.4):
+/// §FS-fmt.3.2's lines, the paths this walk met and then each such project's, each path
+/// once, since a walk and the project behind a link it met can name the same one.
+pub(super) fn unproven_alias_abort(
+    workspace: &WorkspaceContext,
+    aliases: &BTreeSet<String>,
+    walked: Vec<ApiScanError>,
+    render: &Config,
+) -> FmtScanAbort {
+    let projects = aliases
+        .iter()
+        .filter_map(|alias| workspace.project_by_alias(alias));
+    let aliased = projects.flat_map(|project| {
+        let errors = project.scan_errors.iter();
+        errors.map(|(path, message)| api_scan_error(render.frame(), path, message))
+    });
+    FmtScanAbort {
+        scan_errors: walked.into_iter().chain(aliased).collect(),
+    }
+    .named_once()
+}
 
 /// The refusal a conflict block earns (§FS-fmt.7.4): each block's
 /// `conflict-marker` finding, from the one function `check` reports it with

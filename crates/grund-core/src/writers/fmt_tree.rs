@@ -3,9 +3,10 @@
 //! per-line rewriting remains in `fmt_rewrite.rs`.
 
 use anyhow::Result;
+use std::collections::BTreeSet;
 use std::path::Path;
 
-use super::fmt_complete_findings::{CompleteFindings, CompleteScan};
+use super::fmt_complete_findings::{CompleteFindings, CompleteScan, unproven_alias_abort};
 use super::fmt_plan::{PlannedFile, TreePlan, WalkRead, partial_io_error};
 use super::fmt_rewrite::{FmtLineOpts, rewrite_file};
 use super::fmt_row::FmtRow;
@@ -164,6 +165,7 @@ pub(super) fn plan_tree<'a>(
 ) -> Result<TreePlan<'a>> {
     let mut changes = Vec::new();
     let mut refused_writes = Vec::new();
+    let mut unproven_aliases = BTreeSet::new();
     let mut planned: Vec<PlannedFile> = Vec::new();
     let mut relative_seen = false;
     let add_marker = opts.add_marker;
@@ -335,6 +337,7 @@ pub(super) fn plan_tree<'a>(
                 &mut changes,
             );
         }
+        unproven_aliases.append(&mut rewritten.unproven_aliases);
         // §FS-fmt.7.3: kept in either mode, so a dry run judges the tree `--write` leaves.
         let text = rewritten.changed.then(|| {
             let mut text = rewritten.lines.join("\n");
@@ -356,6 +359,15 @@ pub(super) fn plan_tree<'a>(
                 changes: file_changes_start..changes.len(),
             });
         }
+    }
+    // §FS-fmt.7.4.4: after the whole walk, so the refusal names every project it
+    // needed, and before any write (§FS-fmt.7.4.3).
+    if let Some(workspace) = workspace
+        && !unproven_aliases.is_empty()
+    {
+        return Err(
+            unproven_alias_abort(workspace, &unproven_aliases, scan_errors, opts.render).into(),
+        );
     }
     let read = match (precomputed_findings, owned_findings.or(shorthand_findings)) {
         (Some(given), _) => WalkRead::Given(given),
