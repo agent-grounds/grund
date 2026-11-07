@@ -1,0 +1,1 @@
+{"severity":"error","path":"e2e/cases/b/expected.exit","line":null,"code":"io","message":"stream did not contain valid UTF-8; make the path readable, or keep it out of the scan","sites":null,"authority":null}
