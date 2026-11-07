@@ -290,10 +290,12 @@ Selection happens only after the complete scan, and operational failures remain
 visible; selected `success` describes only that view, not an all-findings
 repository verdict ([§FS-check.2](../functional-spec/FS-check.md#2-outputs)).
 
-`grund check <path>` narrows the report to the path instead. A scan failure reached
-under several names is inside the path when any of its names is, so it stays an
-error and the exit stays `2`, and it prints under its name there: with
-`e2e -> realE`, `check realE` says `realE/cases` and `check e2e` says `e2e/cases`.
+`grund check <path>` narrows the report to the path instead. A failure the walk
+itself reports about a directory entry, such as a directory it could not list,
+can be reached under several names. It is inside the path when any of those names
+is, so it stays an error and the exit stays `2`, and it prints under its name
+there: with `e2e -> realE`, `check realE` says `realE/cases` and `check e2e` says
+`e2e/cases`.
 A failure with no name under the path is one caution, under the whole run's name
 ([§FS-check.1.3.6.3](../functional-spec/FS-check.md#1363-a-file-the-wider-walk-could-not-read-is-said-out-loud)).
 
