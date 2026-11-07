@@ -44,7 +44,10 @@ pub(crate) fn resolved_paths() -> usize {
 /// form where every component exists, else the canonical form of the longest
 /// existing prefix with the missing tail appended. A path that has yet to be
 /// written therefore still has one spelling, which is what lets the walk and an
-/// editor's not-yet-saved buffer be compared (§AR-scanner.1, §AR-lsp.5).
+/// editor's not-yet-saved buffer be compared (§AR-scanner.1, §AR-lsp.5). That
+/// spelling is the prefix and the unresolved components in order, with nothing
+/// appended, and a path that exists but has no canonical form keeps its lexical
+/// form the same way (§FS-scan.identity.unresolved).
 pub(crate) fn canonicalize_existing_prefix(path: &Path) -> PathBuf {
     let path = if path.is_absolute() {
         normalize_path_lexically(path)
@@ -56,28 +59,34 @@ pub(crate) fn canonicalize_existing_prefix(path: &Path) -> PathBuf {
     if let Ok(canonical) = fs::canonicalize(&path) {
         return canonical;
     }
-    let mut suffix = PathBuf::new();
+    // Pushed name by name, never joined as one tail: joining an empty path appends
+    // a separator, which would end the text in `/` (§FS-scan.identity.unresolved).
+    let mut missing = Vec::new();
     let mut cursor = path.as_path();
     while !cursor.exists() {
         let Some(name) = cursor.file_name() else {
             break;
         };
-        suffix = Path::new(name).join(suffix);
+        missing.push(name);
         let Some(parent) = cursor.parent() else {
             break;
         };
         cursor = parent;
     }
-    fs::canonicalize(cursor)
-        .unwrap_or_else(|_| normalize_path_lexically(cursor))
-        .join(suffix)
+    let mut resolved =
+        fs::canonicalize(cursor).unwrap_or_else(|_| normalize_path_lexically(cursor));
+    for name in missing.into_iter().rev() {
+        resolved.push(name);
+    }
+    resolved
 }
 
 /// Canonicalize `path` to the same normalized form `LspSnapshot` paths carry,
 /// so an LSP client's request URI matches the snapshot's declaration, stub,
 /// and citation paths (§AR-lsp.5.1). Existing files resolve through
 /// `fs::canonicalize`; a not-yet-saved overlay file resolves its existing
-/// prefix and appends the missing tail — the same absolutization the snapshot
+/// prefix and appends the missing tail, never a trailing separator
+/// (§FS-scan.identity.unresolved) — the same absolutization the snapshot
 /// applies — so `grund-lsp` does not need a second, drift-prone copy of this
 /// logic.
 pub fn canonical_snapshot_path(path: &Path) -> PathBuf {
