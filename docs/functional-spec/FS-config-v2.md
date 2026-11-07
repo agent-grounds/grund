@@ -266,7 +266,7 @@ A scoped `AGENTS.md` that `grund init` generates ([§FS-init.2.3.5.11](FS-init.m
 
 #### schema.places.ownership: A listed file, then the deepest folder
 
-Every scanned file belongs to exactly one row. A file listed in a row's `files` belongs to that row. Otherwise it belongs to the row whose folder containing it is deepest, the complement's folders included; and a file in no place belongs to the complement. No tie can arise, because two equal places are refused ([§FS-config-v2.schema.places.boundaries](FS-config-v2.md#schemaplacesboundaries-what-a-place-may-name)). Two nested folders of one row are both that row's, and the deepest one owns the file. This replaces v1's rule, under which a file in two nested homes falls to the complement ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), for v2 files only.
+Every scanned file belongs to exactly one row. A file listed in a row's `files` belongs to that row. Otherwise it belongs to the row whose folder containing it is deepest, the complement's folders included; and a file in no place belongs to the complement. No tie can arise, because two equal places are refused ([§FS-config-v2.schema.places.boundaries](FS-config-v2.md#schemaplacesboundaries-what-a-place-may-name)). Two nested folders of one row are both that row's, and the deepest one owns the file. This replaces v1's rule, under which a file in two nested homes falls to the complement ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), for v2 files only. A file here is a spelling: each path the walk meets has its own owner, so one physical file reached through two places answers to both, each at its own path ([§FS-scan.identity.findings.place](FS-scan.md#identityfindingsplace-a-place-finding-is-judged-at-each-spelling)).
 
 Every per-file rule asks this one question, so a nested place is never outside them:
 
@@ -362,6 +362,8 @@ A language's comment hosts are the prefixes it reads a comment behind, each stan
 Each key is a suffix and each value a language name. An entry overrides the epoch's assignment of that suffix, so `h = "c"` reads `.h` files as C and `md = "notes"` takes Markdown's suffix away from it. A key is a nonempty literal final extension: no dot, no path separator, and no glob character among `*`, `?`, `[`, `]`, `{`, `}` or `!`. A malformed key is refused at its line: ``invalid suffix `<key>` in [schema.sources.extensions] (expected a final extension with no dot, separator or glob)``.
 
 A value must name a language that `languages` admits. An unknown name is refused at the entry's line: ``unknown language `<name>` in [schema.sources.extensions]``; a known name that `languages` does not admit is refused there too: ``[schema.sources.extensions] <key> maps to `<name>`, which [schema.sources] languages does not admit``. The mapped file takes the target language whole: its reader, its comment hosts, its doc profile and, for `python`, its docstring reading, all together. A mapping selects none of them separately.
+
+A mapping speaks for a file whose own name carries the suffix, not for every name that reaches one: `txt = "rust"` reads `real.txt` as Rust, and a link `a.txt -> real.md` as Markdown ([§FS-scan.identity.reading](FS-scan.md#identityreading-how-a-file-is-read-belongs-to-the-file-not-to-the-name-that-reached-it)).
 
 #### schema.sources.definitions: `[schema.sources.definitions.<name>]` defines a language
 
