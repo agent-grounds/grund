@@ -302,6 +302,14 @@ A YAML value source whose collections are nested more than 128 deep is a stream 
 
 Text and NDJSON use the existing streams, schema, and deterministic ordering ([§FS-output-shapes.1](FS-output-shapes.md#1-finding-object), [§FS-output-shapes.3](FS-output-shapes.md#3-text-report-ordering)). The NDJSON `code`, message, primary location, and declaration `sites` describe the same finding as text. A clean text check prints `success`; a clean JSON check remains empty.
 
+#### 5.3.1 A listed candidate whose file status cannot be read
+
+For a direct child recognized as a candidate by [§FS-values.2.2](FS-values.md#22-declarations-from-value-sources), failure to determine whether it is a file is incomplete input, never a successful determination that it is a non-source. A home that can be listed but cannot be searched is one such failure. Report the candidate path or its home through the existing scan-failure channel, with the shared I/O reason and source/home context of [§FS-check.2.4.1](FS-check.md#241-one-reason-for-one-scan-io-failure) and its actionable repair. Catalog commands, including `list` and `check` with or without a citation of the missing value, exit `2`; readable input and its findings, including other readable value homes, remain available ([§FS-check.2.4](FS-check.md#24-an-incomplete-run)). An entry successfully identified as a directory, even one named `sub.json`, remains a silent non-source.
+
+This classification uses the same effective source view as reading: an open buffer remains a file under [§FS-scan.text.buffer](FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write), including buffer-only files and physical aliases under [§FS-scan.identity.buffers](FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location). It changes neither candidate recognition nor ownership or ordering.
+
+The shared discovery used by selected-folder fetch observes the same distinction within its existing scope ([§FS-fetch.5.1](FS-fetch.md#51-existing-value-source-declarations-prevent-installation)): a failed candidate classification in the selected home prevents installation; a failure in an unrelated home does not gate that fetch. No new scan scope or citation advice follows from this rule. The verdict correction is justified by [§DF-value-candidate-metadata-failure.2](../decisions/functional/DF-value-candidate-metadata-failure.md#2-decision-and-compatibility).
+
 ## 6. Shared catalog consumers
 
 Markdown declarations, value sources of either format, and marked roots enter one declaration/section catalog. `refs` and `cover` count a binding's citation once, as the ordinary citation [§FS-values.3.2](FS-values.md#32-recognized-text-contexts) makes it; completion offers whole-value IDs and numbered fields; and unused and duplicate checks apply normally.
