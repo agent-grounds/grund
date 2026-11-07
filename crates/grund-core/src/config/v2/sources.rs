@@ -7,6 +7,7 @@ use anyhow::Result;
 use ignore::gitignore::GitignoreBuilder;
 
 use super::walk::Reader;
+use crate::config::exclude_globs::add_pattern;
 use crate::config::sources::{DeclarationMode, LanguageClass, builtin, default_languages};
 use crate::config::v1::parse_bool;
 use crate::grammar::DocProfile;
@@ -60,13 +61,7 @@ pub(super) fn sources_key(r: &mut Reader, key: &str, value: &str, line: usize) -
             let patterns = r.string_list(line, value)?;
             let mut builder = GitignoreBuilder::new("");
             for pattern in &patterns {
-                let unclosed = unclosed_class(pattern).then_some("unclosed character class");
-                if let Some(err) = unclosed.map(str::to_string).or_else(|| {
-                    builder
-                        .add_line(None, pattern)
-                        .err()
-                        .map(|err| err.to_string())
-                }) {
+                if let Err(err) = add_pattern(&mut builder, pattern) {
                     let message =
                         format!("invalid [schema.sources] exclude pattern `{pattern}`: {err}");
                     return r.fail(line, message);
@@ -83,36 +78,6 @@ pub(super) fn sources_key(r: &mut Reader, key: &str, value: &str, line: usize) -
         _ => return Ok(false),
     }
     Ok(true)
-}
-
-/// Whether `pattern` opens a `[` class it never closes. The glob builder reads
-/// such a pattern as a literal, where git matches nothing with it, so the reader
-/// refuses it as the malformed pattern it is (§FS-config-v2.schema.sources.exclude).
-fn unclosed_class(pattern: &str) -> bool {
-    let chars: Vec<char> = pattern.chars().collect();
-    let mut at = 0;
-    while at < chars.len() {
-        match chars[at] {
-            '\\' => at += 1,
-            '[' => {
-                let mut end = at + 1;
-                if matches!(chars.get(end), Some('!' | '^')) {
-                    end += 1;
-                }
-                // A `]` first in the class is a member, not its close.
-                if chars.get(end) == Some(&']') {
-                    end += 1;
-                }
-                match chars[end.min(chars.len())..].iter().position(|c| *c == ']') {
-                    Some(close) => at = end + close,
-                    None => return true,
-                }
-            }
-            _ => {}
-        }
-        at += 1;
-    }
-    false
 }
 
 /// The glob characters a suffix may not hold (§FS-config-v2.schema.sources.extensions),

@@ -1,0 +1,4 @@
+grund.toml: version 1 → 2, preview, nothing written
+refused: grund.toml:19: [scan] exclude entry `docs/fs` contains `/`, so version 1 never matched it; as a version 2 glob it would stop reading 0 files
+  repair: remove `docs/fs` from exclude under version 1, which keeps what is scanned exactly as it is
+would not write: 1 refusal (follow the repairs above)

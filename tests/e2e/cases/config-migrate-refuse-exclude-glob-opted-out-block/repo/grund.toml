@@ -1,0 +1,19 @@
+grund_config_version = 1
+project_name = "example"
+
+[id]
+named_sections = true
+
+[workspace]
+members = ["m"]
+include_root = false
+
+[[kinds]]
+kind = "FS"
+folder = "docs"
+index = false
+
+[scan]
+include = ["docs"]
+exclude = ["docs/*.md"]
+extensions = ["md"]

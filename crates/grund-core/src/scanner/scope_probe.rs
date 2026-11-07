@@ -6,9 +6,9 @@
 
 use std::path::{Path, PathBuf};
 
-use super::exclude_globs::ExcludeGlobs;
 use super::walk::{scan_roots_for, scannable_walk_builder, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
+use crate::config::ExcludeGlobs;
 use crate::config::{Frame, Schema, canonical_config_root, config_file_in, root_scope_roots};
 use crate::model::sort_path_key;
 use crate::sources::{canonical_path, is_directory, is_regular_file, path_exists, path_is_file};

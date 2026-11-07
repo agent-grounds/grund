@@ -63,7 +63,6 @@ mod declaration_lines;
 mod e2e;
 mod embedded_value_context;
 mod embedded_values;
-mod exclude_globs;
 mod extents;
 mod file_pass;
 mod front_matter;

@@ -223,9 +223,9 @@ fn grounding(v1: &Project, keys: &Keys) -> Vec<MigrateRefusal> {
 }
 
 /// §FS-config-migrate.3.1.4: each path-shaped exclude entry, with the files the
-/// glob it resembles would stop reading on this tree: the ones version 1 reads at
-/// its path or below it, counted as `0 files` where there are none, when the
-/// refusal still stands (§FS-config-migrate.3.1.4.1).
+/// glob it resembles would stop reading on this tree, among the ones version 1
+/// reads, counted as `0 files` where there are none, when the refusal still stands
+/// (§FS-config-migrate.3.1.4.1).
 fn path_shaped_excludes(
     v1: &Project,
     keys: &Keys,
@@ -234,7 +234,7 @@ fn path_shaped_excludes(
     let line = keys.line("scan", "exclude");
     let mut out = Vec::new();
     for entry in v1.schema.sources.exclude.iter().filter(|e| e.contains('/')) {
-        let files = reads.under(entry.trim_matches('/'))?;
+        let files = reads.stopped_by(entry)?;
         let count = match files.len() {
             1 => "1 file".to_string(),
             n => format!("{n} files"),
