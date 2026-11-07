@@ -112,6 +112,17 @@ The `yaml-value-source-deferred` code that used to report all of this is spent (
 
 A key repeated in one JSON object or YAML mapping, the same ID declared across value sources of either format, a Markdown/value-source collision, or the same value source claimed by two opted-in homes is an ambiguous duplicate declaration even when the components agree. The existing duplicate rule wins; neither source nor kind takes precedence ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)).
 
+The home is what enrolls a value source, so two opted-in homes are two claims on one set of declarations: the duplicate stands, it names each spelling once, and each spelling is judged at its own home ([§FS-declarations.checks.misplaced-declaration.2](FS-declarations.md#checksmisplaced-declaration2-another-kinds-home)). So with `a/limits.json -> ../values/limits.json`, where CONST owns `values/` and OTHER owns `a/`:
+
+```text
+a/limits.json:1: error: CONST-room-limit declares kind CONST inside OTHER home a
+a/limits.json:1: error: duplicate declaration of CONST-room-limit (also declared at values/limits.json:1)
+```
+
+`check a/limits.json` prints those same two lines. `check values/limits.json` prints the duplicate line, same bytes, because a finding that names several sites is in scope at any of them, and leaves out the misplaced line, which belongs to `a/` ([§FS-check.1.3.6.2](FS-check.md#1362-a-finding-that-spans-several-sites-is-in-scope-at-any-of-them)).
+
+A text file differs: its headings declare whatever the folder, so a second home is only a question of placement, and it earns one misplaced error and no duplicate ([§FS-scan.identity.findings.place](FS-scan.md#identityfindingsplace-a-place-finding-is-judged-at-each-spelling)). A value source with two names in one home has one owner and is no duplicate: it is read once, and its findings carry both names like any other content finding ([§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name)).
+
 ### 2.4 Embedded section value roots
 
 An author makes one existing citable numeric section a marked root by ending its heading content with one ASCII space and the byte-exact lowercase suffix `<!-- grund:value -->`, followed only by optional trailing whitespace. The section may occur at any numeric depth inside any scanned Markdown declaration or supported source doc-comment, independently of the enclosing kind's `values` setting and configured home. Its canonical identity remains the declaration ID plus its existing dotted section path: a marked root at `FS-pricing.2.3` owns components `FS-pricing.2.3.1` through `.N`. A root or a component written in the relative form ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)) is judged at its canonical path exactly as its complete form is, so `### .1. 45` under `## 1. Regional floor <!-- grund:value -->` is the component `1.1`. No synthetic declaration, ID, section, or resolver is created. A misspelling, different case, missing or extra space inside the suffix, incomplete suffix, or other lookalike is opaque prose and grants no value authority or value finding. The mark is one of two ways a section becomes a value root; the other is [§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots), which carries no tag.

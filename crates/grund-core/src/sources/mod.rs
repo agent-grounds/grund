@@ -22,6 +22,8 @@ mod disk;
 mod identity;
 pub mod native_watch;
 mod observe;
+#[cfg(all(test, unix))]
+mod tests_identity;
 
 pub use identity::canonical_snapshot_path;
 pub use observe::{CheckInput, CheckInputObserver, with_check_input_observer};
