@@ -308,6 +308,28 @@ fn a_cases_root_only_the_manifest_pass_meets_is_one_line_naming_its_folder() {
     assert_one_io_entry(&project, "tests/e2e");
 }
 
+/// A cases root that links to a barred directory inside the project: the walk reports the link at
+/// its own path, in its own words (§FS-scan.scope.links.unresolvable.unopenable), and the manifest
+/// pass's listing of it is the same failure, so the one line is the walk's (§FS-check.2.4.2).
+#[test]
+fn a_cases_root_that_links_to_a_barred_target_is_the_walks_one_line() {
+    let mut scratch = Scratch::new("linked-inward");
+    scratch.write("grund.toml", &config("tests/e2e"));
+    fs::create_dir_all(scratch.path("tests")).expect("create tests");
+    scratch.cases(".store/cases");
+    std::os::unix::fs::symlink("../.store/cases", scratch.path("tests/e2e"))
+        .expect("link the cases");
+    if !scratch.lock(".store/cases") {
+        eprintln!("{SKIP}");
+        return;
+    }
+    assert_one_line(
+        &scratch.root,
+        &[&["check"], &["list", "--kind", "E2E"]],
+        &format!("error: tests/e2e: unreadable symlink: permission denied; {REMEDY}"),
+    );
+}
+
 /// A walk report at the cases root is not always a listing failure. An ignore file with two
 /// malformed lines names no one path, so the walk reports it at its walk root. The root is still
 /// listable, and its cases are still read, so a citation of one resolves (§FS-check.2.4.2).

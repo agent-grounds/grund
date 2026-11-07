@@ -184,38 +184,29 @@ fn an_unlistable_value_home_is_one_io_entry_in_check_json() {
     );
 }
 
-/// The home links to a hidden directory the walk never descends into, so no walk report names the
-/// home and the value pass's own line is the one that does. Dropping it would leave the failure
-/// unreported (§REQ-no-missed-citation.1). The walk's report of the link's target lands at its
-/// walk root today (#1266), so only the lines naming the home are read. That is also the only
-/// reason this layout leaves the home to the pass: no layout does so by design, since both config
-/// versions refuse a home linking out of the project. Once #1266 is fixed the walk's line names
-/// the home, this test still passes on it, and pins only the plain case; move the pin then to
-/// whatever leaves a home to the pass alone, if anything does.
+/// The home links to a hidden directory the walk never descends into. The walk still reports the
+/// link at the home's own path, in its own words (§FS-scan.scope.links.unresolvable.unopenable),
+/// and the value pass's listing of that home is the same failure, whatever words each writes
+/// around the reason, so the one line is the walk's (§FS-check.2.4.2). Both config versions refuse
+/// a home linking out of the project, so no layout leaves a home to the pass alone.
 #[test]
-fn a_value_home_only_the_value_pass_meets_keeps_its_line() {
+fn a_value_home_that_links_to_a_barred_target_is_the_walks_one_line() {
     let mut scratch = Scratch::new("value-home-linked", ".store/real");
     if !scratch.lock(".store/real") {
         eprintln!("{SKIP}");
         return;
     }
+    let expected = format!("error: values: unreadable symlink: permission denied; {REMEDY}");
     let commands: &[&[&str]] = &[&["check"], &["list"], &["check", "--full"]];
     assert_none(
         &misreports(&scratch.root, commands, |lines| {
-            let home = lines
-                .iter()
-                .filter(|line| line.starts_with("error: values: "))
-                .collect::<Vec<_>>();
-            home.len() == 1 && home[0].ends_with(&format!("permission denied; {REMEDY}"))
+            lines == [expected.as_str()]
         }),
         commands.len(),
     );
     let run = grund(&scratch.root, &["check", "--format", "json"]);
     assert_eq!(run.code, 2, "{}", run.shown());
-    let at_home = run
-        .io_records()
-        .into_iter()
-        .filter(|record| record["path"] == "values")
-        .count();
-    assert_eq!(at_home, 1, "the home's one io entry\n{}", run.shown());
+    let records = run.io_records();
+    assert_eq!(records.len(), 1, "one io entry\n{}", run.shown());
+    assert_eq!(records[0]["path"], "values", "{}", run.shown());
 }
