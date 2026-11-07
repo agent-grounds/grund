@@ -366,3 +366,27 @@ fn a_path_through_a_link_to_the_failing_case_holds_the_file() {
         ],
     );
 }
+
+/// §AR-scanner.1.relisted: the walk reports a fixture link it cannot open as `unreadable symlink:`,
+/// the pass meets the bare reason at the same spelling, and those are one failure, one line.
+#[test]
+fn a_fixture_link_nobody_can_open_is_the_walks_one_line() {
+    let mut tree = Tree::new("fixture-link-unopenable");
+    tree.write("locked/file.txt", b"held\n");
+    symlink(
+        Path::new("../../../locked"),
+        tree.root.join("e2e/cases/b/fixture"),
+    )
+    .expect("link the fixture");
+    if !tree.lock("locked") {
+        eprintln!("{SKIP}");
+        return;
+    }
+    assert_fails(
+        &tree.run(&["check", "e2e/cases/b"]),
+        &[
+            "error: e2e/cases/b/fixture: unreadable symlink: permission denied",
+            "warning: locked: permission denied",
+        ],
+    );
+}

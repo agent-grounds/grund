@@ -89,6 +89,7 @@ pub(super) fn publish_unlisted(
 /// report already says it there: the same path as the tree spells it and the same bare reason. The
 /// walk spells below the canonical root as the pass does, so a plain tree meets here, and a report
 /// at another spelling of the file answers no run holding this one (§AR-scanner.1.relisted).
+/// The walk's words around a fixture directory it reports as a link are not compared either.
 pub(super) fn publish_case_failure(spelled: PathBuf, error: &Error, reported: &mut Vec<ScanError>) {
     let at = spelled.clone();
     publish_unless_reported(spelled, error, None, reported, |path| path == at);
