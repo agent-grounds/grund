@@ -1,1 +1,1 @@
-error: grund.toml:4: [scan] exclude entry `docs/plans` contains `/`, not a directory name; remove it to keep the scan unchanged, or use `plans` to exclude that name at any depth
+error: grund.toml:4: [scan] exclude entry `docs/plans` contains `/`, not a directory name; remove it to keep the scan unchanged, or, if `plans` is a directory, use `plans` to exclude every directory of that name at any depth

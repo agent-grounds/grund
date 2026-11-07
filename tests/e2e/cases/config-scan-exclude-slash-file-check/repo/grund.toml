@@ -1,0 +1,11 @@
+grund_config_version = 1
+
+[[kinds]]
+kind = "FS"
+folder = "fs"
+index = false
+
+[scan]
+include = ["fs"]
+extensions = ["md"]
+exclude = ["fs/b.md"]

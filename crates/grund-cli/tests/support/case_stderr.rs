@@ -137,6 +137,11 @@ const MIGRATE_DEFAULT_WRITTEN_SUFFIX: &str = ": version 1's default, written out
 const MIGRATE_EMPTY_EXTENSION_SUFFIX: &str =
     "; version 1 reads every file with no extension through it, and version 2 reads none";
 
+/// The `[scan] exclude` refusal says its second repair is for a directory, which runs it past the
+/// cap (§FS-config.3.5.16), so it keeps the bytes that point fixes rather than the cap.
+const SCAN_EXCLUDE_DIRECTORY_REPAIR_SUFFIX: &str =
+    "to exclude every directory of that name at any depth";
+
 /// The judgement, isolated from the filesystem. A `--format json` case's
 /// stderr is not uniformly JSON (§FS-errors.5.2.2): a launch-time `error: …`
 /// line stays text and keeps the plain 180-byte cap, while a carried text
@@ -163,6 +168,8 @@ fn assert_stderr_is_concise(name: &str, json_case: bool, migration_case: bool, s
         if line.starts_with("warning: ")
             || (line.starts_with("error: ") && line.contains(ABSORBED_SCAN_SENTENCE))
             || (line.starts_with("error: ") && line.ends_with(PROMOTED_LOAD_WARNING_SUFFIX))
+            || (line.starts_with("error: ")
+                && line.ends_with(SCAN_EXCLUDE_DIRECTORY_REPAIR_SUFFIX))
             || (line.starts_with("written: ") && line.ends_with(MIGRATE_DEFAULT_WRITTEN_SUFFIX))
             || (line.starts_with("refused: ") && line.ends_with(MIGRATE_EMPTY_EXTENSION_SUFFIX))
         {
