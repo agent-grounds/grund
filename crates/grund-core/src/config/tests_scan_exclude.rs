@@ -18,7 +18,8 @@ fn load_exclude(name: &str, list: &str) -> anyhow::Result<Vec<String>> {
 fn refusal(entry: &str, name: &str) -> String {
     format!(
         "grund.toml:4: [scan] exclude entry `{entry}` contains `/`, not a directory name; \
-         remove it to keep the scan unchanged, or use `{name}` to exclude that name at any depth"
+         remove it to keep the scan unchanged, or, if `{name}` is a directory, use `{name}` to \
+         exclude every directory of that name at any depth"
     )
 }
 
