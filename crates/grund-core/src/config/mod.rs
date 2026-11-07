@@ -69,6 +69,7 @@ mod places;
 mod point_sizes;
 mod project;
 mod project_records;
+mod read_name;
 mod record;
 mod report_paths;
 mod rows;
@@ -158,6 +159,7 @@ pub(crate) use kinds::{
     known_kinds_line, unverifiable_reason,
 };
 pub(crate) use point_sizes::measure_point_text;
+pub(crate) use read_name::NamesVerdict;
 pub(crate) use record::{
     DEFAULT_GROUNDING_LEVEL, any_kind_holds_values, guided_kind, kind_front_matter, kind_prefixes,
     kind_uses_values, kind_value_chapter,

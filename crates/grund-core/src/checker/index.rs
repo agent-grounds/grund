@@ -16,6 +16,7 @@ use super::index_form::{
     IndexCitationForm, IndexEntryState, index_citation_form, index_citation_form_at,
 };
 use super::index_mention::index_mentions;
+use super::spellings_report::PlaceNames;
 use crate::config::{Frame, Owners, Schema};
 use crate::grammar::{MarkdownLinks, front_matter_extent, render_catalog_id};
 use crate::model::{
@@ -151,12 +152,17 @@ pub(super) fn declarations_under_folder(
     decls: &[Declaration],
     folder: &str,
     owners: &Owners<'_>,
+    spellings: &PlaceNames<'_>,
 ) -> bool {
-    decls.iter().any(|decl| {
-        owners
-            .relative(&decl.file)
-            .is_some_and(|relative| owners.schema().folder_owns(folder, &relative))
-    })
+    // §FS-scan.identity.findings.place: a link in a second folder owes that folder's index.
+    decls
+        .iter()
+        .flat_map(|decl| spellings.of(&decl.file))
+        .any(|spelling| {
+            owners
+                .relative(&spelling)
+                .is_some_and(|relative| owners.schema().folder_owns(folder, &relative))
+        })
 }
 
 /// The two releases §FS-check.3.17.3's message names

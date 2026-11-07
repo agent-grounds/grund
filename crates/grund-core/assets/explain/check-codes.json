@@ -2687,6 +2687,96 @@
   }
  },
  {
+  "code": "reading-conflict",
+  "meaning": "Two in-tree names of a file whose own name claims no reading read it differently, so the run reads it under neither.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "two in-tree names of a file whose own name claims no reading read differently",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "keep one name, or give the file a name that claims a reading"
+   },
+   "note": "Neither axis of selection hides it, since a hidden one is a green run over an unread file. A citation elsewhere to what the file declares is also reported."
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "two in-tree names of a file whose own name claims no reading read differently",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "keep one name, or give the file a name that claims a reading"
+   },
+   "note": "Neither axis of selection hides it, since a hidden one is a green run over an unread file. A citation elsewhere to what the file declares is also reported."
+  }
+ },
+ {
+  "code": "reading-moved",
+  "meaning": "A link is read as its target's own name reads, which differs from what the link's name read it as before grund 0.22.0.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a scanned link's target has a name that claims another reading",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "rename the target or copy the file"
+   },
+   "note": "It stands for one release and leaves the exit code alone."
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a scanned link's target has a name that claims another reading",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "rename the target or copy the file"
+   },
+   "note": "It stands for one release and leaves the exit code alone."
+  }
+ },
+ {
   "code": "redundant-config",
   "meaning": "A directory holds both grund.toml and .agents/grund.toml, and only the first is read.",
   "ramp": null,

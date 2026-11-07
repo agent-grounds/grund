@@ -60,8 +60,8 @@ fn an_aliased_file_is_read_once_under_the_first_of_its_names() {
     assert_eq!(
         findings(&run),
         vec![
-            "docs/functional-spec/FS-000-alias.md:1: declared but never cited: FS-001-alpha; cite it",
-            "docs/functional-spec/FS-000-alias.md:3: unknown reference FS-999-ghost",
+            "docs/functional-spec/FS-000-alias.md:1: declared but never cited: FS-001-alpha; cite it (also at docs/functional-spec/FS-001-alpha.md:1)",
+            "docs/functional-spec/FS-000-alias.md:3: unknown reference FS-999-ghost (also at docs/functional-spec/FS-001-alpha.md:3)",
         ],
         "§FS-config.3.5: one physical file, one read — under the lexicographically first of its two names, never a duplicate of itself"
     );
@@ -84,8 +84,8 @@ fn an_alias_that_sorts_last_leaves_the_real_name_reported() {
     assert_eq!(
         findings(&run),
         vec![
-            "docs/functional-spec/FS-001-alpha.md:1: declared but never cited: FS-001-alpha; cite it",
-            "docs/functional-spec/FS-001-alpha.md:3: unknown reference FS-999-ghost",
+            "docs/functional-spec/FS-001-alpha.md:1: declared but never cited: FS-001-alpha; cite it (also at docs/functional-spec/FS-002-alias.md:1)",
+            "docs/functional-spec/FS-001-alpha.md:3: unknown reference FS-999-ghost (also at docs/functional-spec/FS-002-alias.md:3)",
         ],
         "§FS-errors.4.1: the surviving spelling is the lexicographically first path, not whichever one readdir happened to yield first"
     );
@@ -228,7 +228,7 @@ fn a_plain_run_collapses_an_aliased_root() {
     assert_eq!(
         findings(&run),
         vec![
-            "docs/functional-spec/FS-001-alpha.md:1: declared but never cited: FS-001-alpha; cite it"
+            "docs/functional-spec/FS-001-alpha.md:1: declared but never cited: FS-001-alpha; cite it (also at docs-link/functional-spec/FS-001-alpha.md:1)"
         ],
         "§FS-check.1.3.2: one physical file read once, under the earlier root's spelling — no duplicate of itself"
     );

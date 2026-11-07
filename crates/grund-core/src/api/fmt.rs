@@ -12,7 +12,7 @@ use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::scanner::ApiScanError;
 use crate::workspace::scope_is_config_root;
 
-use super::report::context_run_warnings;
+use super::report::{context_run_warnings, public_run_warnings};
 pub use crate::writers::{FmtCounts, FmtLockFile};
 use crate::writers::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree, fmt_workspace_projects};
 
@@ -111,7 +111,7 @@ fn format_references_run(opts: FmtOpts, cautions: &mut Vec<Finding>) -> Result<F
     // §AR-config.1.5: the run's one scope test says whether the path names the root.
     let walk_all_projects = context.workspace_loaded
         && scope_is_config_root(&config.root, &opts.path, opts.path_provided);
-    let (changes, scan_errors, refused_writes) = if walk_all_projects {
+    let (changes, scan_errors, refused_writes, refused_readings) = if walk_all_projects {
         // §FS-fmt.3.2: complete every project's strict readiness pass before a
         // workspace write can touch the first one. The dry pass also discovers
         // shorthand-triggered strictness and aggregates root/member failures.
@@ -133,7 +133,12 @@ fn format_references_run(opts: FmtOpts, cautions: &mut Vec<Finding>) -> Result<F
         } else {
             preflight
         };
-        (walked.changes, walked.scan_errors, walked.refused_writes)
+        (
+            walked.changes,
+            walked.scan_errors,
+            walked.refused_writes,
+            walked.refused_readings,
+        )
     } else {
         // §FS-fmt.3.2: same guard as above — a bare `--write` and `--write .` name
         // the same scope and must refuse alike, not one quietly resolving
@@ -156,7 +161,12 @@ fn format_references_run(opts: FmtOpts, cautions: &mut Vec<Finding>) -> Result<F
             settled: None,
         };
         let walked = fmt_tree(&config, Some(&opts.path), opts.path_provided, &run_opts)?;
-        (walked.changes, walked.scan_errors, walked.refused_writes)
+        (
+            walked.changes,
+            walked.scan_errors,
+            walked.refused_writes,
+            walked.refused_readings,
+        )
     };
 
     Ok(FmtOutput {
@@ -172,6 +182,10 @@ fn format_references_run(opts: FmtOpts, cautions: &mut Vec<Finding>) -> Result<F
             .collect(),
         scan_errors,
         refused_writes,
-        warnings: context_run_warnings(&context),
+        // §FS-fmt.2.3.2.3: a refused reading is one of the run's warnings, once per file.
+        warnings: context_run_warnings(&context)
+            .into_iter()
+            .chain(public_run_warnings(&config, refused_readings))
+            .collect(),
     })
 }

@@ -139,7 +139,7 @@ impl Config {
     /// How `path` is read under this project (§FS-config-v2.schema.sources): what a
     /// writer or a query asks of a file, so it reads the file as the scan does.
     pub(crate) fn reading<'a>(&'a self, path: &'a Path) -> FileReading<'a> {
-        self.compiled().reading(self.schema(), path)
+        self.frame().reading(self.schema(), path)
     }
 
     /// The schema a stage below the writers is handed (§AR-config.1.2,
@@ -351,6 +351,8 @@ impl Config {
     pub(crate) fn with_buffers(&self, buffers: Buffers) -> Self {
         let mut run = self.run().clone();
         run.buffers = buffers;
+        // §AR-scanner.1.8: another view of the tree, so a table of its own.
+        run.spellings = Default::default();
         Self::from_records(self.project(), &run, self.compiled())
     }
 

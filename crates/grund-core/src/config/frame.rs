@@ -11,7 +11,8 @@
 use crate::sources::Sources;
 use std::path::{Path, PathBuf};
 
-use super::compiled::Compiled;
+use super::compiled::{Compiled, RefusedHome};
+use super::project::Schema;
 use super::run::Run;
 use crate::grammar::Grammar;
 use crate::model::{base_reads_dot, format_path, relative_from_base};
@@ -60,6 +61,34 @@ impl<'a> Frame<'a> {
     /// The config root (§FS-config.1).
     pub fn root(&self) -> &'a Path {
         &self.run.root
+    }
+
+    /// The `file` home of `kind` under `root` that `fetch` refuses and why, `None` where
+    /// it writes: a whole-value kind's first place, when a value home reads that file as
+    /// a value source (§FS-fetch.4, §FS-values.terms), and any kind's, when the text scan
+    /// reads it as source (§FS-fetch.4.2). The path and the kind decide, and no file is
+    /// read. What the refusal and the remedy that must not name the refused command both
+    /// ask (§FS-check.3.1.3.1).
+    pub(crate) fn fetch_refused_home(
+        &self,
+        schema: &Schema,
+        root: &Path,
+        kind: &str,
+    ) -> Option<(PathBuf, RefusedHome)> {
+        let row = schema.rows.iter().find(|row| row.name == kind)?;
+        let home = root.join(row.file()?);
+        let reading = self.reading(schema, &home);
+        let value_kind = schema.value_rows().any(|row| row.name == kind);
+        let reason = if value_kind && reading.value_format().is_some() {
+            RefusedHome::ValueSource
+        } else if !reading.read_as_source() {
+            return None;
+        } else if value_kind {
+            RefusedHome::SourceFileValue
+        } else {
+            RefusedHome::SourceFile
+        };
+        Some((home, reason))
     }
 
     /// The compiled ID grammar (§AR-config.1.5).
