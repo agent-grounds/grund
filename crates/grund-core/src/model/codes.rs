@@ -117,6 +117,10 @@ impl Code {
     pub const OUT_OF_SCOPE_UNKNOWN_PROJECT: Code = Code("out-of-scope-unknown-project");
     /// §FS-declarations.checks.oversized-lead
     pub const OVERSIZED_LEAD: Code = Code("oversized-lead");
+    /// §FS-scan.checks.reading-conflict
+    pub const READING_CONFLICT: Code = Code("reading-conflict");
+    /// §FS-scan.checks.reading-moved
+    pub const READING_MOVED: Code = Code("reading-moved");
     /// §FS-check.4.3
     pub const REDUNDANT_CONFIG: Code = Code("redundant-config");
     /// §FS-declarations.checks.relative-section-parent
@@ -220,6 +224,8 @@ impl Code {
         Code::OUT_OF_SCOPE_SHORTHAND_CITATION,
         Code::OUT_OF_SCOPE_UNKNOWN_PROJECT,
         Code::OVERSIZED_LEAD,
+        Code::READING_CONFLICT,
+        Code::READING_MOVED,
         Code::REDUNDANT_CONFIG,
         Code::RELATIVE_SECTION_PARENT,
         Code::SECTION_ADDRESS_CHANGED,

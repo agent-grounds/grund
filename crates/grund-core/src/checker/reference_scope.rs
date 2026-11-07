@@ -19,7 +19,7 @@ use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject, judge_section_lock
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, lend_citations, scan_roots_for,
 };
-use crate::sources::physical_path_key;
+use crate::sources::{Spellings, physical_path_key};
 use crate::workspace::scope_is_config_root;
 
 /// The roots a run *without* `--full` walks: the explicit path argument, or
@@ -39,6 +39,8 @@ pub(crate) struct ScanScope {
     /// v2 only: the schema whose ownership rule settles a path under an unwalked
     /// place, and the config root's two spellings to ask it relative to.
     owners: Option<PlaceOwners>,
+    /// The run's table of a file's names, which settles a path whose other name is in scope.
+    spellings: Spellings,
 }
 
 /// [`Schema::owner_walked`] kept with the scope (§FS-config-v2.schema.places.boundaries.6).
@@ -49,6 +51,18 @@ struct PlaceOwners {
 }
 
 impl ScanScope {
+    /// §FS-scan.identity.reading.every-caller: a file a query reports is at or under the path when
+    /// any of its names is, so which name sorts first decides nothing about a narrow `list` or `refs`.
+    /// `check` keeps [`Self::contains`]: its findings carry their own sites (§FS-check.1.3.6.2).
+    pub(crate) fn contains_any_name(&self, path: &Path) -> bool {
+        self.contains(path)
+            || self
+                .spellings
+                .names_of(path)
+                .iter()
+                .any(|name| self.contains(name))
+    }
+
     pub(crate) fn contains(&self, path: &Path) -> bool {
         // §FS-config.3.4.7.5: a file in a home the config lists without walking is
         // outside the configured scope even when a root above it is inside — the
@@ -70,6 +84,22 @@ impl ScanScope {
             .iter()
             .any(|root| path == root || path.starts_with(root))
     }
+}
+
+/// §FS-scan.identity.findings.content: the names a plain run walks, as written. Unlike
+/// [`configured_scope`] it holds no canonical form, which would count `real/a.md` as reached where
+/// only `include = ["link"]` reaches that file (§FS-check.1.3.2).
+pub(super) fn plain_walk_scope(schema: &Schema, frame: Frame<'_>) -> Result<ScanScope> {
+    Ok(ScanScope {
+        roots: scan_roots_for(schema, frame, Some(frame.root()), false, false, false)?,
+        unwalked: unwalked_home_roots(schema, frame.root()),
+        owners: (schema.nesting == Nesting::DeepestPlaceWins).then(|| PlaceOwners {
+            schema: schema.clone(),
+            configured_root: scanned_path_key(frame.root()),
+            physical_root: physical_path_key(frame.root()),
+        }),
+        spellings: frame.run.spellings.clone(),
+    })
 }
 
 /// §FS-check.1.3: the configured scope of this run, or `None` when the walk was
@@ -114,6 +144,7 @@ pub(crate) fn configured_scope(
         roots,
         unwalked,
         owners,
+        spellings: frame.run.spellings.clone(),
     }))
 }
 
@@ -150,6 +181,7 @@ pub(crate) fn path_report_scope(
         roots,
         unwalked: Vec::new(),
         owners: None,
+        spellings: frame.run.spellings.clone(),
     }))
 }
 

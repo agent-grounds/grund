@@ -107,7 +107,7 @@ pub(crate) fn point_body_pair(
     let (mut lead, _) = views.next().unwrap_or_default();
     let (mut full, _) = views.next().unwrap_or_default();
     // §FS-config-v2.schema.sources: Markdown-ness is the file's language's.
-    let reading = frame.compiled.reading(schema, &declaration.file);
+    let reading = frame.reading(schema, &declaration.file);
     // Text and JSON `show` flatten generated wrappers; point measurements promise
     // those same bytes (§FS-show.3.2.2, §FS-list.3.4.1). Markdown measurements retain
     // authored destination bytes inside fences.

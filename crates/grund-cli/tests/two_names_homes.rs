@@ -74,7 +74,6 @@ fn both_lines(home: &str, suffix: &str) -> String {
 }
 
 #[test]
-#[ignore = "red until #1274 keeps every spelling of a value source; implement removes this"]
 fn a_value_source_in_two_homes_names_each_spelling_once_whichever_sorts_first() {
     for (home, suffix) in CASES {
         let tree = value_tree(&format!("whole-{home}-{suffix}"), home, suffix);
@@ -86,7 +85,6 @@ fn a_value_source_in_two_homes_names_each_spelling_once_whichever_sorts_first() 
 
 /// #1216's JSON `sites` names both spellings (§FS-errors.5.1).
 #[test]
-#[ignore = "red until #1274 keeps every spelling of a value source; implement removes this"]
 fn its_json_sites_name_both_spellings() {
     for (home, suffix) in CASES {
         let tree = value_tree(&format!("sites-{home}-{suffix}"), home, suffix);
@@ -108,7 +106,6 @@ fn its_json_sites_name_both_spellings() {
 
 /// #1216's `show`: the ambiguous line names both spellings.
 #[test]
-#[ignore = "red until #1274 keeps every spelling of a value source; implement removes this"]
 fn show_of_it_names_both_spellings() {
     for (home, suffix) in CASES {
         let tree = value_tree(&format!("show-{home}-{suffix}"), home, suffix);
@@ -135,7 +132,6 @@ fn show_of_it_names_both_spellings() {
 /// The scoped table: a finding that names several sites is in scope at any of them and keeps its
 /// bytes; the misplaced line belongs to the link's home alone (§FS-check.1.3.6.2).
 #[test]
-#[ignore = "red until #1274 keeps every spelling of a value source; implement removes this"]
 fn a_run_naming_either_spelling_keeps_the_duplicate() {
     for (home, suffix) in CASES {
         let tree = value_tree(&format!("scoped-{home}-{suffix}"), home, suffix);
@@ -169,7 +165,6 @@ const ORDERS: [(&str, &str); 2] = [("docs/fs", "docs/ar"), ("docs/aa", "docs/zz"
 /// The owner's addition: a Markdown file in two homes gets one error at the wrong spelling and
 /// none at the right one.
 #[test]
-#[ignore = "red until #1274 judges every spelling at its own path; implement removes this"]
 fn a_text_file_in_two_homes_is_judged_at_each_spelling_under_version_2() {
     for (home, wrong) in ORDERS {
         let config = format!(
@@ -190,7 +185,6 @@ fn a_text_file_in_two_homes_is_judged_at_each_spelling_under_version_2() {
 
 /// "A file" in the home rules means the spelling in v1 too.
 #[test]
-#[ignore = "red until #1274 judges every spelling at its own path; implement removes this"]
 fn a_text_file_in_two_homes_is_judged_at_each_spelling_under_version_1() {
     for (home, wrong) in ORDERS {
         let config = format!(
@@ -212,7 +206,6 @@ fn a_text_file_in_two_homes_is_judged_at_each_spelling_under_version_1() {
 /// A value source with two names in one home has one owner: no duplicate, and its finding names
 /// both (§FS-values.2.3, §FS-scan.identity.findings.content).
 #[test]
-#[ignore = "red until #1274 names both spellings on a content finding; implement removes this"]
 fn a_value_source_with_two_names_in_one_home_is_no_duplicate_and_its_finding_names_both() {
     let tree = Tree::new(
         "one-home",
@@ -237,7 +230,6 @@ fn a_value_source_with_two_names_in_one_home_is_no_duplicate_and_its_finding_nam
 
 /// The contrast the spec draws: the same second name means three things by what the file is.
 #[test]
-#[ignore = "red until #1274 judges every spelling at its own path; implement removes this"]
 fn a_second_home_means_a_misplaced_text_file_but_a_duplicate_value_source() {
     let head = "grund_config_version = 2\nproject_name = \"t\"\n";
     let text = text_tree(

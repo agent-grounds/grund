@@ -143,7 +143,6 @@ pub(super) fn missing_snapshot_message(
         (None, Some(escape), false) => remedies::missing_snapshot_escape(escape),
         (None, None, must) => {
             let refused = frame
-                .compiled
                 .fetch_refused_home(schema, frame.root(), &missing.kind)
                 .map(|(_, reason)| reason);
             let tail = match (refused, must) {

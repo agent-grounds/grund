@@ -118,6 +118,8 @@ mod tests_editor_completion_workspace;
 mod tests_editor_multi_line_string;
 #[cfg(test)]
 mod tests_editor_on_type_zones;
+#[cfg(all(test, unix))]
+mod tests_editor_two_names;
 #[cfg(test)]
 mod tests_lsp_hover;
 #[cfg(test)]

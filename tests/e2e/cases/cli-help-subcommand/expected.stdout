@@ -101,6 +101,8 @@ Supported check finding codes:
   out-of-scope-shorthand-citation
   out-of-scope-unknown-project
   oversized-lead
+  reading-conflict
+  reading-moved
   redundant-config
   relative-section-parent
   section-address-changed

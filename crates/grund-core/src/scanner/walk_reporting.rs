@@ -11,9 +11,10 @@ use super::value_json::value_sources;
 use super::walk::{WalkDirFilter, scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{LinkRecovery, symlink_loop_report, walk_error_reports};
+use super::walk_names::settle_names;
 use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
-use crate::model::{Refused, RootRow, sort_path_key};
+use crate::model::{ReadingConflict, ReadingMove, Refused, RootRow, sort_path_key};
 use crate::sources::{
     canonical_path, is_directory, is_regular_file, path_exists, path_is_file, paths_same_location,
     physical_path_key,
@@ -66,6 +67,10 @@ pub(crate) struct WalkedTree {
     /// a root and the rules that refused it, for `check`'s report (§AR-scanner.1.6,
     /// §FS-scan.checks.unread-scan-root).
     pub(crate) unread_roots: Vec<RootRow>,
+    /// The files read under neither name, gone from `files` (§FS-scan.checks.reading-conflict).
+    pub(crate) reading_conflicts: Vec<ReadingConflict>,
+    /// The links whose reading moved under the rule (§FS-scan.checks.reading-moved).
+    pub(crate) reading_moves: Vec<ReadingMove>,
 }
 
 /// The tree walk (§AR-scanner.1): from each scan root, descend skipping hidden and
@@ -118,6 +123,9 @@ pub(crate) fn walk_scannable_files_with_sources(
     on_error: &mut dyn FnMut(&ScanError, ignore::Error),
 ) -> Result<WalkedTree> {
     let (roots, root_scope) = scan_roots(schema, frame, scope, explicit_scope)?;
+    // §FS-check.1.3.6.1: a widened walk starts at the path; how many files that root held.
+    let widened = explicit_scope && !root_scope && frame.run.scope.resolution_wide;
+    let mut handed = None;
     // §FS-config.3.5.4: an aliased root, or a symlink met on the way down, is what
     // hands the same file to the walk under two spellings — nothing else does, so
     // a tree with neither never pays for the identity pass (§GOAL-fast-feedback).
@@ -308,6 +316,9 @@ pub(crate) fn walk_scannable_files_with_sources(
         // first-seen rule below turns that into a choice of *spelling*. Sorting each
         // root's list first makes the choice ours: earlier root wins, then lexicographic.
         sort_paths(&mut root_files);
+        if widened && handed.is_none() {
+            handed = Some(root_files.len());
+        }
         files.append(&mut root_files);
     }
     // One file, one read (§FS-check.1.3.2, §FS-config.3.5.4). Two spellings first,
@@ -328,8 +339,16 @@ pub(crate) fn walk_scannable_files_with_sources(
             })
         });
     }
+    // §AR-scanner.1.8: while the list is in walk order, so the first name is first-seen's.
+    let whole_project = !explicit_scope || root_scope || frame.run.scope.resolution_wide;
+    let handed = handed.unwrap_or(0);
+    let verdicts = settle_names(schema, frame, &files, handed, &resolved, whole_project)?;
     if !resolved.is_empty() {
         dedup_by_file_identity(&mut files, &resolved);
+    }
+    // §FS-scan.checks.reading-conflict: read under neither name.
+    if !verdicts.conflicts.is_empty() {
+        files.retain(|file| !frame.run.spellings.is_refused(file));
     }
     sort_paths(&mut files);
     // The roots may overlap — `include = ["docs", "docs/api"]` names one subtree
@@ -365,6 +384,8 @@ pub(crate) fn walk_scannable_files_with_sources(
         dirs,
         root_scope,
         unread_roots,
+        reading_conflicts: verdicts.conflicts,
+        reading_moves: verdicts.moves,
     })
 }
 

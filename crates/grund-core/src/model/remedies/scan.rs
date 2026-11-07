@@ -7,6 +7,18 @@ use std::fmt::Display;
 use super::super::catalog::fill;
 use super::super::codes::Code;
 
+/// `reading-conflict`'s *Fix* (§FS-scan.checks.reading-conflict).
+pub(crate) fn reading_conflict() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::READING_CONFLICT, 2, None, slots)
+}
+
+/// `reading-moved`'s *Fix* (§FS-scan.checks.reading-moved).
+pub(crate) fn reading_moved() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::READING_MOVED, 2, None, slots)
+}
+
 /// `unread-scan-root`'s *Fix*, case `language` (§FS-scan.checks.unread-scan-root).
 pub(crate) fn unread_scan_root_language(version: u32) -> String {
     let slots: &[(&str, &dyn Display)] = &[];

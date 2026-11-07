@@ -204,7 +204,7 @@ fn from_sites<'c>(
     Ok(context.projects[project]
         .findings
         .edges()
-        .filter(|citation| scope.is_none_or(|scope| scope.contains(&citation.file)))
+        .filter(|citation| scope.is_none_or(|scope| scope.contains_any_name(&citation.file)))
         .filter(|citation| owned(citation, &source.id, section, home))
         .map(|citation| Site { project, citation })
         .collect())

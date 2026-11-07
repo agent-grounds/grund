@@ -219,6 +219,8 @@ const ALWAYS_ARMED: &[&str] = &[
     "config-version-1",
     "inline-citation-style",
     "invalid-section-lock",
+    "reading-conflict",
+    "reading-moved",
     "section-address-changed",
     "selected-check-off",
     "unread-scan-root",

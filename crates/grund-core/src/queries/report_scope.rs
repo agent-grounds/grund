@@ -43,7 +43,7 @@ pub(crate) fn reports(
     let Some(scope) = scope else {
         return true;
     };
-    scope.contains(&record.file)
+    scope.contains_any_name(&record.file)
         || stub_in_scope_declares(scope, decls, |target| {
             target.file == record.file && target.line == record.line
         })
@@ -61,7 +61,7 @@ pub(crate) fn reports_site(
     let Some(scope) = scope else {
         return true;
     };
-    scope.contains(&site.file)
+    scope.contains_any_name(&site.file)
         || site
             .enclosing_declaration
             .as_ref()

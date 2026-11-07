@@ -109,7 +109,7 @@ pub(super) fn scan_file_text(
 ) -> Result<()> {
     let marker = &schema.citation.marker;
     // §FS-config-v2.schema.sources: a v2 file is read as its language is, hosts and all.
-    let reading = frame.compiled.reading(schema, path);
+    let reading = frame.reading(schema, path);
     let grammar = reading.lexical.grammar;
     let (is_md, is_py) = (reading.markdown, reading.python);
     let docstring_python = reading.lexical.docstring_python;

@@ -258,7 +258,7 @@ pub(super) fn check_citation_resolution(
                 .iter()
                 .find(|row| row.name == cite.id.kind && row.fetches());
             // §FS-config-v2.schema.sources: Markdown is the citing file's language's.
-            let markdown = frame.compiled.reading(schema, &cite.file).markdown;
+            let markdown = frame.reading(schema, &cite.file).markdown;
             let in_inline_code = citation_in_markdown_inline_code(findings, frame, cite, markdown);
             let spelling = render_citation_id(
                 target.frame().grammar(),

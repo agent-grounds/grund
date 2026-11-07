@@ -219,9 +219,17 @@ pub(crate) fn file_home_kind(path: &Path, schema: &Schema, frame: Frame<'_>) -> 
 
 /// Whether any kind's home holds `path`: the home test of a stub
 /// (§FS-declarations.stubs.shape), read off the same places as `file_home_kind`
-/// (§AR-scanner.4.7).
+/// (§AR-scanner.4.7). A home holds a file at any of its names, each asked at its own path
+/// (§FS-scan.identity.findings.place).
 pub(crate) fn in_some_home(path: &Path, schema: &Schema, frame: Frame<'_>) -> bool {
-    Owners::new(schema, frame).in_some_home(path)
+    let owners = Owners::new(schema, frame);
+    owners.in_some_home(path)
+        || frame
+            .run
+            .spellings
+            .names_of(path)
+            .iter()
+            .any(|name| owners.in_some_home(name))
 }
 
 /// The lexical half of the run's citation targets (§FS-workspace.1.2): which

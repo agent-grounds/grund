@@ -98,6 +98,7 @@ mod values;
 mod walk;
 mod walk_boundaries;
 mod walk_errors;
+mod walk_names;
 mod walk_order;
 mod walk_reporting;
 mod yaml;
@@ -214,6 +215,8 @@ mod tests_values;
 mod tests_walk;
 #[cfg(all(test, unix))]
 mod tests_walk_errors;
+#[cfg(all(test, unix))]
+mod tests_walk_names;
 #[cfg(all(test, unix))]
 mod tests_walk_roots;
 #[cfg(test)]

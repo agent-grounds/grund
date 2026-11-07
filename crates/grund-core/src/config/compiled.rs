@@ -3,11 +3,9 @@
 //! either is built, so a grammar cannot disagree with the schema it came from.
 
 use std::collections::BTreeSet;
-use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
-use super::file_reading::FileReading;
 use super::grounding::finest_grounding_level_for_kind;
 use super::project::{Project, Schema, Sources};
 use super::record::DEFAULT_GROUNDING_LEVEL;
@@ -78,40 +76,6 @@ impl Compiled {
             inline_note_layout: &notes.layout,
             inline_note_layout_check: &notes.layout_check,
         }
-    }
-
-    /// How `path` is read under this project (§FS-config-v2.schema.sources): the
-    /// one resolver every consumer asks for a file's language, hosts and gate.
-    pub(crate) fn reading<'a>(&'a self, schema: &'a Schema, path: &'a Path) -> FileReading<'a> {
-        FileReading::of(self, schema, path)
-    }
-
-    /// The `file` home of `kind` under `root` that `fetch` refuses and why, `None` where
-    /// it writes: a whole-value kind's first place, when a value home reads that file as
-    /// a value source (§FS-fetch.4, §FS-values.terms), and any kind's, when the text scan
-    /// reads it as source (§FS-fetch.4.2). The path and the kind decide, and no file is
-    /// read. What the refusal and the remedy that must not name the refused command both
-    /// ask (§FS-check.3.1.3.1).
-    pub(crate) fn fetch_refused_home(
-        &self,
-        schema: &Schema,
-        root: &Path,
-        kind: &str,
-    ) -> Option<(PathBuf, RefusedHome)> {
-        let row = schema.rows.iter().find(|row| row.name == kind)?;
-        let home = root.join(row.file()?);
-        let reading = self.reading(schema, &home);
-        let value_kind = schema.value_rows().any(|row| row.name == kind);
-        let reason = if value_kind && reading.value_format().is_some() {
-            RefusedHome::ValueSource
-        } else if !reading.read_as_source() {
-            return None;
-        } else if value_kind {
-            RefusedHome::SourceFileValue
-        } else {
-            RefusedHome::SourceFile
-        };
-        Some((home, reason))
     }
 
     /// The grammar a file of a language with these `comment_prefixes` reads with:
