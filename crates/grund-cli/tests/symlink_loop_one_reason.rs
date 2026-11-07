@@ -1,7 +1,7 @@
 //! Black-box: a symlink loop's reason names the ancestor physically, so the routes to one link have
 //! one reason and print one line (§FS-check.2.4.2), exit `2` as a loop always is
-//! (§FS-scan.scope.links.unresolvable). The tests marked `ignore` are red until #1293; the rest are
-//! its guards and hold today: a fix must not merge two links or lose the config root's wording.
+//! (§FS-scan.scope.links.unresolvable). Its guards say what that must not cost: two links stay two
+//! lines, and the config root keeps its wording.
 //!
 //! Where a run has a second entry name for the link (`grund check b`, `include = ["a", "b"]`), one
 //! line is §FS-check.2.4.2's other half, which #1288 brings, so these pin only the word.
@@ -168,7 +168,6 @@ impl Run {
 }
 
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn the_reports_tree_is_one_line_from_check_and_list() {
     let tree = Tree::reports_tree("surfaces");
     tree.assert_prints(&[
@@ -178,7 +177,6 @@ fn the_reports_tree_is_one_line_from_check_and_list() {
 }
 
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn the_reports_tree_is_one_line_from_fmt_check() {
     let tree = Tree::reports_tree("fmt");
     let want = named("a/sub/up", "a").replacen("error: ", "error: nothing was rewritten: ", 1);
@@ -186,7 +184,6 @@ fn the_reports_tree_is_one_line_from_fmt_check() {
 }
 
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn the_reports_tree_is_one_io_entry_in_check_json() {
     let tree = Tree::reports_tree("json");
     let run = tree.grund(&["check", "--format", "json"]);
@@ -201,7 +198,6 @@ fn the_reports_tree_is_one_io_entry_in_check_json() {
 }
 
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn the_reports_tree_is_one_entry_in_the_embedding_list() {
     let tree = Tree::reports_tree("embedding");
     let envelope = embedding_call(EmbeddingRequest {
@@ -220,15 +216,13 @@ fn the_reports_tree_is_one_entry_in_the_embedding_list() {
 
 /// The word is the whole of this; the two names `check b` prints are #1288's (see the file's head).
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn a_run_narrowed_through_either_name_names_the_physical_ancestor() {
     let tree = Tree::reports_tree("narrowed");
     tree.assert_word_is_a(&[&["check", "b"], &["check", "b/sub"], &["check", "b/sub/up"]]);
 }
 
-/// A narrowed walk root below the ancestor reads `contains the link` today, beside the two names.
+/// A narrowed walk root below the ancestor has the same word as the walk that met it from above.
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn a_run_narrowed_to_the_links_own_name_is_one_line() {
     let tree = Tree::reports_tree("own-name");
     let one = || vec![named("a/sub/up", "a")];
@@ -236,7 +230,6 @@ fn a_run_narrowed_to_the_links_own_name_is_one_line() {
 }
 
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn two_included_names_for_one_directory_name_the_physical_ancestor() {
     let config = "grund_config_version = 1\n\n[scan]\ninclude = [\"a\", \"b\", \"docs\"]\n";
     let tree = Tree::new("include", config);
@@ -246,9 +239,8 @@ fn two_included_names_for_one_directory_name_the_physical_ancestor() {
     tree.assert_word_is_a(&[&["check"]]);
 }
 
-/// One name, and still two reasons today: the walk root below the ancestor has no word for it.
+/// One name, so one reason: the walk root below the ancestor does not change what it is called.
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn overlapping_included_roots_are_one_line() {
     let config = "grund_config_version = 1\n\n[scan]\ninclude = [\"a/sub\", \"a\", \"docs\"]\n";
     let tree = Tree::new("overlap", config);
@@ -260,7 +252,6 @@ fn overlapping_included_roots_are_one_line() {
 /// The one word that moves with no second name in the tree: the overlap above needs it, because a
 /// reason cannot depend on which walk root met the link.
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn a_target_above_the_walk_root_and_below_the_config_root_is_named() {
     let config = "grund_config_version = 1\n\n[scan]\ninclude = [\"a/x\", \"docs\"]\n";
     let tree = Tree::new("above-walk-root", config);
@@ -271,7 +262,6 @@ fn a_target_above_the_walk_root_and_below_the_config_root_is_named() {
 
 /// The second name can be a link on the way, with no link at the root: `a/up` is `b`.
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn a_link_on_the_way_does_not_name_the_ancestor() {
     let tree = Tree::new("on-the-way", V2);
     tree.dirs(&["a", "b"]);
@@ -281,7 +271,6 @@ fn a_link_on_the_way_does_not_name_the_ancestor() {
 }
 
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn a_two_hop_loop_under_an_alias_is_one_line_per_link() {
     let tree = Tree::new("two-hop", V2);
     tree.dirs(&["real/a", "real/b"]);
@@ -299,7 +288,6 @@ fn a_two_hop_loop_under_an_alias_is_one_line_per_link() {
 
 /// A config root spelled through a link has no physical prefix to strip, and the word stays `a`.
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn a_config_root_reached_through_a_link_still_names_the_ancestor_relatively() {
     let tree = Tree::reports_tree("root-link");
     symlink("proj", tree.base.join("plink")).expect("create the link");
@@ -309,7 +297,6 @@ fn a_config_root_reached_through_a_link_still_names_the_ancestor_relatively() {
 
 /// The report base decides how the one location is spelled, and when it has no name at all.
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn the_report_base_spells_the_one_location() {
     let tree = Tree::reports_tree("path-base");
     let args: &[&str] = &["check", "--path-base=invocation"];
@@ -321,7 +308,6 @@ fn the_report_base_spells_the_one_location() {
 
 /// Only the count: the word a member's frame gives its ancestor is not this ticket's to settle.
 #[test]
-#[ignore = "red until #1293 names a loop's ancestor physically; implement removes this"]
 fn a_workspace_root_prints_one_line_for_a_members_loop() {
     let member = "grund_config_version = 2\nproject_name = \"m\"\n\n[schema.kinds.FS]\n\
                   folders = [\"spec\"]\nindex = false\n";

@@ -1,4 +1,6 @@
-use crate::sources::{Sources, canonical_path, link_metadata, open_for_reading, path_is_dir};
+use crate::sources::{
+    Sources, canonical_path, link_metadata, open_for_reading, path_is_dir, physical_path_key,
+};
 use std::collections::HashMap;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -7,7 +9,7 @@ use super::read_predicate::{Unread, directory_refusal, ignored, name_refusal};
 use super::scan_error::{scan_io_reason, unreadable_link_reason};
 use super::tree::ScanError;
 use super::walk::WalkDirFilter;
-use crate::config::{Frame, Schema};
+use crate::config::{Frame, Schema, canonical_config_root};
 
 /// The scan failures one walker error becomes (§FS-check.2.4), each beside the
 /// error it is reported from, which the caller retains (§FS-distribution.3.3.2).
@@ -96,10 +98,6 @@ fn walk_error_report(
         // hands back is not always it — a loop met one link deep is reported at
         // the doubled spelling the descent produced.
         let link = shortest_link_spelling(child, scan_root).unwrap_or_else(|| child.to_path_buf());
-        // Naming the ancestor is the useful half of the message, but it says
-        // nothing when the ancestor *is* the link: the target then reaches back
-        // over the walk root, which no in-tree name below it describes.
-        let ancestor = (!ancestor.starts_with(&link)).then_some(ancestor);
         return symlink_loop_report(&link, ancestor, schema, frame);
     }
     let path = walk_error_path(err).unwrap_or(scan_root);
@@ -272,19 +270,14 @@ fn pathless_io_kind(err: &ignore::Error) -> Option<io::ErrorKind> {
 /// error entry, and the ignore files, which reach a link the walker could not
 /// resolve no other way.
 ///
-/// `ancestor` is the directory the link reaches back into, and `None` where the
-/// target reaches over the walk root, which no in-tree name below it describes. Shared by the two ways a loop is found: the walker's
-/// own detection, and the filter pruning a link whose target is at or above the
-/// walk root — which the walker cannot see without descending a second copy of
-/// the tree first (§AR-scanner.1.9).
-///
-/// Why the ancestor name can be missing: the config root renders as nothing at
-/// all, and a target at or above the walk root has no in-tree name below it
-/// either. Both read the same way — the target is not somewhere inside the tree,
-/// it is the tree.
+/// `ancestor` is the directory the link reaches back into, under any spelling that
+/// reaches it: `loop_ancestor_name` decides what the reason calls it, so neither of
+/// the two ways a loop is found does. Those are the walker's own detection, and the
+/// filter pruning a link whose target is at or above the walk root — which the walker
+/// cannot see without descending a second copy of the tree first (§AR-scanner.1.9).
 pub(super) fn symlink_loop_report(
     link: &Path,
-    ancestor: Option<&Path>,
+    ancestor: &Path,
     schema: &Schema,
     frame: Frame<'_>,
 ) -> Option<ScanError> {
@@ -296,14 +289,35 @@ pub(super) fn symlink_loop_report(
     // Naming the directory is the useful half of the message, and it is available
     // only where that directory has a name *in the report* — the config root
     // renders as nothing at all (§FS-config.3.6).
-    let ancestor = ancestor
-        .map(|ancestor| frame.display_path(ancestor))
-        .filter(|name| !name.is_empty());
+    let ancestor = Some(loop_ancestor_name(ancestor, frame)).filter(|name| !name.is_empty());
     let reason = match ancestor {
         Some(name) => format!("symlink loop: the target is the ancestor directory {name}"),
         None => "symlink loop: the target contains the link".to_string(),
     };
     Some((link.to_path_buf(), reason))
+}
+
+/// The one name a loop's reason gives the directory the link reaches back into, the
+/// same on every route to the link (§FS-check.2.4.2): its physical location under the
+/// config root, as the report spells that, and never the name a walk root or a link
+/// gave it on the way. The config root, or a report base at the directory, renders
+/// empty, which the caller reads as having no name.
+///
+/// The config root is re-joined because it may itself be spelled through a link, and
+/// the report strips that spelling, not the physical one. A location outside the
+/// config root stays as the walker spelled it, which is relative to the root and not
+/// absolute (§FS-errors.4), and has one spelling: a link out of the project is fenced,
+/// so only a walk root reaches that tree, and the filter's prune never hands one in
+/// (§AR-scanner.1.2). Where the directory has gone since the walk met it, the
+/// comparison is lexical (`physical_path_key`), the same comparison a path that has
+/// no resolved form gets everywhere else.
+fn loop_ancestor_name(ancestor: &Path, frame: Frame<'_>) -> String {
+    let root = frame.root();
+    let location = physical_path_key(ancestor);
+    match location.strip_prefix(canonical_config_root(root)) {
+        Ok(rest) => frame.display_path(&root.join(rest)),
+        Err(_) => frame.display_path(ancestor),
+    }
 }
 
 /// The link `path` names, spelled as the walk root reaches it (§FS-config.3.5.2).
