@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 use super::tree::ScanError;
 use crate::config::Frame;
-use crate::model::{remedies, scanned_path_key};
+use crate::model::remedies;
 use crate::sources::paths_same_location;
 
 /// One file the walk could not read, as a caller of the embedding API sees it:
@@ -80,10 +80,8 @@ pub(super) fn publish_unlisted(
 /// walk spells below the canonical root as the pass does, so a plain tree meets here, and a report
 /// at another spelling of the file answers no run holding this one (§AR-scanner.1.relisted).
 pub(super) fn publish_case_failure(spelled: PathBuf, error: &Error, reported: &mut Vec<ScanError>) {
-    let at = scanned_path_key(&spelled);
-    publish_unless_reported(spelled, error, None, reported, |path| {
-        scanned_path_key(path) == at
-    });
+    let at = spelled.clone();
+    publish_unless_reported(spelled, error, None, reported, |path| path == at);
 }
 
 fn publish_unless_reported(
