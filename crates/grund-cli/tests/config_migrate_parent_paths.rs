@@ -251,3 +251,25 @@ fn equivalent_parent_home_spellings_protect_the_scan_root() {
         Fixture::new("other", home, false).assert_detail(0);
     }
 }
+
+/// An include inside a home becomes no protected place (§FS-config-migrate.3.1.4.1).
+#[test]
+fn exclude_include_inside_home() {
+    let fixture = Fixture::new("docs/x", "docs", false);
+    fixture.assert_detail(1);
+    fixture.assert_v1_reads_after_repair(false);
+}
+
+#[test]
+fn exclude_include_inside_home_parent_after_child() {
+    let fixture = Fixture::new("docs/x", "docs/x/..", false);
+    fixture.assert_detail(1);
+    fixture.assert_v1_reads_after_repair(false);
+}
+
+#[test]
+fn exclude_include_inside_home_parent_before_home() {
+    let fixture = Fixture::new("docs/x", "docs/../docs", false);
+    fixture.assert_detail(1);
+    fixture.assert_v1_reads_after_repair(false);
+}
