@@ -14,6 +14,7 @@ use super::reads::Reads;
 use super::record::{MigrateRefusal, RefusalAnchor};
 use crate::config::project::Project;
 use crate::config::rows::{Extent, Place};
+use crate::model::normalize_path_lexically;
 
 /// The `code` row's places, and what the include list says beside them.
 #[derive(Default)]
@@ -56,10 +57,19 @@ fn homes(v1: &Project) -> Vec<(&str, &str, bool)> {
         .collect()
 }
 
-fn at_or_inside(path: &str, home: &str) -> bool {
-    path == home
+/// §FS-config-migrate.3.1.4.1: decide whether an include becomes a place using
+/// lexical home containment, before selecting roots; retain authored spellings
+/// for mapping and emission. The records gate uses this same decision.
+pub(super) fn inside_home(path: &str, home: &str, root: &Path) -> bool {
+    normalize_path_lexically(&root.join(path))
+        .starts_with(normalize_path_lexically(&root.join(home)))
+}
+
+/// Workspace-member matching keeps its existing authored-path rule.
+fn inside_member(path: &str, member: &str) -> bool {
+    path == member
         || path
-            .strip_prefix(home)
+            .strip_prefix(member)
             .is_some_and(|rest| rest.starts_with('/'))
 }
 
@@ -106,8 +116,9 @@ pub(super) fn include(v1: &Project, keys: &Keys, root: &Path) -> Include {
             )));
             continue;
         }
-        if let Some((row, home, scanned)) =
-            homes.iter().find(|(_, home, _)| at_or_inside(&entry, home))
+        if let Some((row, home, scanned)) = homes
+            .iter()
+            .find(|(_, home, _)| inside_home(&entry, home, root))
         {
             if *scanned {
                 out.duplicates.push((entry.clone(), row.to_string()));
@@ -123,7 +134,7 @@ pub(super) fn include(v1: &Project, keys: &Keys, root: &Path) -> Include {
             .members
             .iter()
             .chain(&v1.workspace.optional_members)
-            .find(|m| at_or_inside(&entry, m.trim_end_matches('/')))
+            .find(|m| inside_member(&entry, m.trim_end_matches('/')))
         {
             out.refusals.push(refuse(format!(
                 "[scan] include names `{entry}`, inside workspace member `{member}`, whose own config governs it"

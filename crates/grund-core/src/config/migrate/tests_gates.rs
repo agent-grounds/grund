@@ -11,6 +11,7 @@ use super::records_gate::compare;
 use super::{GateResult, Located, Prepared, candidate, languages, translate};
 use crate::config::discovery::pending_config;
 use crate::config::project::Project;
+use crate::config::rows::Extent;
 use crate::config::run::{Invocation, Selection};
 use crate::config::v1::default_project;
 use crate::testing::{test_root, write};
@@ -156,6 +157,28 @@ fn records_gate_ignores_include_spelled_as_places() {
         compare(&v1, &v2, &root, Block::Project),
         Vec::<String>::new()
     );
+}
+
+/// §FS-config-migrate.3.1.4.1: the gate's scan-root section drops an include
+/// inside any equivalent home, as mapping does before selecting protected roots.
+#[test]
+fn records_gate_scan_roots_drop_include_inside_equivalent_homes() {
+    let toml = format!("{FS}[scan]\ninclude = [\"docs/x\"]\n");
+    let (mut v1, v2, root) = translated("inside-home", &toml, &["docs/x/a.md"]);
+    for home in ["docs", "docs/x/..", "docs/../docs"] {
+        let fs = v1
+            .schema
+            .rows
+            .iter_mut()
+            .find(|row| row.name == "FS")
+            .unwrap();
+        fs.places[0].extent = Extent::Folder(home.to_string());
+        let lines = compare(&v1, &v2, &root, Block::Project);
+        assert!(
+            lines.iter().all(|line| !line.contains("scan roots:")),
+            "{home}: {lines:?}"
+        );
+    }
 }
 
 /// §FS-config-migrate.5.1: the nesting rule, when no two v1 homes nest.

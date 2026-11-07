@@ -11,6 +11,7 @@ use std::path::Path;
 
 use super::candidate::may_default;
 use super::opted_out::Block;
+use super::places::inside_home;
 use crate::config::grounding::configured_row_grounding;
 use crate::config::kind::KindResolution;
 use crate::config::project::{Project, Strength};
@@ -272,12 +273,6 @@ fn scan_roots(p: &Project, root: &Path) -> BTreeSet<String> {
                     Extent::Complement => None,
                 })
                 .collect();
-            let inside = |entry: &str, home: &str| {
-                entry == home
-                    || entry
-                        .strip_prefix(home)
-                        .is_some_and(|rest| rest.starts_with('/'))
-            };
             schema
                 .sources
                 .include
@@ -289,7 +284,7 @@ fn scan_roots(p: &Project, root: &Path) -> BTreeSet<String> {
                         .trim_end_matches('/')
                         .to_string()
                 })
-                .filter(|entry| !homes.iter().any(|home| inside(entry, home)))
+                .filter(|entry| !homes.iter().any(|home| inside_home(entry, home, root)))
                 .filter(|entry| root.join(entry).exists())
                 .collect()
         }
