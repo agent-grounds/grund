@@ -295,7 +295,7 @@ pub(super) fn check_kind_indexes(
         {
             continue;
         }
-        let Some(owed) = index_entries.entries_in(&target.index_file) else {
+        let Some(owed) = index_entries.owed_by(&target.index_key) else {
             continue;
         };
         let covered: Vec<(&Id, &Declaration)> = findings

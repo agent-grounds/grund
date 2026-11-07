@@ -49,3 +49,28 @@ fn a_linkless_tree_resolves_no_more_for_more_files() {
         "the rule resolved a linkless file"
     );
 }
+
+/// The route `check <value source>` takes on a linkless tree: the value scan asks where the source
+/// is, a whole walk then publishes, and the scan asks again. A run resolves a spelling once, so the
+/// second ask costs nothing. This thread's `physical_path_key` count is all that sees it; the
+/// route's whole `readlink` count was measured under `strace` and is not something a test can pin.
+#[test]
+fn a_whole_walk_keeps_where_a_spelling_was_resolved() {
+    let root = physical_test_root("names_count_value_route");
+    write(&root.join("grund.toml"), "grund_config_version = 1\n");
+    let source = root.join("values/v1.json");
+    write(&source, "{}\n");
+    let config = load_config(&root).expect("the project loads");
+    let (schema, frame) = (config.schema(), config.frame());
+    let spellings = &frame.run.spellings;
+
+    let first = spellings.resolve(&source);
+    walk_scannable_files(schema, frame, None, false).expect("a walk");
+    let before = resolved_paths();
+    assert_eq!(spellings.resolve(&source), first);
+    assert_eq!(
+        resolved_paths(),
+        before,
+        "the walk forgot what was resolved"
+    );
+}

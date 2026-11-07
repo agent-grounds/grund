@@ -26,6 +26,9 @@ struct Table {
     names: BTreeMap<PathBuf, Vec<PathBuf>>,
     /// The physical files read under neither name (§FS-scan.checks.reading-conflict).
     refused: BTreeSet<PathBuf>,
+    /// Each name no plain run reaches, of a file it reaches by another: that other name, which it
+    /// is read by (§FS-scan.identity.reading.plain).
+    plain_names: HashMap<PathBuf, PathBuf>,
     /// Whether a walk has published, so that a miss means the spelling is the file's own.
     walked: bool,
     /// The config root's physical path, resolved the first time a link asks.
@@ -46,11 +49,12 @@ impl Spellings {
     }
 
     /// One walk's names, physical file by physical file in listing order. A walk of the whole
-    /// project replaces what the table held; a narrow walk adds to it (§AR-scanner.1.8).
+    /// project replaces the names it lists and a narrow walk adds to them (§AR-scanner.1.8). Where
+    /// a spelling physically is stays, and so does the name a handed one reads by: each is the same
+    /// answer whichever walk asks, and a run resolves a spelling once.
     pub(crate) fn publish_walk(&self, groups: &[(PathBuf, Vec<PathBuf>)], whole_project: bool) {
         let mut table = self.write();
         if whole_project {
-            table.physical.clear();
             table.names.clear();
             table.refused.clear();
         }
@@ -138,6 +142,20 @@ impl Spellings {
     /// before it does anything else (§AR-scanner.1.8).
     pub(crate) fn has_second_names(&self) -> bool {
         self.read().names.values().any(|names| names.len() > 1)
+    }
+
+    /// `name` is reached by no plain run, and `plain` is the name that run reads the file by
+    /// (§FS-scan.identity.reading.plain).
+    pub(crate) fn publish_plain_name(&self, name: &Path, plain: &Path) {
+        self.write()
+            .plain_names
+            .insert(name.to_path_buf(), plain.to_path_buf());
+    }
+
+    /// The name a plain run reads the file by, where `spelling` is not one it reaches and another
+    /// is (§FS-scan.identity.reading.plain).
+    pub(crate) fn plain_name_of(&self, spelling: &Path) -> Option<PathBuf> {
+        self.read().plain_names.get(spelling).cloned()
     }
 
     /// Mark a file read under neither name (§FS-scan.checks.reading-conflict).

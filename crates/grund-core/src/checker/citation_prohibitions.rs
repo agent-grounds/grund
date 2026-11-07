@@ -33,10 +33,10 @@ pub(super) fn check_citation_prohibitions(
     let owners = Owners::new(schema, frame);
     let spellings = PlaceNames::new(schema, frame);
     for cite in findings.edges() {
-        judge_site(cite, rules, &owners, report);
+        judge_site(cite, rules, &owners, &spellings, report);
         // §AR-scanner.1.8: asked of each spelling at its own path.
         for site in spellings.other_sites(cite, schema, frame) {
-            judge_site(&site, rules, &owners, report);
+            judge_site(&site, rules, &owners, &spellings, report);
         }
     }
 }
@@ -46,12 +46,13 @@ fn judge_site(
     cite: &Citation,
     rules: &Rules,
     owners: &Owners<'_>,
+    spellings: &PlaceNames<'_>,
     report: &mut impl DirectionSink,
 ) {
     let Some((level, entries)) = citation_site_level(rules, cite) else {
         return;
     };
-    let (channel, diagnostic) = match level {
+    let (channel, mut diagnostic) = match level {
         CitationLevel::MustNot => (
             DirectionChannel::Errors,
             prohibition_diagnostic(
@@ -86,6 +87,10 @@ fn judge_site(
         ),
         _ => return,
     };
+    // §AR-scanner.1.8: a declaration's kind is the same at every name.
+    if cite.enclosing_declaration.is_some() {
+        diagnostic.sites = spellings.subject_sites(&cite.file, cite.line);
+    }
     report.push(channel, &cite.source_kind, level, &entries, diagnostic);
 }
 

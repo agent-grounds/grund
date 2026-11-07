@@ -2,6 +2,7 @@
 //! against, the space rule that keeps the join one-to-one, and what a
 //! disagreement reports (§FS-values.3.1.2, §FS-values.5.2.2).
 
+use super::spellings_report::PlaceNames;
 use super::value_mismatch::{
     RootComponent, rendered_value_path, root_value_mismatch, value_mismatch_text,
 };
@@ -30,7 +31,8 @@ pub(super) fn root_binding_finding(
 ) -> Option<Diagnostic> {
     let run = root_components(declaration, path)?;
     let site = |line| Site {
-        path: declaration.file.clone(),
+        // §AR-scanner.1.8: the name a whole run gives the file.
+        path: PlaceNames::new(schema, frame).first(&declaration.file),
         line,
     };
     let root = rendered_value_path(schema, binding, spelling, path);

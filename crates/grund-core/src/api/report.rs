@@ -31,29 +31,43 @@ pub(super) fn public_report(
     report: CheckReport,
     include_suggestions: bool,
 ) -> Report {
-    public_report_with_path_mode(config, report, include_suggestions, false)
+    public_report_with_path_mode(config, report, include_suggestions, PathMode::Printed)
 }
 
-pub(super) fn public_lsp_report(config: &Config, report: CheckReport) -> Report {
-    public_report_with_path_mode(config, report, false, true)
+/// `projects` are the configs whose tables hold the report's names: what a finding of a project
+/// stands at is that project's to say (§AR-scanner.1.8).
+pub(super) fn public_lsp_report(
+    config: &Config,
+    projects: &[&Config],
+    report: CheckReport,
+) -> Report {
+    public_report_with_path_mode(config, report, false, PathMode::Editor(projects))
+}
+
+/// How a report spells its paths: as the report prints them, or as an editor is told them,
+/// through the tables of the projects the report covers (§FS-lsp.1.1).
+#[derive(Clone, Copy)]
+enum PathMode<'a> {
+    Printed,
+    Editor(&'a [&'a Config]),
 }
 
 fn public_report_with_path_mode(
     config: &Config,
     report: CheckReport,
     include_suggestions: bool,
-    absolute_paths: bool,
+    paths: PathMode<'_>,
 ) -> Report {
     Report {
         errors: report
             .errors
             .into_iter()
-            .map(|diagnostic| public_finding(config, "error", diagnostic, absolute_paths))
+            .map(|diagnostic| public_finding(config, "error", diagnostic, paths))
             .collect(),
         warnings: report
             .warnings
             .into_iter()
-            .map(|diagnostic| public_finding(config, "warning", diagnostic, absolute_paths))
+            .map(|diagnostic| public_finding(config, "warning", diagnostic, paths))
             .collect(),
         // §FS-check.2.3: suggestions are surfaced only on demand. The public
         // severity tag stays `"suggestion"` so a consumer can tell them apart.
@@ -61,7 +75,7 @@ fn public_report_with_path_mode(
             report
                 .suggestions
                 .into_iter()
-                .map(|diagnostic| public_finding(config, "suggestion", diagnostic, absolute_paths))
+                .map(|diagnostic| public_finding(config, "suggestion", diagnostic, paths))
                 .collect()
         } else {
             Vec::new()
@@ -73,32 +87,34 @@ fn public_finding(
     config: &Config,
     severity: &'static str,
     diagnostic: Diagnostic,
-    absolute_paths: bool,
+    paths: PathMode<'_>,
 ) -> Finding {
-    let render_path = |path: &Path| {
-        if absolute_paths {
-            // Private LSP transport data, not user-facing report text: keep the
-            // platform-native spelling so parsing it back into a `Path` preserves
-            // Windows verbatim-prefix absolute paths (§FS-lsp.1.1).
-            editor_path(config, path).to_string_lossy().into_owned()
-        } else {
-            public_path(config, path)
-        }
+    let render_path = |path: &Path| match paths {
+        // Private LSP transport data, not user-facing report text: keep the
+        // platform-native spelling so parsing it back into a `Path` preserves
+        // Windows verbatim-prefix absolute paths (§FS-lsp.1.1).
+        PathMode::Editor(tables) => editor_path(config, tables, path)
+            .to_string_lossy()
+            .into_owned(),
+        PathMode::Printed => public_path(config, path),
     };
     published_finding(severity, diagnostic, render_path)
 }
 
 /// The absolute path an editor is told a finding stands at. A relative location is a config row's,
 /// joined where the load spelled it, never at the editor's working directory (§FS-lsp.4.1). A file
-/// with a second name keeps the name the finding speaks of, under the resolved root: resolving it
-/// would say a finding about one spelling at another, and every spelling the same (§AR-scanner.1.8).
-fn editor_path(config: &Config, path: &Path) -> PathBuf {
+/// with a second name keeps the name the finding speaks of, under the resolved root of the project
+/// whose table holds it: resolving it would say a finding about one spelling at another, and every
+/// spelling the same (§AR-scanner.1.8).
+fn editor_path(config: &Config, tables: &[&Config], path: &Path) -> PathBuf {
     let joined = config.location_base().join(path);
-    let frame = config.frame();
-    if !frame.run.spellings.names_of(path).is_empty()
-        && let Ok(spelling) = joined.strip_prefix(frame.root())
-    {
-        return absolutize_path(frame.root()).join(spelling);
+    for table in tables.iter().copied().chain([config]) {
+        let frame = table.frame();
+        if !frame.run.spellings.names_of(path).is_empty()
+            && let Ok(spelling) = joined.strip_prefix(frame.root())
+        {
+            return absolutize_path(frame.root()).join(spelling);
+        }
     }
     absolutize_path(&joined)
 }
@@ -137,7 +153,7 @@ pub(super) fn context_run_warnings(context: &WorkspaceContext) -> Vec<Finding> {
 pub(super) fn public_lsp_run_warnings(config: &Config, warnings: Vec<Diagnostic>) -> Vec<Finding> {
     warnings
         .into_iter()
-        .map(|diagnostic| public_finding(config, "warning", diagnostic, true))
+        .map(|diagnostic| public_finding(config, "warning", diagnostic, PathMode::Editor(&[])))
         .collect()
 }
 

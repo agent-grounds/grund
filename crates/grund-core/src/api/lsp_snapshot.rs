@@ -69,7 +69,12 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
     // LSP routes findings back to project snapshots by filesystem identity.
     // Preserve absolute paths here instead of reconstructing them from rendered
     // `../` paths under Windows verbatim roots (§FS-lsp.1.1, §FS-lsp.2.2.2).
-    let report = public_lsp_report(&render_config, report);
+    let projects: Vec<&crate::config::Config> = context
+        .projects
+        .iter()
+        .map(|project| -> &crate::config::Config { &project.config })
+        .collect();
+    let report = public_lsp_report(&render_config, &projects, report);
     let mut kind_titles = BTreeMap::new();
     let mut declarations = Vec::new();
     let mut sections = Vec::new();

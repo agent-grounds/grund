@@ -91,6 +91,20 @@ fn value_name(name: &Path) -> Option<&'static str> {
     }
 }
 
+/// The extension a name reads by, as the configuration or the reader spells it, so the reading can
+/// outlive a name the table lent (§FS-scan.identity.reading.plain). One neither of them reads is no
+/// extension to a reader.
+fn read_extension<'a>(schema: &'a Schema, name: &Path) -> Option<&'a str> {
+    let extension = file_extension(name)?;
+    let read = value_name(name).or((extension == "md").then_some("md"));
+    read.or_else(|| {
+        let listed = schema.sources.extensions.iter();
+        listed
+            .map(String::as_str)
+            .find(|listed| *listed == extension)
+    })
+}
+
 /// How a run reads the file `spelling` reached, against the names it knows
 /// (§FS-scan.checks.reading-conflict, §FS-scan.checks.reading-moved).
 #[derive(Debug, Eq, PartialEq)]
@@ -109,7 +123,7 @@ impl<'f> Frame<'f> {
     fn read_name<'b>(&self, schema: &'b Schema, spelling: &'b Path) -> ReadName<'b> {
         let as_spelled = ReadName::as_spelled(schema, spelling);
         let Some(physical) = self.owning_name(spelling) else {
-            return as_spelled;
+            return self.as_the_plain_run_reads(schema, as_spelled);
         };
         if let Some((language, extension)) = claim(schema, &physical) {
             return ReadName {
@@ -125,8 +139,43 @@ impl<'f> Frame<'f> {
                 extension: Some(extension),
                 ..as_spelled
             },
-            _ => as_spelled,
+            _ => self.as_the_plain_run_reads(schema, as_spelled),
         }
+    }
+
+    /// A name with no say keeps the reading of the name that has one
+    /// (§FS-scan.identity.reading.plain), which every other file skips in one empty lookup.
+    fn as_the_plain_run_reads<'b>(&self, schema: &'b Schema, name: ReadName<'b>) -> ReadName<'b> {
+        let Some(plain) = self.run.spellings.plain_name_of(name.spelling) else {
+            return name;
+        };
+        let model = schema.sources.model.as_ref();
+        ReadName {
+            language: model.and_then(|model| model.language_of(&plain)),
+            extension: read_extension(schema, &plain),
+            ..name
+        }
+    }
+
+    /// The names of `physical` that have a say in how it is read: the ones a plain run `reaches`,
+    /// when it reaches any, and otherwise every name this run met. Each other name is published
+    /// with the first of them, which is the name it is read by, so a refusal, a moved reading and
+    /// a file's reading all rest on this one answer (§FS-scan.identity.reading.plain).
+    pub(crate) fn names_with_a_say(
+        &self,
+        physical: &Path,
+        reaches: impl Fn(&Path) -> bool,
+    ) -> Vec<PathBuf> {
+        let spellings = &self.run.spellings;
+        let names = spellings.names_at(physical);
+        let (reached, others): (Vec<_>, Vec<_>) = names.iter().cloned().partition(|n| reaches(n));
+        let Some(first) = reached.first() else {
+            return names;
+        };
+        for other in &others {
+            spellings.publish_plain_name(other, first);
+        }
+        reached
     }
 
     /// Where `spelling` physically is, where that is another name inside the config root: the

@@ -19,6 +19,7 @@ use crate::model::remedies;
 use std::collections::BTreeMap;
 
 use super::reference_scope::ScanScope;
+use super::spellings_report::PlaceNames;
 use super::support::{heading_marks, section_depth};
 use crate::config::{Frame, Schema};
 use crate::grammar::render_catalog_id;
@@ -227,6 +228,7 @@ pub(super) fn check_section_headings(
     // §FS-declarations.checks.duplicate-section: two headings in one declaration claiming one
     // dotted path give `§<ID>.<path>` two destinations — §FS-declarations.checks.duplicate's
     // ambiguity one level down, reported in its shape (§DF-duplicate-section-path.2.1).
+    let spellings = PlaceNames::new(schema, frame);
     for (id, decls) in &findings.declarations {
         // §FS-declarations.checks.duplicate-section.2: judged on the records the ID pairs with,
         // at their lines; a scanned target is one record (§FS-declarations.stubs.target.5).
@@ -242,16 +244,18 @@ pub(super) fn check_section_headings(
                 // entry the earliest recorded claimant anchors it instead.
                 lines.extend(decl.sections.get(path).map(|first| first.line));
                 lines.sort_unstable();
+                // §AR-scanner.1.8: the name a whole run gives the file.
+                let file = spellings.first(&decl.file);
                 let sites: Vec<Site> = lines
                     .iter()
                     .map(|line| Site {
-                        path: decl.file.clone(),
+                        path: file.clone(),
                         line: *line,
                     })
                     .collect();
                 let others = lines[1..]
                     .iter()
-                    .map(|line| format!("{}:{}", frame.display_path(&decl.file), line))
+                    .map(|line| format!("{}:{}", frame.display_path(&file), line))
                     .collect::<Vec<_>>()
                     .join(", ");
                 report.errors.push(Diagnostic {
