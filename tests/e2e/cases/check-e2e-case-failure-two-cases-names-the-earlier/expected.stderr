@@ -1,0 +1,2 @@
+error: e2e/cases/b/expected.exit: stream did not contain valid UTF-8; make the path readable, or keep it out of the scan
+warning: e2e/cases/d/expected.exit: stream did not contain valid UTF-8 — outside the report scope, so a citation declared there may be reported as unresolved

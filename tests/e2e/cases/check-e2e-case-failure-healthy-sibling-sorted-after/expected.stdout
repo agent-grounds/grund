@@ -1,0 +1,1 @@
+e2e/cases/c:1: error: E2E-c is not listed in e2e/cases/README.md (the index file does not exist): an entry is a `§`-marked Markdown link to the declaration; write `[§E2E-c](c)` in e2e/cases/README.md — became an error in grund 0.13.0

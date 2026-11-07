@@ -84,6 +84,10 @@ name = "lsp_snapshot_path_scope"
 path = "lsp_snapshot_path_scope.rs"
 
 [[test]]
+name = "lsp_snapshot_e2e_case_failure"
+path = "lsp_snapshot_e2e_case_failure.rs"
+
+[[test]]
 name = "lsp_snapshot_outside_member"
 path = "lsp_snapshot_outside_member.rs"
 
