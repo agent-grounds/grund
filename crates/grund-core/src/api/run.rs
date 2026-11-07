@@ -165,7 +165,7 @@ pub(super) fn run_check_with_run_warnings(
     if let Some(report_scope) = report_scope.as_ref() {
         let (inside, outside): (Vec<_>, Vec<_>) = std::mem::take(&mut scan_errors)
             .into_iter()
-            .partition(|(file, _)| report_scope.contains(file));
+            .partition(|(file, _)| report_scope.holds_unread(file));
         scan_errors = inside;
         unread_outside_report_scope = outside;
     }
@@ -425,7 +425,7 @@ fn run_workspace_check(
             .scan_errors
             .iter()
             .cloned()
-            .partition(|(file, _)| report_scope.is_none_or(|scope| scope.contains(file)));
+            .partition(|(file, _)| report_scope.is_none_or(|scope| scope.holds_unread(file)));
         unread_outside_report_scope.extend(outside);
         had_scan_errors |= append_scan_errors(&mut report, inside);
         // §FS-check.2.2 / §FS-check.4.5.3 / §FS-workspace.5: the single-project cautions,

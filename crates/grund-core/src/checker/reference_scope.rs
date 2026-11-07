@@ -69,6 +69,14 @@ impl ScanScope {
     pub(crate) fn contains(&self, path: &Path) -> bool {
         self.bounds.contains(path)
     }
+
+    /// §FS-check.1.3.6.3: whether a file the walk could not read is at or under the path, the one
+    /// answer both the split of the scan failures and the report's narrowing of their `io`
+    /// finding ask. Any name of it counts, as for a finding (§FS-check.1.3.6.2), so a link sorting
+    /// first cannot turn the error into a caution, nor drop it from the report.
+    pub(crate) fn holds_unread(&self, file: &Path) -> bool {
+        self.contains_any_name(file)
+    }
 }
 
 /// §FS-check.1.3: the configured scope of this run, or `None` when the walk was
@@ -182,6 +190,8 @@ pub(crate) fn retain_diagnostics_in_report_scope(
         None => true,
         Some(path) => {
             let in_scope = match Side::of_finding(diagnostic) {
+                // §FS-check.1.3.6.3: as the run's split of its scan failures asks.
+                _ if diagnostic.code == Code::IO => scope.holds_unread(path),
                 Some(Side::Place) => scope.contains_place(path),
                 // §AR-scanner.1.8: it stands at the name the plain run reaches.
                 Some(Side::Content) => scope.contains_any_name(path),

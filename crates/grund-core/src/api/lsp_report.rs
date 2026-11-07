@@ -196,7 +196,7 @@ fn check_workspace_context(
             .scan_errors
             .iter()
             .cloned()
-            .partition(|(file, _)| report_scope.is_none_or(|scope| scope.contains(file)));
+            .partition(|(file, _)| report_scope.is_none_or(|scope| scope.holds_unread(file)));
         append_lsp_scan_errors(&mut project_report, inside);
         for channel in [&mut project_report.errors, &mut project_report.warnings] {
             retain_diagnostics_in_report_scope(
