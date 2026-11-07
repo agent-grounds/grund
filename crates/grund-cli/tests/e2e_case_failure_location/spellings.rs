@@ -104,8 +104,36 @@ fn a_manifest_the_walk_also_reads_in_a_member_is_one_line() {
     );
 }
 
-/// §AR-scanner.1.relisted: the comparison is lexical, so a folder configured with a `..` in it meets
-/// the walk's report of the same file.
+/// §FS-check.2.4.2: a version 1 folder keeps a `..` in what it read, and a failure is published at
+/// the folder's one lexical path, which a run can name and which meets the walk's report.
+#[test]
+fn a_version_1_folder_through_a_parent_step_is_one_line_every_run_holds() {
+    let line = ["error: e2e/cases/b/spec.refs: "];
+    // The pass alone reads the manifest under `md`, and the walk reads it too under `refs`.
+    for extension in ["md", "refs"] {
+        let tree = Tree::new(&format!("version-1-step-{extension}"));
+        let config = format!(
+            "grund_config_version = 1\n[id]\nformat = \"{{kind}}-{{slug}}\"\n\
+             [[kinds]]\nkind = \"E2E\"\nfolder = \"e2e/../e2e/cases\"\nindex = false\n\
+             [scan]\ninclude = [\"e2e\"]\nextensions = [\"{extension}\"]\n"
+        );
+        tree.write("grund.toml", config.as_bytes());
+        tree.write("e2e/cases/b/spec.refs", UNDECODABLE);
+        for args in [
+            &["check"][..],
+            &["check", "e2e"],
+            &["check", "e2e/cases"],
+            &["check", "e2e/cases/b"],
+            &["check", "e2e/cases/b/spec.refs"],
+        ] {
+            assert_fails(&tree.run(args), &line);
+        }
+        assert_fails(&tree.run_in("e2e/cases/b", &["check", "."]), &line);
+    }
+}
+
+/// §FS-config-v2.schema.places.boundaries.1: a version 2 place folds its `..` as it parses, so this
+/// tree has the one spelling of any other.
 #[test]
 fn a_folder_configured_through_a_parent_step_is_one_line() {
     let tree = Tree::new("folder-spelling");

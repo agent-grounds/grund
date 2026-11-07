@@ -10,7 +10,7 @@ use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema, root_scope_roots};
 use crate::grammar::{Grammar, literal_after_kind_placeholder, parse_id_arg, split_alias_path};
 use crate::model::{Catalog, Declaration, DeclarationSource, E2eCase, E2eSpecRef, Id};
-use crate::model::{format_path, sort_path_key};
+use crate::model::{configured_home_path_key, format_path, sort_path_key};
 
 /// §FS-config.3.5.8, §FS-check.1.3.6.1: whether the project's *ordinary* walk reads
 /// the E2E case root at all. A path-scoped run's resolution scope is that ordinary
@@ -67,12 +67,14 @@ pub(super) fn scan_e2e_cases(
     let Some(folder) = e2e_cases_folder(schema) else {
         return;
     };
-    // §FS-check.2.4.2: the folder as the tree spells it, which a failure is published at.
-    let spelled_root = frame.root().join(folder);
-    if !path_exists(&spelled_root) || !path_is_dir(&spelled_root) {
+    let home = frame.root().join(folder);
+    if !path_exists(&home) || !path_is_dir(&home) {
         return;
     }
-    let cases_root = canonical_path(&spelled_root).unwrap_or_else(|_| spelled_root.clone());
+    let cases_root = canonical_path(&home).unwrap_or_else(|_| home.clone());
+    // §FS-check.2.4.2: a failure is published at the folder as the tree spells it, the one lexical
+    // path a run can name, whatever `..` a version 1 folder keeps.
+    let spelled_root = frame.root().join(configured_home_path_key(folder));
     let mut scan_root = cases_root.clone();
 
     // §FS-check.1.3.6.1: a path-scoped run reads the cases the ordinary run reads —
