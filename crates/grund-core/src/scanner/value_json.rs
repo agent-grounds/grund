@@ -301,10 +301,9 @@ fn value_sources_in<'a>(
                         Ok(true) => {}
                         Ok(false) => continue,
                         Err(error) => {
-                            // §FS-values.5.3.1: one failed candidate, even if two homes
-                            // own it; unrelated homes still do not gate selected fetch.
-                            // §FS-scan.identity.reading.entry: entry is the spelling's, so
-                            // the failure is too, whatever its target would read as.
+                            // §FS-values.5.3.1: one failed candidate, even if two homes own it;
+                            // unrelated homes do not gate selected fetch. Named as it entered,
+                            // whatever its target reads as.
                             if required && failed_sources.insert(physical_path_key(&path)) {
                                 errors.push(value_source_error(&path, spelled, &error));
                             }
