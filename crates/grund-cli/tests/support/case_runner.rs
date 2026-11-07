@@ -92,9 +92,48 @@ include!("case_refresh_tests.rs");
 // (§AR-core-module-layout.3).
 include!("case_args_tests.rs");
 
+/// Cases red until #1264 locates a case's failure at the file that failed
+/// (§FS-declarations.e2e-case.failure). `corpus_cases` in `tests/e2e_case_failure_location.rs`
+/// runs them under `--ignored`; implement deletes this list, its filter and that test together.
+pub const RED_UNTIL_1264: &[&str] = &[
+    "check-e2e-case-failure-case-holds-a-scanned-file",
+    "check-e2e-case-failure-folder-elsewhere-indexed-names-the-root",
+    "check-e2e-case-failure-folder-elsewhere-names-above-the-root",
+    "check-e2e-case-failure-folder-elsewhere-names-the-case",
+    "check-e2e-case-failure-folder-elsewhere-names-the-root",
+    "check-e2e-case-failure-folder-elsewhere-whole-project",
+    "check-e2e-case-failure-healthy-sibling-sorted-after",
+    "check-e2e-case-failure-healthy-sibling-sorted-before",
+    "check-e2e-case-failure-names-the-case",
+    "check-e2e-case-failure-names-the-case-command-args",
+    "check-e2e-case-failure-names-the-case-json",
+    "check-e2e-case-failure-names-the-case-spec-refs",
+    "check-e2e-case-failure-names-the-file",
+    "check-e2e-case-failure-stand-in-cases-directory-holds-nothing",
+    "check-e2e-case-failure-stand-in-directory-holds-nothing",
+    "check-e2e-case-failure-stand-in-directory-keeps-its-finding",
+    "check-e2e-case-failure-two-cases-names-the-earlier",
+    "check-e2e-case-failure-two-cases-names-the-later",
+    "check-e2e-case-failure-two-files-names-the-earlier",
+    "check-e2e-case-failure-two-files-names-the-later",
+    "check-e2e-case-failure-two-files-whole-project",
+    "check-e2e-case-failure-workspace-member-names-the-case",
+    "check-e2e-case-two-undecodable",
+    "check-e2e-case-undecodable-command-args",
+    "check-e2e-case-undecodable-expected-exit",
+    "check-e2e-case-undecodable-sorts-first",
+    "check-e2e-case-undecodable-spec-refs",
+    "check-e2e-case-undecodable-unknown-reference-stays",
+    "list-e2e-case-undecodable-expected-exit",
+    "list-e2e-case-undecodable-sorts-first",
+];
+
 pub fn discover_e2e_cases(manifest_dir: &Path) -> Vec<PathBuf> {
     let cases_dir = manifest_dir.join("tests/e2e/cases");
-    let cases = discover_case_dirs(&cases_dir, |_| true);
+    let cases = discover_case_dirs(&cases_dir, |case| {
+        let name = case.file_name().unwrap_or_default().to_string_lossy();
+        !RED_UNTIL_1264.contains(&name.as_ref())
+    });
     assert!(
         !cases.is_empty(),
         "expected at least one e2e case under {}",
