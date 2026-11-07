@@ -4,7 +4,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use super::read_predicate::{Unread, directory_refusal, ignored, name_refusal};
-use super::scan_error::scan_io_reason;
+use super::scan_error::{scan_io_reason, unreadable_link_reason};
 use super::tree::ScanError;
 use super::walk::WalkDirFilter;
 use crate::config::{Frame, Schema};
@@ -113,7 +113,7 @@ fn walk_error_report(
         Some(std::io::ErrorKind::NotFound) => {
             "broken symlink: the target does not exist".to_string()
         }
-        _ => format!("unreadable symlink: {}", walk_error_reason(err)),
+        _ => unreadable_link_reason(&walk_error_reason(err)),
     };
     Some((path.to_path_buf(), reason))
 }

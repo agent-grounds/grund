@@ -169,41 +169,6 @@ command_regression!(
     &["id", "FS", "new-thing"]
 );
 
-/// The home links to a hidden directory the walk never descends into, so the value pass is what
-/// reports it and its line keeps the home's context. Where the walk reports the home too, the one
-/// line is the walk's (§FS-check.2.4.2). This layout leaves the home to the pass only while the
-/// walk reports a link whose target it cannot open at its walk root rather than at the link
-/// (#1266); no layout does so by design. Once that is fixed the one line here is the walk's and
-/// this test goes, the fetch test below keeping the pin of the home's context.
-#[test]
-fn value_home_read_retains_context_with_the_shared_permission_reason() {
-    let mut fixture = Fixture::new("value-home");
-    fs::write(
-        fixture.root.join("grund.toml"),
-        format!("{CONFIG}\n[schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\n"),
-    )
-    .unwrap();
-    fs::create_dir(fixture.root.join(".store")).unwrap();
-    fixture.lock(".store/home", true);
-    std::os::unix::fs::symlink(".store/home", fixture.root.join("values")).unwrap();
-    let stderr = fixture.run(&["check"]);
-    let expected =
-        "read value home: permission denied; make the path readable, or keep it out of the scan";
-    assert!(
-        stderr
-            .lines()
-            .any(|line| line == format!("error: values: {expected}")),
-        "{stderr}"
-    );
-    let stderr = fixture.run(&["check", "--format", "json"]);
-    assert!(
-        io_records(&stderr)
-            .iter()
-            .any(|record| record["path"] == "values" && record["message"] == expected),
-        "{stderr}"
-    );
-}
-
 /// Fetch's selected-home discovery runs no walk, so its failure to list the home is its own and
 /// keeps the home's context around the shared reason (§FS-check.2.4.1, §FS-fetch.5.1). No walk
 /// report can take this line over, so it is the durable pin of that context.

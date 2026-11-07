@@ -57,12 +57,22 @@ pub(super) fn scan_io_reason(error: &Error) -> String {
     }
 }
 
+/// The words the walk keeps around the reason of a link it cannot resolve for lack of access to
+/// its target (§AR-scanner.1.9, §FS-check.2.4.1).
+const UNREADABLE_LINK: &str = "unreadable symlink: ";
+
+/// The walk's report of a link whose target fails to open with `reason`.
+pub(super) fn unreadable_link_reason(reason: &str) -> String {
+    format!("{UNREADABLE_LINK}{reason}")
+}
+
 /// A pass's failure to list `listed`, a directory the walk lists too, published at `spelled`
 /// unless the scan's reports so far already hold the same failure (§FS-check.2.4.2,
 /// §AR-scanner.1.relisted): the same physical location and the bare reason derived from the
 /// error's kind, as the walk derives its own. `context`, the pass's words around that reason,
-/// is published with it and never compared (§FS-check.2.4.1). Only this one failure is
-/// compared: nothing here deduplicates the list.
+/// is published with it and never compared (§FS-check.2.4.1), and neither are the walk's around
+/// a link: a directory the pass lists through a link is the link the walk reported. Only this
+/// one failure is compared: nothing here deduplicates the list.
 pub(super) fn publish_unlisted(
     listed: &Path,
     spelled: PathBuf,
@@ -71,9 +81,10 @@ pub(super) fn publish_unlisted(
     reported: &mut Vec<ScanError>,
 ) {
     let reason = scan_io_reason(error);
-    let already = reported
-        .iter()
-        .any(|(path, said)| *said == reason && paths_same_location(path, listed));
+    let already = reported.iter().any(|(path, said)| {
+        said.strip_prefix(UNREADABLE_LINK).unwrap_or(said) == reason
+            && paths_same_location(path, listed)
+    });
     if !already {
         let message = match context {
             Some(context) => format!("{context}: {reason}"),
