@@ -65,7 +65,6 @@ fn io_at<'a>(findings: &'a [grund_core::Finding], root: &Path) -> Vec<(String, &
 }
 
 #[test]
-#[ignore = "red until #1264 locates a case's failure at the file that failed; implement removes this"]
 fn an_anchor_at_the_failing_case_or_file_holds_the_failure() {
     let root = fixture("holds");
     for anchor in ["e2e/cases/b", FILE] {
@@ -81,7 +80,6 @@ fn an_anchor_at_the_failing_case_or_file_holds_the_failure() {
 }
 
 #[test]
-#[ignore = "red until #1264 locates a case's failure at the file that failed; implement removes this"]
 fn an_anchor_at_a_healthy_sibling_cautions_at_the_failing_file() {
     let root = fixture("sibling");
     let report = snapshot(root.join("e2e/cases/c")).report;
