@@ -11,9 +11,10 @@ use super::value_json::value_sources;
 use super::walk::{scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{symlink_loop_report, walk_error_report};
+use super::walk_names::settle_names;
 use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
-use crate::model::{Refused, RootRow, sort_path_key};
+use crate::model::{ReadingConflict, ReadingMove, Refused, RootRow, sort_path_key};
 use crate::sources::{
     canonical_path, is_directory, is_regular_file, path_exists, path_is_file, paths_same_location,
     physical_path_key,
@@ -66,6 +67,10 @@ pub(crate) struct WalkedTree {
     /// a root and the rules that refused it, for `check`'s report (§AR-scanner.1.6,
     /// §FS-scan.checks.unread-scan-root).
     pub(crate) unread_roots: Vec<RootRow>,
+    /// The files read under neither name, gone from `files` (§FS-scan.checks.reading-conflict).
+    pub(crate) reading_conflicts: Vec<ReadingConflict>,
+    /// The links whose reading moved under the rule (§FS-scan.checks.reading-moved).
+    pub(crate) reading_moves: Vec<ReadingMove>,
 }
 
 /// The tree walk (§AR-scanner.1): from each scan root, descend skipping hidden and
@@ -118,6 +123,8 @@ pub(crate) fn walk_scannable_files_with_sources(
     on_error: &mut dyn FnMut(&ScanError, ignore::Error),
 ) -> Result<WalkedTree> {
     let (roots, root_scope) = scan_roots(schema, frame, scope, explicit_scope)?;
+    let widened = explicit_scope && !root_scope && frame.run.scope.resolution_wide;
+    let mut handed = 0;
     // §FS-config.3.5.4: an aliased root, or a symlink met on the way down, is what
     // hands the same file to the walk under two spellings — nothing else does, so
     // a tree with neither never pays for the identity pass (§GOAL-fast-feedback).
@@ -137,7 +144,12 @@ pub(crate) fn walk_scannable_files_with_sources(
     let mut unread_roots = Vec::new();
     let mut file_rows = None;
     let mut value_homes: Option<Option<Vec<PathBuf>>> = None;
-    for scan_root in roots {
+    for (position, scan_root) in roots.into_iter().enumerate() {
+        // §FS-check.1.3.6.1: a widened walk starts at the path, so what the list holds at the
+        // second root is what the run was handed: a file, a directory's files, or nothing.
+        if widened && position == 1 {
+            handed = files.len();
+        }
         // §FS-check.6.1.1: the actual walk roots are covered before traversal.
         if !crate::config::observe_input(&scan_root, true) {
             return Err(anyhow!("watch input coverage failed"));
@@ -200,7 +212,7 @@ pub(crate) fn walk_scannable_files_with_sources(
                     let value_homes = value_homes.get_or_insert_with(|| {
                         value_sources(schema, frame)
                             .ok()
-                            .map(|sources| sources.into_iter().map(|(path, _, _)| path).collect())
+                            .map(|sources| sources.into_iter().map(|source| source.0).collect())
                     });
                     if let Some(value_homes) = value_homes
                         && !value_homes
@@ -298,7 +310,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     // project's root, and a link straight onto one of its files is the same
     // crossing one entry lower down.
     if !frame.run.workspace.project_roots.is_empty() {
-        files.retain(|file| {
+        let kept = |file: &PathBuf| {
             !resolved.get(file.as_path()).is_some_and(|physical| {
                 owned_by_another_project(
                     &frame.run.workspace.project_roots,
@@ -306,10 +318,22 @@ pub(crate) fn walk_scannable_files_with_sources(
                     physical,
                 )
             })
-        });
+        };
+        // What was handed is counted again, since the count slices this list below.
+        let rest = files.split_off(handed);
+        files.retain(&kept);
+        handed = files.len();
+        files.extend(rest.into_iter().filter(&kept));
     }
+    // §AR-scanner.1.8: while the list is in walk order, so the first name is first-seen's.
+    let whole_project = !explicit_scope || root_scope || frame.run.scope.resolution_wide;
+    let verdicts = settle_names(schema, frame, &files, handed, &resolved, whole_project)?;
     if !resolved.is_empty() {
         dedup_by_file_identity(&mut files, &resolved);
+    }
+    // §FS-scan.checks.reading-conflict: read under neither name.
+    if !verdicts.conflicts.is_empty() {
+        files.retain(|file| !frame.run.spellings.is_refused(file));
     }
     sort_paths(&mut files);
     // The roots may overlap — `include = ["docs", "docs/api"]` names one subtree
@@ -345,6 +369,8 @@ pub(crate) fn walk_scannable_files_with_sources(
         dirs,
         root_scope,
         unread_roots,
+        reading_conflicts: verdicts.conflicts,
+        reading_moves: verdicts.moves,
     })
 }
 

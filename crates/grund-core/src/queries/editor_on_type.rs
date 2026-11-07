@@ -74,7 +74,7 @@ fn can_replace_trigger_with_config(
     if id_token_end_at(line, after, &config.grammar) != Some(token_end) {
         return false;
     }
-    // §FS-config-v2.schema.sources: the file is read as `grund fmt` reads it.
+    // §FS-config-v2.schema.sources, §AR-scanner.1.8: the file is read as `grund fmt` reads it.
     // §FS-lsp.1.4: every zone the bulk pass refuses (§FS-fmt.2.3), a reference key
     // and an HTML tag included.
     if config.reading(path).markdown {

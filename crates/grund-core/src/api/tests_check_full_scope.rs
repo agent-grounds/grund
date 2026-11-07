@@ -393,11 +393,13 @@ fn aliased_include_root_repo(name: &str, real: &str, link: &str) -> std::path::P
     root
 }
 
-/// §FS-check.1.3.2: the wider walk reads each *file* once, not each path once.
-/// An aliased root hands the same file to two walks under two spellings, so
-/// the byte-identical dedup cannot see the reread — and the declaration the
-/// plain run reads once would be reported as a duplicate of itself (§FS-declarations.checks.duplicate),
-/// turning a green run red on a tree nobody changed.
+/// §FS-check.1.3.2: the wider walk reads each *file* once, not each path once. An aliased root
+/// hands the same file to two walks under two spellings, so the byte-identical dedup cannot see the
+/// reread, and a declaration the plain run reads once would be reported as a duplicate of itself
+/// (§FS-declarations.checks.duplicate). `docs/functional-spec` is FS's home whichever root reached
+/// it, so the tree owes that folder's index an entry: one error, located at the spelling in the
+/// home and naming the repair, and no second line, on either tier
+/// (§FS-scan.identity.findings.place).
 #[cfg(unix)]
 #[test]
 fn full_scope_reads_an_aliased_include_root_once() {
@@ -413,15 +415,63 @@ fn full_scope_reads_an_aliased_include_root_once() {
 
     let scoped = check_run(&root, false);
     let full = check_run(&root, true);
-    assert!(
-        scoped.report.errors.is_empty(),
-        "the plain run reads the declaration once, through the `include` spelling"
+    assert_eq!(
+        located_diagnostics(&scoped.config, &scoped.report.errors),
+        vec![
+            "docs/functional-spec/FS-001-login.md:1: FS-001-login is not listed in \
+             docs/functional-spec/README.md (the index file does not exist): an entry is a \
+             `\u{a7}`-marked Markdown link to the declaration; write \
+             `[\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)` in \
+             docs/functional-spec/README.md \u{2014} became an error in grund 0.13.0"
+        ],
+        "the plain run reads the declaration once, and owes its home's index one entry"
     );
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         located_diagnostics(&scoped.config, &scoped.report.errors),
         "§FS-check.1.3.2: --full is purely additive — no duplicate declaration of itself"
     );
+}
+
+/// The same tree with the entry written: the index is one file under two names, so the citation
+/// recorded at the alias is the entry and the tree is green on both tiers. A `README` with no
+/// entry is red the same way, not silently passed for being read under the other name.
+#[cfg(unix)]
+#[test]
+fn an_aliased_index_answers_to_the_entry_written_in_it() {
+    let root = aliased_include_root_repo(
+        "an_aliased_index_answers_to_the_entry_written_in_it",
+        "docs",
+        "docslink",
+    );
+    write(
+        &root.join("docs/functional-spec/FS-001-login.md"),
+        "# FS-001-login: A user can log in\n\n## 1. Rules\n\nSee \u{a7}FS-001-login.1.\n",
+    );
+    write(&root.join("docs/functional-spec/README.md"), "# Index\n");
+    let unlisted = check_run(&root, false);
+    let lines = located_diagnostics(&unlisted.config, &unlisted.report.errors);
+    assert_eq!(lines.len(), 1, "{lines:?}");
+    assert!(
+        lines[0].starts_with(
+            "docs/functional-spec/FS-001-login.md:1: FS-001-login is not listed in \
+             docs/functional-spec/README.md:"
+        ),
+        "{lines:?}"
+    );
+
+    write(
+        &root.join("docs/functional-spec/README.md"),
+        "# Index\n\n- [\u{a7}FS-001-login](FS-001-login.md#fs-001-login-a-user-can-log-in)\n",
+    );
+    for full in [false, true] {
+        let run = check_run(&root, full);
+        assert_eq!(
+            located_diagnostics(&run.config, &run.report.errors),
+            Vec::<String>::new(),
+            "full = {full}"
+        );
+    }
 }
 
 /// §FS-check.1.3.2: and the spelling it keeps is the `include` one. Reporting

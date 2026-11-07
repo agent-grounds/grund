@@ -34,6 +34,7 @@ pub(crate) fn fmt_workspace_projects(
         changes: Vec::new(),
         scan_errors: Vec::new(),
         refused_writes: Vec::new(),
+        refused_readings: Vec::new(),
     };
     // §FS-fmt.6.3.3: a qualified link names a heading in another project as this
     // run leaves it, so every project's headings are settled before any is walked.
@@ -143,6 +144,9 @@ pub(crate) fn fmt_workspace_projects(
                 outcome.changes.append(&mut walked.changes);
                 outcome.scan_errors.append(&mut walked.scan_errors);
                 outcome.refused_writes.append(&mut walked.refused_writes);
+                outcome
+                    .refused_readings
+                    .append(&mut walked.refused_readings);
             }
             Err(mut error) => {
                 // §FS-distribution.3.2.2.1: retain prior projects in a late writer failure;

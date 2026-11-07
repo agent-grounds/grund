@@ -5,15 +5,15 @@ impl Server {
         let mut by_uri: BTreeMap<Url, Vec<Diagnostic>> = BTreeMap::new();
         for project in &self.projects {
             for finding in project.snapshot.report.errors.clone() {
-                if let Some((uri, diagnostic)) =
-                    self.diagnostic_for_finding(project, finding, DiagnosticSeverity::ERROR)
+                for (uri, diagnostic) in
+                    self.diagnostics_for_finding(project, finding, DiagnosticSeverity::ERROR)
                 {
                     by_uri.entry(uri).or_default().push(diagnostic);
                 }
             }
             for finding in project.snapshot.report.warnings.clone() {
-                if let Some((uri, diagnostic)) =
-                    self.diagnostic_for_finding(project, finding, DiagnosticSeverity::WARNING)
+                for (uri, diagnostic) in
+                    self.diagnostics_for_finding(project, finding, DiagnosticSeverity::WARNING)
                 {
                     by_uri.entry(uri).or_default().push(diagnostic);
                 }
@@ -115,6 +115,53 @@ impl Server {
                 ))
             })
             .collect()
+    }
+
+    /// One finding's diagnostic at the path it names, and the same diagnostic on each other name
+    /// of that file the editor has open: the report names every spelling, and the editor shows it
+    /// on whichever is open. A place finding has no sites, so it stays at its own spelling, and a
+    /// site in another file keeps what it published before (§AR-scanner.1.8).
+    fn diagnostics_for_finding(
+        &self,
+        project: &ProjectSnapshot,
+        finding: Finding,
+        severity: DiagnosticSeverity,
+    ) -> Vec<(Url, Diagnostic)> {
+        let open_names = self.other_open_names(project, &finding);
+        let Some((uri, diagnostic)) = self.diagnostic_for_finding(project, finding, severity)
+        else {
+            return Vec::new();
+        };
+        let mut published: Vec<(Url, Diagnostic)> = open_names
+            .into_iter()
+            .filter(|name| *name != uri)
+            .map(|name| (name, diagnostic.clone()))
+            .collect();
+        published.push((uri, diagnostic));
+        published
+    }
+
+    /// The open documents that are another name of the file `finding` stands at, each once. A
+    /// finding with no sites, or none open, resolves no path to say so.
+    fn other_open_names(&self, project: &ProjectSnapshot, finding: &Finding) -> BTreeSet<Url> {
+        let snapshot = &project.snapshot;
+        let Some(path) = absolute_finding_path(snapshot, finding) else {
+            return BTreeSet::new();
+        };
+        let open = finding.sites.iter().filter_map(|site| {
+            let site = snapshot.root.join(&site.path);
+            let uri = path_uri(&site)?;
+            self.open_docs.contains_key(&uri).then_some((site, uri))
+        });
+        open.filter(|(site, _)| {
+            *site != path
+                && self
+                    .project_for_diagnostic_path(site)
+                    .is_some_and(|owner| owner.root == project.root)
+                && canonical_snapshot_path(site) == canonical_snapshot_path(&path)
+        })
+        .map(|(_, uri)| uri)
+        .collect()
     }
 
     /// Turn one finding into the diagnostic the editor shows, or `None` when

@@ -311,6 +311,34 @@ pub struct InlineCitationSite {
     pub layout_violations: Vec<usize>,
 }
 
+/// One file two in-tree names read differently (§FS-scan.checks.reading-conflict): its names in
+/// listing order, and the readings they name in the same order.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct ReadingConflict {
+    pub(crate) names: Vec<PathBuf>,
+    pub(crate) readings: Vec<String>,
+}
+
+impl ReadingConflict {
+    /// `a and b`, or `a, b and c`: how a refusal lists its names and readings, in `check` and in
+    /// `fmt` alike.
+    pub(crate) fn joined(items: &[String]) -> String {
+        match items.split_last() {
+            Some((last, rest)) if !rest.is_empty() => format!("{} and {last}", rest.join(", ")),
+            Some((last, _)) => last.clone(),
+            None => String::new(),
+        }
+    }
+}
+
+/// A link listed first whose reading moved (§FS-scan.checks.reading-moved).
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct ReadingMove {
+    pub(crate) file: PathBuf,
+    pub(crate) was: String,
+    pub(crate) now: String,
+}
+
 /// Everything the scanner found in one tree walk — the catalog of
 /// §FS-terms.terms.1: declarations grouped by ID (so duplicates surface,
 /// §FS-declarations.checks.duplicate) and citations in encounter order. This
@@ -321,6 +349,11 @@ pub struct InlineCitationSite {
 #[non_exhaustive]
 pub struct Catalog {
     pub declarations: BTreeMap<Id, Vec<Declaration>>,
+    /// The files read under neither name (§FS-scan.checks.reading-conflict): verdicts derived once
+    /// from the names, which live only in the run's one table, `Run.spellings` (§AR-scanner.1.8).
+    pub(crate) reading_conflicts: Vec<ReadingConflict>,
+    /// The links whose reading moved (§FS-scan.checks.reading-moved).
+    pub(crate) reading_moves: Vec<ReadingMove>,
     /// The citations the walk found. A hygiene check reads these alone; a reader
     /// that asks what a declaration cites, or who cites an ID, reads [`Catalog::edges`].
     pub citations: Vec<Citation>,

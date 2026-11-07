@@ -97,6 +97,8 @@ pub(crate) fn scan_unwalked_file(
     frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<Catalog> {
+    // §AR-scanner.1.8: no walk met it, and the rule still reads it.
+    frame.run.spellings.resolve(file);
     let mut findings = pass_over_file(file, schema, frame, workspace_targets)?;
     // §FS-workspace.1.2: the two passes' sites, back in the single-project scan's order.
     if !workspace_targets.is_empty() {
@@ -177,6 +179,8 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     let mut findings = Catalog {
         walked_dirs: walked.dirs,
         unread_roots: walked.unread_roots,
+        reading_conflicts: walked.reading_conflicts,
+        reading_moves: walked.reading_moves,
         ..Catalog::default()
     };
     let (mut files, mut errors) = (walked.files, walked.errors);
@@ -187,8 +191,11 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     if schema.value_rows().next().is_some() {
         let home_values = value_sources(schema, frame)
             .map(|sources| {
+                // §AR-scanner.1.8: a file the rule reads as no value source is
+                // the text scan's still, whichever name a value home took it by.
                 sources
                     .into_iter()
+                    .filter(|(_, _, format)| format.is_some())
                     .map(|(path, _, _)| path)
                     .collect::<Vec<_>>()
             })
@@ -198,6 +205,11 @@ pub(crate) fn scan_tree_with_workspace_threshold(
                 .iter()
                 .any(|source| paths_same_location(source, file))
         });
+        // §FS-values.2.2: a text-named link to a value source is the value reader's, which never
+        // read it by that name, so nothing moved.
+        findings
+            .reading_moves
+            .retain(|moved| files.contains(&moved.file));
     }
     // §AR-scanner.2.8: each file's record is set aside as its findings merge, and the map
     // is built once from all of them, not by one keyed insert per file.
@@ -293,6 +305,8 @@ fn add_overlay_scan_files(
         if files.iter().any(|file| paths_same_location(file, &path)) {
             continue;
         }
+        // §FS-scan.identity.buffers: no walk met it, and the rule reads it as its file.
+        frame.run.spellings.resolve(&path);
         files.push(path);
     }
     files.sort_by_key(|path| sort_path_key(path));

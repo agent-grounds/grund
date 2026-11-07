@@ -91,6 +91,7 @@ impl TreePlan<'_> {
             mut changes,
             scan_errors,
             refused_writes,
+            refused_readings,
         } = self.outcome;
         // A dry run writes nothing and reports the same rows (§FS-fmt.7.3).
         let to_write: &[PlannedFile] = if write { &self.planned } else { &[] };
@@ -141,6 +142,7 @@ impl TreePlan<'_> {
             changes,
             scan_errors,
             refused_writes,
+            refused_readings,
         })
     }
 }

@@ -45,7 +45,7 @@ pub(super) fn reconcile_promoted_inline_site(
     }
     let lines = block_lines.iter().map(String::as_str).collect::<Vec<_>>();
     // §FS-config-v2.schema.sources: the block is read through its file's own hosts.
-    let lexical = frame.compiled.reading(schema, file).lexical;
+    let lexical = frame.reading(schema, file).lexical;
     let (has_note, layout_violations) =
         inline_note_verdicts_from_ranges(&lines, site.first_line, lexical, ranges);
     site.has_note = has_note;

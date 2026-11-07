@@ -102,7 +102,10 @@ pub(crate) use paths::{
     relative_from_base, scanned_decl_relative_path, scanned_path_key, sort_path_key,
 };
 pub(crate) use patterns::{GlobCitation, OffFormatCitation};
-pub(crate) use records::{LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode};
+pub(crate) use records::{
+    LegacyCitationCandidate, LocalSectionCitationCandidate, ReadingConflict, ReadingMove,
+    ShowRenderMode,
+};
 pub(crate) use report::{CheckReport, Diagnostic, LANDED_CLAUSE, Site};
 pub(crate) use section_lock::{
     LockEntry, LockLines, SECTION_LOCK_DIR, SectionLockFile, locked, name_under_number,

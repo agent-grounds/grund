@@ -16,6 +16,7 @@ use super::index_form::{
     IndexCitationForm, IndexEntryState, index_citation_form, index_citation_form_at,
 };
 use super::index_mention::index_mentions;
+use super::spellings_report::PlaceNames;
 use crate::config::{Frame, Owners, Schema};
 use crate::grammar::{MarkdownLinks, front_matter_extent, render_catalog_id};
 use crate::model::{
@@ -151,12 +152,17 @@ pub(super) fn declarations_under_folder(
     decls: &[Declaration],
     folder: &str,
     owners: &Owners<'_>,
+    spellings: &PlaceNames<'_>,
 ) -> bool {
-    decls.iter().any(|decl| {
-        owners
-            .relative(&decl.file)
-            .is_some_and(|relative| owners.schema().folder_owns(folder, &relative))
-    })
+    // §AR-scanner.1.8: a link in a second folder owes that folder's index.
+    decls
+        .iter()
+        .flat_map(|decl| spellings.of(&decl.file))
+        .any(|spelling| {
+            owners
+                .relative(&spelling)
+                .is_some_and(|relative| owners.schema().folder_owns(folder, &relative))
+        })
 }
 
 /// The two releases §FS-check.3.17.3's message names
@@ -244,22 +250,40 @@ pub(super) fn check_kind_indexes(
         else {
             continue;
         };
-        if let Some(key) = index_keys.get(relative.as_ref()) {
-            cited_in_index.entry(key).or_default().push(citation);
+        // §AR-scanner.1.8: recorded under the name listed first, which a
+        // directory alias can make another name of the index.
+        for name in index_entries.names().keys(relative.as_ref()) {
+            if let Some(key) = index_keys.get(name) {
+                cited_in_index.entry(key).or_default().push(citation);
+            }
         }
     }
     // §FS-check.3.18.8: which index files *this run* read. The entries come from the
     // scan and the form from the index's text, so an index the run never scanned
     // would otherwise look empty and report every declaration in the folder as unlisted.
-    let index_scanned: BTreeSet<&Path> = findings
-        .scanned_files
-        .iter()
-        .filter_map(|file| {
-            let relative = scanned_decl_relative_path(file, &configured_root, &physical_root)?;
-            index_keys.get(relative.as_ref()).copied()
-        })
-        .collect();
+    let mut index_scanned: BTreeSet<&Path> = BTreeSet::new();
+    for file in &findings.scanned_files {
+        if let Some(relative) = scanned_decl_relative_path(file, &configured_root, &physical_root) {
+            for name in index_entries.names().keys(relative.as_ref()) {
+                index_scanned.extend(index_keys.get(name).copied());
+            }
+        }
+    }
 
+    // §AR-scanner.1.8: at the spelling in the folder that owes the entry.
+    let owners = Owners::new(schema, frame);
+    let spellings = PlaceNames::new(schema, frame);
+    let in_folder = |decl: &Declaration, folder: &str| {
+        spellings
+            .of(&decl.file)
+            .into_iter()
+            .find(|spelling| {
+                owners
+                    .relative(spelling)
+                    .is_some_and(|relative| owners.schema().folder_owns(folder, &relative))
+            })
+            .unwrap_or_else(|| decl.file.clone())
+    };
     // §AR-system.2.13: the index as a save would write it.
     let sources = frame.sources();
     for target in &targets {
@@ -436,7 +460,7 @@ pub(super) fn check_kind_indexes(
                     };
                     report.errors.push(Diagnostic {
                         code: Code::MISSING_INDEX_ENTRY,
-                        path: Some(decl.file.clone()),
+                        path: Some(in_folder(decl, target.folder)),
                         line: Some(decl.line),
                         column: None,
                         message,
@@ -460,51 +484,5 @@ fn entry_form(schema: &Schema) -> String {
         format!(
             "an entry is a Markdown link to the declaration whose text is the ID, with or without the `{marker}` marker"
         )
-    }
-}
-
-/// The configured index files, as a path-membership test (§FS-config.3.4).
-/// `grund fmt` reads it to keep the cross-reference pass running over an index
-/// whatever `[fmt.cross_refs] enabled` says (§FS-fmt.6.1.1,
-/// §DF-index-always-linkified) — the one region the formatter always writes,
-/// mirroring §FS-fmt.2.3's regions it never writes.
-pub(crate) struct KindIndexFiles {
-    configured_root: PathBuf,
-    physical_root: PathBuf,
-    keys: BTreeSet<PathBuf>,
-}
-
-impl KindIndexFiles {
-    pub(crate) fn new(schema: &Schema, frame: Frame<'_>) -> Self {
-        Self {
-            configured_root: scanned_path_key(frame.root()),
-            physical_root: physical_path_key(frame.root()),
-            keys: kind_index_targets(schema, frame)
-                .into_iter()
-                .map(|target| target.index_key)
-                .collect(),
-        }
-    }
-
-    /// The set a run that already linkifies everything needs — no config read,
-    /// no allocation, and `contains` short-circuits on it.
-    pub(crate) fn empty() -> Self {
-        Self {
-            configured_root: PathBuf::new(),
-            physical_root: PathBuf::new(),
-            keys: BTreeSet::new(),
-        }
-    }
-
-    pub(crate) fn is_empty(&self) -> bool {
-        self.keys.is_empty()
-    }
-
-    pub(crate) fn contains(&self, path: &Path) -> bool {
-        if self.keys.is_empty() {
-            return false;
-        }
-        scanned_decl_relative_path(path, &self.configured_root, &self.physical_root)
-            .is_some_and(|relative| self.keys.contains(relative.as_ref()))
     }
 }

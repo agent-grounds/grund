@@ -74,6 +74,7 @@ mod citation_target;
 mod context;
 mod e2e_body;
 mod id_candidates;
+mod index_reached;
 mod legacy_promotion;
 mod link_targets;
 mod mount;

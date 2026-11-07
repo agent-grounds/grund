@@ -19,6 +19,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use super::anchor_numbering::numbered_anchor;
+use super::index_reached::index_as_reached;
 use super::settled_headings::SettledHeadings;
 use crate::config::{Frame, Owners, Presentation, Schema};
 use crate::grammar::{
@@ -145,8 +146,9 @@ pub(crate) fn index_link_targets_for<'c>(
         let Entry::Vacant(entry) = found.entry((file, id)) else {
             return;
         };
+        let from = index_as_reached(files[file], id, frame, findings);
         if let Some(target) = markdown_link_target_with_root(
-            files[file],
+            &from,
             id,
             None,
             presentation,
@@ -158,6 +160,7 @@ pub(crate) fn index_link_targets_for<'c>(
             entry.insert(target);
         }
     };
+    let spellings = &frame.run.spellings;
     // The IDs each index cites with the marker: what enrollment compares.
     let configured_root = scanned_path_key(frame.root());
     let physical_root = physical_path_key(frame.root());
@@ -176,11 +179,23 @@ pub(crate) fn index_link_targets_for<'c>(
         else {
             continue;
         };
-        if let Some((_, file)) = indexes
-            .get(relative.as_ref())
-            .and_then(|rows| rows.iter().find(|(kind, _)| *kind == citation.id.kind))
-        {
-            link(*file, &citation.id);
+        let of_the_kind = |rows: &Vec<(&str, usize)>| {
+            let row = rows.iter().find(|(kind, _)| *kind == citation.id.kind);
+            row.map(|(_, file)| *file)
+        };
+        if let Some(file) = indexes.get(relative.as_ref()).and_then(of_the_kind) {
+            link(file, &citation.id);
+        }
+        // §AR-scanner.1.8: recorded under the name listed first.
+        for name in spellings.names_of(&citation.file) {
+            let other = scanned_decl_relative_path(&name, &configured_root, &physical_root);
+            if let Some(file) = other
+                .as_ref()
+                .and_then(|other| indexes.get(other.as_ref()))
+                .and_then(of_the_kind)
+            {
+                link(file, &citation.id);
+            }
         }
     }
     // §FS-check.3.18.5.2: the declarations under the index's folders, by the
@@ -192,16 +207,18 @@ pub(crate) fn index_link_targets_for<'c>(
             continue;
         }
         for decl in decls {
-            let Some(relative) = owners.relative(&decl.file) else {
-                continue;
-            };
-            for (folder, kind, file) in relative
-                .ancestors()
-                .filter_map(|ancestor| folders.get(ancestor))
-                .flatten()
-            {
-                if *kind == id.kind && schema.folder_owns(folder, &relative) {
-                    link(*file, id);
+            // §AR-scanner.1.8: a link in the folder owes it an entry too.
+            let names = spellings.names_of(&decl.file);
+            let reaching = std::iter::once(&decl.file).chain(&names);
+            for relative in reaching.filter_map(|name| owners.relative(name)) {
+                for (folder, kind, file) in relative
+                    .ancestors()
+                    .filter_map(|ancestor| folders.get(ancestor))
+                    .flatten()
+                {
+                    if *kind == id.kind && schema.folder_owns(folder, &relative) {
+                        link(*file, id);
+                    }
                 }
             }
         }

@@ -16,6 +16,7 @@ use std::path::Path;
 use super::citations::citing_place;
 use super::homes::{DeclarationHome, KindHomeIndex};
 use super::obligation_units::ObligationUnit;
+use super::spellings_report::PlaceNames;
 use crate::config::{
     DEFAULT_GROUNDING_LEVEL, Frame, Owners, Rules, Schema, Strength, any_place_grounded,
     grounding_level_for_kind, homeless_row_grounding, row_grounding, soft_grounding_rungs,
@@ -92,7 +93,18 @@ pub(super) fn check_grounding(
         }
     }
 
-    for file in &findings.scanned_files {
+    // §AR-scanner.1.8: asked of each spelling at its own path, over the citations
+    // and structure its one read recorded at the name listed first.
+    let spellings = PlaceNames::new(schema, frame);
+    let judged = findings.scanned_files.iter().flat_map(|file| {
+        let read = file.as_path();
+        spellings
+            .of(read)
+            .into_iter()
+            .map(move |spelling| (read, spelling))
+    });
+    for (read, file) in judged {
+        let file = &file;
         let home = kind_homes.unique_decl_home_for_file(file);
         let rungs = governing_rungs(rules, schema, frame, home.as_ref(), file);
         if rungs.is_empty() {
@@ -103,19 +115,19 @@ pub(super) fn check_grounding(
             .filter(|home| !home.citable)
             .map(|home| home.place());
         let none: &[usize] = &[];
-        let cited_lines = cited.get(file.as_path()).map_or(none, Vec::as_slice);
+        let cited_lines = cited.get(read).map_or(none, Vec::as_slice);
         // §FS-check.3.6.2.3: no inline-declaration escape in a non-citable home — a declaration
         // there is already misplaced (§FS-declarations.checks.misplaced-declaration.3), so the only
         // way to ground a unit is to cite one.
         let declared_lines = match place {
             Some(_) => none,
-            None => declared.get(file.as_path()).map_or(none, Vec::as_slice),
+            None => declared.get(read).map_or(none, Vec::as_slice),
         };
         // §FS-config-v2.rules.grounding: rungs run strongest first, and a unit a
         // stronger rung already reported is not reported again by a finer one.
         let mut reported: Vec<(usize, usize)> = Vec::new();
         for (channel, level) in rungs {
-            for unit in grounding_units(findings.file_structure.get(file), level) {
+            for unit in grounding_units(findings.file_structure.get(read), level) {
                 if reported.contains(&(unit.start, unit.end))
                     || cited_lines
                         .iter()
@@ -187,7 +199,7 @@ fn governing_grounding<'a>(
     file: &Path,
 ) -> Option<(&'a str, (bool, usize))> {
     // §FS-config-v2.schema.sources.extensions: Markdown by the file's language.
-    let is_markdown = frame.compiled.reading(schema, file).markdown;
+    let is_markdown = frame.reading(schema, file).markdown;
     let row_of = |kind: &str| {
         schema.rows.iter().find(|row| row.name == kind).map(|row| {
             (

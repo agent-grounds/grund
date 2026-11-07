@@ -48,7 +48,7 @@ MIGRATED = {
     "FS-citations": ("image-index-entry",),
     "FS-config-v2": ("config-multiline-string", "config-not-toml"),
     "FS-rules": ("unreached-declaration",),
-    "FS-scan": ("unread-scan-root",),
+    "FS-scan": ("reading-conflict", "reading-moved", "unread-scan-root"),
     "FS-fields": (
         "front-matter-heading",
         "invalid-field-value",

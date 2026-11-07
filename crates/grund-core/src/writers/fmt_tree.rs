@@ -14,7 +14,7 @@ use super::fmt_settle::settle_headings;
 use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::{Config, display_path, fmt_excluded};
 use crate::grammar::FMT_DIRECTIVE;
-use crate::model::Catalog;
+use crate::model::{Catalog, Code, Diagnostic, ReadingConflict};
 use crate::resolver::{SettledHeadings, ShorthandTargets, WorkspaceContext, index_link_targets};
 use crate::scanner::{
     ApiScanError, api_scan_error, may_give_locked_heading, walk_scannable_files,
@@ -60,6 +60,9 @@ pub(crate) struct FmtTreeOutcome {
     /// outside the config root (§FS-fmt.2.3.2). Named in both modes: `--write`
     /// did not write them, and the dry run is saying `--write` will not.
     pub(crate) refused_writes: Vec<String>,
+    /// One warning per file two names read differently, which it leaves alone
+    /// (§FS-fmt.2.3.2.3). The run's warning channel carries them, and the exit code is untouched.
+    pub(crate) refused_readings: Vec<Diagnostic>,
 }
 
 /// What `fmt_tree` rewrites and against what context — grouped so the walk
@@ -235,6 +238,11 @@ pub(super) fn plan_tree<'a>(
         .iter()
         .map(|(file, message)| api_scan_error(opts.render.frame(), file, message))
         .collect();
+    let refused_readings = walked
+        .reading_conflicts
+        .iter()
+        .map(|conflict| reading_refusal(opts.render, conflict))
+        .collect();
     for path in walked.files {
         // §FS-fmt.2.3.2: this file was reached through a link that leaves the
         // config root, so the rewrite stops here (§REQ-no-data-loss.2). The dry
@@ -367,10 +375,32 @@ pub(super) fn plan_tree<'a>(
             changes,
             scan_errors,
             refused_writes,
+            refused_readings,
         },
         planned,
         relative_seen,
         root_scope: walked.root_scope,
         read,
     })
+}
+
+/// `fmt`'s one line about a file two names read differently (§FS-fmt.2.3.2.3): it replaces the
+/// outward-link warning where both hold, because a refused file is gone from the walk's list.
+fn reading_refusal(render: &Config, conflict: &ReadingConflict) -> Diagnostic {
+    let names: Vec<String> = conflict
+        .names
+        .iter()
+        .map(|name| display_path(render, name))
+        .collect();
+    let first = names.first().cloned().unwrap_or_default();
+    let spelled = ReadingConflict::joined(&names);
+    Diagnostic {
+        code: Code::READING_CONFLICT,
+        path: None,
+        line: None,
+        column: None,
+        message: format!("{first}: not rewritten: {spelled} read this file differently"),
+        sites: Vec::new(),
+        authority: Vec::new(),
+    }
 }

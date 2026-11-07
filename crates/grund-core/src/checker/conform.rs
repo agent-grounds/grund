@@ -2,6 +2,8 @@
 //! declaration and heading is judged against its own kind's shape and nothing
 //! else, so the half is handed the schema and no `Rules` (§AR-config.5).
 
+use std::collections::BTreeSet;
+
 use super::conflict_marker::check_conflict_blocks;
 use super::fields::check_fields;
 use super::glob_citations::check_glob_citations;
@@ -10,6 +12,7 @@ use super::inline_style::check_inline_citation_style;
 use super::near_miss::check_declaration_near_misses;
 use super::sections::check_section_headings;
 use super::sizes::check_oversized_leads;
+use super::spellings_report::{PlaceNames, check_reading_names};
 use crate::config::{Extent, Frame, Schema};
 use crate::grammar::render_catalog_id;
 use crate::model::remedies;
@@ -25,6 +28,7 @@ use crate::model::{
 /// Unsorted: the merge sorts (§AR-checker.1.4).
 pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> CheckReport {
     let mut report = CheckReport::default();
+    check_reading_names(catalog, frame, &mut report);
     check_declaration_homes(catalog, frame, &mut report);
     check_misplaced(catalog, schema, frame, &mut report);
     // §FS-declarations.checks.misplaced-declaration.unlisted-project: all placement forms.
@@ -105,8 +109,9 @@ fn check_declaration_homes(findings: &Catalog, frame: Frame<'_>, report: &mut Ch
 }
 
 /// §FS-declarations.checks.misplaced-declaration: declarations must respect configured kind
-/// homes. A single-file kind must live in its exact `file`; any declaration inside a unique
-/// configured home must match that home's kind.
+/// homes. A single-file kind must live in its exact `file`, which is physical, so a link to it is
+/// that document; any declaration inside a unique configured home must match that home's kind,
+/// asked of each spelling at its own path (§AR-scanner.1.8).
 fn check_misplaced(
     findings: &Catalog,
     schema: &Schema,
@@ -121,6 +126,8 @@ fn check_misplaced(
     {
         report.armed.arm(Switch::KindHome);
     }
+    let spellings = PlaceNames::new(schema, frame);
+    let mut judged = BTreeSet::new();
     for (id, decls) in &findings.declarations {
         for decl in decls {
             if let Some(expected) = kind_homes.single_file_for_kind(&id.kind)
@@ -143,10 +150,17 @@ fn check_misplaced(
                 continue;
             }
 
-            let Some(home) = kind_homes.unique_decl_home_for_file(&decl.file) else {
-                continue;
-            };
-            if home.kind != id.kind {
+            for spelling in spellings.of(&decl.file) {
+                // A value source's declaration is copied per spelling, one finding each.
+                if !judged.insert((id, spelling.clone(), decl.line)) {
+                    continue;
+                }
+                let Some(home) = kind_homes.unique_decl_home_for_file(&spelling) else {
+                    continue;
+                };
+                if home.kind == id.kind {
+                    continue;
+                }
                 // §FS-declarations.checks.misplaced-declaration.3: a non-citable home has no kind
                 // an author could have declared instead, so the message names the place and says
                 // why, rather than pointing at a kind that does not exist.
@@ -167,7 +181,7 @@ fn check_misplaced(
                 };
                 report.errors.push(Diagnostic {
                     code: Code::MISPLACED_DECLARATION,
-                    path: Some(decl.file.clone()),
+                    path: Some(spelling.clone()),
                     line: Some(decl.line),
                     column: None,
                     message,

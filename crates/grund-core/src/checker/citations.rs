@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 use super::obligation_units::{
     ObligationUnit, file_is_obligation_unit, non_citable_kind_names, obligation_units,
 };
+use super::spellings_report::PlaceNames;
 use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Frame, KindCitationRules, NamespaceMatch,
     Owners, Place, Row, Rules, Schema, citations_table, render_citation_target, row_grounding,
@@ -122,6 +123,9 @@ pub(super) fn check_citation_obligations(
     let non_citable = non_citable_kind_names(schema);
     let homeless = schema.complement_name();
     let owners = Owners::new(schema, frame);
+    // §AR-scanner.1.8: a citation no declaration owns is a site of the place it
+    // sits in, so a file with two names is a unit of each.
+    let other_sites = PlaceNames::new(schema, frame).all_other_sites(findings, schema, frame);
     // §FS-declarations.stubs.target.5: a declaration's citations are its edges, those a
     // stub's target lends included; a file's are the ones the walk found in it.
     for cite in findings.edges() {
@@ -129,8 +133,8 @@ pub(super) fn check_citation_obligations(
             by_decl.entry(id).or_default().push(cite);
         }
     }
-    for cite in &findings.citations {
-        let markdown = || frame.compiled.reading(schema, &cite.file).markdown;
+    for cite in findings.citations.iter().chain(&other_sites) {
+        let markdown = || frame.reading(schema, &cite.file).markdown;
         if file_is_obligation_unit(&non_citable, homeless, cite, markdown) {
             by_file
                 .entry((cite.source_kind.as_str(), cite.file.as_path()))

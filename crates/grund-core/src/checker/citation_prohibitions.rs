@@ -6,6 +6,7 @@
 use super::citations::{
     DirectionChannel, DirectionSink, citation_matches_target, citing_side_label,
 };
+use super::spellings_report::PlaceNames;
 use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Frame, NamespaceMatch, Owners, Rules,
     Schema, render_citation_target,
@@ -30,47 +31,62 @@ pub(super) fn check_citation_prohibitions(
 ) {
     arm_prohibitions(rules, report);
     let owners = Owners::new(schema, frame);
+    let spellings = PlaceNames::new(schema, frame);
     for cite in findings.edges() {
-        let Some((level, entries)) = citation_site_level(rules, cite) else {
-            continue;
-        };
-        let (channel, diagnostic) = match level {
-            CitationLevel::MustNot => (
-                DirectionChannel::Errors,
-                prohibition_diagnostic(
-                    Code::FORBIDDEN_CITATION,
-                    &owners,
-                    cite,
-                    "must not",
-                    &citation_direction_repair(),
-                ),
-            ),
-            // §FS-config-v2.rules.strengths: the `must-not` finding, code, message
-            // and repair, on the warning channel.
-            CitationLevel::WarnNot => (
-                DirectionChannel::Warnings,
-                prohibition_diagnostic(
-                    Code::FORBIDDEN_CITATION,
-                    &owners,
-                    cite,
-                    "must not",
-                    &citation_direction_repair(),
-                ),
-            ),
-            CitationLevel::ShouldNot => (
-                DirectionChannel::Suggestions,
-                prohibition_diagnostic(
-                    Code::DISCOURAGED_CITATION,
-                    &owners,
-                    cite,
-                    "should not",
-                    &format!(" — {}", remedies::discouraged_citation()),
-                ),
-            ),
-            _ => continue,
-        };
-        report.push(channel, &cite.source_kind, level, &entries, diagnostic);
+        judge_site(cite, rules, &owners, report);
+        // §AR-scanner.1.8: asked of each spelling at its own path.
+        for site in spellings.other_sites(cite, schema, frame) {
+            judge_site(&site, rules, &owners, report);
+        }
     }
+}
+
+/// One citation site against its citing kind's prohibitions (§FS-check.3.12).
+fn judge_site(
+    cite: &Citation,
+    rules: &Rules,
+    owners: &Owners<'_>,
+    report: &mut impl DirectionSink,
+) {
+    let Some((level, entries)) = citation_site_level(rules, cite) else {
+        return;
+    };
+    let (channel, diagnostic) = match level {
+        CitationLevel::MustNot => (
+            DirectionChannel::Errors,
+            prohibition_diagnostic(
+                Code::FORBIDDEN_CITATION,
+                owners,
+                cite,
+                "must not",
+                &citation_direction_repair(),
+            ),
+        ),
+        // §FS-config-v2.rules.strengths: the `must-not` finding, code, message
+        // and repair, on the warning channel.
+        CitationLevel::WarnNot => (
+            DirectionChannel::Warnings,
+            prohibition_diagnostic(
+                Code::FORBIDDEN_CITATION,
+                owners,
+                cite,
+                "must not",
+                &citation_direction_repair(),
+            ),
+        ),
+        CitationLevel::ShouldNot => (
+            DirectionChannel::Suggestions,
+            prohibition_diagnostic(
+                Code::DISCOURAGED_CITATION,
+                owners,
+                cite,
+                "should not",
+                &format!(" — {}", remedies::discouraged_citation()),
+            ),
+        ),
+        _ => return,
+    };
+    report.push(channel, &cite.source_kind, level, &entries, diagnostic);
 }
 
 /// §FS-check.1.4.1: every level a site could resolve to below, a listed entry's

@@ -275,7 +275,7 @@ fn refuse_home_without_markdown(
 ) -> std::result::Result<(), FetchFailure> {
     let Some((home, reason)) =
         selected
-            .compiled()
+            .frame()
             .fetch_refused_home(selected.schema(), &selected.root, &kind.kind)
     else {
         return Ok(());

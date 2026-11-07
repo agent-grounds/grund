@@ -12,6 +12,7 @@ use std::path::Path;
 
 use super::compiled::Compiled;
 use super::project::{Schema, Sources};
+use super::read_name::ReadName;
 use super::sources::{DeclarationMode, Language, LanguageClass};
 use crate::grammar::{DocCommentRule, LexicalSettings, MultiLineStrings, extension_rule};
 use crate::model::{ValueFormat, is_hidden};
@@ -29,9 +30,9 @@ pub(crate) struct FileReading<'a> {
     pub(crate) language: Option<&'a Language>,
     /// `[schema.sources] declarations`, `None` for a v1 file.
     declarations: Option<DeclarationMode>,
-    /// The final extension, which keys a v1 file's recognizer and string forms.
+    /// The chosen name's final extension, which keys a v1 file's recognizer and string forms.
     extension: Option<&'a str>,
-    /// The path, which the name rules below ask.
+    /// The spelling handed, which the name rules below ask (§FS-scan.identity.reading.entry).
     path: &'a Path,
     /// What the walk reads, whose `[scan] extensions` claim on a YAML file comes
     /// before a value home's (§FS-values.2.2).
@@ -43,11 +44,13 @@ pub(crate) struct FileReading<'a> {
 }
 
 impl<'a> FileReading<'a> {
-    pub(super) fn of(compiled: &'a Compiled, schema: &'a Schema, path: &'a Path) -> Self {
-        let extension = path.extension().and_then(|ext| ext.to_str());
+    /// The reading of `name`, which only the rule of §AR-config.1.6 can hand here. The path kept
+    /// is the spelling, which the entry tests ask (§FS-scan.identity.reading.entry).
+    pub(super) fn of(compiled: &'a Compiled, schema: &'a Schema, name: ReadName<'a>) -> Self {
+        let (path, extension) = (name.spelling(), name.extension());
         let mut lexical = compiled.lexical(schema);
         let model = schema.sources.model.as_ref();
-        match model.and_then(|model| Some((model, model.language_of(path)?))) {
+        match model.and_then(|model| Some((model, name.language()?))) {
             Some((model, language)) => {
                 lexical.comment_prefixes = &language.comment_prefixes;
                 lexical.docstring_python = language.docstrings;

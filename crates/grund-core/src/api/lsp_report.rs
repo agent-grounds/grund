@@ -15,8 +15,8 @@ use super::reporting::{reporting, workspace_block_projects};
 use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
-    CheckWorkspace, ScanScope, check_chapter_rules, check_project, path_report_scope,
-    repair_index_citations, retain_diagnostics_in_report_scope,
+    CheckWorkspace, ScanScope, check_chapter_rules, check_project, name_every_spelling,
+    path_report_scope, repair_index_citations, retain_diagnostics_in_report_scope,
 };
 use crate::config::Config;
 use crate::model::{CheckReport, Code, Diagnostic};
@@ -138,32 +138,30 @@ fn check_workspace_context(
             },
             blocks,
         );
-        let mut project_report = if context.workspace_loaded {
-            // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
-            // §FS-workspace.8.1: paths inside a message are spelled from the
-            // render root, like the anchors beside them.
-            let frame = config
+        // §FS-workspace.8.1: paths inside a message are spelled from the render root, like the
+        // anchors beside them.
+        let frame = if context.workspace_loaded {
+            config
                 .frame()
                 .displayed_by(context.render_config().frame().display)
-                .checked_as(Some(&project.alias));
-            check_project(
-                config.rules(),
-                config.schema(),
-                &project.findings,
-                &expected,
-                frame,
-                &check_workspace,
-            )
+                .checked_as(Some(&project.alias))
         } else {
-            check_project(
-                config.rules(),
-                config.schema(),
-                &project.findings,
-                &expected,
-                config.frame(),
-                &CheckWorkspace::alone(&no_workspace),
-            )
+            config.frame()
         };
+        // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
+        let no_project = CheckWorkspace::alone(&no_workspace);
+        let mut project_report = check_project(
+            config.rules(),
+            config.schema(),
+            &project.findings,
+            &expected,
+            frame,
+            if context.workspace_loaded {
+                &check_workspace
+            } else {
+                &no_project
+            },
+        );
         check_chapter_rules(
             &project.findings,
             config.rules(),
@@ -185,6 +183,8 @@ fn check_workspace_context(
             config.frame(),
             &mut project_report,
         );
+        // §AR-scanner.1.8: every rule has run, and the path has not yet narrowed.
+        name_every_spelling(&mut project_report, config.schema(), frame);
         // §FS-lsp.4.1: `grund check`'s warning from its own function
         // (§FS-scan.checks.unread-scan-root).
         project_report

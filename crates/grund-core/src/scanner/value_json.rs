@@ -12,9 +12,11 @@ use super::tree::ScanError;
 use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
 use super::value_yaml_subset::yaml_value_root;
 use super::yaml::parse_yaml;
-use crate::config::{Frame, Schema};
+use crate::config::{Frame, NamesVerdict, Schema};
 use crate::model::sort_path_key;
-use crate::model::{Catalog, DeclarationSource, ValueFormat, normalize_path_lexically};
+use crate::model::{
+    Catalog, DeclarationSource, ReadingConflict, ReadingMove, ValueFormat, normalize_path_lexically,
+};
 use crate::sources::{paths_same_location, physical_path_key};
 
 /// The words a value home's read failure keeps around the shared I/O reason
@@ -54,7 +56,7 @@ pub(super) fn scan_value_sources(
             return;
         }
     };
-    scan_sources(frame, sources, findings, errors);
+    scan_sources(schema, frame, sources, findings, errors);
 }
 
 /// The catalog's value declarations for one selected folder home and owner
@@ -72,7 +74,7 @@ pub(crate) fn folder_value_declarations(
         .map_err(UnreadHome::into_scan_error)?;
     let mut findings = Catalog::default();
     let mut errors = Vec::new();
-    scan_sources(frame, sources, &mut findings, &mut errors);
+    scan_sources(schema, frame, sources, &mut findings, &mut errors);
     if let Some(error) = errors.into_iter().next() {
         return Err(error);
     }
@@ -82,16 +84,19 @@ pub(crate) fn folder_value_declarations(
 /// One enrollment path for catalog scans and folder-home fetch discovery
 /// (§FS-values.2.2, §FS-fetch.5.1), in either format (§FS-values.2.2.4).
 fn scan_sources(
+    schema: &Schema,
     frame: Frame<'_>,
-    sources: Vec<(PathBuf, &str, ValueFormat)>,
+    sources: Vec<ValueSource<'_>>,
     findings: &mut Catalog,
     errors: &mut Vec<ScanError>,
 ) {
+    // §AR-scanner.1.8: grouped through the run's table, which keeps every spelling.
+    let spellings = &frame.run.spellings;
     let mut grouped = BTreeMap::<PathBuf, (Vec<PathBuf>, Vec<&str>)>::new();
     let mut formats = BTreeMap::new();
     for (path, kind, format) in sources {
         formats.insert(path.clone(), format);
-        let (paths, owners) = grouped.entry(physical_path_key(&path)).or_default();
+        let (paths, owners) = grouped.entry(spellings.resolve(&path)).or_default();
         if !paths.contains(&path) {
             paths.push(path);
         }
@@ -99,16 +104,50 @@ fn scan_sources(
             owners.push(kind);
         }
     }
-    let mut grouped = grouped.into_values().collect::<Vec<_>>();
-    for (paths, owners) in &mut grouped {
+    let mut grouped = grouped.into_iter().collect::<Vec<_>>();
+    for (_, (paths, owners)) in &mut grouped {
         paths.sort_by_key(|path| sort_path_key(path));
         owners.sort();
     }
-    grouped.sort_by_key(|(paths, _)| sort_path_key(&paths[0]));
+    grouped.sort_by_key(|(_, (paths, _))| sort_path_key(&paths[0]));
     // §FS-values.2.2.4: one path for either format, which picks only the reader.
-    for (paths, owners) in grouped {
+    for (physical, (paths, owners)) in grouped {
+        // A name that is the file's own, alone, has nothing to judge, so a linkless tree pays
+        // nothing here. A link alone can have moved (§FS-scan.checks.reading-moved).
+        if paths.len() > 1 || paths[0] != physical {
+            if paths.len() > 1 {
+                spellings.publish_value_names(&physical, &paths);
+            }
+            match frame.judge_names(schema, &paths) {
+                NamesVerdict::Agree => {}
+                // §FS-scan.checks.reading-conflict: read under neither name.
+                NamesVerdict::Conflict { readings } => {
+                    spellings.refuse(&physical);
+                    findings.reading_conflicts.push(ReadingConflict {
+                        names: paths,
+                        readings,
+                    });
+                    continue;
+                }
+                // The walk has judged a name it lists too, and a link earns one warning.
+                NamesVerdict::Moved { was, now } => {
+                    if !findings.reading_moves.iter().any(|m| m.file == paths[0]) {
+                        findings.reading_moves.push(ReadingMove {
+                            file: paths[0].clone(),
+                            was,
+                            now,
+                        });
+                    }
+                }
+            }
+        }
         let path = &paths[0];
-        let format = formats[path];
+        // §AR-scanner.1.8: every name of one file read one way, so the
+        // format is the file's and no longer the first spelling's. A file the rule reads as no
+        // value source has earned its `reading-moved` above, and the value reader leaves it.
+        let Some(format) = formats[path] else {
+            continue;
+        };
         // §AR-system.2.13: one location, one text, whichever spelling holds it.
         let text = match frame.sources().text(path) {
             Ok(text) => text.into_owned(),
@@ -130,7 +169,7 @@ fn scan_sources(
             Err(message) => errors.push((path.clone(), message)),
         }
         if owners.len() > 1 {
-            duplicate_owned_source(path, findings);
+            duplicate_owned_source(&paths, findings);
         }
     }
 }
@@ -152,10 +191,16 @@ fn read_value_root(text: &str, format: ValueFormat) -> std::result::Result<JsonN
     }
 }
 
-/// A source owned by two homes is ambiguous even after one read; duplicate each
-/// site so the ordinary duplicate rule stays the single winner (§FS-values.2.3,
-/// §FS-declarations.checks.duplicate).
-fn duplicate_owned_source(path: &Path, findings: &mut Catalog) {
+/// A source owned by two homes is ambiguous even after one read, so each other spelling holds its
+/// own copy and the ordinary duplicate rule stays the single winner, naming both
+/// (§FS-values.2.3, §FS-declarations.checks.duplicate). One name in two homes copies at that name.
+fn duplicate_owned_source(paths: &[PathBuf], findings: &mut Catalog) {
+    let first = &paths[0];
+    let others = if paths.len() > 1 {
+        &paths[1..]
+    } else {
+        std::slice::from_ref(first)
+    };
     let duplicated = findings
         .declarations
         .iter()
@@ -164,20 +209,25 @@ fn duplicate_owned_source(path: &Path, findings: &mut Catalog) {
                 .iter()
                 .filter(|declaration| {
                     matches!(declaration.source, DeclarationSource::Json { .. })
-                        && paths_same_location(&declaration.file, path)
+                        && paths_same_location(&declaration.file, first)
                 })
                 .cloned()
                 .map(|declaration| (id.clone(), declaration))
         })
         .collect::<Vec<_>>();
     for (id, declaration) in duplicated {
-        findings
-            .declarations
-            .entry(id)
-            .or_default()
-            .push(declaration);
+        let copies = findings.declarations.entry(id).or_default();
+        for other in others {
+            let mut copy = declaration.clone();
+            copy.file = other.clone();
+            copies.push(copy);
+        }
     }
 }
+
+/// One name a value home takes, its owning kind, and the format the rule reads the file in: `None`
+/// where its target's own name reads it as no value source (§AR-scanner.1.8).
+pub(super) type ValueSource<'a> = (PathBuf, &'a str, Option<ValueFormat>);
 
 /// Every value source of every value home, with its owning kind and format
 /// (§FS-values.terms, §FS-values.2.2), in one bytewise path order across formats;
@@ -187,7 +237,7 @@ fn duplicate_owned_source(path: &Path, findings: &mut Catalog) {
 pub(super) fn value_sources<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
-) -> std::result::Result<Vec<(PathBuf, &'a str, ValueFormat)>, (PathBuf, String)> {
+) -> std::result::Result<Vec<ValueSource<'a>>, (PathBuf, String)> {
     value_sources_in(schema, frame, None).map_err(UnreadHome::into_scan_error)
 }
 
@@ -198,11 +248,15 @@ fn value_sources_in<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
     selected: Option<(&str, &Path)>,
-) -> std::result::Result<Vec<(PathBuf, &'a str, ValueFormat)>, UnreadHome> {
+) -> std::result::Result<Vec<ValueSource<'a>>, UnreadHome> {
     let mut sources = Vec::new();
     let mut selected_keys = BTreeSet::new();
     // §FS-config-v2.schema.sources.values: the home picks the files, their language the reader.
-    let format_of = |path: &Path| frame.compiled.reading(schema, path).value_format();
+    let format_of = |path: &Path| {
+        frame
+            .enters_as_value(schema, path)
+            .then(|| frame.reading(schema, path).value_format())
+    };
     for row in schema.value_rows() {
         let kind = row.name.as_str();
         // §FS-config-v2.schema.places: every file and folder of the row is a value home.

@@ -94,6 +94,10 @@ CITED = (
 # FS-fmt.md grew past its move baseline by one point of fmt's own, not a restatement:
 # §FS-fmt.6.3.3 (grund#642).
 
+# It grew by the 815-byte §FS-fmt.2.3.2.3, the file `fmt` leaves unwritten because two names
+# read it differently, a point of fmt's own whose finding lives at §FS-scan.checks.reading-conflict
+# (grund#1274).
+
 # It grew again by the 217-byte clause of §FS-fmt.2.5.2.2: a directive inside a
 # multi-line string literal is data (grund#702).
 
@@ -155,7 +159,7 @@ CITED = (
 
 # FS-fmt.md grew by 282 bytes in §FS-fmt.2.3.1: the string-literal rule follows how a file
 # is read, not its name, citing §FS-config-v2.schema.sources.definitions (grund#1208).
-BASELINES = {"FS-show.md": 71962, "FS-fmt.md": 103492}
+BASELINES = {"FS-show.md": 71962, "FS-fmt.md": 104307}
 
 
 def _flat(text):
