@@ -1,0 +1,1 @@
+error: grund.toml:19: [scan] exclude entry `docs/x` contains `/`, not a directory name; remove it to keep the scan unchanged, or, if `x` is a directory, use `x` to exclude every directory of that name at any depth
