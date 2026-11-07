@@ -77,8 +77,9 @@ fn print_config_help() {
     // nothing in the reader's tree (§REQ-shipped-surfaces.1).
     println!("There is no `--config <file>` override: it is discovered, not pointed at.");
     println!();
+    // §FS-config-migrate.2.3: the examples open the `2` list; that row names every cause.
     println!(
-        "Exit:  0 well-formed / printed / answered / migrated · 1 `validate` found an error, `explain` knows no such target, or `migrate` refused · 2 no subcommand, or the config couldn't be read."
+        "Exit:  0 well-formed / printed / answered / migrated · 1 `validate` found an error, `explain` knows no such target, or `migrate` refused · 2 the command could not run, `migrate` included, such as no subcommand, a config that couldn't be read, or a tree the version 1 scan cannot walk."
     );
     println!();
     println!("Examples:");
