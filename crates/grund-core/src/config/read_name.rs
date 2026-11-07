@@ -1,0 +1,195 @@
+//! The one rule that picks the name a file's reading is taken from (§AR-config.1.6,
+//! §FS-scan.identity.reading): it takes a spelling and the `Spellings` table the walk publishes,
+//! and returns the name to read. A [`ReadName`] is the only thing `FileReading` is built from and
+//! nothing outside this file can make one, so no caller gets a reading from a bare spelling.
+//!
+//! Only what the file is read as moves. The hidden and listed tests keep asking the spelling
+//! handed (§FS-scan.identity.reading.entry), which is what `FileReading` keeps as its path.
+
+use std::path::{Path, PathBuf};
+
+use super::file_reading::FileReading;
+use super::frame::Frame;
+use super::project::{Schema, file_extension};
+use super::sources::Language;
+use crate::model::ValueFormat;
+
+/// The name a file is read by, under the spelling that was handed
+/// (§FS-scan.identity.reading). Its fields are this file's alone, which is the guard.
+#[derive(Clone, Copy)]
+pub(crate) struct ReadName<'a> {
+    spelling: &'a Path,
+    language: Option<&'a Language>,
+    extension: Option<&'a str>,
+}
+
+impl<'a> ReadName<'a> {
+    /// The spelling handed, which the entry tests ask (§FS-scan.identity.reading.entry).
+    pub(super) fn spelling(&self) -> &'a Path {
+        self.spelling
+    }
+
+    /// The chosen name's language, `None` for a v1 file or one no admitted language claims.
+    pub(super) fn language(&self) -> Option<&'a Language> {
+        self.language
+    }
+
+    /// The chosen name's extension, which keys a v1 file's reading.
+    pub(super) fn extension(&self) -> Option<&'a str> {
+        self.extension
+    }
+
+    /// The spelling read by its own name, which is every file the rule leaves alone.
+    fn as_spelled(schema: &'a Schema, spelling: &'a Path) -> Self {
+        let model = schema.sources.model.as_ref();
+        Self {
+            spelling,
+            language: model.and_then(|model| model.language_of(spelling)),
+            extension: spelling.extension().and_then(|ext| ext.to_str()),
+        }
+    }
+
+    /// The name of this reading: its language's under version 2; under version 1 its extension,
+    /// `markdown` for `md`, and `source with no extension` for none
+    /// (§FS-scan.checks.reading-conflict).
+    fn label(&self) -> String {
+        match (self.language, self.extension) {
+            (Some(language), _) => language.name.clone(),
+            (None, Some("md")) => "markdown".to_string(),
+            (None, Some(extension)) if !extension.is_empty() => extension.to_string(),
+            (None, _) => "source with no extension".to_string(),
+        }
+    }
+}
+
+/// What a name reads, where it claims a reading (§FS-scan.identity.reading.claims): an admitted
+/// language under version 2, a listed extension under version 1. Only the name counts.
+fn claim<'a>(schema: &'a Schema, name: &Path) -> Option<(Option<&'a Language>, Option<&'a str>)> {
+    let sources = &schema.sources;
+    match sources.model.as_ref() {
+        Some(model) => model
+            .language_of(name)
+            .map(|language| (Some(language), None)),
+        None if sources.lists_extension(name) => {
+            let listed = file_extension(name)
+                .and_then(|ext| sources.extensions.iter().find(|listed| *listed == ext));
+            Some((None, listed.map(String::as_str)))
+        }
+        None => None,
+    }
+}
+
+/// The JSON or YAML name a value source goes by, which a value-named spelling takes from its
+/// target whatever the lists say: `values/a.json -> limits.yaml` is YAML
+/// (§FS-scan.identity.reading.every-caller).
+fn value_name(name: &Path) -> Option<&'static str> {
+    match file_extension(name)? {
+        "json" => Some("json"),
+        "yaml" => Some("yaml"),
+        "yml" => Some("yml"),
+        _ => None,
+    }
+}
+
+/// How a run reads the file `spelling` reached, against the names it knows
+/// (§FS-scan.checks.reading-conflict, §FS-scan.checks.reading-moved).
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) enum NamesVerdict {
+    /// One reading, and the name listed first read that way before 0.22.0 too.
+    Agree,
+    /// Two in-tree names read it differently, and its own name decides nothing.
+    Conflict { readings: Vec<String> },
+    /// The name listed first is a link that read it another way before 0.22.0.
+    Moved { was: String, now: String },
+}
+
+impl<'f> Frame<'f> {
+    /// The rule of §FS-scan.identity.reading: a file inside the config root is read as its own
+    /// name reads, when that name claims a reading, and any other keeps the reaching name's.
+    fn read_name<'b>(&self, schema: &'b Schema, spelling: &'b Path) -> ReadName<'b> {
+        let as_spelled = ReadName::as_spelled(schema, spelling);
+        let Some(physical) = self.owning_name(spelling) else {
+            return as_spelled;
+        };
+        if let Some((language, extension)) = claim(schema, &physical) {
+            return ReadName {
+                language,
+                extension,
+                ..as_spelled
+            };
+        }
+        // §FS-scan.identity.reading.every-caller: JSON or YAML, from the file's own name.
+        match (value_name(spelling), value_name(&physical)) {
+            (Some(_), Some(extension)) => ReadName {
+                language: None,
+                extension: Some(extension),
+                ..as_spelled
+            },
+            _ => as_spelled,
+        }
+    }
+
+    /// Where `spelling` physically is, where that is another name inside the config root: the
+    /// only name that can decide the reading (§FS-scan.identity.reading.outside).
+    fn owning_name(&self, spelling: &Path) -> Option<PathBuf> {
+        let spellings = &self.run.spellings;
+        let physical = spellings.physical(spelling)?;
+        (physical != spelling && physical.starts_with(spellings.physical_root(self.root())))
+            .then_some(physical)
+    }
+
+    /// How `path` is read under this project (§FS-config-v2.schema.sources,
+    /// §FS-scan.identity.reading.every-caller): the one answer every reader asks.
+    pub(crate) fn reading<'b>(&self, schema: &'b Schema, path: &'b Path) -> FileReading<'b>
+    where
+        'f: 'b,
+    {
+        FileReading::of(self.compiled, schema, self.read_name(schema, path))
+    }
+
+    /// The format a value home reads `path` in (§FS-values.2.2). The spelling's own name decides
+    /// whether it enters, its one resolution comes after that, and the rule picks the format
+    /// (§FS-scan.identity.reading.entry, §FS-scan.identity.reading.every-caller).
+    pub(crate) fn value_format(&self, schema: &Schema, path: &Path) -> Option<ValueFormat> {
+        let as_spelled = ReadName::as_spelled(schema, path);
+        FileReading::of(self.compiled, schema, as_spelled).value_format()?;
+        self.run.spellings.resolve(path);
+        self.reading(schema, path).value_format()
+    }
+
+    /// Whether the file `spelling` reached is read by its own name, which no second name can
+    /// contradict (§FS-scan.checks.reading-conflict). A narrow run asks this before it pays for
+    /// the project walk that collects a file's other names
+    /// (§FS-scan.identity.reading.every-caller).
+    pub(crate) fn own_name_decides(&self, schema: &Schema, physical: &Path) -> bool {
+        physical.starts_with(self.run.spellings.physical_root(self.root()))
+            && claim(schema, physical).is_some()
+    }
+
+    /// What the names of one file come to (§FS-scan.checks.reading-conflict,
+    /// §FS-scan.checks.reading-moved), each read through the rule, in the names' order.
+    pub(crate) fn judge_names(&self, schema: &Schema, names: &[PathBuf]) -> NamesVerdict {
+        let mut readings = Vec::new();
+        for name in names {
+            let label = self.read_name(schema, name).label();
+            if !readings.contains(&label) {
+                readings.push(label);
+            }
+        }
+        if readings.len() > 1 {
+            return NamesVerdict::Conflict { readings };
+        }
+        let Some(first) = names.first() else {
+            return NamesVerdict::Agree;
+        };
+        let was = ReadName::as_spelled(schema, first).label();
+        match readings.pop() {
+            Some(now) if now != was => NamesVerdict::Moved { was, now },
+            _ => NamesVerdict::Agree,
+        }
+    }
+}
+
+#[cfg(all(test, unix))]
+#[path = "tests_read_name.rs"]
+mod tests;

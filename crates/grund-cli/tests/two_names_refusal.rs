@@ -30,7 +30,6 @@ fn tree(case: &str) -> Tree {
 
 /// A whole run and a run naming either spelling print the same one line.
 #[test]
-#[ignore = "red until #1274 refuses a reading conflict; implement removes this"]
 fn the_file_is_refused_naming_both_spellings_on_every_scope() {
     let tree = tree("scopes");
     for scope in [None, Some("docs/license.md"), Some("docs/license.rs")] {
@@ -43,7 +42,6 @@ fn the_file_is_refused_naming_both_spellings_on_every_scope() {
 }
 
 #[test]
-#[ignore = "red until #1274 refuses a reading conflict; implement removes this"]
 fn its_json_sites_name_both_spellings() {
     let json = tree("json").grund(&["check", "--format", "json"]);
     assert_eq!(
@@ -55,7 +53,6 @@ fn its_json_sites_name_both_spellings() {
 
 /// Hideable by neither axis, like the import codes (§FS-check.2.1.2).
 #[test]
-#[ignore = "red until #1274 refuses a reading conflict; implement removes this"]
 fn neither_selection_axis_hides_it() {
     let tree = tree("selection");
     for args in [
@@ -71,7 +68,6 @@ fn neither_selection_axis_hides_it() {
 
 /// It is read under neither name, so what it declares is gone and a citation to it is reported.
 #[test]
-#[ignore = "red until #1274 refuses a reading conflict; implement removes this"]
 fn the_file_is_read_under_neither_name() {
     let tree = tree("neither");
     assert!(
@@ -97,7 +93,6 @@ fn the_file_is_read_under_neither_name() {
 /// narrow run does the project walk that finds the other name
 /// (§FS-scan.identity.reading.every-caller).
 #[test]
-#[ignore = "red until #1274 refuses a reading conflict; implement removes this"]
 fn fmt_leaves_the_file_alone_and_says_so_once() {
     let tree = tree("fmt");
     for args in [
@@ -116,7 +111,6 @@ fn fmt_leaves_the_file_alone_and_says_so_once() {
 
 /// `refs` and `cover` scan narrowly, and agree with the whole run that it was not read.
 #[test]
-#[ignore = "red until #1274 refuses a reading conflict; implement removes this"]
 fn a_narrow_refs_or_cover_run_does_not_read_it_either() {
     let tree = tree("narrow");
     tree.put("LICENSE", "# FS-l: L\n\nSee \u{a7}FS-a.\n");
@@ -138,7 +132,6 @@ fn a_narrow_refs_or_cover_run_does_not_read_it_either() {
 
 /// Where the links also leave the root, the conflict line stands and one warning is printed.
 #[test]
-#[ignore = "red until #1274 refuses a reading conflict; implement removes this"]
 fn a_conflict_behind_an_outward_link_prints_one_warning() {
     let outside = Tree::new("outward-target", "");
     outside.put("LICENSE", LICENSE);
@@ -152,7 +145,6 @@ fn a_conflict_behind_an_outward_link_prints_one_warning() {
 
 /// The catalog row is live, and prints the remedy the message carries (§FS-errors.5.5).
 #[test]
-#[ignore = "red until #1274 takes the planned mark off its rows; implement removes this"]
 fn config_explain_answers_for_both_new_codes() {
     let tree = tree("explain");
     for (code, fix) in [

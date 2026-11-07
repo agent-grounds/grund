@@ -72,6 +72,7 @@ mod selection;
 mod shorthand;
 mod sizes;
 mod snapshots;
+mod spellings_report;
 mod support;
 mod value_mismatch;
 mod value_roots;

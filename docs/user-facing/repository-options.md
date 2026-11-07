@@ -89,6 +89,24 @@ workspace member, while in-root directory links, file links, and intentional
 parent-relative `[scan] include` paths remain readable
 ([§FS-scan.scope.links](../functional-spec/FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)).
 
+A file reached by two names is one file, read as [How a linked file is read](sources.md#how-a-linked-file-is-read)
+says. A finding about what the file holds prints once, at the name listed first,
+and names the other in a closing clause, while JSON carries both in `sites`; a
+finding about where the file sits is judged and printed at each name
+([§FS-scan.identity.findings](../functional-spec/FS-scan.md#identityfindings-a-finding-about-a-file-with-two-names-names-each-spelling-once)):
+
+```text
+docs/fs/a.md:5: error: unknown reference FS-gone (also at notes/link.md:5)
+```
+
+Two names that read a file differently, where its own name cannot decide, are
+refused. `check` reports `reading-conflict`, which neither `--only` nor `--ignore`
+hides, and `fmt` leaves the file alone with one warning ([§FS-scan.checks.reading-conflict](../functional-spec/FS-scan.md#checksreading-conflict-two-names-of-one-file-read-it-differently)):
+
+```text
+docs/license.md:1: error: docs/license.md and docs/license.rs are one file that reads two ways, as markdown and as rust; keep one name, or give the file a name that claims a reading
+```
+
 ### A sibling project the build places beside you
 
 When the build checks out another repository beside yours, at a path it fixes, cite it

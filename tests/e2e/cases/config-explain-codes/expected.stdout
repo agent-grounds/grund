@@ -51,6 +51,8 @@ out-of-scope-off-format-citation: Under --full, a file outside the default scope
 out-of-scope-shorthand-citation: Under --full, a file outside the default scope writes a number-only shorthand that matches no declaration or several.
 out-of-scope-unknown-project: Under --full, a file outside the default scope cites through a project alias the workspace does not know.
 oversized-lead: A declaration's lead is longer than the configured word limit.
+reading-conflict: Two in-tree names of a file whose own name claims no reading read it differently, so the run reads it under neither.
+reading-moved: A link is read as its target's own name reads, which differs from what the link's name read it as before grund 0.22.0.
 redundant-config: A directory holds both grund.toml and .agents/grund.toml, and only the first is read.
 relative-section-parent: A relative section heading has no parent section one level up for its path to extend.
 section-address-changed: A cited section's text has moved to another address, and the cited address now holds something else.

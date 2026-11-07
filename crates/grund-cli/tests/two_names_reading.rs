@@ -60,20 +60,17 @@ fn every_name_and_scope_writes_one_set_of_bytes(version: u8) {
 }
 
 #[test]
-#[ignore = "red until #1274 reads a file as its own name reads; implement removes this"]
 fn renaming_a_link_changes_nothing_fmt_writes_under_version_2() {
     every_name_and_scope_writes_one_set_of_bytes(2);
 }
 
 #[test]
-#[ignore = "red until #1274 reads a file as its own name reads; implement removes this"]
 fn renaming_a_link_changes_nothing_fmt_writes_under_version_1() {
     every_name_and_scope_writes_one_set_of_bytes(1);
 }
 
 /// #1248's green disappearance: `FS-b` is there under either link name, in every scope.
 #[test]
-#[ignore = "red until #1274 reads a file as its own name reads; implement removes this"]
 fn renaming_a_link_changes_nothing_a_file_declares() {
     let mut wrong = Vec::new();
     for alias in ["a-link.txt", "z-link.txt"] {
@@ -108,7 +105,6 @@ fn renaming_a_link_changes_nothing_a_file_declares() {
 /// The other direction: `.txt` is Rust by its own name, so a link named `.md` reads it as Rust
 /// and `fmt` leaves its string literal alone (§FS-config-v2.schema.sources.extensions).
 #[test]
-#[ignore = "red until #1274 reads a file as its own name reads; implement removes this"]
 fn a_link_named_md_to_a_rust_named_file_reads_as_rust() {
     let tree = Tree::new("md-to-rust", TXT_IS_RUST);
     tree.put("fs/h.md", "# FS-a: A\n\nCites \u{a7}FS-a.\n");
@@ -144,7 +140,6 @@ fn ignored_rust_target(case: &str) -> Tree {
 /// its name, and the link earns the one warning (§FS-scan.identity.reading.claims,
 /// §FS-scan.checks.reading-moved).
 #[test]
-#[ignore = "red until #1274 reads a file as its own name reads; implement removes this"]
 fn an_excluded_targets_own_name_still_claims_a_reading() {
     let tree = ignored_rust_target("excluded-target");
     let check = tree.grund(&["check"]);
@@ -186,7 +181,6 @@ fn an_excluded_targets_own_name_still_claims_a_reading() {
 /// earns the warning, and a link listed after its target earns none
 /// (§FS-scan.checks.reading-moved.1).
 #[test]
-#[ignore = "red until #1274 emits reading-moved; implement removes this"]
 fn the_warning_stands_at_the_link_whose_reading_moved_and_nowhere_else() {
     for (alias, moved) in [("a-link.txt", true), ("z-link.txt", false)] {
         let tree = Tree::new(&format!("moved-{alias}"), TXT_IS_RUST);
@@ -230,7 +224,6 @@ fn license_under_v1(case: &str, extensions: &str) -> Tree {
 /// the link stops being Markdown (§FS-scan.identity.reading.claims,
 /// §FS-scan.scope.extensions.empty).
 #[test]
-#[ignore = "red until #1274 reads a file as its own name reads; implement removes this"]
 fn a_v1_empty_extension_makes_license_claim_a_reading() {
     let tree = license_under_v1("v1-empty-entry", "\"md\", \"\"");
     tree.put("docs/a.md", "# FS-001-a: A\n\nCites \u{a7}FS-001-a.\n");
@@ -252,7 +245,6 @@ fn a_v1_empty_extension_makes_license_claim_a_reading() {
 /// The value reader asks the rule too: this file is YAML by its own name, and `paths[0]`, a link
 /// named `.json`, no longer decides (§FS-scan.identity.reading.every-caller).
 #[test]
-#[ignore = "red until #1274 routes the value reader through the rule; implement removes this"]
 fn the_value_reader_takes_its_format_from_the_files_own_name() {
     let tree = Tree::new(
         "value-format",

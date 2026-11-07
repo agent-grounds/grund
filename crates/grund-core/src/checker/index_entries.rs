@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::index::{KindIndexTarget, declarations_under_folder, kind_index_targets};
+use super::spellings_report::PlaceNames;
 use crate::config::{Frame, Owners, Schema};
 use crate::grammar::{
     CitationLink, LineLinks, MarkdownLinks, citation_link, markdown_never_rewrite_context,
@@ -72,12 +73,13 @@ impl KindIndexEntries {
         let physical_root = physical_path_key(frame.root());
         let targets = kind_index_targets(schema, frame);
         let owners = Owners::new(schema, frame);
+        let spellings = PlaceNames::new(schema, frame);
         let mut folder_owed: BTreeMap<PathBuf, BTreeSet<Id>> = BTreeMap::new();
         for target in &targets {
             for (id, decls) in &findings.declarations {
                 if id.kind == target.kind
                     && only.is_none_or(|ids| ids.contains(id))
-                    && declarations_under_folder(decls, target.folder, &owners)
+                    && declarations_under_folder(decls, target.folder, &owners, &spellings)
                 {
                     folder_owed
                         .entry(target.index_key.clone())
@@ -92,6 +94,7 @@ impl KindIndexEntries {
             findings,
             &targets,
             &owners,
+            &spellings,
             &configured_root,
             &physical_root,
             index_targets,
@@ -260,6 +263,7 @@ fn enroll_external_inline_declarations(
     findings: &Catalog,
     targets: &[KindIndexTarget<'_>],
     owners: &Owners<'_>,
+    spellings: &PlaceNames<'_>,
     configured_root: &Path,
     physical_root: &Path,
     index_targets: &BTreeMap<(PathBuf, Id), String>,
@@ -323,7 +327,7 @@ fn enroll_external_inline_declarations(
         };
         // The scan read each file as its language reads it, and recorded that.
         let markdown = |file: &Path| findings.files.get(file).is_some_and(|file| file.markdown);
-        if external_inline_home(decls, target.folder, owners, &markdown).is_none() {
+        if external_inline_home(decls, target.folder, owners, spellings, &markdown).is_none() {
             continue;
         }
         let Some((lines, links)) = lines_by_index.get(target.index_key.as_path()) else {
@@ -368,9 +372,10 @@ fn external_inline_home<'a>(
     decls: &'a [Declaration],
     folder: &str,
     owners: &Owners<'_>,
+    spellings: &PlaceNames<'_>,
     markdown: &dyn Fn(&Path) -> bool,
 ) -> Option<&'a Declaration> {
-    if declarations_under_folder(decls, folder, owners) {
+    if declarations_under_folder(decls, folder, owners, spellings) {
         return None;
     }
     let home = paired_declarations(decls).sole()?.stand_in;

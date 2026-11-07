@@ -10,7 +10,8 @@
 //! reads is re-exported below, and everything else is the component's own
 //! (§AR-core-module-layout.1.1). `observe.rs` is the run's input observer, which
 //! came down out of `model/check_inputs.rs`; `identity.rs` the physical path
-//! keys, out of `model/paths.rs`; `disk.rs` the reads, out of `config/inputs.rs`;
+//! keys, out of `model/paths.rs`; `spellings.rs` the one table of a file's names;
+//! `disk.rs` the reads, out of `config/inputs.rs`;
 //! and `buffers.rs` the buffers and the view every reader asks. `native_watch.rs`
 //! is the disk's change notification: the debounce its events are coalesced by
 //! (§FS-check.6.1.2), and behind the `native-watch` feature its backend, which only
@@ -22,6 +23,7 @@ mod disk;
 mod identity;
 pub mod native_watch;
 mod observe;
+mod spellings;
 #[cfg(all(test, unix))]
 mod tests_identity;
 
@@ -36,5 +38,8 @@ pub(crate) use disk::{
     path_exists, path_is_dir, path_is_entry, path_is_file, path_is_symlink, path_metadata,
     read_bytes, read_git_metadata, read_link,
 };
+#[cfg(test)]
+pub(crate) use identity::resolved_paths;
 pub(crate) use identity::{canonicalize_existing_prefix, paths_same_location, physical_path_key};
 pub(crate) use observe::{check_input_observer, observe_input, record_test_workspace_load};
+pub(crate) use spellings::Spellings;

@@ -24,7 +24,6 @@ fn tree(case: &str) -> Tree {
 }
 
 #[test]
-#[ignore = "red until #1274 names both spellings on a content finding; implement removes this"]
 fn a_content_finding_is_one_line_naming_each_spelling() {
     let tree = tree("one-line");
     let plain = tree.grund(&["check"]);
@@ -35,7 +34,6 @@ fn a_content_finding_is_one_line_naming_each_spelling() {
 
 /// The JSON row of §FS-scan.identity.findings.content, byte for byte: `sites` keeps its shape.
 #[test]
-#[ignore = "red until #1274 names both spellings on a content finding; implement removes this"]
 fn its_json_carries_both_in_sites() {
     let json = tree("json").grund(&["check", "--format", "json"]);
     assert_eq!(
@@ -50,7 +48,6 @@ fn its_json_carries_both_in_sites() {
 /// A finding naming several sites is in scope at any and keeps its bytes, so a run naming the
 /// link prints the whole run's line (§FS-scan.identity.link-path, §FS-check.1.3.6.2).
 #[test]
-#[ignore = "red until #1274 names both spellings on a content finding; implement removes this"]
 fn a_run_naming_either_spelling_prints_the_whole_runs_line() {
     let tree = tree("scoped");
     for path in ["notes/link.md", "docs/fs/a.md"] {
@@ -76,7 +73,6 @@ fn v1_tree(case: &str, include: &str) -> Tree {
 
 /// Where the plain run reaches both names, plain and `--full` print the same line, naming both.
 #[test]
-#[ignore = "red until #1274 names both spellings on a content finding; implement removes this"]
 fn plain_and_full_agree_on_a_line_naming_both_reached_spellings() {
     let tree = v1_tree("reached-both", "\"docs\", \"notes\"");
     let want = "docs/x.md:5: error: unknown reference FS-001-gone (also at notes/link.md:5)";

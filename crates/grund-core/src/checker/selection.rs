@@ -88,6 +88,8 @@ impl CheckFindingSelection {
             // §FS-imports.checks: what a run read, or could not, about its imports.
             || code == "import-live"
             || code == "import-missing"
+            // §FS-scan.checks.reading-conflict: hidden, it is a green run over an unread file.
+            || code == "reading-conflict"
             // §FS-check.1.4.1: about the selection itself, so both axes pass it.
             || code == SELECTED_CHECK_OFF && !self.ignore.contains(code)
             || self.code_axis_retains(code)

@@ -50,13 +50,46 @@ owners = ["crates/grund-core/src/config/kinds.rs"]
 name = "text"
 fact = "the text of a file, and which path names it"
 done = true
-points = ["FS-scan.text", "FS-scan.identity", "FS-declarations.stubs.target.1"]
+points = [
+  "FS-scan.text",
+  "FS-scan.identity.buffers",
+  "FS-scan.identity.link-path",
+  "FS-scan.identity.root-path",
+  "FS-scan.identity.read-once",
+  "FS-declarations.stubs.target.1",
+]
 owners = [
+  "crates/grund-core/src/queries/editor_on_type.rs",
   "crates/grund-core/src/scanner/stub_homes.rs",
+  "crates/grund-core/src/scanner/tree.rs",
   "crates/grund-core/src/sources/buffers.rs",
   "crates/grund-core/src/sources/disk.rs",
   "crates/grund-core/src/sources/identity.rs",
   "crates/grund-core/src/sources/mod.rs",
+  "crates/grund-core/src/sources/spellings.rs",
+]
+
+[[family]]
+name = "reading"
+fact = "what a file reached by two names is read as, and which names a finding about it carries"
+done = true
+points = ["FS-scan.identity.reading", "FS-scan.identity.findings"]
+owners = [
+  "crates/grund-core/src/checker/citation_prohibitions.rs",
+  "crates/grund-core/src/checker/citations.rs",
+  "crates/grund-core/src/checker/conform.rs",
+  "crates/grund-core/src/checker/grounding.rs",
+  "crates/grund-core/src/checker/index.rs",
+  "crates/grund-core/src/checker/reference_scope.rs",
+  "crates/grund-core/src/checker/spellings_report.rs",
+  "crates/grund-core/src/config/file_reading.rs",
+  "crates/grund-core/src/config/read_name.rs",
+  "crates/grund-core/src/queries/editor_on_type.rs",
+  "crates/grund-core/src/scanner/context.rs",
+  "crates/grund-core/src/scanner/tree.rs",
+  "crates/grund-core/src/scanner/value_json.rs",
+  "crates/grund-core/src/scanner/walk_names.rs",
+  "crates/grund-core/src/sources/spellings.rs",
 ]
 
 [[family]]

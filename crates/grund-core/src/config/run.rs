@@ -16,7 +16,7 @@ use super::mount_edge::{ImportRead, MountEdge};
 use super::record::{AbsentOptionalNamespace, Config};
 use super::run_warnings::RunWarning;
 use crate::model::Diagnostic;
-use crate::sources::Buffers;
+use crate::sources::{Buffers, Spellings};
 
 /// §AR-config.1.5: one invocation's facts about one project.
 #[derive(Clone)]
@@ -50,6 +50,9 @@ pub struct Run {
     /// The editor's open documents, keyed by physical path, which every reader
     /// of this run reads as the files they name (§AR-system.2.13).
     pub(crate) buffers: Buffers,
+    /// Every in-tree name that reached a file, which the walk publishes here and the reading rule
+    /// reads (§AR-scanner.1.8, §AR-config.1.6).
+    pub(crate) spellings: Spellings,
 }
 
 /// §AR-config.1.5: the scope this invocation asked for.
@@ -264,6 +267,7 @@ impl Run {
             warnings: Vec::new(),
             path_base: invocation.path_base,
             buffers: invocation.buffers.clone(),
+            spellings: Spellings::default(),
         }
     }
 

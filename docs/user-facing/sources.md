@@ -119,6 +119,35 @@ away from Markdown. A key is a bare final extension: no dot, no `/`, and no
 glob character. The target must be a language `languages` admits; a mapping
 admits nothing by itself.
 
+## How a linked file is read
+
+A file reached through a symlink is one file, and renaming the link changes
+nothing about what it is read as ([§FS-scan.identity.reading](../functional-spec/FS-scan.md#identityreading-how-a-file-is-read-belongs-to-the-file-not-to-the-name-that-reached-it)):
+
+1. A file inside the config root is read as its own name reads, when that name claims a reading.
+2. A file whose own name claims nothing, or that lies outside the root, is read as the link's name reads.
+3. Two links that read such a file differently are refused, and the file is read under neither.
+
+Under `txt = "rust"`, then, `fs/spec.md -> real.txt` is Rust, because the
+configuration reads `real.txt` as Rust and the `.md` on the link decides nothing:
+
+```toml
+[schema.sources]
+languages = ["markdown", "rust"]
+[schema.sources.extensions]
+txt = "rust"
+```
+
+A name claims a reading when an admitted language reads it; under version 1,
+when the extension list holds its extension. So `docs/license.md -> ../LICENSE`
+stays Markdown, because `LICENSE` claims nothing. Whether a name enters the scan
+at all is still asked of that name: a hidden link, or one whose extension is
+unlisted, stays unread whatever it points at.
+
+A link whose reading moved earns a `reading-moved` warning that says what it was
+read as and what it is read as now ([§FS-scan.checks.reading-moved](../functional-spec/FS-scan.md#checksreading-moved-a-link-is-read-as-its-targets-own-name-reads)). If the file should stay as it was,
+rename the target or copy the file.
+
 ## Defining a language
 
 `[schema.sources.definitions.<name>]` adds a language that `languages` may admit

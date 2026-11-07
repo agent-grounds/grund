@@ -6,7 +6,6 @@ use std::fs;
 use super::identity::physical_path_key;
 
 #[test]
-#[ignore = "red until #1274 keys an unsaved file through its existing prefix; implement removes this"]
 fn an_unsaved_file_under_a_directory_link_is_one_key_with_its_target() {
     let root = std::env::temp_dir().join(format!("grund-1274-key-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);

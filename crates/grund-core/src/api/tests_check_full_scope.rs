@@ -413,8 +413,14 @@ fn full_scope_reads_an_aliased_include_root_once() {
 
     let scoped = check_run(&root, false);
     let full = check_run(&root, true);
+    // §FS-scan.identity.findings.place: `docs/functional-spec` is FS's home, so the one finding is
+    // its index at that spelling; a read of the file twice would add a duplicate.
     assert!(
-        scoped.report.errors.is_empty(),
+        !scoped
+            .report
+            .errors
+            .iter()
+            .any(|error| error.code == crate::model::Code::DUPLICATE),
         "the plain run reads the declaration once, through the `include` spelling"
     );
     assert_eq!(
