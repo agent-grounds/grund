@@ -3,7 +3,7 @@ use anyhow::Context;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use super::scan_error::publish_unlisted;
+use super::scan_error::{publish_unlisted, publish_unread, scan_error_reason};
 use super::tree::ScanError;
 use super::walk_order::sort_paths;
 
@@ -53,10 +53,9 @@ pub(super) fn e2e_cases_folder(schema: &Schema) -> Option<&str> {
 ///
 /// `reported` is the scan's failures so far, the walk's among them. A failure to list the
 /// directory the pass reads, at open or partway through, is published there, once
-/// (§AR-scanner.6.unlistable-root), and so is a case's fixture directory (§AR-scanner.1.relisted).
-/// A failure reading a case's file is handed back with the path that failed, spelled under the
-/// configured folder, rather than stopping at the first (§AR-scanner.6.6). They stay errors because
-/// the caller derives each published reason from the error's kind (§FS-check.2.4.1).
+/// (§AR-scanner.6.unlistable-root), and so are a case's fixture directory and a case's file
+/// (§AR-scanner.1.relisted). Each is at the path that failed, spelled under the configured folder,
+/// and the first hides none after it (§AR-scanner.6.6).
 pub(super) fn scan_e2e_cases(
     schema: &Schema,
     frame: Frame<'_>,
@@ -64,14 +63,14 @@ pub(super) fn scan_e2e_cases(
     explicit_scope: bool,
     reported: &mut Vec<ScanError>,
     findings: &mut Catalog,
-) -> Vec<(PathBuf, anyhow::Error)> {
+) {
     let Some(folder) = e2e_cases_folder(schema) else {
-        return Vec::new();
+        return;
     };
     // §FS-check.2.4.2: the folder as the tree spells it, which a failure is published at.
     let spelled_root = frame.root().join(folder);
     if !path_exists(&spelled_root) || !path_is_dir(&spelled_root) {
-        return Vec::new();
+        return;
     }
     let cases_root = canonical_path(&spelled_root).unwrap_or_else(|_| spelled_root.clone());
     let mut scan_root = cases_root.clone();
@@ -85,21 +84,20 @@ pub(super) fn scan_e2e_cases(
     if narrowed_to_path {
         let scope = scope.unwrap_or(Path::new("."));
         if path_is_file(&scope) {
-            return Vec::new();
+            return;
         }
         let scope = canonical_path(scope).unwrap_or_else(|_| scope.to_path_buf());
         if scope.starts_with(&cases_root) {
             scan_root = scope;
         } else if !cases_root.starts_with(&scope) {
-            return Vec::new();
+            return;
         }
     } else if !frame.run.scope.full && !cases_root_in_ordinary_scope(schema, frame, &cases_root) {
         // §FS-check.1.3: `--full` cancels `include`, so the e2e cases are in the
         // walk whether or not `include` happens to name their folder.
-        return Vec::new();
+        return;
     }
 
-    let mut failures = Vec::new();
     let mut case_dirs = Vec::new();
     if path_is_file(&scan_root.join("expected.exit")) {
         case_dirs.push(scan_root);
@@ -135,13 +133,16 @@ pub(super) fn scan_e2e_cases(
             Err(case_failures) => {
                 // §AR-scanner.6.6: each failure at its own path, the case's first hiding nothing.
                 for failure in case_failures {
+                    let spelled = spelled_below(&spelled_root, &cases_root, failure.path());
                     match failure {
-                        CaseFailure::Read(path, err) => {
-                            failures.push((spelled_below(&spelled_root, &cases_root, &path), err));
+                        CaseFailure::Unread(path, err) => {
+                            publish_unread(&path, spelled, &err, reported);
                         }
                         CaseFailure::Unlisted(path, err) => {
-                            let spelled = spelled_below(&spelled_root, &cases_root, &path);
                             publish_unlisted(&path, spelled, &err, None, reported);
+                        }
+                        CaseFailure::Unparsed(_, err) => {
+                            reported.push((spelled, scan_error_reason(&err)));
                         }
                     }
                 }
@@ -175,7 +176,6 @@ pub(super) fn scan_e2e_cases(
                 front_matter: None,
             });
     }
-    failures
 }
 
 /// `failed`, a canonical path at or below the canonical `cases_root`, spelled as the tree
@@ -227,12 +227,23 @@ pub(crate) fn e2e_case_dir_name(schema: &Schema, rendered: &str) -> String {
 
 /// One failure reading a case, with the path that failed (§AR-scanner.6.6).
 enum CaseFailure {
-    /// A file of the case that could not be read or decoded, or an `expected.exit` that does not
-    /// parse: handed back and published as it stands.
-    Read(PathBuf, anyhow::Error),
+    /// A file of the case that could not be read or decoded, which the walk reads too where the
+    /// scan's extensions reach it, so it goes through the one comparison (§AR-scanner.1.relisted).
+    Unread(PathBuf, std::io::Error),
     /// A fixture directory that could not be listed, which the walk may have failed on too, so
     /// it goes through the one comparison (§AR-scanner.1.relisted).
     Unlisted(PathBuf, std::io::Error),
+    /// An `expected.exit` that does not parse, which only this pass can say, so nothing is
+    /// compared (§AR-scanner.6.6).
+    Unparsed(PathBuf, anyhow::Error),
+}
+
+impl CaseFailure {
+    fn path(&self) -> &Path {
+        match self {
+            Self::Unread(path, _) | Self::Unlisted(path, _) | Self::Unparsed(path, _) => path,
+        }
+    }
 }
 
 /// Read one e2e case directory into an `E2eCase` — the words of `command.args`
@@ -263,7 +274,7 @@ fn read_e2e_case(
             .parse::<i32>()
             .with_context(|| format!("parse {}/expected.exit", format_path(dir)));
         parsed
-            .map_err(|err| failed.push(CaseFailure::Read(exit_path, err)))
+            .map_err(|err| failed.push(CaseFailure::Unparsed(exit_path, err)))
             .ok()
     });
     let mut fixtures = Vec::new();
@@ -290,7 +301,7 @@ fn read_case_file(frame: Frame<'_>, path: &Path, failed: &mut Vec<CaseFailure>) 
     match frame.sources().text(path) {
         Ok(text) => Some(text.into_owned()),
         Err(err) => {
-            failed.push(CaseFailure::Read(path.to_path_buf(), err.into()));
+            failed.push(CaseFailure::Unread(path.to_path_buf(), err));
             None
         }
     }

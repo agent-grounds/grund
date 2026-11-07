@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use super::tree::ScanError;
 use crate::config::Frame;
 use crate::model::remedies;
-use crate::sources::paths_same_location;
+use crate::sources::{paths_same_entry, paths_same_location};
 
 /// One file the walk could not read, as a caller of the embedding API sees it:
 /// the path rendered against the run's report base (§FS-config.3.6) and the
@@ -70,10 +70,36 @@ pub(super) fn publish_unlisted(
     context: Option<&str>,
     reported: &mut Vec<ScanError>,
 ) {
+    publish_unless_reported(spelled, error, context, reported, |path| {
+        paths_same_location(path, listed)
+    });
+}
+
+/// A pass's failure to read `read`, a file the walk may read too, through the same comparison.
+/// The location is the directory entry and not the file behind it, so a file that is a link keeps
+/// its own line beside the walk's report of the target (§AR-scanner.1.relisted).
+pub(super) fn publish_unread(
+    read: &Path,
+    spelled: PathBuf,
+    error: &Error,
+    reported: &mut Vec<ScanError>,
+) {
+    publish_unless_reported(spelled, error, None, reported, |path| {
+        paths_same_entry(path, read)
+    });
+}
+
+fn publish_unless_reported(
+    spelled: PathBuf,
+    error: &Error,
+    context: Option<&str>,
+    reported: &mut Vec<ScanError>,
+    same_location: impl Fn(&Path) -> bool,
+) {
     let reason = scan_io_reason(error);
     let already = reported
         .iter()
-        .any(|(path, said)| *said == reason && paths_same_location(path, listed));
+        .any(|(path, said)| *said == reason && same_location(path));
     if !already {
         let message = match context {
             Some(context) => format!("{context}: {reason}"),
