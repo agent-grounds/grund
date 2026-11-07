@@ -11,10 +11,11 @@ use super::value_json::value_sources;
 use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{LinkRecovery, symlink_loop_report, walk_error_reports};
+use super::walk_failures::{one_report_per_entry, sort_failures};
 use super::walk_names::settle_names;
 use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
-use crate::model::{ReadingConflict, ReadingMove, Refused, RootRow, sort_path_key};
+use crate::model::{FailureNames, ReadingConflict, ReadingMove, Refused, RootRow};
 use crate::sources::{
     canonical_path, is_directory, is_regular_file, path_exists, path_is_file, paths_same_location,
     physical_path_key,
@@ -48,6 +49,8 @@ pub(crate) struct WalkedTree {
     pub(crate) files: Vec<PathBuf>,
     /// The paths the walk could not read, for the caller to report (§FS-check.2.4).
     pub(crate) errors: Vec<ScanError>,
+    /// The other names each of those failures was reported under (§AR-scanner.1.entry).
+    pub(crate) failure_names: FailureNames,
     /// The files that are in this tree only by a link: their physical path is
     /// outside the config root. Read like any other file (§FS-config.3.5.1) —
     /// `fmt --write` is the caller that treats them differently, because
@@ -98,11 +101,12 @@ pub(crate) struct WalkedTree {
 /// already paid for, so the boundary costs a prefix test over the files that can
 /// wear a second name, and nothing at all for a run that loaded no workspace.
 ///
-/// Why the error list is sorted and deduplicated here: the text report sorts before
+/// Why the error list is sorted and compared here: the text report sorts before
 /// printing while the API surface hands the list over as it stands, so one sort
 /// serves both; and overlapping roots — plus `--full`, which walks every `include`
 /// root beside the config root that contains it — meet the same broken link once per
-/// root, so an undeduplicated list prints every such error twice.
+/// root, and a directory link meets one entry under two names, so an uncompared list
+/// prints each such error twice (§FS-check.2.4.2, §AR-scanner.1.entry).
 ///
 /// Why `outside_root` compares physical paths on both sides: a config root reached
 /// through a link contains none of the paths its own files resolve to, and
@@ -250,6 +254,7 @@ pub(crate) fn walk_scannable_files_with_sources(
             Some(&met_cases),
         )?;
         let mut root_files = Vec::new();
+        let mut root_errors = Vec::new();
         // §AR-scanner.1.9: the last of this root's `dirs` is the directory the walk is inside when
         // an error names no entry. The walk's own filter and the once-per-directory recovery are
         // both built on the first error, so the success path pays for neither.
@@ -272,7 +277,7 @@ pub(crate) fn walk_scannable_files_with_sources(
                 walk_error_reports(err, filter, recovery, listing, schema, frame, &scan_root)
             {
                 on_error(&report, source);
-                errors.push(report);
+                root_errors.push(report);
             }
         };
         for entry in walker {
@@ -317,13 +322,17 @@ pub(crate) fn walk_scannable_files_with_sources(
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .drain(..)
         {
-            errors.extend(symlink_loop_report(&link, &target, schema, frame));
+            root_errors.extend(symlink_loop_report(&link, &target, schema, frame));
         }
         // §FS-errors.4.1: within one root the order is the filesystem's, and the
         // first-seen rule below turns that into a choice of *spelling*. Sorting each
         // root's list first makes the choice ours: earlier root wins, then lexicographic.
         sort_paths(&mut root_files);
         files.append(&mut root_files);
+        // §AR-scanner.1.entry: the failures' name is chosen as the files' is, so each root sorts
+        // its own and the joined list stays in root order until the entry step has run.
+        sort_failures(&mut root_errors);
+        errors.append(&mut root_errors);
     }
     // One file, one read (§FS-check.1.3.2, §FS-config.3.5.4). Two spellings first,
     // while the list is still in walk order and first-seen wins; then the
@@ -363,11 +372,10 @@ pub(crate) fn walk_scannable_files_with_sources(
     // twice, and under `--full` every `include` root is walked beside the config root
     // containing it (§FS-check.1.3.2). A file read twice duplicates its own declaration.
     files.dedup();
-    // §FS-errors.4.1: the walk meets its unreadable paths in readdir order, so they are
-    // sorted once here for both surfaces, then deduplicated byte-wise: overlapping roots
-    // that meet one failure under one spelling print it once; two spellings stay two.
-    errors.sort_by_key(|(path, message)| (sort_path_key(path), message.clone()));
-    errors.dedup();
+    // §FS-check.2.4.2: one entry that failed for one reason is one failure, however many roots
+    // or names met it; what survives is then sorted once for both surfaces (§FS-errors.4.1).
+    let failure_names = one_report_per_entry(&mut errors);
+    sort_failures(&mut errors);
     // §FS-fmt.2.3.2: a file whose physical path is not under the config root is in
     // this tree only by the link that reaches it. The resolution is already paid
     // for above, so this is a prefix test over the links and nothing more.
@@ -395,6 +403,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     Ok(WalkedTree {
         files,
         errors,
+        failure_names,
         outside_root,
         dirs,
         root_scope,

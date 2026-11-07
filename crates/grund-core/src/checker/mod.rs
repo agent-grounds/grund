@@ -104,9 +104,9 @@ pub(crate) use index_entries::KindIndexEntries;
 pub(crate) use index_files::KindIndexFiles;
 pub(crate) use judge::CheckWorkspace;
 pub(crate) use reference_scope::{
-    ScanScope, configured_scope, out_of_scope_references, path_report_scope,
-    retain_diagnostics_in_report_scope, retain_findings_in_scope, scope_read_any_file,
-    workspace_out_of_scope_references,
+    ScanScope, configured_scope, out_of_scope_references, partition_scan_failures,
+    path_report_scope, retain_diagnostics_in_report_scope, retain_findings_in_scope,
+    scope_read_any_file, workspace_out_of_scope_references,
 };
 pub(crate) use report::check_project;
 pub(crate) use sections::{out_of_scope_section_headings, workspace_out_of_scope_section_headings};
@@ -156,6 +156,8 @@ mod tests_finding_selection;
 mod tests_grounding_per_place;
 #[cfg(test)]
 mod tests_grounding_style;
+#[cfg(all(test, unix))]
+mod tests_holds_failure;
 #[cfg(test)]
 mod tests_inline_note_layout;
 #[cfg(test)]

@@ -20,7 +20,6 @@ use two_spellings_tree::{
 
 /// The report's tree, on the two commands its reproducer judged.
 #[test]
-#[ignore = "red until #1288 compares the walk's failures by entry; implement removes this"]
 fn the_reports_tree_is_one_line_from_check_and_list() {
     let mut tree = Tree::new("report", Shape::Plain, &config("e2e/cases"));
     if !tree.reports_tree() {
@@ -33,7 +32,6 @@ fn the_reports_tree_is_one_line_from_check_and_list() {
 }
 
 #[test]
-#[ignore = "red until #1288 compares the walk's failures by entry; implement removes this"]
 fn the_reports_tree_is_one_io_entry_in_check_json() {
     let mut tree = Tree::new("json", Shape::Plain, &config("e2e/cases"));
     if !tree.reports_tree() {
@@ -51,7 +49,6 @@ fn the_reports_tree_is_one_io_entry_in_check_json() {
 
 /// The list the embedding API hands over carries the one failure, once.
 #[test]
-#[ignore = "red until #1288 compares the walk's failures by entry; implement removes this"]
 fn the_reports_tree_is_one_entry_in_the_embedding_list() {
     let mut tree = Tree::new("embedding", Shape::Plain, &config("e2e/cases"));
     if !tree.reports_tree() {
@@ -75,7 +72,6 @@ fn the_reports_tree_is_one_entry_in_the_embedding_list() {
 
 /// The E2E folder elsewhere, so the manifest pass is out of play and both lines are the walk's.
 #[test]
-#[ignore = "red until #1288 compares the walk's failures by entry; implement removes this"]
 fn with_the_manifest_pass_out_of_play_the_tree_is_still_one_line() {
     let mut tree = Tree::new("elsewhere", Shape::Plain, &config("zz/cases"));
     tree.dirs(&["zz/cases"]);
@@ -97,7 +93,6 @@ fn with_the_manifest_pass_out_of_play_the_tree_is_still_one_line() {
 
 /// A fix that merges failures by reason alone fails here: two directories that fail alike.
 #[test]
-#[ignore = "red until #1288 compares the walk's failures by entry; implement removes this"]
 fn a_second_directory_that_fails_alike_keeps_its_own_line() {
     let mut tree = Tree::new("guard", Shape::Plain, &config("e2e/cases"));
     tree.dirs(&["other/cases"]);
@@ -146,7 +141,6 @@ fn two_links_to_one_target_stay_three_lines_with_it() {
 
 /// A link whose target no walk reads, reached under two names, is one entry and one line.
 #[test]
-#[ignore = "red until #1288 compares the walk's failures by entry; implement removes this"]
 fn a_link_under_two_names_to_a_hidden_target_is_one_line() {
     let mut misreports = Vec::new();
     for shape in SHAPES {
@@ -161,7 +155,6 @@ fn a_link_under_two_names_to_a_hidden_target_is_one_line() {
 
 /// With a walked target, the link's two names are one line and the target keeps its own.
 #[test]
-#[ignore = "red until #1288 compares the walk's failures by entry; implement removes this"]
 fn a_link_under_two_names_to_a_walked_target_is_two_lines() {
     let mut tree = Tree::new("walked", Shape::Plain, &config("zz/cases"));
     if !tree.link_under_two_names("secret") {
@@ -176,7 +169,6 @@ fn a_link_under_two_names_to_a_walked_target_is_two_lines() {
 
 /// A broken link below a directory link: one entry, without waiting for the file pass.
 #[test]
-#[ignore = "red until #1288 compares the walk's failures by entry; implement removes this"]
 fn a_broken_link_below_a_directory_link_is_one_line() {
     let mut misreports = Vec::new();
     for shape in SHAPES {
@@ -192,7 +184,6 @@ fn a_broken_link_below_a_directory_link_is_one_line() {
 /// `d` lists but cannot be searched, so `d/sub` fails at the walk under each name. The entry's
 /// parent still resolves. A file `d/x.md` here is the file pass's, which is #1274's, not this.
 #[test]
-#[ignore = "red until #1288 compares the walk's failures by entry; implement removes this"]
 fn a_parent_that_lists_but_cannot_be_searched_is_one_line() {
     let mut tree = Tree::new("search", Shape::Plain, &config("zz/cases"));
     tree.dirs(&["zz/cases", "d/sub"]);
@@ -209,7 +200,6 @@ fn a_parent_that_lists_but_cannot_be_searched_is_one_line() {
 
 /// The whole run's lines are the plain project's at a workspace root.
 #[test]
-#[ignore = "red until #1288 compares the walk's failures by entry; implement removes this"]
 fn the_reports_tree_at_a_workspace_root_is_one_line() {
     let mut tree = Tree::new("ws", Shape::WorkspaceRoot, &config("e2e/cases"));
     if !tree.reports_tree() {
@@ -221,7 +211,6 @@ fn the_reports_tree_at_a_workspace_root_is_one_line() {
 /// Each run names the failure under the path it was handed, as one error and no caution, and
 /// keeps its exit; a run over a path that holds no name of it gives one caution and exits 0.
 #[test]
-#[ignore = "red until #1288 asks the scope about a failure's names; implement removes this"]
 fn scoped_runs_over_the_reports_tree_name_the_path_handed() {
     let mut misreports = Vec::new();
     for shape in SHAPES {
@@ -242,7 +231,6 @@ fn scoped_runs_over_the_reports_tree_name_the_path_handed() {
 
 /// The same for a link standing at the failed entry itself.
 #[test]
-#[ignore = "red until #1288 asks the scope about a failure's names; implement removes this"]
 fn scoped_runs_over_a_link_under_two_names_name_the_path_handed() {
     let mut misreports = Vec::new();
     for shape in SHAPES {
@@ -261,7 +249,6 @@ fn scoped_runs_over_a_link_under_two_names_name_the_path_handed() {
 /// The exit code's guard: the whole run keeps `aa/x`, which is under `realE` neither as written
 /// nor resolved, so a scope that asks physically drops `check realE` from exit 2 to exit 0.
 #[test]
-#[ignore = "red until #1288 asks the scope about a failure's names; implement removes this"]
 fn a_third_name_keeps_the_exit_code_of_a_scoped_run() {
     let mut misreports = Vec::new();
     for shape in SHAPES {
@@ -280,7 +267,6 @@ fn a_third_name_keeps_the_exit_code_of_a_scoped_run() {
 /// `include` keeps its order: the earlier root's name, not the lexicographically first across
 /// the roots, and `--full` only adds, so its lines are the plain run's.
 #[test]
-#[ignore = "red until #1288 keeps each root's failures in root order; implement removes this"]
 fn the_earlier_roots_name_is_kept_and_full_only_adds() {
     let v1 = "grund_config_version = 1\nproject_name = \"q\"\n\n\
               [[kinds]]\nkind = \"E2E\"\nfolder = \"zz/cases\"\n\

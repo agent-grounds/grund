@@ -366,7 +366,7 @@ fn shortest_link_spelling(path: &Path, scan_root: &Path) -> Option<PathBuf> {
 /// directories above it: the canonical parent plus the final component. Unlike
 /// `canonicalize` on the whole path, this does not resolve the entry itself, so a
 /// link is identified as the link rather than as its target.
-fn link_identity(path: &Path) -> Option<PathBuf> {
+pub(super) fn link_identity(path: &Path) -> Option<PathBuf> {
     let name = path.file_name()?;
     Some(canonical_path(path.parent()?).ok()?.join(name))
 }

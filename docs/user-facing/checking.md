@@ -159,6 +159,11 @@ to make one entry stale and refresh it.
 
 ## The report
 
+A scan failure's line is one failure rather than one path, and so is its `io` entry
+in JSON. A directory that failed once prints once however many names reach it,
+under the name a file reached twice keeps: the earlier root's, then the first in
+sort order ([§FS-check.2.4.2](../functional-spec/FS-check.md#242-one-failure-one-line)).
+
 With `[id] named_sections = true`, a marked citation of a name under a number
 is checked as a whole. From grund 0.19.0, an absent section or declaration is
 an ordinary error; the warning and its temporary release clause from 0.18.0
@@ -284,6 +289,13 @@ moves the exit code, and only `--ignore selected-check-off` removes it
 Selection happens only after the complete scan, and operational failures remain
 visible; selected `success` describes only that view, not an all-findings
 repository verdict ([§FS-check.2](../functional-spec/FS-check.md#2-outputs)).
+
+`grund check <path>` narrows the report to the path instead. A scan failure reached
+under several names is inside the path when any of its names is, so it stays an
+error and the exit stays `2`, and it prints under its name there: with
+`e2e -> realE`, `check realE` says `realE/cases` and `check e2e` says `e2e/cases`.
+A failure with no name under the path is one caution, under the whole run's name
+([§FS-check.1.3.6.3](../functional-spec/FS-check.md#1363-a-file-the-wider-walk-could-not-read-is-said-out-loud)).
 
 ### Imports are always reported
 

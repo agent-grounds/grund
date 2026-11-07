@@ -39,6 +39,7 @@ mod e2e;
 mod excluded_stub_targets;
 mod expected;
 mod failure;
+mod failure_names;
 mod file_record;
 mod front_matter;
 mod headings;
@@ -66,6 +67,7 @@ pub(crate) use expected::GENERATED_SECTIONS;
 pub use expected::{Expected, ExpectedEntrypoint, ExpectedSection, ScopedExpectation};
 pub(crate) use failure::OperationContext;
 pub use failure::OperationDiagnostic;
+pub(crate) use failure_names::FailureNames;
 pub use headings::{
     NearMissHeading, RelativeHint, RelativeSectionParent, SectionHeadingOutsideDeclaration,
     UnmarkedHeading,
