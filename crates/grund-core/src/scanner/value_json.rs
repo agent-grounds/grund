@@ -38,14 +38,15 @@ impl UnreadHome {
 }
 
 /// Full-catalog enrollment through the same readers fetch uses for a selected
-/// home (§FS-values.2.2, §FS-fetch.5.1).
+/// home (§FS-values.2.2, §FS-fetch.5.1), retaining readable sources alongside
+/// candidate classification failures (§FS-values.5.3.1).
 pub(super) fn scan_value_sources(
     schema: &Schema,
     frame: Frame<'_>,
     findings: &mut Catalog,
     errors: &mut Vec<ScanError>,
 ) {
-    let sources = match value_sources_in(schema, frame, None) {
+    let sources = match value_sources_in(schema, frame, None, errors) {
         Ok(sources) => sources,
         // §AR-scanner.1.relisted: the walk lists a home too, so its listing failure is
         // published only where the scan has not reported it already (§FS-check.2.4.2).
@@ -61,6 +62,7 @@ pub(super) fn scan_value_sources(
 /// (§FS-fetch.5.1). Alias metadata from other homes preserves the catalog's
 /// reader and ownership decisions, but unrelated bodies are not read. Content
 /// findings stay in the catalog; selected-home discovery/read failures prevent installation.
+/// Candidate classification failures have the same scope (§FS-values.5.3.1).
 pub(crate) fn folder_value_declarations(
     schema: &Schema,
     frame: Frame<'_>,
@@ -68,10 +70,10 @@ pub(crate) fn folder_value_declarations(
     kind: &str,
 ) -> std::result::Result<Catalog, ScanError> {
     // §FS-fetch.5.1: fetch runs no walk, so a home it cannot read is its failure as it stands.
-    let sources = value_sources_in(schema, frame, Some((kind, folder)))
+    let mut errors = Vec::new();
+    let sources = value_sources_in(schema, frame, Some((kind, folder)), &mut errors)
         .map_err(UnreadHome::into_scan_error)?;
     let mut findings = Catalog::default();
-    let mut errors = Vec::new();
     scan_sources(frame, sources, &mut findings, &mut errors);
     if let Some(error) = errors.into_iter().next() {
         return Err(error);
@@ -113,15 +115,7 @@ fn scan_sources(
         let text = match frame.sources().text(path) {
             Ok(text) => text.into_owned(),
             Err(error) => {
-                // §FS-check.2.4.1: retain the format context around the shared I/O reason.
-                errors.push((
-                    path.clone(),
-                    format!(
-                        "could not read value {} source: {}",
-                        format.name(),
-                        scan_io_reason(&error)
-                    ),
-                ));
+                errors.push(value_source_error(path, format, &error));
                 continue;
             }
         };
@@ -133,6 +127,19 @@ fn scan_sources(
             duplicate_owned_source(path, findings);
         }
     }
+}
+
+/// A value source's read or classification failure (§FS-values.5.3.1), with
+/// format context around the shared I/O reason (§FS-check.2.4.1).
+fn value_source_error(path: &Path, format: ValueFormat, error: &std::io::Error) -> ScanError {
+    (
+        path.to_path_buf(),
+        format!(
+            "could not read value {} source: {}",
+            format.name(),
+            scan_io_reason(error)
+        ),
+    )
 }
 
 /// A source's root by its format's reader, or the line a stream the reader
@@ -188,19 +195,25 @@ pub(super) fn value_sources<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
 ) -> std::result::Result<Vec<(PathBuf, &'a str, ValueFormat)>, (PathBuf, String)> {
-    value_sources_in(schema, frame, None).map_err(UnreadHome::into_scan_error)
+    // §FS-values.5.3.1: enrollment publishes classification failures; callers here
+    // need the readable source paths for the ordinary walk's source exclusions.
+    value_sources_in(schema, frame, None, &mut Vec::new()).map_err(UnreadHome::into_scan_error)
 }
 
 /// The single source enumerator (§FS-values.2.2, §FS-fetch.5.1). A selected home
 /// retains all spellings and owners of its physical inputs before shared grouping
 /// chooses a reader. Failures discovering unrelated homes do not gate fetch.
+/// Failed candidate metadata is reported while readable sources remain available
+/// (§FS-values.5.3.1); confirmed non-files stay outside the source set.
 fn value_sources_in<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
     selected: Option<(&str, &Path)>,
+    errors: &mut Vec<ScanError>,
 ) -> std::result::Result<Vec<(PathBuf, &'a str, ValueFormat)>, UnreadHome> {
     let mut sources = Vec::new();
     let mut selected_keys = BTreeSet::new();
+    let mut failed_sources = BTreeSet::new();
     // §FS-config-v2.schema.sources.values: the home picks the files, their language the reader.
     let format_of = |path: &Path| frame.compiled.reading(schema, path).value_format();
     for row in schema.value_rows() {
@@ -223,12 +236,25 @@ fn value_sources_in<'a>(
             if required && let Some(error) = listing.failure {
                 return Err(UnreadHome { folder, error });
             }
+            // §FS-values.5.3.1: classification failures have a deterministic path order too.
+            let mut entries = listing.entries;
+            entries.sort_by_key(|path| sort_path_key(path));
             // §FS-fetch.5.1: a home fetch does not select is read as far as it lists.
-            for listed in listing.entries {
+            for listed in entries {
                 let path = normalize_path_lexically(&listed);
-                if let Some(format) = format_of(&path)
-                    && disk.is_file(&path)
-                {
+                if let Some(format) = format_of(&path) {
+                    match disk.try_is_file(&path) {
+                        Ok(true) => {}
+                        Ok(false) => continue,
+                        Err(error) => {
+                            // §FS-values.5.3.1: one failed candidate, even if two homes
+                            // own it; unrelated homes still do not gate selected fetch.
+                            if required && failed_sources.insert(physical_path_key(&path)) {
+                                errors.push(value_source_error(&path, format, &error));
+                            }
+                            continue;
+                        }
+                    }
                     if selected_home {
                         selected_keys.insert(physical_path_key(&path));
                     }
