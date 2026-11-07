@@ -306,7 +306,8 @@ fn the_report_base_spells_the_one_location() {
     beside.assert_lines(&[named("../a/sub/up", "../a")]);
 }
 
-/// Only the count: the word a member's frame gives its ancestor is not this ticket's to settle.
+/// A member's walk spells the location from the member's root, and empty at that root, even where
+/// the line's path is spelled from the workspace root; the invocation base spells both.
 #[test]
 fn a_workspace_root_prints_one_line_for_a_members_loop() {
     let member = "grund_config_version = 2\nproject_name = \"m\"\n\n[schema.kinds.FS]\n\
@@ -319,15 +320,18 @@ fn a_workspace_root_prints_one_line_for_a_members_loop() {
     fs::write(tree.root().join("m/grund.toml"), member).expect("write the member's config");
     tree.link("m/a/sub/up", "..");
     tree.link("m/b", "a");
-    let run = tree.grund(&["check"]);
-    let lines = run.failure_lines();
-    assert_eq!(lines.len(), 1, "{}", run.report());
-    assert!(
-        lines[0].starts_with("error: m/a/sub/up: symlink loop:"),
-        "{}",
-        run.report()
-    );
-    assert_eq!(run.code, 2, "{}", run.report());
+    tree.dirs(&["m/x"]);
+    tree.link("m/x/toM", "..");
+    tree.assert_prints(&[
+        (
+            &["check"],
+            vec![named("m/a/sub/up", "a"), contains("m/x/toM")],
+        ),
+        (
+            &["check", "--path-base=invocation"],
+            vec![named("m/a/sub/up", "m/a"), named("m/x/toM", "m")],
+        ),
+    ]);
 }
 
 /// Control: without `b` the loop already prints one line, so a fix that silences it fails here.
