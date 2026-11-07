@@ -60,6 +60,11 @@ impl Tree {
         fs::write(project.join("grund.toml"), CONFIG).expect("write the config");
         fs::write(project.join("docs/FS-b.md"), "# FS-b: B\n\nPlain text.\n")
             .expect("write the declaration");
+        fs::write(
+            project.join("docs/README.md"),
+            "# Index\n\n- [\u{a7}FS-b](FS-b.md#fs-b-b)\n",
+        )
+        .expect("write the index");
         fs::write(project.join("notes.md"), "# Notes\n\nSee \u{a7}FS-b.\n")
             .expect("write the notes");
         Self {
@@ -185,9 +190,8 @@ fn an_inward_link_scoped_to_its_path_names_no_walk_root() {
     assert!(
         run.io
             .iter()
-            .any(|(severity, path)| severity == "error"
-                && ["docs/ext", "real"].contains(&path.as_str())),
-        "no in-scope failure in:\n{}",
+            .any(|(severity, path)| severity == "error" && path == "docs/ext"),
+        "the link is not reported in:\n{}",
         run.stderr
     );
 }
@@ -216,7 +220,6 @@ fn several_links_in_one_directory_are_each_reported_at_their_own_path() {
 /// canonical target, as it would a readable one, so neither a whole-project run nor one over the
 /// home reports anything, and both exit 0.
 #[test]
-#[ignore = "red until #1266 asks the project-root fence of a link whose target cannot be opened; implement removes this"]
 fn an_outward_link_whose_target_cannot_be_opened_is_pruned_in_silence() {
     let mut tree = Tree::new("outward");
     tree.dir("outside");
@@ -235,8 +238,8 @@ fn an_outward_link_whose_target_cannot_be_opened_is_pruned_in_silence() {
     }
 }
 
-/// The outward link named as the scope is the root gate's to judge; whatever that says of the
-/// link, no walk root is where anything failed.
+/// The outward link named as the scope is the root gate's to judge: it finds nothing to scan, and
+/// no failure is reported, at the link or at a walk root that met it, so the run exits 0.
 #[test]
 fn an_outward_link_scoped_to_its_path_names_no_walk_root() {
     let mut tree = Tree::new("outward-scoped");
@@ -246,9 +249,29 @@ fn an_outward_link_scoped_to_its_path_names_no_walk_root() {
         return;
     }
     let run = tree.check(&["docs/ext"]);
-    assert!(
-        !run.names_a_walk_root(),
-        "a walk root named in:\n{}",
+    assert_eq!((run.code, run.paths()), (0, vec![]), "{}", run.stderr);
+    assert!(run.stderr.contains("empty-scan"), "{}", run.stderr);
+}
+
+/// The link named as the scope is a walk root of its own, and the `.` and `docs` walks say nothing
+/// of it here, because `exclude` prunes where it leads and they reach it only as an entry. So this
+/// failure is that root's alone, and it fails the run where it once passed
+/// (§DF-unopenable-link-fails-at-the-link.2.1).
+#[test]
+fn a_link_named_as_the_scope_fails_at_its_path_when_nothing_else_reports_it() {
+    let mut tree = Tree::new("scope-excluded-target");
+    let config = format!("{CONFIG}\n[schema.sources]\nexclude = [\"real/\"]\n");
+    fs::write(tree.base.join("p/grund.toml"), config).expect("write the config");
+    tree.dir("p/real");
+    tree.link("docs/ext", "../real");
+    if !tree.bar("p/real") {
+        return;
+    }
+    let run = tree.check(&["docs/ext"]);
+    assert_eq!(
+        (run.code, run.paths()),
+        (2, vec!["docs/ext"]),
+        "{}",
         run.stderr
     );
 }
