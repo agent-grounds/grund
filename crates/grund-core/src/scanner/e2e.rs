@@ -181,7 +181,12 @@ pub(super) fn scan_e2e_cases(
                             publish_file_failure(spelled, reason, run_path.as_deref(), reported);
                         }
                         CaseFailure::Unlisted(_, err) => {
-                            publish_unlisted_fixture(spelled, &err, reported);
+                            publish_unlisted_fixture(
+                                spelled,
+                                &err,
+                                &findings.failure_names,
+                                reported,
+                            );
                         }
                         CaseFailure::Unparsed(_, err) => {
                             reported.push((spelled, scan_error_reason(&err)));

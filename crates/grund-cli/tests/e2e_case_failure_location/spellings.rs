@@ -3,7 +3,8 @@
 //! spelling, is that one failure and one line (§FS-check.2.4.2), named by the spelling the run's
 //! own path reached it under, else the one listed first: the runs of a plain tree that meet the
 //! walk's report, and the link trees where the run's spelling is the one the line takes. A fixture
-//! directory under two spellings is still two lines (§DF-e2e-case-on-the-one-walk).
+//! directory's line goes only where a report says it at that spelling or kept that spelling as a
+//! name, so where the walk kept none it is still two lines (§DF-e2e-case-on-the-one-walk).
 
 use super::*;
 
@@ -375,4 +376,152 @@ fn a_fixture_link_nobody_can_open_is_the_walks_one_line() {
             "warning: locked: permission denied",
         ],
     );
+}
+
+/// A root enters the case under the pass's spelling and `realE` reaches it first, so the walk
+/// reports the failure at `realE/...` and keeps `zz/...` as a name.
+const ENTERED_CASE: &str = "grund_config_version = 2\nproject_name = \"p\"\n\n\
+    [schema]\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
+    [schema.kinds.doc]\ncitable = false\nfolders = [\"docs\", \"realE\", \"zz/cases/b\"]\n\n\
+    [schema.kinds.E2E]\nfolders = [\"zz/cases\"]\nindex = false\n";
+
+/// The same two roots, as a version 1 config spells them.
+const ENTERED_CASE_V1: &str = "grund_config_version = 1\n[id]\nformat = \"{kind}-{slug}\"\n\
+    [[kinds]]\nkind = \"E2E\"\nfolder = \"zz/cases\"\nindex = false\n\
+    [scan]\ninclude = [\"realE\", \"zz/cases/b\"]\n";
+
+/// No root enters the case or `zz`, so the walk never meets the pass's spelling.
+const FOLDER_ONLY: &str = "grund_config_version = 2\nproject_name = \"p\"\n\n\
+    [schema]\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
+    [schema.kinds.doc]\ncitable = false\nfolders = [\"docs\", \"realE\"]\n\n\
+    [schema.kinds.E2E]\nfolders = [\"zz/cases\"]\nindex = false\n";
+
+impl Tree {
+    /// `zz -> realE` below `base`, the cases in `realE/cases`, under `config`, with case `b`
+    /// holding `fix`, a fixture directory the caller breaks.
+    fn linked_cases(test: &str, base: &str, config: &str) -> Self {
+        let tree = Self::new(test);
+        fs::remove_dir_all(tree.root.join("e2e")).expect("clear the default cases");
+        tree.write(&format!("{base}/grund.toml"), config.as_bytes());
+        tree.write(&format!("{base}/docs/notes.md"), b"# Notes\n");
+        for case in ["a", "b"] {
+            tree.write(&format!("{base}/realE/cases/{case}/expected.exit"), b"0\n");
+        }
+        symlink(Path::new("realE"), tree.root.join(base).join("zz")).expect("link the folder");
+        tree
+    }
+
+    /// The same, with `fix` a directory this user cannot list, or `None` where the mode does not
+    /// bar this user.
+    fn barred_fixture(test: &str, base: &str, config: &str) -> Option<Self> {
+        let mut tree = Self::linked_cases(test, base, config);
+        let fix = format!("{base}/realE/cases/b/fix");
+        fs::create_dir_all(tree.root.join(&fix)).expect("create the fixture");
+        if tree.lock(&fix) {
+            Some(tree)
+        } else {
+            eprintln!("{SKIP}");
+            None
+        }
+    }
+}
+
+const AT_TARGET: &str = "error: realE/cases/b/fix: permission denied";
+const AT_LINK: &str = "error: zz/cases/b/fix: permission denied";
+
+/// §FS-check.2.4.2: the walk kept the pass's spelling as a name of its report, so the two are one
+/// failure: one line whether the run names it under the survivor or under that spelling, and no
+/// exit moves (§FS-check.1.3.6.3).
+#[test]
+fn a_case_failure_the_walk_kept_the_spelling_of_is_one_line() {
+    let Some(tree) = Tree::barred_fixture("kept-spelling", ".", ENTERED_CASE) else {
+        return;
+    };
+    assert_fails(&tree.run(&["check"]), &[AT_TARGET]);
+    for path in ["zz", "zz/cases", "zz/cases/b", "zz/cases/b/fix"] {
+        assert_fails(&tree.run(&["check", path]), &[AT_LINK]);
+    }
+    assert_fails(&tree.run(&["check", "realE"]), &[AT_TARGET]);
+
+    let beside = tree.run(&["check", "docs"]);
+    assert_eq!(beside.code, 0, "{beside:#?}");
+    assert_lines(&beside, &["warning: realE/cases/b/fix: permission denied"]);
+}
+
+/// §FS-check.2.4.2: a version 1 config's two roots meet the same way, and `list` reports one line.
+#[test]
+fn a_case_failure_the_walk_kept_the_spelling_of_is_one_line_under_version_1() {
+    let Some(tree) = Tree::barred_fixture("kept-spelling-v1", ".", ENTERED_CASE_V1) else {
+        return;
+    };
+    assert_fails(&tree.run(&["check"]), &[AT_TARGET]);
+    assert_fails(&tree.run(&["check", "zz"]), &[AT_LINK]);
+    assert_fails(&tree.run(&["check", "realE/cases/b"]), &[AT_TARGET]);
+    assert_lines(&tree.run(&["list", "--kind", "E2E"]), &[AT_TARGET]);
+}
+
+/// §FS-check.2.4.2: one `io` entry, where a run naming the link held two identical ones.
+#[test]
+fn a_case_failure_the_walk_kept_the_spelling_of_is_one_json_entry() {
+    let Some(tree) = Tree::barred_fixture("kept-spelling-json", ".", ENTERED_CASE) else {
+        return;
+    };
+    for (args, path) in [
+        (&["check", "--format", "json"][..], "realE/cases/b/fix"),
+        (&["check", "zz", "--format", "json"], "zz/cases/b/fix"),
+    ] {
+        let run = tree.run(args);
+        assert_eq!(run.code, 2, "{run:#?}");
+        let entries = json_failures(&run);
+        assert_eq!(entries.len(), 1, "{run:#?}");
+        assert!(entries[0].contains(path), "{run:#?}");
+    }
+}
+
+/// §FS-check.2.4.2: a member's walk and pass meet below the member's root, however it is reached.
+#[test]
+fn a_case_failure_the_walk_kept_the_spelling_of_is_one_line_in_a_member() {
+    let Some(tree) = Tree::barred_fixture("kept-spelling-member", "m", ENTERED_CASE) else {
+        return;
+    };
+    tree.write(
+        "grund.toml",
+        b"grund_config_version = 2\nproject_name = \"ws\"\n\n[workspace]\nmembers = [\"m\"]\n",
+    );
+    assert_fails(&tree.run(&["check"]), &["error: m/realE/cases/b/fix: "]);
+    assert_fails(&tree.run(&["check", "m/zz"]), &[AT_LINK]);
+    assert_fails(&tree.run_in("m", &["check"]), &[AT_TARGET]);
+    assert_fails(&tree.run_in("m", &["check", "zz"]), &[AT_LINK]);
+}
+
+/// §AR-scanner.1.relisted: the name is held under the walk's own words, so the kept spelling of a
+/// fixture link is found by the report's text, and the one line keeps those words.
+#[test]
+fn a_fixture_link_the_walk_kept_the_spelling_of_is_the_walks_one_line() {
+    let mut tree = Tree::linked_cases("kept-spelling-link", ".", ENTERED_CASE_V1);
+    tree.write("barred/file.txt", b"held\n");
+    let fix = tree.root.join("realE/cases/b/fix");
+    symlink(Path::new("../../../barred"), fix).expect("link the fixture");
+    if !tree.lock("barred") {
+        eprintln!("{SKIP}");
+        return;
+    }
+    assert_fails(
+        &tree.run(&["check"]),
+        &["error: realE/cases/b/fix: unreadable symlink: permission denied"],
+    );
+    assert_fails(
+        &tree.run(&["check", "zz"]),
+        &["error: zz/cases/b/fix: unreadable symlink: permission denied"],
+    );
+}
+
+/// §FS-check.2.4.2: a case's failure compares by spelling. The walk never met `zz`, so no report
+/// kept it and the pass's line stands beside the walk's, though both resolve to one directory.
+#[test]
+fn a_case_failure_at_a_spelling_the_walk_never_met_keeps_its_line() {
+    let Some(tree) = Tree::barred_fixture("unmet-spelling", ".", FOLDER_ONLY) else {
+        return;
+    };
+    assert_fails(&tree.run(&["check"]), &[AT_TARGET, AT_LINK]);
 }

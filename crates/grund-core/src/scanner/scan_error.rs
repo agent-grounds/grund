@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 use super::tree::ScanError;
 use crate::config::Frame;
-use crate::model::remedies;
+use crate::model::{FailureNames, remedies};
 use crate::sources::{io_reason, paths_same_location};
 
 /// One file the walk could not read, as a caller of the embedding API sees it:
@@ -67,23 +67,28 @@ pub(super) fn publish_unlisted(
     context: Option<&str>,
     reported: &mut Vec<ScanError>,
 ) {
-    publish_unless_reported(spelled, error, context, reported, |path| {
+    publish_unless_reported(spelled, error, context, reported, |path, _| {
         paths_same_location(path, listed)
     });
 }
 
 /// A case's failure to list a fixture directory, published at `spelled` unless a report already
-/// says it there: the same path as the tree spells it and the same bare reason. The walk spells
-/// below the canonical root as the pass does, so a plain tree meets here. A directory under two
-/// spellings is not settled here (§DF-e2e-case-on-the-one-walk), and the walk's words around a
-/// fixture directory it reports as a link are not compared either (§AR-scanner.1.relisted).
+/// says it there: that path as the tree spells it, or a name the report kept for it
+/// (§AR-scanner.1.entry), and the same bare reason. The walk spells below the canonical root as the
+/// pass does, so a plain tree meets here. A report at another spelling it did not keep answers no
+/// run holding this one, and a kept one does, because `holds_failure` asks the names
+/// (§AR-scanner.1.relisted). The walk's words around a fixture directory it reports as a link are
+/// not compared either, and a kept name is found under those words, so asked with them.
 pub(super) fn publish_unlisted_fixture(
     spelled: PathBuf,
     error: &Error,
+    names: &FailureNames,
     reported: &mut Vec<ScanError>,
 ) {
     let at = spelled.clone();
-    publish_unless_reported(spelled, error, None, reported, |path| path == at);
+    publish_unless_reported(spelled, error, None, reported, |path, said| {
+        names.of(path, said).any(|name| name == at)
+    });
 }
 
 /// A failure to read, decode or parse one file, published at `spelled` unless the scan's reports
@@ -118,11 +123,11 @@ fn publish_unless_reported(
     error: &Error,
     context: Option<&str>,
     reported: &mut Vec<ScanError>,
-    same_location: impl Fn(&Path) -> bool,
+    same_location: impl Fn(&Path, &str) -> bool,
 ) {
     let reason = io_reason(error);
     let already = reported.iter().any(|(path, said)| {
-        said.strip_prefix(UNREADABLE_LINK).unwrap_or(said) == reason && same_location(path)
+        said.strip_prefix(UNREADABLE_LINK).unwrap_or(said) == reason && same_location(path, said)
     });
     if !already {
         let message = match context {

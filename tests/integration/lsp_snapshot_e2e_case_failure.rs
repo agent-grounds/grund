@@ -92,3 +92,63 @@ fn an_anchor_at_a_healthy_sibling_cautions_at_the_failing_file() {
         "{report:#?}"
     );
 }
+
+/// §FS-check.2.4.2: the snapshot reads the scan's list, so a case failure the walk kept the
+/// spelling of as a name is one failure here as on `check`, under the whole run's name, the one
+/// a surface other than `check <path>` gives it, and an anchor under either name holds it.
+#[cfg(unix)]
+#[test]
+fn a_failure_the_walk_kept_the_spelling_of_is_one_failure_at_every_anchor() {
+    use std::os::unix::fs::{PermissionsExt, symlink};
+
+    /// Hands the barred directory back, so the work directory stays removable.
+    struct Unbar(PathBuf);
+    impl Drop for Unbar {
+        fn drop(&mut self) {
+            let _ = fs::set_permissions(&self.0, fs::Permissions::from_mode(0o755));
+        }
+    }
+
+    let root = fixture("kept-spelling");
+    fs::remove_dir_all(root.join("e2e")).expect("clear the default cases");
+    fs::write(
+        root.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"p\"\n\n\
+         [schema]\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
+         [schema.kinds.doc]\ncitable = false\nfolders = [\"docs\", \"realE\", \"zz/cases/b\"]\n\n\
+         [schema.kinds.E2E]\nfolders = [\"zz/cases\"]\nindex = false\n",
+    )
+    .expect("write the config");
+    fs::create_dir_all(root.join("docs")).expect("create the docs");
+    fs::write(root.join("docs/notes.md"), "# Notes\n").expect("write the notes");
+    for case in ["a", "b"] {
+        let case = root.join("realE/cases").join(case);
+        fs::create_dir_all(&case).expect("create the case");
+        fs::write(case.join("expected.exit"), "0\n").expect("write the manifest");
+    }
+    symlink("realE", root.join("zz")).expect("link the folder");
+    let fix = root.join("realE/cases/b/fix");
+    fs::create_dir_all(&fix).expect("create the fixture");
+    fs::set_permissions(&fix, fs::Permissions::from_mode(0o000)).expect("take the mode");
+    let _unbar = Unbar(fix.clone());
+    if fs::read_dir(&fix).is_ok() {
+        return; // The mode does not bar this user, so nothing here is unreadable.
+    }
+
+    for anchor in ["zz", "zz/cases/b", "realE"] {
+        let report = snapshot(root.join(anchor)).report;
+        let errors = io_at(&report.errors, &root);
+        assert_eq!(errors.len(), 1, "{anchor}: {report:#?}");
+        assert!(
+            errors[0].0.ends_with("realE/cases/b/fix"),
+            "{anchor}: {report:#?}"
+        );
+        assert!(
+            io_at(&report.warnings, &root).is_empty(),
+            "{anchor}: {report:#?}"
+        );
+    }
+    let report = snapshot(root.join("docs")).report;
+    assert!(io_at(&report.errors, &root).is_empty(), "{report:#?}");
+    assert_eq!(io_at(&report.warnings, &root).len(), 1, "{report:#?}");
+}
