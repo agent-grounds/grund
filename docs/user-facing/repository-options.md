@@ -99,6 +99,10 @@ finding about where the file sits is judged and printed at each name
 docs/fs/a.md:5: error: unknown reference FS-gone (also at notes/link.md:5)
 ```
 
+A link in a folder of a kind's home owes that folder's index an entry like any
+other file there: add it, and `grund fmt --write` links a bare one. It writes no
+missing entry for you.
+
 Two names that read a file differently, where its own name cannot decide, are
 refused. `check` reports `reading-conflict`, which neither `--only` nor `--ignore`
 hides, and `fmt` leaves the file alone with one warning ([§FS-scan.checks.reading-conflict](../functional-spec/FS-scan.md#checksreading-conflict-two-names-of-one-file-read-it-differently)):

@@ -34,8 +34,8 @@ thread_local! {
     static RESOLVED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
-/// See [`RESOLVED`].
-#[cfg(test)]
+/// See [`RESOLVED`]. Gated as its only reader, `scanner/tests_walk_names.rs`, is.
+#[cfg(all(test, unix))]
 pub(crate) fn resolved_paths() -> usize {
     RESOLVED.with(std::cell::Cell::get)
 }

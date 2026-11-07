@@ -12,7 +12,6 @@ use super::file_reading::FileReading;
 use super::frame::Frame;
 use super::project::{Schema, file_extension};
 use super::sources::Language;
-use crate::model::ValueFormat;
 
 /// The name a file is read by, under the spelling that was handed
 /// (§FS-scan.identity.reading). Its fields are this file's alone, which is the guard.
@@ -147,14 +146,20 @@ impl<'f> Frame<'f> {
         FileReading::of(self.compiled, schema, self.read_name(schema, path))
     }
 
-    /// The format a value home reads `path` in (§FS-values.2.2). The spelling's own name decides
-    /// whether it enters, its one resolution comes after that, and the rule picks the format
-    /// (§FS-scan.identity.reading.entry, §FS-scan.identity.reading.every-caller).
-    pub(crate) fn value_format(&self, schema: &Schema, path: &Path) -> Option<ValueFormat> {
+    /// Whether a value home takes `path` (§FS-values.2.2): the spelling's own name decides, and
+    /// its one resolution comes after that, so a name no home takes pays for none. The rule then
+    /// picks the format, or says the file reads as no value source at all, which earns the name a
+    /// located finding rather than silence (§FS-scan.identity.reading.entry,
+    /// §FS-scan.checks.reading-moved).
+    pub(crate) fn enters_as_value(&self, schema: &Schema, path: &Path) -> bool {
         let as_spelled = ReadName::as_spelled(schema, path);
-        FileReading::of(self.compiled, schema, as_spelled).value_format()?;
-        self.run.spellings.resolve(path);
-        self.reading(schema, path).value_format()
+        let entered = FileReading::of(self.compiled, schema, as_spelled)
+            .value_format()
+            .is_some();
+        if entered {
+            self.run.spellings.resolve(path);
+        }
+        entered
     }
 
     /// Whether the file `spelling` reached is read by its own name, which no second name can

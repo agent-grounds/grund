@@ -528,8 +528,6 @@ pub(crate) fn check_project(
     let conformed = conform(schema, catalog, frame);
     let judged = judge(rules, schema, catalog, expected, frame, workspace);
     let mut report = merge(conformed, judged);
-    // §AR-scanner.1.8: the one pass that names a file's other spellings, before the path narrows.
-    super::spellings_report::name_every_spelling(&mut report, schema, frame);
     // §FS-check.1.4.1: the advice is spelled in the versions the run's projects read.
     report.armed.read(frame.version);
     report

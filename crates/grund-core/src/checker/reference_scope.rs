@@ -6,6 +6,7 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+use super::finding_sides::Side;
 use super::off_format_citations::check_off_format_citations;
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::sections::retain_heading_findings_in_scope;
@@ -41,6 +42,9 @@ pub(crate) struct ScanScope {
     owners: Option<PlaceOwners>,
     /// The run's table of a file's names, which settles a path whose other name is in scope.
     spellings: Spellings,
+    /// The report scope's roots as the run wrote them inside the config root: where the file has a
+    /// name there, that name is the one a finding about where it sits is reported at.
+    handed: Vec<PathBuf>,
 }
 
 /// [`Schema::owner_walked`] kept with the scope (§FS-config-v2.schema.places.boundaries.6).
@@ -51,7 +55,7 @@ struct PlaceOwners {
 }
 
 impl ScanScope {
-    /// §FS-scan.identity.reading.every-caller: a file a query reports is at or under the path when
+    /// §AR-scanner.1.8: a file a query reports is at or under the path when
     /// any of its names is, so which name sorts first decides nothing about a narrow `list` or `refs`.
     /// `check` keeps [`Self::contains`]: its findings carry their own sites (§FS-check.1.3.6.2).
     pub(crate) fn contains_any_name(&self, path: &Path) -> bool {
@@ -61,6 +65,18 @@ impl ScanScope {
                 .names_of(path)
                 .iter()
                 .any(|name| self.contains(name))
+    }
+
+    /// Whether a finding about where a file sits is in scope: it is about one spelling, so the path
+    /// narrows it as written, and the canonical form stands in only for a run that reaches the file
+    /// by no in-tree name (§AR-scanner.1.8). A file with one name is the ordinary question.
+    fn contains_place(&self, path: &Path) -> bool {
+        let names = self.spellings.names_of(path);
+        if names.is_empty() {
+            return self.contains(path);
+        }
+        let handed = |name: &Path| self.handed.iter().any(|root| name.starts_with(root));
+        handed(path) || (self.contains(path) && !names.iter().any(|name| handed(name)))
     }
 
     pub(crate) fn contains(&self, path: &Path) -> bool {
@@ -86,7 +102,7 @@ impl ScanScope {
     }
 }
 
-/// §FS-scan.identity.findings.content: the names a plain run walks, as written. Unlike
+/// §AR-scanner.1.8: the names a plain run walks, as written. Unlike
 /// [`configured_scope`] it holds no canonical form, which would count `real/a.md` as reached where
 /// only `include = ["link"]` reaches that file (§FS-check.1.3.2).
 pub(super) fn plain_walk_scope(schema: &Schema, frame: Frame<'_>) -> Result<ScanScope> {
@@ -99,6 +115,7 @@ pub(super) fn plain_walk_scope(schema: &Schema, frame: Frame<'_>) -> Result<Scan
             physical_root: physical_path_key(frame.root()),
         }),
         spellings: frame.run.spellings.clone(),
+        handed: Vec::new(),
     })
 }
 
@@ -145,6 +162,7 @@ pub(crate) fn configured_scope(
         unwalked,
         owners,
         spellings: frame.run.spellings.clone(),
+        handed: Vec::new(),
     }))
 }
 
@@ -170,6 +188,11 @@ pub(crate) fn path_report_scope(
         return Ok(None);
     }
     let mut roots = scan_roots_for(schema, frame, Some(path), path_provided, false, false)?;
+    let handed = roots
+        .iter()
+        .filter(|root| root.starts_with(frame.root()))
+        .cloned()
+        .collect();
     let canonical = roots
         .iter()
         .filter_map(|root| canonical_path(root).ok())
@@ -182,6 +205,7 @@ pub(crate) fn path_report_scope(
         unwalked: Vec::new(),
         owners: None,
         spellings: frame.run.spellings.clone(),
+        handed,
     }))
 }
 
@@ -216,7 +240,12 @@ pub(crate) fn retain_diagnostics_in_report_scope(
     diagnostics.retain(|diagnostic| match &diagnostic.path {
         None => true,
         Some(path) => {
-            scope.contains(path)
+            let in_scope = if Side::of(diagnostic.code) == Some(Side::Place) {
+                scope.contains_place(path)
+            } else {
+                scope.contains(path)
+            };
+            in_scope
                 // §FS-check.1.3.6.2: the anchor may be the site the caller did not type.
                 || diagnostic.sites.iter().any(|site| scope.contains(&site.path))
                 // §FS-rules.9.1.1: a stale block, chapter rules included, reaches a narrowed run.

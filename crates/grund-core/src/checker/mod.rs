@@ -48,12 +48,15 @@ mod conflict_marker;
 mod conform;
 mod direction_findings;
 mod fields;
+mod finding_sides;
 mod front_matter_fields;
 mod glob_citations;
 mod grounding;
 mod homes;
 mod index;
+mod index_enrollment;
 mod index_entries;
+mod index_files;
 mod index_form;
 mod index_mention;
 mod inline_style;
@@ -97,8 +100,8 @@ pub(crate) use agents::{section_in_block, stale_section_noun};
 pub(crate) use chapter_rules::markdown_project;
 pub(crate) use citation_repair::repair_index_citations;
 pub(crate) use conflict_marker::conflict_marker_finding;
-pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;
+pub(crate) use index_files::KindIndexFiles;
 pub(crate) use judge::CheckWorkspace;
 pub(crate) use reference_scope::{
     ScanScope, configured_scope, out_of_scope_references, path_report_scope,
@@ -107,6 +110,7 @@ pub(crate) use reference_scope::{
 };
 pub(crate) use report::check_project;
 pub(crate) use sections::{out_of_scope_section_headings, workspace_out_of_scope_section_headings};
+pub(crate) use spellings_report::name_every_spelling;
 pub(crate) use support::sort_diagnostics;
 pub(crate) use values::{
     binding_aims_at_embedded_value_authority, binding_target_has_any_value_authority,

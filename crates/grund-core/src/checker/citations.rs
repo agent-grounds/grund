@@ -123,7 +123,7 @@ pub(super) fn check_citation_obligations(
     let non_citable = non_citable_kind_names(schema);
     let homeless = schema.complement_name();
     let owners = Owners::new(schema, frame);
-    // §FS-scan.identity.findings.place: a citation no declaration owns is a site of the place it
+    // §AR-scanner.1.8: a citation no declaration owns is a site of the place it
     // sits in, so a file with two names is a unit of each.
     let other_sites = PlaceNames::new(schema, frame).all_other_sites(findings, schema, frame);
     // §FS-declarations.stubs.target.5: a declaration's citations are its edges, those a

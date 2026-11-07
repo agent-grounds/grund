@@ -17,9 +17,10 @@ use super::reporting::{reporting, workspace_block_projects};
 use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
-    CheckWorkspace, check_chapter_rules, check_project, configured_scope, out_of_scope_references,
-    out_of_scope_section_headings, parse_ad_hoc, parse_ad_hoc_with_workspace, path_report_scope,
-    repair_index_citations, retain_diagnostics_in_report_scope, retain_findings_in_scope,
+    CheckWorkspace, check_chapter_rules, check_project, configured_scope, name_every_spelling,
+    out_of_scope_references, out_of_scope_section_headings, parse_ad_hoc,
+    parse_ad_hoc_with_workspace, path_report_scope, repair_index_citations,
+    retain_diagnostics_in_report_scope, retain_findings_in_scope,
     workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
@@ -204,6 +205,8 @@ pub(super) fn run_check_with_run_warnings(
         config.frame(),
         &mut report,
     );
+    // §AR-scanner.1.8: every rule has run, and the path has not yet narrowed.
+    name_every_spelling(&mut report, config.schema(), config.frame());
     // §FS-scan.checks.unread-scan-root: before the narrowing, which drops it where the
     // path does not cover the `grund.toml` holding the row (.scope).
     report
@@ -403,6 +406,8 @@ fn run_workspace_check(
             frame,
             &mut project_report,
         );
+        // §AR-scanner.1.8: every rule has run, and the path has not yet narrowed.
+        name_every_spelling(&mut project_report, project.config.schema(), frame);
         // §FS-scan.checks.unread-scan-root.scope: each project in its own `grund.toml`.
         project_report
             .warnings
