@@ -175,6 +175,49 @@ fn a_link_the_pass_would_write_into_a_member_with_a_hole_refuses_and_leaves_the_
     }
 }
 
+/// The proof asks whether the member's scan met an error, not which: a broken link is a path the
+/// walk could not read, and no mode bars anything here, so this one runs as root too (§FS-fmt.7.4.4).
+#[test]
+fn a_broken_link_in_the_member_refuses_a_narrowed_rewrite() {
+    let tree = Tree::new("broken-link", SHORTHAND, true);
+    fs::remove_file(tree.root.join("m/docs/secret/FS-001-hidden.md")).expect("drop the holder");
+    symlink("nowhere", tree.root.join("m/docs/x.md")).expect("make the link");
+    tree.assert_refused_naming(&["--write", "docs"], "m/docs/x.md: broken symlink");
+    tree.assert_refused_naming(&["--check", "docs"], "m/docs/x.md: broken symlink");
+    fs::remove_file(tree.root.join("m/docs/x.md")).expect("remove the link");
+    assert_eq!(tree.fmt(&["--write", "docs"]).code, 0);
+    assert!(
+        tree.body().contains("\u{a7}m/FS-001-login"),
+        "{}",
+        tree.body()
+    );
+}
+
+/// A link out of the member is no hole in its set (§FS-scan.scope.links.owed.fence), so its walk
+/// meets no error, the proof stands, and a whole run writes.
+#[test]
+fn a_link_out_of_the_member_leaves_its_proof_standing() {
+    let mut tree = Tree::new("member-outward", SHORTHAND, true);
+    fs::remove_file(tree.root.join("m/docs/secret/FS-001-hidden.md")).expect("drop the holder");
+    let outside = tree.root.with_extension("outside");
+    fs::create_dir_all(&outside).expect("create the target");
+    symlink(&outside, tree.root.join("m/docs/ext")).expect("make the link");
+    fs::set_permissions(&outside, fs::Permissions::from_mode(0o000)).expect("set the mode");
+    tree.locked.push(outside.clone());
+    if fs::read_dir(&outside).is_ok() {
+        return;
+    }
+    let run = tree.fmt(&["--write"]);
+    tree.free();
+    fs::remove_dir_all(&outside).expect("remove the target");
+    assert_eq!(run.code, 0, "{}", run.stderr);
+    assert!(
+        tree.body().contains("\u{a7}m/FS-001-login"),
+        "{}",
+        tree.body()
+    );
+}
+
 /// A conflict block changes no recognition, so it leaves the member's set short of nothing: a
 /// narrowed rewrite into it lands, and a whole run still refuses on the block (§FS-fmt.7.4.4).
 #[test]
