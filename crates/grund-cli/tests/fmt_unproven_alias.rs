@@ -155,6 +155,60 @@ fn a_narrowed_run_with_no_link_refuses_and_leaves_the_file() {
     tree.assert_refused(&["--check", "docs"]);
 }
 
+/// A full ID and a stale link change no token, so only the link pass can write here, and it asks
+/// the same proof before it does (§FS-fmt.7.4.4).
+#[test]
+fn a_link_the_pass_would_write_into_a_member_with_a_hole_refuses_and_leaves_the_file() {
+    for (test, body) in [
+        ("full-id", "See \u{a7}m/FS-001-login here."),
+        (
+            "stale-wrap",
+            "See [\u{a7}m/FS-001-login](../m/docs/old.md) here.",
+        ),
+    ] {
+        let mut tree = Tree::new(test, body, true);
+        if !tree.bar() {
+            return;
+        }
+        tree.assert_refused(&["--write", "docs"]);
+        tree.assert_refused(&["--check", "docs"]);
+    }
+}
+
+/// A conflict block changes no recognition, so it leaves the member's set short of nothing: a
+/// narrowed rewrite into it lands, and a whole run still refuses on the block (§FS-fmt.7.4.4).
+#[test]
+fn a_conflict_block_in_the_member_refuses_a_whole_run_and_no_narrowed_rewrite() {
+    let tree = Tree::new("conflict", SHORTHAND, true);
+    let second_holder = tree.root.join("m/docs/secret/FS-001-hidden.md");
+    fs::remove_file(second_holder).expect("remove the second holder");
+    fs::write(
+        tree.root.join("m/docs/FS-002-c.md"),
+        "# FS-002-c: C\n\n<<<<<<< HEAD\nours\n=======\ntheirs\n>>>>>>> b\n",
+    )
+    .expect("write the block");
+    let before = tree.body();
+    let whole = tree.fmt(&["--write"]);
+    assert_eq!(whole.code, 2, "{}", whole.stderr);
+    assert!(
+        whole.stderr.contains("unresolved merge conflict"),
+        "{}",
+        whole.stderr
+    );
+    assert_eq!(
+        tree.body(),
+        before,
+        "a whole run wrote past a conflict block"
+    );
+    let narrowed = tree.fmt(&["--write", "docs"]);
+    assert_eq!(narrowed.code, 0, "{}", narrowed.stderr);
+    assert!(
+        tree.body().contains("[\u{a7}m/FS-001-login]"),
+        "the narrowed rewrite did not land:\n{}",
+        tree.body()
+    );
+}
+
 /// With the directory readable, the same citation is ambiguous and there is no rewrite to make, so
 /// the bar decides what a wrong write would have said.
 #[test]
