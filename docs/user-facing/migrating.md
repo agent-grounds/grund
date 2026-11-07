@@ -44,7 +44,8 @@ previews it with exit `0`, and `--full` prints it with the complete report
 before that closing line, still exiting `1`
 ([§FS-config-migrate.1.3](../functional-spec/FS-config-migrate.md#13-the-other-flags)).
 The exit is `0` when `--write` would succeed, `1` when it would refuse, and `2`
-when there is no config or the command was used wrongly
+when the command could not run, whether for no config, a wrong use or another
+cause the exits table lists
 ([§FS-config-migrate.2.3](../functional-spec/FS-config-migrate.md#23-exits)).
 
 In [`examples/migrate/migrate-1-refused`](../../examples/migrate/migrate-1-refused/)
