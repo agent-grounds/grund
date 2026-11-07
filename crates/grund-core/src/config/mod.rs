@@ -47,6 +47,7 @@ mod citation_places;
 mod citations;
 mod compiled;
 mod discovery;
+mod exclude_globs;
 // §AR-config.9: `grund config explain`'s answer, assembled from the gates.
 pub(crate) mod explain;
 mod facade;
@@ -96,6 +97,7 @@ pub use citations::{
 pub(crate) use citations::{parse_citation_target_entry, render_citation_target};
 pub use compiled::Compiled;
 pub(crate) use compiled::RefusedHome;
+pub(crate) use exclude_globs::ExcludeGlobs;
 pub use frame::{Display, Frame};
 pub(crate) use guidance::{format_guidance, kind_format_guidance, source_scope_name};
 pub(crate) use project_records::ProjectRecords;
