@@ -31,8 +31,8 @@ fn config_capture_contract_preserves_cli_outputs() {
         "config-migrate-refuse-path-shaped-exclude",
         "config-migrate-invalid-config",
         "config-migrate-workspace-member",
-        "config-scan-exclude-slash-single-check",
-        "config-scan-exclude-slash-single-validate",
+        // Red until #1212, in scan_exclude_repair_wording_contract; implement restores
+        // config-scan-exclude-slash-single-check and config-scan-exclude-slash-single-validate.
         "show-config-invalid-cli-error",
     ]
     .iter()

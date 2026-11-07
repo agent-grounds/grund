@@ -1,0 +1,1 @@
+error: grund.toml:11: [scan] exclude entry `fs/b.md` contains `/`, not a directory name; remove it to keep the scan unchanged, or, if `b.md` is a directory, use `b.md` to exclude every directory of that name at any depth
