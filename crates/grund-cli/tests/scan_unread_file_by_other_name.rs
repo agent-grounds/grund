@@ -137,7 +137,6 @@ fn a_link_sorting_after_leaves_the_narrowed_run_red() {
 /// The ticket: the link `aa` sorts first, so the walk keeps `aa/s.md`, and the run must still
 /// count `real/s.md` as at or under `real`.
 #[test]
-#[ignore = "red until #1299 lets the scan-failure split ask every name of the file; implement removes this"]
 fn a_link_sorting_before_leaves_the_narrowed_run_red() {
     let fixture = Fixture::new("aa", "aa");
     if !fixture.barred() {
