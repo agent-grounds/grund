@@ -1,0 +1,18 @@
+grund_config_version = 1
+project_name = "example"
+
+[id]
+named_sections = true
+
+[workspace]
+members = ["missing/*"]
+
+[[kinds]]
+kind = "FS"
+folder = "docs"
+index = false
+
+[scan]
+include = ["docs"]
+exclude = ["drafts/"]
+extensions = ["md"]
