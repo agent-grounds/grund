@@ -303,18 +303,7 @@ pub(crate) fn walk_scannable_files_with_sources(
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .drain(..)
         {
-            // The in-tree name of the directory the link reaches back into, or
-            // nothing where the target reaches over the walk root.
-            let ancestor = target
-                .strip_prefix(&canonical_scan_root)
-                .ok()
-                .map(|rest| scan_root.join(rest));
-            errors.extend(symlink_loop_report(
-                &link,
-                ancestor.as_deref(),
-                schema,
-                frame,
-            ));
+            errors.extend(symlink_loop_report(&link, &target, schema, frame));
         }
         // §FS-errors.4.1: within one root the order is the filesystem's, and the
         // first-seen rule below turns that into a choice of *spelling*. Sorting each
