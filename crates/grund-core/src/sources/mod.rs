@@ -42,6 +42,6 @@ pub(crate) use disk::{
 };
 pub(crate) use identity::{canonicalize_existing_prefix, paths_same_location, physical_path_key};
 pub(crate) use observe::{check_input_observer, observe_input, record_test_workspace_load};
-#[cfg(test)]
+#[cfg(all(test, unix))]
 pub(crate) use realpath_count::realpaths_during;
 pub(crate) use spellings::Spellings;
