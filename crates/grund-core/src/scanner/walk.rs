@@ -4,12 +4,12 @@ use ignore::WalkBuilder;
 use std::path::{Path, PathBuf};
 
 use super::e2e::{e2e_cases_folder, e2e_id_from_case_dir_name};
-use super::exclude_globs::ExcludeGlobs;
 use super::global_excludes::GlobalExcludes;
 use super::mounted_ignore::{mounted_ignore_mode, rules_above};
 use super::read_predicate::{Unread, directory_refusal, globally_ignored};
 use super::walk_boundaries::{is_directory_symlink, owned_by_another_project};
 pub(super) use super::walk_reporting::walk_scannable_files_reporting;
+use crate::config::ExcludeGlobs;
 use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots, unwalked_homes};
 use crate::grammar::Grammar;
 use crate::model::{

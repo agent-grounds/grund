@@ -6,7 +6,7 @@
 //! (§FS-config-migrate.3.1.5).
 
 use anyhow::Result;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::keymap::joined;
 use super::keys::Keys;
@@ -61,6 +61,19 @@ fn at_or_inside(path: &str, home: &str) -> bool {
         || path
             .strip_prefix(home)
             .is_some_and(|rest| rest.starts_with('/'))
+}
+
+/// §FS-config-migrate.3.1.4.1: the places version 1's homes and include entries
+/// become, under `root`, so a refused run, which has no candidate, can name a file's
+/// scan root. An include entry inside a home becomes no place, and `include` says so.
+pub(super) fn scan_roots(v1: &Project, include: &Include, root: &Path) -> Vec<PathBuf> {
+    let homes = homes(v1);
+    let homes = homes.iter().map(|(_, home, _)| *home);
+    let entries = include.folders.iter().chain(&include.files);
+    homes
+        .chain(entries.map(String::as_str))
+        .map(|place| root.join(place))
+        .collect()
 }
 
 /// §FS-config-migrate.mapping `[scan] include`: each entry by what it is on

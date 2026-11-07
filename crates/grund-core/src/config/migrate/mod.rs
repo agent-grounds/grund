@@ -162,11 +162,14 @@ pub(crate) fn translate(
     let root = &located.root;
     // §AR-config.8.4: the one answer every step below reads.
     let block = opted_out::Block::of(&project, &keys, root, scope_on_disk);
+    let settings_include = places::include(&project, &keys, root);
+    // §FS-config-migrate.3.1.4.1: a block's settings read as a project's, compact or not.
+    let scan_roots = places::scan_roots(&project, &settings_include, root);
     // §FS-config-migrate.8.1.2: a compact block's include counts as omitted.
     let include = if block.compact() {
         places::Include::default()
     } else {
-        places::include(&project, &keys, root)
+        settings_include
     };
     // §FS-config-migrate.8.1.3: a compact block's candidate is its envelope.
     let emission = if block.compact() {
@@ -182,7 +185,7 @@ pub(crate) fn translate(
         values_home,
     );
     // §AR-config.8.1: one read set for both details, walked only if one asks.
-    let reads = reads::Reads::new(&project, root, v1_walk);
+    let reads = reads::Reads::new(&project, root, &scan_roots, v1_walk);
     let mut refusals = refusals::settings(&project, &keys, &reads, block)?;
     refusals.extend(places::nested_homes(&project, &keys, &reads)?);
     refusals.extend(include.refusals.iter().cloned());
