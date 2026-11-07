@@ -22,10 +22,10 @@ use std::sync::Arc;
 
 use ignore::{Match, WalkBuilder, gitignore::Glob};
 
-use super::exclude_globs::ExcludeGlobs;
 use super::global_excludes::GlobalExcludes;
 use super::mounted_ignore::mounted_ignore_mode;
 use super::walk::WalkDirFilter;
+use crate::config::ExcludeGlobs;
 use crate::config::{Frame, Schema, canonical_config_root};
 use crate::model::{ExcludingRule, format_path, is_hidden, scanned_path_key};
 use crate::sources::{
