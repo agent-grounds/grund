@@ -790,3 +790,26 @@ pub(crate) fn over_the_column_cap(
         ),
     )]
 }
+
+/// A directory held at a mode, put back to `0o755` on every exit path, so that a failing test
+/// still leaves a tree that can be deleted.
+#[cfg(unix)]
+pub(crate) struct DirectoryMode(PathBuf);
+
+#[cfg(unix)]
+impl DirectoryMode {
+    pub(crate) fn set(directory: &Path, mode: u32) -> Self {
+        use std::os::unix::fs::PermissionsExt;
+        let permissions = std::fs::Permissions::from_mode(mode);
+        std::fs::set_permissions(directory, permissions).expect("set the directory's mode");
+        Self(directory.to_path_buf())
+    }
+}
+
+#[cfg(unix)]
+impl Drop for DirectoryMode {
+    fn drop(&mut self) {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(&self.0, std::fs::Permissions::from_mode(0o755));
+    }
+}

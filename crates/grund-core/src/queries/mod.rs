@@ -122,6 +122,8 @@ mod tests_editor_on_type_zones;
 mod tests_editor_two_names;
 #[cfg(test)]
 mod tests_lsp_hover;
+#[cfg(all(test, unix))]
+mod tests_overlay_unstatable_home;
 #[cfg(test)]
 mod tests_stub_home;
 #[cfg(test)]
