@@ -49,12 +49,15 @@ impl View<'_> {
         })
     }
 
+    /// §FS-lsp.1.1: a finding carries the path and sites of the core report, so the corpus's one
+    /// link, whose target the walk also reaches, stays spelled and no site is named twice
+    /// (§FS-scan.identity.findings). A link that is a file's only name would resolve here.
     fn editor_finding(&self, f: &Value) -> Value {
         json!({"authority":f.get("authority").cloned().unwrap_or(json!([])),"code":f["code"],
             "column":self.column(f),"line":f["line"],"message":f["message"],
-            "path":f["path"].as_str().map(|p| self.identity(p)),"severity":f["severity"],
+            "path":f["path"].as_str().map(|p| self.absolute(p)),"severity":f["severity"],
             "sites":f["sites"].as_array().into_iter().flatten().map(|s|
-                json!({"path":self.identity(s["path"].as_str().unwrap()),"line":s["line"]}))
+                json!({"path":self.absolute(s["path"].as_str().unwrap()),"line":s["line"]}))
                 .collect::<Vec<_>>()})
     }
 

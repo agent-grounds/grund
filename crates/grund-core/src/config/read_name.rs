@@ -147,14 +147,19 @@ impl<'f> Frame<'f> {
         FileReading::of(self.compiled, schema, self.read_name(schema, path))
     }
 
-    /// The format a value home reads `path` in (§FS-values.2.2). The spelling's own name decides
-    /// whether it enters, its one resolution comes after that, and the rule picks the format
-    /// (§FS-scan.identity.reading.entry, §FS-scan.identity.reading.every-caller).
-    pub(crate) fn value_format(&self, schema: &Schema, path: &Path) -> Option<ValueFormat> {
+    /// The format a value home takes `path` by, where it takes it (§FS-values.2.2): the spelling's
+    /// own name decides, and its one resolution comes after that, so a name no home takes pays for
+    /// none. This is the entry answer, not the file's reading: the rule then picks the format, or
+    /// says the file reads as no value source at all, which earns the name a located finding
+    /// rather than silence, and a failed status keeps this format (§FS-scan.identity.reading.entry,
+    /// §FS-scan.checks.reading-moved, §FS-values.5.3.1).
+    pub(crate) fn enters_as_value(&self, schema: &Schema, path: &Path) -> Option<ValueFormat> {
         let as_spelled = ReadName::as_spelled(schema, path);
-        FileReading::of(self.compiled, schema, as_spelled).value_format()?;
-        self.run.spellings.resolve(path);
-        self.reading(schema, path).value_format()
+        let entered = FileReading::of(self.compiled, schema, as_spelled).value_format();
+        if entered.is_some() {
+            self.run.spellings.resolve(path);
+        }
+        entered
     }
 
     /// Whether the file `spelling` reached is read by its own name, which no second name can

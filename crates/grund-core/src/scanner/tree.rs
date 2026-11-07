@@ -97,7 +97,7 @@ pub(crate) fn scan_unwalked_file(
     frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<Catalog> {
-    // §FS-scan.identity.reading.every-caller: no walk met it, and the rule still reads it.
+    // §AR-scanner.1.8: no walk met it, and the rule still reads it.
     frame.run.spellings.resolve(file);
     let mut findings = pass_over_file(file, schema, frame, workspace_targets)?;
     // §FS-workspace.1.2: the two passes' sites, back in the single-project scan's order.
@@ -191,8 +191,11 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     if schema.value_rows().next().is_some() {
         let home_values = value_sources(schema, frame)
             .map(|sources| {
+                // §AR-scanner.1.8: a file the rule reads as no value source is
+                // the text scan's still, whichever name a value home took it by.
                 sources
                     .into_iter()
+                    .filter(|(_, _, format)| format.is_some())
                     .map(|(path, _, _)| path)
                     .collect::<Vec<_>>()
             })

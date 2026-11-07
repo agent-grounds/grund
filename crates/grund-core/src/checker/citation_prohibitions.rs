@@ -34,7 +34,7 @@ pub(super) fn check_citation_prohibitions(
     let spellings = PlaceNames::new(schema, frame);
     for cite in findings.edges() {
         judge_site(cite, rules, &owners, report);
-        // §FS-scan.identity.findings.place: asked of each spelling at its own path.
+        // §AR-scanner.1.8: asked of each spelling at its own path.
         for site in spellings.other_sites(cite, schema, frame) {
             judge_site(&site, rules, &owners, report);
         }

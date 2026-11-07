@@ -123,9 +123,8 @@ pub(crate) fn walk_scannable_files_with_sources(
     on_error: &mut dyn FnMut(&ScanError, ignore::Error),
 ) -> Result<WalkedTree> {
     let (roots, root_scope) = scan_roots(schema, frame, scope, explicit_scope)?;
-    // §FS-check.1.3.6.1: a widened walk starts at the path; how many files that root held.
     let widened = explicit_scope && !root_scope && frame.run.scope.resolution_wide;
-    let mut handed = None;
+    let mut handed = 0;
     // §FS-config.3.5.4: an aliased root, or a symlink met on the way down, is what
     // hands the same file to the walk under two spellings — nothing else does, so
     // a tree with neither never pays for the identity pass (§GOAL-fast-feedback).
@@ -145,7 +144,12 @@ pub(crate) fn walk_scannable_files_with_sources(
     let mut unread_roots = Vec::new();
     let mut file_rows = None;
     let mut value_homes: Option<Option<Vec<PathBuf>>> = None;
-    for scan_root in roots {
+    for (position, scan_root) in roots.into_iter().enumerate() {
+        // §FS-check.1.3.6.1: a widened walk starts at the path, so what the list holds at the
+        // second root is what the run was handed: a file, a directory's files, or nothing.
+        if widened && position == 1 {
+            handed = files.len();
+        }
         // §FS-check.6.1.1: the actual walk roots are covered before traversal.
         if !crate::config::observe_input(&scan_root, true) {
             return Err(anyhow!("watch input coverage failed"));
@@ -208,7 +212,7 @@ pub(crate) fn walk_scannable_files_with_sources(
                     let value_homes = value_homes.get_or_insert_with(|| {
                         value_sources(schema, frame)
                             .ok()
-                            .map(|sources| sources.into_iter().map(|(path, _, _)| path).collect())
+                            .map(|sources| sources.into_iter().map(|source| source.0).collect())
                     });
                     if let Some(value_homes) = value_homes
                         && !value_homes
@@ -316,9 +320,6 @@ pub(crate) fn walk_scannable_files_with_sources(
         // first-seen rule below turns that into a choice of *spelling*. Sorting each
         // root's list first makes the choice ours: earlier root wins, then lexicographic.
         sort_paths(&mut root_files);
-        if widened && handed.is_none() {
-            handed = Some(root_files.len());
-        }
         files.append(&mut root_files);
     }
     // One file, one read (§FS-check.1.3.2, §FS-config.3.5.4). Two spellings first,
@@ -329,7 +330,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     // project's root, and a link straight onto one of its files is the same
     // crossing one entry lower down.
     if !frame.run.workspace.project_roots.is_empty() {
-        files.retain(|file| {
+        let kept = |file: &PathBuf| {
             !resolved.get(file.as_path()).is_some_and(|physical| {
                 owned_by_another_project(
                     &frame.run.workspace.project_roots,
@@ -337,11 +338,15 @@ pub(crate) fn walk_scannable_files_with_sources(
                     physical,
                 )
             })
-        });
+        };
+        // What was handed is counted again, since the count slices this list below.
+        let rest = files.split_off(handed);
+        files.retain(&kept);
+        handed = files.len();
+        files.extend(rest.into_iter().filter(&kept));
     }
     // §AR-scanner.1.8: while the list is in walk order, so the first name is first-seen's.
     let whole_project = !explicit_scope || root_scope || frame.run.scope.resolution_wide;
-    let handed = handed.unwrap_or(0);
     let verdicts = settle_names(schema, frame, &files, handed, &resolved, whole_project)?;
     if !resolved.is_empty() {
         dedup_by_file_identity(&mut files, &resolved);

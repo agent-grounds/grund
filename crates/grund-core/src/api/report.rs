@@ -10,7 +10,7 @@
 //! `pub` spelling of a `FindingSite`, shared by the `grund` CLI and the
 //! deprecated mirror so the two printers cannot drift (§FS-errors.5).
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::lsp_ranges::absolutize_path;
 use crate::checker::sort_diagnostics;
@@ -77,18 +77,30 @@ fn public_finding(
 ) -> Finding {
     let render_path = |path: &Path| {
         if absolute_paths {
-            // A relative location is a config row's, joined where the load spelled
-            // it, never at the editor's working directory (§FS-lsp.4.1).
-            let path = config.location_base().join(path);
             // Private LSP transport data, not user-facing report text: keep the
             // platform-native spelling so parsing it back into a `Path` preserves
             // Windows verbatim-prefix absolute paths (§FS-lsp.1.1).
-            absolutize_path(&path).to_string_lossy().into_owned()
+            editor_path(config, path).to_string_lossy().into_owned()
         } else {
             public_path(config, path)
         }
     };
     published_finding(severity, diagnostic, render_path)
+}
+
+/// The absolute path an editor is told a finding stands at. A relative location is a config row's,
+/// joined where the load spelled it, never at the editor's working directory (§FS-lsp.4.1). A file
+/// with a second name keeps the name the finding speaks of, under the resolved root: resolving it
+/// would say a finding about one spelling at another, and every spelling the same (§AR-scanner.1.8).
+fn editor_path(config: &Config, path: &Path) -> PathBuf {
+    let joined = config.location_base().join(path);
+    let frame = config.frame();
+    if !frame.run.spellings.names_of(path).is_empty()
+        && let Ok(spelling) = joined.strip_prefix(frame.root())
+    {
+        return absolutize_path(frame.root()).join(spelling);
+    }
+    absolutize_path(&joined)
 }
 
 /// The run's warning channel, published (§FS-distribution.3.1): every

@@ -260,6 +260,70 @@ fn a_second_home_means_a_misplaced_text_file_but_a_duplicate_value_source() {
 
 /// Guard: a single-file kind compares physically, so a link to its document from elsewhere is
 /// that document, not a second one (§FS-declarations.checks.misplaced-declaration.1).
+/// Three names read as two do: in one home one declaration at the name listed first, across three
+/// homes one duplicate naming each once and a wrong home at every name but the right one.
+#[test]
+fn three_names_of_a_value_source_read_as_two_do() {
+    let source = "{\"CONST-room-limit\": [40, \"rooms\"]}\n";
+    let row = "CONST-room-limit  values/limits.json:1";
+
+    let tree = Tree::new(
+        "three-one-home",
+        "grund_config_version = 2\nproject_name = \"v\"\n\
+         [schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\nindex = false\n",
+    );
+    tree.put("values/limits.json", source);
+    tree.link("values/m.json", "limits.json");
+    tree.link("values/z.json", "limits.json");
+    let check = tree.grund(&["check", "--format", "json"]);
+    assert!(!check.stdout.contains("\"duplicate\""), "{}", check.stdout);
+    let list = tree.grund(&["list"]);
+    assert_eq!(
+        list.stdout.matches("CONST-room-limit").count(),
+        1,
+        "{}",
+        list.stdout
+    );
+    assert!(list.stdout.contains(row), "{}", list.stdout);
+
+    let tree = Tree::new(
+        "three-homes",
+        "grund_config_version = 2\nproject_name = \"v\"\n\
+         [schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\nindex = false\n\
+         [schema.kinds.A]\nfolders = [\"a\"]\nform = \"value\"\nindex = false\n\
+         [schema.kinds.Z]\nfolders = [\"z\"]\nform = \"value\"\nindex = false\n",
+    );
+    tree.put("values/limits.json", source);
+    tree.link("a/limits.json", "../values/limits.json");
+    tree.link("z/limits.json", "../values/limits.json");
+    let check = tree.grund(&["check"]);
+    assert!(
+        check.stdout.contains(
+            "a/limits.json:1: error: duplicate declaration of CONST-room-limit (also declared at \
+             values/limits.json:1, z/limits.json:1)"
+        ),
+        "{}",
+        check.stdout
+    );
+    let json = tree.grund(&["check", "--format", "json"]);
+    let findings = json.findings();
+    let misplaced: Vec<&str> = findings
+        .iter()
+        .filter(|row| row["code"] == "misplaced-declaration")
+        .map(|row| row["path"].as_str().unwrap())
+        .collect();
+    assert_eq!(misplaced, ["a/limits.json", "z/limits.json"]);
+    assert_eq!(
+        json.sites("duplicate"),
+        ["a/limits.json:1", "values/limits.json:1", "z/limits.json:1"]
+    );
+    assert_eq!(
+        tree.grund(&["show", "CONST-room-limit"]).stderr.trim_end(),
+        "ambiguous ID: CONST-room-limit (declared at a/limits.json:1, values/limits.json:1, \
+         z/limits.json:1)"
+    );
+}
+
 #[test]
 fn a_link_to_a_single_file_home_is_that_document() {
     let tree = Tree::new(
