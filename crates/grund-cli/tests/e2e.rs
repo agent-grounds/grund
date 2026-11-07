@@ -70,6 +70,10 @@ mod dotdot_scope_root_names;
 #[path = "support/fetch_folder_elsewhere.rs"]
 mod fetch_folder_elsewhere;
 
+// §FS-config-migrate.3.1.4.1: issue #1290's glob-shaped exclude entries, their cases run alone.
+#[path = "support/exclude_glob_reading.rs"]
+mod exclude_glob_reading;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
@@ -110,7 +114,8 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    let cases = discover_e2e_cases(&manifest_dir);
+    // Red until #1290: its cases run alone in the ignored contract; implement removes this.
+    let cases = exclude_glob_reading::without_red(discover_e2e_cases(&manifest_dir));
     let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
     let compared = outcomes
         .iter()

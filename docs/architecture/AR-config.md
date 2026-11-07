@@ -536,8 +536,14 @@ the notices, the refusals, the listed comments and both gates' results, and
   entry with one directory's name and they match nothing, which is what removing
   them keeps. One walk serves every detail of a run, the member roots kept out as
   `grund list` keeps them, and a run that has no such refusal, or whose refusals
-  name only paths not on disk, walks nothing. A walk that cannot run at all fails
-  the run, since `grund list` fails there too.
+  need only a path not on disk to answer them ([§FS-config-migrate.3.1.4.1](../functional-spec/FS-config-migrate.md#3141-the-files-named-are-the-ones-version-1-reads)), walks
+  nothing. A walk that cannot run at all fails the run, since `grund list` fails
+  there too. A path-shaped entry is asked of the one matcher the version 2 walk
+  asks ([§AR-scanner.1.13](AR-scanner.md#113-one-predicate-says-whether-a-file-is-read-and-why-not)), never a copy of its grammar ([§AR-system.principle](README.md#principle-one-fact-one-point-one-implementation)), and
+  of the one refusal its reader makes. Since config may not read the scanner, that
+  matcher lives in config, where the reader's check is and the scanner may read it.
+  The nested-homes detail stays a path lookup, because a home is a literal path
+  ([§FS-config-migrate.3.1.5.1](../functional-spec/FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads)).
 
 ### 8.2 The lowering table is its checklist
 
