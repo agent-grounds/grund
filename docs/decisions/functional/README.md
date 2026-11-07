@@ -4,6 +4,7 @@ Why `grund` behaves the way it does. Each file here is one product-behavior deci
 
 - [§DF-watch-terminal-loop](DF-watch-terminal-loop.md#df-watch-terminal-loop-a-terminal-watch-loop-preserves-ordinary-check-reports) — Preserve ordinary reports in the terminal watch loop, including recovery, interruption and screen ownership.
 - [§DF-fetch-folder-value-source](DF-fetch-folder-value-source.md#df-fetch-folder-value-source-folder-fetch-refuses-an-id-already-declared-by-a-value-source) — Refuse folder-home fetch when a value source already declares the ID.
+- [§DF-value-candidate-metadata-failure](DF-value-candidate-metadata-failure.md#df-value-candidate-metadata-failure-a-failed-value-candidate-lookup-makes-the-scan-incomplete) — Report failed metadata lookup of a listed value candidate as an incomplete scan.
 - [§DF-fetch-source-home](DF-fetch-source-home.md#df-fetch-source-home-fetch-refuses-a-file-home-the-text-scan-reads-as-source) — Refuse a fetch into a `file` home the text scan reads as source, whatever the file holds.
 
 Read a decision when the spec tells you *what* and you need *why*. Do not read them for the current behavior: a decision records the state of the argument on its date, and a superseded one is kept for its reasoning, not its verdict.
