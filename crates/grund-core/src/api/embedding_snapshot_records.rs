@@ -1,5 +1,6 @@
 //! Source fields retained by the owned scanner snapshot (§FS-distribution.3.2.2.3).
 use super::embedding_data::Data;
+use crate::config::{Config, display_location};
 use crate::*;
 use serde_json::{Value, json};
 
@@ -43,11 +44,12 @@ impl Data for InlineCitationSite {
             "max_columns":self.max_columns,"has_note":self.has_note,"layout_violations":self.layout_violations})
     }
 }
-impl Data for E2eCase {
-    fn data(&self) -> Value {
-        // §AR-scanner.6.2: the parsed words, `[]` with no `command.args`.
-        json!({"dir":self.dir.data(),"args":self.args,"expected_exit":self.expected_exit,
-            "fixtures":self.fixtures.data(),"spec_refs":self.spec_refs.iter()
-                .map(|s|json!({"namespace":s.namespace,"kind":s.kind})).collect::<Vec<_>>()})
-    }
+/// An E2E case's published fields. Not a `Data` impl because `dir` needs the run's
+/// report base: it reads as the same record's `path` does, `.` at the base
+/// (§FS-distribution.3.2.2.3).
+pub(super) fn e2e_case_data(config: &Config, case: &E2eCase) -> Value {
+    // §AR-scanner.6.2: the parsed words, `[]` with no `command.args`.
+    json!({"dir":display_location(config,&case.dir),"args":case.args,"expected_exit":case.expected_exit,
+        "fixtures":case.fixtures.data(),"spec_refs":case.spec_refs.iter()
+            .map(|s|json!({"namespace":s.namespace,"kind":s.kind})).collect::<Vec<_>>()})
 }
