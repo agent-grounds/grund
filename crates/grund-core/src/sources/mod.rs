@@ -34,7 +34,7 @@ pub use observe::{CheckInput, CheckInputObserver, with_check_input_observer};
 pub(crate) use buffers::{Buffers, Sources};
 pub(crate) use digest::sha256_hex;
 pub(crate) use disk::{
-    canonical_path, input_read_to_string, is_directory, is_regular_file, link_metadata,
+    canonical_path, input_read_to_string, io_reason, is_directory, is_regular_file, link_metadata,
     open_for_reading, path_exists, path_is_dir, path_is_entry, path_is_file, path_is_symlink,
     path_metadata, read_bytes, read_git_metadata, read_link,
 };

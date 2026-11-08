@@ -169,25 +169,21 @@ fn assert_refused_with_reason(name: &str, version: Version, shape: Shape) {
 }
 
 #[test]
-#[ignore = "red until #1294 lands §FS-fetch.4.3; implement removes this"]
 fn v1_file_home_under_unsearchable_parent_names_the_reason() {
     assert_refused_with_reason("v1-file", Version::V1, Shape::File);
 }
 
 #[test]
-#[ignore = "red until #1294 lands §FS-fetch.4.3; implement removes this"]
 fn v1_folder_home_under_unsearchable_parent_names_the_reason() {
     assert_refused_with_reason("v1-folder", Version::V1, Shape::Folder);
 }
 
 #[test]
-#[ignore = "red until #1294 lands §FS-fetch.4.3; implement removes this"]
 fn v2_file_home_under_unsearchable_parent_names_the_reason() {
     assert_refused_with_reason("v2-file", Version::V2, Shape::File);
 }
 
 #[test]
-#[ignore = "red until #1294 lands §FS-fetch.4.3; implement removes this"]
 fn v2_folder_home_under_unsearchable_parent_names_the_reason() {
     assert_refused_with_reason("v2-folder", Version::V2, Shape::Folder);
 }
