@@ -119,3 +119,83 @@ fn a_case_at_the_base_reads_dot_from_every_binding() {
         assert!(paths.iter().all(|path| path == "."), "{operation}: {reply}");
     }
 }
+
+/// A tree holding the one case `E2E-login`, with one fixture, under an optional `[output]` table.
+fn case_tree(name: &str, output: &str) -> std::path::PathBuf {
+    let root = test_root(name);
+    write(
+        &root.join("grund.toml"),
+        &format!(
+            "grund_config_version = 1\n{output}[id]\nformat = \"{{kind}}-{{slug}}\"\n\
+             [[kinds]]\nkind = \"E2E\"\nfolder = \"e2e/cases\"\nindex = false\n"
+        ),
+    );
+    let case = root.join("e2e/cases/login");
+    write(&case.join("expected.exit"), "0\n");
+    write(&case.join("repo/notes.txt"), "fixture\n");
+    root
+}
+
+/// The one `E2E-login` record of a Node `scan` called on `dir`.
+fn scanned_case(dir: &Path) -> Value {
+    let reply = node(dir, "scan", vec![json!(dir.to_str().unwrap())]);
+    assert_eq!(reply["failure"], Value::Null, "{reply}");
+    reply["result"]["snapshot"]["declarations"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["id"] == "E2E-login")
+        .unwrap_or_else(|| panic!("E2E-login in {reply}"))
+        .clone()
+}
+
+/// §FS-distribution.3.2.2.3: `dir` is spelled as the same record's `path`.
+fn assert_dir_reads(record: &Value, expected: &str) {
+    assert_eq!(record["path"], expected, "{record}");
+    assert_eq!(record["e2e_case"]["dir"], expected, "{record}");
+}
+
+#[test]
+#[ignore = "red until #1220 spells e2e_case.dir through the report base; implement removes this"]
+fn a_case_dir_reads_as_its_path_from_the_config_root() {
+    let root = case_tree("a_case_dir_reads_as_its_path_from_the_config_root", "");
+    let record = scanned_case(&root);
+    assert_dir_reads(&record, "e2e/cases/login");
+    assert_eq!(
+        record["e2e_case"]["fixtures"],
+        json!(["expected.exit", "repo/notes.txt"])
+    );
+}
+
+#[test]
+#[ignore = "red until #1220 spells e2e_case.dir through the report base; implement removes this"]
+fn a_case_dir_reads_as_its_path_from_a_base_below_the_config_root() {
+    let root = case_tree(
+        "a_case_dir_reads_as_its_path_from_a_base_below_the_config_root",
+        "[output]\nrelative_paths = false\n",
+    );
+    assert_dir_reads(&scanned_case(&root.join("e2e/cases")), "login");
+}
+
+/// §FS-cli.3.4: the near-fix, the snapshot's `path` closure, gives `""` here.
+#[test]
+#[ignore = "red until #1220 spells e2e_case.dir through the report base; implement removes this"]
+fn a_case_dir_at_the_report_base_reads_dot() {
+    let root = case_tree(
+        "a_case_dir_at_the_report_base_reads_dot",
+        "[output]\nrelative_paths = false\n",
+    );
+    assert_dir_reads(&scanned_case(&root.join("e2e/cases/login")), ".");
+}
+
+#[test]
+#[ignore = "red until #1220 spells e2e_case.dir through the report base; implement removes this"]
+fn a_case_dir_is_the_same_wherever_the_tree_sits() {
+    let here = case_tree("a_case_dir_is_the_same_here", "");
+    let there = case_tree("a_case_dir_is_the_same_there", "");
+    assert_ne!(here, there);
+    assert_eq!(
+        scanned_case(&here)["e2e_case"]["dir"],
+        scanned_case(&there)["e2e_case"]["dir"],
+    );
+}
