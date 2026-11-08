@@ -110,6 +110,7 @@ fn first_read_file(schema: &Schema, frame: Frame<'_>, scan_root: &Path) -> Optio
         &physical_root,
         &link_roots,
         &looping_links,
+        None,
     ) else {
         return None;
     };
@@ -167,6 +168,7 @@ pub(crate) fn project_configs_below(schema: &Schema, frame: Frame<'_>) -> Vec<(P
         &canonical_config_root(root),
         &link_roots,
         &looping_links,
+        None,
     ) else {
         return Vec::new();
     };

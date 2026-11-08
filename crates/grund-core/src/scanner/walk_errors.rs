@@ -37,9 +37,13 @@ pub(super) fn walk_error_reports(
     scan_root: &Path,
 ) -> Vec<(ScanError, ignore::Error)> {
     let Some(links) = recovery.unopenable_links(&err, listing, scan_root) else {
-        return walk_error_report(&err, filter, schema, frame, scan_root)
-            .map(|report| (report, err))
+        // §FS-check.2.4.2: errors `ignore` folds into one are each at the file that raised them.
+        return split_by_path(err)
             .into_iter()
+            .filter_map(|err| {
+                walk_error_report(&err, filter, schema, frame, scan_root)
+                    .map(|report| (report, err))
+            })
             .collect();
     };
     links
@@ -379,11 +383,53 @@ fn walk_error_loop(err: &ignore::Error) -> Option<(&Path, &Path)> {
     }
 }
 
-/// The in-tree path a walker error is about, at any nesting depth.
+/// A walker error as one error per path it names (§FS-check.2.4.2). The `ignore` crate folds
+/// every malformed line of a directory's ignore files into one `Partial`, which names no path of
+/// its own; each inner error names its file, so the lines are grouped by it, in the order they
+/// came, and each group is one failure at that file. Any other error stands as it is.
+fn split_by_path(err: ignore::Error) -> Vec<ignore::Error> {
+    let errs = match err {
+        ignore::Error::Partial(errs) => errs,
+        ignore::Error::WithDepth { depth, err } => match *err {
+            ignore::Error::Partial(errs) => errs,
+            err => {
+                return vec![ignore::Error::WithDepth {
+                    depth,
+                    err: Box::new(err),
+                }];
+            }
+        },
+        other => return vec![other],
+    };
+    let mut groups: Vec<(Option<PathBuf>, Vec<ignore::Error>)> = Vec::new();
+    for err in errs {
+        let path = walk_error_path(&err).map(Path::to_path_buf);
+        match groups.iter_mut().find(|(at, _)| *at == path) {
+            Some((_, group)) => group.push(err),
+            None => groups.push((path, vec![err])),
+        }
+    }
+    groups
+        .into_iter()
+        .map(|(_, mut group)| match group.len() {
+            1 => group.remove(0),
+            _ => ignore::Error::Partial(group),
+        })
+        .collect()
+}
+
+/// The in-tree path a walker error is about, at any nesting depth: for a `Partial`, the one path
+/// every error it folds names, which `split_by_path` makes it have (§FS-check.2.4.2).
 fn walk_error_path(err: &ignore::Error) -> Option<&Path> {
     match err {
         ignore::Error::WithPath { path, .. } => Some(path),
         ignore::Error::WithDepth { err, .. } => walk_error_path(err),
+        ignore::Error::Partial(errs) => {
+            let first = walk_error_path(errs.first()?)?;
+            errs.iter()
+                .all(|err| walk_error_path(err) == Some(first))
+                .then_some(first)
+        }
         _ => None,
     }
 }
@@ -397,6 +443,14 @@ fn walk_error_reason(err: &ignore::Error) -> String {
         Some(io) => scan_io_reason(io),
         None => match err {
             ignore::Error::WithPath { err, .. } => err.to_string(),
+            ignore::Error::WithDepth { err, .. } => walk_error_reason(err),
+            // §FS-errors.4: each folded line without the absolute path `ignore` writes before it,
+            // joined the way `ignore` joins them.
+            ignore::Error::Partial(errs) => errs
+                .iter()
+                .map(walk_error_reason)
+                .collect::<Vec<_>>()
+                .join("\n"),
             other => other.to_string(),
         },
     }

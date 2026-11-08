@@ -1,7 +1,9 @@
 //! Black-box: which spelling a failure reading an E2E case is reported at
-//! (§FS-declarations.e2e-case.failure). A case's line goes only where a report already says that
-//! failure at the same path as the tree spells it (§FS-check.2.4.2): the runs of a plain tree that
-//! must therefore meet the walk's report, and the link trees whose other spelling must not stand in.
+//! (§FS-declarations.e2e-case.failure). A file the walk or another case already reported, under any
+//! spelling, is that one failure and one line (§FS-check.2.4.2), named by the spelling the run's
+//! own path reached it under, else the one listed first: the runs of a plain tree that meet the
+//! walk's report, and the link trees where the run's spelling is the one the line takes. A fixture
+//! directory under two spellings is still two lines (§DF-e2e-case-on-the-one-walk).
 
 use super::*;
 
@@ -190,36 +192,27 @@ fn a_fixture_directory_through_a_linked_root_is_one_line() {
     assert_one_line_through_a_link(&mut tree, "fx");
 }
 
-/// §FS-declarations.e2e-case.failure: a case that is a link is a spelling of its own, so where it
-/// sorts first its line does not take its target's, and the run naming the target holds the file.
+/// §FS-declarations.e2e-case.failure: a case linked to a sibling reaches the sibling's file, so the
+/// two cases meet one failure, one line: at the case listed first, and at the target where the run
+/// names it, so the run naming the target holds the file.
 #[test]
 fn a_case_linked_to_a_sibling_it_sorts_before_leaves_the_siblings_line() {
     let tree = Tree::new("linked-case-first");
     tree.write("e2e/cases/b/spec.refs", UNDECODABLE);
     tree.link_case("a", "b");
     let held = "error: e2e/cases/b/spec.refs: ";
-    let beside = "warning: e2e/cases/a/spec.refs: ";
-    assert_fails(
-        &tree.run(&["check"]),
-        &["error: e2e/cases/a/spec.refs: ", held],
-    );
-    assert_fails(&tree.run(&["check", "e2e/cases/b"]), &[held, beside]);
-    assert_fails(
-        &tree.run(&["check", "e2e/cases/b/spec.refs"]),
-        &[held, beside],
-    );
-    assert_fails(
-        &tree.run_in("e2e/cases/b", &["check", "."]),
-        &[held, beside],
-    );
+    assert_fails(&tree.run(&["check"]), &["error: e2e/cases/a/spec.refs: "]);
+    assert_fails(&tree.run(&["check", "e2e/cases/b"]), &[held]);
+    assert_fails(&tree.run(&["check", "e2e/cases/b/spec.refs"]), &[held]);
+    assert_fails(&tree.run_in("e2e/cases/b", &["check", "."]), &[held]);
     assert_fails(
         &tree.run_in("e2e/cases/b", &["check", "spec.refs"]),
-        &[held, beside],
+        &[held],
     );
     let json = tree.run(&["check", "e2e/cases/b", "--format", "json"]);
     assert_eq!(json.code, 2, "{json:#?}");
     let entries = json_failures(&json);
-    assert_eq!(entries.len(), 2, "{json:#?}");
+    assert_eq!(entries.len(), 1, "{json:#?}");
     assert!(
         entries.iter().any(
             |entry| entry.contains("\"severity\":\"error\",\"path\":\"e2e/cases/b/spec.refs\"")
@@ -228,8 +221,8 @@ fn a_case_linked_to_a_sibling_it_sorts_before_leaves_the_siblings_line() {
     );
 }
 
-/// §FS-declarations.e2e-case.failure: two cases linked to one directory are two spellings, so each
-/// is held by the run naming it.
+/// §FS-declarations.e2e-case.failure: two cases linked to one directory read one file, so it is
+/// one line, and each is held by the run naming it, which the line is then named by.
 #[test]
 fn two_cases_linked_to_one_directory_each_keep_their_line() {
     let tree = Tree::new("linked-case-pair");
@@ -239,23 +232,18 @@ fn two_cases_linked_to_one_directory_each_keep_their_line() {
     tree.link_case("c", "../../elsewhere/x");
     assert_fails(
         &tree.run(&["check", "e2e/cases/c"]),
-        &[
-            "error: e2e/cases/c/spec.refs: ",
-            "warning: e2e/cases/b/spec.refs: ",
-        ],
+        &["error: e2e/cases/c/spec.refs: "],
     );
     assert_fails(
         &tree.run(&["check", "e2e/cases/b"]),
-        &[
-            "error: e2e/cases/b/spec.refs: ",
-            "warning: e2e/cases/c/spec.refs: ",
-        ],
+        &["error: e2e/cases/b/spec.refs: "],
     );
 }
 
 /// §DF-e2e-case-failure-at-the-file.2.2: the walk's report at a linked case's target does not take
 /// the line at the configured spelling, so a run holding only that spelling exits `2`. Which of the
-/// two the walk and the pass meet is why the fixture and the manifest are both here.
+/// two the walk and the pass meet is why the fixture is here: a directory under two spellings is
+/// still two lines, while a manifest is one file and one line (§DF-e2e-case-on-the-one-walk).
 fn assert_linked_case_holds(tree: &Tree, file: &str) {
     let held = format!("error: e2e/cases/b/{file}: ");
     let beside = format!("warning: elsewhere/b/{file}: ");
@@ -277,17 +265,24 @@ fn a_linked_case_keeps_its_fixture_line_beside_the_walks_report_of_the_target() 
     assert_linked_case_holds(&tree, "fx");
 }
 
+/// §FS-check.2.4.2: the walk read the manifest at the link's target, and the case reads that one
+/// file, so it is one line, named by the spelling a run holding only the case reached it under.
 #[test]
 fn a_linked_case_keeps_its_manifest_line_beside_the_walks_report_of_the_target() {
     let tree = tree_scanning_manifests("linked-case-manifest");
     tree.write("elsewhere/b/expected.exit", b"0\n");
     tree.write("elsewhere/b/spec.refs", UNDECODABLE);
     tree.link_case("b", "../../elsewhere/b");
-    assert_linked_case_holds(&tree, "spec.refs");
+    for path in ["e2e/cases", "e2e"] {
+        assert_fails(
+            &tree.run(&["check", path]),
+            &["error: e2e/cases/b/spec.refs: "],
+        );
+    }
 }
 
-/// The same for a linked folder: `e2e` holds the configured spelling alone, and `e2e/cases`, which
-/// the partition resolves through the link, holds both.
+/// The same for a linked folder's fixture directory: `e2e` holds the configured spelling alone, and
+/// `e2e/cases`, which the partition resolves through the link, holds both.
 fn assert_linked_folder_holds(tree: &Tree, file: &str) {
     let held = format!("error: e2e/cases/b/{file}: ");
     assert_fails(
@@ -312,16 +307,22 @@ fn a_linked_folder_keeps_its_fixture_line_beside_the_walks_report_of_the_target(
     assert_linked_folder_holds(&tree, "fx");
 }
 
+/// §FS-check.2.4.2: the same one file through a linked folder, one line at the configured spelling.
 #[test]
 fn a_linked_folder_keeps_its_manifest_line_beside_the_walks_report_of_the_target() {
     let tree = tree_scanning_manifests("linked-folder-manifest");
     tree.write("e2e/cases/b/spec.refs", UNDECODABLE);
     tree.link_folder();
-    assert_linked_folder_holds(&tree, "spec.refs");
+    for path in ["e2e", "e2e/cases"] {
+        assert_fails(
+            &tree.run(&["check", path]),
+            &["error: e2e/cases/b/spec.refs: "],
+        );
+    }
 }
 
-/// §FS-check.1.3.6.3: a healthy sibling holds neither spelling, so it cautions about each and the
-/// failure leaves its exit alone.
+/// §FS-check.1.3.6.3: a healthy sibling holds no spelling of the one failing file, so it cautions
+/// about it once, at the spelling listed first, and the failure leaves its exit alone.
 #[test]
 fn a_healthy_sibling_on_a_link_tree_keeps_its_cautions() {
     let linked_case = Tree::new("healthy-linked-case");
@@ -329,30 +330,18 @@ fn a_healthy_sibling_on_a_link_tree_keeps_its_cautions() {
     linked_case.link_case("a", "b");
     let run = linked_case.run(&["check", "e2e/cases/c"]);
     assert_ne!(run.code, 2, "{run:#?}");
-    assert_lines(
-        &run,
-        &[
-            "warning: e2e/cases/a/spec.refs: ",
-            "warning: e2e/cases/b/spec.refs: ",
-        ],
-    );
+    assert_lines(&run, &["warning: e2e/cases/a/spec.refs: "]);
 
     let linked_folder = tree_scanning_manifests("healthy-linked-folder");
     linked_folder.write("e2e/cases/b/spec.refs", UNDECODABLE);
     linked_folder.link_folder();
     let run = linked_folder.run(&["check", "e2e/cases/a"]);
     assert_ne!(run.code, 2, "{run:#?}");
-    assert_lines(
-        &run,
-        &[
-            "warning: e2e/cases/b/spec.refs: ",
-            "warning: real/b/spec.refs: ",
-        ],
-    );
+    assert_lines(&run, &["warning: real/b/spec.refs: "]);
 }
 
-/// §FS-declarations.e2e-case.failure: a path through a link that resolves to the located spelling
-/// holds the file, so this run is not the caution a path past the link gets.
+/// §FS-declarations.e2e-case.failure: a path through a link to the failing case holds the file,
+/// one line named by the run's own spelling, so this run is not the caution a path past it gets.
 #[test]
 fn a_path_through_a_link_to_the_failing_case_holds_the_file() {
     let tree = Tree::new("through-link");
@@ -360,10 +349,7 @@ fn a_path_through_a_link_to_the_failing_case_holds_the_file() {
     tree.link_case("c", "b");
     assert_fails(
         &tree.run(&["check", "e2e/cases/c"]),
-        &[
-            "error: e2e/cases/b/spec.refs: ",
-            "error: e2e/cases/c/spec.refs: ",
-        ],
+        &["error: e2e/cases/c/spec.refs: "],
     );
 }
 

@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use super::read_predicate::{Unread, extension_refusal, name_refusal};
 use super::tree::ScanError;
 use super::value_json::value_sources;
-use super::walk::{WalkDirFilter, scan_roots, scannable_walker};
+use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{LinkRecovery, symlink_loop_report, walk_error_reports};
 use super::walk_names::settle_names;
@@ -71,6 +71,10 @@ pub(crate) struct WalkedTree {
     pub(crate) reading_conflicts: Vec<ReadingConflict>,
     /// The links whose reading moved under the rule (§FS-scan.checks.reading-moved).
     pub(crate) reading_moves: Vec<ReadingMove>,
+    /// The E2E case directories the walk met and pruned for the manifest pass, as the walk
+    /// spelled them, sorted and deduplicated: the one listing the pass reads its cases from
+    /// (§FS-declarations.e2e-case.excluded, §FS-check.2.4.2).
+    pub(crate) e2e_cases: Vec<PathBuf>,
 }
 
 /// The tree walk (§AR-scanner.1): from each scan root, descend skipping hidden and
@@ -144,6 +148,8 @@ pub(crate) fn walk_scannable_files_with_sources(
     let mut unread_roots = Vec::new();
     let mut file_rows = None;
     let mut value_homes: Option<Option<Vec<PathBuf>>> = None;
+    // §FS-declarations.e2e-case.excluded: the case directories every root's walk met.
+    let met_cases = MetCases::default();
     for (position, scan_root) in roots.into_iter().enumerate() {
         // §FS-check.1.3.6.1: a widened walk starts at the path, so what the list holds at the
         // second root is what the run was handed: a file, a directory's files, or nothing.
@@ -241,6 +247,7 @@ pub(crate) fn walk_scannable_files_with_sources(
             &physical_root,
             &link_roots,
             &looping_links,
+            Some(&met_cases),
         )?;
         let mut root_files = Vec::new();
         // §AR-scanner.1.9: the last of this root's `dirs` is the directory the walk is inside when
@@ -371,6 +378,13 @@ pub(crate) fn walk_scannable_files_with_sources(
     // root, so one sort and one dedup make the candidate list a set.
     sort_paths(&mut dirs);
     dirs.dedup();
+    let mut e2e_cases = std::mem::take(
+        &mut *met_cases
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner),
+    );
+    sort_paths(&mut e2e_cases);
+    e2e_cases.dedup();
     Ok(WalkedTree {
         files,
         errors,
@@ -380,6 +394,7 @@ pub(crate) fn walk_scannable_files_with_sources(
         unread_roots,
         reading_conflicts: verdicts.conflicts,
         reading_moves: verdicts.moves,
+        e2e_cases,
     })
 }
 

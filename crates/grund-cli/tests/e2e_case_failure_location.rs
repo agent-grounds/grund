@@ -379,8 +379,8 @@ fn an_expected_exit_that_does_not_parse_the_walk_also_reads_is_one_line() {
     }
 }
 
-/// §AR-scanner.1.relisted: a manifest that is a link is a spelling of its own, so the walk's report
-/// of the file behind it does not stand in for it, and the run naming the case still holds it.
+/// §FS-check.2.4.2: a manifest that is a link reads the file the walk reported, so the two are one
+/// failure, one line, named by the case's spelling, which the run naming the case holds.
 #[test]
 fn a_manifest_linked_to_a_file_the_walk_reported_keeps_its_own_line() {
     let tree = Tree::new("linked-manifest");
@@ -393,12 +393,11 @@ fn a_manifest_linked_to_a_file_the_walk_reported_keeps_its_own_line() {
     let run = tree.run(&["check", "e2e/cases/b"]);
     assert_eq!(run.code, 2, "{run:#?}");
     let lines = failure_lines(&run);
-    assert_eq!(lines.len(), 2, "{run:#?}");
+    assert_eq!(lines.len(), 1, "{run:#?}");
     assert!(
         lines[0].starts_with("error: e2e/cases/b/spec.refs: "),
         "{run:#?}"
     );
-    assert!(lines[1].starts_with("warning: notes.md: "), "{run:#?}");
 }
 
 /// §AR-scanner.1.relisted: two cases' manifests are two spellings even where one links to the other,

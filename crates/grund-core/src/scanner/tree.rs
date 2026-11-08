@@ -234,14 +234,15 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         }
     }
     findings.files = records.into_iter().collect();
-    // §AR-scanner.1.relisted: the E2E and value passes read the reports so far, the walk's among
-    // them, so a directory both list is one line, and one only a pass met still is.
+    // §AR-scanner.1.relisted: the E2E pass reads the cases the walk met, and both passes read the
+    // reports so far, the walk's among them, so one failure both meet is one line.
     // §AR-scanner.6.6: each case failure at its path; two that read alike stay two.
     scan_e2e_cases(
         schema,
         frame,
         scope,
         explicit_scope,
+        &walked.e2e_cases,
         &mut errors,
         &mut findings,
     );
