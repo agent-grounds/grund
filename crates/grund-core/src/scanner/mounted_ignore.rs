@@ -20,6 +20,14 @@ pub(super) fn mounted_ignore_mode(builder: &mut WalkBuilder) {
         .require_git(false);
 }
 
+/// Whether a walk under `mounted` keeps the walker's default `require_git`, applying a
+/// `.gitignore` only inside a repository: every walk but a mounted root's, which
+/// [`mounted_ignore_mode`] turns it off for, and the one fact a report of such a file asks
+/// (§FS-remote-projects.ignore).
+pub(super) fn walk_requires_git(mounted: Option<&Path>) -> bool {
+    mounted.is_none()
+}
+
 /// The rules a walk from `scan_root` must still ask of each entry, because the
 /// builder cannot read them: the ignore files between the mounted root and a scan
 /// root below it, which a mounted member's walk starts under. They are asked in the

@@ -5,7 +5,9 @@ use std::collections::HashMap;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use super::read_predicate::{Unread, directory_refusal, ignored, name_refusal};
+use super::read_predicate::{
+    Unread, directory_refusal, ignore_file_unapplied, ignored, name_refusal,
+};
 use super::scan_error::{scan_io_reason, unreadable_link_reason};
 use super::tree::ScanError;
 use super::walk::WalkDirFilter;
@@ -86,8 +88,8 @@ pub(super) fn walk_error_reports(
 /// going to read them, and nothing else in the run reads through them. A directory
 /// link into a tree another reader of the run holds is pruned from this walk and is
 /// still reported (§AR-scanner.1.9). Anything else
-/// — an unreadable directory, a malformed ignore file — is reported as it stands,
-/// at the path the error names, and at the walk root only when the error names
+/// — an unreadable directory, a malformed ignore file the run applies — is reported as it
+/// stands, at the path the error names, and at the walk root only when the error names
 /// no entry at all: it is a hole in the walk either way, and a silent one is what
 /// §REQ-no-missed-citation.1 rules out.
 fn walk_error_report(
@@ -105,7 +107,15 @@ fn walk_error_report(
         return symlink_loop_report(&link, ancestor, schema, frame);
     }
     let path = walk_error_path(err).unwrap_or(scan_root);
-    if !link_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
+    let ignore_file_line = is_ignore_file_line_error(err);
+    // §DF-unparsed-ignore-file-at-any-depth: asked where every route a walker error comes by
+    // meets, so whether a walk root sits below the file cannot change the answer.
+    if ignore_file_line && ignore_file_unapplied(path, filter, frame) {
+        return None;
+    }
+    // §FS-check.2.4.2: an ignore file that is a link was resolved and read, so a line of it
+    // that does not parse is no link failure for the rules below to silence.
+    if ignore_file_line || !link_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
         return Some((path.to_path_buf(), walk_error_reason(err)));
     }
     if walk_skips_link(path, filter, schema, frame, scan_root) {
@@ -370,6 +380,19 @@ fn link_identity(path: &Path) -> Option<PathBuf> {
 fn walk_ignores(path: &Path, is_dir: bool, schema: &Schema, frame: Frame<'_>) -> bool {
     schema.sources.respect_gitignore
         && ignored(path, is_dir, frame.run.workspace.mounted_root.as_deref())
+}
+
+/// Whether a walker error is about lines of an ignore file, the only errors `ignore` tags with a
+/// line number, a `Partial` being several of them (§FS-check.2.4.2).
+fn is_ignore_file_line_error(err: &ignore::Error) -> bool {
+    match err {
+        ignore::Error::WithLineNumber { .. } => true,
+        ignore::Error::WithPath { err, .. } | ignore::Error::WithDepth { err, .. } => {
+            is_ignore_file_line_error(err)
+        }
+        ignore::Error::Partial(errs) => errs.iter().all(is_ignore_file_line_error),
+        _ => false,
+    }
 }
 
 /// The `(link, ancestor)` of a symlink loop, at any nesting depth of the error.

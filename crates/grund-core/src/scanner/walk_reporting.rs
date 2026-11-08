@@ -255,6 +255,26 @@ pub(crate) fn walk_scannable_files_with_sources(
         // both built on the first error, so the success path pays for neither.
         let first_dir = dirs.len();
         let mut error_state = None;
+        let mut report_walk_error = |err, listing: Option<&Path>| {
+            let (filter, recovery) = error_state.get_or_insert_with(|| {
+                let filter = WalkDirFilter::new(
+                    schema,
+                    frame,
+                    &scan_root,
+                    &canonical_scan_root,
+                    &physical_root,
+                    &link_roots,
+                    &looping_links,
+                );
+                (filter, LinkRecovery::default())
+            });
+            for (report, source) in
+                walk_error_reports(err, filter, recovery, listing, schema, frame, &scan_root)
+            {
+                on_error(&report, source);
+                errors.push(report);
+            }
+        };
         for entry in walker {
             let entry = match entry {
                 Ok(entry) => entry,
@@ -262,28 +282,15 @@ pub(crate) fn walk_scannable_files_with_sources(
                 // cannot read — reported at its own path, the walk continuing past it
                 // (§FS-check.2.4). Failing the scan would let it take the whole report.
                 Err(err) => {
-                    let (filter, recovery) = error_state.get_or_insert_with(|| {
-                        let filter = WalkDirFilter::new(
-                            schema,
-                            frame,
-                            &scan_root,
-                            &canonical_scan_root,
-                            &physical_root,
-                            &link_roots,
-                            &looping_links,
-                        );
-                        (filter, LinkRecovery::default())
-                    });
-                    let listing = dirs[first_dir..].last().map(PathBuf::as_path);
-                    for (report, source) in walk_error_reports(
-                        err, filter, recovery, listing, schema, frame, &scan_root,
-                    ) {
-                        on_error(&report, source);
-                        errors.push(report);
-                    }
+                    report_walk_error(err, dirs[first_dir..].last().map(PathBuf::as_path));
                     continue;
                 }
             };
+            // §FS-check.2.4.2: a directory's unparsable ignore file rides on its entry, and the
+            // directory is still walked (§AR-scanner.1.9).
+            if let Some(err) = entry.error() {
+                report_walk_error(err.clone(), dirs[first_dir..].last().map(PathBuf::as_path));
+            }
             // §FS-check.3.29.11: a directory is not a scannable file, so it falls out
             // one line below. Its path is what the unlisted-`[workspace]` rule needs,
             // and the scan root itself — the entry at depth 0 — is one of them.

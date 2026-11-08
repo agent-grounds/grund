@@ -31,6 +31,20 @@ use crate::sources::{path_exists, path_is_file};
 /// (§FS-scan.scope.ignore-files.global).
 const REPOSITORY_MARKERS: [&str; 2] = [".git", ".jj"];
 
+/// Whether a repository encloses `path`: a directory above it holds one of the
+/// [`REPOSITORY_MARKERS`], the walker's own test for applying a `.gitignore` under
+/// `require_git` (§FS-scan.scope.ignore-files.unparsed).
+pub(super) fn enclosed_by_repository(path: &Path) -> bool {
+    path.ancestors()
+        .skip(1)
+        .take_while(|dir| !dir.as_os_str().is_empty())
+        .any(|dir| {
+            REPOSITORY_MARKERS
+                .iter()
+                .any(|marker| path_exists(dir.join(marker)))
+        })
+}
+
 /// The global excludes file's patterns, the repository top each path is matched
 /// against them from (§FS-scan.scope.ignore-files.global), and the ignore files
 /// a global match is weighed against, each read once.
