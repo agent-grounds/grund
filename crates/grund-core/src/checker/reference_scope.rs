@@ -72,21 +72,29 @@ impl ScanScope {
     }
 
     /// The one answer to whether a scan failure is inside this scope, as the name to report it
-    /// under where it is (§FS-check.1.3.6.3, §AR-scanner.1.entry). It is inside when any of its
-    /// names is, and is then named by the first under the path as given, else the first the
-    /// scope holds (§FS-check.2.4.2). Names and never a resolved path: the name the whole run
-    /// keeps can be under the path neither as written nor resolved. No filesystem call.
+    /// under where it is (§FS-check.1.3.6.3, §AR-scanner.1.entry). Its names are the ones the walk
+    /// kept for a directory entry's failure and, for a file it could not read, the file's names in
+    /// the run's `Spellings`. It is inside when any of them is, and is then named by the first
+    /// under the path as given, else the first the scope holds (§FS-check.2.4.2). Names and never
+    /// a resolved path: the name the whole run keeps can be under the path neither as written nor
+    /// resolved. No filesystem call.
     pub(crate) fn holds_failure(
         &self,
         (path, reason): &ScanError,
         names: &FailureNames,
     ) -> Option<PathBuf> {
-        self.held_name(names.of(path, reason))
-            .map(Path::to_path_buf)
+        let spellings = self.spellings.names_of(path);
+        self.held_name(
+            names
+                .of(path, reason)
+                .chain(spellings.iter().map(PathBuf::as_path)),
+        )
+        .map(Path::to_path_buf)
     }
 
     /// The one "any name" answer [`Self::contains_any_name`] and [`Self::holds_failure`] share,
-    /// which differ only in where the names come from: the first of `names` under the path as
+    /// which differ only in where the names come from: a file's names, or a failure's kept names
+    /// and then its file's. It answers the first of `names` under the path as
     /// handed, else the first the scope holds, and `None` when it holds none. A handed root is
     /// one of the scope's roots, so a handed name is always held.
     fn held_name<'a>(&self, mut names: impl Iterator<Item = &'a Path> + Clone) -> Option<&'a Path> {
@@ -237,6 +245,7 @@ pub(crate) fn retain_diagnostics_in_report_scope(
                 Some(Side::Place) => scope.contains_place(path),
                 // §AR-scanner.1.8: it stands at the name the plain run reaches.
                 Some(Side::Content) => scope.contains_any_name(path),
+                // §FS-check.1.3.6.3: an `io` finding stands at the name `holds_failure` gave it.
                 _ => scope.contains(path),
             };
             in_scope
