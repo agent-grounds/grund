@@ -420,7 +420,7 @@ fn split_by_path(err: ignore::Error) -> Vec<ignore::Error> {
 
 /// The in-tree path a walker error is about, at any nesting depth: for a `Partial`, the one path
 /// every error it folds names, which `split_by_path` makes it have (§FS-check.2.4.2).
-fn walk_error_path(err: &ignore::Error) -> Option<&Path> {
+pub(super) fn walk_error_path(err: &ignore::Error) -> Option<&Path> {
     match err {
         ignore::Error::WithPath { path, .. } => Some(path),
         ignore::Error::WithDepth { err, .. } => walk_error_path(err),

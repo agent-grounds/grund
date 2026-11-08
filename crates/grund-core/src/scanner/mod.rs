@@ -61,6 +61,7 @@ mod context;
 mod declaration_line;
 mod declaration_lines;
 mod e2e;
+mod e2e_case;
 mod embedded_value_context;
 mod embedded_values;
 mod extents;

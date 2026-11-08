@@ -335,7 +335,7 @@ fn a_cases_root_that_links_to_a_barred_target_is_the_walks_one_line() {
 /// is still listed by the walk, so its cases are still read and a citation of one resolves. This
 /// guards against a walk failure that leaves the root listable taking the cases with it.
 #[test]
-fn a_walk_report_at_the_cases_root_that_is_no_listing_failure_leaves_the_cases_read() {
+fn a_walk_failure_beside_the_cases_root_leaves_the_cases_read() {
     let scratch = Scratch::new("ignore-file");
     scratch.write(
         "grund.toml",
