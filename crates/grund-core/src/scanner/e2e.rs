@@ -10,8 +10,8 @@ use super::scan_error::{
     publish_case_file_failure, publish_unlisted, publish_unlisted_fixture, scan_error_reason,
 };
 use super::tree::ScanError;
-use super::walk::{MetCases, scan_roots, scannable_walk_builder};
-use super::walk_errors::walk_error_path;
+use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walk_builder};
+use super::walk_errors::{LinkRecovery, walk_error_path, walk_error_reports};
 
 use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots};
 use crate::grammar::{Grammar, literal_after_kind_placeholder, parse_id_arg};
@@ -141,6 +141,12 @@ pub(super) fn scan_e2e_cases(
             let spelled = spelled_below(&spelled_root, &cases_root, &scan_root);
             publish_unlisted(&scan_root, spelled, err, None, reported);
         }
+        // §FS-check.2.4.2: a narrowed run's walk may have reported the same file already.
+        for report in listed.ignore_failures {
+            if !reported.contains(&report) {
+                reported.push(report);
+            }
+        }
         // §AR-scanner.6.6: the cases listed before a failure are still read; none, where the
         // root could not be opened, so nothing is left to read.
         case_dirs.extend(cases_met(&listed.cases, &home, &cases_root));
@@ -241,19 +247,24 @@ struct OneLevel {
     kept: Vec<PathBuf>,
     /// Its failure to list `dir`, at open or partway through, which ends the listing.
     failure: Option<std::io::Error>,
+    /// What the ignore files in `dir` failed with, the rules this listing is filtered by: where
+    /// no walk lists `dir`, no other report names them (§FS-check.2.4.2).
+    ignore_failures: Vec<ScanError>,
 }
 
 /// `dir`, spelled under the configured folder, listed by the scan's own walker one level deep, so
 /// that `exclude` and the ignore files keep a case out of a cases root no walk listed by the same
 /// filter that keeps one out where the walk lists it (§FS-declarations.e2e-case.excluded). It is
 /// one walk of the root, never one probe per entry (§GOAL-fast-feedback). Of the walker's errors,
-/// only its failure to list `dir` is the pass's, as it was when the pass listed `dir` itself; what
-/// else it meets is not read here, and stays the walk's to report where it reads it.
+/// its failure to list `dir` is the pass's, as it was when the pass listed `dir` itself, and so is
+/// a failure to parse the ignore files in `dir`, whose rules filter this listing. What else it
+/// meets is not read here, and stays the walk's to report where it reads it.
 fn walk_one_level(schema: &Schema, frame: Frame<'_>, dir: &Path, canonical: &Path) -> OneLevel {
     let mut listed = OneLevel {
         cases: Vec::new(),
         kept: Vec::new(),
         failure: None,
+        ignore_failures: Vec::new(),
     };
     let link_roots = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
     let looping_links = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
@@ -280,8 +291,11 @@ fn walk_one_level(schema: &Schema, frame: Frame<'_>, dir: &Path, canonical: &Pat
             return listed;
         }
     };
+    let mut ignore_failure = None;
     for entry in builder.max_depth(Some(1)).build() {
         match entry {
+            // §AR-scanner.1.9: a directory's unparsable ignore file rides on its own entry.
+            Ok(entry) if entry.depth() == 0 => ignore_failure = entry.error().cloned(),
             Ok(entry) if entry.depth() == 1 && entry.file_type().is_some_and(is_directory) => {
                 listed.kept.push(entry.into_path());
             }
@@ -293,6 +307,23 @@ fn walk_one_level(schema: &Schema, frame: Frame<'_>, dir: &Path, canonical: &Pat
             }
             Ok(_) | Err(_) => {}
         }
+    }
+    if let Some(err) = ignore_failure {
+        let filter = WalkDirFilter::new(
+            schema,
+            frame,
+            dir,
+            canonical,
+            &physical_root,
+            &link_roots,
+            &looping_links,
+        );
+        let mut recovery = LinkRecovery::default();
+        listed.ignore_failures =
+            walk_error_reports(err, &filter, &mut recovery, None, schema, frame, dir)
+                .into_iter()
+                .map(|(report, _)| report)
+                .collect();
     }
     listed.cases = std::mem::take(&mut *met.lock().unwrap_or_else(PoisonError::into_inner));
     listed

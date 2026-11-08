@@ -17,13 +17,14 @@
 //! since the walker filters no error entry itself. That last reader is the one that
 //! tells `Unread::AnotherProject` from `Unread::OutsideProject`.
 
+use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
 use ignore::{Match, WalkBuilder, gitignore::Glob};
 
-use super::global_excludes::GlobalExcludes;
-use super::mounted_ignore::mounted_ignore_mode;
+use super::global_excludes::{GlobalExcludes, enclosed_by_repository};
+use super::mounted_ignore::{mounted_ignore_mode, walk_requires_git};
 use super::walk::WalkDirFilter;
 use crate::config::ExcludeGlobs;
 use crate::config::{Frame, Schema, canonical_config_root};
@@ -92,12 +93,22 @@ pub(crate) fn directory_refusal(path: &Path, exclude: &[String]) -> Option<Unrea
 
 /// The `[scan] exclude` entry that names `path`'s own directory name
 /// (§FS-config.3.5.16), as the list writes it.
-fn excluded_entry<'a>(path: &Path, exclude: &'a [String]) -> Option<&'a str> {
+pub(super) fn excluded_entry<'a>(path: &Path, exclude: &'a [String]) -> Option<&'a str> {
     let name = path.file_name().and_then(|name| name.to_str())?;
     exclude
         .iter()
         .find(|item| *item == name)
         .map(String::as_str)
+}
+
+/// Whether the ignore file at `path` plays no part in this run, so a line of it that does not
+/// parse costs the run nothing and is no failure of it (§FS-scan.scope.ignore-files.unparsed):
+/// `exclude` keeps the file out of the scan, or it is a `.gitignore` the walk does not apply.
+pub(super) fn ignore_file_unapplied(path: &Path, filter: &WalkDirFilter, frame: Frame<'_>) -> bool {
+    filter.excludes_file(path)
+        || (path.file_name() == Some(OsStr::new(".gitignore"))
+            && walk_requires_git(frame.run.workspace.mounted_root.as_deref())
+            && !enclosed_by_repository(path))
 }
 
 /// The `[scan] exclude` entry or ignore-file rule that keeps the walk from reading a
