@@ -283,10 +283,10 @@ fn the_earlier_roots_name_is_kept_and_full_only_adds() {
     ]);
 }
 
-/// Control, green today and after: one place, two reasons. A parse failure is not the listing
-/// failure, so a fix that compares by entry alone loses a line here.
+/// Control, green today and after: a parse failure is not the listing failure. Since #1304 they
+/// are at two paths, the ignore file and the directory (§FS-check.2.4.2), and stay two lines.
 #[test]
-fn a_parse_failure_and_a_listing_failure_at_one_place_stay_two_lines() {
+fn a_parse_failure_and_a_listing_failure_stay_two_lines() {
     let mut tree = Tree::new("reasons", Shape::Plain, &config("e2e/cases"));
     tree.dirs(&["e2e/cases"]);
     tree.write("e2e/.ignore", "{a\n{b\n");
@@ -298,7 +298,7 @@ fn a_parse_failure_and_a_listing_failure_at_one_place_stay_two_lines() {
     assert_eq!(run.code, 2, "{}", run.shown());
     assert!(
         lines.len() == 2
-            && lines[0].starts_with("error: e2e/cases: ")
+            && lines[0].starts_with("error: e2e/.ignore: ")
             && lines[0].contains("error parsing glob")
             && lines[1] == denied("e2e/cases"),
         "{}",
