@@ -142,6 +142,11 @@ const MIGRATE_EMPTY_EXTENSION_SUFFIX: &str =
 const SCAN_EXCLUDE_DIRECTORY_REPAIR_SUFFIX: &str =
     "to exclude every directory of that name at any depth";
 
+/// The repair of a value row says what removal costs and names the rewrite, which runs it past
+/// the cap (§FS-config-migrate.3.1.7.2), so it keeps the bytes that point fixes rather than the
+/// cap. A repair that opens otherwise keeps the cap.
+const MIGRATE_VALUE_KEY_REPAIR_PREFIX: &str = "  repair: removing value";
+
 /// The judgement, isolated from the filesystem. A `--format json` case's
 /// stderr is not uniformly JSON (§FS-errors.5.2.2): a launch-time `error: …`
 /// line stays text and keeps the plain 180-byte cap, while a carried text
@@ -172,6 +177,7 @@ fn assert_stderr_is_concise(name: &str, json_case: bool, migration_case: bool, s
                 && line.ends_with(SCAN_EXCLUDE_DIRECTORY_REPAIR_SUFFIX))
             || (line.starts_with("written: ") && line.ends_with(MIGRATE_DEFAULT_WRITTEN_SUFFIX))
             || (line.starts_with("refused: ") && line.ends_with(MIGRATE_EMPTY_EXTENSION_SUFFIX))
+            || (migration_case && line.starts_with(MIGRATE_VALUE_KEY_REPAIR_PREFIX))
         {
             continue;
         } else if json_case && line.starts_with('{') {
@@ -433,6 +439,14 @@ mod stderr_concise_tests {
         assert_stderr_is_concise("case", false, false, refused);
         let other = format!("refused: grund.toml:4: {}", "x".repeat(180));
         let panic_message = rejects(false, &other);
+        assert!(panic_message.contains("too long"), "{panic_message}");
+    }
+
+    #[test]
+    fn migration_case_preserves_the_value_key_repair_and_nothing_beside_it() {
+        let repair = format!("  repair: removing value_chapter alone {}", "x".repeat(180));
+        assert_stderr_is_concise("case", false, true, &repair);
+        let panic_message = rejects(false, &repair);
         assert!(panic_message.contains("too long"), "{panic_message}");
     }
 

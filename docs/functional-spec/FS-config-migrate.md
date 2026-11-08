@@ -171,14 +171,14 @@ A `value_chapter`, a lead budget counted in lines or bytes, and a non-default `[
 
 ```text
 refused: grund.toml:11: [[kinds]] `FS` value_chapter would become a field, which adds a "Declaration shapes" section grund check compares
-  repair: none keeps the generated guidance; remove value_chapter under version 1 only if that section may change
+  repair: removing value_chapter alone ends the comparison of every binding that quoted the chapter; to keep them compared, under version 1 rewrite its roots as marked sections, remove value_chapter and cite the new paths
 refused: grund.toml:5: [reference] lead_size_warning counts lines, and version 2 counts a lead in words
   repair: restate it with unit = "words" under version 1
 refused: grund.toml:8: [fmt.cross_refs] enabled = false has no version 2 spelling in this grund
   repair: none yet; keep version 1, or set enabled = true under version 1 if fmt may write links
 ```
 
-The same `lead_size_warning` line reads `counts bytes` for a byte budget, and `anchor_format` other than `"github"` reads `` [fmt.cross_refs] anchor_format = "<value>" has no version 2 spelling in this grund ``.
+The same `lead_size_warning` line reads `counts bytes` for a byte budget, and `anchor_format` other than `"github"` reads `` [fmt.cross_refs] anchor_format = "<value>" has no version 2 spelling in this grund ``. The `value_chapter` repair says what removal costs, for the reason [§FS-config-migrate.3.1.7.2](FS-config-migrate.md#3172-removing-a-value-key-alone-ends-the-comparison) gives.
 
 ##### 3.1.7.1 A `value_chapter` on a fetched kind
 
@@ -189,12 +189,18 @@ refused: grund.toml:9: [[kinds]] `AR` value_chapter has no version 2 spelling on
   repair: none yet; keep version 1, or under version 1 rewrite its roots as marked sections, remove value_chapter and cite the new paths
 ```
 
-The words of [§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet) stay for a row without `fetch`, and are true of it: version 2 loads that field. On this row neither of their lines holds.
+The reason line of [§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet) stays for a row without `fetch`, and is true of it: version 2 loads that field. On this row it does not hold, so the row has words of its own.
 
 - **The obstacle is another one.** [§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts) gives a fetched kind no fields, so the key cannot become one and no "Declaration shapes" section can appear. The refusal names what actually stops the row.
-- **Removing the key is not the way through.** Removed alone, it ends the value comparison for every binding that quoted the chapter, so a wrong literal goes from an error to exit `0`. The gates of [§FS-config-migrate.5](FS-config-migrate.md#5-equivalence-two-gates) cannot say so: they compare the tree with the key already gone, and truthfully report no difference. The repair is the only place left to say it, so it names the rewrite that keeps the values compared.
+- **Removing the key is not the way through**, for the reason [§FS-config-migrate.3.1.7.2](FS-config-migrate.md#3172-removing-a-value-key-alone-ends-the-comparison) gives of every such row. Here there is no field to keep the values compared either, so the repair offers the rewrite and version 1 alone.
 
-A root rewritten as a marked section ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) is judged the same under both versions, whatever the row's `fetch`: a wrong literal bound to it fails `grund check` before the migration and after it, and with the key gone nothing here refuses the row. The repair speaks of the tree `grund check` and this command read; what `grund fetch` may write into that home is [§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)'s to say.
+The rewrite holds on this row as [§FS-config-migrate.3.1.7.2](FS-config-migrate.md#3172-removing-a-value-key-alone-ends-the-comparison) says it holds on any. The repair speaks of the tree `grund check` and this command read; what `grund fetch` may write into that home is [§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)'s to say.
+
+##### 3.1.7.2 Removing a value key alone ends the comparison
+
+Removed alone, a `value_chapter` or a `values = true` ends the value comparison for every binding that quoted its values, so a wrong literal goes from an error to exit `0`, whatever the row's `fetch`. The gates of [§FS-config-migrate.5](FS-config-migrate.md#5-equivalence-two-gates) cannot say so: they compare the tree with the key already gone, and truthfully report no difference. The repair is the only place left to say it, so the repair of a `value_chapter` row without `fetch` ([§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet)) and of every `values = true` row ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)) says what removal costs and names the rewrite that keeps the values compared. It weighs no generated section, because removal leaves that section out: the section comes with keeping the comparison through a version 2 field, which is what the reason line says.
+
+A root rewritten as a marked section ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) is judged the same under both versions, whatever the row's `fetch`: a wrong literal bound to it fails `grund check` before the migration and after it, with the key gone nothing here refuses the row, and `grund init` writes no "Declaration shapes" section for it.
 
 #### 3.1.8 A string that closes early
 
@@ -346,8 +352,10 @@ Migration also renders in memory what `grund init` would write into each `AGENTS
 refused: grund.toml:11: [[kinds]] `TERM` values = true adds a "Declaration shapes" section to the AGENTS.md block in version 2, which grund check compares
   would write: - **TERM**
   would write:   - field <number> may · values
-  repair: none keeps the generated guidance; remove values under version 1 only if that section may change
+  repair: removing values alone ends the comparison of every binding that quoted its values; to keep them compared, under version 1 rewrite its roots as marked sections, remove values and cite the new paths
 ```
+
+The repair says what removal costs, for the reason [§FS-config-migrate.3.1.7.2](FS-config-migrate.md#3172-removing-a-value-key-alone-ends-the-comparison) gives, on a row that sets `fetch` as on one that does not.
 
 Any other compared difference is one block per section, its lines prefixed `- ` for version 1 and `+ ` for the candidate, or a version alone when no section differs:
 

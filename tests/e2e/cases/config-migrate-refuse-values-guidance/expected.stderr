@@ -2,5 +2,5 @@ grund.toml: version 1 → 2, preview, nothing written
 refused: grund.toml:16: [[kinds]] `TERM` values = true adds a "Declaration shapes" section to the AGENTS.md block in version 2, which grund check compares
   would write: - **TERM**
   would write:   - field <number> may · values
-  repair: none keeps the generated guidance; remove values under version 1 only if that section may change
+  repair: removing values alone ends the comparison of every binding that quoted its values; to keep them compared, under version 1 rewrite its roots as marked sections, remove values and cite the new paths
 would not write: 1 refusal (follow the repairs above)
