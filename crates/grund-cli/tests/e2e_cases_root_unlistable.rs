@@ -330,11 +330,10 @@ fn a_cases_root_that_links_to_a_barred_target_is_the_walks_one_line() {
     );
 }
 
-/// A walk report at the cases root is not always a listing failure. An ignore file with two
-/// malformed lines names no one path, so the walk reports it at its walk root. The root is still
-/// listable, and its cases are still read, so a citation of one resolves (§FS-check.2.4.2).
-/// This guards against skipping the listing wherever the walk reported the root, so it passes
-/// before the fix as well as after it.
+/// A walk failure beside the cases root is no listing failure of it. An ignore file with two
+/// malformed lines is reported at the ignore file, each line once (§FS-check.2.4.2), and the root
+/// is still listed by the walk, so its cases are still read and a citation of one resolves. This
+/// guards against a walk failure that leaves the root listable taking the cases with it.
 #[test]
 fn a_walk_report_at_the_cases_root_that_is_no_listing_failure_leaves_the_cases_read() {
     let scratch = Scratch::new("ignore-file");
@@ -355,10 +354,9 @@ fn a_walk_report_at_the_cases_root_that_is_no_listing_failure_leaves_the_cases_r
     assert!(
         list.code == 2
             && lines.len() == 1
-            && lines[0].starts_with("error: e2e/cases: ")
+            && lines[0].starts_with("error: e2e/.ignore: ")
             && lines[0].contains("error parsing glob"),
-        "this guard needs the walk to report the ignore file at the cases root; if it now reports \
-         it elsewhere, find another walk report at the root that leaves it listable\n{}",
+        "the walk reports the ignore file at the file, once\n{}",
         list.shown()
     );
     assert_eq!(

@@ -440,3 +440,42 @@ fn git_dir(top: &Path) -> PathBuf {
         Err(_) => gitdir,
     }
 }
+
+/// The two rules that reach a path below a scan root, `exclude` and the ignore files, asked of an
+/// E2E case's manifests and fixture directories, which the walk leaves to the manifest pass
+/// (§FS-declarations.e2e-case.excluded, §FS-config-v2.schema.sources.exclude.roots). The case
+/// directory itself faced them in the walk; what lies inside it faces them here, with the same
+/// globs and the same resolved global file the walk reads (§FS-scan.scope.ignore-files.pathname).
+pub(super) struct CaseEntryFilter {
+    root: PathBuf,
+    globs: Option<ExcludeGlobs>,
+    global: Option<Arc<GlobalExcludes>>,
+}
+
+impl CaseEntryFilter {
+    pub(super) fn new(schema: &Schema, frame: Frame<'_>) -> Self {
+        let mounted = frame.run.workspace.mounted_root.as_deref();
+        let global = schema
+            .sources
+            .respect_gitignore
+            .then(|| GlobalExcludes::for_walk(mounted).ok().map(Arc::new))
+            .flatten();
+        Self {
+            root: frame.root().to_path_buf(),
+            globs: ExcludeGlobs::of(schema),
+            global,
+        }
+    }
+
+    /// Whether `exclude` or an ignore file keeps the entry at `path`, spelled as the walk spells
+    /// the tree, out of the run.
+    pub(super) fn keeps_out(&self, path: &Path, is_dir: bool) -> bool {
+        self.globs
+            .as_ref()
+            .is_some_and(|globs| globs.excluding(&self.root, path, is_dir).is_some())
+            || self
+                .global
+                .as_ref()
+                .is_some_and(|global| ignored_with(path, is_dir, global))
+    }
+}

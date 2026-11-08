@@ -30,6 +30,7 @@ use crate::model::{
 ///
 /// `link_roots` and `looping_links` are the filter's two outputs and belong to the
 /// caller, because the reporting walk reads both after the traversal.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn scannable_walker(
     schema: &Schema,
     frame: Frame<'_>,
@@ -38,6 +39,7 @@ pub(super) fn scannable_walker(
     physical_root: &Path,
     link_roots: &std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
     looping_links: &std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
+    met_cases: Option<&MetCases>,
 ) -> Result<ignore::Walk> {
     Ok(scannable_walk_builder(
         schema,
@@ -47,13 +49,21 @@ pub(super) fn scannable_walker(
         physical_root,
         link_roots,
         looping_links,
+        met_cases,
     )?
     .build())
 }
 
+/// The E2E case directories one walk met and left to the manifest pass, as the walk spelled
+/// them (§FS-declarations.e2e-case.excluded): the pass reads its cases from this listing rather
+/// than listing the cases root again (§FS-check.2.4.2, §AR-scanner.6.4).
+pub(super) type MetCases = std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>;
+
 /// [`scannable_walker`] before it is built, so a probe that only needs the walk's
 /// first levels bounds its depth without a second copy of its rules
-/// (§FS-check.2.2.2.5.2).
+/// (§FS-check.2.2.2.5.2). `met_cases` is where the walk records the case directories
+/// it meets, and `None` for a walk that hands its cases to no pass.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn scannable_walk_builder(
     schema: &Schema,
     frame: Frame<'_>,
@@ -62,6 +72,7 @@ pub(super) fn scannable_walk_builder(
     physical_root: &Path,
     link_roots: &std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
     looping_links: &std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
+    met_cases: Option<&MetCases>,
 ) -> Result<WalkBuilder> {
     // §FS-check.6.1.3: include ignore discovery outside the source roots.
     if schema.sources.respect_gitignore && !crate::config::observe_ignore_inputs(scan_root) {
@@ -105,6 +116,10 @@ pub(super) fn scannable_walk_builder(
         link_roots,
         looping_links,
     );
+    let filter = WalkDirFilter {
+        met_cases: met_cases.cloned(),
+        ..filter
+    };
     builder.filter_entry(move |entry| {
         !global
             .as_ref()
@@ -164,6 +179,9 @@ pub(super) struct WalkDirFilter {
     grammar: Grammar,
     link_roots: std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
     looping_links: std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
+    /// Where the walk records each E2E case directory it prunes for the manifest pass; `None`
+    /// for the read predicate's filter, which walks nothing (§FS-declarations.e2e-case.excluded).
+    met_cases: Option<MetCases>,
 }
 
 impl WalkDirFilter {
@@ -207,6 +225,7 @@ impl WalkDirFilter {
             grammar: frame.grammar().clone(),
             link_roots: std::sync::Arc::clone(link_roots),
             looping_links: std::sync::Arc::clone(looping_links),
+            met_cases: None,
         }
     }
 
@@ -232,10 +251,24 @@ impl WalkDirFilter {
     /// the tree before it notices at `docs/up/docs/up`. That descent reports findings
     /// from a tree the run has just called unreadable and reads past `[scan] include`,
     /// so the link is pruned here and the report raised afterwards.
+    ///
+    /// A case directory is met here only once the ignore files, which the walker asks first, and
+    /// `exclude`, which `refusal` asks before the case test, have both admitted it, so the cases
+    /// recorded are the ones the read predicate reads (§FS-declarations.e2e-case.excluded).
     fn keep(&self, entry: &ignore::DirEntry) -> bool {
         let is_dir = entry.file_type().is_some_and(is_directory);
-        self.refusal(entry.path(), entry.depth(), is_dir, entry.path_is_symlink())
-            .is_none()
+        match self.refusal(entry.path(), entry.depth(), is_dir, entry.path_is_symlink()) {
+            None => true,
+            Some(Unread::E2eCase) => {
+                if let Some(met) = &self.met_cases {
+                    met.lock()
+                        .unwrap_or_else(std::sync::PoisonError::into_inner)
+                        .push(entry.path().to_path_buf());
+                }
+                false
+            }
+            Some(_) => false,
+        }
     }
 
     /// Which rule prunes the entry at `path`, `depth` below the scan root, or

@@ -85,14 +85,45 @@ pub(super) fn publish_unlisted(
     });
 }
 
-/// A case's failure to read a file or list a fixture directory, published at `spelled` unless a
-/// report already says it there: the same path as the tree spells it and the same bare reason. The
-/// walk spells below the canonical root as the pass does, so a plain tree meets here, and a report
-/// at another spelling of the file answers no run holding this one (§AR-scanner.1.relisted).
-/// The walk's words around a fixture directory it reports as a link are not compared either.
-pub(super) fn publish_case_failure(spelled: PathBuf, error: &Error, reported: &mut Vec<ScanError>) {
+/// A case's failure to list a fixture directory, published at `spelled` unless a report already
+/// says it there: the same path as the tree spells it and the same bare reason. The walk spells
+/// below the canonical root as the pass does, so a plain tree meets here. A directory under two
+/// spellings is not settled here (§DF-e2e-case-on-the-one-walk), and the walk's words around a
+/// fixture directory it reports as a link are not compared either (§AR-scanner.1.relisted).
+pub(super) fn publish_unlisted_fixture(
+    spelled: PathBuf,
+    error: &Error,
+    reported: &mut Vec<ScanError>,
+) {
     let at = spelled.clone();
     publish_unless_reported(spelled, error, None, reported, |path| path == at);
+}
+
+/// A case's failure to read or decode one of its files, published at `spelled` unless the scan's
+/// reports so far already hold it: the same file, under any of its spellings, and the same bare
+/// reason (§FS-check.2.4.2, §FS-declarations.e2e-case.failure). One file is one failure, under any
+/// spelling, so the line already there stands, named as it was, the
+/// one listed first, unless only `spelled` lies inside `run_path`, the path the run was handed:
+/// then that is the spelling it is named by, so the run that names it keeps its exit.
+pub(super) fn publish_case_file_failure(
+    spelled: PathBuf,
+    error: &Error,
+    run_path: Option<&Path>,
+    reported: &mut Vec<ScanError>,
+) {
+    let reason = scan_io_reason(error);
+    let already = reported.iter_mut().find(|(path, said)| {
+        said.strip_prefix(UNREADABLE_LINK).unwrap_or(said) == reason
+            && (*path == spelled || paths_same_location(path, &spelled))
+    });
+    match already {
+        Some((path, _)) => {
+            if run_path.is_some_and(|run| spelled.starts_with(run) && !path.starts_with(run)) {
+                *path = spelled;
+            }
+        }
+        None => reported.push((spelled, reason)),
+    }
 }
 
 fn publish_unless_reported(

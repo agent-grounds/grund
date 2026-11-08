@@ -141,7 +141,6 @@ fn one_malformed_line_is_one_failure_at_the_ignore_file() {
 }
 
 #[test]
-#[ignore = "red until #1271 reports a folded ignore-file error at the file; implement removes this"]
 fn two_malformed_lines_under_the_e2e_folder_are_reported_at_the_ignore_file() {
     let tree = Tree::new("e2e-two");
     tree.write("e2e/.ignore", TWO_LINES);
@@ -152,7 +151,6 @@ fn two_malformed_lines_under_the_e2e_folder_are_reported_at_the_ignore_file() {
 
 /// Every walk root reads a root ignore file, and the one failure is still one line per bad line.
 #[test]
-#[ignore = "red until #1271 reports a folded ignore-file error at the file; implement removes this"]
 fn two_malformed_lines_in_a_root_ignore_file_are_reported_once_at_it() {
     for file in [".ignore", ".gitignore"] {
         let tree = Tree::new(&format!("root{file}"));
@@ -163,7 +161,6 @@ fn two_malformed_lines_in_a_root_ignore_file_are_reported_once_at_it() {
 
 /// A run naming the ignore file holds its failure, as a run naming any failing file does.
 #[test]
-#[ignore = "red until #1271 reports a folded ignore-file error at the file; implement removes this"]
 fn a_run_naming_the_ignore_file_holds_its_failure() {
     let tree = Tree::new("named");
     tree.write("e2e/.ignore", TWO_LINES);

@@ -163,7 +163,6 @@ fn excluded_trees(test: &str) -> Vec<Tree> {
 
 /// §FS-declarations.e2e-case.excluded: nothing in an excluded case can fail the run.
 #[test]
-#[ignore = "red until #1271 reads the cases through the one walk; implement removes this"]
 fn an_excluded_case_with_a_broken_manifest_does_not_fail_the_run() {
     for tree in excluded_trees("broken") {
         tree.write("e2e/cases/b/expected.exit", UNDECODABLE);
@@ -175,7 +174,6 @@ fn an_excluded_case_with_a_broken_manifest_does_not_fail_the_run() {
 
 /// §FS-declarations.e2e-case.excluded: an excluded case declares no ID, so a citation dangles.
 #[test]
-#[ignore = "red until #1271 reads the cases through the one walk; implement removes this"]
 fn an_excluded_case_declares_no_id() {
     for tree in excluded_trees("healthy") {
         assert_eq!(listed(&tree), ["E2E-a", "E2E-c"]);
@@ -196,7 +194,6 @@ fn the_readable_linked_tree_passes() {
 /// §FS-check.2.4.2: one unreadable manifest the walk and the case read under two spellings is one
 /// failure, so one line and one `io` entry.
 #[test]
-#[ignore = "red until #1271 reads the cases through the one walk; implement removes this"]
 fn one_unreadable_manifest_under_two_spellings_is_one_line() {
     let mut tree = Tree::linked("one-file");
     if !tree.lock("realE/cases/b/spec.refs") {
@@ -212,7 +209,6 @@ fn one_unreadable_manifest_under_two_spellings_is_one_line() {
 
 /// The guard: two unreadable manifests are two failures, one line each, not one and not four.
 #[test]
-#[ignore = "red until #1271 reads the cases through the one walk; implement removes this"]
 fn two_unreadable_manifests_under_two_spellings_are_two_lines() {
     let mut tree = Tree::linked("two-files");
     tree.write("realE/cases/a/spec.refs", b"\n");
