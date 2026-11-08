@@ -179,8 +179,9 @@ pub(super) struct WalkDirFilter {
     grammar: Grammar,
     link_roots: std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
     looping_links: std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
-    /// Where the walk records each E2E case directory it prunes for the manifest pass; `None`
-    /// for the read predicate's filter, which walks nothing (§FS-declarations.e2e-case.excluded).
+    /// Where the walk records each E2E case directory it meets and the configuration does not
+    /// keep out, for the manifest pass; `None` for the read predicate's filter, which walks
+    /// nothing (§FS-declarations.e2e-case.excluded).
     met_cases: Option<MetCases>,
 }
 
@@ -252,23 +253,53 @@ impl WalkDirFilter {
     /// from a tree the run has just called unreadable and reads past `[scan] include`,
     /// so the link is pruned here and the report raised afterwards.
     ///
-    /// A case directory is met here only once the ignore files, which the walker asks first, and
-    /// `exclude`, which `refusal` asks before the case test, have both admitted it, so the cases
-    /// recorded are the ones the read predicate reads (§FS-declarations.e2e-case.excluded).
+    /// Every case directory the walk meets is pruned, and `met_cases` records each one the
+    /// configuration does not keep out, for the manifest pass to read
+    /// (§FS-declarations.e2e-case.excluded). The ignore files have been asked by then, since
+    /// the walker asks them before this filter, and `exclude` is asked by `case_kept_out`.
     fn keep(&self, entry: &ignore::DirEntry) -> bool {
         let is_dir = entry.file_type().is_some_and(is_directory);
-        match self.refusal(entry.path(), entry.depth(), is_dir, entry.path_is_symlink()) {
-            None => true,
-            Some(Unread::E2eCase) => {
-                if let Some(met) = &self.met_cases {
-                    met.lock()
-                        .unwrap_or_else(std::sync::PoisonError::into_inner)
-                        .push(entry.path().to_path_buf());
-                }
-                false
-            }
-            Some(_) => false,
+        let refusal = self.refusal(entry.path(), entry.depth(), is_dir, entry.path_is_symlink());
+        if let Some(met) = &self.met_cases
+            && is_dir
+            && refusal.is_some_and(|reason| self.met_case(entry.path(), reason))
+        {
+            met.lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .push(entry.path().to_path_buf());
         }
+        refusal.is_none()
+    }
+
+    /// Whether the directory at `path`, which `refusal` refused for `reason`, is a case the
+    /// manifest pass reads. Only `exclude` and the ignore files keep a case out
+    /// (§FS-declarations.e2e-case.excluded). The walk's other prunes stop a descent, and the walk
+    /// never descends into a case anyway. So a case that is a link out of the project, or that
+    /// stands in a home the walk does not walk, is still read, as it was before the pass read
+    /// the walk's listing.
+    fn met_case(&self, path: &Path, reason: Unread) -> bool {
+        match reason {
+            Unread::E2eCase => true,
+            // `refusal` answers `UnwalkedHome` before it asks `exclude`, so all three ask it here.
+            Unread::OutsideProject | Unread::AnotherProject | Unread::UnwalkedHome => {
+                self.is_e2e_case_dir(path) && !self.case_kept_out(path)
+            }
+            _ => false,
+        }
+    }
+
+    /// Whether `exclude` keeps the directory at `path` out: a v2 pattern, or a hidden name or a
+    /// name a version 1 `[scan] exclude` lists. These are the same two tests `refusal` asks.
+    fn case_kept_out(&self, path: &Path) -> bool {
+        self.excluded_by_pattern(path, true) || directory_refusal(path, &self.excluded).is_some()
+    }
+
+    /// Whether a v2 `exclude` pattern matches `path`, by the spelling the walk reached it under
+    /// (§FS-config-v2.schema.sources.exclude.roots).
+    fn excluded_by_pattern(&self, path: &Path, is_dir: bool) -> bool {
+        self.globs
+            .as_ref()
+            .is_some_and(|globs| globs.excluding(&self.root, path, is_dir).is_some())
     }
 
     /// Which rule prunes the entry at `path`, `depth` below the scan root, or
@@ -303,9 +334,7 @@ impl WalkDirFilter {
         }
         // §FS-config-v2.schema.sources.exclude.roots: below a root, a glob prunes a
         // file or a directory by the spelling the walk reached it under.
-        if let Some(globs) = &self.globs
-            && globs.excluding(&self.root, path, is_dir).is_some()
-        {
+        if self.excluded_by_pattern(path, is_dir) {
             return Some(Unread::ExcludedPath);
         }
         if !is_dir {

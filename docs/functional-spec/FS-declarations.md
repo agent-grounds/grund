@@ -703,14 +703,25 @@ is read.
 
 ### e2e-case.excluded: `exclude` and an ignore file keep a case out
 
-A case directory is found, and its manifests and fixtures read, by the ordinary walk and its read
-predicate, and a case is no exception to them: below a scan root, a case directory, manifest or
-fixture directory that `exclude` or an ignore file matches is not read
-([§FS-config-v2.schema.sources.exclude.roots](FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters), item 2). An excluded case declares no ID, so a
-citation of it dangles and `grund list` does not name it, and nothing in it can fail the run:
-a manifest that cannot be read or decoded there is not reported. `--full` applies `exclude` and
-the ignore files as it always does. Value sources keep the exemption [§FS-values.2.2](FS-values.md#22-declarations-from-value-sources) gives them;
-a case has none. Decided in [§DF-e2e-case-on-the-one-walk](../decisions/functional/DF-e2e-case-on-the-one-walk.md#df-e2e-case-on-the-one-walk-an-e2e-case-is-read-by-the-one-walk-so-exclude-and-ignore-files-keep-it-out-and-a-scan-failure-is-one-line-at-the-path-that-failed).
+A case directory is found by the ordinary walk and its read predicate, and a case is no
+exception to them: below a scan root, a case directory that `exclude` or an ignore file matches
+is not read ([§FS-config-v2.schema.sources.exclude.roots](FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters), item 2). In a version 1 configuration that is
+a `[scan] exclude` name as well as an ignore file. It holds wherever the cases folder lies,
+whether the walk lists it or the folder is a link out of the project that the walk skips. An
+excluded case declares no ID, so a citation of it dangles and `grund list` does not name it,
+and nothing in it can fail the run: a manifest that cannot be read or decoded there is not
+reported. `--full` applies `exclude` and the ignore files as it always does. Only these keep a
+case out. The walk's other reasons not to enter a directory, such as a link out of the project
+or another project's tree, are about descending, and the walk never descends into a case
+([§FS-declarations.e2e-case.walk](FS-declarations.md#e2e-casewalk-the-walk-stops-at-a-case-directory)). So a case directory that is such a link is still read.
+
+What a case holds is its data and is read whole with the case: its manifests and its fixture
+tree, whatever `exclude` or an ignore file says of a path inside the case directory. A
+fixture's own `.gitignore` is content of the fixture repository. A pattern such as `repo/`,
+which keeps fixture trees out of the walk, matches inside the case. Neither trims the fixture
+list `grund E2E-<name>` prints ([§FS-show.2.4](FS-show.md#24-e2e-cases)), and neither hides a failure reading the case
+([§FS-declarations.e2e-case.failure](FS-declarations.md#e2e-casefailure-a-case-that-cannot-be-read-fails-alone)). Value sources keep the exemption [§FS-values.2.2](FS-values.md#22-declarations-from-value-sources) gives them; a case
+directory has none. Decided in [§DF-e2e-case-on-the-one-walk](../decisions/functional/DF-e2e-case-on-the-one-walk.md#df-e2e-case-on-the-one-walk-an-e2e-case-is-read-by-the-one-walk-so-exclude-and-ignore-files-keep-it-out-and-a-scan-failure-is-one-line-at-the-path-that-failed).
 
 ### e2e-case.failure: A case that cannot be read fails alone
 

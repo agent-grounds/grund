@@ -382,7 +382,7 @@ fn an_expected_exit_that_does_not_parse_the_walk_also_reads_is_one_line() {
 /// §FS-check.2.4.2: a manifest that is a link reads the file the walk reported, so the two are one
 /// failure, one line, named by the case's spelling, which the run naming the case holds.
 #[test]
-fn a_manifest_linked_to_a_file_the_walk_reported_keeps_its_own_line() {
+fn a_manifest_linked_to_a_file_the_walk_reported_is_one_line_named_by_the_case() {
     let tree = Tree::new("linked-manifest");
     tree.write("notes.md", UNDECODABLE);
     symlink(

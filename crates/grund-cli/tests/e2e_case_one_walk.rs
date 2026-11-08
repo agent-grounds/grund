@@ -91,10 +91,15 @@ impl Tree {
     }
 
     fn run(&self, args: &[&str]) -> Run {
+        self.run_in("", args)
+    }
+
+    /// A run from `dir`, relative to the tree's root.
+    fn run_in(&self, dir: &str, args: &[&str]) -> Run {
         let output = Command::new(env!("CARGO_BIN_EXE_grund"))
             .args(args)
             .env("NO_COLOR", "1")
-            .current_dir(&self.root)
+            .current_dir(self.root.join(dir))
             .output()
             .expect("run grund");
         Run {
@@ -129,7 +134,12 @@ fn io_entries(run: &Run) -> usize {
 
 /// The `E2E` IDs `grund list` names, in its order.
 fn listed(tree: &Tree) -> Vec<String> {
-    let run = tree.run(&["list", "--kind", "E2E"]);
+    listed_in(tree, "")
+}
+
+/// The `E2E` IDs `grund list` names from `dir`, in its order.
+fn listed_in(tree: &Tree, dir: &str) -> Vec<String> {
+    let run = tree.run_in(dir, &["list", "--kind", "E2E"]);
     run.stdout
         .lines()
         .filter_map(|line| line.split_whitespace().next().map(str::to_string))
@@ -234,4 +244,104 @@ fn two_unreadable_manifests_under_two_spellings_are_two_lines() {
     );
     let json = tree.run(&["check", "--format", "json"]);
     assert_eq!(io_entries(&json), 2, "{json:#?}");
+}
+
+/// A version-1 project under `{kind}-{slug}` whose `E2E` kind keeps its cases in `folder`, with
+/// `scan` written under `[scan]`.
+fn v1_config(folder: &str, scan: &str) -> String {
+    format!(
+        "grund_config_version = 1\n\n[id]\nformat = \"{{kind}}-{{slug}}\"\n\n\
+         [[kinds]]\nkind = \"E2E\"\nfolder = \"{folder}\"\nindex = false\n\n[scan]\n{scan}\n"
+    )
+}
+
+/// §FS-declarations.e2e-case.excluded: a version 1 `[scan] exclude` name is `exclude` as well,
+/// asked by the walk's own filter, so it keeps a case directory out by its name, and the broken
+/// case it names fails nothing.
+#[test]
+fn a_version_1_exclude_name_keeps_a_case_out() {
+    let tree = Tree::new("v1-name");
+    tree.write(
+        "grund.toml",
+        v1_config("e2e/cases", "exclude = [\"b\"]").as_bytes(),
+    );
+    for case in ["a", "b", "c"] {
+        tree.write(&format!("e2e/cases/{case}/expected.exit"), b"0\n");
+    }
+    tree.write("e2e/cases/b/expected.exit", UNDECODABLE);
+    assert_eq!(listed(&tree), ["E2E-a", "E2E-c"]);
+    let run = tree.run(&["check"]);
+    assert_eq!(run.code, 0, "{run:#?}");
+    assert_eq!(error_lines(&run), Vec::<&str>::new(), "{run:#?}");
+}
+
+/// The tree no walk lists: a version 1 project at `proj` whose `E2E` folder `tests/e2e` is a link
+/// out of the project to `outside`, which holds `a`, `c`, and `b` with an undecodable
+/// `expected.exit`. The walk skips a scan root that is a link out of the project, so only the
+/// manifest pass reads these cases (§AR-scanner.6.unlistable-root).
+fn linked_out(test: &str, scan: &str) -> Tree {
+    let tree = Tree::new(test);
+    tree.write("proj/grund.toml", v1_config("tests/e2e", scan).as_bytes());
+    for case in ["a", "b", "c"] {
+        tree.write(&format!("outside/{case}/expected.exit"), b"0\n");
+    }
+    tree.write("outside/b/expected.exit", UNDECODABLE);
+    fs::create_dir_all(tree.root.join("proj/tests")).expect("create tests");
+    symlink(Path::new("../../outside"), tree.root.join("proj/tests/e2e")).expect("link out");
+    tree
+}
+
+/// §FS-declarations.e2e-case.excluded: a cases root no walk lists is read by the same filter the
+/// walk prunes with, one level deep, so `exclude` and an ignore file keep a case out there too.
+#[test]
+fn a_cases_root_no_walk_lists_keeps_an_excluded_case_out() {
+    let control = linked_out("out-control", "");
+    let run = control.run_in("proj", &["check"]);
+    assert_eq!(
+        run.code, 2,
+        "the broken case is read where nothing keeps it out\n{run:#?}"
+    );
+    assert_eq!(
+        error_lines(&run),
+        [
+            "error: tests/e2e/b/expected.exit: stream did not contain valid UTF-8; make the path readable, or keep it out of the scan"
+        ],
+        "{run:#?}"
+    );
+    let by_exclude = linked_out("out-exclude", "exclude = [\"b\"]");
+    let by_ignore = linked_out("out-ignore", "");
+    by_ignore.write("outside/.ignore", b"b\n");
+    for tree in [by_exclude, by_ignore] {
+        let run = tree.run_in("proj", &["check"]);
+        assert_eq!(run.code, 0, "{run:#?}");
+        assert_eq!(error_lines(&run), Vec::<&str>::new(), "{run:#?}");
+        assert_eq!(listed_in(&tree, "proj"), ["E2E-a", "E2E-c"], "{run:#?}");
+    }
+}
+
+/// §FS-declarations.e2e-case.excluded: only `exclude` and the ignore files keep a case out. A
+/// case directory that is a link out of the project is still read, since the walk never
+/// descends into a case under any reading, and `exclude` keeps it out as it keeps out any case.
+#[test]
+fn a_case_linked_out_of_the_project_is_read_unless_excluded() {
+    for (test, sources, expected) in [
+        ("linked-case", "", &["E2E-a", "E2E-b", "E2E-c"][..]),
+        (
+            "linked-case-excluded",
+            "exclude = [\"e2e/cases/b\"]\n",
+            &["E2E-a", "E2E-c"][..],
+        ),
+    ] {
+        let tree = Tree::new(test);
+        tree.write("proj/grund.toml", config(sources).as_bytes());
+        tree.write("proj/e2e/cases/a/expected.exit", b"0\n");
+        tree.write("proj/e2e/cases/c/expected.exit", b"0\n");
+        tree.write("outside/b/expected.exit", b"0\n");
+        symlink(
+            Path::new("../../../outside/b"),
+            tree.root.join("proj/e2e/cases/b"),
+        )
+        .expect("link the case out of the project");
+        assert_eq!(listed_in(&tree, "proj"), expected, "{test}");
+    }
 }
