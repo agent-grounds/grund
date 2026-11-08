@@ -546,6 +546,10 @@ valueValid. Citation records retain namespace/id/section/path/line/column/marker
   enclosingDeclaration/enclosingSection. A front-matter coordinate is a Section
 record like any other, with `headingLevel` `0` and no new field
 ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
+An `e2eCase`'s `dir` is the case directory spelled exactly as the same record's
+`path`, from the same report base, reading `.` when the case directory is that
+base ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), so it does not change with where the tree sits; its
+`fixtures` stay relative to that directory.
 Each structural/value fact is a fixed typed record carrying the actual source
 fields under camelCase, with paths rendered through core; source is discriminated
 `kind: 'text'` versus `kind: 'json'` memberSlice/keyColumn/keyText/format. `kind:
