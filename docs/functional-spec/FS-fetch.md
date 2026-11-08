@@ -19,7 +19,7 @@ section; `--remote` takes the place of the ID ([§FS-fetch.remote.selector](FS-f
 invocation naming both is a usage error with exit 2. The ID form uses
 the same target-project selection as the ID query ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)) but parses
 by the kind's effective grammar only, without the catalog-backed off-grammar spellings
-the query also reads ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). `grund fetch alias/TICKET-1234` loads that member's config and home, renders the qualified form in user messages, and passes only `TICKET-1234` to the integration.
+the query also reads ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). `grund fetch alias/TICKET-1234` loads that member's config and home, renders the qualified form in user messages, and passes only `TICKET-1234` to the integration. What that selection answers for an alias path through an import is [§FS-imports.writes.answer](FS-imports.md#writesanswer-where-a-qualified-id-is-fetched-has-one-answer).
 A malformed alias path is refused as [§FS-workspace.8.11](FS-workspace.md#811-a-malformed-alias-path-names-the-offending-segment) says, naming the offending segment, with exit 2; `grund fetch Bad/TICKET-1234` prints what `grund show Bad/TICKET-1234` prints.
 
 An ID that cannot be parsed is a bare query failure ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)) and exits 1.

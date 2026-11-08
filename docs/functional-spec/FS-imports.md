@@ -158,6 +158,8 @@ importing `org` gives `native-image/org`, and a member `compiler` of that import
 `native-image/org/compiler`. Only declared imports are followed. Two different trees that
 share a `project_name` under two importers are two projects, `a/shared` and `b/shared`, as
 two pins of one remote are ([§FS-remote-projects.mount.nested](FS-remote-projects.md#mountnested-nested-pins-stay-isolated)).
+A fetch or a check remedy for an ID below a nested import costs one command, in the last
+import's target, not one per edge ([§FS-imports.writes.answer](FS-imports.md#writesanswer-where-a-qualified-id-is-fetched-has-one-answer)).
 
 ### graph.cycle: A cycle is a config error
 
@@ -237,7 +239,7 @@ leaves the consumer's `.grund/sections/<alias>/` entries for it as they are, as 
 alias the run does not load.
 
 `grund fetch` of an ID in an import is refused before its integration runs, with exit 2,
-naming the target as the place to run it:
+naming the target as the place to run it ([§FS-imports.writes.answer](FS-imports.md#writesanswer-where-a-qualified-id-is-fetched-has-one-answer)):
 
 ```text
 error: `native-image/TICKET-1` is in import `native-image`, read-only here — run grund fetch TICKET-1 in ../graal/substratevm
@@ -245,6 +247,37 @@ error: `native-image/TICKET-1` is in import `native-image`, read-only here — r
 
 Read-only belongs to the import edge, not to the tree: run from the dependency itself, every
 write is ordinary.
+
+### writes.answer: Where a qualified ID is fetched has one answer
+
+One answer says where the fetch of a qualified ID runs and whether it can. `grund fetch`'s
+refusal and the fetch tails of `grund check` ([§FS-check.3.1.3](FS-check.md#313-a-kind-that-fetches), [§FS-check.4.12](FS-check.md#412-missing-snapshot)) render from
+it, so following either takes one command and neither names a command that is refused. The hint of [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure), once implemented, renders it too. It
+selects the project as the ID query does ([§FS-fetch.1](FS-fetch.md#1-input-and-project-selection)), over every import edge the run can
+reach, nested ones and a member's included. A fetch of a local or member ID reads no import
+it does not name, so an import that cannot be read does not fail it. The first of these that
+holds ends the answer:
+
+- **An alias path no project has** is an unknown alias, in the words `grund show` prints for
+  it, and names no command.
+- **An alias path into a missing import** names that import as missing, in the words
+  [§FS-imports.checks.import-missing](FS-imports.md#checksimport-missing-an-import-names-no-directory) gives a query, and names no command. Neither of these two
+  says read-only, and both exit 2.
+- **A workspace member's ID** is fetched from the root, and a remedy for it stays
+  `run grund fetch <alias>/<ID>` ([§FS-check.4.12.2](FS-check.md#4122-in-a-workspace)).
+- **An ID reached through an import** stays read-only at the edge. Its fetch runs in the
+  target of the last import edge on the alias path, and the ID there is the alias path below
+  that edge: `lb/in/alpha/FS-a`, where `lb/in` is the last import, is
+  `run grund fetch alpha/FS-a in ../inner`, and `grund fetch` refuses it as
+  `` `lb/in/alpha/FS-a` is in import `lb/in`, read-only here — run grund fetch alpha/FS-a in ../inner``.
+  The target is spelled from the run's report base ([§FS-errors.4](FS-errors.md#4-determinism)).
+
+Whether to name that command is asked of the project the ID is in, and each of these names
+none. An ID that project cannot parse, a kind it does not have among them, is what [§FS-fetch.1](FS-fetch.md#1-input-and-project-selection)
+says it is there: `invalid ID` and exit 1. A kind with no `fetch` is the same refusal it is
+there, ``kind `<KIND>` has no fetch integration``, exit 2. At a home `fetch` refuses,
+`grund fetch` prints the refusal of [§FS-fetch.4](FS-fetch.md#4-file-home-write) and [§FS-fetch.4.2](FS-fetch.md#42-a-home-read-as-source-is-refused), naming the home from the run's
+report base, exit 2, and `grund check` prints the tail of [§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses).
 
 ## editor: The editor reads the import graph the command line reads
 
