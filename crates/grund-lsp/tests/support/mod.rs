@@ -342,9 +342,19 @@ pub fn hover_result(
 /// zero-config case built by hand takes its base from here too, because
 /// discovery climbs past the fixture and a covered base would hand it the
 /// config it found there; when no candidate is clean the suite fails here.
+/// The selected existing base is resolved before caching so every descendant
+/// shares initialization's root spelling, retaining child links (§AR-ci.10.3.1).
 pub fn fixture_base() -> PathBuf {
     static BASE: std::sync::OnceLock<Result<PathBuf, String>> = std::sync::OnceLock::new();
-    match BASE.get_or_init(|| uncovered_base(&temp_candidates())) {
+    match BASE.get_or_init(|| {
+        let base = uncovered_base(&temp_candidates())?;
+        fs::canonicalize(&base).map_err(|error| {
+            format!(
+                "resolve grund-lsp fixture base {} after config-isolation checks: {error}",
+                base.display()
+            )
+        })
+    }) {
         Ok(base) => base.clone(),
         Err(reason) => panic!("{reason}"),
     }

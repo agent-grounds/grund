@@ -20,7 +20,6 @@ impl Drop for Scratch {
 }
 
 #[test]
-#[ignore = "red until #1307 resolves the shared LSP fixture base; implement removes this"]
 fn two_names_survive_an_ancestor_alias_in_tmpdir() {
     let scratch =
         Scratch(fixture_base().join(format!("grund-1307-two-names-temp-{}", std::process::id())));
