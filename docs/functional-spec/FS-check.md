@@ -526,7 +526,7 @@ When the dangling citation sits inside a Markdown inline-code span ([§FS-fmt.2.
 
 #### 3.1.3 A kind that fetches
 
-This is also the fixed finding for a fetch-enabled kind whose effective target-side resolution is `must` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)). In that case the exact message is `unknown reference <qualified-ID>; no snapshot in <home> — run grund fetch <qualified-ID>`, or another tail at a home `fetch` refuses ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)), its JSON code remains `dangling`, its severity is `error`, and it contributes exit 1. For a kind without `fetch`, the historical `unknown reference <qualified-ID>` bytes remain unchanged.
+This is also the fixed finding for a fetch-enabled kind whose effective target-side resolution is `must` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)). In that case the exact message is `unknown reference <qualified-ID>; no snapshot in <home> — run grund fetch <qualified-ID>`, or another tail at a home `fetch` refuses ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)), or `run grund fetch <ID below the last import edge> in <target of that edge>` for an ID reached through an import, nested or not ([§FS-imports.writes.answer](FS-imports.md#writesanswer-where-a-qualified-id-is-fetched-has-one-answer)), its JSON code remains `dangling`, its severity is `error`, and it contributes exit 1. For a kind without `fetch`, the historical `unknown reference <qualified-ID>` bytes remain unchanged.
 
 The near-ID and escaped-inline-code hints ([§FS-check.3.1.1](FS-check.md#311-a-near-id), [§FS-check.3.1.2](FS-check.md#312-an-illustration-in-inline-code)) take precedence over the fetch action. The message retains `unknown reference <qualified-ID>; no snapshot in <home>` and substitutes the existing conditional tail for the em-dash fetch tail: `; did you mean <candidate>?`, `; write <§><qualified-ID> if this is an illustration`, or their existing combined form. One citation site still produces one finding.
 
@@ -1628,7 +1628,7 @@ A recognized citation has no declaration and targets a fetch-enabled kind whose 
 <path>:<line>: no snapshot for <qualified-ID> in <home> — run grund fetch <qualified-ID>
 ```
 
-The em-dash remedy tail is exactly `— run grund fetch <qualified-ID>`, with no inner backticks, except at a home `fetch` refuses ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)). The JSON code is `missing-snapshot`, severity is `warning`, and the message field is the text after `<path>:<line>: `. A warning-only run exits 0 and prints no `success` line. Every site gets one finding, remains in what `refs` and `cover` report, and may resolve after an explicit [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot), or, at a home `fetch` refuses, once the source declares it. The hints that take the fetch tail's place are [§FS-check.4.12.1](FS-check.md#4121-a-hint-takes-the-fetch-tails-place), and its workspace spelling is [§FS-check.4.12.2](FS-check.md#4122-in-a-workspace).
+The em-dash remedy tail is exactly `— run grund fetch <qualified-ID>`, with no inner backticks, except at a home `fetch` refuses ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)) and for an ID reached through an import or a nested import, where it is `— run grund fetch <ID below the last import edge> in <target of that edge>` ([§FS-imports.writes.answer](FS-imports.md#writesanswer-where-a-qualified-id-is-fetched-has-one-answer)). The JSON code is `missing-snapshot`, severity is `warning`, and the message field is the text after `<path>:<line>: `. A warning-only run exits 0 and prints no `success` line. Every site gets one finding, remains in what `refs` and `cover` report, and may resolve after an explicit [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot), or, at a home `fetch` refuses, once the source declares it. The hints that take the fetch tail's place are [§FS-check.4.12.1](FS-check.md#4121-a-hint-takes-the-fetch-tails-place), and its workspace spelling is [§FS-check.4.12.2](FS-check.md#4122-in-a-workspace).
 
 Under v2 the same warning is selected by `[rules.resolution] <KIND> = "warn"`, and `must` selects the error; v1's `resolve = "should"` keeps selecting it. An explicit v2 entry needs `fetch` on the kind's row ([§FS-config-v2.rules.resolution](FS-config-v2.md#rulesresolution-rulesresolution)).
 
@@ -1639,7 +1639,7 @@ The near-ID and escaped-inline-code hints of [§FS-check.3.1.1](FS-check.md#311-
 
 #### 4.12.2 In a workspace
 
-In a workspace, the ID and remedy use the complete alias-qualified spelling while `<home>` is rendered from the run's report base ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)).
+In a workspace, the ID and remedy use the complete alias-qualified spelling while `<home>` is rendered from the run's report base ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)). The remedy for an ID reached through an import is the exception: the message's base keeps the complete spelling, and the remedy names the ID below the last import edge, in that edge's target ([§FS-imports.writes.answer](FS-imports.md#writesanswer-where-a-qualified-id-is-fetched-has-one-answer)).
 
 ### 4.13 Oversized lead *(opt-in)*
 
