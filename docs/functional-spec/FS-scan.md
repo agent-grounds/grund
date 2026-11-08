@@ -419,8 +419,10 @@ For a root whose name is not hidden, the reason names the extension as the file 
 
 | Configuration | The file has an extension | The file has none |
 |---|---|---|
-| version 1 | `` `<ext>` is not in [scan] extensions`` | `it has no extension, and [scan] extensions reads a file only by its extension` |
+| version 1 | `extension <ext> is not in [scan] extensions` | `it has no extension, and [scan] extensions reads a file only by its extension` |
 | version 2 | ``no language in [schema.sources] languages reads `.<ext>` `` | `it has no extension, and [schema.sources] languages reads a file only by its extension` |
+
+This table is the one wording of why a name is not read. The warning and the broken-stub line of [§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing) both say its cell for the configuration and the name, and a name ending in `.` has no extension.
 
 The fix is the one edit that makes the row say what it means. Listing the extension is offered only where there is one to list, so a file with none is never told to add it:
 
@@ -435,7 +437,7 @@ For a root whose name begins with `.`, the reason says so first, and names the e
 | The hidden file | Reason |
 |---|---|
 | has an extension the list holds, or has none and the list holds the empty string ([§FS-scan.scope.extensions.empty](FS-scan.md#scopeextensionsempty-in-version-1-an-empty-string-in-the-list-reads-a-file-with-no-extension)) | `` its name begins with `.`, and grund reads no hidden file `` |
-| has one it does not, version 1 | ``its name begins with `.`, and `<ext>` is not in [scan] extensions`` |
+| has one it does not, version 1 | ``its name begins with `.`, and extension <ext> is not in [scan] extensions`` |
 | has one it does not, version 2 | ``its name begins with `.`, and no language in [schema.sources] languages reads `.<ext>` `` |
 | has none, such as `.notes`, and the list does not hold the empty string | `` its name begins with `.`, and it has no extension `` |
 
@@ -450,13 +452,13 @@ Its fix is one edit, the rename, and it names everything the new name must satis
 A home on a row with `citable = false` may name the file only as a place in the Project map, so its fix also offers the key that says so ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)): the last `, or` of the version-1 fix becomes `,`, and the fix ends ``, or set `scan = false` on the row if it only lists a place``. A version-2 row's single fix, and a hidden home's single rename, gain the same ending. So, for one root of each shape:
 
 ```
-grund.toml:10: warning: [[kinds]] TXT home `notes.txt` is not read — `txt` is not in [scan] extensions, so nothing in it is checked. Add "txt" to [scan] extensions, or give the file an extension the list holds.
-grund.toml:9: warning: [scan] include entry `extra.txt` is not read — `txt` is not in [scan] extensions, so nothing in it is checked. Add "txt" to [scan] extensions, or drop the entry.
+grund.toml:10: warning: [[kinds]] TXT home `notes.txt` is not read — extension txt is not in [scan] extensions, so nothing in it is checked. Add "txt" to [scan] extensions, or give the file an extension the list holds.
+grund.toml:9: warning: [scan] include entry `extra.txt` is not read — extension txt is not in [scan] extensions, so nothing in it is checked. Add "txt" to [scan] extensions, or drop the entry.
 grund.toml:7: warning: [[kinds]] NOTES home `NOTES` is not read — it has no extension, and [scan] extensions reads a file only by its extension, so nothing in it is checked. Rename the file to an extension the list holds, or set `scan = false` on the row if it only lists a place.
 grund.toml:8: warning: [schema.kinds.TXT] file `notes.txt` is not read — no language in [schema.sources] languages reads `.txt`, so nothing in it is checked. Give the file an extension a listed language reads.
 grund.toml:10: warning: [[kinds]] NOTE home `.notes.md` is not read — its name begins with `.`, and grund reads no hidden file, so nothing in it is checked. Rename the file to a name that is not hidden.
 grund.toml:9: warning: [scan] include entry `.extra.md` is not read — its name begins with `.`, and grund reads no hidden file, so nothing in it is checked. Rename the file to a name that is not hidden, or drop the entry.
-grund.toml:10: warning: [[kinds]] TXT home `.notes.txt` is not read — its name begins with `.`, and `txt` is not in [scan] extensions, so nothing in it is checked. Rename the file to a name that is not hidden and an extension the list holds.
+grund.toml:10: warning: [[kinds]] TXT home `.notes.txt` is not read — its name begins with `.`, and extension txt is not in [scan] extensions, so nothing in it is checked. Rename the file to a name that is not hidden and an extension the list holds.
 grund.toml:8: warning: [schema.kinds.NOTE] file `.notes.md` is not read — its name begins with `.`, and grund reads no hidden file, so nothing in it is checked. Rename the file to a name that is not hidden.
 ```
 
