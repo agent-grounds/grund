@@ -141,7 +141,7 @@ fn resolve_stub(
     // judged by the name the stub wrote, so a hidden or unlisted symlink never pairs.
     if let Some(reason) = name_refusal(&resolved, targets.schema) {
         return Some(if reason == Unread::Extension {
-            StubResolution::UnlistedExtension(file_extension(&resolved).unwrap_or("").to_string())
+            StubResolution::UnlistedExtension(file_extension(&resolved).map(str::to_string))
         } else {
             StubResolution::NotRead
         });

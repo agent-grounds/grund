@@ -102,45 +102,38 @@ fn assert_json_reason(name: &str, config: &str, target: &str, reason: &str) {
 }
 
 #[test]
-#[ignore = "red until #1275 gives the stub line the one reason; implement removes this"]
 fn a_target_with_no_extension_is_told_so_in_version_1() {
     assert_reason("none-v1", V1, "FACTS", NONE_V1);
 }
 
 #[test]
-#[ignore = "red until #1275 gives the stub line the one reason; implement removes this"]
 fn a_target_with_no_extension_is_told_so_in_version_2() {
     assert_reason("none-v2", V2, "FACTS", NONE_V2);
 }
 
 #[test]
-#[ignore = "red until #1275 gives the stub line the one reason; implement removes this"]
 fn a_target_ending_in_a_dot_has_no_extension_in_version_1() {
     assert_reason("dot-v1", V1, "FACTS.", NONE_V1);
 }
 
 #[test]
-#[ignore = "red until #1275 gives the stub line the one reason; implement removes this"]
 fn a_target_ending_in_a_dot_has_no_extension_in_version_2() {
     assert_reason("dot-v2", V2, "FACTS.", NONE_V2);
 }
 
 #[test]
-#[ignore = "red until #1275 gives the stub line the one reason; implement removes this"]
 fn version_2_names_its_languages_for_an_extension_nothing_maps() {
     let reason = "no language in [schema.sources] languages reads `.zz`";
     assert_reason("zz-v2", V2, "FACTS.zz", reason);
 }
 
 #[test]
-#[ignore = "red until #1275 gives the stub line the one reason; implement removes this"]
 fn version_2_names_its_languages_for_a_known_language_it_does_not_list() {
     let reason = "no language in [schema.sources] languages reads `.rs`";
     assert_reason("rs-v2", V2, "FACTS.rs", reason);
 }
 
 #[test]
-#[ignore = "red until #1275 gives the stub line the one reason; implement removes this"]
 fn the_json_message_carries_the_same_reason() {
     assert_json_reason("none-json", V1, "FACTS", NONE_V1);
     let reason = "no language in [schema.sources] languages reads `.zz`";
@@ -148,7 +141,6 @@ fn the_json_message_carries_the_same_reason() {
 }
 
 #[test]
-#[ignore = "red until #1275 moves the warning to the one reason; implement removes this"]
 fn the_warning_says_the_version_1_reason_the_stub_line_says() {
     let tree = Tree::empty("warning-v1");
     tree.write(
@@ -166,7 +158,6 @@ fn the_warning_says_the_version_1_reason_the_stub_line_says() {
 }
 
 #[test]
-#[ignore = "red until #1275 moves the warning to the one reason; implement removes this"]
 fn a_hidden_and_unlisted_warning_says_the_same_version_1_reason() {
     let tree = Tree::empty("warning-hidden-v1");
     tree.write(

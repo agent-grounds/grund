@@ -8,7 +8,7 @@ use crate::model::remedies;
 use std::path::Path;
 
 use crate::config::{Config, file_extension};
-use crate::model::{Catalog, Code, Diagnostic, RootOrigin, RootRow};
+use crate::model::{Catalog, Code, Diagnostic, RootOrigin, RootRow, unread_name_reason};
 
 /// One located warning per unread root, at the line of the key that named it
 /// (§FS-scan.checks.unread-scan-root.location). A warning, so the exit code stays
@@ -50,15 +50,10 @@ pub(super) fn unread_root_message(row: &RootRow, v2: bool) -> String {
         }
     };
     let version = if v2 { 2 } else { 1 };
-    let list = if v2 {
-        "[schema.sources] languages"
-    } else {
-        "[scan] extensions"
-    };
     let (reason, mut fixes) = if row.refused.hidden {
-        hidden_reason_and_fixes(row, ext, v2, list)
+        hidden_reason_and_fixes(row, ext, version)
     } else {
-        extension_reason_and_fixes(row, ext, v2, list)
+        extension_reason_and_fixes(row, ext, version)
     };
     // §FS-config.3.4.7: a non-citable row may name the file only as a place.
     if matches!(row.origin, RootOrigin::Home { citable: false, .. }) {
@@ -75,17 +70,12 @@ pub(super) fn unread_root_message(row: &RootRow, v2: bool) -> String {
 fn extension_reason_and_fixes(
     row: &RootRow,
     ext: Option<&str>,
-    v2: bool,
-    list: &str,
+    version: u32,
 ) -> (String, Vec<String>) {
-    let reason = match (ext, v2) {
-        (Some(ext), false) => format!("`{ext}` is not in {list}"),
-        (Some(ext), true) => format!("no language in {list} reads `.{ext}`"),
-        (None, _) => format!("it has no extension, and {list} reads a file only by its extension"),
-    };
+    let reason = unread_name_reason(ext, version);
     // Listing the extension is offered only where there is one to list. Each fix is a
     // case of the row's Fix, on the version's side (§FS-errors.5.5.1).
-    let fixes: Vec<String> = match (&row.origin, ext, v2) {
+    let fixes: Vec<String> = match (&row.origin, ext, version == 2) {
         (_, _, true) => vec![remedies::unread_scan_root_language(2)],
         (RootOrigin::Include, Some(ext), false) => vec![
             remedies::unread_scan_root_add(1, ext),
@@ -111,18 +101,15 @@ fn extension_reason_and_fixes(
 fn hidden_reason_and_fixes(
     row: &RootRow,
     ext: Option<&str>,
-    v2: bool,
-    list: &str,
+    version: u32,
 ) -> (String, Vec<String>) {
-    let rule = match (row.refused.extension, ext, v2) {
-        (false, _, _) => "grund reads no hidden file".to_string(),
-        (true, Some(ext), false) => format!("`{ext}` is not in {list}"),
-        (true, Some(ext), true) => format!("no language in {list} reads `.{ext}`"),
-        (true, None, _) => "it has no extension".to_string(),
+    let rule = match (row.refused.extension, ext) {
+        (false, _) => "grund reads no hidden file".to_string(),
+        (true, Some(_)) => unread_name_reason(ext, version),
+        (true, None) => "it has no extension".to_string(),
     };
     let reason = format!("its name begins with `.`, and {rule}");
-    let version = if v2 { 2 } else { 1 };
-    let rename = match (row.refused.extension, v2) {
+    let rename = match (row.refused.extension, version == 2) {
         (false, _) => remedies::unread_scan_root_hidden(version),
         (true, false) => remedies::unread_scan_root_hidden_list(1),
         (true, true) => remedies::unread_scan_root_hidden_language(2),

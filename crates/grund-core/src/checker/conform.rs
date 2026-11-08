@@ -18,7 +18,7 @@ use crate::grammar::render_catalog_id;
 use crate::model::remedies;
 use crate::model::{
     Catalog, CheckReport, Code, Declaration, Diagnostic, ExcludingRule, Id, MissingStubRepair,
-    Site, StubResolution, Switch, format_path, paired_declarations, site_order,
+    Site, StubResolution, Switch, format_path, paired_declarations, site_order, unread_name_reason,
 };
 
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub,
@@ -251,10 +251,11 @@ fn check_broken_stubs(
                     )
                 )
             }
+            // §FS-declarations.stubs.target.3: the reason alone, with no remedy clause.
             StubResolution::UnlistedExtension(extension) => format!(
-                "stub link target {} is not scanned: extension {} is not in [scan] extensions",
+                "stub link target {} is not scanned: {}",
                 format_path(target),
-                extension
+                unread_name_reason(extension.as_deref(), frame.version)
             ),
             StubResolution::Excluded(rule) => excluded_target_message(target, rule),
             StubResolution::NotRead | StubResolution::LacksId => format!(
