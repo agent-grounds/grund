@@ -1,0 +1,66 @@
+# DF-e2e-case-on-the-one-walk: an E2E case is read by the one walk, so `exclude` and ignore files keep it out, and a scan failure is one line at the path that failed
+
+**Date:** 2026-11-08
+
+## status: Accepted
+
+## 1. Context
+
+Two questions are answered by the ordinary walk: which paths below a scan root are read, and where a failure to read one is located. The pass over the E2E cases answered both again. It listed the cases root and each case's fixtures itself, kept any directory holding an `expected.exit` without asking `exclude` or an ignore file, and read the manifests under its own spelling. Three defects followed, each reported against `grund 0.21.1-dev`:
+
+- **A case `exclude` names was read anyway.** With `[schema.sources] exclude = ["e2e/cases/b"]`, or `e2e/cases/b/` in a root `.ignore`, a `b` holding the bytes `ff fe` in `expected.exit` still printed `error: e2e/cases/b/expected.exit: …` and the run exited `2`, and a healthy excluded `b` still declared `E2E-b`. [§FS-config-v2.schema.sources.exclude.roots](../../functional-spec/FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters), item 2, has said since config version 2 that below a root a path is read only if neither filter matches it, and named no exception for a case ([issue #1255](https://github.com/agent-grounds/grund/issues/1255)).
+- **One unreadable manifest printed a line per spelling.** With `zz` a link to `realE`, the kind's folder `zz/cases`, and `realE/cases/b/spec.refs` at mode `000` in a tree whose extensions reach `.refs`, `grund check` printed `error: realE/cases/b/spec.refs: …` from the walk and `error: zz/cases/b/spec.refs: …` from the pass, and two `io` entries. [§DF-e2e-case-failure-at-the-file.2.3](DF-e2e-case-failure-at-the-file.md#23-what-moves-in-bytes-only) accepted that cost and handed it on (tool report grund.273).
+- **An ignore file the walk could not parse was reported at each walk root.** With two malformed lines, the `ignore` crate folds the line errors into one error that carries no path of its own, so the walk placed it at its root: `error: docs: <absolute path>/.gitignore: line 1: …` and the same again at `e2e/cases`, each holding the tree's absolute path. One malformed line was already reported at the file, relative (tool report grund.263).
+
+The owner's ruling on [issue #1271](https://github.com/agent-grounds/grund/issues/1271), 2026-11-05: the same behaviour lives in one place, under one name, and every caller uses it.
+
+## 2. Decision
+
+### 2.1 One walk
+
+The walk and its read predicate find the cases and read their manifests and fixtures ([§FS-declarations.e2e-case.excluded](../../functional-spec/FS-declarations.md#e2e-caseexcluded-exclude-and-an-ignore-file-keep-a-case-out)). What only the case pass can say stays its own: an `expected.exit` that does not parse, and which directory is a case ([§FS-declarations.e2e-case.id](../../functional-spec/FS-declarations.md#e2e-caseid-a-case-directory-and-the-id-it-declares)). It lists no directory the walk lists. So a case is excluded like any other path below a root, and a citation of an excluded case dangles. Value sources do not move: [§FS-values.2.2](../../functional-spec/FS-values.md#22-declarations-from-value-sources) exempts them from `exclude`, the ignore files, the include and the path scope on purpose, as project catalog input, and they keep that.
+
+### 2.2 At the path that failed
+
+A scan failure carries its path from where it is raised: the manifest, the fixture directory, the link whose target could not be opened, the ignore file ([§FS-check.2.4.2](../../functional-spec/FS-check.md#242-one-failure-one-line)). No walk root or configured folder stands in for it. That is the file, not the case or the folder, for the reason [§DF-e2e-case-failure-at-the-file.2.1](DF-e2e-case-failure-at-the-file.md#21-why-the-file) measured: anything coarser lets a run naming the file pass. An ignore file with several bad lines is reported at the file, each line once, with no absolute path in the reason ([§FS-errors.4](../../functional-spec/FS-errors.md#4-determinism)).
+
+### 2.3 Once
+
+One failure is one line on every surface, however many walks and roots meet it and, for a file, however many spellings, and two failures that read alike stay two ([§FS-check.2.4.2](../../functional-spec/FS-check.md#242-one-failure-one-line)). Where a file is met under two spellings the line takes the run's own path's spelling, and otherwise the one listed first ([§FS-scan.identity.read-once](../../functional-spec/FS-scan.md#identityread-once-one-physical-file-is-read-once)), so a run holding either spelling keeps its exit. This retires, for a file, the second line [§DF-e2e-case-failure-at-the-file.2.3](DF-e2e-case-failure-at-the-file.md#23-what-moves-in-bytes-only) accepted.
+
+### 2.4 Exits and bytes that move
+
+| Tree | Run | Before | Now |
+|---|---|---|---|
+| `b` broken and excluded, by `exclude` or an ignore file | `grund check` | `error: e2e/cases/b/expected.exit: …`, exit `2` | `b`'s line goes, and the run exits on the rest of the tree: `0` where nothing else is wrong |
+| `b` healthy and excluded, a document citing `§E2E-b` | `grund check` | exit `0` | the citation dangles, exit `1` |
+| `b` healthy and excluded | `grund list --kind E2E` | names `E2E-b` | does not |
+| one unreadable manifest under two spellings | `grund check`, `check --format json` | two `error:` lines, two `io` entries | one line, one entry; exit `2` as before |
+| two malformed lines in a root `.gitignore` or `.ignore` | `grund check` | the pair once per walk root, at the root, with absolute paths | at `.gitignore` or `.ignore`, each bad line once, relative; exit `2` as before |
+| two malformed lines in `e2e/.ignore` | `grund check`, `grund list --kind E2E` | at `e2e/cases`, with absolute paths | at `e2e/.ignore`, each bad line once, relative |
+
+A path-scoped run follows from the location: one that names the ignore file or a directory above it holds the failure and exits `2`, and one that names a healthy sibling keeps its caution.
+
+### 2.5 What does not move
+
+- A case the walk admits is read and fails as [§FS-declarations.e2e-case.failure](../../functional-spec/FS-declarations.md#e2e-casefailure-a-case-that-cannot-be-read-fails-alone) says, and [§FS-check.1.3.6.3](../../functional-spec/FS-check.md#1363-a-file-the-wider-walk-could-not-read-is-said-out-loud) partitions its failure as before.
+- A scan root is read even where a pattern names it ([§FS-config-v2.schema.sources.exclude.roots](../../functional-spec/FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters), item 1).
+- One directory, a fixture directory among them, that the walk lists under two spellings: [issue #1288](https://github.com/agent-grounds/grund/issues/1288).
+- Value sources, by [§FS-values.2.2](../../functional-spec/FS-values.md#22-declarations-from-value-sources).
+- The reason's own text and the `io` code and remedy ([issue #1272](https://github.com/agent-grounds/grund/issues/1272)), and how a chosen path is spelled ([issue #1207](https://github.com/agent-grounds/grund/issues/1207)).
+
+## 3. The correction route
+
+The exclusion flips shipped verdicts in both directions, which [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered) allows only by a named route; the location and the one line move no verdict, only bytes. [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids) is the route.
+
+1. *Prior prohibition.* The prior verdict on an excluded broken case violated [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms): the run exited `2` on a failure at a path the configuration keeps out of the scan, a false alarm that section treats with the severity of a missed citation. The old verdict on a citation of an excluded case violated [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), because it resolved to a declaration the configuration says the project does not read, which is not exactly the declaration its ID names. Both sections already applied when config version 2, whose `exclude` names no exception for a case, first shipped.
+2. *Accepted proof.* This record. [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) does not fit, because there is no old form to carry beside a new one: the user already wrote the form that asks for this. [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) does not fit, because nothing the user wrote is at fault.
+3. *Named release.* The release note below.
+4. *Actionable findings.* Where `0` becomes `1`, the finding is the dangling citation of `E2E-<name>`, located at the citation, and the action is to drop the citation or stop excluding the case. Where `2` becomes lower, nothing replaces the old line: the configuration's own exclusion is honoured.
+5. *No new licence.* This route cannot justify ordinary policy tightening, feature removal, or a prohibition invented by this change, and it is used for none of them: no check, rule or partition changes, and the run reads what the configuration always said it reads.
+
+**The weak point.** Neither section names `exclude`. The prohibition rests on reading the configuration as the statement of what the project's declarations are, and an objector can hold that a case found by its `expected.exit` was always its own source. This record refuses that because [§FS-config-v2.schema.sources.exclude.roots](../../functional-spec/FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters) names no exception for a case, where [§FS-values.2.2](../../functional-spec/FS-values.md#22-declarations-from-value-sources) names one for value sources, and the owner ruled the same on #1255.
+
+## release-note: Release note
+
+- [§FS-declarations.e2e-case.excluded](../../functional-spec/FS-declarations.md#e2e-caseexcluded-exclude-and-an-ignore-file-keep-a-case-out), [§FS-check.2.4.2](../../functional-spec/FS-check.md#242-one-failure-one-line), [§DF-e2e-case-on-the-one-walk](DF-e2e-case-on-the-one-walk.md#df-e2e-case-on-the-one-walk-an-e2e-case-is-read-by-the-one-walk-so-exclude-and-ignore-files-keep-it-out-and-a-scan-failure-is-one-line-at-the-path-that-failed), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms): **an E2E case that `exclude` or an ignore file matches is no longer read, and a scan failure is one line at the path that failed.** **Exits move down from `2`:** a run over a tree whose only scan failure is in an excluded case exits on the rest of the tree. **Exits move up from `0`:** a citation of an excluded case dangles, and `grund list` no longer names it; drop the citation, or take the case out of `exclude` or the ignore file. **Bytes only:** an ignore file with several malformed lines is reported at the ignore file, relative, each bad line once, where it was reported at every walk root with its absolute path; and one unreadable manifest reached under two spellings is one line and one `io` entry. **Who notices:** a repository that excludes a case directory it still cites, and a script matching the walk root in an ignore file's error line. The verdict moves by the correction route of [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), because the old verdicts were false alarms or wrong resolutions under [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms) and [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), and every finding that replaces an old verdict names its location and the action to take. Closes [issue #1271](https://github.com/agent-grounds/grund/issues/1271).
