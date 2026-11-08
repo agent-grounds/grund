@@ -366,7 +366,7 @@ fn a_target_at_the_config_root_keeps_its_wording() {
     tree.assert_prints(&[(&["check"], vec![contains("a/sub/up"), contains("top")])]);
     let run = tree.grund(&["check", "b"]);
     assert!(
-        run.failure_lines().contains(&contains("a/sub/up").as_str()),
+        run.failure_lines().contains(&contains("b/sub/up").as_str()),
         "{}",
         run.report()
     );
