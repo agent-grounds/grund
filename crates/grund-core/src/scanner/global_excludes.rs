@@ -24,25 +24,31 @@ use ignore::gitignore::{Gitignore, GitignoreBuilder, Glob};
 use ignore::{Match, WalkBuilder};
 
 use crate::config::global_excludes_path;
-use crate::sources::{path_exists, path_is_file};
+use crate::sources::{canonical_path, path_exists, path_is_file};
 
 /// What marks a directory as a repository top: the set the `ignore` crate counts,
 /// so the global file anchors at the top that bounds the `.gitignore` files
 /// (§FS-scan.scope.ignore-files.global).
 const REPOSITORY_MARKERS: [&str; 2] = [".git", ".jj"];
 
-/// Whether a repository encloses `path`: a directory above it holds one of the
-/// [`REPOSITORY_MARKERS`], the walker's own test for applying a `.gitignore` under
-/// `require_git` (§FS-scan.scope.ignore-files.unparsed).
+/// Whether a repository encloses the file at `path`: a directory above it holds one of the
+/// [`REPOSITORY_MARKERS`], on the path as the walk spelled it or on the directory's canonical
+/// path, which is where the walker finds a walk root's repository
+/// (§FS-scan.scope.ignore-files.unparsed).
 pub(super) fn enclosed_by_repository(path: &Path) -> bool {
-    path.ancestors()
-        .skip(1)
-        .take_while(|dir| !dir.as_os_str().is_empty())
-        .any(|dir| {
-            REPOSITORY_MARKERS
-                .iter()
-                .any(|marker| path_exists(dir.join(marker)))
-        })
+    let Some(dir) = path.parent() else {
+        return false;
+    };
+    let physical = canonical_path(dir).ok();
+    std::iter::once(dir).chain(physical.as_deref()).any(|dir| {
+        dir.ancestors()
+            .take_while(|dir| !dir.as_os_str().is_empty())
+            .any(|dir| {
+                REPOSITORY_MARKERS
+                    .iter()
+                    .any(|marker| path_exists(dir.join(marker)))
+            })
+    })
 }
 
 /// The global excludes file's patterns, the repository top each path is matched

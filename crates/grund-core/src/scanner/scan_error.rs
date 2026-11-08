@@ -99,19 +99,19 @@ pub(super) fn publish_unlisted_fixture(
     publish_unless_reported(spelled, error, None, reported, |path| path == at);
 }
 
-/// A case's failure to read or decode one of its files, published at `spelled` unless the scan's
-/// reports so far already hold it: the same file, under any of its spellings, and the same bare
-/// reason (§FS-check.2.4.2, §FS-declarations.e2e-case.failure). One file is one failure, under any
-/// spelling, so the line already there stands, named as it was, the
-/// one listed first, unless only `spelled` lies inside `run_path`, the path the run was handed:
-/// then that is the spelling it is named by, so the run that names it keeps its exit.
-pub(super) fn publish_case_file_failure(
+/// A failure to read, decode or parse one file, published at `spelled` unless the scan's reports
+/// so far already hold it: the same file, under any of its spellings, and the same bare reason
+/// (§FS-check.2.4.2, §FS-declarations.e2e-case.failure). Two passes raise it, for a case's file and
+/// for an ignore file the walk may have met too. One file is one failure, under any spelling, so
+/// the line already there stands, named as it was, the one listed first, unless only `spelled`
+/// lies inside `run_path`, the path the run was handed: then that is the spelling it is named by,
+/// so the run that names it keeps its exit.
+pub(super) fn publish_file_failure(
     spelled: PathBuf,
-    error: &Error,
+    reason: String,
     run_path: Option<&Path>,
     reported: &mut Vec<ScanError>,
 ) {
-    let reason = scan_io_reason(error);
     let already = reported.iter_mut().find(|(path, said)| {
         said.strip_prefix(UNREADABLE_LINK).unwrap_or(said) == reason
             && (*path == spelled || paths_same_location(path, &spelled))
