@@ -156,7 +156,6 @@ fn assert_dir_reads(record: &Value, expected: &str) {
 }
 
 #[test]
-#[ignore = "red until #1220 spells e2e_case.dir through the report base; implement removes this"]
 fn a_case_dir_reads_as_its_path_from_the_config_root() {
     let root = case_tree("a_case_dir_reads_as_its_path_from_the_config_root", "");
     let record = scanned_case(&root);
@@ -168,7 +167,6 @@ fn a_case_dir_reads_as_its_path_from_the_config_root() {
 }
 
 #[test]
-#[ignore = "red until #1220 spells e2e_case.dir through the report base; implement removes this"]
 fn a_case_dir_reads_as_its_path_from_a_base_below_the_config_root() {
     let root = case_tree(
         "a_case_dir_reads_as_its_path_from_a_base_below_the_config_root",
@@ -179,7 +177,6 @@ fn a_case_dir_reads_as_its_path_from_a_base_below_the_config_root() {
 
 /// §FS-cli.3.4: the near-fix, the snapshot's `path` closure, gives `""` here.
 #[test]
-#[ignore = "red until #1220 spells e2e_case.dir through the report base; implement removes this"]
 fn a_case_dir_at_the_report_base_reads_dot() {
     let root = case_tree(
         "a_case_dir_at_the_report_base_reads_dot",
@@ -189,7 +186,6 @@ fn a_case_dir_at_the_report_base_reads_dot() {
 }
 
 #[test]
-#[ignore = "red until #1220 spells e2e_case.dir through the report base; implement removes this"]
 fn a_case_dir_is_the_same_wherever_the_tree_sits() {
     let here = case_tree("a_case_dir_is_the_same_here", "");
     let there = case_tree("a_case_dir_is_the_same_there", "");

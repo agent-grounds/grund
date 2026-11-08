@@ -2,6 +2,7 @@
 use super::embedding::EmbeddingRequest;
 use super::embedding_data::Data;
 use super::embedding_failure::{error_data, failure};
+use super::embedding_snapshot_records::e2e_case_data;
 use crate::config::{Config, display_location, display_path};
 use crate::grammar::{
     BindingSpellings, render_catalog_id, render_citation_id, render_declaration_id,
@@ -45,7 +46,7 @@ fn snapshot(c: &Config, f: &Catalog) -> Value {
             "sections":d.sections.iter().map(|(p,s)|section(p,s)).collect::<Vec<_>>(),
             "duplicate_sections":d.duplicate_sections.iter().map(|(p,s)|section(p,s)).collect::<Vec<_>>(),
             "stub":d.is_stub,"defines":d.defined_in.as_ref().map(|p|path(p)),
-            "e2e_case":d.e2e_case.as_ref().map(Data::data),
+            "e2e_case":d.e2e_case.as_ref().map(|e|e2e_case_data(c,e)),
             "body_start":d.body_start,"body_end":d.body_end,"body_has_content":d.body_has_content,
             "source":d.source.data(),"value_valid":d.value_valid}))).collect::<Vec<_>>();
     declarations.sort_by(|a, b| {
