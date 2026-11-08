@@ -131,25 +131,37 @@ pub fn assert_template<E: AsRef<str>>(template: &Value, extensions: &[E], execut
     assert_eq!(template["id"], "grund-lsp");
     assert_eq!(template["name"], "grund LSP");
 
+    // Windows ordinary/verbatim spellings must name the copied binary (§AR-ci.10.3.1).
+    let emitted = template["env"]["variables"][EXECUTABLE_ENV]
+        .as_str()
+        .expect("executable environment value");
+    assert!(
+        Path::new(emitted).is_absolute(),
+        "executable is not absolute"
+    );
+    #[cfg(windows)]
+    assert_eq!(
+        fs::canonicalize(emitted).expect("resolve emitted executable"),
+        fs::canonicalize(executable).expect("resolve copied executable"),
+        "template does not name the copied executable"
+    );
+    #[cfg(not(windows))]
+    assert_eq!(emitted, executable.to_string_lossy().as_ref());
+
     assert_program_arg_boundaries(
         template,
         r"C:\repo%PATH%\project Ω & '() $;! ^ with spaces",
-        executable,
+        Path::new(emitted),
     );
-    let executable = executable.to_string_lossy();
     let args = template["programArgs"]
         .as_object()
         .expect("programArgs object");
     assert_eq!(args.len(), 2, "only host command forms are emitted");
     assert_eq!(template["workingDir"], "$PROJECT_DIR$");
-    assert_eq!(
-        template["env"]["variables"][EXECUTABLE_ENV],
-        executable.as_ref()
-    );
     for key in ["default", "windows"] {
         let command = args[key].as_str().expect("command string");
         assert!(
-            !command.contains("$PROJECT_DIR$") && !command.contains(executable.as_ref()),
+            !command.contains("$PROJECT_DIR$") && !command.contains(emitted),
             "{key} exposes path bytes to command tokenization: {command}"
         );
         assert!(command.contains(EXECUTABLE_ENV));
@@ -222,10 +234,6 @@ fn assert_program_arg_boundaries(template: &Value, project: &str, executable: &P
 
     assert_eq!(template["env"]["includeSystemEnvironmentVariables"], true);
     assert_eq!(template["env"]["variables"][CMD_QUOTE_ENV], "\"");
-    assert_eq!(
-        template["env"]["variables"][EXECUTABLE_ENV],
-        executable.as_ref()
-    );
     let windows = args["windows"].as_str().expect("windows command");
     let windows = lsp4ij_commands(&windows);
     assert_eq!(

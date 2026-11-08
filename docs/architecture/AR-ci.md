@@ -1006,13 +1006,16 @@ The agreement harness's no-config control follows the same rule while sharing ro
 
 #### 10.3.1 LSP fixture roots share initialization's resolved spelling
 
-The shared LSP fixture boundary returns an existing base in its resolved spelling,
-after the candidate-selection and config-isolation checks above. Configured roots
-and roots built by hand under that base therefore use the same root spelling for
-file creation, initialization and document URIs, even when `TMPDIR` reaches the
-base through an ancestor symlink. Resolve the base once in the shared harness;
-cases and URI helpers do not add separate temporary-base repairs. Candidate
-probing still accepts deliberately aliased inputs for discovery tests.
+The shared LSP fixture boundary resolves the existing base once, after candidate
+selection and config-isolation checks. Configured and hand-built roots share
+that spelling for file creation, initialization and document URIs, even through
+an ancestor symlink in `TMPDIR`. Cases and URI helpers add no separate repairs;
+candidate probing retains deliberately aliased discovery inputs.
+
+Installation assertions compare Windows absolute executable paths by resolved
+identity with the copied binary, accommodating ordinary and verbatim spellings.
+Other platforms retain exact spelling checks; command quoting is checked against
+the emitted path bytes. Fixture roots keep their resolved spelling.
 
 This removes incidental ancestor aliases, not links a case deliberately creates
 inside its root. A URI used to open or assert such a file link retains that link's
@@ -1022,12 +1025,10 @@ preserving content findings at each open name ([§FS-scan.identity.findings.cont
 place findings at their own spelling ([§FS-scan.identity.findings.place](../functional-spec/FS-scan.md#identityfindingsplace-a-place-finding-is-judged-at-each-spelling)), and
 buffer refusal under every name ([§FS-scan.identity.buffers](../functional-spec/FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)).
 
-The regression runs the four real-server `two_names` scenarios with both a
-physical temporary base and an ancestor symlink to it. Each scenario runs in a
-child process whose `TMPDIR` is set before its fixture base is chosen; the parent
-test process's environment is unchanged. Both runs retain the content/place
-diagnostic URI assertions and the duplicate/refusal controls. This is a fixture
-contract and changes no server URI handling or scan-root promise.
+The four real-server `two_names` cases run under physical and ancestor-aliased bases
+in children with `TMPDIR` set before fixture selection; the parent environment is
+unchanged. Both runs retain content/place URI assertions and duplicate/refusal
+controls. This fixture contract changes no server URI handling or scan-root promise.
 
 ### 10.4 Git descendants stay inside the fixture lifetime
 
