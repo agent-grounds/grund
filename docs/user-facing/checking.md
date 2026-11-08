@@ -235,7 +235,7 @@ the line of the key that named it, keeping the exit code at 0 and withholding
 `success`:
 
 ```text
-grund.toml:10: warning: [[kinds]] TXT home `notes.txt` is not read — `txt` is not in [scan] extensions, so nothing in it is checked. Add "txt" to [scan] extensions, or give the file an extension the list holds.
+grund.toml:10: warning: [[kinds]] TXT home `notes.txt` is not read — extension txt is not in [scan] extensions, so nothing in it is checked. Add "txt" to [scan] extensions, or give the file an extension the list holds.
 grund.toml:10: warning: [[kinds]] NOTE home `.notes.md` is not read — its name begins with `.`, and grund reads no hidden file, so nothing in it is checked. Rename the file to a name that is not hidden.
 ```
 

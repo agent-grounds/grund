@@ -345,18 +345,18 @@ The target is read for the ID the way the scan reads that file ([§FS-declaratio
 
 Name and extension refusals apply whether or not the target lies inside `[scan] include`. The name judged is the one the stub wrote, not the one a symlink resolves to: `notes/.a.md -> a.md` declares nothing even where the `notes/a.md` it resolves to is scanned and declares the ID, so the stub pairs with neither and is a declaration of its own beside that one, the duplicate a regular hidden copy of `notes/a.md` makes. The same holds for `notes/a.zz -> a.md` where `zz` is not listed. That a target outside `include` reads as if it were scanned ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)) reaches only a file the scan would read were it in scope.
 
-When the target is refused because its extension is absent from `[scan] extensions`,
-`check` reports `stub link target <path> is not scanned: extension <extension> is not in [scan] extensions`.
-The diagnostic names the target the stub wrote, the refused extension and the configuration
-key that prevents scanning; it never claims that this unread target lacks the ID.
+When the target is refused because the configuration reads no file by its name's extension,
+`check` reports `stub link target <path> is not scanned: <reason>`, whose `<reason>` is the
+cell of the reason table in [§FS-scan.checks.unread-scan-root.message](FS-scan.md#checksunread-scan-rootmessage-the-message), with no remedy clause.
+The diagnostic names the target the stub wrote; it never claims that this unread target lacks the ID.
 It remains an error coded `broken-stub` at the stub's line, and `check` exits `1`.
 This explanation applies inside and outside `[scan] include` alike, with the serialized
 finding's fields unchanged. The hidden-name refusal still takes precedence over the
 extension refusal and keeps `stub link target lacks <ID>: <path>`, as does a target
-that is read and actually lacks the ID. Adding the extension to `[scan] extensions`
+that is read and actually lacks the ID. Listing the extension in `[scan] extensions` under version 1, mapping it to a listed language or listing a language that reads it under version 2 ([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)), or renaming the target to an extension the configuration reads, the one repair for a target with none,
 lets the target be read, and a target declaring the ID then makes the stub healthy.
 
-`show` still refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub) rather than answering a body sliced out of a file the scan does not read. A stub broken this way pairs with nothing ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so `refs` refuses nothing from its target, however many headings of the ID the target holds ([§FS-refs.4.1](FS-refs.md#41-a-stubs-homes-are-found-in-its-target)). The remedy is the target's: a name that does not begin with `.`, and an extension `extensions` lists.
+`show` still refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub) rather than answering a body sliced out of a file the scan does not read. A stub broken this way pairs with nothing ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so `refs` refuses nothing from its target, however many headings of the ID the target holds ([§FS-refs.4.1](FS-refs.md#41-a-stubs-homes-are-found-in-its-target)). The remedy is the target's: a name that does not begin with `.`, and an extension the configuration reads.
 
 From grund 0.19.0 two more rules refuse a target: a directory on its path that `[scan] exclude` names ([§FS-config.3.5.16](FS-config.md#3516-an-exclude-entry-containing--is-refused)), and an enabled ignore rule ([§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)). A v2 exclusion pattern has the same effect ([§FS-config-v2.schema.sources.exclude.stubs](FS-config-v2.md#schemasourcesexcludestubs-a-pattern-is-the-exclude-reason-a-stubs-target-is-not-read)). Such a target declares nothing: its stub is `broken-stub`, an error at the stub's line, and `check` exits `1`. The refusal is recorded before pairing or lending any target content. This activates D5 of [§DF-one-answer-rulings-run.decision](../decisions/functional/DF-one-answer-rulings-run.md#decision-decision) after the warning release ([§DF-stub-target-exclusions](../decisions/functional/DF-stub-target-exclusions.md#df-stub-target-exclusions-excluded-and-ignored-stub-targets-are-broken-from-grund-0190)).
 
