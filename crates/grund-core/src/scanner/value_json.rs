@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::json::{JsonNode, JsonReader};
-use super::scan_error::{publish_unlisted, scan_io_reason};
+use super::scan_error::publish_unlisted;
 use super::tree::ScanError;
 use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
 use super::value_yaml_subset::yaml_value_root;
@@ -17,6 +17,7 @@ use crate::model::sort_path_key;
 use crate::model::{
     Catalog, DeclarationSource, ReadingConflict, ReadingMove, ValueFormat, normalize_path_lexically,
 };
+use crate::sources::io_reason;
 use crate::sources::{paths_same_location, physical_path_key};
 
 /// The words a value home's read failure keeps around the shared I/O reason
@@ -34,7 +35,7 @@ impl UnreadHome {
     /// The failure as it is published where nothing else could have reported it, the home's
     /// context around the shared I/O reason (§FS-check.2.4.1).
     fn into_scan_error(self) -> ScanError {
-        let reason = scan_io_reason(&self.error);
+        let reason = io_reason(&self.error);
         (self.folder, format!("{HOME_CONTEXT}: {reason}"))
     }
 }
@@ -176,7 +177,7 @@ fn value_source_error(path: &Path, format: ValueFormat, error: &std::io::Error) 
         format!(
             "could not read value {} source: {}",
             format.name(),
-            scan_io_reason(error)
+            io_reason(error)
         ),
     )
 }

@@ -4,10 +4,10 @@
 
 use std::path::{Path, PathBuf};
 
-use super::scan_error::scan_io_reason;
 use crate::config::Frame;
 use crate::grammar::{STUB_LINK_HEADING, may_hold_relative_heading, mixed_heading_path};
 use crate::model::{Catalog, SECTION_LOCK_DIR, SectionLockFile};
+use crate::sources::io_reason;
 
 /// Whether the config root holds anything under `.grund/sections/`, read where
 /// `read_section_locks` reads: what makes a run that has not scanned ask for a
@@ -108,7 +108,7 @@ pub(super) fn read_section_locks(
             }),
             Err(error) => errors.push((
                 path,
-                format!("could not read section lock: {}", scan_io_reason(&error)),
+                format!("could not read section lock: {}", io_reason(&error)),
             )),
         }
     }

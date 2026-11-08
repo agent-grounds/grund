@@ -8,10 +8,11 @@ use std::path::{Path, PathBuf};
 use super::read_predicate::{
     Unread, directory_refusal, ignore_file_unapplied, ignored, name_refusal,
 };
-use super::scan_error::{scan_io_reason, unreadable_link_reason};
+use super::scan_error::unreadable_link_reason;
 use super::tree::ScanError;
 use super::walk::WalkDirFilter;
 use crate::config::{Frame, Schema, canonical_config_root};
+use crate::sources::io_reason;
 
 /// The scan failures one walker error becomes (§FS-check.2.4), each beside the
 /// error it is reported from, which the caller retains (§FS-distribution.3.3.2).
@@ -463,7 +464,7 @@ pub(super) fn walk_error_path(err: &ignore::Error) -> Option<&Path> {
 /// Its typed I/O reason is the same as a file read's (§FS-check.2.4.1).
 fn walk_error_reason(err: &ignore::Error) -> String {
     match err.io_error() {
-        Some(io) => scan_io_reason(io),
+        Some(io) => io_reason(io),
         None => match err {
             ignore::Error::WithPath { err, .. } => err.to_string(),
             ignore::Error::WithDepth { err, .. } => walk_error_reason(err),

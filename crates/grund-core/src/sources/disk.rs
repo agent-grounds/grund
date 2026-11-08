@@ -3,6 +3,7 @@
 //! run's input observer before it is made (§FS-check.6.1.1, §AR-bindings.3).
 //! Nothing here knows of buffers; `Sources` puts them in front of it.
 
+use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
 
 use super::observe::observe_input;
@@ -100,4 +101,18 @@ pub(crate) fn is_regular_file(file_type: std::fs::FileType) -> bool {
 /// Whether an entry's type, as a listing reports it, is a directory.
 pub(crate) fn is_directory(file_type: std::fs::FileType) -> bool {
     file_type.is_dir()
+}
+
+/// One I/O kind, one reason without an OS number (§FS-check.2.4.1): the scan's and
+/// config load's, which names a value home's failed lookup by it (§FS-fetch.4.3).
+/// Decode and input-observation failures use I/O errors to carry non-I/O
+/// descriptions; keep those details. Borrow the error so its original source
+/// and OS number remain available to callers that publish raw causes.
+pub(crate) fn io_reason(error: &Error) -> String {
+    match error.kind() {
+        ErrorKind::InvalidData | ErrorKind::Other if error.raw_os_error().is_none() => {
+            error.to_string()
+        }
+        kind => Error::from(kind).to_string(),
+    }
 }

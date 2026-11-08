@@ -10,12 +10,14 @@
 
 use anyhow::Result;
 use std::fs;
+use std::io::ErrorKind;
 use std::path::Path;
 
 use super::values::bail_config;
 use crate::config::kind::KindConfig;
 use crate::config::project::Sources;
 use crate::model::normalize_path_lexically;
+use crate::sources::io_reason;
 
 /// The lines a row's value refusals are located at: the key that wrote each,
 /// or the row's header (§FS-config.4.3).
@@ -218,8 +220,21 @@ fn validate_value_home(
     let shape = if expects_file { "file" } else { "folder" };
     let candidate = normalize_path_lexically(&root.join(home));
     let root = fs::canonicalize(root).unwrap_or_else(|_| normalize_path_lexically(root));
-    // §FS-fetch.4.1: the first line stays as it is; the hint follows it.
-    let resolved = fs::canonicalize(&candidate).or_else(|_| {
+    let resolved = fs::canonicalize(&candidate).or_else(|error| {
+        if error.kind() != ErrorKind::NotFound {
+            // §FS-fetch.4.3: a lookup that fails otherwise is refused by its reason, as the
+            // scan names one (§FS-check.2.4.1), never as absent.
+            return bail_config(
+                config_path,
+                line,
+                format!(
+                    "could not look up value home for kind `{kind}`: {home}: {}\n\
+                     hint: make the home and every directory above it accessible",
+                    io_reason(&error)
+                ),
+            );
+        }
+        // §FS-fetch.4.1: the first line stays as it is; the hint follows it.
         let inside_root = candidate.starts_with(&root);
         bail_config(
             config_path,
