@@ -6,6 +6,22 @@
 
 use std::path::PathBuf;
 
+/// Why the configuration reads no file by this extension, or by a name with none: the
+/// one wording of §FS-scan.checks.unread-scan-root.message, cell by cell, for the warning
+/// and the broken-stub line of §FS-declarations.stubs.target.3 alike.
+pub(crate) fn unread_name_reason(extension: Option<&str>, version: u32) -> String {
+    let list = if version == 2 {
+        "[schema.sources] languages"
+    } else {
+        "[scan] extensions"
+    };
+    match (extension, version == 2) {
+        (Some(ext), false) => format!("extension {ext} is not in {list}"),
+        (Some(ext), true) => format!("no language in {list} reads `.{ext}`"),
+        (None, _) => format!("it has no extension, and {list} reads a file only by its extension"),
+    }
+}
+
 /// The configuration row that made a file a scan root, and where it was written:
 /// the `grund.toml` and the line of the key that named the file
 /// (§FS-scan.checks.unread-scan-root.location).

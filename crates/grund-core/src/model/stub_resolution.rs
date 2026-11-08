@@ -24,8 +24,8 @@ pub(crate) enum StubResolution {
     NotRead,
     /// The shared name predicate refused the target's extension, kept as judged
     /// on the name the stub wrote for the explanation that it is not scanned
-    /// (§FS-declarations.stubs.target.3).
-    UnlistedExtension(String),
+    /// (§FS-declarations.stubs.target.3). `None` is a name with no extension.
+    UnlistedExtension(Option<String>),
     /// The shared predicate refused the target by exclude or an enabled ignore
     /// rule, saved before reading or pairing (§FS-declarations.stubs.target.3).
     Excluded(ExcludingRule),

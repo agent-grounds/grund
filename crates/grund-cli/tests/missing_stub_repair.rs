@@ -388,7 +388,7 @@ fn missing_stub_guidance_does_not_leak_to_other_verdicts() {
             "src/cache.zz",
             DECLARATION,
             "",
-            Some("is not scanned: extension zz is not in [scan] extensions"),
+            Some("is not scanned: no language in [schema.sources] languages reads `.zz`"),
         ),
         (
             "src/cache.rs",

@@ -59,15 +59,15 @@ fn a_hidden_include_entry_is_told_to_rename_or_drop() {
 fn a_hidden_and_unlisted_root_names_both_rules_in_version_1() {
     assert_eq!(
         unread_root_message(&hidden(home(true), ".notes.txt", true), false),
-        "[[kinds]] NOTE home `.notes.txt` is not read — its name begins with `.`, and `txt` \
-         is not in [scan] extensions, so nothing in it is checked. Rename the file to a name \
+        "[[kinds]] NOTE home `.notes.txt` is not read — its name begins with `.`, and extension \
+         txt is not in [scan] extensions, so nothing in it is checked. Rename the file to a name \
          that is not hidden and an extension the list holds.",
         "§DF-unread-hidden-root.2.1: one warning names both rules"
     );
     assert_eq!(
         unread_root_message(&hidden(RootOrigin::Include, ".extra.txt", true), false),
-        "[scan] include entry `.extra.txt` is not read — its name begins with `.`, and `txt` \
-         is not in [scan] extensions, so nothing in it is checked. Rename the file to a name \
+        "[scan] include entry `.extra.txt` is not read — its name begins with `.`, and extension \
+         txt is not in [scan] extensions, so nothing in it is checked. Rename the file to a name \
          that is not hidden and an extension the list holds, or drop the entry.",
         "§FS-scan.checks.unread-scan-root.message: the include rename names both rules"
     );
