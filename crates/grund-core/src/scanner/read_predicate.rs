@@ -101,12 +101,16 @@ pub(super) fn excluded_entry<'a>(path: &Path, exclude: &'a [String]) -> Option<&
         .map(String::as_str)
 }
 
-/// Whether the ignore file at `path` plays no part in this run, so a line of it that does not
-/// parse costs the run nothing and is no failure of it (§FS-scan.scope.ignore-files.unparsed):
-/// `exclude` keeps the file out of the scan, or it is a `.gitignore` the walk does not apply.
+/// Whether the ignore file at `path` plays no part in the walk that met it, so a line of it that
+/// does not parse costs that walk nothing and is no failure of it
+/// (§FS-scan.scope.ignore-files.unparsed): it governs nothing the walk reads, or it is a
+/// `.gitignore` no repository encloses. A repository's `info/exclude` governs the repository
+/// rather than the directory it sits in, so what `exclude` says of that directory says nothing.
 pub(super) fn ignore_file_unapplied(path: &Path, filter: &WalkDirFilter, frame: Frame<'_>) -> bool {
-    filter.excludes_file(path)
-        || (path.file_name() == Some(OsStr::new(".gitignore"))
+    let gitignore = path.file_name() == Some(OsStr::new(".gitignore"));
+    let per_directory = gitignore || path.file_name() == Some(OsStr::new(".ignore"));
+    (per_directory && filter.governs_nothing_read(path))
+        || (gitignore
             && walk_requires_git(frame.run.workspace.mounted_root.as_deref())
             && !enclosed_by_repository(path))
 }

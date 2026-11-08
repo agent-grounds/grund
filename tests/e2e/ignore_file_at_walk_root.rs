@@ -243,6 +243,19 @@ fn excluding(name: &str, pattern: &str) -> Tree {
     tree
 }
 
+/// `excluding`, with an `FS` kind whose home is `home`, so a walk starts there.
+fn excluding_with_home(name: &str, pattern: &str, home: &str) -> Tree {
+    let tree = excluding(name, pattern);
+    let config = format!(
+        "grund_config_version = 2\nproject_name = \"p\"\n\n[schema]\n\
+         slug_pattern = \"[a-z][a-z-]*\"\n\n[schema.sources]\nexclude = [\"{pattern}\"]\n\n\
+         [schema.kinds.FS]\nfolders = [\"{home}\"]\n"
+    );
+    tree.write("grund.toml", &config);
+    tree.write(&format!("{home}/x.md"), "# N\n");
+    tree
+}
+
 #[test]
 fn a_malformed_ignore_file_exclude_keeps_out_is_no_failure() {
     for pattern in ["vendor/**", "vendor/*"] {
@@ -271,17 +284,33 @@ fn exclude_treats_an_unparsable_ignore_file_as_it_treats_an_unreadable_file() {
 }
 
 #[test]
-fn excluding_the_ignore_file_by_name_clears_the_line_the_remedy_names() {
-    let tree = excluding("excluded-name", ".ignore");
-    tree.write(".ignore", "{alpha\n");
-    assert_clean(&tree.check());
-    // Asked by the other route too: the walk below the file meets it from above.
-    let config = "grund_config_version = 2\nproject_name = \"p\"\n\n[schema]\n\
-                  slug_pattern = \"[a-z][a-z-]*\"\n\n[schema.sources]\n\
-                  exclude = [\".ignore\"]\n\n[schema.kinds.FS]\nfolders = [\"docs\"]\n";
-    let home = Tree::new("excluded-name-home", true, "{alpha\n");
-    home.write("grund.toml", config);
-    assert_clean(&home.check());
+fn excluding_the_ignore_file_by_name_leaves_its_rules_in_force_so_the_line_still_fails() {
+    // §FS-scan.scope.ignore-files: `exclude` applies beside the file's rules, never instead.
+    for (at, pattern) in [".ignore", "**/.ignore", ".*"].into_iter().enumerate() {
+        let tree = excluding(&format!("excluded-name-{at}"), pattern);
+        tree.write(".ignore", "{alpha\n");
+        assert_one_failure_at(&tree.check(), ".ignore");
+        // Asked by the other route too: the walk below the file meets it from above.
+        let home = excluding_with_home(&format!("excluded-name-home-{at}"), pattern, "docs");
+        home.write(".ignore", "{alpha\n");
+        assert_one_failure_at(&home.check(), ".ignore");
+    }
+}
+
+#[test]
+fn a_pattern_that_keeps_out_only_part_of_the_directory_leaves_the_line_failing() {
+    let some = excluding("excluded-some", "vendor/*.md");
+    some.write("vendor/.ignore", "{alpha\n");
+    assert_one_failure_at(&some.check(), "vendor/.ignore");
+    // A negation may rescue any name, so what the directory holds is not all kept out.
+    let negated = excluding("excluded-negated", "vendor/**");
+    negated.write(
+        "grund.toml",
+        "grund_config_version = 2\nproject_name = \"p\"\n\n[schema.sources]\n\
+         exclude = [\"vendor/**\", \"!vendor/keep.md\"]\n",
+    );
+    negated.write("vendor/.ignore", "{alpha\n");
+    assert_one_failure_at(&negated.check(), "vendor/.ignore");
 }
 
 #[test]
@@ -297,18 +326,26 @@ fn a_malformed_ignore_file_in_an_excluded_kind_home_is_no_failure() {
 }
 
 #[test]
-fn a_kind_home_below_an_excluded_ignore_file_does_not_change_the_answer() {
-    // Both spell the same exclusion of `vendor/`: the walk prunes it, and the walk rooted at the
-    // kind home below it would otherwise meet `vendor/.ignore` from above.
-    let config = "grund_config_version = 2\nproject_name = \"p\"\n\n[schema]\n\
-                  slug_pattern = \"[a-z][a-z-]*\"\n\n[schema.sources]\n\
-                  exclude = [\"vendor/\"]\n\n[schema.kinds.FS]\nfolders = [\"vendor/sub\"]\n";
-    let tree = Tree::new("excluded-above-home", false, "");
-    fs::remove_file(tree.0.join(".ignore")).expect("clear the ignore file");
-    tree.write("grund.toml", config);
-    tree.write("vendor/sub/x.md", "# N\n");
+fn a_kind_home_below_an_excluded_directory_is_read_under_that_directorys_ignore_file() {
+    // The answers differ because what is read differs: the walk from the config root prunes
+    // `vendor/` and applies nothing there, and the walk from the kind home applies the file.
+    let pruned = excluding("excluded-dir", "vendor/");
+    pruned.write("vendor/sub/x.md", "# N\n");
+    pruned.write("vendor/.ignore", "{alpha\n");
+    assert_clean(&pruned.check());
+    let read = excluding_with_home("excluded-above-home", "vendor/", "vendor/sub");
+    read.write("vendor/.ignore", "{alpha\n");
+    assert_one_failure_at(&read.check(), "vendor/.ignore");
+}
+
+#[test]
+fn one_walk_that_reads_under_the_ignore_file_is_enough_to_report_it_once() {
+    // `vendor/*` keeps out all the config-root walk finds in `vendor/`, and nothing the walk from
+    // the kind home two levels down reads.
+    let tree = excluding_with_home("one-walk-applies", "vendor/*", "vendor/sub/deep");
     tree.write("vendor/.ignore", "{alpha\n");
-    assert_eq!(tree.check().failure_lines(), Vec::<&str>::new());
+    assert_one_failure_at(&tree.check(), "vendor/.ignore");
+    assert_one_failure_at(&tree.check_with(&["--full"]), "vendor/.ignore");
 }
 
 #[test]
@@ -326,8 +363,25 @@ fn with_gitignore(name: &str, kind_home: bool) -> Tree {
     tree
 }
 
+/// Whether a repository encloses the temp directory, so no tree built there is outside one. The
+/// test that asks prints why it stopped, as the unreadable-file test does under root.
+fn temp_dir_in_a_repository() -> bool {
+    let temp = std::env::temp_dir();
+    let temp = temp.canonicalize().unwrap_or(temp);
+    let enclosed = temp
+        .ancestors()
+        .any(|dir| dir.join(".git").exists() || dir.join(".jj").exists());
+    if enclosed {
+        eprintln!("skipped: a repository encloses the temp directory");
+    }
+    enclosed
+}
+
 #[test]
 fn a_gitignore_outside_any_repository_is_no_failure() {
+    if temp_dir_in_a_repository() {
+        return;
+    }
     // The walk would not apply the file's rules even had it parsed: `x.md` is read.
     let tree = with_gitignore("gitignore-no-repo", false);
     assert_clean(&tree.check());
@@ -365,6 +419,33 @@ fn a_malformed_dot_ignore_is_reported_with_or_without_a_repository() {
     assert_one_failure_at(&repo.check(), ".ignore");
 }
 
+#[test]
+fn a_repositorys_malformed_info_exclude_is_reported_under_the_default_name_list() {
+    // `.git` is on version 1's default name list, and the file governs the repository whatever
+    // that list says of the directory it sits in.
+    for (name, kind_home, kinds) in [
+        (
+            "info-exclude",
+            false,
+            "[scan]\ninclude = [\".\"]\n\n[[kinds]]\nkind = \"FS\"\nfolder = \".\"\n",
+        ),
+        (
+            "info-exclude-home",
+            true,
+            "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n",
+        ),
+    ] {
+        let tree = Tree::new(name, kind_home, "");
+        fs::remove_file(tree.0.join(".ignore")).expect("clear the ignore file");
+        tree.write(
+            "grund.toml",
+            &format!("grund_config_version = 1\n\n{kinds}"),
+        );
+        tree.write(".git/info/exclude", "{alpha\n");
+        assert_one_failure_at(&tree.check(), ".git/info/exclude");
+    }
+}
+
 /// A version-1 project whose `E2E` folder is a link out of the project, so no walk lists its cases
 /// and the manifest pass walks that root itself (§FS-check.2.4.2).
 #[cfg(unix)]
@@ -397,12 +478,53 @@ fn a_malformed_ignore_file_at_a_cases_root_no_walk_lists_is_reported_once() {
 #[cfg(unix)]
 #[test]
 fn a_gitignore_at_a_cases_root_no_repository_encloses_is_no_failure() {
+    if temp_dir_in_a_repository() {
+        return;
+    }
     // No walk lists this root either, and the pass's report asks the same question the walk's does.
     let (tree, outside) = with_linked_out_cases("cases-outside-gitignore");
     fs::write(outside.join(".gitignore"), "{alpha\n").expect("write the ignore file");
     let run = tree.check();
     let _ = fs::remove_dir_all(&outside);
     assert_clean(&run);
+}
+
+#[cfg(unix)]
+#[test]
+fn a_gitignore_at_a_linked_out_cases_root_inside_a_repository_is_reported() {
+    // The repository is met on the path the link resolves to, as the walker finds it.
+    let (tree, outside) = with_linked_out_cases("cases-outside-repository");
+    fs::create_dir(outside.join(".git")).expect("create the repository marker");
+    fs::write(outside.join(".gitignore"), "{alpha\n").expect("write the ignore file");
+    let run = tree.check();
+    let _ = fs::remove_dir_all(&outside);
+    assert_one_failure_at(&run, "tests/e2e/.gitignore");
+}
+
+/// Asserts the run exits `2` on exactly one failure line: the file is one failure, whichever
+/// spelling that line names it by (§FS-check.2.4.2).
+#[cfg(unix)]
+fn assert_one_failure(run: &Run) {
+    assert_eq!(run.code, 2, "{}", run.shown());
+    assert_eq!(run.failure_lines().len(), 1, "{}", run.shown());
+}
+
+#[cfg(unix)]
+#[test]
+fn a_walk_below_a_linked_out_cases_root_and_the_pass_at_it_report_its_ignore_file_once() {
+    // The walk from the case meets the file from above at its resolved path, and the pass at the
+    // configured folder.
+    let (tree, outside) = with_linked_out_cases("cases-met-twice");
+    tree.write(
+        "grund.toml",
+        "grund_config_version = 1\n\n[scan]\ninclude = [\"tests/e2e/1-alpha\"]\n\n\
+         [[kinds]]\nkind = \"E2E\"\nfolder = \"tests/e2e\"\n",
+    );
+    fs::write(outside.join(".ignore"), "{alpha\n").expect("write the ignore file");
+    let (plain, full) = (tree.check(), tree.check_with(&["--full"]));
+    let _ = fs::remove_dir_all(&outside);
+    assert_one_failure(&plain);
+    assert_one_failure(&full);
 }
 
 #[test]

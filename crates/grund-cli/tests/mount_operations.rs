@@ -387,3 +387,19 @@ fn an_imported_tree_answers_every_command_as_its_standalone_run() {
         row(&fixture);
     }
 }
+
+/// §FS-remote-projects.ignore: a mounted root applies a `.gitignore` whether or not a repository
+/// encloses it, so a line of one that does not parse is a failure of the run that reads the mount
+/// (§FS-scan.scope.ignore-files.unparsed).
+#[test]
+fn a_malformed_gitignore_under_a_mounted_root_with_no_repository_is_reported() {
+    let fixture = Fixture::new("gitignore-unparsed");
+    fixture.write("lib/docs/fs/.gitignore", "FS-z.md\n{alpha\n");
+    let output = fixture.grund("app", &["show", "dep/FS-z", "--brief"]);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(
+        stderr.contains("docs/fs/.gitignore: line 2: "),
+        "unreported: {stderr}"
+    );
+}

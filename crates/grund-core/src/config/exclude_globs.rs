@@ -69,6 +69,10 @@ pub(super) fn matches_only_its_path(pattern: &str) -> bool {
     line.contains('/') && !line.contains(['*', '?', '[', '{', '\\'])
 }
 
+/// A file name no pattern is written for: it starts and ends in a control character, so what
+/// matches it is a pattern that matches every name (§FS-config-v2.schema.sources.exclude.roots).
+const UNNAMED: &str = "\u{1}grund\u{2}";
+
 /// The compiled `exclude` list of a v2 project, matched over config-root paths.
 #[derive(Clone)]
 pub(crate) struct ExcludeGlobs(Arc<Gitignore>);
@@ -136,6 +140,17 @@ impl ExcludeGlobs {
             }
         }
         None
+    }
+
+    /// Whether these patterns keep out whatever `dir` holds, met on the way down from `root`
+    /// (§FS-config-v2.schema.sources.exclude.roots). A pattern that names only some of it,
+    /// `.ignore` or `*.md`, does not, and a negation may rescue any name, so a list holding one
+    /// does not either.
+    pub(crate) fn excludes_all_of(&self, config_root: &Path, root: &Path, dir: &Path) -> bool {
+        self.0.num_whitelists() == 0
+            && self
+                .excluding_below(config_root, root, &dir.join(UNNAMED))
+                .is_some()
     }
 }
 

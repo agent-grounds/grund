@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use super::e2e::{e2e_cases_folder, is_direct_e2e_case_dir};
 use super::global_excludes::GlobalExcludes;
 use super::mounted_ignore::{mounted_ignore_mode, rules_above};
-use super::read_predicate::{Unread, directory_refusal, excluded_entry, globally_ignored};
+use super::read_predicate::{Unread, directory_refusal, globally_ignored};
 use super::walk_boundaries::{is_directory_symlink, owned_by_another_project};
 pub(super) use super::walk_reporting::walk_scannable_files_reporting;
 use crate::config::ExcludeGlobs;
@@ -302,24 +302,19 @@ impl WalkDirFilter {
             .is_some_and(|globs| globs.excluding(&self.root, path, is_dir).is_some())
     }
 
-    /// Whether `exclude` keeps the file at `path` out of the scan, by the tests `refusal` asks on
-    /// the way down to it: from this walk's root, which is read whatever names it, and from the
-    /// config root for a file above that root, which the walker reads for a walk below it and
-    /// this filter never meets (§FS-config-v2.schema.sources.exclude.roots).
-    pub(super) fn excludes_file(&self, path: &Path) -> bool {
-        let from = if path.starts_with(&self.scan_root) {
-            &self.scan_root
-        } else {
-            &self.root
-        };
+    /// Whether `exclude` keeps out everything this walk would read under the ignore file at
+    /// `path`, so that the file governs nothing it reads: what the file's directory holds, or what
+    /// this walk's root holds where the root lies below the file. Excluding the file itself, or a
+    /// directory above this walk, leaves the file's rules in force on what the walk reads
+    /// (§FS-scan.scope.ignore-files.unparsed).
+    pub(super) fn governs_nothing_read(&self, path: &Path) -> bool {
+        let governed = path
+            .parent()
+            .filter(|dir| dir.starts_with(&self.scan_root))
+            .unwrap_or(&self.scan_root);
         self.globs
             .as_ref()
-            .is_some_and(|globs| globs.excluding_below(&self.root, from, path).is_some())
-            || path
-                .ancestors()
-                .skip(1)
-                .take_while(|dir| dir.starts_with(from) && *dir != from.as_path())
-                .any(|dir| excluded_entry(dir, &self.excluded).is_some())
+            .is_some_and(|globs| globs.excludes_all_of(&self.root, &self.scan_root, governed))
     }
 
     /// Which rule prunes the entry at `path`, `depth` below the scan root, or

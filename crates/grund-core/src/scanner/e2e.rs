@@ -7,7 +7,8 @@ use std::sync::PoisonError;
 
 use super::e2e_case::{CaseFailure, read_e2e_case};
 use super::scan_error::{
-    publish_case_file_failure, publish_unlisted, publish_unlisted_fixture, scan_error_reason,
+    publish_file_failure, publish_unlisted, publish_unlisted_fixture, scan_error_reason,
+    scan_io_reason,
 };
 use super::tree::ScanError;
 use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walk_builder};
@@ -141,11 +142,9 @@ pub(super) fn scan_e2e_cases(
             let spelled = spelled_below(&spelled_root, &cases_root, &scan_root);
             publish_unlisted(&scan_root, spelled, err, None, reported);
         }
-        // §FS-check.2.4.2: a narrowed run's walk may have reported the same file already.
-        for report in listed.ignore_failures {
-            if !reported.contains(&report) {
-                reported.push(report);
-            }
+        // §FS-check.2.4.2: a walk may have reported the same file already, under another spelling.
+        for (spelled, reason) in listed.ignore_failures {
+            publish_file_failure(spelled, reason, run_path.as_deref(), reported);
         }
         // §AR-scanner.6.6: the cases listed before a failure are still read; none, where the
         // root could not be opened, so nothing is left to read.
@@ -179,7 +178,8 @@ pub(super) fn scan_e2e_cases(
                     let spelled = spelled_below(&spelled_root, &cases_root, failure.path());
                     match failure {
                         CaseFailure::Unread(_, err) => {
-                            publish_case_file_failure(spelled, &err, run_path.as_deref(), reported);
+                            let reason = scan_io_reason(&err);
+                            publish_file_failure(spelled, reason, run_path.as_deref(), reported);
                         }
                         CaseFailure::Unlisted(_, err) => {
                             publish_unlisted_fixture(spelled, &err, reported);
