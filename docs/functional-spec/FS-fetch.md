@@ -128,7 +128,9 @@ refused whether or not it exists ([§FS-fetch.4.2](FS-fetch.md#42-a-home-read-as
 
 ### 4.1. An absent value home is refused with the way through
 
-The refusal ``<config>:<line>: value home for kind `<KIND>` does not exist: <home>``
+A home is absent when looking it up fails because a path component is not there; a
+lookup that fails for any other reason is not an absent home, and
+[§FS-fetch.4.3](FS-fetch.md#43-a-value-home-that-cannot-be-looked-up-is-refused-with-its-reason) refuses it instead. The refusal ``<config>:<line>: value home for kind `<KIND>` does not exist: <home>``
 keeps that text as its first line and is followed by one repair-hint line. A kind that
 sets `value_chapter` ([§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)) reaches the same refusal and the same hint as a
 value kind.
@@ -221,6 +223,26 @@ and `refs` keep their verdicts on such a project, reading what the file declares
 remedy `check` names moves ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)). [§DF-fetch-source-home](../decisions/functional/DF-fetch-source-home.md#df-fetch-source-home-fetch-refuses-a-file-home-the-text-scan-reads-as-source) records the
 compatibility correction, and names as a judgement the one tree on which this refusal takes away a
 fetch that worked.
+
+### 4.3. A value home that cannot be looked up is refused with its reason
+
+A value home whose lookup fails for a reason other than absence, such as a directory
+above it without search permission, is refused at the same point, the same located line
+([§FS-lsp.2.2.4.1](FS-lsp.md#2241-a-config-that-will-not-load-is-a-diagnostic-on-that-config)) and with the same exit 2 as an absent one, because a home grund
+cannot check is not accepted. The refusal says why the lookup failed, and only that:
+
+```text
+<config>:<line>: could not look up value home for kind `<KIND>`: <home>: <reason>
+hint: make the home and every directory above it accessible
+```
+
+`<reason>` is derived from the lookup's I/O error kind, without an OS error number, the
+way [§FS-check.2.4.1](FS-check.md#241-one-reason-for-one-scan-io-failure) derives a scan failure's reason, so a denied lookup reads
+`permission denied`. The hint is the same for a `file` and a `folder` home, in either
+configuration version, whether or not the kind sets `fetch`. Neither line says
+`does not exist` or `create the`: the home may be on disk, and creating it fails for the
+same reason the lookup did. A home that is absent keeps the refusal and hints of
+[§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through) unchanged.
 
 ## 5. Folder-home write
 
