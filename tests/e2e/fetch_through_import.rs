@@ -263,7 +263,6 @@ fn check_and_fetch_name_one_command(lib_extra: &str, finding: &str) {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn check_and_fetch_name_one_command_for_a_dangling_citation() {
     check_and_fetch_name_one_command(
         "",
@@ -272,7 +271,6 @@ fn check_and_fetch_name_one_command_for_a_dangling_citation() {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn check_and_fetch_name_one_command_for_a_missing_snapshot() {
     check_and_fetch_name_one_command(
         "\n[rules.resolution]\nFS = \"warn\"\n",
@@ -304,7 +302,6 @@ fn nested(id: &str, below: &str, inner: impl FnOnce(&Tree)) {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn a_nested_import_takes_one_command() {
     nested("lb/in/FS-a", "FS-a", |tree| {
         tree.fetcher("inner", "inner", "");
@@ -312,7 +309,6 @@ fn a_nested_import_takes_one_command() {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn a_member_below_a_nested_import_takes_one_command() {
     nested("lb/in/alpha/FS-a", "alpha/FS-a", |tree| {
         tree.project(
@@ -326,7 +322,6 @@ fn a_member_below_a_nested_import_takes_one_command() {
 
 /// An import a member declares is reached from the root, under the member's alias.
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn an_import_a_member_declares_takes_one_command_from_the_root() {
     let tree = Tree::new();
     tree.project(
@@ -378,7 +373,6 @@ fn refused(id: &str, home: &str, setup: impl FnOnce(&Tree)) {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn a_refused_home_through_an_import_names_no_command() {
     refused("lb/CONST-a", "../lib/values/limits.json", |tree| {
         tree.refusing("lib", "lib");
@@ -386,7 +380,6 @@ fn a_refused_home_through_an_import_names_no_command() {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn a_refused_home_through_a_nested_import_names_no_command() {
     refused("lb/in/CONST-a", "../inner/values/limits.json", |tree| {
         tree.project("lib", "lib", &import("in", "../inner", "inner"));
@@ -395,7 +388,6 @@ fn a_refused_home_through_a_nested_import_names_no_command() {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn a_kind_with_no_fetch_through_an_import_names_no_command() {
     let tree = Tree::new();
     tree.consumer("../lib", "lb/FS-a");
@@ -417,7 +409,6 @@ fn a_kind_with_no_fetch_through_an_import_names_no_command() {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn a_kind_the_target_lacks_is_what_the_target_says() {
     let tree = Tree::new();
     tree.consumer("../lib", "lb/FS-a");
@@ -445,7 +436,6 @@ fn in_shows_words(tree: &Tree, id: &str, words: &str) {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn an_unknown_alias_below_an_import_is_unknown() {
     let tree = Tree::new();
     tree.consumer("../lib", "lb/FS-a");
@@ -454,7 +444,6 @@ fn an_unknown_alias_below_an_import_is_unknown() {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn an_unknown_alias_below_a_nested_import_is_unknown() {
     let tree = Tree::new();
     tree.consumer("../lib", "lb/FS-a");
@@ -468,7 +457,6 @@ fn an_unknown_alias_below_a_nested_import_is_unknown() {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn a_missing_import_is_named_missing() {
     let tree = Tree::new();
     tree.consumer("../gone", "lb/FS-a");
@@ -476,7 +464,6 @@ fn a_missing_import_is_named_missing() {
 }
 
 #[test]
-#[ignore = "red until #1273 renders fetch and check from one answer; implement removes this"]
 fn a_missing_nested_import_is_named_missing() {
     let tree = Tree::new();
     tree.consumer("../lib", "lb/FS-a");

@@ -14,11 +14,11 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use super::context::{WorkspaceProject, load_projects_with};
+use super::project_scan::scan_project;
 use crate::config::{
     ImportRead, MountEdge, ProjectRecords, alias_path_depth, config_at, config_file_in,
 };
 use crate::model::{Catalog, OperationDiagnostic, format_path};
-use crate::scanner::scan_tree_with_workspace;
 use crate::workspace::config_location_error;
 
 /// What a mount put into the run about one of its projects
@@ -79,6 +79,11 @@ pub(crate) struct MountLoader {
     report_base: PathBuf,
     /// Every edge reached so far, in the order reached (§FS-imports.checks).
     pub(super) read: Vec<ImportRead>,
+    /// Whether each project is scanned, which a run that only selects one does not ask
+    /// (§FS-imports.writes.answer).
+    scan: bool,
+    /// The one alias path whose imports to load, `None` for every edge.
+    along: Option<String>,
 }
 
 impl MountLoader {
@@ -93,7 +98,32 @@ impl MountLoader {
             cli_base: consumer.cli_base.clone(),
             report_base: consumer.root.clone(),
             read: Vec::new(),
+            scan: true,
+            along: None,
         }
+    }
+
+    /// The loader for a run that only selects a project: nothing scanned, and with
+    /// `along`, only the imports on that alias path (§FS-imports.writes.answer).
+    pub(super) fn unscanned(consumer: &ProjectRecords, along: Option<&str>) -> Self {
+        Self {
+            scan: false,
+            along: along.map(str::to_string),
+            ..Self::for_consumer(consumer)
+        }
+    }
+
+    pub(super) fn scans(&self) -> bool {
+        self.scan
+    }
+
+    /// Whether the edge the run spells `spelled` is one this load reads.
+    fn reaches(&self, spelled: &str) -> bool {
+        self.along.as_deref().is_none_or(|along| {
+            along
+                .strip_prefix(spelled)
+                .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
+        })
     }
 
     /// The base a mounted config's locations and paths are spelled from: the
@@ -114,10 +144,14 @@ impl MountLoader {
         let mut grafted = Vec::new();
         let mut roots = Vec::new();
         for edge in &edges {
+            let spelled = self.spelled(edge);
+            if !self.reaches(&spelled) {
+                continue;
+            }
             // §FS-imports.checks: every edge the run reaches is announced, a missing one
             // instead of being mounted.
             self.read.push(ImportRead {
-                alias: self.spelled(edge),
+                alias: spelled,
                 written: edge.written.clone(),
                 source: edge.source.clone(),
                 missing: edge.missing,
@@ -217,13 +251,7 @@ impl MountLoader {
                 roots,
             });
         }
-        let (findings, scan_errors) = scan_tree_with_workspace(
-            records.schema(),
-            records.frame(),
-            Some(records.frame().root()),
-            true,
-            &[],
-        )?;
+        let (findings, scan_errors) = scan_project(records, &[], self.scan)?;
         Ok(Native {
             name,
             projects: vec![WorkspaceProject {
@@ -302,6 +330,13 @@ fn graft(native: &Native, alias: &str) -> Vec<WorkspaceProject> {
         .iter()
         .map(|project| {
             let mut project = project.clone();
+            // §FS-imports.writes.answer: the first graft is the last import edge's.
+            if project.mount.is_none() {
+                let below = below_root(root, &project.alias)
+                    .unwrap_or_default()
+                    .to_string();
+                project.config.facade_mut().set_import_below(below);
+            }
             project.alias = graft_namespace(root, alias, &project.alias);
             graft_catalog(&mut project.findings, root, alias);
             let layer = (alias.to_string(), root.map(str::to_string));
@@ -320,11 +355,15 @@ fn graft(native: &Native, alias: &str) -> Vec<WorkspaceProject> {
 /// other gains the mount alias in front, so a namespace the native run could not
 /// resolve stays one the consumer run cannot either.
 fn graft_namespace(root: Option<&str>, alias: &str, native: &str) -> String {
-    if native.is_empty() || Some(native) == root {
-        alias.to_string()
-    } else {
-        format!("{alias}/{native}")
+    match below_root(root, native) {
+        None => alias.to_string(),
+        Some(below) => format!("{alias}/{below}"),
     }
+}
+
+/// `native` as an alias below its tree's root: `None` for the root itself.
+fn below_root<'a>(root: Option<&str>, native: &'a str) -> Option<&'a str> {
+    (!native.is_empty() && Some(native) != root).then_some(native)
 }
 
 /// Every target-naming namespace in `catalog`, mapped (§FS-remote-projects.mount.rule).

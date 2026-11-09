@@ -279,7 +279,7 @@ pub(super) fn check_citation_resolution(
                 let home = frame.display_path(&target.run.root.join(home));
                 let message = missing_snapshot_message(
                     target.schema,
-                    target.frame(),
+                    target.frame().displayed_by(frame.display),
                     cite.namespace.as_deref(),
                     target.catalog,
                     &cite.id,
