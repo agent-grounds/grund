@@ -1,0 +1,10 @@
+grund_config_version = 2
+project_name = "b"
+
+[schema.kinds.CONST]
+folders = ["values"]
+form = "value"
+fetch = "scripts/fetch"
+
+[rules.resolution]
+CONST = "warn"
