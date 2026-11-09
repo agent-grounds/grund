@@ -40,7 +40,7 @@ read, so the complete ID printed by `list` is the same ID `show` accepts
 ([§FS-declarations.line.configured-literals](../functional-spec/FS-declarations.md#lineconfigured-literals-configured-literals-belong-to-the-canonical-id), [§FS-show.1.1](../functional-spec/FS-show.md#11-id)).
 
 Where `check` reports an ID a duplicate, `show` and `refs` refuse it as ambiguous at the
-same sites ([§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id), [§FS-refs.4.1](../functional-spec/FS-refs.md#41-a-stubs-homes-are-found-in-its-target)), `list` and `list --size` mark its rows
+same sites, in the same order ([§FS-errors.4.1.1](../functional-spec/FS-errors.md#411-the-order-of-a-duplicates-sites), [§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id), [§FS-refs.4.1](../functional-spec/FS-refs.md#41-a-stubs-homes-are-found-in-its-target)), `list` and `list --size` mark its rows
 duplicate, and `fmt` wraps none of its citations ([§FS-fmt.6.4.2](../functional-spec/FS-fmt.md#642-a-citation-of-a-broken-stub-or-of-an-ambiguous-id-is-not-wrapped)).
 
 ### identity.kinds: Every command reads one kind verdict

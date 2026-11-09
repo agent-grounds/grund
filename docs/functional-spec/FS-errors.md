@@ -153,7 +153,7 @@ How ambiguity and hint lines read is [§FS-errors.2.3.1](FS-errors.md#231-ambigu
 
 #### 2.3.1 Ambiguity and hint lines
 
-Ambiguity messages list every site in lexicographic `path:line` order ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), except an ambiguous number-only shorthand's, which lists its candidate IDs in ID order ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates)). A `hint:` line may follow on stderr where the next step is obvious ([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)).
+Ambiguity messages list every site in the order [§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites) defines, except an ambiguous number-only shorthand's, which lists its candidate IDs in ID order ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates)). A `hint:` line may follow on stderr where the next step is obvious ([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)).
 
 A missing-target stub beside another home appends repair guidance after the complete
 ambiguity prefix, as [§FS-declarations.stubs.repair](FS-declarations.md#stubsrepair-a-missing-target-beside-another-declaration-explains-the-repair) defines.
@@ -596,8 +596,9 @@ Text `check` findings are grouped as errors,
 warnings, then enabled suggestions and sort bytewise by `(path, line,
 message)` within each group. JSON `check` findings retain their global
 bytewise `(path, line, message)` order across channels. Other reports retain
-their existing documented order; multi-site findings are located at the
-lexicographically-first site ([§FS-check.2.1](FS-check.md#21-report-format)).
+their existing documented order; multi-site findings are located at their
+first site ([§FS-check.2.1](FS-check.md#21-report-format)), which for a duplicate is the first in the order of
+[§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites).
 
 A message that would otherwise be non-deterministic (e.g. the order of duplicate-declaration sites) is sorted before printing.
 
@@ -606,6 +607,22 @@ same-anchor `cite each` group, the fixed message puts the target ID immediately
 after `<subject> cites ` and before its count, so bytewise message ordering also
 orders shared-prefix target IDs bytewise
 ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)).
+
+#### 4.1.1 The order of a duplicate's sites
+
+The sites of one duplicate, which `duplicate`, `ambiguous` and `ambiguous-section` list in the
+message and in JSON `sites`, have one order whichever command names them
+([§REQ-one-answer.identity.declarations](../requirements/REQ-one-answer.md#identitydeclarations-every-command-reads-one-declaration-set)). They sort by path, then by line as a number. The path
+is the name the site is reported by, relative to its project root, taken before it is rendered
+against the report base, and compared bytewise with `/` separators. So line 9 comes before line
+10, and neither `--path-base` nor the directory a run starts from moves a site. The **first
+site** is the first in this order, and it is where `check` locates the finding
+([§FS-check.2.1](FS-check.md#21-report-format)).
+
+A file reached by two names is one site here, under the name
+[§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name) settles on. Its other names, added beside that site, take no
+part in the order. This point covers a duplicate's sites only: a content finding's `(also at …)`
+names and a value mismatch's sites keep their own orders.
 
 ### 4.2 Finding selection
 
