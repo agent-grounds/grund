@@ -5,6 +5,7 @@ line, and files one `bug` issue; it is never a check of a pull request.
 The wrapper cases run real lychee against a loopback host that counts requests.
 """
 
+import os
 import re
 import sys
 import unittest
@@ -16,6 +17,10 @@ from link_gate_fixture import LYCHEE, ROOT, LinkFixture  # noqa: E402
 
 WORKFLOW = ROOT / ".github" / "workflows" / "links-nightly.yml"
 TITLE = "Nightly link sweep: external links failing"
+RED_UNTIL_FIX = unittest.skipUnless(
+    os.environ.get("GRUND_LINK_GATE_LINES_RUN_RED_TESTS") == "1",
+    "red until the report numbers a file's lines as git does; the fix removes this",
+)
 MAIN = {
     "docs/a.md": "# A\n\nSee [the old dead page](<{host}/dead-old>).\n\nSee [a live page](<{host}/ok>).\n",
     "docs/b.md": "# B\n\nBack to [A](a.md#a).\n\nAgain [the old dead page](<{host}/dead-old>).\n",
@@ -63,6 +68,37 @@ class SweepTests(unittest.TestCase):
                 f"no report line for {location}:\n" + "\n".join(lines),
             )
         self.assertFalse(any("/ok" in line for line in lines), "\n".join(lines))
+
+    def report_lines(self, files):
+        """The sweep's verdict and its report, split at a newline alone so a name keeps its \\r."""
+        gate = self.fixture(files)
+        report = gate.root / "sweep-report.md"
+        code, output = gate.run("--all", "--report", str(report), "docs")
+        self.assertNotEqual(0, code, output)
+        return gate, report.read_bytes().decode("utf-8").split("\n"), output
+
+    def assert_reported(self, gate, lines, location):
+        dead = re.escape(f"{gate.base}/dead-old")
+        self.assertTrue(
+            any(re.fullmatch(rf"- {dead} - {re.escape(location)} - 404\b.*", line)
+                for line in lines),
+            f"no report line for {location!r}:\n" + "\n".join(map(repr, lines)),
+        )
+
+    @unittest.skipIf(os.name == "nt", "Windows allows no carriage return in a file name")
+    def test_report_names_a_file_named_with_a_carriage_return_and_its_line(self):
+        """lychee's `--dump-inputs` is read at a newline alone, so the report names the file as
+        the file system holds it, with its line (§AR-ci.3.1.5)."""
+        files = {"docs/a\rb.md": "# R\n\nSee [the old dead page](<{host}/dead-old>).\n"}
+        gate, lines, _ = self.report_lines(files)
+        self.assert_reported(gate, lines, "docs/a\rb.md:3")
+
+    @RED_UNTIL_FIX
+    def test_report_numbers_a_line_as_git_does(self):
+        """A form feed ends no line, so the dead URL is on line 3 (§AR-ci.3.1.4.2)."""
+        files = {"docs/a.md": "# A\fstill line one\n\nSee [the old dead page](<{host}/dead-old>).\n"}
+        gate, lines, _ = self.report_lines(files)
+        self.assert_reported(gate, lines, "docs/a.md:3")
 
 
 class SweepWorkflowTests(unittest.TestCase):
