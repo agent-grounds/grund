@@ -293,6 +293,20 @@ fn a_path_the_command_was_given_says_to_stop_passing_it() {
     tree.assert_failure(&["check", "notes/x.md"], "notes/x.md", PASSED, "io");
 }
 
+/// No walk reads a case's file, so giving it does not make the run read it: its fix is the one
+/// `exclude` honours, whichever way the run is asked (§FS-check.2.4.3).
+#[test]
+fn a_case_file_given_on_the_command_line_keeps_the_entry_fix() {
+    let mut tree = Tree::new("case-file-given", V2_E2E);
+    tree.write("e2e/cases/b/expected.exit", "0\n");
+    tree.lock("e2e/cases/b/expected.exit");
+    let path = "e2e/cases/b/expected.exit";
+    tree.assert_failure(&["check", path], path, ENTRY, "io");
+    tree.assert_failure(&["check"], path, ENTRY, "io");
+    tree.append_config("\n[schema.sources]\nexclude = [\"e2e/cases/b\"]\n");
+    assert_eq!(tree.grund(&["check", path]).code, Some(0));
+}
+
 #[test]
 fn a_value_source_says_the_value_home_reaches_it() {
     let mut source = Tree::new("value", V2_VALUES);

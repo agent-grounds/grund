@@ -158,6 +158,16 @@ impl FailureRoots {
         let (roots, whole) = scan_roots(schema, frame, scope, explicit_scope).unwrap_or_default();
         Self::new(roots, whole, explicit_scope, frame.root())
     }
+
+    /// The same answer for a path a pass reads whether or not the run was given one, which no
+    /// longer passing would not stop reading, so it is never `passed` (§FS-check.2.4.3). `new`
+    /// keeps the handed path first in the roots, so what is left are the ordinary ones.
+    pub(super) fn unpassed(mut self) -> Self {
+        if self.passed.take().is_some() {
+            self.roots.remove(0);
+        }
+        self
+    }
 }
 
 /// Where `path` is among the run's roots, by directory entry so a second spelling of its parents

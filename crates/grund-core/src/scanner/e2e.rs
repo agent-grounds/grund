@@ -123,16 +123,18 @@ pub(super) fn scan_e2e_cases(
         .filter(|(_, whole)| !whole)
         .and_then(|(roots, _)| roots.into_iter().next());
 
-    // §FS-declarations.e2e-case.excluded: the cases are the ones the walk's filter met and the
-    // configuration does not keep out, from the walk's own listing where it listed the root.
-    // §FS-check.2.4.3: where a failure is, resolved only for a pass that has one to judge.
+    // §FS-check.2.4.3: resolved only for a pass with a failure to judge. Unless the path alone
+    // brought this pass here, it reads the cases either way, so the path was not what read them.
+    let failure_roots = || {
+        let at = FailureRoots::resolve(schema, frame, scope, explicit_scope);
+        if narrowed_to_path { at } else { at.unpassed() }
+    };
     let failure_at = |spelled: &Path| ScanFailure::Unread {
-        place: failure_place(
-            spelled,
-            &FailureRoots::resolve(schema, frame, scope, explicit_scope),
-        ),
+        place: failure_place(spelled, &failure_roots()),
         version: frame.version,
     };
+    // §FS-declarations.e2e-case.excluded: the cases are the ones the walk's filter met and the
+    // configuration does not keep out, from the walk's own listing where it listed the root.
     let mut case_dirs = Vec::new();
     if path_is_file(&scan_root.join("expected.exit")) {
         case_dirs.push(scan_root);
@@ -153,8 +155,11 @@ pub(super) fn scan_e2e_cases(
         }
         // §FS-check.2.4.2: a walk may have reported the same file already, under another spelling.
         for report in listed.ignore_failures {
-            let at = FailureRoots::resolve(schema, frame, scope, explicit_scope);
-            publish_file_failure(report.placed(&at), run_path.as_deref(), reported);
+            publish_file_failure(
+                report.placed(&failure_roots()),
+                run_path.as_deref(),
+                reported,
+            );
         }
         // §AR-scanner.6.6: the cases listed before a failure are still read; none, where the
         // root could not be opened, so nothing is left to read.
