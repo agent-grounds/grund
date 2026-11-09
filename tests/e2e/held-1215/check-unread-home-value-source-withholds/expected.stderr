@@ -1,0 +1,1 @@
+error: values/limits.json: invalid JSON: 2:1: expected `,` or `]` after array element; make the path readable, or keep it out of the scan

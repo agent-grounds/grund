@@ -177,7 +177,8 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// ### 2.3 Dangling citations (§FS-check.3.1)
 ///
 /// For each citation whose ID has no declaration, emit one error at the citation
-/// site.
+/// site. Whether §FS-check.2.4 withholds that finding is decided in
+/// `check_citation_resolution`, before its message is built.
 ///
 /// ### 2.4 Missing sections (§FS-check.3.2)
 ///
