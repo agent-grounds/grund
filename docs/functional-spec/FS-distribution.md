@@ -537,7 +537,7 @@ nearMissHeadings. Arrays preserve deterministic core order. Declaration groups
 are flattened by rendered ID/path/line, retaining every duplicate site; sections
 are ordered entries, retaining duplicate section claims separately. Private
 legacy/local candidate lists remain private; promoted citations already expose
-the semantic edges. Strict scan errors reject, with available snapshot partial.
+the semantic edges. Strict scan errors reject, with available snapshot partial, and the first failure's message is its reason and *Fix*, as `check` prints it ([§FS-check.2.4.3](FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix)).
 
 Declaration records: id/kind/number/slug/path/line/headingLevel/title/sections/
 duplicateSections/stub/defines/e2eCase/bodyStart/bodyEnd/bodyHasContent/source/

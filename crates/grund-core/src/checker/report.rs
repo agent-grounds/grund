@@ -301,8 +301,10 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// `canonical` policy, a finding naming the canonical form to write; under
 /// `accepted`, a unique marker-origin shorthand adds no form finding
 /// (§FS-config.3.1.1). Unknown and ambiguous candidates remain findings under both
-/// policies. It looks the candidate set up in a per-namespace `(kind,
-/// number)` index — built on first use, because deriving it per site is quadratic
+/// policies, save an unknown one while the run could not read the fetching home of
+/// its kind, withheld as a dangling ID is (§FS-check.2.4). It looks the candidate set
+/// up in a per-namespace `(kind, number)` index — built on first use, because
+/// deriving it per site is quadratic
 /// on the tree this rule asks people to migrate — so the three outcomes (unique,
 /// ambiguous, unknown) pick the message. The dangling check (§AR-checker.2.3) skips shorthand
 /// sites, so one *cause* never yields two findings; rules judging a different fact
