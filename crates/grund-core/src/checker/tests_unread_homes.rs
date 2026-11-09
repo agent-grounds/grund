@@ -26,7 +26,8 @@ fn project(name: &str, place: &str, source: &str) -> (PathBuf, Config) {
     write(&root.join("docs/offer.md"), "# Offer\n");
     write(&root.join(source), "{}\n");
     let config = load_config(&root).expect("load the config");
-    (root, config)
+    // The root the config resolved is the record's key; Windows spells it differently (`\\?\`).
+    (config.frame().root().to_path_buf(), config)
 }
 
 fn folder_project(name: &str) -> (PathBuf, Config) {
