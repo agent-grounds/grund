@@ -734,7 +734,7 @@ remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)).
 
 ##### 3.4.10.2 `fetch` and `resolve`
 
-`fetch` names the direct integration executable specified by [§FS-fetch.2](FS-fetch.md#2-integration-invocation). A value that names no executable ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable)) still loads, for good ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)), and counts as `fetch` being present; it meets the rule at `grund fetch` and at `config migrate` ([§FS-config-migrate.3.1.10](FS-config-migrate.md#3110-a-fetch-that-names-no-executable)). It requires exactly one `file` or `folder`
+`fetch` names the direct integration executable specified by [§FS-fetch.2](FS-fetch.md#2-integration-invocation). A value that names no executable ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable)) still loads, for good ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)), and counts as `fetch` being present; it meets the rule at `grund fetch`, at `grund check` ([§FS-check.3.1.3.2](FS-check.md#3132-a-key-fetch-has-nothing-to-run-for)) and at `config migrate` ([§FS-config-migrate.3.1.10](FS-config-migrate.md#3110-a-fetch-that-names-no-executable)). It requires exactly one `file` or `folder`
 home. `resolve` is the target-side obligation used when that kind's citation
 has no declaration: the closed enum is `must | should`, with no `may`.
 Explicit `resolve` is valid only when `fetch` is also present; `fetch` without

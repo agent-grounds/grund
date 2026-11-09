@@ -8,7 +8,7 @@ use super::super::catalog::fill;
 use super::super::codes::Code;
 
 /// `config-fetch-names-nothing`'s *Fix* (§FS-config-v2.checks.config-fetch-names-nothing).
-pub(crate) fn config_fetch_names_nothing(kind: impl Display) -> String {
-    let slots: &[(&str, &dyn Display)] = &[("kind", &kind)];
+pub(crate) fn config_fetch_names_nothing(setting: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("setting", &setting)];
     fill(Code::CONFIG_FETCH_NAMES_NOTHING, 2, None, slots)
 }

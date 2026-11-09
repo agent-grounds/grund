@@ -252,7 +252,7 @@ write is ordinary.
 
 One answer says where the fetch of a qualified ID runs and whether it can. `grund fetch`'s
 refusal and the fetch tails of `grund check` ([§FS-check.3.1.3](FS-check.md#313-a-kind-that-fetches), [§FS-check.4.12](FS-check.md#412-missing-snapshot)) render from
-it, so following either takes one command and neither names a command that is refused. The hint of [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure), once implemented, renders it too. It
+it, so following either takes one command and neither names a command that is refused, but for the one case the last paragraph of this point gives. The hint of [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure), once implemented, renders it too. It
 selects the project as the ID query does ([§FS-fetch.1](FS-fetch.md#1-input-and-project-selection)), reading the import edges on the alias
 path, nested ones and a member's included, and every edge the run can reach only for an alias
 nothing answers. A fetch of a local or member ID reads no import
@@ -279,6 +279,10 @@ says it is there: `invalid ID` and exit 1. A kind with no `fetch` is the same re
 there, ``kind `<KIND>` has no fetch integration``, exit 2. At a home `fetch` refuses,
 `grund fetch` prints the refusal of [§FS-fetch.4](FS-fetch.md#4-file-home-write) and [§FS-fetch.4.2](FS-fetch.md#42-a-home-read-as-source-is-refused), naming the home from the run's
 report base, exit 2, and `grund check` prints the tail of [§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses).
+A kind whose key has nothing to run in that project ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable)) gets the tail of
+[§FS-check.3.1.3.2](FS-check.md#3132-a-key-fetch-has-nothing-to-run-for) from `grund check`, which names no command. `grund fetch` of such an ID keeps
+its read-only refusal, and in this one case the command that refusal names is refused in the
+target, with the repair, because the test of the key stands immediately before the spawn.
 
 ## editor: The editor reads the import graph the command line reads
 

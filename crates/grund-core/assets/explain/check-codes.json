@@ -243,7 +243,7 @@
    },
    "fix": {
     "kind": "template",
-    "text": "name the program, or if this kind is not fetched remove the key and any `[rules.resolution] {kind}`, and its missing IDs are then errors"
+    "text": "name the program, or if this kind is not fetched remove the key and any {setting}, and its missing IDs are then errors"
    },
    "note": null
   },
@@ -446,6 +446,10 @@
       "text": "move the kind to a Markdown file or folder"
      },
      {
+      "label": "fetch-names-nothing",
+      "text": "name the program, or if this kind is not fetched remove the key and any {setting}, and its missing IDs are then errors"
+     },
+     {
       "label": "pattern",
       "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
@@ -491,6 +495,10 @@
      {
       "label": "source-file-value",
       "text": "move the kind to a Markdown file or folder"
+     },
+     {
+      "label": "fetch-names-nothing",
+      "text": "name the program, or if this kind is not fetched remove the key and any {setting}, and its missing IDs are then errors"
      },
      {
       "label": "pattern",
@@ -2095,6 +2103,10 @@
      {
       "label": "source-file-value",
       "text": "move the kind to a Markdown file or folder"
+     },
+     {
+      "label": "fetch-names-nothing",
+      "text": "name the program, or if this kind is not fetched remove the key and any {setting}, and its missing IDs are then errors"
      }
     ]
    },
@@ -2144,6 +2156,10 @@
      {
       "label": "source-file-value",
       "text": "move the kind to a Markdown file or folder"
+     },
+     {
+      "label": "fetch-names-nothing",
+      "text": "name the program, or if this kind is not fetched remove the key and any {setting}, and its missing IDs are then errors"
      }
     ]
    },
@@ -2392,6 +2408,10 @@
       "text": "move the kind to a Markdown file or folder"
      },
      {
+      "label": "fetch-names-nothing",
+      "text": "name the program, or if this kind is not fetched remove the key and any {setting}, and its missing IDs are then errors"
+     },
+     {
       "label": "pattern",
       "text": "a place is a path from the config root, not a pattern, so list each file or name the folder"
      }
@@ -2443,6 +2463,10 @@
      {
       "label": "source-file-value",
       "text": "move the kind to a Markdown file or folder"
+     },
+     {
+      "label": "fetch-names-nothing",
+      "text": "name the program, or if this kind is not fetched remove the key and any {setting}, and its missing IDs are then errors"
      },
      {
       "label": "pattern",
