@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Callable, Sequence
 from urllib.parse import urlsplit
 
-from link_scope import carries, dump_lines
+from link_scope import carries, dump_lines, numbered_lines
 
 
 GITHUB_ENDPOINTS = (
@@ -235,15 +235,15 @@ def write_report(
     texts = {}
     for name in files:
         try:
-            texts[name] = (repo_root / name).read_text(encoding="utf-8", errors="replace")
+            texts[name] = numbered_lines(repo_root / name)  # as git numbers them (§AR-ci.3.1.4.2)
         except OSError:
             pass
     lines = []
     for source, url, status, outcome in {failure[1]: failure for failure in kept}.values():
         found = [
             f"{name}:{number}"
-            for name, text in texts.items()
-            for number, line in enumerate(text.splitlines(), 1)
+            for name, numbered in texts.items()
+            for number, line in enumerate(numbered, 1)
             if carries(line, url)
         ]
         status_text = f"{_status_label(status)}{_failure_detail(status, outcome)}"

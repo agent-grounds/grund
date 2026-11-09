@@ -29,11 +29,6 @@ NON_ASCII_NAME = unittest.skipIf(
     WINDOWS, "unverified on Windows: the scope reads git's names as UTF-8, and no run there has "
     "yet held git for Windows to writing a non-ASCII name so"
 )
-RED_UNTIL_FIX = unittest.skipUnless(
-    os.environ.get("GRUND_LINK_GATE_LINES_RUN_RED_TESTS") == "1",
-    "red until the gate counts lines as git does, names a newline-named file and refuses a name "
-    "that is not UTF-8; the fix removes this",
-)
 NOT_UTF8 = b"docs/caf\xe9.md"
 LINE = "See [a page](https://example.invalid/page)."
 KEPT = "one\ntwo\n"
@@ -296,7 +291,6 @@ class ChangedLinesWhateverTheNameTests(ScopeCase):
         self.assert_new("docs/u b.md", "untracked")
 
     @unittest.skipIf(WINDOWS, "Windows holds a name as UTF-16 text, never as bytes")
-    @RED_UNTIL_FIX
     def test_a_name_that_is_not_utf8_is_refused_with_the_name(self):
         for state in ("committed", "untracked"):
             def change(gate):
@@ -313,7 +307,6 @@ class ChangedLinesWhateverTheTextTests(ScopeCase):
     """§AR-ci.3.1.4.2 — the scope numbers a file's lines as git does, and reads a hunk's lines
     by its count, whatever a line holds."""
 
-    @RED_UNTIL_FIX
     def test_the_line_after_a_break_git_does_not_count_is_the_one_edited(self):
         name = "docs/text.md"
         for mark in ("\f", "\v", "\r", "\u2028"):
@@ -324,7 +317,6 @@ class ChangedLinesWhateverTheTextTests(ScopeCase):
                 files = {name: f"one{mark}two\nthree\n"}
                 self.assertEqual({name: {2: LINE}}, self.scope(change, files))
 
-    @RED_UNTIL_FIX
     def test_an_added_line_that_begins_like_a_file_header_ends_no_file(self):
         name = "docs/text.md"
 
@@ -377,14 +369,12 @@ class ChangedLineGateWhateverTheNameTests(unittest.TestCase):
     def test_a_line_separator(self):
         self.assert_fails("docs/a b.md", "/dead-separator")
 
-    @RED_UNTIL_FIX
     def test_the_gate_names_a_newline_named_file_it_leaves_to_the_sweep(self):
         (requested, code), output = self.gate_on("docs/a\nb.md", "/dead-newline")
         said = re.findall(r"(?m)^not requested: .*$", output)
         self.assertEqual(([], 0, 1), (requested, code, len(said)), output)
         self.assertIn('"docs/a\\nb.md"', said[0])
 
-    @RED_UNTIL_FIX
     def test_a_name_that_is_not_utf8_fails_on_one_error_line(self):
         gate = LinkFixture()
         self.addCleanup(gate.close)

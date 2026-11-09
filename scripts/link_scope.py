@@ -37,12 +37,39 @@ def diff_base(repo_root: Path, link_base: str | None) -> str | None:
     return _commit(_git(repo_root, "merge-base", "HEAD", "origin/main"))
 
 
-HUNK = re.compile(rb"^@@ -\S+ \+(\d+)(?:,(\d+))? @@")
+HUNK = re.compile(rb"^@@ -\d+(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 C_ESCAPES = {
     b'"': b'"', b"\\": b"\\", b"a": b"\a", b"b": b"\b", b"f": b"\f", b"n": b"\n", b"r": b"\r",
     b"t": b"\t", b"v": b"\v",
 }
 C_ESCAPE = re.compile(rb"\\([0-7]{3}|.)", re.DOTALL)
+
+
+class NameNotUtf8(Exception):
+    """A changed file's name that is not UTF-8, which lychee's dump cannot name, so the gate
+    cannot place its URLs and fails (§AR-ci.3.1.4.1)."""
+
+
+def _name(raw: bytes) -> str:
+    """A name git wrote, as the file system holds it, or `NameNotUtf8` naming it as a bytes
+    literal writes it (§AR-ci.3.1.4.1)."""
+    try:
+        return os.path.normpath(raw.decode("utf-8"))
+    except UnicodeDecodeError:
+        raise NameNotUtf8(
+            f"the name of the changed file {repr(raw)[1:]} is not UTF-8, so the gate cannot tell "
+            "which URLs its lines carry; give the file a UTF-8 name"
+        ) from None
+
+
+def numbered_lines(path: Path) -> list[str]:
+    """A file's lines as git numbers them, each ended by `\\n` alone, so a form feed, a lone
+    carriage return or a line separator ends none; a `\\r\\n` ending is read without its `\\r`,
+    which moves no number (§AR-ci.3.1.4.2). Raises `OSError` for a file it cannot read."""
+    lines = path.read_bytes().decode("utf-8", errors="replace").split("\n")
+    if lines[-1] == "":
+        lines.pop()
+    return [line.removesuffix("\r") for line in lines]
 
 
 def patch_name(header: bytes) -> str | None:
@@ -60,7 +87,7 @@ def patch_name(header: bytes) -> str | None:
         )
     if name == b"/dev/null":
         return None
-    return os.path.normpath(name.decode("utf-8").removeprefix("b/"))
+    return _name(name.removeprefix(b"b/"))
 
 
 def changed_lines(
@@ -78,26 +105,30 @@ def changed_lines(
     if diff.returncode != 0:
         return {}
     numbers: dict[str, set[int]] = {}
-    path = None
+    path, body = None, 0
     for line in diff.stdout.split(b"\n"):  # git ends a line at \n alone (§AR-ci.3.1.4.1)
-        if line.startswith(b"+++ "):
+        if body:  # one of the hunk's own lines, whatever it begins with (§AR-ci.3.1.4.2)
+            body -= not line.startswith(b"\\")  # `\\ No newline at end of file` is not one
+        elif line.startswith(b"+++ "):
             path = patch_name(line[4:])
-        elif path is not None and (hunk := HUNK.match(line)):
-            start, count = int(hunk[1]), int(hunk[2] if hunk[2] is not None else 1)
-            numbers.setdefault(path, set()).update(range(start, start + count))
+        elif hunk := HUNK.match(line):
+            removed, start, count = (int(n) if n is not None else 1 for n in hunk.groups())
+            body = removed + count  # --unified=0: the hunk holds no context line
+            if path is not None:
+                numbers.setdefault(path, set()).update(range(start, start + count))
     untracked = _git(  # -z: each name raw, ended by NUL (§AR-ci.3.1.4.1)
         repo_root, "ls-files", "-z", "--others", "--exclude-standard", "--", *inputs
     )
-    whole = {os.path.normpath(name.decode("utf-8")) for name in untracked.stdout.split(b"\0")
+    whole = {_name(name) for name in untracked.stdout.split(b"\0")
              if name and untracked.returncode == 0}
     changed: dict[str, dict[int, str]] = {}
     for name in numbers.keys() | whole:
         try:
-            text = (repo_root / name).read_text(encoding="utf-8", errors="replace")
+            numbered = numbered_lines(repo_root / name)
         except OSError:
             continue
         wanted = numbers.get(name, set())
-        lines = {i: t for i, t in enumerate(text.splitlines(), 1) if name in whole or i in wanted}
+        lines = {i: t for i, t in enumerate(numbered, 1) if name in whole or i in wanted}
         if lines:
             changed[name] = lines
     return changed
