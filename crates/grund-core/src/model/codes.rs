@@ -20,6 +20,8 @@ impl Code {
     pub const CHAPTER_CARDINALITY: Code = Code("chapter-cardinality");
     /// §FS-check.3.27
     pub const CITATION_CARDINALITY: Code = Code("citation-cardinality");
+    /// §FS-config-v2.checks.config-fetch-names-nothing
+    pub const CONFIG_FETCH_NAMES_NOTHING: Code = Code("config-fetch-names-nothing");
     /// §FS-config-v2.checks.config-multiline-string
     pub const CONFIG_MULTILINE_STRING: Code = Code("config-multiline-string");
     /// §FS-config-v2.checks.config-not-toml
@@ -176,6 +178,7 @@ impl Code {
         Code::BROKEN_STUB,
         Code::CHAPTER_CARDINALITY,
         Code::CITATION_CARDINALITY,
+        Code::CONFIG_FETCH_NAMES_NOTHING,
         Code::CONFIG_MULTILINE_STRING,
         Code::CONFIG_NOT_TOML,
         Code::CONFIG_VERSION_1,

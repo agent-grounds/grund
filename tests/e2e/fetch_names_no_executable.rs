@@ -203,7 +203,6 @@ fn each(mut body: impl FnMut(Version, &str, &str)) {
 
 /// §FS-config-v2.checks.config-fetch-names-nothing: one warning at the key's line, exit 0.
 #[test]
-#[ignore = "red until #1233 the v2 reader warns; implement removes this"]
 fn v2_check_warns_at_the_key_line() {
     for value in [EMPTY, BLANK] {
         let tree = Tree::new(&format!("check-{}", value.len()), Two, Some(value), "");
@@ -231,7 +230,6 @@ fn v1_check_is_unchanged() {
 
 /// §FS-fetch.2.1: exit 2, the old prefix and the key's line, with nothing spawned or written.
 #[test]
-#[ignore = "red until #1233 grund fetch tests the value before the spawn; implement removes this"]
 fn fetch_refuses_before_any_spawn() {
     each(|version, value, name| {
         let tree = Tree::new(&format!("fetch-{name}"), version, Some(value), "");
@@ -245,7 +243,6 @@ fn fetch_refuses_before_any_spawn() {
 
 /// §FS-config-migrate.3.1.10: refused at the key's line with the repair, the file untouched.
 #[test]
-#[ignore = "red until #1233 migrate refuses the key; implement removes this"]
 fn migrate_refuses_the_key() {
     for value in [EMPTY, BLANK] {
         let tree = Tree::new(&format!("migrate-{}", value.len()), One, Some(value), "");
@@ -263,7 +260,6 @@ fn migrate_refuses_the_key() {
 
 /// §FS-config-migrate.3.1.10: one block per key, ordered by line, 3.1.7.1's words unchanged.
 #[test]
-#[ignore = "red until #1233 migrate refuses the key; implement removes this"]
 fn migrate_orders_the_fetch_block_and_the_value_chapter_block_by_line() {
     const CHAPTER: &str = "refused: grund.toml:7: [[kinds]] `AR` value_chapter has no version 2 \
                            spelling on a fetched kind";
@@ -312,7 +308,6 @@ fn leaning_tree_warns_under_version_2_and_repairs_truthfully() {
 
 /// §FS-fetch.2.1: the repair names the setting, under both versions, at `grund fetch`.
 #[test]
-#[ignore = "red until #1233 grund fetch tests the value before the spawn; implement removes this"]
 fn leaning_tree_fetch_refusal_carries_the_repair() {
     for version in [One, Two] {
         let name = format!("lean-fetch-{}", version.id());
@@ -325,7 +320,6 @@ fn leaning_tree_fetch_refusal_carries_the_repair() {
 
 /// §FS-config-migrate.3.1.10: a version 1 `resolve` row is refused with the same repair.
 #[test]
-#[ignore = "red until #1233 migrate refuses the key; implement removes this"]
 fn leaning_tree_migrate_refusal_names_resolve() {
     let tree = leaning_tree("lean-migrate", One, Some(EMPTY), true);
     let run = tree.run(&["config", "migrate", "--to", "2", "--write", "."]);
@@ -397,7 +391,6 @@ fn the_warning_reaches_its_surfaces_and_selectors() {
 
 /// §FS-distribution.4.2.1: the pending half — the warning names 0.23.0, and this tree is below it.
 #[test]
-#[ignore = "red until #1233 the v2 reader warns; implement removes this"]
 fn the_window_is_pending_below_0_23_0() {
     let parts: Vec<u64> = env!("CARGO_PKG_VERSION")
         .split(['.', '-'])

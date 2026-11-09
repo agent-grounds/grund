@@ -224,6 +224,46 @@
   }
  },
  {
+  "code": "config-fetch-names-nothing",
+  "meaning": "A fetch key in a version-2 config names no executable, and is read for now as a kind whose fetch cannot run.",
+  "ramp": "error in grund 0.23.0",
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a fetch key names no executable",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "name the program, or if this kind is not fetched remove the key and any `[rules.resolution] {kind}`, and its missing IDs are then errors"
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "note": null
+  }
+ },
+ {
   "code": "config-multiline-string",
   "meaning": "A value in a version-2 config held a multi-line string, which version 2 does not read, and was read for one more release as before; such a value is now refused when the config loads.",
   "ramp": null,

@@ -199,7 +199,7 @@ impl Project {
             if let Some(format) = &kind.id_format {
                 let _ = writeln!(out, "id_format = {}", string(format));
             }
-            if let crate::config::rows::Origin::External { fetch } = &kind.origin {
+            if let crate::config::rows::Origin::External { fetch, .. } = &kind.origin {
                 let _ = writeln!(out, "fetch = {}", string(fetch));
             }
             fields(out, &row.name, kind);

@@ -14,6 +14,7 @@ use crate::config::point_sizes::PointSizeUnit;
 use crate::config::project::Project;
 use crate::config::v1::LineKind;
 use crate::config::v2::{read_string_as_before, read_string_list_as_before};
+use crate::config::{fetch_key_name, fetch_key_repair, names_no_executable};
 
 fn at(line: Option<usize>) -> RefusalAnchor {
     line.map_or(RefusalAnchor::Unset, RefusalAnchor::Line)
@@ -104,6 +105,20 @@ pub(super) fn settings(
                 &format!(
                     "rename the row, and its [citations.{}] table, to `code` under version 1",
                     row.name
+                ),
+            ));
+        }
+        // §FS-config-migrate.3.1.10: the test of the string alone; the file is not asked.
+        if row
+            .fetch_key()
+            .is_some_and(|(fetch, _)| names_no_executable(fetch))
+        {
+            out.push(refusal(
+                at(keys.row_line(&row.name, "fetch")),
+                format!("{} names no executable", fetch_key_name(1, &row.name)),
+                &format!(
+                    "under version 1, {}; grund check shows its effect",
+                    fetch_key_repair(1, &row.name)
                 ),
             ));
         }
