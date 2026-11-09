@@ -7,7 +7,8 @@ use std::sync::PoisonError;
 
 use super::e2e_case::{CaseFailure, read_e2e_case};
 use super::scan_error::{
-    publish_file_failure, publish_unlisted, publish_unlisted_fixture, scan_error_reason,
+    FailureRoots, FileKind, ScanFailure, failure_place, publish_file_failure, publish_unlisted,
+    publish_unlisted_fixture, scan_error_reason,
 };
 use super::tree::ScanError;
 use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walk_builder};
@@ -124,6 +125,14 @@ pub(super) fn scan_e2e_cases(
 
     // §FS-declarations.e2e-case.excluded: the cases are the ones the walk's filter met and the
     // configuration does not keep out, from the walk's own listing where it listed the root.
+    // §FS-check.2.4.3: where a failure is, resolved only for a pass that has one to judge.
+    let failure_at = |spelled: &Path| ScanFailure::Unread {
+        place: failure_place(
+            spelled,
+            &FailureRoots::resolve(schema, frame, scope, explicit_scope),
+        ),
+        version: frame.version,
+    };
     let mut case_dirs = Vec::new();
     if path_is_file(&scan_root.join("expected.exit")) {
         case_dirs.push(scan_root);
@@ -139,11 +148,13 @@ pub(super) fn scan_e2e_cases(
         let listed = walk_one_level(schema, frame, &home.join(below), &scan_root);
         if let Some(err) = &listed.failure {
             let spelled = spelled_below(&spelled_root, &cases_root, &scan_root);
-            publish_unlisted(&scan_root, spelled, err, None, reported);
+            let failure = failure_at(&spelled);
+            publish_unlisted(&scan_root, spelled, err, None, failure, reported);
         }
         // §FS-check.2.4.2: a walk may have reported the same file already, under another spelling.
-        for (spelled, reason) in listed.ignore_failures {
-            publish_file_failure(spelled, reason, run_path.as_deref(), reported);
+        for report in listed.ignore_failures {
+            let at = FailureRoots::resolve(schema, frame, scope, explicit_scope);
+            publish_file_failure(report.placed(&at), run_path.as_deref(), reported);
         }
         // §AR-scanner.6.6: the cases listed before a failure are still read; none, where the
         // root could not be opened, so nothing is left to read.
@@ -177,19 +188,27 @@ pub(super) fn scan_e2e_cases(
                     let spelled = spelled_below(&spelled_root, &cases_root, failure.path());
                     match failure {
                         CaseFailure::Unread(_, err) => {
-                            let reason = io_reason(&err);
-                            publish_file_failure(spelled, reason, run_path.as_deref(), reported);
+                            let failure = failure_at(&spelled);
+                            let report = ScanError::new(spelled, io_reason(&err), failure);
+                            publish_file_failure(report, run_path.as_deref(), reported);
                         }
                         CaseFailure::Unlisted(_, err) => {
+                            let failure = failure_at(&spelled);
                             publish_unlisted_fixture(
                                 spelled,
                                 &err,
                                 &findings.failure_names,
+                                failure,
                                 reported,
                             );
                         }
                         CaseFailure::Unparsed(_, err) => {
-                            reported.push((spelled, scan_error_reason(&err)));
+                            let failure = ScanFailure::Unparsed(FileKind::Exit);
+                            reported.push(ScanError::new(
+                                spelled,
+                                scan_error_reason(&err),
+                                failure,
+                            ));
                         }
                     }
                 }

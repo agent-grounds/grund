@@ -45,5 +45,9 @@ fn a_target_read_as_no_value_source_still_fails_by_the_name_that_entered() {
         link.clone(),
         "could not read value JSON source: permission denied".to_string(),
     )];
+    let errors: Vec<(PathBuf, String)> = errors
+        .into_iter()
+        .map(|error| (error.path, error.reason))
+        .collect();
     assert_eq!(errors, expected);
 }

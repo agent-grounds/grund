@@ -24,9 +24,9 @@ use crate::checker::{
     workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
-use crate::model::{CheckReport, Code, Diagnostic, Finding, Switch};
+use crate::model::{CheckReport, Diagnostic, Finding, Switch};
 use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
-use crate::scanner::{scan_error_message, scan_tree};
+use crate::scanner::{ScanError, scan_error_message, scan_tree};
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, arm_imports,
     arm_optional_members, import_diagnostics, open, unlisted_workspace_block_errors,
@@ -521,20 +521,20 @@ fn run_workspace_check(
 
 fn append_scan_errors(
     report: &mut CheckReport,
-    scan_errors: impl IntoIterator<Item = (PathBuf, String)>,
+    scan_errors: impl IntoIterator<Item = ScanError>,
 ) -> bool {
     let mut had_scan_errors = false;
-    for (file, message) in scan_errors {
+    for failure in scan_errors {
         had_scan_errors = true;
         // A file that could not be read mid-walk is reported as a CLI-shaped
         // `error: <path>: <reason>; <fix>` finding (§FS-check.2.4): the walk continued,
         // the findings below are real, but the view of the tree was incomplete.
         report.errors.push(Diagnostic {
-            code: Code::IO,
-            path: Some(file),
+            code: failure.code(),
+            message: scan_error_message(&failure),
+            path: Some(failure.path),
             line: None,
             column: None,
-            message: scan_error_message(&message),
             sites: Vec::new(),
             authority: Vec::new(),
         });

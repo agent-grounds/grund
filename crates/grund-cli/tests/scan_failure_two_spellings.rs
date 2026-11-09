@@ -16,6 +16,7 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use two_spellings_tree::{
     SHAPES, SKIP, Shape, Tree, assert_none, broken, caution, config, denied, denied_link,
+    denied_link_passed, denied_passed, denied_root,
 };
 
 /// The report's tree, on the two commands its reproducer judged.
@@ -26,8 +27,12 @@ fn the_reports_tree_is_one_line_from_check_and_list() {
         return;
     }
     tree.assert_prints(&[
-        (&["check"], 2, vec![denied("e2e/cases")]),
-        (&["list", "--kind", "E2E"], 2, vec![denied("e2e/cases")]),
+        (&["check"], 2, vec![denied_root("e2e/cases")]),
+        (
+            &["list", "--kind", "E2E"],
+            2,
+            vec![denied_root("e2e/cases")],
+        ),
     ]);
 }
 
@@ -102,7 +107,7 @@ fn a_second_directory_that_fails_alike_keeps_its_own_line() {
     tree.assert_prints(&[(
         &["check"],
         2,
-        vec![denied("e2e/cases"), denied("other/cases")],
+        vec![denied_root("e2e/cases"), denied("other/cases")],
     )]);
 }
 
@@ -205,7 +210,7 @@ fn the_reports_tree_at_a_workspace_root_is_one_line() {
     if !tree.reports_tree() {
         return;
     }
-    tree.assert_prints(&[(&["check"], 2, vec![denied("e2e/cases")])]);
+    tree.assert_prints(&[(&["check"], 2, vec![denied_root("e2e/cases")])]);
 }
 
 /// Each run names the failure under the path it was handed, as one error and no caution, and
@@ -218,11 +223,16 @@ fn scoped_runs_over_the_reports_tree_name_the_path_handed() {
         if !tree.reports_tree() {
             return;
         }
+        // §FS-check.2.4.3: a workspace root narrows the report, so the path did not make it read.
+        let handed = |path: &str| match shape {
+            Shape::Plain => denied_passed(path),
+            Shape::WorkspaceRoot => denied_root(path),
+        };
         misreports.extend(tree.misreports(&[
-            (&["check", "realE"], 2, vec![denied("realE/cases")]),
-            (&["check", "realE/cases"], 2, vec![denied("realE/cases")]),
-            (&["check", "e2e"], 2, vec![denied("e2e/cases")]),
-            (&["check", "e2e/cases"], 2, vec![denied("e2e/cases")]),
+            (&["check", "realE"], 2, vec![denied_root("realE/cases")]),
+            (&["check", "realE/cases"], 2, vec![handed("realE/cases")]),
+            (&["check", "e2e"], 2, vec![denied_root("e2e/cases")]),
+            (&["check", "e2e/cases"], 2, vec![handed("e2e/cases")]),
             (&["check", "docs"], 0, vec![caution("e2e/cases")]),
         ]));
     }
@@ -238,9 +248,14 @@ fn scoped_runs_over_a_link_under_two_names_name_the_path_handed() {
         if !tree.link_under_two_names(".secret") {
             return;
         }
+        // §FS-check.2.4.3: a workspace root narrows the report, so the path did not make it read.
+        let handed = |path: &str| match shape {
+            Shape::Plain => denied_link_passed(path),
+            Shape::WorkspaceRoot => denied_link(path),
+        };
         misreports.extend(tree.misreports(&[
-            (&["check", "realE/link"], 2, vec![denied_link("realE/link")]),
-            (&["check", "e2e/link"], 2, vec![denied_link("e2e/link")]),
+            (&["check", "realE/link"], 2, vec![handed("realE/link")]),
+            (&["check", "e2e/link"], 2, vec![handed("e2e/link")]),
         ]));
     }
     assert_none(&misreports);
@@ -300,7 +315,7 @@ fn a_parse_failure_and_a_listing_failure_stay_two_lines() {
         lines.len() == 2
             && lines[0].starts_with("error: e2e/.ignore: ")
             && lines[0].contains("error parsing glob")
-            && lines[1] == denied("e2e/cases"),
+            && lines[1] == denied_root("e2e/cases"),
         "{}",
         run.shown()
     );

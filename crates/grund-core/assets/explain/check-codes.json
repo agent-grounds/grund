@@ -3599,6 +3599,65 @@
   }
  },
  {
+  "code": "unparsable-file",
+  "meaning": "A file was read and does not parse, so the run's view of the tree is incomplete.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "exit",
+      "text": "write the case's expected exit status in the file as one integer"
+     },
+     {
+      "label": "value",
+      "text": "make the file valid {format}"
+     },
+     {
+      "label": "ignore",
+      "text": "write the line it names as a valid ignore pattern"
+     }
+    ]
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "exit",
+      "text": "write the case's expected exit status in the file as one integer"
+     },
+     {
+      "label": "value",
+      "text": "make the file valid {format}"
+     },
+     {
+      "label": "ignore",
+      "text": "write the line it names as a valid ignore pattern"
+     }
+    ]
+   },
+   "note": null
+  }
+ },
+ {
   "code": "unreached-declaration",
   "meaning": "A declaration lacks the chapter a chapter-scoped citation rule over its kind needs in order to reach it.",
   "ramp": null,

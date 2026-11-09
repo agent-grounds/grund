@@ -1,1 +1,1 @@
-error: values/limits.yaml: could not read value YAML source: stream did not contain valid UTF-8; make the path readable, or keep it out of the scan
+error: values/limits.yaml: could not read value YAML source: stream did not contain valid UTF-8; make the path readable, or keep it out of the scan by moving it out of the value home, because exclude does not reach a value source

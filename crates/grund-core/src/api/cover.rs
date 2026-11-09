@@ -327,10 +327,10 @@ pub(super) fn cover_scan_errors(context: &WorkspaceContext) -> Vec<ApiScanError>
     // §FS-errors.4.1: by path, not by the order the projects were loaded — the
     // same order `check` prints the same errors in, keyed with `sort_path_key`
     // on the path itself, before rendering.
-    errors.sort_by_key(|(path, message)| (sort_path_key(path), message.clone()));
+    errors.sort_by_key(|error| (sort_path_key(&error.path), error.reason.clone()));
     errors
         .into_iter()
-        .map(|(path, message)| api_scan_error(config.frame(), path, message))
+        .map(|error| api_scan_error(config.frame(), error))
         .collect()
 }
 

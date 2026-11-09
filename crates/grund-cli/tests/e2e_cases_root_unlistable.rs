@@ -10,7 +10,12 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const REMEDY: &str = "make the path readable, or keep it out of the scan";
+const REMEDY: &str = "make the path readable, or keep it out of the scan by removing it from \
+    the [schema.kinds] row that lists it, because exclude does not prune scan roots";
+const V1_REMEDY: &str = "make the path readable, or keep it out of the scan by removing it from \
+    the [scan] include or [[kinds]] row that lists it, because exclude does not prune scan roots";
+const PASSED_REMEDY: &str = "make the path readable, or keep it out of the scan by not passing \
+    it, because exclude does not prune a path the command is given";
 const SKIP: &str = "skipped: the mode does not bar this user, so nothing here can be unreadable";
 
 /// A scratch directory for one test's trees, its barred directories given back on drop.
@@ -162,7 +167,7 @@ fn assert_one_line(dir: &Path, commands: &[&[&str]], expected: &str) {
 }
 
 /// `check --format json` exits `2` with one `io` entry, an error at `path`.
-fn assert_one_io_entry(dir: &Path, path: &str) {
+fn assert_one_io_entry(dir: &Path, path: &str, remedy: &str) {
     let run = grund(dir, &["check", "--format", "json"]);
     assert_eq!(run.code, 2, "{}", run.shown());
     let records = run.io_records();
@@ -176,7 +181,7 @@ fn assert_one_io_entry(dir: &Path, path: &str) {
     assert_eq!(records[0]["severity"], "error", "{}", run.shown());
     assert_eq!(
         records[0]["message"],
-        format!("permission denied; {REMEDY}"),
+        format!("permission denied; {remedy}"),
         "{}",
         run.shown()
     );
@@ -215,7 +220,7 @@ fn an_unlistable_cases_root_is_one_io_entry_in_check_json() {
         eprintln!("{SKIP}");
         return;
     }
-    assert_one_io_entry(&scratch.root, "e2e/cases");
+    assert_one_io_entry(&scratch.root, "e2e/cases", REMEDY);
 }
 
 /// With the folder elsewhere, the one line names the folder, never a directory the tree lacks.
@@ -270,7 +275,7 @@ fn under_a_path_scope_the_one_line_keeps_the_severity_its_location_earns() {
     let caution = "warning: tests/e2e: permission denied — outside the report scope, so a citation \
                    declared there may be reported as unresolved";
     let mut wrong = misreports(&scratch.root, &[&["check", "docs"]], 0, caution);
-    let inside = unlistable("tests/e2e");
+    let inside = format!("error: tests/e2e: permission denied; {PASSED_REMEDY}");
     wrong.extend(misreports(
         &scratch.root,
         &[&["check", "tests/e2e"]],
@@ -303,9 +308,9 @@ fn a_cases_root_only_the_manifest_pass_meets_is_one_line_naming_its_folder() {
     assert_one_line(
         &project,
         &[&["check"], &["list", "--kind", "E2E"]],
-        &unlistable("tests/e2e"),
+        &format!("error: tests/e2e: permission denied; {V1_REMEDY}"),
     );
-    assert_one_io_entry(&project, "tests/e2e");
+    assert_one_io_entry(&project, "tests/e2e", V1_REMEDY);
 }
 
 /// A cases root that links to a barred directory inside the project: the walk reports the link at

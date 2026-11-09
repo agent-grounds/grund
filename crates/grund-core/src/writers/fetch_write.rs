@@ -14,8 +14,9 @@ use crate::model::{
     Id, OperationDiagnostic, format_path, paired_declarations, relative_from_base, scanned_path_key,
 };
 use crate::scanner::{
-    folder_value_declarations, markdown_heading_level, scan_error_message, scan_error_reason,
-    scan_tree, scan_unwalked_file, walk_scannable_files_with_sources,
+    Place, ScanError, ScanFailure, folder_value_declarations, markdown_heading_level,
+    scan_error_message, scan_error_reason, scan_tree, scan_unwalked_file,
+    walk_scannable_files_with_sources,
 };
 use crate::sources::{path_exists, path_is_dir, read_bytes};
 
@@ -73,15 +74,22 @@ struct SnapshotDeclaration {
 fn unscanned_file_failure(
     path: &Path,
     error: anyhow::Error,
+    failure: ScanFailure,
     report_base: &Path,
     diagnostic: &mut Option<anyhow::Error>,
 ) -> FetchFailure {
     let shown = format_path(&relative_from_base(report_base, path));
-    let message = format!(
-        "{shown}: {}",
-        scan_error_message(&scan_error_reason(&error))
-    );
+    let unread = ScanError::new(path.to_path_buf(), scan_error_reason(&error), failure);
+    let message = format!("{shown}: {}", scan_error_message(&unread));
     fetch_walk_failure(diagnostic, path, error, message)
+}
+
+/// §FS-check.2.4.3: a file a folder home holds is an `entry` of the walk.
+fn entry_failure(version: u32) -> ScanFailure {
+    ScanFailure::Unread {
+        place: Place::Entry,
+        version,
+    }
 }
 
 /// §FS-fetch.5.4: decode a home file through `std::io`, as the scan's own read does, so the
@@ -97,11 +105,13 @@ fn declarations_at_depth(
     bytes: &[u8],
     grammar: &Grammar,
     depth: usize,
+    undecoded: ScanFailure,
     report_base: &Path,
     diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<Vec<SnapshotDeclaration>, FetchFailure> {
     let text = decode_home_file(bytes).map_err(|error| {
-        unscanned_file_failure(path, anyhow::Error::new(error), report_base, diagnostic)
+        let error = anyhow::Error::new(error);
+        unscanned_file_failure(path, error, undecoded, report_base, diagnostic)
     })?;
     let mut headings = Vec::<(usize, Option<Id>)>::new();
     let mut offset = 0usize;
@@ -184,6 +194,7 @@ pub(super) fn write_file_home(
     path: &Path,
     grammar: &Grammar,
     requested: &Id,
+    undecoded: ScanFailure,
     report_base: &Path,
     snapshot: &[u8],
     diagnostic: &mut Option<anyhow::Error>,
@@ -200,7 +211,15 @@ pub(super) fn write_file_home(
             ));
         }
     };
-    let declarations = declarations_at_depth(path, &original, grammar, 2, report_base, diagnostic)?;
+    let declarations = declarations_at_depth(
+        path,
+        &original,
+        grammar,
+        2,
+        undecoded,
+        report_base,
+        diagnostic,
+    )?;
     let matching = declarations
         .iter()
         .filter(|declaration| &declaration.id == requested)
@@ -296,7 +315,14 @@ fn refuse_declaring_file(
                         Some((earlier, anyhow::Error::new(undecodable)))
                     })
                     .unwrap_or((path, error));
-                return Err(unscanned_file_failure(path, error, report_base, diagnostic));
+                let unread = entry_failure(config.frame().version);
+                return Err(unscanned_file_failure(
+                    path,
+                    error,
+                    unread,
+                    report_base,
+                    diagnostic,
+                ));
             }
         }
     }
@@ -350,11 +376,12 @@ pub(super) fn write_folder_home(
         // Consult their shared reader before any Markdown match can win.
         let values =
             folder_value_declarations(config.schema(), config.frame(), folder, &requested.kind)
-                .map_err(|(path, message)| {
+                .map_err(|error| {
                     fetch_operational(format!(
-                        "cannot read snapshot folder {} at {}: {message}",
+                        "cannot read snapshot folder {} at {}: {}",
                         folder.display(),
-                        path.display()
+                        error.path.display(),
+                        error.reason
                     ))
                 })?;
         if let Some(declaration) = values
@@ -376,28 +403,34 @@ pub(super) fn write_folder_home(
             Some(folder),
             true,
             &mut |report, error| {
-                sources.entry(report.clone()).or_insert(error);
+                sources
+                    .entry((report.path.clone(), report.reason.clone()))
+                    .or_insert(error);
             },
         )
         .map_err(|err| {
             let message = format!("cannot read snapshot folder {}: {err:#}", folder.display());
             fetch_walk_failure(diagnostic, folder, err, message)
         })?;
-        if let Some(report @ (path, message)) = walked.errors.first() {
+        if let Some(report) = walked.errors.first() {
+            let path = &report.path;
             let message = format!(
-                "cannot read snapshot folder {} at {}: {message}",
+                "cannot read snapshot folder {} at {}: {}",
                 folder.display(),
-                path.display()
+                path.display(),
+                report.reason
             );
-            return Err(match sources.remove(report) {
-                Some(source) => fetch_walk_failure(
-                    diagnostic,
-                    path,
-                    anyhow::Error::new(SnapshotWalkSource(source)),
-                    message,
-                ),
-                None => fetch_operational(message),
-            });
+            return Err(
+                match sources.remove(&(path.clone(), report.reason.clone())) {
+                    Some(source) => fetch_walk_failure(
+                        diagnostic,
+                        path,
+                        anyhow::Error::new(SnapshotWalkSource(source)),
+                        message,
+                    ),
+                    None => fetch_operational(message),
+                },
+            );
         }
         // §FS-fetch.5.2: ahead of every judgement of a Markdown file below.
         refuse_declaring_file(
@@ -421,8 +454,15 @@ pub(super) fn write_folder_home(
                     format!("cannot read {}", path.display()),
                 )
             })?;
-            let declarations =
-                declarations_at_depth(&path, &bytes, &config.grammar, 1, report_base, diagnostic)?;
+            let declarations = declarations_at_depth(
+                &path,
+                &bytes,
+                &config.grammar,
+                1,
+                entry_failure(config.frame().version),
+                report_base,
+                diagnostic,
+            )?;
             let contains_requested = declarations
                 .iter()
                 .any(|declaration| declaration.id == *requested);

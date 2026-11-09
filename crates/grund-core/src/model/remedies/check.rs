@@ -475,6 +475,24 @@ pub(crate) fn unlisted_workspace_block(entry: impl Display, enclosing: impl Disp
     fill(Code::UNLISTED_WORKSPACE_BLOCK, 2, None, slots)
 }
 
+/// `unparsable-file`'s *Fix*, case `exit` (§FS-check.2.4.3).
+pub(crate) fn unparsable_file_exit() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNPARSABLE_FILE, 2, Some("exit"), slots)
+}
+
+/// `unparsable-file`'s *Fix*, case `value` (§FS-check.2.4.3).
+pub(crate) fn unparsable_file_value(format: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("format", &format)];
+    fill(Code::UNPARSABLE_FILE, 2, Some("value"), slots)
+}
+
+/// `unparsable-file`'s *Fix*, case `ignore` (§FS-check.2.4.3).
+pub(crate) fn unparsable_file_ignore() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNPARSABLE_FILE, 2, Some("ignore"), slots)
+}
+
 /// `unused`'s *Fix* (§FS-check.4.1).
 pub(crate) fn unused() -> String {
     let slots: &[(&str, &dyn Display)] = &[];

@@ -16,6 +16,14 @@ fn call(root: &std::path::Path, operation: &str) -> Value {
     })
 }
 
+/// What a reason renders to at a path `exclude` reaches (§FS-check.2.4.3).
+fn entry_message(reason: &str) -> String {
+    crate::scanner::scan_error_message(&crate::scanner::ScanError::unread_entry(
+        std::path::PathBuf::new(),
+        reason,
+    ))
+}
+
 /// Every `{"path", "message"}` pair a reply carries under a `scan_errors` key.
 fn scan_error_messages(data: &Value) -> Vec<String> {
     match data {
@@ -53,7 +61,7 @@ fn scan_publishes_the_message_every_other_operation_publishes() {
     symlink("missing.md", &root.join("docs/FS-b.md"));
     let expected = vec![format!(
         "docs/FS-b.md: {}",
-        crate::scanner::scan_error_message("broken symlink: the target does not exist")
+        entry_message("broken symlink: the target does not exist")
     )];
     for operation in ["scan", "list_ids"] {
         assert_eq!(
@@ -65,12 +73,7 @@ fn scan_publishes_the_message_every_other_operation_publishes() {
     let check = call(&root, "check");
     let io = check.to_string();
     assert!(
-        io.contains(
-            &json!(crate::scanner::scan_error_message(
-                "broken symlink: the target does not exist"
-            ))
-            .to_string()
-        ),
+        io.contains(&json!(entry_message("broken symlink: the target does not exist")).to_string()),
         "{check}"
     );
 }
@@ -78,7 +81,6 @@ fn scan_publishes_the_message_every_other_operation_publishes() {
 /// Node's strict `scan` failure and an operation's scan-failure record both carry the record's own
 /// code rather than a hard-coded `io` (§FS-check.2.4.3, §AR-bindings.2).
 #[test]
-#[ignore = "red until #1272 reads the record's code; implement removes this"]
 fn strict_and_listed_scan_failures_carry_the_records_code() {
     let root = test_root("strict_and_listed_scan_failures_carry_the_records_code");
     write(
@@ -102,4 +104,18 @@ fn strict_and_listed_scan_failures_carry_the_records_code() {
         json!("unparsable-file"),
         "{listed}"
     );
+    let options = json!({"root": root.to_string_lossy()});
+    for (operation, id) in [
+        ("show", json!("CONST-a")),
+        ("showBatch", json!(["CONST-a"])),
+    ] {
+        let args = vec![id, options.clone()];
+        let failed = node_embedding_call(node_request(operation, args, &root));
+        assert_eq!(
+            failed["failure"]["kind"],
+            json!("unparsable-file"),
+            "{operation}: {failed}"
+        );
+        assert_eq!(failed["failure"]["code"], json!("filesystem"), "{failed}");
+    }
 }

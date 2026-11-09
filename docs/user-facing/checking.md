@@ -226,6 +226,8 @@ without redirection (the linter convention — only run-level `error:` lines, li
 an unreadable path, go to stderr). JSON output remains diagnostics-only and in
 global location order, so a clean `grund check --format=json` prints nothing.
 
+A run-level `error:` line says what failed by its reason and its fix, and the record's `code` in JSON tells the two kinds apart. `io` means a file or directory could not be read or decoded, and `unparsable-file` means a file was read and does not parse: a case's `expected.exit`, a JSON or YAML value source, or an ignore file. Both exit `2`, and `--only` and `--ignore` hide neither. The fix on the line is the one that works at that path. A scan root is not pruned by `exclude`, so its line says to remove it from the row that lists it, a path you passed says to stop passing it, and a value source says to move it out of its value home.
+
 Some warnings are about what the run did not read rather than what it found.
 A file the configuration names as a scan root — a `[[kinds]]` `file` home, a
 version-2 `files` entry, or an `[scan] include` entry that is a file — is read

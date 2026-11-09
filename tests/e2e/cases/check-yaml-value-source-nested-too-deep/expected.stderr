@@ -1,1 +1,1 @@
-error: values/limits.yaml: invalid YAML: 2:257: collections are nested more than 128 deep; make the path readable, or keep it out of the scan
+error: values/limits.yaml: invalid YAML: 2:257: collections are nested more than 128 deep; make the file valid YAML

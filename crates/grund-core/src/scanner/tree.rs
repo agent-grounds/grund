@@ -7,7 +7,8 @@ use super::file_pass::scan_file_text;
 use super::legacy::promote_local_legacy_citations;
 use super::merge::merge_findings;
 use super::read_predicate::unread;
-use super::scan_error::scan_error_reason;
+pub(crate) use super::scan_error::ScanError;
+use super::scan_error::{FailureRoots, ScanFailure, failure_place, scan_error_reason};
 use super::section_locks::read_section_locks;
 use super::stub_homes::resolve_stubs;
 use super::value_json::{scan_value_sources, value_sources};
@@ -45,11 +46,6 @@ pub(super) fn heading_level_for_line(
         .map(|m| m.as_str().len())
         .unwrap_or(1)
 }
-
-/// A file that could not be read or decoded during the walk. The walk continues
-/// past it (§FS-check.2.4); callers that are point queries treat any entry here as
-/// fatal, `check` and `refs` report it and exit 2 with a still-printed report.
-pub(crate) type ScanError = (PathBuf, String);
 
 type FileScanResult = (PathBuf, std::result::Result<Catalog, String>);
 
@@ -219,20 +215,33 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         records.extend(std::mem::take(&mut file_findings.files));
         merge_findings(findings, file_findings);
     };
+    // §FS-check.2.4.3: judged together once the pass is over, so a clean tree resolves no roots.
+    let mut unread_files = Vec::new();
     if files.len() >= parallel_min_files {
         for (file, result) in scan_file_results(&files, schema, frame, workspace_targets) {
             match result {
                 Ok(file_findings) => merge(&mut findings, file_findings),
-                Err(message) => errors.push((file, message)),
+                Err(message) => unread_files.push((file, message)),
             }
         }
     } else {
         for file in files {
             match scan_one_file(&file, schema, frame, workspace_targets) {
                 (_, Ok(file_findings)) => merge(&mut findings, file_findings),
-                (_, Err(message)) => errors.push((file, message)),
+                (_, Err(message)) => unread_files.push((file, message)),
             }
         }
+    }
+    if !unread_files.is_empty() {
+        let at = FailureRoots::resolve(schema, frame, scope, explicit_scope);
+        errors.extend(unread_files.into_iter().map(|(file, reason)| {
+            let place = failure_place(&file, &at);
+            let failure = ScanFailure::Unread {
+                place,
+                version: frame.version,
+            };
+            ScanError::new(file, reason, failure)
+        }));
     }
     findings.files = records.into_iter().collect();
     // §AR-scanner.1.relisted: the E2E pass reads the cases the walk met, and both passes read the
@@ -328,8 +337,12 @@ pub(crate) fn scan_tree_strict(
     explicit_scope: bool,
 ) -> Result<Catalog> {
     let (findings, errors) = scan_tree(schema, frame, scope, explicit_scope)?;
-    if let Some((path, message)) = errors.into_iter().next() {
-        return Err(anyhow!("{}: {}", frame.display_location(&path), message));
+    if let Some(error) = errors.into_iter().next() {
+        return Err(anyhow!(
+            "{}: {}",
+            frame.display_location(&error.path),
+            error.reason
+        ));
     }
     Ok(findings)
 }

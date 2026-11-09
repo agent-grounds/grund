@@ -89,7 +89,7 @@ pub(super) fn scan_data(r: &EmbeddingRequest) -> Result<Value, Value> {
     Ok(json!({"catalog":catalog, "citations":citations,
         "scanned_files": findings.scanned_files.iter().map(|p|display_path(&config,p)).collect::<Vec<_>>(),
         // §FS-check.2.4: the one record every other operation publishes for a failure.
-        "scan_errors":errors.iter().map(|(p,m)|crate::scanner::api_scan_error(config.frame(),p,m))
+        "scan_errors":errors.iter().map(|e|crate::scanner::api_scan_error(config.frame(),e))
             .collect::<Vec<_>>().data(),
         "run_cautions":config_run_warnings(&config).data()}))
 }

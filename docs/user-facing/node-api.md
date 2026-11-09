@@ -87,7 +87,9 @@ Core validates active-agent and user-config policy before writing.
 
 Every result has `runCautions`, separate from check report warnings. Check
 findings resolve normally, including partial file-read checks where
-`hadScanErrors` is true. Strict scan failure rejects with available snapshot
+`hadScanErrors` is true. Each `scanErrors` record carries `path`, `message` and `code`: `io` for a
+path that could not be read, `unparsable-file` for a file read that does not parse, so a consumer
+never parses `message`. Strict scan failure rejects with available snapshot
 partial. Batch query failures continue in order; setup failure rejects the batch.
 
 Each completed report channel stably sorts bytewise by `(path, line, message)`,

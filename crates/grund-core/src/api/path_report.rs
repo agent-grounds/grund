@@ -3,12 +3,14 @@
 //! single-project arm and the workspace arm so the two cannot disagree about what a
 //! path keeps.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
+
+use crate::scanner::ScanError;
 
 use super::scope_cautions::full_scope_ignored_warning;
 use crate::checker::{ScanScope, retain_diagnostics_in_report_scope};
 use crate::config::Config;
-use crate::model::{CheckReport, Code, Diagnostic};
+use crate::model::{CheckReport, Diagnostic};
 
 /// What the caller typed that the report answers to: the path, whether it was typed
 /// at all, `--full`, and the report scope the path names (`None` over the root).
@@ -35,7 +37,7 @@ impl PathReport<'_> {
         &self,
         report: &mut CheckReport,
         config: &Config,
-        unread_outside: Vec<(PathBuf, String)>,
+        unread_outside: Vec<ScanError>,
         scope_caution: impl FnOnce(bool) -> Option<Diagnostic>,
         config_warnings: impl IntoIterator<Item = Diagnostic>,
     ) {
@@ -59,29 +61,29 @@ impl PathReport<'_> {
 }
 
 /// §FS-check.1.3.6.3: one caution per file the resolution scope could not read and
-/// the report scope does not own. It carries the read failure's own reason and the
-/// `io` code the §FS-check.2.4 error carries, because it is the same knowledge on a
-/// softer channel rather than a new finding — `--only io` keeps meaning "read
-/// failures". `line` is `None`, which is what puts a CLI-level message on stderr
+/// the report scope does not own. It carries the failure's own reason and the code
+/// the §FS-check.2.4 error carries (§FS-check.2.4.3), because it is the same knowledge
+/// on a softer channel rather than a new finding. `line` is `None`, which is what puts a CLI-level message on stderr
 /// (§FS-check.2.1.1), and the path stays the file's so the reader can go and chmod
 /// it. Silence is the thing this exists to prevent: the citation whose declaration
 /// lay in that file is reported as unresolved, and §REQ-no-wrong-citation.2 asks
-/// that a false alarm stay legible as one. The `io` code's one cost is that
+/// that a false alarm stay legible as one. The code's one cost is that
 /// `--ignore` cannot turn the line off, which §FS-check.1.3.6.3 states rather than
 /// leaves to be found.
 pub(super) fn unread_resolution_source_cautions(
-    unread: impl IntoIterator<Item = (PathBuf, String)>,
+    unread: impl IntoIterator<Item = ScanError>,
 ) -> Vec<Diagnostic> {
     unread
         .into_iter()
-        .map(|(file, message)| Diagnostic {
-            code: Code::IO,
-            path: Some(file),
+        .map(|failure| Diagnostic {
+            code: failure.code(),
+            path: Some(failure.path),
             line: None,
             column: None,
             message: format!(
-                "{message} — outside the report scope, so a citation declared there \
-                 may be reported as unresolved"
+                "{} — outside the report scope, so a citation declared there \
+                 may be reported as unresolved",
+                failure.reason
             ),
             sites: Vec::new(),
             authority: Vec::new(),

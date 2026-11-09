@@ -85,6 +85,8 @@ impl CheckFindingSelection {
     /// unselectable with it, and is a warning (§FS-check.2.1.2).
     pub fn retains(&self, code: &str, authority: &[String]) -> bool {
         code == "io"
+            // §FS-check.1.4: a file read and not parsed is the same hole in the run.
+            || code == "unparsable-file"
             // §FS-imports.checks: what a run read, or could not, about its imports.
             || code == "import-live"
             || code == "import-missing"

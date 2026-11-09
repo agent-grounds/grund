@@ -405,8 +405,8 @@ type Report = {
   readonly suggestions: readonly Finding[];
 };
 type Cautions = { readonly runCautions: readonly Finding[] };
-type ScanError = { readonly path: string; readonly message: string };
-type FailureKind = 'input' | 'query' | 'config' | 'io' | 'operation'
+type ScanError = { readonly path: string; readonly message: string; readonly code: string };
+type FailureKind = 'input' | 'query' | 'config' | 'io' | 'unparsable-file' | 'operation'
                  | 'load' | 'worker' | 'native' | 'busy';
 type Failure = {
   readonly kind: FailureKind; readonly code: string;

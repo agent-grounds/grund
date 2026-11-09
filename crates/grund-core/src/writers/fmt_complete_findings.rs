@@ -92,7 +92,7 @@ mod complete_findings {
                 return Err(FmtScanAbort {
                     scan_errors: errors
                         .into_iter()
-                        .map(|(path, message)| api_scan_error(render.frame(), &path, &message))
+                        .map(|error| api_scan_error(render.frame(), &error))
                         .collect::<Vec<ApiScanError>>(),
                 }
                 .into());
@@ -169,7 +169,7 @@ pub(super) fn unproven_alias_abort(
         .filter_map(|alias| workspace.project_by_alias(alias));
     let aliased = projects.flat_map(|project| {
         let errors = project.scan_errors.iter();
-        errors.map(|(path, message)| api_scan_error(render.frame(), path, message))
+        errors.map(|error| api_scan_error(render.frame(), error))
     });
     FmtScanAbort {
         scan_errors: walked.into_iter().chain(aliased).collect(),

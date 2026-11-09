@@ -71,6 +71,7 @@ unknown-project: A citation names a project alias that is not known, or a declar
 unlinked-index-entry: An index entry cites a declaration bare rather than as a Markdown link.
 unlisted-workspace-block: A directory declares [workspace], but no enclosing workspace lists it among its members.
 unmarked-heading: A heading inside a declaration's body is neither a declaration nor a recognized section heading.
+unparsable-file: A file was read and does not parse, so the run's view of the tree is incomplete.
 unreached-declaration: A declaration lacks the chapter a chapter-scoped citation rule over its kind needs in order to reach it.
 unread-scan-root: A file the config names as a scan root is not read, because its name is hidden or its extension is not scanned.
 unreadable-front-matter: The front matter of a declaration whose kind declares a front-matter field cannot be read as YAML or TOML keys.

@@ -1,1 +1,1 @@
-{"severity":"error","path":"values/limits.yaml","line":null,"code":"io","message":"invalid YAML: 2:1: while parsing a flow sequence, expected ',' or ']'; make the path readable, or keep it out of the scan","sites":null,"authority":null}
+{"severity":"error","path":"values/limits.yaml","line":null,"code":"unparsable-file","message":"invalid YAML: 2:1: while parsing a flow sequence, expected ',' or ']'; make the file valid YAML","sites":null,"authority":null}

@@ -9,7 +9,10 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::process::Command;
 
-const REMEDY: &str = "make the path readable, or keep it out of the scan";
+const VALUE_REMEDY: &str = "make the path readable, or keep it out of the scan by moving it out \
+    of the value home, because exclude does not reach a value source";
+const ROOT_REMEDY: &str = "make the path readable, or keep it out of the scan by removing it from \
+    the [schema.kinds] row that lists it, because exclude does not prune scan roots";
 const CONFIG: &str = "grund_config_version = 2\nproject_name = \"fixture\"\n\n\
     [schema.kinds.CONST]\nfolders = [\"values\", \"readable\"]\nindex = false\nform = \"value\"\n\n\
     [schema.kinds.FS]\nfolders = [\"docs\"]\nindex = false\n";
@@ -115,9 +118,14 @@ struct Run {
 }
 
 fn is_failure(path: &str, message: &str, source: &str) -> bool {
+    let remedy = if path == "values" {
+        ROOT_REMEDY
+    } else {
+        VALUE_REMEDY
+    };
     (path == "values" || path == source)
         && message.contains("permission denied")
-        && message.ends_with(REMEDY)
+        && message.ends_with(remedy)
 }
 
 /// Aggregate formats and commands so a red run retains evidence for every surface.
@@ -209,7 +217,7 @@ fn confirmed_non_files_stay_silent_and_unlistable_homes_still_report() {
         assert_eq!(run.code, 2, "{run:?}");
         assert_eq!(
             run.stderr.trim(),
-            format!("error: values: permission denied; {REMEDY}"),
+            format!("error: values: permission denied; {ROOT_REMEDY}"),
             "{run:?}"
         );
         assert!(run.stdout.contains("FS-a"), "{run:?}");

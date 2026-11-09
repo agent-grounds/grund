@@ -1,7 +1,7 @@
 //! A scan failure carries its own code and a fix that works at its path (§FS-check.2.4.3): a file
 //! read and not parsed is `unparsable-file`, exit `2`, and an unread path's `io` fix is the case
 //! of its place (§FS-errors.5.5). Acceptance cases of #1272 and the reports fused into it, #1251
-//! and #1263; `ignore` marks are removed by the implementation.
+//! and #1263.
 #![cfg(unix)]
 
 use std::fs;
@@ -160,7 +160,6 @@ fn exit_case(name: &str) -> Tree {
 
 /// #1251: a readable `expected.exit` that is no integer.
 #[test]
-#[ignore = "red until #1272 records a parse failure as unparsable-file; implement removes this"]
 fn a_malformed_expected_exit_is_unparsable_and_says_what_it_should_hold() {
     let tree = exit_case("exit");
     tree.assert_failure(
@@ -172,7 +171,6 @@ fn a_malformed_expected_exit_is_unparsable_and_says_what_it_should_hold() {
 }
 
 #[test]
-#[ignore = "red until #1272 records a parse failure as unparsable-file; implement removes this"]
 fn a_json_value_source_that_does_not_parse_is_unparsable() {
     let tree = Tree::new("json", V2_VALUES);
     tree.write("values/a.json", "{ not json\n");
@@ -185,7 +183,6 @@ fn a_json_value_source_that_does_not_parse_is_unparsable() {
 }
 
 #[test]
-#[ignore = "red until #1272 records a parse failure as unparsable-file; implement removes this"]
 fn a_yaml_value_source_that_does_not_parse_is_unparsable() {
     let tree = Tree::new("yaml", V2_VALUES);
     tree.write("values/a.yaml", "a: [1, 2\nb: }\n");
@@ -198,7 +195,6 @@ fn a_yaml_value_source_that_does_not_parse_is_unparsable() {
 }
 
 #[test]
-#[ignore = "red until #1272 records a parse failure as unparsable-file; implement removes this"]
 fn an_ignore_file_with_a_bad_line_is_unparsable() {
     let tree = Tree::new("ignore", V2);
     tree.write("docs/fs/x.md", "# Notes\n");
@@ -208,7 +204,6 @@ fn an_ignore_file_with_a_bad_line_is_unparsable() {
 
 /// §FS-check.1.4: `--ignore unparsable-file` is accepted and hides nothing.
 #[test]
-#[ignore = "red until #1272 makes unparsable-file a catalog code; implement removes this"]
 fn ignoring_unparsable_file_is_accepted_and_hides_nothing() {
     let tree = exit_case("ignore-flag");
     let run = tree.grund(&["check", "--ignore", "unparsable-file"]);
@@ -219,7 +214,6 @@ fn ignoring_unparsable_file_is_accepted_and_hides_nothing() {
 
 /// §FS-check.1.3.6.3: the caution of a narrowed run wears the failure's own code.
 #[test]
-#[ignore = "red until #1272 gives the caution the record's code; implement removes this"]
 fn a_parse_failure_outside_a_narrowed_run_cautions_as_unparsable() {
     let tree = Tree::new(
         "narrowed",
@@ -244,7 +238,6 @@ fn a_parse_failure_outside_a_narrowed_run_cautions_as_unparsable() {
 
 /// #1263: `exclude` cannot prune a root, so the fix says what can, before and after trying it.
 #[test]
-#[ignore = "red until #1272 picks io's fix by place; implement removes this"]
 fn an_unreadable_scan_root_names_its_row_before_and_after_exclude_names_it() {
     let mut tree = Tree::new("root", V2);
     fs::create_dir_all(tree.root.join("docs/fs")).expect("create the root");
@@ -255,7 +248,6 @@ fn an_unreadable_scan_root_names_its_row_before_and_after_exclude_names_it() {
 }
 
 #[test]
-#[ignore = "red until #1272 picks io's fix by place; implement removes this"]
 fn a_nested_root_names_its_row() {
     let mut nested = Tree::new(
         "nested",
@@ -269,7 +261,6 @@ fn a_nested_root_names_its_row() {
 }
 
 #[test]
-#[ignore = "red until #1272 picks io's fix by place; implement removes this"]
 fn a_single_file_home_names_its_row() {
     let mut file = Tree::new(
         "file-home",
@@ -283,7 +274,6 @@ fn a_single_file_home_names_its_row() {
 
 /// A version-1 config names its own row (§FS-errors.5.5.1).
 #[test]
-#[ignore = "red until #1272 picks io's fix by place; implement removes this"]
 fn a_version_1_scan_root_names_its_own_row() {
     let mut tree = Tree::new(
         "v1-root",
@@ -295,7 +285,6 @@ fn a_version_1_scan_root_names_its_own_row() {
 }
 
 #[test]
-#[ignore = "red until #1272 picks io's fix by place; implement removes this"]
 fn a_path_the_command_was_given_says_to_stop_passing_it() {
     let mut tree = Tree::new("passed", V2);
     tree.write("docs/fs/FS-a.md", "# FS-a: A\n");
@@ -305,7 +294,6 @@ fn a_path_the_command_was_given_says_to_stop_passing_it() {
 }
 
 #[test]
-#[ignore = "red until #1272 picks io's fix by place; implement removes this"]
 fn a_value_source_says_the_value_home_reaches_it() {
     let mut source = Tree::new("value", V2_VALUES);
     source.write("values/a.json", "{}\n");
@@ -314,7 +302,6 @@ fn a_value_source_says_the_value_home_reaches_it() {
 }
 
 #[test]
-#[ignore = "red until #1272 picks io's fix by place; implement removes this"]
 fn a_value_home_names_its_row() {
     let mut home = Tree::new("value-home", V2_VALUES);
     fs::create_dir_all(home.root.join("values")).expect("create the home");
@@ -323,7 +310,6 @@ fn a_value_home_names_its_row() {
 }
 
 #[test]
-#[ignore = "red until #1272 picks io's fix by place; implement removes this"]
 fn a_section_lock_is_only_told_to_be_readable() {
     let mut tree = Tree::new("lock", V2);
     tree.write("docs/fs/FS-a.md", "# FS-a: A\n");
@@ -359,4 +345,27 @@ fn an_unreadable_file_below_a_root_keeps_todays_fix_and_io() {
         "{}",
         json.stderr
     );
+}
+
+/// The catalog row answers `explain`, every case of it (§FS-errors.5.5.1).
+#[test]
+fn explain_prints_every_case_of_both_codes() {
+    let tree = Tree::new("explain", V2);
+    let printed = |code: &str| {
+        let output = Command::new(env!("CARGO_BIN_EXE_grund"))
+            .args(["config", "explain", code])
+            .current_dir(&tree.root)
+            .env("NO_COLOR", "1")
+            .output()
+            .expect("run grund");
+        assert_eq!(output.status.code(), Some(0), "{output:?}");
+        String::from_utf8_lossy(&output.stdout).into_owned()
+    };
+    let unparsable = printed("unparsable-file");
+    assert!(unparsable.contains(EXIT), "{unparsable}");
+    assert!(unparsable.contains(IGNORE), "{unparsable}");
+    let io = printed("io");
+    for fix in [ENTRY, ROOT_V2, PASSED, VALUE] {
+        assert!(io.contains(fix), "{fix} in:\n{io}");
+    }
 }

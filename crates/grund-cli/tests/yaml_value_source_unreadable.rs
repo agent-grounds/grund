@@ -69,7 +69,7 @@ impl Fixture {
         assert_eq!(code, 2, "{stderr}");
         let line = stderr.trim().strip_prefix("error: ").unwrap();
         let line = line
-            .strip_suffix("; make the path readable, or keep it out of the scan")
+            .strip_suffix("; make the path readable, or keep it out of the scan by moving it out of the value home, because exclude does not reach a value source")
             .unwrap();
         let path = self.source.strip_prefix(&self.root).unwrap().display();
         assert!(line.starts_with(&format!("{path}: could not read value {format} source: ")));
@@ -94,7 +94,9 @@ fn run(root: &Path, args: &[&str]) -> std::process::Output {
 
 /// Every reader of the catalog exits `2` on the source's own line; `id` names no remedy.
 fn assert_incomplete_for_every_reader(fixture: &Fixture, line: &str) {
-    let scan = format!("error: {line}; make the path readable, or keep it out of the scan\n");
+    let scan = format!(
+        "error: {line}; make the path readable, or keep it out of the scan by moving it out of the value home, because exclude does not reach a value source\n"
+    );
     for args in [
         &["check"][..],
         &["list"],
@@ -166,7 +168,7 @@ fn assert_json_reason(fixture: &Fixture, path: &str, format: &str) {
     assert_eq!(
         record["message"],
         format!(
-            "could not read value {format} source: permission denied; make the path readable, or keep it out of the scan"
+            "could not read value {format} source: permission denied; make the path readable, or keep it out of the scan by moving it out of the value home, because exclude does not reach a value source"
         ),
         "{stderr}"
     );

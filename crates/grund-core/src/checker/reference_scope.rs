@@ -110,10 +110,11 @@ impl ScanScope {
 /// Every name of a scan failure (§FS-check.2.4.2): the ones the walk kept for its directory entry,
 /// then, for a file it could not read, the file's names in the run's `Spellings`.
 pub(super) fn every_failure_name(
-    (path, reason): &ScanError,
+    failure: &ScanError,
     names: &FailureNames,
     spellings: &Spellings,
 ) -> Vec<PathBuf> {
+    let (path, reason) = (&failure.path, &failure.reason);
     names
         .of(path, reason)
         .map(Path::to_path_buf)
@@ -135,7 +136,11 @@ pub(crate) fn partition_scan_failures(
     let (mut inside, mut outside) = (Vec::new(), Vec::new());
     for failure in failures {
         match scope.holds_failure(&failure, names) {
-            Some(name) => inside.push((name, failure.1)),
+            Some(name) => {
+                let mut failure = failure;
+                failure.path = name;
+                inside.push(failure);
+            }
             None => outside.push(failure),
         }
     }

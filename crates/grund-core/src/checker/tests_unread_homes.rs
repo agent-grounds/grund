@@ -7,6 +7,7 @@ use super::reference_scope::path_report_scope;
 use super::unread_homes::UnreadNames;
 use crate::config::{Config, load_config};
 use crate::model::FailureNames;
+use crate::scanner::ScanError;
 use crate::testing::{test_root, write};
 
 const DENIED: &str = "permission denied";
@@ -37,7 +38,7 @@ fn folder_project(name: &str) -> (PathBuf, Config) {
 /// Whether a run over the whole project, failing at `failed`, withholds an ID of `kind`.
 fn withholds(root: &Path, config: &Config, kind: &str, failed: &str) -> bool {
     let mut unread = UnreadNames::default();
-    let failures = [(root.join(failed), DENIED.to_string())];
+    let failures = [ScanError::unread_entry(root.join(failed), DENIED)];
     let names = FailureNames::default();
     unread.record(config.frame(), &failures, &names, None);
     asks(&unread, root, config, kind)
@@ -97,7 +98,7 @@ fn a_failure_known_only_by_another_name_withholds() {
 
     unread.record(
         config.frame(),
-        &[(survivor, DENIED.to_string())],
+        &[ScanError::unread_entry(survivor, DENIED)],
         &names,
         None,
     );
@@ -119,7 +120,10 @@ fn a_failure_outside_the_report_scope_withholds_nothing() {
     let scope = path_report_scope(config.schema(), config.frame(), &root.join("docs"), true)
         .expect("resolve the scope")
         .expect("a path below the root narrows");
-    let failures = [(root.join("values/limits.json"), DENIED.to_string())];
+    let failures = [ScanError::unread_entry(
+        root.join("values/limits.json"),
+        DENIED,
+    )];
     let mut unread = UnreadNames::default();
 
     unread.record(
@@ -151,7 +155,10 @@ fn the_answer_reads_the_failures_names_never_its_reason() {
     let (root, config) = folder_project("the_answer_reads_the_failures_names");
 
     for reason in ["invalid JSON: 2:1", "", DENIED, "unparsable-file"] {
-        let failures = [(root.join("values/limits.json"), reason.to_string())];
+        let failures = [ScanError::unread_entry(
+            root.join("values/limits.json"),
+            reason,
+        )];
         let mut unread = UnreadNames::default();
         unread.record(config.frame(), &failures, &FailureNames::default(), None);
         assert!(asks(&unread, &root, &config, "CONST"), "reason {reason:?}");

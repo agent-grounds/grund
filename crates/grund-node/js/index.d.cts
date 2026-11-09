@@ -11,8 +11,8 @@ export type Finding = {
 export type Report = { readonly errors: readonly Finding[]; readonly warnings: readonly Finding[];
   readonly suggestions: readonly Finding[] };
 export type Cautions = { readonly runCautions: readonly Finding[] };
-export type ScanError = { readonly path: string; readonly message: string };
-export type FailureKind = 'input' | 'query' | 'config' | 'io' | 'operation' | 'load' |
+export type ScanError = { readonly path: string; readonly message: string; readonly code: string };
+export type FailureKind = 'input' | 'query' | 'config' | 'io' | 'unparsable-file' | 'operation' | 'load' |
   'worker' | 'native' | 'busy';
 export type Failure = {
   readonly kind: FailureKind; readonly code: string; readonly operation: string;

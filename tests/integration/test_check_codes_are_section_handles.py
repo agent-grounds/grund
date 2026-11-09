@@ -121,6 +121,7 @@ NOT_YET_MIGRATED = (
     "unknown-project",
     "unlinked-index-entry",
     "unlisted-workspace-block",
+    "unparsable-file",
     "unused",
     "value-mismatch",
     "yaml-value-source-deferred",
@@ -133,9 +134,6 @@ NOT_YET_MIGRATED = (
 SPECIFIED_AHEAD = {
     "FS-remote-projects": ("remote-missing", "remote-modified", "remote-orphan", "remote-stale"),
 }
-# Specified ahead at a numbered point rather than a `checks.<code>` section (§FS-check.2.4.3).
-# The row's `planned` mark and this entry go together when #1272's implementation renders it.
-NUMBERED_AHEAD = {"unparsable-file"}
 
 
 def _selectable_codes():
@@ -144,7 +142,7 @@ def _selectable_codes():
 
 
 def _specified_ahead():
-    return {code for codes in SPECIFIED_AHEAD.values() for code in codes} | NUMBERED_AHEAD
+    return {code for codes in SPECIFIED_AHEAD.values() for code in codes}
 
 
 def _catalog_rows():

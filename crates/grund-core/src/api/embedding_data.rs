@@ -53,7 +53,7 @@ impl Data for Finding {
             "sites": self.sites.data(), "authority": self.authority})
     }
 }
-record!(ApiScanError; path, message);
+record!(ApiScanError; path, message, code);
 record!(ShowSection; path, title, depth);
 record!(ShowOutput; body, path, line, json, sections);
 record!(RefHit; project, path, line, column, id, section, marker, text,

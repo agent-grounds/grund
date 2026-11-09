@@ -11,7 +11,8 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const REMEDY: &str = "make the path readable, or keep it out of the scan";
+const REMEDY: &str = "make the path readable, or keep it out of the scan by removing it from \
+    the [schema.kinds] row that lists it, because exclude does not prune scan roots";
 const SKIP: &str = "skipped: the mode does not bar this user, so nothing here can be unreadable";
 const CONFIG: &str = "grund_config_version = 2\nproject_name = \"vals\"\n\n\
     [schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\n\n\

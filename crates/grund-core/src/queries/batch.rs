@@ -78,14 +78,14 @@ pub(crate) fn show_batch_data(
         let context = load_reported_workspace_context(&opts.path, path_provided)?;
         cautions = run_warning_findings(context.render_config(), context.run_warnings.clone());
         let selection = selection(&context, &globs)?;
-        if let Some((file, message)) = context.projects.iter().find_map(|p| p.scan_errors.first()) {
+        if let Some(first) = context.projects.iter().find_map(|p| p.scan_errors.first()) {
             let mut diagnostic = crate::model::OperationDiagnostic::new(
                 "filesystem",
-                "io",
-                crate::scanner::scan_error_message(message),
+                first.code().as_str(),
+                crate::scanner::scan_error_message(first),
             );
             // §FS-cli.3.4: a scan failure at the report base names it `.`.
-            diagnostic.path = Some(display_location(context.render_config(), file));
+            diagnostic.path = Some(display_location(context.render_config(), &first.path));
             return Err(diagnostic.into());
         }
         let queries = match queries {
@@ -219,7 +219,7 @@ fn show_batch_run(
     // workspace pass has already settled them.
     *run_warnings = run_warning_findings(context.render_config(), context.run_warnings.clone());
     let selection = selection(&context, &globs)?;
-    if let Some((file, message)) = context
+    if let Some(first) = context
         .projects
         .iter()
         .find_map(|project| project.scan_errors.first())
@@ -227,8 +227,8 @@ fn show_batch_run(
         // §FS-cli.3.4: a scan failure at the report base names it `.`.
         return Err(anyhow!(
             "{}: {}",
-            display_location(context.render_config(), file),
-            crate::scanner::scan_error_message(message)
+            display_location(context.render_config(), &first.path),
+            crate::scanner::scan_error_message(first)
         ));
     }
     let queries = match queries {

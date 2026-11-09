@@ -191,7 +191,7 @@ pub(super) fn partial_io_error(
     );
     diagnostic.partial_output = serde_json::json!({"changes":changes.iter().map(|row|
             row.partial_json(render)).collect::<Vec<_>>(),
-            "scan_errors":scan_errors.iter().map(|e|serde_json::json!({"path":e.path,"message":e.message})).collect::<Vec<_>>(),
+            "scan_errors":scan_errors.iter().map(|e|serde_json::json!({"path":e.path,"message":e.message,"code":e.code})).collect::<Vec<_>>(),
             "refused_writes":refused_writes});
     anyhow::Error::new(error).context(diagnostic)
 }

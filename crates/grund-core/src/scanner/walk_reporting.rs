@@ -6,6 +6,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use super::read_predicate::{Unread, extension_refusal, name_refusal};
+use super::scan_error::FailureRoots;
 use super::tree::ScanError;
 use super::value_json::value_sources;
 use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walker};
@@ -158,7 +159,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     let mut value_homes: Option<Option<Vec<PathBuf>>> = None;
     // §FS-declarations.e2e-case.excluded: the case directories every root's walk met.
     let met_cases = MetCases::default();
-    for (position, scan_root) in roots.into_iter().enumerate() {
+    for (position, scan_root) in roots.iter().cloned().enumerate() {
         // §FS-check.1.3.6.1: a widened walk starts at the path, so what the list holds at the
         // second root is what the run was handed: a file, a directory's files, or nothing.
         if widened && position == 1 {
@@ -402,6 +403,11 @@ pub(crate) fn walk_scannable_files_with_sources(
     // §FS-check.2.4.2: one entry that failed for one reason is one failure, however many roots
     // or names met it; what survives is then sorted once for both surfaces (§FS-errors.4.1).
     let failure_names = one_report_per_entry(&mut errors);
+    // §FS-check.2.4.3: where each survivor is decides its fix, asked only of a walk with failures.
+    if !errors.is_empty() {
+        let at = FailureRoots::new(roots, root_scope, explicit_scope, frame.root());
+        errors = errors.into_iter().map(|error| error.placed(&at)).collect();
+    }
     sort_failures(&mut errors);
     // §FS-fmt.2.3.2: a file whose physical path is not under the config root is in
     // this tree only by the link that reaches it. The resolution is already paid

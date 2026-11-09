@@ -350,6 +350,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "unlinked-index-entry",
         "unlisted-workspace-block",
         "unmarked-heading",
+        "unparsable-file",
         "unreached-declaration",
         "unread-scan-root",
         "unreadable-front-matter",

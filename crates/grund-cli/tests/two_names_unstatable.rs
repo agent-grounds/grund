@@ -15,7 +15,8 @@ use std::path::{Path, PathBuf};
 
 use two_names::{Run, Tree};
 
-const REMEDY: &str = "make the path readable, or keep it out of the scan";
+const REMEDY: &str = "make the path readable, or keep it out of the scan by moving it out of the \
+    value home, because exclude does not reach a value source";
 
 /// Version 1, because version 2 refuses two places with one target at load
 /// (§FS-config-v2.schema.places.boundaries.3).

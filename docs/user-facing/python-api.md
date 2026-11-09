@@ -101,6 +101,8 @@ are outside this initial disk-backed API.
 
 ## Failures, paths and concurrency
 
+A `ScanError` carries `path`, `message` and `code`: `io` for a path that could not be read, and `unparsable-file` for a file that was read and does not parse, so nothing has to parse `message`.
+
 `GrundError` has `ConfigError`, `FilesystemError`, `QueryError` and fallback
 `OperationError` subclasses. `.failure` retains kind, code/message, nullable
 location, sites, authority, causes, cautions, partial output and details such as
