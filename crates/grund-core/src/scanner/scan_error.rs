@@ -120,7 +120,7 @@ pub(super) struct FailureRoots {
 }
 
 impl FailureRoots {
-    #[cfg(test)]
+    #[cfg(all(test, unix))]
     pub(super) fn of(roots: Vec<PathBuf>, passed: Option<PathBuf>, config_root: PathBuf) -> Self {
         Self {
             roots,

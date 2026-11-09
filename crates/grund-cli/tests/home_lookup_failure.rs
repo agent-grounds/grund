@@ -24,6 +24,13 @@ const V1_INCLUDE: &str = "grund_config_version = 1\nproject_name = \"include-loo
 const CITING: &str = "# Offer\n\nThe room holds at most §CONST-room-limit people.\n";
 const PLAIN: &str = "# Offer\n\nNothing cited here.\n";
 const FIX: &str = "permission denied; make the path readable, or keep it out of the scan";
+/// §FS-check.2.4.3: a scan root's fix says how, because exclude does not prune one.
+const ROOT_V2: &str = "permission denied; make the path readable, or keep it out of the scan \
+    by removing it from the [schema.kinds] row that lists it, because exclude does not prune \
+    scan roots";
+const ROOT_V1: &str = "permission denied; make the path readable, or keep it out of the scan \
+    by removing it from the [scan] include or [[kinds]] row that lists it, because exclude \
+    does not prune scan roots";
 
 struct Fixture {
     root: PathBuf,
@@ -111,7 +118,7 @@ fn v2_denied_lookup_is_a_failure_at_the_home() {
     let output = fixture.check();
     let err = stderr(&output);
     assert_eq!(
-        lines_equal(&err, &format!("error: data/values: {FIX}")),
+        lines_equal(&err, &format!("error: data/values: {ROOT_V2}")),
         1,
         "{err}"
     );
@@ -133,7 +140,7 @@ fn v1_should_denied_lookup_is_a_failure_at_the_home_and_exits_2() {
     let output = fixture.check();
     let err = stderr(&output);
     assert_eq!(
-        lines_equal(&err, &format!("error: data/values: {FIX}")),
+        lines_equal(&err, &format!("error: data/values: {ROOT_V1}")),
         1,
         "{err}"
     );
@@ -166,7 +173,7 @@ fn denied_lookup_of_an_include_entry_is_a_failure_at_the_entry() {
     let output = fixture.check();
     let err = stderr(&output);
     assert_eq!(
-        lines_equal(&err, &format!("error: data/extra: {FIX}")),
+        lines_equal(&err, &format!("error: data/extra: {ROOT_V1}")),
         1,
         "{err}"
     );
@@ -305,7 +312,7 @@ fn outward_root_link_named_as_a_read_file_is_reported() {
         return;
     };
     assert_eq!(
-        lines_equal(&stderr(&output), &format!("error: far.md: {FIX}")),
+        lines_equal(&stderr(&output), &format!("error: far.md: {ROOT_V1}")),
         1,
         "{}",
         stderr(&output)
@@ -324,7 +331,7 @@ fn inward_root_link_with_a_denied_parent_is_reported() {
     }
     let output = fixture.check();
     assert_eq!(
-        lines_equal(&stderr(&output), &format!("error: src: {FIX}")),
+        lines_equal(&stderr(&output), &format!("error: src: {ROOT_V1}")),
         1,
         "{}",
         stderr(&output)
