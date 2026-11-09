@@ -218,3 +218,102 @@ fn home_below_a_regular_file_scans_as_nothing() {
     );
     assert_exit(&output, 0);
 }
+
+/// A tree beside the project, whose `par/t` the outward link names, with `par` denied.
+fn outside_tree(fixture: &Fixture, name: &str) -> PathBuf {
+    let outside = fixture
+        .root
+        .with_file_name(format!("grund-1318-{name}-outside-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&outside);
+    fs::create_dir_all(outside.join("par/t")).unwrap();
+    outside
+}
+
+const V1_DEFAULT_ROOTS: &str = "grund_config_version = 1\nproject_name = \"outward-root\"\n\n\
+    [id]\nformat = \"{kind}-{slug}\"\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
+    [[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n";
+const V2_OUTWARD_HOME: &str = "grund_config_version = 2\nproject_name = \"outward-root\"\n\n\
+    [schema.kinds.FS]\nfolders = [\"docs\"]\nindex = false\n\n\
+    [schema.kinds.CONST]\nfolders = [\"vals\"]\nindex = false\n";
+
+/// Runs `check` with `link` naming `par/t` outside the project and `par` denied.
+fn outward_denied_check(name: &str, config: &str, link: &str) -> Option<Output> {
+    let fixture = Fixture::bare(name, config, "# FS-a: A\n\nPlain.\n");
+    let outside = outside_tree(&fixture, name);
+    std::os::unix::fs::symlink(outside.join("par/t"), fixture.root.join(link)).unwrap();
+    let par = outside.join("par");
+    fs::set_permissions(&par, fs::Permissions::from_mode(0o000)).unwrap();
+    let denied = fs::symlink_metadata(par.join("t")).is_err();
+    let output = denied.then(|| fixture.check());
+    fs::set_permissions(&par, fs::Permissions::from_mode(0o755)).unwrap();
+    let _ = fs::remove_dir_all(&outside);
+    output
+}
+
+/// §FS-scan.scope.homes.lookup.outward: pruned as it is with the target open, so a mode
+/// outside the project decides nothing.
+#[test]
+fn outward_root_link_with_a_denied_parent_is_pruned_on_version_1() {
+    let Some(output) = outward_denied_check("out-v1", V1_DEFAULT_ROOTS, "src") else {
+        return;
+    };
+    assert!(
+        !stderr(&output).contains("permission denied"),
+        "{}",
+        stderr(&output)
+    );
+    assert_exit(&output, 0);
+}
+
+/// §FS-scan.scope.homes.lookup.outward: a kind home that is such a link is the same root.
+#[test]
+fn outward_home_link_with_a_denied_parent_is_pruned_on_version_2() {
+    let Some(output) = outward_denied_check("out-v2", V2_OUTWARD_HOME, "vals") else {
+        return;
+    };
+    assert!(
+        !stderr(&output).contains("permission denied"),
+        "{}",
+        stderr(&output)
+    );
+    assert_exit(&output, 0);
+}
+
+/// §FS-scan.scope.homes.lookup.outward: a file link is followed wherever it resolves, so a
+/// root named as a file the walk reads stays reported.
+#[test]
+fn outward_root_link_named_as_a_read_file_is_reported() {
+    const INCLUDE: &str = "grund_config_version = 1\nproject_name = \"outward-root\"\n\n\
+        [scan]\ninclude = [\"docs\", \"far.md\"]\n\n\
+        [id]\nformat = \"{kind}-{slug}\"\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
+        [[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n";
+    let Some(output) = outward_denied_check("out-file", INCLUDE, "far.md") else {
+        return;
+    };
+    assert_eq!(
+        lines_equal(&stderr(&output), &format!("error: far.md: {FIX}")),
+        1,
+        "{}",
+        stderr(&output)
+    );
+    assert_exit(&output, 2);
+}
+
+/// §FS-scan.scope.homes.lookup.outward: a link staying inside the project is still reported.
+#[test]
+fn inward_root_link_with_a_denied_parent_is_reported() {
+    let mut fixture = Fixture::bare("inward", V1_DEFAULT_ROOTS, "# FS-a: A\n\nPlain.\n");
+    fs::create_dir_all(fixture.root.join("data/real")).unwrap();
+    std::os::unix::fs::symlink("data/real", fixture.root.join("src")).unwrap();
+    if !fixture.lock_data(0o000, "data/real", true) {
+        return;
+    }
+    let output = fixture.check();
+    assert_eq!(
+        lines_equal(&stderr(&output), &format!("error: src: {FIX}")),
+        1,
+        "{}",
+        stderr(&output)
+    );
+    assert_exit(&output, 2);
+}

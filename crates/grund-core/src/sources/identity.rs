@@ -7,7 +7,7 @@
 //! the filesystem, and only sources does (§AR-system.5).
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use crate::model::normalize_path_lexically;
 
@@ -66,6 +66,44 @@ pub(crate) fn canonicalize_existing_prefix(path: &Path) -> PathBuf {
         resolved.push(name);
     }
     resolved
+}
+
+/// Where `path` goes as far as the disk answers, for a path that cannot be looked up
+/// (§FS-scan.scope.homes.lookup.outward): each link on the way is read, and a component
+/// behind a directory that refuses the question keeps its written name. Hops are bounded
+/// as the kernel bounds them, so a link cycle ends as written rather than never.
+pub(crate) fn resolved_as_far_as_answered(path: &Path) -> PathBuf {
+    let absolute =
+        std::env::current_dir().map_or_else(|_| path.to_path_buf(), |cwd| cwd.join(path));
+    let mut pending: Vec<PathBuf> = components_reversed(&absolute);
+    let mut resolved = PathBuf::new();
+    let mut hops = 40;
+    while let Some(next) = pending.pop() {
+        if next == Path::new("..") {
+            resolved.pop();
+            continue;
+        }
+        let candidate = resolved.join(&next);
+        match fs::read_link(&candidate) {
+            Ok(target) if hops > 0 => {
+                hops -= 1;
+                if target.is_absolute() {
+                    resolved.clear();
+                }
+                pending.extend(components_reversed(&target));
+            }
+            _ => resolved = candidate,
+        }
+    }
+    resolved
+}
+
+fn components_reversed(path: &Path) -> Vec<PathBuf> {
+    path.components()
+        .filter(|component| !matches!(component, Component::CurDir))
+        .map(|component| PathBuf::from(component.as_os_str()))
+        .rev()
+        .collect()
 }
 
 /// Canonicalize `path` to the same normalized form `LspSnapshot` paths carry,

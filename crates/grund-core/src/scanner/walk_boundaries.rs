@@ -54,6 +54,20 @@ pub(super) fn outward_directory_link_root(
     is_directory_symlink(scan_root)
 }
 
+/// The same gate for a root whose lookup failed, so `is_directory_symlink` cannot answer
+/// (§FS-scan.scope.homes.lookup.outward): `resolved` is where the root goes as far as the
+/// disk says, and only the link's name can tell a directory link from a file link.
+pub(super) fn outward_unlooked_link_root(
+    scan_root: &Path,
+    resolved: &Path,
+    physical_root: &Path,
+    schema: &Schema,
+) -> bool {
+    !resolved.starts_with(physical_root)
+        && link_metadata(scan_root).is_ok_and(|metadata| metadata.file_type().is_symlink())
+        && !is_scannable(scan_root, schema)
+}
+
 pub(super) fn is_directory_symlink(path: &Path) -> bool {
     path_is_dir(path) && link_metadata(path).is_ok_and(|metadata| metadata.file_type().is_symlink())
 }
