@@ -1,11 +1,13 @@
 """§FS-distribution-candidate.5.2.1: the rehearsal's fresh `PATH` hides Rust and keeps the rest;
-§FS-distribution-candidate.5.2.2: it carries no npm setting the contributor exported, in any case.
+§FS-distribution-candidate.5.2.2: it carries no npm setting the contributor exported, in any case,
+nor a variable that chooses which global npmrc npm reads.
 
-Each test makes up a `PATH`, or the npm settings exported, and asks the real `fresh_env` about
-it, so what this host has installed or exported does not matter. `fresh_env` needs no candidate, so although the rehearsal itself is
-manual (§AR-ci.6) this is one of the cheap, offline tests the Python gate collects, on every
-operating system a pull request runs on. A tool is judged by whether it is found and what it
-prints when run, never by how `fresh_env` kept it.
+Each test makes up a `PATH`, and the npm settings exported, and asks the real `fresh_env` about
+it, so what this host has installed or exported does not matter. `fresh_env` needs no
+candidate, so although the rehearsal itself is manual (§AR-ci.6) this is one of the cheap,
+offline tests the Python gate collects, on every operating system a pull request runs on. A
+tool is judged by whether it is found and what it prints when run, never by how `fresh_env`
+kept it.
 """
 
 import json
@@ -35,6 +37,13 @@ MIXED_CASE = {"Npm_Config_Offline": "true", "NPM_Config_Offline": "true",
               "Npm_Config_Cache": "inherited-cache", "Npm_Config_Registry": "http://mixed.invalid/"}
 EXACT_CASE = {"npm_config_offline": "true", "NPM_CONFIG_OFFLINE": "true",
               "npm_config_cache": "inherited-cache", "NPM_CONFIG_REGISTRY": "http://exact.invalid/"}
+# §FS-distribution-candidate.5.2.2: each chooses the global npmrc, where `offline=true` would
+# turn npm offline.
+GLOBAL_NPMRC_CHOOSERS = {"PREFIX": "chosen-prefix", "DESTDIR": "chosen-destdir"}
+RED_UNTIL_FIX = unittest.skipUnless(
+    os.environ.get("GRUND_FRESH_ENV_RUN_RED_TESTS") == "1",
+    "red until fresh_env drops PREFIX and DESTDIR; the fix removes this",
+)
 # Asks in a process of its own, whose exit removes what `keep` made, from a cwd of its choosing.
 CHILD = """
 import json, shutil, subprocess, sys
@@ -124,7 +133,7 @@ class FreshPathTests(unittest.TestCase):
                 self.assertEqual(wanted, answers(self.fresh(beside), *wanted))
 
     def test_rust_beside_sh_and_node_leaves_every_one_of_them_found(self):
-        """The ticket's host B, where today nothing at all is left on `PATH`."""
+        """#1234's host B, where Rust beside `sh` and `node` once left nothing on `PATH`."""
         installed(self.usr, "cargo", "sh", "node", "npx", "npm")
         env = self.fresh(self.usr)
         self.assertTrue(env["PATH"], "the fresh PATH is empty")
@@ -144,7 +153,7 @@ class FreshPathTests(unittest.TestCase):
                 self.assertFalse(found(env, "cargo"))
 
     def test_the_rest_of_the_toolchain_beside_cargo_is_hidden(self):
-        """A guard: today the whole directory goes, and a fix must not bring these back."""
+        """A guard: what keeps the rest of the directory brings none of the toolchain back."""
         installed(self.usr, "cargo", *TOOLCHAIN)
         env = self.fresh(self.usr)
         self.assertEqual({name: False for name in (*RUST, *TOOLCHAIN)},
@@ -276,13 +285,21 @@ class InheritedNpmSettingTests(unittest.TestCase):
         temp = scratch("grund-fresh-env-npm-")
         self.addCleanup(temp.cleanup)
         self.home = Path(temp.name) / "home"
+        self.path = Path(temp.name) / "bin"
+        self.path.mkdir()
+
+    def fresh_env(self, exported):
+        """`fresh_env` when `exported` are the only npm settings and global-npmrc choosers the
+        shell holds, on an empty `PATH` of the test's own, so no host directory is walked."""
+        unset = {k: v for k, v in os.environ.items()
+                 if not k.lower().startswith("npm_config_") and k not in GLOBAL_NPMRC_CHOOSERS}
+        with mock.patch.dict(os.environ, {**unset, **exported, "PATH": str(self.path)},
+                             clear=True):
+            return rehearsal_support.fresh_env(self.home, npm_config_registry=NAMED_REGISTRY)
 
     def fresh(self, exported):
         """`fresh_env`'s npm settings when `exported` are the only ones the shell holds."""
-        unset = {k: v for k, v in os.environ.items() if not k.lower().startswith("npm_config_")}
-        with mock.patch.dict(os.environ, {**unset, **exported}, clear=True):
-            return npm_settings(rehearsal_support.fresh_env(
-                self.home, npm_config_registry=NAMED_REGISTRY))
+        return npm_settings(self.fresh_env(exported))
 
     def own(self):
         """What `fresh_env` sets itself, each once, when the shell exports no npm setting."""
@@ -303,3 +320,10 @@ class InheritedNpmSettingTests(unittest.TestCase):
         """The two usual spellings go too, and what `fresh_env` names keeps its value."""
         own = self.own()
         self.assertEqual(own, self.fresh(EXACT_CASE))
+
+    @RED_UNTIL_FIX
+    def test_no_variable_that_chooses_the_global_npmrc_survives(self):
+        """`PREFIX` and `DESTDIR` go, and the npm settings stay what `fresh_env` names."""
+        own, env = self.own(), self.fresh_env(GLOBAL_NPMRC_CHOOSERS)
+        self.assertEqual({}, {k: env[k] for k in GLOBAL_NPMRC_CHOOSERS if k in env})
+        self.assertEqual(own, npm_settings(env))
