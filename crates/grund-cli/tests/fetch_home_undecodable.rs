@@ -81,7 +81,6 @@ fn assert_refused_with_checks_line(project: &Path, cwd: &Path, id: &str, shown: 
 }
 
 #[test]
-#[ignore = "red until #1309 names the undecodable file; implement removes this"]
 fn the_requested_ids_own_file_is_named_with_the_line_check_prints() {
     let project = folder_project("own");
     corrupt(&project, "fs/a.md", BROKEN);
@@ -89,7 +88,6 @@ fn the_requested_ids_own_file_is_named_with_the_line_check_prints() {
 }
 
 #[test]
-#[ignore = "red until #1309 names the undecodable file; implement removes this"]
 fn a_sibling_of_the_requested_ids_file_is_named() {
     let project = folder_project("sibling");
     corrupt(&project, "fs/b.md", b"# FS-b: Beta\n\xff");
@@ -98,7 +96,6 @@ fn a_sibling_of_the_requested_ids_file_is_named() {
 
 /// §FS-fetch.5.4: `check` prints both lines; the fetch stops at the first in the walk's order.
 #[test]
-#[ignore = "red until #1309 names the undecodable file; implement removes this"]
 fn the_first_of_several_undecodable_files_is_named() {
     let project = folder_project("several");
     corrupt(&project, "fs/b.md", b"# FS-b: Beta\n\xff");
@@ -106,10 +103,63 @@ fn the_first_of_several_undecodable_files_is_named() {
     assert_refused_with_checks_line(&project, &project, "FS-a", "fs/b.md");
 }
 
+/// A folder home the scan also reads Python in, `FS-a`'s file holding only the local copy.
+fn mixed_project(test: &str) -> std::path::PathBuf {
+    let project = root(&format!("home-undecodable-{test}"));
+    let config = fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/e2e/cases/fetch-folder-source-v2-python-refused/repo/grund.toml"),
+    )
+    .expect("read the version 2 config");
+    write(&project, "grund.toml", &config);
+    executable(
+        &project,
+        "scripts/fetch",
+        "#!/bin/sh\nprintf '# FS-a: Alpha\\n\\nFetched body.\\n'\n",
+    );
+    write(&project, "fs/a.md", "# FS-a: Alpha\n\nLocal body.\n");
+    project
+}
+
+/// §FS-fetch.5.4: the walk's order holds across `.md` and other names, though the two are
+/// judged in separate passes: a broken `a.md` is named ahead of a broken `b.py`.
+#[test]
+fn the_walks_first_is_named_across_markdown_and_source() {
+    let project = mixed_project("across");
+    corrupt(&project, "fs/a.md", BROKEN);
+    corrupt(&project, "fs/b.py", b"# nothing\n\xff");
+    assert_refused_with_checks_line(&project, &project, "FS-a", "fs/a.md");
+}
+
+/// §FS-fetch.5.4: and a broken `b.py` the walk reaches first is named ahead of a broken `c.md`.
+#[test]
+fn a_source_file_the_walk_reaches_first_is_named() {
+    let project = mixed_project("source-first");
+    corrupt(&project, "fs/b.py", b"# nothing\n\xff");
+    corrupt(&project, "fs/c.md", b"# FS-c: Gamma\n\xff");
+    assert_refused_with_checks_line(&project, &project, "FS-a", "fs/b.py");
+}
+
+/// §FS-fetch.5.2: a file that declares the ID still comes ahead of a broken `.md` file.
+#[test]
+fn a_declaring_source_file_comes_ahead_of_a_broken_markdown_file() {
+    let project = mixed_project("declaring");
+    corrupt(&project, "fs/a.md", BROKEN);
+    write(&project, "fs/b.py", "\"\"\"FS-a: Alpha\n\nBody.\n\"\"\"\n");
+    let before = tree_with_directories(&project);
+    let fetch = run(&project, &["fetch", "FS-a"]);
+    assert_code(&fetch, 2, "fetch");
+    assert!(
+        stderr(&fetch).starts_with("error: cannot fetch FS-a: fs/b.py already declares it"),
+        "{}",
+        stderr(&fetch)
+    );
+    assert_eq!(tree_with_directories(&project), before);
+}
+
 /// §FS-cli.3.4: the default base is the config root wherever the run stands, and
 /// `relative_paths = false` is the invocation base (§FS-config.3.6.1).
 #[test]
-#[ignore = "red until #1309 names the undecodable file; implement removes this"]
 fn the_file_is_spelled_from_the_report_base() {
     let project = folder_project("base");
     corrupt(&project, "fs/a.md", BROKEN);
@@ -139,7 +189,6 @@ fn the_file_is_spelled_from_the_report_base() {
 
 /// §FS-fetch.4.4: the same refusal through the file home's own read of the bytes.
 #[test]
-#[ignore = "red until #1309 names the undecodable file; implement removes this"]
 fn an_undecodable_file_home_is_named() {
     let project = file_project("file-home");
     corrupt(

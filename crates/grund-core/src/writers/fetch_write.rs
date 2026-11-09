@@ -68,17 +68,45 @@ struct SnapshotDeclaration {
     path: Option<PathBuf>,
 }
 
+/// §FS-fetch.5.4: one home file's failure as the line `grund check` prints for it, the file
+/// spelled from the report base and the raw cause retained below (§FS-check.2.4.1).
+fn unscanned_file_failure(
+    path: &Path,
+    error: anyhow::Error,
+    report_base: &Path,
+    diagnostic: &mut Option<anyhow::Error>,
+) -> FetchFailure {
+    let shown = format_path(&relative_from_base(report_base, path));
+    let message = format!(
+        "{shown}: {}",
+        scan_error_message(&scan_error_reason(&error))
+    );
+    fetch_walk_failure(diagnostic, path, error, message)
+}
+
+/// §FS-fetch.5.4: decode a home file through `std::io`, as the scan's own read does, so the
+/// failure is the same typed error and the reason derived from it the same words.
+fn decode_home_file(bytes: &[u8]) -> std::io::Result<String> {
+    std::io::read_to_string(bytes)
+}
+
+/// §FS-fetch.4.4, §FS-fetch.5.4: the declarations of the home file at `path`, which names itself
+/// when it cannot be decoded, for a file home and a folder home alike.
 fn declarations_at_depth(
+    path: &Path,
     bytes: &[u8],
     grammar: &Grammar,
     depth: usize,
+    report_base: &Path,
+    diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<Vec<SnapshotDeclaration>, FetchFailure> {
-    let text = std::str::from_utf8(bytes)
-        .map_err(|_| fetch_operational("snapshot home is not UTF-8 Markdown"))?;
+    let text = decode_home_file(bytes).map_err(|error| {
+        unscanned_file_failure(path, anyhow::Error::new(error), report_base, diagnostic)
+    })?;
     let mut headings = Vec::<(usize, Option<Id>)>::new();
     let mut offset = 0usize;
     // §FS-check.1.1.5.2: the whole snapshot home, so its front matter holds no heading.
-    let mut blocks = MarkdownBlocks::file(text);
+    let mut blocks = MarkdownBlocks::file(&text);
     for line in text.split_inclusive('\n') {
         let without_newline = line.strip_suffix('\n').unwrap_or(line);
         let content = without_newline
@@ -156,6 +184,7 @@ pub(super) fn write_file_home(
     path: &Path,
     grammar: &Grammar,
     requested: &Id,
+    report_base: &Path,
     snapshot: &[u8],
     diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
@@ -171,7 +200,7 @@ pub(super) fn write_file_home(
             ));
         }
     };
-    let declarations = declarations_at_depth(&original, grammar, 2)?;
+    let declarations = declarations_at_depth(path, &original, grammar, 2, report_base, diagnostic)?;
     let matching = declarations
         .iter()
         .filter(|declaration| &declaration.id == requested)
@@ -226,11 +255,18 @@ fn already_declared(local: &str, shown: &str) -> FetchFailure {
     ))
 }
 
+/// §FS-fetch.5: what the Markdown branch replaces is a file named `.md`.
+fn is_replaceable_markdown(path: &Path) -> bool {
+    path.extension().and_then(|ext| ext.to_str()) == Some("md")
+}
+
 /// §FS-fetch.5.2: ask the scan's own pass about each file the Markdown branch would not
 /// replace, so which forms declare stays the scan's answer and fetch keeps no second reader
 /// of comments. In the walk's sorted order, the first file that declares the ID or that the
 /// pass cannot read decides, spelled from the report base. A file the pass cannot read gets
-/// the line `grund check` prints for it (§FS-check.2.4).
+/// the line `grund check` prints for it (§FS-check.2.4), unless a `.md` file the walk reaches
+/// earlier cannot be decoded: §FS-fetch.5.4 names the first, and only a failure looks back, so a
+/// declaring file still comes ahead of every judgement of a Markdown file.
 fn refuse_declaring_file(
     files: &[PathBuf],
     config: &Config,
@@ -239,20 +275,28 @@ fn refuse_declaring_file(
     report_base: &Path,
     diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
-    for path in files {
-        let shown = format_path(&relative_from_base(report_base, path));
+    for (position, path) in files.iter().enumerate() {
+        if is_replaceable_markdown(path) {
+            continue;
+        }
         match scan_unwalked_file(path, config.schema(), config.frame(), &[]) {
             Ok(findings) if findings.declarations.contains_key(requested) => {
+                let shown = format_path(&relative_from_base(report_base, path));
                 return Err(already_declared(local, &shown));
             }
             Ok(_) => {}
             Err(error) => {
-                // §FS-check.2.4.1: publish the shared reason, retaining the raw cause below.
-                let message = format!(
-                    "{shown}: {}",
-                    scan_error_message(&scan_error_reason(&error))
-                );
-                return Err(fetch_walk_failure(diagnostic, path, error, message));
+                // §FS-fetch.5.4: a `.md` file that cannot be read is the Markdown loop's.
+                let (path, error) = files[..position]
+                    .iter()
+                    .filter(|earlier| is_replaceable_markdown(earlier))
+                    .find_map(|earlier| {
+                        let bytes = read_bytes(earlier).ok()?;
+                        let undecodable = decode_home_file(&bytes).err()?;
+                        Some((earlier, anyhow::Error::new(undecodable)))
+                    })
+                    .unwrap_or((path, error));
+                return Err(unscanned_file_failure(path, error, report_base, diagnostic));
             }
         }
     }
@@ -355,13 +399,20 @@ pub(super) fn write_folder_home(
                 None => fetch_operational(message),
             });
         }
-        let (markdown, others): (Vec<_>, Vec<_>) = walked
+        // §FS-fetch.5.2: ahead of every judgement of a Markdown file below.
+        refuse_declaring_file(
+            &walked.files,
+            config,
+            requested,
+            local,
+            report_base,
+            diagnostic,
+        )?;
+        for path in walked
             .files
             .into_iter()
-            .partition(|path| path.extension().and_then(|ext| ext.to_str()) == Some("md"));
-        // §FS-fetch.5.2: ahead of every judgement of a Markdown file below.
-        refuse_declaring_file(&others, config, requested, local, report_base, diagnostic)?;
-        for path in markdown {
+            .filter(|path| is_replaceable_markdown(path))
+        {
             let bytes = read_bytes(&path).map_err(|err| {
                 fetch_io(
                     diagnostic,
@@ -370,7 +421,8 @@ pub(super) fn write_folder_home(
                     format!("cannot read {}", path.display()),
                 )
             })?;
-            let declarations = declarations_at_depth(&bytes, &config.grammar, 1)?;
+            let declarations =
+                declarations_at_depth(&path, &bytes, &config.grammar, 1, report_base, diagnostic)?;
             let contains_requested = declarations
                 .iter()
                 .any(|declaration| declaration.id == *requested);

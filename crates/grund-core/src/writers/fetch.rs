@@ -214,6 +214,7 @@ fn fetch_run(
             &path,
             &selected.grammar,
             &id,
+            &report_base,
             snapshot.as_bytes(),
             diagnostic,
         ),
