@@ -293,7 +293,6 @@ fn leaning_tree(name: &str, version: Version, value: Option<&str>, setting: bool
 
 /// §FS-config-v2.checks.config-fetch-names-nothing: the key still lets the setting load.
 #[test]
-#[ignore = "red until #1322 check gives the repair; implement removes this"]
 fn leaning_tree_warns_under_version_2_and_repairs_truthfully() {
     let tree = leaning_tree("lean-v2", Two, Some(EMPTY), true);
     let run = tree.run(&["check"]);

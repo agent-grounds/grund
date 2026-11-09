@@ -62,7 +62,6 @@ fn external_facts_lsp_publishes_the_warning_without_fetch_or_code_action() {
 
 /// [§FS-check.3.1.3.2](../../../docs/functional-spec/FS-check.md): the editor shows the repair `check` gives.
 #[test]
-#[ignore = "red until #1322 check gives the repair; implement removes this"]
 fn a_blank_fetch_key_publishes_the_repair() {
     let root = test_root("external-facts-blank-fetch");
     fs::write(

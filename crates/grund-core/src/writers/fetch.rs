@@ -7,8 +7,8 @@ use std::path::{Path, PathBuf};
 
 use super::fetch_write::{write_file_home, write_folder_home};
 use crate::config::{
-    Config, KindConfig, ProjectRecords, RefusedHome, fetch_names_nothing_reason,
-    fetch_runs_nothing, run_warning_findings,
+    Config, KindConfig, ProjectRecords, RefusedHome, fetch_integration_path,
+    fetch_names_nothing_reason, fetch_runs_nothing, run_warning_findings,
 };
 use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
@@ -161,14 +161,7 @@ fn fetch_run(
     if let Some(refusal) = place.import_refusal() {
         return Err(fetch_operational(refusal));
     }
-    let integration = {
-        let configured = Path::new(fetch);
-        if configured.is_absolute() {
-            configured.to_path_buf()
-        } else {
-            selected.root.join(configured)
-        }
-    };
+    let integration = fetch_integration_path(&selected.root, fetch);
 
     // §FS-fetch.2.1: immediately before the spawn, behind every earlier refusal.
     if fetch_runs_nothing(fetch, &integration) {

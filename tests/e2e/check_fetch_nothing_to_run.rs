@@ -243,7 +243,6 @@ fn citer(tree: &Tree, citer_value: &str) {
 /// §FS-imports.writes.answer: the target's blank key decides, whatever the citer holds, and
 /// `grund fetch` of the ID keeps its read-only refusal.
 #[test]
-#[ignore = "red until #1322 check gives the repair; implement removes this"]
 fn a_blank_key_in_the_target_gives_the_repair_through_an_import() {
     let tree = Tree::new();
     tree.v1("lib", " ", "should", "AR-001-power");

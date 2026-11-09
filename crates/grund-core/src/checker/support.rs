@@ -1,4 +1,7 @@
-use crate::config::{Extent, Frame, RefusedHome, Schema, holds_glob};
+use crate::config::{
+    Extent, Frame, RefusedHome, Schema, fetch_integration_path, fetch_key_name, fetch_key_setting,
+    fetch_runs_nothing, holds_glob,
+};
 #[cfg(test)]
 use crate::grammar::render_id;
 use crate::grammar::{is_inside_inline_code, render_catalog_id};
@@ -162,6 +165,10 @@ pub(super) fn missing_snapshot_message(
                     remedies::missing_snapshot_source_file_value()
                 }
                 (None, must) => {
+                    // §FS-check.3.1.3.2: only a key `grund fetch` could run earns the command.
+                    if let Some(repair) = fetch_key_tail(schema, frame, &missing.kind, must) {
+                        return format!("{base} — {repair}");
+                    }
                     // §FS-imports.writes.answer: the command `grund fetch` itself names.
                     let place = fetch_place(frame.run, frame.display.base(), namespace, spelling);
                     if must {
@@ -175,6 +182,26 @@ pub(super) fn missing_snapshot_message(
         }
     };
     format!("{base}; {remedy}")
+}
+
+/// §FS-check.3.1.3.2: the key's name and the repair where `grund fetch` has nothing to run for
+/// `kind`, asked as that command asks it of the project the ID is in: `schema` and `frame` are
+/// the target's. `None` where the command could run.
+fn fetch_key_tail(schema: &Schema, frame: Frame<'_>, kind: &str, must: bool) -> Option<String> {
+    let (value, _) = schema.fetching_row(kind)?.fetch_key()?;
+    if !fetch_runs_nothing(value, &fetch_integration_path(frame.root(), value)) {
+        return None;
+    }
+    let setting = fetch_key_setting(frame.version, kind);
+    let repair = if must {
+        remedies::dangling_fetch_names_nothing(setting)
+    } else {
+        remedies::missing_snapshot_fetch_names_nothing(setting)
+    };
+    Some(format!(
+        "{} names no executable; {repair}",
+        fetch_key_name(frame.version, kind)
+    ))
 }
 
 /// §FS-check.3.1.2: whether a citation site sits inside a Markdown inline-code
