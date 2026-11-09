@@ -5,9 +5,10 @@
 #![cfg(unix)]
 
 use std::fs;
+use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 const DASH: &str = "\u{2014}";
@@ -105,6 +106,30 @@ impl Tree {
             stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
             stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
         }
+    }
+
+    /// The refusal `grund show --batch` reports for `id` in its one-item envelope.
+    fn batch_refusal(&self, dir: &str, id: &str) -> String {
+        let mut child = Command::new(env!("CARGO_BIN_EXE_grund"))
+            .args(["show", "--batch", "--format=json"])
+            .current_dir(self.0.join(dir))
+            .env("NO_COLOR", "1")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("run grund");
+        let query = serde_json::json!({ "id": id }).to_string();
+        let mut stdin = child.stdin.take().expect("a piped stdin");
+        writeln!(stdin, "{query}").expect("write the query");
+        drop(stdin);
+        let output = child.wait_with_output().expect("wait for grund");
+        assert_eq!(output.status.code(), Some(1), "a failed batch item exits 1");
+        let line: serde_json::Value =
+            serde_json::from_slice(&output.stdout).expect("one JSON envelope");
+        line["error"]["message"]
+            .as_str()
+            .expect("a refusal")
+            .to_owned()
     }
 
     /// Runs the `run grund fetch <id>[ in <dir>]` named in `line` from `from`: one try must do.
@@ -424,7 +449,8 @@ fn a_kind_the_target_lacks_is_what_the_target_says() {
     );
 }
 
-/// An unknown alias or a missing import is refused in the words `show` prints, naming no command.
+/// An unknown alias or a missing import is refused in the words `show` prints, naming no command,
+/// by `fetch`, `refs` and each item of `show --batch` alike.
 fn in_shows_words(tree: &Tree, id: &str, words: &str) {
     let show = tree.grund("consumer", &["show", id]);
     assert_eq!(show.code, 2, "{}", show.stderr);
@@ -433,6 +459,11 @@ fn in_shows_words(tree: &Tree, id: &str, words: &str) {
     assert_eq!(fetch.code, 2, "{}", fetch.stderr);
     assert_no_command(&fetch.stderr);
     assert_eq!(fetch.stderr, show.stderr);
+    let refs = tree.grund("consumer", &["refs", id]);
+    assert_eq!(refs.code, 2, "{}", refs.stderr);
+    assert_eq!(refs.stderr, show.stderr);
+    let refusal = show.stderr.strip_prefix("error: ").expect("an error line");
+    assert_eq!(tree.batch_refusal("consumer", id), refusal.trim_end());
 }
 
 #[test]

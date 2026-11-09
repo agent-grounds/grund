@@ -253,8 +253,9 @@ write is ordinary.
 One answer says where the fetch of a qualified ID runs and whether it can. `grund fetch`'s
 refusal and the fetch tails of `grund check` ([§FS-check.3.1.3](FS-check.md#313-a-kind-that-fetches), [§FS-check.4.12](FS-check.md#412-missing-snapshot)) render from
 it, so following either takes one command and neither names a command that is refused. The hint of [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure), once implemented, renders it too. It
-selects the project as the ID query does ([§FS-fetch.1](FS-fetch.md#1-input-and-project-selection)), over every import edge the run can
-reach, nested ones and a member's included. A fetch of a local or member ID reads no import
+selects the project as the ID query does ([§FS-fetch.1](FS-fetch.md#1-input-and-project-selection)), reading the import edges on the alias
+path, nested ones and a member's included, and every edge the run can reach only for an alias
+nothing answers. A fetch of a local or member ID reads no import
 it does not name, so an import that cannot be read does not fail it. The first of these that
 holds ends the answer:
 
