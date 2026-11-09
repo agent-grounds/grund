@@ -293,13 +293,19 @@ fn leaning_tree(name: &str, version: Version, value: Option<&str>, setting: bool
 
 /// §FS-config-v2.checks.config-fetch-names-nothing: the key still lets the setting load.
 #[test]
+#[ignore = "red until #1322 check gives the repair; implement removes this"]
 fn leaning_tree_warns_under_version_2_and_repairs_truthfully() {
     let tree = leaning_tree("lean-v2", Two, Some(EMPTY), true);
     let run = tree.run(&["check"]);
     assert_eq!(run.code, 0, "{}", run.shown());
     assert_eq!(run.has_line(&warning()), 1, "{}", run.shown());
+    let line = format!(
+        "docs/arch.md:7: warning: no snapshot for AR-other in docs/arch.md — {} names no \
+         executable; {V2_REPAIR}",
+        Two.key()
+    );
     assert!(
-        run.stdout.contains("run grund fetch AR-other"),
+        run.stdout.lines().any(|seen| seen == line),
         "{}",
         run.shown()
     );
