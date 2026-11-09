@@ -53,6 +53,7 @@ Supported check finding codes:
   broken-stub
   chapter-cardinality
   citation-cardinality
+  config-fetch-names-nothing
   config-multiline-string
   config-not-toml
   config-version-1

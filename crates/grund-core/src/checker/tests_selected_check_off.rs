@@ -216,6 +216,7 @@ fn a_workspace_of_both_versions_names_only_a_shared_spelling() {
 /// `inline-citation-style` is on by default, and the code of the line itself
 /// needs no switch.
 const ALWAYS_ARMED: &[&str] = &[
+    "config-fetch-names-nothing",
     "config-version-1",
     "inline-citation-style",
     "invalid-section-lock",

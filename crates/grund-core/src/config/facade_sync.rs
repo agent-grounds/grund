@@ -200,6 +200,7 @@ fn row_of(kind: &KindConfig) -> Row {
             origin: match &kind.fetch {
                 Some(fetch) => Origin::External {
                     fetch: fetch.clone(),
+                    source: None,
                 },
                 None => Origin::Local,
             },

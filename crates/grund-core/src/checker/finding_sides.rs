@@ -134,6 +134,7 @@ const JUDGED: &[Code] = &[
 /// fires now and named no second spelling when it did.
 const RUN: &[Code] = &[
     Code::AGENTS_INIT,
+    Code::CONFIG_FETCH_NAMES_NOTHING,
     Code::CONFIG_MULTILINE_STRING,
     Code::CONFIG_NOT_TOML,
     Code::CONFIG_VERSION_1,

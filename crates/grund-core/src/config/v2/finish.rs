@@ -297,8 +297,12 @@ fn lower_row(draft: &RowDraft, fields: &[FieldDraft], path: &Path) -> Row {
                 .as_ref()
                 .map_or(KindIndex::Default, |(index, _)| index.clone()),
             origin: match &draft.fetch {
-                Some((fetch, _)) => Origin::External {
+                Some((fetch, line)) => Origin::External {
                     fetch: fetch.clone(),
+                    source: Some(ConfigLocation {
+                        path: path.to_path_buf(),
+                        line: *line,
+                    }),
                 },
                 None => Origin::Local,
             },

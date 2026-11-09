@@ -6,7 +6,10 @@
 use std::path::{Path, PathBuf};
 
 use super::fetch_write::{write_file_home, write_folder_home};
-use crate::config::{Config, KindConfig, ProjectRecords, RefusedHome, run_warning_findings};
+use crate::config::{
+    Config, KindConfig, ProjectRecords, RefusedHome, fetch_names_nothing_reason,
+    fetch_runs_nothing, run_warning_findings,
+};
 use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
 use crate::resolver::{fetch_place, load_alias_path, settled_run_warnings};
@@ -166,6 +169,14 @@ fn fetch_run(
             selected.root.join(configured)
         }
     };
+
+    // §FS-fetch.2.1: immediately before the spawn, behind every earlier refusal.
+    if fetch_runs_nothing(fetch, &integration) {
+        let reason = fetch_names_nothing_reason(&selected, &kind.kind, &report_base);
+        return Err(fetch_operational(format!(
+            "cannot run fetch integration `{fetch}` for {raw}: {reason}"
+        )));
+    }
 
     // §FS-fetch.2: direct argv invocation, inherited environment, no shell and
     // no implicit stdin. Stdout is data and is never forwarded to the caller.

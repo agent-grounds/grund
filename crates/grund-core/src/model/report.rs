@@ -63,8 +63,13 @@ impl Code {
     /// The check findings about a config line that a terminal still prints CLI-level,
     /// the line in their text (§FS-errors.2.2.1) as well as in `line` (§FS-errors.5.2.3):
     /// the version-2 window's warnings (§FS-config-v2.checks.config-not-toml,
-    /// §FS-config-v2.checks.config-multiline-string).
-    const CLI_LEVEL_AT_A_LINE: [Code; 2] = [Code::CONFIG_MULTILINE_STRING, Code::CONFIG_NOT_TOML];
+    /// §FS-config-v2.checks.config-multiline-string,
+    /// §FS-config-v2.checks.config-fetch-names-nothing).
+    const CLI_LEVEL_AT_A_LINE: [Code; 3] = [
+        Code::CONFIG_FETCH_NAMES_NOTHING,
+        Code::CONFIG_MULTILINE_STRING,
+        Code::CONFIG_NOT_TOML,
+    ];
 }
 
 /// The outcome of `check`: errors and warnings, kept apart so the exit code keys

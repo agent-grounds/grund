@@ -82,10 +82,42 @@ pub enum Form {
 }
 
 /// Where a kind's declarations come from (§FS-config.3.4.10).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone)]
 pub enum Origin {
     Local,
-    External { fetch: String },
+    External {
+        fetch: String,
+        /// The line of the `fetch` key, which a report about the key anchors at (§FS-fetch.2.1);
+        /// `None` for a row no file wrote.
+        source: Option<ConfigLocation>,
+    },
+}
+
+/// Two origins are equal when they mean the same: where the key was written is not part of it,
+/// as for a [`Place`] (§AR-config.2).
+impl PartialEq for Origin {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Local, Self::Local) => true,
+            (Self::External { fetch: left, .. }, Self::External { fetch: right, .. }) => {
+                left == right
+            }
+            _ => false,
+        }
+    }
+}
+
+/// An origin prints what it means and not where it was written, so the comparisons that read
+/// a row's debug form hold across two files (§AR-config.2).
+impl std::fmt::Debug for Origin {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Local => f.write_str("Local"),
+            Self::External { fetch, .. } => {
+                f.debug_struct("External").field("fetch", fetch).finish()
+            }
+        }
+    }
 }
 
 /// §AR-config.3.2: what a place nested inside another row's place means, which
@@ -157,6 +189,14 @@ impl Row {
         self.fetches()
             .then(|| self.file().or(self.folder()))
             .flatten()
+    }
+
+    /// This row's `fetch` value and where it was written, when it has one (§FS-fetch.2.1).
+    pub(crate) fn fetch_key(&self) -> Option<(&str, Option<&ConfigLocation>)> {
+        match &self.kind.as_ref()?.origin {
+            Origin::External { fetch, source } => Some((fetch, source.as_ref())),
+            Origin::Local => None,
+        }
     }
 
     /// Whether this row is the complement (§FS-config.3.9.2.1). A v2 `code` row
@@ -244,7 +284,7 @@ impl Project {
             format: kind.and_then(|kind| kind.id_format.clone()),
             resolve: self.rules.resolution.get(&row.name).copied(),
             fetch: kind.and_then(|kind| match &kind.origin {
-                Origin::External { fetch } => Some(fetch.clone()),
+                Origin::External { fetch, .. } => Some(fetch.clone()),
                 Origin::Local => None,
             }),
         }
