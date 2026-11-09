@@ -114,8 +114,7 @@ pub(crate) use section_lock::{
     named_section_path, read_lock_lines, render_lock, section_lock_path,
 };
 pub(crate) use stub_resolution::{
-    Paired, PairedDeclarations, StubResolution, declaration_site_order, paired_declarations,
-    section_resolves,
+    Paired, PairedDeclarations, StubResolution, paired_declarations, section_resolves,
 };
 pub use text::schema_text;
 pub(crate) use text::{citation_direction_repair, format_list, json_escape, plural};

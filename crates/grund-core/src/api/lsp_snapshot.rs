@@ -20,7 +20,7 @@ use super::lsp_report::{editor_report, editor_report_scope, editor_run_warnings}
 use super::report::{public_lsp_report, public_lsp_run_warnings};
 use crate::config::{Invocation, ProjectRecords, Selection, display_path};
 use crate::grammar::{expand_relative_heading, render_catalog_id, render_citation_id};
-use crate::model::{Declaration, declaration_site_order, paired_declarations, sort_path_key};
+use crate::model::{Declaration, paired_declarations, sort_path_key};
 use crate::queries::{
     LspCitation, LspCompletionContext, LspDeclaration, LspFindingRange, LspShowContext,
     LspSnapshot, LspSnapshotOpts, LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
@@ -205,10 +205,9 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 }
             }
             // A title for each stand-in of the ID's paired declarations, and a stub title
-            // for each stub that only points at one.
-            let mut stand_ins: Vec<&Declaration> = paired.stand_ins().collect();
-            // §FS-errors.4.1.1: an ID's homes, in the one order of its sites.
-            stand_ins.sort_by(|a, b| declaration_site_order(a, b));
+            // for each stub that only points at one. Unsorted: `declaration_sort` below
+            // orders every title by path, line, column and text.
+            let stand_ins: Vec<&Declaration> = paired.stand_ins().collect();
             for &home in &stand_ins {
                 let display = if context.workspace_loaded {
                     display_path(context.render_config(), &home.file)
