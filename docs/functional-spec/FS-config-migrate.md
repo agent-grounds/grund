@@ -235,7 +235,7 @@ Under the entry, the files [§FS-config-migrate.3.1.4.1](FS-config-migrate.md#31
 
 #### 3.1.10 A `fetch` that names no executable
 
-A version 1 row whose `fetch` names no executable loads for good ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable), [§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)), and version 2 warns for that value and then refuses it ([§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)). Writing the value out would carry the mistake across, and no command can know whether the author meant a program or no fetching at all. Migration refuses at the key's line, with the repair [§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable) prints, made under version 1:
+A version 1 row whose `fetch` names no executable loads for good ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable), [§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)), and version 2 refuses that value at load ([§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)). Writing the value out would carry the mistake across, and no command can know whether the author meant a program or no fetching at all. Migration refuses at the key's line, with the repair [§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable) prints, made under version 1:
 
 ```text
 refused: grund.toml:6: [[kinds]] `AR` fetch names no executable

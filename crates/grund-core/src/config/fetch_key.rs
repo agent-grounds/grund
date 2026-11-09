@@ -97,9 +97,22 @@ pub(crate) fn fetch_names_nothing_reason(
 mod tests {
     use std::path::Path;
 
+    use super::super::v2;
     use super::{
         fetch_integration_path, fetch_key_repair, fetch_runs_nothing, names_no_executable,
     };
+
+    /// The error loading a version 2 row with a blank `fetch` and `settings` after it.
+    fn load_error(settings: &str) -> String {
+        let text = format!(
+            "grund_config_version = 2\nproject_name = \"x\"\n\n[schema.kinds.AR]\n\
+             files = [\"a.md\"]\nfetch = \"\"\n{settings}"
+        );
+        match v2::read(&text, Path::new("grund.toml"), Path::new(".")) {
+            Ok(_) => String::new(),
+            Err(error) => format!("{error:#}"),
+        }
+    }
 
     /// §FS-fetch.2.1: empty and whitespace-only values name nothing, and any other character
     /// names what it spells, stray spaces and all.
@@ -154,5 +167,27 @@ mod tests {
             fetch_key_repair(2, "AR"),
             format!("{tail} `[rules.resolution] AR`, {errors}")
         );
+    }
+
+    /// §FS-config-v2.checks.config-fetch-names-nothing: the blank value is the row's last
+    /// question, so a row an earlier release refused keeps that error.
+    #[test]
+    fn a_row_refused_before_is_asked_its_older_question_first() {
+        let citable = load_error("citable = false\n");
+        assert!(citable.contains("fetch` needs a citable row"), "{citable}");
+        assert!(!citable.contains("0.23.0"), "{citable}");
+        let places = load_error("folders = [\"b\"]\n");
+        assert!(places.contains("fetch` needs one place"), "{places}");
+        assert!(!places.contains("0.23.0"), "{places}");
+    }
+
+    /// §FS-config-v2.checks.config-fetch-names-nothing: a citable one-place row reaches it.
+    #[test]
+    #[ignore = "red until #1321 refuses a blank version 2 fetch at load; implement removes this"]
+    fn a_citable_one_place_row_is_refused_for_the_blank_value() {
+        let error = load_error("");
+        assert!(error.contains("names no executable"), "{error:?}");
+        // The release scan reads source strings, so the suffix is pinned end to end instead.
+        assert!(error.ends_with("0.23.0"), "{error:?}");
     }
 }
