@@ -58,6 +58,13 @@ declarations in the source file
 
 The `fetch` key must name a program: an empty or whitespace-only value names none. `grund fetch` refuses it at the key's line, before running anything, and says to name the program, or, if the kind is not fetched, to remove the key and any `[rules.resolution] <KIND>` (version 1: `resolve`), after which the kind's missing IDs are errors
 ([§FS-fetch.2.1](../functional-spec/FS-fetch.md#21-a-value-that-names-no-executable)).
+`grund check` gives the same repair at each citation of a missing ID rather than sending you to a command with nothing to run:
+
+```text
+docs/arch.md:7: warning: no snapshot for AR-002-other in docs/arch.md — [[kinds]] `AR` fetch names no executable; name the program, or if this kind is not fetched remove the key and any `resolve`, and its missing IDs are then errors
+```
+
+([§FS-check.3.1.3.2](../functional-spec/FS-check.md#3132-a-key-fetch-has-nothing-to-run-for)).
 
 For a folder home, fetch replaces an existing Markdown snapshot even when its
 filename differs from the ID. If a recognized value source in that home already

@@ -11,7 +11,7 @@
 
 use crate::checker::sort_diagnostics;
 use crate::config::{
-    Config, Display, config_file_under, fetch_key_name, fetch_key_repair, home_form_of,
+    Config, Display, config_file_under, fetch_key_name, fetch_key_setting, home_form_of,
     names_no_executable,
 };
 /// §FS-check.4.3: the warning for a config root holding both discovery names —
@@ -137,7 +137,7 @@ fn fetch_names_nothing_warnings(config: &Config, display: Display<'_>) -> Vec<Di
                 display.path(&file),
                 at.line,
                 fetch_key_name(project.version, &row.name),
-                fetch_key_repair(project.version, &row.name)
+                remedies::config_fetch_names_nothing(fetch_key_setting(project.version, &row.name))
             ),
             path: Some(file),
             line: Some(at.line),

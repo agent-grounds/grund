@@ -2,7 +2,7 @@
 //! key's name and repair every site that reports it prints. It reads nothing but the string,
 //! so a reader of the key asks it without touching the disk.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::discovery::config_file_under;
 use super::record::Config;
@@ -11,6 +11,17 @@ use crate::model::{format_path, relative_from_base, remedies};
 /// §FS-fetch.2.1: whether a `fetch` value names no executable, being empty or only whitespace.
 pub(crate) fn names_no_executable(value: &str) -> bool {
     value.trim().is_empty()
+}
+
+/// §FS-fetch.2.1: the path `grund fetch` runs for this value, from the project's config root
+/// unless it is absolute. `check` asks of this same path before it names the command.
+pub(crate) fn fetch_integration_path(root: &Path, value: &str) -> PathBuf {
+    let configured = Path::new(value);
+    if configured.is_absolute() {
+        configured.to_path_buf()
+    } else {
+        root.join(configured)
+    }
 }
 
 /// §FS-fetch.2.1: whether `grund fetch` has nothing to run for this value, its one question of
@@ -28,24 +39,20 @@ pub(crate) fn fetch_key_name(version: u32, kind: &str) -> String {
     }
 }
 
-/// §FS-fetch.2.1: the one repair, from the *Fix* template of
-/// §FS-config-v2.checks.config-fetch-names-nothing. Only the setting that needs the key differs
-/// by version, and version 1's is `resolve`.
-pub(crate) fn fetch_key_repair(version: u32, kind: &str) -> String {
-    let repair = remedies::config_fetch_names_nothing(format!("`[rules.resolution] {kind}`"));
+/// §FS-fetch.2.1: the setting that needs the key, in the spelling of the version that wrote it.
+pub(crate) fn fetch_key_setting(version: u32, kind: &str) -> String {
     if version == 1 {
-        repair.replace(&format!("`[rules.resolution] {kind}`"), "`resolve`")
+        "`resolve`".to_string()
     } else {
-        repair
+        format!("`[rules.resolution] {kind}`")
     }
 }
 
-// Scaffold for #1322's specify commit, where the catalog's case is written ahead of the findings
-// that give it (§FS-check.3.1.3.2): implement removes it when `check` calls these two.
-const _: [fn(String) -> String; 2] = [
-    remedies::dangling_fetch_names_nothing,
-    remedies::missing_snapshot_fetch_names_nothing,
-];
+/// §FS-fetch.2.1: the one repair, the `fetch-names-nothing` case of `dangling`'s *Fix*
+/// (§FS-errors.5.5), its setting spelled by the version that wrote the key.
+pub(crate) fn fetch_key_repair(version: u32, kind: &str) -> String {
+    remedies::dangling_fetch_names_nothing(fetch_key_setting(version, kind))
+}
 
 /// §FS-fetch.2.1: what `grund fetch` says in place of the operating system's reason: the key's
 /// line in its config file, as a report path from `report_base`, what is wrong and the repair.
@@ -76,7 +83,11 @@ pub(crate) fn fetch_names_nothing_reason(
 
 #[cfg(test)]
 mod tests {
-    use super::{fetch_key_repair, fetch_runs_nothing, names_no_executable};
+    use std::path::Path;
+
+    use super::{
+        fetch_integration_path, fetch_key_repair, fetch_runs_nothing, names_no_executable,
+    };
 
     /// §FS-fetch.2.1: empty and whitespace-only values name nothing, and any other character
     /// names what it spells, stray spaces and all.
@@ -88,6 +99,24 @@ mod tests {
         for value in ["scripts/fetch", " scripts/fetch "] {
             assert!(!names_no_executable(value), "{value:?}");
         }
+    }
+
+    /// §FS-fetch.2.1: a relative value runs from the config root, and an absolute one as written.
+    #[test]
+    fn the_integration_runs_from_the_root_unless_absolute() {
+        let root = std::env::current_exe().expect("the test binary");
+        let root = root.parent().expect("its folder");
+        assert_eq!(
+            fetch_integration_path(root, "scripts/fetch"),
+            root.join("scripts/fetch")
+        );
+        assert_eq!(fetch_integration_path(root, " "), root.join(" "));
+        let absolute = root.join("elsewhere");
+        let absolute_value = absolute.to_str().expect("a UTF-8 test path");
+        assert_eq!(
+            fetch_integration_path(Path::new("unused"), absolute_value),
+            absolute
+        );
     }
 
     /// §FS-fetch.2.1: a blank value runs nothing unless a file stands where it would run.
