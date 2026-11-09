@@ -83,11 +83,12 @@ Evidence: `build.sbt`, `src/main/scala`, `src/test/scala`.
 ```toml
 include = ["docs", "e2e", "src"]
 extensions = ["md", "scala"]
-exclude = ["target", "project/target", ".bloop", ".metals", ".git"]
+exclude = ["target", ".bloop", ".metals", ".git"]
 comment_prefixes = ["//", "/*", "*"]
 ```
 
-Pros: covers sbt source layout.
+Pros: covers sbt source layout; `target` names a directory at every depth, so it
+excludes `project/target` too, and a version-1 entry holding `/` is refused.
 Cons: generated sources may need explicit exclusion.
 
 ## SQL / Data Projects

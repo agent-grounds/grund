@@ -70,10 +70,6 @@ mod dotdot_scope_root_names;
 #[path = "support/fetch_folder_elsewhere.rs"]
 mod fetch_folder_elsewhere;
 
-// §FS-config-migrate.3.1.7.2: the repair wording of a value row, its cases by name.
-#[path = "support/value_row_repair_wording.rs"]
-mod value_row_repair_wording;
-
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
