@@ -219,6 +219,20 @@ fn home_below_a_regular_file_scans_as_nothing() {
     assert_exit(&output, 0);
 }
 
+/// §FS-scan.scope.homes.lookup: a name the file system cannot hold names nothing, so this is
+/// absence; a component over the length limit is the Unix form of a `*` on Windows.
+#[test]
+fn root_whose_name_cannot_be_held_scans_as_nothing() {
+    let config = V1_INCLUDE.replace("data/extra", &"x".repeat(300));
+    let output = Fixture::bare("name-too-long", &config, "# FS-a: A\n\nPlain.\n").check();
+    assert!(
+        !all_text(&output).contains("error:"),
+        "{}",
+        all_text(&output)
+    );
+    assert_exit(&output, 0);
+}
+
 /// A tree beside the project, whose `par/t` the outward link names, with `par` denied.
 fn outside_tree(fixture: &Fixture, name: &str) -> PathBuf {
     let outside = fixture
