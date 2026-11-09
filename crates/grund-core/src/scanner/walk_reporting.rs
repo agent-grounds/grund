@@ -10,14 +10,16 @@ use super::tree::ScanError;
 use super::value_json::value_sources;
 use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
-use super::walk_errors::{LinkRecovery, symlink_loop_report, walk_error_reports};
+use super::walk_errors::{
+    LinkRecovery, root_lookup_failure, symlink_loop_report, walk_error_reports,
+};
 use super::walk_failures::{one_report_per_entry, sort_failures};
 use super::walk_names::settle_names;
 use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
 use crate::model::{FailureNames, ReadingConflict, ReadingMove, Refused, RootRow};
 use crate::sources::{
-    canonical_path, is_directory, is_regular_file, path_exists, path_is_file, paths_same_location,
+    canonical_path, is_directory, is_regular_file, path_is_file, path_lookup, paths_same_location,
     physical_path_key,
 };
 
@@ -164,7 +166,10 @@ pub(crate) fn walk_scannable_files_with_sources(
         if !crate::config::observe_input(&scan_root, true) {
             return Err(anyhow!("watch input coverage failed"));
         }
-        if !path_exists(&scan_root) {
+        // §FS-scan.scope.homes.lookup: absent only when the lookup says so; the rest is reported
+        // below, after the boundaries, so a root another scan owns stays that scan's.
+        let looked_up = path_lookup(&scan_root);
+        if matches!(looked_up, Ok(false)) {
             continue;
         }
         let canonical_scan_root =
@@ -188,6 +193,12 @@ pub(crate) fn walk_scannable_files_with_sources(
                 &canonical_scan_root,
             )
         {
+            continue;
+        }
+        if let Err(error) = looked_up {
+            let (report, source) = root_lookup_failure(&scan_root, error);
+            on_error(&report, source);
+            errors.push(report);
             continue;
         }
         // A root that resolves elsewhere reaches every one of its files under a
