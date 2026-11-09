@@ -53,12 +53,18 @@ pub(crate) fn path_exists(path: impl AsRef<Path>) -> bool {
 }
 
 /// Whether `path` names something, links followed, as far as the lookup can tell
-/// (§FS-scan.scope.homes.lookup): `Ok(false)` only where it says not found, or a component
-/// above is a regular file. Any other failure says nothing either way, so it is the `Err`.
+/// (§FS-scan.scope.homes.lookup): `Ok(false)` only where it says not found, a component above
+/// is a regular file, or the name is one the file system cannot hold. Any other failure says
+/// nothing either way, so it is the `Err`.
 pub(crate) fn path_lookup(path: impl AsRef<Path>) -> std::io::Result<bool> {
     match std::fs::metadata(path) {
         Ok(_) => Ok(true),
-        Err(error) if matches!(error.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory) => {
+        Err(error)
+            if matches!(
+                error.kind(),
+                ErrorKind::NotFound | ErrorKind::NotADirectory | ErrorKind::InvalidFilename
+            ) =>
+        {
             Ok(false)
         }
         Err(error) => Err(error),

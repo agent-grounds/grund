@@ -37,7 +37,7 @@ Where a wider walk root meets the denied parent, version 2 exited `2` before and
 
 ### 2.3 What does not move
 
-- A home that does not exist, one below a regular file, and a dangling link scan as nothing, exit unchanged.
+- A home that does not exist, one below a regular file, one whose name the file system cannot hold (a `*` or a `"` on Windows, a component over the length limit), and a dangling link scan as nothing, exit unchanged.
 - A root link going outside the project with a denied directory on the way is pruned, as with its target open: exit `0` before and now ([§FS-scan.scope.homes.lookup.outward](../../functional-spec/FS-scan.md#scopehomeslookupoutward-a-root-link-leaving-the-project-answers-to-its-gate-first)). On version 2 such a link as a kind's home exits `0` when denied, while with the target open config load refuses it with exit `2`, and did before this change: that gate is config load's, which cannot see through the denied directory.
 - A root the workspace boundary gives to another project stays that project's.
 - The `no snapshot` line beside the failure. Withholding it is a separate rule, tracked in [issue #1215](https://github.com/agent-grounds/grund/issues/1215), and this change only records the failure it needs.
