@@ -244,6 +244,12 @@ configuration version, whether or not the kind sets `fetch`. Neither line says
 same reason the lookup did. A home that is absent keeps the refusal and hints of
 [§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through) unchanged.
 
+### 4.4. A home that cannot be decoded is named
+
+A Markdown home file that cannot be decoded as UTF-8 is a home that cannot be read under
+[§FS-fetch.4](FS-fetch.md#4-file-home-write), and it is refused as [§FS-fetch.5.4](FS-fetch.md#54-a-home-file-that-cannot-be-decoded-is-named) refuses a file in a folder home: with the line
+`grund check` prints for that file, spelled from the report base.
+
 ## 5. Folder-home write
 
 For `folder = "<home>"`, grund replaces the Markdown file that currently declares the requested
@@ -319,9 +325,8 @@ fetch. This pass asks only the home's own files, and a declaration outside them 
 [§FS-fetch.5.3](FS-fetch.md#53-a-declaration-outside-the-home-prevents-installation)'s to refuse.
 
 A file the pass cannot read or decode may hold the declaration, so it is a discovery
-failure under [§FS-fetch.5](FS-fetch.md#5-folder-home-write) whatever else the home holds: exit 2, empty stdout, the tree
-byte-identical, and on stderr the line `grund check` prints for that file ([§FS-check.2.4](FS-check.md#24-an-incomplete-run)),
-spelled from the same base.
+failure under [§FS-fetch.5](FS-fetch.md#5-folder-home-write) whatever else the home holds, and it is reported as [§FS-fetch.5.4](FS-fetch.md#54-a-home-file-that-cannot-be-decoded-is-named)
+says.
 
 [§DF-fetch-folder-declaring-file](../decisions/functional/DF-fetch-folder-declaring-file.md#df-fetch-folder-declaring-file-a-folder-home-fetch-refuses-an-id-a-file-it-does-not-replace-already-declares) records why this refusal is a compatibility correction.
 
@@ -388,6 +393,19 @@ refuses. Inside the home a file discovery cannot read stays a discovery failure 
 [§FS-fetch.5](FS-fetch.md#5-folder-home-write), and so does a scan that could not run at all, which has no answer for any ID.
 
 [§DF-fetch-declaration-outside-home](../decisions/functional/DF-fetch-declaration-outside-home.md#df-fetch-declaration-outside-home-a-folder-home-fetch-refuses-an-id-declared-outside-the-home) records why this refusal is a compatibility correction.
+
+### 5.4 A home file that cannot be decoded is named
+
+Discovery reads the home's files to answer [§FS-fetch.5](FS-fetch.md#5-folder-home-write), so a file in it that cannot be decoded
+as UTF-8 stops the fetch whichever file it is: it may hold the requested ID's declaration, and
+that the requested ID's own file reads cleanly settles nothing about the others. Whatever the
+file's name, the failure is exit 2, empty stdout, the tree byte-identical, and on stderr the
+line `grund check` prints for that file ([§FS-check.2.4](FS-check.md#24-an-incomplete-run)), spelled from the report base
+([§FS-errors.terms](FS-errors.md#terms-terms)). One broken file reads the same in both commands, so the reader of a fetch
+that failed is told which file to repair without running another command.
+
+Where several files cannot be decoded, the line is for the first in the walk's sorted order.
+A file [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)'s pass cannot read is reported the same way.
 
 ## 6. Stability and ownership
 
