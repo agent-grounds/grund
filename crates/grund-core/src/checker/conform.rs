@@ -18,7 +18,7 @@ use crate::grammar::render_catalog_id;
 use crate::model::remedies;
 use crate::model::{
     Catalog, CheckReport, Code, Declaration, Diagnostic, ExcludingRule, Id, MissingStubRepair,
-    Site, StubResolution, Switch, format_path, paired_declarations, sort_path_key,
+    Site, StubResolution, Switch, format_path, paired_declarations, site_order,
 };
 
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub,
@@ -83,9 +83,8 @@ fn check_declaration_homes(
                 .collect();
             // §AR-scanner.1.8: settled on the names a whole run gives them.
             spellings.settle(&mut sites);
-            sites.sort_by(|a, b| {
-                (sort_path_key(&a.path), a.line).cmp(&(sort_path_key(&b.path), b.line))
-            });
+            // §FS-errors.4.1.1: again after settling, which can rename a site.
+            sites.sort_by(|a, b| site_order((&a.path, a.line), (&b.path, b.line)));
             let primary = sites[0].clone();
             let others = sites[1..]
                 .iter()

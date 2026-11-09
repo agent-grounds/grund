@@ -101,7 +101,7 @@ pub(crate) use headings::UnmarkedHeadingCandidate;
 pub(crate) use missing_stub_repair::MissingStubRepair;
 pub(crate) use paths::{
     base_reads_dot, configured_home_path_key, format_path, is_hidden, normalize_path_lexically,
-    relative_from_base, scanned_decl_relative_path, scanned_path_key, sort_path_key,
+    relative_from_base, scanned_decl_relative_path, scanned_path_key, site_order, sort_path_key,
 };
 pub(crate) use patterns::{GlobCitation, OffFormatCitation};
 pub(crate) use records::{
@@ -114,7 +114,8 @@ pub(crate) use section_lock::{
     named_section_path, read_lock_lines, render_lock, section_lock_path,
 };
 pub(crate) use stub_resolution::{
-    Paired, PairedDeclarations, StubResolution, paired_declarations, section_resolves,
+    Paired, PairedDeclarations, StubResolution, declaration_site_order, paired_declarations,
+    section_resolves,
 };
 pub use text::schema_text;
 pub(crate) use text::{citation_direction_repair, format_list, json_escape, plural};

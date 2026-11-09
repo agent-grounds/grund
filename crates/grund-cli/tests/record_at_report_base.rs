@@ -171,7 +171,7 @@ fn a_broken_stub_refusal_names_its_one_home_at_the_base_dot() {
     let fixture = with_broken_stub("stub-one");
     let text = fixture.run(&fixture.root.join(CASE), &["show", "E2E-login", AT_BASE]);
     assert!(
-        text.starts_with("ambiguous ID: E2E-login (declared at ../s.md:1, .:1); "),
+        text.starts_with("ambiguous ID: E2E-login (declared at .:1, ../s.md:1); "),
         "{text}"
     );
     assert!(text.contains("; E2E-login is declared at .:1; "), "{text}");
