@@ -62,6 +62,16 @@ pub(super) fn walk_error_reports(
         .collect()
 }
 
+/// The scan failure at a walk root whose lookup failed for a reason other than absence
+/// (§FS-check.2.4), beside the error it is reported from, as a walker error's is.
+pub(super) fn root_lookup_failure(root: &Path, error: io::Error) -> (ScanError, ignore::Error) {
+    let located = ignore::Error::WithPath {
+        path: root.to_path_buf(),
+        err: Box::new(ignore::Error::Io(error)),
+    };
+    ((root.to_path_buf(), walk_error_reason(&located)), located)
+}
+
 /// The per-file scan failure a walker error becomes (§FS-check.2.4), or `None` when
 /// the walk was never going to read through the path it names (§FS-config.3.5.6).
 ///

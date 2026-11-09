@@ -103,7 +103,6 @@ fn assert_exit(output: &Output, code: i32) {
 
 /// §FS-check.2.4.2: the parent the wider walk met and the home are two paths, so two lines.
 #[test]
-#[ignore = "red until #1318 records the failed lookup at the home; implement removes this"]
 fn v2_denied_lookup_is_a_failure_at_the_home() {
     let mut fixture = Fixture::with_snapshot("v2", V2, CITING);
     if !fixture.lock_data(0o000, "data/values", true) {
@@ -126,7 +125,6 @@ fn v2_denied_lookup_is_a_failure_at_the_home() {
 
 /// §FS-check.2.4: no wider root meets `data` here, so the home's line is the only report.
 #[test]
-#[ignore = "red until #1318 records the failed lookup at the home; implement removes this"]
 fn v1_should_denied_lookup_is_a_failure_at_the_home_and_exits_2() {
     let mut fixture = Fixture::with_snapshot("v1", V1_SHOULD, CITING);
     if !fixture.lock_data(0o000, "data/values", true) {
@@ -159,7 +157,6 @@ fn denied_lookup_never_says_no_snapshot() {
 
 /// §FS-scan.scope.homes.lookup: the rule is the walk's for every root.
 #[test]
-#[ignore = "red until #1318 records the failed lookup at the root; implement removes this"]
 fn denied_lookup_of_an_include_entry_is_a_failure_at_the_entry() {
     let mut fixture = Fixture::bare("include", V1_INCLUDE, "# FS-a: A\n\nPlain.\n");
     fs::create_dir_all(fixture.root.join("data/extra")).unwrap();

@@ -36,6 +36,8 @@ owners = [
   "crates/grund-core/src/scanner/global_excludes.rs",
   "crates/grund-core/src/scanner/read_predicate.rs",
   "crates/grund-core/src/scanner/walk.rs",
+  "crates/grund-core/src/scanner/walk_reporting.rs",
+  "crates/grund-core/src/sources/disk.rs",
   "crates/grund-core/src/workspace/declared.rs",
 ]
 

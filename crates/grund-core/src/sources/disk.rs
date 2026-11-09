@@ -52,6 +52,19 @@ pub(crate) fn path_exists(path: impl AsRef<Path>) -> bool {
     path.as_ref().exists()
 }
 
+/// Whether `path` names something, links followed, as far as the lookup can tell
+/// (§FS-scan.scope.homes.lookup): `Ok(false)` only where it says not found, or a component
+/// above is a regular file. Any other failure says nothing either way, so it is the `Err`.
+pub(crate) fn path_lookup(path: impl AsRef<Path>) -> std::io::Result<bool> {
+    match std::fs::metadata(path) {
+        Ok(_) => Ok(true),
+        Err(error) if matches!(error.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory) => {
+            Ok(false)
+        }
+        Err(error) => Err(error),
+    }
+}
+
 /// The file's bytes as the disk holds them: what a writer reads of the file it
 /// replaces and of the tree it writes into, which no run observes (§FS-fetch.4).
 pub(crate) fn read_bytes(path: impl AsRef<Path>) -> std::io::Result<Vec<u8>> {
