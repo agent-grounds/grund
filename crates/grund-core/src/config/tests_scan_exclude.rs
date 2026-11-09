@@ -70,6 +70,41 @@ fn scan_exclude_offers_only_removal_for_a_bare_slash() {
     );
 }
 
+/// §FS-config.3.5.16: an entry whose last non-empty component is `.` or `..` is
+/// offered removal alone, because no directory bears either name; a `.` or `..`
+/// before the last component leaves the name repair to that component.
+#[test]
+#[ignore = "red until the name repair passes over `.` and `..`; the fix removes this"]
+fn scan_exclude_offers_only_removal_where_the_last_component_is_dot_or_dot_dot() {
+    for (case, entry) in [
+        ("dot", "./"),
+        ("dot_dot", "../"),
+        ("trailing_dot", "a/."),
+        ("trailing_dot_dot", "a/.."),
+        ("dot_dot_twice", "../../"),
+    ] {
+        let err = load_err(
+            &format!("scan_exclude_offers_only_removal_{case}"),
+            &format!(r#"["{entry}"]"#),
+        );
+        assert_eq!(
+            err,
+            format!(
+                "grund.toml:4: [scan] exclude entry `{entry}` contains `/`, not a directory \
+                 name; remove it to keep the scan unchanged"
+            ),
+            "{case}"
+        );
+    }
+    for (case, entry, name) in [("lead_dot", "./a", "a"), ("lead_dot_dot", "../a/", "a")] {
+        let err = load_err(
+            &format!("scan_exclude_names_after_{case}"),
+            &format!(r#"["{entry}"]"#),
+        );
+        assert_eq!(err, refusal(entry, name), "{case}");
+    }
+}
+
 /// §FS-config.3.5.16: only `/` is refused — an empty list and a list of names
 /// load unchanged.
 #[test]
