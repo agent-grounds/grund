@@ -124,6 +124,13 @@ impl Schema {
         })
     }
 
+    /// The row of `kind` if that kind keeps fetched snapshots (§FS-check.3.1.3).
+    pub(crate) fn fetching_row(&self, kind: &str) -> Option<&Row> {
+        self.rows
+            .iter()
+            .find(|row| row.name == kind && row.fetches())
+    }
+
     /// The name of the complement (§FS-config.3.9.2): the row whose place is
     /// `Complement` when one is written, else `code` with no row added
     /// (§AR-config.3.2).
@@ -142,6 +149,14 @@ impl Row {
         self.kind
             .as_ref()
             .is_some_and(|kind| matches!(kind.origin, Origin::External { .. }))
+    }
+
+    /// The one home of a kind that fetches, a file or a folder (§FS-check.3.1.3): the first place
+    /// on purpose, since a fetched row has one (§FS-config-v2.schema.places).
+    pub(crate) fn fetch_home(&self) -> Option<&str> {
+        self.fetches()
+            .then(|| self.file().or(self.folder()))
+            .flatten()
     }
 
     /// Whether this row is the complement (§FS-config.3.9.2.1). A v2 `code` row

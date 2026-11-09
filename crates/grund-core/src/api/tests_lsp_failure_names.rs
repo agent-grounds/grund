@@ -75,3 +75,38 @@ fn a_failure_under_the_anchor_stays_an_error_under_any_of_its_names() {
     assert!(one_failure(&under_another_name), "{under_another_name:?}");
     assert!(outside.is_empty(), "{outside:?}");
 }
+
+/// §FS-check.2.4 in the editor: one report, the same limit as `grund check`. Over the root the
+/// unread value source is the snapshot's own error, so the citation earns nothing; anchored at
+/// `docs` it is outside the report and the finding stands (§FS-check.1.3.6.3).
+#[test]
+fn an_unread_home_withholds_the_finding_only_where_the_failure_is_the_reports_own() {
+    let root = physical_test_root("an_unread_home_withholds_in_the_editor");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"q\"\n\n[schema.kinds.CONST]\n\
+         folders = [\"values\"]\nform = \"value\"\nfetch = \"scripts/fetch\"\n\n\
+         [schema.kinds.page]\ncitable = false\nfiles = [\"docs/offer.md\"]\n",
+    );
+    write(&root.join("values/limits.json"), "{\"CONST-a\": [40\n");
+    write(
+        &root.join("docs/offer.md"),
+        "# Offer\n\nSee \u{a7}CONST-a.\n",
+    );
+    let cites_missing = |rel: &str| {
+        let snapshot = lsp_snapshot(LspSnapshotOpts {
+            path: root.join(rel),
+            path_provided: true,
+            ..LspSnapshotOpts::default()
+        })
+        .expect("build the snapshot");
+        snapshot
+            .report
+            .errors
+            .iter()
+            .any(|finding| finding.message.contains("unknown reference"))
+    };
+
+    assert!(!cites_missing("."), "the root's report holds the failure");
+    assert!(cites_missing("docs"), "the anchor leaves it a caution");
+}

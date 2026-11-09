@@ -77,6 +77,7 @@ mod sizes;
 mod snapshots;
 mod spellings_report;
 mod support;
+mod unread_homes;
 mod value_mismatch;
 mod value_roots;
 mod values;
@@ -112,6 +113,7 @@ pub(crate) use report::check_project;
 pub(crate) use sections::{out_of_scope_section_headings, workspace_out_of_scope_section_headings};
 pub(crate) use spellings_report::name_every_spelling;
 pub(crate) use support::sort_diagnostics;
+pub(crate) use unread_homes::UnreadNames;
 pub(crate) use values::{
     binding_aims_at_embedded_value_authority, binding_target_has_any_value_authority,
 };
@@ -192,6 +194,8 @@ mod tests_selected_check_off;
 mod tests_shorthand;
 #[cfg(test)]
 mod tests_stale_section_noun;
+#[cfg(test)]
+mod tests_unread_homes;
 #[cfg(test)]
 mod tests_unverifiable_rule_scope;
 #[cfg(test)]

@@ -15,8 +15,8 @@ use super::reporting::{reporting, workspace_block_projects};
 use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
-    CheckWorkspace, ScanScope, check_chapter_rules, check_project, name_every_spelling,
-    partition_scan_failures, path_report_scope, repair_index_citations,
+    CheckWorkspace, ScanScope, UnreadNames, check_chapter_rules, check_project,
+    name_every_spelling, partition_scan_failures, path_report_scope, repair_index_citations,
     retain_diagnostics_in_report_scope,
 };
 use crate::config::Config;
@@ -100,13 +100,16 @@ fn check_workspace_context(
         })
         .collect::<BTreeMap<_, _>>();
     // §FS-check.4.12: a qualified citation's `resolve` policy is its target's rule.
+    // §FS-check.2.4: every project's, before any rule, as `run_workspace_check` keeps them.
+    let unread = UnreadNames::of_projects(reporting(&context.projects), report_scope);
     let check_workspace = CheckWorkspace::new(
         &workspace,
         context
             .projects
             .iter()
             .map(|project| (project.alias.as_str(), project.config.rules())),
-    );
+    )
+    .unread(&unread);
     let mut report = CheckReport::default();
     // §FS-check.1.3.6.1: a workspace anchor below its root asks the scope caution once,
     // after the loop, and holds the unread files back for after it (§FS-check.2.2.3.1).
@@ -150,7 +153,7 @@ fn check_workspace_context(
             config.frame()
         };
         // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
-        let no_project = CheckWorkspace::alone(&no_workspace);
+        let no_project = CheckWorkspace::alone(&no_workspace).unread(&unread);
         let mut project_report = check_project(
             config.rules(),
             config.schema(),
