@@ -4,7 +4,7 @@ agents-init: An agent entrypoint such as AGENTS.md lacks the grund init block it
 broken-stub: A stub's link does not lead to a declaration of its ID.
 chapter-cardinality: A declaration has more or fewer chapters of a name than a rule's have sentence allows.
 citation-cardinality: A declaration cites a target more or fewer times than a rule allows.
-config-fetch-names-nothing: A fetch key in a version-2 config names no executable, and is read for now as a kind whose fetch cannot run.
+config-fetch-names-nothing: A fetch key in a version-2 config named no executable, and was read for one more release as a kind whose fetch could not run; such a key is now refused when the config loads.
 config-multiline-string: A value in a version-2 config held a multi-line string, which version 2 does not read, and was read for one more release as before; such a value is now refused when the config loads.
 config-not-toml: A version-2 config held text TOML refuses that grund read for one more release as the readers before it did; such text is now refused when the config loads.
 conflict-marker: A scanned file holds an unresolved merge-conflict block.

@@ -110,6 +110,10 @@ CONST-api-version: ['1.10']
 
 A `§` citation inside a YAML comment is read by nothing, so cite provenance from Markdown. A finding at a YAML source is reported as one at a JSON source is, and a source that cannot be read or parsed exits `2`.
 
+A `fetch` key must name a program. Version 2 refuses an empty or whitespace-only value when the config loads, so `grund config validate` exits 1 and every other command exits 2, at the key's line. In version 2, name the program, or remove the key together with any `[rules.resolution]` entry for the kind and let its missing IDs be errors ([a value that names no executable](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-fetch.md#21-a-value-that-names-no-executable)).
+
+Version 1 loads such a value and meets the rule at `grund fetch` and `grund config migrate`; the setting to remove with the key is `resolve`.
+
 ### `[scan]`
 
 `include`

@@ -56,9 +56,10 @@ folder, or, for a kind that is not a value kind, remove its `fetch` and keep the
 declarations in the source file
 ([§FS-fetch.4.2](../functional-spec/FS-fetch.md#42-a-home-read-as-source-is-refused)).
 
-The `fetch` key must name a program: an empty or whitespace-only value names none. `grund fetch` refuses it at the key's line, before running anything, and says to name the program, or, if the kind is not fetched, to remove the key and any `[rules.resolution] <KIND>` (version 1: `resolve`), after which the kind's missing IDs are errors
-([§FS-fetch.2.1](../functional-spec/FS-fetch.md#21-a-value-that-names-no-executable)).
-`grund check` gives the same repair at each citation of a missing ID rather than sending you to a command with nothing to run:
+The `fetch` key must name a program: an empty or whitespace-only value names none. From grund 0.23.0, version 2 refuses it when the config loads, at the key's line, on every command that loads the config, and no selector suppresses that. Version 1 still loads the key and meets the rule at `grund fetch`, before running anything, and at `grund config migrate`. Either way the repair is the same: name the program, or, if the kind is not fetched, remove the key and any `[rules.resolution] <KIND>` (version 1: `resolve`). A setting of `warn` needs the key, so removing the key alone is a load error, and with both gone the kind's missing IDs are errors
+([§FS-fetch.2.1](../functional-spec/FS-fetch.md#21-a-value-that-names-no-executable),
+[§FS-config-v2.checks.config-fetch-names-nothing](../functional-spec/FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)).
+Under version 1, `grund check` gives the same repair at each citation of a missing ID rather than sending you to a command with nothing to run:
 
 ```text
 docs/arch.md:7: warning: no snapshot for AR-002-other in docs/arch.md — [[kinds]] `AR` fetch names no executable; name the program, or if this kind is not fetched remove the key and any `resolve`, and its missing IDs are then errors

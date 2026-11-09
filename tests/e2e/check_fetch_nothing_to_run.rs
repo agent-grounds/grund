@@ -203,26 +203,28 @@ fn a_near_id_hint_keeps_its_place() {
     );
 }
 
-/// §FS-check.3.1.3.2: a home `fetch` refuses keeps its own tail on a blank key.
+/// §FS-check.3.1.3.2: a home `fetch` refuses keeps its own tail on a blank key. Version 1,
+/// because version 2 refuses the blank key at load (§FS-config-v2.checks.config-fetch-names-nothing).
 #[test]
 fn a_refused_home_keeps_its_tail() {
     let tree = Tree::new();
     tree.write(
         "grund.toml",
-        "grund_config_version = 2\nproject_name = \"g1322\"\n\n[schema.kinds.CONST]\n\
-         files = [\"values/limits.json\"]\nform = \"value\"\nfetch = \"\"\n\n\
-         [rules.resolution]\nCONST = \"warn\"\n",
+        "grund_config_version = 1\nproject_name = \"g1322\"\n\n[scan]\n\
+         include = [\"docs\", \"values\"]\nextensions = [\"json\", \"md\"]\n\n[[kinds]]\n\
+         kind = \"CONST\"\nfile = \"values/limits.json\"\nvalues = true\nfetch = \"\"\n\
+         resolve = \"should\"\n",
     );
     tree.write(
         "values/limits.json",
-        "{\n  \"CONST-room-limit\": [40, \"rooms\"]\n}\n",
+        "{\n  \"CONST-001-room\": [40, \"rooms\"]\n}\n",
     );
-    tree.write("README.md", "See §CONST-zebra-other.\n");
+    tree.write("docs/a.md", "See §CONST-002-zebra.\n");
     let run = tree.grund(".", &["check"]);
     assert_eq!(run.code, 0, "{}", run.shown());
     run.has_line(
-        "README.md:1: warning: no snapshot for CONST-zebra-other in values/limits.json — declare \
-         it in that value source",
+        "docs/a.md:1: warning: no snapshot for CONST-002-zebra in values/limits.json — declare it \
+         in that value source",
     );
 }
 
@@ -267,14 +269,15 @@ fn a_blank_key_in_the_target_gives_the_repair_through_an_import() {
     );
 }
 
-/// §FS-check.3.1.3.2: the target's working key keeps the command, whatever the citer holds.
+/// §FS-check.3.1.3.2: the target's working key keeps the command, whatever the citer holds; a
+/// version 2 citer cannot hold a blank key (§FS-config-v2.checks.config-fetch-names-nothing).
 #[test]
 #[cfg(unix)]
 fn a_runnable_key_in_the_target_keeps_the_command_through_an_import() {
     let tree = Tree::new();
     tree.v1("lib", " ", "should", "AR-001-power");
     tree.write("lib/ ", "#!/bin/sh\nexit 0\n");
-    citer(&tree, "");
+    citer(&tree, "scripts/absent");
     let run = tree.grund("consumer", &["check"]);
     assert_eq!(run.code, 0, "{}", run.shown());
     run.has_line(
@@ -288,30 +291,26 @@ const SHORT_HINT: &str = "hint: a value kind's home must exist; create the file"
 const LONG_HINT: &str = "hint: a value kind's home must exist; create the empty file, then run \
                          `grund fetch <ID>` to write the first snapshot";
 
-/// A project whose value kind's Markdown home does not exist yet, keyed `fetch = "{value}"`.
-fn absent_value_home(tree: &Tree, version: u32, value: &str) {
-    let config = if version == 1 {
-        format!(
+/// A version 1 project whose value kind's Markdown home does not exist yet, keyed `fetch = "{value}"`.
+fn absent_value_home(tree: &Tree, value: &str) {
+    tree.write(
+        "grund.toml",
+        &format!(
             "grund_config_version = 1\nproject_name = \"vals\"\n\n[scan]\n\
              extensions = [\"rs\", \"md\"]\n\n[[kinds]]\nkind = \"CONST\"\n\
              file = \"values/limits.md\"\nvalues = true\nfetch = \"{value}\"\n"
-        )
-    } else {
-        format!(
-            "grund_config_version = 2\nproject_name = \"vals\"\n\n[schema.kinds.CONST]\n\
-             files = [\"values/limits.md\"]\nform = \"value\"\nfetch = \"{value}\"\n"
-        )
-    };
-    tree.write("grund.toml", &config);
+        ),
+    );
 }
 
-/// §FS-fetch.4.1: a key with nothing to run takes the shorter hint, under either version,
-/// and the refusal's first line and exit 2 stand.
+/// §FS-fetch.4.1: a key with nothing to run takes the shorter hint, and the refusal's first
+/// line and exit 2 stand. Version 1 only: version 2 refuses such a key at load
+/// (§FS-config-v2.checks.config-fetch-names-nothing).
 #[test]
 fn a_blank_key_on_an_absent_value_home_takes_the_shorter_hint() {
-    for (version, value) in [(1, ""), (1, " "), (2, ""), (2, " ")] {
+    for value in ["", " "] {
         let tree = Tree::new();
-        absent_value_home(&tree, version, value);
+        absent_value_home(&tree, value);
         let run = tree.grund(".", &["check"]);
         assert_eq!(run.code, 2, "{}", run.shown());
         assert!(
@@ -330,7 +329,7 @@ fn a_blank_key_on_an_absent_value_home_takes_the_shorter_hint() {
 #[cfg(unix)]
 fn a_whitespace_value_naming_a_file_keeps_the_long_hint() {
     let tree = Tree::new();
-    absent_value_home(&tree, 1, " ");
+    absent_value_home(&tree, " ");
     tree.write(" ", "#!/bin/sh\nexit 0\n");
     let run = tree.grund(".", &["check"]);
     assert_eq!(run.code, 2, "{}", run.shown());

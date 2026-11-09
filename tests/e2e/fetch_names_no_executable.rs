@@ -224,7 +224,6 @@ impl Run {
 /// §FS-config-v2.checks.config-fetch-names-nothing: exit 2, and 1 on `config validate`, with the
 /// one refusal line once and nothing else, for every value that names nothing.
 #[test]
-#[ignore = "red until #1321 refuses a blank version 2 fetch at load; implement removes this"]
 fn v2_refuses_at_load_on_every_reporting_command() {
     for (value, spelled) in [(EMPTY, "empty"), (BLANK, "space"), (TAB, "tab")] {
         let tree = Tree::new(&format!("refuse-{spelled}"), Two, Some(value), "");
@@ -278,7 +277,6 @@ fn v1_fetch_refuses_before_any_spawn() {
 
 /// §FS-fetch.2.1: version 2's `grund fetch` meets the load refusal, and writes nothing.
 #[test]
-#[ignore = "red until #1321 refuses a blank version 2 fetch at load; implement removes this"]
 fn v2_fetch_meets_the_load_refusal() {
     for value in [EMPTY, BLANK] {
         let tree = Tree::new(&format!("fetch-v2-{}", value.len()), Two, Some(value), "");
@@ -364,7 +362,6 @@ fn leaning_tree_migrate_refusal_names_resolve() {
 /// §FS-fetch.2.1: why the repair says what it says — the three-way behaviour of the tree. Version
 /// 1 goes 0, 2, 1 and version 2, whose blank key no longer loads, 2, 2, 1.
 #[test]
-#[ignore = "red until #1321 refuses a blank version 2 fetch at load; implement removes this"]
 fn leaning_tree_guard_the_repair_is_true_of_it() {
     for version in [One, Two] {
         let name = format!("guard-{}", version.id());
@@ -402,7 +399,6 @@ fn leaning_tree_guard_the_repair_is_true_of_it() {
 /// §FS-config-v2.checks.config-fetch-names-nothing: the refusal's exact bytes, none of the
 /// window's words left in it.
 #[test]
-#[ignore = "red until #1321 refuses a blank version 2 fetch at load; implement removes this"]
 fn the_refusal_is_these_exact_bytes() {
     let run = Tree::new("bytes", Two, Some(EMPTY), "").run(&["check"]);
     assert_eq!(
@@ -442,7 +438,6 @@ fn an_earlier_refusal_keeps_its_own_error() {
 
 /// §FS-config-v2.checks.config-fetch-names-nothing: a member's refusal names its own file.
 #[test]
-#[ignore = "red until #1321 refuses a blank version 2 fetch at load; implement removes this"]
 fn a_workspace_member_refusal_names_the_members_file() {
     let tree = Tree::new("member", Two, Some(EMPTY), "").into_workspace_member();
     for (args, code) in [(&["check"][..], 2), (&["config", "validate"], 1)] {
@@ -460,7 +455,6 @@ fn a_workspace_member_refusal_names_the_members_file() {
 /// §FS-config-v2.checks.config-fetch-names-nothing: on a tree that loads the spent code is
 /// accepted by both flags in both spellings, and `--only` says it is spent (§FS-check.1.4.1).
 #[test]
-#[ignore = "red until #1321 refuses a blank version 2 fetch at load; implement removes this"]
 fn the_code_is_spent_and_its_selectors_still_accepted() {
     let tree = Tree::new("spent", Two, Some("scripts/fetch"), "");
     tree.cite_declared(Two);
@@ -486,7 +480,6 @@ fn the_code_is_spent_and_its_selectors_still_accepted() {
 
 /// §FS-config-v2.checks.config-fetch-names-nothing: no selector suppresses the load error.
 #[test]
-#[ignore = "red until #1321 refuses a blank version 2 fetch at load; implement removes this"]
 fn a_blank_key_is_refused_under_every_selector() {
     let tree = Tree::new("selected", Two, Some(EMPTY), "");
     let only = format!("--only={CODE}");
@@ -511,7 +504,6 @@ fn a_blank_key_is_refused_under_every_selector() {
 /// §FS-config-v2.checks.config-fetch-names-nothing: `config explain` reads only the version, so
 /// it answers as spent even on a tree with a blank key, and `--codes` still lists the code.
 #[test]
-#[ignore = "red until #1321 refuses a blank version 2 fetch at load; implement removes this"]
 fn explain_answers_for_the_code_as_spent() {
     let tree = Tree::new("explain", Two, Some(EMPTY), "");
     let run = tree.run(&["config", "explain", CODE]);
@@ -605,7 +597,6 @@ fn control_a_file_named_blank_still_runs_under_version_1() {
 /// §FS-fetch.2.1: version 2's test is of the string alone, so that file does not rescue the key.
 #[test]
 #[cfg(unix)]
-#[ignore = "red until #1321 refuses a blank version 2 fetch at load; implement removes this"]
 fn version_2_refuses_a_blank_key_even_with_a_file_of_that_name() {
     let tree = Tree::new("named-blank-v2", Two, Some(BLANK), "");
     tree.write_fetcher(BLANK);

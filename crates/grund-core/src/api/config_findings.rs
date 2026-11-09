@@ -10,10 +10,7 @@
 //! (§AR-system.2.9.1, §AR-bindings.2).
 
 use crate::checker::sort_diagnostics;
-use crate::config::{
-    Config, Display, config_file_under, fetch_key_name, fetch_key_setting, home_form_of,
-    names_no_executable,
-};
+use crate::config::{Config, Display, config_file_under, home_form_of};
 /// §FS-check.4.3: the warning for a config root holding both discovery names —
 /// the bare `grund.toml` won, and the `.agents/grund.toml` beside it is read by
 /// nothing (§FS-config.1.1). `line`-less, so it prints as a CLI-level `warning:`
@@ -112,49 +109,10 @@ fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Dia
     })
 }
 
-/// §FS-config-v2.checks.config-fetch-names-nothing: the clause the warning ends with, naming
-/// the release from which the key is refused instead.
-const FETCH_WINDOW_CLAUSE: &str = "this warning becomes an error in grund 0.23.0";
-
-/// §FS-config-v2.checks.config-fetch-names-nothing: one warning per version-2 row whose `fetch`
-/// names no executable (§FS-fetch.2.1), at the key's line, behind the `<config>:<line>:`
-/// breadcrumb (§FS-errors.2.2.1), which JSON carries too. Never for version 1 (§FS-config.5.2).
-fn fetch_names_nothing_warnings(config: &Config, display: Display<'_>) -> Vec<Diagnostic> {
-    let project = config.project();
-    if project.version != 2 {
-        return Vec::new();
-    }
-    let rows = project.schema.rows.iter();
-    rows.filter_map(|row| {
-        let (fetch, at) = row.fetch_key()?;
-        let at = at.filter(|_| names_no_executable(fetch))?;
-        let file = config_file_under(&config.root, &at.path);
-        Some(Diagnostic {
-            code: Code::CONFIG_FETCH_NAMES_NOTHING,
-            message: format!(
-                "{}:{}: {} names no executable, read for now as a kind whose fetch cannot run; \
-                 {}; {FETCH_WINDOW_CLAUSE}",
-                display.path(&file),
-                at.line,
-                fetch_key_name(project.version, &row.name),
-                remedies::config_fetch_names_nothing(fetch_key_setting(project.version, &row.name))
-            ),
-            path: Some(file),
-            line: Some(at.line),
-            column: None,
-            sites: Vec::new(),
-            authority: Vec::new(),
-        })
-    })
-    .collect()
-}
-
 /// The findings a loaded config carries on its own — the redundant discovery
-/// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11),
-/// a file read as version 1 (§FS-check.checks.config-version-1) and a version-2
-/// `fetch` that names no executable
-/// (§FS-config-v2.checks.config-fetch-names-nothing), in that order, which the
-/// report then sorts (§FS-check.checks.config-version-1.1). All
+/// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11)
+/// and a file read as version 1 (§FS-check.checks.config-version-1), in that
+/// order, which the report then sorts (§FS-check.checks.config-version-1.1). All
 /// are known from the file the run read rather than from the walk, which is why
 /// they arrive together. The version-2 reader's window warnings are spent from
 /// grund 0.22.0 (§FS-config-v2.checks.config-not-toml).
@@ -171,7 +129,6 @@ pub(super) fn config_diagnostics<'a>(
         .into_iter()
         .chain(deprecated_config_location_warning(config))
         .chain(config_version_1_warning(config, display))
-        .chain(fetch_names_nothing_warnings(config, display))
 }
 
 /// The config findings a workspace names (§FS-check.4.11.3): the root's config,
