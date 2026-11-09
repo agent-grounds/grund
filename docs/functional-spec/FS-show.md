@@ -231,7 +231,7 @@ If an ID has more than one home — the duplicate-declaration error from [§FS-d
 ambiguous ID: <ID> (declared at <path>:<line>, <path>:<line>[, ...])
 ```
 
-Sites are listed in lexicographic `path:line` order so the message is stable across runs. The repo must be fixed (run `grund check` first) before `show` will return a body. With `--format=json`, those same sites travel in the finding's `sites` field, `[{ path, line }]` in the same order ([§FS-errors.5](FS-errors.md#5-json-format)).
+Sites follow [§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites). The repo must be fixed (run `grund check` first) before `show` will return a body. With `--format=json`, those same sites travel in the finding's `sites` field, `[{ path, line }]` in the same order ([§FS-errors.5](FS-errors.md#5-json-format)).
 
 This shape matches the bare-message form used for `ID not found` and `section not found` ([§FS-show.3](FS-show.md#3-outputs)): all three are queries that found something other than exactly one body. An ambiguous number-only shorthand fails the same way but names candidates rather than sites ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates)).
 
@@ -253,7 +253,7 @@ The same refusal one level down. If two citable headings inside the selected dec
 ambiguous section: FS-001-login.1 (declared at docs/functional-spec/FS-001-login.md:5, docs/functional-spec/FS-001-login.md:9)
 ```
 
-Sites are in `path:line` order, as in [§FS-show.2.2.1](FS-show.md#221-ambiguous-id), and the exit is `1` with the bare stderr line of [§FS-errors.2.3](FS-errors.md#23-bare-query-failure). The repo must be fixed before `show` will return a body. With `--format=json`, the same sites travel in the finding's `sites` field too ([§FS-errors.5](FS-errors.md#5-json-format)).
+Sites follow [§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites), and the exit is `1` with the bare stderr line of [§FS-errors.2.3](FS-errors.md#23-bare-query-failure). The repo must be fixed before `show` will return a body. With `--format=json`, the same sites travel in the finding's `sites` field too ([§FS-errors.5](FS-errors.md#5-json-format)).
 
 What this replaces is worse than a pick: the reader used to get *both* headings and both bodies concatenated into one slice, a body no heading in the file spans ([§DF-duplicate-section-path.1](../decisions/functional/DF-duplicate-section-path.md#1-context)).
 

@@ -153,6 +153,8 @@ mod tests_embedding_report_base;
 #[cfg(all(test, unix))]
 mod tests_embedding_scan_errors;
 #[cfg(test)]
+mod tests_embedding_site_order;
+#[cfg(test)]
 mod tests_embedding_sources;
 #[cfg(test)]
 mod tests_enclosing_unit;

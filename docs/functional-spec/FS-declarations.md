@@ -744,7 +744,7 @@ business, in [§FS-check.2](FS-check.md#2-outputs) and [§FS-check.1.4](FS-check
 
 ### checks.duplicate: Duplicate declaration
 
-The same ID declared more than once: any two declarations that are not stubs ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)), whether headings or inline doc-comment declarations and whether in one file or several. Reported per [§FS-check.2.1](FS-check.md#21-report-format): one error located at the lexicographically-first site, with the remaining sites listed in the message.
+The same ID declared more than once: any two declarations that are not stubs ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)), whether headings or inline doc-comment declarations and whether in one file or several. Reported per [§FS-check.2.1](FS-check.md#21-report-format): one error located at the first site ([§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites)), with the remaining sites listed in the message.
 
 Duplicate keys in one value source ([§FS-values.terms](FS-values.md#terms-terms)), IDs declared across value sources, Markdown/value-source collisions, and overlapping opted-in ownership feed this same ambiguity rule even when their components agree. A duplicate target cannot be value-compared ([§FS-values.2.3](FS-values.md#23-duplicates-and-ownership)). The finding names each actual site once, the two spellings of a value source linked into a second home among them, and never one spelling twice ([§FS-values.2.3](FS-values.md#23-duplicates-and-ownership)).
 
