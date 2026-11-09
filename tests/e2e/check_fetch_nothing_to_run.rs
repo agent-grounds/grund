@@ -284,6 +284,7 @@ fn a_runnable_key_in_the_target_keeps_the_command_through_an_import() {
 }
 
 const SHORT_HINT: &str = "hint: a value kind's home must exist; create the file";
+#[cfg(unix)]
 const LONG_HINT: &str = "hint: a value kind's home must exist; create the empty file, then run \
                          `grund fetch <ID>` to write the first snapshot";
 
