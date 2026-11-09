@@ -304,7 +304,7 @@
               },
               "fetch": {
                 "type": "string",
-                "description": "The executable `grund fetch` runs to save a missing external snapshot."
+                "description": "The executable `grund fetch` runs to save a missing external snapshot. It must name a program: an empty or whitespace-only value names none and is reported at its line."
               }
             },
             "additionalProperties": false
@@ -1185,7 +1185,7 @@
         },
         "fetch": {
           "type": "string",
-          "description": "The executable `grund fetch` runs to save a missing external snapshot."
+          "description": "The executable `grund fetch` runs to save a missing external snapshot. It must name a program: an empty or whitespace-only value names none and is reported at its line."
         },
         "form": {
           "type": "string",

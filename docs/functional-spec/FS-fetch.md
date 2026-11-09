@@ -28,7 +28,7 @@ one configured file or folder home, is an operational refusal on stderr and exit
 
 ## 2. Integration invocation
 
-`[[kinds]].fetch` names one executable. A relative value is resolved from the selected
+`[[kinds]].fetch` names one executable ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable)). A relative value is resolved from the selected
 project's config root. Grund invokes that path directly, never through a shell, appends
 the local unqualified ID as the integration's sole argument, inherits the user's
 environment, and provides no implicit input on stdin. Deliberately running `fetch` is
@@ -38,6 +38,25 @@ Fetcher stdout is snapshot data and is never copied to grund's stdout. Exit 0 ad
 to validation. A spawn failure, signal, or non-zero integration exit is an operational
 error on stderr and exit 2. The message identifies the configured integration and ID;
 the tree remains byte-identical.
+
+### 2.1 A value that names no executable
+
+The key names an executable, under either config version. A value that is empty or holds only whitespace names none, and one test of the string says so wherever it is asked. A value with any other character names what it spells: `" scripts/fetch "` is a real name with stray spaces, is taken literally, and fails as a spawn failure of [§FS-fetch.2](FS-fetch.md#2-integration-invocation) if nothing is there.
+
+`grund fetch <ID>` on such a key runs nothing. It exits `2`, the tree stays byte-identical, and the message is the spawn failure's, with what is wrong and the key's line where the operating system's reason stood:
+
+```text
+error: cannot run fetch integration `` for AR-power: grund.toml:6: `[schema.kinds.AR] fetch` names no executable; name the program, or if this kind is not fetched remove the key and any `[rules.resolution] AR`, and its missing IDs are then errors
+error: cannot run fetch integration `` for AR-001-power: grund.toml:6: [[kinds]] `AR` fetch names no executable; name the program, or if this kind is not fetched remove the key and any `resolve`, and its missing IDs are then errors
+```
+
+The first line is a version 2 row and the second a version 1 row. The path is the config file that holds the key, as a report path ([§FS-errors.4](FS-errors.md#4-determinism)), so a workspace member's names the member's own file. The value is quoted as written.
+
+The repair is one sentence, printed in the same words wherever the key is reported: here, by the version 2 warning and its refusal ([§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)), and by migration ([§FS-config-migrate.3.1.10](FS-config-migrate.md#3110-a-fetch-that-names-no-executable)). It holds for every tree, so it does not ask which one it is in. A kind with a `[rules.resolution] <KIND>` (version 1: `resolve`) on it can load only while the key is there ([§FS-config-v2.rules.resolution](FS-config-v2.md#rulesresolution-rulesresolution), [§FS-config.3.4.10.2](FS-config.md#34102-fetch-and-resolve)), so the setting goes with the key, and with both gone a citation of an ID the kind does not hold is an error.
+
+The test is of the string alone. A whitespace-only value that names a file at the config root, one literally named `" "`, is still run by `grund fetch`, as it was before this rule was written: under version 1 for good ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)), and under version 2 for as long as such a key loads ([§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)). This is a question `grund fetch` asks of the disk, after the test of the string says the value names nothing. An empty value can never name a file.
+
+The check comes immediately before the spawn would, so every refusal `grund fetch` makes before running the integration stands in front of it, as they stand in front of a spawn failure.
 
 ## 3. Accepted declaration
 
