@@ -293,14 +293,13 @@ fn leaning_tree(name: &str, version: Version, value: Option<&str>, setting: bool
 
 /// §FS-config-v2.checks.config-fetch-names-nothing: the key still lets the setting load.
 #[test]
-#[ignore = "red until #1233 the v2 reader warns; implement removes this"]
 fn leaning_tree_warns_under_version_2_and_repairs_truthfully() {
     let tree = leaning_tree("lean-v2", Two, Some(EMPTY), true);
     let run = tree.run(&["check"]);
     assert_eq!(run.code, 0, "{}", run.shown());
     assert_eq!(run.has_line(&warning()), 1, "{}", run.shown());
     assert!(
-        run.stderr.contains("run grund fetch AR-other"),
+        run.stdout.contains("run grund fetch AR-other"),
         "{}",
         run.shown()
     );
@@ -360,7 +359,6 @@ fn leaning_tree_guard_the_repair_is_true_of_it() {
 
 /// §FS-config-v2.checks.config-fetch-names-nothing: the surfaces and selectors of the window.
 #[test]
-#[ignore = "red until #1233 the v2 reader warns; implement removes this"]
 fn the_warning_reaches_its_surfaces_and_selectors() {
     let tree = Tree::new("surfaces", Two, Some(EMPTY), "");
     for args in [&["config", "validate"][..], &["config", "show"]] {
@@ -382,7 +380,7 @@ fn the_warning_reaches_its_surfaces_and_selectors() {
         "\"line\":6",
     ] {
         assert!(
-            json.stdout.replace(": ", ":").contains(field),
+            json.stderr.replace(": ", ":").contains(field),
             "{field}\n{}",
             json.shown()
         );
