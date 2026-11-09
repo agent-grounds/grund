@@ -131,6 +131,7 @@ NOT_YET_MIGRATED = (
 # and rows land with the contract, and the change that ships each one (§DF-remote-projects,
 # §DF-imports) adds it to the selector constant and strikes it off here.
 SPECIFIED_AHEAD = {
+    "FS-config-v2": ("config-fetch-names-nothing",),
     "FS-remote-projects": ("remote-missing", "remote-modified", "remote-orphan", "remote-stale"),
 }
 

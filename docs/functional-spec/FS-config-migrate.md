@@ -233,6 +233,19 @@ refused: grund.toml:4: [scan] extensions names `tar.gz`, which is not a final ex
 
 Under the entry, the files [§FS-config-migrate.3.1.4.1](FS-config-migrate.md#3141-the-files-named-are-the-ones-version-1-reads) and [§FS-config-migrate.3.1.5.1](FS-config-migrate.md#3151-the-files-named-are-the-ones-version-1-reads) name are still the ones version 1 reads. So they include each file with no extension that the scan reads through it ([§FS-scan.scope.extensions.empty](FS-scan.md#scopeextensionsempty-in-version-1-an-empty-string-in-the-list-reads-a-file-with-no-extension)), `Makefile` for one, and leave out one it does not read, such as a hidden `.gitkeep`. Those details ask the scan itself, so a file whose extension is not UTF-8 is named exactly when the scan reads it. Under a list naming an extension spelled with U+FFFD it is not read, because the scan asks the path and not the printed name, so it is neither named nor counted.
 
+#### 3.1.10 A `fetch` that names no executable
+
+A version 1 row whose `fetch` names no executable loads for good ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable), [§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)), and version 2 warns for that value and then refuses it ([§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)). Writing the value out would carry the mistake across, and no command can know whether the author meant a program or no fetching at all. Migration refuses at the key's line, with the repair [§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable) prints, made under version 1:
+
+```text
+refused: grund.toml:6: [[kinds]] `AR` fetch names no executable
+  repair: under version 1, name the program, or if this kind is not fetched remove the key and any `resolve`, and its missing IDs are then errors; grund check shows its effect
+```
+
+The test is of the string alone ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable)), so a whitespace-only value is refused whether or not a file of that name exists. A value with any other character is mapped as written.
+
+A row that also sets `value_chapter` earns two blocks, this one at the `fetch` line and that of [§FS-config-migrate.3.1.7.1](FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind) at the `value_chapter` line, one each, ordered by line as every refusal of [§FS-config-migrate.3.1](FS-config-migrate.md#31-a-refusal-names-a-v1-repair) is. A person who removes the `fetch` key under the first block meets the words of [§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet) on the next run, because the row no longer sets `fetch`.
+
 ### 3.2 Notices
 
 Some settings are written with a notice rather than refused, because version 1 gave them no force ([§DISC-core-concerns.7.5](../discussions/proposals/2026-09-30-core-concerns.md#75-what-has-no-v2-spelling-and-how-migrate-reports-it)):
@@ -554,7 +567,7 @@ not written: grund check --suggestions differs (inspect the comparison above); g
 | `[id] section_separator` | `[schema] section_separator` | mapped |
 | `[id] slug_pattern` | `[schema] slug_pattern` | mapped, and written even at v1's default |
 | `[[kinds]] citable` | `citable = false` | mapped |
-| `[[kinds]] fetch` | `fetch` | mapped |
+| `[[kinds]] fetch` | `fetch`; a value that names no executable has none ([§FS-config-migrate.3.1.10](FS-config-migrate.md#3110-a-fetch-that-names-no-executable)) | mapped, or refused for that value |
 | `[[kinds]] file` | `files = […]` | mapped |
 | `[[kinds]] folder` | `folders = […]` | mapped |
 | `[[kinds]] format` | the row's `id_format` | mapped |

@@ -113,7 +113,7 @@ One row per kind: where its declarations live and how they are read. `kinds = []
 | `rules` | boolean | `false` | Make every declaration title of this kind an executable rule sentence. [§FS-config.3.4.12](../functional-spec/FS-config.md#3412-rules--rule-declaration-kinds) |
 | `format` | string | inherits `[id] format` | This kind's ID template, overriding `[id] format`. [§FS-config.3.4.10.1](../functional-spec/FS-config.md#34101-format) |
 | `resolve` | `"must"` \| `"should"` | must when fetch is set, else absent | How a missing external snapshot is reported: `must` as a dangling citation, `should` as a warning. [§FS-config.3.4.10.2](../functional-spec/FS-config.md#34102-fetch-and-resolve) |
-| `fetch` | string | — | The executable `grund fetch` runs to save a missing external snapshot. [§FS-config.3.4.10.2](../functional-spec/FS-config.md#34102-fetch-and-resolve) |
+| `fetch` | string | — | The executable `grund fetch` runs to save a missing external snapshot. It must name a program: an empty or whitespace-only value names none and is reported at its line. [§FS-config.3.4.10.2](../functional-spec/FS-config.md#34102-fetch-and-resolve) |
 
 ### `[scan]`
 
@@ -307,7 +307,7 @@ One row: its places, its form, and its fields. A row may list several places; a 
 | `scan` | boolean | `true` | `false` lists the kind in the Project map without walking any of its places; a scanned place nested under it is still walked. Refused on `code`: narrow its places or use `[schema.sources] exclude`. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `index` | string or `false` | README.md (no E2E special case in v2) | The index file each folder keeps, which must list every declaration that folder owns; `false` opts out. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `id_format` | string | inherits `[schema] id_format` | This kind's ID template, overriding `[schema] id_format`. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
-| `fetch` | string | — | The executable `grund fetch` runs to save a missing external snapshot. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
+| `fetch` | string | — | The executable `grund fetch` runs to save a missing external snapshot. It must name a program: an empty or whitespace-only value names none and is reported at its line. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `form` | `"prose"` \| `"value"` \| `"rule"` | `"prose"` | What a declaration is: ordinary `prose`, a first-class `value`, or an executable `rule`. [§FS-fields.declare.form](../functional-spec/FS-fields.md#declareform-form-is-a-row-key) |
 | `closed` | `"must"` \| `"warn"` \| `"should"` \| `"may"` | `"may"` | How strongly a chapter that is neither a declared field nor a numbered section is reported. [§FS-fields.declare.closed](../functional-spec/FS-fields.md#declareclosed-closed-is-a-strength-on-the-row) |
 

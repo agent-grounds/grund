@@ -56,6 +56,9 @@ folder, or, for a kind that is not a value kind, remove its `fetch` and keep the
 declarations in the source file
 ([§FS-fetch.4.2](../functional-spec/FS-fetch.md#42-a-home-read-as-source-is-refused)).
 
+The `fetch` key must name a program: an empty or whitespace-only value names none. `grund fetch` refuses it at the key's line, before running anything, and says to name the program, or, if the kind is not fetched, to remove the key and any `[rules.resolution] <KIND>` (version 1: `resolve`), after which the kind's missing IDs are errors
+([§FS-fetch.2.1](../functional-spec/FS-fetch.md#21-a-value-that-names-no-executable)).
+
 For a folder home, fetch replaces an existing Markdown snapshot even when its
 filename differs from the ID. If a recognized value source in that home already
 declares the requested ID, fetch instead exits 2 and names the source, leaving

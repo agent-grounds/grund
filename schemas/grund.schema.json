@@ -474,7 +474,7 @@
               },
               "fetch": {
                 "type": "string",
-                "description": "The executable `grund fetch` runs to save a missing external snapshot.",
+                "description": "The executable `grund fetch` runs to save a missing external snapshot. It must name a program: an empty or whitespace-only value names none and is reported at its line.",
                 "x-grund-spec": {
                   "id": "FS-config.3.4.10.2",
                   "href": "docs/functional-spec/FS-config.md#34102-fetch-and-resolve"
@@ -1773,7 +1773,7 @@
         },
         "fetch": {
           "type": "string",
-          "description": "The executable `grund fetch` runs to save a missing external snapshot.",
+          "description": "The executable `grund fetch` runs to save a missing external snapshot. It must name a program: an empty or whitespace-only value names none and is reported at its line.",
           "x-grund-spec": {
             "id": "FS-config-v2.schema.places",
             "href": "docs/functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places"
