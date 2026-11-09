@@ -18,6 +18,7 @@ use super::support::{
     citation_in_markdown_inline_code, close_enough_for_hint, dangling_message_spelled,
     edit_distance, missing_snapshot_message, qualify,
 };
+use super::unread_homes::UnreadNames;
 use super::{mounted_citation::report_mounted_duplicate, reference_scope::ScanScope};
 use crate::config::{Frame, Schema};
 use crate::grammar::{render_catalog_id, render_citation_id};
@@ -99,6 +100,7 @@ pub(super) fn check_citation_resolution(
     locks: &[LockJudgement<'_>],
     tier: ReferenceTier,
     outside: Option<&ScanScope>,
+    unread: &UnreadNames,
     report: &mut CheckReport,
 ) {
     // §FS-check.3.24: every persisted local spelling is independently loud.
@@ -252,11 +254,11 @@ pub(super) fn check_citation_resolution(
         // nowhere in its target namespace is dangling, mixed too (§FS-citations.checks.mixed-path).
         if !target.catalog.declarations.contains_key(&cite.id) {
             // §FS-check.3.1.3: a fetch-enabled target kind keeps snapshots.
-            let snapshot_row = target
-                .schema
-                .rows
-                .iter()
-                .find(|row| row.name == cite.id.kind && row.fetches());
+            let snapshot_row = target.schema.fetching_row(&cite.id.kind);
+            // §FS-check.2.4: no conclusion about an ID absent from a home this run could not read.
+            if snapshot_row.is_some_and(|row| unread.withholds(&target.run.root, row)) {
+                continue;
+            }
             // §FS-config-v2.schema.sources: Markdown is the citing file's language's.
             let markdown = frame.reading(schema, &cite.file).markdown;
             let in_inline_code = citation_in_markdown_inline_code(findings, frame, cite, markdown);
@@ -271,10 +273,8 @@ pub(super) fn check_citation_resolution(
                 // a target kind's in-scope `should` must not demote this opt-in tier.
                 let should_warn = tier == ReferenceTier::Configured
                     && snapshot_warns(resolve, cite.namespace.as_deref(), &row.name);
-                // First place on purpose: a fetched row has one (§FS-config-v2.schema.places).
                 let home = row
-                    .file()
-                    .or(row.folder())
+                    .fetch_home()
                     .expect("fetch-enabled kind has exactly one home after config validation");
                 let home = frame.display_path(&target.run.root.join(home));
                 let message = missing_snapshot_message(

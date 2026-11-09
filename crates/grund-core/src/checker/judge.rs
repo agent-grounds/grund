@@ -18,6 +18,7 @@ use super::references::{ReferenceTier, check_citation_resolution};
 use super::section_lock::check_section_locks;
 use super::snapshots::arm_missing_snapshot;
 use super::spellings_report::PlaceNames;
+use super::unread_homes::UnreadNames;
 use super::values::check_values;
 use crate::config::{Frame, KindResolution, Rules, Schema};
 use crate::grammar::render_catalog_id;
@@ -34,6 +35,8 @@ use crate::resolver::{WorkspaceCheckTarget, judge_section_locks, resolved_coordi
 pub(crate) struct CheckWorkspace<'a> {
     pub(crate) targets: &'a BTreeMap<String, WorkspaceCheckTarget<'a>>,
     pub(crate) rules: BTreeMap<&'a str, &'a Rules>,
+    /// What this run could not read of its own, which a citation asks (§FS-check.2.4).
+    pub(crate) unread: &'a UnreadNames,
 }
 
 impl<'a> CheckWorkspace<'a> {
@@ -45,7 +48,14 @@ impl<'a> CheckWorkspace<'a> {
         Self {
             targets,
             rules: rules.into_iter().collect(),
+            unread: UnreadNames::nothing(),
         }
+    }
+
+    /// This workspace, judged knowing what the run could not read (§FS-check.2.4).
+    pub(crate) fn unread(mut self, unread: &'a UnreadNames) -> Self {
+        self.unread = unread;
+        self
     }
 
     /// A project judged alone: no target beyond its own.
@@ -102,6 +112,7 @@ pub(crate) fn judge(
         &locks,
         ReferenceTier::Configured,
         None,
+        workspace.unread,
         &mut report,
     );
     // §FS-check.3.14.2: a verdict on the citing token and the catalog it names.

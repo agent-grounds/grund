@@ -10,6 +10,7 @@ use super::finding_sides::Side;
 use super::off_format_citations::check_off_format_citations;
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::sections::retain_heading_findings_in_scope;
+use super::unread_homes::UnreadNames;
 use crate::config::{Frame, Schema, WalkBounds, source_scope_name, unwalked_home_roots};
 use crate::grammar::Grammar;
 use crate::model::{
@@ -80,16 +81,12 @@ impl ScanScope {
     /// resolved. No filesystem call.
     pub(crate) fn holds_failure(
         &self,
-        (path, reason): &ScanError,
+        failure: &ScanError,
         names: &FailureNames,
     ) -> Option<PathBuf> {
-        let spellings = self.spellings.names_of(path);
-        self.held_name(
-            names
-                .of(path, reason)
-                .chain(spellings.iter().map(PathBuf::as_path)),
-        )
-        .map(Path::to_path_buf)
+        let every = every_failure_name(failure, names, &self.spellings);
+        self.held_name(every.iter().map(PathBuf::as_path))
+            .map(Path::to_path_buf)
     }
 
     /// The one "any name" answer [`Self::contains_any_name`] and [`Self::holds_failure`] share,
@@ -108,6 +105,20 @@ impl ScanScope {
     fn is_handed(&self, name: &Path) -> bool {
         self.handed.iter().any(|root| name.starts_with(root))
     }
+}
+
+/// Every name of a scan failure (§FS-check.2.4.2): the ones the walk kept for its directory entry,
+/// then, for a file it could not read, the file's names in the run's `Spellings`.
+pub(super) fn every_failure_name(
+    (path, reason): &ScanError,
+    names: &FailureNames,
+    spellings: &Spellings,
+) -> Vec<PathBuf> {
+    names
+        .of(path, reason)
+        .map(Path::to_path_buf)
+        .chain(spellings.names_of(path))
+        .collect()
 }
 
 /// §FS-check.1.3.6.3: a run's failures, split into those inside the report scope, each under the
@@ -386,6 +397,7 @@ pub(crate) fn out_of_scope_references(
     frame: Frame<'_>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     scope: Option<&ScanScope>,
+    unread: &UnreadNames,
 ) -> Vec<Diagnostic> {
     let Some(scope) = scope else {
         return Vec::new();
@@ -403,6 +415,7 @@ pub(crate) fn out_of_scope_references(
         &locks,
         ReferenceTier::OutOfScope,
         Some(scope),
+        unread,
         &mut tier,
     );
     // §FS-check.3.14.2: the off-format verdict is the tier's too.
@@ -421,6 +434,7 @@ pub(crate) fn out_of_scope_references(
 pub(crate) fn workspace_out_of_scope_references(
     projects: &[WorkspaceProject],
     scopes: &[Option<ScanScope>],
+    unread: &UnreadNames,
 ) -> Vec<Diagnostic> {
     if scopes.iter().all(Option::is_none) {
         return Vec::new();
@@ -451,6 +465,7 @@ pub(crate) fn workspace_out_of_scope_references(
             project.config.frame(),
             &workspace,
             scope.as_ref(),
+            unread,
         ));
     }
     diagnostics

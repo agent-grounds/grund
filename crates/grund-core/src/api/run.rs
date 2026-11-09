@@ -17,8 +17,8 @@ use super::reporting::{reporting, workspace_block_projects};
 use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
-    CheckWorkspace, check_chapter_rules, check_project, configured_scope, name_every_spelling,
-    out_of_scope_references, out_of_scope_section_headings, parse_ad_hoc,
+    CheckWorkspace, UnreadNames, check_chapter_rules, check_project, configured_scope,
+    name_every_spelling, out_of_scope_references, out_of_scope_section_headings, parse_ad_hoc,
     parse_ad_hoc_with_workspace, partition_scan_failures, path_report_scope,
     repair_index_citations, retain_diagnostics_in_report_scope, retain_findings_in_scope,
     workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
@@ -149,12 +149,21 @@ pub(super) fn run_check_with_run_warnings(
         Some(_) => None,
         None => configured_scope(config.schema(), config.frame(), path, path_provided, full)?,
     };
+    // §FS-check.2.4: before any rule, the out-of-scope tier included, asks it.
+    let mut unread = UnreadNames::default();
+    unread.record(
+        config.frame(),
+        &scan_errors,
+        &findings.failure_names,
+        report_scope.as_ref(),
+    );
     let mut out_of_scope = out_of_scope_references(
         &findings,
         config.schema(),
         config.frame(),
         &BTreeMap::new(),
         scope.as_ref(),
+        &unread,
     );
     out_of_scope.extend(out_of_scope_section_headings(&findings, scope.as_ref()));
     retain_findings_in_scope(&mut findings, config.frame().grammar(), scope.as_ref());
@@ -178,7 +187,7 @@ pub(super) fn run_check_with_run_warnings(
         &findings,
         &expected,
         config.frame(),
-        &CheckWorkspace::alone(&no_workspace),
+        &CheckWorkspace::alone(&no_workspace).unread(&unread),
     );
     check_chapter_rules(
         &findings,
@@ -316,7 +325,9 @@ fn run_workspace_check(
             )
         })
         .collect::<Result<Vec<_>>>()?;
-    let mut out_of_scope = workspace_out_of_scope_references(&projects, &scopes);
+    // §FS-check.2.4: every member's, before any rule, so a citation sees its target's.
+    let unread = UnreadNames::of_projects(reporting(&projects), report_scope);
+    let mut out_of_scope = workspace_out_of_scope_references(&projects, &scopes, &unread);
     out_of_scope.extend(workspace_out_of_scope_section_headings(&projects, &scopes));
     for (project, scope) in projects.iter_mut().zip(&scopes) {
         let grammar = project.config.frame().grammar();
@@ -356,7 +367,8 @@ fn run_workspace_check(
         projects
             .iter()
             .map(|project| (project.alias.as_str(), project.config.rules())),
-    );
+    )
+    .unread(&unread);
     let mut report = CheckReport::default();
     let mut had_scan_errors = false;
     let mut unread_outside_report_scope = Vec::new();
