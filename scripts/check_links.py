@@ -11,17 +11,20 @@ internal pass, then every external URL of the tree (§AR-ci.3.1.5).
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path, PurePosixPath
-from typing import Callable, Sequence
+from typing import Any, Callable, Sequence
 from urllib.parse import unquote, urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from link_scope import changed_lines, changed_urls, diff_base, dump_lines  # noqa: E402
+from link_scope import (  # noqa: E402
+    NameNotUtf8, changed_lines, changed_urls, diff_base, dump_lines,
+)
 from link_settle import check_urls, report_failures, settle, write_report  # noqa: E402
 
 
@@ -32,6 +35,9 @@ SELF_PATH_PREFIXES = {
 }
 SELF_PREFIXES = tuple(f"https://github.com{prefix}" for prefix in SELF_PATH_PREFIXES.values())
 RECHECK_PAUSE = 5  # seconds before the transient re-check (§AR-ci.3.1.3)
+# `subprocess.run` or a test's stand-in. Lychee's two dumps read its output as bytes
+# (§AR-ci.3.1.4.1), the `gh api` re-check reads it as text, and the other calls read none.
+Runner = Callable[..., subprocess.CompletedProcess[Any]]
 
 
 class SelfLinkError(Exception):
@@ -102,7 +108,7 @@ def internal_pass(
     inputs: Sequence[str],
     repo_root: Path,
     lychee: str = "lychee",
-    runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    runner: Runner = subprocess.run,
 ) -> tuple[int, list[str]]:
     """Every internal link of the inputs, without the network: same-repository URLs against
     the checkout, then relative paths and fragments offline (§AR-ci.3.1). Returns lychee's
@@ -139,7 +145,7 @@ def check_links(
     inputs: Sequence[str],
     repo_root: Path,
     lychee: str = "lychee",
-    runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    runner: Runner = subprocess.run,
     kept: list[tuple[str, str, dict, str | None]] | None = None,
 ) -> int:
     """The sweep, `--all`: the internal pass, then one network pass over every external URL
@@ -170,7 +176,7 @@ def check_changed(
     inputs: Sequence[str],
     repo_root: Path,
     lychee: str = "lychee",
-    runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    runner: Runner = subprocess.run,
     link_base: str | None = None,
 ) -> int:
     """The gate: the internal pass, then a network pass over only the external URLs on lines
@@ -186,6 +192,12 @@ def check_changed(
         )
         return 0
     changed = changed_lines(repo_root, base, inputs)
+    for name in sorted(name for name in changed if "\n" in name):
+        print(  # lychee's dump writes this name across two lines (§AR-ci.3.1.4.1)
+            f"not requested: {json.dumps(name, ensure_ascii=False)} holds a newline, which "
+            "lychee's dump cannot name, so no URL on its changed lines is checked; the "
+            "scheduled sweep checks them"
+        )
     if not changed:
         return 0
     dumped = runner(  # bytes: text mode would turn a \r in a file name into \n (§AR-ci.3.1.4.1)
@@ -244,7 +256,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.report is not None:
             write_report(args.report, kept, args.inputs, repo_root, args.lychee)
         return returncode
-    except SelfLinkError as exc:
+    except (SelfLinkError, NameNotUtf8) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 

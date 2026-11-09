@@ -17,10 +17,6 @@ from link_gate_fixture import LYCHEE, ROOT, LinkFixture  # noqa: E402
 
 WORKFLOW = ROOT / ".github" / "workflows" / "links-nightly.yml"
 TITLE = "Nightly link sweep: external links failing"
-RED_UNTIL_FIX = unittest.skipUnless(
-    os.environ.get("GRUND_LINK_GATE_LINES_RUN_RED_TESTS") == "1",
-    "red until the report numbers a file's lines as git does; the fix removes this",
-)
 MAIN = {
     "docs/a.md": "# A\n\nSee [the old dead page](<{host}/dead-old>).\n\nSee [a live page](<{host}/ok>).\n",
     "docs/b.md": "# B\n\nBack to [A](a.md#a).\n\nAgain [the old dead page](<{host}/dead-old>).\n",
@@ -93,7 +89,6 @@ class SweepTests(unittest.TestCase):
         gate, lines, _ = self.report_lines(files)
         self.assert_reported(gate, lines, "docs/a\rb.md:3")
 
-    @RED_UNTIL_FIX
     def test_report_numbers_a_line_as_git_does(self):
         """A form feed ends no line, so the dead URL is on line 3 (§AR-ci.3.1.4.2)."""
         files = {"docs/a.md": "# A\fstill line one\n\nSee [the old dead page](<{host}/dead-old>).\n"}
