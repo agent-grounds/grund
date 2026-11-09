@@ -25,6 +25,16 @@ SPEC.loader.exec_module(link_scope)
 
 WINDOWS = os.name == "nt"
 POSIX_NAME = unittest.skipIf(WINDOWS, "Windows allows no such character in a file name")
+NON_ASCII_NAME = unittest.skipIf(
+    WINDOWS, "unverified on Windows: the scope reads git's names as UTF-8, and no run there has "
+    "yet held git for Windows to writing a non-ASCII name so"
+)
+RED_UNTIL_FIX = unittest.skipUnless(
+    os.environ.get("GRUND_LINK_GATE_LINES_RUN_RED_TESTS") == "1",
+    "red until the gate counts lines as git does, names a newline-named file and refuses a name "
+    "that is not UTF-8; the fix removes this",
+)
+NOT_UTF8 = b"docs/caf\xe9.md"
 LINE = "See [a page](https://example.invalid/page)."
 KEPT = "one\ntwo\n"
 
@@ -143,11 +153,20 @@ class ChangedLineGateTests(unittest.TestCase):
         self.assertEqual(1, len(re.findall(r"(?m)^no diff base:", output)), output)
 
 
-class ChangedLinesWhateverTheNameTests(unittest.TestCase):
-    """§AR-ci.3.1.4.1 — the scope returns a changed file with exactly its changed lines, and
-    every line of a new or untracked one, whatever its name holds. Each test makes one change,
-    so that one file is the whole scope."""
+def write_not_utf8(test, gate, text):
+    """Write `NOT_UTF8` in `gate`, or skip where the file system refuses that name or stores it
+    under another spelling, as macOS does."""
+    path = os.path.join(os.fsencode(gate.root), NOT_UTF8)
+    try:
+        with open(path, "wb") as out:
+            out.write(text.replace("{host}", gate.base).encode("utf-8"))
+    except OSError as exc:
+        test.skipTest(f"this file system refuses a name that is not UTF-8: {exc}")
+    if os.path.basename(NOT_UTF8) not in os.listdir(os.path.dirname(path)):
+        test.skipTest("this file system stores a name that is not UTF-8 under another spelling")
 
+
+class ScopeCase(unittest.TestCase):
     def scope(self, change, files=None):
         gate = LinkFixture()
         self.addCleanup(gate.close)
@@ -155,6 +174,12 @@ class ChangedLinesWhateverTheNameTests(unittest.TestCase):
         change(gate)
         with mock.patch.dict(os.environ, isolated_env(), clear=True):
             return link_scope.changed_lines(gate.root, base, ["docs"])
+
+
+class ChangedLinesWhateverTheNameTests(ScopeCase):
+    """§AR-ci.3.1.4.1 — the scope returns a changed file with exactly its changed lines, and
+    every line of a new or untracked one, whatever its name holds. Each test makes one change,
+    so that one file is the whole scope."""
 
     def assert_new(self, name, state="committed"):
         """A new file of one line: committed since the base, staged, or untracked."""
@@ -190,7 +215,7 @@ class ChangedLinesWhateverTheNameTests(unittest.TestCase):
             with self.subTest(edited=state):
                 self.assert_edited("docs/plain.md", state)
 
-    @unittest.skipIf(WINDOWS, "on Windows the scope may decode git's UTF-8 by the code page")
+    @NON_ASCII_NAME
     def test_a_non_ascii_name(self):
         self.assert_new("docs/été.md")
 
@@ -246,11 +271,11 @@ class ChangedLinesWhateverTheNameTests(unittest.TestCase):
     def test_a_name_with_another_control_character(self):
         self.assert_new("docs/a\x01b.md")
 
-    @unittest.skipIf(WINDOWS, "on Windows the scope may decode git's UTF-8 by the code page")
+    @NON_ASCII_NAME
     def test_a_name_with_non_ascii_text_and_a_space(self):
         self.assert_new("docs/été b.md")
 
-    @unittest.skipIf(WINDOWS, "on Windows the scope may decode git's UTF-8 by the code page")
+    @NON_ASCII_NAME
     def test_a_name_with_a_line_separator(self):
         self.assert_new("docs/a b.md")
 
@@ -266,9 +291,48 @@ class ChangedLinesWhateverTheNameTests(unittest.TestCase):
     def test_an_untracked_name_with_a_carriage_return(self):
         self.assert_new("docs/u\rb.md", "untracked")
 
-    @unittest.skipIf(WINDOWS, "on Windows the scope may decode git's UTF-8 by the code page")
+    @NON_ASCII_NAME
     def test_an_untracked_name_with_a_line_separator(self):
         self.assert_new("docs/u b.md", "untracked")
+
+    @unittest.skipIf(WINDOWS, "Windows holds a name as UTF-16 text, never as bytes")
+    @RED_UNTIL_FIX
+    def test_a_name_that_is_not_utf8_is_refused_with_the_name(self):
+        for state in ("committed", "untracked"):
+            def change(gate):
+                write_not_utf8(self, gate, LINE + "\n")
+                if state == "committed":
+                    gate.commit()
+            with self.subTest(state=state), self.assertRaisesRegex(
+                link_scope.NameNotUtf8, re.escape(repr(NOT_UTF8)[1:])
+            ):
+                self.scope(change)
+
+
+class ChangedLinesWhateverTheTextTests(ScopeCase):
+    """§AR-ci.3.1.4.2 — the scope numbers a file's lines as git does, and reads a hunk's lines
+    by its count, whatever a line holds."""
+
+    @RED_UNTIL_FIX
+    def test_the_line_after_a_break_git_does_not_count_is_the_one_edited(self):
+        name = "docs/text.md"
+        for mark in ("\f", "\v", "\r", "\u2028"):
+            def change(gate):
+                gate.write(name, f"one{mark}two\n{LINE}\n")
+                gate.commit()
+            with self.subTest(mark=repr(mark)):
+                files = {name: f"one{mark}two\nthree\n"}
+                self.assertEqual({name: {2: LINE}}, self.scope(change, files))
+
+    @RED_UNTIL_FIX
+    def test_an_added_line_that_begins_like_a_file_header_ends_no_file(self):
+        name = "docs/text.md"
+
+        def change(gate):
+            gate.write(name, f"++ one\ntwo\nthree\nfour\n{LINE}\n")
+            gate.commit()
+        files = {name: "one\ntwo\nthree\nfour\nfive\n"}
+        self.assertEqual({name: {1: "++ one", 5: LINE}}, self.scope(change, files))
 
 
 @unittest.skipUnless(LYCHEE, "Link gate fixture requires CI-pinned lychee 0.23.0 on PATH")
@@ -312,6 +376,28 @@ class ChangedLineGateWhateverTheNameTests(unittest.TestCase):
 
     def test_a_line_separator(self):
         self.assert_fails("docs/a b.md", "/dead-separator")
+
+    @RED_UNTIL_FIX
+    def test_the_gate_names_a_newline_named_file_it_leaves_to_the_sweep(self):
+        (requested, code), output = self.gate_on("docs/a\nb.md", "/dead-newline")
+        said = re.findall(r"(?m)^not requested: .*$", output)
+        self.assertEqual(([], 0, 1), (requested, code, len(said)), output)
+        self.assertIn('"docs/a\\nb.md"', said[0])
+
+    @RED_UNTIL_FIX
+    def test_a_name_that_is_not_utf8_fails_on_one_error_line(self):
+        gate = LinkFixture()
+        self.addCleanup(gate.close)
+        gate.commit_main(MAIN)
+        write_not_utf8(self, gate, "# Named\n\nSee [a dead page](<{host}/dead-bytes>).\n")
+        gate.commit()
+
+        code, output = gate.run("docs")
+
+        said = re.findall(r"(?m)^error: .*$", output)
+        self.assertEqual(({}, 2, 1), (gate.requested(), code, len(said)), output)
+        self.assertIn(repr(NOT_UTF8)[1:], said[0])
+        self.assertNotIn("Traceback", output)
 
 
 class CiGivesTheGateItsBaseTests(unittest.TestCase):

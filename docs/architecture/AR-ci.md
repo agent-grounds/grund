@@ -296,22 +296,17 @@ separator, non-ASCII text. A file yields the same changed lines and the same
 requests as it would under a plain name. The name is the one the file system
 holds, however a tool the gate reads it from writes it for display.
 
-One name stops short of the network: a name holding a newline. Its changed
-lines are read, but lychee's `--dump --verbose`, the gate's only report of
-which file carries which URL, writes that name across two lines, so none of
-its URLs is requested. The sweep of [§AR-ci.3.1.5](AR-ci.md#315-a-scheduled-sweep-checks-every-external-url) requests them.
+One name stops short of the network: a name holding a newline. Its changed lines are read, but lychee's `--dump --verbose`, the gate's only report of which file carries which URL, writes that name across two lines, so none of its URLs is requested. The gate says so, on one line for each such file that begins `not requested:` and names the file in double quotes with its newline written `\n`, and the sweep of [§AR-ci.3.1.5](AR-ci.md#315-a-scheduled-sweep-checks-every-external-url) requests them.
 
-`tests/integration/test_check_links_scope.py` asks the changed-line scope
-directly for a file under each such name. A space is held in a new file,
-committed or staged, and in an edited one, committed, staged or not, which
-yields its changed line alone. A double quote, a newline, a carriage return
-and a line separator are held in an untracked file as well. A plain name, a
-non-ASCII name, a deleted file and an untracked name with a space are the
-controls. The module runs the wrapper with the real lychee on a dead URL on a
-changed line of a file named with a space, a double quote, a tab, a backslash,
-a carriage return or a line separator, and holds each to a failed gate that
-requested that URL alone. It holds the sweep to requesting one in a file named
-with a newline.
+A name that is not UTF-8 holds no characters at all, and lychee's dump names no file for the URLs in it, so the gate cannot place them. It fails rather than pass them unread: one line beginning `error:` names the file as a Python bytes literal writes it, `'docs/caf\xe9.md'` for a Latin-1 `é`, and asks for a UTF-8 name, the gate exits 2, and no traceback is printed.
+
+`tests/integration/test_check_links_scope.py` asks the changed-line scope directly for a file under each such name. A space is held in a new file, committed or staged, and in an edited one, committed, staged or not, which yields its changed line alone. A double quote, a newline, a carriage return and a line separator are held in an untracked file as well. A plain name, a non-ASCII name, a deleted file and an untracked name with a space are the controls. The module runs the wrapper with the real lychee on a dead URL on a changed line of a file named with a space, a double quote, a tab, a backslash, a carriage return or a line separator, and holds each to a failed gate that requested that URL alone. It holds the sweep to requesting one in a file named with a newline, and the gate to its one `not requested:` line for that file. Where the file system holds a name that is not UTF-8, it holds the scope to refusing one, committed or untracked, and the gate to failing on its one `error:` line with no traceback.
+
+##### 3.1.4.2 A changed line is the one git counts, whatever its text
+
+A file's lines are the ones git counts, each ended by a newline alone: a form feed, a vertical tab, a lone carriage return, a line or paragraph separator, or any other character Python's `str.splitlines` breaks at ends none, so the line a hunk names is the line the gate reads. A line that ends `\r\n` is read without its `\r`, which moves no number. A changed line is read whatever its text. Under `--unified=0` git writes an added line that begins `++ ` as `+++ `, the shape of a file header, so the gate reads each hunk's lines by the count in its `@@` header and takes no line inside a hunk for a header: every later hunk of the file stays the file's. The report of [§AR-ci.3.1.5](AR-ci.md#315-a-scheduled-sweep-checks-every-external-url) numbers the lines it names the same way.
+
+`tests/integration/test_check_links_scope.py` asks the changed-line scope for the edited line after a form feed, a vertical tab, a lone carriage return and a line separator, and for a later hunk of a file whose first added line begins `++ `. `tests/integration/test_check_links_sweep.py` holds the report to the line git counts after a form feed.
 
 #### 3.1.5 A scheduled sweep checks every external URL
 
@@ -335,8 +330,9 @@ added to it as a comment; otherwise one is opened with that title and the label
 a second issue. A clean tree passes the sweep and files nothing.
 
 `tests/integration/test_check_links_sweep.py` holds `--all` and its report
-against a loopback host, and the workflow's triggers, command, permissions and
-title against this section.
+against a loopback host, a report line for a file named with a carriage return
+among them, and the workflow's triggers, command, permissions and title
+against this section.
 
 ### 3.2 The managed block's text
 
