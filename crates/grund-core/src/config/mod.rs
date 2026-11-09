@@ -102,8 +102,8 @@ pub use compiled::Compiled;
 pub(crate) use compiled::RefusedHome;
 pub(crate) use exclude_globs::ExcludeGlobs;
 pub(crate) use fetch_key::{
-    fetch_integration_path, fetch_key_name, fetch_key_repair, fetch_key_setting,
-    fetch_names_nothing_reason, fetch_runs_nothing, names_no_executable,
+    fetch_integration_path, fetch_key_name, fetch_key_repair, fetch_key_runs_nothing,
+    fetch_key_setting, fetch_names_nothing_reason, fetch_runs_nothing, names_no_executable,
 };
 pub use frame::{Display, Frame};
 pub(crate) use guidance::{format_guidance, kind_format_guidance, source_scope_name};
