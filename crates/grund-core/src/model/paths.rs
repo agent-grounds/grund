@@ -25,6 +25,7 @@
 //! (§FS-config.3.6) — stayed one level up, in `config/report_paths.rs`.
 
 use std::borrow::Cow;
+use std::cmp::Ordering;
 use std::path::{Component, Path, PathBuf};
 
 /// `path` with `.` dropped and `..` applied textually — no filesystem access, so
@@ -114,6 +115,13 @@ pub(crate) fn sort_path_key(path: &Path) -> String {
     format_path(path)
 }
 
+/// The one order of a duplicate's sites (§FS-errors.4.1.1): by the path a site is
+/// reported by, before it is rendered against the report base, then by the line as a
+/// number. Every command that lists those sites orders them here.
+pub(crate) fn site_order(a: (&Path, usize), b: (&Path, usize)) -> Ordering {
+    (sort_path_key(a.0), a.1).cmp(&(sort_path_key(b.0), b.1))
+}
+
 /// `path` expressed relative to `base`, walking up with `..` for a target that
 /// lies *outside* it (§FS-errors.4: a report never carries an absolute path, and a
 /// reader resolves what it prints against the directory they are standing in). The
@@ -142,4 +150,26 @@ pub(crate) fn relative_from_base(base: &Path, path: &Path) -> PathBuf {
     }
     relative.extend(&path_parts[shared..]);
     relative
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// §FS-errors.4.1.1: the line compares as a number.
+    #[test]
+    fn site_order_compares_lines_as_numbers() {
+        let path = Path::new("docs/one.md");
+        assert_eq!(site_order((path, 9), (path, 10)), Ordering::Less);
+    }
+
+    /// §FS-errors.4.1.1: the path compares before any `:line` is appended to it.
+    #[test]
+    fn site_order_puts_a_path_before_one_it_prefixes() {
+        let (login, longer) = (
+            Path::new("e2e/cases/login"),
+            Path::new("e2e/cases/login.md"),
+        );
+        assert_eq!(site_order((login, 1), (longer, 1)), Ordering::Less);
+    }
 }

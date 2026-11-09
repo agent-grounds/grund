@@ -31,7 +31,6 @@ fn lines(failure: &Value) -> Vec<u64> {
 }
 
 #[test]
-#[ignore = "red until #1219 show sorts on the path and numeric line; implement removes this"]
 fn a_hosts_query_failure_lists_a_duplicates_sites_in_line_order() {
     let root = test_root("a_hosts_query_failure_lists_a_duplicates_sites_in_line_order");
     duplicate_on_lines_nine_and_ten(&root);

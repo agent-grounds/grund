@@ -74,7 +74,6 @@ fn assert_one_order(sites: [String; 3], want: &str) {
 }
 
 #[test]
-#[ignore = "red until #1219 show sorts on the path and numeric line; implement removes this"]
 fn line_nine_comes_before_line_ten() {
     let tree = Tree::new("site-order-lines", SPEC);
     tree.put(
@@ -88,7 +87,6 @@ fn line_nine_comes_before_line_ten() {
 }
 
 #[test]
-#[ignore = "red until #1219 show sorts on the path and numeric line; implement removes this"]
 fn a_path_that_prefixes_another_comes_first() {
     let tree = Tree::new("site-order-prefix", CASES);
     tree.put("e2e/cases/login/command.args", "check repo\n");
@@ -101,7 +99,6 @@ fn a_path_that_prefixes_another_comes_first() {
 }
 
 #[test]
-#[ignore = "red until #1219 show sorts before it renders the path; implement removes this"]
 fn a_run_from_a_subdirectory_keeps_the_order_of_the_project() {
     let tree = Tree::new("site-order-subdir", SPEC);
     tree.put("docs/sub/a.md", DECL);
@@ -115,7 +112,6 @@ fn a_run_from_a_subdirectory_keeps_the_order_of_the_project() {
 /// §FS-declarations.stubs.pairing.3: a home reached through a stub is named at its target, and
 /// its sites sort as `check` sorts them.
 #[test]
-#[ignore = "red until #1219 show sorts on the path and numeric line; implement removes this"]
 fn a_stubs_target_declaring_the_id_twice_is_in_line_order() {
     let tree = Tree::new("site-order-stub", STUB);
     tree.put(

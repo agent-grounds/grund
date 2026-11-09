@@ -7,7 +7,7 @@
 use std::cmp::Ordering;
 
 use super::ExcludingRule;
-use super::paths::sort_path_key;
+use super::paths::site_order;
 use super::records::{Catalog, Declaration, Id};
 
 /// What the scan found at a stub's target, in the order the scanner asks
@@ -145,7 +145,7 @@ pub(crate) fn paired_declarations(decls: &[Declaration]) -> PairedDeclarations<'
         })
         .collect();
     let mut stubs: Vec<&Declaration> = decls.iter().filter(|decl| decl.is_stub).collect();
-    stubs.sort_by(|a, b| site_order(a, b));
+    stubs.sort_by(|a, b| declaration_site_order(a, b));
     for stub in stubs {
         let Some(StubResolution::Declares(records)) = &stub.stub_resolution else {
             paired.push(Paired {
@@ -168,7 +168,7 @@ pub(crate) fn paired_declarations(decls: &[Declaration]) -> PairedDeclarations<'
             }
         }
     }
-    paired.sort_by(|a, b| site_order(a.record, b.record));
+    paired.sort_by(|a, b| declaration_site_order(a.record, b.record));
     PairedDeclarations { decls, paired }
 }
 
@@ -196,6 +196,7 @@ pub(crate) fn section_resolves(findings: &Catalog, id: &Id, section: &str) -> bo
     })
 }
 
-fn site_order(a: &Declaration, b: &Declaration) -> Ordering {
-    (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
+/// Two declarations in the order of a duplicate's sites (§FS-errors.4.1.1).
+pub(crate) fn declaration_site_order(a: &Declaration, b: &Declaration) -> Ordering {
+    site_order((&a.file, a.line), (&b.file, b.line))
 }

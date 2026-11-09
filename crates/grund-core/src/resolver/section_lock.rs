@@ -16,7 +16,7 @@ use crate::config::{Frame, Schema};
 use crate::grammar::{parse_id_arg, render_catalog_id, render_id};
 use crate::model::{
     Catalog, Citation, Declaration, Id, LockEntry, LockLines, locked, paired_declarations,
-    read_lock_lines, section_lock_path, sort_path_key,
+    read_lock_lines, section_lock_path, site_order,
 };
 
 /// What `fmt --write` does with one entry the lock holds (§FS-section-lock.write.rules).
@@ -409,7 +409,7 @@ fn citing_sites(citations: &[&Citation]) -> Vec<(PathBuf, usize)> {
         .iter()
         .map(|citation| (citation.file.clone(), citation.line))
         .collect::<Vec<_>>();
-    sites.sort_by(|a, b| (sort_path_key(&a.0), a.1).cmp(&(sort_path_key(&b.0), b.1)));
+    sites.sort_by(|a, b| site_order((&a.0, a.1), (&b.0, b.1)));
     sites.dedup();
     sites
 }

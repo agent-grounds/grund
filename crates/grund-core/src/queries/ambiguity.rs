@@ -90,7 +90,8 @@ fn set_aside_warnings(
 }
 
 /// A valid stub/inline pair is one home; multiple independent homes refuse with
-/// all sites in show's deterministic order (§FS-show.2.2.1, §FS-refs.4).
+/// all sites in the order `paired` holds them, the one order of a duplicate's sites
+/// (§FS-errors.4.1.1, §FS-show.2.2.1, §FS-refs.4).
 /// Missing-target guidance shares the checker's derivation and located suffix
 /// (§AR-system.2.2).
 pub(super) fn ambiguous_id_refusal(
@@ -105,17 +106,13 @@ pub(super) fn ambiguous_id_refusal(
     // §FS-declarations.stubs.pairing.3: a declaration a stub stands for is at its
     // target, at each line there that declares the ID (§AR-scanner.4.6).
     // §FS-errors.3.1, §FS-cli.3.4, §FS-errors.5.2.1: spelled from the report root, `.` at it.
-    let mut sites: Vec<(String, String, usize)> = paired
+    let sites: Vec<FindingSite> = paired
         .iter()
-        .map(|declaration| {
-            let (path, line) = (
-                display_location(path_config, &declaration.record.file),
-                declaration.record.line,
-            );
-            (format!("{path}:{line}"), path, line)
+        .map(|declaration| FindingSite {
+            path: display_location(path_config, &declaration.record.file),
+            line: declaration.record.line,
         })
         .collect();
-    sites.sort_by(|a, b| a.0.cmp(&b.0));
     let rendered_id = render_declaration_id(
         &config.grammar,
         paired.records().next().expect("multiple records"),
@@ -124,7 +121,7 @@ pub(super) fn ambiguous_id_refusal(
         "ambiguous ID: {rendered_id} (declared at {})",
         sites
             .iter()
-            .map(|(rendered, ..)| rendered.as_str())
+            .map(|site| format!("{}:{}", site.path, site.line))
             .collect::<Vec<_>>()
             .join(", ")
     );
@@ -135,10 +132,7 @@ pub(super) fn ambiguous_id_refusal(
     // §FS-errors.5.2.1: JSON carries the same sites, without parsing prose.
     Some(ShowQueryError {
         code: "ambiguous",
-        sites: sites
-            .into_iter()
-            .map(|(_, path, line)| FindingSite { path, line })
-            .collect(),
+        sites,
         message,
     })
 }
