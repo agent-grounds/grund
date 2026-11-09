@@ -32,6 +32,39 @@ fn watch_missing_stub_creation_has_coverage_before_completion() {
     h.stop(0);
 }
 
+/// §FS-check.6.1.3: the file a blank `fetch` would run is an input, so its creation reruns
+/// the check and the tail follows the disk (§FS-check.3.1.3.2).
+#[test]
+#[cfg(unix)]
+fn watch_blank_fetch_file_is_an_input() {
+    let _serial = crate::support::serial();
+    let f = Fixture::new();
+    f.write(
+        "grund.toml",
+        "grund_config_version = 1\nproject_name = \"g1322\"\n\n[[kinds]]\nkind = \"AR\"\n\
+         file = \"docs/arch.md\"\nfetch = \" \"\nresolve = \"should\"\n\n[id]\n\
+         named_sections = true\n\n[scan]\ninclude = [\"docs\"]\n",
+    );
+    f.write(
+        "docs/arch.md",
+        "# Architecture\n\n## AR-001-power: Power\n\nSee \u{a7}AR-002-other.\n",
+    );
+    let target = f.0.join(" ");
+    let before = f.ordinary();
+    let mut h = Harness::start(&f, None, None);
+    h.matches(&before);
+    assert!(
+        h.history.iter().any(|event| {
+            matches!(event, WatchObservation::Input(input) if input.path == target)
+        })
+    );
+    f.write(" ", "#!/bin/sh\nexit 0\n");
+    let after = f.ordinary();
+    assert_ne!(before.stdout, after.stdout);
+    h.matches(&after);
+    h.stop(after.status);
+}
+
 /// §FS-check.6.1.1: creation at the subscribed candidate barrier affects the
 /// very first selection, rather than merely arranging a later repair run.
 #[test]

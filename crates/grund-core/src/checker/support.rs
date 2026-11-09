@@ -1,6 +1,6 @@
 use crate::config::{
-    Extent, Frame, RefusedHome, Schema, fetch_integration_path, fetch_key_name, fetch_key_setting,
-    fetch_runs_nothing, holds_glob,
+    Extent, Frame, RefusedHome, Schema, fetch_key_name, fetch_key_runs_nothing, fetch_key_setting,
+    holds_glob,
 };
 #[cfg(test)]
 use crate::grammar::render_id;
@@ -189,7 +189,7 @@ pub(super) fn missing_snapshot_message(
 /// the target's. `None` where the command could run.
 fn fetch_key_tail(schema: &Schema, frame: Frame<'_>, kind: &str, must: bool) -> Option<String> {
     let (value, _) = schema.fetching_row(kind)?.fetch_key()?;
-    if !fetch_runs_nothing(value, &fetch_integration_path(frame.root(), value)) {
+    if !fetch_key_runs_nothing(frame.root(), value) {
         return None;
     }
     let setting = fetch_key_setting(frame.version, kind);

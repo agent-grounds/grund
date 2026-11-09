@@ -1,0 +1,11 @@
+grund_config_version = 1
+project_name = "vals"
+
+[scan]
+extensions = ["rs", "md"]
+
+[[kinds]]
+kind = "CONST"
+file = "values/limits.md"
+values = true
+fetch = ""

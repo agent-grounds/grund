@@ -14,6 +14,7 @@ use std::io::ErrorKind;
 use std::path::Path;
 
 use super::values::bail_config;
+use crate::config::fetch_key_runs_nothing;
 use crate::config::kind::KindConfig;
 use crate::config::project::Sources;
 use crate::model::normalize_path_lexically;
@@ -184,9 +185,11 @@ fn snapshot_read_as_markdown(k: &KindConfig, sources: &Sources) -> bool {
 
 /// §FS-fetch.4.1: the one step past an absent home. Outside the root no step helps, so
 /// that hint names another path. Inside it, `grund fetch` writes Markdown, so it is the
-/// way through only for a kind that sets it and a home whose snapshot is read as Markdown.
+/// way through only for a key with something to run (§FS-fetch.2.1), asked of the project's
+/// own `root`, and a home whose snapshot is read as Markdown.
 fn absent_value_home_hint(
     k: &KindConfig,
+    root: &Path,
     shape: &str,
     inside_root: bool,
     sources: &Sources,
@@ -194,7 +197,11 @@ fn absent_value_home_hint(
     if !inside_root {
         "hint: a value kind's home must be inside the project root; name a path inside it"
             .to_string()
-    } else if k.fetch.is_some() && snapshot_read_as_markdown(k, sources) {
+    } else if snapshot_read_as_markdown(k, sources)
+        && k.fetch
+            .as_deref()
+            .is_some_and(|value| !fetch_key_runs_nothing(root, value))
+    {
         format!(
             "hint: a value kind's home must exist; create the empty {shape}, then run `grund fetch <ID>` to write the first snapshot"
         )
@@ -219,7 +226,7 @@ fn validate_value_home(
     let kind = &k.kind;
     let shape = if expects_file { "file" } else { "folder" };
     let candidate = normalize_path_lexically(&root.join(home));
-    let root = fs::canonicalize(root).unwrap_or_else(|_| normalize_path_lexically(root));
+    let canonical_root = fs::canonicalize(root).unwrap_or_else(|_| normalize_path_lexically(root));
     let resolved = fs::canonicalize(&candidate).or_else(|error| {
         if error.kind() != ErrorKind::NotFound {
             // §FS-fetch.4.3: a lookup that fails otherwise is refused by its reason, as the
@@ -235,17 +242,17 @@ fn validate_value_home(
             );
         }
         // §FS-fetch.4.1: the first line stays as it is; the hint follows it.
-        let inside_root = candidate.starts_with(&root);
+        let inside_root = candidate.starts_with(&canonical_root);
         bail_config(
             config_path,
             line,
             format!(
                 "value home for kind `{kind}` does not exist: {home}\n{}",
-                absent_value_home_hint(k, shape, inside_root, sources)
+                absent_value_home_hint(k, root, shape, inside_root, sources)
             ),
         )
     })?;
-    if !resolved.starts_with(&root) {
+    if !resolved.starts_with(&canonical_root) {
         return bail_config(
             config_path,
             line,

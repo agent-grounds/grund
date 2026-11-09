@@ -2,7 +2,8 @@
 //! gives the repair instead (§FS-check.3.1.3.2). The first cases are the project #1322 reports.
 //! Each message is asserted whole, so a load refusal or a vanished finding cannot pass as the
 //! change. Each tree is built in the temp directory, because a file named `" "` cannot be a
-//! committed fixture on every platform.
+//! committed fixture on every platform. An absent value home takes the same question of its
+//! hint (§FS-fetch.4.1).
 
 use std::fs;
 use std::path::PathBuf;
@@ -109,23 +110,19 @@ fn should(tree: &Tree, tail: &str) -> Run {
 }
 
 fn finding_json(run: &Run) -> serde_json::Value {
-    let report: serde_json::Value = serde_json::from_str(&run.stdout).expect("JSON report");
-    report["findings"]
-        .as_array()
-        .expect("findings")
-        .iter()
+    run.stdout
+        .lines()
+        .map(|line| serde_json::from_str::<serde_json::Value>(line).expect("one JSON finding"))
         .find(|f| {
             f["message"]
                 .as_str()
                 .is_some_and(|m| m.contains("AR-002-other"))
         })
         .unwrap_or_else(|| panic!("no finding of AR-002-other: {}", run.shown()))
-        .clone()
 }
 
 /// §FS-check.3.1.3.2: the report's two files, whose `should` finding gives the repair.
 #[test]
-#[ignore = "red until #1322 check gives the repair; implement removes this"]
 fn a_blank_v1_key_under_should_gives_the_repair() {
     for value in ["", " "] {
         let tree = Tree::new();
@@ -148,7 +145,6 @@ fn a_blank_v1_key_under_should_gives_the_repair() {
 
 /// §FS-check.3.1.3.2: under `must` the same tail follows the `dangling` base, and exits 1.
 #[test]
-#[ignore = "red until #1322 check gives the repair; implement removes this"]
 fn a_blank_v1_key_under_must_gives_the_repair() {
     for value in ["", " "] {
         let tree = Tree::new();
@@ -166,6 +162,10 @@ fn a_blank_v1_key_under_must_gives_the_repair() {
         let found = finding_json(&run);
         assert_eq!(found["code"], "dangling", "{}", run.shown());
         assert_eq!(found["severity"], "error", "{}", run.shown());
+        assert_eq!(
+            found["message"],
+            format!("unknown reference AR-002-other; no snapshot in docs/arch.md — {V1_TAIL}")
+        );
     }
 }
 
@@ -281,4 +281,57 @@ fn a_runnable_key_in_the_target_keeps_the_command_through_an_import() {
         "README.md:1: warning: no snapshot for lb/AR-002-other in ../lib/docs/arch.md — run grund \
          fetch AR-002-other in ../lib",
     );
+}
+
+const SHORT_HINT: &str = "hint: a value kind's home must exist; create the file";
+const LONG_HINT: &str = "hint: a value kind's home must exist; create the empty file, then run \
+                         `grund fetch <ID>` to write the first snapshot";
+
+/// A project whose value kind's Markdown home does not exist yet, keyed `fetch = "{value}"`.
+fn absent_value_home(tree: &Tree, version: u32, value: &str) {
+    let config = if version == 1 {
+        format!(
+            "grund_config_version = 1\nproject_name = \"vals\"\n\n[scan]\n\
+             extensions = [\"rs\", \"md\"]\n\n[[kinds]]\nkind = \"CONST\"\n\
+             file = \"values/limits.md\"\nvalues = true\nfetch = \"{value}\"\n"
+        )
+    } else {
+        format!(
+            "grund_config_version = 2\nproject_name = \"vals\"\n\n[schema.kinds.CONST]\n\
+             files = [\"values/limits.md\"]\nform = \"value\"\nfetch = \"{value}\"\n"
+        )
+    };
+    tree.write("grund.toml", &config);
+}
+
+/// §FS-fetch.4.1: a key with nothing to run takes the shorter hint, under either version,
+/// and the refusal's first line and exit 2 stand.
+#[test]
+fn a_blank_key_on_an_absent_value_home_takes_the_shorter_hint() {
+    for (version, value) in [(1, ""), (1, " "), (2, ""), (2, " ")] {
+        let tree = Tree::new();
+        absent_value_home(&tree, version, value);
+        let run = tree.grund(".", &["check"]);
+        assert_eq!(run.code, 2, "{}", run.shown());
+        assert!(
+            run.stderr
+                .contains("value home for kind `CONST` does not exist: values/limits.md"),
+            "{}",
+            run.shown()
+        );
+        run.has_line(SHORT_HINT);
+        assert!(!run.stderr.contains("grund fetch"), "{}", run.shown());
+    }
+}
+
+/// §FS-fetch.4.1: a whitespace value naming a real file still runs, so the long hint stays.
+#[test]
+#[cfg(unix)]
+fn a_whitespace_value_naming_a_file_keeps_the_long_hint() {
+    let tree = Tree::new();
+    absent_value_home(&tree, 1, " ");
+    tree.write(" ", "#!/bin/sh\nexit 0\n");
+    let run = tree.grund(".", &["check"]);
+    assert_eq!(run.code, 2, "{}", run.shown());
+    run.has_line(LONG_HINT);
 }

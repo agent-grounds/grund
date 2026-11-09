@@ -54,7 +54,7 @@ The first line is a version 2 row and the second a version 1 row. The path is th
 
 The repair is one sentence, printed in the same words wherever the key is reported: here, by the version 2 warning and its refusal ([§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)), by migration ([§FS-config-migrate.3.1.10](FS-config-migrate.md#3110-a-fetch-that-names-no-executable)), and by `grund check` in place of this command ([§FS-check.3.1.3.2](FS-check.md#3132-a-key-fetch-has-nothing-to-run-for)). It holds for every tree, so it does not ask which one it is in. A kind with a `[rules.resolution] <KIND>` (version 1: `resolve`) on it can load only while the key is there ([§FS-config-v2.rules.resolution](FS-config-v2.md#rulesresolution-rulesresolution), [§FS-config.3.4.10.2](FS-config.md#34102-fetch-and-resolve)), so the setting goes with the key, and with both gone a citation of an ID the kind does not hold is an error.
 
-The test is of the string alone. A whitespace-only value that names a file at the config root, one literally named `" "`, is still run by `grund fetch`, as it was before this rule was written: under version 1 for good ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)), and under version 2 for as long as such a key loads ([§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)). This is a question `grund fetch` asks of the disk, after the test of the string says the value names nothing, and `grund check` asks it the same way before it names this command ([§FS-check.3.1.3.2](FS-check.md#3132-a-key-fetch-has-nothing-to-run-for)). An empty value can never name a file.
+The test is of the string alone. A whitespace-only value that names a file at the config root, one literally named `" "`, is still run by `grund fetch`, as it was before this rule was written: under version 1 for good ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)), and under version 2 for as long as such a key loads ([§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable)). This is a question `grund fetch` asks of the disk, after the test of the string says the value names nothing, and `grund check` asks it the same way before it names this command ([§FS-check.3.1.3.2](FS-check.md#3132-a-key-fetch-has-nothing-to-run-for)), as the hint of an absent value home does ([§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through)). An empty value can never name a file.
 
 The check comes immediately before the spawn would, so every refusal `grund fetch` makes before running the integration stands in front of it, as they stand in front of a spawn failure.
 
@@ -154,8 +154,8 @@ keeps that text as its first line and is followed by one repair-hint line. A kin
 sets `value_chapter` ([§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)) reaches the same refusal and the same hint as a
 value kind.
 
-For a kind that sets `fetch`, with a home whose snapshot the project reads as Markdown, the
-hint names the one step that unblocks the first snapshot: create the empty file or the
+For a kind whose `fetch` has something to run ([§FS-fetch.2.1](FS-fetch.md#21-a-value-that-names-no-executable)), with a home whose snapshot the
+project reads as Markdown, the hint names the one step that unblocks the first snapshot: create the empty file or the
 empty folder, then run `grund fetch <ID>`. In a version-2 file the language decides: the
 one a name resolves to ([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)) is of class `document`,
 where the name is the `file` home's own or, for a `folder` home, the `<ID>.md` fetch writes
@@ -172,7 +172,8 @@ file`. `<ID>` is written as it stands, because the configuration is loaded befor
 requested ID is read.
 
 Every other absent home inside the project root gets the shorter hint: a kind without
-`fetch`, which is never told to run `grund fetch`, and a home whose snapshot the project
+`fetch` or whose key has nothing to run, neither of which is ever told to run `grund fetch`,
+and a home whose snapshot the project
 does not read as Markdown, because fetch writes Markdown and so is not the way through
 there: a value source's reader refuses it, [§FS-fetch.4.2](FS-fetch.md#42-a-home-read-as-source-is-refused) refuses a home read as source, and
 under a name no language or `[scan] extensions` list reads nothing ever sees it. It does

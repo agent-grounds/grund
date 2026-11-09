@@ -1,10 +1,11 @@
 //! A `fetch` key that names no executable (§FS-fetch.2.1): the one test of the value, and the
-//! key's name and repair every site that reports it prints. It reads nothing but the string,
-//! so a reader of the key asks it without touching the disk.
+//! key's name and repair every site that reports it prints. The test reads nothing but the
+//! string; only whether a blank value still runs a file of that name asks the disk.
 
 use std::path::{Path, PathBuf};
 
 use super::discovery::config_file_under;
+use super::observe_input;
 use super::record::Config;
 use crate::model::{format_path, relative_from_base, remedies};
 
@@ -28,6 +29,17 @@ pub(crate) fn fetch_integration_path(root: &Path, value: &str) -> PathBuf {
 /// the disk: a blank value still runs a file of that very name at the config root.
 pub(crate) fn fetch_runs_nothing(value: &str, integration: &Path) -> bool {
     names_no_executable(value) && !integration.is_file()
+}
+
+/// §FS-fetch.2.1: whether a reader about to name `grund fetch` for the project at `root` would
+/// name a command with nothing to run. The one file asked of is observed first, so `--watch`
+/// reruns when it appears or goes (§FS-check.6.1.3).
+pub(crate) fn fetch_key_runs_nothing(root: &Path, value: &str) -> bool {
+    let integration = fetch_integration_path(root, value);
+    if names_no_executable(value) {
+        observe_input(&integration, false);
+    }
+    fetch_runs_nothing(value, &integration)
 }
 
 /// §FS-fetch.2.1: the key as a message names it, in the spelling of the version that wrote it.
