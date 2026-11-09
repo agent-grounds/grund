@@ -74,7 +74,6 @@ fn scan_exclude_offers_only_removal_for_a_bare_slash() {
 /// offered removal alone, because no directory bears either name; a `.` or `..`
 /// before the last component leaves the name repair to that component.
 #[test]
-#[ignore = "red until the name repair passes over `.` and `..`; the fix removes this"]
 fn scan_exclude_offers_only_removal_where_the_last_component_is_dot_or_dot_dot() {
     for (case, entry) in [
         ("dot", "./"),
