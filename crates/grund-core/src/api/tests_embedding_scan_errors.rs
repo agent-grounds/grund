@@ -74,3 +74,32 @@ fn scan_publishes_the_message_every_other_operation_publishes() {
         "{check}"
     );
 }
+
+/// Node's strict `scan` failure and an operation's scan-failure record both carry the record's own
+/// code rather than a hard-coded `io` (§FS-check.2.4.3, §AR-bindings.2).
+#[test]
+#[ignore = "red until #1272 reads the record's code; implement removes this"]
+fn strict_and_listed_scan_failures_carry_the_records_code() {
+    let root = test_root("strict_and_listed_scan_failures_carry_the_records_code");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\n[schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\n",
+    );
+    write(&root.join("values/a.json"), "{ not json\n");
+    let strict = node_embedding_call(node_request(
+        "scan",
+        vec![json!(root.to_string_lossy())],
+        &root,
+    ));
+    assert_eq!(
+        strict["failure"]["kind"],
+        json!("unparsable-file"),
+        "{strict}"
+    );
+    let listed = call(&root, "scan");
+    assert_eq!(
+        listed["result"]["scan_errors"][0]["code"],
+        json!("unparsable-file"),
+        "{listed}"
+    );
+}

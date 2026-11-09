@@ -88,6 +88,7 @@ One selection, `CheckFindingSelection::select`, narrows a check for the CLI and
 both bindings, and appends the `selected-check-off` lines from the switches the
 hidden `check_with_run_warnings` path says the run armed
 ([§FS-check.1.4.1](../functional-spec/FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)).
+`ApiScanError` gains `code`, and the Python and Node scan-failure records with it, one more string on a `#[non_exhaustive]` record and no new public type ([§FS-check.2.4.3](../functional-spec/FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix)): a consumer tells a file that could not be read from one that was read and does not parse by `code`, and never by `message` ([§FS-errors.requirements.fields](../functional-spec/FS-errors.md#requirementsfields-what-a-program-needs-from-a-finding-is-a-field--realized-directional-for-the-next-finding)). The enum the scanner holds stays private.
 Existing Rust entry points and CLI rendering/defaults stay compatible
 ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)). Historical signatures below are not a frozen Python schema.
 

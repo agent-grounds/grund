@@ -1620,8 +1620,29 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "make the path readable, or keep it out of the scan"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "entry",
+      "text": "make the path readable, or keep it out of the scan"
+     },
+     {
+      "label": "root",
+      "text": "make the path readable, or keep it out of the scan by removing it from the [schema.kinds] row that lists it, because exclude does not prune scan roots"
+     },
+     {
+      "label": "passed",
+      "text": "make the path readable, or keep it out of the scan by not passing it, because exclude does not prune a path the command is given"
+     },
+     {
+      "label": "value",
+      "text": "make the path readable, or keep it out of the scan by moving it out of the value home, because exclude does not reach a value source"
+     },
+     {
+      "label": "readable",
+      "text": "make the path readable"
+     }
+    ]
    },
    "note": null
   },
@@ -1634,8 +1655,29 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "make the path readable, or keep it out of the scan"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "entry",
+      "text": "make the path readable, or keep it out of the scan"
+     },
+     {
+      "label": "root",
+      "text": "make the path readable, or keep it out of the scan by removing it from the [scan] include or [[kinds]] row that lists it, because exclude does not prune scan roots"
+     },
+     {
+      "label": "passed",
+      "text": "make the path readable, or keep it out of the scan by not passing it, because exclude does not prune a path the command is given"
+     },
+     {
+      "label": "value",
+      "text": "make the path readable, or keep it out of the scan by moving it out of the value home, because exclude does not reach a value source"
+     },
+     {
+      "label": "readable",
+      "text": "make the path readable"
+     }
+    ]
    },
    "note": null
   }

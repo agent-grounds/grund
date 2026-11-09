@@ -76,7 +76,7 @@ impl Code {
     pub const INVALID_VALUE_BINDING: Code = Code("invalid-value-binding");
     /// §FS-check.3.20
     pub const INVALID_VALUE_DECLARATION: Code = Code("invalid-value-declaration");
-    /// §FS-check.2.4
+    /// §FS-check.2.4.3
     pub const IO: Code = Code("io");
     /// §FS-check.3.24
     pub const LOCAL_SECTION_CITATION: Code = Code("local-section-citation");

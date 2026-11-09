@@ -41,8 +41,17 @@ pub(crate) fn api_scan_error(frame: Frame<'_>, path: &Path, message: &str) -> Ap
 /// then `io`'s *Fix*, built here once so every command that prints the line, and
 /// `check`'s own report, print the same bytes (§FS-check.2.4, §FS-workspace.8.7.3).
 pub(crate) fn scan_error_message(reason: &str) -> String {
-    format!("{reason}; {}", remedies::io())
+    format!("{reason}; {}", remedies::io_entry(2))
 }
+
+// Scaffold for #1272's specify commit, where the catalog's `io` cases are written ahead of the
+// record that picks them (§FS-check.2.4.3): implement removes it when each failure takes its case.
+const _: [fn(u32) -> String; 4] = [
+    remedies::io_root,
+    remedies::io_passed,
+    remedies::io_value,
+    remedies::io_readable,
+];
 
 /// The words the walk keeps around the reason of a link it cannot resolve for lack of access to
 /// its target (§AR-scanner.1.9, §FS-check.2.4.1).
