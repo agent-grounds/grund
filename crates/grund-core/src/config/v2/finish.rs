@@ -9,6 +9,7 @@ use std::path::Path;
 
 use super::fields::{FieldDraft, kind_checks};
 use super::walk::Reader;
+use crate::config::fetch_key::{fetch_key_name, fetch_key_repair, names_no_executable};
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
 use crate::config::project::{Project, Strength};
 use crate::config::record::{CODE_SOURCE_KIND, ConfigLocation};
@@ -138,7 +139,7 @@ fn row_checks(row: &RowDraft, late: &mut Vec<(usize, String)>) {
         );
         late.push((*line, message));
     }
-    if let Some((_, line)) = &row.fetch {
+    if let Some((fetch, line)) = &row.fetch {
         if !row.citable {
             let message = format!(
                 "`[schema.kinds.{name}] fetch` needs a citable row (`citable = false` declares no IDs)"
@@ -147,6 +148,14 @@ fn row_checks(row: &RowDraft, late: &mut Vec<(usize, String)>) {
         } else if row.places.len() != 1 {
             let message =
                 format!("`[schema.kinds.{name}] fetch` needs one place to hold its snapshots");
+            late.push((*line, message));
+        } else if names_no_executable(fetch) {
+            // §FS-config-v2.checks.config-fetch-names-nothing: last, so an older refusal stands.
+            let message = format!(
+                "{} names no executable; {}; this became an error in grund 0.23.0",
+                fetch_key_name(2, name),
+                fetch_key_repair(2, name)
+            );
             late.push((*line, message));
         }
     }
@@ -297,12 +306,10 @@ fn lower_row(draft: &RowDraft, fields: &[FieldDraft], path: &Path) -> Row {
                 .as_ref()
                 .map_or(KindIndex::Default, |(index, _)| index.clone()),
             origin: match &draft.fetch {
-                Some((fetch, line)) => Origin::External {
+                // §FS-fetch.2.1: only version 1 reaches `grund fetch` with a blank key to locate.
+                Some((fetch, _)) => Origin::External {
                     fetch: fetch.clone(),
-                    source: Some(ConfigLocation {
-                        path: path.to_path_buf(),
-                        line: *line,
-                    }),
+                    source: None,
                 },
                 None => Origin::Local,
             },

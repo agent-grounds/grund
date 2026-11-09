@@ -26,3 +26,31 @@ The e2e runner performs the mutating fetch from a copied repository and compares
 the entire result with `expected.repo`. No network or credentials are involved.
 The practical cost is deliberate: snapshot freshness is an explicit repository
 diff rather than an implicit property of every check.
+
+The `fetch` key has to name a program; an empty or whitespace-only value names
+none ([§FS-fetch.2.1](../../docs/functional-spec/FS-fetch.md#21-a-value-that-names-no-executable)).
+Where that is refused depends on the config version. Version 2 refuses it when
+the config loads, so this config stops every command that reads it:
+
+```toml
+grund_config_version = 2
+project_name = "tickets"
+
+[schema.kinds.GH]
+files = ["docs/tickets.md"]
+fetch = ""
+```
+
+```text
+$ grund check
+error: grund.toml:6: `[schema.kinds.GH] fetch` names no executable; name the program, or if this kind is not fetched remove the key and any `[rules.resolution] GH`, and its missing IDs are then errors; this became an error in grund 0.23.0
+```
+
+This example's own config is version 1, which still loads the key. With
+`fetch = ""` in `repo/grund.toml`, `grund check` keeps working and `grund fetch`
+is what refuses, before running anything:
+
+```text
+$ grund fetch GH-1234
+error: cannot run fetch integration `` for GH-1234: grund.toml:15: [[kinds]] `GH` fetch names no executable; name the program, or if this kind is not fetched remove the key and any `resolve`, and its missing IDs are then errors
+```

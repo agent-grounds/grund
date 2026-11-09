@@ -55,6 +55,20 @@ def apart_from_the_off_format_flip(found):
     ]
 
 
+FETCH_KEY_REFUSAL = "crates/grund-core/src/config/v2/finish.rs"
+
+
+def apart_from_the_fetch_key_refusal(found):
+    """§FS-config-v2.checks.config-fetch-names-nothing: the tree's claims less the
+    `0.23.0` the version-2 refusal of a `fetch` naming no executable closes with,
+    judged on its own, so a window pinned for another ramp does not move with it."""
+    return [
+        claim
+        for claim in found
+        if not (claim.path == FETCH_KEY_REFUSAL and claim.release == "0.23.0")
+    ]
+
+
 class ClauseReadingTests(unittest.TestCase):
     def test_a_pending_clause_names_its_release(self):
         (claim,) = claims('"… becomes an error in grund 0.14.0"')
@@ -369,9 +383,13 @@ class ThisRepositoryTests(unittest.TestCase):
         refuses 0.14.x, and the `prefix` removal refuses 0.12.x. The integrations
         retirement's lines raise the tree's floor further, and are judged apart.
         So is the off-format flip (§FS-check.checks.off-format-citation.1), whose
-        pair refuses a 0.20.x release (§FS-distribution.4.2)."""
+        pair refuses a 0.20.x release (§FS-distribution.4.2), and the `fetch` key
+        refusal (§FS-config-v2.checks.config-fetch-names-nothing), whose landed
+        `0.23.0` raises the tree's floor past this one."""
         floor, _ = ramps.release_window(
-            apart_from_the_off_format_flip(apart_from_the_integrations_retirement(self.claims))
+            apart_from_the_fetch_key_refusal(
+                apart_from_the_off_format_flip(apart_from_the_integrations_retirement(self.claims))
+            )
         )
         self.assertEqual(floor, "0.22.0")
         self.assertTrue(

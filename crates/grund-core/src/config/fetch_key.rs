@@ -183,7 +183,6 @@ mod tests {
 
     /// §FS-config-v2.checks.config-fetch-names-nothing: a citable one-place row reaches it.
     #[test]
-    #[ignore = "red until #1321 refuses a blank version 2 fetch at load; implement removes this"]
     fn a_citable_one_place_row_is_refused_for_the_blank_value() {
         let error = load_error("");
         assert!(error.contains("names no executable"), "{error:?}");
