@@ -119,3 +119,25 @@ fn strict_and_listed_scan_failures_carry_the_records_code() {
         assert_eq!(failed["failure"]["code"], json!("filesystem"), "{failed}");
     }
 }
+
+/// Node's strict `scan` rejects with the record an operation lists for the same failure: its path
+/// and its message, the reason followed by the fix (§FS-distribution.3.2.2.3, §FS-check.2.4.3).
+#[test]
+#[ignore = "red until the strict scan says its fix; the fix removes this"]
+fn the_strict_scan_failure_carries_the_fix_its_record_carries() {
+    let root = test_root("the_strict_scan_failure_carries_the_fix_its_record_carries");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\n[schema.kinds.CONST]\nfolders = [\"values\"]\nform = \"value\"\n",
+    );
+    write(&root.join("values/a.json"), "{ not json\n");
+    let strict = node_embedding_call(node_request(
+        "scan",
+        vec![json!(root.to_string_lossy())],
+        &root,
+    ));
+    let listed = call(&root, "scan");
+    let record = &listed["result"]["scan_errors"][0];
+    assert_eq!(strict["failure"]["message"], record["message"], "{strict}");
+    assert_eq!(strict["failure"]["path"], record["path"], "{strict}");
+}
