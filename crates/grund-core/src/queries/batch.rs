@@ -277,20 +277,7 @@ fn show_batch_query_with_metadata(
 ) -> Result<ShowOutput> {
     let (alias, raw_id) = split_qualified_id_arg(id_arg)?;
     let project = match alias.as_deref() {
-        Some(name) => context.project_by_alias(name).ok_or_else(|| {
-            if let Some(refusal) = context.missing_import(name) {
-                refusal
-            } else if !context.workspace_loaded {
-                anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
-                    "unknown project alias `{name}`\nnote: workspace aliases are defined in the root grund.toml under [workspace]"
-                )))
-            } else {
-                anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
-                    "unknown project alias `{name}`\nknown aliases: {}",
-                    context.aliases().join(", ")
-                )))
-            }
-        })?,
+        Some(name) => context.project_at_alias(name)?,
         None => context.current_project().ok_or_else(|| {
             let known = context.aliases().join(", ");
             if known.is_empty() {
