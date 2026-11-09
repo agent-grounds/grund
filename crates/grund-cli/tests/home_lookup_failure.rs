@@ -147,10 +147,9 @@ fn v1_should_denied_lookup_is_a_failure_at_the_home_and_exits_2() {
     assert_exit(&output, 2);
 }
 
-/// §FS-scan.scope.homes.lookup: an unread home earns no statement about what it holds.
-/// Needs the withholding rule of #1215 as well as the recorded failure.
+/// §FS-scan.scope.homes.lookup: an unread home earns no statement about what it holds. The
+/// failure is recorded at the home, so §FS-check.2.4 withholds the citation's finding.
 #[test]
-#[ignore = "red until #1318 records the failure and #1315's rule is on main; implement removes this once both hold"]
 fn denied_lookup_never_says_no_snapshot() {
     for (name, config) in [("snap-v2", V2), ("snap-v1", V1_SHOULD)] {
         let mut fixture = Fixture::with_snapshot(name, config, CITING);
