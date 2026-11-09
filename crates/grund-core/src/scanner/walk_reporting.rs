@@ -213,7 +213,7 @@ pub(crate) fn walk_scannable_files_with_sources(
             continue;
         }
         if let Err(error) = looked_up {
-            let (report, source) = root_lookup_failure(&scan_root, error);
+            let (report, source) = root_lookup_failure(&scan_root, error, frame.version);
             on_error(&report, source);
             errors.push(report);
             continue;
