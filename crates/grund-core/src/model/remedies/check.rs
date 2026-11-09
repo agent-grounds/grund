@@ -271,10 +271,34 @@ pub(crate) fn invalid_value_declaration() -> String {
     fill(Code::INVALID_VALUE_DECLARATION, 2, None, slots)
 }
 
-/// `io`'s *Fix* (§FS-check.2.4).
-pub(crate) fn io() -> String {
+/// `io`'s *Fix*, case `entry` (§FS-check.2.4.3).
+pub(crate) fn io_entry(version: u32) -> String {
     let slots: &[(&str, &dyn Display)] = &[];
-    fill(Code::IO, 2, None, slots)
+    fill(Code::IO, version, Some("entry"), slots)
+}
+
+/// `io`'s *Fix*, case `root` (§FS-check.2.4.3).
+pub(crate) fn io_root(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::IO, version, Some("root"), slots)
+}
+
+/// `io`'s *Fix*, case `passed` (§FS-check.2.4.3).
+pub(crate) fn io_passed(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::IO, version, Some("passed"), slots)
+}
+
+/// `io`'s *Fix*, case `value` (§FS-check.2.4.3).
+pub(crate) fn io_value(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::IO, version, Some("value"), slots)
+}
+
+/// `io`'s *Fix*, case `readable` (§FS-check.2.4.3).
+pub(crate) fn io_readable(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::IO, version, Some("readable"), slots)
 }
 
 /// `local-section-citation`'s *Fix*, case `write` (§FS-check.3.24).

@@ -141,6 +141,12 @@ A failure that lost a name keeps it. `failure_names`, a map on the `Catalog` fro
 
 `fetch` sees each report through `on_error` before this step, so a failure keeps its source. Each project of a workspace keeps its own list and names, so nothing merges across projects.
 
+### 1.failure: A scan failure carries what failed
+
+A scan failure is a record of the path, the reason, and a private enum saying what failed: unread at one of the places of [§FS-check.2.4.3](../functional-spec/FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix), or unparsed as one of its kinds of file. One method answers the code and one the *Fix* case, filled from the catalog row ([§AR-config.9.1](AR-config.md#91-what-it-reads)), so `scan_error_message` renders from the record and nothing classifies a finished message ([§AR-bindings.2](AR-bindings.md#2-grund-core-the-only-place-logic-lives), [§FS-check.2.4.1](../functional-spec/FS-check.md#241-one-reason-for-one-scan-io-failure)). Each raising site says which it is. Where the answer depends on where the path is, one function, `failure_place`, compares the failed location against the list `scan_roots` already returns, and whether a path was handed in, and it runs only on a failure, so a clean tree pays nothing ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). The walk, the file pass and the E2E pass call it; the value and section-lock passes know their answer without it.
+
+Every reader takes the code from the record: `check`'s text and NDJSON, the LSP report, `api_scan_error` and the commands behind it, the failure `show` and both `batch` paths build, the narrowed run's caution in `api/path_report.rs`, and the strict embedding `scan` failure in `api/embedding_snapshot.rs`. A `fmt` abort's own top-level `io` stays: it names the abort, and each failure inside it carries its own. The comparison of [§AR-scanner.1.relisted](AR-scanner.md#1relisted-a-directory-a-later-pass-lists-again-is-reported-once) does not read the enum.
+
 ## 2. Per-file scan
 
 A single linear pass over each file's lines performs three jobs together: declaration detection ([§AR-scanner.2.1](AR-scanner.md#21-declaration-detection)), section detection ([§AR-scanner.2.2](AR-scanner.md#22-section-detection)), and citation detection ([§AR-scanner.2.3](AR-scanner.md#23-citation-detection)).
