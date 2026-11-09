@@ -27,8 +27,7 @@ fn config_capture_contract_preserves_cli_outputs() {
         "config-migrate-drop-comments",
         "config-migrate-preview-minimal",
         "config-migrate-write",
-        // Red until #1232, in value_row_repair_wording_contract; implement restores
-        // config-migrate-refuse-values-guidance.
+        "config-migrate-refuse-values-guidance",
         "config-migrate-refuse-path-shaped-exclude",
         "config-migrate-invalid-config",
         "config-migrate-workspace-member",
