@@ -17,6 +17,7 @@ use crate::grammar::render_id;
 use crate::model::{Catalog, CheckReport, Diagnostic, format_path, sort_path_key};
 use crate::resolver::WorkspaceCheckTarget;
 use crate::scanner::ScanError;
+pub(crate) use crate::scanner::tests_failure_lines::*;
 use crate::templates::ConversationSurface;
 use crate::workspace::WorkspaceCitationTarget;
 use crate::writers::{Guidance, WorkspaceBlocks, expected, render_agents_append_block_at};
@@ -350,13 +351,6 @@ pub(crate) fn findings_signature(config: &Config, findings: &Catalog) -> Vec<Str
     rows
 }
 
-pub(crate) fn scan_errors_signature(errors: Vec<ScanError>) -> Vec<String> {
-    errors
-        .into_iter()
-        .map(|(path, message)| format!("{}|{}", sort_path_key(&path), message))
-        .collect()
-}
-
 pub(crate) fn current_block() -> String {
     render_agents_append_block_at(
         "demo",
@@ -635,7 +629,10 @@ pub(crate) fn only<'a>(run: &'a CheckRun, code: &str) -> &'a Diagnostic {
 /// line and the version 1 caution are stderr lines about the scan and the
 /// config (§FS-check.checks.config-version-1).
 fn is_graph_finding(diagnostic: &Diagnostic) -> bool {
-    !matches!(diagnostic.code.as_str(), "io" | "config-version-1")
+    !matches!(
+        diagnostic.code.as_str(),
+        "io" | "unparsable-file" | "config-version-1"
+    )
 }
 
 /// The codes of [`findings`], in the order the report holds them — what a
@@ -679,29 +676,6 @@ pub(crate) fn scanned(config: &Config, findings: &Catalog) -> Vec<String> {
         .collect();
     files.sort();
     files
-}
-
-/// The `error: <path>: <reason>` lines a file the scan could not read earns
-/// (§FS-check.2.4, §FS-errors.2.2.1).
-/// Unix only: every caller is a symlink case and so `#[cfg(unix)]` too.
-#[cfg(unix)]
-pub(crate) fn scan_errors(run: &CheckRun) -> Vec<String> {
-    run.report
-        .errors
-        .iter()
-        .filter(|diagnostic| diagnostic.code == "io")
-        .map(|diagnostic| {
-            format!(
-                "{}: {}",
-                diagnostic
-                    .path
-                    .as_ref()
-                    .map(|path| display_path(&run.config, path))
-                    .unwrap_or_default(),
-                diagnostic.message
-            )
-        })
-        .collect()
 }
 
 /// One source file's inline-citation-style findings as `(line, message)`,

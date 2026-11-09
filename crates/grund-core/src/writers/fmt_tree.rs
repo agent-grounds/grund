@@ -238,7 +238,7 @@ pub(super) fn plan_tree<'a>(
     let scan_errors: Vec<ApiScanError> = walked
         .errors
         .iter()
-        .map(|(file, message)| api_scan_error(opts.render.frame(), file, message))
+        .map(|error| api_scan_error(opts.render.frame(), error))
         .collect();
     let refused_readings = walked
         .reading_conflicts

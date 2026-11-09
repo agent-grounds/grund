@@ -13,7 +13,7 @@ use crate::config::{
 use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
 use crate::resolver::{fetch_place, load_alias_path, settled_run_warnings};
-use crate::scanner::unmarked_below_declaration;
+use crate::scanner::{Place, ScanFailure, unmarked_below_declaration};
 use crate::workspace::{resolve_workspace_config, split_qualified_id_arg};
 
 /// Which public CLI exit class a fetch refusal belongs to (§FS-fetch.7).
@@ -225,6 +225,11 @@ fn fetch_run(
             &path,
             &selected.grammar,
             &id,
+            // §FS-check.2.4.3: a file home is the row's own root, so `exclude` cannot prune it.
+            ScanFailure::Unread {
+                place: Place::Root,
+                version: selected.frame().version,
+            },
             &report_base,
             snapshot.as_bytes(),
             diagnostic,

@@ -156,11 +156,13 @@ fn init_run(
             *diagnostic = Some(err);
             InitError::new(message)
         })?;
-        if let Some((path, message)) = errors.first() {
-            // §FS-distribution.3.3.2: scanner errors carry a source path.
+        if let Some(first) = errors.first() {
+            let (path, message) = (&first.path, &first.reason);
+            // §FS-distribution.3.3.2: scanner errors carry a source path, and their code
+            // (§FS-check.2.4.3).
             let mut source = crate::model::OperationDiagnostic::new(
                 "filesystem",
-                "io",
+                first.code().as_str(),
                 format!("{}: {message}", path.display()),
             );
             source.path = Some(format_path(path));

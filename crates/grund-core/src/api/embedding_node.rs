@@ -212,7 +212,14 @@ fn normalize(value: &mut Value, operation: &str) {
 pub(super) fn normalize_failure(f: &mut Value, operation: &str) {
     f["operation"] = json!(operation);
     if f["kind"] == "filesystem" {
-        f["kind"] = json!("io");
+        // §FS-check.2.4.3: a file that does not parse keeps the record's code, on the field the
+        // strict scan puts it (§AR-bindings.2).
+        if f["code"] == Code::UNPARSABLE_FILE.as_str() {
+            f["kind"] = f["code"].take();
+            f["code"] = json!("filesystem");
+        } else {
+            f["kind"] = json!("io");
+        }
     }
     if f["kind"] == "path-encoding" {
         f["kind"] = json!("input");

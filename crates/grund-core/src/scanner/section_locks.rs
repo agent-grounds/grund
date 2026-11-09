@@ -4,6 +4,8 @@
 
 use std::path::{Path, PathBuf};
 
+use super::scan_error::{Place, ScanError, ScanFailure};
+
 use crate::config::Frame;
 use crate::grammar::{STUB_LINK_HEADING, may_hold_relative_heading, mixed_heading_path};
 use crate::model::{Catalog, SECTION_LOCK_DIR, SectionLockFile};
@@ -79,7 +81,7 @@ fn is_mixed_heading_line(line: &str) -> bool {
 pub(super) fn read_section_locks(
     frame: Frame<'_>,
     findings: &mut Catalog,
-    errors: &mut Vec<(PathBuf, String)>,
+    errors: &mut Vec<ScanError>,
 ) {
     let dir = frame.root().join(SECTION_LOCK_DIR);
     let mut paths = Vec::new();
@@ -106,9 +108,14 @@ pub(super) fn read_section_locks(
                 id: id.to_string(),
                 text: text.into_owned(),
             }),
-            Err(error) => errors.push((
+            // §FS-check.2.4.3: no walk reaches a lock and no row lists one.
+            Err(error) => errors.push(ScanError::new(
                 path,
                 format!("could not read section lock: {}", io_reason(&error)),
+                ScanFailure::Unread {
+                    place: Place::Readable,
+                    version: frame.version,
+                },
             )),
         }
     }

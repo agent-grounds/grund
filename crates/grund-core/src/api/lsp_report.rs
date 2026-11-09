@@ -7,7 +7,7 @@
 
 use anyhow::Result;
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::path_report::unread_resolution_source_cautions;
 use super::report::complete_report;
@@ -22,7 +22,7 @@ use crate::checker::{
 use crate::config::Config;
 use crate::model::{CheckReport, Code, Diagnostic};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext};
-use crate::scanner::scan_error_message;
+use crate::scanner::{ScanError, scan_error_message};
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, import_diagnostics,
     unlisted_workspace_block_errors,
@@ -321,15 +321,15 @@ pub(super) fn editor_run_warnings(context: &WorkspaceContext) -> Vec<Diagnostic>
 
 fn append_lsp_scan_errors(
     report: &mut CheckReport,
-    scan_errors: impl IntoIterator<Item = (PathBuf, String)>,
+    scan_errors: impl IntoIterator<Item = ScanError>,
 ) {
-    for (file, message) in scan_errors {
+    for failure in scan_errors {
         report.errors.push(Diagnostic {
-            code: Code::IO,
-            path: Some(file),
+            code: failure.code(),
+            message: scan_error_message(&failure),
+            path: Some(failure.path),
             line: None,
             column: None,
-            message: scan_error_message(&message),
             sites: Vec::new(),
             authority: Vec::new(),
         });

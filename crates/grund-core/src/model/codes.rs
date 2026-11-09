@@ -157,6 +157,8 @@ impl Code {
     pub const UNLISTED_WORKSPACE_BLOCK: Code = Code("unlisted-workspace-block");
     /// §FS-declarations.checks.unmarked-heading
     pub const UNMARKED_HEADING: Code = Code("unmarked-heading");
+    /// §FS-check.2.4.3
+    pub const UNPARSABLE_FILE: Code = Code("unparsable-file");
     /// §FS-rules.checks.unreached-declaration
     pub const UNREACHED_DECLARATION: Code = Code("unreached-declaration");
     /// §FS-scan.checks.unread-scan-root
@@ -246,6 +248,7 @@ impl Code {
         Code::UNLINKED_INDEX_ENTRY,
         Code::UNLISTED_WORKSPACE_BLOCK,
         Code::UNMARKED_HEADING,
+        Code::UNPARSABLE_FILE,
         Code::UNREACHED_DECLARATION,
         Code::UNREAD_SCAN_ROOT,
         Code::UNREADABLE_FRONT_MATTER,

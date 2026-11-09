@@ -1,6 +1,6 @@
-//! The published form of a scan failure (§AR-system.2.5): the `(path, message)`
-//! pair the walk collects (§FS-check.2.4), with its path already spelled the way
-//! the report spells it.
+//! A scan failure and its published form (§AR-system.2.5, §AR-scanner.1.failure): the record the
+//! walk collects (§FS-check.2.4), and the rendering whose path is spelled the way the report
+//! spells it.
 //!
 //! It sat in the api's contract file while the queries and the writers read it
 //! upward — the size catalog, the formatter's walk, its completeness proof and
@@ -12,46 +12,227 @@
 use std::io::Error;
 use std::path::{Path, PathBuf};
 
-use super::tree::ScanError;
-use crate::config::Frame;
-use crate::model::{FailureNames, remedies};
-use crate::sources::{io_reason, paths_same_location};
+use super::walk::scan_roots;
+use super::walk_errors::link_identity;
+use crate::config::{Frame, Schema};
+use crate::model::{Code, FailureNames, ValueFormat, remedies};
+use crate::sources::{io_reason, paths_same_location, physical_path_key};
+
+/// Where a path that could not be read is, which decides what can keep it out of a run
+/// (§FS-check.2.4.3): each is a case of `io`'s *Fix* (§FS-errors.5.5).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Place {
+    Passed,
+    Readable,
+    Value,
+    Root,
+    Entry,
+}
+
+/// The kind of a file that was read and does not parse, each a case of `unparsable-file`'s *Fix*
+/// (§FS-check.2.4.3).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum FileKind {
+    Exit,
+    Value(ValueFormat),
+    Ignore,
+}
+
+/// What failed, said where the failure is raised and never read back out of a message
+/// (§AR-scanner.1.failure, §FS-check.2.4.1). `version` is the config format the fix is worded for
+/// (§FS-errors.5.5.1).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum ScanFailure {
+    Unread { place: Place, version: u32 },
+    Unparsed(FileKind),
+}
+
+/// A path the scan could not read, or a file it read and could not parse. The walk continues past
+/// it (§FS-check.2.4); callers that are point queries treat any entry as fatal, `check` and `refs`
+/// report it and exit 2 with a still-printed report (§AR-scanner.1.failure).
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct ScanError {
+    pub(crate) path: PathBuf,
+    pub(crate) reason: String,
+    failure: ScanFailure,
+}
+
+impl ScanError {
+    pub(crate) fn new(path: PathBuf, reason: String, failure: ScanFailure) -> Self {
+        Self {
+            path,
+            reason,
+            failure,
+        }
+    }
+
+    /// An ordinary unread path, the record most tests of the list's own handling need.
+    #[cfg(test)]
+    pub(crate) fn unread_entry(path: PathBuf, reason: &str) -> Self {
+        let failure = ScanFailure::Unread {
+            place: Place::Entry,
+            version: 2,
+        };
+        Self::new(path, reason.to_string(), failure)
+    }
+
+    /// The code this failure is published under (§FS-check.2.4.3).
+    pub(crate) fn code(&self) -> Code {
+        match self.failure {
+            ScanFailure::Unread { .. } => Code::IO,
+            ScanFailure::Unparsed(_) => Code::UNPARSABLE_FILE,
+        }
+    }
+
+    /// The *Fix* case that works for this failure at its path (§FS-check.2.4.3, §FS-errors.5.5).
+    fn fix(&self) -> String {
+        match self.failure {
+            ScanFailure::Unread { place, version } => match place {
+                Place::Passed => remedies::io_passed(version),
+                Place::Readable => remedies::io_readable(version),
+                Place::Value => remedies::io_value(version),
+                Place::Root => remedies::io_root(version),
+                Place::Entry => remedies::io_entry(version),
+            },
+            ScanFailure::Unparsed(FileKind::Exit) => remedies::unparsable_file_exit(),
+            ScanFailure::Unparsed(FileKind::Value(format)) => {
+                remedies::unparsable_file_value(format.name())
+            }
+            ScanFailure::Unparsed(FileKind::Ignore) => remedies::unparsable_file_ignore(),
+        }
+    }
+
+    /// This failure judged at its path: a parse failure's kind does not depend on where it is.
+    pub(super) fn placed(mut self, at: &FailureRoots) -> Self {
+        if let ScanFailure::Unread { place, .. } = &mut self.failure {
+            *place = failure_place(&self.path, at);
+        }
+        self
+    }
+}
+
+/// What a failed path is compared against (§FS-check.2.4.3), built only once a pass has a failure
+/// to judge, so a clean tree pays nothing (§GOAL-fast-feedback).
+pub(super) struct FailureRoots {
+    roots: Vec<PathBuf>,
+    passed: Option<PathBuf>,
+    config_root: PathBuf,
+}
+
+impl FailureRoots {
+    #[cfg(test)]
+    pub(super) fn of(roots: Vec<PathBuf>, passed: Option<PathBuf>, config_root: PathBuf) -> Self {
+        Self {
+            roots,
+            passed,
+            config_root,
+        }
+    }
+
+    /// What `scan_roots` answered, whose first entry is the path a narrowed run was handed
+    /// (§FS-check.1.3.6.1). `whole` says the scope is the config root, which is no narrowing.
+    pub(super) fn new(
+        roots: Vec<PathBuf>,
+        whole: bool,
+        explicit_scope: bool,
+        config_root: &Path,
+    ) -> Self {
+        let passed = (explicit_scope && !whole)
+            .then(|| roots.first().cloned())
+            .flatten();
+        Self {
+            roots,
+            passed,
+            config_root: config_root.to_path_buf(),
+        }
+    }
+
+    /// The same answer for a pass that does not hold the walk's roots. A scope that no longer
+    /// resolves judges every path an `entry`.
+    pub(super) fn resolve(
+        schema: &Schema,
+        frame: Frame<'_>,
+        scope: Option<&Path>,
+        explicit_scope: bool,
+    ) -> Self {
+        let (roots, whole) = scan_roots(schema, frame, scope, explicit_scope).unwrap_or_default();
+        Self::new(roots, whole, explicit_scope, frame.root())
+    }
+}
+
+/// Where `path` is among the run's roots, by directory entry so a second spelling of its parents
+/// answers the same and a link is the path it is, the first case of §FS-check.2.4.3 that holds. The
+/// value and section-lock passes know their answer without asking (§AR-scanner.1.failure).
+pub(super) fn failure_place(path: &Path, at: &FailureRoots) -> Place {
+    let same = |root: &Path| same_entry(path, root);
+    if at.passed.as_deref().is_some_and(same) {
+        Place::Passed
+    } else if same(&at.config_root) {
+        Place::Readable
+    } else if at.roots.iter().any(|root| same(root)) {
+        Place::Root
+    } else {
+        Place::Entry
+    }
+}
+
+/// Whether `path` is the entry `root` names (§AR-scanner.1.entry). One spelled below the root is
+/// below it, though a loop may have walked it back to the root's own entry. The final component is
+/// never resolved, so names that differ cannot be one entry and cost no `realpath`
+/// (§AR-scanner.1.failure).
+fn same_entry(path: &Path, root: &Path) -> bool {
+    if path == root {
+        return true;
+    }
+    if path.starts_with(root) {
+        return false;
+    }
+    if let (Some(left), Some(right)) = (path.file_name(), root.file_name())
+        && left != right
+    {
+        return false;
+    }
+    entry_key(path) == entry_key(root)
+}
+
+/// The key `link_identity` gives a path. One with no final name, `.` or `..`, is resolved whole,
+/// and one whose parent is gone compares as written (§AR-scanner.1.entry).
+fn entry_key(path: &Path) -> PathBuf {
+    match path.file_name() {
+        Some(_) => link_identity(path).unwrap_or_else(|| path.to_path_buf()),
+        None => physical_path_key(path),
+    }
+}
 
 /// One file the walk could not read, as a caller of the embedding API sees it:
-/// the path rendered against the run's report base (§FS-config.3.6) and the
-/// reason followed by `; ` and `io`'s *Fix* (§FS-check.2.4, §AR-bindings.2).
+/// the path rendered against the run's report base (§FS-config.3.6), the reason
+/// followed by `; ` and the failure's *Fix* (§FS-check.2.4.3), and the code that
+/// tells what failed without parsing the message (§AR-bindings.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub struct ApiScanError {
     pub path: String,
     pub message: String,
+    pub code: String,
 }
 
 /// Render one [`ScanError`](super::tree::ScanError) for a caller: the same path
 /// spelling `check` prints, so an embedder and the terminal name one file the
 /// same way (§FS-errors.4), and the report base `.` (§FS-cli.3.4).
-pub(crate) fn api_scan_error(frame: Frame<'_>, path: &Path, message: &str) -> ApiScanError {
+pub(crate) fn api_scan_error(frame: Frame<'_>, failure: &ScanError) -> ApiScanError {
     ApiScanError {
-        path: frame.display_location(path),
-        message: scan_error_message(message),
+        path: frame.display_location(&failure.path),
+        message: scan_error_message(failure),
+        code: failure.code().as_str().to_string(),
     }
 }
 
-/// The text after `error: <path>: ` for a path the walk could not read: the reason,
-/// then `io`'s *Fix*, built here once so every command that prints the line, and
-/// `check`'s own report, print the same bytes (§FS-check.2.4, §FS-workspace.8.7.3).
-pub(crate) fn scan_error_message(reason: &str) -> String {
-    format!("{reason}; {}", remedies::io_entry(2))
+/// The text after `error: <path>: ` for a scan failure: the reason, then the *Fix* of its failure
+/// and place, built here once so every command that prints the line, and `check`'s own report,
+/// print the same bytes (§FS-check.2.4.3, §FS-workspace.8.7.3).
+pub(crate) fn scan_error_message(failure: &ScanError) -> String {
+    format!("{}; {}", failure.reason, failure.fix())
 }
-
-// Scaffold for #1272's specify commit, where the catalog's `io` cases are written ahead of the
-// record that picks them (§FS-check.2.4.3): implement removes it when each failure takes its case.
-const _: [fn(u32) -> String; 4] = [
-    remedies::io_root,
-    remedies::io_passed,
-    remedies::io_value,
-    remedies::io_readable,
-];
 
 /// The words the walk keeps around the reason of a link it cannot resolve for lack of access to
 /// its target (§AR-scanner.1.9, §FS-check.2.4.1).
@@ -74,9 +255,10 @@ pub(super) fn publish_unlisted(
     spelled: PathBuf,
     error: &Error,
     context: Option<&str>,
+    failure: ScanFailure,
     reported: &mut Vec<ScanError>,
 ) {
-    publish_unless_reported(spelled, error, context, reported, |path, _| {
+    publish_unless_reported(spelled, error, context, failure, reported, |path, _| {
         paths_same_location(path, listed)
     });
 }
@@ -92,10 +274,11 @@ pub(super) fn publish_unlisted_fixture(
     spelled: PathBuf,
     error: &Error,
     names: &FailureNames,
+    failure: ScanFailure,
     reported: &mut Vec<ScanError>,
 ) {
     let at = spelled.clone();
-    publish_unless_reported(spelled, error, None, reported, |path, said| {
+    publish_unless_reported(spelled, error, None, failure, reported, |path, said| {
         names.of(path, said).any(|name| name == at)
     });
 }
@@ -108,22 +291,25 @@ pub(super) fn publish_unlisted_fixture(
 /// lies inside `run_path`, the path the run was handed: then that is the spelling it is named by,
 /// so the run that names it keeps its exit.
 pub(super) fn publish_file_failure(
-    spelled: PathBuf,
-    reason: String,
+    report: ScanError,
     run_path: Option<&Path>,
     reported: &mut Vec<ScanError>,
 ) {
-    let already = reported.iter_mut().find(|(path, said)| {
-        said.strip_prefix(UNREADABLE_LINK).unwrap_or(said) == reason
-            && (*path == spelled || paths_same_location(path, &spelled))
+    let spelled = &report.path;
+    let already = reported.iter_mut().find(|held| {
+        held.reason
+            .strip_prefix(UNREADABLE_LINK)
+            .unwrap_or(&held.reason)
+            == report.reason
+            && (held.path == *spelled || paths_same_location(&held.path, spelled))
     });
     match already {
-        Some((path, _)) => {
-            if run_path.is_some_and(|run| spelled.starts_with(run) && !path.starts_with(run)) {
-                *path = spelled;
+        Some(held) => {
+            if run_path.is_some_and(|run| spelled.starts_with(run) && !held.path.starts_with(run)) {
+                held.path = report.path;
             }
         }
-        None => reported.push((spelled, reason)),
+        None => reported.push(report),
     }
 }
 
@@ -131,19 +317,24 @@ fn publish_unless_reported(
     spelled: PathBuf,
     error: &Error,
     context: Option<&str>,
+    failure: ScanFailure,
     reported: &mut Vec<ScanError>,
     same_location: impl Fn(&Path, &str) -> bool,
 ) {
     let reason = io_reason(error);
-    let already = reported.iter().any(|(path, said)| {
-        said.strip_prefix(UNREADABLE_LINK).unwrap_or(said) == reason && same_location(path, said)
+    let already = reported.iter().any(|held| {
+        held.reason
+            .strip_prefix(UNREADABLE_LINK)
+            .unwrap_or(&held.reason)
+            == reason
+            && same_location(&held.path, &held.reason)
     });
     if !already {
         let message = match context {
             Some(context) => format!("{context}: {reason}"),
             None => reason,
         };
-        reported.push((spelled, message));
+        reported.push(ScanError::new(spelled, message, failure));
     }
 }
 

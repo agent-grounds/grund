@@ -78,7 +78,7 @@ fn answer(
         Operation::ScanErrors => project
             .scan_errors
             .iter()
-            .map(|(file, message)| format!("{}|{message}", file.display()))
+            .map(|error| format!("{}|{}", error.path.display(), error.reason))
             .collect(),
         Operation::CitationTargets => findings
             .edges()

@@ -20,9 +20,15 @@ pub(super) fn scan(r: &EmbeddingRequest) -> Result<Value, Value> {
             .map_err(|e| error_data(e, &cautions))?;
     let snapshot = snapshot(&config, &findings);
     if !errors.is_empty() {
-        let mut f = failure("io", "filesystem", errors[0].1.clone(), &cautions);
+        let first = &errors[0];
+        let mut f = failure(
+            first.code().as_str(),
+            "filesystem",
+            first.reason.clone(),
+            &cautions,
+        );
         // §FS-cli.3.4: a scan failure at the report base names it `.`.
-        f["path"] = json!(display_location(&config, &errors[0].0));
+        f["path"] = json!(display_location(&config, &first.path));
         f["partial_output"] = snapshot;
         return Err(f);
     }

@@ -153,6 +153,8 @@ if let Err(err) = format_references(opts) {
 }
 ```
 
+An `ApiScanError` carries `path`, `message` and `code`: `io` for a path that could not be read, and `unparsable-file` for a file that was read and does not parse, so nothing has to parse `message`.
+
 ## Migrating
 
 ### Removed in 0.19.0

@@ -44,9 +44,10 @@ pub(super) fn refs_scan_errors(context: &WorkspaceContext) -> Vec<ApiScanError> 
         .projects
         .iter()
         .flat_map(|project| {
-            project.scan_errors.iter().map(|(file, message)| {
-                api_scan_error(context.render_config().frame(), file, message)
-            })
+            project
+                .scan_errors
+                .iter()
+                .map(|error| api_scan_error(context.render_config().frame(), error))
         })
         .collect()
 }

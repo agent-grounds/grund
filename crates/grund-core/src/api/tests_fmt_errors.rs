@@ -40,10 +40,12 @@ fn public_fmt_api_preserves_every_strict_scan_error() {
             ApiScanError {
                 path: "docs/FS-002-gone.md".to_string(),
                 message: "broken symlink: the target does not exist; make the path readable, or keep it out of the scan".to_string(),
+                code: "io".to_string(),
             },
             ApiScanError {
                 path: "docs/FS-003-also-gone.md".to_string(),
                 message: "broken symlink: the target does not exist; make the path readable, or keep it out of the scan".to_string(),
+                code: "io".to_string(),
             },
         ]
     );

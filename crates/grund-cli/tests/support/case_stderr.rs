@@ -147,6 +147,15 @@ const SCAN_EXCLUDE_DIRECTORY_REPAIR_SUFFIX: &str =
 /// cap. A repair that opens otherwise keeps the cap.
 const MIGRATE_VALUE_KEY_REPAIR_PREFIX: &str = "  repair: removing value";
 
+/// A value source's *Fix* says how to keep it out of the scan and why `exclude` will not, which
+/// runs a long reason past the cap (§FS-check.2.4.3), so it keeps the bytes that point fixes.
+const SCAN_VALUE_SOURCE_REPAIR_SUFFIX: &str =
+    "by moving it out of the value home, because exclude does not reach a value source";
+
+/// The same for a path the command was given, whose *Fix* says why `exclude` will not reach it.
+const SCAN_PASSED_PATH_REPAIR_SUFFIX: &str =
+    "by not passing it, because exclude does not prune a path the command is given";
+
 /// The judgement, isolated from the filesystem. A `--format json` case's
 /// stderr is not uniformly JSON (§FS-errors.5.2.2): a launch-time `error: …`
 /// line stays text and keeps the plain 180-byte cap, while a carried text
@@ -175,6 +184,8 @@ fn assert_stderr_is_concise(name: &str, json_case: bool, migration_case: bool, s
             || (line.starts_with("error: ") && line.ends_with(PROMOTED_LOAD_WARNING_SUFFIX))
             || (line.starts_with("error: ")
                 && line.ends_with(SCAN_EXCLUDE_DIRECTORY_REPAIR_SUFFIX))
+            || (line.starts_with("error: ") && line.ends_with(SCAN_VALUE_SOURCE_REPAIR_SUFFIX))
+            || (line.starts_with("error: ") && line.ends_with(SCAN_PASSED_PATH_REPAIR_SUFFIX))
             || (line.starts_with("written: ") && line.ends_with(MIGRATE_DEFAULT_WRITTEN_SUFFIX))
             || (line.starts_with("refused: ") && line.ends_with(MIGRATE_EMPTY_EXTENSION_SUFFIX))
             || (migration_case && line.starts_with(MIGRATE_VALUE_KEY_REPAIR_PREFIX))

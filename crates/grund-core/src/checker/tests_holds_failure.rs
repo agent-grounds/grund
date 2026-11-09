@@ -35,7 +35,7 @@ fn failure(root: &Path, survivor: &str, others: &[&str]) -> (ScanError, FailureN
     for other in others {
         names.keep(&root.join(survivor), DENIED, &root.join(other));
     }
-    ((root.join(survivor), DENIED.to_string()), names)
+    (ScanError::unread_entry(root.join(survivor), DENIED), names)
 }
 
 #[test]
@@ -95,7 +95,7 @@ fn with_no_name_as_given_the_first_the_scope_holds_is_used() {
 fn a_kept_name_says_nothing_about_another_failure_at_that_path() {
     let root = tree("a_kept_name_says_nothing_about_another_failure");
     let (listing, names) = failure(&root, "e2e/cases", &["realE/cases"]);
-    let parse = (root.join("e2e/cases"), "error parsing glob".to_string());
+    let parse = ScanError::unread_entry(root.join("e2e/cases"), "error parsing glob");
 
     let (inside, outside) = partition_scan_failures(
         [listing, parse.clone()],
@@ -103,7 +103,10 @@ fn a_kept_name_says_nothing_about_another_failure_at_that_path() {
         Some(&scope(&root, "realE")),
     );
 
-    assert_eq!(inside, [(root.join("realE/cases"), DENIED.to_string())]);
+    assert_eq!(
+        inside,
+        [ScanError::unread_entry(root.join("realE/cases"), DENIED)]
+    );
     assert_eq!(outside, [parse]);
 }
 

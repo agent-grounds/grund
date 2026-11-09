@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::json::{JsonNode, JsonReader};
-use super::scan_error::publish_unlisted;
+use super::scan_error::{FileKind, Place, ScanFailure, publish_unlisted};
 use super::tree::ScanError;
 use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
 use super::value_yaml_subset::yaml_value_root;
@@ -34,9 +34,18 @@ struct UnreadHome {
 impl UnreadHome {
     /// The failure as it is published where nothing else could have reported it, the home's
     /// context around the shared I/O reason (§FS-check.2.4.1).
-    fn into_scan_error(self) -> ScanError {
+    fn into_scan_error(self, version: u32) -> ScanError {
         let reason = io_reason(&self.error);
-        (self.folder, format!("{HOME_CONTEXT}: {reason}"))
+        let message = format!("{HOME_CONTEXT}: {reason}");
+        ScanError::new(self.folder, message, home_failure(version))
+    }
+}
+
+/// §FS-check.2.4.3: a value home is a scan root, so `exclude` does not reach it.
+fn home_failure(version: u32) -> ScanFailure {
+    ScanFailure::Unread {
+        place: Place::Root,
+        version,
     }
 }
 
@@ -54,7 +63,15 @@ pub(super) fn scan_value_sources(
         // §AR-scanner.1.relisted: the walk lists a home too, so its listing failure is
         // published only where the scan has not reported it already (§FS-check.2.4.2).
         Err(UnreadHome { folder, error }) => {
-            publish_unlisted(&folder, folder.clone(), &error, Some(HOME_CONTEXT), errors);
+            let failure = home_failure(frame.version);
+            publish_unlisted(
+                &folder,
+                folder.clone(),
+                &error,
+                Some(HOME_CONTEXT),
+                failure,
+                errors,
+            );
             return;
         }
     };
@@ -75,7 +92,7 @@ pub(crate) fn folder_value_declarations(
     // §FS-fetch.5.1: fetch runs no walk, so a home it cannot read is its failure as it stands.
     let mut errors = Vec::new();
     let sources = value_sources_in(schema, frame, Some((kind, folder)), &mut errors)
-        .map_err(UnreadHome::into_scan_error)?;
+        .map_err(|home| home.into_scan_error(frame.version))?;
     let mut findings = Catalog::default();
     scan_sources(schema, frame, sources, &mut findings, &mut errors);
     if let Some(error) = errors.into_iter().next() {
@@ -155,13 +172,16 @@ fn scan_sources(
         let text = match frame.sources().text(path) {
             Ok(text) => text.into_owned(),
             Err(error) => {
-                errors.push(value_source_error(path, format, &error));
+                errors.push(value_source_error(path, format, &error, frame.version));
                 continue;
             }
         };
         match read_value_root(&text, format) {
             Ok(root) => enroll_value_root(frame, path, &owners, &text, root, format, findings),
-            Err(message) => errors.push((path.clone(), message)),
+            Err(message) => {
+                let failure = ScanFailure::Unparsed(FileKind::Value(format));
+                errors.push(ScanError::new(path.clone(), message, failure));
+            }
         }
         if owners.len() > 1 {
             duplicate_owned_source(&paths, findings);
@@ -171,14 +191,23 @@ fn scan_sources(
 
 /// A value source's read or classification failure (§FS-values.5.3.1), with
 /// format context around the shared I/O reason (§FS-check.2.4.1).
-fn value_source_error(path: &Path, format: ValueFormat, error: &std::io::Error) -> ScanError {
-    (
+fn value_source_error(
+    path: &Path,
+    format: ValueFormat,
+    error: &std::io::Error,
+    version: u32,
+) -> ScanError {
+    ScanError::new(
         path.to_path_buf(),
         format!(
             "could not read value {} source: {}",
             format.name(),
             io_reason(error)
         ),
+        ScanFailure::Unread {
+            place: Place::Value,
+            version,
+        },
     )
 }
 
@@ -245,10 +274,11 @@ pub(super) type ValueSource<'a> = (PathBuf, &'a str, Option<ValueFormat>);
 pub(super) fn value_sources<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
-) -> std::result::Result<Vec<ValueSource<'a>>, (PathBuf, String)> {
+) -> std::result::Result<Vec<ValueSource<'a>>, ScanError> {
     // §FS-values.5.3.1: enrollment publishes classification failures; callers here
     // need the readable source paths for the ordinary walk's source exclusions.
-    value_sources_in(schema, frame, None, &mut Vec::new()).map_err(UnreadHome::into_scan_error)
+    value_sources_in(schema, frame, None, &mut Vec::new())
+        .map_err(|home| home.into_scan_error(frame.version))
 }
 
 /// The single source enumerator (§FS-values.2.2, §FS-fetch.5.1). A selected home
@@ -306,7 +336,12 @@ fn value_sources_in<'a>(
                             // unrelated homes do not gate selected fetch. Named as it entered,
                             // whatever its target reads as.
                             if required && failed_sources.insert(physical_path_key(&path)) {
-                                errors.push(value_source_error(&path, spelled, &error));
+                                errors.push(value_source_error(
+                                    &path,
+                                    spelled,
+                                    &error,
+                                    frame.version,
+                                ));
                             }
                             continue;
                         }

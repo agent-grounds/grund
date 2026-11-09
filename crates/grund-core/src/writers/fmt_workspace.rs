@@ -162,7 +162,7 @@ pub(crate) fn fmt_workspace_projects(
                             "changes":outcome.changes.iter().map(|row|
                                 row.partial_json(render)).collect::<Vec<_>>(),
                             "scan_errors":outcome.scan_errors.iter().map(|e|
-                                serde_json::json!({"path":e.path,"message":e.message})).collect::<Vec<_>>(),
+                                serde_json::json!({"path":e.path,"message":e.message,"code":e.code})).collect::<Vec<_>>(),
                             "refused_writes":outcome.refused_writes});
                         for key in ["changes", "scan_errors", "refused_writes"] {
                             let mut ordered =

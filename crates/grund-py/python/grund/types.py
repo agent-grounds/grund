@@ -69,6 +69,7 @@ class Failure(Cautioned):
 class ScanError:
     path: str
     message: str
+    code: str
 
 
 @dataclass(frozen=True)

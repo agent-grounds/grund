@@ -9,7 +9,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const REMEDY: &str = "make the path readable, or keep it out of the scan";
+const REMEDY: &str = "write the line it names as a valid ignore pattern";
 const ALPHA: &str = "error parsing glob '{alpha': unclosed alternate group; \
                      missing '}' (maybe escape '{' with '[{]'?)";
 

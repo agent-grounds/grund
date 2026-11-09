@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use super::read_predicate::{
     Unread, directory_refusal, ignore_file_unapplied, ignored, name_refusal,
 };
-use super::scan_error::unreadable_link_reason;
+use super::scan_error::{FileKind, Place, ScanFailure, unreadable_link_reason};
 use super::tree::ScanError;
 use super::walk::WalkDirFilter;
 use crate::config::{Frame, Schema, canonical_config_root};
@@ -126,8 +126,26 @@ fn walk_error_report(
     }
     // §FS-check.2.4.2: an ignore file that is a link was resolved and read, so a line of it
     // that does not parse is no link failure for the rules below to silence.
-    if ignore_file_line || !link_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
-        return Some((path.to_path_buf(), walk_error_reason(err)));
+    let unread = ScanFailure::Unread {
+        place: Place::Entry,
+        version: frame.version,
+    };
+    // §FS-check.2.4.3: an ignore file's bad line is the one walker error that read and did not
+    // parse; every other is unread, and the walk judges its place once it has them all.
+    if ignore_file_line {
+        let failure = ScanFailure::Unparsed(FileKind::Ignore);
+        return Some(ScanError::new(
+            path.to_path_buf(),
+            walk_error_reason(err),
+            failure,
+        ));
+    }
+    if !link_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
+        return Some(ScanError::new(
+            path.to_path_buf(),
+            walk_error_reason(err),
+            unread,
+        ));
     }
     if walk_skips_link(path, filter, schema, frame, scan_root) {
         return None;
@@ -138,7 +156,7 @@ fn walk_error_report(
         }
         _ => unreadable_link_reason(&walk_error_reason(err)),
     };
-    Some((path.to_path_buf(), reason))
+    Some(ScanError::new(path.to_path_buf(), reason, unread))
 }
 
 /// Whether the walk was never going to read through the link at `path`, judged
@@ -319,7 +337,12 @@ pub(super) fn symlink_loop_report(
         Some(name) => format!("symlink loop: the target is the ancestor directory {name}"),
         None => "symlink loop: the target contains the link".to_string(),
     };
-    Some((link.to_path_buf(), reason))
+    // §FS-check.2.4.3: the walk judges where the link is once it has all its failures.
+    let failure = ScanFailure::Unread {
+        place: Place::Entry,
+        version: frame.version,
+    };
+    Some(ScanError::new(link.to_path_buf(), reason, failure))
 }
 
 /// The one name a loop's reason gives the directory the link reaches back into, the

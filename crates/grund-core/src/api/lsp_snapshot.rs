@@ -99,7 +99,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
             project
                 .scan_errors
                 .iter()
-                .map(|(file, message)| api_scan_error(project.config.frame(), file, message)),
+                .map(|error| api_scan_error(project.config.frame(), error)),
         );
         finding_ranges.extend(
             project

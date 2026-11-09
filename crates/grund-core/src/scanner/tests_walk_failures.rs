@@ -26,12 +26,12 @@ fn linked_tree(name: &str) -> PathBuf {
 }
 
 fn report(root: &Path, rel: &str, reason: &str) -> ScanError {
-    (root.join(rel), reason.to_string())
+    ScanError::unread_entry(root.join(rel), reason)
 }
 
 fn names_of(names: &FailureNames, failure: &ScanError) -> Vec<PathBuf> {
     names
-        .of(&failure.0, &failure.1)
+        .of(&failure.path, &failure.reason)
         .map(Path::to_path_buf)
         .collect()
 }
@@ -50,7 +50,7 @@ fn one_entry_for_one_reason_is_one_report_and_the_survivor_keeps_the_other_name(
         [first.clone()],
         "the first report is the survivor"
     );
-    assert_eq!(names_of(&names, &first), [first.0, second.0]);
+    assert_eq!(names_of(&names, &first), [first.path, second.path]);
 }
 
 #[test]
@@ -87,7 +87,7 @@ fn another_reason_stays_apart_and_a_name_answers_only_for_the_reason_that_lost_i
 
     assert_eq!(failures, [listing.clone(), parse.clone()]);
     assert_eq!(names_of(&names, &listing).len(), 2);
-    assert_eq!(names_of(&names, &parse), [parse.0.clone()]);
+    assert_eq!(names_of(&names, &parse), [parse.path.clone()]);
 }
 
 /// Overlapping roots meet one failure under one name: one report, and no second name.
@@ -109,7 +109,7 @@ fn one_name_met_twice_is_one_report_and_no_second_name() {
 fn a_path_with_no_key_compares_as_written_and_is_kept() {
     let root = physical_test_root("a_path_with_no_key");
     let (bare, gone, other) = (
-        (PathBuf::from("/"), "denied".to_string()),
+        ScanError::unread_entry(PathBuf::from("/"), "denied"),
         report(&root, "gone/x", "denied"),
         report(&root, "other/x", "denied"),
     );

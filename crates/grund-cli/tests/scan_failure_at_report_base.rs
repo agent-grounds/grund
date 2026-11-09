@@ -13,11 +13,16 @@ const CONFIG: &str = "grund_config_version = 2\nproject_name = \"p\"\n\n\
     [schema]\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
     [schema.kinds.SPEC]\nfolders = [\"docs/open\"]\n";
 
-const AT_BASE: &str =
-    "error: .: permission denied; make the path readable, or keep it out of the scan";
+/// The config root is no path handed in, so its fix is `readable` (§FS-check.2.4.3).
+const AT_BASE: &str = "error: .: permission denied; make the path readable";
+
+/// `docs/locked` is the path the command was given, so its fix is `passed` (§FS-check.2.4.3).
+const PASSED_AT_BASE: &str = "error: .: permission denied; make the path readable, or keep it out \
+    of the scan by not passing it, because exclude does not prune a path the command is given";
 
 const JSON_AT_BASE: &str = "{\"severity\":\"error\",\"path\":\".\",\"line\":null,\"code\":\"io\",\
-    \"message\":\"permission denied; make the path readable, or keep it out of the scan\",\
+    \"message\":\"permission denied; make the path readable, or keep it out of the scan by not \
+    passing it, because exclude does not prune a path the command is given\",\
     \"sites\":null,\"authority\":null}";
 
 /// A v2 project with one readable kind home, `docs/open`, and a directory beside it,
@@ -97,7 +102,8 @@ fn the_project_base_names_the_unreadable_directory() {
         (
             2,
             "error: docs/locked: permission denied; make the path readable, or keep it out of \
-             the scan\n"
+             the scan by not passing it, because exclude does not prune a path the command is \
+             given\n"
                 .to_string()
         )
     );
@@ -111,7 +117,10 @@ fn check_names_an_unreadable_invocation_base_dot() {
         eprintln!("skipped: the mode does not bar this user, so nothing here can be unreadable");
         return;
     }
-    assert_eq!(fixture.at_base(&["check"]), (2, format!("{AT_BASE}\n")));
+    assert_eq!(
+        fixture.at_base(&["check"]),
+        (2, format!("{PASSED_AT_BASE}\n"))
+    );
 }
 
 #[test]
@@ -143,7 +152,7 @@ fn every_command_names_an_unreadable_invocation_base_dot() {
     for args in [&["list"][..], &["show", "SPEC-a"]] {
         assert_eq!(
             fixture.at_base(args),
-            (2, format!("{AT_BASE}\n")),
+            (2, format!("{PASSED_AT_BASE}\n")),
             "grund {args:?}"
         );
     }
@@ -156,7 +165,7 @@ fn every_command_names_an_unreadable_invocation_base_dot() {
         let (code, stderr) = fixture.at_base(args);
         assert_eq!(code, 2, "grund {args:?}: {stderr}");
         assert!(
-            has_line(&stderr, AT_BASE),
+            has_line(&stderr, PASSED_AT_BASE),
             "grund {args:?} names no `.`:\n{stderr}"
         );
     }

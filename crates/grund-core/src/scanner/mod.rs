@@ -129,7 +129,9 @@ pub(crate) use legacy::{
 pub(crate) use off_format::record_off_format_citations;
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
 pub(crate) use relative_sections::unmarked_below_declaration;
-pub(crate) use scan_error::{api_scan_error, scan_error_message, scan_error_reason};
+pub(crate) use scan_error::{
+    Place, ScanFailure, api_scan_error, scan_error_message, scan_error_reason,
+};
 pub(crate) use scope_probe::{
     effective_scope_reads_any_file, project_configs_below, pruning_pattern, walk_reads_any_file,
 };
@@ -168,6 +170,8 @@ mod tests_escape_position;
 #[cfg(test)]
 mod tests_excluding_rule;
 #[cfg(test)]
+pub(crate) mod tests_failure_lines;
+#[cfg(test)]
 mod tests_file_pass;
 #[cfg(test)]
 mod tests_front_matter;
@@ -191,6 +195,8 @@ mod tests_relative_sections;
 mod tests_relative_values;
 #[cfg(test)]
 mod tests_scan_demand;
+#[cfg(all(test, unix))]
+mod tests_scan_error;
 #[cfg(test)]
 mod tests_scope_probe;
 #[cfg(test)]

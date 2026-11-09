@@ -9,6 +9,10 @@ use std::path::PathBuf;
 use std::process::Command;
 
 pub const REMEDY: &str = "make the path readable, or keep it out of the scan";
+pub const ROOT_REMEDY: &str = "make the path readable, or keep it out of the scan by removing it \
+    from the [schema.kinds] row that lists it, because exclude does not prune scan roots";
+pub const PASSED_REMEDY: &str = "make the path readable, or keep it out of the scan by not passing \
+    it, because exclude does not prune a path the command is given";
 pub const OUTSIDE: &str = "outside the report scope, so a citation declared there may be reported as \
                        unresolved";
 pub const SKIP: &str =
@@ -222,6 +226,20 @@ pub fn assert_none(misreports: &[String]) {
 
 pub fn denied(path: &str) -> String {
     format!("error: {path}: permission denied; {REMEDY}")
+}
+
+/// At a scan root, which `exclude` does not prune (§FS-check.2.4.3).
+pub fn denied_root(path: &str) -> String {
+    format!("error: {path}: permission denied; {ROOT_REMEDY}")
+}
+
+/// At the path a run was handed, which `exclude` does not prune either (§FS-check.2.4.3).
+pub fn denied_passed(path: &str) -> String {
+    format!("error: {path}: permission denied; {PASSED_REMEDY}")
+}
+
+pub fn denied_link_passed(path: &str) -> String {
+    format!("error: {path}: unreadable symlink: permission denied; {PASSED_REMEDY}")
 }
 
 pub fn denied_link(path: &str) -> String {

@@ -12,7 +12,7 @@ use crate::model::{FailureNames, sort_path_key};
 /// §FS-errors.4.1: the walk meets its unreadable paths in readdir order, and the text report and
 /// the API hand over this one order.
 pub(super) fn sort_failures(failures: &mut [ScanError]) {
-    failures.sort_by_key(|(path, reason)| (sort_path_key(path), reason.clone()));
+    failures.sort_by_key(|failure| (sort_path_key(&failure.path), failure.reason.clone()));
 }
 
 /// Keeps the first report of each directory entry and reason and answers with the names the
@@ -28,7 +28,8 @@ pub(super) fn one_report_per_entry(failures: &mut Vec<ScanError>) -> FailureName
         return names;
     }
     let mut first = HashMap::<(PathBuf, String), PathBuf>::new();
-    failures.retain(|(path, reason)| {
+    failures.retain(|failure| {
+        let (path, reason) = (&failure.path, &failure.reason);
         let entry = link_identity(path).unwrap_or_else(|| path.clone());
         match first.entry((entry, reason.clone())) {
             Entry::Vacant(vacant) => {

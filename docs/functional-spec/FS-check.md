@@ -520,7 +520,7 @@ Everything else that could not be read or decoded, malformed UTF-8 among it, is 
 
 | Case | The path |
 |---|---|
-| `passed` | a path given on the command line; passing it is what made this run read it, however the roots were widened. The config root, which `check` treats as no narrowing, is not one |
+| `passed` | a path given on the command line that a walk reads; passing it is what made this run read it, however the roots were widened. The config root, which `check` treats as no narrowing, is not one, and a value source or section lock given on the command line is not one either: no walk reads it, so no longer passing it does not stop the read and it answers `value` or `readable` |
 | `readable` | the config root, or a section lock, which no walk reaches and no row lists |
 | `value` | a value source ([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources)) |
 | `root` | a scan root: a kind's folder or file, nested in another root or not, a value home, or a version-1 `[scan] include` entry ([§FS-scan.scope.roots](FS-scan.md#scoperoots-a-scan-root-outruns-every-rule-about-descent)) |
