@@ -73,14 +73,30 @@ fn stdout(output: &Output) -> String {
 
 /// `check` keeps the verdict and prints exactly this reason for `src/<target>`.
 fn assert_reason(name: &str, config: &str, target: &str, reason: &str) {
+    let message = format!("stub link target ../../src/{target} is not scanned: {reason}");
+    assert_message(name, config, target, &message);
+}
+
+/// `check` keeps the verdict and prints exactly `message` for the stub on `src/<target>`.
+fn assert_message(name: &str, config: &str, target: &str, message: &str) {
     let tree = Tree::stub(name, config, target);
     let output = tree.run(&["check"]);
     let text = stdout(&output);
     assert_eq!(output.status.code(), Some(1), "{output:?}");
-    let expected =
-        format!("{STUB}:1: error: stub link target ../../src/{target} is not scanned: {reason}");
+    let expected = format!("{STUB}:1: error: {message}");
     let line = text.lines().find(|l| l.contains("stub link target"));
     assert_eq!(line, Some(expected.as_str()), "{text}");
+}
+
+/// `FACTS.` has no extension. Windows drops a name's trailing dot, so the fixture there writes
+/// `FACTS`, no file named `FACTS.` can exist, and the stub's target is missing instead.
+fn assert_trailing_dot_reason(name: &str, config: &str, reason: &str) {
+    if cfg!(windows) {
+        let message = "stub link target missing: ../../src/FACTS.";
+        assert_message(name, config, "FACTS.", message);
+    } else {
+        assert_reason(name, config, "FACTS.", reason);
+    }
 }
 
 /// `--format=json` carries `reason` in the `broken-stub` finding's `message`.
@@ -113,12 +129,12 @@ fn a_target_with_no_extension_is_told_so_in_version_2() {
 
 #[test]
 fn a_target_ending_in_a_dot_has_no_extension_in_version_1() {
-    assert_reason("dot-v1", V1, "FACTS.", NONE_V1);
+    assert_trailing_dot_reason("dot-v1", V1, NONE_V1);
 }
 
 #[test]
 fn a_target_ending_in_a_dot_has_no_extension_in_version_2() {
-    assert_reason("dot-v2", V2, "FACTS.", NONE_V2);
+    assert_trailing_dot_reason("dot-v2", V2, NONE_V2);
 }
 
 #[test]
