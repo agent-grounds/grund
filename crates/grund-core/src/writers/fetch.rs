@@ -6,12 +6,12 @@
 use std::path::{Path, PathBuf};
 
 use super::fetch_write::{write_file_home, write_folder_home};
-use crate::config::{Config, KindConfig, RefusedHome, run_warning_findings};
+use crate::config::{Config, KindConfig, ProjectRecords, RefusedHome, run_warning_findings};
 use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
 use crate::model::{Finding, format_path, relative_from_base};
-use crate::resolver::settled_run_warnings;
+use crate::resolver::{fetch_place, load_alias_path, settled_run_warnings};
 use crate::scanner::unmarked_below_declaration;
-use crate::workspace::{expand_workspace_tree, resolve_workspace_config, split_qualified_id_arg};
+use crate::workspace::{resolve_workspace_config, split_qualified_id_arg};
 
 /// Which public CLI exit class a fetch refusal belongs to (§FS-fetch.7).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -103,38 +103,13 @@ pub(crate) fn fetch_with_diagnostics(raw: &str, path: &Path) -> (Vec<Finding>, a
     (warnings, result)
 }
 
-/// §FS-imports.writes: an ID in an import is read-only here, refused before its
-/// integration runs and named by the place it is fetched from — the target, spelled
-/// from the run's report base as every reported path is (§FS-errors.4), so an import
-/// a member declares is named from where the run started, not from the member — with
-/// the alias path below the import kept on the ID.
-fn imported_fetch(root_config: &Config, namespace: &str, local: &str) -> Option<String> {
-    let edge = root_config.run().workspace.mounts.iter().find(|edge| {
-        namespace == edge.alias || namespace.starts_with(&format!("{}/", edge.alias))
-    })?;
-    let below = namespace[edge.alias.len()..].trim_start_matches('/');
-    let there = if below.is_empty() {
-        local.to_owned()
-    } else {
-        format!("{below}/{local}")
-    };
-    let alias = &edge.alias;
-    let target = format_path(&relative_from_base(
-        root_config.display().base(),
-        &edge.root,
-    ));
-    Some(format!(
-        "`{namespace}/{local}` is in import `{alias}`, read-only here — run grund fetch {there} in {target}"
-    ))
-}
-
 fn fetch_run(
     raw: &str,
     path: &Path,
     run_warnings: &mut Vec<Finding>,
     diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
-    let mut root_config = resolve_workspace_config(path).map_err(|err| {
+    let root_config = resolve_workspace_config(path).map_err(|err| {
         let message = format!("{err:#}");
         *diagnostic = Some(err);
         fetch_operational(message)
@@ -144,31 +119,24 @@ fn fetch_run(
     // a malformed path with the words `show` prints, still at the operational exit.
     let (namespace, local) =
         split_qualified_id_arg(raw).map_err(|err| fetch_operational(format!("{err:#}")))?;
+    // §FS-imports.writes.answer: the ID query's selection, over the alias path alone.
     let selected = if let Some(namespace) = namespace.as_deref() {
-        if !root_config.workspace_declared {
-            return Err(fetch_operational(format!(
-                "unknown project alias `{namespace}` for fetch"
-            )));
-        }
-        let projects = expand_workspace_tree(&mut root_config).map_err(|err| {
-            let message = format!("{err:#}");
-            *diagnostic = Some(err);
-            fetch_operational(message)
-        })?;
-        *run_warnings = run_warning_findings(&root_config, settled_run_warnings(root_config.run()));
-        if let Some(refusal) = imported_fetch(&root_config, namespace, local) {
-            return Err(fetch_operational(refusal));
-        }
-        projects
-            .into_iter()
-            .find(|project| project.alias == namespace)
-            .map(|project| project.config)
-            .ok_or_else(|| {
-                fetch_operational(format!("unknown project alias `{namespace}` for fetch"))
-            })?
+        let context =
+            load_alias_path(ProjectRecords::of(root_config), namespace).map_err(|err| {
+                let message = format!("{err:#}");
+                *diagnostic = Some(err);
+                fetch_operational(message)
+            })?;
+        let config = context.render_config();
+        *run_warnings = run_warning_findings(config, context.run_warnings.clone());
+        context
+            .project_at_alias(namespace)
+            .map_err(|err| fetch_operational(format!("{err:#}")))?
+            .config
+            .clone()
     } else {
         *run_warnings = run_warning_findings(&root_config, settled_run_warnings(root_config.run()));
-        root_config
+        ProjectRecords::of(root_config)
     };
 
     let (id, section) =
@@ -185,6 +153,11 @@ fn fetch_run(
         fetch_operational(format!("kind `{}` has no fetch integration", kind.kind))
     })?;
     refuse_home_without_markdown(&selected, kind, &report_base)?;
+    // §FS-imports.writes: asked last, so only a command that can run is named.
+    let place = fetch_place(selected.run(), &report_base, namespace.as_deref(), local);
+    if let Some(refusal) = place.import_refusal() {
+        return Err(fetch_operational(refusal));
+    }
     let integration = {
         let configured = Path::new(fetch);
         if configured.is_absolute() {
@@ -264,7 +237,7 @@ enum FetchHome {
 
 /// §FS-fetch.4, §FS-fetch.4.2: a value source and a file read as source hold no
 /// Markdown declaration, and the answer is spelled from the run's report base
-/// (§FS-errors.4), as `imported_fetch` spells its target. A value source's way out
+/// (§FS-errors.4), as `FetchPlace` spells its target. A value source's way out
 /// names a folder without it, since one kept beside a fetched snapshot of its own ID
 /// is a duplicate (§FS-values.2.3); a source file's moves its declarations too, since
 /// one left there is what the scan goes on reading.

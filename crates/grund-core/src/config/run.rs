@@ -93,6 +93,9 @@ pub struct RunWorkspace {
     /// (§FS-remote-projects.ignore, §AR-scanner.1.1), and the climb for a claim
     /// above the project stops there (§FS-imports.declaration.root).
     pub(crate) mounted_root: Option<PathBuf>,
+    /// This project's alias path below the last import edge that reached it, empty
+    /// for that edge's own project; `None` outside a mount (§FS-imports.writes.answer).
+    pub(crate) import_below: Option<String>,
     /// The canonical root of every mount the run loaded, each of whose files is
     /// reported where it is, relative to the report base (§FS-imports.paths).
     pub(crate) mounted_roots: Vec<PathBuf>,

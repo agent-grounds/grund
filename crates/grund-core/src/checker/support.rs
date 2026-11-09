@@ -4,6 +4,7 @@ use crate::grammar::render_id;
 use crate::grammar::{is_inside_inline_code, render_catalog_id};
 use crate::model::remedies;
 use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
+use crate::resolver::fetch_place;
 use crate::sources::path_exists;
 
 /// §FS-check.3.1: the dangling message. A near same-kind ID is a likely typo; a
@@ -112,7 +113,9 @@ fn missing_places(schema: &Schema, frame: Frame<'_>, kind: &str) -> Option<Strin
 /// §FS-check.3.1.3 / §FS-check.4.12.1: a missing declaration in a fetch-enabled
 /// home. Existing typo/illustration hints replace the fetch action while the
 /// snapshot-specific base and fixed finding class remain. `schema` and `frame` are
-/// the target's, so a home `fetch` refuses (§FS-check.3.1.3.1) is asked of it.
+/// the target's, spelling paths as the report does, so a home `fetch` refuses
+/// (§FS-check.3.1.3.1) is asked of it and the tail names where the fetch runs
+/// (§FS-imports.writes.answer).
 pub(super) fn missing_snapshot_message(
     schema: &Schema,
     frame: Frame<'_>,
@@ -158,8 +161,15 @@ pub(super) fn missing_snapshot_message(
                 (Some(RefusedHome::SourceFileValue), false) => {
                     remedies::missing_snapshot_source_file_value()
                 }
-                (None, true) => remedies::dangling_fetch(rendered),
-                (None, false) => remedies::missing_snapshot_fetch(rendered),
+                (None, must) => {
+                    // §FS-imports.writes.answer: the command `grund fetch` itself names.
+                    let place = fetch_place(frame.run, frame.display.base(), namespace, spelling);
+                    if must {
+                        remedies::dangling_fetch(place)
+                    } else {
+                        remedies::missing_snapshot_fetch(place)
+                    }
+                }
             };
             return format!("{base} — {tail}");
         }

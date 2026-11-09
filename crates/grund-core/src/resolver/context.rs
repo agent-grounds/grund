@@ -19,6 +19,7 @@ use std::path::{Path, PathBuf};
 
 use super::legacy_promotion::promote_qualified_legacy_citations;
 use super::mount::{MountLoader, Mounted, mark_canonical};
+use super::project_scan::load_workspace_project;
 use super::shorthand::resolve_qualified_shorthand_citations;
 use super::unread_block::settled_run_warnings;
 use crate::config::{Invocation, ProjectRecords, Selection};
@@ -462,7 +463,16 @@ pub(crate) fn load_narrowable_workspace_context(
 pub(crate) fn load_workspace_projects(
     root_config: &mut ProjectRecords,
 ) -> Result<Vec<WorkspaceProject>> {
-    let mut mounts = MountLoader::for_consumer(root_config);
+    let mounts = MountLoader::for_consumer(root_config);
+    load_workspace_projects_through(root_config, mounts)
+}
+
+/// [`load_workspace_projects`] through `mounts`, which decide how much of the tree a
+/// run reads (§FS-imports.writes.answer).
+pub(super) fn load_workspace_projects_through(
+    root_config: &mut ProjectRecords,
+    mut mounts: MountLoader,
+) -> Result<Vec<WorkspaceProject>> {
     let (mut projects, mounted_roots) = load_projects_with(root_config, &mut mounts)?;
     // §FS-imports.checks: every project's run knows every edge, a missing one to
     // leave unverified (§FS-imports.checks.import-missing).
@@ -559,13 +569,17 @@ pub(super) fn load_projects_with(
     // §FS-check.6.1.1, §AR-bindings.3: project workers inherit scoped coverage
     // before tree discovery, then restore their previous observer on return.
     let observer = crate::config::check_input_observer();
+    let scan = mounts.scans();
     let mut indexed = if entries.len() >= 2 {
         entries
             .into_par_iter()
             .enumerate()
             .map(|(index, (alias, records))| {
                 crate::config::with_check_input_observer(observer.clone(), || {
-                    (index, load_workspace_project(alias, records, &targets))
+                    (
+                        index,
+                        load_workspace_project(alias, records, &targets, scan),
+                    )
                 })
             })
             .collect::<Vec<_>>()
@@ -574,7 +588,10 @@ pub(super) fn load_projects_with(
             .into_iter()
             .enumerate()
             .map(|(index, (alias, records))| {
-                (index, load_workspace_project(alias, records, &targets))
+                (
+                    index,
+                    load_workspace_project(alias, records, &targets, scan),
+                )
             })
             .collect::<Vec<_>>()
     };
@@ -587,25 +604,4 @@ pub(super) fn load_projects_with(
     promote_qualified_legacy_citations(&mut projects);
     resolve_qualified_shorthand_citations(&mut projects);
     Ok((projects, mounted_roots))
-}
-
-fn load_workspace_project(
-    alias: String,
-    config: ProjectRecords,
-    targets: &[WorkspaceCitationTarget],
-) -> Result<WorkspaceProject> {
-    let (findings, scan_errors) = scan_tree_with_workspace(
-        config.schema(),
-        config.frame(),
-        Some(config.frame().root()),
-        true,
-        targets,
-    )?;
-    Ok(WorkspaceProject {
-        alias,
-        config,
-        findings,
-        scan_errors,
-        mount: None,
-    })
 }

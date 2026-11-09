@@ -297,11 +297,21 @@ fn id(fixture: &Fixture) {
 
 /// §FS-imports.writes: a fetch into the tree is refused before its integration runs.
 fn fetch(fixture: &Fixture) {
+    // §FS-imports.writes.answer: the command is named only for a kind the target fetches.
+    let config = fs::read_to_string(fixture.0.join("lib/grund.toml")).expect("lib config");
+    fixture.write(
+        "lib/grund.toml",
+        &format!(
+            "{config}\n[schema.kinds.TICKET]\nfolders = [\"docs/tickets\"]\n\
+             id_format = \"{{kind}}-{{number}}\"\nfetch = \"fetch.sh\"\n"
+        ),
+    );
     let lib = fixture.snapshot("lib");
     let refused = fixture.grund("app", &["fetch", "dep/TICKET-1"]);
     assert_eq!(refused.status.code(), Some(2), "{}", text(&refused.stderr));
     assert!(text(&refused.stderr).contains("run grund fetch TICKET-1 in ../lib"));
     assert_eq!(fixture.snapshot("lib"), lib);
+    fixture.write("lib/grund.toml", &config);
 }
 
 /// §FS-imports.writes: `init` in the consumer writes nothing of the tree.

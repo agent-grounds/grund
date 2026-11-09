@@ -247,6 +247,12 @@ impl Config {
         self.records.run.workspace.mounted_root = Some(root);
     }
 
+    /// Record this project's alias path below the last import edge
+    /// (§FS-imports.writes.answer).
+    pub(crate) fn set_import_below(&mut self, below: String) {
+        self.records.run.workspace.import_below = Some(below);
+    }
+
     /// The mounted root this project was loaded under, if any.
     pub(crate) fn mounted_root(&self) -> Option<&Path> {
         self.records.run.workspace.mounted_root.as_deref()
