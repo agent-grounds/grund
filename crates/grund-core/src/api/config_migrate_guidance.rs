@@ -87,7 +87,8 @@ fn value_shapes(section: &str, value_lines: &[(String, usize)]) -> Vec<MigrateRe
                     .iter()
                     .map(|text| format!("would write: {text}"))
                     .collect(),
-                repair: "none keeps the generated guidance; remove values under version 1 only if that section may change".into(),
+                // §FS-config-migrate.3.1.7.2: the repair says what removal costs and the rewrite.
+                repair: "removing values alone ends the comparison of every binding that quoted its values; to keep them compared, under version 1 rewrite its roots as marked sections, remove values and cite the new paths".into(),
             })
         })
         .collect()

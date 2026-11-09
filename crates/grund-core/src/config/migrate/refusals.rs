@@ -120,9 +120,10 @@ pub(super) fn settings(
                     "none yet; keep version 1, or under version 1 rewrite its roots as marked sections, remove value_chapter and cite the new paths",
                 )
             } else {
+                // §FS-config-migrate.3.1.7.2: the repair says what removal costs and the rewrite.
                 (
                     "would become a field, which adds a \"Declaration shapes\" section grund check compares",
-                    "none keeps the generated guidance; remove value_chapter under version 1 only if that section may change",
+                    "removing value_chapter alone ends the comparison of every binding that quoted the chapter; to keep them compared, under version 1 rewrite its roots as marked sections, remove value_chapter and cite the new paths",
                 )
             };
             out.push(refusal(
