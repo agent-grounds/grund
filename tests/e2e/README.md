@@ -302,6 +302,7 @@ can read is the same silence in a new spelling.
 - one file reached under two names read once: no duplicate declaration, and the lexicographically first spelling is the one reported
 - a symlink loop (`docs/self -> .`) reported at its own path while the walk carries on to the findings past it
 - a loop whose target is above the walk root (`docs/up -> ..`) reported at the link and not descended into: no finding out of the second copy of the tree, and `[scan] include` still bounds the scan
+- a version-2 `[schema.sources] exclude` pattern matching a looping directory link keeping the loop out with exit `0`, for a link to its ancestor under every spelling (`self`, `self/`, `docs/fs/self`, `/docs/fs/self`, `**/self`, `self*`) and for a link above the walk root, beside the un-excluded controls still reported ([§FS-config-v2.schema.sources.exclude.roots](../../docs/functional-spec/FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters), `exclude_silences_symlink_loop.rs`)
 - a broken symlink with a scanned extension reported and exiting 2, beside one without that stays silent
 - `fmt --write` reading a file reached through a link that leaves the config root and refusing to write it: the target keeps its bytes, the in-root file is rewritten, and the refusal is one `warning:` line
 - `fmt --check` refusing the same link `--write` refuses instead of listing a rewrite nobody can perform: the one pending edit in the tree is inside it, so the dry run is green with a `warning:` and not red forever
