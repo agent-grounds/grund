@@ -1,4 +1,4 @@
-use crate::sources::{canonical_path, is_directory};
+use crate::sources::{canonical_path, is_directory, path_lookup, resolved_as_far_as_answered};
 use anyhow::{Result, anyhow};
 use ignore::WalkBuilder;
 use std::path::{Path, PathBuf};
@@ -402,8 +402,16 @@ impl WalkDirFilter {
             link_roots.push(path.to_path_buf());
         }
         drop(link_roots);
+        // §FS-scan.scope.links.owed.refused: a target the lookup is refused on the way to is
+        // placed as far as the disk answers, so the fence still judges where it goes.
         (is_link || covered)
-            .then(|| canonical_path(path).ok())
+            .then(|| {
+                canonical_path(path).ok().or_else(|| {
+                    path_lookup(path)
+                        .is_err()
+                        .then(|| resolved_as_far_as_answered(path))
+                })
+            })
             .flatten()
     }
 

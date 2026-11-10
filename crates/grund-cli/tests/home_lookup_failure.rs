@@ -357,6 +357,7 @@ fn inward_home_link_with_a_denied_parent_is_reported_on_version_2() {
 
 /// §FS-scan.scope.homes.lookup.outward: a file link is followed wherever it resolves, so a
 /// root named as a file the walk reads stays reported.
+/// It is the link of §FS-scan.scope.links.owed.refused, so its line is the unopenable link's.
 #[test]
 fn outward_root_link_named_as_a_read_file_is_reported() {
     const INCLUDE: &str = "grund_config_version = 1\nproject_name = \"outward-root\"\n\n\
@@ -367,7 +368,10 @@ fn outward_root_link_named_as_a_read_file_is_reported() {
         return;
     };
     assert_eq!(
-        lines_equal(&stderr(&output), &format!("error: far.md: {ROOT_V1}")),
+        lines_equal(
+            &stderr(&output),
+            &format!("error: far.md: unreadable symlink: {ROOT_V1}")
+        ),
         1,
         "{}",
         stderr(&output)
@@ -376,6 +380,7 @@ fn outward_root_link_named_as_a_read_file_is_reported() {
 }
 
 /// §FS-scan.scope.homes.lookup.outward: a link staying inside the project is still reported.
+/// It is the link of §FS-scan.scope.links.owed.refused, so its line is the unopenable link's.
 #[test]
 fn inward_root_link_with_a_denied_parent_is_reported() {
     let mut fixture = Fixture::bare("inward", V1_DEFAULT_ROOTS, "# FS-a: A\n\nPlain.\n");
@@ -386,7 +391,10 @@ fn inward_root_link_with_a_denied_parent_is_reported() {
     }
     let output = fixture.check();
     assert_eq!(
-        lines_equal(&stderr(&output), &format!("error: src: {ROOT_V1}")),
+        lines_equal(
+            &stderr(&output),
+            &format!("error: src: unreadable symlink: {ROOT_V1}")
+        ),
         1,
         "{}",
         stderr(&output)
