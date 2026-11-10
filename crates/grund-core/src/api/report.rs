@@ -34,8 +34,7 @@ pub(super) fn public_report(
     public_report_with_path_mode(config, report, include_suggestions, PathMode::Printed)
 }
 
-/// `projects` are the configs whose tables hold the report's names: what a finding of a project
-/// stands at is that project's to say (§AR-scanner.1.8).
+/// `projects` supply the owning roots for the report's chosen names (§FS-lsp.1.1).
 pub(super) fn public_lsp_report(
     config: &Config,
     projects: &[&Config],
@@ -45,7 +44,7 @@ pub(super) fn public_lsp_report(
 }
 
 /// How a report spells its paths: as the report prints them, or as an editor is told them,
-/// through the tables of the projects the report covers (§FS-lsp.1.1).
+/// through the owning roots of the projects the report covers (§FS-lsp.1.1).
 #[derive(Clone, Copy)]
 enum PathMode<'a> {
     Printed,
@@ -93,7 +92,7 @@ fn public_finding(
         // Private LSP transport data, not user-facing report text: keep the
         // platform-native spelling so parsing it back into a `Path` preserves
         // Windows verbatim-prefix absolute paths (§FS-lsp.1.1).
-        PathMode::Editor(tables) => editor_path(config, tables, path)
+        PathMode::Editor(projects) => editor_path(config, projects, path)
             .to_string_lossy()
             .into_owned(),
         PathMode::Printed => public_path(config, path),
@@ -103,18 +102,25 @@ fn public_finding(
 
 /// The absolute path an editor is told a finding stands at. A relative location is a config row's,
 /// joined where the load spelled it, never at the editor's working directory (§FS-lsp.4.1). A file
-/// with a second name keeps the name the finding speaks of, under the resolved root of the project
-/// whose table holds it: resolving it would say a finding about one spelling at another, and every
-/// spelling the same (§AR-scanner.1.8).
-fn editor_path(config: &Config, tables: &[&Config], path: &Path) -> PathBuf {
+/// keeps the chosen descendant spelling under its resolved owning root, even when its only name
+/// is a link. Only paths outside all owning roots are resolved whole (§FS-lsp.1.1).
+fn editor_path(config: &Config, projects: &[&Config], path: &Path) -> PathBuf {
     let joined = config.location_base().join(path);
-    for table in tables.iter().copied().chain([config]) {
-        let frame = table.frame();
-        if !frame.run.spellings.names_of(path).is_empty()
-            && let Ok(spelling) = joined.strip_prefix(frame.root())
-        {
-            return absolutize_path(frame.root()).join(spelling);
-        }
+    // §FS-lsp.1.1: a workspace member supplies its own root, before its enclosing workspace.
+    let owner = projects
+        .iter()
+        .copied()
+        .chain([config])
+        .filter_map(|project| {
+            let root = project.frame().root();
+            joined
+                .strip_prefix(root)
+                .ok()
+                .map(|spelling| (root, spelling))
+        })
+        .max_by_key(|(root, _)| root.components().count());
+    if let Some((root, spelling)) = owner {
+        return absolutize_path(root).join(spelling);
     }
     absolutize_path(&joined)
 }

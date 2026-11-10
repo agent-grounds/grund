@@ -7,13 +7,64 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
+use super::scan_error::{FailureRoots, FileKind, ScanFailure, publish_file_failure};
 use super::tree::ScanError;
-use super::walk_failures::one_report_per_entry;
+use super::walk_failures::{one_report_per_entry, whole_run_failures};
 use super::walk_reporting::walk_scannable_files_reporting;
 use crate::config::Config;
 use crate::model::FailureNames;
 use crate::sources::realpaths_during;
-use crate::testing::{physical_test_root, symlink};
+use crate::testing::{physical_test_root, symlink, write};
+
+/// The cases-root pass can report an ignore file the walk already reported under another
+/// directory spelling. It keeps the whole-run name and adds its alias (§FS-check.2.4.2).
+#[test]
+fn issue_1337_an_ignore_failure_keeps_the_walks_name_and_the_passes_alias() {
+    let root = linked_tree("ignore_failure_pass_alias");
+    write(&root.join("realE/cases/.ignore"), "{bad\n");
+    let config = Config::default_for(root.clone());
+    let whole = ScanError::new(
+        root.join("realE/cases/.ignore"),
+        "error parsing glob '{bad'".into(),
+        ScanFailure::Unparsed(FileKind::Ignore),
+    );
+    let mut alias = whole.clone();
+    alias.path = root.join("e2e/cases/.ignore");
+    let mut failures = vec![whole.clone()];
+    let mut names = FailureNames::default();
+
+    publish_file_failure(alias.clone(), config.frame(), &mut names, &mut failures);
+    publish_file_failure(alias.clone(), config.frame(), &mut names, &mut failures);
+
+    assert_eq!(failures, [whole.clone()]);
+    assert_eq!(names_of(&names, &whole), [whole.path, alias.path]);
+}
+
+/// Choosing an ordinary-root name does not turn a loop met below the passed path into a
+/// failure at that path (§FS-check.2.4.3). CLI keeps the encountered entry's remedy.
+#[test]
+fn issue_1337_selecting_a_whole_run_name_keeps_the_encounters_failure_place() {
+    let root = physical_test_root("whole_run_failure_place");
+    fs::create_dir_all(root.join("a/sub")).expect("create the directory");
+    symlink("..", &root.join("a/sub/up"));
+    symlink("a", &root.join("b"));
+    let passed = root.join("b/sub/up");
+    let at = FailureRoots::of(
+        vec![passed.clone(), root.clone()],
+        Some(passed),
+        root.clone(),
+    );
+    let first = report(&root, "b/sub/up/sub/up", "loop");
+    let ordinary = report(&root, "a/sub/up", "loop");
+    let mut expected = first.clone().placed(&at);
+    expected.path = ordinary.path.clone();
+    let mut failures = vec![first.clone(), ordinary];
+
+    let names = whole_run_failures(&mut failures, 1, &at);
+
+    assert_eq!(failures, [expected.clone()]);
+    assert_eq!(names_of(&names, &expected), [expected.path, first.path]);
+}
 
 /// `<root>/realE/cases` and `<root>/real`, with `e2e -> realE` and `ext -> real`.
 fn linked_tree(name: &str) -> PathBuf {

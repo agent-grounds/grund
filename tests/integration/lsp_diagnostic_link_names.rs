@@ -195,25 +195,21 @@ fn assert_link_names(case: &str, member: bool, linked_root: bool, external_files
 }
 
 #[test]
-#[ignore = "red until #1337 diagnostics preserve sole link names; implement removes this"]
 fn issue_1337_stdio_keeps_sole_link_names_with_excluded_targets() {
     assert_link_names("excluded", false, false, false);
 }
 
 #[test]
-#[ignore = "red until #1337 diagnostics preserve external file links; implement removes this"]
 fn issue_1337_stdio_keeps_sole_file_links_to_external_targets() {
     assert_link_names("external-files", false, false, true);
 }
 
 #[test]
-#[ignore = "red until #1337 diagnostics preserve member link names; implement removes this"]
 fn issue_1337_stdio_uses_the_members_root_and_link_names() {
     assert_link_names("member", true, false, false);
 }
 
 #[test]
-#[ignore = "red until #1337 resolving the root preserves descendant links; implement removes this"]
 fn issue_1337_stdio_resolves_a_linked_root_without_erasing_descendant_names() {
     assert_link_names("linked-root", false, true, false);
 }

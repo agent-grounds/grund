@@ -106,6 +106,16 @@ The LSP must produce the same diagnostics for the same workspace state as `grund
 
 A snapshot asked for a path below its config root — `path_provided` with a sub-folder or a file of a configured project, or a folder below a workspace root and outside every member — is a path-scoped run, and it keeps the two scopes [§FS-scan.path.check](../functional-spec/FS-scan.md#pathcheck-check-reads-more-than-it-reports) keeps. Its **resolution scope** is the one `grund check <path>` walks: the project's ordinary roots and every walked kind home, union the path, and below a workspace root every project of the workspace whole ([§FS-scan.projects.narrowed](../functional-spec/FS-scan.md#projectsnarrowed-a-path-below-the-config-root-loads-what-a-run-from-it-would-see)). Every rule runs over that, including the managed-block compare, so the `### Chapter rules` render is the whole project's and never the anchor's ([§FS-rules.9.1.1](../functional-spec/FS-rules.md#911-a-path-scoped-check-compares-against-the-same-render)). Its **report** is narrowed to the path after the rules ran, by the same filter and with the same exemptions the CLI's run uses — the `agents-init` finding about `AGENTS.md` reaches it by its code. So `report` holds exactly the diagnostics `grund_core::check(<path>)` reports on the same bytes, the parity [§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics) asks of the shared core report: a citation in the path that resolves to a declaration outside it does not dangle, and the block `grund init` wrote is not stale.
 
+Scan failures use the same alias-aware scope membership as the CLI, but keep the whole run's
+chosen path in both the error and caution channels ([§FS-check.2.4.2](../functional-spec/FS-check.md#242-one-failure-one-line)).
+The scan selects that path before the editor reads its failure list: entry deduplication retains
+the first encounter's typed failure and place, then ordinary walk roots select its name before
+the explicit anchor. File, case and ignore-file failures share the run's ordered file-name
+selection. Later passes retain their introduced aliases for membership instead of replacing the
+selected path. CLI report partitioning alone selects an anchor's name.
+They enter the report after ordinary finding narrowing: filtering their chosen path alone would
+discard a failure the anchor holds under another name ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)).
+
 The navigation records are not narrowed. `declarations`, `sections`, `stubs`, `citations` and `scanned_files` carry everything the resolution scope read, because a citation inside the path resolves to a declaration outside it and its `target_path` must name a declaration the snapshot holds. A path that resolves to the config root is the root scope and nothing narrows. The `grund-lsp` server already anchors every configured folder at its config root ([§FS-lsp.2.2.1](../functional-spec/FS-lsp.md#221-workspace-folders-anchor-discovery)), so this point changes nothing it publishes; it is the promise a direct caller of the public API is owed, and `tests/integration/lsp_snapshot_path_scope.rs` and `tests/integration/lsp_snapshot_outside_member.rs` hold it.
 
 ### 5.2 Hover

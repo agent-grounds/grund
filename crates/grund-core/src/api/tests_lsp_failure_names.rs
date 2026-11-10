@@ -7,6 +7,7 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
+use super::check::{CheckOpts, check_with_opts};
 use super::lsp_snapshot::lsp_snapshot;
 use crate::queries::LspSnapshotOpts;
 use crate::testing::{physical_test_root, symlink, write};
@@ -78,7 +79,6 @@ fn a_failure_under_the_anchor_stays_an_error_under_any_of_its_names() {
 /// `aa/x`, even though the anchor `realE` reaches the entry through a third name and resolving
 /// either gives `zz/x`. CLI `check <path>` alone uses the anchor's own spelling.
 #[test]
-#[ignore = "red until #1337 editor failures keep the whole-run name; implement removes this"]
 fn issue_1337_an_anchored_editor_failure_keeps_the_whole_runs_name() {
     let Some(root) = third_name_tree("anchored_editor_failure_whole_run_name") else {
         return;
@@ -125,6 +125,150 @@ fn issue_1337_an_anchored_editor_failure_keeps_the_whole_runs_name() {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+/// Assert the public failure list as well as the located report, with independent expected
+/// names. A healthy sibling holds no alias and must caution once (§FS-lsp.1.1).
+fn assert_whole_run_failure(root: &Path, anchors: &[&str], expected: &str) {
+    let absolute = root.join(expected).to_string_lossy().into_owned();
+    for anchor in anchors {
+        let snapshot = lsp_snapshot(LspSnapshotOpts {
+            path: root.join(anchor),
+            path_provided: true,
+            ..Default::default()
+        })
+        .expect("build the snapshot");
+        let scan_paths: Vec<_> = snapshot
+            .scan_errors
+            .iter()
+            .map(|e| e.path.as_str())
+            .collect();
+        assert_eq!(scan_paths, [expected], "{anchor}: {snapshot:#?}");
+        let (own, other) = if *anchor == "docs" {
+            (&snapshot.report.warnings, &snapshot.report.errors)
+        } else {
+            (&snapshot.report.errors, &snapshot.report.warnings)
+        };
+        let failures: Vec<_> = own.iter().filter(|f| f.code == "io").collect();
+        assert_eq!(failures.len(), 1, "{anchor}: {snapshot:#?}");
+        assert_eq!(
+            failures[0].path.as_deref(),
+            Some(absolute.as_str()),
+            "{anchor}"
+        );
+        assert_eq!(
+            failures[0].message.contains("outside the report scope"),
+            *anchor == "docs",
+            "{anchor}: {snapshot:#?}"
+        );
+        assert!(
+            other.iter().all(|f| f.code != "io"),
+            "{anchor}: {snapshot:#?}"
+        );
+    }
+}
+
+/// CLI reporting alone selects the alias under its anchor (§FS-check.2.4.2).
+fn assert_cli_failure_names(root: &Path, anchors: &[(&str, &str)]) {
+    for (anchor, expected) in anchors {
+        let output = check_with_opts(CheckOpts {
+            path: root.join(anchor),
+            path_provided: true,
+            ..Default::default()
+        })
+        .expect("check the path");
+        assert!(output.had_scan_errors, "{anchor}: {output:#?}");
+        let paths: Vec<_> = output
+            .report
+            .errors
+            .iter()
+            .filter(|f| f.code == "io")
+            .map(|f| f.path.as_deref().expect("located failure"))
+            .collect();
+        assert_eq!(paths, [*expected], "{anchor}: {output:#?}");
+    }
+}
+
+/// No workspace and no E2E pass: the explicit root precedes ordinary roots in the walk, but
+/// must not select the editor's failure name (§FS-lsp.1.1, §FS-check.2.4.2).
+#[test]
+fn issue_1337_standalone_walk_failures_keep_the_whole_runs_name() {
+    let root = physical_test_root("standalone_editor_failure_whole_run_name");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"p\"\n\
+         [schema.kinds.doc]\ncitable = false\nfolders = [\"docs\"]\n",
+    );
+    write(&root.join("docs/notes.md"), "# Notes\n");
+    fs::create_dir_all(root.join("realE")).expect("create the directory");
+    fs::create_dir_all(root.join("zz/x")).expect("create the barred directory");
+    symlink("zz", &root.join("aa"));
+    symlink("../zz", &root.join("realE/lnk"));
+
+    struct Unbar(PathBuf);
+    impl Drop for Unbar {
+        fn drop(&mut self) {
+            let _ = fs::set_permissions(&self.0, fs::Permissions::from_mode(0o755));
+        }
+    }
+    let barred = root.join("zz/x");
+    let _unbar = Unbar(barred.clone());
+    fs::set_permissions(&barred, fs::Permissions::from_mode(0o000)).expect("bar it");
+    if fs::read_dir(&barred).is_ok() {
+        return; // This user is not barred, so this run proves nothing about a walk failure.
+    }
+    assert_whole_run_failure(
+        &root,
+        &[".", "realE", "realE/lnk", "zz", "aa", "docs"],
+        "aa/x",
+    );
+    assert_cli_failure_names(
+        &root,
+        &[
+            (".", "aa/x"),
+            ("realE", "realE/lnk/x"),
+            ("zz", "zz/x"),
+            ("aa", "aa/x"),
+        ],
+    );
+}
+
+/// A case introduces an alias absent from the ordinary file walk. Retain it for membership,
+/// without replacing the file pass's whole-run decode-failure name (§FS-check.2.4.2).
+#[test]
+fn issue_1337_e2e_decode_failures_keep_the_whole_runs_name_and_case_alias() {
+    let root = physical_test_root("e2e_editor_decode_failure_whole_run_name");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"p\"\n\
+         [schema.kinds.doc]\ncitable = false\nfolders = [\"docs\"]\n\
+         [schema.kinds.E2E]\nfolders = [\"realE/cases\"]\nindex = false\n",
+    );
+    write(&root.join("docs/notes.md"), "# Notes\n");
+    write(&root.join("realE/cases/b/expected.exit"), "0\n");
+    fs::write(root.join("payload.md"), b"\xff\xfe").expect("write invalid UTF-8");
+    symlink("../../../payload.md", &root.join("realE/cases/b/spec.refs"));
+    assert_whole_run_failure(
+        &root,
+        &[
+            ".",
+            "realE",
+            "realE/cases/b",
+            "realE/cases/b/spec.refs",
+            "payload.md",
+            "docs",
+        ],
+        "payload.md",
+    );
+    assert_cli_failure_names(
+        &root,
+        &[
+            (".", "payload.md"),
+            ("realE", "realE/cases/b/spec.refs"),
+            ("realE/cases/b", "realE/cases/b/spec.refs"),
+            ("realE/cases/b/spec.refs", "realE/cases/b/spec.refs"),
+        ],
+    );
 }
 
 /// §FS-check.2.4 in the editor: one report, the same limit as `grund check`. Over the root the
