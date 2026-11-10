@@ -6,8 +6,8 @@ from it. It is the current wave of the design whose codebases grund is for
 
 ## work: What the work is
 
-- GitHub Spec Kit ([github/spec-kit](https://github.com/github/spec-kit)), v1.1.3
-  (2026-10-09), checked 2026-10-13, is a toolkit for spec-driven development. Its
+- GitHub Spec Kit ([github/spec-kit](https://github.com/github/spec-kit)), v1.4.0
+  (2026-11-10), checked 2026-11-10, is a toolkit for spec-driven development. Its
   [specification template](https://github.com/github/spec-kit/blob/main/templates/spec-template.md)
   numbers requirements `FR-001` on and success criteria `SC-001` on, afresh in each spec, and
   marks what the spec leaves open with `[NEEDS CLARIFICATION: …]`; its
@@ -15,8 +15,8 @@ from it. It is the current wave of the design whose codebases grund is for
   numbers tasks `T001` on. Its
   [analysis command](https://github.com/github/spec-kit/blob/main/templates/commands/analyze.md)
   is a prompt the user's coding agent runs, and its report is advisory. Its experimental
-  [MCP server](https://github.github.com/spec-kit/reference/mcp.html)
-  "supports only the dotted command `version`".
+  [MCP server](https://github.github.com/spec-kit/overview/mcp.html) registers three generic
+  tools, which "support only the dotted command `version`".
 - Kiro ([kiro.dev](https://kiro.dev/)), AWS's agentic development environment, turns
   prompts into requirements, architectural designs and sequenced tasks, kept as
   `requirements.md`, `design.md` and `tasks.md` ([specs](https://kiro.dev/docs/specs/)). It

@@ -62,6 +62,49 @@ class CheckLinksTests(unittest.TestCase):
             )
             self.assertEqual("SKILL.md", network_call.args[0][-1])
 
+    def sweep_argv(self, config):
+        """The sweep's network command line for one resolving self-link, with `config` as the
+        checkout's `lychee.toml` (§AR-ci.3.1.1.1)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "guide.md").write_text("# Guide\n", encoding="utf-8")
+            (root / "lychee.toml").write_text(config, encoding="utf-8")
+            url = "https://github.com/agent-grounds/grund/blob/main/guide.md"
+            runner = Mock(
+                side_effect=[
+                    CompletedProcess(args=[], returncode=0, stdout=f"{url}\n".encode()),
+                    CompletedProcess(args=[], returncode=0),
+                    CompletedProcess(args=[], returncode=0),
+                    CompletedProcess(args=[], returncode=0),
+                ]
+            )
+
+            self.assertEqual(0, check_links.check_links(["SKILL.md"], root, runner=runner))
+            return runner.call_args_list[-1].args[0], f"^{re.escape(url)}$"
+
+    def test_the_sweep_passes_lychee_toml_s_excludes_before_its_self_link_exclusion(self):
+        argv, self_link = self.sweep_argv(
+            "timeout = 30\n\nexclude = [\n"
+            "  \"^https://iana\\\\.org/assignments/http-problem-types#stale-widget$\",\n"
+            "  'docs/architecture/src/checker\\.rs$',\n]\n"
+        )
+
+        self.assertEqual(
+            [
+                "--exclude", r"^https://iana\.org/assignments/http-problem-types#stale-widget$",
+                "--exclude", r"docs/architecture/src/checker\.rs$",
+                "--exclude", self_link,
+                "--scheme",
+            ],
+            argv[3:10],
+        )
+
+    def test_the_sweep_adds_nothing_for_a_lychee_toml_without_excludes(self):
+        argv, self_link = self.sweep_argv("timeout = 30\nmax_retries = 4\n")
+
+        self.assertEqual(["--exclude", self_link, "--scheme"], argv[3:6])
+        self.assertEqual(1, argv.count("--exclude"))
+
     def test_missing_self_link_target_fails_before_lychee(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

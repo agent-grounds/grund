@@ -9,7 +9,7 @@ grund does to a repository's text: what is marked is checked, and the rest is le
 
 - Jeremy G. Siek and Walid Taha, *Gradual Typing for Functional Languages*, Scheme and
   Functional Programming Workshop 2006, pages 81–92
-  ([PDF](http://scheme2006.cs.uchicago.edu/13-siek.pdf)), introduced gradual typing, with
+  ([PDF](https://www.schemeworkshop.org/2006/13-siek.pdf)), introduced gradual typing, with
   "the notation ? for the dynamic type".
 - Jeremy G. Siek, Michael M. Vitousek, Matteo Cimini and John Tang Boyland, *Refined
   Criteria for Gradual Typing*, SNAPL 2015, LIPIcs 32, pages 274–293, DOI
