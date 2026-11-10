@@ -23,7 +23,10 @@
 #[path = "support/fmt_shapes.rs"]
 mod fmt_shapes;
 
-use fmt_shapes::{aborted_strictly, run_grund, scan_error_pairs, shapes, stderr};
+use fmt_shapes::{
+    Shape, UNREADABLE_MANIFEST, aborted_strictly, byte_snapshot, e2e_case_shapes, run_grund,
+    scan_error_pairs, shapes, stderr,
+};
 
 /// Each `fmt` form §FS-fmt.7.2 names, over the default scope: the dry run, the
 /// write, and the explicitly strict pass.
@@ -127,5 +130,123 @@ fn every_shape_exercises_the_half_of_the_corpus_it_claims() {
             shape.name,
             stderr(&output),
         );
+    }
+}
+
+/// The E2E case pass is part of the scan both commands read (§FS-fmt.7.2,
+/// §FS-declarations.e2e-case.failure): a case manifest `check` cannot decode is an
+/// unreadable path of `fmt`'s scope wherever it is one of `check`'s, whether or
+/// not the scope holds a file `fmt` rewrites. Each row is a shape, the scope
+/// both commands are narrowed to (`None` for the default scope) and the `fmt`
+/// mode; `check` over the same scope is the control.
+const E2E_CASE_ROWS: &[(&str, Option<&str>, &str)] = &[
+    ("e2e-cases-bare", None, "--check"),
+    ("e2e-cases-bare", None, "--write"),
+    ("e2e-cases-docs", Some("e2e/cases"), "--check"),
+    ("e2e-cases-docs", Some("e2e/cases"), "--write"),
+    ("e2e-cases-docs", Some("e2e/cases/b"), "--check"),
+    ("e2e-cases-docs", Some("e2e/cases/b"), "--write"),
+    ("e2e-cases-docs", Some(UNREADABLE_MANIFEST), "--check"),
+    ("e2e-cases-docs", Some(UNREADABLE_MANIFEST), "--write"),
+];
+
+/// The rows that agree today: the docs shape's whole-project run takes the strict
+/// path (§FS-fmt.3.2), whose complete scan already meets the manifest. Pinned so
+/// the case pass the fix adds neither breaks them nor names the manifest twice
+/// (§FS-check.2.4.2).
+const E2E_CASE_STRICT_ROWS: &[(&str, Option<&str>, &str)] = &[
+    ("e2e-cases-docs", None, "--check"),
+    ("e2e-cases-docs", None, "--write"),
+];
+
+fn e2e_case_shape(name: &str) -> Shape {
+    e2e_case_shapes()
+        .into_iter()
+        .find(|shape| shape.name == name)
+        .expect("a row names a shape of the E2E case corpus")
+}
+
+/// One row: `check` over the scope names the manifest and exits 2, `fmt` over the
+/// same scope gives the same `(path, reason)` pairs, once each, and exits 2, and a
+/// `--write` leaves every byte of the tree where it was (§FS-fmt.3.2,
+/// §FS-fmt.7.4.3).
+fn assert_e2e_case_row(shape_name: &str, scope: Option<&str>, mode: &str) {
+    let shape = e2e_case_shape(shape_name);
+    let slot = format!(
+        "reader-e2e-case{}{mode}",
+        scope
+            .map(|s| format!("-{}-", s.replace('/', "-")))
+            .unwrap_or("-".into())
+    );
+    let checker = shape.materialize(&format!("{slot}-check"));
+    let root = shape.materialize(&slot);
+
+    let mut check_args = vec!["check"];
+    let mut fmt_args = vec!["fmt", mode];
+    check_args.extend(scope);
+    fmt_args.extend(scope);
+    let label = format!("{shape_name} / `grund {}`", fmt_args.join(" "));
+
+    let check = run_grund(&check_args, &checker);
+    let expected = scan_error_pairs(&check);
+    assert!(
+        check.status.code() == Some(2)
+            && expected
+                .iter()
+                .any(|pair| pair.starts_with(UNREADABLE_MANIFEST)),
+        "{label}: the control `grund {}` no longer names {UNREADABLE_MANIFEST} with exit 2, \
+         so the fixture is not the one this row pins\n  check stderr: {}",
+        check_args.join(" "),
+        stderr(&check),
+    );
+
+    let before = byte_snapshot(&root);
+    let output = run_grund(&fmt_args, &root);
+    let pairs = scan_error_pairs(&output);
+    assert_eq!(
+        (output.status.code(), &pairs),
+        (Some(2), &expected),
+        "{label}: fmt's account of what it could not read differs from \
+         `grund {}` over the same scope\n  fmt stdout: {}\n  fmt stderr: {}",
+        check_args.join(" "),
+        String::from_utf8_lossy(&output.stdout),
+        stderr(&output),
+    );
+    if mode == "--write" {
+        assert_eq!(
+            byte_snapshot(&root),
+            before,
+            "{label}: a run with an unreadable path in scope wrote to the tree"
+        );
+    }
+}
+
+#[test]
+#[ignore = "red until #1329 fmt runs the E2E case pass on every scope; the fix removes this"]
+fn fmt_names_an_unreadable_case_manifest_wherever_check_does_on_the_same_scope() {
+    // Every row runs before the verdict, so a failure names each row that fails.
+    let failed: Vec<String> = E2E_CASE_ROWS
+        .iter()
+        .filter_map(|(shape, scope, mode)| {
+            std::panic::catch_unwind(|| assert_e2e_case_row(shape, *scope, mode))
+                .err()
+                .map(|_| {
+                    format!(
+                        "{shape} / fmt {mode} {}",
+                        scope.unwrap_or("(default scope)")
+                    )
+                })
+        })
+        .collect();
+    assert!(
+        failed.is_empty(),
+        "rows that disagree with check: {failed:#?}"
+    );
+}
+
+#[test]
+fn a_strict_fmt_names_an_unreadable_case_manifest_once_as_check_does() {
+    for (shape, scope, mode) in E2E_CASE_STRICT_ROWS {
+        assert_e2e_case_row(shape, *scope, mode);
     }
 }
