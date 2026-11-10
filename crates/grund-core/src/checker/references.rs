@@ -191,9 +191,7 @@ pub(super) fn check_citation_resolution(
     // member-local refusal needs it; loaded-workspace scope/candidate hints stay intact.
     let member_guidance = OnceCell::new();
     for cite in &findings.citations {
-        if let Some(scope) = outside
-            && scope.contains(&cite.file)
-        {
+        if outside.is_some_and(|scope| scope.contains(&cite.file)) {
             continue;
         }
         let Some(target) = target_for_citation(cite, findings, schema, frame, workspace) else {
@@ -244,6 +242,7 @@ pub(super) fn check_citation_resolution(
                     schema,
                     &target,
                     tier,
+                    unread,
                     &mut shorthand_indexes,
                     report,
                 )
@@ -256,7 +255,7 @@ pub(super) fn check_citation_resolution(
             // §FS-check.3.1.3: a fetch-enabled target kind keeps snapshots.
             let snapshot_row = target.schema.fetching_row(&cite.id.kind);
             // §FS-check.2.4: no conclusion about an ID absent from a home this run could not read.
-            if snapshot_row.is_some_and(|row| unread.withholds(&target.run.root, row)) {
+            if unread.withholds_absent(&target, &cite.id.kind) {
                 continue;
             }
             // §FS-config-v2.schema.sources: Markdown is the citing file's language's.

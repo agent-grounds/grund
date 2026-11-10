@@ -99,6 +99,9 @@ assert.equal(incomplete.hadScanErrors, true, 'incomplete checks still resolve');
 assert.ok(incomplete.report.errors.some(f => f.code === 'io'));
 await assert.rejects(api.scan(partial), error => {
   assert.equal(error.failure.kind, 'io');
+  // §FS-distribution.3.2.2.3: the strict rejection says the failure as check does, fix and all.
+  const io = incomplete.report.errors.find(f => f.code === 'io' && f.path === error.failure.path);
+  assert.equal(error.failure.message, io.message);
   assert.equal(error.failure.partial.operation, 'scan');
   assert.ok(error.failure.partial.result.declarations.length > 0);
   return true;
