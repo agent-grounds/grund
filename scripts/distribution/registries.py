@@ -14,6 +14,7 @@ import io
 import json
 import os
 import tarfile
+import time
 import uuid
 import zipfile
 from urllib.error import HTTPError, URLError
@@ -22,14 +23,16 @@ from urllib.request import Request, urlopen
 
 AGENT = "grund-cross-registry-publisher (+https://github.com/agent-grounds/grund)"
 NPM_AUDIENCE = "npm:registry.npmjs.org"
+ASKS, ASK_PAUSE_SECONDS = 3, 0.2
 
 
 class Refused(Exception):
     """A registry or the identity provider said no; the message names to what."""
 
 
-def call(method, url, body=None, headers=None):
-    """(status, decoded JSON or None). A transport failure is a status of 0."""
+def _exchange(method, url, body=None, headers=None):
+    """(status, decoded JSON or None, transport error). No HTTP answer is a status of 0,
+    and the error then names what the connection did instead."""
     request = Request(url, data=body, method=method,
                       headers={"User-Agent": AGENT, "Accept": "application/json", **(headers or {})})
     try:
@@ -37,12 +40,34 @@ def call(method, url, body=None, headers=None):
             status, data = response.status, response.read()
     except HTTPError as error:
         status, data = error.code, error.read()
-    except (URLError, OSError):
-        return 0, None
+    except (URLError, OSError) as error:
+        reason = error.reason if isinstance(error, URLError) else error
+        named = type(reason).__name__
+        return 0, None, f"{named}: {reason}" if str(reason) else named
     try:
-        return status, json.loads(data) if data else None
+        return status, json.loads(data) if data else None, ""
     except ValueError:
-        return status, None
+        return status, None, ""
+
+
+def call(method, url, body=None, headers=None):
+    """(status, decoded JSON or None). A transport failure is a status of 0."""
+    return _exchange(method, url, body, headers)[:2]
+
+
+def ask(registry, about, url):
+    """§FS-distribution-candidate.8.5.1: (status, body) of a question about what a registry
+    holds, asked again a moment apart while it gets no HTTP answer, up to ASKS times in all.
+    An HTTP answer of any status is taken as given; one never answered is refused, naming
+    the last transport error, and never read as empty."""
+    for attempt in range(ASKS):
+        if attempt:
+            time.sleep(ASK_PAUSE_SECONDS)
+        status, body, error = _exchange("GET", url)
+        if status:
+            return status, body
+    raise Refused(f"{registry} cannot be asked about {about} (HTTP 0); "
+                  f"a registry that does not answer is not read as empty: {error}")
 
 
 def identity_token(audience):
@@ -92,7 +117,7 @@ def npm_integrity(data):
 
 def npm_held(registry, name, version):
     """The integrity npm holds for name@version, None when it holds none."""
-    status, body = call("GET", f"{registry}/{npm_escape(name)}")
+    status, body = ask("npm", name, f"{registry}/{npm_escape(name)}")
     if status == 404:
         return None
     if status != 200:
@@ -121,7 +146,7 @@ def npm_publish(registry, name, version, data, token):
 
 def pypi_held(pypi, name, version):
     """{file name: sha256} PyPI holds for name==version."""
-    status, body = call("GET", f"{pypi}/pypi/{name}/{version}/json")
+    status, body = ask("pypi", f"{name} {version}", f"{pypi}/pypi/{name}/{version}/json")
     if status == 404:
         return {}
     if status != 200:
