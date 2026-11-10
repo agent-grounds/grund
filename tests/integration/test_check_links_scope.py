@@ -315,7 +315,7 @@ class ChangedLinesWhateverTheTextTests(ScopeCase):
                 gate.commit()
             with self.subTest(mark=repr(mark)):
                 files = {name: f"one{mark}two\nthree\n"}
-                self.assertEqual({name: {2: LINE}}, self.scope(change, files))
+                self.assertEqual({os.path.normpath(name): {2: LINE}}, self.scope(change, files))
 
     def test_an_added_line_that_begins_like_a_file_header_ends_no_file(self):
         name = "docs/text.md"
@@ -324,7 +324,9 @@ class ChangedLinesWhateverTheTextTests(ScopeCase):
             gate.write(name, f"++ one\ntwo\nthree\nfour\n{LINE}\n")
             gate.commit()
         files = {name: "one\ntwo\nthree\nfour\nfive\n"}
-        self.assertEqual({name: {1: "++ one", 5: LINE}}, self.scope(change, files))
+        self.assertEqual(
+            {os.path.normpath(name): {1: "++ one", 5: LINE}}, self.scope(change, files)
+        )
 
 
 @unittest.skipUnless(LYCHEE, "Link gate fixture requires CI-pinned lychee 0.23.0 on PATH")
