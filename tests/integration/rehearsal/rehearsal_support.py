@@ -184,7 +184,9 @@ def fresh_env(home, **extra):
                                 "PYTHON", "NODE_"))
            # npm reads `npm_config_` in any case, so every case goes
            # (§FS-distribution-candidate.5.2.2).
-           and not k.lower().startswith("npm_config_")}
+           and not k.lower().startswith("npm_config_")
+           # Each chooses the global npmrc npm reads (§FS-distribution-candidate.5.2.2).
+           and k not in ("PREFIX", "DESTDIR")}
     env.update({
         "PATH": os.pathsep.join(path), "HOME": str(home), "USERPROFILE": str(home),
         "XDG_CONFIG_HOME": str(home / ".config"), "XDG_CACHE_HOME": str(home / ".cache"),
