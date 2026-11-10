@@ -13,7 +13,7 @@ use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema};
 use crate::grammar::{parse_id_arg, split_alias_path};
 use crate::model::{E2eCase, E2eSpecRef, format_path, sort_path_key};
-use crate::sources::{Sources, path_is_dir, path_is_file};
+use crate::sources::{Sources, path_is_dir, path_names_file};
 
 /// One failure reading a case, with the path that failed (§AR-scanner.6.6).
 pub(super) enum CaseFailure {
@@ -51,7 +51,8 @@ pub(super) fn read_e2e_case(
     let mut failed = Vec::new();
     let command_args = dir.join("command.args");
     // §AR-scanner.6.2: the record keeps the manifest; the implicit `check` is the text form's.
-    let has_command_args = path_is_file(&command_args);
+    // §FS-declarations.e2e-case.failure: a dangling link is read and fails; only no name is none.
+    let has_command_args = path_names_file(&command_args);
     let args = if has_command_args {
         read_case_file(frame, &command_args, &mut failed)
             .map(|text| text.split_whitespace().map(str::to_string).collect())
@@ -106,7 +107,8 @@ fn read_e2e_spec_refs(
     failed: &mut Vec<CaseFailure>,
 ) -> Vec<E2eSpecRef> {
     let path = dir.join("spec.refs");
-    if !path_is_file(&path) {
+    // §FS-declarations.e2e-case.failure: a dangling link is read and fails; only no name is none.
+    if !path_names_file(&path) {
         return Vec::new();
     }
     read_case_file(frame, &path, failed)

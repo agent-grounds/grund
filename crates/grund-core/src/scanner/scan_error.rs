@@ -13,10 +13,10 @@ use std::io::Error;
 use std::path::{Path, PathBuf};
 
 use super::walk::scan_roots;
-use super::walk_errors::link_identity;
+use super::walk_errors::{BROKEN_LINK, link_identity};
 use crate::config::{Frame, Schema};
 use crate::model::{Code, FailureNames, ValueFormat, remedies};
-use crate::sources::{io_reason, paths_same_location, physical_path_key};
+use crate::sources::{io_reason, path_is_symlink, paths_same_location, physical_path_key};
 
 /// Where a path that could not be read is, which decides what can keep it out of a run
 /// (§FS-check.2.4.3): each is a case of `io`'s *Fix* (§FS-errors.5.5).
@@ -242,6 +242,17 @@ pub(crate) fn api_scan_error(frame: Frame<'_>, failure: &ScanError) -> ApiScanEr
 /// print the same bytes (§FS-check.2.4.3, §FS-workspace.8.7.3).
 pub(crate) fn scan_error_message(failure: &ScanError) -> String {
     format!("{}; {}", failure.reason, failure.fix())
+}
+
+/// The reason a pass that reads `path` itself gives for `error`: a link whose target does not
+/// exist carries the walk's own reason (§FS-declarations.e2e-case.failure), and every other
+/// failure the reason its I/O kind derives (§FS-check.2.4.1).
+pub(super) fn read_failure_reason(path: &Path, error: &Error) -> String {
+    if error.kind() == std::io::ErrorKind::NotFound && path_is_symlink(path) {
+        BROKEN_LINK.to_string()
+    } else {
+        io_reason(error)
+    }
 }
 
 /// The words the walk keeps around the reason of a link it cannot resolve for lack of access to

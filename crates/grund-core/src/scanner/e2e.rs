@@ -1,5 +1,5 @@
 use crate::sources::{
-    canonical_path, io_reason, is_directory, observe_input, path_exists, path_is_dir, path_is_file,
+    canonical_path, is_directory, observe_input, path_exists, path_is_dir, path_is_file,
 };
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
@@ -8,7 +8,7 @@ use std::sync::PoisonError;
 use super::e2e_case::{CaseFailure, read_e2e_case};
 use super::scan_error::{
     FailureRoots, FileKind, ScanFailure, failure_place, publish_file_failure, publish_unlisted,
-    publish_unlisted_fixture, scan_error_reason,
+    publish_unlisted_fixture, read_failure_reason, scan_error_reason,
 };
 use super::tree::ScanError;
 use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walk_builder};
@@ -211,9 +211,10 @@ pub(super) fn scan_e2e_cases(
                         continue;
                     }
                     match failure {
-                        CaseFailure::Unread(_, err) => {
+                        CaseFailure::Unread(path, err) => {
                             let failure = failure_at(&spelled);
-                            let report = ScanError::new(spelled, io_reason(&err), failure);
+                            let reason = read_failure_reason(&path, &err);
+                            let report = ScanError::new(spelled, reason, failure);
                             publish_file_failure(
                                 report,
                                 frame,

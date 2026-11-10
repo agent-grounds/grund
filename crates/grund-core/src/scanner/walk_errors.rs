@@ -13,6 +13,10 @@ use super::walk::WalkDirFilter;
 use crate::config::{Frame, Schema, canonical_config_root};
 use crate::sources::io_reason;
 
+/// The walk's reason for a link whose target does not exist (§AR-scanner.1.9), the one copy a
+/// pass that reads such a link itself reports too (§FS-declarations.e2e-case.failure).
+pub(super) const BROKEN_LINK: &str = "broken symlink: the target does not exist";
+
 /// The scan failures one walker error becomes (§FS-check.2.4), each beside the
 /// error it is reported from, which the caller retains (§FS-distribution.3.3.2).
 ///
@@ -165,9 +169,7 @@ fn walk_error_report(
         return None;
     }
     let reason = match err.io_error().map(std::io::Error::kind) {
-        Some(std::io::ErrorKind::NotFound) => {
-            "broken symlink: the target does not exist".to_string()
-        }
+        Some(std::io::ErrorKind::NotFound) => BROKEN_LINK.to_string(),
         _ => unreadable_link_reason(&walk_error_reason(err)),
     };
     Some(ScanError::new(path.to_path_buf(), reason, unread))
