@@ -213,7 +213,6 @@ fn an_outward_link_behind_a_barred_parent_stays_pruned() {
 /// The issue: `check`, `check docs` and `check --full` each exit 2 with the link's line, where
 /// they printed `success` and exited 0.
 #[test]
-#[ignore = "red until #1325 stops reading a refused target lookup as a broken link; implement removes this"]
 fn a_link_behind_a_barred_parent_fails_check_at_the_link() {
     let Some(tree) = Tree::barred("check") else {
         return;
@@ -233,7 +232,6 @@ fn a_link_behind_a_barred_parent_fails_check_at_the_link() {
 
 /// The issue in JSON: one `io` error at `docs/x`, where the run printed nothing and exited 0.
 #[test]
-#[ignore = "red until #1325 stops reading a refused target lookup as a broken link; implement removes this"]
 fn a_link_behind_a_barred_parent_is_one_json_error_at_the_link() {
     let Some(tree) = Tree::barred("json") else {
         return;
@@ -258,7 +256,6 @@ fn a_link_behind_a_barred_parent_is_one_json_error_at_the_link() {
 /// The link given as the path: it exists, so the run does not say that the path does not exist,
 /// and it fails at the link.
 #[test]
-#[ignore = "red until #1325 stops reading a refused target lookup as a broken link; implement removes this"]
 fn a_link_behind_a_barred_parent_given_as_the_path_exists() {
     let Some(tree) = Tree::barred("scoped") else {
         return;
@@ -280,7 +277,6 @@ fn a_link_behind_a_barred_parent_given_as_the_path_exists() {
 
 /// `cover`, `list` and `fmt --check` read the same scan, so they fail at the same link.
 #[test]
-#[ignore = "red until #1325 stops reading a refused target lookup as a broken link; implement removes this"]
 fn a_link_behind_a_barred_parent_fails_cover_list_and_fmt() {
     let Some(tree) = Tree::barred("others") else {
         return;
@@ -308,7 +304,6 @@ fn a_link_behind_a_barred_parent_fails_cover_list_and_fmt() {
 /// Behind a refusal the run cannot tell whether anything stands there, so a link whose target
 /// would not exist is reported the same way (§FS-scan.scope.links.owed.refused).
 #[test]
-#[ignore = "red until #1325 stops reading a refused target lookup as a broken link; implement removes this"]
 fn a_link_behind_a_barred_parent_is_reported_whatever_stands_behind_it() {
     let mut tree = Tree::new("unknown");
     tree.link("x", "../.r/nothing");

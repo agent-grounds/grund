@@ -186,7 +186,15 @@ pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
     // Resolve to an absolute path before walking up, mirroring how `cargo` finds
     // `Cargo.toml` (§FS-config.1): a relative `.` or `subdir/` must still discover
     // a `grund.toml` in an ancestor directory.
-    let walk_start = fs::canonicalize(&start_dir).unwrap_or(start_dir);
+    let walk_start = fs::canonicalize(&start_dir).unwrap_or_else(|_| {
+        // §AR-scanner.1.9: a link given as the path whose lookup is refused
+        // is placed as far as the disk answers, as the walk places such a root.
+        if crate::sources::path_lookup(&start_dir).is_err() {
+            crate::sources::resolved_as_far_as_answered(&start_dir)
+        } else {
+            start_dir
+        }
+    });
     let mut cursor = Some(walk_start.as_path());
     while let Some(dir) = cursor {
         // Both names are probed at *every* level before climbing, so a bare

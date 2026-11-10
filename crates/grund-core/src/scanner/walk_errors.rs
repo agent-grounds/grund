@@ -92,11 +92,17 @@ pub(super) fn root_lookup_failure(
         version,
     };
     let reason = walk_error_reason(&located);
-    // §FS-scan.scope.links.unresolvable.named: a looping link handed as the path is the line
-    // the walk reports for it, so the two routes to one link stay one failure.
-    let reason = match located.io_error().map(error_resolution) {
-        Some(Resolution::Loop) if path_is_symlink(root) => unreadable_link_reason(&reason),
-        _ => reason,
+    // §FS-scan.scope.links.unresolvable.named, §AR-scanner.1.9: a looping link handed as the
+    // path, or one whose lookup is refused, is the line the walk reports at the link, so the two
+    // routes to one link stay one failure.
+    let link_line = located.io_error().is_some_and(|error| {
+        error_resolution(error) == Resolution::Loop
+            || error.kind() == io::ErrorKind::PermissionDenied
+    });
+    let reason = if link_line && path_is_symlink(root) {
+        unreadable_link_reason(&reason)
+    } else {
+        reason
     };
     (ScanError::new(root.to_path_buf(), reason, unread), located)
 }
@@ -176,7 +182,8 @@ fn walk_error_report(
             unread,
         ));
     }
-    if walk_skips_link(path, filter, schema, frame, scan_root) {
+    let kind = err.io_error().map(io::Error::kind);
+    if walk_skips_link(path, kind, filter, schema, frame, scan_root) {
         return None;
     }
     let reason = match err.io_error() {
@@ -204,27 +211,30 @@ fn walk_error_report(
 /// other link, broken, is asked the name tests, the filter's `exclude` test and the
 /// ignore files, as the file it names would be.
 ///
+/// `kind` is the failure the walker met the link with. A lookup refused for lack of
+/// permission says nothing about the target, so that link is no broken link whatever its
+/// name: it is asked what a directory link is, its fence judged as far as the disk answers
+/// (§AR-scanner.1.9). Only a link whose target is no directory on any
+/// other failure takes the name tests.
+///
 /// The walker never drops its own root, so a link that is the walk root is asked
 /// no ignore file, and the filter answers for it as it does for the root.
 fn walk_skips_link(
     path: &Path,
+    kind: Option<io::ErrorKind>,
     filter: &WalkDirFilter,
     schema: &Schema,
     frame: Frame<'_>,
     scan_root: &Path,
 ) -> bool {
+    // §AR-scanner.1.9: a refused lookup is never read as a missing target.
+    let refused = kind == Some(io::ErrorKind::PermissionDenied);
     let depth = path
         .strip_prefix(scan_root)
         .map_or(0, |relative| relative.components().count());
     match path_resolution(path) {
-        Resolution::Directory => {
-            (depth > 0 && walk_ignores(path, true, schema, frame))
-                || filter
-                    .refusal(path, depth, true, true)
-                    .is_some_and(|reason| {
-                        !matches!(reason, Unread::AnotherProject | Unread::UnwalkedHome)
-                    })
-        }
+        _ if refused => directory_link_skipped(path, depth, filter, schema, frame),
+        Resolution::Directory => directory_link_skipped(path, depth, filter, schema, frame),
         // §FS-scan.scope.links.owed.cycle: a loop faces what a directory faces, never `extensions`.
         Resolution::Loop => depth > 0 && loop_skipped(path, filter, schema, frame),
         Resolution::NotDirectory | Resolution::Unresolved(_) => {
@@ -234,6 +244,21 @@ fn walk_skips_link(
                 || walk_ignores(path, false, schema, frame)
         }
     }
+}
+
+/// Whether the walk was never going to read through a directory link: the ignore files, then
+/// the walk's own filter, whose answers `AnotherProject` and `UnwalkedHome` are not silence.
+fn directory_link_skipped(
+    path: &Path,
+    depth: usize,
+    filter: &WalkDirFilter,
+    schema: &Schema,
+    frame: Frame<'_>,
+) -> bool {
+    (depth > 0 && walk_ignores(path, true, schema, frame))
+        || filter
+            .refusal(path, depth, true, true)
+            .is_some_and(|reason| !matches!(reason, Unread::AnotherProject | Unread::UnwalkedHome))
 }
 
 /// The directory links one walk root has recovered, by the directory listed again
