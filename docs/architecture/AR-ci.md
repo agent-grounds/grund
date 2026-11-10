@@ -40,7 +40,7 @@ CI dependency and build caches are performance optimizations only. A cache resto
 
 ## 3. Current hooks
 
-The current pre-commit gate runs the same Rust format/build/test commands that development CI runs: `cargo fmt --all -- --check`, `cargo build --quiet --workspace --all-targets --locked` with warnings denied, and `python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count`, which runs `cargo test` with those arguments and prints what [§AR-ci.requirements.5.1](AR-ci.md#requirements51-a-suite-prints-its-failures-its-check-ins-and-one-summary) asks rather than a line per test. CI runs that last command as its shards, one job each, which together run exactly the tests it runs ([§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards)). A plain `cargo test --workspace --all-targets --locked` is green on the same tree but runs less: it reports every test that reads the workspace-load observer as `ignored`, naming the feature that test needs ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)). The test hook also runs at `pre-push`, so a contributor who commits while a test is transiently broken still gets the same local stop before sending the branch. It is the one hook `pre-push` runs: no hook asks a change for a changelog entry at any stage, because no change is gated on the changelog ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)).
+The current pre-commit gate runs the same Rust format/build/test commands that development CI runs: `cargo fmt --all -- --check`, `cargo check --quiet --workspace --all-targets --locked` with warnings denied, a check rather than `cargo build --quiet --workspace --all-targets --locked` because it proves the same of the default features without linking a second set of test executables ([§AR-ci.13.7.1](AR-ci.md#1371-a-shard-links-the-test-targets-once)), and `python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count`, which runs `cargo test` with those arguments and prints what [§AR-ci.requirements.5.1](AR-ci.md#requirements51-a-suite-prints-its-failures-its-check-ins-and-one-summary) asks rather than a line per test. CI runs that last command as its shards, one job each, which together run exactly the tests it runs ([§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards)). A plain `cargo test --workspace --all-targets --locked` is green on the same tree but runs less: it reports every test that reads the workspace-load observer as `ignored`, naming the feature that test needs ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)). The test hook also runs at `pre-push`, so a contributor who commits while a test is transiently broken still gets the same local stop before sending the branch. It is the one hook `pre-push` runs: no hook asks a change for a changelog entry at any stage, because no change is gated on the changelog ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)).
 
 The local Python gate runs `python scripts/run_python_gate.py`, and CI runs that
 same command as its four selections, in three jobs ([§AR-ci.3.4.3](AR-ci.md#343-selecting-the-binding-acceptances-and-the-slow-tests)). The wrapper prepares
@@ -1154,8 +1154,10 @@ On `ubuntu-latest` and `windows-latest` each leg is the **Rust** jobs and three
 Python jobs. The Rust jobs are the shards of [§AR-ci.13.7](AR-ci.md#137-a-legs-cargo-suite-runs-in-shards): each runs one shard
 of `python scripts/run_cargo_suite.py --workspace --all-targets --locked --features
 grund/test-workspace-load-count` ([§AR-ci.3](AR-ci.md#3-current-hooks)), and shard 1 also runs `cargo fmt
---all -- --check`, the native watch contract, `cargo build --quiet --workspace
---all-targets --locked` and the grund self-check of §AR-ci.4. The **Python** job
+--all -- --check`, the native watch contract, `cargo check --quiet --workspace
+--all-targets --locked` and the grund self-check of §AR-ci.4. That third command
+is a check, not a build, so shard 1 links one set of test executables, as the
+other shards do ([§AR-ci.13.7.1](AR-ci.md#1371-a-shard-links-the-test-targets-once)). The **Python** job
 runs `python scripts/run_python_gate.py --rest`, the **Node** job runs `python
 scripts/run_python_gate.py --only-node-acceptance`, and the **Python acceptance**
 job runs `python scripts/run_python_gate.py --only-python-acceptance` and then
@@ -1341,6 +1343,31 @@ target exits 5 rather than passing on nothing run, as an empty selection of
 a usage line before cargo runs, so a mistyped shard is never silently the whole
 suite or none of it. Each shard prints its own summary of
 [§AR-ci.requirements.5.1](AR-ci.md#requirements51-a-suite-prints-its-failures-its-check-ins-and-one-summary), counting the tests of its targets alone.
+
+#### 13.7.1 A shard links the test targets once
+
+No shard compiles and links the workspace's test targets in a step before its
+shard of the suite under features other than the suite's own. The suite's
+`--features grund/test-workspace-load-count` is a feature of `grund-core`, which
+every workspace crate depends on, so a `cargo build --workspace --all-targets`
+without it shares no unit with the suite, and the suite then links every test
+executable a second time beside the first, with debuginfo. That is what filled the
+hosted runner's disk on `ubuntu-latest / rust 1/4`: shard 1's `target/` reached
+17.35 GB where the other shards' reached 8.48 GB, and the job died of `No space
+left on device` about a minute into `cargo test`
+([agent-grounds/grund#1225](https://github.com/agent-grounds/grund/issues/1225)).
+
+What that build proved is still proved on shard 1: that the workspace's every
+target compiles warning-free under its default features, where code behind a
+test feature can hide an unused item. It is proved by `cargo check --quiet
+--workspace --all-targets --locked` under the leg's `RUSTFLAGS: "-D warnings"`,
+which type-checks and lints each target, emits metadata alone and links nothing,
+and the `cargo-build` hook runs the same command with warnings denied
+([§AR-ci.3](AR-ci.md#3-current-hooks)). Buying headroom instead, by trimming debuginfo or freeing the
+runner's disk, would leave the second set in place for the next test target to
+fill again. `tests/integration/test_ci_shards.py` reads each shard's steps and
+holds both halves: nothing before the suite links the workspace's test targets
+under other features, and shard 1 still checks them under the default ones.
 
 ## 14. macOS runs once a day
 
