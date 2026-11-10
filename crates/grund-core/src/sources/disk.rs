@@ -37,26 +37,12 @@ pub(crate) fn path_is_symlink(path: impl AsRef<Path>) -> bool {
     std::fs::symlink_metadata(path).is_ok_and(|meta| meta.is_symlink())
 }
 
-/// Whether `path` names a file to be read, so a read is attempted rather than the name taken as
-/// absent (§FS-declarations.e2e-case.failure): a regular file, links followed, and any name the
-/// lookup cannot answer for — a link whose target does not resolve among them — so its read
-/// fails at the name itself. Only a name not there at all, or one that resolves to anything but a
-/// regular file, is not.
-pub(crate) fn path_names_file(path: impl AsRef<Path>) -> bool {
-    let path = path.as_ref();
-    match std::fs::metadata(path) {
-        Ok(meta) => meta.is_file(),
-        Err(_) => !matches!(
-            std::fs::symlink_metadata(path),
-            Err(error) if error.kind() == ErrorKind::NotFound
-        ),
-    }
-}
-
-/// Whether the directory holding `path` has a file of that name, found by the name's own lookup
-/// (§FS-declarations.e2e-case.id): a regular file, links followed, or a link whose target does
-/// not resolve, whose read then fails at the link. A name whose lookup fails, the directory
-/// holding it unsearchable, is not found here: that failure is the directory's.
+/// Whether the directory holding `path` has a file of that name to read, found by the name's
+/// own lookup: a regular file, links followed, or a name whose lstat succeeds but whose target
+/// does not resolve, which is read so it fails at the name itself
+/// (§FS-declarations.e2e-case.id, §FS-declarations.e2e-case.failure). Any other lookup failure,
+/// the directory holding the name unsearchable among them, is not found here: that failure is
+/// the directory's.
 pub(crate) fn path_holds_file(path: impl AsRef<Path>) -> bool {
     let path = path.as_ref();
     match std::fs::metadata(path) {
