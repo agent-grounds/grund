@@ -178,8 +178,8 @@ fn walk_error_report(
 /// is a hole in what the run answers from (§AR-scanner.1.9).
 /// `Unread::UnwalkedHome`: a link standing at a home the config lists without walking
 /// is in no declared blind spot (§AR-scanner.1.9). Any
-/// other link, broken, is asked the name tests and the ignore files, as the file it
-/// names would be.
+/// other link, broken, is asked the name tests, the filter's `exclude` test and the
+/// ignore files, as the file it names would be.
 ///
 /// The walker never drops its own root, so a link that is the walk root is asked
 /// no ignore file, and the filter answers for it as it does for the root.
@@ -191,7 +191,10 @@ fn walk_skips_link(
     scan_root: &Path,
 ) -> bool {
     if !path_is_dir(path) {
-        return name_refusal(path, schema).is_some() || walk_ignores(path, false, schema, frame);
+        // §FS-config-v2.schema.sources.exclude.roots: a pattern keeps a dangling file link out.
+        return name_refusal(path, schema).is_some()
+            || filter.kept_out_by_exclude(path, false)
+            || walk_ignores(path, false, schema, frame);
     }
     let depth = path
         .strip_prefix(scan_root)
@@ -334,7 +337,7 @@ pub(super) fn symlink_loop_report(
     frame: Frame<'_>,
 ) -> Option<ScanError> {
     // §FS-config-v2.schema.sources.exclude.roots: a pattern matching the link keeps its loop out.
-    if filter.kept_out_by_exclude(link) || walk_ignores(link, true, schema, frame) {
+    if filter.kept_out_by_exclude(link, true) || walk_ignores(link, true, schema, frame) {
         return None;
     }
     // Naming the directory is the useful half of the message, and it is available

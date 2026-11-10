@@ -282,18 +282,20 @@ impl WalkDirFilter {
             Unread::E2eCase => true,
             // `refusal` answers `UnwalkedHome` before it asks `exclude`, so all three ask it here.
             Unread::OutsideProject | Unread::AnotherProject | Unread::UnwalkedHome => {
-                self.is_e2e_case_dir(path) && !self.kept_out_by_exclude(path)
+                self.is_e2e_case_dir(path) && !self.kept_out_by_exclude(path, true)
             }
             _ => false,
         }
     }
 
-    /// Whether `exclude` keeps the directory at `path` out: a v2 pattern, or a hidden name or a
-    /// name a version 1 `[scan] exclude` lists. These are the same two tests `refusal` asks, and
-    /// the ones a looping link's report asks, which the walker never filters
+    /// Whether `exclude` keeps the entry at `path` out: a v2 pattern, asked as a file or a
+    /// directory by `is_dir`, or, for a directory, a hidden name or a name a version 1
+    /// `[scan] exclude` lists. These are the same tests `refusal` asks, and the ones a
+    /// looping or dangling link's report asks, which the walker never filters
     /// (§FS-config-v2.schema.sources.exclude.roots).
-    pub(super) fn kept_out_by_exclude(&self, path: &Path) -> bool {
-        self.excluded_by_pattern(path, true) || directory_refusal(path, &self.excluded).is_some()
+    pub(super) fn kept_out_by_exclude(&self, path: &Path, is_dir: bool) -> bool {
+        self.excluded_by_pattern(path, is_dir)
+            || (is_dir && directory_refusal(path, &self.excluded).is_some())
     }
 
     /// Whether a v2 `exclude` pattern matches `path`, by the spelling the walk reached it under
