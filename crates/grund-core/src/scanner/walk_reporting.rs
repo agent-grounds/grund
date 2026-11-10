@@ -288,19 +288,20 @@ pub(crate) fn walk_scannable_files_with_sources(
         // both built on the first error, so the success path pays for neither.
         let first_dir = dirs.len();
         let mut error_state = None;
+        let new_error_state = || {
+            let filter = WalkDirFilter::new(
+                schema,
+                frame,
+                &scan_root,
+                &canonical_scan_root,
+                &physical_root,
+                &link_roots,
+                &looping_links,
+            );
+            (filter, LinkRecovery::default())
+        };
         let mut report_walk_error = |err, listing: Option<&Path>| {
-            let (filter, recovery) = error_state.get_or_insert_with(|| {
-                let filter = WalkDirFilter::new(
-                    schema,
-                    frame,
-                    &scan_root,
-                    &canonical_scan_root,
-                    &physical_root,
-                    &link_roots,
-                    &looping_links,
-                );
-                (filter, LinkRecovery::default())
-            });
+            let (filter, recovery) = error_state.get_or_insert_with(new_error_state);
             for (report, source) in
                 walk_error_reports(err, filter, recovery, listing, schema, frame, &scan_root)
             {
@@ -345,12 +346,16 @@ pub(crate) fn walk_scannable_files_with_sources(
         // §FS-config.3.5.5: the loops the filter pruned. The link is owed the same
         // report a loop the walker found earns, and by the same gates — it is the
         // descent, not the report, that pruning removes.
-        for (link, target) in looping_links
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .drain(..)
-        {
-            root_errors.extend(symlink_loop_report(&link, &target, schema, frame));
+        let pruned_loops = std::mem::take(
+            &mut *looping_links
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner),
+        );
+        if !pruned_loops.is_empty() {
+            let (filter, _) = error_state.get_or_insert_with(new_error_state);
+            for (link, target) in pruned_loops {
+                root_errors.extend(symlink_loop_report(&link, &target, filter, schema, frame));
+            }
         }
         // §FS-errors.4.1: within one root the order is the filesystem's, and the
         // first-seen rule below turns that into a choice of *spelling*. Sorting each

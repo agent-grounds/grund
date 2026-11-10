@@ -256,7 +256,7 @@ impl WalkDirFilter {
     /// Every case directory the walk meets is pruned, and `met_cases` records each one the
     /// configuration does not keep out, for the manifest pass to read
     /// (§FS-declarations.e2e-case.excluded). The ignore files have been asked by then, since
-    /// the walker asks them before this filter, and `exclude` is asked by `case_kept_out`.
+    /// the walker asks them before this filter, and `exclude` is asked by `kept_out_by_exclude`.
     fn keep(&self, entry: &ignore::DirEntry) -> bool {
         let is_dir = entry.file_type().is_some_and(is_directory);
         let refusal = self.refusal(entry.path(), entry.depth(), is_dir, entry.path_is_symlink());
@@ -282,15 +282,17 @@ impl WalkDirFilter {
             Unread::E2eCase => true,
             // `refusal` answers `UnwalkedHome` before it asks `exclude`, so all three ask it here.
             Unread::OutsideProject | Unread::AnotherProject | Unread::UnwalkedHome => {
-                self.is_e2e_case_dir(path) && !self.case_kept_out(path)
+                self.is_e2e_case_dir(path) && !self.kept_out_by_exclude(path)
             }
             _ => false,
         }
     }
 
     /// Whether `exclude` keeps the directory at `path` out: a v2 pattern, or a hidden name or a
-    /// name a version 1 `[scan] exclude` lists. These are the same two tests `refusal` asks.
-    fn case_kept_out(&self, path: &Path) -> bool {
+    /// name a version 1 `[scan] exclude` lists. These are the same two tests `refusal` asks, and
+    /// the ones a looping link's report asks, which the walker never filters
+    /// (§FS-config-v2.schema.sources.exclude.roots).
+    pub(super) fn kept_out_by_exclude(&self, path: &Path) -> bool {
         self.excluded_by_pattern(path, true) || directory_refusal(path, &self.excluded).is_some()
     }
 
