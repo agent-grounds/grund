@@ -12,6 +12,8 @@ use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+#[path = "e2e_case_failure_location/cover.rs"]
+mod cover;
 #[path = "e2e_case_failure_location/spellings.rs"]
 mod spellings;
 
