@@ -5,9 +5,7 @@ use std::collections::HashMap;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use super::read_predicate::{
-    Unread, directory_refusal, ignore_file_unapplied, ignored, name_refusal,
-};
+use super::read_predicate::{Unread, ignore_file_unapplied, ignored, name_refusal};
 use super::scan_error::{FileKind, Place, ScanFailure, unreadable_link_reason};
 use super::tree::ScanError;
 use super::walk::WalkDirFilter;
@@ -97,7 +95,7 @@ pub(super) fn root_lookup_failure(
 /// opened, which `walk_error_reports` has already located at the link. The
 /// walker applies neither its directory filter nor its ignore files to an error
 /// entry, so the tests the link would have faced are asked of the one read
-/// predicate instead (§AR-scanner.1.13): the hidden-name and `[scan] exclude`
+/// predicate instead (§AR-scanner.1.13): the hidden-name and `exclude`
 /// tests for a looping directory, the ignore files for every kind, the name test
 /// as well for a broken link, which names a file where a loop names a directory,
 /// and the walk's own directory filter for a link whose target is a directory,
@@ -124,7 +122,7 @@ fn walk_error_report(
         // hands back is not always it — a loop met one link deep is reported at
         // the doubled spelling the descent produced.
         let link = shortest_link_spelling(child, scan_root).unwrap_or_else(|| child.to_path_buf());
-        return symlink_loop_report(&link, ancestor, schema, frame);
+        return symlink_loop_report(&link, ancestor, filter, schema, frame);
     }
     let path = walk_error_path(err).unwrap_or(scan_root);
     let ignore_file_line = is_ignore_file_line_error(err);
@@ -318,9 +316,10 @@ fn pathless_io_kind(err: &ignore::Error) -> Option<io::ErrorKind> {
 
 /// The scan error a looping directory link earns (§FS-config.3.5.5), or `None`
 /// where the walk was never going to read through it: the hidden-name and
-/// `[scan] exclude` tests the walker's own directory filter never applies to an
-/// error entry, and the ignore files, which reach a link the walker could not
-/// resolve no other way.
+/// `exclude` tests — a version 1 name or a version 2 pattern, asked of `filter`,
+/// the walk's own directory filter, which never applies them to an error entry
+/// (§FS-config-v2.schema.sources.exclude.roots) — and the ignore files, which
+/// reach a link the walker could not resolve no other way.
 ///
 /// `ancestor` is the directory the link reaches back into, under any spelling that
 /// reaches it: `loop_ancestor_name` decides what the reason calls it, so neither of
@@ -330,12 +329,12 @@ fn pathless_io_kind(err: &ignore::Error) -> Option<io::ErrorKind> {
 pub(super) fn symlink_loop_report(
     link: &Path,
     ancestor: &Path,
+    filter: &WalkDirFilter,
     schema: &Schema,
     frame: Frame<'_>,
 ) -> Option<ScanError> {
-    if directory_refusal(link, &schema.sources.exclude).is_some()
-        || walk_ignores(link, true, schema, frame)
-    {
+    // §FS-config-v2.schema.sources.exclude.roots: a pattern matching the link keeps its loop out.
+    if filter.kept_out_by_exclude(link) || walk_ignores(link, true, schema, frame) {
         return None;
     }
     // Naming the directory is the useful half of the message, and it is available

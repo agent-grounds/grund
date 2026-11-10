@@ -109,7 +109,6 @@ fn an_unexcluded_loop_below_a_root_is_still_reported() {
 }
 
 #[test]
-#[ignore = "red until #1333 makes symlink_loop_report ask the version 2 exclude globs; implement removes this"]
 fn an_exclude_matching_a_link_to_its_ancestor_keeps_the_loop_out() {
     for (name, spelling) in [
         ("name", "\"self\""),
@@ -142,7 +141,6 @@ fn an_unexcluded_link_above_the_walk_root_is_still_reported() {
 }
 
 #[test]
-#[ignore = "red until #1333 makes symlink_loop_report ask the version 2 exclude globs; implement removes this"]
 fn an_exclude_matching_a_link_above_the_walk_root_keeps_the_loop_out() {
     for (name, spelling) in [("name", "\"up\""), ("anchored", "\"/docs/up\"")] {
         let tree = Tree::new(&format!("above-{name}"), "docs/up", "..", Some(spelling));
