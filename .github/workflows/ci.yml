@@ -279,6 +279,8 @@ jobs:
     name: cargo bench (shard ${{ matrix.shard }})
     needs: [bench-build]
     runs-on: ubuntu-latest
+    # §AR-ci.5.6: a stall no command's bound covers fails the shard, not the queue.
+    timeout-minutes: 20
     strategy:
       # Every shard reports, so one regression does not hide another's.
       fail-fast: false
