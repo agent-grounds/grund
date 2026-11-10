@@ -134,6 +134,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 
 ## Config, discovery, and workspaces
 
+- [§DF-config-discovery-keeps-lexical-parents](DF-config-discovery-keeps-lexical-parents.md#df-config-discovery-keeps-lexical-parents-config-discovery-climbs-the-paths-lexical-parents-before-resolving-directory-links) — Climb the path's lexical parents before resolving directory links, and restore the governing config on narrowed runs.
 - [§DF-config-file-location](DF-config-file-location.md#df-config-file-location-grundtoml-is-discovered-at-two-names-per-directory-and-init-writes-the-bare-one) — grund.toml is discovered at two names per directory, and init writes the bare one
 - [§DF-config-scope-override](DF-config-scope-override.md#df-config-scope-override-the-committed-scopes-are-one-relation-stated-once) — the committed scopes are one relation, stated once
 - [§DF-config-concerns](DF-config-concerns.md#df-config-concerns-a-keys-concern-is-derived-from-what-a-finding-from-it-can-be-about) — a key's concern is derived from what a finding from it can be about

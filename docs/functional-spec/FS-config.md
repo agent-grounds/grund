@@ -165,6 +165,10 @@ The bare `grund.toml` is the form `grund init` generates ([§FS-init.2.4](FS-ini
 
 A file argument named without a directory part — `FS-widget.md`, not `./FS-widget.md` — has the **working directory** as its parent directory, so discovery starts there and climbs exactly as it does for `./FS-widget.md`. `grund <command> NAME` and `grund <command> ./NAME` are one run: they find the same config root, are rooted at the same workspace member when the working directory lies inside one ([§FS-workspace.5.1](FS-workspace.md#51-a-member-run)), and render every path from the same base ([§FS-config.3.6](FS-config.md#36-output--report-format)). How a file argument is spelled never decides which config is loaded; a run that finds no `grund.toml` above a bare name does so only because there is none, never because the spelling cut the walk short.
 
+### 1.5 The ancestor search keeps the path through directory links
+
+The discovery start from [§FS-config.1](FS-config.md#1-file-location-and-discovery) is made absolute against the working directory without following directory links, then searched through its lexical parents. Resolving a link must not substitute the target's ancestors. This governs every upward config lookup in both versions, including `config explain` and `config migrate`; a nearer config along the path still wins, and both names retain their precedence at each level. With `e2e/cases` linked outside a project and no nearer config, arguments `e2e/cases`, `e2e/cases/b`, and `e2e/cases/b/expected.exit` still find that project's config, even when a stranger config sits above the target. Absolute spellings do the same; bare-file handling remains [§FS-config.1.4](FS-config.md#14-a-file-argument-with-no-directory-part). Canonical project identity and actual reads resolve links as before, after selection. The selected config's validation applies, and narrowed reads and reports remain [§FS-scan.path.check](FS-scan.md#pathcheck-check-reads-more-than-it-reports) and [§FS-check.1.3.6.3](FS-check.md#1363-a-file-the-wider-walk-could-not-read-is-said-out-loud)'s: discovery cannot replace a refusal or in-scope read failure with successful defaults. Per [§DF-config-discovery-keeps-lexical-parents](../decisions/functional/DF-config-discovery-keeps-lexical-parents.md#df-config-discovery-keeps-lexical-parents-config-discovery-climbs-the-paths-lexical-parents-before-resolving-directory-links).
+
 ## 2. Precedence
 
 Two sources decide a setting: the committed `grund.toml` and the CLI inputs of the one run. A value written in `grund.toml` stands over the built-in default ([§FS-config.3](FS-config.md#3-keys-version-1)), and a CLI input is not a third source above both — it enters at the scope its flag spells and resolves from there ([§FS-config.principle.cli](FS-config.md#principlecli-a-cli-input-enters-at-the-scope-its-flag-spells)), which is why `grund check --require-grounding` sets the project default and an explicit `require_grounding = false` on a row still wins over it. Both statements are about one leaf key at a time ([§FS-config.principle.unit](FS-config.md#principleunit-one-leaf-key-overrides-and-one-value-is-whole)): a table naming one key leaves every other key of that table at its default, and what a key does override is its whole value, an array included. How the scopes inside the file relate is stated once in [§FS-config.principle](FS-config.md#principle-a-setting-written-at-a-narrower-scope-wins), and this section does not restate it. Per [§DF-config-scope-override](../decisions/functional/DF-config-scope-override.md#df-config-scope-override-the-committed-scopes-are-one-relation-stated-once), which records what this section said before and why it was withdrawn.
@@ -197,14 +201,12 @@ marker            = "§"      # default; rare character that prefixes a citation
 trigger           = "$$"     # default; typed sequence rewritten to marker by IDE plugin and `grund fmt`
 strict            = true     # default; if false, bare citations are also recognized
 shorthand         = "canonical" # canonical | accepted; persisted number-only citation policy
-require_grounding = false    # default; if true, `check` flags source files that cite no declared ID
-#                            # …and the default for every [[kinds]] row (§3.4.8)
+require_grounding = false    # default; if true, `check` flags source files that cite no declared ID; …and the default for every [[kinds]] row (§3.4.8)
 # grounding_level = 1        # default; 1 = the file — the unit inside each governed file (§3.4.8)
 # conversation    = "link"   # optional; committed conversation-rendering opinion — see below
 # lead_size_warning = { max = 600, unit = "words" } # optional; oversized lead warning
 
-# Inline citation style — see [§FS-inline-citation-style](FS-inline-citation-style.md#fs-inline-citation-style-configurable-shape-of-inline-code-comment-citations)
-inline_style                 = "citation-with-note"   # default; alt: "citation-only"
+inline_style                 = "citation-with-note"   # default; alt: "citation-only"; see [§FS-inline-citation-style](FS-inline-citation-style.md#fs-inline-citation-style-configurable-shape-of-inline-code-comment-citations)
 inline_note_suggested_lines  = 1                       # soft cap; advisory unless warn_on_suggested = true
 inline_note_max_lines        = 3                       # hard cap (error)
 inline_note_max_columns      = 100                     # hard cap (error)
