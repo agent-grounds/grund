@@ -14,6 +14,7 @@ use super::record::Config;
 use super::run::{Invocation, Run};
 use super::{v1, v2, validate};
 use crate::model::{format_path, relative_from_base};
+use crate::sources::{Resolution, path_resolution};
 
 /// The two names one directory may hold its config under, in probe order
 /// (§FS-config.1): the bare root-visible `grund.toml` first, then
@@ -148,10 +149,12 @@ pub(crate) fn config_file_under(root: &Path, read: &Path) -> PathBuf {
 /// The directory a path argument starts discovery from: a file's parent
 /// directory, and the working directory for a file named without a directory
 /// part, whose `parent()` is the empty path rather than `None` (§FS-config.1.4);
-/// any other path is its own start. Uncanonicalized, so each caller resolves
-/// `.` the way it resolves every other relative start.
+/// any other path is its own start. A link whose resolution loops starts where a file
+/// does, at its directory: it has no inside to start from, and its own spelling cannot be
+/// resolved, so the climb from it would lose the root (§FS-scan.scope.links.unresolvable.named).
+/// Uncanonicalized, so each caller resolves `.` the way it resolves every other relative start.
 pub(crate) fn discovery_start_dir(path: &Path) -> &Path {
-    if !path.is_file() {
+    if !path.is_file() && path_resolution(path) != Resolution::Loop {
         return path;
     }
     match path.parent() {

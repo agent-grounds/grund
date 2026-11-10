@@ -42,6 +42,45 @@ pub(crate) fn path_is_dir(path: impl AsRef<Path>) -> bool {
     path.as_ref().is_dir()
 }
 
+/// What resolving `path` meets, links followed: the one classifier of a link's
+/// resolution the walk and the explicit path both ask (§FS-scan.scope.links.owed.cycle).
+/// A loop is told apart from every other failure because the filesystem says what went
+/// wrong: the target is not missing, resolving it never arrives.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Resolution {
+    /// The path resolves to a directory.
+    Directory,
+    /// The path resolves to something that is not a directory.
+    NotDirectory,
+    /// Resolving the path loops: a self-link, a cycle of links (§FS-scan.scope.links.owed.cycle).
+    Loop,
+    /// Resolving the path failed another way, a missing target among them.
+    Unresolved(ErrorKind),
+}
+
+/// How resolving `path` ends, links followed (§FS-scan.scope.links.owed.cycle).
+pub(crate) fn path_resolution(path: impl AsRef<Path>) -> Resolution {
+    match std::fs::metadata(path) {
+        Ok(meta) if meta.is_dir() => Resolution::Directory,
+        Ok(_) => Resolution::NotDirectory,
+        Err(error) => error_resolution(&error),
+    }
+}
+
+/// How a failed resolution ended, by its error (§FS-scan.scope.links.owed.cycle).
+///
+/// The kind the standard library gives ELOOP, `FilesystemLoop`, cannot be named on stable
+/// Rust (`io_error_more`, rust-lang/rust#86442), though every error carries it; its derived
+/// name is what tells it, on every platform the library maps a loop to it.
+pub(crate) fn error_resolution(error: &Error) -> Resolution {
+    let kind = error.kind();
+    if format!("{kind:?}") == "FilesystemLoop" {
+        Resolution::Loop
+    } else {
+        Resolution::Unresolved(kind)
+    }
+}
+
 /// Whether `path` is a file, links followed.
 pub(crate) fn path_is_file(path: impl AsRef<Path>) -> bool {
     path.as_ref().is_file()

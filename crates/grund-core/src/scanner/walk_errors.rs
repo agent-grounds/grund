@@ -1,5 +1,6 @@
 use crate::sources::{
-    Sources, canonical_path, link_metadata, open_for_reading, path_is_dir, physical_path_key,
+    Resolution, Sources, canonical_path, error_resolution, link_metadata, open_for_reading,
+    path_is_dir, path_is_symlink, path_resolution, physical_path_key,
 };
 use std::collections::HashMap;
 use std::io;
@@ -76,6 +77,12 @@ pub(super) fn root_lookup_failure(
         version,
     };
     let reason = walk_error_reason(&located);
+    // §FS-scan.scope.links.unresolvable.named: a looping link handed as the path is the line
+    // the walk reports for it, so the two routes to one link stay one failure.
+    let reason = match located.io_error().map(error_resolution) {
+        Some(Resolution::Loop) if path_is_symlink(root) => unreadable_link_reason(&reason),
+        _ => reason,
+    };
     (ScanError::new(root.to_path_buf(), reason, unread), located)
 }
 
@@ -177,7 +184,10 @@ fn walk_error_report(
 /// through such a link, but the run reads the tree it lands in, so a failure there
 /// is a hole in what the run answers from (§AR-scanner.1.9).
 /// `Unread::UnwalkedHome`: a link standing at a home the config lists without walking
-/// is in no declared blind spot (§AR-scanner.1.9). Any
+/// is in no declared blind spot (§AR-scanner.1.9). A link whose resolution loops — a
+/// self-link, a cycle of links — is a loop, not a broken link, and is asked what the
+/// walker-reported loop is asked: the hidden-name and `[scan] exclude` tests and the
+/// ignore files as a directory, never `extensions` (§FS-scan.scope.links.owed.cycle). Any
 /// other link, broken, is asked the name tests, the filter's `exclude` test and the
 /// ignore files, as the file it names would be.
 ///
@@ -190,19 +200,27 @@ fn walk_skips_link(
     frame: Frame<'_>,
     scan_root: &Path,
 ) -> bool {
-    if !path_is_dir(path) {
-        // §FS-config-v2.schema.sources.exclude.roots: a pattern keeps a dangling file link out.
-        return name_refusal(path, schema).is_some()
-            || filter.kept_out_by_exclude(path, false)
-            || walk_ignores(path, false, schema, frame);
-    }
     let depth = path
         .strip_prefix(scan_root)
         .map_or(0, |relative| relative.components().count());
-    (depth > 0 && walk_ignores(path, true, schema, frame))
-        || filter
-            .refusal(path, depth, true, true)
-            .is_some_and(|reason| !matches!(reason, Unread::AnotherProject | Unread::UnwalkedHome))
+    match path_resolution(path) {
+        Resolution::Directory => {
+            (depth > 0 && walk_ignores(path, true, schema, frame))
+                || filter
+                    .refusal(path, depth, true, true)
+                    .is_some_and(|reason| {
+                        !matches!(reason, Unread::AnotherProject | Unread::UnwalkedHome)
+                    })
+        }
+        // §FS-scan.scope.links.owed.cycle: a loop faces what a directory faces, never `extensions`.
+        Resolution::Loop => depth > 0 && loop_skipped(path, filter, schema, frame),
+        Resolution::NotDirectory | Resolution::Unresolved(_) => {
+            // §FS-config-v2.schema.sources.exclude.roots: a pattern keeps a dangling file link out.
+            name_refusal(path, schema).is_some()
+                || filter.kept_out_by_exclude(path, false)
+                || walk_ignores(path, false, schema, frame)
+        }
+    }
 }
 
 /// The directory links one walk root has recovered, by the directory listed again
@@ -336,8 +354,7 @@ pub(super) fn symlink_loop_report(
     schema: &Schema,
     frame: Frame<'_>,
 ) -> Option<ScanError> {
-    // §FS-config-v2.schema.sources.exclude.roots: a pattern matching the link keeps its loop out.
-    if filter.kept_out_by_exclude(link, true) || walk_ignores(link, true, schema, frame) {
+    if loop_skipped(link, filter, schema, frame) {
         return None;
     }
     // Naming the directory is the useful half of the message, and it is available
@@ -354,6 +371,16 @@ pub(super) fn symlink_loop_report(
         version: frame.version,
     };
     Some(ScanError::new(link.to_path_buf(), reason, failure))
+}
+
+/// Whether the walk was never going to read through a looping link, whichever way the loop
+/// was found: what a directory faces, the hidden-name and `[scan] exclude` tests and the
+/// ignore files as a directory, and never `extensions` (§FS-scan.scope.links.owed.cycle).
+/// The exclude test is the walk filter's own, so a v2 pattern keeps a loop out as it keeps
+/// out a directory (§FS-config-v2.schema.sources.exclude.roots), and the ignore files judge
+/// a link asked as a directory by their rules, whether or not it opens.
+fn loop_skipped(link: &Path, filter: &WalkDirFilter, schema: &Schema, frame: Frame<'_>) -> bool {
+    filter.kept_out_by_exclude(link, true) || walk_ignores(link, true, schema, frame)
 }
 
 /// The one name a loop's reason gives the directory the link reaches back into, the
