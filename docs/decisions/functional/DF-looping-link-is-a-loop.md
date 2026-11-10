@@ -1,0 +1,40 @@
+# DF-looping-link-is-a-loop: a link whose resolution loops is a loop whatever its name, judged by the ignore files as a directory, and exits move with it in both directions
+
+**Date:** 2026-11-10
+
+## status: Accepted
+
+## 1. Context
+
+A link the walk could not resolve was split by one question, whether it resolved to a directory. A link to its own directory (`docs/up -> .`) answers yes and was reported as a loop. A link that names itself (`docs/self -> self`), or each link of a cycle (`docs/a2 -> b` beside `docs/b -> a2`), answers no, because resolving it fails with a loop, and it was then judged as a broken link naming a file: by `extensions`, and by the ignore files as a file. So `docs/self.md -> self.md` was reported with exit `2` while `docs/self -> self` and `docs/logo.png -> logo.png` passed with `success`, and `grund check docs/self` said `path does not exist` of a link that exists. Reported as [issue #1331](https://github.com/agent-grounds/grund/issues/1331).
+
+The walk's loop, for its part, asked the ignore files about the link without following it, so the walker saw an entry that is not a directory: a pattern written for a directory, `docs/up/`, never matched it, and the loop was reported although the ignore files keep that directory out of the scan.
+
+## 2. Decision
+
+A link whose resolution loops is a loop, whatever its name ([§FS-scan.scope.links.owed.cycle](../../functional-spec/FS-scan.md#scopelinksowedcycle-a-link-whose-resolution-loops-is-a-loop-whatever-its-name)). It is judged as the directory a loop names: a hidden name, `[scan] exclude` and the ignore files asked as of a directory, and never `extensions`. Named as the `<path>`, it is reported at the link as the walk reports it ([§FS-scan.scope.links.unresolvable.named](../../functional-spec/FS-scan.md#scopelinksunresolvablenamed-a-looping-link-named-as-the-path-is-reported-at-the-link-not-as-missing)). A dangling link stays a broken link, and the extensionless blind spot of [§FS-scan.scope.links.blind-spot](../../functional-spec/FS-scan.md#scopelinksblind-spot-a-broken-link-with-no-extension-is-a-declared-blind-spot) is unchanged.
+
+The ignore files are asked once, as of a directory, and not as a file *or* a directory. Either-way would let `docs/*` beside `!docs/*/` drop a loop whose directory the same rules keep, which is the silent skip this decision removes.
+
+### 2.1 Exits that move
+
+| Tree | Before | After |
+|---|---|---|
+| A self-link or a cycle of links whose name has no listed extension (`docs/self -> self`, `docs/logo.png -> logo.png`, `docs/a2 -> b` with `docs/b -> a2`), not ignored, hidden or excluded | `0`, `success` | `2`, `error: docs/self: unreadable symlink: …` at each link |
+| Such a link, or `docs/up -> .`, that the ignore files drop as a file but keep as a directory (`docs/*` with `!docs/*/`) | `0` | `2`, the loop reported at the link |
+| A link to its own directory covered only by a directory pattern (`docs/up -> .` with `docs/up/` in `.gitignore`) | `2`, the loop reported | `0`, the link is not walked |
+| `grund check docs/self`, naming a looping link | `2`, `error: path does not exist: docs/self` | `2`, the loop reported at `docs/self` |
+
+## 3. The correction route
+
+These exits flip a shipped verdict, which [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered) allows only by a named route. [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids) is the route, and all five conditions hold.
+
+1. *Prior prohibition.* The old exit `0` over a looping link violated [§REQ-no-missed-citation.1](../../requirements/REQ-no-missed-citation.md#1-no-silent-skips): the scan could not read through the link, and the run passed as if its report were complete. The old exit `2` over a loop the ignore files drop as a directory violated [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded), which declares ignore-file matches outside every walk: a failure of a walk into that region is a failure in a region the run never reads. Each prohibition already applied when the verdict it forbids shipped.
+2. *Accepted proof.* This record. [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s deprecation path does not fit, because nothing a user writes selects the old verdict, so there is no old form to carry beside a new one. [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)'s mechanical migration does not fit, because nothing a user wrote is at fault, so there is no command to run on anyone's behalf.
+3. *Named release.* The release note below names each exit that moves, who notices and what to do.
+4. *Actionable findings.* Where `0` becomes `2`, the line is the one a looping `docs/self.md` already gets: `error: docs/self: unreadable symlink: filesystem loop or indirection limit (e.g. symlink loop); make the path readable, or keep it out of the scan`, located at the link and naming the action. Where `2` becomes `0` nothing replaces it, because the failure is outside the scan.
+5. *No new licence.* This route cannot justify ordinary policy tightening, feature removal, or a prohibition invented by this change, and it is used for none of them. No check, diagnostic or prohibition is added: the report is the existing loop report, owed by points that already named a loop a per-file failure and held only a broken link to `extensions`.
+
+## release-note: Release note
+
+- [§FS-scan.scope.links.owed.cycle](../../functional-spec/FS-scan.md#scopelinksowedcycle-a-link-whose-resolution-loops-is-a-loop-whatever-its-name), [§DF-looping-link-is-a-loop](DF-looping-link-is-a-loop.md#df-looping-link-is-a-loop-a-link-whose-resolution-loops-is-a-loop-whatever-its-name-judged-by-the-ignore-files-as-a-directory-and-exits-move-with-it-in-both-directions), [§FS-scan.scope.links.unresolvable.named](../../functional-spec/FS-scan.md#scopelinksunresolvablenamed-a-looping-link-named-as-the-path-is-reported-at-the-link-not-as-missing), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids): **a symlink that points into a loop is reported as a loop whatever its file name, and is judged by the ignore files as the directory a loop names.** **From `0` to `2`:** a self-link or a cycle of links with no extension or an extension the scan does not read, such as `docs/self -> self`, `docs/logo.png -> logo.png` or `docs/a -> b` beside `docs/b -> a`, is now reported at each link, as `docs/self.md -> self.md` already was; so is a looping link that the ignore files drop as a file but keep as a directory (`docs/*` with `!docs/*/`). Remove or repair the link, or keep it out of the scan with an ignore pattern, a hidden name or `[scan] exclude`. **From `2` to `0`, nothing to do:** a link back to its own directory, such as `docs/up -> .`, that only a directory pattern such as `docs/up/` covers is no longer reported, because the ignore files keep that directory out of the scan. **Exit stays `2`, the message moves:** `grund check docs/self`, naming a looping link, reports the loop at the link where it said `path does not exist`. **Who notices:** a gate that passed over a tree holding such a link, and a script that matched the old message. The verdicts move by the correction route of [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), because the old exit `0` broke [§REQ-no-missed-citation.1](../../requirements/REQ-no-missed-citation.md#1-no-silent-skips) and the old exit `2` over an ignored directory broke [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded); every finding that replaces a verdict names its location and the action to take. Closes [issue #1331](https://github.com/agent-grounds/grund/issues/1331).

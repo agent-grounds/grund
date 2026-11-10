@@ -45,6 +45,17 @@ impl Tree {
         self
     }
 
+    /// Makes the tree a git repository, so its `.gitignore` is read.
+    fn git(self) -> Self {
+        let status = Command::new("git")
+            .args(["init", "-q"])
+            .current_dir(&self.0)
+            .status()
+            .expect("run git init");
+        assert!(status.success(), "git init failed");
+        self
+    }
+
     fn grund(&self, args: &[&str]) -> Run {
         let output = Command::new(env!("CARGO_BIN_EXE_grund"))
             .args(args)
@@ -190,5 +201,30 @@ fn an_ignored_looping_link_stays_silent() {
 #[test]
 fn a_hidden_looping_link_stays_silent() {
     let tree = Tree::new("hidden").link(".self", ".self");
+    tree.grund(&["check"]).assert_silent();
+}
+
+/// A loop is judged by the ignore files as a directory and only as one: a `.gitignore` that drops
+/// every entry of `docs/` but keeps its directories keeps a looping link, which is then owed a
+/// report whatever its name (§FS-scan.scope.links.owed.cycle).
+#[test]
+fn a_looping_link_kept_as_a_directory_is_reported() {
+    let tree = Tree::new("negated")
+        .git()
+        .link("self", "self")
+        .link("logo.png", "logo.png")
+        .write(".gitignore", "docs/*\n!docs/*/\n!docs/*.md\n");
+    tree.grund(&["check"])
+        .assert_reports(&["docs/self", "docs/logo.png"]);
+}
+
+/// A link back to its own directory covered only by a directory pattern is dropped as a
+/// directory, so it stays silent (§FS-scan.scope.links.owed.cycle).
+#[test]
+fn a_link_to_its_own_directory_ignored_as_a_directory_stays_silent() {
+    let tree = Tree::new("walk-ignored")
+        .git()
+        .link("up", ".")
+        .write(".gitignore", "docs/up/\n");
     tree.grund(&["check"]).assert_silent();
 }
