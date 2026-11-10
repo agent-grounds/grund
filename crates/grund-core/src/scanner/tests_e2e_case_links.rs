@@ -36,7 +36,6 @@ fn failed_paths(root: &Path, dir: &Path) -> Vec<PathBuf> {
 }
 
 #[test]
-#[ignore = "red until #1330 reads a dangling manifest as unread rather than absent; implement removes this"]
 fn a_dangling_spec_refs_fails_the_case_at_the_link() {
     let (root, dir) = case_dir("e2e_case_dangling_spec_refs");
     symlink("spec.refs.gone", &dir.join("spec.refs"));
@@ -45,7 +44,6 @@ fn a_dangling_spec_refs_fails_the_case_at_the_link() {
 }
 
 #[test]
-#[ignore = "red until #1330 reads a dangling manifest as unread rather than absent; implement removes this"]
 fn a_dangling_command_args_fails_the_case_at_the_link() {
     let (root, dir) = case_dir("e2e_case_dangling_command_args");
     symlink("command.args.gone", &dir.join("command.args"));

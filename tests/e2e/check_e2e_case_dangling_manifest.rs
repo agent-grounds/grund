@@ -69,25 +69,21 @@ fn assert_fails_at_the_link(name: &str, manifest: &str, args: &[&str]) {
 }
 
 #[test]
-#[ignore = "red until #1330 reads a dangling manifest as unread rather than absent; implement removes this"]
 fn a_dangling_spec_refs_fails_the_whole_tree_check_at_the_link() {
     assert_fails_at_the_link("spec-refs-tree", "spec.refs", &["check"]);
 }
 
 #[test]
-#[ignore = "red until #1330 reads a dangling manifest as unread rather than absent; implement removes this"]
 fn a_dangling_spec_refs_fails_the_check_narrowed_to_its_case() {
     assert_fails_at_the_link("spec-refs-case", "spec.refs", &["check", "e2e/cases/b"]);
 }
 
 #[test]
-#[ignore = "red until #1330 reads a dangling manifest as unread rather than absent; implement removes this"]
 fn a_dangling_command_args_fails_the_whole_tree_check_at_the_link() {
     assert_fails_at_the_link("command-args-tree", "command.args", &["check"]);
 }
 
 #[test]
-#[ignore = "red until #1330 reads a dangling manifest as unread rather than absent; implement removes this"]
 fn a_dangling_command_args_fails_the_check_narrowed_to_its_case() {
     assert_fails_at_the_link(
         "command-args-case",
