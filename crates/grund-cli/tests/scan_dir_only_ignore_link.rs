@@ -132,8 +132,6 @@ impl Drop for Tree {
 /// holding `docs/ext/` and `real/`. The same lines keep the link out when `real` opens, so they
 /// keep it out when it does not.
 #[test]
-#[ignore = "red until #1334 judges an unopenable directory link as a directory against the ignore \
-            files; implement removes this"]
 fn a_directory_only_pattern_keeps_out_a_link_whose_target_cannot_be_opened() {
     let mut tree = Tree::new("slash", "docs/ext/\nreal/\n");
     tree.link("docs/ext", "../real");
@@ -145,8 +143,6 @@ fn a_directory_only_pattern_keeps_out_a_link_whose_target_cannot_be_opened() {
 
 /// The ticket's `loopslash` case: `docs/self -> .` names a directory, so `docs/self/` covers it.
 #[test]
-#[ignore = "red until #1334 judges a looping link as a directory against the ignore files; \
-            implement removes this"]
 fn a_directory_only_pattern_keeps_out_a_loop() {
     let tree = Tree::new("loopslash", "docs/self/\n");
     tree.link("docs/self", ".");
@@ -156,8 +152,6 @@ fn a_directory_only_pattern_keeps_out_a_loop() {
 /// The walker's precedence holds on the error path as it does when the target opens: a later
 /// `!docs/ext/` re-includes the link that `docs/ext` ignored, so its report is owed.
 #[test]
-#[ignore = "red until #1334 judges an unopenable directory link as a directory against the ignore \
-            files; implement removes this"]
 fn a_directory_only_negation_re_includes_a_link_whose_target_cannot_be_opened() {
     let mut tree = Tree::new("renegate", "docs/ext\n!docs/ext/\nreal/\n");
     tree.link("docs/ext", "../real");

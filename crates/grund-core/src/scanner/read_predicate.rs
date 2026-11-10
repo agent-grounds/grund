@@ -300,9 +300,11 @@ fn under_root(
 /// Whether the ignore files the walk honours drop `path` (§AR-scanner.1.1).
 /// Where the entry is on disk the walker itself answers, one level deep from its
 /// parent, its parents' ignore files and the global ones included, which is
-/// also how `walk_errors.rs` asks about a link the walker could not resolve;
-/// where it is not, the same files are
-/// matched against the name in the walker's order of precedence.
+/// also how `walk_errors.rs` asks about a dangling link; where it is not, and
+/// where `path` is a link the caller says names a directory, the same files are
+/// matched against the name in the walker's order of precedence, so a link the
+/// walker could not resolve faces the directory patterns the followed link does
+/// (§FS-scan.scope.links.owed).
 /// Both use one resolved global file (§FS-scan.scope.ignore-files.pathname), and
 /// under a mounted root none, with only the ignore files at and below it
 /// (§FS-remote-projects.ignore).
@@ -316,6 +318,10 @@ pub(super) fn ignored(path: &Path, is_dir: bool, mounted: Option<&Path>) -> bool
 /// (§FS-scan.scope.ignore-files.pathname). Resolution errors stop the owning
 /// scan through `scannable_walker`; these optional rule queries add no verdict.
 fn ignored_with(path: &Path, is_dir: bool, global: &Arc<GlobalExcludes>) -> bool {
+    // §FS-scan.scope.links.owed: a link naming a directory is judged as one, opens or not.
+    if is_dir && path_is_symlink(path) {
+        return ignored_by_rules(path, true, global).is_some();
+    }
     walker_ignores(path, false, global)
         .unwrap_or_else(|| ignored_by_rules(path, is_dir, global).is_some())
 }
@@ -332,8 +338,8 @@ fn ignoring_rule(path: &Path, is_dir: bool, global: &Arc<GlobalExcludes>) -> Opt
 }
 
 /// The walker's own answer for an entry on disk, `None` where nothing is there.
-/// Stub eligibility follows links like the scan; the unresolved-link error probe
-/// instead asks about the link entry without trying to resolve it again.
+/// Stub eligibility follows links like the scan; the probe for a path that is
+/// no directory link asks about the entry without trying to resolve it.
 fn walker_ignores(path: &Path, follow_links: bool, global: &Arc<GlobalExcludes>) -> Option<bool> {
     let Some(parent) = path.parent() else {
         return Some(false);
