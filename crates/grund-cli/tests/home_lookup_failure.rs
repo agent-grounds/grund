@@ -336,6 +336,7 @@ fn dangling_outward_home_link_stays_quiet_on_version_2() {
 
 /// §FS-config-v2.schema.places.boundaries.3.1: a place still inside the root where the lookup
 /// stops is not refused at load; its failure is the scan failure at the home.
+/// It is the link of §FS-scan.scope.links.owed.refused, so its line is the unopenable link's.
 #[test]
 fn inward_home_link_with_a_denied_parent_is_reported_on_version_2() {
     let mut fixture = Fixture::bare("inward-v2", V2_OUTWARD_HOME, "# FS-a: A\n\nPlain.\n");
@@ -347,7 +348,7 @@ fn inward_home_link_with_a_denied_parent_is_reported_on_version_2() {
     let output = fixture.check();
     let err = stderr(&output);
     assert_eq!(
-        lines_equal(&err, &format!("error: vals: {ROOT_V2}")),
+        lines_equal(&err, &format!("error: vals: unreadable symlink: {ROOT_V2}")),
         1,
         "{err}"
     );
