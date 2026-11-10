@@ -164,6 +164,8 @@ mod tests_context_homes;
 mod tests_declaration_line_titles;
 #[cfg(test)]
 mod tests_doc_comment_relative;
+#[cfg(all(test, unix))]
+mod tests_e2e_case_links;
 #[cfg(test)]
 mod tests_embedded_value_boundaries;
 #[cfg(test)]
