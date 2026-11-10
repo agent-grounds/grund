@@ -21,6 +21,20 @@ MAIN = {
     "docs/a.md": "# A\n\nSee [the old dead page](<{host}/dead-old>).\n\nSee [a live page](<{host}/ok>).\n",
     "docs/b.md": "# B\n\nBack to [A](a.md#a).\n\nAgain [the old dead page](<{host}/dead-old>).\n",
 }
+# Two URLs `lychee.toml` excludes that fail when requested, a 404 and a line anchor the page
+# lacks, the shapes of main's IANA and OpenSpec entries, beside a URL that resolves.
+EXCLUDED = {
+    "docs/a.md": "# A\n\n[excluded 404](<{host}/dead-excluded>)\n\n"
+                 "[excluded line anchor](<{host}/page#L6>)\n\n[a live page](<{host}/ok>)\n",
+}
+SELF_LINK = {
+    "docs/self.md": "# Self\n\n[this page](https://github.com/agent-grounds/grund/blob/main/docs/self.md)\n",
+}
+RED_UNTIL_1171 = unittest.skipUnless(
+    os.environ.get("GRUND_LINK_SWEEP_RUN_RED_TESTS") == "1",
+    "red until #1171: --all passes lychee.toml's exclude beside its self-link exclusions;"
+    " implement removes this",
+)
 
 
 @unittest.skipUnless(LYCHEE, "Link gate fixture requires CI-pinned lychee 0.23.0 on PATH")
@@ -41,6 +55,46 @@ class SweepTests(unittest.TestCase):
 
     def test_all_passes_a_clean_tree(self):
         gate = self.fixture({"docs/a.md": "# A\n\nSee [a live page](<{host}/ok>).\n"})
+
+        code, output = gate.run("--all", "docs")
+
+        self.assertEqual(["/ok"], sorted(gate.requested()), output)
+        self.assertEqual(0, code, output)
+
+    def excluding_fixture(self, files):
+        """main's `lychee.toml` with the two loopback URLs of `EXCLUDED` added to its
+        `exclude` list (§AR-ci.3.1.1.1)."""
+        gate = LinkFixture()
+        self.addCleanup(gate.close)
+        config = gate.root / "lychee.toml"
+        host = re.escape(gate.base)
+        text = config.read_text(encoding="utf-8")
+        self.assertEqual(1, text.count("\nexclude = [\n"), "lychee.toml has no exclude list")
+        config.write_text(
+            text.replace(
+                "\nexclude = [\n",
+                f"\nexclude = [\n  '^{host}/dead-excluded$',\n  '^{host}/page#L[0-9]+$',\n",
+            ),
+            encoding="utf-8",
+        )
+        gate.commit_main(files)
+        return gate
+
+    def test_all_never_requests_a_url_lychee_toml_excludes_without_a_self_link(self):
+        """The control: with no self-link the wrapper adds no exclusion of its own, and the
+        config's list holds (§AR-ci.3.1.1.1)."""
+        gate = self.excluding_fixture(EXCLUDED)
+
+        code, output = gate.run("--all", "docs")
+
+        self.assertEqual(["/ok"], sorted(gate.requested()), output)
+        self.assertEqual(0, code, output)
+
+    @RED_UNTIL_1171
+    def test_all_never_requests_a_url_lychee_toml_excludes_beside_a_self_link(self):
+        """A resolving self-link adds the wrapper's exact exclusion, which extends the config's
+        list rather than replacing it (§AR-ci.3.1.1.1)."""
+        gate = self.excluding_fixture({**EXCLUDED, **SELF_LINK})
 
         code, output = gate.run("--all", "docs")
 

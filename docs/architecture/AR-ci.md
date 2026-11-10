@@ -120,6 +120,17 @@ routing, exact self-link exclusions, hook invocation, checked documents, and
 lychee version stay as described in [§AR-ci.3.1](AR-ci.md#31-citations-and-links), apart from the per-URL re-checks of
 [§AR-ci.3.1.2](AR-ci.md#312-a-github-5xx-is-settled-through-the-api) and [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more); no outer whole-tree retry is added.
 
+##### 3.1.1.1 The config's exclusions hold in every network pass
+
+`lychee.toml`'s `exclude` list holds in every network pass, the sweep's
+included, beside the exact self-link exclusions of [§AR-ci.3.1](AR-ci.md#31-citations-and-links): a URL the config
+excludes is never requested, whatever self-links the inputs carry. Lychee
+0.23.0 lets an `exclude` given on its command line replace the config's list
+rather than add to it, so the wrapper's own exclusions extend that list and
+never stand in for it. `tests/integration/test_check_links_sweep.py` holds
+`--all` to this against a loopback host, with a resolving self-link among the
+inputs and without one.
+
 #### 3.1.2 A GitHub 5xx is settled through the API
 
 GitHub's HTML views fail to serve for long stretches while the resource behind
