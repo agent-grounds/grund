@@ -62,6 +62,7 @@ mod declaration_line;
 mod declaration_lines;
 mod e2e;
 mod e2e_case;
+mod e2e_case_failures;
 mod embedded_value_context;
 mod embedded_values;
 mod extents;
@@ -121,6 +122,7 @@ pub(crate) use agent_entrypoints::{
 pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is_numeric};
 pub(crate) use declaration_lines::DeclarationLines;
 pub(crate) use e2e::e2e_case_dir_name;
+pub(crate) use e2e_case_failures::with_e2e_case_failures;
 pub(crate) use embedded_value_context::without_value_tag;
 pub(crate) use legacy::{
     collect_local_legacy_markdown_citations, configured_catalog_ids, legacy_catalog_ids,

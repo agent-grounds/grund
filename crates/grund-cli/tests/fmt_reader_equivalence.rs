@@ -222,7 +222,6 @@ fn assert_e2e_case_row(shape_name: &str, scope: Option<&str>, mode: &str) {
 }
 
 #[test]
-#[ignore = "red until #1329 fmt runs the E2E case pass on every scope; the fix removes this"]
 fn fmt_names_an_unreadable_case_manifest_wherever_check_does_on_the_same_scope() {
     // Every row runs before the verdict, so a failure names each row that fails.
     let failed: Vec<String> = E2E_CASE_ROWS

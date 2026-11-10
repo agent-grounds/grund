@@ -252,6 +252,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         frame,
         scope,
         explicit_scope,
+        frame.run.scope.resolution_wide,
         &walked.e2e_cases,
         &mut errors,
         &mut findings,

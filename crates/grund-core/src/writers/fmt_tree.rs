@@ -12,14 +12,16 @@ use super::fmt_rewrite::{FmtLineOpts, rewrite_file};
 use super::fmt_row::FmtRow;
 use super::fmt_section_lock::{lock_targets, section_lock_changes};
 use super::fmt_settle::settle_headings;
-use crate::checker::{KindIndexEntries, KindIndexFiles};
+use crate::checker::{
+    KindIndexEntries, KindIndexFiles, partition_scan_failures, path_report_scope,
+};
 use crate::config::{Config, display_path, fmt_excluded};
 use crate::grammar::FMT_DIRECTIVE;
 use crate::model::{Catalog, Code, Diagnostic, ReadingConflict};
 use crate::resolver::{SettledHeadings, ShorthandTargets, WorkspaceContext, index_link_targets};
 use crate::scanner::{
     ApiScanError, api_scan_error, may_give_locked_heading, walk_scannable_files,
-    walk_scannable_files_reporting,
+    walk_scannable_files_reporting, with_e2e_case_failures,
 };
 
 /// §FS-fmt.6.6: whether this invocation turns the cross-reference pass on by
@@ -178,7 +180,7 @@ pub(super) fn plan_tree<'a>(
     // §FS-fmt.6.3: the link pass needs the whole project's declarations, because
     // a wrap's URL comes from a home file that may sit outside the rewrite scope.
     // §FS-fmt.2.4.5's scan is deferred instead, to the first shorthand candidate.
-    let walked =
+    let mut walked =
         walk_scannable_files_reporting(config.schema(), config.frame(), scope, explicit_scope)?;
     // §FS-fmt.2.5.1: the files this config takes out of every rewrite. The walk
     // above is untouched — only what happens to each file's bytes changes.
@@ -235,8 +237,28 @@ pub(super) fn plan_tree<'a>(
     // §FS-fmt.3.1: the paths this walk could not read, rendered here while the
     // config that names them is at hand — the same account `check` owes of the
     // tree it walks (§FS-check.2.4).
-    let scan_errors: Vec<ApiScanError> = walked
-        .errors
+
+    // §FS-fmt.7.2, §FS-declarations.e2e-case.failure: a run that read the declaration set met
+    // every case and refused on a bad one; any other reads the cases `check` reads on this scope.
+    let unread = if findings.is_some() {
+        std::mem::take(&mut walked.errors)
+    } else {
+        let report_scope = scope
+            .map(|path| path_report_scope(config.schema(), config.frame(), path, explicit_scope))
+            .transpose()?
+            .flatten();
+        let narrow =
+            |cases, names: &_| partition_scan_failures(cases, names, report_scope.as_ref()).0;
+        with_e2e_case_failures(
+            config.schema(),
+            config.frame(),
+            scope,
+            explicit_scope,
+            &mut walked,
+            narrow,
+        )
+    };
+    let scan_errors: Vec<ApiScanError> = unread
         .iter()
         .map(|error| api_scan_error(opts.render.frame(), error))
         .collect();
