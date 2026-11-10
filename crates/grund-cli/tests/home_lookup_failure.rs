@@ -258,11 +258,11 @@ const V2_OUTWARD_HOME: &str = "grund_config_version = 2\nproject_name = \"outwar
 /// §FS-config-v2.schema.places.boundaries.3: the refusal at `vals`'s line in V2_OUTWARD_HOME.
 const OUTWARD_REFUSAL: &str = "error: grund.toml:9: place `vals` in `[schema.kinds.CONST] folders` links out of the project root";
 
-/// Runs `check` with `link` naming `par/t` outside the project and `par` denied.
-fn outward_denied_check(name: &str, config: &str, link: &str) -> Option<Output> {
+/// Runs `check` with `link` naming `target` (under `par/`) outside the project and `par` denied.
+fn outward_denied_check(name: &str, config: &str, link: &str, target: &str) -> Option<Output> {
     let fixture = Fixture::bare(name, config, "# FS-a: A\n\nPlain.\n");
     let outside = outside_tree(&fixture, name);
-    std::os::unix::fs::symlink(outside.join("par/t"), fixture.root.join(link)).unwrap();
+    std::os::unix::fs::symlink(outside.join(target), fixture.root.join(link)).unwrap();
     let par = outside.join("par");
     fs::set_permissions(&par, fs::Permissions::from_mode(0o000)).unwrap();
     let denied = fs::symlink_metadata(par.join("t")).is_err();
@@ -276,7 +276,7 @@ fn outward_denied_check(name: &str, config: &str, link: &str) -> Option<Output> 
 /// outside the project decides nothing.
 #[test]
 fn outward_root_link_with_a_denied_parent_is_pruned_on_version_1() {
-    let Some(output) = outward_denied_check("out-v1", V1_DEFAULT_ROOTS, "src") else {
+    let Some(output) = outward_denied_check("out-v1", V1_DEFAULT_ROOTS, "src", "par/t") else {
         return;
     };
     assert!(
@@ -291,12 +291,29 @@ fn outward_root_link_with_a_denied_parent_is_pruned_on_version_1() {
 /// refused at load as it is with the target open, so a mode outside the project decides nothing.
 #[test]
 fn outward_home_link_with_a_denied_parent_is_refused_on_version_2() {
-    let Some(output) = outward_denied_check("out-v2", V2_OUTWARD_HOME, "vals") else {
+    let Some(output) = outward_denied_check("out-v2", V2_OUTWARD_HOME, "vals", "par/t") else {
         return;
     };
     let err = stderr(&output);
     assert_eq!(lines_equal(&err, OUTWARD_REFUSAL), 1, "{err}");
     assert!(!err.contains("permission denied"), "{err}");
+    assert_exit(&output, 2);
+}
+
+/// §FS-config-v2.schema.places.boundaries.3.1: a dangling link whose lookup a directory refuses
+/// cannot be told from a present one, so it is judged on the partial resolution and refused.
+#[test]
+fn dangling_outward_home_link_with_a_denied_parent_is_refused_on_version_2() {
+    let Some(output) = outward_denied_check(
+        "out-v2-dangling-denied",
+        V2_OUTWARD_HOME,
+        "vals",
+        "par/missing",
+    ) else {
+        return;
+    };
+    let err = stderr(&output);
+    assert_eq!(lines_equal(&err, OUTWARD_REFUSAL), 1, "{err}");
     assert_exit(&output, 2);
 }
 
@@ -346,7 +363,7 @@ fn outward_root_link_named_as_a_read_file_is_reported() {
         [scan]\ninclude = [\"docs\", \"far.md\"]\n\n\
         [id]\nformat = \"{kind}-{slug}\"\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
         [[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n";
-    let Some(output) = outward_denied_check("out-file", INCLUDE, "far.md") else {
+    let Some(output) = outward_denied_check("out-file", INCLUDE, "far.md", "par/t") else {
         return;
     };
     assert_eq!(
