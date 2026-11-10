@@ -8,6 +8,10 @@
 //! built under the system temp directory, so run with a `TMPDIR` that no
 //! grund.toml encloses.
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -56,7 +60,7 @@ impl Fresh {
 
 impl Drop for Fresh {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

@@ -2,6 +2,10 @@
 //! The CLI's verdict, site and JSON shape stay fixed; the suggested edit must
 //! preserve the marked index entry that §FS-check.3.18.5 requires.
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use serde_json::Value;
 use std::fs;
 use std::path::PathBuf;
@@ -82,7 +86,7 @@ folders = ["docs/requirements"]
 
 impl Drop for Repo {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).expect("remove test repository");
+        remove_fixture_tree(&self.0, "remove test repository");
     }
 }
 

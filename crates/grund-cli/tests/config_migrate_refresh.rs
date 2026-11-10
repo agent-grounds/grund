@@ -1,6 +1,10 @@
 //! Black-box migration follow-up (§FS-config-migrate.6.5): port the #831
 //! reproducer, keeping successful config-only writes separate from advice.
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -67,7 +71,7 @@ impl Fixture {
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).expect("remove fixture");
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

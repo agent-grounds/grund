@@ -2,10 +2,15 @@
 //! and §FS-rule-refusals.selectors. The four-spec fixture distinguishes a
 //! chapter citation from a citation elsewhere and from an absent chapter.
 
+#[path = "../support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use super::support::{assert_run, case_repo, run, text, write};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Output;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[cfg(unix)]
 #[path = "offer_scope_cleanup.rs"]
@@ -190,15 +195,17 @@ fn rule_offers_keep_typed_chapter_literal_and_predicate_scope() {
 struct Configured(PathBuf);
 
 impl Configured {
+    /// The root is named from the process and a process-wide serial, never the clock
+    /// (§AR-ci.10.1), and claimed with an exclusive `create_dir` before anything is written into
+    /// it, so a name already taken is refused rather than adopted and then removed (§AR-ci.10.2).
     fn new() -> Self {
+        static SERIAL: AtomicUsize = AtomicUsize::new(0);
+        let serial = SERIAL.fetch_add(1, Ordering::Relaxed);
         let root = std::env::temp_dir().join(format!(
-            "grund-1001-configured-{}-{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
+            "grund-1001-configured-{}-{serial}",
+            std::process::id()
         ));
+        fs::create_dir(&root).expect("claim the isolated configured fixture root");
         for file in [
             "grund.toml",
             "requirements.md",
@@ -221,7 +228,7 @@ impl Configured {
 
 impl Drop for Configured {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).expect("remove isolated configured fixture");
+        remove_fixture_tree(&self.0, "remove isolated configured fixture");
     }
 }
 

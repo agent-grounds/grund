@@ -1,6 +1,10 @@
 //! #939's reproducer, ported to the CLI harness: refused writes explain every
 //! blocking cause without completed-write claims (§FS-config-migrate.2.2).
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -42,7 +46,7 @@ impl Fixture {
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

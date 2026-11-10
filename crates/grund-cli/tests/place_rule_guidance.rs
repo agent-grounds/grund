@@ -2,6 +2,10 @@
 //! No production parser is used: both refusal and suggested configuration run
 //! through the shipped executable, including the existing direction check.
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
@@ -57,7 +61,7 @@ impl Repo {
 
 impl Drop for Repo {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

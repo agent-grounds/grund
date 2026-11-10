@@ -4,6 +4,10 @@
 //! do not bar this process; a skip supplies no evidence for the regression.
 #![cfg(unix)]
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
@@ -105,8 +109,10 @@ impl Fixture {
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        self.mode(0o755);
-        fs::remove_dir_all(&self.root).expect("remove fixture");
+        // A reset that fails leaves the tree unremovable, which the removal then reports, so
+        // neither raises while unwinding (§AR-ci-fixture-cleanup.1).
+        let _ = fs::set_permissions(self.root.join("values"), fs::Permissions::from_mode(0o755));
+        remove_fixture_tree(&self.root, "remove fixture");
     }
 }
 

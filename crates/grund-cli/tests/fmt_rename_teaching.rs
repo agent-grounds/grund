@@ -2,6 +2,10 @@
 //! help and freshly generated guidance must teach it (§FS-cli.2.2,
 //! §FS-cli.2.3.3, §FS-init.2.3.4.9). Ported from the ticket-local reproducer.
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -57,7 +61,7 @@ impl Fixture {
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

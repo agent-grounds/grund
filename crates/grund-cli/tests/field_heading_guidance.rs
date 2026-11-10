@@ -1,6 +1,10 @@
 //! Binary regressions for the appended field repair (§FS-declarations.checks.unmarked-heading.2.2).
 //! Field recognition and v1 output remain §FS-fields.identity.name and §FS-fields.v1.
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use serde_json::{Value, json};
 use std::fs;
 use std::path::PathBuf;
@@ -56,7 +60,7 @@ impl Fixture {
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

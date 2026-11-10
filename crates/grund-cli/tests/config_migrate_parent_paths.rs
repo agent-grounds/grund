@@ -3,6 +3,10 @@
 //! §FS-config-migrate.3.1.5.1). Ports tool report grund.267's run.sh to the CLI
 //! harness; the scanner remains the oracle for what version 1 reads.
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -169,7 +173,7 @@ impl Fixture {
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.root).unwrap();
+        remove_fixture_tree(&self.root, "remove fixture");
     }
 }
 

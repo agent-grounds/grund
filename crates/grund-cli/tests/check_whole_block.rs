@@ -3,6 +3,10 @@
 //! and every way of naming the tree reports the same findings; and one `grund init`
 //! per project of a fresh workspace, in either order, leaves none (grund#931).
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
@@ -99,7 +103,7 @@ impl Fixture {
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).expect("remove fixture");
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

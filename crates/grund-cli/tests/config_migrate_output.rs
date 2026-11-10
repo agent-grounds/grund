@@ -2,6 +2,10 @@
 //! §FS-config-migrate.2.2, §FS-config-migrate.6.5). The fixture and tree checks
 //! port triage's run.sh; assertions use the CLI, without a second renderer.
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -75,7 +79,7 @@ impl Fixture {
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

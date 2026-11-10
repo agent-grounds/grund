@@ -1,5 +1,9 @@
 //! Linux filesystem fault injection for §AR-ci.10.6; never linked into grund.
 
+#[path = "fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -91,6 +95,6 @@ impl Result {
 
 impl Drop for Probe {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).expect("strict refusal probe cleanup");
+        remove_fixture_tree(&self.0, "strict refusal probe cleanup");
     }
 }
