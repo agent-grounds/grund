@@ -18,6 +18,40 @@ const MARKER_HASH: &str = "[reference]\nmarker = \"#\"\n";
 /// warnings a version 1 caution would add to (§FS-check.checks.config-version-1).
 const MARKER_AT_V2: &str = "grund_config_version = 2\n\n[schema]\nmarker = \"@\"\n";
 
+/// §FS-config.1.5: locate by lexical ancestors, then retain canonical project identity.
+#[cfg(unix)]
+#[test]
+#[ignore = "red until #1326 discovery keeps lexical parents; implement removes this"]
+fn linked_path_discovery_keeps_the_lexical_config_and_canonical_root() {
+    let root = test_root("linked_path_discovery_keeps_the_lexical_config_and_canonical_root");
+    let project = root.join("project");
+    write(&project.join("grund.toml"), MARKER_AT_V2);
+    write(&root.join("outside/cases/b/note.md"), "Note.\n");
+    std::os::unix::fs::symlink(root.join("outside/cases"), project.join("cases")).unwrap();
+    let mut failures = Vec::new();
+    for stranger in [false, true] {
+        if stranger {
+            write(
+                &root.join("outside/grund.toml"),
+                "grund_config_version = 2\n\n[schema]\nmarker = \"#\"\n",
+            );
+        }
+        for path in ["cases", "cases/b", "cases/b/note.md"] {
+            let config = load_config(&project.join(path)).expect("load config through link");
+            if config.marker != "@" || config.root != canonical_test_path(&project) {
+                failures.push(format!(
+                    "{path}, stranger={stranger}: expected marker @ and project root {}; \
+                     got marker {} and root {}",
+                    canonical_test_path(&project).display(),
+                    config.marker,
+                    config.root.display()
+                ));
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
 // §FS-config.1: the bare root-visible `grund.toml` is a config root on its
 // own — the form `grund init` now generates (§FS-init.2.4).
 #[test]

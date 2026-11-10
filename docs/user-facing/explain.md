@@ -113,6 +113,17 @@ and nothing else of the file, so a `grund.toml` that `grund check` refuses is
 still answered: that is usually when you are asking. Only a file whose version
 cannot be read is refused, exactly as every command refuses it.
 
+The upward search keeps the path you supplied through directory links
+([§FS-config.1.5](../functional-spec/FS-config.md#15-the-ancestor-search-keeps-the-path-through-directory-links)).
+If `e2e/cases` links outside your project, `grund check e2e/cases/b`,
+`grund config explain --path e2e/cases/b`, and
+`grund config migrate --to 2 e2e/cases/b` still search the ancestors of
+`e2e/cases/b` in your project. They do not jump to a config above the link's
+target. Absolute paths through the same link work the same way. The selected
+config still applies its usual validation: version 2 refuses a kind home linked
+outside the project, and a version-1 check still reports an unreadable manifest
+under the requested path. Fix the named home or file as the finding directs.
+
 With no `grund.toml` at all, the answer gives both versions, version 2 first,
 after one line saying which is which:
 
