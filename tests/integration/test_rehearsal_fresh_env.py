@@ -40,10 +40,6 @@ EXACT_CASE = {"npm_config_offline": "true", "NPM_CONFIG_OFFLINE": "true",
 # §FS-distribution-candidate.5.2.2: each chooses the global npmrc, where `offline=true` would
 # turn npm offline.
 GLOBAL_NPMRC_CHOOSERS = {"PREFIX": "chosen-prefix", "DESTDIR": "chosen-destdir"}
-RED_UNTIL_FIX = unittest.skipUnless(
-    os.environ.get("GRUND_FRESH_ENV_RUN_RED_TESTS") == "1",
-    "red until fresh_env drops PREFIX and DESTDIR; the fix removes this",
-)
 # Asks in a process of its own, whose exit removes what `keep` made, from a cwd of its choosing.
 CHILD = """
 import json, shutil, subprocess, sys
@@ -321,7 +317,6 @@ class InheritedNpmSettingTests(unittest.TestCase):
         own = self.own()
         self.assertEqual(own, self.fresh(EXACT_CASE))
 
-    @RED_UNTIL_FIX
     def test_no_variable_that_chooses_the_global_npmrc_survives(self):
         """`PREFIX` and `DESTDIR` go, and the npm settings stay what `fresh_env` names."""
         own, env = self.own(), self.fresh_env(GLOBAL_NPMRC_CHOOSERS)
