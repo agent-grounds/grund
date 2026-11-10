@@ -61,6 +61,8 @@ jobs:
     name: cargo bench nightly (shard ${{ matrix.shard }})
     needs: [bench-build]
     runs-on: ubuntu-latest
+    # §AR-ci.5.6: a stall no command's bound covers fails the shard, not the queue.
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:

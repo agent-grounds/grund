@@ -39,8 +39,6 @@ APT_DIRS = ("/etc/apt/", "/var/lib/apt/", "/var/cache/apt/")
 WRITES = re.compile(r"(?:>>?|\btee\s+(?:-a\s+)?)\s*\"?(/[^\s\"]*)")
 SENTINEL = re.compile(r"\[stub\] (?:apt-get|cargo) \w+")
 BASH = shutil.which("bash")
-RED = ("red until #1191: bench-shard's install runs each network command under a per-attempt "
-       "bound and retries it, and both shard jobs carry timeout-minutes; implement removes this")
 
 # The stand-ins log one tab-separated event per line to $STUB_DIR/log, and print what they are.
 NETWORK_STANDIN = r"""#!/usr/bin/env bash
@@ -326,11 +324,9 @@ class ShardInstallTests(unittest.TestCase):
         if problems:
             self.fail("\n" + "\n".join(problems))
 
-    @unittest.skip(RED)
     def test_the_pull_request_shard_install_is_bounded_and_retried(self):
         self.check(CI)
 
-    @unittest.skip(RED)
     def test_the_nightly_shard_install_is_bounded_and_retried(self):
         self.check(NIGHTLY)
 
