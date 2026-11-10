@@ -71,11 +71,17 @@ pub(super) fn e2e_cases_folder(schema: &Schema) -> Option<&str> {
 /// are a case's fixture directory and a case's file (§AR-scanner.1.relisted). Each is at the path
 /// that failed, spelled under the configured folder, and the first hides none after it
 /// (§AR-scanner.6.6).
+///
+/// `resolution_wide` is whether a path below the root reads the project's ordinary roots beside it
+/// (§FS-check.1.3.6.1): the run's own answer for `check`, and `check`'s answer for `fmt`, which
+/// reports the case failures `check` reports on the same scope (§FS-fmt.7.2).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn scan_e2e_cases(
     schema: &Schema,
     frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
+    resolution_wide: bool,
     walked_cases: &[PathBuf],
     reported: &mut Vec<ScanError>,
     findings: &mut Catalog,
@@ -97,8 +103,7 @@ pub(super) fn scan_e2e_cases(
     // the whole root, the report filter narrowing afterwards. Only a cases root the
     // ordinary scope misses is read through the path alone, which is the branch below.
     let narrowed_to_path = explicit_scope
-        && !(frame.run.scope.resolution_wide
-            && cases_root_in_ordinary_scope(schema, frame, &cases_root));
+        && !(resolution_wide && cases_root_in_ordinary_scope(schema, frame, &cases_root));
     if narrowed_to_path {
         let scope = scope.unwrap_or(Path::new("."));
         if path_is_file(&scope) {
