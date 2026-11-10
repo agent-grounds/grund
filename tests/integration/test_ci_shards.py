@@ -1,6 +1,6 @@
-"""§AR-ci.13.7 — each leg's cargo suite runs in shards, and the Python acceptance in a job
-of its own (§AR-ci.13.1, §AR-ci.3.4.3), so no gate waits on one long job
-(§AR-ci.requirements.1).
+"""§AR-ci.13.7 — each leg's cargo suite runs in shards, none linking the test targets twice
+(§AR-ci.13.7.1), and the Python acceptance in a job of its own (§AR-ci.13.1, §AR-ci.3.4.3),
+so no gate waits on one long job (§AR-ci.requirements.1).
 
 Read as text with the layout test's reader (§AR-ci.13.5). Each check returns the problems it
 finds, and runs against fixture workflows too, so a check that can no longer fail is caught.
@@ -13,9 +13,9 @@ from pathlib import Path
 
 from test_cargo_suite_shards import listed, placed
 from ci_workflow import ci_text, instances
-from test_ci_language_jobs import (CARGO_SUITE, SHARD, SHARDS, SUITES, SYSTEMS, called_fixture,
-                                   fixture, required_check_problems, saves, shard_command,
-                                   split_problems)
+from test_ci_language_jobs import (CARGO_SUITE, RUST_CHECKS, SHARD, SHARDS, SUITES, SYSTEMS,
+                                   called_fixture, fixture, required_check_problems, saves,
+                                   shard_command, split_problems)
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 import cargo_shards  # noqa: E402
@@ -74,6 +74,44 @@ def shard_problems(text):
     return problems
 
 
+# §AR-ci.13.7.1: the default-feature proof shard 1 keeps, and the build it replaced.
+CHECK = "cargo check --quiet --workspace --all-targets --locked"
+BUILD = "cargo build --quiet --workspace --all-targets --locked"
+LINKS = re.compile(r"\b(?:cargo (?:build|test)|python scripts/run_cargo_suite\.py)\b")
+
+
+def features(command):
+    """The `--features` a cargo command names, as a set; empty for the default features."""
+    return {feature for found in re.findall(r"--features[ =](\S+)", command)
+            for feature in found.split(",") if feature}
+
+
+def link_problems(text):
+    """§AR-ci.13.7.1: no shard links the workspace's test targets before its shard of the
+    suite under other features than the suite's, and shard 1 still checks them under the
+    default features with nothing linked."""
+    problems = []
+    for instance in instances(text):
+        if instance["aggregate"]:
+            continue
+        # One command per `&&` link, so a chain is read as the commands it runs.
+        runs = [part.strip() for command in instance["commands"] for part in command.split("&&")]
+        found = [(index, command) for index, command in enumerate(runs)
+                 if SHARD.search(command + " ")]
+        if not found:
+            continue
+        at, suite = found[0]
+        for command in runs[:at]:
+            whole = "--workspace" in command.split() and "--all-targets" in command.split()
+            if (LINKS.search(command) and whole and "--shard" not in command
+                    and features(command) != features(suite)):
+                problems.append(f"{instance_id(instance)!r} links the workspace's test targets "
+                                f"under other features than its suite's, before it: `{command}`")
+        if instance["shard"] == 1 and CHECK not in runs[:at]:
+            problems.append(f"{instance_id(instance)!r} does not run `{CHECK}` before its suite")
+    return problems
+
+
 def acceptance_problems(text):
     """§AR-ci.13.1: one Python acceptance job per leg, apart from the Python job."""
     found = [i for i in instances(text) if not i["aggregate"]]
@@ -104,6 +142,11 @@ class ShardTests(unittest.TestCase):
     def test_each_leg_runs_the_python_acceptance_in_a_job_of_its_own(self):
         self.assertEqual([], acceptance_problems(self.text))
 
+    @unittest.skip("red until #1225 makes shard 1's build step `cargo check`; implement removes this")
+    def test_no_shard_links_the_test_targets_twice(self):
+        # §AR-ci.13.7.1: a second set of test executables filled the runner's disk.
+        self.assertEqual([], link_problems(self.text))
+
     def test_the_shard_that_saves_is_the_one_dealt_the_command_agreement(self):
         # §AR-ci.13.4: only it builds the agreement's 1.95.0 target under target/agreement.
         # The weighed binaries are placed before the rest, so they alone fix where it lands.
@@ -123,6 +166,26 @@ class ShardCheckTests(unittest.TestCase):
         for text in (fixture(), called_fixture()):
             self.assertEqual([], shard_problems(text))
             self.assertEqual([], acceptance_problems(text))
+
+    def test_a_check_beside_the_suite_passes(self):
+        # §AR-ci.13.7.1: a check links nothing; a build under the suite's own features is reused.
+        build = RUST_CHECKS["build"]
+        self.assertEqual([], link_problems(called_fixture().replace(build, CHECK)))
+        same = f"{CHECK} && {BUILD} --features grund/test-workspace-load-count"
+        self.assertEqual([], link_problems(called_fixture().replace(build, same)))
+
+    def test_a_build_of_the_test_targets_under_other_features_is_caught(self):
+        # §AR-ci.13.7.1: the default-feature build before the suite links every target twice.
+        build = RUST_CHECKS["build"]
+        for command in (BUILD, "cargo test --no-run --workspace --all-targets --locked"):
+            with self.subTest(command=command):
+                text = called_fixture().replace(build, f"{CHECK} && {command}")
+                self.assertTrue(link_problems(text))
+
+    def test_a_shard_1_without_the_default_feature_check_is_caught(self):
+        # §AR-ci.13.7.1: dropping the build drops the proof it gave, which the check keeps.
+        text = called_fixture().replace(RUST_CHECKS["build"], "true")
+        self.assertTrue(link_problems(text))
 
     def test_shards_saving_twice_or_never_are_caught(self):
         # §AR-ci.13.4: a leg's shards share one key, so exactly one of them saves it.
