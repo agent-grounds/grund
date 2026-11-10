@@ -238,6 +238,10 @@ The matching crates must already resolve on crates.io before the publisher uploa
 
 Before each upload the publisher asks the registry what it already holds at that version. An artifact already there with the manifest's digest is skipped; one there with another digest stops the run without uploading anything else. With `--status-out` a run writes the state of every npm and PyPI artifact — `published`, `skipped`, `pending` or `failed` — with the candidate's version and manifest digest, and a run that stops reports itself partial. A rerun with the same candidate resumes from there. A release is complete only when every artifact the plan names is published: the crates and archives by the existing release, the rest by this publisher ([§FS-distribution.4.11](FS-distribution.md#411-the-full-ecosystem-release)).
 
+#### 8.5.1 A question that gets no answer is asked again
+
+A question about what a registry holds — an npm package's document, a PyPI release — that gets no HTTP answer at all, because the connection was refused, reset or closed before any response, is asked again, up to three times in all and a moment apart, before the publisher refuses. The refusal still never reads the unanswered registry as empty, and after its reason it names the transport error of the last attempt, so a sighting says whether the connection was refused, reset or dropped. An HTTP answer of any status, a 5xx included, is taken as given and not asked again. An upload or a token exchange is never repeated: a write that may have landed is settled by the next run's question about what the registry holds, and a readiness wait asks again by its own count ([§FS-distribution-candidate.8.4](FS-distribution-candidate.md#84-order-and-readiness)).
+
 ### 8.6 Checksums establish integrity, not identity
 
 The manifest's digests and the archives' `.sha256` files say a file is the one the rehearsal proved. They do not say who built it: build provenance and the registries' own attestations are required before publication is turned on, and signing and notarization are deferred.

@@ -20,9 +20,10 @@ import unittest
 from pathlib import Path
 
 from distribution_support import (
-    PUBLISH, SHA, VERSION, FakeRegistries, file_sha256, npm_integrity,
-    run, scratch, synthetic_candidate, tool_missing, write_receipts,
+    PUBLISH, SHA, VERSION, file_sha256, run, scratch, synthetic_candidate, tool_missing,
+    write_receipts,
 )
+from fake_registries import DROP, FakeRegistries, npm_integrity
 
 BUILD_TOOLS = ("cargo", "rustc", "maturin", "cibuildwheel")
 
@@ -357,6 +358,54 @@ class RecoveryTests(PublisherFixture):
         for item in (a for a in self.uploaded if a["registry"] == "npm"):
             expected = 2 if item["package"] == name else 1
             self.assertEqual(expected, puts.count(item["package"]), item["package"])
+
+
+class TransportFailureTests(PublisherFixture):
+    """§FS-distribution-candidate.8.5.1 — a question that gets no HTTP answer is asked
+    again before it is refused; a write is never repeated. The first two landed as
+    `expectedFailure`, one commit before the publisher asks again, and come off it in the
+    commit that makes it (#1229)."""
+
+    NAME = "@grund-cli/darwin-x64"
+
+    def asked(self):
+        return self.registries.log.count(("GET", f"/npm/{self.NAME}"))
+
+    @unittest.expectedFailure
+    def test_a_rerun_survives_one_question_that_gets_no_answer(self):
+        """The shape of #1229: one dropped loopback connection on the rerun."""
+        self.registries.grants[self.NAME] = 1
+        self.assertNotEqual(0, self.publish().returncode)
+        del self.registries.grants[self.NAME]
+        self.registries.faults[("npm", "GET", self.NAME)] = [DROP]
+        second = self.publish()
+        self.assertEqual(0, second.returncode, second.stderr)
+        status, states = self.state()
+        self.assertTrue(status["complete"])
+        self.assertEqual("published", states[f"npm/grund-cli-darwin-x64-{VERSION}.tgz"])
+
+    @unittest.expectedFailure
+    def test_a_question_never_answered_is_refused_naming_the_transport_error(self):
+        self.registries.faults[("npm", "GET", self.NAME)] = [DROP] * 10
+        result = self.publish()
+        self.assertNotEqual(0, result.returncode)
+        self.assertRegex(result.stderr, rf"npm cannot be asked about {self.NAME} \(HTTP 0\); "
+                         r"a registry that does not answer is not read as empty: \S")
+        self.assertEqual(3, self.asked(), "asked three times in all before refusing")
+        self.assertNotIn(self.NAME, self.npm_puts())
+
+    def test_an_http_answer_is_taken_as_given(self):
+        self.registries.faults[("npm", "GET", self.NAME)] = [503] * 10
+        self.assertNotEqual(0, self.publish().returncode)
+        self.assertEqual(1, self.asked(), "an HTTP answer was asked again")
+
+    def test_an_upload_that_gets_no_answer_is_not_repeated(self):
+        """A guard: it passes before the fix and must keep passing after it."""
+        self.registries.faults[("npm", "PUT", self.NAME)] = [DROP] * 10
+        result = self.publish()
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn(self.NAME, result.stderr)
+        self.assertEqual(1, self.npm_puts().count(self.NAME))
 
 
 if __name__ == "__main__":
