@@ -17,6 +17,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import tomllib
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Sequence
 from urllib.parse import unquote, urlsplit
@@ -141,6 +142,19 @@ def internal_pass(
     return offline.returncode, urls
 
 
+def config_excludes(repo_root: Path) -> list[str]:
+    """`lychee.toml`'s `exclude` list, which every network pass that names exclusions of its own
+    must carry first, because lychee 0.23.0 lets a command-line `exclude` replace the config's
+    list (§AR-ci.3.1.1.1). It reads the file lychee itself loads: lychee takes `lychee.toml` from
+    its working directory, and every pass runs with `cwd=repo_root` and no `--config`. A missing
+    file or `exclude` key gives none; the patterns stay declared in `lychee.toml` alone."""
+    try:
+        text = (repo_root / "lychee.toml").read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return []
+    return list(tomllib.loads(text).get("exclude", []))
+
+
 def check_links(
     inputs: Sequence[str],
     repo_root: Path,
@@ -155,8 +169,9 @@ def check_links(
         return returncode
 
     command = [lychee, "--no-progress", "--include-fragments"]
-    for url in urls:
-        command.extend(["--exclude", f"^{re.escape(url)}$"])
+    # The self-links extend the config's exclusions, never replace them (§AR-ci.3.1.1.1).
+    for pattern in [*config_excludes(repo_root), *(f"^{re.escape(url)}$" for url in urls)]:
+        command.extend(["--exclude", pattern])
     command.extend(["--scheme", "http", "--scheme", "https"])
     with tempfile.TemporaryDirectory(prefix="grund-links-") as scratch:
         report_path = Path(scratch) / "lychee.json"

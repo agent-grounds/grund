@@ -30,11 +30,6 @@ EXCLUDED = {
 SELF_LINK = {
     "docs/self.md": "# Self\n\n[this page](https://github.com/agent-grounds/grund/blob/main/docs/self.md)\n",
 }
-RED_UNTIL_1171 = unittest.skipUnless(
-    os.environ.get("GRUND_LINK_SWEEP_RUN_RED_TESTS") == "1",
-    "red until #1171: --all passes lychee.toml's exclude beside its self-link exclusions;"
-    " implement removes this",
-)
 
 
 @unittest.skipUnless(LYCHEE, "Link gate fixture requires CI-pinned lychee 0.23.0 on PATH")
@@ -90,7 +85,6 @@ class SweepTests(unittest.TestCase):
         self.assertEqual(["/ok"], sorted(gate.requested()), output)
         self.assertEqual(0, code, output)
 
-    @RED_UNTIL_1171
     def test_all_never_requests_a_url_lychee_toml_excludes_beside_a_self_link(self):
         """A resolving self-link adds the wrapper's exact exclusion, which extends the config's
         list rather than replacing it (§AR-ci.3.1.1.1)."""
