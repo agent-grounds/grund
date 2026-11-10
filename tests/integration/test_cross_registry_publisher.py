@@ -362,16 +362,13 @@ class RecoveryTests(PublisherFixture):
 
 class TransportFailureTests(PublisherFixture):
     """§FS-distribution-candidate.8.5.1 — a question that gets no HTTP answer is asked
-    again before it is refused; a write is never repeated. The first two landed as
-    `expectedFailure`, one commit before the publisher asks again, and come off it in the
-    commit that makes it (#1229)."""
+    again before it is refused; a write is never repeated (#1229)."""
 
     NAME = "@grund-cli/darwin-x64"
 
     def asked(self):
         return self.registries.log.count(("GET", f"/npm/{self.NAME}"))
 
-    @unittest.expectedFailure
     def test_a_rerun_survives_one_question_that_gets_no_answer(self):
         """The shape of #1229: one dropped loopback connection on the rerun."""
         self.registries.grants[self.NAME] = 1
@@ -384,7 +381,6 @@ class TransportFailureTests(PublisherFixture):
         self.assertTrue(status["complete"])
         self.assertEqual("published", states[f"npm/grund-cli-darwin-x64-{VERSION}.tgz"])
 
-    @unittest.expectedFailure
     def test_a_question_never_answered_is_refused_naming_the_transport_error(self):
         self.registries.faults[("npm", "GET", self.NAME)] = [DROP] * 10
         result = self.publish()
