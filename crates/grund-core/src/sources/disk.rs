@@ -53,6 +53,18 @@ pub(crate) fn path_names_file(path: impl AsRef<Path>) -> bool {
     }
 }
 
+/// Whether the directory holding `path` has a file of that name, found by the name's own lookup
+/// (§FS-declarations.e2e-case.id): a regular file, links followed, or a link whose target does
+/// not resolve, whose read then fails at the link. A name whose lookup fails, the directory
+/// holding it unsearchable, is not found here: that failure is the directory's.
+pub(crate) fn path_holds_file(path: impl AsRef<Path>) -> bool {
+    let path = path.as_ref();
+    match std::fs::metadata(path) {
+        Ok(meta) => meta.is_file(),
+        Err(_) => std::fs::symlink_metadata(path).is_ok(),
+    }
+}
+
 /// Whether `path` is a directory, links followed.
 pub(crate) fn path_is_dir(path: impl AsRef<Path>) -> bool {
     path.as_ref().is_dir()

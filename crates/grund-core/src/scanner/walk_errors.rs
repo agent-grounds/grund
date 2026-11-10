@@ -17,6 +17,17 @@ use crate::sources::io_reason;
 /// pass that reads such a link itself reports too (§FS-declarations.e2e-case.failure).
 pub(super) const BROKEN_LINK: &str = "broken symlink: the target does not exist";
 
+/// The walk's reason for a link that does not resolve, failing with `error` (§AR-scanner.1.9): a
+/// target that does not exist is a broken link, and any other failure to resolve it, a loop
+/// among them, an unreadable one. The one classification the walk and a pass that reads such a
+/// link itself both report (§FS-declarations.e2e-case.failure).
+pub(super) fn unresolved_link_reason(error: &io::Error) -> String {
+    match error.kind() {
+        io::ErrorKind::NotFound => BROKEN_LINK.to_string(),
+        _ => unreadable_link_reason(&io_reason(error)),
+    }
+}
+
 /// The scan failures one walker error becomes (§FS-check.2.4), each beside the
 /// error it is reported from, which the caller retains (§FS-distribution.3.3.2).
 ///
@@ -168,9 +179,9 @@ fn walk_error_report(
     if walk_skips_link(path, filter, schema, frame, scan_root) {
         return None;
     }
-    let reason = match err.io_error().map(std::io::Error::kind) {
-        Some(std::io::ErrorKind::NotFound) => BROKEN_LINK.to_string(),
-        _ => unreadable_link_reason(&walk_error_reason(err)),
+    let reason = match err.io_error() {
+        Some(io) => unresolved_link_reason(io),
+        None => unreadable_link_reason(&walk_error_reason(err)),
     };
     Some(ScanError::new(path.to_path_buf(), reason, unread))
 }

@@ -1,5 +1,6 @@
 use crate::sources::{
-    canonical_path, is_directory, observe_input, path_exists, path_is_dir, path_is_file,
+    canonical_path, is_directory, observe_input, path_exists, path_holds_file, path_is_dir,
+    path_is_file,
 };
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
@@ -150,7 +151,8 @@ pub(super) fn scan_e2e_cases(
     // §FS-declarations.e2e-case.excluded: the cases are the ones the walk's filter met and the
     // configuration does not keep out, from the walk's own listing where it listed the root.
     let mut case_dirs = Vec::new();
-    if path_is_file(&scan_root.join("expected.exit")) {
+    // §FS-declarations.e2e-case.id: an `expected.exit` that is a dangling link still names a case.
+    if path_holds_file(scan_root.join("expected.exit")) {
         case_dirs.push(scan_root);
     } else if findings.walked_dirs.contains(&home) {
         // §FS-check.2.4.2: no second listing; a scope below the cases root names no case.
@@ -185,7 +187,7 @@ pub(super) fn scan_e2e_cases(
             .filter_map(|dir| dir.strip_prefix(&home).ok());
         case_dirs.extend(
             kept.map(|below| cases_root.join(below))
-                .filter(|dir| path_is_file(&dir.join("expected.exit"))),
+                .filter(|dir| path_holds_file(dir.join("expected.exit"))),
         );
     }
     case_dirs.sort_by_key(|path| sort_path_key(path));
@@ -478,7 +480,8 @@ pub(super) fn is_direct_e2e_case_dir(
     let Some(cases_root) = cases_root else {
         return false;
     };
-    if path.parent() != Some(cases_root) || !path_is_file(&path.join("expected.exit")) {
+    // §FS-declarations.e2e-case.id: a dangling `expected.exit` names a case, which fails at it.
+    if path.parent() != Some(cases_root) || !path_holds_file(path.join("expected.exit")) {
         return false;
     }
     path.file_name()
