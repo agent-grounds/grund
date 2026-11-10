@@ -117,6 +117,59 @@ pub fn shapes() -> Vec<Shape> {
     ]
 }
 
+/// §FS-fmt.7.2 over the E2E case pass (§FS-declarations.e2e-case.failure): a
+/// project whose one unreadable path is a case manifest, `e2e/cases/b/expected.exit`,
+/// holding bytes that are not UTF-8. `e2e-cases-bare` holds no other file, so no
+/// rewrite pass runs at all; `e2e-cases-docs` adds one Markdown file the run scans,
+/// so its whole-project run takes the strict path (§FS-fmt.3.2) while a run
+/// narrowed under `e2e/cases` does not. Kept apart from [`shapes`] because the
+/// other equivalence suites owe these shapes nothing yet; `inner_scope` is the
+/// cases folder, and the suite narrows further itself.
+pub fn e2e_case_shapes() -> Vec<Shape> {
+    vec![
+        Shape {
+            name: "e2e-cases-bare",
+            reports_unreadable: true,
+            rewrites: false,
+            inner_scope: "e2e/cases",
+            build: build_e2e_cases_bare,
+        },
+        Shape {
+            name: "e2e-cases-docs",
+            reports_unreadable: true,
+            rewrites: false,
+            inner_scope: "e2e/cases",
+            build: build_e2e_cases_docs,
+        },
+    ]
+}
+
+/// The manifest every E2E case shape cannot read, as the tree spells it.
+pub const UNREADABLE_MANIFEST: &str = "e2e/cases/b/expected.exit";
+
+const E2E_CASES_SCOPE: &str = "grund_config_version = 2\nproject_name = \"p\"\n\n\
+     [schema]\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
+     [schema.kinds.E2E]\nfolders = [\"e2e/cases\"]\nindex = false\n";
+
+fn build_e2e_cases_bare(root: &Path) {
+    write(root, "grund.toml", E2E_CASES_SCOPE);
+    for case in ["a", "b", "c"] {
+        write(root, &format!("e2e/cases/{case}/expected.exit"), "0\n");
+    }
+    // Written as bytes at build time: a tracked fixture could not hold them.
+    fs::write(root.join(UNREADABLE_MANIFEST), b"\xff\xfe\n").expect("write the bad manifest");
+}
+
+fn build_e2e_cases_docs(root: &Path) {
+    build_e2e_cases_bare(root);
+    write(
+        root,
+        "grund.toml",
+        &format!("{E2E_CASES_SCOPE}\n[schema.kinds.doc]\nfolders = [\"docs\"]\ncitable = false\n"),
+    );
+    write(root, "docs/n.md", "# Notes\n\nNothing cited.\n");
+}
+
 fn write(root: &Path, relative: &str, contents: &str) {
     let path = root.join(relative);
     if let Some(parent) = path.parent() {
@@ -313,6 +366,37 @@ fn collect(root: &Path, dir: &Path, files: &mut BTreeMap<String, Vec<String>>) {
                 .to_string_lossy()
                 .replace('\\', "/");
             files.insert(relative, contents.lines().map(str::to_string).collect());
+        }
+    }
+}
+
+/// Every regular file under `root` as raw bytes, keyed by its path relative to
+/// `root`: unlike [`snapshot`], it keeps a file that is not UTF-8, so a `--write`
+/// over one can be held to leaving it byte-identical.
+pub fn byte_snapshot(root: &Path) -> BTreeMap<String, Vec<u8>> {
+    let mut files = BTreeMap::new();
+    collect_bytes(root, root, &mut files);
+    files
+}
+
+fn collect_bytes(root: &Path, dir: &Path, files: &mut BTreeMap<String, Vec<u8>>) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let Ok(metadata) = path.symlink_metadata() else {
+            continue;
+        };
+        if metadata.is_dir() {
+            collect_bytes(root, &path, files);
+        } else if metadata.is_file() {
+            let relative = path
+                .strip_prefix(root)
+                .expect("fixture path under its root")
+                .to_string_lossy()
+                .replace('\\', "/");
+            files.insert(relative, fs::read(&path).expect("read fixture file"));
         }
     }
 }
