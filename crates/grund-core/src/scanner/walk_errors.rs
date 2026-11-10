@@ -1,6 +1,6 @@
 use crate::sources::{
-    Resolution, Sources, canonical_path, error_resolution, link_metadata, open_for_reading,
-    path_is_dir, path_is_symlink, path_resolution, physical_path_key,
+    Resolution, Sources, canonical_path, error_resolution, link_metadata, lookup_refused,
+    open_for_reading, path_is_dir, path_is_symlink, path_resolution, physical_path_key,
 };
 use std::collections::HashMap;
 use std::io;
@@ -83,6 +83,10 @@ pub(super) fn root_lookup_failure(
     error: io::Error,
     version: u32,
 ) -> (ScanError, ignore::Error) {
+    // §AR-scanner.1.9: a root link the lookup is refused through is the
+    // unopenable link, with the line a link to a barred target earns.
+    let refused_link = lookup_refused(&error)
+        && link_metadata(root).is_ok_and(|meta| meta.file_type().is_symlink());
     let located = ignore::Error::WithPath {
         path: root.to_path_buf(),
         err: Box::new(ignore::Error::Io(error)),
@@ -92,14 +96,13 @@ pub(super) fn root_lookup_failure(
         version,
     };
     let reason = walk_error_reason(&located);
-    // §FS-scan.scope.links.unresolvable.named, §AR-scanner.1.9: a looping link handed as the
-    // path, or one whose lookup is refused, is the line the walk reports at the link, so the two
-    // routes to one link stay one failure.
-    let link_line = located.io_error().is_some_and(|error| {
-        error_resolution(error) == Resolution::Loop
-            || error.kind() == io::ErrorKind::PermissionDenied
-    });
-    let reason = if link_line && path_is_symlink(root) {
+    // §FS-scan.scope.links.unresolvable.named: a looping link handed as the path is the line
+    // the walk reports for it, so the two routes to one link stay one failure.
+    let looping_link = located
+        .io_error()
+        .is_some_and(|error| error_resolution(error) == Resolution::Loop)
+        && path_is_symlink(root);
+    let reason = if refused_link || looping_link {
         unreadable_link_reason(&reason)
     } else {
         reason
@@ -182,8 +185,7 @@ fn walk_error_report(
             unread,
         ));
     }
-    let kind = err.io_error().map(io::Error::kind);
-    if walk_skips_link(path, kind, filter, schema, frame, scan_root) {
+    if walk_skips_link(path, err.io_error(), filter, schema, frame, scan_root) {
         return None;
     }
     let reason = match err.io_error() {
@@ -211,24 +213,24 @@ fn walk_error_report(
 /// other link, broken, is asked the name tests, the filter's `exclude` test and the
 /// ignore files, as the file it names would be.
 ///
-/// `kind` is the failure the walker met the link with. A lookup refused for lack of
+/// `error` is the failure the walker met the link with. A lookup refused for lack of
 /// permission says nothing about the target, so that link is no broken link whatever its
 /// name: it is asked what a directory link is, its fence judged as far as the disk answers
-/// (§AR-scanner.1.9). Only a link whose target is no directory on any
-/// other failure takes the name tests.
+/// (§AR-scanner.1.9). Only a link that is neither refused nor a loop, and whose target is
+/// no directory, takes the name tests.
 ///
 /// The walker never drops its own root, so a link that is the walk root is asked
 /// no ignore file, and the filter answers for it as it does for the root.
 fn walk_skips_link(
     path: &Path,
-    kind: Option<io::ErrorKind>,
+    error: Option<&io::Error>,
     filter: &WalkDirFilter,
     schema: &Schema,
     frame: Frame<'_>,
     scan_root: &Path,
 ) -> bool {
     // §AR-scanner.1.9: a refused lookup is never read as a missing target.
-    let refused = kind == Some(io::ErrorKind::PermissionDenied);
+    let refused = error.is_some_and(lookup_refused);
     let depth = path
         .strip_prefix(scan_root)
         .map_or(0, |relative| relative.components().count());

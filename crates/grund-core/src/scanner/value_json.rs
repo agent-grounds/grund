@@ -7,7 +7,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::json::{JsonNode, JsonReader};
-use super::scan_error::{FileKind, Place, ScanFailure, publish_unlisted};
+use super::scan_error::{
+    FileKind, Place, ScanFailure, publish_unlisted, publish_value_source_failure,
+};
 use super::tree::ScanError;
 use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
 use super::value_yaml_subset::yaml_value_root;
@@ -336,12 +338,9 @@ fn value_sources_in<'a>(
                             // unrelated homes do not gate selected fetch. Named as it entered,
                             // whatever its target reads as.
                             if required && failed_sources.insert(physical_path_key(&path)) {
-                                errors.push(value_source_error(
-                                    &path,
-                                    spelled,
-                                    &error,
-                                    frame.version,
-                                ));
+                                let report =
+                                    value_source_error(&path, spelled, &error, frame.version);
+                                publish_value_source_failure(report, &error, errors);
                             }
                             continue;
                         }
