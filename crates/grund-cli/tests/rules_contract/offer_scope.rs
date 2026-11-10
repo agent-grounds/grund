@@ -7,6 +7,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Output;
 
+#[cfg(unix)]
+#[path = "offer_scope_cleanup.rs"]
+mod cleanup;
 #[path = "offer_literal_prefix.rs"]
 mod literal_prefix;
 
