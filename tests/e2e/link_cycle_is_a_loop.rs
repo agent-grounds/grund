@@ -45,6 +45,19 @@ impl Tree {
         self
     }
 
+    /// Adds a v2 `[schema.sources] exclude` listing `patterns` to the config.
+    fn exclude(self, patterns: &[&str]) -> Self {
+        let config = self.0.join("grund.toml");
+        let mut text = fs::read_to_string(&config).expect("read the config");
+        let listed: Vec<String> = patterns.iter().map(|p| format!("\"{p}\"")).collect();
+        text.push_str(&format!(
+            "\n[schema.sources]\nexclude = [{}]\n",
+            listed.join(", ")
+        ));
+        fs::write(&config, text).expect("write the config");
+        self
+    }
+
     /// Makes the tree a git repository, so its `.gitignore` is read.
     fn git(self) -> Self {
         let status = Command::new("git")
@@ -227,4 +240,32 @@ fn a_link_to_its_own_directory_ignored_as_a_directory_stays_silent() {
         .link("up", ".")
         .write(".gitignore", "docs/up/\n");
     tree.grund(&["check"]).assert_silent();
+}
+
+/// A v2 `exclude` pattern keeps a looping link out as it keeps out a directory, whichever way the
+/// loop is found: a self-link, a link whose name `extensions` does not list, and a link back to its
+/// own directory (§FS-scan.scope.links.owed.cycle).
+#[test]
+fn a_looping_link_a_v2_exclude_covers_stays_silent() {
+    let cases: [(&str, &str, &[&str]); 4] = [
+        ("logo.png", "logo.png", &["*.png"]),
+        ("self", "self", &["docs/self"]),
+        ("self", "self", &["**/self"]),
+        ("up", ".", &["**/up"]),
+    ];
+    for (link, target, patterns) in cases {
+        let tree = Tree::new("excluded").link(link, target).exclude(patterns);
+        tree.grund(&["check"]).assert_silent();
+    }
+}
+
+/// Control: an exclude that covers some other path leaves a looping link reported.
+#[test]
+fn a_looping_link_no_exclude_covers_is_reported() {
+    let tree = Tree::new("excluded-other")
+        .link("self", "self")
+        .link("up", ".")
+        .exclude(&["*.png", "docs/other"]);
+    tree.grund(&["check"])
+        .assert_reports(&["docs/self", "docs/up"]);
 }
