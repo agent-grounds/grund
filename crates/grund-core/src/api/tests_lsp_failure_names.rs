@@ -1,7 +1,7 @@
 //! Test module: the editor's report asks a scan failure's names as `grund check <path>` does, so
 //! a failure under the anchor stays an error under any of them, in the tree where the name the
 //! whole run keeps is under the anchor neither as written nor resolved (§FS-check.1.3.6.3,
-//! §FS-lsp.4.1, §AR-scanner.1.entry). Unix-only: the tree is links and a mode.
+//! §FS-lsp.1.1, §AR-scanner.1.entry). Unix-only: the tree is links and a mode.
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -68,12 +68,63 @@ fn a_failure_under_the_anchor_stays_an_error_under_any_of_its_names() {
     let outside = io_errors(&root, "docs");
     fs::set_permissions(root.join("zz/x"), fs::Permissions::from_mode(0o755)).expect("free it");
 
-    // An editor is told a finding's resolved path (§FS-lsp.4.1), so every name reads `zz/x`. What
-    // the names decide here is that the anchor `realE` holds the failure at all.
-    let one_failure = |paths: &[String]| paths.len() == 1 && paths[0].ends_with("zz/x");
-    assert!(one_failure(&under_the_anchor), "{under_the_anchor:?}");
-    assert!(one_failure(&under_another_name), "{under_another_name:?}");
+    // Membership considers every alias (§FS-check.1.3.6.3); naming is asserted separately below.
+    assert_eq!(under_the_anchor.len(), 1, "{under_the_anchor:?}");
+    assert_eq!(under_another_name.len(), 1, "{under_another_name:?}");
     assert!(outside.is_empty(), "{outside:?}");
+}
+
+/// §FS-lsp.1.1 and §FS-check.2.4.2: every editor anchor uses the whole run's first name,
+/// `aa/x`, even though the anchor `realE` reaches the entry through a third name and resolving
+/// either gives `zz/x`. CLI `check <path>` alone uses the anchor's own spelling.
+#[test]
+#[ignore = "red until #1337 editor failures keep the whole-run name; implement removes this"]
+fn issue_1337_an_anchored_editor_failure_keeps_the_whole_runs_name() {
+    let Some(root) = third_name_tree("anchored_editor_failure_whole_run_name") else {
+        return;
+    };
+    let reports = [".", "realE", "realE/lnk", "zz", "aa", "docs"].map(|anchor| {
+        let report = lsp_snapshot(LspSnapshotOpts {
+            path: root.join(anchor),
+            path_provided: true,
+            ..LspSnapshotOpts::default()
+        })
+        .expect("build the snapshot")
+        .report;
+        (anchor, report)
+    });
+    fs::set_permissions(root.join("zz/x"), fs::Permissions::from_mode(0o755)).expect("free it");
+
+    let expected = root.join("aa/x").to_string_lossy().into_owned();
+    let mut failures = Vec::new();
+    for (anchor, report) in reports {
+        let (own, other) = if anchor == "docs" {
+            (&report.warnings, &report.errors)
+        } else {
+            (&report.errors, &report.warnings)
+        };
+        let paths: Vec<_> = own
+            .iter()
+            .filter(|finding| finding.code == "io")
+            .map(|finding| finding.path.as_deref().expect("located failure"))
+            .collect();
+        if paths != [expected.as_str()] {
+            failures.push(format!("{anchor}: expected {expected:?}, got {paths:?}"));
+        }
+        assert!(
+            other.iter().all(|finding| finding.code != "io"),
+            "{report:#?}"
+        );
+        if anchor == "docs" {
+            assert!(
+                own.iter().any(|finding| {
+                    finding.code == "io" && finding.message.contains("outside the report scope")
+                }),
+                "{report:#?}"
+            );
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
 /// §FS-check.2.4 in the editor: one report, the same limit as `grund check`. Over the root the
