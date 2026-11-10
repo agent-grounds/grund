@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use super::reference_scope::{ScanScope, every_failure_name};
 use crate::config::{Frame, Row};
 use crate::model::{FailureNames, normalize_path_lexically};
-use crate::resolver::WorkspaceProject;
+use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject};
 use crate::scanner::ScanError;
 
 /// §FS-check.2.4: every name of each failure this run reports as its own, by project root. A
@@ -78,5 +78,14 @@ impl UnreadNames {
         names
             .iter()
             .any(|name| normalize_path_lexically(name).starts_with(&home))
+    }
+
+    /// §FS-check.2.4: whether a citation of `kind` that `target`'s catalog declares nowhere earns no
+    /// finding, asked alike of a full ID and of a shorthand matching nothing (§FS-check.3.13.3).
+    pub(super) fn withholds_absent(&self, target: &WorkspaceCheckTarget<'_>, kind: &str) -> bool {
+        target
+            .schema
+            .fetching_row(kind)
+            .is_some_and(|row| self.withholds(&target.run.root, row))
     }
 }

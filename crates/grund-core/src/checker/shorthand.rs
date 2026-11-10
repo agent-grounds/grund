@@ -15,6 +15,7 @@ use std::collections::BTreeMap;
 
 use super::references::ReferenceTier;
 use super::support::qualify;
+use super::unread_homes::UnreadNames;
 use crate::config::{Schema, ShorthandPolicy};
 use crate::grammar::{ShorthandIndex, render_catalog_id};
 use crate::model::{CheckReport, Citation, Code, Diagnostic, Id};
@@ -38,15 +39,21 @@ use crate::resolver::WorkspaceCheckTarget;
 /// there — that is a dangling reference, not a formatting nit. The out-of-scope
 /// tier of `check --full` withholds it for the same reason: `fmt` scopes by
 /// `[scan] include` too (§FS-check.3.14.4).
+///
+/// A shorthand matching nothing earns `None` too while the run could not read the
+/// home of its kind's `fetch`, as a full ID absent from that home does: the run
+/// cannot say that no declaration has the number (§FS-check.2.4).
 fn shorthand_diagnostic(
     schema: &Schema,
     cite: &Citation,
     target: &WorkspaceCheckTarget<'_>,
     tier: ReferenceTier,
+    unread: &UnreadNames,
     candidates: &[&Id],
 ) -> Option<Diagnostic> {
     let written = cite.text.trim();
     let message = match candidates {
+        [] if unread.withholds_absent(target, &cite.id.kind) => return None,
         [] => format!(
             "shorthand citation {written} matches no declaration; {}",
             remedies::shorthand_citation_full()
@@ -170,6 +177,7 @@ pub(super) fn report_shorthand_citation<'a>(
     schema: &Schema,
     target: &WorkspaceCheckTarget<'a>,
     tier: ReferenceTier,
+    unread: &UnreadNames,
     indexes: &mut ShorthandIndexes<'a>,
     report: &mut CheckReport,
 ) -> bool {
@@ -178,7 +186,7 @@ pub(super) fn report_shorthand_citation<'a>(
     });
     let candidates = index.candidates(&cite.id);
     let resolved = cite.id.slug.is_some() && candidates.len() == 1;
-    if let Some(diagnostic) = shorthand_diagnostic(schema, cite, target, tier, candidates) {
+    if let Some(diagnostic) = shorthand_diagnostic(schema, cite, target, tier, unread, candidates) {
         report.errors.push(diagnostic);
     }
     !resolved

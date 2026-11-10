@@ -21,12 +21,9 @@ pub(super) fn scan(r: &EmbeddingRequest) -> Result<Value, Value> {
     let snapshot = snapshot(&config, &findings);
     if !errors.is_empty() {
         let first = &errors[0];
-        let mut f = failure(
-            first.code().as_str(),
-            "filesystem",
-            first.reason.clone(),
-            &cautions,
-        );
+        // §FS-distribution.3.2.2.3: the reason and its fix, as every surface says the failure.
+        let message = crate::scanner::scan_error_message(first);
+        let mut f = failure(first.code().as_str(), "filesystem", message, &cautions);
         // §FS-cli.3.4: a scan failure at the report base names it `.`.
         f["path"] = json!(display_location(&config, &first.path));
         f["partial_output"] = snapshot;
