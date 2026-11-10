@@ -16,7 +16,7 @@ use super::walk_boundaries::{
 use super::walk_errors::{
     LinkRecovery, root_lookup_failure, symlink_loop_report, walk_error_reports,
 };
-use super::walk_failures::{one_report_per_entry, sort_failures};
+use super::walk_failures::{sort_failures, whole_run_failures};
 use super::walk_names::settle_names;
 use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
@@ -138,6 +138,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     let (roots, root_scope) = scan_roots(schema, frame, scope, explicit_scope)?;
     let widened = explicit_scope && !root_scope && frame.run.scope.resolution_wide;
     let mut handed = 0;
+    let mut handed_failures = 0;
     // §FS-config.3.5.4: an aliased root, or a symlink met on the way down, is what
     // hands the same file to the walk under two spellings — nothing else does, so
     // a tree with neither never pays for the identity pass (§GOAL-fast-feedback).
@@ -164,6 +165,7 @@ pub(crate) fn walk_scannable_files_with_sources(
         // second root is what the run was handed: a file, a directory's files, or nothing.
         if widened && position == 1 {
             handed = files.len();
+            handed_failures = errors.len();
         }
         // §FS-check.6.1.1: the actual walk roots are covered before traversal.
         if !crate::config::observe_input(&scan_root, true) {
@@ -405,14 +407,13 @@ pub(crate) fn walk_scannable_files_with_sources(
     // twice, and under `--full` every `include` root is walked beside the config root
     // containing it (§FS-check.1.3.2). A file read twice duplicates its own declaration.
     files.dedup();
-    // §FS-check.2.4.2: one entry that failed for one reason is one failure, however many roots
-    // or names met it; what survives is then sorted once for both surfaces (§FS-errors.4.1).
-    let failure_names = one_report_per_entry(&mut errors);
-    // §FS-check.2.4.3: where each survivor is decides its fix, asked only of a walk with failures.
-    if !errors.is_empty() {
+    // §FS-check.2.4.2: choose ordinary-root names while keeping encounter-time classification.
+    let failure_names = if errors.is_empty() {
+        FailureNames::default()
+    } else {
         let at = FailureRoots::new(roots, root_scope, explicit_scope, frame.root());
-        errors = errors.into_iter().map(|error| error.placed(&at)).collect();
-    }
+        whole_run_failures(&mut errors, handed_failures, &at)
+    };
     sort_failures(&mut errors);
     // §FS-fmt.2.3.2: a file whose physical path is not under the config root is in
     // this tree only by the link that reaches it. The resolution is already paid

@@ -8,7 +8,9 @@ use super::legacy::promote_local_legacy_citations;
 use super::merge::merge_findings;
 use super::read_predicate::unread;
 pub(crate) use super::scan_error::ScanError;
-use super::scan_error::{FailureRoots, ScanFailure, failure_place, scan_error_reason};
+use super::scan_error::{
+    FailureRoots, ScanFailure, failure_place, name_file_failure, scan_error_reason,
+};
 use super::section_locks::read_section_locks;
 use super::stub_homes::resolve_stubs;
 use super::value_json::{scan_value_sources, value_sources};
@@ -234,14 +236,18 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     }
     if !unread_files.is_empty() {
         let at = FailureRoots::resolve(schema, frame, scope, explicit_scope);
-        errors.extend(unread_files.into_iter().map(|(file, reason)| {
+        for (file, reason) in unread_files {
             let place = failure_place(&file, &at);
             let failure = ScanFailure::Unread {
                 place,
                 version: frame.version,
             };
-            ScanError::new(file, reason, failure)
-        }));
+            errors.push(name_file_failure(
+                ScanError::new(file, reason, failure),
+                frame,
+                &mut findings.failure_names,
+            ));
+        }
     }
     findings.files = records.into_iter().collect();
     // §AR-scanner.1.relisted: the E2E pass reads the cases the walk met, and both passes read the

@@ -16,7 +16,7 @@ use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
     CheckWorkspace, ScanScope, UnreadNames, check_chapter_rules, check_project,
-    name_every_spelling, partition_scan_failures, path_report_scope, repair_index_citations,
+    name_every_spelling, path_report_scope, repair_index_citations,
     retain_diagnostics_in_report_scope,
 };
 use crate::config::Config;
@@ -194,14 +194,15 @@ fn check_workspace_context(
         project_report
             .warnings
             .extend(unread_root_warnings(&config, &project.findings));
-        // §FS-check.1.3.6.1: a file the wider walk could not read outside the anchor
-        // leaves the errors; §FS-check.1.3.6.3 says it once the report is narrowed.
-        let (inside, unread_outside) = partition_scan_failures(
-            project.scan_errors.iter().cloned(),
-            &project.findings.failure_names,
-            report_scope,
-        );
-        append_lsp_scan_errors(&mut project_report, inside);
+        // §FS-lsp.1.1: membership asks every alias; the editor keeps the whole-run name.
+        let (inside, unread_outside): (Vec<_>, Vec<_>) =
+            project.scan_errors.iter().cloned().partition(|failure| {
+                report_scope.is_none_or(|scope| {
+                    scope
+                        .holds_failure(failure, &project.findings.failure_names)
+                        .is_some()
+                })
+            });
         for channel in [&mut project_report.errors, &mut project_report.warnings] {
             retain_diagnostics_in_report_scope(
                 channel,
@@ -209,6 +210,8 @@ fn check_workspace_context(
                 report_scope,
             );
         }
+        // §FS-lsp.1.1: already scoped by every failure name, not by the chosen anchor alone.
+        append_lsp_scan_errors(&mut project_report, inside);
         let report_is_silent =
             project_report.errors.is_empty() && project_report.warnings.is_empty();
         report.errors.append(&mut project_report.errors);
@@ -319,6 +322,7 @@ pub(super) fn editor_run_warnings(context: &WorkspaceContext) -> Vec<Diagnostic>
         .collect()
 }
 
+/// Publish failures at the whole run's selected paths (§FS-lsp.1.1, §FS-check.2.4.2).
 fn append_lsp_scan_errors(
     report: &mut CheckReport,
     scan_errors: impl IntoIterator<Item = ScanError>,

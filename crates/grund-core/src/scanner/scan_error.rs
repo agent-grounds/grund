@@ -293,33 +293,52 @@ pub(super) fn publish_unlisted_fixture(
     });
 }
 
-/// A failure to read, decode or parse one file, published at `spelled` unless the scan's reports
-/// so far already hold it: the same file, under any of its spellings, and the same bare reason
-/// (§FS-check.2.4.2, §FS-declarations.e2e-case.failure). Two passes raise it, for a case's file and
-/// for an ignore file the walk may have met too. One file is one failure, under any spelling, so
-/// the line already there stands, named as it was, the one listed first, unless only `spelled`
-/// lies inside `run_path`, the path the run was handed: then that is the spelling it is named by,
-/// so the run that names it keeps its exit.
+/// Select the whole-run name of a file failure from the run's ordered file names
+/// (§FS-check.2.4.2). The ordinary file pass, case files and ignore files share this selection.
+/// Every alias this pass introduces is retained for membership; CLI reporting alone selects an
+/// anchor name. A file absent from the table keeps the spelling the pass encountered.
+pub(super) fn name_file_failure(
+    mut report: ScanError,
+    frame: Frame<'_>,
+    names: &mut FailureNames,
+) -> ScanError {
+    let spelled = report.path.clone();
+    let file_names = frame.run.spellings.names_of(&spelled);
+    if let Some(first) = file_names.first() {
+        report.path = first.clone();
+    }
+    for name in std::iter::once(spelled).chain(file_names) {
+        names.keep(&report.path, &report.reason, &name);
+    }
+    report
+}
+
+/// Publish a case or ignore-file failure through the same name selection as the file pass
+/// (§FS-check.2.4.2). An earlier report wins; retain this pass's names under that survivor.
 pub(super) fn publish_file_failure(
     report: ScanError,
-    run_path: Option<&Path>,
+    frame: Frame<'_>,
+    names: &mut FailureNames,
     reported: &mut Vec<ScanError>,
 ) {
-    let spelled = &report.path;
+    let report = name_file_failure(report, frame, names);
     let already = reported.iter_mut().find(|held| {
         held.reason
             .strip_prefix(UNREADABLE_LINK)
             .unwrap_or(&held.reason)
             == report.reason
-            && (held.path == *spelled || paths_same_location(&held.path, spelled))
+            && (held.path == report.path || paths_same_location(&held.path, &report.path))
     });
-    match already {
-        Some(held) => {
-            if run_path.is_some_and(|run| spelled.starts_with(run) && !held.path.starts_with(run)) {
-                held.path = report.path;
-            }
+    if let Some(held) = already {
+        let introduced: Vec<_> = names
+            .of(&report.path, &report.reason)
+            .map(Path::to_path_buf)
+            .collect();
+        for name in introduced {
+            names.keep(&held.path, &held.reason, &name);
         }
-        None => reported.push(report),
+    } else {
+        reported.push(report);
     }
 }
 

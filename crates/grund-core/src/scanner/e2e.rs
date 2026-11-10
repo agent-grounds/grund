@@ -11,7 +11,7 @@ use super::scan_error::{
     publish_unlisted_fixture, scan_error_reason,
 };
 use super::tree::ScanError;
-use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walk_builder};
+use super::walk::{MetCases, WalkDirFilter, scannable_walk_builder};
 use super::walk_errors::{LinkRecovery, walk_error_path, walk_error_reports};
 
 use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots};
@@ -121,13 +121,6 @@ pub(super) fn scan_e2e_cases(
         return;
     }
 
-    // §FS-check.2.4.2: the path the run was handed, whose spelling names a file met twice.
-    let run_path = explicit_scope
-        .then(|| scan_roots(schema, frame, scope, explicit_scope).ok())
-        .flatten()
-        .filter(|(_, whole)| !whole)
-        .and_then(|(roots, _)| roots.into_iter().next());
-
     // §FS-check.2.4.3: resolved only for a pass with a failure to judge. Unless the path alone
     // brought this pass here, it reads the cases either way, so the path was not what read them.
     let failure_roots = || {
@@ -162,7 +155,8 @@ pub(super) fn scan_e2e_cases(
         for report in listed.ignore_failures {
             publish_file_failure(
                 report.placed(&failure_roots()),
-                run_path.as_deref(),
+                frame,
+                &mut findings.failure_names,
                 reported,
             );
         }
@@ -200,7 +194,12 @@ pub(super) fn scan_e2e_cases(
                         CaseFailure::Unread(_, err) => {
                             let failure = failure_at(&spelled);
                             let report = ScanError::new(spelled, io_reason(&err), failure);
-                            publish_file_failure(report, run_path.as_deref(), reported);
+                            publish_file_failure(
+                                report,
+                                frame,
+                                &mut findings.failure_names,
+                                reported,
+                            );
                         }
                         CaseFailure::Unlisted(_, err) => {
                             let failure = failure_at(&spelled);

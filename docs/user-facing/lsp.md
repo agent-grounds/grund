@@ -121,6 +121,12 @@ plain text edits and cannot intercept Tab or enforce client response handling
 
 The editor judges what a save would write ([§FS-scan.text.buffer](../functional-spec/FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write)). A new file you have not saved yet is a file: a stub that points at it is not reported broken, and the ID it declares is not reported duplicated ([§FS-scan.text.buffer-only](../functional-spec/FS-scan.md#textbuffer-only-a-buffer-with-no-file-behind-it-is-a-file)). A file is the same file under any spelling, so an unsaved edit to a stub's target reaches the stub even when one of them goes through a symlink ([§FS-scan.identity.buffers](../functional-spec/FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)). A buffer is also read as its file whichever name you opened it under, so a Rust file opened through a link named `.md` is still Rust, and where the run refuses a file because its names read it differently ([§FS-scan.checks.reading-conflict](../functional-spec/FS-scan.md#checksreading-conflict-two-names-of-one-file-read-it-differently)) typing in it converts nothing. A diagnostic about what such a file holds shows on whichever of its names you have open, and one about where it sits shows at the name it holds at ([§FS-scan.identity.findings](../functional-spec/FS-scan.md#identityfindings-a-finding-about-a-file-with-two-names-names-each-spelling-once)). An unsaved file in a directory the scan skips, by `exclude` or an ignore file, is skipped as the saved file would be.
 
+Diagnostics keep the link name that `grund check` prints, even when it is the file's only name
+in the project and the target is excluded or, for a file link, outside the project. This includes
+unreadable files and files below an in-project directory link. Opening the project through a link
+resolves the project root while preserving those descendant names
+([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)).
+
 ## A broken `grund.toml`
 
 A `grund.toml` that stops loading — a half-typed table header, say — shows up as an error on `grund.toml` itself, at the line `grund check` names, with the message `grund check` prints. The project keeps its last good scan meanwhile, so the diagnostics on your other files are from before the config broke, and the error says so. Fix the config and the error goes away on the next load ([§FS-lsp.2.2.4.1](../functional-spec/FS-lsp.md#2241-a-config-that-will-not-load-is-a-diagnostic-on-that-config)).
