@@ -97,3 +97,34 @@ fn cover_over_a_healthy_sibling_prints_what_a_healthy_tree_does() {
         );
     }
 }
+
+/// A tree whose cases folder is itself a link, `e2e/cases` to `../shared/cases`, case `b` in it
+/// undecodable.
+fn linked_folder(test: &str) -> Tree {
+    let tree = Tree::new(&format!("cover-{test}"));
+    fs::remove_dir_all(tree.root.join("e2e/cases")).expect("clear the folder");
+    tree.write("shared/cases/a/expected.exit", b"0\n");
+    tree.write("shared/cases/b/expected.exit", UNDECODABLE);
+    symlink(Path::new("../shared/cases"), tree.root.join("e2e/cases")).expect("link the folder");
+    tree
+}
+
+/// §FS-cover.1.2: a directory above the case as the tree spells it holds it, the folder a link.
+#[test]
+fn cover_above_a_linked_cases_folder_holds_its_manifest() {
+    let tree = linked_folder("folder-above");
+    assert_holds(&tree.run(&["check", "e2e"]), MANIFEST);
+    assert_holds(&tree.run(&["cover", "e2e"]), MANIFEST);
+    assert_holds(&tree.run(&["cover", "e2e/cases/b"]), MANIFEST);
+}
+
+/// §FS-cover.1.2: the folder link's target reads the cases where it resolves, as it did, and names
+/// the failure at the configured spelling.
+#[test]
+fn cover_over_a_linked_folders_target_reads_its_cases_as_it_did() {
+    let tree = linked_folder("folder-target");
+    for path in ["shared", "shared/cases", "shared/cases/b"] {
+        assert_holds(&tree.run(&["cover", path]), MANIFEST);
+    }
+    assert_quiet(&tree.run(&["cover", "shared/cases/a"]));
+}
