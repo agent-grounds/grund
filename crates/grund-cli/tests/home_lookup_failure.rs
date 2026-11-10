@@ -255,6 +255,8 @@ const V1_DEFAULT_ROOTS: &str = "grund_config_version = 1\nproject_name = \"outwa
 const V2_OUTWARD_HOME: &str = "grund_config_version = 2\nproject_name = \"outward-root\"\n\n\
     [schema.kinds.FS]\nfolders = [\"docs\"]\nindex = false\n\n\
     [schema.kinds.CONST]\nfolders = [\"vals\"]\nindex = false\n";
+/// §FS-config-v2.schema.places.boundaries.3: the refusal at `vals`'s line in V2_OUTWARD_HOME.
+const OUTWARD_REFUSAL: &str = "error: grund.toml:9: place `vals` in `[schema.kinds.CONST] folders` links out of the project root";
 
 /// Runs `check` with `link` naming `par/t` outside the project and `par` denied.
 fn outward_denied_check(name: &str, config: &str, link: &str) -> Option<Output> {
@@ -285,18 +287,56 @@ fn outward_root_link_with_a_denied_parent_is_pruned_on_version_1() {
     assert_exit(&output, 0);
 }
 
-/// §FS-scan.scope.homes.lookup.outward: a kind home that is such a link is the same root.
+/// §FS-config-v2.schema.places.boundaries.3.1: on version 2 such a link as a kind's home is
+/// refused at load as it is with the target open, so a mode outside the project decides nothing.
 #[test]
-fn outward_home_link_with_a_denied_parent_is_pruned_on_version_2() {
+#[ignore = "red until #1332 judges an outward place as far as the disk answers; implement removes this"]
+fn outward_home_link_with_a_denied_parent_is_refused_on_version_2() {
     let Some(output) = outward_denied_check("out-v2", V2_OUTWARD_HOME, "vals") else {
         return;
     };
+    let err = stderr(&output);
+    assert_eq!(lines_equal(&err, OUTWARD_REFUSAL), 1, "{err}");
+    assert!(!err.contains("permission denied"), "{err}");
+    assert_exit(&output, 2);
+}
+
+/// §FS-config-v2.schema.places.boundaries.3.1: a place that does not exist stays quiet,
+/// a dangling link out of the project included (§FS-config-v2.schema.places.boundaries.4).
+#[test]
+fn dangling_outward_home_link_stays_quiet_on_version_2() {
+    let fixture = Fixture::bare("out-v2-dangling", V2_OUTWARD_HOME, "# FS-a: A\n\nPlain.\n");
+    let outside = outside_tree(&fixture, "out-v2-dangling");
+    std::os::unix::fs::symlink(outside.join("gone/t"), fixture.root.join("vals")).unwrap();
+    let output = fixture.check();
+    let _ = fs::remove_dir_all(&outside);
     assert!(
-        !stderr(&output).contains("permission denied"),
+        !stderr(&output).contains("links out"),
         "{}",
         stderr(&output)
     );
     assert_exit(&output, 0);
+}
+
+/// §FS-config-v2.schema.places.boundaries.3.1: a place still inside the root where the lookup
+/// stops is not refused at load; its failure is the scan failure at the home.
+#[test]
+fn inward_home_link_with_a_denied_parent_is_reported_on_version_2() {
+    let mut fixture = Fixture::bare("inward-v2", V2_OUTWARD_HOME, "# FS-a: A\n\nPlain.\n");
+    fs::create_dir_all(fixture.root.join("data/real")).unwrap();
+    std::os::unix::fs::symlink("data/real", fixture.root.join("vals")).unwrap();
+    if !fixture.lock_data(0o000, "data/real", true) {
+        return;
+    }
+    let output = fixture.check();
+    let err = stderr(&output);
+    assert_eq!(
+        lines_equal(&err, &format!("error: vals: {ROOT_V2}")),
+        1,
+        "{err}"
+    );
+    assert!(!err.contains("links out"), "{err}");
+    assert_exit(&output, 2);
 }
 
 /// §FS-scan.scope.homes.lookup.outward: a file link is followed wherever it resolves, so a
