@@ -29,6 +29,10 @@ name = "lsp_cli_parity"
 path = "lsp_cli_parity.rs"
 
 [[test]]
+name = "lsp_diagnostic_link_names"
+path = "lsp_diagnostic_link_names.rs"
+
+[[test]]
 name = "lsp_config_refusal_locations"
 path = "lsp_config_refusal_locations.rs"
 

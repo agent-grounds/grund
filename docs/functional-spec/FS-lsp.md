@@ -63,6 +63,19 @@ forms receive no guessed target.
 
 Where each diagnostic anchors is [§FS-lsp.1.1.1](FS-lsp.md#111-where-a-diagnostic-anchors). Value, named-section, and missing-snapshot findings are transported from the core report rather than derived by the server ([§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)), and the `[workspace]` warnings on the run's warning channel are published too ([§FS-lsp.1.1.3](FS-lsp.md#113-workspace-warnings-on-the-runs-warning-channel)).
 
+Diagnostic paths preserve the shared report's chosen in-project spelling, including when a
+file's only name in the project is a file link or lies below a directory link: the actionable
+name is the link name defined by [§FS-scan.identity.link-path](FS-scan.md#identitylink-path-a-finding-names-the-in-tree-link-path). File-link targets may be excluded
+or outside the project; directory traversal remains bounded by [§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed).
+This applies to scan failures as well as content findings. An anchored
+editor snapshot names a scan failure by the whole run's name, as [§FS-check.2.4.2](FS-check.md#242-one-failure-one-line) requires;
+membership and severity still consider every name by which the anchor holds the failure.
+Absolute diagnostic paths resolve the owning project's root without resolving away that
+chosen descendant spelling. A linked project root and a workspace member follow the same
+rule, using the member's owning root for its findings. Findings on a file with several names
+retain the sites required by [§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name) and
+[§FS-scan.identity.findings.place](FS-scan.md#identityfindingsplace-a-place-finding-is-judged-at-each-spelling).
+
 #### 1.1.1 Where a diagnostic anchors
 
 The diagnostic position is the start column of the citation the finding concerns — the offending token, not merely the first citation on the line. A single comment can carry several citations, so each finding anchors to its own token, and a resolving citation beside it stays unmarked. Diagnostics that are line-anchored rather than citation-anchored, such as the opt-in ungrounded-file check ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)), do not borrow a citation range from the same line; otherwise VSCode-style diagnostic hovers would stack unrelated line-level messages onto the citation's own error. Declaration-side findings may still use the declaration, section, or stub title span on that line. Precise column information is computed once per scan and reused across the open editor session.
