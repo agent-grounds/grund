@@ -142,7 +142,6 @@ class ShardTests(unittest.TestCase):
     def test_each_leg_runs_the_python_acceptance_in_a_job_of_its_own(self):
         self.assertEqual([], acceptance_problems(self.text))
 
-    @unittest.skip("red until #1225 makes shard 1's build step `cargo check`; implement removes this")
     def test_no_shard_links_the_test_targets_twice(self):
         # §AR-ci.13.7.1: a second set of test executables filled the runner's disk.
         self.assertEqual([], link_problems(self.text))

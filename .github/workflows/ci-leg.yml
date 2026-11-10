@@ -74,9 +74,10 @@ jobs:
         if: matrix.shard == 1
         run: python scripts/run_cargo_suite.py -p grund --features test-watch --test check_watch_observer --locked
 
-      - name: cargo build
+      # §AR-ci.13.7.1: a check, not a build, so the suite links its test targets once.
+      - name: cargo check
         if: matrix.shard == 1
-        run: cargo build --quiet --workspace --all-targets --locked
+        run: cargo check --quiet --workspace --all-targets --locked
 
       - name: grund self-check
         if: matrix.shard == 1

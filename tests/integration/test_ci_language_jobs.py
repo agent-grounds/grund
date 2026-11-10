@@ -48,7 +48,7 @@ RUST_CHECKS = {
     "fmt": "cargo fmt --all -- --check",
     "native watch contract": ("python scripts/run_cargo_suite.py -p grund --features test-watch"
                               " --test check_watch_observer --locked"),
-    "build": "cargo build --quiet --workspace --all-targets --locked",
+    "build": "cargo check --quiet --workspace --all-targets --locked",
     "self-check": '"check", ".", "--format", "json", "--full"',
 }
 PRE_COMMIT = "pre-commit run --all-files"

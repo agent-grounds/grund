@@ -119,8 +119,9 @@ jobs:
       - name: slow python tests
         run: python scripts/run_python_gate.py --only-slow
 
-      - name: cargo build
-        run: cargo build --quiet --workspace --all-targets --locked
+      # §AR-ci.13.7.1: a check, not a build, so the suites link the test targets once.
+      - name: cargo check
+        run: cargo check --quiet --workspace --all-targets --locked
 
       - name: grund self-check
         shell: bash

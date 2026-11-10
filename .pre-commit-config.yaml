@@ -27,13 +27,15 @@ default_install_hook_types: [pre-commit, pre-push, commit-msg]
 repos:
   - repo: local
     hooks:
-      # `cargo fmt`, `cargo build`, and `cargo test` mirror the CI workflow's
+      # `cargo fmt`, `cargo check`, and `cargo test` mirror the CI workflow's
       # checks exactly
       # (§AR-ci.1, .github/workflows/ci.yml) so every commit is well-formatted
       # and test-clean before it leaves the developer's machine:
       #   - `cargo fmt --all -- --check` matches the CI `cargo fmt --check` step.
-      #   - `cargo build --quiet --workspace --all-targets --locked` with `RUSTFLAGS=-Dwarnings`
-      #     matches the CI build step and its `RUSTFLAGS: "-D warnings"` env. The
+      #   - `cargo check --quiet --workspace --all-targets --locked` with `RUSTFLAGS=-Dwarnings`
+      #     matches the CI check step and its `RUSTFLAGS: "-D warnings"` env: it proves
+      #     the default features compile warning-free without linking a second set of
+      #     test executables beside the suite's (§AR-ci.13.7.1). The
       #     `env` prefix is just `/usr/bin/env` so the env var is applied to the
       #     single cargo invocation without depending on shell-syntax expansion
       #     in pre-commit's argv split. Clippy is intentionally **not** part of
@@ -54,8 +56,8 @@ repos:
         always_run: true
         stages: [pre-commit]
       - id: cargo-build
-        name: cargo build (warnings as errors)
-        entry: env RUSTFLAGS=-Dwarnings cargo build --quiet --workspace --all-targets --locked
+        name: cargo check (warnings as errors)
+        entry: env RUSTFLAGS=-Dwarnings cargo check --quiet --workspace --all-targets --locked
         language: system
         pass_filenames: false
         always_run: true
