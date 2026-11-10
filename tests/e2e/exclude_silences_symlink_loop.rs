@@ -4,7 +4,8 @@
 //! it out of the scan", and in version 2 `exclude` is that fix. Both ways a loop is found are
 //! pinned — the walker's own detection of a link to its ancestor, and the pruning of a link whose
 //! target is at or above the walk root (§FS-config.3.5.5) — beside the control that an
-//! un-excluded loop is still reported. The trees are built in the temp directory, because a
+//! un-excluded loop is still reported. A dangling file link, the other walker error an entry's
+//! `exclude` answers, is pinned the same way. The trees are built in the temp directory, because a
 //! committed directory link is a different tree on a platform that cannot check one out.
 #![cfg(unix)]
 
@@ -14,6 +15,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 const LOOP: &str = "symlink loop";
+const BROKEN: &str = "broken symlink";
 
 /// One version-2 project under the temp directory, removed on drop: an `FS` kind homed at
 /// `docs/`, one cited declaration, and the directory link `link -> target`.
@@ -78,16 +80,21 @@ impl Run {
         )
     }
 
-    fn reports_loop(&self) -> bool {
-        self.stdout.contains(LOOP) || self.stderr.contains(LOOP)
+    fn reports(&self, line: &str) -> bool {
+        self.stdout.contains(line) || self.stderr.contains(line)
     }
 }
 
-/// Asserts the run is clean: exit `0`, no loop line, and `success`.
+/// Asserts the run is clean: exit `0`, and no loop line.
 fn assert_silenced(run: &Run, spelling: &str) {
+    assert_silenced_of(run, spelling, LOOP);
+}
+
+/// Asserts the run is clean: exit `0`, and no line naming `failure`.
+fn assert_silenced_of(run: &Run, spelling: &str, failure: &str) {
     assert!(
-        !run.reports_loop(),
-        "exclude {spelling} left the loop:\n{}",
+        !run.reports(failure),
+        "exclude {spelling} left the {failure}:\n{}",
         run.shown()
     );
     assert_eq!(run.code, 0, "exclude {spelling}:\n{}", run.shown());
@@ -145,5 +152,36 @@ fn an_exclude_matching_a_link_above_the_walk_root_keeps_the_loop_out() {
     for (name, spelling) in [("name", "\"up\""), ("anchored", "\"/docs/up\"")] {
         let tree = Tree::new(&format!("above-{name}"), "docs/up", "..", Some(spelling));
         assert_silenced(&tree.check(), spelling);
+    }
+}
+
+#[test]
+fn an_unexcluded_dangling_file_link_below_a_root_is_still_reported() {
+    let tree = Tree::new("broken-bare", "docs/fs/ext.md", "../../nowhere.md", None);
+    let run = tree.check();
+    assert_eq!(run.code, 2, "{}", run.shown());
+    assert!(
+        run.stderr.contains(
+            "error: docs/fs/ext.md: broken symlink: the target does not exist; \
+             make the path readable, or keep it out of the scan"
+        ),
+        "{}",
+        run.shown()
+    );
+}
+
+#[test]
+fn an_exclude_matching_a_dangling_file_link_keeps_it_out() {
+    for (name, spelling) in [
+        ("wildcard", "\"ext*\""),
+        ("anchored", "\"/docs/fs/ext.md\""),
+    ] {
+        let tree = Tree::new(
+            &format!("broken-{name}"),
+            "docs/fs/ext.md",
+            "../../nowhere.md",
+            Some(spelling),
+        );
+        assert_silenced_of(&tree.check(), spelling, BROKEN);
     }
 }
