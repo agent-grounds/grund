@@ -40,14 +40,12 @@ fn cover_over_a_plain_case_holds_its_manifest() {
 }
 
 #[test]
-#[ignore = "red until #1327 reads the case a file path holds; implement removes this"]
 fn cover_naming_a_plain_cases_manifest_holds_it() {
     let tree = Tree::broken_case("plain-file", false);
     assert_holds(&tree.run(&["cover", "e2e/cases/b/expected.exit"]), MANIFEST);
 }
 
 #[test]
-#[ignore = "red until #1327 reads the case a file path holds; implement removes this"]
 fn cover_naming_a_plain_cases_manifest_holds_it_in_json() {
     let tree = Tree::broken_case("plain-json", false);
     // §FS-cover.4: `cover` reports a scan failure on stderr in either format, as `cover e2e/cases`.
@@ -56,14 +54,12 @@ fn cover_naming_a_plain_cases_manifest_holds_it_in_json() {
 }
 
 #[test]
-#[ignore = "red until #1327 reads the case a file path holds; implement removes this"]
 fn cover_naming_a_manifest_in_a_linked_case_holds_it() {
     let tree = Tree::broken_case("linked-file", true);
     assert_holds(&tree.run(&["cover", "e2e/cases/b/expected.exit"]), MANIFEST);
 }
 
 #[test]
-#[ignore = "red until #1327 decides a linked case by its spelling; implement removes this"]
 fn cover_over_a_case_linked_out_of_the_folder_holds_its_manifest() {
     let tree = Tree::broken_case("linked-case", true);
     assert_holds(&tree.run(&["cover", "e2e/cases/b"]), MANIFEST);

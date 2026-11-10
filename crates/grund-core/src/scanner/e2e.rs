@@ -2,7 +2,7 @@ use crate::sources::{
     canonical_path, io_reason, is_directory, observe_input, path_exists, path_is_dir, path_is_file,
 };
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::sync::PoisonError;
 
 use super::e2e_case::{CaseFailure, read_e2e_case};
@@ -11,13 +11,13 @@ use super::scan_error::{
     publish_unlisted_fixture, scan_error_reason,
 };
 use super::tree::ScanError;
-use super::walk::{MetCases, WalkDirFilter, scannable_walk_builder};
+use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walk_builder};
 use super::walk_errors::{LinkRecovery, walk_error_path, walk_error_reports};
 
 use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots};
 use crate::grammar::{Grammar, literal_after_kind_placeholder, parse_id_arg};
 use crate::model::{Catalog, Declaration, DeclarationSource, Id};
-use crate::model::{configured_home_path_key, sort_path_key};
+use crate::model::{configured_home_path_key, normalize_path_lexically, sort_path_key};
 
 /// §FS-config.3.5.8, §FS-check.1.3.6.1: whether the project's *ordinary* walk reads
 /// the E2E case root at all. A path-scoped run's resolution scope is that ordinary
@@ -104,7 +104,22 @@ pub(super) fn scan_e2e_cases(
     // ordinary scope misses is read through the path alone, which is the branch below.
     let narrowed_to_path = explicit_scope
         && !(resolution_wide && cases_root_in_ordinary_scope(schema, frame, &cases_root));
-    if narrowed_to_path {
+    // §FS-check.2.4.2: the path the run was handed, whose spelling names a file met twice.
+    let run_path = explicit_scope
+        .then(|| scan_roots(schema, frame, scope, explicit_scope).ok())
+        .flatten()
+        .filter(|(_, whole)| !whole)
+        .and_then(|(roots, _)| roots.into_iter().next());
+
+    // §FS-cover.1.2: the spelled path below a case, whose failures alone the pass holds.
+    let mut held = None;
+    let case = narrowed_to_path
+        .then(|| case_holding(&spelled_root, &cases_root, run_path.as_deref()))
+        .flatten();
+    if let Some((case, below_case)) = case {
+        scan_root = case;
+        held = below_case;
+    } else if narrowed_to_path {
         let scope = scope.unwrap_or(Path::new("."));
         if path_is_file(&scope) {
             return;
@@ -190,6 +205,10 @@ pub(super) fn scan_e2e_cases(
                 // §AR-scanner.6.6: each failure at its own path, the case's first hiding nothing.
                 for failure in case_failures {
                     let spelled = spelled_below(&spelled_root, &cases_root, failure.path());
+                    // §FS-cover.1.2: a path holding none of its failing files holds no failure.
+                    if held.as_ref().is_some_and(|held| !spelled.starts_with(held)) {
+                        continue;
+                    }
                     match failure {
                         CaseFailure::Unread(_, err) => {
                             let failure = failure_at(&spelled);
@@ -224,6 +243,10 @@ pub(super) fn scan_e2e_cases(
                 continue;
             }
         };
+        // §FS-cover.1.2: a path below the case reads it for its failures; it declares nothing.
+        if held.is_some() {
+            continue;
+        }
         findings
             .declarations
             .entry(id.clone())
@@ -267,6 +290,32 @@ fn cases_met<'a>(
         (parent == home || canonical_path(parent).is_ok_and(|dir| dir == cases_root))
             .then(|| cases_root.join(name))
     })
+}
+
+/// The case a narrowed path names or lies below, decided on the path as the tree spells it under
+/// the configured folder, so a case directory linked out of the folder is still that case
+/// (§FS-cover.1.2). Beside the case, the spelled path where it lies below the case, whose files
+/// alone it holds. `None` where the path is at or above the folder, or below no case.
+fn case_holding(
+    spelled_root: &Path,
+    cases_root: &Path,
+    run_path: Option<&Path>,
+) -> Option<(PathBuf, Option<PathBuf>)> {
+    let below = run_path?
+        .strip_prefix(normalize_path_lexically(spelled_root))
+        .ok()?;
+    let mut parts = below.components();
+    let name = match parts.next()? {
+        Component::Normal(name) => name,
+        _ => return None,
+    };
+    let case = cases_root.join(name);
+    // §AR-scanner.6.1: a case is a directory holding `expected.exit`, as the walk reads one.
+    if !path_is_file(&case.join("expected.exit")) {
+        return None;
+    }
+    let held = parts.next().is_some().then(|| spelled_root.join(below));
+    Some((case, held))
 }
 
 /// What a walk one level below `dir` met, where no walk of the scan listed it
