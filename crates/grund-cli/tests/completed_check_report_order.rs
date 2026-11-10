@@ -1,6 +1,10 @@
 //! Completed embedding reports obey §FS-errors.4.1 independently of workspace
 //! dispatch. CLI cautions retain their separately rendered order.
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use grund_core::{EmbeddingRequest, embedding_call};
 use serde_json::{Value, json};
 use std::fs;
@@ -34,7 +38,7 @@ impl Repo {
 
 impl Drop for Repo {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

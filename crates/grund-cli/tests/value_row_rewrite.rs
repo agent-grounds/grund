@@ -1,5 +1,9 @@
 //! §FS-config-migrate.3.1.7.2: the rewrite the repair of a value row names keeps its values
 //! compared across the migration, on a row without `fetch`, and adds no generated section.
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -59,7 +63,7 @@ impl Tree {
 
 impl Drop for Tree {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

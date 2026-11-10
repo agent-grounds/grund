@@ -2,6 +2,10 @@
 //! usable offline help (§FS-check.4.5.2), and the parent kind table teaches the
 //! child's complete key rows without another lookup (§FS-config-explain.1.2).
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
@@ -69,7 +73,7 @@ impl Project {
 
 impl Drop for Project {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

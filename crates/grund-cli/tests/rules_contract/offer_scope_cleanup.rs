@@ -80,9 +80,8 @@ fn message(payload: &(dyn Any + Send)) -> Option<&str> {
 }
 
 /// §AR-ci-fixture-cleanup.1: the join hands back the test's own panic, so the binary is still running to report
-/// it. Today the fixture's `Drop` panics again while unwinding and the whole binary aborts.
+/// it. Before #1226 the fixture's `Drop` panicked again while unwinding and the whole binary aborted.
 #[test]
-#[ignore = "red until #1226 stops a fixture Drop raising while its thread unwinds; implement removes this"]
 fn a_failing_test_whose_configured_cannot_be_removed_reports_its_own_panic() {
     let Some((ended, root)) = hold_unremovable(true) else {
         return;

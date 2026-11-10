@@ -2,6 +2,10 @@
 //! Port grund#932's intake join/mark reproducer: make blocks current before
 //! changing them, and inspect only detail before the refresh command.
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
@@ -150,7 +154,7 @@ impl Fixture {
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

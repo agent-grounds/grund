@@ -1,5 +1,9 @@
 //! Fixture and assertions for §FS-declarations.stubs.repair.
 
+#[path = "../support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use serde_json::{Value, json};
 use std::fs;
 use std::path::PathBuf;
@@ -83,7 +87,7 @@ impl Repo {
 
 impl Drop for Repo {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

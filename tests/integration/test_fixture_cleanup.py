@@ -191,8 +191,6 @@ def tree_violations():
 class TreeTest(unittest.TestCase):
     maxDiff = None
 
-    # §AR-ci-fixture-cleanup.1: red until #1226 guards every copy; the fix removes this.
-    @unittest.expectedFailure
     def test_no_tree_removing_fixture_drop_raises_while_unwinding(self):
         found = tree_violations()
         self.assertEqual([], [str(site) for site in found], f"{len(found)} sites: {FIX}")

@@ -1,6 +1,10 @@
 //! #1004: listed comments explain their mapping and how to preserve the prose
 //! (§FS-config-migrate.2.2), without changing carrying or consent (§FS-config-migrate.4.4).
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
@@ -66,7 +70,7 @@ impl Fixture {
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 

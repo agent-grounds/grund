@@ -1,6 +1,10 @@
 //! Run the existing real-server cases across temporary-root spellings (§AR-ci.10.3.1).
 #![cfg(unix)]
 
+#[path = "../../grund-cli/tests/support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 #[path = "two_names.rs"]
 mod cases;
 mod support;
@@ -15,7 +19,7 @@ struct Scratch(PathBuf);
 
 impl Drop for Scratch {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).expect("remove temporary-root regression fixtures");
+        remove_fixture_tree(&self.0, "remove temporary-root regression fixtures");
     }
 }
 

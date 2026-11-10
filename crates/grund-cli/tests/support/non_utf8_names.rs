@@ -1,5 +1,9 @@
 //! Filesystem capability for invalid-byte fixture names (§AR-ci.10.6).
 
+#[path = "fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::os::unix::ffi::OsStrExt;
 use std::path::{Path, PathBuf};
@@ -50,6 +54,6 @@ struct Probe(PathBuf);
 
 impl Drop for Probe {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).expect("remove capability probe directory");
+        remove_fixture_tree(&self.0, "remove capability probe directory");
     }
 }

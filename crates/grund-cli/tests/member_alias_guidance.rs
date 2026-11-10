@@ -2,6 +2,10 @@
 //! with a usable location and command. These black-box checks port #823's
 //! root-success/member-failure reproducer without enabling workspace resolution.
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -58,7 +62,7 @@ impl Fixture {
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).expect("remove isolated fixture");
+        remove_fixture_tree(&self.0, "remove isolated fixture");
     }
 }
 

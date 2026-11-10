@@ -1,6 +1,10 @@
 //! End-to-end explanation of index entries excluded from use: §FS-check.4.1.2,
 //! §FS-refs.3.1.1 and §FS-refs.3.3.1. Port of issue #909's triage reproducer.
 
+#[path = "fixture_cleanup.rs"]
+mod fixture_cleanup;
+use fixture_cleanup::remove_fixture_tree;
+
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
@@ -58,7 +62,7 @@ impl Repo {
 
 impl Drop for Repo {
     fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
+        remove_fixture_tree(&self.0, "remove fixture");
     }
 }
 
