@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 use super::schema::{PlaceDraft, RowDraft};
 use crate::config::project::Members;
-use crate::sources::canonical_path;
+use crate::sources::{canonical_path, path_lookup, resolved_as_far_as_answered};
 
 /// §FS-config-v2.schema.places.boundaries: every place against every earlier
 /// one, the root and the members, at most one refusal per place.
@@ -49,11 +49,11 @@ pub(super) fn judge(
                 );
                 late.push(at(what));
             } else if place.key() == "folders"
-                && target
-                    .as_ref()
-                    .is_some_and(|target| !target.starts_with(&canonical_root))
+                && reach(root, place, target.as_ref())
+                    .is_some_and(|reach| !reach.starts_with(&canonical_root))
             {
-                // Refused, not pruned (§FS-config-v2.schema.places.boundaries.3).
+                // Refused, not pruned, judged as far as the disk answers when the lookup
+                // fails (§FS-config-v2.schema.places.boundaries.3.1).
                 late.push(at("links out of the project root".to_string()));
             } else if let Some(member) = members
                 .iter()
@@ -67,6 +67,21 @@ pub(super) fn judge(
             seen.push((row, place, target));
         }
     }
+}
+
+/// Where a folder place goes, for its outward refusal
+/// (§FS-config-v2.schema.places.boundaries.3.1): its canonical target, or, where the lookup
+/// fails for a reason other than absence, where it goes as far as the disk answers. `None` for
+/// a place that does not exist, a dangling link included
+/// (§FS-config-v2.schema.places.boundaries.4).
+fn reach(root: &Path, place: &PlaceDraft, target: Option<&PathBuf>) -> Option<PathBuf> {
+    if let Some(target) = target {
+        return Some(target.clone());
+    }
+    let path = root.join(place.path());
+    path_lookup(&path)
+        .is_err()
+        .then(|| resolved_as_far_as_answered(&path))
 }
 
 /// The member `pattern` names that holds `place`, both config-root-relative:

@@ -290,7 +290,6 @@ fn outward_root_link_with_a_denied_parent_is_pruned_on_version_1() {
 /// §FS-config-v2.schema.places.boundaries.3.1: on version 2 such a link as a kind's home is
 /// refused at load as it is with the target open, so a mode outside the project decides nothing.
 #[test]
-#[ignore = "red until #1332 judges an outward place as far as the disk answers; implement removes this"]
 fn outward_home_link_with_a_denied_parent_is_refused_on_version_2() {
     let Some(output) = outward_denied_check("out-v2", V2_OUTWARD_HOME, "vals") else {
         return;
