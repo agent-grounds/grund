@@ -189,7 +189,8 @@ pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
     let walk_start = fs::canonicalize(&start_dir).unwrap_or_else(|_| {
         // §AR-scanner.1.9: a link given as the path whose lookup is refused
         // is placed as far as the disk answers, as the walk places such a root.
-        if crate::sources::path_lookup(&start_dir).is_err() {
+        let lookup = crate::sources::path_lookup(&start_dir);
+        if lookup.is_err_and(|error| crate::sources::lookup_refused(&error)) {
             crate::sources::resolved_as_far_as_answered(&start_dir)
         } else {
             start_dir

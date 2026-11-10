@@ -1,4 +1,6 @@
-use crate::sources::{canonical_path, is_directory, path_lookup, resolved_as_far_as_answered};
+use crate::sources::{
+    canonical_path, is_directory, lookup_refused, path_lookup, resolved_as_far_as_answered,
+};
 use anyhow::{Result, anyhow};
 use ignore::WalkBuilder;
 use std::path::{Path, PathBuf};
@@ -408,7 +410,7 @@ impl WalkDirFilter {
             .then(|| {
                 canonical_path(path).ok().or_else(|| {
                     path_lookup(path)
-                        .is_err()
+                        .is_err_and(|error| lookup_refused(&error))
                         .then(|| resolved_as_far_as_answered(path))
                 })
             })

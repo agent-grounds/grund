@@ -97,7 +97,6 @@ fn a_source_two_homes_reach_that_cannot_be_stated_fails_once() {
 /// name would read as no value source still fails, named by the format its own name claims. `data`
 /// is out of the walk, whose own line would otherwise report `data/x.txt` at that name as well.
 #[test]
-#[ignore = "#1325 supervisor decision: under FS-scan.scope.links.owed.refused the walk now also reports values/a.json as an unreadable symlink beside the value pass's line; which one line survives is not yet specified"]
 fn a_listed_link_whose_target_cannot_be_stated_is_not_dropped() {
     let tree = Tree::new("unstatable-link-target", TXT_IS_RUST);
     tree.put("data/x.txt", "{\"CONST-a\": [\"a price\"]}\n");

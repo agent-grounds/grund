@@ -125,6 +125,13 @@ pub(crate) fn path_lookup(path: impl AsRef<Path>) -> std::io::Result<bool> {
     }
 }
 
+/// Whether a failed lookup was refused for lack of permission, the one failure that says the
+/// path may well be there (§FS-scan.scope.links.owed.refused). Every caller asks this one question,
+/// so every other failure, a loop among them, keeps the route it had.
+pub(crate) fn lookup_refused(error: &Error) -> bool {
+    error.kind() == ErrorKind::PermissionDenied
+}
+
 /// The file's bytes as the disk holds them: what a writer reads of the file it
 /// replaces and of the tree it writes into, which no run observes (§FS-fetch.4).
 pub(crate) fn read_bytes(path: impl AsRef<Path>) -> std::io::Result<Vec<u8>> {

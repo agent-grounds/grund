@@ -313,3 +313,28 @@ fn a_link_behind_a_barred_parent_is_reported_whatever_stands_behind_it() {
     let run = tree.run(&["check"]);
     assert_eq!((run.code, run.says_line()), (2, true), "{}", run.stderr);
 }
+
+/// Control: only a refused lookup is rerouted. An extensionless cycle fails its lookup with a loop,
+/// not a refusal, so it keeps the route it had until #1331 rules on it: a bare run passes, and the
+/// link given as the path does not exist (§FS-scan.scope.links.owed.refused).
+#[test]
+fn an_extensionless_cycle_keeps_its_route() {
+    let tree = Tree::new("cycle");
+    tree.link("x", "y");
+    tree.link("y", "x");
+    let run = tree.run(&["check"]);
+    assert_eq!(
+        (run.code, run.stdout.trim()),
+        (0, "success"),
+        "{}",
+        run.stderr
+    );
+    let run = tree.run(&["check", "docs/x"]);
+    assert_eq!(run.code, 2, "{}", run.stderr);
+    assert_eq!(
+        run.stderr.trim(),
+        "error: path does not exist: docs/x",
+        "{}",
+        run.stderr
+    );
+}

@@ -355,6 +355,31 @@ pub(super) fn publish_file_failure(
     }
 }
 
+/// A value source the value pass could not read, published in place of the walk's report of the
+/// same directory entry for the same bare reason (§FS-check.2.4.2, §AR-scanner.1.relisted): a link
+/// in a value home whose target lookup is refused is reported by the walk too, whatever its name,
+/// and the value pass's line, with its value-home remedy, is
+/// the one that stands (§FS-values.5.3.1), since `exclude` does not reach a value source.
+pub(super) fn publish_value_source_failure(
+    report: ScanError,
+    error: &Error,
+    reported: &mut Vec<ScanError>,
+) {
+    let reason = io_reason(error);
+    let entry = link_identity(&report.path);
+    let walk_line = reported.iter_mut().find(|held| {
+        held.reason
+            .strip_prefix(UNREADABLE_LINK)
+            .unwrap_or(&held.reason)
+            == reason
+            && (held.path == report.path || entry.is_some() && link_identity(&held.path) == entry)
+    });
+    match walk_line {
+        Some(held) => *held = report,
+        None => reported.push(report),
+    }
+}
+
 fn publish_unless_reported(
     spelled: PathBuf,
     error: &Error,
