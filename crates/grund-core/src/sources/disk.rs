@@ -72,6 +72,7 @@ pub(crate) fn path_resolution(path: impl AsRef<Path>) -> Resolution {
 /// The kind the standard library gives ELOOP, `FilesystemLoop`, cannot be named on stable
 /// Rust (`io_error_more`, rust-lang/rust#86442), though every error carries it; its derived
 /// name is what tells it, on every platform the library maps a loop to it.
+// Switch to `ErrorKind::FilesystemLoop` once it is stable; `classifies_*` below fail on a rename.
 pub(crate) fn error_resolution(error: &Error) -> Resolution {
     let kind = error.kind();
     if format!("{kind:?}") == "FilesystemLoop" {
@@ -174,5 +175,30 @@ pub(crate) fn io_reason(error: &Error) -> String {
             error.to_string()
         }
         kind => Error::from(kind).to_string(),
+    }
+}
+
+/// The classifier itself tells a loop from a missing target (§FS-scan.scope.links.owed.cycle), so a
+/// toolchain that renames the loop's kind fails here rather than only in the walk's tests.
+#[cfg(all(test, unix))]
+mod tests {
+    use super::{Resolution, path_resolution};
+    use std::io::ErrorKind;
+
+    #[test]
+    fn classifies_a_self_link_as_a_loop_and_a_dangling_link_as_missing() {
+        let root =
+            std::env::temp_dir().join(format!("grund-1331-resolution-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).unwrap();
+        std::os::unix::fs::symlink("self", root.join("self")).unwrap();
+        std::os::unix::fs::symlink("nowhere", root.join("dangling")).unwrap();
+        let looping = path_resolution(root.join("self"));
+        let dangling = path_resolution(root.join("dangling"));
+        let directory = path_resolution(&root);
+        std::fs::remove_dir_all(&root).unwrap();
+        assert_eq!(looping, Resolution::Loop);
+        assert_eq!(dangling, Resolution::Unresolved(ErrorKind::NotFound));
+        assert_eq!(directory, Resolution::Directory);
     }
 }
