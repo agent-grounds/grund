@@ -249,7 +249,7 @@ A directory link whose target exists but cannot be opened, because this user may
 
 #### scope.links.owed: Which unresolvable links are owed a report
 
-That report is owed only where the scan would otherwise have read through the link, judged by the same rules as any other entry: the ignore files for both kinds, and `extensions` as well for a broken link, which names a file where a loop names a directory. So a dangling `docs/logo.png -> nowhere`, and a link of either kind that `.gitignore` covers, stay silent — the scan was never going to read them.
+That report is owed only where the scan would otherwise have read through the link, judged by the same rules as any other entry: the ignore files for both kinds, and `extensions` as well for a broken link, which names a file where a loop names a directory. So a dangling `docs/logo.png -> nowhere`, and a link of either kind that `.gitignore` covers, stay silent — the scan was never going to read them. A directory-only pattern such as `docs/ext/` covers a link that names a directory whether or not its target opens, a loop and a directory link whose target cannot be opened alike, just as it covers the followed link when its target opens ([§FS-scan.scope.links.names](FS-scan.md#scopelinksnames-the-directory-rules-apply-under-the-link-name)); a dangling link names a file, and such a pattern does not cover it.
 
 ##### scope.links.owed.fence: The project-root fence is judged on the target, opened or not
 
