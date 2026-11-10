@@ -105,31 +105,32 @@ pub(super) fn scan_e2e_cases(
     let narrowed_to_path = explicit_scope
         && !(resolution_wide && cases_root_in_ordinary_scope(schema, frame, &cases_root));
     // §FS-check.2.4.2: the path the run was handed, whose spelling names a file met twice.
-    let run_path = explicit_scope
+    let resolved = explicit_scope
         .then(|| scan_roots(schema, frame, scope, explicit_scope).ok())
-        .flatten()
+        .flatten();
+    let run_path = resolved
+        .as_ref()
         .filter(|(_, whole)| !whole)
-        .and_then(|(roots, _)| roots.into_iter().next());
+        .and_then(|(roots, _)| roots.first().cloned());
 
     // §FS-cover.1.2: the spelled path below a case, whose failures alone the pass holds.
     let mut held = None;
-    let case = narrowed_to_path
-        .then(|| case_holding(&spelled_root, &cases_root, run_path.as_deref()))
-        .flatten();
-    if let Some((case, below_case)) = case {
-        scan_root = case;
+    if narrowed_to_path {
+        // A path that resolved to the config root holds the whole folder.
+        let whole = resolved.as_ref().is_some_and(|(_, whole)| *whole);
+        let narrowed = if whole {
+            Some((cases_root.clone(), None))
+        } else {
+            run_path
+                .as_deref()
+                .and_then(|path| narrowed_root(&spelled_root, &cases_root, path))
+                .or_else(|| resolved_root(scope.unwrap_or(Path::new(".")), &cases_root))
+        };
+        let Some((root, below_case)) = narrowed else {
+            return;
+        };
+        scan_root = root;
         held = below_case;
-    } else if narrowed_to_path {
-        let scope = scope.unwrap_or(Path::new("."));
-        if path_is_file(&scope) {
-            return;
-        }
-        let scope = canonical_path(scope).unwrap_or_else(|_| scope.to_path_buf());
-        if scope.starts_with(&cases_root) {
-            scan_root = scope;
-        } else if !cases_root.starts_with(&scope) {
-            return;
-        }
     } else if !frame.run.scope.full && !cases_root_in_ordinary_scope(schema, frame, &cases_root) {
         // §FS-check.1.3: `--full` cancels `include`, so the e2e cases are in the
         // walk whether or not `include` happens to name their folder.
@@ -292,18 +293,22 @@ fn cases_met<'a>(
     })
 }
 
-/// The case a narrowed path names or lies below, decided on the path as the tree spells it under
-/// the configured folder, so a case directory linked out of the folder is still that case
-/// (§FS-cover.1.2). Beside the case, the spelled path where it lies below the case, whose files
-/// alone it holds. `None` where the path is at or above the folder, or below no case.
-fn case_holding(
+/// What a narrowed pass reads, decided on the path as the tree spells it against the configured
+/// folder, and on nothing else, so neither the case nor the folder being a link changes the answer
+/// (§FS-cover.1.2): a path at or above the folder reads the whole folder; a path naming a case or
+/// lying below one reads that case, with the spelled path beside it where it lies below the case,
+/// whose files alone it holds; a directory below the folder that is no case is read from there, as
+/// it was. `None` for any other path, which `resolved_root` then answers.
+fn narrowed_root(
     spelled_root: &Path,
     cases_root: &Path,
-    run_path: Option<&Path>,
+    run_path: &Path,
 ) -> Option<(PathBuf, Option<PathBuf>)> {
-    let below = run_path?
-        .strip_prefix(normalize_path_lexically(spelled_root))
-        .ok()?;
+    let folder = normalize_path_lexically(spelled_root);
+    if folder.starts_with(run_path) {
+        return Some((cases_root.to_path_buf(), None));
+    }
+    let below = run_path.strip_prefix(&folder).ok()?;
     let mut parts = below.components();
     let name = match parts.next()? {
         Component::Normal(name) => name,
@@ -311,11 +316,29 @@ fn case_holding(
     };
     let case = cases_root.join(name);
     // §AR-scanner.6.1: a case is a directory holding `expected.exit`, as the walk reads one.
-    if !path_is_file(&case.join("expected.exit")) {
+    if path_is_file(&case.join("expected.exit")) {
+        let held = parts.next().is_some().then(|| spelled_root.join(below));
+        return Some((case, held));
+    }
+    // Below the folder but in no case: a file holds no case, and a directory reads what it held.
+    (!path_is_file(run_path)).then(|| (cases_root.join(below), None))
+}
+
+/// §FS-cover.1.2: a directory path the spelling decides nothing for reads the cases where it
+/// resolves at, above or below the canonical folder, as it did: the target of a cases folder that
+/// is a link. The target of a case that is a link resolves outside the folder and reads nothing.
+fn resolved_root(scope: &Path, cases_root: &Path) -> Option<(PathBuf, Option<PathBuf>)> {
+    if path_is_file(scope) {
         return None;
     }
-    let held = parts.next().is_some().then(|| spelled_root.join(below));
-    Some((case, held))
+    let scope = canonical_path(scope).unwrap_or_else(|_| scope.to_path_buf());
+    if scope.starts_with(cases_root) {
+        Some((scope, None))
+    } else {
+        cases_root
+            .starts_with(&scope)
+            .then(|| (cases_root.to_path_buf(), None))
+    }
 }
 
 /// What a walk one level below `dir` met, where no walk of the scan listed it
