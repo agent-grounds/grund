@@ -104,6 +104,7 @@ mod walk_failures;
 mod walk_names;
 mod walk_order;
 mod walk_reporting;
+mod walk_roots;
 mod yaml;
 mod yaml_text;
 

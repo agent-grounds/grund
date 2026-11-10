@@ -118,7 +118,6 @@ impl Run {
 
 /// The ticket's `self`, `self-full` and `grund check docs`: the walk meets the link on the way down.
 #[test]
-#[ignore = "red until #1331 judges a looping link as a loop; implement removes this"]
 fn an_extensionless_self_link_is_reported_at_the_link() {
     let tree = Tree::new("self").link("self", "self");
     for args in [&["check"][..], &["check", "--full"], &["check", "docs"]] {
@@ -128,7 +127,6 @@ fn an_extensionless_self_link_is_reported_at_the_link() {
 
 /// The ticket's `pair`: each link of a two-link cycle is a loop.
 #[test]
-#[ignore = "red until #1331 judges a looping link as a loop; implement removes this"]
 fn each_link_of_an_extensionless_cycle_is_reported() {
     let tree = Tree::new("pair").link("a2", "b").link("b", "a2");
     tree.grund(&["check"])
@@ -137,7 +135,6 @@ fn each_link_of_an_extensionless_cycle_is_reported() {
 
 /// `extensions` is never asked of a loop, so a name it does not list is reported too.
 #[test]
-#[ignore = "red until #1331 judges a looping link as a loop; implement removes this"]
 fn a_self_link_with_an_unlisted_extension_is_reported() {
     let tree = Tree::new("png").link("logo.png", "logo.png");
     tree.grund(&["check"]).assert_reports(&["docs/logo.png"]);
@@ -145,7 +142,6 @@ fn a_self_link_with_an_unlisted_extension_is_reported() {
 
 /// A looping link named as the path exists, so the run reports it rather than calling it missing.
 #[test]
-#[ignore = "red until #1331 judges a looping link as a loop; implement removes this"]
 fn a_looping_link_named_as_the_path_is_reported_not_missing() {
     let tree = Tree::new("named")
         .link("self", "self")

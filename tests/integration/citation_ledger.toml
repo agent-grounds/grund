@@ -26,6 +26,7 @@ points = [
   "FS-scan.scope",
 ]
 owners = [
+  "crates/grund-core/src/config/discovery.rs",
   "crates/grund-core/src/config/global_excludes.rs",
   "crates/grund-core/src/config/project.rs",
   "crates/grund-core/src/config/run.rs",
@@ -37,7 +38,9 @@ owners = [
   "crates/grund-core/src/scanner/read_predicate.rs",
   "crates/grund-core/src/scanner/walk.rs",
   "crates/grund-core/src/scanner/walk_boundaries.rs",
+  "crates/grund-core/src/scanner/walk_errors.rs",
   "crates/grund-core/src/scanner/walk_reporting.rs",
+  "crates/grund-core/src/scanner/walk_roots.rs",
   "crates/grund-core/src/sources/disk.rs",
   "crates/grund-core/src/sources/identity.rs",
   "crates/grund-core/src/workspace/declared.rs",
