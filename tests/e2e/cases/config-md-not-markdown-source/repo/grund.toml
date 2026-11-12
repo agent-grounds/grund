@@ -1,0 +1,19 @@
+grund_config_version = 2
+project_name = "g1206"
+
+[schema.sources]
+languages = ["markdown", "rust"]
+
+[schema.sources.extensions]
+md = "rust"
+
+[schema.kinds.FS]
+folders = ["fs"]
+index = false
+
+[schema.kinds.G]
+folders = ["g"]
+index = false
+
+[rules.citations.G.grounding]
+must = "file"

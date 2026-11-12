@@ -1,0 +1,3 @@
+fs/b.txt:1: error: FS-b is not listed in fs/index.txt: an entry is a `§`-marked Markdown link to the declaration; write `[§FS-b](b.txt#fs-b-beta)` in fs/index.txt — became an error in grund 0.13.0
+fs/a.txt:1: warning: declared but never cited: FS-a (its index entry at fs/index.txt:3 does not count as a use); cite it
+fs/b.txt:1: warning: declared but never cited: FS-b; cite it

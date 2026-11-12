@@ -47,7 +47,7 @@ exit 2 with the tree byte-identical, by the home's path and kind and before the
 integration runs. Five answers lose.
 
 - **Refuse when the configuration loads.** A rule kind's non-Markdown home is refused
-  there ([§FS-config-v2.schema.sources.rules](../../functional-spec/FS-config-v2.md#schemasourcesrules-a-rule-kinds-file-home-is-markdown-by-its-language)), and that also passes the reproducer. But
+  there ([§FS-config-v2.schema.sources.rules](../../functional-spec/FS-config-v2.md#schemasourcesrules-every-home-of-a-rule-kind-is-judged-by-its-reading)), and that also passes the reproducer. But
   `check`, `list`, `show` and `refs` read this project correctly, so they would stop on a
   project they have nothing against, for a write they never make.
 - **Refuse only a home that declares the ID.** That is the reported shape and it passes

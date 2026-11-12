@@ -1,0 +1,16 @@
+grund_config_version = 2
+project_name = "g1206"
+
+[schema.sources]
+languages = ["markdown", "rust"]
+
+[schema.sources.extensions]
+md = "rust"
+fsdoc = "markdown"
+
+[schema.kinds.FS]
+files = ["fs/spec.fsdoc"]
+
+[schema.kinds.RULE]
+files = ["rules/rules.md"]
+form = "rule"

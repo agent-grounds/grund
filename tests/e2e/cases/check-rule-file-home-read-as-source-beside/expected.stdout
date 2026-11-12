@@ -1,0 +1,4 @@
+fs/spec.md:1: error: FS-a has 0 Terms chapters; RULE-glossary requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: none; add, remove or retitle chapters until the count fits
+fs/spec.md:1: warning: declared but never cited: FS-a; cite it
+rules/more.rs:1: warning: declared but never cited: RULE-glossary; cite it
+rules/rules.md:1: warning: declared but never cited: RULE-cite; cite it

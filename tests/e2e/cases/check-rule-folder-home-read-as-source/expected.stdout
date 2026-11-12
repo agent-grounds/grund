@@ -1,0 +1,2 @@
+fs/spec.fsdoc:1: warning: declared but never cited: FS-a; cite it
+rules/rules.md:1: warning: read as `rust`, which does not read Markdown, in `rules`, a folder home of rule kind `RULE`, so a rule written as a Markdown heading here declares nothing; give it a name a `document` language reads, or move it out of `rules`

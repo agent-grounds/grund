@@ -1,0 +1,1 @@
+"""A txt read as Python, docstring $$FS-a here."""

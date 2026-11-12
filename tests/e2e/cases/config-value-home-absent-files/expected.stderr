@@ -1,0 +1,1 @@
+warning: grund.toml:5: value home for kind `CONST` does not exist: values/absent.md; until then the row reads its other homes; create the file, or drop the entry; this becomes an error in grund 1.0.0

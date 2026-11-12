@@ -1,0 +1,2 @@
+warning: grund.toml:8: [schema.sources.extensions] maps `md` to `rust`, which does not read Markdown; `.md` is always Markdown, and until then a `.md` file is read as `rust`; drop the entry, or map `md` to a `document` language; this becomes an error in grund 1.0.0
+warning: grund.toml:12: `[schema.kinds.FS] index` must name a Markdown file; `index.md` is not read as Markdown, so until then its folders are judged as under `index = false`; name a file a `document` language reads, or set `index = false`; this becomes an error in grund 1.0.0

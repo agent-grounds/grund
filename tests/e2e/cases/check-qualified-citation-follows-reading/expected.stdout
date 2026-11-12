@@ -1,0 +1,7 @@
+fs/a.txt:3: error: unknown reference api/FS-quoted
+fs/a.txt:4: error: unknown reference api/FS-ticks; write <§>api/FS-ticks if this is an illustration
+fs/a.txt:5: error: unknown reference api/FS-plain
+fs/b.rs:4: error: unknown reference api/FS-plain
+api/fs/FS-api.md:1: warning: declared but never cited: FS-api; cite it
+fs/a.txt:1: warning: declared but never cited: FS-a; cite it
+fs/b.rs:1: warning: declared but never cited: FS-b; cite it
