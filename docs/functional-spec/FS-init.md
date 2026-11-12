@@ -310,7 +310,9 @@ The prefix is `wrote ` for a newly written or overwritten file, including an age
 
 After the file list come any `note:` lines ([§FS-init.2.2.1](FS-init.md#221-notes)), then the `next:` block ([§FS-init.2.2.2](FS-init.md#222-the-next-block)). `--check` ([§FS-init.1](FS-init.md#1-inputs)) prints the same conditional report as `--dry-run` and everything after it — the `note:` lines, the `next:` block, and the rule that suppresses it — so the two runs differ in one thing only: the exit code each draws from what it printed ([§FS-init.4](FS-init.md#4-exit-codes)).
 
-Paths are relative to `<path>`. Stdout is always empty ([§FS-errors.6](FS-errors.md#6-the-grund-init-transcript) — `init`'s output is the scaffold it wrote to disk, and the transcript is progress, not output).
+Paths are relative to `<path>`. The path transcript stays on stderr
+([§FS-errors.6](FS-errors.md#6-the-grund-init-transcript)); located rule findings
+are printed on stdout ([§FS-init.4.1](FS-init.md#41-what-earns-the-1)). With no rule finding, stdout is empty.
 
 #### 2.2.1 Notes
 
@@ -1202,15 +1204,37 @@ With `--force`, a selected canonical `AGENTS.md` and the starter files `--scaffo
 
 ## 4. Exit codes
 
-- `0` — every requested file was written, appended, updated, or already current. Under `--check` ([§FS-init.1](FS-init.md#1-inputs)) this is the tree that is current: every reported path was `exists ` and there is nothing to write.
-- `1` — `--check` only: the report carried at least one `would-…` line, so the tree is not current ([§FS-init.4.1](FS-init.md#41-what-earns-the-1)).
+- `0` — no rule finding was reported and every requested file was written, appended, updated, or already current; a `--dry-run` preview may still report pending paths ([§FS-init.4.3](FS-init.md#43-why---dry-run-keeps-0)). Under `--check` ([§FS-init.1](FS-init.md#1-inputs)), there is no rule finding and nothing pending.
+- `1` — a rule finding was reported ([§FS-rules.4](FS-rules.md#4-validation-lifecycle), [§FS-rules.4.1.2](FS-rules.md#412-what-init-writes-anyway)), independently of the path events; otherwise, `--check` reported at least one pending path ([§FS-init.4.1](FS-init.md#41-what-earns-the-1)).
 - `2` — I/O error (target path does not exist, permission denied, disk full, etc.); a CLI-level error such as an unknown flag; a refused target ([§FS-init.1.2](FS-init.md#12-refused-targets)), in which case nothing was written; an existing config that fails to load ([§FS-init.2.3.8.3](FS-init.md#2383-a-config-that-fails-to-load)); a refused template, an unknown name or `none` beside `--scaffold` ([§FS-init.1.6.3](FS-init.md#163-an-unknown-name), [§FS-init.1.6.4](FS-init.md#164-none-has-nothing-to-scaffold)), in which case nothing was written; an existing agent entrypoint contains a managed block whose schema version is newer than the running binary supports ([§FS-init.2.3.10.2](FS-init.md#23102-a-newer-block-version)); or an existing agent entrypoint has malformed delimiters ([§FS-init.2.3.11](FS-init.md#2311-malformed-delimiters)) — in both of those the file is left unchanged. `2` wins over `1` ([§FS-init.4.2](FS-init.md#42-2-wins-over-1)).
 
-`--dry-run` alone keeps `0` whatever it reports ([§FS-init.4.3](FS-init.md#43-why---dry-run-keeps-0)). Exit-code mapping is fixed per [§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out) and [§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization).
+Rule findings take precedence over the pending-path check, including under
+`--dry-run` ([§FS-init.4.3](FS-init.md#43-why---dry-run-keeps-0)). Exit-code mapping is fixed per [§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out) and [§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization).
 
 ### 4.1 What earns the `1`
 
-The `would-…` lines that earn the `1` are `would-write `, `would-append `, and `would-update `. Nothing was written, and the run that fixes it is the same `init` without the flag. A `note:` never earns the `1` and neither does the `next:` block — a note is a report, not a finding ([§FS-init.2.2.1](FS-init.md#221-notes)), and the exit code is decided by the reported paths alone.
+Rule findings earn `1` in ordinary, `--check` and `--dry-run` runs. Their
+validation and write consequences are defined by [§FS-rules.4](FS-rules.md#4-validation-lifecycle) and
+[§FS-rules.4.1.2](FS-rules.md#412-what-init-writes-anyway): an invalid rule withholds the write; an unverifiable rule is
+reported and rendered as authored. The latter still earns `1` when the block
+was written, updated or already current, including a current `--check` run.
+`grund check` from the workspace root can judge the alias-pinned rule with the
+full vocabulary ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)).
+
+Independently, under `--check`, the pending-path events `would-write `,
+`would-append ` and `would-update ` earn `1` (as do pending scoped-file events
+defined by [§FS-init.2.3.5.14.4](FS-init.md#235144-the-report-names-every-scoped-file-and-link-it-touched)). Nothing was written, and the run that refreshes
+those paths is the same `init` without the flag. A `note:` never earns `1` and
+neither does the `next:` block — a note is a report, not a finding
+([§FS-init.2.2.1](FS-init.md#221-notes)).
+
+Help and user guidance must explain both causes and the existing reports that
+distinguish them: located rule errors are on stdout; path events are on stderr
+([§FS-init.2.2](FS-init.md#22-stdout--stderr)). A rule finding and pending events can coexist. A rule finding
+alone says nothing about pending paths; `exists` or `updated` alone says
+nothing about other paths or rule findings. In particular, a report containing
+only current path events can accompany a rule finding and exit `1`, so the exit
+alone cannot serve as a member's staleness gate. No new report format is required.
 
 ### 4.2 `2` wins over `1`
 
@@ -1218,7 +1242,14 @@ A run that could not be performed produced no report to gate on, so `--check` ov
 
 ### 4.3 Why `--dry-run` keeps `0`
 
-The asymmetry between `--dry-run`'s `0` and `--check`'s `1` is deliberate. `1` is the *findings* slot of the mapping [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed) freezes, and `init` had never used it, so `--check` fills a hole in the mapping rather than moving it. Giving the `1` to `--dry-run` instead would change the verdict an existing green CI step gets on upgrade — quietly, with no finding naming the release and no one-command fix — which is the one thing [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) puts the exit-code mapping out of reach of. So there are two spellings because there are two questions: `--dry-run` asks *what would this run do*, `--check` asks *is there anything left to do*.
+With no rule finding or operational failure, `--dry-run` keeps `0` even when
+paths are pending, while `--check` earns `1` for those paths. This asymmetry is
+deliberate: `--dry-run` asks *what would this run do*, `--check` asks *is there
+anything left to do*. Making pending paths alone fail a preview would change
+an existing green CI step's verdict on upgrade ([§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered)).
+Both forms still use the findings slot of [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed) for rule errors
+([§FS-init.4.1](FS-init.md#41-what-earns-the-1)); `--dry-run` is not an unconditional-success escape from the
+rule verdict preserved by [§DF-unverifiable-rule-scope.2.2](../decisions/functional/DF-unverifiable-rule-scope.md#22-unverifiable-is-a-verdict-the-parser-reaches-not-a-judgement).
 
 ## 5. The guide
 

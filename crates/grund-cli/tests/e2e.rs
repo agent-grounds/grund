@@ -5,6 +5,8 @@ use std::time::Instant;
 
 #[path = "support/case_runner.rs"]
 mod case_runner;
+#[path = "support/init_rule_exit.rs"]
+mod init_rule_exit;
 #[path = "../../../tests/integration/ordered_pool.rs"]
 mod ordered_pool;
 
