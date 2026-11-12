@@ -182,7 +182,6 @@ fn a_link_behind_the_barred_directory_keeps_its_line() {
 /// The issue: a file, a directory, and a name that may not exist behind the barred `.r` each fail
 /// at the path given, where the run said `path does not exist`.
 #[test]
-#[ignore = "red until #1354 stops reading a refused lookup as a missing path; implement removes this"]
 fn a_barred_path_is_a_permission_failure_at_the_path() {
     let Some(tree) = Tree::barred("check") else {
         return;
@@ -197,7 +196,6 @@ fn a_barred_path_is_a_permission_failure_at_the_path() {
 
 /// The issue in JSON: one `io` error at the path given, where the run printed the text line.
 #[test]
-#[ignore = "red until #1354 stops reading a refused lookup as a missing path; implement removes this"]
 fn a_barred_path_is_one_json_error_at_the_path() {
     let Some(tree) = Tree::barred("json") else {
         return;
@@ -227,7 +225,6 @@ fn a_barred_path_is_one_json_error_at_the_path() {
 
 /// Every command that scans from a `<path>` reaches the same site, so each fails at the path.
 #[test]
-#[ignore = "red until #1354 stops reading a refused lookup as a missing path; implement removes this"]
 fn a_barred_path_fails_every_command_at_the_path() {
     let Some(tree) = Tree::barred("others") else {
         return;

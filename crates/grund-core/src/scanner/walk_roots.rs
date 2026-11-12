@@ -8,9 +8,7 @@ use std::path::{Path, PathBuf};
 use super::walk_boundaries::is_directory_symlink;
 use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots};
 use crate::model::normalize_path_lexically;
-use crate::sources::{
-    Resolution, canonical_path, lookup_refused, path_is_symlink, path_lookup, path_resolution,
-};
+use crate::sources::{canonical_path, path_lookup};
 
 /// The directories (or single file) the walk starts from, and so which files a run
 /// reads (§FS-scan.scope): `[scan] include`
@@ -72,13 +70,10 @@ fn resolve_scan_roots(
 ) -> Result<(Vec<PathBuf>, bool)> {
     if explicit_scope {
         let scope = scope.unwrap_or(Path::new("."));
-        // §FS-scan.scope.links.unresolvable.named: a looping link exists; the walk reports it.
-        // §FS-scan.scope.links.owed.refused: so does a link whose target lookup is refused, at
-        // the link; only a lookup that says nothing is there is absent.
-        let absent = matches!(path_resolution(scope), Resolution::Unresolved(_))
-            && !(path_lookup(scope).is_err_and(|error| lookup_refused(&error))
-                && path_is_symlink(scope));
-        if absent {
+        // §FS-scan.scope.homes.lookup.path: absent only when the lookup says so, as the walk
+        // asks of every root; a refused path, link or not (§FS-scan.scope.links.owed.refused),
+        // and a looping link (§FS-scan.scope.links.unresolvable.named) are the walk's to report.
+        if matches!(path_lookup(scope), Ok(false)) {
             return Err(anyhow!("path does not exist: {}", scope.display()));
         }
         let lexical_scope = if scope.is_absolute() {
