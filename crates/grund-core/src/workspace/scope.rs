@@ -18,9 +18,9 @@ use crate::config::display_path;
 use crate::config::{
     Config, ConfigLocation, Invocation, RunWarning, Selection, config_at, config_file_in,
     discover_config, discovery_start, invalid_project_alias_message, is_valid_project_alias,
-    reject_unaccepted_citation_targets,
+    nearest_config, reject_unaccepted_citation_targets,
 };
-use crate::model::format_path;
+use crate::model::{format_path, normalize_path_lexically};
 
 /// Whether the path names the project's root (§FS-check.1.3.6): the invocation's
 /// question, answered in config where the `Run` is built (§AR-config.1.5).
@@ -135,22 +135,48 @@ fn config_for_member_scope(mut config: Config, invocation: &Invocation) -> Resul
     if !config.workspace_declared {
         return Ok(config);
     }
-    let scope = config_scope_start(&invocation.path);
+    let start = discovery_start(&invocation.path);
+    let scope = canonical_path(&start).unwrap_or_else(|_| start.clone());
     if scope == config.root {
         return Ok(config);
     }
-    if let Some(member_root) = configured_member_root_for_scope(&config, &scope) {
+    if let Some(member_root) = lexical_member_root(&config, &start)
+        .or_else(|| configured_member_root_for_scope(&config, &scope))
+    {
         config = config_at(&member_root, &config.cli_base, None, invocation)?;
     }
     Ok(config)
 }
 
-/// The canonical directory a scope starts from: the one discovery starts from
-/// (§FS-config.1.5), so a bare file name is scoped from the working directory
-/// (§FS-config.1.4), resolved here because member roots are compared resolved.
-fn config_scope_start(path: &Path) -> PathBuf {
-    let start = discovery_start(path);
-    canonical_path(&start).unwrap_or(start)
+/// §FS-config.1.5: the member a scope lies in on the path discovery climbed, written below
+/// the directory the workspace config was found in, so a scope under `m/` is member `m`'s
+/// even through a link out of the workspace. `None` where the start lies in no member as
+/// written; the caller then matches it resolved.
+fn lexical_member_root(config: &Config, start: &Path) -> Option<PathBuf> {
+    let (dir, _) = nearest_config(start)?;
+    let relative = start.strip_prefix(&dir).ok()?;
+    let member = config
+        .workspace_members
+        .iter()
+        .chain(config.workspace_optional_members.iter())
+        .filter_map(|member| lexical_member_candidate(member, relative))
+        .max_by_key(|member| member.components().count())?;
+    Some(canonical_workspace_path(&config.root.join(member)))
+}
+
+/// The member directory `entry` names that holds `relative`, both as written below the
+/// workspace config: the one child of a `parent/*` entry, or the entry itself.
+fn lexical_member_candidate(entry: &str, relative: &Path) -> Option<PathBuf> {
+    if let Some(parent) = entry.strip_suffix("/*") {
+        let parent = normalize_path_lexically(Path::new(parent));
+        let Component::Normal(child) = relative.strip_prefix(&parent).ok()?.components().next()?
+        else {
+            return None;
+        };
+        return Some(parent.join(child));
+    }
+    let member = normalize_path_lexically(Path::new(entry));
+    relative.starts_with(&member).then_some(member)
 }
 
 /// §FS-workspace.2.2: both lists are read here. Present, an optional member is an

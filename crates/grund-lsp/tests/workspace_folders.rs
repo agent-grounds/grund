@@ -337,3 +337,62 @@ fn removing_one_symlink_alias_keeps_the_other_anchor_active() {
     wait_for_exit(&mut child);
     let _ = fs::remove_dir_all(root);
 }
+
+/// §FS-lsp.2.2.1, §FS-config.1.5: a folder opened at `v2/e2e/cases`, a link out of the
+/// project `v2`, discovers `v2`'s config from the folder as the client named it, as the
+/// CLI does from that path, so its refusal of the outward kind home is published on
+/// `v2/grund.toml` as it is for the folder `v2`, rather than nothing at the link's target.
+#[test]
+#[cfg(unix)]
+fn a_folder_opened_through_a_link_out_of_its_project_keeps_the_project() {
+    let root = test_root("linked-out-folder");
+    let project = root.join("v2");
+    fs::create_dir_all(project.join("e2e")).expect("create the project");
+    fs::create_dir_all(root.join("outside/cases/b")).expect("create the link target");
+    fs::write(root.join("outside/cases/b/expected.exit"), "0\n").expect("write the case");
+    let config = project.join("grund.toml");
+    fs::write(
+        &config,
+        "grund_config_version = 2\nproject_name = \"p\"\n\n[schema]\n\
+         slug_pattern = \"[a-z][a-z-]*\"\n\n[schema.kinds.E2E]\nfolders = [\"e2e/cases\"]\n",
+    )
+    .expect("write the config");
+    symlink(root.join("outside/cases"), project.join("e2e/cases")).expect("create the link");
+    let folder = url::Url::from_directory_path(project.join("e2e/cases"))
+        .expect("folder URI")
+        .to_string();
+
+    let (mut child, mut stdin, receiver) = start_server_with_initialize(
+        &root,
+        json!({
+            "processId": std::process::id(),
+            "workspaceFolders": [{ "uri": folder, "name": "cases" }],
+            "capabilities": { "workspace": { "workspaceFolders": true } }
+        }),
+    );
+    let config_uri = file_uri(&config);
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    let message = loop {
+        let remaining = deadline.saturating_duration_since(std::time::Instant::now());
+        let message = receiver
+            .recv_timeout(remaining)
+            .unwrap_or_else(|_| panic!("no diagnostics published on {config_uri}"));
+        if message["method"] == "textDocument/publishDiagnostics"
+            && message["params"]["uri"].as_str() == Some(config_uri.as_str())
+        {
+            break message["params"]["diagnostics"][0]["message"].clone();
+        }
+    };
+    assert!(
+        message.as_str().is_some_and(|text| text.starts_with(
+            "grund.toml:8: place `e2e/cases` in `[schema.kinds.E2E] folders` links out of the \
+             project root"
+        )),
+        "the project's refusal: {message}"
+    );
+
+    stop_server(&mut child, &mut stdin, &receiver, 2);
+    drop(stdin);
+    wait_for_exit(&mut child);
+    let _ = fs::remove_dir_all(root);
+}

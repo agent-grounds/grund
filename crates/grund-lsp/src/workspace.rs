@@ -1,8 +1,14 @@
 /// Resolve an editor folder to the scan root it names. A discovered config owns
 /// the scan, including sibling `[scan] include` roots; only a zero-config folder
-/// remains its own boundary (§FS-lsp.2.2.1).
-fn project_root(folder: &Path) -> Result<PathBuf> {
-    let config = effective_config(folder)?;
+/// remains its own boundary (§FS-lsp.2.2.1). Discovery starts from the folder as the
+/// client named it, as the CLI's does from its path (§FS-config.1.5), so a folder
+/// reached through a link out of its project keeps that project; `folder` is its
+/// canonical identity, which only the roots returned here take.
+fn project_root(folder_uri: &Url, folder: &Path) -> Result<PathBuf> {
+    let named = folder_uri
+        .to_file_path()
+        .unwrap_or_else(|()| folder.to_path_buf());
+    let config = effective_config(&named)?;
     if config.config_file.is_some() {
         Ok(canonical_snapshot_path(&config.root))
     } else {

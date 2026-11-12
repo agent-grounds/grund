@@ -2,7 +2,8 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use crate::config::{
-    AbsentOptionalNamespace, Config, config_file_in, is_valid_project_alias, run_warning_findings,
+    AbsentOptionalNamespace, Config, config_file_in, discovery_start, is_valid_project_alias,
+    nearest_config, run_warning_findings,
 };
 use crate::model::{Finding, normalize_path_lexically};
 use crate::resolver::settled_run_warnings;
@@ -173,14 +174,11 @@ fn find_init_workspace_root(
     // canonicalized project roots `expand_workspace_tree` returns; bail
     // out so the section is suppressed (§FS-init.2.3.4.15).
     let canonical_target = canonical_path(target).ok()?;
-    let mut cursor: Option<&Path> = Some(&canonical_target);
-    let mut config = loop {
-        let dir = cursor?;
-        if config_file_in(dir).is_some() {
-            break open_at(dir, &canonical_target).ok()?;
-        }
-        cursor = dir.parent();
-    };
+    // §FS-config.1.5: the governing config is found on the target's own parents, so a
+    // target linked out of its workspace never teaches a stranger's members; only the
+    // chosen root resolves, when `open_at` loads it.
+    let (dir, _) = nearest_config(&discovery_start(target))?;
+    let mut config = open_at(&dir, &canonical_target).ok()?;
     let run_root = config.root.clone();
     let mut ancestors = AncestorWorkspaces::for_run_at(&config.root);
     let climbed = loop {

@@ -337,7 +337,7 @@ impl Server {
         let mut discoverable_roots = BTreeSet::new();
         self.folder_config_failures.clear();
         for (folder_uri, folder) in &self.workspace_folders {
-            match project_root(folder) {
+            match project_root(folder_uri, folder) {
                 Ok(root) => {
                     self.folder_roots.insert(folder_uri.clone(), root.clone());
                     discoverable_roots.insert(root.clone());
