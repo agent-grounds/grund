@@ -165,6 +165,10 @@ to record grounding structure for ([§AR-config.6.1](AR-config.md#61-scandemand-
 
 Scan entry stays on the spelling ([§FS-scan.identity.reading.entry](../functional-spec/FS-scan.md#identityreadingentry-whether-a-spelling-enters-the-scan-is-judged-by-the-name-met)). The hidden and listed tests in `read_as_source` and `value_format`, and `lists_extension` in the walk's filter, decide whether a file enters the scan and keep asking the path they were handed; only the reading moves to the chosen name. `language_of` at config load and the config-load `.md` tests judge a name written in the config, not a file, and stay as they are.
 
+### 1.7 A reported path is spelled by one function
+
+`config` holds the one function that spells a path a report names: relative to the run's report base, and `.` for the base itself ([§FS-cli.3.4](../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from)). The empty string is not a spelling any caller can get, so no message handles it on its own, and a message that needs to know whether a place is the base asks the path, never the rendered string. A finding's location and `sites`, the paths inside its message, a scan failure's location and a path its reason names all go through it ([§FS-errors.2.2.5](../functional-spec/FS-errors.md#225-one-scan-failure-one-rendering)). What is spelled from another base for another reason, a `members` entry about to be written relative to the config root, is a different fact with its own named function, not a caller of this one.
+
 ## 2. The v1 reader and its isolation
 
 Discovery, which decides which file governs ([§FS-config.1](../functional-spec/FS-config.md#1-file-location-and-discovery)), stays in
