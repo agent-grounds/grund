@@ -86,7 +86,7 @@ pub(crate) fn show_e2e_case(
         // The frame's display is the report root's: an `<alias>/E2E-x` from a workspace root
         // reports a root-relative path like every other kind (§FS-workspace.8.1.2), `.` at
         // that root (§FS-cli.3.4). This baked JSON bypasses render_show_output_json.
-        json_escape(&frame.display_location(&case.dir)),
+        json_escape(&frame.display_path(&case.dir)),
         args_json,
         case.expected_exit,
         fixtures_json,

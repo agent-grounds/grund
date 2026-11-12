@@ -11,7 +11,7 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-use crate::config::{Config, KindConfig, display_location};
+use crate::config::{Config, KindConfig, display_path};
 use crate::grammar::{field_value, render_declaration_id};
 use crate::model::{
     Declaration, FileRecords, Finding, Id, format_path, paired_declarations, sort_path_key,
@@ -245,7 +245,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 section_separator: entry.project_config.section_separator.clone(),
                 kind: entry.id.kind.clone(),
                 // §FS-cli.3.4: a record at the report base, an E2E case's directory, reads `.`.
-                path: display_location(render_config, &entry.home.file),
+                path: display_path(render_config, &entry.home.file),
                 line: entry.home.line,
                 title: entry.home.title.clone(),
                 stub: entry.home.is_stub,

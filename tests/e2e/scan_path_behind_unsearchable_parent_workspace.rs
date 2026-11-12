@@ -341,15 +341,15 @@ fn a_path_in_a_barred_member_fails_cover_fmt_and_id_at_the_path() {
                     failures.push(format!("{}: wrote `{line}`", run.shown));
                 }
             }
+            // §FS-errors.2.2.5: `id` prints the line every command prints, its *Fix* included.
             let id = workspace.run(&["id", "FS", "new thing", path]);
-            let line = format!("error: {path}: permission denied");
-            if id.code != 2 || !id.stdout.is_empty() || !id.stderr.lines().any(|l| l == line) {
+            if !id.stdout.is_empty() {
                 failures.push(format!(
-                    "{}: want exit 2, empty stdout and `{line}`; got exit {}\n  stdout: {:?}\n  \
-                     stderr: {:?}",
-                    id.shown, id.code, id.stdout, id.stderr
+                    "{}: want empty stdout; got {:?}",
+                    id.shown, id.stdout
                 ));
             }
+            failures.extend(id.permission_failure_at(path));
         }
         let line = format!("error: docs/ml: unreadable symlink: permission denied; {PASSED_FIX}");
         for args in [&["cover", "docs/ml"][..], &["fmt", "--check", "docs/ml"]] {

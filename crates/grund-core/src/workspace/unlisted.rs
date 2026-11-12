@@ -186,7 +186,7 @@ fn unlisted_workspace_block_message(
     // Both remedies are written from the enclosing project's root, so the entry is
     // spelled from there — while the two file paths render against the run's report
     // base like every other path in a diagnostic (§FS-errors.3.1).
-    let entry = format_path(&relative_from_base(&config.root, dir));
+    let entry = members_entry(&config.root, dir);
     let enclosing_config = config
         .config_file
         .clone()
@@ -255,4 +255,12 @@ fn workspace_table_line(config_path: &Path) -> Option<usize> {
             && line.trim_matches(['[', ']']) == "workspace")
             .then_some(idx + 1)
     })
+}
+
+/// `dir` as a `[workspace] members` entry written in the config at `config_root`: relative to
+/// that root because that is what an entry means, never to the report base, so it is not a
+/// reported path and does not go through the one spelling of one (§AR-config.1.7,
+/// §FS-check.3.29.7).
+pub(super) fn members_entry(config_root: &Path, dir: &Path) -> String {
+    format_path(&relative_from_base(config_root, dir))
 }
