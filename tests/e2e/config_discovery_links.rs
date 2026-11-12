@@ -123,21 +123,18 @@ struct Run {
 
 /// §FS-config.1.5: a v2 outward-home refusal is not replaced by defaults.
 #[test]
-#[ignore = "red until #1326 discovery keeps lexical parents; implement removes this"]
 fn v2_narrowed_checks_keep_the_projects_refusal() {
     Tree::new("v2", V2, "e2e/cases").check_scopes("e2e/cases", 2, &["grund.toml:8:", REFUSAL]);
 }
 
 /// §FS-config.1.5, §FS-check.1.3.6.3: v1 still reads the in-scope bad manifest.
 #[test]
-#[ignore = "red until #1326 discovery keeps lexical parents; implement removes this"]
 fn v1_narrowed_checks_keep_the_projects_read_failure() {
     Tree::new("v1", V1, "tests/e2e").check_scopes("tests/e2e", 2, &[READ_ERROR, V1_WARNING]);
 }
 
 /// §FS-config.1.5: a config above the target cannot replace the governing project.
 #[test]
-#[ignore = "red until #1326 discovery keeps lexical parents; implement removes this"]
 fn a_target_side_config_cannot_replace_the_projects_config() {
     let mut failures = Vec::new();
     for (name, config, link, messages) in [
@@ -160,7 +157,6 @@ fn a_target_side_config_cannot_replace_the_projects_config() {
 
 /// §FS-config.1.5: walking commands share config selection and its refusal.
 #[test]
-#[ignore = "red until #1326 discovery keeps lexical parents; implement removes this"]
 fn cover_fmt_and_list_keep_the_projects_config() {
     let tree = Tree::new("commands", V2, "e2e/cases");
     tree.write("outside/grund.toml", STRANGER.as_bytes());
@@ -178,7 +174,6 @@ fn cover_fmt_and_list_keep_the_projects_config() {
 
 /// §FS-config.1.5: explain's version probe searches the same lexical ancestors.
 #[test]
-#[ignore = "red until #1326 explain keeps lexical parents; implement removes this"]
 fn explain_uses_the_lexical_projects_version() {
     let tree = Tree::new("explain", V1, "tests/e2e");
     tree.write("outside/grund.toml", STRANGER.as_bytes());
@@ -219,7 +214,6 @@ fn explain_uses_the_lexical_projects_version() {
 
 /// §FS-config.1.5: migration previews the lexical config and writes neither file.
 #[test]
-#[ignore = "red until #1326 migrate keeps lexical parents; implement removes this"]
 fn migrate_locates_the_lexical_projects_config_without_writing() {
     let tree = Tree::new("migrate", STRANGER, "e2e/cases");
     let other = b"grund_config_version = 1\nproject_name = \"target-side\"\n\n\

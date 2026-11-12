@@ -17,7 +17,7 @@ use super::members::{WorkspaceMember, canonical_workspace_path, expand_workspace
 use crate::config::display_path;
 use crate::config::{
     Config, ConfigLocation, Invocation, RunWarning, Selection, config_at, config_file_in,
-    discover_config, discovery_start_dir, invalid_project_alias_message, is_valid_project_alias,
+    discover_config, discovery_start, invalid_project_alias_message, is_valid_project_alias,
     reject_unaccepted_citation_targets,
 };
 use crate::model::format_path;
@@ -145,11 +145,12 @@ fn config_for_member_scope(mut config: Config, invocation: &Invocation) -> Resul
     Ok(config)
 }
 
-/// The canonical directory a scope starts from, the same one discovery starts
-/// from, so a bare file name is scoped from the working directory (§FS-config.1.4).
+/// The canonical directory a scope starts from: the one discovery starts from
+/// (§FS-config.1.5), so a bare file name is scoped from the working directory
+/// (§FS-config.1.4), resolved here because member roots are compared resolved.
 fn config_scope_start(path: &Path) -> PathBuf {
-    let start = discovery_start_dir(path);
-    canonical_path(start).unwrap_or_else(|_| start.to_path_buf())
+    let start = discovery_start(path);
+    canonical_path(&start).unwrap_or(start)
 }
 
 /// §FS-workspace.2.2: both lists are read here. Present, an optional member is an

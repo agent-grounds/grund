@@ -149,11 +149,11 @@ pub(crate) use walk_bounds::WalkBounds;
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use discovery::{
-    config_at, config_file_in, config_file_under, discover_config, discovery_start_dir,
-    home_form_of, pending_config, unloaded_string_list, unread_project_name,
+    config_at, config_file_in, config_file_under, discover_config, discovery_start, home_form_of,
+    pending_config, unloaded_string_list, unread_project_name,
 };
 #[cfg(test)]
-pub(crate) use discovery::{load_config, load_config_at};
+pub(crate) use discovery::{load_config, load_config_at, nearest_config};
 pub(crate) use file_reading::FileReading;
 pub(crate) use fmt_block::fmt_excluded;
 pub(crate) use grounding::{
