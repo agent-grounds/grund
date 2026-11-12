@@ -9,7 +9,7 @@ use super::merge::{drop_file_findings, merge_findings};
 use super::read_predicate::unread;
 pub(crate) use super::scan_error::ScanError;
 use super::scan_error::{
-    FailureRoots, ScanFailure, failure_place, name_file_failure, scan_error_reason,
+    FailureRoots, ScanFailure, api_scan_error, failure_place, name_file_failure, scan_error_reason,
 };
 use super::section_locks::read_section_locks;
 use super::stub_homes::{resolve_stubs, resolve_stubs_through};
@@ -377,11 +377,8 @@ pub(crate) fn scan_tree_strict(
 ) -> Result<Catalog> {
     let (findings, errors) = scan_tree(schema, frame, scope, explicit_scope)?;
     if let Some(error) = errors.into_iter().next() {
-        return Err(anyhow!(
-            "{}: {}",
-            frame.display_location(&error.path),
-            error.reason
-        ));
+        // §FS-errors.2.2.5: the line every command prints, its *Fix* included.
+        return Err(anyhow!("{}", api_scan_error(frame, &error).line()));
     }
     Ok(findings)
 }

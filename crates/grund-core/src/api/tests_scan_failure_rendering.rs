@@ -34,7 +34,6 @@ fn listed_record(root: &std::path::Path) -> Value {
 
 /// The record names the file it could not parse as the report spells it, never absolute.
 #[test]
-#[ignore = "red until #1207 renders a scan failure's parsed path at report time; implement removes this"]
 fn an_unparsable_expected_exit_is_named_from_the_report_base() {
     let root = unparsable_exit("an_unparsable_expected_exit_is_named_from_the_report_base");
     let record = listed_record(&root);
@@ -57,7 +56,6 @@ fn an_unparsable_expected_exit_is_named_from_the_report_base() {
 /// and kind: `show` does not prefix its message with the path its `path` field already carries.
 /// `refs` is not here: it completes, its result marked incomplete.
 #[test]
-#[ignore = "red until #1207 builds every operation's scan failure from one function; implement removes this"]
 fn every_operation_fails_with_the_record_the_scan_lists() {
     let root = unparsable_exit("every_operation_fails_with_the_record_the_scan_lists");
     let record = listed_record(&root);
@@ -87,7 +85,6 @@ fn every_operation_fails_with_the_record_the_scan_lists() {
 /// `kind`, `code` and `path` are not held here: they differ from the record's today, and moving
 /// a field is a contract this ticket does not make.
 #[test]
-#[ignore = "red until #1207 builds every operation's scan failure from one function; implement removes this"]
 fn propose_id_fails_with_the_records_message_and_fix() {
     let root = unparsable_exit("propose_id_fails_with_the_records_message_and_fix");
     let record = listed_record(&root);

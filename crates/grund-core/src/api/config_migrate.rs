@@ -15,12 +15,11 @@ use crate::config::migrate::{
     Gate, GateResult, Located, MigrateFailure, MigrateOutcome, MigrateReport, Prepared, locate,
     member_on_v1, translate,
 };
+use crate::config::report_path;
 use crate::config::{
     Config, Invocation, PathBase, Project, Selection, config_at, with_report_path_base,
 };
-use crate::model::{
-    Code, Finding, GENERATED_SECTIONS, base_reads_dot, format_path, relative_from_base,
-};
+use crate::model::{Code, Finding, GENERATED_SECTIONS, format_path};
 use crate::scanner::walk_scannable_files;
 use crate::writers::{Holds, Install, InstallFailure, atomic_install};
 
@@ -162,10 +161,11 @@ fn members(located: &Located) -> Vec<String> {
         .iter()
         .filter_map(|root| {
             let file = member_on_v1(root)?;
-            let member = format_path(&relative_from_base(&located.root, root));
-            let file = format_path(&relative_from_base(&located.root, &file));
+            // §AR-config.1.7: both named from the root the command reports from.
+            let member = (root != &located.root).then(|| report_path(&located.root, root));
+            let file = report_path(&located.root, &file);
             // §FS-check.checks.config-version-1: the caution's renderer, so both say it alike.
-            Some(version_1_caution(&file, Some(&member)))
+            Some(version_1_caution(&file, member.as_deref()))
         })
         .collect()
 }
@@ -265,7 +265,7 @@ fn lines(
     match output {
         Ok((output, projects)) => {
             out.extend(projects.iter().map(|root| {
-                let shown = base_reads_dot(format_path(&relative_from_base(root_dir, root)));
+                let shown = report_path(root_dir, root);
                 format!("project {shown}")
             }));
             let report = &output.report;

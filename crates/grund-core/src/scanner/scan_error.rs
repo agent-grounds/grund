@@ -14,8 +14,8 @@ use std::path::{Path, PathBuf};
 
 use super::walk::scan_roots;
 use super::walk_errors::{BROKEN_LINK, link_identity, unresolved_link_reason};
-use crate::config::{Frame, Schema};
-use crate::model::{Code, FailureNames, ValueFormat, remedies};
+use crate::config::{Display, Frame, Schema};
+use crate::model::{Code, Diagnostic, FailureNames, OperationDiagnostic, ValueFormat, remedies};
 use crate::sources::{
     io_reason, path_is_symlink, path_metadata, paths_same_location, physical_path_key,
 };
@@ -56,6 +56,10 @@ pub(crate) enum ScanFailure {
 pub(crate) struct ScanError {
     pub(crate) path: PathBuf,
     pub(crate) reason: String,
+    /// The file whose parse failed, which the message names ahead of the reason. A path, not
+    /// text, so it is spelled when the report is, by the spelling of the location
+    /// (§FS-errors.2.2.5, §AR-scanner.1.failure).
+    parsed: Option<PathBuf>,
     failure: ScanFailure,
 }
 
@@ -64,7 +68,26 @@ impl ScanError {
         Self {
             path,
             reason,
+            parsed: None,
             failure,
+        }
+    }
+
+    /// This failure as the parse of `file` that failed for its reason, the file named when the
+    /// report is spelled rather than while scanning (§FS-errors.2.2.5).
+    pub(super) fn parsing(self, file: PathBuf) -> Self {
+        Self {
+            parsed: Some(file),
+            ..self
+        }
+    }
+
+    /// The reason with the file it parsed named by `spell`, the report's spelling of a path
+    /// (§FS-errors.2.2.5): what a reader that prints the reason without its *Fix* prints.
+    pub(crate) fn spelled_reason(&self, spell: impl Fn(&Path) -> String) -> String {
+        match &self.parsed {
+            Some(file) => format!("parse {}: {}", spell(file), self.reason),
+            None => self.reason.clone(),
         }
     }
 
@@ -234,22 +257,68 @@ pub struct ApiScanError {
     pub code: String,
 }
 
-/// Render one [`ScanError`](super::tree::ScanError) for a caller: the same path
-/// spelling `check` prints, so an embedder and the terminal name one file the
-/// same way (§FS-errors.4), and the report base `.` (§FS-cli.3.4).
-pub(crate) fn api_scan_error(frame: Frame<'_>, failure: &ScanError) -> ApiScanError {
+impl ApiScanError {
+    /// The `error: ` line's text, `<location>: <message>`, which every command that prints the
+    /// failure prints (§FS-errors.2.2.5, §FS-workspace.8.7.3).
+    pub(crate) fn line(&self) -> String {
+        format!("{}: {}", self.path, self.message)
+    }
+}
+
+/// The whole reported form of one failure for a run, built here once and read by every
+/// surface that publishes it (§FS-errors.2.2.5, §AR-scanner.1.failure): its location and the
+/// file it parsed spelled by `spell`, the run's one spelling of a reported path
+/// (§AR-config.1.7), so an embedder and the terminal name one file the same way
+/// (§FS-errors.4); its message; and its code.
+pub(crate) fn reported_scan_failure(
+    failure: &ScanError,
+    spell: impl Fn(&Path) -> String,
+) -> ApiScanError {
     ApiScanError {
-        path: frame.display_location(&failure.path),
-        message: scan_error_message(failure),
+        path: spell(&failure.path),
+        message: scan_error_message(failure, &spell),
         code: failure.code().as_str().to_string(),
     }
 }
 
-/// The text after `error: <path>: ` for a scan failure: the reason, then the *Fix* of its failure
-/// and place, built here once so every command that prints the line, and `check`'s own report,
-/// print the same bytes (§FS-check.2.4.3, §FS-workspace.8.7.3).
-pub(crate) fn scan_error_message(failure: &ScanError) -> String {
-    format!("{}; {}", failure.reason, failure.fix())
+/// [`reported_scan_failure`] as `frame`'s report spells it, the report base `.`
+/// (§FS-cli.3.4).
+pub(crate) fn api_scan_error(frame: Frame<'_>, failure: &ScanError) -> ApiScanError {
+    reported_scan_failure(failure, |path| frame.display_path(path))
+}
+
+/// The failure an operation fails with, as `frame`'s report spells it: located at the record's
+/// `path`, so its message is the record's and never repeats the location at its head
+/// (§FS-errors.2.2.5, §FS-distribution.3.3.2).
+pub(crate) fn scan_operation_failure(frame: Frame<'_>, failure: &ScanError) -> OperationDiagnostic {
+    let record = api_scan_error(frame, failure);
+    let mut diagnostic =
+        OperationDiagnostic::new("filesystem", failure.code().as_str(), record.message);
+    diagnostic.path = Some(record.path);
+    diagnostic
+}
+
+/// The failure as one of `check`'s findings, its location left a path for the report to spell
+/// and narrow and its message spelled by `display`, the report's (§FS-errors.2.2.5,
+/// §FS-check.2.4).
+pub(crate) fn scan_failure_diagnostic(failure: ScanError, display: Display<'_>) -> Diagnostic {
+    Diagnostic {
+        code: failure.code(),
+        message: scan_error_message(&failure, |path| display.path(path)),
+        path: Some(failure.path),
+        line: None,
+        column: None,
+        sites: Vec::new(),
+        authority: Vec::new(),
+    }
+}
+
+/// The text after `error: <path>: ` for a scan failure: the reason, the file it parsed spelled
+/// by `spell`, then the *Fix* of its failure and place, built here once so every command that
+/// prints the line, and `check`'s own report, print the same bytes (§FS-check.2.4.3,
+/// §FS-workspace.8.7.3, §FS-errors.2.2.5).
+pub(crate) fn scan_error_message(failure: &ScanError, spell: impl Fn(&Path) -> String) -> String {
+    format!("{}; {}", failure.spelled_reason(spell), failure.fix())
 }
 
 /// The reason a pass that reads `path` itself gives for `error`: a link that does not resolve

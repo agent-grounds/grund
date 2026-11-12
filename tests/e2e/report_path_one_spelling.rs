@@ -77,7 +77,6 @@ fn error_lines(output: &Output) -> String {
 /// grund.249 from the project root: text and JSON name the manifest from the report base, and
 /// the same tree at two depths prints the same bytes (§FS-errors.4).
 #[test]
-#[ignore = "red until #1207 renders a scan failure's parsed path at report time; implement removes this"]
 fn an_unparsable_expected_exit_reads_the_same_wherever_the_tree_sits() {
     let scratch = Scratch::new("249-depth");
     let shallow = scratch.0.join("one/p");
@@ -107,7 +106,6 @@ fn an_unparsable_expected_exit_reads_the_same_wherever_the_tree_sits() {
 /// grund.249 from a subdirectory under `--path-base=invocation`: the manifest climbs out of the
 /// subdirectory the way the location beside it does (§FS-cli.3.4, §FS-config.3.6.1).
 #[test]
-#[ignore = "red until #1207 renders a scan failure's parsed path at report time; implement removes this"]
 fn an_unparsable_expected_exit_is_spelled_from_the_invocation_base() {
     let scratch = Scratch::new("249-invocation");
     unparsable_exit_tree(&scratch.0, CONFIG);
@@ -127,7 +125,6 @@ fn an_unparsable_expected_exit_is_spelled_from_the_invocation_base() {
 /// grund.249 at a workspace root: the member's manifest is spelled from the workspace root, as
 /// its location is, never from the member that scanned it (§FS-workspace.8.7.3).
 #[test]
-#[ignore = "red until #1207 renders a scan failure's parsed path at report time; implement removes this"]
 fn an_unparsable_expected_exit_in_a_member_is_spelled_from_the_workspace_root() {
     let scratch = Scratch::new("249-workspace");
     write(
@@ -149,7 +146,6 @@ fn an_unparsable_expected_exit_in_a_member_is_spelled_from_the_workspace_root() 
 /// Every command that meets grund.249's failure prints `check`'s line for it, fix included
 /// (§FS-errors.2.2.5, §FS-workspace.8.7.3): `id` among them.
 #[test]
-#[ignore = "red until #1207 builds every command's scan failure from one function; implement removes this"]
 fn every_command_prints_checks_line_for_a_failure_below_the_base() {
     let scratch = Scratch::new("249-commands");
     unparsable_exit_tree(&scratch.0, CONFIG);
@@ -185,7 +181,6 @@ fn every_command_prints_checks_line_for_a_failure_below_the_base() {
 /// A scan failure at the report base itself is `.` in every command's line, and every command
 /// prints the same fix for it: the passed path's (§FS-cli.3.4, §FS-errors.2.2.5).
 #[test]
-#[ignore = "red until #1207 builds every command's scan failure from one function; implement removes this"]
 fn every_command_prints_checks_line_for_a_failure_at_the_base() {
     let scratch = Scratch::new("base-commands");
     write(
@@ -235,7 +230,6 @@ fn every_command_prints_checks_line_for_a_failure_at_the_base() {
 /// reads `.`, as the finding's `sites[].path` for it already does (§FS-cli.3.4). Only the message
 /// text moves: the location and `sites` stay as they are.
 #[test]
-#[ignore = "red until #1207 spells every reported path through one function; implement removes this"]
 fn a_message_naming_the_report_base_reads_dot() {
     let scratch = Scratch::new("dup-dot");
     write(&scratch.0.join("grund.toml"), CONFIG);

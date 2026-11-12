@@ -23,10 +23,10 @@ use crate::checker::{
     repair_index_citations, retain_diagnostics_in_report_scope, retain_findings_in_scope,
     workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
-use crate::config::{Config, Invocation, ProjectRecords, Selection};
-use crate::model::{CheckReport, Diagnostic, Finding, Switch};
+use crate::config::{Config, Display, Invocation, ProjectRecords, Selection};
+use crate::model::{CheckReport, Finding, Switch};
 use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
-use crate::scanner::{ScanError, scan_error_message, scan_tree};
+use crate::scanner::{ScanError, scan_failure_diagnostic, scan_tree};
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, arm_imports,
     arm_optional_members, import_diagnostics, open, unlisted_workspace_block_errors,
@@ -215,7 +215,7 @@ pub(super) fn run_check_with_run_warnings(
     report
         .warnings
         .extend(unread_root_warnings(&config, &findings));
-    let had_scan_errors = append_scan_errors(&mut report, scan_errors);
+    let had_scan_errors = append_scan_errors(&mut report, scan_errors, config.display());
     // §FS-check.1.3.6.1: every rule has run over the resolution scope, so the report
     // narrows to the path — the second stage, after the rules (§AR-resolver.3.3).
     let narrowing = PathReport {
@@ -433,7 +433,7 @@ fn run_workspace_check(
             report_scope,
         );
         unread_outside_report_scope.extend(outside);
-        had_scan_errors |= append_scan_errors(&mut report, inside);
+        had_scan_errors |= append_scan_errors(&mut report, inside, root_config.display());
         // §FS-check.2.2 / §FS-check.4.5.3 / §FS-workspace.5: the single-project cautions,
         // asked per project — one member's empty scope says nothing about another's.
         // §FS-check.1.3.6.1: a narrowed run asks the path instead, below.
@@ -522,22 +522,17 @@ fn run_workspace_check(
 fn append_scan_errors(
     report: &mut CheckReport,
     scan_errors: impl IntoIterator<Item = ScanError>,
+    display: Display<'_>,
 ) -> bool {
     let mut had_scan_errors = false;
     for failure in scan_errors {
         had_scan_errors = true;
         // A file that could not be read mid-walk is reported as a CLI-shaped
-        // `error: <path>: <reason>; <fix>` finding (§FS-check.2.4): the walk continued,
-        // the findings below are real, but the view of the tree was incomplete.
-        report.errors.push(Diagnostic {
-            code: failure.code(),
-            message: scan_error_message(&failure),
-            path: Some(failure.path),
-            line: None,
-            column: None,
-            sites: Vec::new(),
-            authority: Vec::new(),
-        });
+        // `error: <path>: <reason>; <fix>` finding (§FS-check.2.4), in its one form
+        // spelled by the report's display (§FS-errors.2.2.5).
+        report
+            .errors
+            .push(scan_failure_diagnostic(failure, display));
     }
     had_scan_errors
 }

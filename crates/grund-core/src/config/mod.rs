@@ -105,6 +105,7 @@ pub(crate) use fetch_key::{
     fetch_integration_path, fetch_key_name, fetch_key_repair, fetch_key_runs_nothing,
     fetch_key_setting, fetch_names_nothing_reason, fetch_runs_nothing, names_no_executable,
 };
+pub(crate) use frame::report_path;
 pub use frame::{Display, Frame};
 pub(crate) use guidance::{format_guidance, kind_format_guidance, source_scope_name};
 pub(crate) use project_records::ProjectRecords;
@@ -171,9 +172,7 @@ pub(crate) use record::{
     DEFAULT_GROUNDING_LEVEL, any_kind_holds_values, guided_kind, kind_front_matter, kind_prefixes,
     kind_uses_values, kind_value_chapter,
 };
-pub(crate) use report_paths::{
-    display_location, display_path, published_finding, run_warning_findings,
-};
+pub(crate) use report_paths::{display_path, published_finding, run_warning_findings};
 pub(crate) use run_warnings::RunWarning;
 pub(crate) use scope_roots::{
     canonical_config_root, file_root_rows, root_scope_roots, unwalked_home_roots, unwalked_homes,

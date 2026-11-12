@@ -3,7 +3,7 @@ use super::embedding::EmbeddingRequest;
 use super::embedding_data::Data;
 use super::embedding_failure::{error_data, failure};
 use super::embedding_snapshot_records::e2e_case_data;
-use crate::config::{Config, display_location, display_path};
+use crate::config::{Config, display_path};
 use crate::grammar::{
     BindingSpellings, render_catalog_id, render_citation_id, render_declaration_id,
 };
@@ -21,11 +21,16 @@ pub(super) fn scan(r: &EmbeddingRequest) -> Result<Value, Value> {
     let snapshot = snapshot(&config, &findings);
     if !errors.is_empty() {
         let first = &errors[0];
-        // §FS-distribution.3.2.2.3: the reason and its fix, as every surface says the failure.
-        let message = crate::scanner::scan_error_message(first);
-        let mut f = failure(first.code().as_str(), "filesystem", message, &cautions);
-        // §FS-cli.3.4: a scan failure at the report base names it `.`.
-        f["path"] = json!(display_location(&config, &first.path));
+        // §FS-distribution.3.2.2.3, §FS-errors.2.2.5: the one form every surface publishes,
+        // the reason and its fix, the report base `.` (§FS-cli.3.4).
+        let record = crate::scanner::api_scan_error(config.frame(), first);
+        let mut f = failure(
+            first.code().as_str(),
+            "filesystem",
+            record.message,
+            &cautions,
+        );
+        f["path"] = json!(record.path);
         f["partial_output"] = snapshot;
         return Err(f);
     }
@@ -45,7 +50,7 @@ fn snapshot(c: &Config, f: &Catalog) -> Value {
     // §FS-cli.3.4: a record at the report base, an E2E case's directory, reads `.`.
     let mut declarations = f.declarations.iter().flat_map(|(i,ds)|ds.iter().map(|d|
         json!({"id":render_declaration_id(&c.grammar,d),"kind":i.kind,"number":i.num,"slug":i.slug,
-            "path":display_location(c,&d.file),"line":d.line,"heading_level":d.heading_level,"title":d.title,
+            "path":display_path(c,&d.file),"line":d.line,"heading_level":d.heading_level,"title":d.title,
             "sections":d.sections.iter().map(|(p,s)|section(p,s)).collect::<Vec<_>>(),
             "duplicate_sections":d.duplicate_sections.iter().map(|(p,s)|section(p,s)).collect::<Vec<_>>(),
             "stub":d.is_stub,"defines":d.defined_in.as_ref().map(|p|path(p)),

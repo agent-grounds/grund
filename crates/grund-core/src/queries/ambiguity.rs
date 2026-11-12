@@ -6,7 +6,7 @@
 
 use super::show::broken_stub_message;
 use super::show_query::ShowQueryError;
-use crate::config::{Config, display_location, display_path};
+use crate::config::{Config, display_path};
 use crate::grammar::render_declaration_id;
 use crate::model::{
     Catalog, Declaration, FindingSite, Id, MissingStubRepair, Paired, PairedDeclarations,
@@ -109,7 +109,7 @@ pub(super) fn ambiguous_id_refusal(
     let sites: Vec<FindingSite> = paired
         .iter()
         .map(|declaration| FindingSite {
-            path: display_location(path_config, &declaration.record.file),
+            path: display_path(path_config, &declaration.record.file),
             line: declaration.record.line,
         })
         .collect();
@@ -127,7 +127,7 @@ pub(super) fn ambiguous_id_refusal(
     );
     message.push_str(
         &MissingStubRepair::new(paired)
-            .located_suffix(&rendered_id, |path| display_location(path_config, path)),
+            .located_suffix(&rendered_id, |path| display_path(path_config, path)),
     );
     // §FS-errors.5.2.1: JSON carries the same sites, without parsing prose.
     Some(ShowQueryError {

@@ -9,8 +9,8 @@ use std::path::{Path, PathBuf};
 
 use super::expand::enclosing_workspace_of;
 use super::members::{AncestorWorkspaces, canonical_workspace_path};
+use super::unlisted::members_entry;
 use crate::config::{Frame, Run, Schema, config_file_in, root_scope_roots, unread_project_name};
-use crate::model::{format_path, relative_from_base};
 
 /// One quiet claim cache for both uses of an unlisted config
 /// (§FS-declarations.checks.misplaced-declaration.unlisted-project, §FS-check.3.29.2).
@@ -114,7 +114,7 @@ fn placement_context(
     name: &str,
     roots: &[PathBuf],
 ) -> String {
-    let entry = format_path(&relative_from_base(frame.root(), dir));
+    let entry = members_entry(frame.root(), dir);
     let enclosing = frame
         .run
         .config_file

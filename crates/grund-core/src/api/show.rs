@@ -12,7 +12,7 @@
 
 use anyhow::{Result, anyhow};
 
-use crate::config::display_location;
+use crate::config::display_path;
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Declaration, Finding, Id, ShowOutput, ShowRenderMode};
 use crate::queries::{
@@ -54,7 +54,21 @@ pub fn show_with_scope(
         &mut run_warnings,
         &mut serde_json::Value::Null,
     );
-    (run_warnings, output)
+    // §FS-errors.2.2.5: the command prints a scan failure's line, as `check` does.
+    (run_warnings, output.map_err(scan_failure_line))
+}
+
+/// A scan failure [`ShowSource::resolve`] refused with, as the `error:` line a command prints
+/// for it, `<location>: <message>`: the operation's failure carries the location as its
+/// `path`, so its message does not (§FS-errors.2.2.5). Every other error is returned as it is.
+fn scan_failure_line(error: anyhow::Error) -> anyhow::Error {
+    match error.downcast_ref::<crate::model::OperationDiagnostic>() {
+        Some(failure) if failure.details.get("scan_errors").is_some() => {
+            let path = failure.path.as_deref().unwrap_or_default();
+            anyhow::anyhow!("{path}: {}", failure.message)
+        }
+        _ => error,
+    }
 }
 
 /// Query metadata from the same loaded context (§FS-distribution.3.2.2.2).
@@ -154,7 +168,7 @@ fn show_answer(
         output.json = Some(json);
     }
     // §FS-cli.3.4: a record at the report base, an E2E case's directory, reads `.`.
-    metadata["path"] = serde_json::json!(display_location(context.render_config(), &output.path));
+    metadata["path"] = serde_json::json!(display_path(context.render_config(), &output.path));
     Ok(output)
 }
 
@@ -196,16 +210,15 @@ impl<'c, 'a> ShowSource<'c, 'a> {
         // project's — the same spelling `check` uses for the same tree, the base `.`
         // (§FS-cli.3.4).
         if let Some(first) = project.scan_errors.first() {
-            // §FS-distribution.3.3.2: scan failures are located filesystem outcomes.
-            let path = display_location(context.render_config(), &first.path);
-            let mut failure = crate::model::OperationDiagnostic::new(
-                "filesystem",
-                first.code().as_str(),
-                format!("{path}: {}", crate::scanner::scan_error_message(first)),
-            );
-            failure.path = Some(path);
+            // §FS-distribution.3.3.2: scan failures are located filesystem outcomes, in the
+            // one form every surface publishes (§FS-errors.2.2.5).
+            let frame = context.render_config().frame();
+            let mut failure = crate::scanner::scan_operation_failure(frame, first);
             failure.details = serde_json::json!({"scan_errors": project.scan_errors.iter()
-                .map(|e| serde_json::json!({"path": display_location(context.render_config(),&e.path),"message":crate::scanner::scan_error_message(e),"code":e.code().as_str()}))
+                .map(|e| {
+                    let record = crate::scanner::api_scan_error(frame, e);
+                    serde_json::json!({"path": record.path, "message": record.message, "code": record.code})
+                })
                 .collect::<Vec<_>>()});
             return Err(failure.into());
         }

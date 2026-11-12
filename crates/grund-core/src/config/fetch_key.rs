@@ -7,7 +7,8 @@ use std::path::{Path, PathBuf};
 use super::discovery::config_file_under;
 use super::observe_input;
 use super::record::Config;
-use crate::model::{format_path, relative_from_base, remedies};
+use super::report_path;
+use crate::model::remedies;
 
 /// §FS-fetch.2.1: whether a `fetch` value names no executable, being empty or only whitespace.
 pub(crate) fn names_no_executable(value: &str) -> bool {
@@ -83,7 +84,7 @@ pub(crate) fn fetch_names_nothing_reason(
         .and_then(|(_, source)| source);
     let place = source.map_or_else(String::new, |at| {
         let file = config_file_under(&config.root, &at.path);
-        let file = format_path(&relative_from_base(report_base, &file));
+        let file = report_path(report_base, &file);
         format!("{file}:{}: ", at.line)
     });
     format!(

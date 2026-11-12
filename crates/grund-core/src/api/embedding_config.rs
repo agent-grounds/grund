@@ -39,7 +39,7 @@ fn cautions(config: &Config) -> Vec<Finding> {
                 severity: "warning",
                 code: d.code.as_str(),
                 // §FS-cli.3.4: a finding's location, spelled as every other finding's.
-                path: d.path.map(|p| crate::config::display_location(config, &p)),
+                path: d.path.map(|p| crate::config::display_path(config, &p)),
                 line: d.line,
                 column: d.column,
                 message: d.message,

@@ -4,7 +4,7 @@ use super::batch_generation::exhaustive_batch_queries;
 use super::glob_scope::{GlobSelection, read_globs};
 use super::show::{render_show_output_json, show_declaration_with_home};
 use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
-use crate::config::{display_location, run_warning_findings};
+use crate::config::{display_path, run_warning_findings};
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Finding, FindingSite, ShowOutput};
 use crate::resolver::{
@@ -79,14 +79,9 @@ pub(crate) fn show_batch_data(
         cautions = run_warning_findings(context.render_config(), context.run_warnings.clone());
         let selection = selection(&context, &globs)?;
         if let Some(first) = context.projects.iter().find_map(|p| p.scan_errors.first()) {
-            let mut diagnostic = crate::model::OperationDiagnostic::new(
-                "filesystem",
-                first.code().as_str(),
-                crate::scanner::scan_error_message(first),
-            );
-            // §FS-cli.3.4: a scan failure at the report base names it `.`.
-            diagnostic.path = Some(display_location(context.render_config(), &first.path));
-            return Err(diagnostic.into());
+            // §FS-errors.2.2.5: the one form, the report base `.` (§FS-cli.3.4).
+            let frame = context.render_config().frame();
+            return Err(crate::scanner::scan_operation_failure(frame, first).into());
         }
         let queries = match queries {
             Some(queries) => queries,
@@ -112,8 +107,7 @@ pub(crate) fn show_batch_data(
                 match result {
                     Ok(mut output) => {
                         // §FS-cli.3.4: a record at the report base reads `.`.
-                        output.path =
-                            display_location(context.render_config(), &output.path).into();
+                        output.path = display_path(context.render_config(), &output.path).into();
                         Ok(BatchDataRecord {
                             query,
                             result: Ok(output),
@@ -224,12 +218,9 @@ fn show_batch_run(
         .iter()
         .find_map(|project| project.scan_errors.first())
     {
-        // §FS-cli.3.4: a scan failure at the report base names it `.`.
-        return Err(anyhow!(
-            "{}: {}",
-            display_location(context.render_config(), &first.path),
-            crate::scanner::scan_error_message(first)
-        ));
+        // §FS-errors.2.2.5: the line every command prints, the base `.` (§FS-cli.3.4).
+        let record = crate::scanner::api_scan_error(context.render_config().frame(), first);
+        return Err(anyhow!("{}", record.line()));
     }
     let queries = match queries {
         Some(queries) => queries,

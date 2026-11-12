@@ -18,10 +18,10 @@ fn call(root: &std::path::Path, operation: &str) -> Value {
 
 /// What a reason renders to at a path `exclude` reaches (§FS-check.2.4.3).
 fn entry_message(reason: &str) -> String {
-    crate::scanner::scan_error_message(&crate::scanner::ScanError::unread_entry(
-        std::path::PathBuf::new(),
-        reason,
-    ))
+    crate::scanner::scan_error_message(
+        &crate::scanner::ScanError::unread_entry(std::path::PathBuf::new(), reason),
+        crate::model::format_path,
+    )
 }
 
 /// Every `{"path", "message"}` pair a reply carries under a `scan_errors` key.

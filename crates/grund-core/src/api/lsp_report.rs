@@ -19,10 +19,10 @@ use crate::checker::{
     name_every_spelling, path_report_scope, repair_index_citations,
     retain_diagnostics_in_report_scope,
 };
-use crate::config::Config;
+use crate::config::{Config, Display};
 use crate::model::{CheckReport, Code, Diagnostic};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext};
-use crate::scanner::{ScanError, scan_error_message};
+use crate::scanner::{ScanError, scan_failure_diagnostic};
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, import_diagnostics,
     unlisted_workspace_block_errors,
@@ -211,7 +211,11 @@ fn check_workspace_context(
             );
         }
         // §FS-lsp.1.1: already scoped by every failure name, not by the chosen anchor alone.
-        append_lsp_scan_errors(&mut project_report, inside);
+        append_lsp_scan_errors(
+            &mut project_report,
+            inside,
+            context.render_config().display(),
+        );
         let report_is_silent =
             project_report.errors.is_empty() && project_report.warnings.is_empty();
         report.errors.append(&mut project_report.errors);
@@ -240,9 +244,10 @@ fn check_workspace_context(
         ));
         // §FS-check.1.3.6.3, §AR-lsp.5.1.1: after the silence flag, as in `grund check`
         // (§FS-check.2.2.3.1).
-        report
-            .warnings
-            .extend(unread_resolution_source_cautions(unread_outside));
+        report.warnings.extend(unread_resolution_source_cautions(
+            unread_outside,
+            context.render_config().display(),
+        ));
     }
     // §FS-check.3.29.13, §FS-check.3.29.11: per project, the blocks that walk met that
     // no enclosing one lists — located report errors, the decision `run_workspace_check`
@@ -297,6 +302,7 @@ fn check_workspace_context(
         ));
         report.warnings.extend(unread_resolution_source_cautions(
             unread_outside_report_scope,
+            context.render_config().display(),
         ));
     }
     // §FS-errors.4.1: the editor completes its channels by the same rule as disk checks.
@@ -326,16 +332,12 @@ pub(super) fn editor_run_warnings(context: &WorkspaceContext) -> Vec<Diagnostic>
 fn append_lsp_scan_errors(
     report: &mut CheckReport,
     scan_errors: impl IntoIterator<Item = ScanError>,
+    display: Display<'_>,
 ) {
+    // §FS-errors.2.2.5: the one form `check` reports, the message spelled by the run.
     for failure in scan_errors {
-        report.errors.push(Diagnostic {
-            code: failure.code(),
-            message: scan_error_message(&failure),
-            path: Some(failure.path),
-            line: None,
-            column: None,
-            sites: Vec::new(),
-            authority: Vec::new(),
-        });
+        report
+            .errors
+            .push(scan_failure_diagnostic(failure, display));
     }
 }
