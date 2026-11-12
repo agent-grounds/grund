@@ -11,7 +11,7 @@ use super::fetch_target::{
     Before, Request, Site, Target, link_target, text_of, unscanned, with_io_source,
 };
 use crate::model::{scanned_path_key, sort_path_key};
-use crate::scanner::{ScanError, folder_value_declarations};
+use crate::scanner::{FromBase, ScanError, folder_value_declarations};
 use crate::sources::{path_exists, path_is_dir, path_is_file, read_bytes};
 
 /// §FS-fetch.5: replace the one file that declares the ID, or create or fill `<ID>.md`, after
@@ -146,7 +146,7 @@ fn unread_folder(request: &Request<'_>, folder: &Path, error: &ScanError) -> Fet
         "cannot read snapshot folder {} at {}: {}",
         request.shown(folder),
         request.shown(&error.path),
-        error.spelled_reason(|path| request.shown(path))
+        error.spelled_reason(&FromBase(request.report_base))
     ))
 }
 

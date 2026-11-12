@@ -54,7 +54,9 @@ fn an_unparsable_expected_exit_is_named_from_the_report_base() {
 
 /// Every Node operation that fails on the scan failure fails with the record's own path, message
 /// and kind: `show` does not prefix its message with the path its `path` field already carries.
-/// `refs` is not here: it completes, its result marked incomplete.
+/// `refs` is not here: it completes, its result marked incomplete. The generic `show`, the one
+/// Python's `grund.show()` sends, fails the same way, as a `filesystem` failure with the record's
+/// code that lists every record in `details.scan_errors` (§FS-distribution.3.3.2).
 #[test]
 fn every_operation_fails_with_the_record_the_scan_lists() {
     let root = unparsable_exit("every_operation_fails_with_the_record_the_scan_lists");
@@ -73,6 +75,31 @@ fn every_operation_fails_with_the_record_the_scan_lists() {
         if got != (&record["path"], &record["message"], &record["code"]) {
             differs.push(format!("{operation}: {failure}"));
         }
+    }
+    let shown = embedding_call(EmbeddingRequest {
+        operation: "show".into(),
+        root: root.clone(),
+        explicit: true,
+        args: vec![json!("E2E-a")],
+        options: json!({}),
+    });
+    let failure = &shown["failure"];
+    let got = (
+        &failure["path"],
+        &failure["message"],
+        &failure["code"],
+        &failure["kind"],
+        &failure["details"]["scan_errors"],
+    );
+    let expected = (
+        &record["path"],
+        &record["message"],
+        &record["code"],
+        &json!("filesystem"),
+        &json!([record]),
+    );
+    if got != expected {
+        differs.push(format!("generic show: {failure}"));
     }
     assert!(
         differs.is_empty(),

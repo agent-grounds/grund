@@ -13,8 +13,8 @@ use std::io::Error;
 use std::path::{Path, PathBuf};
 
 use super::walk::scan_roots;
-use super::walk_errors::{BROKEN_LINK, link_identity, unresolved_link_reason};
-use crate::config::{Display, Frame, Schema};
+use super::walk_errors::{BROKEN_LINK, link_identity, loop_reason, unresolved_link_reason};
+use crate::config::{Display, Frame, Schema, report_path};
 use crate::model::{Code, Diagnostic, FailureNames, OperationDiagnostic, ValueFormat, remedies};
 use crate::sources::{
     io_reason, path_is_symlink, path_metadata, paths_same_location, physical_path_key,
@@ -60,7 +60,57 @@ pub(crate) struct ScanError {
     /// text, so it is spelled when the report is, by the spelling of the location
     /// (§FS-errors.2.2.5, §AR-scanner.1.failure).
     parsed: Option<PathBuf>,
+    /// The directory a symlink loop's link reaches back into, which the message names after
+    /// the reason: a path, spelled when the report is, and left unnamed where it is the base the
+    /// report spells from (§FS-check.2.4.2, §AR-scanner.1.failure). One link reaches one
+    /// directory, so the bare reason beside it is what failures are compared by.
+    ancestor: Option<PathBuf>,
     failure: ScanFailure,
+}
+
+/// How a report spells the paths a scan failure names: the one spelling of a reported path, and
+/// whether a path is the base that spelling starts from, asked of the path and never of its
+/// spelling (§AR-config.1.7, §FS-cli.3.4).
+pub(crate) trait ReportSpelling {
+    fn path(&self, path: &Path) -> String;
+    fn is_base(&self, path: &Path) -> bool;
+}
+
+impl ReportSpelling for Display<'_> {
+    fn path(&self, path: &Path) -> String {
+        Display::path(self, path)
+    }
+
+    fn is_base(&self, path: &Path) -> bool {
+        Display::is_base(self, path)
+    }
+}
+
+/// The spelling of a reader that holds only the report base (§AR-config.1.7).
+pub(crate) struct FromBase<'a>(pub(crate) &'a Path);
+
+impl ReportSpelling for FromBase<'_> {
+    fn path(&self, path: &Path) -> String {
+        report_path(self.0, path)
+    }
+
+    fn is_base(&self, path: &Path) -> bool {
+        path == self.0
+    }
+}
+
+/// Every path absolute, as `grund init` still locates a scan failure: no path is a base it is
+/// spelled from.
+pub(crate) struct Absolute;
+
+impl ReportSpelling for Absolute {
+    fn path(&self, path: &Path) -> String {
+        path.display().to_string()
+    }
+
+    fn is_base(&self, _: &Path) -> bool {
+        false
+    }
 }
 
 impl ScanError {
@@ -69,6 +119,7 @@ impl ScanError {
             path,
             reason,
             parsed: None,
+            ancestor: None,
             failure,
         }
     }
@@ -82,12 +133,26 @@ impl ScanError {
         }
     }
 
-    /// The reason with the file it parsed named by `spell`, the report's spelling of a path
-    /// (§FS-errors.2.2.5): what a reader that prints the reason without its *Fix* prints.
-    pub(crate) fn spelled_reason(&self, spell: impl Fn(&Path) -> String) -> String {
-        match &self.parsed {
-            Some(file) => format!("parse {}: {}", spell(file), self.reason),
-            None => self.reason.clone(),
+    /// This failure as a symlink loop whose link reaches back into `directory`, the directory
+    /// named when the report is spelled rather than while scanning (§FS-check.2.4.2).
+    pub(super) fn looping_into(self, directory: PathBuf) -> Self {
+        Self {
+            ancestor: Some(directory),
+            ..self
+        }
+    }
+
+    /// The reason with the file it parsed, or the directory a loop reaches back into, named by
+    /// `spell`, the report's spelling of a path (§FS-errors.2.2.5, §FS-check.2.4.2): what a reader
+    /// that prints the reason without its *Fix* prints.
+    pub(crate) fn spelled_reason(&self, spell: &impl ReportSpelling) -> String {
+        match (&self.parsed, &self.ancestor) {
+            (Some(file), _) => format!("parse {}: {}", spell.path(file), self.reason),
+            (None, Some(directory)) => loop_reason(
+                &self.reason,
+                (!spell.is_base(directory)).then(|| spell.path(directory)),
+            ),
+            (None, None) => self.reason.clone(),
         }
     }
 
@@ -260,8 +325,29 @@ pub struct ApiScanError {
 impl ApiScanError {
     /// The `error: ` line's text, `<location>: <message>`, which every command that prints the
     /// failure prints (§FS-errors.2.2.5, §FS-workspace.8.7.3).
-    pub(crate) fn line(&self) -> String {
+    #[doc(hidden)]
+    pub fn line(&self) -> String {
         format!("{}: {}", self.path, self.message)
+    }
+
+    /// The record an operation failed on, when `error` is the refusal [`scan_operation_failure`]
+    /// built: a command prints its [`Self::line`], while a binding reads the refusal's own fields
+    /// (§FS-errors.2.2.5).
+    #[doc(hidden)]
+    pub fn failed_on(error: &anyhow::Error) -> Option<&Self> {
+        let refusal = error.downcast_ref::<OperationDiagnostic>()?;
+        refusal.origin::<RefusedOn>().map(|origin| &origin.0)
+    }
+}
+
+/// The record a scan failure's operation refusal copies its fields from, carried on it whole
+/// (§FS-errors.2.2.5).
+#[derive(Debug)]
+struct RefusedOn(ApiScanError);
+
+impl std::fmt::Display for RefusedOn {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0.line())
     }
 }
 
@@ -272,11 +358,11 @@ impl ApiScanError {
 /// (§FS-errors.4); its message; and its code.
 pub(crate) fn reported_scan_failure(
     failure: &ScanError,
-    spell: impl Fn(&Path) -> String,
+    spell: &impl ReportSpelling,
 ) -> ApiScanError {
     ApiScanError {
-        path: spell(&failure.path),
-        message: scan_error_message(failure, &spell),
+        path: spell.path(&failure.path),
+        message: scan_error_message(failure, spell),
         code: failure.code().as_str().to_string(),
     }
 }
@@ -284,18 +370,22 @@ pub(crate) fn reported_scan_failure(
 /// [`reported_scan_failure`] as `frame`'s report spells it, the report base `.`
 /// (§FS-cli.3.4).
 pub(crate) fn api_scan_error(frame: Frame<'_>, failure: &ScanError) -> ApiScanError {
-    reported_scan_failure(failure, |path| frame.display_path(path))
+    reported_scan_failure(failure, &frame.display)
 }
 
 /// The failure an operation fails with, as `frame`'s report spells it: located at the record's
 /// `path`, so its message is the record's and never repeats the location at its head
-/// (§FS-errors.2.2.5, §FS-distribution.3.3.2).
+/// (§FS-errors.2.2.5, §FS-distribution.3.3.2). It carries the record, which a command prints
+/// as [`ApiScanError::line`].
 pub(crate) fn scan_operation_failure(frame: Frame<'_>, failure: &ScanError) -> OperationDiagnostic {
     let record = api_scan_error(frame, failure);
-    let mut diagnostic =
-        OperationDiagnostic::new("filesystem", failure.code().as_str(), record.message);
-    diagnostic.path = Some(record.path);
-    diagnostic
+    let mut diagnostic = OperationDiagnostic::new(
+        "filesystem",
+        failure.code().as_str(),
+        record.message.clone(),
+    );
+    diagnostic.path = Some(record.path.clone());
+    diagnostic.with_origin(RefusedOn(record))
 }
 
 /// The failure as one of `check`'s findings, its location left a path for the report to spell
@@ -304,7 +394,7 @@ pub(crate) fn scan_operation_failure(frame: Frame<'_>, failure: &ScanError) -> O
 pub(crate) fn scan_failure_diagnostic(failure: ScanError, display: Display<'_>) -> Diagnostic {
     Diagnostic {
         code: failure.code(),
-        message: scan_error_message(&failure, |path| display.path(path)),
+        message: scan_error_message(&failure, &display),
         path: Some(failure.path),
         line: None,
         column: None,
@@ -317,7 +407,7 @@ pub(crate) fn scan_failure_diagnostic(failure: ScanError, display: Display<'_>) 
 /// by `spell`, then the *Fix* of its failure and place, built here once so every command that
 /// prints the line, and `check`'s own report, print the same bytes (§FS-check.2.4.3,
 /// §FS-workspace.8.7.3, §FS-errors.2.2.5).
-pub(crate) fn scan_error_message(failure: &ScanError, spell: impl Fn(&Path) -> String) -> String {
+pub(crate) fn scan_error_message(failure: &ScanError, spell: &impl ReportSpelling) -> String {
     format!("{}; {}", failure.spelled_reason(spell), failure.fix())
 }
 

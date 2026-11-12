@@ -108,7 +108,7 @@ fn unread(place: Place, version: u32) -> (String, String) {
 fn answer(failure: ScanFailure) -> (String, String) {
     let error = ScanError::new(PathBuf::from("p"), "why".to_string(), failure);
     let code = error.code().as_str().to_string();
-    let message = scan_error_message(&error, crate::model::format_path);
+    let message = scan_error_message(&error, &super::scan_error::Absolute);
     let fix = message.strip_prefix("why; ").expect("the reason leads");
     (code, fix.to_string())
 }

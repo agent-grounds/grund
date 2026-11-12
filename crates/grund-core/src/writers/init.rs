@@ -19,7 +19,8 @@ use crate::checker::{configured_rule_sentences, declared_workspace_vocabulary};
 use crate::config::{Config, config_file_in, display_path};
 use crate::model::{Catalog, Diagnostic, Finding, FindingSite, format_path};
 use crate::scanner::{
-    CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file, scan_tree,
+    Absolute, CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file,
+    reported_scan_failure, scan_tree,
 };
 use crate::templates::{ConversationSurface, render_agents_append_block, render_grund_toml};
 use crate::workspace::{declared_member_schemas, populate_workspace_boundary};
@@ -157,18 +158,19 @@ fn init_run(
             InitError::new(message)
         })?;
         if let Some(first) = errors.first() {
-            let path = &first.path;
-            let message = first.spelled_reason(|file| file.display().to_string());
+            // §FS-errors.2.2.5: the one rendering, its *Fix* included, located where init still
+            // locates a scan failure, by its absolute path.
+            let line = reported_scan_failure(first, &Absolute).line();
             // §FS-distribution.3.3.2: scanner errors carry a source path, and their code
             // (§FS-check.2.4.3).
             let mut source = crate::model::OperationDiagnostic::new(
                 "filesystem",
                 first.code().as_str(),
-                format!("{}: {message}", path.display()),
+                line.clone(),
             );
-            source.path = Some(format_path(path));
+            source.path = Some(format_path(&first.path));
             *diagnostic = Some(source.into());
-            return Err(InitError::new(format!("{}: {message}", path.display())));
+            return Err(InitError::new(line));
         }
         // §FS-rules.4.1: the workspace this project's own config declares, which
         // is the one `check` in this same directory resolves against — never the

@@ -340,8 +340,8 @@ error: kind `<KIND>` cannot fetch into <home>: [schema.sources] exclude matches 
 error: kind `<KIND>` cannot fetch into <home>: [scan] exclude names <entry>, so the scan would not read what fetch writes; remove <entry> from [scan] exclude, and fetch again
 ```
 
-`<file>` is the ignore file from the config root and `<pattern>` and `<entry>` are as written,
-as the broken-stub line spells them. A link there takes this line ahead of [[§FS-fetch.links](FS-fetch.md#links-a-link-at-the-target-is-written-through-when-it-stays-inside-the-config-root)].
+`<file>` is the ignore file spelled as the report spells a path, from the report base
+([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), and `<pattern>` and `<entry>` are as written, as the broken-stub line spells them. A link there takes this line ahead of [[§FS-fetch.links](FS-fetch.md#links-a-link-at-the-target-is-written-through-when-it-stays-inside-the-config-root)].
 Admission's reading after the integration holds the same predicate: a target the walk would not
 read is not read there either, so the requested declaration is not there
 ([[§FS-fetch.admission.1](FS-fetch.md#admission1-the-requested-declaration-is-there-once-and-its-body-takes-in-all-of-the-output)]).

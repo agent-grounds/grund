@@ -83,7 +83,7 @@ pub(super) fn unread_resolution_source_cautions(
                 "{} — outside the report scope, so a citation declared there \
                  may be reported as unresolved",
                 // §FS-errors.2.2.5: a file the reason names, spelled as the report spells.
-                failure.spelled_reason(|path| display.path(path))
+                failure.spelled_reason(&display)
             ),
             path: Some(failure.path),
             line: None,

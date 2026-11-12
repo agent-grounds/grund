@@ -54,21 +54,7 @@ pub fn show_with_scope(
         &mut run_warnings,
         &mut serde_json::Value::Null,
     );
-    // §FS-errors.2.2.5: the command prints a scan failure's line, as `check` does.
-    (run_warnings, output.map_err(scan_failure_line))
-}
-
-/// A scan failure [`ShowSource::resolve`] refused with, as the `error:` line a command prints
-/// for it, `<location>: <message>`: the operation's failure carries the location as its
-/// `path`, so its message does not (§FS-errors.2.2.5). Every other error is returned as it is.
-fn scan_failure_line(error: anyhow::Error) -> anyhow::Error {
-    match error.downcast_ref::<crate::model::OperationDiagnostic>() {
-        Some(failure) if failure.details.get("scan_errors").is_some() => {
-            let path = failure.path.as_deref().unwrap_or_default();
-            anyhow::anyhow!("{path}: {}", failure.message)
-        }
-        _ => error,
-    }
+    (run_warnings, output)
 }
 
 /// Query metadata from the same loaded context (§FS-distribution.3.2.2.2).

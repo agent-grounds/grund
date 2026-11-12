@@ -178,6 +178,25 @@ fn every_command_prints_checks_line_for_a_failure_below_the_base() {
     );
 }
 
+/// `init` stops on grund.249's failure with `check`'s message for it, fix included
+/// (§FS-errors.2.2.5). A rule kind is what makes `init` scan the tree. Where `init` locates the
+/// failure is not held here: it still names it by its absolute path, which is a fix of its own.
+#[test]
+fn init_prints_checks_message_with_its_fix() {
+    let scratch = Scratch::new("249-init");
+    let rule_kind = "\n[schema.kinds.RULE]\nfolders = [\"docs/rules\"]\nform = \"rule\"\n";
+    unparsable_exit_tree(&scratch.0, &format!("{CONFIG}{rule_kind}"));
+    let output = run(&scratch.0, &["init", "--no-vcs"]);
+    let said = error_lines(&output);
+    let message = unparsable("e2e/cases/a/expected.exit");
+    let tail = format!("/{}\n", message.trim_start_matches("parse "));
+    assert!(
+        said.starts_with("error: ") && said.ends_with(&tail) && said.lines().count() == 1,
+        "expected one line ending {tail}got {said}"
+    );
+    assert_eq!(output.status.code(), Some(2));
+}
+
 /// A scan failure at the report base itself is `.` in every command's line, and every command
 /// prints the same fix for it: the passed path's (§FS-cli.3.4, §FS-errors.2.2.5).
 #[test]
