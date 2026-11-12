@@ -204,6 +204,12 @@ A missing target directory is an I/O failure ([§FS-init.4](FS-init.md#4-exit-co
 error: target directory does not exist: <path>
 ```
 
+A target behind a directory the user cannot search is not a missing one ([§FS-init.1](FS-init.md#1-inputs)): with `.r` at mode `000`, `grund init .r/sub` exits `2`, stdout empty, stderr:
+
+```text
+error: .r/sub: permission denied; make the path readable
+```
+
 An unknown flag is a CLI-level failure: exit `2`, stdout empty, stderr:
 
 ```text

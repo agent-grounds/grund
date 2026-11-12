@@ -25,7 +25,9 @@ use crate::checker::{
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
 use crate::model::{CheckReport, Diagnostic, Finding, Switch};
-use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
+use crate::resolver::{
+    WorkspaceCheckTarget, load_workspace_projects, report_unwalked_path, settled_run_warnings,
+};
 use crate::scanner::{ScanError, scan_error_message, scan_tree};
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, arm_imports,
@@ -311,6 +313,13 @@ fn run_workspace_check(
     // §FS-check.3.5: `--require-grounding` reaches every member's run through the
     // invocation it was built from (`Run::members`), as `--full` does.
     let mut projects = load_workspace_projects(&mut root_config)?;
+    // §AR-scanner.1.6: each project is walked whole, never from the path.
+    report_unwalked_path(
+        &mut projects,
+        &root_config,
+        narrowing.path,
+        narrowing.path_provided,
+    );
     // §FS-check.1.3.8: `include` is a per-project statement, so each project's
     // walk is widened past its own and tiered against its own configured scope.
     let scopes = projects
