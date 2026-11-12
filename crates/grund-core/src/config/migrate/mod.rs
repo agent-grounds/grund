@@ -33,7 +33,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::compiled::compile;
-use super::discovery::{config_file_in, discovery_start_dir, pending_config};
+use super::discovery::{
+    cli_base_of, config_file_in, discovery_start, nearest_config, pending_config,
+};
 use super::kind::KindResolution;
 use super::project::Project;
 use super::run::{Invocation, Selection};
@@ -56,30 +58,27 @@ pub(crate) struct Located {
 }
 
 /// §FS-config-migrate.1.1: discovery walks up from `path`, as `config validate`
-/// does, and the governing config of the first directory that has one is it.
+/// does, and the governing config of the first directory that has one is it —
+/// found on the path's own parents (§FS-config.1.5), its root then resolved as
+/// every loaded root is, and the file spelled under that root.
 pub(crate) fn locate(path: &Path) -> Option<Located> {
-    let start = discovery_start_dir(path).to_path_buf();
-    let walk_start = fs::canonicalize(&start).unwrap_or(start);
-    let mut cursor = Some(walk_start.as_path());
-    while let Some(dir) = cursor {
-        if let Some(file) = config_file_in(dir) {
-            let from_cli = super::call_scope::report_path_base()
-                == Some(super::call_scope::PathBase::Invocation);
-            let shown = if from_cli {
-                relative_from_base(&walk_start, &file)
-            } else {
-                file.strip_prefix(dir)
-                    .map_or_else(|_| file.clone(), Path::to_path_buf)
-            };
-            return Some(Located {
-                root: dir.to_path_buf(),
-                file,
-                config: format_path(&shown),
-            });
-        }
-        cursor = dir.parent();
-    }
-    None
+    let start = discovery_start(path);
+    let (dir, file) = nearest_config(&start)?;
+    let root = super::canonical_config_root(&dir);
+    let name = file.strip_prefix(&dir).ok()?;
+    let file = root.join(name);
+    let from_cli =
+        super::call_scope::report_path_base() == Some(super::call_scope::PathBase::Invocation);
+    let shown = if from_cli {
+        relative_from_base(&cli_base_of(&start, &root), &file)
+    } else {
+        name.to_path_buf()
+    };
+    Some(Located {
+        root,
+        file,
+        config: format_path(&shown),
+    })
 }
 
 /// §FS-config-migrate.8: the config of the member at `root` when it is still on

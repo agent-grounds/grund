@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 use anyhow::Result;
 
 use crate::checker::{CheckWorkspace, check_project, diagnostic_cmp};
-use crate::config::{Config, KindIndex, config_file_in, display_path};
+use crate::config::{Config, KindIndex, discovery_start, display_path, nearest_config};
 use crate::grammar::render_id;
 use crate::model::{Catalog, CheckReport, Diagnostic, format_path, sort_path_key};
 use crate::resolver::WorkspaceCheckTarget;
@@ -149,15 +149,19 @@ fn temp_candidates() -> Vec<PathBuf> {
 
 /// The first of `candidates` no config covers, under either name, at it or at
 /// any ancestor (§AR-ci.10.3), returned as given. It asks discovery's own
-/// `config_file_in`, from the canonical path discovery would walk, so the guard
-/// reads exactly the names discovery reads; a candidate that will not
+/// search from the resolved path, as a `physical_test_root` fixture is spelled,
+/// and from the path as spelled, which discovery climbs (§FS-config.1.5), so the
+/// guard reads exactly the names discovery reads; a candidate that will not
 /// canonicalize is skipped. The `Err` names `TMPDIR` and what refused each
 /// candidate — the config covering it, or why it is unusable.
 pub(crate) fn uncovered_base(candidates: &[PathBuf]) -> Result<PathBuf, String> {
     let mut refusals = Vec::new();
     for candidate in candidates {
         match std::fs::canonicalize(candidate) {
-            Ok(walk) => match walk.ancestors().find_map(config_file_in) {
+            Ok(physical) => match [physical, discovery_start(candidate)]
+                .iter()
+                .find_map(|walk| nearest_config(walk).map(|(_, config)| config))
+            {
                 None => return Ok(candidate.clone()),
                 Some(config) => refusals.push(format!(
                     "{} is covered by {}",

@@ -6,15 +6,17 @@
 
 use anyhow::{Context, Result};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use super::compiled::{Compiled, compile};
 use super::project::Project;
 use super::record::Config;
 use super::run::{Invocation, Run};
 use super::{v1, v2, validate};
-use crate::model::{format_path, relative_from_base};
-use crate::sources::{Resolution, path_resolution};
+use crate::model::{format_path, normalize_path_lexically, relative_from_base};
+use crate::sources::{
+    Resolution, lookup_refused, path_lookup, path_resolution, resolved_as_far_as_answered,
+};
 
 /// The two names one directory may hold its config under, in probe order
 /// (§FS-config.1): the bare root-visible `grund.toml` first, then
@@ -152,14 +154,90 @@ pub(crate) fn config_file_under(root: &Path, read: &Path) -> PathBuf {
 /// any other path is its own start. A link whose resolution loops starts where a file
 /// does, at its directory: it has no inside to start from, and its own spelling cannot be
 /// resolved, so the climb from it would lose the root (§FS-scan.scope.links.unresolvable.named).
-/// Uncanonicalized, so each caller resolves `.` the way it resolves every other relative start.
-pub(crate) fn discovery_start_dir(path: &Path) -> &Path {
+/// Relative still: [`discovery_start`] makes it absolute, so `.` resolves the way every
+/// other relative start does.
+fn discovery_start_dir(path: &Path) -> &Path {
     if !path.is_file() && path_resolution(path) != Resolution::Loop {
         return path;
     }
     match path.parent() {
         Some(parent) if !parent.as_os_str().is_empty() => parent,
         _ => Path::new("."),
+    }
+}
+
+/// The absolute directory every upward config search climbs from (§FS-config.1.5):
+/// `path`'s start, joined to the working directory, with no directory link after its
+/// last `..` followed. The path through that `..` names the directory the OS gives
+/// it — the parent of a link's target, not of the link — so it resolves as before,
+/// and as written where it does not resolve. Without a working directory a relative
+/// start stays as given.
+pub(crate) fn discovery_start(path: &Path) -> PathBuf {
+    let start = discovery_start_dir(path);
+    let absolute = if start.is_absolute() {
+        start.to_path_buf()
+    } else {
+        match std::env::current_dir() {
+            Ok(cwd) => cwd.join(start),
+            Err(_) => return start.to_path_buf(),
+        }
+    };
+    let components: Vec<_> = absolute.components().collect();
+    let Some(last) = components
+        .iter()
+        .rposition(|component| *component == Component::ParentDir)
+    else {
+        return normalize_path_lexically(&absolute);
+    };
+    let through: PathBuf = components[..=last].iter().collect();
+    let resolved = resolved_start(&through).unwrap_or_else(|| normalize_path_lexically(&through));
+    let after: PathBuf = components[last + 1..].iter().collect();
+    normalize_path_lexically(&resolved.join(after))
+}
+
+/// The nearest directory on `start`'s lexical parents that carries a config, with
+/// that file (§FS-config.1, §FS-config.1.5): the one upward search discovery,
+/// `config explain` and `config migrate` share. A directory the path reaches
+/// through a link is probed where the path names it, so a nearer config there
+/// still wins, and while any lexical parent carries a config the link target's own
+/// parents are never climbed. Only where none does, as for a link from outside
+/// every project into one, are the parents of what `start` resolves to searched,
+/// so discovery cannot trade that project's verdict for the defaults.
+pub(crate) fn nearest_config(start: &Path) -> Option<(PathBuf, PathBuf)> {
+    let above = |start: &Path| {
+        start
+            .ancestors()
+            .find_map(|dir| config_file_in(dir).map(|file| (dir.to_path_buf(), file)))
+    };
+    above(start).or_else(|| {
+        resolved_start(start)
+            .filter(|resolved| resolved != start)
+            .and_then(|resolved| above(&resolved))
+    })
+}
+
+/// The CLI base of a run rooted at the canonical `root`, from the lexical `start`
+/// (§FS-config.3.6.1, §FS-cli.3.4, §FS-config.1.5). Under the root it keeps the path's
+/// own spelling, as a finding names the in-tree link path, so a path through a directory
+/// link is spelled from the path given; a start the root does not prefix, as one reached
+/// through a link above the root, resolves.
+pub(crate) fn cli_base_of(start: &Path, root: &Path) -> PathBuf {
+    if start.starts_with(root) {
+        return start.to_path_buf();
+    }
+    resolved_start(start).unwrap_or_else(|| start.to_path_buf())
+}
+
+/// Where `start` resolves, links followed: its canonical path, else, for a lookup
+/// refused for lack of permission, the place the walk gives such a root, as far as the
+/// disk answers (§AR-scanner.1.9, §FS-scan.scope.links.owed.refused). `None` for any
+/// other failure, a missing target among them, which keeps the route it had.
+fn resolved_start(start: &Path) -> Option<PathBuf> {
+    match fs::canonicalize(start) {
+        Ok(resolved) => Some(resolved),
+        Err(_) => path_lookup(start)
+            .is_err_and(|error| lookup_refused(&error))
+            .then(|| resolved_as_far_as_answered(start)),
     }
 }
 
@@ -177,38 +255,26 @@ pub(crate) fn discovery_start_dir(path: &Path) -> &Path {
 pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
     let start = invocation.path.as_path();
     // §FS-check.6.1.1, §FS-check.6.1.3: cover the lexical invocation and its
-    // followed targets before type probes or canonical discovery lose the link.
+    // followed targets before type probes or the canonical root lose the link.
     anyhow::ensure!(
         super::observe_input(start, false),
         "watch input coverage failed"
     );
-    let start_dir = discovery_start_dir(start).to_path_buf();
-    // Resolve to an absolute path before walking up, mirroring how `cargo` finds
-    // `Cargo.toml` (§FS-config.1): a relative `.` or `subdir/` must still discover
-    // a `grund.toml` in an ancestor directory.
-    let walk_start = fs::canonicalize(&start_dir).unwrap_or_else(|_| {
-        // §AR-scanner.1.9: a link given as the path whose lookup is refused
-        // is placed as far as the disk answers, as the walk places such a root.
-        let lookup = crate::sources::path_lookup(&start_dir);
-        if lookup.is_err_and(|error| crate::sources::lookup_refused(&error)) {
-            crate::sources::resolved_as_far_as_answered(&start_dir)
-        } else {
-            start_dir
-        }
-    });
-    let mut cursor = Some(walk_start.as_path());
-    while let Some(dir) = cursor {
-        // Both names are probed at *every* level before climbing, so a bare
-        // member config shadows an ancestor's `.agents/` one exactly as a nested
-        // `.agents/grund.toml` always did (§FS-config.1, §DF-config-file-location.2.1).
-        if config_file_in(dir).is_some() {
-            return config_at(dir, &walk_start, None, invocation);
-        }
-        cursor = dir.parent();
+    // Absolute before walking up, as `cargo` finds `Cargo.toml` (§FS-config.1): a
+    // relative `.` or `subdir/` still discovers an ancestor's `grund.toml`, on the
+    // path's own parents rather than a link target's (§FS-config.1.5).
+    let walk_start = discovery_start(start);
+    // Both names are probed at *every* level before climbing, so a bare member
+    // config shadows an ancestor's `.agents/` one exactly as a nested
+    // `.agents/grund.toml` always did (§FS-config.1, §DF-config-file-location.2.1).
+    if let Some((dir, _)) = nearest_config(&walk_start) {
+        // §FS-config.1.5: the project's identity resolves links once it is chosen.
+        let root = super::canonical_config_root(&dir);
+        return config_at(&root, &cli_base_of(&walk_start, &root), None, invocation);
     }
     // Zero-config (§GOAL-zero-config): the "project root" is the current working
     // directory, never the path passed on the command line. Reports stay relative to
-    // `cli_base` (the resolved path arg) when `relative_paths` is off (§FS-config.3.6.1).
+    // `cli_base` (the path arg) when `relative_paths` is off (§FS-config.3.6.1).
 
     // §FS-distribution.3.3.3: embedding scopes this fallback to its supplied root.
     // §FS-lsp.2.2.1: an editor's explicit zero-config folder is the project anchor
@@ -221,7 +287,8 @@ pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
             .and_then(|cwd| fs::canonicalize(&cwd).ok())
             .unwrap_or_else(|| walk_start.clone()),
     };
-    let mut run = Run::of(root, walk_start, invocation);
+    let cli_base = cli_base_of(&walk_start, &root);
+    let mut run = Run::of(root, cli_base, invocation);
     // §FS-check.2.2.2.5: the one place a run learns that no config applies to it.
     run.found_no_config = true;
     let config = defaults_under(run, invocation);

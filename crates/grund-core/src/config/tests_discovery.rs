@@ -21,7 +21,6 @@ const MARKER_AT_V2: &str = "grund_config_version = 2\n\n[schema]\nmarker = \"@\"
 /// §FS-config.1.5: locate by lexical ancestors, then retain canonical project identity.
 #[cfg(unix)]
 #[test]
-#[ignore = "red until #1326 discovery keeps lexical parents; implement removes this"]
 fn linked_path_discovery_keeps_the_lexical_config_and_canonical_root() {
     let root = test_root("linked_path_discovery_keeps_the_lexical_config_and_canonical_root");
     let project = root.join("project");
@@ -50,6 +49,80 @@ fn linked_path_discovery_keeps_the_lexical_config_and_canonical_root() {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+/// A project whose `cases` links to `outside/cases`, with a stranger config above
+/// the target and `outside/sub/note.md` beside it, under a resolved root.
+#[cfg(unix)]
+fn linked_project(name: &str) -> PathBuf {
+    let root = crate::testing::physical_test_root(name);
+    let project = root.join("project");
+    write(&project.join("grund.toml"), MARKER_AT_V2);
+    write(&project.join("docs/note.md"), "Note.\n");
+    write(&root.join("outside/cases/b/note.md"), "Note.\n");
+    write(&root.join("outside/sub/note.md"), "Note.\n");
+    write(
+        &root.join("outside/grund.toml"),
+        "grund_config_version = 2\n\n[schema]\nmarker = \"#\"\n",
+    );
+    std::os::unix::fs::symlink(root.join("outside/cases"), project.join("cases")).unwrap();
+    project
+}
+
+/// §FS-config.1.5: a `..` names the directory the OS gives it, so `cases/..` is
+/// `outside`, whose config governs there, as the bindings' explicit-symlink-parent
+/// regression pins; a link after the last `..` is still not followed.
+#[cfg(unix)]
+#[test]
+fn a_dot_dot_resolves_as_the_os_reads_it_and_a_link_after_it_does_not() {
+    let project =
+        linked_project("a_dot_dot_resolves_as_the_os_reads_it_and_a_link_after_it_does_not");
+    let outside = project.parent().unwrap().join("outside");
+    for (path, marker, root) in [
+        ("cases/../sub", "#", &outside),
+        ("cases/../sub/note.md", "#", &outside),
+        ("docs/../cases/b", "@", &project),
+        ("docs/../docs/note.md", "@", &project),
+    ] {
+        let config = load_config(&project.join(path)).expect("load config");
+        assert_eq!(
+            (config.marker.as_str(), &config.root),
+            (marker, root),
+            "{path}"
+        );
+    }
+}
+
+/// §FS-config.1.5: a link from outside every project into one has no config on its
+/// own parents, so the project it reaches governs rather than the defaults.
+#[cfg(unix)]
+#[test]
+fn a_link_from_outside_every_project_reads_the_project_it_reaches() {
+    let project = linked_project("a_link_from_outside_every_project_reads_the_project_it_reaches");
+    let into = project.parent().unwrap().join("into");
+    std::os::unix::fs::symlink(project.join("docs"), &into).unwrap();
+    for path in [into.clone(), into.join("note.md")] {
+        let config = load_config(&path).expect("load config");
+        assert_eq!((config.marker.as_str(), &config.root), ("@", &project));
+    }
+}
+
+/// §FS-config.3.6.1, §FS-config.1.5: through a link, the CLI base is the path as
+/// given under the project root, the spelling the walk records for its files, not
+/// the link's target outside it.
+#[cfg(unix)]
+#[test]
+fn a_linked_paths_cli_base_is_spelled_as_given() {
+    let project = linked_project("a_linked_paths_cli_base_is_spelled_as_given");
+    for (path, base) in [
+        ("cases", "cases"),
+        ("cases/b", "cases/b"),
+        ("cases/b/note.md", "cases/b"),
+        ("docs/note.md", "docs"),
+    ] {
+        let config = load_config(&project.join(path)).expect("load config");
+        assert_eq!(config.cli_base, project.join(base), "{path}");
+    }
 }
 
 // §FS-config.1: the bare root-visible `grund.toml` is a config root on its
