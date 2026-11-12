@@ -187,6 +187,8 @@ mod tests_report_order;
 #[cfg(test)]
 mod tests_rule_overlays;
 #[cfg(test)]
+mod tests_scan_failure_rendering;
+#[cfg(test)]
 mod tests_scope_cautions;
 #[cfg(test)]
 mod tests_shorthand_docstring;

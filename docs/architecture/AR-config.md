@@ -167,6 +167,10 @@ Scan entry stays on the spelling ([§FS-scan.identity.reading.entry](../function
 
 What a form asks of a home is judged in one function, `home_requirement`, called for every `files` and `folders` entry of a row by both loaders, so the first entry is not the only one asked ([§FS-config-v2.schema.sources.rules](../functional-spec/FS-config-v2.md#schemasourcesrules-every-home-of-a-rule-kind-is-judged-by-its-reading), [§FS-config.3.4.9](../functional-spec/FS-config.md#349-values--first-class-value-declarations)).
 
+### 1.7 A reported path is spelled by one function
+
+`config` holds the one function that spells a path a report names: relative to the run's report base, and `.` for the base itself ([§FS-cli.3.4](../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from)). The empty string is not a spelling any caller can get, so no message handles it on its own, and a message that needs to know whether a place is the base asks the path, never the rendered string. A finding's location and `sites`, the paths inside its message, a scan failure's location and a path its reason names all go through it ([§FS-errors.2.2.5](../functional-spec/FS-errors.md#225-one-scan-failure-one-rendering)). What is spelled from another base for another reason, a `members` entry about to be written relative to the config root, is a different fact with its own named function, not a caller of this one.
+
 ## 2. The v1 reader and its isolation
 
 Discovery, which decides which file governs ([§FS-config.1](../functional-spec/FS-config.md#1-file-location-and-discovery)), stays in

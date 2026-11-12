@@ -133,6 +133,12 @@ Used by [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location) (unknown subcom
 
 A *launch-time* `error:` (bad flag, unreadable config, missing path) is printed as raw text and is never JSON-ified; a *mid-scan* per-file failure collected by `grund check` is one of the report's findings and is rendered in `--format=json` like the others ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)), still on stderr because it is not a finding about the spec graph.
 
+#### 2.2.5 One scan failure, one rendering
+
+A per-file scan failure has one reported form for a run: its location, spelled from the report base with the base itself `.` ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)); its message, the reason followed by `; ` and its *Fix* ([§FS-check.2.4.3](FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix)); and its code. Every surface that publishes the failure publishes that form: the `error: <location>: <message>` line `check`, `list`, `show`, `show --batch`, `refs`, `id` and `fetch` print, `check`'s JSON record, the embedding API's record, and a binding's failure, whichever command or operation met the failure ([§FS-workspace.8.7.3](FS-workspace.md#873-paths)). None drops the *Fix*, and none repeats the location at the head of a message whose record carries it as `path`: `show` publishes the message `show --batch` and the scan's own record publish.
+
+A file the reason names is part of what failed, not text written while scanning. It is spelled when the report is, by the spelling of the location beside it, so the same tree prints the same bytes wherever it sits ([§FS-errors.4](FS-errors.md#4-determinism)), a run from a subdirectory under `--path-base=invocation` names it with the `..` the location takes, and a member's file is named from the workspace root rather than from the member that scanned it. An `expected.exit` that does not parse at a workspace root with `members = ["m"]` is therefore `error: m/e2e/cases/a/expected.exit: parse m/e2e/cases/a/expected.exit: invalid digit found in string; …`.
+
 ### 2.3 Bare query failure
 
 When a subcommand established its query context but has no result to put on
