@@ -100,8 +100,8 @@ pub(crate) use headings::UnmarkedHeadingCandidate;
 // §AR-system.2.2: checker and queries share the guidance.
 pub(crate) use missing_stub_repair::MissingStubRepair;
 pub(crate) use paths::{
-    base_reads_dot, configured_home_path_key, format_path, is_hidden, normalize_path_lexically,
-    relative_from_base, scanned_decl_relative_path, scanned_path_key, site_order, sort_path_key,
+    configured_home_path_key, format_path, is_hidden, normalize_path_lexically, relative_from_base,
+    scanned_decl_relative_path, scanned_path_key, site_order, sort_path_key,
 };
 pub(crate) use patterns::{GlobCitation, OffFormatCitation};
 pub(crate) use records::{

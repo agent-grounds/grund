@@ -38,19 +38,10 @@ impl Config {
     }
 }
 
-/// Render a path the way reports show it: relative to the repo root by default,
-/// or relative to the CLI base directory under `--path-base=invocation` or
-/// `[output] relative_paths = false` (§FS-config.3.6.1 — an in-root target
-/// outside that base uses bounded `..`).
+/// `path` as this run's report names it, the report base `.` (§AR-config.1.7): the
+/// run's [`Display::path`](super::frame::Display::path), asked of a `Config`.
 pub(crate) fn display_path(config: &Config, path: &Path) -> String {
     config.display().path(path)
-}
-
-/// `path` as a report names a place: [`display_path`], with the report base itself
-/// reading `.` (§FS-cli.3.4). What a finding's `path`, its `sites[].path` and a scan
-/// failure's `<path>` are spelled through.
-pub(crate) fn display_location(config: &Config, path: &Path) -> String {
-    config.display().location(path)
 }
 
 /// A `Diagnostic` in the published shape (§FS-distribution.3.1), its anchor and
@@ -99,7 +90,7 @@ pub(crate) fn run_warning_findings(config: &Config, warnings: Vec<Diagnostic>) -
         .map(|warning| Finding {
             severity: "warning",
             code: warning.code.as_str(),
-            path: warning.path.map(|path| display_location(config, &path)),
+            path: warning.path.map(|path| display_path(config, &path)),
             line: warning.line,
             column: None,
             message: warning.message,

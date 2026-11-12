@@ -97,18 +97,6 @@ pub(crate) fn format_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 
-/// A path already spelled relative to the directory it is read from, for a report
-/// that names a place: that directory reads `.`, since the empty string it spells as
-/// names nothing (§FS-cli.3.4, §FS-workspace.5.3). Over the spelled string because
-/// other readers of that spelling ask whether it is empty (§FS-config.3.6).
-pub(crate) fn base_reads_dot(spelled: String) -> String {
-    if spelled.is_empty() {
-        ".".to_owned()
-    } else {
-        spelled
-    }
-}
-
 /// The key a list of paths is ordered by (§FS-errors.4.1). The same spelling
 /// `format_path` renders, so what a reader sorts by is what they see.
 pub(crate) fn sort_path_key(path: &Path) -> String {

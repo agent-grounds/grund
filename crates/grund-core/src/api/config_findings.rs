@@ -71,12 +71,13 @@ pub(super) const CONFIG_VERSION_1: Code = Code::CONFIG_VERSION_1;
 
 /// §FS-check.checks.config-version-1: the one sentence that tells a reader the
 /// config at `file` is on version 1 and names the command that migrates it,
-/// ending at `--to 2` when `dir` is the report's base. `config migrate` prints
+/// ending at `--to 2` when `dir` is `None`, the report's base, which the caller
+/// asks of the path (§AR-config.1.7). `config migrate` prints
 /// it for a member (§FS-config-migrate.8) and the caution below prints it for
 /// any config, so the two cannot drift apart.
 pub(super) fn version_1_caution(file: &str, dir: Option<&str>) -> String {
     let mut line = format!("{file} is version 1; {}", remedies::config_version_1("it"));
-    if let Some(dir) = dir.filter(|dir| !dir.is_empty()) {
+    if let Some(dir) = dir {
         line.push(' ');
         line.push_str(dir);
     }
@@ -103,7 +104,12 @@ fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Dia
         path: None,
         line: None,
         column: None,
-        message: version_1_caution(&display.path(&file), Some(&display.path(&config.root))),
+        message: version_1_caution(
+            &display.path(&file),
+            (!display.is_base(&config.root))
+                .then(|| display.path(&config.root))
+                .as_deref(),
+        ),
         sites: Vec::new(),
         authority: Vec::new(),
     })

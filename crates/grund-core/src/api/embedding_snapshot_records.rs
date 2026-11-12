@@ -1,6 +1,6 @@
 //! Source fields retained by the owned scanner snapshot (§FS-distribution.3.2.2.3).
 use super::embedding_data::Data;
-use crate::config::{Config, display_location};
+use crate::config::{Config, display_path};
 use crate::*;
 use serde_json::{Value, json};
 
@@ -49,7 +49,7 @@ impl Data for InlineCitationSite {
 /// (§FS-distribution.3.2.2.3).
 pub(super) fn e2e_case_data(config: &Config, case: &E2eCase) -> Value {
     // §AR-scanner.6.2: the parsed words, `[]` with no `command.args`.
-    json!({"dir":display_location(config,&case.dir),"args":case.args,"expected_exit":case.expected_exit,
+    json!({"dir":display_path(config,&case.dir),"args":case.args,"expected_exit":case.expected_exit,
         "fixtures":case.fixtures.data(),"spec_refs":case.spec_refs.iter()
             .map(|s|json!({"namespace":s.namespace,"kind":s.kind})).collect::<Vec<_>>()})
 }

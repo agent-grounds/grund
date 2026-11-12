@@ -11,8 +11,8 @@ use anyhow::{Result, anyhow};
 use super::context::{WorkspaceContext, WorkspaceProject, load_workspace_projects_through};
 use super::mount::MountLoader;
 use super::unread_block::settled_run_warnings;
-use crate::config::{ProjectRecords, Run};
-use crate::model::{Catalog, OperationDiagnostic, format_path, relative_from_base};
+use crate::config::{ProjectRecords, Run, report_path};
+use crate::model::{Catalog, OperationDiagnostic};
 use crate::workspace::WorkspaceCitationTarget;
 
 impl WorkspaceContext {
@@ -149,7 +149,7 @@ pub(crate) fn fetch_place(
         qualified,
         import: import.to_owned(),
         id,
-        target: format_path(&relative_from_base(base, root)),
+        target: report_path(base, root),
     }
 }
 

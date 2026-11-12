@@ -298,7 +298,7 @@ fn a_barred_path_fails_every_command_at_the_path() {
 
 /// R3-02: where the project's own walk meets the barred `rr` and fails there first, `show`, read
 /// from stdin and from a glob as well as single, still stops at the path, where it stopped at `rr`,
-/// and `id` refuses there, the path and its reason (§FS-id.4), and mints nothing.
+/// and `id` refuses there, the path, its reason and its *Fix* (§FS-id.4), and mints nothing.
 #[test]
 fn a_query_stops_at_the_path_where_the_walk_meets_the_barred_directory_first() {
     let Some(tree) = Tree::visible("visible") else {
@@ -315,15 +315,15 @@ fn a_query_stops_at_the_path_where_the_walk_meets_the_barred_directory_first() {
         failures.extend(run.permission_failure_at(path));
         let glob = ["show", "--batch", "--glob", "FS-*", "--format=json", path];
         failures.extend(tree.run(&glob).permission_failure_at(path));
+        // §FS-errors.2.2.5: `id` prints the line every command prints, its *Fix* included.
         let id = tree.run(&["id", "FS", "new thing", path]);
-        let line = format!("error: {path}: permission denied");
-        if id.code != 2 || !id.stdout.is_empty() || !id.stderr.lines().any(|l| l == line) {
+        if !id.stdout.is_empty() {
             failures.push(format!(
-                "{}: want exit 2, empty stdout and `{line}`; got exit {}\n  stdout: {:?}\n  \
-                 stderr: {:?}",
-                id.shown, id.code, id.stdout, id.stderr
+                "{}: want empty stdout; got {:?}",
+                id.shown, id.stdout
             ));
         }
+        failures.extend(id.permission_failure_at(path));
     }
     assert_none(failures);
 }

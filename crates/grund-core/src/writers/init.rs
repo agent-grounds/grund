@@ -16,7 +16,7 @@ use super::init_template::{
     StarterWrite, lay_starter_files, resolve_template, template_config_note,
 };
 use crate::checker::{configured_rule_sentences, declared_workspace_vocabulary};
-use crate::config::{Config, config_file_in, display_location};
+use crate::config::{Config, config_file_in, display_path};
 use crate::model::{Catalog, Diagnostic, Finding, FindingSite, format_path};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file, scan_tree,
@@ -157,7 +157,8 @@ fn init_run(
             InitError::new(message)
         })?;
         if let Some(first) = errors.first() {
-            let (path, message) = (&first.path, &first.reason);
+            let path = &first.path;
+            let message = first.spelled_reason(|file| file.display().to_string());
             // §FS-distribution.3.3.2: scanner errors carry a source path, and their code
             // (§FS-check.2.4.3).
             let mut source = crate::model::OperationDiagnostic::new(
@@ -526,7 +527,7 @@ fn init_finding(config: &Config, diagnostic: Diagnostic) -> Finding {
     Finding {
         severity: "error",
         code: diagnostic.code.as_str(),
-        path: diagnostic.path.map(|path| display_location(config, &path)),
+        path: diagnostic.path.map(|path| display_path(config, &path)),
         line: diagnostic.line,
         column: diagnostic.column,
         message: diagnostic.message,
@@ -534,7 +535,7 @@ fn init_finding(config: &Config, diagnostic: Diagnostic) -> Finding {
             .sites
             .into_iter()
             .map(|site| FindingSite {
-                path: display_location(config, &site.path),
+                path: display_path(config, &site.path),
                 line: site.line,
             })
             .collect(),

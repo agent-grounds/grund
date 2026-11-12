@@ -20,11 +20,8 @@ use std::path::{Path, PathBuf};
 
 use super::members::{WorkspaceMember, canonical_workspace_path};
 use super::scope::{config_location_message, workspace_members_error};
-use crate::config::{Config, ConfigLocation, config_file_in, root_scope_roots};
-use crate::model::{
-    Code, Diagnostic, LANDED_CLAUSE, base_reads_dot, format_path, normalize_path_lexically,
-    relative_from_base,
-};
+use crate::config::{Config, ConfigLocation, config_file_in, report_path, root_scope_roots};
+use crate::model::{Code, Diagnostic, LANDED_CLAUSE, normalize_path_lexically};
 use anyhow::Result;
 
 /// §FS-workspace.2.1.1: each of the block's own walk roots that a member root
@@ -129,10 +126,11 @@ pub(crate) fn block_relative_root(config: &Config, root: &Path) -> String {
 /// [`block_relative_root`] on the two paths alone, so a test can fold a spelling
 /// without building a `Config`.
 pub(super) fn root_under_block(block_root: &Path, root: &Path) -> String {
-    base_reads_dot(format_path(&relative_from_base(
+    // §AR-config.1.7: the block root reads `.` through the one spelling.
+    report_path(
         &normalize_path_lexically(block_root),
         &normalize_path_lexically(root),
-    )))
+    )
 }
 
 /// The sentence §FS-check.3.30.1 carries, built apart from the error that
@@ -239,7 +237,7 @@ pub(crate) fn undecidable_ancestor_claim_warning(
     format!(
         "{}: cannot read [workspace] members ({reason}); \
          alias paths below it may be missing a segment",
-        format_path(&relative_from_base(report_base, config_path))
+        report_path(report_base, config_path)
     )
 }
 

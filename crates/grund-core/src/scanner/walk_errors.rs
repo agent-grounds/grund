@@ -398,9 +398,9 @@ pub(super) fn symlink_loop_report(
         return None;
     }
     // Naming the directory is the useful half of the message, and it is available
-    // only where that directory has a name *in the report* — the config root
-    // renders as nothing at all (§FS-config.3.6).
-    let ancestor = Some(loop_ancestor_name(ancestor, frame)).filter(|name| !name.is_empty());
+    // only where that directory has a name *in the report*: the base it is spelled
+    // from has none, asked of the path (§FS-config.3.6, §AR-config.1.7).
+    let ancestor = loop_ancestor_name(ancestor, frame);
     let reason = match ancestor {
         Some(name) => format!("symlink loop: the target is the ancestor directory {name}"),
         None => "symlink loop: the target contains the link".to_string(),
@@ -428,8 +428,8 @@ fn loop_skipped(link: &Path, filter: &WalkDirFilter, schema: &Schema, frame: Fra
 /// config root, and never the name a walk root or a link gave it on the way. `frame` is
 /// the walk's, so a workspace member or an import spells the location from its own root
 /// even where the line's path is spelled from the workspace root, unless the run reports
-/// from the invocation. The directory it is spelled from renders empty, which the caller
-/// reads as having no name.
+/// from the invocation. The directory it is spelled from has no name here, `None`, asked of
+/// the path rather than of its spelling (§AR-config.1.7).
 ///
 /// The config root is re-joined because it may itself be spelled through a link, and
 /// the report strips that spelling, not the physical one. Outside the config root there
@@ -439,13 +439,14 @@ fn loop_skipped(link: &Path, filter: &WalkDirFilter, schema: &Schema, frame: Fra
 /// Where the directory has gone since the walk met it, the comparison is lexical
 /// (`physical_path_key`), the same comparison a path that has no resolved form gets
 /// everywhere else.
-fn loop_ancestor_name(ancestor: &Path, frame: Frame<'_>) -> String {
+fn loop_ancestor_name(ancestor: &Path, frame: Frame<'_>) -> Option<String> {
     let root = frame.root();
     let location = physical_path_key(ancestor);
-    match location.strip_prefix(canonical_config_root(root)) {
-        Ok(rest) => frame.display_path(&root.join(rest)),
-        Err(_) => frame.display_path(ancestor),
-    }
+    let named = match location.strip_prefix(canonical_config_root(root)) {
+        Ok(rest) => root.join(rest),
+        Err(_) => ancestor.to_path_buf(),
+    };
+    (!frame.display.is_base(&named)).then(|| frame.display_path(&named))
 }
 
 /// The link `path` names, spelled as the walk root reaches it (§FS-config.3.5.2).

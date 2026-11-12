@@ -5,10 +5,11 @@ use anyhow::Result;
 use std::path::Path;
 
 use super::context::WorkspaceProject;
-use crate::config::{ProjectRecords, display_location};
+use crate::config::ProjectRecords;
 use crate::model::{Catalog, OperationDiagnostic};
 use crate::scanner::{
-    ScanError, scan_error_message, scan_tree_with_workspace, unwalked_path_failure,
+    ScanError, api_scan_error, scan_operation_failure, scan_tree_with_workspace,
+    unwalked_path_failure,
 };
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -101,25 +102,21 @@ pub(crate) fn stopping_failure<'c>(
     })
 }
 
-/// The refusal of a query that stops at `first` (§FS-distribution.3.3.2): a located filesystem
-/// outcome with every failure of `all` in its details, rendered against the run's config rather
-/// than the failed project's, the spelling `check` uses for the same tree, the base `.`
-/// (§FS-workspace.8.7.3, §FS-cli.3.4).
+/// The refusal of a query that stops at `first` (§FS-distribution.3.3.2): the one reported form
+/// of `first` that every surface publishes, located at its `path` and carrying the record a
+/// command prints whole (§FS-errors.2.2.5), with every failure of `all` in its details in that
+/// same form. Both are spelled by the run's config rather than the failed project's, the spelling
+/// `check` uses for the same tree, the base `.` (§FS-workspace.8.7.3, §FS-cli.3.4).
 pub(crate) fn scan_failure_refusal(
     render: &ProjectRecords,
     first: &ScanError,
     all: &[ScanError],
 ) -> OperationDiagnostic {
-    let path = display_location(render, &first.path);
-    let message = format!("{path}: {}", scan_error_message(first));
-    let mut refusal = OperationDiagnostic::new("filesystem", first.code().as_str(), message);
-    refusal.path = Some(path);
+    let frame = render.frame();
+    let mut refusal = scan_operation_failure(frame, first);
     let failures = all.iter().map(|failure| {
-        serde_json::json!({
-            "path": display_location(render, &failure.path),
-            "message": scan_error_message(failure),
-            "code": failure.code().as_str(),
-        })
+        let record = api_scan_error(frame, failure);
+        serde_json::json!({"path": record.path, "message": record.message, "code": record.code})
     });
     refusal.details = serde_json::json!({"scan_errors": failures.collect::<Vec<_>>()});
     refusal

@@ -6,7 +6,7 @@ use super::glob_scope::{GlobSelection, read_globs};
 use super::list_scope::{check_list_scope, unused_leaves_out};
 use super::report_scope::{reported_scope, reports};
 use super::selector_refusal::require_unique_literal;
-use crate::config::{Config, display_location, measure_point_text, run_warning_findings};
+use crate::config::{Config, display_path, measure_point_text, run_warning_findings};
 use crate::grammar::{field_value, render_declaration_id};
 use crate::model::{
     Declaration, FileRecords, Finding, Id, SectionInfo, format_path, paired_declarations,
@@ -240,7 +240,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             section_separator: row.project_config.section_separator.clone(),
             kind: row.id.kind.clone(),
             // §FS-cli.3.4: a record at the report base, an E2E case's directory, reads `.`.
-            path: display_location(render_config, &row.declaration.file),
+            path: display_path(render_config, &row.declaration.file),
             line: row
                 .section
                 .map(|(_, info)| info.line)
