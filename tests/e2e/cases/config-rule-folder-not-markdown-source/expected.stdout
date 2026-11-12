@@ -1,0 +1,2 @@
+fs/a.rs:1: error: FS-a must cite RULE (RULE-cite); add such a citation within it
+rules/r.rs:1: warning: declared but never cited: RULE-cite; cite it

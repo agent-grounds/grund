@@ -1,0 +1,1 @@
+warning: grund.toml:11: [schema.kinds.RULE] folders entry `rules` can hold no file read as Markdown, because no admitted language reads Markdown; admit one in [schema.sources] languages, such as `markdown`; this becomes an error in grund 1.0.0

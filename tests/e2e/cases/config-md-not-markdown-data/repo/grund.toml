@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "g1206"
+
+[schema.sources]
+languages = ["markdown", "json"]
+
+[schema.sources.extensions]
+md = "json"
+txt = "markdown"
+
+[schema.kinds.FS]
+files = ["fs/a.txt"]

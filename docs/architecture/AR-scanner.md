@@ -245,7 +245,7 @@ Three carve-outs share one predicate, `bare_token_in_never_rewrite_zone`, whose 
 
 #### 2.3.2 A qualified citation in source code
 
-The source-only skip of a marker-prefixed **qualified** `§<alias>/<ID>` inside an inline-code span or a string literal is the same path-collision caution that already rules out an *unmarked* `alias/ID` ([§AR-workspace.3.1](AR-workspace.md#31-the-rule)). That collision is a source-language hazard; in Markdown the typed marker is the author's deliberate act, so a marker-prefixed qualified citation in a `.md` file — including one wrapped in backticks — is always a citation, exactly like the unqualified form ([§FS-workspace.1](../functional-spec/FS-workspace.md#1-citation-syntax)).
+The source-only skip of a marker-prefixed **qualified** `§<alias>/<ID>` inside an inline-code span or a string literal is the same path-collision caution that already rules out an *unmarked* `alias/ID` ([§AR-workspace.3.1](AR-workspace.md#31-the-rule)). That collision is a source-language hazard; in Markdown the typed marker is the author's deliberate act, so a marker-prefixed qualified citation in a file read as Markdown ([§FS-fmt.2.3.1](../functional-spec/FS-fmt.md#231-string-literal-exclusion-rule)), whatever its name — including one wrapped in backticks — is always a citation, exactly like the unqualified form ([§FS-workspace.1](../functional-spec/FS-workspace.md#1-citation-syntax)).
 
 Both the unknown-alias fallback and workspace-aware qualified passes share the context
 decision of [§FS-citations.recognized.contexts](../functional-spec/FS-citations.md#recognizedcontexts-contexts-read-as-neither-prose-nor-code).

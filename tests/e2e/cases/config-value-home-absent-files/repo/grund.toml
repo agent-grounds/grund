@@ -1,0 +1,6 @@
+grund_config_version = 2
+project_name = "g1206"
+
+[schema.kinds.CONST]
+files = ["values/a.md", "values/absent.md"]
+form = "value"
