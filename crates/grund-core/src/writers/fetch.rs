@@ -313,11 +313,14 @@ fn refuse_home_without_markdown(
             )
         }
         // §FS-fetch.4.2.1: the file's name is the ID's, so the repair is the rule.
-        RefusedHome::Excluded(rule) => format!(
-            "{}, so the scan would not read what fetch writes; {}, and fetch again",
-            rule.reason(),
-            rule.lift()
-        ),
+        RefusedHome::Excluded(rule) => {
+            let spell = |path: &Path| request.shown(path);
+            format!(
+                "{}, so the scan would not read what fetch writes; {}, and fetch again",
+                rule.reason(&spell),
+                rule.lift(&spell)
+            )
+        }
     };
     Err(fetch_operational(format!(
         "kind `{}` cannot fetch into {shown}: {why}",

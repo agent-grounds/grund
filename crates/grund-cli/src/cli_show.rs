@@ -213,7 +213,8 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             ExitCode::SUCCESS
         }
         Err(err) => {
-            let message = format!("{err:#}");
+            // §FS-errors.2.2.5: a scan failure prints `check`'s line, the record's own.
+            let message = ApiScanError::printed(&err);
             // §FS-errors.5.2: the ambiguous refusals carry their sites in a typed
             // carrier the query itself raised; every other query failure downcasts
             // to `None` and keeps `sites: null`.

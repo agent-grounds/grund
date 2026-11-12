@@ -159,12 +159,15 @@ pub(super) fn missing_snapshot_message(
                 // §FS-check.3.1.3.1: the scan reads no file there, so the repair is a name.
                 (Some((_, RefusedHome::Unread(_))), _) => UNREAD_HOME_TAIL.to_string(),
                 // §FS-check.3.1.3.1: the walk skips the `<ID>.md`, so the repair is the rule.
-                (Some((snapshot, RefusedHome::Excluded(rule))), _) => format!(
-                    "the scan does not read {}: {}; {}",
-                    frame.display.path(&snapshot),
-                    rule.reason(),
-                    rule.lift()
-                ),
+                (Some((snapshot, RefusedHome::Excluded(rule))), _) => {
+                    let spell = |path: &std::path::Path| frame.display.path(path);
+                    format!(
+                        "the scan does not read {}: {}; {}",
+                        spell(&snapshot),
+                        rule.reason(&spell),
+                        rule.lift(&spell)
+                    )
+                }
                 (Some((_, RefusedHome::ValueSource)), true) => remedies::dangling_value_source(),
                 (Some((_, RefusedHome::ValueSource)), false) => {
                     remedies::missing_snapshot_value_source()

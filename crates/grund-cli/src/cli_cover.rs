@@ -102,7 +102,8 @@ fn command_cover(args: &[String]) -> ExitCode {
     let (output, note) = match cover_with_globs(opts, &globs).1 {
         Ok(output) => output,
         Err(err) => {
-            eprintln!("error: {err:#}");
+            // §FS-errors.2.2.5: a scan failure prints `check`'s line, the record's own.
+            eprintln!("error: {}", ApiScanError::printed(&err));
             return ExitCode::from(2);
         }
     };
@@ -189,7 +190,8 @@ fn command_cover_lines(opts: CoverLinesOpts, format_override: Option<String>) ->
     let output = match cover_lines(opts) {
         Ok(output) => output,
         Err(err) => {
-            eprintln!("error: {err:#}");
+            // §FS-errors.2.2.5: a scan failure prints `check`'s line, the record's own.
+            eprintln!("error: {}", ApiScanError::printed(&err));
             return ExitCode::from(2);
         }
     };

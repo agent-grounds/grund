@@ -211,7 +211,7 @@ fn command_list(args: &[String]) -> ExitCode {
         opts.top = top;
         let output = match list_sizes(opts) {
             Ok(output) => output,
-            Err(err) => return list_refused(&err, &path, path_provided),
+            Err(err) => return list_refused(&ApiScanError::printed(&err), &path, path_provided),
         };
         render_run_warnings(&output.warnings);
         render_glob_notes(output.note.as_deref());
@@ -244,7 +244,7 @@ fn command_list(args: &[String]) -> ExitCode {
     render_run_warnings(&run_warnings);
     let output = match listed {
         Ok(output) => output,
-        Err(err) => return list_refused(&err, &path, path_provided),
+        Err(err) => return list_refused(&ApiScanError::printed(&err), &path, path_provided),
     };
     render_glob_notes(output.note.as_deref());
     let format = match command_output_format("list", &output.output_format, format_override) {
@@ -275,8 +275,7 @@ fn command_list(args: &[String]) -> ExitCode {
 
 /// A refused `list`: its error line, and the hint for a scan path that was more
 /// likely a coordinate glob (§FS-coordinate-globs.errors.hint).
-fn list_refused(err: &impl std::fmt::Display, path: &Path, path_provided: bool) -> ExitCode {
-    let message = format!("{err:#}");
+fn list_refused(message: &str, path: &Path, path_provided: bool) -> ExitCode {
     eprintln!("error: {message}");
     let typed = path.to_string_lossy();
     if path_provided

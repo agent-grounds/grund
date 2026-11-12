@@ -320,6 +320,55 @@ fn global_ignore_tree(name: &str, pattern: &str) -> (PathBuf, String) {
     (root, global.to_string_lossy().replace('\\', "/"))
 }
 
+/// §FS-declarations.stubs.target.3: an ignore file is spelled as the report spells a path,
+/// from the report base (§FS-cli.3.4), so from `docs/` under `--path-base=invocation` it
+/// climbs out the way the stub's location beside it does.
+#[test]
+fn an_ignore_file_is_spelled_from_the_invocation_base() {
+    let root = tree("ignore-invocation-base");
+    write(&root, "notes/.ignore", "gen/\n");
+    let output = grund_in(
+        &root,
+        &root.join("docs"),
+        &["check", "--path-base=invocation"],
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        refusal("../notes/.ignore", "gen/").replacen("docs/fs/x.md", "fs/x.md", 1),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(output.status.code(), Some(1));
+    let _ = fs::remove_dir_all(root);
+}
+
+/// The same refusal in workspace member `m`, checked from the workspace root: the ignore file
+/// is named from that root, as the stub's location is (§FS-cli.3.4, §FS-workspace.8.1).
+#[test]
+fn a_members_ignore_file_is_spelled_from_the_workspace_root() {
+    let root = tree("ignore-workspace-member");
+    let member = root.join("m");
+    fs::create_dir_all(&member).expect("create the member");
+    for entry in ["grund.toml", "docs", "notes"] {
+        fs::rename(root.join(entry), member.join(entry)).expect("move into the member");
+    }
+    write(
+        &root,
+        "grund.toml",
+        "grund_config_version = 2\n\n[workspace]\nmembers = [\"m\"]\n",
+    );
+    write(&member, "notes/.ignore", "gen/\n");
+    let output = check(&root, &[]);
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        refusal("m/notes/.ignore", "gen/").replacen("docs/fs/x.md", "m/docs/fs/x.md", 1),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(output.status.code(), Some(1));
+    let _ = fs::remove_dir_all(root);
+}
+
 /// §FS-declarations.stubs.target.3: global git ignores use the same matcher,
 /// and name the absolute ignore file plus the authored pattern. The pattern is
 /// anchored, and it anchors at the repository top (§FS-scan.scope.ignore-files.global).

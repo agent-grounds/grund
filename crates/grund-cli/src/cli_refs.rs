@@ -147,7 +147,8 @@ fn command_refs(args: &[String]) -> ExitCode {
                 }
                 return ExitCode::from(1);
             }
-            eprintln!("error: {err:#}");
+            // §FS-errors.2.2.5: a scan failure prints `check`'s line, the record's own.
+            eprintln!("error: {}", ApiScanError::printed(&err));
             return ExitCode::from(2);
         }
     };

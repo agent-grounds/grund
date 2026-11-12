@@ -16,7 +16,7 @@ use crate::model::{
     Catalog, Declaration, FileRecord, Id, OperationDiagnostic, paired_declarations,
     scanned_path_key,
 };
-use crate::scanner::{ScanError, reported_scan_failure};
+use crate::scanner::{FromBase, ScanError, reported_scan_failure};
 use crate::sources::{link_metadata, path_is_dir, path_is_file, read_bytes};
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -318,7 +318,7 @@ pub(super) fn unscanned(
     error: &ScanError,
     diagnostic: &mut Option<anyhow::Error>,
 ) -> FetchFailure {
-    let line = reported_scan_failure(error, |path| request.shown(path)).line();
+    let line = reported_scan_failure(error, &FromBase(request.report_base)).line();
     let failure = fetch_operational(line);
     with_io_source(request, &error.path, failure, diagnostic)
 }

@@ -71,7 +71,8 @@ fn command_refs_sites(line: RefsSiteLine) -> ExitCode {
                 .map(|carrier| carrier.sites.as_slice())
                 .unwrap_or(&[]);
             let refusal = RefsSiteRefusal {
-                message: format!("{err:#}"),
+                // §FS-errors.2.2.5: a scan failure prints `check`'s line, the record's own.
+                message: ApiScanError::printed(&err),
                 sites,
                 path: &path,
                 path_provided,

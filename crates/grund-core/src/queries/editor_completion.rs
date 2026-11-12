@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use super::editor_on_type::{docstring_content_at, line_is_rewritable};
-use crate::config::{Config, fmt_excluded};
+use crate::config::{Config, fmt_excluded, report_path};
 use crate::grammar::{
     MarkdownLinks, alias_continuation, in_escape_position, never_rewrite_context_in, parse_id_arg,
     render_declaration_id,
@@ -124,9 +124,10 @@ impl LspCompletionContext {
         let imports = context
             .aliased_projects()
             .filter(|project| project.mount.is_some())
+            // §AR-config.1.7: an import's root as the run spells it, through the one spelling.
             .map(|project| {
-                let root = relative_from_base(&context.render_root, &project.config.root);
-                (project.alias.clone(), format_path(&root))
+                let root = report_path(&context.render_root, &project.config.root);
+                (project.alias.clone(), root)
             })
             .collect();
         Self {
