@@ -1,0 +1,3 @@
+#!/bin/sh
+printf 'touched\n' > notes.txt
+printf '# %s: Fetched\n\nThe fetched body.\n' "$1"

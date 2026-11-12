@@ -211,6 +211,9 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-fetch-declaration-outside-home](DF-fetch-declaration-outside-home.md#df-fetch-declaration-outside-home-a-folder-home-fetch-refuses-an-id-declared-outside-the-home) — a folder-home fetch refuses an ID a file outside the home already declares, naming that file, and overwrites no stub whose target declares it
 - [§DF-dev-build-names-its-commit](DF-dev-build-names-its-commit.md#df-dev-build-names-its-commit-a-development-builds---version-names-its-commit-and-what-a-development-build-prints-between-releases-was-never-a-promise) — a development build's `--version` names its commit, and what a development build prints between releases was never a promise
 - [§DF-fetch-folder-declaring-file](DF-fetch-folder-declaring-file.md#df-fetch-folder-declaring-file-a-folder-home-fetch-refuses-an-id-a-file-it-does-not-replace-already-declares) — a folder-home fetch refuses an ID a file it does not replace already declares.
+- [[§DF-fetch-admission](DF-fetch-admission.md#df-fetch-admission-fetch-installs-only-what-the-next-scan-reads-back-as-exactly-what-was-asked-for)] — fetch installs only what the next scan reads back as exactly what was asked for
+- [[§DF-fetch-unread-home](DF-fetch-unread-home.md#df-fetch-unread-home-fetch-refuses-a-home-the-scan-does-not-read-before-the-integration-runs)] — fetch refuses a home the scan does not read, before the integration runs
+- [[§DF-fetch-refusals-follow-the-scan](DF-fetch-refusals-follow-the-scan.md#df-fetch-refusals-follow-the-scan-four-fetch-refusals-say-what-the-scan-reads-corrected-in-place-and-an-empty-idmd-is-filled)] — four fetch refusals say what the scan reads, corrected in place, and an empty `<ID>.md` is filled
 
 ## Agent-facing surfaces
 

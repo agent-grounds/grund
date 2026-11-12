@@ -1,0 +1,12 @@
+#!/bin/sh
+cat <<'OUT'
+# AR-001-thing: Thing
+
+## notes.more: More
+
+prose
+
+## notes: Notes
+
+prose
+OUT

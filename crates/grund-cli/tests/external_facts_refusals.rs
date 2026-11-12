@@ -83,9 +83,14 @@ fn external_facts_file_home_preserves_unowned_sibling_sections_byte_for_byte() {
     );
 }
 
+/// The scan ends `TICKET-8`'s body at the near-miss `## TICKET-bad` heading, so the owned range
+/// stops there and the sibling is kept byte for byte, with `check`'s finding on it unchanged
+/// (§FS-fetch.4, §FS-fetch.admission.3).
 #[cfg(unix)]
 #[test]
-fn external_facts_file_home_refuses_malformed_declaration_ownership() {
+#[ignore = "red until #1205 replaces the range the scan records, keeping the near-miss sibling; \
+            implement removes this"]
+fn external_facts_file_home_writes_beside_a_malformed_declaration_heading() {
     let root = root("file-malformed-ownership");
     write(
         &root,
@@ -106,13 +111,29 @@ fn external_facts_file_home_refuses_malformed_declaration_ownership() {
         "scripts/fetch-ticket",
         "#!/bin/sh\nprintf '## TICKET-8: New snapshot\\n\\nNew body.\\n'\n",
     );
-    let before = tree_with_directories(&root);
+    let near_miss = |root: &std::path::Path| {
+        let check = run(root, &["check"]);
+        format!("{}{}", stdout(&check), stderr(&check))
+            .lines()
+            .filter(|line| line.contains("TICKET-bad"))
+            .map(str::to_owned)
+            .collect::<Vec<_>>()
+    };
+    let finding = near_miss(&root);
+    assert!(!finding.is_empty(), "check names the near-miss sibling");
 
     let output = run(&root, &["fetch", "TICKET-8"]);
 
-    assert_code(&output, 2, "malformed home");
-    assert!(stderr(&output).contains("malformed declaration heading"));
-    assert_eq!(tree_with_directories(&root), before);
+    assert_code(&output, 0, "write beside a malformed heading");
+    assert_eq!(
+        fs::read_to_string(root.join("docs/tickets.md")).unwrap(),
+        concat!(
+            "# Tickets\n\n",
+            "## TICKET-8: New snapshot\n\nNew body.\n\n",
+            "## TICKET-bad: Malformed snapshot\n\nDo not consume this.\n"
+        )
+    );
+    assert_eq!(near_miss(&root), finding);
 }
 
 #[cfg(unix)]

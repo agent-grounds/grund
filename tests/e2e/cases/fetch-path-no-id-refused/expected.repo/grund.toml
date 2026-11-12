@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "demo"
+
+[schema.kinds.T]
+folders = ["docs/t"]
+id_format = "{kind}-{number}"
+index = false
+fetch = "scripts/fetch"

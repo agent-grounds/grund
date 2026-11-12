@@ -1,0 +1,11 @@
+grund_config_version = 1
+[id]
+named_sections = false
+section_heading_levels = "loose"
+[[kinds]]
+kind = "AR"
+folder = "docs/arch"
+fetch = "scripts/fetch"
+index = false
+[scan]
+include = ["docs"]

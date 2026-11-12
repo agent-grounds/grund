@@ -1,0 +1,11 @@
+grund_config_version = 2
+project_name = "g213"
+
+[schema.sources]
+languages = ["markdown", "json"]
+
+[schema.kinds.T]
+folders = ["docs/t"]
+id_format = "{kind}-{number}"
+index = false
+fetch = "s/f"

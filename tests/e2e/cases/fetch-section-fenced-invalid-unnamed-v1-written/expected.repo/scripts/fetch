@@ -1,0 +1,14 @@
+#!/bin/sh
+cat <<'OUT'
+## AR-001-thing: Thing
+
+### 1. One
+
+prose
+
+```markdown
+### 1.2. Deep
+### notes.more: Orphan
+### 1. Again
+```
+OUT

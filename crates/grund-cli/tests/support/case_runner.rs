@@ -241,9 +241,11 @@ pub fn run_case_inspecting(
         // Links are created in the copy, and only the `{repo_copy}` branch of
         // preparation copies the fixture — so a manifest case written against
         // `{repo}` created no links at all and was green anyway, testing the
-        // committed tree while claiming to test a symlinked one.
+        // committed tree while claiming to test a symlinked one. A command that takes no
+        // path, such as `fetch <ID>`, names the copy as its working directory instead.
         assert!(
-            case_command(case).contains("{repo_copy}"),
+            case_command(case).contains("{repo_copy}")
+                || case_command_cwd(case).contains("{repo_copy}"),
             "{name}: a case with a `symlinks` manifest must run against {{repo_copy}} — \
              its links are created in the copy"
         );

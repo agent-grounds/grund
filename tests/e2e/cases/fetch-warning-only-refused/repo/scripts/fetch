@@ -1,0 +1,5 @@
+#!/bin/sh
+printf '%s' '## AR-001-thing: Thing
+
+one two three four five six seven eight.
+'

@@ -1,0 +1,1 @@
+error: fetch output line 1: AR-001-thing lead is 8 words, over the configured maximum of 5; move detail into citable child sections, or promote a child section to its own ID after running grund refs AR-001-thing --summary

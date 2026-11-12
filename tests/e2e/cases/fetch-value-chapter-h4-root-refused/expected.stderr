@@ -1,0 +1,1 @@
+error: fetch output line 4: invalid value declaration for AR-001-thing: embedded value root must define contiguous numbered components starting at `.1`; correct what the reason names

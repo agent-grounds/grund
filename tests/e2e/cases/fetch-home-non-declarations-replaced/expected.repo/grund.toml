@@ -1,0 +1,15 @@
+grund_config_version = 1
+
+[id]
+format = "{kind}-{slug}"
+slug_pattern = "[0-9]{3}-[a-z][a-z-]*"
+named_sections = true
+
+[[kinds]]
+kind = "AR"
+file = "docs/arch.md"
+fetch = "scripts/fetch"
+
+[scan]
+include = ["docs"]
+respect_gitignore = false

@@ -1,0 +1,1 @@
+error: fetch output line 3: section AR-001-thing.1.2 heading level mismatch: expected #### (level 4), found ### (level 3); re-level the heading, or change its path to match its depth

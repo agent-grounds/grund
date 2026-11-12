@@ -1,0 +1,2 @@
+docs/offer.md:3: error: unknown reference FS-a; no snapshot in fs.dat — give the file a name the scan reads as Markdown
+grund.toml:8: warning: [schema.kinds.FS] file `fs.dat` is not read — no language in [schema.sources] languages reads `.dat`, so nothing in it is checked. Give the file an extension a listed language reads.

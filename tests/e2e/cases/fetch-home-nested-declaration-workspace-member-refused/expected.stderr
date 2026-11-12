@@ -1,0 +1,1 @@
+error: cannot fetch AR-001-thing: alpha/docs/arch.md:4 declares AR-002-other inside AR-001-thing, and replacing AR-001-thing would delete it; move AR-002-other out of AR-001-thing, and fetch again

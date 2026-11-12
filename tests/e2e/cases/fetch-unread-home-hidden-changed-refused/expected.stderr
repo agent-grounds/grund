@@ -1,0 +1,1 @@
+error: kind `FS` cannot fetch into .fs.py: its name begins with `.`, and grund reads no hidden file, so the scan would not read what fetch writes; give the file a name a listed document language reads, or remove its `fetch`

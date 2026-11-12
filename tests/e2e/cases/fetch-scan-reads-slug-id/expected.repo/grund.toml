@@ -1,0 +1,7 @@
+grund_config_version = 2
+project_name = "g216"
+
+[schema.kinds.FS]
+folders = ["docs/t"]
+index = false
+fetch = "scripts/f"
