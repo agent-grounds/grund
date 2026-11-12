@@ -36,11 +36,8 @@ impl std::fmt::Display for FmtScanAbort {
             if index > 0 {
                 f.write_str("\n")?;
             }
-            write!(
-                f,
-                "nothing was rewritten: {}: {}",
-                error.path, error.message
-            )?;
+            // The line every command prints for the failure (§AR-scanner.1.failure).
+            write!(f, "nothing was rewritten: {}", error.line())?;
         }
         Ok(())
     }
