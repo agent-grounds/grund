@@ -168,7 +168,7 @@ fn exit_after_scan_errors(scan_errors: &[ApiScanError]) -> ExitCode {
         return ExitCode::SUCCESS;
     }
     for err in scan_errors {
-        eprintln!("error: {}: {}", err.path, err.message);
+        eprintln!("error: {}", err.line());
     }
     ExitCode::from(2)
 }

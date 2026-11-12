@@ -257,7 +257,7 @@ fn check_broken_stubs(
                 format_path(target),
                 unread_name_reason(extension.as_deref(), frame.version)
             ),
-            StubResolution::Excluded(rule) => excluded_target_message(target, rule),
+            StubResolution::Excluded(rule) => excluded_target_message(target, rule, frame),
             StubResolution::NotRead | StubResolution::LacksId => format!(
                 "stub link target lacks {}: {}",
                 render_catalog_id(frame.grammar(), &findings.declarations, id),
@@ -278,18 +278,24 @@ fn check_broken_stubs(
 }
 
 /// Render the saved refusal without rechecking the target or its rules
-/// (§FS-declarations.stubs.target.3, §AR-checker.2.5).
-fn excluded_target_message(target: &std::path::Path, rule: &ExcludingRule) -> String {
+/// (§FS-declarations.stubs.target.3, §AR-checker.2.5), an ignore file it names spelled as the
+/// report spells a path (§FS-cli.3.4), by the rule's own words (§FS-fetch.4.2.1).
+fn excluded_target_message(
+    target: &std::path::Path,
+    rule: &ExcludingRule,
+    frame: Frame<'_>,
+) -> String {
+    let spell = |path: &std::path::Path| frame.display_path(path);
     // §FS-errors.5.5.1: `[scan] exclude` is version 1's, the pattern version 2's.
     let remedy = match rule {
         ExcludingRule::Exclude(entry) => remedies::broken_stub_excluded_entry(1, entry),
         ExcludingRule::Pattern(pattern) => remedies::broken_stub_excluded_pattern(2, pattern),
-        ExcludingRule::IgnoreFile { file, .. } => remedies::broken_stub_ignored(2, file),
+        ExcludingRule::IgnoreFile { file, .. } => remedies::broken_stub_ignored(2, spell(file)),
     };
     format!(
         "stub link target {} is not scanned: {}; \
          this became an error in grund 0.19.0 — {remedy}",
         format_path(target),
-        rule.reason()
+        rule.reason(&spell)
     )
 }

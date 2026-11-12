@@ -71,7 +71,8 @@ fn command_id(args: &[String]) -> ExitCode {
     let outcome = match proposed {
         Ok(outcome) => outcome,
         Err(err) => {
-            eprintln!("error: {err:#}");
+            // §FS-errors.2.2.5: a scan failure prints `check`'s line, the record's own.
+            eprintln!("error: {}", ApiScanError::printed(&err));
             return ExitCode::from(2);
         }
     };

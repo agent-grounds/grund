@@ -20,7 +20,7 @@ fn call(root: &std::path::Path, operation: &str) -> Value {
 fn entry_message(reason: &str) -> String {
     crate::scanner::scan_error_message(
         &crate::scanner::ScanError::unread_entry(std::path::PathBuf::new(), reason),
-        crate::model::format_path,
+        &crate::scanner::Absolute,
     )
 }
 

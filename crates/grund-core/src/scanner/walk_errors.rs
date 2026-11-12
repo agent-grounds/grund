@@ -383,7 +383,7 @@ fn pathless_io_kind(err: &ignore::Error) -> Option<io::ErrorKind> {
 /// reach a link the walker could not resolve no other way.
 ///
 /// `ancestor` is the directory the link reaches back into, under any spelling that
-/// reaches it: `loop_ancestor_name` decides what the reason calls it, so neither of
+/// reaches it: `loop_ancestor` decides which directory the reason names, so neither of
 /// the two ways a loop is found does. Those are the walker's own detection, and the
 /// filter pruning a link whose target is at or above the walk root — which the walker
 /// cannot see without descending a second copy of the tree first (§AR-scanner.1.9).
@@ -397,20 +397,29 @@ pub(super) fn symlink_loop_report(
     if loop_skipped(link, filter, schema, frame) {
         return None;
     }
-    // Naming the directory is the useful half of the message, and it is available
-    // only where that directory has a name *in the report*: the base it is spelled
-    // from has none, asked of the path (§FS-config.3.6, §AR-config.1.7).
-    let ancestor = loop_ancestor_name(ancestor, frame);
-    let reason = match ancestor {
-        Some(name) => format!("symlink loop: the target is the ancestor directory {name}"),
-        None => "symlink loop: the target contains the link".to_string(),
-    };
     // §FS-check.2.4.3: the walk judges where the link is once it has all its failures.
     let failure = ScanFailure::Unread {
         place: Place::Entry,
         version: frame.version,
     };
-    Some(ScanError::new(link.to_path_buf(), reason, failure))
+    // §AR-scanner.1.failure: the directory travels as a path, for the report to name.
+    let reason = SYMLINK_LOOP.to_string();
+    let report = ScanError::new(link.to_path_buf(), reason, failure);
+    Some(report.looping_into(loop_ancestor(ancestor, frame)))
+}
+
+/// A symlink loop's bare reason, what its failures are compared by (§AR-scanner.1.relisted).
+const SYMLINK_LOOP: &str = "symlink loop";
+
+/// A loop's reason as a report words it, `name` the directory the link reaches back into as the
+/// report spells it (§FS-check.2.4.2). Naming the directory is the useful half of the message,
+/// and it is available only where that directory has a name *in the report*: the base it is
+/// spelled from has none, `None` (§FS-config.3.6, §AR-config.1.7).
+pub(super) fn loop_reason(bare: &str, name: Option<String>) -> String {
+    match name {
+        Some(name) => format!("{bare}: the target is the ancestor directory {name}"),
+        None => format!("{bare}: the target contains the link"),
+    }
 }
 
 /// Whether the walk was never going to read through a looping link, whichever way the loop
@@ -423,13 +432,11 @@ fn loop_skipped(link: &Path, filter: &WalkDirFilter, schema: &Schema, frame: Fra
     filter.kept_out_by_exclude(link, true) || walk_ignores(link, true, schema, frame)
 }
 
-/// The one name a loop's reason gives the directory the link reaches back into, the
+/// The one directory a loop's reason names as the one the link reaches back into, the
 /// same on every route to the link (§FS-check.2.4.2): its physical location under the
-/// config root, and never the name a walk root or a link gave it on the way. `frame` is
-/// the walk's, so a workspace member or an import spells the location from its own root
-/// even where the line's path is spelled from the workspace root, unless the run reports
-/// from the invocation. The directory it is spelled from has no name here, `None`, asked of
-/// the path rather than of its spelling (§AR-config.1.7).
+/// config root, and never the name a walk root or a link gave it on the way. It is a path,
+/// which the report spells as it spells the line's own, so a workspace member or an import
+/// names it from the workspace root as it names the link (§AR-scanner.1.failure).
 ///
 /// The config root is re-joined because it may itself be spelled through a link, and
 /// the report strips that spelling, not the physical one. Outside the config root there
@@ -439,14 +446,13 @@ fn loop_skipped(link: &Path, filter: &WalkDirFilter, schema: &Schema, frame: Fra
 /// Where the directory has gone since the walk met it, the comparison is lexical
 /// (`physical_path_key`), the same comparison a path that has no resolved form gets
 /// everywhere else.
-fn loop_ancestor_name(ancestor: &Path, frame: Frame<'_>) -> Option<String> {
+fn loop_ancestor(ancestor: &Path, frame: Frame<'_>) -> PathBuf {
     let root = frame.root();
     let location = physical_path_key(ancestor);
-    let named = match location.strip_prefix(canonical_config_root(root)) {
+    match location.strip_prefix(canonical_config_root(root)) {
         Ok(rest) => root.join(rest),
         Err(_) => ancestor.to_path_buf(),
-    };
-    (!frame.display.is_base(&named)).then(|| frame.display_path(&named))
+    }
 }
 
 /// The link `path` names, spelled as the walk root reaches it (§FS-config.3.5.2).

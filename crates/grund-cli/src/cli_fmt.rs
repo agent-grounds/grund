@@ -45,10 +45,7 @@ fn command_fmt(args: &[String]) -> ExitCode {
                 // §FS-fmt.3.4: the engine keeps strict scan failures structured;
                 // this frontend owns the prefix on every complete refusal line.
                 for error in &abort.scan_errors {
-                    eprintln!(
-                        "error: nothing was rewritten: {}: {}",
-                        error.path, error.message
-                    );
+                    eprintln!("error: nothing was rewritten: {}", error.line());
                 }
             } else if let Some(abort) = err.downcast_ref::<FmtConflictAbort>() {
                 // §FS-fmt.3.4: a block's line carries its first line and its finding's message.
@@ -61,7 +58,8 @@ fn command_fmt(args: &[String]) -> ExitCode {
                     );
                 }
             } else {
-                eprintln!("error: {err:#}");
+                // §FS-errors.2.2.5: a scan failure prints `check`'s line, the record's own.
+                eprintln!("error: {}", ApiScanError::printed(&err));
             }
             return ExitCode::from(2);
         }
@@ -111,7 +109,7 @@ fn command_fmt(args: &[String]) -> ExitCode {
         // it that could not be read (§FS-check.2.4). What it did rewrite is real and, under
         // `--write`, already on disk — the `2` says the tree it ran over was not the whole tree.
         for error in &output.scan_errors {
-            eprintln!("error: {}: {}", error.path, error.message);
+            eprintln!("error: {}", error.line());
         }
         return ExitCode::from(2);
     }

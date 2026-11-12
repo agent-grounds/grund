@@ -58,6 +58,25 @@ impl OperationDiagnostic {
         diagnostic
     }
 
+    /// This refusal carrying `origin`, the record it copied its fields from, for a frontend
+    /// that prints that record whole rather than assembling it again from the copies
+    /// (§FS-errors.2.2.5). The record has no source, so the chain stays this refusal alone.
+    pub(crate) fn with_origin<T>(mut self, origin: T) -> Self
+    where
+        T: std::fmt::Display + std::fmt::Debug + Send + Sync + 'static,
+    {
+        self.source = Some(std::sync::Arc::new(anyhow::Error::msg(origin)));
+        self
+    }
+
+    /// The record [`Self::with_origin`] carries, when it is a `T`.
+    pub(crate) fn origin<T>(&self) -> Option<&T>
+    where
+        T: std::fmt::Display + std::fmt::Debug + Send + Sync + 'static,
+    {
+        self.source.as_deref()?.downcast_ref::<T>()
+    }
+
     /// Preserve OS classification where a writer still has the original error
     /// (§FS-distribution.3.3.2).
     pub(crate) fn filesystem(

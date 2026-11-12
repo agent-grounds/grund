@@ -79,7 +79,8 @@ fn command_show_batch(
             run.records
         }
         Err(error) => {
-            eprintln!("error: {error:#}");
+            // §FS-errors.2.2.5: a scan failure prints `check`'s line, the record's own.
+            eprintln!("error: {}", ApiScanError::printed(&error));
             return ExitCode::from(2);
         }
     };
