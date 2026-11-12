@@ -4,7 +4,8 @@ use std::path::{Path, PathBuf};
 
 use super::integrations_agents::GLOBAL_AGENT_INSTRUCTION_TARGETS;
 use super::integrations_clients::expand_target;
-use crate::model::format_list;
+use crate::model::{format_list, remedies};
+use crate::sources::{io_reason, lookup_refused, path_lookup};
 
 /// §FS-init.1.2.3: the version-control markers whose presence in the target or
 /// any ancestor says it is inside a working tree. Presence is what is tested,
@@ -38,11 +39,23 @@ const INIT_VCS_MARKERS: [&str; 4] = [".git", ".hg", ".jj", ".svn"];
 /// Unix spelling, and a Windows runner that never sets it would silently lose
 /// the rule that stops the accident this exists for.
 pub(crate) fn refuse_init_target(target: &Path, no_vcs: bool) -> Option<String> {
-    if !target.exists() {
-        return Some(format!(
-            "target directory does not exist: {}",
-            target.display()
-        ));
+    // §FS-init.1: missing only where the lookup says so; refused, it is unread, with the catalog's
+    // `readable` remedy for the version-2 config init writes.
+    match path_lookup(target) {
+        Ok(true) => {}
+        Ok(false) => {
+            return Some(format!(
+                "target directory does not exist: {}",
+                target.display()
+            ));
+        }
+        Err(error) => {
+            let fix = match lookup_refused(&error) {
+                true => format!("; {}", remedies::io_readable(2)),
+                false => String::new(),
+            };
+            return Some(format!("{}: {}{fix}", target.display(), io_reason(&error)));
+        }
     }
     if !target.is_dir() {
         return Some(format!("target is not a directory: {}", target.display()));

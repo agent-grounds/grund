@@ -5,8 +5,10 @@
 //! alike, and never as `path does not exist`. The controls hold what must not move: a path whose
 //! lookup says not found, or that runs through a regular file, keeps `path does not exist`, a link
 //! to the same place keeps its line (§FS-scan.scope.links.owed.refused), and a readable path is
-//! read. Git carries no mode, so the e2e corpus cannot hold these trees, and every barred case
-//! skips where mode 000 does not bar the user (root).
+//! read. Under `--path-base=invocation` the path is spelled from the working directory, because a
+//! path the lookup is refused on is known as neither a directory nor a file (§FS-cli.3.4). Git
+//! carries no mode, so the e2e corpus cannot hold these trees, and every barred case skips where
+//! mode 000 does not bar the user (root).
 #![cfg(unix)]
 
 #[path = "../../crates/grund-cli/tests/support/fixture_cleanup.rs"]
@@ -82,10 +84,15 @@ impl Tree {
 
     /// `grund <args>` from the project root.
     fn run(&self, args: &[&str]) -> Run {
+        self.run_in(".", args)
+    }
+
+    /// `grund <args>` from `dir`, under the project root.
+    fn run_in(&self, dir: &str, args: &[&str]) -> Run {
         let output = Command::new(env!("CARGO_BIN_EXE_grund"))
             .args(args)
             .env("NO_COLOR", "1")
-            .current_dir(self.base.join("p"))
+            .current_dir(self.base.join("p").join(dir))
             .output()
             .expect("run grund");
         Run {
@@ -242,5 +249,66 @@ fn a_barred_path_fails_every_command_at_the_path() {
             .into_iter()
             .filter_map(|args| tree.run(args).permission_failure_at(path))
             .collect(),
+    );
+}
+
+/// §FS-cli.3.4: a barred path is neither a known directory nor a known file, so the invocation
+/// base is the working directory: the line names the path as typed, from the root and from
+/// `docs/`, in text and JSON, and so does a link given as the path.
+#[test]
+fn a_barred_path_is_spelled_from_the_working_directory() {
+    let Some(tree) = Tree::barred("invocation") else {
+        return;
+    };
+    let invocation = "--path-base=invocation";
+    let mut failures: Vec<String> = [
+        (".", ".r/sub/x.md"),
+        (".", ".r/sub"),
+        ("docs", "../.r/sub/x.md"),
+    ]
+    .into_iter()
+    .filter_map(|(dir, path)| {
+        tree.run_in(dir, &["check", path, invocation])
+            .permission_failure_at(path)
+    })
+    .collect();
+    let link = tree.run(&["check", "docs/x", invocation]);
+    let line = format!("error: docs/x: unreadable symlink: permission denied; {PASSED_FIX}");
+    if link.code != 2 || !link.stderr.lines().any(|l| l == line) {
+        failures.push(format!(
+            "{}: want `{line}`; got {:?}",
+            link.shown, link.stderr
+        ));
+    }
+    let json = tree.run(&["check", ".r/sub/x.md", invocation, "--format", "json"]);
+    let paths: Vec<serde_json::Value> = json
+        .stderr
+        .lines()
+        .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
+        .filter(|record| record["severity"] == "error")
+        .map(|record| record["path"].clone())
+        .collect();
+    if json.code != 2 || paths != [".r/sub/x.md"] {
+        failures.push(format!(
+            "{}: want one error at `.r/sub/x.md`; got {:?}",
+            json.shown, json.stderr
+        ));
+    }
+    assert_none(failures);
+}
+
+/// Control: a readable file under `--path-base=invocation` is still spelled from its parent.
+#[test]
+fn a_readable_path_keeps_its_invocation_spelling() {
+    let tree = Tree::new("invocation-readable");
+    let run = tree.run(&["check", ".r/sub/x.md", "--path-base=invocation"]);
+    assert_eq!(run.code, 1, "{}{}", run.stdout, run.stderr);
+    assert!(
+        run.stdout
+            .lines()
+            .any(|line| line == "x.md:3: error: unknown reference FS-nope"),
+        "{}{}",
+        run.stdout,
+        run.stderr
     );
 }

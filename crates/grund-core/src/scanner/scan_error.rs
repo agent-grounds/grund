@@ -92,6 +92,18 @@ impl ScanError {
         }
     }
 
+    /// Whether this failure is at the path the run was handed (§FS-check.2.4.3), which a workspace
+    /// run walks no project from (§AR-scanner.1.6).
+    pub(crate) fn at_passed_path(&self) -> bool {
+        matches!(
+            self.failure,
+            ScanFailure::Unread {
+                place: Place::Passed,
+                ..
+            }
+        )
+    }
+
     /// The *Fix* case that works for this failure at its path (§FS-check.2.4.3, §FS-errors.5.5).
     fn fix(&self) -> String {
         match self.failure {

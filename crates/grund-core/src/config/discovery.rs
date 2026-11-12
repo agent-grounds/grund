@@ -228,6 +228,22 @@ pub(crate) fn cli_base_of(start: &Path, root: &Path) -> PathBuf {
     resolved_start(start).unwrap_or_else(|| start.to_path_buf())
 }
 
+/// The CLI base of a run for the path argument `start`, discovered from `walk_start` and
+/// rooted at `root` (§FS-cli.3.4). A path whose lookup is refused is known as neither a
+/// directory nor a file, so its report is spelled from the working directory, never from
+/// where discovery climbs (§FS-scan.scope.homes.lookup.path); every other path keeps
+/// [`cli_base_of`].
+fn run_cli_base(start: &Path, walk_start: &Path, root: &Path) -> PathBuf {
+    let refused = fs::canonicalize(start).is_err()
+        && path_lookup(start).is_err_and(|error| lookup_refused(&error));
+    match refused {
+        true => std::env::current_dir()
+            .and_then(fs::canonicalize)
+            .unwrap_or_else(|_| cli_base_of(walk_start, root)),
+        false => cli_base_of(walk_start, root),
+    }
+}
+
 /// Where `start` resolves, links followed: its canonical path, else, for a lookup
 /// refused for lack of permission, the place the walk gives such a root, as far as the
 /// disk answers (§AR-scanner.1.9, §FS-scan.scope.links.owed.refused). `None` for any
@@ -270,7 +286,7 @@ pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
     if let Some((dir, _)) = nearest_config(&walk_start) {
         // §FS-config.1.5: the project's identity resolves links once it is chosen.
         let root = super::canonical_config_root(&dir);
-        return config_at(&root, &cli_base_of(&walk_start, &root), None, invocation);
+        return config_at(&root, &run_cli_base(start, &walk_start, &root), None, invocation);
     }
     // Zero-config (§GOAL-zero-config): the "project root" is the current working
     // directory, never the path passed on the command line. Reports stay relative to
@@ -287,7 +303,7 @@ pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
             .and_then(|cwd| fs::canonicalize(&cwd).ok())
             .unwrap_or_else(|| walk_start.clone()),
     };
-    let cli_base = cli_base_of(&walk_start, &root);
+    let cli_base = run_cli_base(start, &walk_start, &root);
     let mut run = Run::of(root, cli_base, invocation);
     // §FS-check.2.2.2.5: the one place a run learns that no config applies to it.
     run.found_no_config = true;
