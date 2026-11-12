@@ -1,0 +1,219 @@
+//! Issue #1205's cases, run alone: `grund fetch` installs only what the next scan reads back as
+//! exactly what was asked for (§FS-fetch.admission), replaces the range the scan records
+//! (§FS-fetch.4), refuses a home the scan does not read (§FS-fetch.4.2.1), and writes through a
+//! link that stays inside the config root (§FS-fetch.links). The red cases are held out of the
+//! full pass until the fix lands; the guards also run there.
+
+use super::case_runner::CaseKind::E2e;
+use super::case_runner::{assert_every_case_passed, run_case};
+use super::repo_root;
+use std::path::PathBuf;
+
+/// Red until #1205: each fails today for the reason its issue or reproducer reports.
+const RED: [&str; 118] = [
+    "check-fetch-tail-unread-home",
+    "fetch-bare-closer-h1-refused",
+    "fetch-bare-closer-h2-refused",
+    "fetch-bare-heading-folder-home-h1-refused",
+    "fetch-bare-heading-folder-home-h3-refused",
+    "fetch-bare-heading-four-space-indent-kept",
+    "fetch-bare-heading-h1-refused",
+    "fetch-bare-heading-h2-refused",
+    "fetch-bare-heading-h4-refused",
+    "fetch-bare-heading-indented-refused",
+    "fetch-bare-heading-trailing-space-refused",
+    "fetch-folder-value-source-declares-refused",
+    "fetch-heading-indented-deep-written",
+    "fetch-heading-seven-hashes-written",
+    "fetch-home-changed-during-integration-refused",
+    "fetch-home-created-during-integration-refused",
+    "fetch-home-nested-declaration-before-sibling-refused",
+    "fetch-home-nested-declaration-cited-refused",
+    "fetch-home-nested-declaration-comment-line-refused",
+    "fetch-home-nested-declaration-file-refused",
+    "fetch-home-nested-declaration-folder-refused",
+    "fetch-home-nested-declaration-indented-refused",
+    "fetch-home-nested-declaration-v2-refused",
+    "fetch-home-nested-declaration-workspace-member-refused",
+    "fetch-home-nested-first-of-two-refused",
+    "fetch-home-nested-near-miss-refused",
+    "fetch-home-nested-requested-id-refused",
+    "fetch-id-file-citation-refused",
+    "fetch-id-file-empty-filled",
+    "fetch-id-file-heading-refused",
+    "fetch-id-file-other-id-refused",
+    "fetch-id-file-prose-refused",
+    "fetch-id-file-whitespace-filled",
+    "fetch-link-dangling-refused",
+    "fetch-link-file-home-inside-written",
+    "fetch-link-inside-written",
+    "fetch-nested-declaration-comment-line-refused",
+    "fetch-nested-hand-written-before-sibling-refused",
+    "fetch-nested-hand-written-comment-prefixed-refused",
+    "fetch-nested-hand-written-h2-folder-home-refused",
+    "fetch-nested-hand-written-h3-cited-refused",
+    "fetch-nested-hand-written-h3-file-home-refused",
+    "fetch-nested-hand-written-indented-refused",
+    "fetch-nested-hand-written-v2-refused",
+    "fetch-nested-site-file-replaced",
+    "fetch-nested-site-file-v2-replaced",
+    "fetch-nested-site-folder-h2-alone-replaced",
+    "fetch-nested-site-folder-h3-under-group-refused",
+    "fetch-nested-site-folder-under-declaration-refused",
+    "fetch-nested-site-folder-under-group-refused",
+    "fetch-nested-site-folder-v1-refused",
+    "fetch-open-fence-no-bare-heading-refused",
+    "fetch-open-fence-refused",
+    "fetch-open-fence-replace-refused",
+    "fetch-open-pre-refused",
+    "fetch-path-beside-refused",
+    "fetch-path-different-id-refused",
+    "fetch-path-no-id-refused",
+    "fetch-path-not-a-directory-refused",
+    "fetch-path-value-source-refused",
+    "fetch-refetch-final-bare-cr-sibling-refused",
+    "fetch-refetch-leading-blank-refused",
+    "fetch-refetch-nbsp-indent-folder-settled",
+    "fetch-scan-reads-bare",
+    "fetch-scan-reads-bare-other",
+    "fetch-scan-reads-beside",
+    "fetch-scan-reads-control-beside",
+    "fetch-scan-reads-empty-title",
+    "fetch-scan-reads-file-home",
+    "fetch-scan-reads-file-home-bare",
+    "fetch-scan-reads-nested",
+    "fetch-scan-reads-report",
+    "fetch-scan-reads-same-name",
+    "fetch-scan-reads-slug-id",
+    "fetch-scan-reads-spaced",
+    "fetch-scan-reads-spaced-other",
+    "fetch-scan-reads-two-colons",
+    "fetch-section-deep-folder-refused",
+    "fetch-section-deep-named-prefixed-refused",
+    "fetch-section-deep-named-refused",
+    "fetch-section-deep-refused",
+    "fetch-section-deep-replace-v1-refused",
+    "fetch-section-duplicate-depth-may-refused",
+    "fetch-section-duplicate-existing-folder-refused",
+    "fetch-section-duplicate-folder-refused",
+    "fetch-section-duplicate-named-refused",
+    "fetch-section-duplicate-named-replace-v1-refused",
+    "fetch-section-duplicate-refused",
+    "fetch-section-duplicate-unnamed-loose-v1-folder-refused",
+    "fetch-section-gap-warn-refused",
+    "fetch-section-nested-path-written",
+    "fetch-section-orphan-depth-may-folder-refused",
+    "fetch-section-orphan-mixed-loose-v1-refused",
+    "fetch-section-relative-duplicate-refused",
+    "fetch-shallower-heading-at-end-kept",
+    "fetch-shallower-heading-before-sibling-kept",
+    "fetch-sibling-four-space-refused",
+    "fetch-sibling-two-space-kept",
+    "fetch-source-home-hidden-name-refused",
+    "fetch-source-home-unread-dat-refused",
+    "fetch-source-home-v1-hidden-name-refused",
+    "fetch-source-home-v1-unread-dat-refused",
+    "fetch-unchanged-output-folder-home-nbsp-indent-kept",
+    "fetch-unchanged-output-leading-blank-line-refused",
+    "fetch-unchanged-output-trailing-blank-line-before-sibling-kept",
+    "fetch-unread-home-dat-between-refused",
+    "fetch-unread-home-dat-changed-refused",
+    "fetch-unread-home-dat-report-refused",
+    "fetch-unread-home-dat-same-refused",
+    "fetch-unread-home-hidden-between-refused",
+    "fetch-unread-home-hidden-changed-refused",
+    "fetch-unread-home-hidden-report-refused",
+    "fetch-unread-home-hidden-same-refused",
+    "fetch-value-chapter-h3-root-refused",
+    "fetch-value-chapter-h4-root-refused",
+    "fetch-value-chapter-prose-refused",
+    "fetch-value-chapter-written",
+    "fetch-warning-only-refused",
+];
+
+/// Pass today: what admission must not refuse, and the refusals that keep their words.
+const GUARDS: [&str; 47] = [
+    "fetch-bare-closer-control-written",
+    "fetch-bare-heading-fenced-written",
+    "fetch-bare-heading-first-line-refused",
+    "fetch-bare-heading-folder-home-four-space-indent-written",
+    "fetch-bare-heading-four-space-indent-written",
+    "fetch-bare-heading-run-into-text-written",
+    "fetch-bare-heading-seven-hashes-written",
+    "fetch-bare-heading-tab-indent-written",
+    "fetch-closed-fence-written",
+    "fetch-closed-pre-written",
+    "fetch-findings-below-mapped-written",
+    "fetch-heading-indented-declaration-refused",
+    "fetch-home-insert-beside-nested-folder-created",
+    "fetch-home-insert-beside-nested-written",
+    "fetch-home-nested-output-refusal-first-refused",
+    "fetch-home-non-declarations-replaced",
+    "fetch-home-sibling-holds-nested-folder-replaced",
+    "fetch-home-sibling-holds-nested-replaced",
+    "fetch-home-subsections-folder-replaced",
+    "fetch-home-subsections-replaced",
+    "fetch-home-unmarked-headings-replaced",
+    "fetch-refetch-control-file-written",
+    "fetch-refetch-final-bare-cr-no-sibling-written",
+    "fetch-refetch-nbsp-indent-folder-created",
+    "fetch-scan-reads-control-absent",
+    "fetch-scan-reads-control-colon",
+    "fetch-scan-reads-control-file-home",
+    "fetch-scan-reads-control-unrelated",
+    "fetch-section-fenced-invalid-named-v1-written",
+    "fetch-section-fenced-invalid-unnamed-v1-written",
+    "fetch-section-gap-loose-v1-written",
+    "fetch-section-gap-may-written",
+    "fetch-section-named-folder-written",
+    "fetch-section-named-prefix-after-written",
+    "fetch-section-named-v1-written",
+    "fetch-section-named-written",
+    "fetch-section-numbered-folder-written",
+    "fetch-section-numbered-v1-written",
+    "fetch-section-numbered-written",
+    "fetch-section-two-folder-written",
+    "fetch-section-two-v1-written",
+    "fetch-section-two-written",
+    "fetch-unchanged-output-plain-kept",
+    "fetch-unread-home-md-control-written",
+    "fetch-unread-home-py-source-refused",
+    "fetch-unrelated-change-during-integration-written",
+    "fetch-warning-under-budget-written",
+];
+
+/// The full pass, without the cases red until #1205; `implement` deletes this filter.
+pub(crate) fn without_red_until_1205(cases: Vec<PathBuf>) -> Vec<PathBuf> {
+    cases
+        .into_iter()
+        .filter(|case| {
+            let name = case
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or_default();
+            !RED.contains(&name)
+        })
+        .collect()
+}
+
+fn run_alone(label: &str, names: &[&str]) {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let outcomes = names
+        .iter()
+        .map(|name| run_case(&root, &cases.join(name), E2e))
+        .collect::<Vec<_>>();
+    assert_every_case_passed(label, &outcomes);
+}
+
+#[test]
+#[ignore = "red until #1205 admits fetch output through the scan; implement removes this"]
+fn fetch_admission_contract() {
+    run_alone("fetch admission", &RED);
+}
+
+/// Pass today: every one is also in the full pass, and a fix that refuses too much fails them.
+#[test]
+fn fetch_admission_guards() {
+    run_alone("fetch admission guards", &GUARDS);
+}

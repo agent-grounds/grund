@@ -1,0 +1,7 @@
+#!/bin/sh
+printf '%s' '## AR-001-thing: Thing
+kept
+<pre>
+##
+prose
+'

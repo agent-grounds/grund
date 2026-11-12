@@ -1,0 +1,1 @@
+error: cannot fetch T-1 into docs/t/T-1.md: the symlink target does not exist; create the target, or remove the link, and fetch again

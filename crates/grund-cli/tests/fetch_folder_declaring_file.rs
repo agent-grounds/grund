@@ -121,6 +121,38 @@ fn a_created_snapshot_leaves_the_tree_green_and_fetches_again() {
     }
 }
 
+/// §FS-fetch.4.2.1: with the declaration taken out and no language reading `.md`, the
+/// `<ID>.md` the fetch would create is a path the scan does not read, so the fetch is refused
+/// before the integration runs and the tree stays as it was (§DF-fetch-folder-declaring-file.3).
+#[test]
+#[ignore = "red until #1205 refuses a folder <ID>.md the scan does not read; implement removes this"]
+fn taking_the_declaration_out_where_markdown_is_not_read_is_refused() {
+    let project = copy_of(
+        "way-through-unread",
+        "fetch-folder-source-markdown-not-read-refused",
+    );
+    write(&project, "fs/a.py", "x = 1\n");
+    let before = tree_with_directories(&project);
+    let fetch = run(&project, &["fetch", "FS-a"]);
+    assert_eq!(
+        (fetch.status.code(), stdout(&fetch), stderr(&fetch)),
+        (
+            Some(2),
+            String::new(),
+            "error: kind `FS` cannot fetch into fs/FS-a.md: no language in [schema.sources] \
+             languages reads `.md`, so the scan would not read what fetch writes; give the file \
+             a name a listed document language reads, or remove its `fetch`\n"
+                .to_owned(),
+        ),
+        "fetch where Markdown is not read"
+    );
+    assert_eq!(
+        tree_with_directories(&project),
+        before,
+        "the refusal changed the tree"
+    );
+}
+
 #[test]
 fn taking_the_declaration_out_of_the_file_is_the_way_through() {
     let project = copy_of("way-through", "fetch-folder-source-v2-python-refused");
@@ -139,24 +171,6 @@ fn taking_the_declaration_out_of_the_file_is_the_way_through() {
     assert!(
         project.join("fs/FS-a.md").is_file(),
         "the snapshot is created"
-    );
-
-    // §DF-fetch-folder-declaring-file.3: no language reads the snapshot this creates, as on
-    // 0.21.0, and the ID is declared nowhere after it. #1206 owns that, and meets this test.
-    let project = copy_of(
-        "way-through",
-        "fetch-folder-source-markdown-not-read-refused",
-    );
-    write(&project, "fs/a.py", "x = 1\n");
-    assert_code(
-        &run(&project, &["fetch", "FS-a"]),
-        0,
-        "fetch where Markdown is not read",
-    );
-    assert_code(
-        &run(&project, &["check"]),
-        0,
-        "check where Markdown is not read",
     );
 
     // §DF-fetch-folder-declaring-file.3: the way to the fetched fact on that tree, in one change:

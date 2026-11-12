@@ -1,0 +1,4 @@
+#!/bin/sh
+touch "$(dirname "$0")/../ran"
+printf '## %s: Alpha\n\n' "$1"
+cat "$(dirname "$0")/../body.txt"

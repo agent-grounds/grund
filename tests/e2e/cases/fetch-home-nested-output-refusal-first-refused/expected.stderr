@@ -1,0 +1,1 @@
+error: fetch output nests declaration `AR-009-output` inside requested `AR-001-thing`; fetch output must hold only the requested declaration

@@ -90,7 +90,9 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// (§FS-declarations.checks.oversized-lead) and the field family
 /// (§AR-checker.2.21). It is handed no `Rules` and no `Presentation`. Where it
 /// reads a kind's shape it reads it through the kind's record (§AR-config.6.2),
-/// so the value checks and the field checks read one model.
+/// so the value checks and the field checks read one model. `fetch` runs it
+/// unchanged on its before and after readings to admit a candidate
+/// (§AR-system.2.8.1, §FS-fetch.admission.3).
 ///
 /// ### 1.2 `judge`: the relational half
 ///

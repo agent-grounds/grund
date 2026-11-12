@@ -1,0 +1,1 @@
+error: cannot fetch AR-001-thing: a second fetch of this output would change docs/arch.md at line 4 again, so the first is refused

@@ -61,22 +61,42 @@ The check comes immediately before the spawn would, so every refusal `grund fetc
 
 ## 3. Accepted declaration
 
-The complete stdout must be UTF-8 and contain exactly one Markdown declaration for the
-requested local ID, with no sibling declaration:
+The complete stdout must be UTF-8 and hold one Markdown declaration of the requested local ID,
+which begins on its first line:
 
 - a `file` home accepts one H2 declaration (`## TICKET-1234: Title`);
 - a `folder` home accepts one H1 declaration (`# TICKET-1234: Title`).
 
-The declaration may contain ordinary prose, fenced blocks, and subsections exactly one
-heading depth below its native declaration depth ([§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)). Its title must be
-non-empty. A malformed heading, wrong ID or kind, wrong native depth, duplicate
-declaration, sibling declaration, invalid subsection depth, invalid UTF-8, or trailing content outside the
-one declaration is refused on stderr with exit 2.
+Whether that is so is the selected project's own scan's answer, never a second reading of
+`fetch`'s: the output is accepted when admission says so ([[§FS-fetch.admission](FS-fetch.md#admission-admission-the-next-scan-reads-back-exactly-what-was-asked-for)]). A heading is the
+requested declaration where the next scan reads it as declaring that ID, so `## TICKET-1234`,
+`## TICKET-1234:` and `## TICKET-1234 x: y` are accepted wherever the scan reads them as
+`TICKET-1234`, and a heading indented by up to three spaces is a heading as it is on the next
+scan. The declaration may contain ordinary prose, fenced blocks, and any subsection the next scan
+reads as a section of it at the level `check` holds it to ([[§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)]); `fetch` keeps no
+depth limit of its own, so a value chapter and its value roots are written
+([[§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)]).
+
+Output that declares no ID or another ID first, or whose first line sits at the wrong level for
+the home, keeps the words it was refused with before admission:
+
+```text
+error: fetch output must begin with one Markdown declaration
+error: fetch output declares `<OTHER>` instead of requested `<ID>`
+error: fetch output heading depth <n> is invalid for a depth-<d> declaration
+error: fetch output must contain exactly one declaration and no leading content
+error: fetch output must contain exactly one Markdown declaration
+```
+
+The third is for the declaration's own heading at the wrong level for the home, and the fourth
+for content before it. A section at the wrong level is `check`'s finding, refused under
+[[§FS-fetch.admission.3](FS-fetch.md#admission3-the-structural-rules-check-applies-report-nothing-new)] with `check`'s words. Invalid UTF-8 and every other refusal below exit 2
+with empty stdout and the tree byte-identical.
 
 The whole output is validated before any filesystem mutation. Accepted bytes are
 preserved verbatim; grund does not add timestamps, normalize whitespace, run `fmt`, or
 sanitize marked citations. A marked citation in the body is therefore a live citation
-on the next ordinary scan ([§FS-check.1.1](FS-check.md#11-recognized-citations)).
+on the next ordinary scan ([[§FS-check.1.1](FS-check.md#11-recognized-citations)]).
 
 ### 3.1 A nested declaration is refused
 
@@ -88,25 +108,38 @@ depth below the native one and whichever ID it carries: an unrequested ID, the
 requested ID a second time, an ID the snapshot home already declares, or another
 kind's ID. The refusal names the nested ID. It holds under config version 1 and 2 and
 for `file` and `folder` homes alike, because `fetch` owns only the requested
-declaration and one `fetch <ID>` fetches one ID ([§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)).
+declaration and one `fetch <ID>` fetches one ID ([[§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)]). Which headings declare is
+the scan's reading of the output alone ([[§FS-fetch.admission.1](FS-fetch.md#admission1-the-requested-declaration-is-there-once-and-its-body-takes-in-all-of-the-output)]).
 
-A subsection heading ([§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)), which carries a numbered or named section path rather than an
+A subsection heading ([[§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)]), which carries a numbered or named section path rather than an
 ID, stays accepted, as does any heading inside a fenced block, which declares nothing.
 The rule binds only what `fetch` accepts: a nested declaration written by hand into a
-scanned file stays legal.
+scanned file stays legal. What `fetch` does not do is delete one. Where the home holds a
+declaration the scan reads inside the range the requested one owns, at any depth, under any
+indent the scan reads as a heading, replacing that range would delete it, so the fetch is
+refused ([[§FS-fetch.admission.2](FS-fetch.md#admission2-every-other-declaration-in-the-home-reads-as-it-did-before)]):
+
+```text
+error: cannot fetch <ID>: <file>:<line> declares <OTHER> inside <ID>, and replacing <ID> would delete it; move <OTHER> out of <ID>, and fetch again
+```
+
+`<file>:<line>` is that declaration's heading, spelled from the report base ([[§FS-errors.terms](FS-errors.md#terms-terms)]).
 
 ### 3.2. A subsection is a heading the next scan reads as a section
 
-A subsection is a heading one depth below the declaration that the next ordinary scan
-reads as a section of it, so the one rule that decides it is the scanner's
-([§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)): a numeric section path (`### 1. Notes`),
+A subsection is a heading inside the declaration that the next ordinary scan reads as a
+section of it, so the one rule that decides it is the scanner's
+([[§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)]): a numeric section path (`### 1. Notes`),
 a named one where `[id] named_sections` enables names (`### notes: Notes`), or a
-relative heading ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)) the same configuration admits
+relative heading ([[§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)]) the same configuration admits
 (`### .notes: Notes`). Whether a heading qualifies is read with the selected project's
 configuration, never by matching its text again, so with `named_sections` unset
-`### notes: Notes` is not a subsection while `### 1. Notes` still is.
+`### notes: Notes` is not a subsection while `### 1. Notes` still is. Its level is held where
+`check` holds it ([[§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch)]): a `#### 1.1. Detail` under
+`### 1. Notes` is a subsection, and `#### 1. Notes` directly under an H2 is refused with
+`check`'s line under [[§FS-fetch.admission.3](FS-fetch.md#admission3-the-structural-rules-check-applies-report-nothing-new)].
 
-Any other heading at subsection depth — a prose heading (`### Other`), an ID of a kind
+Any other heading inside the declaration — a prose heading (`### Other`), an ID of a kind
 the project does not configure (`### XX-002-other: Other`), or an escaped one
 (`### <§>AR-002-other: Other`) — is a malformed heading: the fetch is refused on stderr
 with exit 2 and the tree stays byte-identical, rather than accepted and turned red by
@@ -118,16 +151,35 @@ error: fetch output line <n>: heading `<heading>` is not a section of `<ID>`; nu
 ```
 
 `<n>` is the heading's 1-based line in the output and `<heading>` that line as written,
-trailing whitespace removed. A `file` home's H3 and a `folder` home's H2 are held
-alike. A heading inside a fenced block is content and a bold label is no heading, so
-both stay accepted, as they are on the next scan.
+trailing whitespace removed. This line stands in place of `check`'s own for the same finding,
+because `check`'s suggests declaring an ID there, which [[§FS-fetch.3.1](FS-fetch.md#31-a-nested-declaration-is-refused)] refuses. A `file`
+home's H3 and a `folder` home's H2 are held alike, and so is a heading at any depth below them.
+A heading inside a fenced block is content and a bold label is no heading, so both stay
+accepted, as they are on the next scan.
 
 ## 4. File-home write
 
-For `file = "<home>"`, grund replaces only the H2 declaration whose ID exactly matches
+For `file = "<home>"`, grund replaces only the declaration whose ID exactly matches
 the requested ID. If it is absent, grund inserts the declaration among sibling H2
 declarations in ID order. The file's preamble, other declarations, line endings, and
 all bytes outside the owned declaration remain unchanged.
+
+The owned declaration is the one the selected project's scan reads in the home, wherever it
+stands and at whatever heading level, under whatever heading the scan reads as declaring it
+([[§FS-fetch.3](FS-fetch.md#3-accepted-declaration)]), and what it owns is the range the scan records for it: from its heading line to
+its body's last non-blank line ([[§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)]). The blank lines after that range stay
+as the separator, except where the output itself ends in blank lines: those then take the
+separator's place rather than adding to it, so a refetch of the same output leaves the same
+bytes ([[§FS-fetch.admission.5](FS-fetch.md#admission5-fetching-the-same-output-again-leaves-the-same-bytes)]). A heading shallower than the declaration's, a sibling under an indent the scan
+reads as a heading, and a heading the scan reads as near-missing a declaration therefore end
+the range where the scan ends it, and are kept byte for byte. Where the scan reads the
+requested declaration inside another declaration it is replaced there, and admission refuses
+the write where the output standing there would change how the file reads
+([[§FS-fetch.admission.2](FS-fetch.md#admission2-every-other-declaration-in-the-home-reads-as-it-did-before)]).
+
+A `file`-home fetch of an ID the scan reads as declared in a file other than the home is
+refused with [[§FS-fetch.5.3](FS-fetch.md#53-a-declaration-outside-the-home-prevents-installation)]'s line. Neither inserting beside that declaration nor replacing it
+is the requested declaration's to do; [[§DF-fetch-admission](../decisions/functional/DF-fetch-admission.md#df-fetch-admission-fetch-installs-only-what-the-next-scan-reads-back-as-exactly-what-was-asked-for)] records why the verdict moves.
 
 The final file is installed atomically only after the complete result is available. If
 the home cannot be read, parsed unambiguously, or atomically replaced, the command emits
@@ -220,7 +272,9 @@ error: kind `<KIND>` cannot fetch into <home>: a file read as source holds no Ma
 
 The refusal is decided by the home's path and its kind, not by what the file holds or what the
 integration would print, and comes before the integration runs, as the value-source refusal
-does. A home that declares
+does. For a `folder` home's `<ID>.md` ([[§FS-fetch.4.2.1](FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)]) the path and the kind decide together
+with the one scan `fetch` runs before the integration ([[§FS-fetch.6.1](FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)]), which says whether a
+file in the home already declares the ID. A home that declares
 the requested ID, one that declares only other IDs, one that declares nothing and an absent
 one are all refused, and an absent one is not created.
 
@@ -234,16 +288,46 @@ not `include` names it ([§FS-scan.scope.homes](FS-scan.md#scopehomes-every-conf
 it ([§FS-scan.scope.roots](FS-scan.md#scoperoots-a-scan-root-outruns-every-rule-about-descent)), so `.x/fs.py` is read and refused too.
 
 A home the scan reads as Markdown goes on being written, whatever its name, `fs.txt` under
-`txt = "markdown"` included. So does a home the text scan does not read: a name no language
-or `[scan] extensions` list claims, such as `fs.dat`, or a hidden name of its own, such as
-`.fs.py` ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), where `check` already warns that the file is not read. Such a
-file is not read two ways, and this refusal says nothing about it.
+`txt = "markdown"` included. A home the text scan does not read is refused, first write
+included ([[§FS-fetch.4.2.1](FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)]).
 
 The refusal is `fetch`'s alone. The configuration still loads, and `check`, `list`, `show`
 and `refs` keep their verdicts on such a project, reading what the file declares; only the
 remedy `check` names moves ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)). [§DF-fetch-source-home](../decisions/functional/DF-fetch-source-home.md#df-fetch-source-home-fetch-refuses-a-file-home-the-text-scan-reads-as-source) records the
 compatibility correction, and names as a judgement the one tree on which this refusal takes away a
 fetch that worked.
+
+#### 4.2.1. A home the scan does not read is refused
+
+A `file` home the text scan does not read holds no declaration any command reads: a name no
+language or `[scan] extensions` list claims, such as `fs.dat`, or a hidden name of its own,
+such as `.fs.py` ([[§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)]), where `check` already warns that the file is not
+read. No read says where a declaration there ends, so a refresh cannot keep the bytes around
+it ([[§FS-fetch.4](FS-fetch.md#4-file-home-write)]), and what a first write leaves is the home the next fetch would cut. So
+`fetch` refuses it, first write included, with exit 2, empty stdout and the whole tree
+byte-identical, before the integration runs, on stderr:
+
+```text
+error: kind `<KIND>` cannot fetch into <home>: <reason>, so the scan would not read what fetch writes; give the file a name a listed document language reads, or remove its `fetch`
+```
+
+`<home>` is spelled from the report base ([[§FS-errors.terms](FS-errors.md#terms-terms)]). `<reason>` is the one `check`'s
+unread warning gives for that name ([[§FS-scan.checks.unread-scan-root.message](FS-scan.md#checksunread-scan-rootmessage-the-message)]), so a
+correction to that reason moves both: ``no language in [schema.sources] languages reads `.dat` ``
+or ``its name begins with `.`, and grund reads no hidden file`` in a version-2 file, and
+`extension dat is not in [scan] extensions` in a version-1 file, whose line says `a name the
+scan reads as Markdown` in place of `a name a listed document language reads`, since version 1
+has no language to list. A home that declares the requested ID, one that declares nothing and
+an absent one are all refused, and an absent one is not created.
+
+In a `folder` home the same refusal holds for the `<ID>.md` [[§FS-fetch.5](FS-fetch.md#5-folder-home-write)] would create, when
+the scan run before the integration ([[§FS-fetch.6.1](FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)]) finds no file in the home declaring the
+ID and does not read that path as Markdown; `<reason>` is then why it does not. A file in the
+home that does declare the ID is replaced or refused as [[§FS-fetch.5](FS-fetch.md#5-folder-home-write)] says, and is not judged
+here.
+
+`check` stops offering `run grund fetch` at such a home ([[§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)]).
+[[§DF-fetch-unread-home](../decisions/functional/DF-fetch-unread-home.md#df-fetch-unread-home-fetch-refuses-a-home-the-scan-does-not-read-before-the-integration-runs)] records the compatibility correction.
 
 ### 4.3. A value home that cannot be looked up is refused with its reason
 
@@ -276,15 +360,8 @@ A Markdown home file that cannot be decoded as UTF-8 is a home that cannot be re
 For `folder = "<home>"`, grund replaces the Markdown file that currently declares the requested
 ID, or creates `<home>/<ID>.md` when no declaration exists. It never replaces a
 different-ID file. Multiple existing declarations for the requested ID are ambiguous
-and refused. The declaring file or new file contains the accepted stdout verbatim.
-
-The replacement is atomic. A missing folder may be created only as part of the
-successful final installation; any discovery, validation, or write failure leaves the
-tree byte-identical and exits 2.
-
-That does not reach a value kind or a kind that sets `value_chapter`: its folder home
-must already exist ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations), [§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)), and an absent one is refused at
-configuration load with the hint of [§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through).
+and refused. The declaring file or new file contains the accepted stdout verbatim. Which file
+declares, and what an existing `<ID>.md` that declares nothing may hold, is [[§FS-fetch.5.5](FS-fetch.md#55-which-file-declares-and-what-idmd-may-hold)]'s.
 
 ### 5.1 Existing value-source declarations prevent installation
 
@@ -319,7 +396,9 @@ read. A file in which that pass records a declaration of the requested ID is an 
 declaration, not an absent snapshot. Fetch can neither create beside it, which leaves a
 duplicate, nor replace it, which overwrites what the file holds around the declaration
 ([§FS-fetch.6](FS-fetch.md#6-stability-and-ownership)). So before creating or replacing anything grund refuses, with exit 2, empty
-stdout and the whole tree byte-identical, on stderr:
+stdout and the whole tree byte-identical, on stderr: The pass is the
+one scan `fetch` runs before the integration ([[§FS-fetch.6.1](FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)]), read once for the whole tree,
+not a second pass over each file.
 
 ```text
 error: cannot fetch <ID>: <file> already declares it; keep the fact in that file, or take the declaration out of it and fetch again
@@ -353,7 +432,8 @@ says.
 
 ### 5.3 A declaration outside the home prevents installation
 
-"When no declaration exists" is the selected project's scan's answer, not the home's.
+"When no declaration exists" is the selected project's scan's answer, not the home's. It is the
+same answer for a `file` home ([[§FS-fetch.4](FS-fetch.md#4-file-home-write)]), whose fetch is refused with the same line.
 Discovery asks that scan for the requested ID, with the ID's stubs paired by their verdicts
 ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), and a declaration whose record is in a file outside the
 home is an existing declaration, not an absent snapshot. Fetch can neither create beside it,
@@ -428,6 +508,46 @@ that failed is told which file to repair without running another command.
 Where several files cannot be decoded, the line is for the first in the walk's sorted order.
 A file [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)'s pass cannot read is reported the same way.
 
+### 5.5. Which file declares, and what `<ID>.md` may hold
+
+The declaring file is the file named `.md` in which the selected project's scan reads the
+requested ID, under whatever heading the scan reads as declaring it and at whatever depth
+([[§FS-fetch.3](FS-fetch.md#3-accepted-declaration)]). Its whole content is replaced, so it may hold nothing beyond the range the
+scan records for that declaration ([[§FS-fetch.4](FS-fetch.md#4-file-home-write)]) but blank lines. A file that holds anything
+else beside it — a group heading above it, prose before it, another declaration — is refused,
+with the path spelled from the report base ([[§FS-errors.terms](FS-errors.md#terms-terms)]):
+
+```text
+error: snapshot file <path> contains the requested ID beside other content
+```
+
+"When no declaration exists" never licenses overwriting a file that holds text. Where the
+scan reads no declaration of the ID and `<home>/<ID>.md` exists, the file is filled when it
+holds no bytes, or only whitespace and line endings, since there is nothing in it to lose and
+after the write the scan reads the requested declaration there once. Any other such file —
+prose, a heading that declares nothing such as `# Notes`, a lone citation — is refused with the
+file byte-identical, and the refusal says what the scan reads there:
+
+```text
+error: snapshot file <path> already exists and the scan reads no ID in it; move or rename it, and fetch again
+```
+
+A file in which the scan reads another ID keeps the words it was refused with before:
+
+```text
+error: snapshot file <path> already exists for a different ID
+```
+
+[[§DF-fetch-refusals-follow-the-scan](../decisions/functional/DF-fetch-refusals-follow-the-scan.md#df-fetch-refusals-follow-the-scan-four-fetch-refusals-say-what-the-scan-reads-corrected-in-place-and-an-empty-idmd-is-filled)] records the corrected line and the fill.
+
+The replacement is atomic. A missing folder may be created only as part of the
+successful final installation; any discovery, validation, or write failure leaves the
+tree byte-identical and exits 2.
+
+That does not reach a value kind or a kind that sets `value_chapter`: its folder home
+must already exist ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations), [§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)), and an absent one is refused at
+configuration load with the hint of [§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through).
+
 ## 6. Stability and ownership
 
 Fetching unchanged output is idempotent: it leaves the same file set and bytes. Stable
@@ -435,8 +555,30 @@ ID-order insertion and declaration-local replacement make repeated and independe
 fetches produce reviewable diffs. `fetch` owns only the requested declaration in the
 configured snapshot home, extending [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own); it never prunes another snapshot or rewrites a citation.
 
+Idempotence is checked before anything is installed, as [[§FS-fetch.admission.5](FS-fetch.md#admission5-fetching-the-same-output-again-leaves-the-same-bytes)]: output whose
+second fetch would change the bytes its first one wrote is refused, so a refresh never drifts.
+
 One `fetch <ID>` fetches one ID. There is no `--refresh`, generated timestamp,
 unused-snapshot exemption, or workspace-wide snapshot ownership behavior.
+
+### 6.1. One scan, read before the integration runs, and installed against
+
+`fetch` runs the selected project's scan once, after every refusal that needs no scan and before
+the integration runs. That one reading answers every question about the tree as it stood: which
+file declares the ID ([[§FS-fetch.4](FS-fetch.md#4-file-home-write)], [[§FS-fetch.5.5](FS-fetch.md#55-which-file-declares-and-what-idmd-may-hold)]), whether a declaration outside the home or
+under another name stops the fetch ([[§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)], [[§FS-fetch.5.3](FS-fetch.md#53-a-declaration-outside-the-home-prevents-installation)]), whether a folder home's
+`<ID>.md` is read ([[§FS-fetch.4.2.1](FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)]), and what admission compares against
+([[§FS-fetch.admission](FS-fetch.md#admission-admission-the-next-scan-reads-back-exactly-what-was-asked-for)]). No second discovery scan runs after the integration.
+
+The integration runs between that reading and the write, so the write is made against what the
+scan read: the target is replaced only if it still holds the bytes the scan read there, and
+created only if it is still absent. A home changed while the integration ran, edited or created,
+is not overwritten: the fetch exits 2, empty stdout, with the change left as it was, and says so
+from the report base ([[§FS-errors.terms](FS-errors.md#terms-terms)]):
+
+```text
+error: <path> changed while the integration ran; fetch again
+```
 
 ## 7. Output and exits
 
@@ -447,7 +589,15 @@ ambiguous existing content, a folder-home file that already declares the ID
 ([§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)), and filesystem failure are CLI-level operational errors on
 stderr and exit 2, following
 [§FS-errors.2.2](FS-errors.md#22-cli-level-message).
-A folder-home fetch of an ID declared outside the home ([§FS-fetch.5.3](FS-fetch.md#53-a-declaration-outside-the-home-prevents-installation)) is refused the same way.
+A fetch of an ID declared outside the home ([§FS-fetch.5.3](FS-fetch.md#53-a-declaration-outside-the-home-prevents-installation)), a home the scan does not read
+([[§FS-fetch.4.2.1](FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)]), output admission refuses ([[§FS-fetch.admission](FS-fetch.md#admission-admission-the-next-scan-reads-back-exactly-what-was-asked-for)]), a link at the target that
+leaves the config root or points nowhere ([[§FS-fetch.links](FS-fetch.md#links-a-link-at-the-target-is-written-through-when-it-stays-inside-the-config-root)]), and a home changed while the
+integration ran ([[§FS-fetch.6.1](FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)]) are refused the same way.
+
+Every path a refusal names is spelled from the report base ([[§FS-errors.terms](FS-errors.md#terms-terms)]), whichever
+refusal names it, so one tree's refusal reads the same from every checkout
+([[§FS-errors.4](FS-errors.md#4-determinism)]). That covers the folder, file and value-source paths of [[§FS-fetch.5.1](FS-fetch.md#51-existing-value-source-declarations-prevent-installation)],
+[[§FS-fetch.5.5](FS-fetch.md#55-which-file-declares-and-what-idmd-may-hold)] and the discovery failures of [[§FS-fetch.5](FS-fetch.md#5-folder-home-write)].
 
 Once it ships, `fetch --remote` exits 0 when the projection and lock are installed, and prints the
 remote's own content findings, which never block the pin
@@ -455,6 +605,133 @@ remote's own content findings, which never block the pin
 lock byte-identical. `--check` exits 0 when every selected pin is current, 1 on any
 difference, a rewind included, and 2 when a ref cannot be obtained
 ([§FS-fetch.remote.check](FS-fetch.md#remotecheck---check-is-a-read-only-drift-signal)).
+
+## admission: Admission: the next scan reads back exactly what was asked for
+
+`fetch` builds the file it would install — the home with the output in place of the owned range
+([[§FS-fetch.4](FS-fetch.md#4-file-home-write)]), or the output whole in a `folder` home ([[§FS-fetch.5](FS-fetch.md#5-folder-home-write)]) — has the selected
+project's own scan read it, and installs it only if that reading is exactly what was asked for.
+Each of the five points below is one clause, answered by one reading: the output alone, as the
+scan reads one file at the target's path; the tree as the scan read it before the integration ran
+([[§FS-fetch.6.1](FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)]); and the home as it would read after, with the candidate in place of the file
+on disk. A clause that fails refuses the fetch with exit 2, empty stdout, the whole tree
+byte-identical, and the line the clause names. The clauses are judged in order, and only the
+first that fails is reported.
+
+`fetch` keeps no heading test of its own, no second line loop and no depth limit: what a
+declaration is, where its body ends and which structure is wrong each have their one answer in
+the scan and in `check`, and `fetch` reads those answers rather than copying them. Accepted
+bytes stay verbatim ([[§FS-fetch.3](FS-fetch.md#3-accepted-declaration)]): admission refuses output, it never rewrites it.
+
+### admission.1: The requested declaration is there once, and its body takes in all of the output
+
+Read from the output alone. The first line declares the requested ID at the level the home
+takes ([[§FS-fetch.3](FS-fetch.md#3-accepted-declaration)]); no later heading the scan reads as declaring an ID stands inside it
+([[§FS-fetch.3.1](FS-fetch.md#31-a-nested-declaration-is-refused)]); and no later heading ends it before the output does. A heading that ends it —
+a bare `##` or `#`, or any heading at or above the declaration's level that declares nothing —
+leaves the text after it belonging to nothing on the next scan, so it is refused:
+
+```text
+error: fetch output line <n>: heading `<heading>` ends <ID> before the output does; fence it, make it a bold label, or remove it
+```
+
+`<n>` is the heading's 1-based line in the output and `<heading>` that line as written, trailing
+whitespace removed. A heading that declares a second ID at the declaration's own level keeps
+[[§FS-fetch.3](FS-fetch.md#3-accepted-declaration)]'s `must contain exactly one declaration and no leading content`. Leading blank
+lines are content before the declaration, and refused with that same line, never trimmed.
+
+### admission.2: Every other declaration in the home reads as it did before
+
+Read from the tree before and the home after. Once the replaced range is cut from both
+readings, every other declaration the scan reads in the home is there in both, with the same ID,
+title, level, sections and body text. A declaration that appears, disappears, or changes in any
+of those is refused, naming where it stood before. One the scan read inside the replaced range
+would be deleted, and takes [[§FS-fetch.3.1](FS-fetch.md#31-a-nested-declaration-is-refused)]'s line; any other takes:
+
+```text
+error: cannot fetch <ID>: writing the output would change how <file>:<line> reads <OTHER>; change the output or <OTHER> so the two stand apart, and fetch again
+```
+
+`<file>:<line>` is `<OTHER>`'s heading before the fetch, spelled from the report base
+([[§FS-errors.terms](FS-errors.md#terms-terms)]). An open fence in the home, an indented sibling the scan reads as a heading,
+and an H2 written where an enclosing declaration's tail would fall under it are refused here,
+not discovered on the next scan.
+
+### admission.3: The structural rules `check` applies report nothing new
+
+`check`'s node-local rules run on the tree before and on the home after: duplicate, misplaced
+and near-miss declarations, broken stubs, heading levels, duplicate and orphan sections,
+unmarked headings, inline citation style, oversized leads, fields, conflict markers and glob
+citations, and the scan's own invalid-value records ([[§FS-check](FS-check.md#fs-check-grund-validates-every-citation-in-a-repo)]). The relational rules —
+citations, locks, chapter rules, grounding — are not run, because a fetched body's citations are
+the reader's to settle ([[§FS-fetch.3](FS-fetch.md#3-accepted-declaration)]). A finding of any channel, warning included, that the
+after reading holds and the before reading does not is refused; findings are compared by code
+and message, with every line a finding names below the replaced range mapped through the splice
+first, so a finding the home already held is never new because the output's length moved it.
+A new finding inside the output is refused as:
+
+```text
+error: fetch output line <n>: <message>
+```
+
+and one elsewhere in the home as `error: cannot fetch <ID>: <file>:<line>: <message>`, where
+`<message>` is `check`'s message for the finding and `<n>` its line in the output. An unmarked
+heading takes [[§FS-fetch.3.2](FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)]'s line in place of `check`'s. A value chapter's wrong shape, a
+section path `check` faults and a duplicate section are refused here with `check`'s words.
+
+### admission.4: The output closes every fence and raw-text block it opens
+
+Read from the output alone. A fenced block or an HTML raw-text block (`<pre>`, `<script>`,
+`<style>`, `<textarea>`) the output opens and does not close would swallow every line after it in
+the home, so it is refused, naming the line that opens it:
+
+```text
+error: fetch output line <n> opens a <block> it does not close; close it, and fetch again
+```
+
+`<block>` is `fenced block` or `raw-text block`.
+
+### admission.5: Fetching the same output again leaves the same bytes
+
+Read from the home after. The output spliced again into the candidate, at the range the
+candidate's own reading records for the requested declaration, must reproduce the candidate byte
+for byte. Output that would grow, shrink or move on its next fetch — a leading blank line, a
+final bare carriage return beside a sibling — is refused, naming the first line that would
+change:
+
+```text
+error: cannot fetch <ID>: a second fetch of this output would change <file> at line <n> again, so the first is refused
+```
+
+`<file>` is spelled from the report base ([[§FS-errors.terms](FS-errors.md#terms-terms)]).
+
+## links: A link at the target is written through when it stays inside the config root
+
+The scan follows a file link and reads the declaration at the link's path
+([[§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)]), so the file behind the link is the declaration, and cutting the link
+would change what the scan reads without anyone asking. A `folder` home's declaring file or
+`<ID>.md`, and a `file` home, that is a symbolic link is decided by the walk's own record of it,
+the one `fmt --write` asks ([[§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through)]); `fetch` resolves no link a second time.
+
+- A link whose target the walk puts inside the selected project's config root is written
+  through: the write is atomic at the target, the link stays, and admission judges the written
+  target like any other file.
+- A link whose target leaves the config root is refused, by its path, with link and target
+  byte-identical, also when the target already holds the bytes the integration printed:
+
+  ```text
+  error: cannot fetch <ID> into <path>: the symlink target is outside the config root; replace the link with the file it points to, and fetch again
+  ```
+
+- A link whose target does not exist is refused the same way, whichever language reads `.md`:
+
+  ```text
+  error: cannot fetch <ID> into <path>: the symlink target does not exist; create the target, or remove the link, and fetch again
+  ```
+
+`<path>` is the link, spelled from the report base ([[§FS-errors.terms](FS-errors.md#terms-terms)]). Where the home is also
+one the scan does not read, [[§FS-fetch.4.2.1](FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)] speaks first. `fmt` refuses an outward link with a
+warning and goes on, while `fetch` refuses the run, because `fetch` writes one file.
 
 ## remote: Remote projections
 

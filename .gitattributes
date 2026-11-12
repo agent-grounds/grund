@@ -1,5 +1,8 @@
 scripts/*.sh text eol=lf
 tests/e2e/cases/** text eol=lf
+# Fixtures whose CRLF bytes are the point: a whitespace-only <ID>.md and a byte sentinel (§FS-fetch.5.5).
+tests/e2e/cases/fetch-id-file-whitespace-filled/repo/fs/FS-a.md -text
+tests/e2e/cases/fetch-section-*/**/sentinel.bin binary
 examples/** text eol=lf
 # An example's image is bytes, not text: no line ending is normalized in it.
 examples/**/*.png binary

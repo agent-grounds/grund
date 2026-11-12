@@ -1,0 +1,10 @@
+grund_config_version = 2
+project_name = "sections"
+[schema]
+id_format = "{kind}-{number}-{slug}"
+heading_depth = "may"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.AR]
+files = ["docs/arch.md"]
+fetch = "scripts/fetch"

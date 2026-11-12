@@ -70,6 +70,10 @@ mod dotdot_scope_root_names;
 #[path = "support/fetch_folder_elsewhere.rs"]
 mod fetch_folder_elsewhere;
 
+// §FS-fetch.admission: issue #1205's admission through the scan, its cases run alone.
+#[path = "support/fetch_admission_1205.rs"]
+mod fetch_admission_1205;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
@@ -110,7 +114,7 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    let cases = discover_e2e_cases(&manifest_dir);
+    let cases = fetch_admission_1205::without_red_until_1205(discover_e2e_cases(&manifest_dir));
     let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
     let compared = outcomes
         .iter()

@@ -156,6 +156,26 @@ const SCAN_VALUE_SOURCE_REPAIR_SUFFIX: &str =
 const SCAN_PASSED_PATH_REPAIR_SUFFIX: &str =
     "by not passing it, because exclude does not prune a path the command is given";
 
+/// A fetch into a home the scan does not read names `check`'s whole unread reason and the way
+/// through (§FS-fetch.4.2.1), so the line keeps the bytes that point fixes rather than the cap.
+const FETCH_UNREAD_HOME_SUFFIX: &str = ", or remove its `fetch`";
+const FETCH_UNREAD_HOME_CLAUSE: &str = ", so the scan would not read what fetch writes; give the file";
+
+/// A fetch that would delete a hand-written declaration names the file, the line and both IDs
+/// twice over (§FS-fetch.3.1), so the line keeps the bytes that point fixes rather than the cap.
+const FETCH_NESTED_DELETE_CLAUSE: &str = " would delete it; move ";
+
+/// Admission relays `check`'s own finding, warnings included, at the output's line
+/// (§FS-fetch.admission.3), so the line is held to what holds `check`'s, not to the cap.
+const FETCH_OUTPUT_LINE_PREFIX: &str = "error: fetch output line ";
+
+fn is_relayed_check_finding(line: &str) -> bool {
+    line.strip_prefix(FETCH_OUTPUT_LINE_PREFIX).is_some_and(|rest| {
+        let digits = rest.find(|ch: char| !ch.is_ascii_digit()).unwrap_or(0);
+        digits > 0 && rest[digits..].starts_with(": ")
+    })
+}
+
 /// The judgement, isolated from the filesystem. A `--format json` case's
 /// stderr is not uniformly JSON (§FS-errors.5.2.2): a launch-time `error: …`
 /// line stays text and keeps the plain 180-byte cap, while a carried text
@@ -186,6 +206,12 @@ fn assert_stderr_is_concise(name: &str, json_case: bool, migration_case: bool, s
                 && line.ends_with(SCAN_EXCLUDE_DIRECTORY_REPAIR_SUFFIX))
             || (line.starts_with("error: ") && line.ends_with(SCAN_VALUE_SOURCE_REPAIR_SUFFIX))
             || (line.starts_with("error: ") && line.ends_with(SCAN_PASSED_PATH_REPAIR_SUFFIX))
+            || (line.starts_with("error: ")
+                && line.contains(FETCH_UNREAD_HOME_CLAUSE)
+                && line.ends_with(FETCH_UNREAD_HOME_SUFFIX))
+            || (line.starts_with("error: cannot fetch ")
+                && line.contains(FETCH_NESTED_DELETE_CLAUSE))
+            || is_relayed_check_finding(line)
             || (line.starts_with("written: ") && line.ends_with(MIGRATE_DEFAULT_WRITTEN_SUFFIX))
             || (line.starts_with("refused: ") && line.ends_with(MIGRATE_EMPTY_EXTENSION_SUFFIX))
             || (migration_case && line.starts_with(MIGRATE_VALUE_KEY_REPAIR_PREFIX))

@@ -1,0 +1,1 @@
+error: snapshot file docs/t/T-1.md already exists and the scan reads no ID in it; move or rename it, and fetch again

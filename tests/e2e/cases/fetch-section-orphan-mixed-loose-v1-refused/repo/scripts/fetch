@@ -1,0 +1,8 @@
+#!/bin/sh
+cat <<'OUT'
+## AR-001-thing: Thing
+
+### 1.more: More
+
+prose
+OUT

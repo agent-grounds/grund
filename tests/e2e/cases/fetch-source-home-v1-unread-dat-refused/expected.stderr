@@ -1,0 +1,1 @@
+error: kind `FS` cannot fetch into fs.dat: extension dat is not in [scan] extensions, so the scan would not read what fetch writes; give the file a name the scan reads as Markdown, or remove its `fetch`

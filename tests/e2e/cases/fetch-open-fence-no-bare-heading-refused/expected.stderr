@@ -1,0 +1,1 @@
+error: fetch output line 3 opens a fenced block it does not close; close it, and fetch again

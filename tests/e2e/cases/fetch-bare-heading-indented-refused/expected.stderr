@@ -1,0 +1,1 @@
+error: fetch output line 3: heading `   ##` ends AR-001-thing before the output does; fence it, make it a bold label, or remove it

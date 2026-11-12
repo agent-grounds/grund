@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "demo"
+
+[schema.kinds.AR]
+folders = ["docs/ar"]
+id_format = "{kind}-{number}-{slug}"
+index = false
+fetch = "scripts/fetch"

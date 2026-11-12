@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "vals"
+
+[schema.kinds.CONST]
+folders = ["values"]
+form = "value"
+index = false
+fetch = "scripts/fetch"
