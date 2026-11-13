@@ -7,6 +7,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+#[path = "support/fixture_root_contract.rs"]
+mod fixture_root_contract;
+
 fn test_root(name: &str) -> PathBuf {
     let root =
         std::env::temp_dir().join(format!("grund-off-grammar-{name}-{}", std::process::id()));

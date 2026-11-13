@@ -169,10 +169,11 @@ path = "crates/grund-core/src/testing.rs"
 match = "exact"
 rules = ["tests"]
 kind = "deferred"
-max_accepted = { value = 600, unit = "lines" }
+max_accepted = { value = 601, unit = "lines" }
 until = "the fixture-root helpers (test_root, uncovered_base, physical_test_root) leave for a sibling module beside testing.rs"
 reason = """
 Shared fixtures for every component's tests (§AR-core-module-layout.1.2), past the soft budget before this entry. It is edited only when a shared fixture moves with the code it mirrors — here current_marker() following the managed block's version bump (§FS-init.2.3.7.1), a one-line change no split would have avoided. Missing boundary: the fixture-root discovery of §AR-ci.10.3 (test_root, temp_candidates, uncovered_base, physical_test_root) is a self-contained concern every suite calls but none of the config or signature builders touch; it can become its own testing module, which needs testing.rs to become a directory module first.
+Issue #1362's specification adds six non-comment wiring lines for two test-only modules, one for ordinary roots and one for canonicalized roots. The test bodies live in shared test support and no helper implementation changes. The file now measures exactly 601 lines; this ceiling allows no further growth. Splitting the allocation implementation belongs to the following implementation state, which must preserve the already committed red contract; the existing extraction boundary and retirement condition remain.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-rules.md"
