@@ -170,7 +170,12 @@ impl Workspace {
 
     /// Build `dir` with `env` added, then run it.
     /// Returns the label the binary printed and whether the build script ran.
+    ///
+    /// The first build into an empty target directory always runs the script, so one
+    /// the detector does not see fails here, before any "must not rerun" verdict is read
+    /// (§AR-ci-cargo-layout.3).
     fn build(&self, dir: &Path, env: &[(&str, &str)]) -> (String, bool, String) {
+        let cold = !dir.join("target").exists();
         let output = self.cargo(dir, env);
         let log = String::from_utf8_lossy(&output.stderr).into_owned();
         assert!(
@@ -181,6 +186,13 @@ impl Workspace {
         let reran = log.lines().any(|line| {
             line.trim_start().starts_with("Running `") && line.contains("build-script-build")
         });
+        assert!(
+            reran || !cold,
+            "{}: the first build into an empty target ran the build script, but the rerun \
+             detector saw no `Running` line naming it, so every \"must not rerun\" verdict \
+             would pass over nothing (§AR-ci-cargo-layout.3)\n{log}",
+            dir.display()
+        );
         let binary = dir.join(format!(
             "target/debug/grund{}",
             std::env::consts::EXE_SUFFIX
@@ -250,6 +262,16 @@ impl Drop for Workspace {
 fn write(path: &Path, text: &str) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, text).unwrap();
+}
+
+/// The rerun detector sees the cold build run the script, whatever Cargo spells it as
+/// (§AR-ci-cargo-layout.2, §AR-ci-cargo-layout.3).
+#[test]
+fn the_rerun_detector_sees_the_first_build_run_the_script() {
+    let ws = Workspace::new("cold");
+    let root = ws.root.clone();
+    let (_, reran, log) = ws.build(&root, &[]);
+    assert!(reran, "the cold build ran the script unseen\n{log}");
 }
 
 #[test]
