@@ -28,7 +28,7 @@ use super::mounted_ignore::{mounted_ignore_mode, walk_requires_git};
 use super::walk::WalkDirFilter;
 use crate::config::ExcludeGlobs;
 use crate::config::{Frame, Schema, canonical_config_root};
-use crate::model::{ExcludingRule, format_path, is_hidden, scanned_path_key};
+use crate::model::{ExcludingRule, is_hidden, scanned_path_key};
 use crate::sources::{
     canonicalize_existing_prefix, is_directory, path_is_entry, path_is_symlink, read_git_metadata,
 };
@@ -199,12 +199,9 @@ fn excluding_rule_under(
         if let Some(global) = global
             && let Some(ignored) = ignoring_rule(&path, is_dir, global)
         {
-            let file = ignored
-                .file
-                .strip_prefix(config_root)
-                .map_or_else(|_| format_path(&ignored.file), format_path);
+            // §FS-cli.3.4: the file stays a path, for the report to spell.
             return Some(ExcludingRule::IgnoreFile {
-                file,
+                file: ignored.file,
                 pattern: ignored.pattern,
             });
         }

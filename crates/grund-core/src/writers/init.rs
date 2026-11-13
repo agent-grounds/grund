@@ -16,10 +16,11 @@ use super::init_template::{
     StarterWrite, lay_starter_files, resolve_template, template_config_note,
 };
 use crate::checker::{configured_rule_sentences, declared_workspace_vocabulary};
-use crate::config::{Config, config_file_in, display_location};
+use crate::config::{Config, config_file_in, display_path};
 use crate::model::{Catalog, Diagnostic, Finding, FindingSite, format_path};
 use crate::scanner::{
-    CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file, scan_tree,
+    Absolute, CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file,
+    reported_scan_failure, scan_tree,
 };
 use crate::templates::{ConversationSurface, render_agents_append_block, render_grund_toml};
 use crate::workspace::{declared_member_schemas, populate_workspace_boundary};
@@ -157,17 +158,19 @@ fn init_run(
             InitError::new(message)
         })?;
         if let Some(first) = errors.first() {
-            let (path, message) = (&first.path, &first.reason);
+            // §FS-errors.2.2.5: the one rendering, its *Fix* included, located where init still
+            // locates a scan failure, by its absolute path.
+            let line = reported_scan_failure(first, &Absolute).line();
             // §FS-distribution.3.3.2: scanner errors carry a source path, and their code
             // (§FS-check.2.4.3).
             let mut source = crate::model::OperationDiagnostic::new(
                 "filesystem",
                 first.code().as_str(),
-                format!("{}: {message}", path.display()),
+                line.clone(),
             );
-            source.path = Some(format_path(path));
+            source.path = Some(format_path(&first.path));
             *diagnostic = Some(source.into());
-            return Err(InitError::new(format!("{}: {message}", path.display())));
+            return Err(InitError::new(line));
         }
         // §FS-rules.4.1: the workspace this project's own config declares, which
         // is the one `check` in this same directory resolves against — never the
@@ -526,7 +529,7 @@ fn init_finding(config: &Config, diagnostic: Diagnostic) -> Finding {
     Finding {
         severity: "error",
         code: diagnostic.code.as_str(),
-        path: diagnostic.path.map(|path| display_location(config, &path)),
+        path: diagnostic.path.map(|path| display_path(config, &path)),
         line: diagnostic.line,
         column: diagnostic.column,
         message: diagnostic.message,
@@ -534,7 +537,7 @@ fn init_finding(config: &Config, diagnostic: Diagnostic) -> Finding {
             .sites
             .into_iter()
             .map(|site| FindingSite {
-                path: display_location(config, &site.path),
+                path: display_path(config, &site.path),
                 line: site.line,
             })
             .collect(),

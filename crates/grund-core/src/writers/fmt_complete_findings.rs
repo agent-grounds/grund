@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 
 use super::fmt_error::{FmtConflictAbort, FmtScanAbort};
 use crate::checker::{conflict_marker_finding, sort_diagnostics};
-use crate::config::{Config, display_location, published_finding};
+use crate::config::{Config, display_path, published_finding};
 use crate::model::{Catalog, Diagnostic};
 use crate::resolver::{WorkspaceContext, WorkspaceProject};
 use crate::scanner::{ApiScanError, api_scan_error, scan_tree};
@@ -197,7 +197,7 @@ fn conflict_abort(
         .collect();
     sort_diagnostics(&mut conflicts);
     // §FS-cli.3.4: one spelling of a finding's location, whichever command publishes it.
-    let render_path = |path: &std::path::Path| display_location(render, path);
+    let render_path = |path: &std::path::Path| display_path(render, path);
     Some(FmtConflictAbort {
         conflicts: conflicts
             .into_iter()

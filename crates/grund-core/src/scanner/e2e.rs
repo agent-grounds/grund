@@ -6,10 +6,9 @@ use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 use std::sync::PoisonError;
 
-use super::e2e_case::{CaseFailure, read_e2e_case};
+use super::e2e_case::read_e2e_case;
 use super::scan_error::{
-    FailureRoots, FileKind, ScanFailure, failure_place, publish_file_failure, publish_unlisted,
-    publish_unlisted_fixture, read_failure_reason, scan_error_reason,
+    FailureRoots, ScanFailure, failure_place, publish_file_failure, publish_unlisted,
 };
 use super::tree::ScanError;
 use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walk_builder};
@@ -212,37 +211,8 @@ pub(super) fn scan_e2e_cases(
                     if held.as_ref().is_some_and(|held| !spelled.starts_with(held)) {
                         continue;
                     }
-                    match failure {
-                        CaseFailure::Unread(path, err) => {
-                            let failure = failure_at(&spelled);
-                            let reason = read_failure_reason(&path, &err);
-                            let report = ScanError::new(spelled, reason, failure);
-                            publish_file_failure(
-                                report,
-                                frame,
-                                &mut findings.failure_names,
-                                reported,
-                            );
-                        }
-                        CaseFailure::Unlisted(_, err) => {
-                            let failure = failure_at(&spelled);
-                            publish_unlisted_fixture(
-                                spelled,
-                                &err,
-                                &findings.failure_names,
-                                failure,
-                                reported,
-                            );
-                        }
-                        CaseFailure::Unparsed(_, err) => {
-                            let failure = ScanFailure::Unparsed(FileKind::Exit);
-                            reported.push(ScanError::new(
-                                spelled,
-                                scan_error_reason(&err),
-                                failure,
-                            ));
-                        }
-                    }
+                    let names = &mut findings.failure_names;
+                    failure.publish(spelled, failure_at, frame, names, reported);
                 }
                 continue;
             }

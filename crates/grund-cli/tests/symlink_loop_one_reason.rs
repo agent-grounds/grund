@@ -306,8 +306,9 @@ fn the_report_base_spells_the_one_location() {
     beside.assert_lines(&[named("../a/sub/up", "../a")]);
 }
 
-/// A member's walk spells the location from the member's root, and empty at that root, even where
-/// the line's path is spelled from the workspace root; the invocation base spells both.
+/// A member's loop names the location as the line names the link, from the workspace root, so the
+/// member's root is `m` and only the report base itself goes unnamed (§FS-check.2.4.2,
+/// §FS-errors.2.2.5); the invocation base spells both the same way.
 #[test]
 fn a_workspace_root_prints_one_line_for_a_members_loop() {
     let member = "grund_config_version = 2\nproject_name = \"m\"\n\n[schema.kinds.FS]\n\
@@ -325,7 +326,7 @@ fn a_workspace_root_prints_one_line_for_a_members_loop() {
     tree.assert_prints(&[
         (
             &["check"],
-            vec![named("m/a/sub/up", "a"), contains("m/x/toM")],
+            vec![named("m/a/sub/up", "m/a"), named("m/x/toM", "m")],
         ),
         (
             &["check", "--path-base=invocation"],

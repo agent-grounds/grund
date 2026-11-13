@@ -6,13 +6,16 @@
 //! `exclude` or an ignore file of a path inside the case, since what a case holds is the case's
 //! data, and a failure here is the case's alone (§FS-declarations.e2e-case.failure).
 
-use anyhow::Context;
 use std::path::{Path, PathBuf};
 
+use super::scan_error::{
+    FileKind, ScanError, ScanFailure, publish_file_failure, publish_unlisted_fixture,
+    read_failure_reason, scan_error_reason,
+};
 use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema};
 use crate::grammar::{parse_id_arg, split_alias_path};
-use crate::model::{E2eCase, E2eSpecRef, format_path, sort_path_key};
+use crate::model::{E2eCase, E2eSpecRef, FailureNames, sort_path_key};
 use crate::sources::{Sources, path_holds_file, path_is_dir};
 
 /// One failure reading a case, with the path that failed (§AR-scanner.6.6).
@@ -32,6 +35,38 @@ impl CaseFailure {
     pub(super) fn path(&self) -> &Path {
         match self {
             Self::Unread(path, _) | Self::Unlisted(path, _) | Self::Unparsed(path, _) => path,
+        }
+    }
+
+    /// Publish this failure at `spelled`, the path as the tree spells it, `unread_at` judging
+    /// where a path that could not be read is (§AR-scanner.6.6, §FS-check.2.4.3): a file or a
+    /// fixture directory unless a report already says it (§FS-check.2.4.2), and a manifest that
+    /// does not parse as itself, the file it parsed travelling as a path for the report to
+    /// spell (§FS-errors.2.2.5).
+    pub(super) fn publish(
+        self,
+        spelled: PathBuf,
+        unread_at: impl Fn(&Path) -> ScanFailure,
+        frame: Frame<'_>,
+        names: &mut FailureNames,
+        reported: &mut Vec<ScanError>,
+    ) {
+        match self {
+            Self::Unread(path, err) => {
+                let failure = unread_at(&spelled);
+                let report = ScanError::new(spelled, read_failure_reason(&path, &err), failure);
+                publish_file_failure(report, frame, names, reported);
+            }
+            Self::Unlisted(_, err) => {
+                let failure = unread_at(&spelled);
+                publish_unlisted_fixture(spelled, &err, names, failure, reported);
+            }
+            Self::Unparsed(_, err) => {
+                let failure = ScanFailure::Unparsed(FileKind::Exit);
+                let parsed = spelled.clone();
+                let report = ScanError::new(spelled, scan_error_reason(&err), failure);
+                reported.push(report.parsing(parsed));
+            }
         }
     }
 }
@@ -62,12 +97,10 @@ pub(super) fn read_e2e_case(
     };
     let exit_path = dir.join("expected.exit");
     let expected_exit = read_case_file(frame, &exit_path, &mut failed).and_then(|text| {
-        let parsed = text
-            .trim()
+        // §FS-errors.2.2.5: the file is named when the report is spelled, never here.
+        text.trim()
             .parse::<i32>()
-            .with_context(|| format!("parse {}/expected.exit", format_path(dir)));
-        parsed
-            .map_err(|err| failed.push(CaseFailure::Unparsed(exit_path, err)))
+            .map_err(|err| failed.push(CaseFailure::Unparsed(exit_path, err.into())))
             .ok()
     });
     let mut fixtures = Vec::new();

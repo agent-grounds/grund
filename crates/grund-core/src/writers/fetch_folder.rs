@@ -11,7 +11,7 @@ use super::fetch_target::{
     Before, Request, Site, Target, link_target, text_of, unscanned, with_io_source,
 };
 use crate::model::{scanned_path_key, sort_path_key};
-use crate::scanner::folder_value_declarations;
+use crate::scanner::{ScanError, folder_value_declarations};
 use crate::sources::{path_exists, path_is_dir, path_is_file, read_bytes};
 
 /// §FS-fetch.5: replace the one file that declares the ID, or create or fill `<ID>.md`, after
@@ -42,12 +42,7 @@ pub(super) fn place_in_folder(
             && !path_is_file(&error.path)
             && scanned_path_key(&error.path) != scanned_path_key(&snapshot)
     }) {
-        let failure = fetch_operational(format!(
-            "cannot read snapshot folder {} at {}: {}",
-            request.shown(folder),
-            request.shown(&error.path),
-            error.reason
-        ));
+        let failure = unread_folder(request, folder, error);
         return Err(with_io_source(request, &error.path, failure, diagnostic));
     }
     let mut files: Vec<&Path> = before
@@ -142,20 +137,26 @@ fn unclaimed_snapshot(
     Ok(Some(text))
 }
 
+/// §FS-fetch.5: fetch's own refusal of a folder the scan could not read at `error`'s path. The
+/// reason it quotes is the scan failure's, every path in it spelled as the refusal spells its
+/// own (§FS-errors.2.2.5, §AR-scanner.1.failure), so nothing the record carries beside its
+/// reason is dropped.
+fn unread_folder(request: &Request<'_>, folder: &Path, error: &ScanError) -> FetchFailure {
+    fetch_operational(format!(
+        "cannot read snapshot folder {} at {}: {}",
+        request.shown(folder),
+        request.shown(&error.path),
+        error.spelled_reason(&request.display)
+    ))
+}
+
 /// §FS-fetch.5.1: value inputs bypass the general walk's scan filters, so their own reader is
 /// asked before any Markdown match can win.
 fn refuse_value_source(request: &Request<'_>, folder: &Path) -> Result<(), FetchFailure> {
     let config = request.config;
     let values =
         folder_value_declarations(config.schema(), config.frame(), folder, &request.id.kind)
-            .map_err(|error| {
-                fetch_operational(format!(
-                    "cannot read snapshot folder {} at {}: {}",
-                    request.shown(folder),
-                    request.shown(&error.path),
-                    error.reason
-                ))
-            })?;
+            .map_err(|error| unread_folder(request, folder, &error))?;
     match values
         .declarations
         .get(request.id)

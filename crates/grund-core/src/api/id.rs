@@ -12,7 +12,7 @@ use std::path::PathBuf;
 
 use super::config::config_run_warnings;
 use crate::config::{
-    Invocation, KindScope, KindTable, KindVerdict, Quote, Selection, display_location,
+    Invocation, KindScope, KindTable, KindVerdict, Quote, Selection, display_path,
 };
 use crate::model::{Finding, Id};
 use crate::scanner::{e2e_case_dir_name, scan_tree_strict};
@@ -193,7 +193,7 @@ fn propose_id_run(
                 "proposed ID `{}` already declared at {}:{}",
                 rendered,
                 // §FS-cli.3.4: a record at the report base, an E2E case's directory, reads `.`.
-                display_location(&config, &decl.file),
+                display_path(&config, &decl.file),
                 decl.line
             ),
         });

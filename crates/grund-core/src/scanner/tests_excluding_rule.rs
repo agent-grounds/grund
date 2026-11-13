@@ -43,14 +43,16 @@ fn an_exclude_entry_on_the_path_is_named_as_written() {
     );
 }
 
+/// The ignore file is kept a path, for the report to spell from its base (§FS-cli.3.4).
 #[test]
-fn an_ignore_file_is_named_from_the_config_root_with_its_line() {
+fn an_ignore_file_is_kept_as_a_path_with_its_line() {
     let config = project("excluding_rule_ignore", "respect_gitignore = true");
-    write(&config.frame().root().join("notes/.ignore"), "gen/\n");
+    let file = config.frame().root().join("notes/.ignore");
+    write(&file, "gen/\n");
     assert_eq!(
         rule(&config, &["docs"], "notes/gen/a.md"),
         Some(ExcludingRule::IgnoreFile {
-            file: "notes/.ignore".to_string(),
+            file,
             pattern: "gen/".to_string(),
         })
     );

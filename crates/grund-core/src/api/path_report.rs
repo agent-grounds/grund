@@ -9,7 +9,7 @@ use crate::scanner::ScanError;
 
 use super::scope_cautions::full_scope_ignored_warning;
 use crate::checker::{ScanScope, retain_diagnostics_in_report_scope};
-use crate::config::Config;
+use crate::config::{Config, Display};
 use crate::model::{CheckReport, Diagnostic};
 
 /// What the caller typed that the report answers to: the path, whether it was typed
@@ -47,9 +47,10 @@ impl PathReport<'_> {
         retain_diagnostics_in_report_scope(&mut report.suggestions, frame, self.scope);
         let report_is_silent = report.errors.is_empty() && report.warnings.is_empty();
         report.warnings.extend(scope_caution(report_is_silent));
-        report
-            .warnings
-            .extend(unread_resolution_source_cautions(unread_outside));
+        report.warnings.extend(unread_resolution_source_cautions(
+            unread_outside,
+            config.display(),
+        ));
         report.warnings.extend(config_warnings);
         report.warnings.extend(full_scope_ignored_warning(
             config,
@@ -72,19 +73,21 @@ impl PathReport<'_> {
 /// leaves to be found.
 pub(super) fn unread_resolution_source_cautions(
     unread: impl IntoIterator<Item = ScanError>,
+    display: Display<'_>,
 ) -> Vec<Diagnostic> {
     unread
         .into_iter()
         .map(|failure| Diagnostic {
             code: failure.code(),
-            path: Some(failure.path),
-            line: None,
-            column: None,
             message: format!(
                 "{} — outside the report scope, so a citation declared there \
                  may be reported as unresolved",
-                failure.reason
+                // §FS-errors.2.2.5: a file the reason names, spelled as the report spells.
+                failure.spelled_reason(&display)
             ),
+            path: Some(failure.path),
+            line: None,
+            column: None,
             sites: Vec::new(),
             authority: Vec::new(),
         })

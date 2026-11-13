@@ -92,7 +92,8 @@ fn run(root: &Path, args: &[&str]) -> std::process::Output {
         .expect("run grund")
 }
 
-/// Every reader of the catalog exits `2` on the source's own line; `id` names no remedy.
+/// Every reader of the catalog exits `2` on the source's own line, `id` with the same remedy
+/// (§FS-errors.2.2.5).
 fn assert_incomplete_for_every_reader(fixture: &Fixture, line: &str) {
     let scan = format!(
         "error: {line}; make the path readable, or keep it out of the scan by moving it out of the value home, because exclude does not reach a value source\n"
@@ -104,11 +105,10 @@ fn assert_incomplete_for_every_reader(fixture: &Fixture, line: &str) {
         &["show", "CONST-room-limit"],
         &["refs", "CONST-field-price"],
         &["cover"],
+        &["id", "CONST", "title"],
     ] {
         assert_eq!(fixture.ask(args), (2, scan.clone()), "grund {args:?}");
     }
-    let id = format!("error: {line}\n");
-    assert_eq!(fixture.ask(&["id", "CONST", "title"]), (2, id), "grund id");
 }
 
 /// The control: what the YAML source below is held to.

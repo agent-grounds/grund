@@ -18,11 +18,11 @@ use std::path::Path;
 
 use super::unread_configs::UnreadConfigs;
 use crate::checker::{ScanScope, scope_read_any_file};
-use crate::config::{Config, Display, format_guidance, kind_prefixes, source_scope_name};
-use crate::grammar::id_shape;
-use crate::model::{
-    Catalog, Code, Diagnostic, base_reads_dot, format_path, normalize_path_lexically,
+use crate::config::{
+    Config, Display, format_guidance, kind_prefixes, report_path, source_scope_name,
 };
+use crate::grammar::id_shape;
+use crate::model::{Catalog, Code, Diagnostic, format_path, normalize_path_lexically};
 use crate::scanner::{
     Unread, extension_refusal, handed_outward_link, name_refusal, pruning_pattern,
 };
@@ -358,10 +358,9 @@ pub(super) fn display_scope(display: Display<'_>, path: &Path) -> String {
         return format_path(path);
     }
     let base = display.base();
-    let shown = path
-        .ancestors()
+    // §AR-config.1.7: either way the one spelling, the base `.`.
+    path.ancestors()
         .find(|ancestor| canonical_path(ancestor).is_ok_and(|resolved| resolved == base))
-        .map(|ancestor| format_path(path.strip_prefix(ancestor).unwrap_or(path)))
-        .unwrap_or_else(|| display.path(path));
-    base_reads_dot(shown)
+        .map(|ancestor| report_path(ancestor, path))
+        .unwrap_or_else(|| display.path(path))
 }

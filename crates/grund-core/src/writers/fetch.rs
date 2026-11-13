@@ -5,14 +5,14 @@
 //! `fetch_readback.rs`, the splice `fetch_splice.rs`, and the atomic install it
 //! ends in `fetch_write.rs`.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::fetch_admit::admit;
 use super::fetch_target::{Before, Home, Request, declared_elsewhere, place};
 use super::fetch_write::install;
 use crate::config::{
-    KindConfig, ProjectRecords, RefusedHome, fetch_integration_path, fetch_names_nothing_reason,
-    fetch_runs_nothing, run_warning_findings,
+    Display, KindConfig, ProjectRecords, RefusedHome, fetch_integration_path,
+    fetch_names_nothing_reason, fetch_runs_nothing, run_warning_findings,
 };
 use crate::grammar::parse_id_arg;
 use crate::model::Finding;
@@ -110,6 +110,35 @@ pub(crate) fn fetch_with_diagnostics(raw: &str, path: &Path) -> (Vec<Finding>, a
     (warnings, result)
 }
 
+/// The run's spelling of a reported path, owned past the config it is read from, so every
+/// refusal names a path as `check` names it for the same tree (§FS-cli.3.4, §AR-config.1.7).
+struct Spelling {
+    root: PathBuf,
+    cli_base: PathBuf,
+    from_root: bool,
+    mounted: Vec<PathBuf>,
+}
+
+impl Spelling {
+    fn of(display: Display<'_>) -> Self {
+        Self {
+            root: display.root.to_path_buf(),
+            cli_base: display.cli_base.to_path_buf(),
+            from_root: display.from_root,
+            mounted: display.mounted.to_vec(),
+        }
+    }
+
+    fn display(&self) -> Display<'_> {
+        Display {
+            root: &self.root,
+            cli_base: &self.cli_base,
+            from_root: self.from_root,
+            mounted: &self.mounted,
+        }
+    }
+}
+
 fn fetch_run(
     raw: &str,
     path: &Path,
@@ -128,7 +157,7 @@ fn fetch_run(
         split_qualified_id_arg(raw).map_err(|err| fetch_operational(format!("{err:#}")))?;
     // §FS-imports.writes.answer: the ID query's selection, over the alias path alone.
     // §FS-workspace.1.2: the citation targets `check` scans the selected project with.
-    let (selected, targets) = if let Some(namespace) = namespace.as_deref() {
+    let (selected, targets, spelling) = if let Some(namespace) = namespace.as_deref() {
         let context =
             load_alias_path(ProjectRecords::of(root_config), namespace).map_err(|err| {
                 let message = format!("{err:#}");
@@ -136,14 +165,17 @@ fn fetch_run(
                 fetch_operational(message)
             })?;
         let config = context.render_config();
+        // §FS-imports.paths: the loaded run's spelling, which knows the import's mounted root.
+        let spelling = Spelling::of(config.display());
         *run_warnings = run_warning_findings(config, context.run_warnings.clone());
         let selected = context
             .project_at_alias(namespace)
             .map_err(|err| fetch_operational(format!("{err:#}")))?
             .config
             .clone();
-        (selected, context.citation_targets())
+        (selected, context.citation_targets(), spelling)
     } else {
+        let spelling = Spelling::of(root_config.display());
         *run_warnings = run_warning_findings(&root_config, settled_run_warnings(root_config.run()));
         let selected = ProjectRecords::of(root_config);
         // A member that does not load fails `check` before any scan, so it costs fetch nothing.
@@ -154,7 +186,7 @@ fn fetch_run(
         } else {
             Vec::new()
         };
-        (selected, targets)
+        (selected, targets, spelling)
     };
 
     let (id, section) =
@@ -199,7 +231,7 @@ fn fetch_run(
         config: &selected,
         id: &id,
         local,
-        report_base: &report_base,
+        display: spelling.display(),
         home,
     };
     refuse_home_without_markdown(&request, &before, kind)?;
@@ -313,11 +345,15 @@ fn refuse_home_without_markdown(
             )
         }
         // §FS-fetch.4.2.1: the file's name is the ID's, so the repair is the rule.
-        RefusedHome::Excluded(rule) => format!(
-            "{}, so the scan would not read what fetch writes; {}, and fetch again",
-            rule.reason(),
-            rule.lift()
-        ),
+        RefusedHome::Excluded(rule) => {
+            // §FS-fetch.4.2.1: the ignore file as `check`'s tail names it, outside the root too.
+            let spell = |path: &Path| request.shown(path);
+            format!(
+                "{}, so the scan would not read what fetch writes; {}, and fetch again",
+                rule.reason(&spell),
+                rule.lift(&spell)
+            )
+        }
     };
     Err(fetch_operational(format!(
         "kind `{}` cannot fetch into {shown}: {why}",

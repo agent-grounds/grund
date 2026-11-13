@@ -16,9 +16,7 @@ use super::project::Schema;
 use super::project::file_extension;
 use super::run::Run;
 use crate::grammar::Grammar;
-use crate::model::{
-    Refused, base_reads_dot, format_path, is_hidden, relative_from_base, unread_reason,
-};
+use crate::model::{Refused, format_path, is_hidden, relative_from_base, unread_reason};
 
 /// §AR-checker.1: the frame a stage runs in. `Copy`, so a stage hands it down
 /// as freely as it would a reference.
@@ -156,14 +154,9 @@ impl<'a> Frame<'a> {
         Self { alias, ..self }
     }
 
-    /// `path` as this run's report spells it (§FS-config.3.6.1).
+    /// `path` as this run's report spells it, the report base `.` (§AR-config.1.7).
     pub fn display_path(&self, path: &Path) -> String {
         self.display.path(path)
-    }
-
-    /// `path` as this run's report names a place, the report base `.` (§FS-cli.3.4).
-    pub fn display_location(&self, path: &Path) -> String {
-        self.display.location(path)
     }
 }
 
@@ -177,36 +170,41 @@ impl Display<'_> {
         }
     }
 
-    /// Render a path the way reports show it: relative to the repo root by
-    /// default, or relative to the CLI base directory under
-    /// `--path-base=invocation` or `[output] relative_paths = false`
-    /// (§FS-config.3.6.1 — an in-root target outside that base uses bounded `..`).
-    /// The base itself spells as the empty string, which a message asks of a place
-    /// to tell whether it has a name in the report (§FS-config.3.6); a report that
-    /// names the place reads [`Self::location`] instead.
-    pub fn path(&self, path: &Path) -> String {
-        let base = self.base();
-        let relative = path
-            .strip_prefix(base)
-            .map(Path::to_path_buf)
-            .unwrap_or_else(|_| {
-                // §FS-imports.paths: a mounted file is the second exception to
-                // "never above the report base" (§FS-config.3.6).
-                if (!self.from_root && path.starts_with(self.root))
-                    || self.mounted.iter().any(|root| path.starts_with(root))
-                {
-                    relative_from_base(base, path)
-                } else {
-                    path.to_path_buf()
-                }
-            });
-        format_path(&relative)
+    /// Whether `path` is the report base itself, asked of the path and never of its
+    /// spelling (§AR-config.1.7): what a message that leaves the base unnamed asks.
+    pub fn is_base(&self, path: &Path) -> bool {
+        path == self.base()
     }
 
-    /// `path` as a report names a place: [`Self::path`], with the report base itself
-    /// reading `.` rather than nothing (§FS-cli.3.4), so a finding or a scan failure
-    /// at that directory still says which one it means.
-    pub fn location(&self, path: &Path) -> String {
-        base_reads_dot(self.path(path))
+    /// The one spelling of a path a report names (§AR-config.1.7): relative to the repo
+    /// root by default, or relative to the CLI base directory under
+    /// `--path-base=invocation` or `[output] relative_paths = false` (§FS-config.3.6.1 —
+    /// an in-root target outside that base uses bounded `..`), and the report base
+    /// itself `.`, never the empty string (§FS-cli.3.4).
+    pub fn path(&self, path: &Path) -> String {
+        let base = self.base();
+        // §FS-imports.paths: a mounted file is the second exception to "never above the
+        // report base" (§FS-config.3.6).
+        if path.starts_with(base)
+            || (!self.from_root && path.starts_with(self.root))
+            || self.mounted.iter().any(|root| path.starts_with(root))
+        {
+            report_path(base, path)
+        } else {
+            format_path(path)
+        }
+    }
+}
+
+/// `path` as a report names it from `base`, with `..` for a target outside it and `base`
+/// itself `.`: the base-relative step of the one spelling (§AR-config.1.7, §FS-cli.3.4).
+/// [`Display::path`] gives a run it, absolute outside the loaded root; a reader that holds only
+/// a base asks it directly, for a path inside that base or one its point spells with a climb.
+pub(crate) fn report_path(base: &Path, path: &Path) -> String {
+    let spelled = format_path(&relative_from_base(base, path));
+    if spelled.is_empty() {
+        ".".to_owned()
+    } else {
+        spelled
     }
 }
