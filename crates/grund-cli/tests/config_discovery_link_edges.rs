@@ -141,9 +141,10 @@ fn a_looping_link_given_as_the_path_starts_at_its_directory() {
 }
 
 /// §FS-scan.scope.links.owed.refused, §FS-cli.3.4: a link given as the path whose target
-/// lookup is refused fails at the link, and the invocation base is that path, spelled `.`.
+/// lookup is refused fails at the link, and the invocation base is the working directory,
+/// because a refused lookup cannot tell a file from a directory, so the link is `docs/x`.
 #[test]
-fn a_refused_link_given_as_the_path_is_spelled_from_itself() {
+fn a_refused_link_given_as_the_path_is_spelled_from_the_working_directory() {
     let mut tree = Tree::project("refused-path");
     tree.link("p/docs/x", "../.r/sub");
     if !tree.bar("p/.r") {
@@ -152,7 +153,7 @@ fn a_refused_link_given_as_the_path_is_spelled_from_itself() {
     tree.run("p", &["check", "docs/x", "--path-base=invocation"])
         .expect(
             2,
-            "error: .: unreadable symlink: permission denied",
+            "error: docs/x: unreadable symlink: permission denied",
             "check",
         );
 }

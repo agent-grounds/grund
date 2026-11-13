@@ -8,7 +8,7 @@
 //! config work every walking command shares, not something `check` owns
 //! (§AR-core-module-layout.1).
 
-use crate::sources::canonical_path;
+use crate::sources::{canonical_path, lookup_refused, path_lookup};
 use anyhow::Result;
 use std::path::{Component, Path, PathBuf};
 
@@ -136,7 +136,15 @@ fn config_for_member_scope(mut config: Config, invocation: &Invocation) -> Resul
         return Ok(config);
     }
     let start = discovery_start(&invocation.path);
-    let scope = canonical_path(&start).unwrap_or_else(|_| start.clone());
+    let scope = match canonical_path(&start) {
+        Ok(scope) => scope,
+        // §FS-scan.scope.homes.lookup.path: a path whose lookup is refused is no member's to
+        // read, so the run keeps the config that holds it and fails at the path as given.
+        Err(_) if path_lookup(&start).is_err_and(|error| lookup_refused(&error)) => {
+            return Ok(config);
+        }
+        Err(_) => start.clone(),
+    };
     if scope == config.root {
         return Ok(config);
     }

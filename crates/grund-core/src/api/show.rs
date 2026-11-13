@@ -20,7 +20,8 @@ use crate::queries::{
     show_declaration_with_home,
 };
 use crate::resolver::{
-    WorkspaceContext, WorkspaceProject, load_reported_workspace_context, with_member_id_candidates,
+    WorkspaceContext, WorkspaceProject, load_reported_workspace_context, scan_failure_refusal,
+    stopping_failure, with_member_id_candidates,
 };
 
 use super::report::context_run_warnings;
@@ -192,22 +193,9 @@ impl<'c, 'a> ShowSource<'c, 'a> {
                 }
             })?,
         };
-        // §FS-workspace.8.7.3: rendered against the run's config, not the target
-        // project's — the same spelling `check` uses for the same tree, the base `.`
-        // (§FS-cli.3.4).
-        if let Some(first) = project.scan_errors.first() {
-            // §FS-distribution.3.3.2: scan failures are located filesystem outcomes.
-            let path = display_location(context.render_config(), &first.path);
-            let mut failure = crate::model::OperationDiagnostic::new(
-                "filesystem",
-                first.code().as_str(),
-                format!("{path}: {}", crate::scanner::scan_error_message(first)),
-            );
-            failure.path = Some(path);
-            failure.details = serde_json::json!({"scan_errors": project.scan_errors.iter()
-                .map(|e| serde_json::json!({"path": display_location(context.render_config(),&e.path),"message":crate::scanner::scan_error_message(e),"code":e.code().as_str()}))
-                .collect::<Vec<_>>()});
-            return Err(failure.into());
+        // §AR-scanner.1.6: the run's own path, unread, fails whichever project the ID names.
+        if let Some((first, all)) = stopping_failure(&context.projects, [project]) {
+            return Err(scan_failure_refusal(context.render_config(), first, all).into());
         }
         let config = &project.config;
         let (id, inline_section) =

@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 
 use super::legacy_promotion::promote_qualified_legacy_citations;
 use super::mount::{MountLoader, Mounted, mark_canonical};
-use super::project_scan::load_workspace_project;
+use super::project_scan::{load_workspace_project, report_unwalked_path, scan_failure_refusal};
 use super::shorthand::resolve_qualified_shorthand_citations;
 use super::unread_block::settled_run_warnings;
 use crate::config::{Invocation, ProjectRecords, Selection};
@@ -332,7 +332,13 @@ pub(crate) fn load_resolved_workspace_context(
     // §FS-workspace.8.9: the current project is the root iff
     // `include_root = true` (the helper always emits the root first).
     let current = root_config.project().workspace.include_root.then_some(0);
-    let projects = load_workspace_projects(&mut root_config)?;
+    let mut projects = load_workspace_projects(&mut root_config)?;
+    // §FS-scan.scope.homes.lookup.path: the path bounds the report, and no walk starts at it;
+    // §AR-scanner.1.6: a failure no project holds is the run's, refused as `show` refuses one.
+    if let Some(failure) = report_unwalked_path(&mut projects, &root_config, path, path_provided) {
+        let all = std::slice::from_ref(&failure);
+        return Err(scan_failure_refusal(&root_config, &failure, all).into());
+    }
     // Cloned *after* the expansion, not before: what the walk learns about the
     // tree is what the report is rendered from (§FS-check.4.9).
     let render_config = root_config.clone();

@@ -5,12 +5,12 @@
 use anyhow::{Result, anyhow};
 use std::path::{Path, PathBuf};
 
+use super::scan_error::{FailureRoots, Place, ScanError, failure_place};
 use super::walk_boundaries::is_directory_symlink;
+use super::walk_errors::root_lookup_failure;
 use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots};
 use crate::model::normalize_path_lexically;
-use crate::sources::{
-    Resolution, canonical_path, lookup_refused, path_is_symlink, path_lookup, path_resolution,
-};
+use crate::sources::{canonical_path, path_lookup};
 
 /// The directories (or single file) the walk starts from, and so which files a run
 /// reads (§FS-scan.scope): `[scan] include`
@@ -61,6 +61,40 @@ pub(crate) fn scan_roots_for(
     Ok(resolve_scan_roots(schema, frame, scope, explicit_scope, full, widen)?.0)
 }
 
+/// The scan failure at a `<path>` whose lookup failed for a reason other than absence, for a run
+/// no walk of which starts at the path (§FS-scan.scope.homes.lookup.path). A workspace run walks
+/// each project whole and narrows its report to the path afterwards (§FS-check.1.3.6.1), so
+/// nothing would say the path went unread, and a run over a tree it never read would pass. It is
+/// the failure the walk raises at such a root (§AR-scanner.1.9), placed `passed`
+/// (§FS-check.2.4.3), so both routes print one line. `None` for no path, the config root, a path
+/// the lookup answers, and one a failure in `walked` already sits at, as a link's does.
+pub(crate) fn unwalked_path_failure<'a>(
+    schema: &Schema,
+    frame: Frame<'_>,
+    path: &Path,
+    path_provided: bool,
+    walked: impl IntoIterator<Item = &'a ScanError>,
+) -> Option<ScanError> {
+    if !path_provided {
+        return None;
+    }
+    let (roots, whole) = resolve_scan_roots(schema, frame, Some(path), true, false, false).ok()?;
+    let root = roots.first().filter(|_| !whole)?.clone();
+    let error = path_lookup(&root).err()?;
+    let at = FailureRoots::new(roots, whole, true, frame.root());
+    if walked
+        .into_iter()
+        .any(|failure| failure_place(&failure.path, &at) == Place::Passed)
+    {
+        return None;
+    }
+    Some(
+        root_lookup_failure(&root, error, frame.version)
+            .0
+            .placed(&at),
+    )
+}
+
 /// `scan_roots_for`, and whether the scope it resolved is the config root.
 fn resolve_scan_roots(
     schema: &Schema,
@@ -72,13 +106,10 @@ fn resolve_scan_roots(
 ) -> Result<(Vec<PathBuf>, bool)> {
     if explicit_scope {
         let scope = scope.unwrap_or(Path::new("."));
-        // §FS-scan.scope.links.unresolvable.named: a looping link exists; the walk reports it.
-        // §FS-scan.scope.links.owed.refused: so does a link whose target lookup is refused, at
-        // the link; only a lookup that says nothing is there is absent.
-        let absent = matches!(path_resolution(scope), Resolution::Unresolved(_))
-            && !(path_lookup(scope).is_err_and(|error| lookup_refused(&error))
-                && path_is_symlink(scope));
-        if absent {
+        // §FS-scan.scope.homes.lookup.path: absent only when the lookup says so, as the walk
+        // asks of every root; a refused path, link or not (§FS-scan.scope.links.owed.refused),
+        // and a looping link (§FS-scan.scope.links.unresolvable.named) are the walk's to report.
+        if matches!(path_lookup(scope), Ok(false)) {
             return Err(anyhow!("path does not exist: {}", scope.display()));
         }
         let lexical_scope = if scope.is_absolute() {

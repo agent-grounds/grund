@@ -25,7 +25,9 @@ use crate::checker::{
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
 use crate::model::{CheckReport, Diagnostic, Finding, Switch};
-use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
+use crate::resolver::{
+    WorkspaceCheckTarget, load_workspace_projects, report_unwalked_path, settled_run_warnings,
+};
 use crate::scanner::{ScanError, scan_error_message, scan_tree};
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, arm_imports,
@@ -311,6 +313,14 @@ fn run_workspace_check(
     // §FS-check.3.5: `--require-grounding` reaches every member's run through the
     // invocation it was built from (`Run::members`), as `--full` does.
     let mut projects = load_workspace_projects(&mut root_config)?;
+    // §AR-scanner.1.6: each project is walked whole, never from the path; a failure there that
+    // no project holds is the run's own, reported below with the projects' failures.
+    let unheld = report_unwalked_path(
+        &mut projects,
+        &root_config,
+        narrowing.path,
+        narrowing.path_provided,
+    );
     // §FS-check.1.3.8: `include` is a per-project statement, so each project's
     // walk is widened past its own and tiered against its own configured scope.
     let scopes = projects
@@ -450,6 +460,8 @@ fn run_workspace_check(
             ));
         }
     }
+    // §AR-scanner.1.6: at the path, inside the report scope, so no partition is owed.
+    had_scan_errors |= append_scan_errors(&mut report, unheld);
     // §FS-workspace.2.2, §FS-check.4.9: the caution and the announcements — see
     // this function's docs.
     report.warnings.extend(absent_only_workspace_caution(
