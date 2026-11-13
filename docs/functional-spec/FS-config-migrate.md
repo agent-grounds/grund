@@ -352,10 +352,26 @@ The candidate is loaded through the v2 reader, the path a file on disk goes thro
 
 `grund check --suggestions` runs twice in the same process, on the same root, members and invocation: once with the file as read, once with the candidate. It compares every finding's code, channel, path, line, column and message, the run warnings, the projects checked, and the exit status. Each finding is one line in its run, as many times as `check` would print it: a run warning `check` prints once is compared once, however many places the run carries it, so a candidate that adds one finding adds one `+ ` line. It ignores only:
 
-- a finding located in the config itself, whose line is mapped through the key map before comparing; a finding with no mapped line is a difference;
+- a finding located in the config itself, whose line is mapped through the key map before comparing, as is every `<config>:<line>` its message names; a finding with no mapped line is a difference ([§FS-config-migrate.5.2.1](FS-config-migrate.md#521-a-candidate-line-with-no-version-1-line));
 - the config-table names inside messages, such as `[scan] exclude` against `[schema.sources] exclude`: both runs are spelled as v1;
 - the `config-version-1` caution ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)), which the run on the file as read carries and the candidate's run never does, so it is dropped from both before comparing;
 - an `agents-init` finding about a managed block's text outside the block version and the five generated sections: [§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance) passes that difference on purpose, and the candidate's run reports it because `check` compares the whole block ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). Kept, it would refuse every version-1 migration, whose citation scheme paragraph always changes.
+
+#### 5.2.1 A candidate line with no version-1 line
+
+The key map holds the lines of the keys and headers the version-1 file authored. A candidate line it does not hold, such as a default written out ([§FS-config-migrate.3.3](FS-config-migrate.md#33-defaults-are-written-out)) or a built-in row a file with no `[[kinds]]` gets, has no version-1 line to move to. The comparison prints such a line as the candidate's own line, the one `grund check` names once the candidate is written, marked as the candidate's: `the candidate's <config>:<line>`. The same spelling serves both places a config line appears, inside a message and as the location of a finding in the config, where the column follows it as it follows any line: `the candidate's <config>:<line>:<column>`. A finding in the config with no line keeps `-`, because there is no line to move.
+
+The mark is what keeps it a difference. It reads as no version-1 line and compares equal to none, even where version 1's run names the same number for the same finding. Nothing else is printed in its place: a line that neither file has, such as an unset sentinel, is never printed.
+
+A version-1 file with no `[[kinds]]` table, whose `src/A.java` cites the undeclared `FS-typo`, previews as:
+
+```text
+differs: grund check --suggestions on this tree
+- error error dangling src/A.java:1:4 unknown reference FS-typo
++ error error dangling src/A.java:1:4 unknown reference FS-typo; no place of kind FS exists: docs/functional-spec (the candidate's grund.toml:159)
+```
+
+Line 159 is the `folders` line of the built-in `FS` row the candidate writes out ([§FS-check.3.1.4](FS-check.md#314-a-kind-none-of-whose-places-exists)), which version 1 never spelled.
 
 ### 5.3 Guidance
 
@@ -384,7 +400,7 @@ The Project map row the complement gains once its places are listed is a `note:`
 
 ### 5.4 The result, and a difference
 
-When both gates pass the complete report says `compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after`. Compact success omits that narration, but runs the same gates. A difference always prints `differs: the records` or `differs: grund check --suggestions on this tree`, then each differing line prefixed `- ` for version 1 and `+ ` for the candidate, and refuses with exit `1` and empty stdout, with or without `--full`.
+When both gates pass the complete report says `compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after`. Compact success omits that narration, but runs the same gates. A difference always prints `differs: the records` or `differs: grund check --suggestions on this tree`, then each differing line prefixed `- ` for version 1 and `+ ` for the candidate, and refuses with exit `1` and empty stdout, with or without `--full`. A config line on a `+ ` line is the version-1 line its key came from, or the candidate's own line marked as the candidate's where there is none ([§FS-config-migrate.5.2.1](FS-config-migrate.md#521-a-candidate-line-with-no-version-1-line)).
 
 ## 6. The write
 

@@ -413,3 +413,115 @@ fn report_gate_compares_a_run_warning_once() {
         .collect();
     assert_eq!(unread.len(), 1, "one finding, one line: {lines:#?}");
 }
+
+/// #1387's tree: a v1 file with no `[[kinds]]`, so the candidate writes out the
+/// built-in `FS` row, whose folder does not exist, and a citer of an undeclared
+/// `FS` ID, whose dangling message names that row's `folders` line.
+fn unwritten_place(name: &str) -> PathBuf {
+    tree(
+        name,
+        "grund_config_version = 1\n[id]\nformat = \"{kind}-{slug}\"\nnamed_sections = true\n\
+         [scan]\ninclude = [\"src\"]\n",
+        &[("src/A.java", "// \u{a7}FS-typo\nclass A {}\n")],
+    )
+}
+
+/// The 1-based number of the first line of `text` that is `wanted`, below the
+/// line that is `under`.
+fn line_under(text: &str, under: &str, wanted: &str) -> usize {
+    let lines: Vec<&str> = text.lines().collect();
+    let header = lines.iter().position(|line| *line == under);
+    let header = header.unwrap_or_else(|| panic!("no `{under}` in:\n{text}"));
+    let below = lines[header..].iter().position(|line| *line == wanted);
+    header + below.unwrap_or_else(|| panic!("no `{wanted}` under `{under}` in:\n{text}")) + 1
+}
+
+/// §FS-config-migrate.5.2.1: a `<config>:<line>` inside a message, where the key
+/// map holds no version-1 line for it, prints as the candidate's own line marked
+/// as the candidate's, never as a line neither file has.
+#[test]
+#[ignore = "red until #1387 prints the candidate's own line; implement removes this"]
+fn report_gate_names_an_unmapped_line_in_a_message_as_the_candidates() {
+    let root = unwritten_place("unmapped-message");
+    let (located, v1, candidate, map) = prepared(&root);
+    let folders = line_under(
+        &candidate,
+        "[schema.kinds.FS]",
+        "folders = [\"docs/functional-spec\"]",
+    );
+    assert!(
+        map.iter().all(|(v2, _)| *v2 != folders),
+        "the built-in row is written out, not mapped: {map:?}"
+    );
+    let lines = report_gate(&located, &v1, &candidate, &map, "grund.toml");
+    let marked = format!("(the candidate's grund.toml:{folders})");
+    assert!(
+        lines
+            .iter()
+            .any(|line| line.starts_with("+ error error dangling ") && line.ends_with(&marked)),
+        "{marked}: {lines:#?}"
+    );
+    let sentinel = usize::MAX.to_string();
+    assert!(
+        !lines.iter().any(|line| line.contains(&sentinel)),
+        "{lines:#?}"
+    );
+}
+
+/// §FS-config-migrate.5.2.1: a finding located at a candidate line the key map
+/// does not hold prints at the candidate's own line, marked, in its location and
+/// in the breadcrumb its message carries, and stays a difference where the run
+/// as read names the same line number for the same finding.
+#[test]
+#[ignore = "red until #1387 prints the candidate's own line; implement removes this"]
+fn report_gate_names_an_unmapped_config_finding_at_the_candidates_line() {
+    // `include = ["."]` makes version 1 name the scope version 2 names, `.`.
+    let body = format!(
+        "[workspace]\nmembers = [\"sub\"]\ninclude_root = false\n{FS}[scan]\ninclude = [\".\"]\n"
+    );
+    let root = tree(
+        "unmapped-location",
+        &v1_config(&body),
+        &[
+            ("docs/FS-a.md", "# FS-a: A\n\nText.\n"),
+            ("sub/grund.toml", "grund_config_version = 2\n"),
+        ],
+    );
+    let located = Located {
+        file: root.join("grund.toml"),
+        root: root.clone(),
+        config: "grund.toml".into(),
+    };
+    let Prepared::Translated { v1, .. } =
+        translate(&located, false, false, &|| true, &|_| Ok(Vec::new()))
+            .expect("the v1 file reads")
+    else {
+        panic!("read as version 2");
+    };
+    // The same key on the same line 4, with no key map to move it by.
+    let candidate =
+        "grund_config_version = 2\n[workspace]\nmembers = [\"sub\"]\ninclude_root = false\n";
+    let lines = report_gate(&located, &v1, candidate, &[], "grund.toml");
+    let unread = |mark: &str| {
+        let at: Vec<&String> = lines
+            .iter()
+            .filter(|line| {
+                line.starts_with(&format!(
+                    "{mark} run-warning warning unread-workspace-block "
+                ))
+            })
+            .collect();
+        assert_eq!(at.len(), 1, "one `{mark}` unread-block line: {lines:#?}");
+        at[0][mark.len()..].to_string()
+    };
+    let before = unread("-");
+    assert!(
+        before.contains(" grund.toml:4:- grund.toml:4: no project scans `.`,"),
+        "{lines:#?}"
+    );
+    assert_eq!(
+        unread("+"),
+        before.replace("grund.toml:4", "the candidate's grund.toml:4"),
+        "the candidate's line, marked, in the location and the message: {lines:#?}"
+    );
+}
