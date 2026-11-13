@@ -1,10 +1,12 @@
 //! Black-box: an explicit path that is itself a directory link out of the project root is not
 //! followed (§FS-scan.scope.links), and the empty-scan warning says so rather than blaming the
 //! extensions it never consulted (§FS-check.2.2.2.6). A real directory whose walk refused such a
-//! link below it names that link the same way (§FS-check.2.2.2.6.1). The controls hold what must
-//! not move: a file below the link is read, a link inside the project is walked, an exclude
-//! pattern is named ahead of an outward link, and a real directory with no file grund reads and
-//! no outward link below it keeps the extensions wording (§FS-check.2.2.2.2). An outward link
+//! link below it names that link the same way (§FS-check.2.2.2.6.1), and so does a run over the
+//! project's whole root, given no path from anywhere in it or handed the root. The controls hold
+//! what must not move: a file below the link is read, a link inside the project is walked, an
+//! exclude pattern is named ahead of an outward link, a link the run's walk never reached and an
+//! E2E case the manifest pass reads are not named, and a real directory with no file grund reads
+//! and no outward link below it keeps the extensions wording (§FS-check.2.2.2.2). An outward link
 //! whose target refuses the lookup takes the same warning; git carries no mode, so that case
 //! builds its own tree and skips where mode 000 does not bar the user (root).
 #![cfg(unix)]
@@ -29,13 +31,18 @@ struct Tree {
 }
 
 impl Tree {
-    fn new(test: &str) -> Self {
+    /// A tree with nothing in it yet.
+    fn empty(test: &str) -> Self {
         let root = std::env::temp_dir().join(format!("grund-1376-{test}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
-        let tree = Self {
+        Self {
             root,
             locked: Vec::new(),
-        };
+        }
+    }
+
+    fn new(test: &str) -> Self {
+        let tree = Self::empty(test);
         tree.write(
             "p/grund.toml",
             "grund_config_version = 2\nproject_name = \"p\"\n\n[schema.kinds.FS]\n\
@@ -73,6 +80,22 @@ impl Tree {
         let tree = Self::new(test);
         tree.write("outside/sub/s.md", "# Notes\n\nSee \u{a7}FS-nope.\n");
         tree.link("p/real/subx", "../../outside/sub");
+        tree
+    }
+
+    /// A version-2 project `p` with no kinds, holding only `bin/tool.txt` and `real/subx`, a link
+    /// out of the project to the `.md` [`Tree::with_link_below`] links to: a root a run over the
+    /// whole project reads nothing under, wherever in it the run starts.
+    fn lone(test: &str) -> Self {
+        let tree = Self::empty(test);
+        tree.write(
+            "p/grund.toml",
+            "grund_config_version = 2\nproject_name = \"p\"\n",
+        );
+        tree.write("p/bin/tool.txt", "a tool\n");
+        tree.write("outside/sub/s.md", "# Notes\n\nSee \u{a7}FS-nope.\n");
+        tree.link("p/real/subx", "../../outside/sub");
+        git_init(&tree.root.join("p"));
         tree
     }
 
@@ -432,6 +455,84 @@ fn an_inward_link_below_the_path_keeps_the_extensions_wording() {
     tree.link("p/real/inbin", "../bin");
     tree.grund(&["check", "real"])
         .assert_extensions_warning("real");
+}
+
+/// §FS-check.2.2.2.6.1, §FS-scan.path.none: a run given no path walks the project's root, so the
+/// link is spelled from the root as the report spells a path, not from the directory it started in.
+#[test]
+fn a_run_with_no_path_names_the_link_below_the_project_root() {
+    let tree = Tree::lone("below-no-path");
+    tree.grund(&["check"])
+        .assert_link_below_warning(".", "real/subx");
+}
+
+/// §FS-check.2.2.2.6.1, §FS-scan.path.none: from a directory beside the link, or the one holding
+/// it, a run given no path walks the same root and names the same link, spelled the same way.
+#[test]
+fn a_run_with_no_path_from_below_the_root_names_the_same_link() {
+    let tree = Tree::lone("below-no-path-sub");
+    for dir in ["p/bin", "p/real"] {
+        tree.grund_in(dir, &["check"])
+            .assert_link_below_warning(".", "real/subx");
+    }
+}
+
+/// §FS-check.2.2.2.6.1: handed the root, the link is spelled from the path as written: `.` names
+/// `./real/subx`, and the root's absolute path, spelled from the report base, names `real/subx`.
+#[test]
+fn a_run_handed_the_project_root_spells_the_link_from_the_path() {
+    let tree = Tree::lone("below-root-path");
+    tree.grund(&["check", "."])
+        .assert_link_below_warning(".", "./real/subx");
+    let root = tree.root.join("p");
+    tree.grund(&["check", root.to_str().expect("a UTF-8 path")])
+        .assert_link_below_warning(".", "real/subx");
+}
+
+/// §FS-check.2.2.2.6.1, §FS-scan.path.none: the run's walk pruned `gen` and the hidden `.h`
+/// before reaching the link in each, so no run names it, and a run given no path says from either
+/// one what it says from the root.
+#[test]
+fn a_run_with_no_path_names_no_link_its_walk_never_reached() {
+    let tree = Tree::empty("below-no-path-pruned");
+    tree.write(
+        "p/grund.toml",
+        "grund_config_version = 2\nproject_name = \"p\"\n\n[schema.sources]\nexclude = [\"gen\"]\n",
+    );
+    tree.write("outside/sub/s.md", "# Notes\n\nSee \u{a7}FS-nope.\n");
+    tree.link("p/gen/subx", "../../outside/sub");
+    tree.link("p/.h/subx", "../../outside/sub");
+    git_init(&tree.root.join("p"));
+    let from_root = tree.grund(&["check"]);
+    from_root.assert_extensions_warning(".");
+    for dir in ["p/gen", "p/.h"] {
+        let run = tree.grund_in(dir, &["check"]);
+        assert_eq!(
+            (run.code, &run.stdout, &run.stderr),
+            (from_root.code, &from_root.stdout, &from_root.stderr),
+            "{}\nfrom the root:\n{}",
+            run.report(),
+            from_root.report()
+        );
+    }
+}
+
+/// The control: the manifest pass reads an E2E case that links out of the project, so the walk
+/// refused nothing there that went unread, and the warning keeps the extensions wording
+/// (§FS-check.2.2.2.6.1, §FS-declarations.e2e-case.excluded).
+#[test]
+fn an_e2e_case_that_links_out_of_the_project_is_read_so_it_is_not_named() {
+    let tree = Tree::empty("below-e2e-case");
+    tree.write(
+        "p/grund.toml",
+        "grund_config_version = 2\nproject_name = \"p\"\n\n[schema.kinds.E2E]\n\
+         folders = [\"tests/e2e\"]\nindex = false\n",
+    );
+    tree.write("outside/case/expected.exit", "0\n");
+    tree.link("p/tests/e2e/login", "../../../outside/case");
+    git_init(&tree.root.join("p"));
+    tree.grund(&["check", "tests/e2e"])
+        .assert_extensions_warning("tests/e2e");
 }
 
 /// Makes `dir` a git repository, as `Tree::new` makes `p` one.

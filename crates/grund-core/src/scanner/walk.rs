@@ -294,7 +294,8 @@ impl WalkDirFilter {
     ///
     /// Where the empty-scan probe asks for them, `met` also records each directory link the gate
     /// refuses as out of the project root, as the gate's own verdict, so the warning names the
-    /// link this walk pruned and judges none again (§FS-check.2.2.2.6.1).
+    /// link this walk pruned and judges none again (§FS-check.2.2.2.6.1). A case that links out of
+    /// the project is not one of them: the manifest pass reads it, so nothing went unread there.
     fn keep(&self, entry: &ignore::DirEntry) -> bool {
         let is_dir = entry.file_type().is_some_and(is_directory);
         let refusal = self.refusal(entry.path(), entry.depth(), is_dir, entry.path_is_symlink());
@@ -303,15 +304,16 @@ impl WalkDirFilter {
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
                 .push(entry.path().to_path_buf());
         };
+        let case = || is_dir && refusal.is_some_and(|reason| self.met_case(entry.path(), reason));
         if let Some(met) = &self.met.cases
-            && is_dir
-            && refusal.is_some_and(|reason| self.met_case(entry.path(), reason))
+            && case()
         {
             record(met);
         }
         // §FS-check.2.2.2.6.1: the gate refuses a directory link before anything below it.
         if let Some(met) = &self.met.outward_links
             && refusal == Some(Unread::OutsideProject)
+            && !case()
         {
             record(met);
         }

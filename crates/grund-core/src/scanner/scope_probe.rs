@@ -169,25 +169,29 @@ pub(crate) fn handed_outward_link(schema: &Schema, frame: Frame<'_>, path: &Path
 }
 
 /// §FS-check.2.2.2.6.1: the directory link out of the project root that the walk refused below the
-/// handed `path`, spelled from the path down (`subx`, `a/subx`), and the first in path order where
-/// it refused several (§FS-errors.4.1): the walk meets a directory's entries in the order the disk
-/// lists them, which two filesystems need not share. `None` where it refused none.
+/// run's scope, spelled from that scope down (`subx`, `a/subx`): from the handed `path`, or from
+/// the project root where the scope is the root. The first in path order where it refused several
+/// (§FS-errors.4.1): the walk meets a directory's entries in the order the disk lists them, which
+/// two filesystems need not share. `None` where it refused none.
 ///
-/// It walks what the scan walked under the path, the project's roots for a path that resolves to
-/// the project root and the path itself for any other (`scan_roots`), with the walk's own builder
-/// and filter. The filter records each link as its gate prunes it, so the verdict is the walk's
-/// and not a second outward test, and no link is followed. The exclude patterns, the ignore files
-/// and the hidden rule keep out what they kept out of the scan, so a link the scan never reached
-/// is not named. A link whose target another project of the run or an import owns is pruned as
-/// that project's (§FS-workspace.6), not as out of the project root, so it is not named either.
-/// Like `pruning_pattern`, asked only of a scan that read nothing, so no run that read a file
-/// walks twice (§GOAL-fast-feedback).
+/// It walks what the scan walked: the project's roots for a run given no path, whatever directory
+/// it started in, or a path that resolves to the project root, and the path itself for any other.
+/// `scan_roots` answers that from `path_provided`, as it answers the reporting walk, so a run
+/// given no path is never read as one handed its working directory. It walks with the walk's own
+/// builder and filter. The filter records each link as its gate prunes it, so the verdict is the
+/// walk's and not a second outward test, and no link is followed. The exclude patterns, the
+/// ignore files and the hidden rule keep out what they kept out of the scan, so a link the scan
+/// never reached is not named. A link whose target another project of the run or an import owns
+/// is pruned as that project's (§FS-workspace.6), not as out of the project root, so it is not
+/// named either. Like `pruning_pattern`, asked only of a scan that read nothing, so no run that
+/// read a file walks twice (§GOAL-fast-feedback).
 pub(crate) fn outward_link_below(
     schema: &Schema,
     frame: Frame<'_>,
     path: &Path,
+    path_provided: bool,
 ) -> Option<PathBuf> {
-    let (roots, whole) = scan_roots(schema, frame, Some(path), true).ok()?;
+    let (roots, whole) = scan_roots(schema, frame, Some(path), path_provided).ok()?;
     // §FS-check.1.3.6.1: a widened walk starts at the path, so the path is the first root.
     let (roots, base) = if whole {
         (roots.as_slice(), frame.root())
