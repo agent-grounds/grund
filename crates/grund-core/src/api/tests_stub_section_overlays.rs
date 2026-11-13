@@ -2,6 +2,7 @@
 //! (§FS-check.3.2.1, §FS-lsp.1.1): with a target outside the scan open in an
 //! editor, the snapshot reports the missing sections the saved text gives, as it
 //! reads the overlay for a stub's health (§FS-declarations.stubs.target.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::lsp_snapshot;
 use crate::model::format_path;
@@ -24,8 +25,9 @@ const MISSING: &str = "docs/uses.md:1 missing section FS-second.1";
 
 /// A stub in `docs/` pointing at `source.rs`, which holds `source` on disk and lies
 /// outside `[scan] include`, and a citation of its section `1`.
-fn stub_repo(name: &str, source: &str) -> PathBuf {
-    let root = std::fs::canonicalize(test_root(name)).expect("canonical test root");
+fn stub_repo(name: &str, source: &str) -> crate::testing::TemporaryRoot {
+    let root = test_root(name);
+    let root = root.physical();
     write(
         &root.join("grund.toml"),
         "grund_config_version = 1\n[reference]\nstrict = true\nrequire_grounding = false\n\

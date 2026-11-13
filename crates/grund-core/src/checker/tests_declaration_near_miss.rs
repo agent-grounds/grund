@@ -1,14 +1,14 @@
 //! Test module: the declaration near-miss error (§FS-declarations.checks.declaration-near-miss) — a heading
 //! that opens like a declaration and parses as none.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
-use std::path::PathBuf;
 
 use crate::api::{FmtOpts, check, format_references, show};
 use crate::queries::{ShowMode, ShowOpts};
 use crate::testing::{check_run, codes, findings, only, test_root, write};
 
-fn near_miss_repo(name: &str, heading: &str) -> PathBuf {
+fn near_miss_repo(name: &str, heading: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

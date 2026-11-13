@@ -3,8 +3,9 @@
 //! gives each path one reading, the walk that stops at the first unequal
 //! component, and the bare citation of a declaration that is not a value, which
 //! stays prose (§FS-values.3.1.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::model::{
     authored_component, first_unequal_component, joined_value_components, root_literal_parts,
@@ -15,7 +16,7 @@ use crate::testing::{check_run, test_root, write};
 /// whole value, a marked root and a chapter root, each with a component that
 /// carries a no-break space — plus an ordinary `NOTE` declaration. `uses` lands
 /// at line 9 of `docs/offer.md`.
-fn roots_repo(name: &str, uses: &str) -> PathBuf {
+fn roots_repo(name: &str, uses: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -105,7 +106,6 @@ fn a_root_literal_agrees_under_every_authority() {
          `3.0 per\u{a0}day` (§DOC-offer.values.rate)\n",
     );
     assert_eq!(errors(&root), Vec::<String>::new());
-    let _ = std::fs::remove_dir_all(root);
 }
 
 /// The walk compares in declared order and stops at the first inequality, so a
@@ -137,7 +137,6 @@ fn the_walk_stops_at_the_first_unequal_component() {
                 .to_string(),
         ]
     );
-    let _ = std::fs::remove_dir_all(root);
 }
 
 /// What an equal-count root-aimed mismatch prints: the root's message alone, then the
@@ -186,7 +185,6 @@ fn a_root_aimed_mismatch_names_the_root_the_literal_and_the_component() {
             ),
         ]
     );
-    let _ = std::fs::remove_dir_all(root);
 }
 
 /// No path reads both ways over valid authority (§FS-values.5.1). Where a path
@@ -236,7 +234,6 @@ fn no_path_reads_both_ways_over_valid_authority() {
             "the overlap is the declaration's error: {errors:?}"
         );
     }
-    let _ = std::fs::remove_dir_all(root);
 }
 
 /// A delimited form aimed at a declaration that is not a value — an ordinary
@@ -253,7 +250,6 @@ fn a_delimited_citation_of_an_ordinary_declaration_stays_prose() {
          `999` (§DOC-offer)\n",
     );
     assert_eq!(errors(&root), Vec::<String>::new());
-    let _ = std::fs::remove_dir_all(root);
 }
 
 /// A duplicated declaration owns the site of every root it declares, so a chapter
@@ -292,5 +288,4 @@ fn a_root_bound_whole_over_a_duplicate_reports_only_the_duplicate() {
             "duplicate: duplicate declaration of CONST-dupc (also declared at values/dupc-b.md:1)",
         ]
     );
-    let _ = std::fs::remove_dir_all(root);
 }

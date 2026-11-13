@@ -4,8 +4,9 @@
 //! a coverage index that omits whole projects, and one that reports a fully
 //! grounded file as citing nothing — and both print as absence, which is why
 //! they need a test that names what should be there.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 #[cfg(unix)]
@@ -55,7 +56,7 @@ fn workspace(
     member_file: &str,
     root_doc: &str,
     member_doc: &str,
-) -> PathBuf {
+) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(&root.join("grund.toml"), ROOT_CONFIG);
     write(

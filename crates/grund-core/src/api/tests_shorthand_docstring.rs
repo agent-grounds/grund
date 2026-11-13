@@ -8,9 +8,10 @@
 //! nearly every case here asserts `check`'s reported set against `fmt --check`'s
 //! rewrite set on one fixture, which is the shape §AR-scanner.2.6.8 calls "one
 //! predicate serving both" and the shape neither of those modules has.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 use crate::queries::{DeclaredId, on_type_line_edits};
@@ -19,7 +20,7 @@ use crate::testing::{check_run, scan_findings, test_root, write};
 /// A repo scoped to `docs` and `src`, declaring `FS-042-user-login`, with one
 /// Python file. `scan` appends extra `[scan]` keys — `docstring_python =
 /// false` is the one case that needs it.
-fn docstring_repo(name: &str, source: &str, scan: &str) -> PathBuf {
+fn docstring_repo(name: &str, source: &str, scan: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

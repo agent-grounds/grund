@@ -6,6 +6,7 @@
 //! lists, are `crates/grund-cli/tests/mount_operations.rs`, where the commands are, and
 //! the editor's, one per capability the server advertises, are
 //! `tests/integration/lsp_mount_operations.rs`.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::{Path, PathBuf};
 
@@ -123,8 +124,8 @@ fn cites(text: &str) -> String {
 /// A mounted tree inside a git checkout whose ignore files above it, and whose
 /// `info/exclude`, would each hide a declaration of its own run in place: `lib`,
 /// a workspace with member `core`, under `outer`, and the consumer `app` beside it.
-fn fixture(name: &str) -> (PathBuf, PathBuf) {
-    let base = canonical_test_path(&test_root(name));
+fn fixture(name: &str) -> (crate::testing::TemporaryRoot, PathBuf, PathBuf) {
+    let base = test_root(name).physical();
     let outer = base.join("outer");
     let lib = outer.join("lib");
     write(&outer.join(".git/info/exclude"), "FS-excluded.md\n");
@@ -179,7 +180,7 @@ fn fixture(name: &str) -> (PathBuf, PathBuf) {
         &app.join("docs/fs/FS-a.md"),
         &cites("# FS-a: A\n\nCites @dep/FS-x.1 and @dep/core/FS-y.\n"),
     );
-    (canonical_test_path(&lib), canonical_test_path(&app))
+    (base, canonical_test_path(&lib), canonical_test_path(&app))
 }
 
 /// `lib` as its own standalone run reads it in the committed portable scan context
@@ -218,7 +219,7 @@ fn shown(native: &str) -> String {
 /// §REQ-remote-equivalence.4: source against projection, operation by operation.
 #[test]
 fn a_mounted_tree_answers_every_inventoried_operation_as_its_standalone_run() {
-    let (lib, app) = fixture("a_mounted_tree_answers_every_inventoried_operation");
+    let (_root, lib, app) = fixture("a_mounted_tree_answers_every_inventoried_operation");
     let native = standalone(&lib);
     let run = mounted(&lib, &app);
     assert_eq!(
@@ -262,7 +263,7 @@ fn a_mounted_tree_answers_every_inventoried_operation_as_its_standalone_run() {
 /// its in-place run reads all three.
 #[test]
 fn a_mounted_root_reads_only_the_ignore_files_at_and_below_it() {
-    let (lib, app) = fixture("a_mounted_root_reads_only_the_ignore_files_at_and_below_it");
+    let (_root, lib, app) = fixture("a_mounted_root_reads_only_the_ignore_files_at_and_below_it");
     let ids = |projects: &[WorkspaceProject]| {
         let mut ids = projects
             .iter()
@@ -301,7 +302,7 @@ fn a_mounted_root_reads_only_the_ignore_files_at_and_below_it() {
 /// own config answers every inventoried operation as the run through the bare edge.
 #[test]
 fn an_import_table_mounts_the_tree_as_the_bare_edge_does() {
-    let (lib, app) = fixture("an_import_table_mounts_the_tree_as_the_bare_edge_does");
+    let (_root, lib, app) = fixture("an_import_table_mounts_the_tree_as_the_bare_edge_does");
     let by_edge = mounted(&lib, &app);
     write(
         &app.join("grund.toml"),
@@ -335,7 +336,7 @@ fn an_import_table_mounts_the_tree_as_the_bare_edge_does() {
 /// that reached it is refused, naming the chain.
 #[test]
 fn a_mount_of_the_consumer_itself_closes_a_cycle() {
-    let (_, app) = fixture("a_mount_of_the_consumer_itself_closes_a_cycle");
+    let (_root, _, app) = fixture("a_mount_of_the_consumer_itself_closes_a_cycle");
     let mut config = load_config_at(&app, &app).expect("app loads");
     config.set_mount_edges(vec![MountEdge {
         alias: "back".into(),

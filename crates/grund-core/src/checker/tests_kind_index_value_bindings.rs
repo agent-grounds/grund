@@ -2,8 +2,9 @@
 //! entry (§FS-check.4.1.2.1). Only a citation of the declaration itself is
 //! navigation; a section citation or a value binding's citation on the same page
 //! is use, for `check` and `list --unused` alike (agent-grounds/grund#645).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::api::{ListOpts, list};
 use crate::testing::{check_run, findings, test_root, write};
@@ -28,7 +29,7 @@ const BINDING: &str = "Price: `30 USD contributor month` (§COMP-zz-a.values.pri
 
 /// The issue's fixture: a `COMP` kind whose index holds the entry for
 /// `COMP-zz-a`, followed by `index_tail`; `roadmap` is a page outside the folder.
-fn comp_repo(name: &str, index_tail: &str, roadmap: &str) -> PathBuf {
+fn comp_repo(name: &str, index_tail: &str, roadmap: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(&root.join("grund.toml"), COMP_CONFIG);
     write(

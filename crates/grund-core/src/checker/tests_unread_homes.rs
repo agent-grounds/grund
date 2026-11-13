@@ -1,7 +1,8 @@
 //! Test module: the one answer to whether a run may call an ID absent from a home it could not
 //! read (§FS-check.2.4).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::reference_scope::path_report_scope;
 use super::unread_homes::UnreadNames;
@@ -14,7 +15,7 @@ const DENIED: &str = "permission denied";
 
 /// A project whose `CONST` fetches into the home `place` (`folders = [..]` or `files = [..]`) and
 /// whose `PLAIN` does not. `source` is a file that makes the home exist, as a value kind's must.
-fn project(name: &str, place: &str, source: &str) -> (PathBuf, Config) {
+fn project(name: &str, place: &str, source: &str) -> (crate::testing::TemporaryRoot, Config) {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -28,10 +29,10 @@ fn project(name: &str, place: &str, source: &str) -> (PathBuf, Config) {
     write(&root.join(source), "{}\n");
     let config = load_config(&root).expect("load the config");
     // The root the config resolved is the record's key; Windows spells it differently (`\\?\`).
-    (config.frame().root().to_path_buf(), config)
+    (root.physical(), config)
 }
 
-fn folder_project(name: &str) -> (PathBuf, Config) {
+fn folder_project(name: &str) -> (crate::testing::TemporaryRoot, Config) {
     project(name, "folders = [\"values\"]", "values/a.json")
 }
 

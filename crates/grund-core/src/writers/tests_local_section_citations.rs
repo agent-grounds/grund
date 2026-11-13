@@ -1,10 +1,11 @@
 //! Local-to-full formatter rewrites and protected locations
 //! (§FS-fmt.2.3, §FS-fmt.2.4, §DF-declaration-local-section-shorthand).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::api::{FmtOpts, format_references};
 use crate::testing::{test_root, write};
 
-fn fixture(name: &str) -> std::path::PathBuf {
+fn fixture(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -39,7 +40,7 @@ fn fixture(name: &str) -> std::path::PathBuf {
 fn formatter_dry_run_names_only_safe_owned_local_replacements() {
     let root = fixture("formatter_dry_run_names_only_safe_owned_local_replacements");
     let output = format_references(FmtOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         write: false,
         add_marker: false,
@@ -87,7 +88,7 @@ fn formatter_write_expands_owned_local_paths_and_preserves_protected_sites() {
 /// resolving one, and an owner with no numbered sections at all — plus a
 /// resolving control, and one line carrying a control and a refusal together so
 /// a refused token cannot take its whole line with it.
-fn absent_target_fixture(name: &str) -> std::path::PathBuf {
+fn absent_target_fixture(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -125,7 +126,7 @@ fn absent_target_fixture(name: &str) -> std::path::PathBuf {
 fn the_dry_run_omits_a_local_path_its_owner_has_no_heading_for() {
     let root = absent_target_fixture("the_dry_run_omits_a_local_path_its_owner_has_no_heading_for");
     let output = format_references(FmtOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         write: false,
         add_marker: false,

@@ -1,5 +1,6 @@
 //! Test module: what a binding publishes for a path that names the report base reads `.`
 //! (§FS-cli.3.4), a scan failure's `path` and a declaration record's alike (§AR-bindings.2).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -121,7 +122,7 @@ fn a_case_at_the_base_reads_dot_from_every_binding() {
 }
 
 /// A tree holding the one case `E2E-login`, with one fixture, under an optional `[output]` table.
-fn case_tree(name: &str, output: &str) -> std::path::PathBuf {
+fn case_tree(name: &str, output: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

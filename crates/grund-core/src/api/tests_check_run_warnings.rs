@@ -1,4 +1,5 @@
 //! Check warning-channel API contracts (§FS-distribution.3.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use anyhow::Result;
 
@@ -9,9 +10,9 @@ use crate::testing::{test_root, write};
 const ID_RULES: &str = "[reference]\nmarker = \"§\"\nstrict = true\n\n\
      [id]\nformat = \"{kind}-{slug}\"\nslug_pattern = \"[a-z][a-z0-9-]*\"\n";
 
-fn opts(path: std::path::PathBuf) -> CheckOpts {
+fn opts(path: &std::path::Path) -> CheckOpts {
     CheckOpts {
-        path,
+        path: path.to_path_buf(),
         path_provided: true,
         ..CheckOpts::default()
     }
@@ -46,7 +47,7 @@ fn unread_root_warning() -> Finding {
     )
 }
 
-fn absorbed_root(name: &str, broken_member: bool) -> std::path::PathBuf {
+fn absorbed_root(name: &str, broken_member: bool) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -68,7 +69,7 @@ fn absorbed_root(name: &str, broken_member: bool) -> std::path::PathBuf {
     root
 }
 
-fn unread_root(name: &str, broken_member: bool) -> std::path::PathBuf {
+fn unread_root(name: &str, broken_member: bool) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     let members = if broken_member {
         "[\"alpha\", \"broken\"]"
@@ -111,7 +112,7 @@ fn check_with_opts_keeps_its_result_output_contract() {
     write(&root.join("grund.toml"), "grund_config_version = 1\n");
 
     let output: Result<CheckOutput> = check_with_opts(CheckOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         ..CheckOpts::default()
     });
@@ -129,7 +130,7 @@ fn check_with_opts_keeps_its_result_output_contract() {
 fn absorbed_root_error_wins_over_a_later_expansion_refusal() {
     let root = absorbed_root("check-warning-absorbed-refusal", true);
 
-    let (warnings, result) = check_with_run_warnings(opts(root));
+    let (warnings, result) = check_with_run_warnings(opts(&root));
 
     assert_eq!(warnings, Vec::<Finding>::new());
     assert_eq!(
@@ -147,7 +148,7 @@ fn absorbed_root_error_wins_over_a_later_expansion_refusal() {
 fn answerable_unread_root_warning_survives_a_later_expansion_refusal() {
     let root = unread_root("check-warning-unread-root-refusal", true);
 
-    let (warnings, result) = check_with_run_warnings(opts(root));
+    let (warnings, result) = check_with_run_warnings(opts(&root));
 
     assert_eq!(warnings, vec![unread_root_warning()]);
     assert_eq!(
@@ -166,7 +167,7 @@ fn answerable_unread_root_warning_survives_a_later_expansion_refusal() {
 fn absorbed_root_success_is_refused_with_no_warning() {
     let root = absorbed_root("check-warning-absorbed-success", false);
 
-    let (warnings, result) = check_with_run_warnings(opts(root));
+    let (warnings, result) = check_with_run_warnings(opts(&root));
 
     assert_eq!(warnings, Vec::<Finding>::new());
     assert_eq!(
@@ -184,7 +185,7 @@ fn absorbed_root_success_is_refused_with_no_warning() {
 fn unread_root_success_returns_the_same_warning_on_both_channels() {
     let root = unread_root("check-warning-unread-root-success", false);
 
-    let (warnings, result) = check_with_run_warnings(opts(root));
+    let (warnings, result) = check_with_run_warnings(opts(&root));
     let (output, _) = result.expect("check the valid workspace");
 
     assert_eq!(warnings, vec![unread_root_warning()]);

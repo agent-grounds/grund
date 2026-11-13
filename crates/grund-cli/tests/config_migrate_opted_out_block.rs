@@ -4,10 +4,13 @@
 //! at `group/a/grund.toml`. Each run is the reported command, `grund config
 //! migrate --to 2 group`, from the root, and every stream is compared whole.
 
+#[path = "support/temporary_root.rs"]
+mod temporary_root;
+use temporary_root::TemporaryRoot;
+
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Output};
-use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// The reported block: lines 2 and 3 are `include_root` and `members`.
 const BARE: &str = "[workspace]\ninclude_root = false\nmembers = [\"a\"]\n";
@@ -41,13 +44,12 @@ fn text(bytes: &[u8]) -> String {
 
 /// The reported tree under the system temp directory, where no config above it
 /// is discovered, with `block` as `group/grund.toml`.
-fn tree(name: &str, block: &str) -> PathBuf {
-    static SERIAL: AtomicUsize = AtomicUsize::new(0);
-    let serial = SERIAL.fetch_add(1, Ordering::Relaxed);
-    let root = std::env::temp_dir()
-        .join(format!("grund-migrate-opted-out-{}", std::process::id()))
-        .join(format!("{name}-{serial}"));
-    let _ = fs::remove_dir_all(&root);
+fn tree(name: &str, block: &str) -> TemporaryRoot {
+    // §FS-repository-maintenance.4.2: claim a direct leaf without an unowned pid parent.
+    let root = TemporaryRoot::new(
+        &std::env::temp_dir(),
+        &format!("grund-migrate-opted-out-{name}"),
+    );
     fs::create_dir_all(root.join("group/a")).expect("create fixture");
     fs::write(
         root.join("grund.toml"),

@@ -1,9 +1,10 @@
 //! Test module: the one answer to whether a scan failure is inside a narrowed run's path, and
 //! which name it is printed under (§FS-check.1.3.6.3, §FS-check.2.4.2, §AR-scanner.1.entry).
 //! Unix-only: every tree here is reached through a link.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::reference_scope::{ScanScope, partition_scan_failures, path_report_scope};
 use crate::config::Config;
@@ -14,7 +15,7 @@ use crate::testing::{physical_test_root, symlink};
 const DENIED: &str = "permission denied";
 
 /// `e2e -> realE`, with `realE/cases` and `docs` real.
-fn tree(name: &str) -> PathBuf {
+fn tree(name: &str) -> crate::testing::TemporaryRoot {
     let root = physical_test_root(name);
     fs::create_dir_all(root.join("realE/cases")).expect("create the directory");
     fs::create_dir_all(root.join("docs")).expect("create the home");

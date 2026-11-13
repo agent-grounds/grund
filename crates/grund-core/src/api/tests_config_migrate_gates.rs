@@ -4,8 +4,9 @@
 //! ignores — a finding located in the config, moved through the key map, and
 //! the config-table names inside messages — pass. The records gate is
 //! `config/migrate/tests_gates.rs`.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::config_migrate::{config_lines, describes_config, report_gate, surplus, v1_spelling};
 use super::config_migrate_guidance::refusals as guidance;
@@ -21,7 +22,7 @@ use crate::{MigrateOpts, config_migrate};
 const FS: &str = "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n";
 
 /// A v1 tree with `config` and the files of `files` under a fresh root.
-fn tree(name: &str, config: &str, files: &[(&str, &str)]) -> PathBuf {
+fn tree(name: &str, config: &str, files: &[(&str, &str)]) -> crate::testing::TemporaryRoot {
     let root = test_root(&format!("migrate-report-gate-{name}"));
     for (path, text) in files {
         write(&root.join(path), text);
@@ -92,7 +93,7 @@ fn report_gate_catches_a_candidate_that_changes_the_findings() {
 
 /// A workspace root that opts out of itself and lists a version-2 member: the
 /// run warns at a `grund.toml` line, and the message names that line again.
-fn opted_out_root(name: &str) -> PathBuf {
+fn opted_out_root(name: &str) -> crate::testing::TemporaryRoot {
     let config = v1_config(&format!(
         "[workspace]\nmembers = [\"sub\"]\ninclude_root = false\n{FS}"
     ));
@@ -120,7 +121,7 @@ fn report_gate_moves_a_config_finding_through_the_key_map() {
     let lines = report_gate(&located, &v1, &candidate, &map, "grund.toml");
     assert_eq!(lines, Vec::<String>::new());
     match config_migrate(&MigrateOpts {
-        path: root,
+        path: root.to_path_buf(),
         write: false,
         drop_comments: false,
     }) {
@@ -157,7 +158,7 @@ fn report_gate_drops_the_version_1_caution() {
     let (located, v1, candidate, map) = prepared(&root);
     assert!(report_gate(&located, &v1, &candidate, &map, "grund.toml").is_empty());
     match config_migrate(&MigrateOpts {
-        path: root,
+        path: root.to_path_buf(),
         write: false,
         drop_comments: false,
     }) {
@@ -356,7 +357,7 @@ fn a_block_init_wrote_passes_both_gates() {
         Vec::<String>::new()
     );
     match config_migrate(&MigrateOpts {
-        path: root,
+        path: root.to_path_buf(),
         write: false,
         drop_comments: false,
     }) {
@@ -371,7 +372,7 @@ fn a_block_init_wrote_passes_both_gates() {
 /// #1146's tree: a v1 `include_root = false` grouping block under a v2 root,
 /// whose candidate run warns `unread-workspace-block` where the run as read
 /// does not.
-fn unread_grouping_block(name: &str) -> PathBuf {
+fn unread_grouping_block(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(&format!("migrate-report-gate-{name}"));
     write(
         &root.join("grund.toml"),
@@ -387,7 +388,7 @@ fn unread_grouping_block(name: &str) -> PathBuf {
         "grund_config_version = 2\n",
     );
     write(&root.join("group/README.md"), "Cites \u{a7}FS-x.\n");
-    root.join("group")
+    root.child("group")
 }
 
 /// §FS-config-migrate.5.2: "a run warning `check` prints once is compared
@@ -397,7 +398,7 @@ fn unread_grouping_block(name: &str) -> PathBuf {
 fn report_gate_compares_a_run_warning_once() {
     let group = unread_grouping_block("run-warning-once");
     let lines = match config_migrate(&MigrateOpts {
-        path: group,
+        path: group.to_path_buf(),
         write: false,
         drop_comments: false,
     }) {

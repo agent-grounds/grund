@@ -3,6 +3,7 @@
 //! the target just before the rename each leave the original byte for byte and
 //! no temporary file behind (§FS-config-migrate.6.2, §FS-config-migrate.6.3); the
 //! install that succeeds keeps the original's permissions.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::{Path, PathBuf};
 
@@ -12,7 +13,7 @@ use crate::testing::{test_root, write};
 const ORIGINAL: &str = "grund_config_version = 1\n";
 const REPLACEMENT: &str = "grund_config_version = 2\n";
 
-fn target(name: &str) -> (PathBuf, PathBuf) {
+fn target(name: &str) -> (crate::testing::TemporaryRoot, PathBuf) {
     let root = test_root(name);
     let path = root.join("grund.toml");
     write(&path, ORIGINAL);

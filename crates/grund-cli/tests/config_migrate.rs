@@ -3,10 +3,13 @@
 //! entries, and grund's own config. The byte-exact streams are the
 //! `config-migrate-*` e2e cases.
 
+#[path = "support/temporary_root.rs"]
+mod temporary_root;
+use temporary_root::TemporaryRoot;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
-use std::sync::atomic::{AtomicUsize, Ordering};
 
 const V1: &str = "grund_config_version = 1
 project_name = \"example\"
@@ -47,21 +50,17 @@ fn text(bytes: &[u8]) -> String {
 /// A fresh directory named after the case. `outside` puts it under the system
 /// temp directory, where no config above it can be discovered; otherwise it is
 /// under this repository's `target/`, where its own config stops discovery.
-fn fixture(name: &str, outside: bool) -> PathBuf {
-    static SERIAL: AtomicUsize = AtomicUsize::new(0);
-    let serial = SERIAL.fetch_add(1, Ordering::Relaxed);
+fn fixture(name: &str, outside: bool) -> TemporaryRoot {
     let base = if outside {
-        std::env::temp_dir().join(format!("grund-config-migrate-{}", std::process::id()))
+        std::env::temp_dir()
     } else {
         repository_root().join("target/config-migrate-tests")
     };
-    let dir = base.join(format!("{name}-{serial}"));
-    let _ = fs::remove_dir_all(&dir);
-    fs::create_dir_all(&dir).expect("create fixture");
-    dir
+    // §FS-repository-maintenance.4.2: claim a direct leaf without an unowned pid parent.
+    TemporaryRoot::new(&base, &format!("grund-config-migrate-{name}"))
 }
 
-fn v1_tree(name: &str) -> PathBuf {
+fn v1_tree(name: &str) -> TemporaryRoot {
     let dir = fixture(name, false);
     fs::write(dir.join("grund.toml"), V1).expect("write config");
     fs::write(dir.join("requirements.md"), REQUIREMENTS).expect("write requirements");

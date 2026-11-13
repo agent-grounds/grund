@@ -247,6 +247,8 @@ fn resolver_ignores_field_shapes_inside_the_body() {
 #[cfg(unix)]
 #[test]
 fn set_executable_surfaces_io_errors() {
-    let missing = test_root("set_executable_surfaces_io_errors").join("missing");
+    // §FS-repository-maintenance.4.1: a derived path keeps its fixture owner in scope.
+    let root = test_root("set_executable_surfaces_io_errors");
+    let missing = root.join("missing");
     assert!(set_executable(&missing).is_err());
 }

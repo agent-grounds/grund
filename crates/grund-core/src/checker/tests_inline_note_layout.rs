@@ -1,8 +1,9 @@
 //! Test module: the opt-in inline note layout check — its two config keys, the
 //! channel each level speaks through, and the sentence the managed entrypoint
 //! block teaches (§FS-inline-citation-style.4.4, §FS-inline-citation-style.5)
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 use crate::config::{Config, Project, load_config};
@@ -10,7 +11,7 @@ use crate::model::Diagnostic;
 use crate::templates::inline_citation_style_sentence;
 use crate::testing::{layout_config, legacy_fs_folder_config, scan_tree, test_root, write};
 
-fn layout_fixture(name: &str) -> PathBuf {
+fn layout_fixture(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("docs/functional-spec/FS-001-login.md"),

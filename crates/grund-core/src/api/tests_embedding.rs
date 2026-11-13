@@ -1,4 +1,5 @@
 //! Test module: the public embedding API and init guidance (§AR-bindings.2)
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -144,7 +145,7 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     let shown_json = show(
         "FS-001-alpha",
         ShowOpts {
-            path: root,
+            path: root.to_path_buf(),
             format: ShowFormat::Json,
             ..ShowOpts::default()
         },
@@ -326,7 +327,7 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
 
     let init_root = test_root("public_embedding_api_init_dry_run");
     let init_output = init(InitOpts {
-        target: init_root,
+        target: init_root.to_path_buf(),
         dry_run: true,
         // §FS-init.1.2.3: a bare temp root no VCS marker covers.
         no_vcs: true,
@@ -355,7 +356,7 @@ fn list_summary_reports_single_file_kind_home() {
     );
 
     let catalog = list(ListOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         ..ListOpts::default()
     })

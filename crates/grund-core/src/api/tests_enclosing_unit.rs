@@ -5,8 +5,9 @@
 //! These are the API seams rather than the CLI: the two e2e cases pin the bytes,
 //! and a Rust embedder reads `CoverCitation` and `RefHit` without going near a
 //! formatter, so the pair is pinned once on each side of that line.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 
@@ -56,7 +57,7 @@ const ALPHA: &str = concat!(
     "A numbered section cites \u{a7}FS-beta.\n",
 );
 
-fn four_sites(name: &str) -> PathBuf {
+fn four_sites(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(&root.join("grund.toml"), CONFIG);
     write(&root.join("docs/FS-alpha.md"), ALPHA);
@@ -201,7 +202,7 @@ fn the_queries_that_publish_no_enclosing_unit_still_skip_classification() {
 /// A workspace whose member numbers its IDs and whose root does not, so the
 /// citing project's grammar and the target project's spell the same `Id`
 /// differently. The member's file is the citing one.
-fn two_grammars(name: &str) -> PathBuf {
+fn two_grammars(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

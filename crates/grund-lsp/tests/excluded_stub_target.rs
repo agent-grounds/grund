@@ -1,5 +1,6 @@
 //! Real-server regression: an excluded stub target is broken at the stub with
 //! error severity (§FS-declarations.stubs.target.3, §FS-lsp.1.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -57,5 +58,4 @@ fn a_stub_to_an_excluded_target_errors_at_the_stub() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

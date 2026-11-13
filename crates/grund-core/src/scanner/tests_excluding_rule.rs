@@ -1,5 +1,6 @@
 //! Test module: the rule that keeps the walk from a stub's target
 //! (§FS-declarations.stubs.target.3, §AR-scanner.1.13).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::PathBuf;
 
@@ -9,7 +10,7 @@ use crate::model::ExcludingRule;
 use crate::testing::{test_root, write};
 
 /// A project whose `[scan]` table is `scan`, with `notes/gen/a.md` on disk.
-fn project(name: &str, scan: &str) -> Config {
+fn project(name: &str, scan: &str) -> crate::testing::Rooted<Config> {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -20,7 +21,8 @@ fn project(name: &str, scan: &str) -> Config {
         ),
     );
     write(&root.join("notes/gen/a.md"), "# FS-x: X\n");
-    load_config(&root).expect("load config")
+    let config = load_config(&root).expect("load config");
+    root.hold(config)
 }
 
 fn rule(config: &Config, roots: &[&str], relative: &str) -> Option<ExcludingRule> {
@@ -95,7 +97,8 @@ fn a_hidden_directory_is_no_reason_in_this_release() {
 #[test]
 fn a_target_outside_the_config_root_is_no_reason() {
     let config = project("excluding_rule_outside", "exclude = [\"gen\"]");
-    let outside = test_root("excluding_rule_outside_target").join("gen/a.md");
+    let outside_root = test_root("excluding_rule_outside_target");
+    let outside = outside_root.join("gen/a.md");
     write(&outside, "# FS-x: X\n");
     let root = config.frame().root();
     assert_eq!(

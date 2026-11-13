@@ -1,6 +1,7 @@
 //! Real-server coverage for a relative section heading
 //! (§FS-declarations.section.relative.shown): its title hover, the range the
 //! record gives it, and where a citation of its canonical path goes (§FS-lsp.1.2.4).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -111,5 +112,4 @@ fn a_relative_heading_hovers_and_navigates_at_its_canonical_path() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

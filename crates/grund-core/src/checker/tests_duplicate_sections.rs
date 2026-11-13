@@ -2,9 +2,9 @@
 //! §FS-show.2.2.2, §DF-duplicate-section-path). The scanner half is
 //! first-wins recording, the checker half is the error, the `show` half is the
 //! refusal that replaced a body assembled out of both headings.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
 
 use super::*;
 use crate::config::Config;
@@ -27,7 +27,7 @@ fn alpha() -> Id {
 /// A repo whose `FS-001-alpha` writes `## 1.` twice, plus whatever extra
 /// body the caller needs. Cited so the unused-declaration warning stays out
 /// of the way of what each case is asserting.
-fn duplicated_repo(name: &str, extra: &str) -> (PathBuf, Config) {
+fn duplicated_repo(name: &str, extra: &str) -> (crate::testing::TemporaryRoot, Config) {
     let root = test_root(name);
     write(
         &root.join("docs/functional-spec/FS-001-alpha.md"),

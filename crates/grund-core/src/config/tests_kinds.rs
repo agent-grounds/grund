@@ -2,6 +2,7 @@
 //! per scope, unverifiable where the run holds no workspace, named sections read
 //! under the project that configures the kind, the non-citable reason in both
 //! quotings (§FS-errors.2.5.1), the first of §FS-errors.3.8.1's final templates.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::BTreeSet;
 
@@ -10,13 +11,14 @@ use crate::config::{Config, load_config};
 use crate::testing::{test_root, write};
 
 /// A project whose `kinds` rows are `rows`, with named sections set to `named`.
-fn project(name: &str, rows: &str, named: bool) -> Config {
+fn project(name: &str, rows: &str, named: bool) -> crate::testing::Rooted<Config> {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
         &format!("grund_config_version = 1\n\n[id]\nnamed_sections = {named}\n\n{rows}"),
     );
-    load_config(&root).expect("load config")
+    let config = load_config(&root).expect("load config");
+    root.hold(config)
 }
 
 /// One `[[kinds]]` row. `index` is written on a citable row alone: config
@@ -28,7 +30,10 @@ fn row(kind: &str, folder: &str, citable: bool) -> String {
 
 /// `api` configures `FS` and a non-citable `skill`; `web` configures `AR`,
 /// and `skill` as citable, with named sections on.
-fn workspace() -> (Config, Config) {
+fn workspace() -> (
+    crate::testing::Rooted<Config>,
+    crate::testing::Rooted<Config>,
+) {
     let api = project(
         "kinds_workspace_api",
         &(row("FS", "docs/specs", true) + &row("skill", "skills", false)),

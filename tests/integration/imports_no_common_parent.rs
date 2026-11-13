@@ -13,9 +13,10 @@ use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::{Child, ChildStdin, Command, Output, Stdio};
+use std::process::{ChildStdin, Command, Output, Stdio};
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
+use support::Child;
 use support::{file_uri, send_message, wait_for_exit};
 
 const GRAAL: &str = "grund_config_version = 2\nproject_name = \"native-image\"\n\n\

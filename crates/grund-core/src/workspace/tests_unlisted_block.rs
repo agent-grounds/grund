@@ -8,8 +8,9 @@
 //! also why their fixtures put a config inside a scanned tree rather than above
 //! the run's root (§DF-unlisted-workspace-block.2.3) — except the one case that is
 //! about what an ancestor above that root can and cannot answer.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::api::CheckRun;
 use crate::api::{ListOpts, list_with_run_warnings};
@@ -24,49 +25,49 @@ use crate::testing::{check_run, codes, only, test_root, write};
 /// own scope. `[id] format` is slug-only because the ticket's IDs carry no
 /// number, and every folder kind opts out of an index the cases never assert
 /// on (§FS-config.3.4).
-fn unlisted_block_repo(name: &str) -> PathBuf {
+fn unlisted_block_repo(name: &str) -> crate::testing::TemporaryRoot {
     unlisted_block_repo_at(test_root(name))
 }
 
 /// The same tree at a root the caller chose, for the one case whose fixture
 /// needs a directory *above* the run's root to put an ancestor config in.
-fn unlisted_block_repo_at(root: PathBuf) -> PathBuf {
+fn unlisted_block_repo_at<T: AsRef<Path>>(root: T) -> T {
     write(
-        &root.join("grund.toml"),
+        &root.as_ref().join("grund.toml"),
         "grund_config_version = 1\nproject_name = \"root\"\n\n\
              [id]\nformat = \"{kind}-{slug}\"\n\n\
              [workspace]\nmembers = [\"a\"]\n\n\
              [scan]\ninclude = [\"docs\", \"b\"]\n",
     );
     write(
-        &root.join("a/grund.toml"),
+        &root.as_ref().join("a/grund.toml"),
         "grund_config_version = 1\nproject_name = \"a\"\n\n[id]\nformat = \"{kind}-{slug}\"\n",
     );
     write(
-        &root.join("b/grund.toml"),
+        &root.as_ref().join("b/grund.toml"),
         "grund_config_version = 1\nproject_name = \"b\"\n\n\
              [id]\nformat = \"{kind}-{slug}\"\n\n\
              [workspace]\nmembers = [\"c\"]\n\n\
              [scan]\ninclude = [\"docs\"]\n",
     );
     write(
-        &root.join("b/c/grund.toml"),
+        &root.as_ref().join("b/c/grund.toml"),
         "grund_config_version = 1\nproject_name = \"c\"\n\n[id]\nformat = \"{kind}-{slug}\"\n",
     );
     write(
-        &root.join("docs/FS-001-root.md"),
+        &root.as_ref().join("docs/FS-001-root.md"),
         "# FS-001-root: Root\n\nThe root project, cited as \u{a7}FS-001-root\n",
     );
     write(
-        &root.join("a/docs/FS-001-alpha.md"),
+        &root.as_ref().join("a/docs/FS-001-alpha.md"),
         "# FS-001-alpha: A\n\nA listed member, cited as \u{a7}FS-001-alpha\n",
     );
     write(
-        &root.join("b/docs/FS-001-beta.md"),
+        &root.as_ref().join("b/docs/FS-001-beta.md"),
         "# FS-001-beta: B\n\nInside the unlisted block, cited as \u{a7}FS-001-beta, and citing §c/FS-001-gamma\n",
     );
     write(
-        &root.join("b/c/docs/FS-001-gamma.md"),
+        &root.as_ref().join("b/c/docs/FS-001-gamma.md"),
         "# FS-001-gamma: C\n\nUnder the unlisted block, cited as \u{a7}FS-001-gamma\n",
     );
     root
@@ -419,8 +420,12 @@ fn one_block_the_walk_reached_twice_is_one_finding() {
 /// carrying a `[workspace]` block somewhere inside its scan. Every other fixture
 /// here gives the root a `[workspace]` table, so this is the shape that exercises
 /// the message's fallback name.
-fn plain_repo_absorbing_the_block(name: &str, project_name: Option<&str>) -> PathBuf {
-    let root = unlisted_block_repo_at(test_root(name));
+fn plain_repo_absorbing_the_block(
+    name: &str,
+    project_name: Option<&str>,
+) -> crate::testing::TemporaryRoot {
+    let root = test_root(name);
+    let root = unlisted_block_repo_at(root);
     let named =
         project_name.map_or_else(String::new, |name| format!("project_name = \"{name}\"\n"));
     write(
@@ -467,15 +472,15 @@ fn a_repo_with_no_project_name_is_named_root() {
 /// The ticket's tree one level down, under an ancestor `[workspace]` whose
 /// `members` the caller writes — the only fixture here with a config *above* the
 /// run's root, because the claim it tests is one only an ancestor can make.
-fn repo_under_an_ancestor_listing(name: &str, members: &str) -> PathBuf {
+fn repo_under_an_ancestor_listing(name: &str, members: &str) -> crate::testing::TemporaryRoot {
     repo_under_an_ancestor_workspace(name, &format!("members = {members}\n"))
 }
 
 /// The same tree under an ancestor whose `[workspace]` table body the caller
 /// writes verbatim, for the cases whose claim value cannot be read at all.
-fn repo_under_an_ancestor_workspace(name: &str, workspace: &str) -> PathBuf {
+fn repo_under_an_ancestor_workspace(name: &str, workspace: &str) -> crate::testing::TemporaryRoot {
     let outer = test_root(name);
-    let root = unlisted_block_repo_at(outer.join("repo"));
+    unlisted_block_repo_at(outer.join("repo"));
     write(
         &outer.join("grund.toml"),
         &format!(
@@ -483,7 +488,7 @@ fn repo_under_an_ancestor_workspace(name: &str, workspace: &str) -> PathBuf {
                  [workspace]\n{workspace}"
         ),
     );
-    root
+    outer.child("repo")
 }
 
 /// A check run under such an ancestor, asserting the block is left unreported.

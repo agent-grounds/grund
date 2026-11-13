@@ -2,9 +2,10 @@
 //! means something else is caught, and each difference the gate ignores is a
 //! real difference between the two projects that it passes. The report gate is
 //! `api/tests_config_migrate_gates.rs`.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fmt::Debug;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::opted_out::Block;
 use super::records_gate::compare;
@@ -22,7 +23,11 @@ const NAMED: &str = "[id]\nnamed_sections = true\n";
 /// A v1 tree of `toml` (after its version line, before `[id]`), with
 /// `docs/FS-a.md` and the folders of `paths`, translated: the v1 project, the
 /// loaded candidate, and the root. The candidate must not be refused.
-fn translated(name: &str, toml: &str, paths: &[&str]) -> (Project, Project, PathBuf) {
+fn translated(
+    name: &str,
+    toml: &str,
+    paths: &[&str],
+) -> (Project, Project, crate::testing::TemporaryRoot) {
     let root = test_root(&format!("migrate-gates-{name}"));
     write(&root.join("docs/FS-a.md"), "# FS-a: A\n\nText.\n");
     for path in paths {

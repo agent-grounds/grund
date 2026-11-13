@@ -1,16 +1,17 @@
 //! Enforcement of all five citation levels and Boolean obligations (§FS-config.3.9.1).
-
-use std::path::PathBuf;
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::check_findings;
 use crate::config::load_config;
 use crate::model::CheckReport;
 use crate::testing::{scan_tree, test_root, write};
 
-fn check_rules(name: &str, rules: &str, body: &str) -> (PathBuf, CheckReport) {
-    let root = test_root(name)
-        .canonicalize()
-        .expect("canonical rule fixture");
+fn check_rules(
+    name: &str,
+    rules: &str,
+    body: &str,
+) -> (crate::testing::TemporaryRoot, CheckReport) {
+    let root = test_root(name).physical();
     let mut config = String::from("grund_config_version = 1\n[reference]\nstrict = true\n");
     for kind in ["FS", "GOAL", "GRUND", "AR", "DF"] {
         let file = format!("docs/{}.md", kind.to_ascii_lowercase());

@@ -2,8 +2,7 @@
 //! citation from the declaration that heading declares, never the entry
 //! (§FS-check.4.1.2.1, §FS-citations.recognized.title-lines). The entry rule
 //! and the unused carve-out give it the same answer (agent-grounds/grund#956).
-
-use std::path::PathBuf;
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::tests_kind_index_enrollment::scanned_index;
 use crate::api::{ListOpts, list};
@@ -12,7 +11,7 @@ use crate::testing::{check_run, findings, test_root, write};
 /// The issue's tree. The index's own heading cites `FS-session`, which the index
 /// does not list. The control is `FS-login`'s heading, which cites `FS-token`,
 /// unlisted too: the same title citation, outside the index.
-fn title_citation_repo(name: &str) -> PathBuf {
+fn title_citation_repo(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

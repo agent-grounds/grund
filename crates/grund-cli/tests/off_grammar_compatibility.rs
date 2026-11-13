@@ -3,19 +3,23 @@
 //! §FS-show.1.1, §FS-refs.1, §FS-list.2.3, §FS-completions.2.2, §FS-cover.2.4,
 //! §FS-fmt.6, and §FS-workspace.8).
 
+#[path = "support/temporary_root.rs"]
+mod temporary_root;
+use temporary_root::TemporaryRoot;
+
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Output};
 
 #[path = "support/fixture_root_contract.rs"]
 mod fixture_root_contract;
 
-fn test_root(name: &str) -> PathBuf {
-    let root =
-        std::env::temp_dir().join(format!("grund-off-grammar-{name}-{}", std::process::id()));
-    let _ = fs::remove_dir_all(&root);
-    fs::create_dir_all(&root).expect("create test root");
-    root
+/// Own each fixture until its caller finishes (§FS-repository-maintenance.4.1).
+fn test_root(name: &str) -> TemporaryRoot {
+    TemporaryRoot::new(
+        &std::env::temp_dir(),
+        &format!("grund-off-grammar-compatibility-{name}"),
+    )
 }
 
 fn write(root: &Path, path: &str, text: &str) {

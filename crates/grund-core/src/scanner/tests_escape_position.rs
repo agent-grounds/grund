@@ -1,6 +1,7 @@
 //! Test module: the escape position is not a citation (§FS-check.1.1.9) — the
 //! carve-out the bare-token pass of §FS-check.1.1 reaches before its strict gate
 //! (§AR-scanner.2.3.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::config::Config;
 use crate::grammar::in_escape_position;
@@ -11,7 +12,7 @@ use crate::testing::{numbered_config, scan_findings, test_root, write};
 const QUALIFIED_LINE: &str =
     "Across a namespace the illustration reads <§>api/FS-002-session here.";
 
-fn escape_tree(name: &str) -> (std::path::PathBuf, Config) {
+fn escape_tree(name: &str) -> (crate::testing::TemporaryRoot, Config) {
     let root = test_root(name);
     write(
         &root.join("docs/functional-spec/FS-001-login.md"),

@@ -1,5 +1,6 @@
 //! Real-server coverage for local-section diagnostic parity and graph navigation
 //! (§FS-lsp.1.1, §FS-lsp.1.3, §AR-lsp.5).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -7,7 +8,7 @@ use serde_json::{Value, json};
 use std::fs;
 use support::*;
 
-fn fixture(name: &str) -> (std::path::PathBuf, std::path::PathBuf, std::path::PathBuf) {
+fn fixture(name: &str) -> (TemporaryRoot, std::path::PathBuf, std::path::PathBuf) {
     let root = test_root(name);
     fs::write(
         root.join("grund.toml"),
@@ -44,7 +45,7 @@ fn fixture(name: &str) -> (std::path::PathBuf, std::path::PathBuf, std::path::Pa
 fn request(
     stdin: &mut std::process::ChildStdin,
     receiver: &std::sync::mpsc::Receiver<Value>,
-    child: &mut std::process::Child,
+    child: &mut support::Child,
     id: i64,
     method: &str,
     uri: &str,
@@ -66,7 +67,7 @@ fn request(
 }
 
 fn stop(
-    mut child: std::process::Child,
+    mut child: support::Child,
     mut stdin: std::process::ChildStdin,
     receiver: &std::sync::mpsc::Receiver<Value>,
 ) {
@@ -172,7 +173,6 @@ fn local_section_diagnostics_keep_cli_messages_and_exact_token_ranges() {
         assert_eq!(definition, json!(null));
     }
     stop(child, stdin, &receiver);
-    let _ = fs::remove_dir_all(root);
 }
 
 #[test]
@@ -209,7 +209,6 @@ fn ownerless_local_section_is_diagnosed_without_a_navigation_target() {
     );
     assert_eq!(definition, json!(null));
     stop(child, stdin, &receiver);
-    let _ = fs::remove_dir_all(root);
 }
 
 #[test]
@@ -293,5 +292,4 @@ fn owned_local_sections_navigate_and_unresolved_forms_never_gain_targets() {
     assert_eq!(ownerless, json!(null));
 
     stop(child, stdin, &receiver);
-    let _ = fs::remove_dir_all(root);
 }

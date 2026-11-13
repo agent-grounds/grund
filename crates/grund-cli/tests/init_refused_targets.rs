@@ -8,6 +8,14 @@
 //! its target under the system temp directory and, for the home-directory rule,
 //! points the child's home directory at it.
 
+#[path = "support/temporary_root.rs"]
+mod temporary_root;
+use temporary_root::TemporaryRoot;
+
+use outside_repo_dir as test_root;
+#[path = "support/fixture_root_contract.rs"]
+mod fixture_root_contract;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -45,11 +53,7 @@ fn vcs_marker_at_or_above(dir: &Path) -> Option<PathBuf> {
 /// developer machines that a second candidate is worth having — with it, the
 /// version-control cases keep testing the rule instead of silently inverting
 /// into failures about the fixture.
-///
-/// The path is per-process: every case here starts by removing its directory,
-/// so a shared fixed path would let two concurrent runs on one machine delete
-/// each other's targets mid-run.
-fn fixture_root() -> PathBuf {
+fn fixture_base() -> PathBuf {
     let system = std::env::temp_dir();
     // The second candidate exists only where the platform has a well-known temp
     // root to fall back to; elsewhere the list is the system one alone.
@@ -67,7 +71,7 @@ fn fixture_root() -> PathBuf {
                 .map(|marker| format!("{} is covered by {}", candidate.display(), marker.display()))
         })
         .collect();
-    let root = candidates
+    candidates
         .into_iter()
         .find(|candidate| vcs_marker_at_or_above(candidate).is_none())
         .unwrap_or_else(|| {
@@ -76,17 +80,19 @@ fn fixture_root() -> PathBuf {
                  is the condition under test; point TMPDIR at one ({})",
                 reasons.join("; ")
             )
-        });
-    root.join(format!("grund-init-refused-targets-{}", std::process::id()))
+        })
 }
 
 /// A fresh directory outside every version-controlled tree — deliberately *not*
 /// under `target/`, which is inside this repository's git tree and would satisfy
 /// the version-control rule through the walk-up.
-fn outside_repo_dir(suffix: &str) -> PathBuf {
-    let dir = fixture_root().join(suffix);
-    let _ = fs::remove_dir_all(&dir);
-    fs::create_dir_all(&dir).expect("create target outside the repo");
+/// Ownership covers setup and use (§FS-repository-maintenance.4.1); each claim
+/// is a direct leaf of the shared base (§FS-repository-maintenance.4.2).
+fn outside_repo_dir(suffix: &str) -> TemporaryRoot {
+    let dir = TemporaryRoot::new(
+        &fixture_base(),
+        &format!("grund-init-refused-targets-{suffix}"),
+    );
     assert!(
         vcs_marker_at_or_above(&dir).is_none(),
         "fixture root must not be version-controlled: {}",

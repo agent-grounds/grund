@@ -9,6 +9,7 @@
 //! site named inside the message text has to agree, or one workspace line has
 //! two halves relative to two different roots and an editor can follow only the
 //! first of them.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::BTreeMap;
 
@@ -40,18 +41,21 @@ fn router() -> Id {
 /// A workspace whose one member is `apps/api`, holding `files`. Returns the
 /// root config the report renders against and the member config the project
 /// is checked with — the pair every case here needs to keep apart.
-fn member_workspace(name: &str, files: &[(&str, &str)]) -> (Config, Config, Catalog) {
+fn member_workspace(
+    name: &str,
+    files: &[(&str, &str)],
+) -> (crate::testing::Rooted<Config>, Config, Catalog) {
     let root = test_root(name);
     let member = root.join("apps/api");
     for (path, text) in files {
         write(&member.join(path), text);
     }
-    let mut root_config = legacy_fs_folder_config(root);
+    let mut root_config = legacy_fs_folder_config(root.to_path_buf());
     root_config.workspace_boundary_roots = vec![canonical_test_path(&member)];
     let api_config = legacy_fs_folder_config(member);
     let (api_findings, _) =
         scan_tree(&api_config, Some(&api_config.root), true).expect("scan member");
-    (root_config, api_config, api_findings)
+    (root.hold(root_config), api_config, api_findings)
 }
 
 const TWO_HOMES: [(&str, &str); 2] = [

@@ -225,7 +225,8 @@ fn number_less_and_slug_less_formats_have_no_shorthand() {
 #[test]
 fn component_patterns_must_be_valid_regexes_on_their_own() {
     let root = test_root("component_patterns_must_be_valid_regexes_on_their_own");
-    let mut config = numbered_config(root);
+    // §FS-repository-maintenance.4.1: retain root while configuring its path copy.
+    let mut config = numbered_config(root.to_path_buf());
     config.number_pattern = "(".into();
     config.slug_pattern = "a)".into();
     let err = config.rebuild_grammar().expect_err("rejected at build");
@@ -378,7 +379,8 @@ fn an_escaped_shorthand_that_resolves_is_suggested() {
 #[test]
 fn shorthand_shape_is_derived_from_either_separator_side() {
     let root = test_root("shorthand_shape_is_derived_from_either_separator_side");
-    let mut config = legacy_fs_folder_config(root);
+    // §FS-repository-maintenance.4.1: retain root while configuring its path copy.
+    let mut config = legacy_fs_folder_config(root.to_path_buf());
     config.id_format = "{kind}-{slug}-{number}".into();
     config.rebuild_grammar().expect("rebuild grammar");
     assert!(config.grammar.has_shorthand());

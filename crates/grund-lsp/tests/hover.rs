@@ -2,6 +2,7 @@
 //! counts a declaration-side title carries, the citation preview they must
 //! leave alone, and the citation that resolves to nothing and defers to its
 //! diagnostic (§FS-lsp.1.2).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -12,7 +13,7 @@ use support::*;
 /// A tree with one declaration cited twice from two files, a section cited
 /// once, a stub-and-inline-source pair cited once, and an uncited declaration —
 /// the four count shapes §FS-lsp.1.2 words differently, in one workspace.
-fn hover_fixture(name: &str) -> std::path::PathBuf {
+fn hover_fixture(name: &str) -> TemporaryRoot {
     let root = test_root(name);
     fs::write(
         root.join("grund.toml"),
@@ -150,7 +151,6 @@ fn title_hover_reports_usage_counts_for_every_title_kind() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 /// §FS-lsp.1.2.1: hovering a *citation* is unchanged — it still previews the
@@ -193,7 +193,6 @@ fn citation_hover_still_previews_the_declaration_body() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 /// A citation that cannot resolve has no hover body. Its diagnostic already
@@ -250,7 +249,6 @@ fn hover_on_dangling_citation_defers_to_diagnostic() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 /// §FS-lsp.1.2.1: the hover's linkification asks the one reading of
@@ -323,5 +321,4 @@ fn citation_hover_leaves_authored_markup_as_written() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

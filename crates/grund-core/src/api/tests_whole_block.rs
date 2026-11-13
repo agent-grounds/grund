@@ -3,6 +3,7 @@
 //! stale finding names, the directory a finding about another project's block
 //! names (§FS-errors.3.6.1), and the runs that leave the two workspace sections
 //! out (§FS-check.3.5.5, §FS-check.4.9.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -32,7 +33,7 @@ fn project(root: &Path, name: &str, file: &str, id: &str) {
 
 /// A workspace root `shop` with the members `members` names, each a project
 /// of its own.
-fn workspace(name: &str, members: &[&str], optional: &[&str]) -> std::path::PathBuf {
+fn workspace(name: &str, members: &[&str], optional: &[&str]) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     project(&root, "shop", "requirements.md", "FS-receipt");
     let list = |names: &[&str]| {

@@ -2,6 +2,7 @@
 //! (§FS-lsp.1.3.4): on a `/* … */` line, before the block's first `*/`
 //! (§FS-declarations.line.block-comment), while a line comment or a Markdown
 //! heading keeps a `*/` its author wrote.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::*;
 use crate::queries::LspSnapshotOpts;
@@ -20,7 +21,7 @@ fn declaration_span_ends_before_the_first_block_closer() {
         "/** FS-b: Beta */\nfn b() {}\n\n/* FS-tail: Head */ fn e() {} /* x */\n\n/// FS-glob: matches src/**/ files\nfn g() {}\n",
     );
     let snapshot = lsp_snapshot(LspSnapshotOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         open_documents: Default::default(),
     })

@@ -4,6 +4,7 @@
 //! (§FS-declarations.line, §AR-scanner.2.1.1). The e2e cases
 //! `*-section-suffixed-line-*` pin what `list`, `check` and `show` print; these
 //! pin the one answer underneath them, in each shape a declaration line takes.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::{
     Grammar, declaration_captures, declaration_id_on_line, near_miss_heading, parse_id,
@@ -135,11 +136,12 @@ fn configured_star_slug_section_coordinates_never_declare_a_prefix() {
 }
 
 /// The default `{kind}-{number}-{slug}` grammar with `edit` applied on top.
-fn config_with(name: &str, edit: impl FnOnce(&mut Config)) -> Config {
-    let mut config = numbered_config(test_root(name));
+fn config_with(name: &str, edit: impl FnOnce(&mut Config)) -> crate::testing::Rooted<Config> {
+    let root = test_root(name);
+    let mut config = numbered_config(root.to_path_buf());
     edit(&mut config);
     config.rebuild_grammar().expect("rebuild the test grammar");
-    config
+    root.hold(config)
 }
 
 /// Every row must declare nothing: no declaration, and no near miss either.

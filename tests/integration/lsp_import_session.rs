@@ -6,12 +6,13 @@
 #![allow(dead_code)]
 
 use crate::binaries;
+use crate::support::Child;
 use crate::support::{self, file_uri, send_message, wait_for_exit};
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::{Child, ChildStdin, Command, Stdio};
+use std::process::{ChildStdin, Command, Stdio};
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 

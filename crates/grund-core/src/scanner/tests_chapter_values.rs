@@ -2,6 +2,7 @@
 //! declared chapter may hold, which delimited forms become bindings, and the
 //! comparison that follows (§FS-config.3.4.13, §FS-values.2.5, §FS-values.3.1,
 //! §FS-values.5.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::PathBuf;
 
@@ -27,14 +28,18 @@ fn chapter_config(root: PathBuf, chapter: Option<&str>) -> Config {
     config
 }
 
-fn scan_chapter(name: &str, chapter: Option<&str>, source: &str) -> (Config, Catalog) {
+fn scan_chapter(
+    name: &str,
+    chapter: Option<&str>,
+    source: &str,
+) -> (crate::testing::Rooted<Config>, Catalog) {
     let root = test_root(name);
     let path = root.join("docs/power.md");
     write(&path, source);
-    let config = chapter_config(root, chapter);
+    let config = chapter_config(root.to_path_buf(), chapter);
     let (findings, errors) = scan_tree(&config, Some(&path), true).expect("scan chapter fixture");
     assert!(errors.is_empty(), "fixture should be readable: {errors:?}");
-    (config, findings)
+    (root.hold(config), findings)
 }
 
 fn root_origins(findings: &Catalog) -> Vec<(String, ValueRootOrigin)> {
@@ -207,7 +212,7 @@ fn toc_and_editor_title_a_tagged_chapter_root_alike() {
     };
     let toc = show("AR-004-probe", opts).expect("--toc maps the declaration");
     let snapshot = lsp_snapshot(LspSnapshotOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         open_documents: Default::default(),
     })
@@ -296,7 +301,7 @@ fn a_rootless_chapter_root_is_reported_at_its_own_heading() {
 /// A repository on disk whose `AR` kind declares `values` as its value chapter
 /// — what the checker and the formatter are asked about, since both load the
 /// config themselves.
-fn chapter_repo(name: &str, body: &str) -> PathBuf {
+fn chapter_repo(name: &str, body: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -344,7 +349,6 @@ fn a_chapter_binding_compares_and_its_near_misses_are_refused() {
             "line {line} must be an attempted binding, not prose: {codes:?}"
         );
     }
-    let _ = std::fs::remove_dir_all(root);
 }
 
 /// The same delimited form aimed at a named section outside every declared
@@ -369,5 +373,4 @@ fn a_named_section_outside_every_chapter_stays_prose() {
         "nothing about values may be reported: {:?}",
         report.errors
     );
-    let _ = std::fs::remove_dir_all(root);
 }

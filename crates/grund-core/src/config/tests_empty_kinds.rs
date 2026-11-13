@@ -3,6 +3,7 @@
 //! config gets (§FS-config.3.4.4); refused when it is not empty or a table follows it;
 //! and what each template's config means against the built-in defaults
 //! (§FS-init.2.4.3, §FS-init.2.4.9).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::PathBuf;
 
@@ -51,7 +52,8 @@ fn an_empty_kind_set_is_not_an_omitted_one() {
 /// `[[kinds]]` load the same nine rows, `FS` at `folder = "docs/functional-spec"`.
 #[test]
 fn no_config_and_an_omitted_kind_set_give_one_fs_home() {
-    let zero = load_config(&test_root("empty_kinds_no_config")).expect("loads");
+    let root = test_root("empty_kinds_no_config");
+    let zero = load_config(&root).expect("loads");
     let omitted = load("empty_kinds_omitted_again", "grund_config_version = 1\n").expect("loads");
     assert_eq!(zero.kinds, omitted.kinds);
     let fs = zero.kinds.iter().find(|kind| kind.kind == "FS");

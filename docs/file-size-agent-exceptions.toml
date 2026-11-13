@@ -107,12 +107,14 @@ path = "crates/grund-core/src/checker/tests_shorthand.rs"
 match = "exact"
 rules = ["tests"]
 kind = "deferred"
-max_accepted = { value = 477, unit = "lines" }
+max_accepted = { value = 478, unit = "lines" }
 until = "a third shorthand behaviour area earns its own module, the way the rewrite cases already did"
 reason = """
 The rewrite cases already left, to what is now `resolver/tests_shorthand_rewrite.rs` — that was the seam, and it is spent. What remains is one area: what `check` reports about a shorthand, plus the two surfaces that must agree with it (the CLI argument resolver and the LSP snapshot). These fail together — a change to the recognition boundary or the candidate rule breaks the report, the query, and the editor in one move — so a reader chasing one is chasing all three. A second cut here would be by fixture shape rather than by behaviour, which is the split the tests rule exists to prevent.
 
 The ceiling moved 475 -> 477 when the file went beside the code it pins (§AR-core-module-layout.1): the seven-line import block a module charges, less the three `include!` wrapper lines it drops, and `cargo fmt --all` reaching the file for the first time now that it is a module rather than spliced in. No case changed.
+
+Issue #1362 retains two fixture owners while passing path copies into their config builders (§FS-repository-maintenance.4.1). No case or executable line is added; the staged file measures 478 lines against this older 477-line ceiling. Accept exactly the measured size for this ownership adaptation, preserving the same extraction boundary and allowing no further growth.
 """
 
 [[exceptions]]

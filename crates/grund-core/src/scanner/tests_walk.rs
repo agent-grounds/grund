@@ -271,8 +271,8 @@ fn an_excluded_directory_reached_through_a_link_is_still_excluded() {
 fn a_config_root_reached_through_a_link_is_reported_under_that_name() {
     let real =
         linked_repo("a_config_root_reached_through_a_link_is_reported_under_that_name-target");
-    let link =
-        test_root("a_config_root_reached_through_a_link_is_reported_under_that_name").join("repo");
+    let owner = test_root("a_config_root_reached_through_a_link_is_reported_under_that_name");
+    let link = owner.join("repo");
     symlink(real.to_str().expect("a utf-8 test root"), &link);
 
     let mut config = Config::default_for(link.clone());

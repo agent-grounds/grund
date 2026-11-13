@@ -6,7 +6,6 @@ use super::physical_test_root as test_root;
 mod fixture_root_contract;
 
 #[test]
-#[ignore = "red until #1362 canonical roots retain ownership through consumers; implement removes this"]
 fn fixture_root_contract_path_consuming_constructor_keeps_owner() {
     let path;
     {

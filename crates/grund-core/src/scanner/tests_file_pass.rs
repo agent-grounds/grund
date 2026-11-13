@@ -1,4 +1,5 @@
 //! Test module: scanner comment handling, stubs, and anchors (§AR-scanner)
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::checker::check_findings;
 use crate::config::{Config, load_config};
@@ -45,7 +46,7 @@ fn markdown_fences_match_the_opening_delimiter() {
         ),
     );
 
-    let config = Config::default_for(root);
+    let config = Config::default_for(root.to_path_buf());
     let (findings, _) = scan_tree(&config, Some(&path), true).expect("scan Markdown file");
     let lines = findings
         .citations

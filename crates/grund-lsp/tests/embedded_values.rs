@@ -2,6 +2,7 @@
 //! navigation, raw previews, and CLI-equal diagnostics; a binding aimed at the
 //! root navigates to the root heading (§FS-lsp.1.2.1, §FS-lsp.1.3.5,
 //! §FS-lsp.4.2, §FS-values.3.1.2, §FS-values.7).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -141,5 +142,4 @@ fn embedded_value_ranges_navigation_and_diagnostics_match_the_cli() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

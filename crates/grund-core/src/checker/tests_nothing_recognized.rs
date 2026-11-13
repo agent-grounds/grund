@@ -2,9 +2,9 @@
 //! in them (§FS-check.4.5, §DF-nothing-recognized). The empty scan next door
 //! (§FS-check.2.2) is about a scope that found no files; every case here is
 //! about a scope that found them and recognized none of their content.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
 
 use crate::api::{CheckOpts, CheckRun, check_with_opts, lsp_snapshot};
 use crate::model::{Diagnostic, Finding};
@@ -319,7 +319,7 @@ fn the_lsp_snapshot_carries_the_same_caution_as_check() {
 
 /// A workspace root over two members: `specs` declares, `app` only cites it
 /// across the namespace boundary (§FS-workspace.1).
-fn citing_member_workspace(name: &str) -> PathBuf {
+fn citing_member_workspace(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

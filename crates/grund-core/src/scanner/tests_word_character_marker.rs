@@ -1,17 +1,18 @@
 //! Shared recognition contract (§AR-scanner.2.3, §FS-check.1.1.10).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::checker::check_findings;
 use crate::config::Config;
 use crate::testing::{legacy_fs_folder_config, scan_tree, test_root, write};
 
-fn config(name: &str, marker: &str, strict: bool) -> Config {
+fn config(name: &str, marker: &str, strict: bool) -> crate::testing::Rooted<Config> {
     let root = test_root(name);
-    let mut config = Config::default_for(root);
+    let mut config = Config::default_for(root.to_path_buf());
     config.id_format = "{kind}_{slug}".into();
     config.marker = marker.into();
     config.strict = strict;
     config.rebuild_grammar().expect("rebuild grammar");
-    config
+    root.hold(config)
 }
 
 #[test]
@@ -133,7 +134,8 @@ fn word_character_marker_containing_full_ids_keep_their_target() {
             "FS_login_FS_logout",
         ),
     ] {
-        let mut config = legacy_fs_folder_config(test_root("word_character_marker_containing_id"));
+        let root = test_root("word_character_marker_containing_id");
+        let mut config = legacy_fs_folder_config(root.to_path_buf());
         config.marker = marker.into();
         config.id_format = format.into();
         config.slug_pattern = pattern.into();
@@ -205,7 +207,8 @@ fn word_character_marker_overlapping_starts_keep_one_positioned_edge() {
         ("::", "::", 0),
         ("éé", "ééé", "é".len()),
     ] {
-        let mut config = legacy_fs_folder_config(test_root("word_character_marker_overlap"));
+        let root = test_root("word_character_marker_overlap");
+        let mut config = legacy_fs_folder_config(root.to_path_buf());
         config.marker = marker.into();
         config.id_format = "{kind}_{slug}".into();
         config.rebuild_grammar().unwrap();

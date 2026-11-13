@@ -1,12 +1,13 @@
 //! Unsaved rule rationales use the shared overlay scan (§FS-lsp.1.1,
 //! §FS-lsp.4, §FS-rules.9).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::lsp_snapshot;
 use crate::queries::LspSnapshotOpts;
 use crate::testing::{test_root, write};
 use std::collections::BTreeMap;
 
-fn rule_repo(name: &str) -> std::path::PathBuf {
+fn rule_repo(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -42,7 +43,7 @@ fn lsp_rule_rationale_follows_unsaved_addition_and_deletion() {
 
     write(&rule, &format!("{title}\n   \n"));
     let added = lsp_snapshot(LspSnapshotOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         open_documents: BTreeMap::from([(
             rule,

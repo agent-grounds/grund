@@ -1,5 +1,6 @@
 //! LSP parity for the configured lead-size warning (§FS-declarations.checks.oversized-lead.2,
 //! §FS-lsp.1.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -50,5 +51,4 @@ fn oversized_lead_uses_the_cli_code_message_location_and_warning_severity() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

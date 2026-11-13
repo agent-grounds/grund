@@ -3,9 +3,10 @@
 //! older block, the section rendered where there is none to keep, one note per
 //! absent member, each companion's own section, `--force` (§FS-init.3.4), the
 //! nested tree, and the expansion error that still suppresses the section.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::init_block::keep_workspace_members;
 use super::{InitAgentEntrypointSelection, InitOpts, InitOutput, init};
@@ -27,7 +28,7 @@ fn project(root: &Path, name: &str, file: &str, id: &str, extra: &str) {
 
 /// A workspace root `shop` with the member `billing` and the optional members
 /// `optional` names, in the order given, each a project of its own.
-fn shop(name: &str, optional: &[&str]) -> PathBuf {
+fn shop(name: &str, optional: &[&str]) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     let listed: Vec<String> = optional
         .iter()

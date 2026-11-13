@@ -1,17 +1,16 @@
 //! JSON value-home shape, order, and duplicate ownership (§FS-values.2.2,
 //! §FS-values.2.3).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::json::{JsonNode, JsonReader};
 use crate::config::load_config;
 use crate::model::{Catalog, DeclarationSource, ValueComponentKind};
 use crate::testing::{scan_tree, test_root, write};
 
-fn value_root(name: &str, kinds: &str) -> PathBuf {
-    let root = test_root(name)
-        .canonicalize()
-        .expect("canonical value fixture");
+fn value_root(name: &str, kinds: &str) -> crate::testing::TemporaryRoot {
+    let root = test_root(name).physical();
     write(
         &root.join("grund.toml"),
         &format!(
@@ -25,7 +24,7 @@ fn value_root(name: &str, kinds: &str) -> PathBuf {
     root
 }
 
-fn one_kind(name: &str) -> PathBuf {
+fn one_kind(name: &str) -> crate::testing::TemporaryRoot {
     value_root(
         name,
         "[[kinds]]\nkind = \"CONST\"\nfolder = \"values\"\nindex = false\nvalues = true\n\n",

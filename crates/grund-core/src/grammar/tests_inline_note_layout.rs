@@ -1,5 +1,6 @@
 //! Test module: the inline note layout classifier and its opt-in check
 //! (§FS-inline-citation-style.3.3, §FS-inline-citation-style.4.4)
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::comment_line::{comment_content_range, line_citation_ranges};
 use super::inline_note_layout::{
@@ -50,7 +51,8 @@ fn violations(config: &Config, block: &[&str], has_note: bool) -> Vec<usize> {
 // arrangement a `citation-with-note` tree already wrote still passes.
 #[test]
 fn any_layout_accepts_every_arrangement() {
-    let config = layout_config(test_root("any_layout_accepts_every_arrangement"), "any");
+    let root = test_root("any_layout_accepts_every_arrangement");
+    let config = layout_config(root.to_path_buf(), "any");
     for line in [
         "// \u{a7}FS-001-login: reject an expired credential",
         "// \u{a7}FS-001-login reject an expired credential",
@@ -70,10 +72,8 @@ fn any_layout_accepts_every_arrangement() {
 /// §FS-inline-citation-style.3.3.9: these are the conforming example lines.
 #[test]
 fn citation_first_colon_accepts_the_canonical_forms() {
-    let config = layout_config(
-        test_root("citation_first_colon_accepts_the_canonical_forms"),
-        "citation-first-colon",
-    );
+    let root = test_root("citation_first_colon_accepts_the_canonical_forms");
+    let config = layout_config(root.to_path_buf(), "citation-first-colon");
     for line in [
         "// \u{a7}FS-001-login: reject an expired credential",
         "    // \u{a7}FS-001-login: indented like the code it annotates",
@@ -98,10 +98,8 @@ fn citation_first_colon_accepts_the_canonical_forms() {
 /// §FS-inline-citation-style.3.3.9: these are the nonconforming example lines.
 #[test]
 fn citation_first_colon_rejects_near_misses() {
-    let config = layout_config(
-        test_root("citation_first_colon_rejects_near_misses"),
-        "citation-first-colon",
-    );
+    let root = test_root("citation_first_colon_rejects_near_misses");
+    let config = layout_config(root.to_path_buf(), "citation-first-colon");
     for line in [
         "// \u{a7}FS-001-login reject an expired credential",
         "// reject an expired credential (\u{a7}FS-001-login)",
@@ -129,10 +127,8 @@ fn citation_first_colon_rejects_near_misses() {
 /// strip them.
 #[test]
 fn citation_first_colon_reads_every_comment_prefix() {
-    let config = layout_config(
-        test_root("citation_first_colon_reads_every_comment_prefix"),
-        "citation-first-colon",
-    );
+    let root = test_root("citation_first_colon_reads_every_comment_prefix");
+    let config = layout_config(root.to_path_buf(), "citation-first-colon");
     for line in [
         "/** \u{a7}FS-001-login: reject an expired credential",
         " * \u{a7}FS-001-login: reject an expired credential",
@@ -157,10 +153,8 @@ fn citation_first_colon_reads_every_comment_prefix() {
 // grammar's empty tail rather than opening a note made of one space.
 #[test]
 fn a_block_closer_leaves_no_trailing_space() {
-    let config = layout_config(
-        test_root("a_block_closer_leaves_no_trailing_space"),
-        "citation-first-colon",
-    );
+    let root = test_root("a_block_closer_leaves_no_trailing_space");
+    let config = layout_config(root.to_path_buf(), "citation-first-colon");
     for (line, content) in [
         ("/* \u{a7}FS-001-login: */", "\u{a7}FS-001-login:"),
         (
@@ -184,10 +178,8 @@ fn a_block_closer_leaves_no_trailing_space() {
 // with its citation run. One marker, and only where a space follows it.
 #[test]
 fn a_list_marker_is_skipped_like_indentation() {
-    let config = layout_config(
-        test_root("a_list_marker_is_skipped_like_indentation"),
-        "citation-first-colon",
-    );
+    let root = test_root("a_list_marker_is_skipped_like_indentation");
+    let config = layout_config(root.to_path_buf(), "citation-first-colon");
     for line in [
         "// - \u{a7}FS-001-login: a bulleted grounded point",
         "// * \u{a7}FS-001-login: a star bullet",
@@ -220,10 +212,8 @@ fn a_list_marker_is_skipped_like_indentation() {
 /// and still name a second point on the way (rule 3, and the line budget).
 #[test]
 fn a_wrapped_note_may_name_a_point_on_its_continuation() {
-    let config = checked_layout_config(
-        test_root("a_wrapped_note_may_name_a_point_on_its_continuation"),
-        "citation-first-colon",
-    );
+    let root = test_root("a_wrapped_note_may_name_a_point_on_its_continuation");
+    let config = checked_layout_config(root.to_path_buf(), "citation-first-colon");
 
     let wrapped = [
         "/* \u{a7}FS-001-login: a note that runs past one line and",
@@ -253,10 +243,8 @@ fn a_wrapped_note_may_name_a_point_on_its_continuation() {
 // citation token, so the run reads it as the line's opening citation.
 #[test]
 fn citation_first_colon_reads_a_qualified_token() {
-    let config = layout_config(
-        test_root("citation_first_colon_reads_a_qualified_token"),
-        "citation-first-colon",
-    );
+    let root = test_root("citation_first_colon_reads_a_qualified_token");
+    let config = layout_config(root.to_path_buf(), "citation-first-colon");
     assert!(conforms(&config, "// §api/FS-001-login: the member's rule"));
     assert!(!conforms(&config, "// §api/FS-001-login the member's rule"));
 }
@@ -265,10 +253,8 @@ fn citation_first_colon_reads_a_qualified_token() {
 // nothing in it is classified — not even a line that would otherwise deviate.
 #[test]
 fn a_site_without_a_note_is_exempt() {
-    let config = checked_layout_config(
-        test_root("a_site_without_a_note_is_exempt"),
-        "citation-first-colon",
-    );
+    let root = test_root("a_site_without_a_note_is_exempt");
+    let config = checked_layout_config(root.to_path_buf(), "citation-first-colon");
     let block = ["// \u{a7}FS-001-login  \u{a7}FS-002-logout"];
     assert!(violations(&config, &block, false).is_empty());
     // The same block, told it carries a note, is judged and fails.
@@ -285,10 +271,8 @@ fn a_site_without_a_note_is_exempt() {
 /// why ` + `, an `and`, a second comma, and a colon-led sentence all carry one.
 #[test]
 fn a_citation_chain_carries_no_note() {
-    let config = checked_layout_config(
-        test_root("a_citation_chain_carries_no_note"),
-        "citation-first-colon",
-    );
+    let root = test_root("a_citation_chain_carries_no_note");
+    let config = checked_layout_config(root.to_path_buf(), "citation-first-colon");
     for line in [
         "// \u{a7}FS-001-login  \u{a7}FS-002-logout",
         "// \u{a7}FS-001-login, \u{a7}FS-002-logout",
@@ -375,7 +359,7 @@ fn no_layout_records_no_violations() {
     citation_only.inline_style = "citation-only".into();
     // A layout the project documents but does not gate: at `off` the verdicts
     // have no consumer, so the deviating line is never classified.
-    let documented_only = layout_config(root, "citation-first-colon");
+    let documented_only = layout_config(root.to_path_buf(), "citation-first-colon");
     assert_eq!(documented_only.inline_note_layout_check, "off");
 
     for config in [any, citation_only, documented_only] {
@@ -395,7 +379,7 @@ fn an_unknown_check_level_classifies_nothing() {
     let root = test_root("an_unknown_check_level_classifies_nothing");
     let block = ["// \u{a7}FS-001-login reject an expired credential"];
 
-    let mut config = checked_layout_config(root, "citation-first-colon");
+    let mut config = checked_layout_config(root.to_path_buf(), "citation-first-colon");
     config.inline_note_layout_check = "info".into();
     assert!(layout_channel(config.lexical()).is_none());
     assert!(!layout_pass_enabled(config.lexical()));
@@ -444,7 +428,7 @@ fn note_walk_tokenizes_only_the_lines_it_reads() {
 
     // Gated: the layout pass judges the lines rule 1 names, so every line is
     // tokenized — and the one the note walk already read is not tokenized twice.
-    let gated_config = checked_layout_config(root, "citation-first-colon");
+    let gated_config = checked_layout_config(root.to_path_buf(), "citation-first-colon");
     assert!(layout_pass_enabled(gated_config.lexical()));
     let prefixes = comment_strip_prefixes(gated_config.lexical());
     let mut gated = BlockCitations::new(&block, &[], gated_config.lexical(), &[]);

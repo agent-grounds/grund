@@ -1,6 +1,7 @@
 //! Test module: §FS-config-migrate.4, the comments a migration carries or
 //! lists. No comment may be neither, since `--drop-comments` is the only way a
 //! migration loses one (§REQ-no-data-loss.4).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::{Located, MigrateReport, Prepared, translate};
 use crate::testing::{test_root, write};
@@ -17,7 +18,6 @@ fn report(name: &str, toml: &str) -> MigrateReport {
     };
     let prepared =
         translate(&located, false, false, &|| true, &|_| Ok(Vec::new())).expect("translates");
-    let _ = std::fs::remove_dir_all(&root);
     match prepared {
         Prepared::Translated { report, .. } => *report,
         Prepared::AlreadyV2 => panic!("read as version 2"),

@@ -10,7 +10,6 @@ use std::path::PathBuf;
 use super::test_root;
 
 #[test]
-#[ignore = "red until #1362 roots own cleanup; implement removes this"]
 fn fixture_root_normal_exit_removes_contents() {
     let path;
     {
@@ -31,7 +30,6 @@ fn fixture_root_normal_exit_removes_contents() {
 }
 
 #[test]
-#[ignore = "red until #1362 roots clean up during unwinding; implement removes this"]
 fn fixture_root_panic_removes_contents() {
     let mut path = PathBuf::new();
     let result = catch_unwind(AssertUnwindSafe(|| {
@@ -53,7 +51,6 @@ fn fixture_root_panic_removes_contents() {
 }
 
 #[test]
-#[ignore = "red until #1362 repeated roots are independent; implement removes this"]
 fn fixture_root_repeated_allocations_are_independent() {
     for first_drops_first in [true, false] {
         let first = test_root("fixture_root_repeated_allocations_are_independent");
@@ -96,7 +93,6 @@ fn fixture_root_repeated_allocations_are_independent() {
 }
 
 #[test]
-#[ignore = "red until #1362 occupied roots are preserved; implement removes this"]
 fn fixture_root_occupied_candidate_is_preserved() {
     // Forget the first owner to model an occupied leaf from a previous caller.
     // A new caller may refuse it or choose another leaf, but must not pre-clear it.

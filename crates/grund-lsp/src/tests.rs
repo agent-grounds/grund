@@ -4,20 +4,16 @@ use std::fs;
 #[path = "../../grund-cli/tests/support/fixture_root_contract.rs"]
 mod fixture_root_contract;
 
-fn test_root(name: &str) -> PathBuf {
-    let unique = format!(
-        "{}-{}-{:?}",
-        name,
-        std::process::id(),
-        std::thread::current().id()
-    );
-    let dir = std::env::temp_dir().join("grund-lsp-tests").join(unique);
-    let _ = fs::remove_dir_all(&dir);
-    fs::create_dir_all(&dir).expect("create test root");
+#[path = "../../grund-cli/tests/support/temporary_root.rs"]
+mod temporary_root;
+
+/// Own the leaf through canonicalization and use (§FS-repository-maintenance.4.1).
+fn test_root(name: &str) -> temporary_root::TemporaryRoot {
     // The server answers from canonical paths, so a fixture URI built from this
     // root must be canonical too — `env::temp_dir()` is `/var/…` behind a
     // symlink on macOS, where the two spellings are not the same string.
-    fs::canonicalize(&dir).expect("canonical test root")
+    temporary_root::TemporaryRoot::new(&std::env::temp_dir().join("grund-lsp-tests"), name)
+        .physical()
 }
 
 fn write(path: &Path, text: &str) {

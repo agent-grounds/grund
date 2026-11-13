@@ -1,13 +1,14 @@
 //! Core contract for the typed `refs` query-failure carrier
 //! (§FS-refs.4, §FS-errors.2.3).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 use crate::testing::{test_root, write};
 use anyhow::Result;
 
-fn refs_repo(name: &str) -> PathBuf {
+fn refs_repo(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -87,7 +88,7 @@ fn successful_and_setup_outcomes_do_not_receive_the_query_failure_carrier() {
     );
 
     let legacy_error = refs(RefsOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         id: "FS-bar".to_string(),
         section: None,

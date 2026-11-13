@@ -4,13 +4,15 @@
 //! [`declaration_id_on_line`], for a line read as comment-prefixed; the
 //! cross-line block state of a bare line is pinned by the e2e cases
 //! `bare-block-comment-line-*`.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::{declaration_id_on_line, render_id};
 use crate::testing::{numbered_config, test_root};
 
 /// The ID a comment-prefixed source line declares, or `None`.
 fn declared(name: &str, line: &str) -> Option<String> {
-    let mut config = numbered_config(test_root(name));
+    let root = test_root(name);
+    let mut config = numbered_config(root.to_path_buf());
     config.rebuild_grammar().expect("rebuild the test grammar");
     declaration_id_on_line(&config.grammar, line, false, false)
         .map(|(id, _)| render_id(&config.grammar, &id))

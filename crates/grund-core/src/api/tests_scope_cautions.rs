@@ -1,5 +1,6 @@
 //! The empty-scan caution's hidden-file branch (§FS-check.2.2.2, §AR-scanner.1.13),
 //! and how it names the scope it read (§FS-workspace.5.3, §FS-config.3.6).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::scope_cautions::{display_scope, empty_scan_warning};
 use crate::config::{Config, load_config_at};
@@ -8,14 +9,15 @@ use std::path::Path;
 
 /// A project at `name` whose `[scan] extensions` is `extensions`, holding a
 /// hidden `.notes.txt`, loaded from its own `grund.toml`.
-fn hidden_notes_project(name: &str, extensions: &str) -> Config {
+fn hidden_notes_project(name: &str, extensions: &str) -> crate::testing::Rooted<Config> {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
         &format!("[scan]\nextensions = [{extensions}]\n"),
     );
     write(&root.join(".notes.txt"), "# Notes\n");
-    load_config_at(&root, &root).expect("load the project")
+    let config = load_config_at(&root, &root).expect("load the project");
+    root.hold(config)
 }
 
 /// §FS-check.2.2.2, §AR-scanner.1.13: the hidden-file message is the read

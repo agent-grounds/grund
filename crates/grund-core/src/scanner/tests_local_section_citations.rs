@@ -1,5 +1,6 @@
 //! Scanner ownership and grammar boundaries for declaration-local numeric citations
 //! (§FS-check.1.1.8, §AR-scanner.2.3, §AR-scanner.2.4).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::model::{Catalog, Citation, Id};
 use crate::testing::{numbered_config, scan_tree, test_root, write};
@@ -28,7 +29,7 @@ fn local_numeric_paths_use_marker_boundaries_and_markdown_body_ownership() {
             "# Plain chapter\n\nOwnerless @2.\n",
         ),
     );
-    let mut config = numbered_config(root);
+    let mut config = numbered_config(root.to_path_buf());
     config.marker = "@".into();
     config.rebuild_grammar().expect("configured marker grammar");
     let mut scans = Vec::new();
@@ -115,7 +116,7 @@ fn source_local_paths_use_comment_boundaries_and_nearest_preceding_declaration()
             "// Outside the doc-comment \u{a7}2.1.\n",
         ),
     );
-    let config = numbered_config(root);
+    let config = numbered_config(root.to_path_buf());
 
     let (findings, errors) = scan_tree(&config, Some(&path), true).expect("scan source fixture");
     assert!(errors.is_empty(), "unexpected scan errors: {errors:?}");
@@ -154,7 +155,7 @@ fn promoted_local_citation_carries_its_enclosing_chapter() {
             "## 2. Target\n",
         ),
     );
-    let config = numbered_config(root);
+    let config = numbered_config(root.to_path_buf());
 
     let (findings, errors) = scan_tree(&config, Some(&path), true).expect("scan fixture");
     assert!(errors.is_empty(), "unexpected scan errors: {errors:?}");

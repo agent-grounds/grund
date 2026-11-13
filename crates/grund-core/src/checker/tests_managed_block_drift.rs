@@ -1,6 +1,7 @@
 //! Test module: drift detection for the managed blocks grund writes into
 //! agent entrypoints — citation directions, clickable citations, and the
 //! guidance block version (§FS-init).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::agents::section_in_block;
 use super::*;
@@ -335,7 +336,7 @@ fn agents_init_messages_cover_all_five_final_templates() {
         let root = test_root(&format!("agents_init_{name}"));
         let path = root.join("AGENTS.md");
         write(&path, contents);
-        let config = Config::default_for(root);
+        let config = Config::default_for(root.to_path_buf());
         let mut report = CheckReport::default();
 
         check_agent_block_path(&config, &path, &mut report, true);

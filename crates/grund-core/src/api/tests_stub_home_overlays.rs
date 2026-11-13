@@ -3,6 +3,7 @@
 //! snapshot reports the duplicate the saved text gives, and `show` refuses or
 //! answers as the saved text does (§FS-show.2.2.1, §FS-lsp.1.1), because the stub
 //! pairs on the same reading as its health (§FS-declarations.stubs.target.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::{lsp_snapshot, lsp_snapshot_with_completion, show_from_snapshot};
 use crate::model::format_path;
@@ -34,8 +35,14 @@ const LONE_STUB: &[&str] = &["docs/a.md"];
 
 /// The stubs of one ID in `docs/` named by `stubs`, pointing at `src/x.rs`, which
 /// holds `source` on disk and is inside `[scan] include` only when `scanned`.
-fn stub_repo(name: &str, scanned: bool, stubs: &[&str], source: &str) -> PathBuf {
-    let root = std::fs::canonicalize(test_root(name)).expect("canonical test root");
+fn stub_repo(
+    name: &str,
+    scanned: bool,
+    stubs: &[&str],
+    source: &str,
+) -> crate::testing::TemporaryRoot {
+    let root = test_root(name);
+    let root = root.physical();
     let include = if scanned {
         "[\"docs\", \"src\"]"
     } else {

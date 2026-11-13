@@ -1,6 +1,7 @@
 //! Migration capture is opt-in (§FS-config-migrate.4.3, §AR-config.8.1). The observer
 //! counts records actually constructed, including those an ordinary read drops;
 //! it is thread-local and compiled only into unit tests.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::cell::Cell;
 use std::path::Path;
@@ -74,7 +75,6 @@ fn discovered_config_constructs_no_line_records() {
     let root = test_root("config-capture-contract-discovered");
     write(&root.join("grund.toml"), TEXT);
     let (loaded, captured) = captured_during(|| load_config_at(&root, &root));
-    let _ = std::fs::remove_dir_all(&root);
     assert_eq!(loaded.expect("the config loads").marker, "#");
     assert_eq!(captured, 0, "discovery captured migration records");
 }
@@ -85,7 +85,6 @@ fn pending_config_constructs_no_line_records() {
     let root = test_root("config-capture-contract-pending");
     let invocation = Invocation::new(&root, true, Selection::Project);
     let (loaded, captured) = captured_during(|| pending_config(TEXT, &root, &invocation));
-    let _ = std::fs::remove_dir_all(&root);
     assert_eq!(loaded.expect("the pending config loads").marker, "#");
     assert_eq!(
         captured, 0,

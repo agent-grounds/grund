@@ -4,8 +4,9 @@
 //! name this key carried before that rename (§FS-config.3.4.6), lives here too:
 //! it is the same change seen from the config file, and a reader chasing either
 //! one wants both.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 use crate::api::{IdOpts, IdProposalOutcome, propose_id};
@@ -16,7 +17,7 @@ use crate::writers::render_agents_append_block_at;
 /// A repo whose `skills/` is a non-citable home, plus the `FS` its rules
 /// point at. `[scan] include` deliberately does **not** name `skills` — the
 /// home is what puts it in scope (§FS-config.3.5.8).
-fn skills_repo(name: &str, citations: &str, skill_body: &str) -> PathBuf {
+fn skills_repo(name: &str, citations: &str, skill_body: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -360,7 +361,7 @@ fn a_kinds_entry_that_sets_kind_twice_is_refused_at_the_second_line() {
 }
 
 /// A repo whose complement kind is named, rather than left as `code`.
-fn named_homeless_repo(name: &str, citations: &str) -> PathBuf {
+fn named_homeless_repo(name: &str, citations: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

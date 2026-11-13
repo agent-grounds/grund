@@ -2,6 +2,7 @@
 //! `[scan] include`, and the promise that everything inside it still reads
 //! exactly as a run without the flag (§FS-check.1.3, §DF-check-full-scope).
 //! What the wider walk then *reports* out there is in `tests_check_full.rs`.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 #[cfg(unix)]
 use crate::testing::symlink;
@@ -136,7 +137,10 @@ fn full_scope_warns_when_an_explicit_path_leaves_it_nothing_to_cancel() {
 #[cfg(unix)]
 #[test]
 fn full_scope_warning_keeps_a_lexical_root_alias() {
-    let root = drifted_include_repo("full_scope_warning_keeps_a_lexical_root_alias");
+    // §FS-repository-maintenance.4.1: the project and its external alias share an owner.
+    let root = crate::testing::drifted_include_repo_at(
+        test_root("full_scope_warning_keeps_a_lexical_root_alias").child("project"),
+    );
     write(&root.join("sim/world.py"), "# Cites \u{a7}FS-999-missing\n");
     let alias = root.with_extension("alias");
     symlink(root.to_str().expect("UTF-8 test path"), &alias);
@@ -382,7 +386,7 @@ fn full_scope_reads_each_file_once_across_overlapping_roots() {
 /// a Windows runner that checks the repository out without them, so this
 /// case stays here rather than in `e2e/cases/` (§FS-check.1.3.2).
 #[cfg(unix)]
-fn aliased_include_root_repo(name: &str, real: &str, link: &str) -> std::path::PathBuf {
+fn aliased_include_root_repo(name: &str, real: &str, link: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

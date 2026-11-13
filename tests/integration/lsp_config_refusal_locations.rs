@@ -1,6 +1,7 @@
 //! Real config-load refusals retain their named lines through publication
 //! (§FS-lsp.2.2.4.1), with CLI message agreement (§FS-lsp.1.1). Exercise the
 //! shared core/transport boundary (§AR-lsp.2), not prelocated mock diagnostics.
+//! Fixture owners remove their roots after all consumers (§FS-repository-maintenance.4.1).
 
 #[path = "binaries.rs"]
 mod binaries;
@@ -88,7 +89,6 @@ fn startup(config: &str, expected: &str, located: bool, setup: impl FnOnce(&Path
     send_message(&mut stdin, json!({"jsonrpc":"2.0", "method":"exit"}));
     drop(stdin);
     wait_for_exit(&mut child);
-    fs::remove_dir_all(root).expect("remove fixture");
     assert_refusal(&diagnostics, &cli, line);
 }
 

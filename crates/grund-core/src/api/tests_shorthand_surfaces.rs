@@ -5,6 +5,7 @@
 //! which pins recognition, resolution, and the check error: these cases fail
 //! when a surface stops accepting the shorthand, not when the scanner changes
 //! its mind about one (§AR-core-module-layout.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::BTreeMap;
 
@@ -22,7 +23,8 @@ use regex::Regex;
 // `FS-042` rather than leaking the raw `{slug}` placeholder into a report.
 #[test]
 fn render_id_prints_a_slugless_id_as_the_shorthand() {
-    let config = numbered_config(test_root("render_id_prints_a_slugless_id_as_the_shorthand"));
+    let root = test_root("render_id_prints_a_slugless_id_as_the_shorthand");
+    let config = numbered_config(root.to_path_buf());
     let shorthand = Id {
         kind: "FS".into(),
         num: Some(42),
@@ -117,7 +119,7 @@ fn ambiguous_shorthand_query_carries_no_sites() {
     let Err(err) = show(
         "FS-042",
         ShowOpts {
-            path: root,
+            path: root.to_path_buf(),
             format: ShowFormat::Json,
             ..ShowOpts::default()
         },

@@ -1,15 +1,16 @@
 //! Contract tests for module-level assigned Python triple-quoted data
 //! (§FS-check.1.1.3.1, §FS-refs.2, §FS-fmt.2.3.1.1, §AR-scanner.4.4).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 use crate::queries::{DeclaredId, LspSnapshotOpts, on_type_line_edits};
 use crate::testing::{test_root, write};
 
-fn assigned_repo(name: &str, source: &str, scan: &str) -> PathBuf {
+fn assigned_repo(name: &str, source: &str, scan: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -236,7 +237,7 @@ fn check_refs_cover_and_lsp_share_the_assigned_data_boundary() {
     .map(|citation| citation.line)
     .collect::<Vec<_>>();
     let lsp_lines = lsp_snapshot(LspSnapshotOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         open_documents: BTreeMap::new(),
     })

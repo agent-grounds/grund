@@ -51,7 +51,7 @@ fn codes(diagnostics: &[Value], code: &str) -> usize {
 fn shown_then_exit(
     stdin: &mut impl std::io::Write,
     receiver: &mpsc::Receiver<Value>,
-    child: &mut std::process::Child,
+    child: &mut support::Child,
 ) -> BTreeMap<String, Vec<Value>> {
     send_message(
         stdin,

@@ -1,6 +1,7 @@
 //! Negative embedded-value boundaries: wrapper normalization, host-language
 //! enrollment, and overlapping root authority (§FS-values.2.4, §FS-values.5.1,
 //! §FS-values.9).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::testing::{embedded_value_config, scan_embedded_value, scan_tree, test_root, write};
 
@@ -58,7 +59,7 @@ fn block_close_bytes_are_wrapper_syntax_only_in_block_comments() {
              /// ## 2. Use\n\
              /// Bound: `1200` (\u{a7}FS-001-alpha.1.1)\n",
     );
-    let config = embedded_value_config(root);
+    let config = embedded_value_config(root.to_path_buf());
     let (findings, errors) = scan_tree(&config, Some(&path), true).expect("scan line comment");
     assert!(errors.is_empty());
     let declaration = findings
@@ -92,7 +93,7 @@ fn block_close_bytes_are_wrapper_syntax_only_in_block_comments() {
              * ### 1.1. 1200 */\n"
         ),
     );
-    let config = embedded_value_config(root);
+    let config = embedded_value_config(root.to_path_buf());
     let (findings, errors) = scan_tree(&config, Some(&path), true).expect("scan block comment");
     assert!(errors.is_empty());
     let declaration = findings
@@ -132,7 +133,7 @@ fn non_comment_source_markers_are_inert() {
              ### 2.1. 50\n\
              \";\n",
     );
-    let mut config = embedded_value_config(root);
+    let mut config = embedded_value_config(root.to_path_buf());
     config.comment_prefixes = vec!["//".to_string()];
     config.rebuild_grammar().expect("rebuild Rust grammar");
     let (findings, errors) = scan_tree(&config, Some(&path), true).expect("scan host strings");

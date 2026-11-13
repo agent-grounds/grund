@@ -1,6 +1,7 @@
 //! Lifecycle, navigation, and diagnostics cases driven against a real server
 //! process over stdio (§FS-lsp.1, §FS-lsp.2.2, §FS-lsp.2.4). `textDocument/hover` has its
 //! own suite in `tests/hover.rs`.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -35,7 +36,6 @@ fn shutdown_exit_terminates_stdio_server() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 /// Stub-title definition follows the inline source home (§FS-lsp.1.3);
@@ -344,7 +344,6 @@ fn navigation_covers_source_comment_citations_and_stub_titles() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 #[test]
@@ -413,7 +412,6 @@ fn diagnostic_anchors_on_offending_citation_token() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 /// A dangling citation in an ungrounded source file gets two diagnostics from
@@ -484,7 +482,6 @@ fn line_anchored_diagnostic_does_not_overlap_dangling_citation() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 #[test]
@@ -560,7 +557,6 @@ fn document_links_cover_python_docstring_citation_columns() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 /// Clients that advertise `textDocument.definition.linkSupport` get
@@ -664,7 +660,6 @@ fn definition_links_carry_whole_token_origin_span() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 /// With no highlight provider an editor falls back to its word pattern and
@@ -739,7 +734,6 @@ fn document_highlight_marks_whole_citation_token() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 #[test]
@@ -802,7 +796,6 @@ fn forbidden_citation_surfaces_as_diagnostic() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 #[test]
@@ -876,5 +869,4 @@ fn malformed_message_does_not_crash_server() {
     drop(stdin);
 
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

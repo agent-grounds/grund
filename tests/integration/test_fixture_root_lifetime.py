@@ -45,7 +45,6 @@ class FixtureRootLifetime(unittest.TestCase):
             (root / 'missing').symlink_to(root / 'absent')
             self.assertEqual(set(ORACLE.entries(root)), {root / 'loop', root / 'missing'})
 
-    @unittest.skip('red until #1362 roots own cleanup; implement removes this')
     def test_two_passing_core_suites_leave_no_owned_roots(self):
         with tempfile.TemporaryDirectory(prefix='grund-1362-oracle-logs-') as logs:
             self.assertEqual(ORACLE.run(ROOT, Path(logs)), 0,

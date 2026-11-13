@@ -2,6 +2,7 @@
 //! `fmt --write` writes from (§FS-section-lock.write.rules,
 //! §FS-section-lock.checks.section-address-changed,
 //! §FS-section-lock.checks.vanished), over a scanned tree.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::BTreeMap;
 
@@ -63,7 +64,7 @@ fn scan_tree(
     cites: &str,
     lock: &str,
     extra: &[(&str, &str)],
-) -> (Config, Catalog) {
+) -> (crate::testing::Rooted<Config>, Catalog) {
     let root = test_root(name);
     for (path, text) in extra {
         write(&root.join(path), text);
@@ -82,7 +83,7 @@ fn scan_tree(
     }
     let config = load_config(&root).expect("load config");
     let findings = scan_findings(&config, &root);
-    (config, findings)
+    (root.hold(config), findings)
 }
 
 #[test]

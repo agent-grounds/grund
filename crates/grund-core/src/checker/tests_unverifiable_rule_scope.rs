@@ -6,6 +6,7 @@
 //! `…-pinned-rule-…` e2e cases. What is here is the seam each one rests on: the
 //! classification bit, the authored sentence surviving into the row, and the
 //! alias set `init` resolves against being the one `check` loads.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::chapter_rules::{configured_rule_sentences, declared_workspace_vocabulary, vocabulary};
 use crate::config::{Config, KindScope, KindVerdict, ProjectRecords, load_config};
@@ -15,7 +16,7 @@ use crate::rules::sentence::{RuleVocabulary, parse_rule};
 use crate::testing::{scan_tree, test_root, write};
 use crate::workspace::declared_member_schemas;
 use std::collections::BTreeSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 const PINNED: &str = "The operations chapter of each SEG must cite at least one workshop/OP.";
 
@@ -23,7 +24,8 @@ const PINNED: &str = "The operations chapter of each SEG must cite at least one 
 /// sentence. `workshop` is written beside it whether or not the project claims
 /// it as a member, so what varies between the cases below is the `[workspace]`
 /// line and nothing else.
-fn project(name: &str, extra: &str, sentence: &str) -> PathBuf {
+/// Keep this owner through every workspace read (§FS-repository-maintenance.4.1).
+fn project(name: &str, extra: &str, sentence: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -125,15 +127,15 @@ fn verdict(config: &Config, sentence: &str) -> Result<(), bool> {
 /// rejected anyway, the answer was no and the rule is invalid.
 #[test]
 fn only_a_scope_holding_no_namespace_makes_an_object_kind_unverifiable() {
-    let with = load_config(&project(
+    let with_root = project(
         "rule-scope-with-workspace",
         "[workspace]\nmembers = [\"workshop\"]\n",
         PINNED,
-    ))
-    .expect("load workspace config");
+    );
+    let with = load_config(&with_root).expect("load workspace config");
     // No `[workspace]` line at all — the member-scoped run's effective config.
-    let without = load_config(&project("rule-scope-without-workspace", "", PINNED))
-        .expect("load standalone config");
+    let without_root = project("rule-scope-without-workspace", "", PINNED);
+    let without = load_config(&without_root).expect("load standalone config");
 
     let each = "The operations chapter of each SEG must cite at least one";
     for (config, object, expected) in [
@@ -314,11 +316,11 @@ fn a_declared_workspace_holds_its_own_namespace_even_when_the_members_do_not_exp
 
     // And `members = []` reaches that same verdict, which is the disagreement
     // between two spellings of one broken tree that the fallback removes.
-    let empty = load_config(&project(
+    let empty_root = project(
         "rule-scope-empty-workspace",
         "[workspace]\nmembers = []\n",
         PINNED,
-    ))
-    .expect("load empty-workspace config");
+    );
+    let empty = load_config(&empty_root).expect("load empty-workspace config");
     assert_eq!(verdict(&empty, PINNED), verdict(&config, PINNED));
 }

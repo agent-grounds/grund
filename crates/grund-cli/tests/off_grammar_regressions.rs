@@ -2,21 +2,23 @@
 //! sites, and formatter-wrapper reads (§FS-config.3.2.5, §FS-show.3.2.1,
 //! §FS-inline-citation-style.3.1, §FS-workspace.8).
 
+#[path = "support/temporary_root.rs"]
+mod temporary_root;
+use temporary_root::TemporaryRoot;
+
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Output};
 
 #[path = "support/fixture_root_contract.rs"]
 mod fixture_root_contract;
 
-fn test_root(name: &str) -> PathBuf {
-    let root = std::env::temp_dir().join(format!(
-        "grund-off-grammar-fix-{name}-{}",
-        std::process::id()
-    ));
-    let _ = fs::remove_dir_all(&root);
-    fs::create_dir_all(&root).expect("create test root");
-    root
+/// Own each fixture until its caller finishes (§FS-repository-maintenance.4.1).
+fn test_root(name: &str) -> TemporaryRoot {
+    TemporaryRoot::new(
+        &std::env::temp_dir(),
+        &format!("grund-off-grammar-regressions-{name}"),
+    )
 }
 
 fn write(root: &Path, path: &str, text: &str) {

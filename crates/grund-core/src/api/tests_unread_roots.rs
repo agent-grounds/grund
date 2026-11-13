@@ -159,9 +159,8 @@ fn an_editor_marks_the_warning_at_the_config_not_under_its_working_directory() {
 fn an_editor_marks_a_members_warning_at_the_members_config() {
     // Canonical, as a workspace load spells its members' roots: on Windows a plain
     // root shares no prefix with a member's verbatim config path.
-    let root = test_root("unread_root_editor_member_config_path")
-        .canonicalize()
-        .unwrap();
+    // §FS-repository-maintenance.4.1: keep ownership through the member's last use.
+    let root = test_root("unread_root_editor_member_config_path").physical();
     let member = root.join("member");
     write(
         &member.join("grund.toml"),
