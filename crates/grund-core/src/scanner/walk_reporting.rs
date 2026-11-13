@@ -9,7 +9,7 @@ use super::read_predicate::{Unread, extension_refusal, name_refusal};
 use super::scan_error::FailureRoots;
 use super::tree::ScanError;
 use super::value_json::value_sources;
-use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walker};
+use super::walk::{Met, MetCases, WalkDirFilter, scan_roots, scannable_walker};
 use super::walk_boundaries::{PlacedRoot, is_scannable, owned_by_another_project, place_root};
 use super::walk_errors::{
     LinkRecovery, root_lookup_failure, symlink_loop_report, walk_error_reports,
@@ -266,7 +266,7 @@ pub(crate) fn walk_scannable_files_with_sources(
             &physical_root,
             &link_roots,
             &looping_links,
-            Some(&met_cases),
+            Met::cases(&met_cases),
         )?;
         let mut root_files = Vec::new();
         let mut root_errors = Vec::new();

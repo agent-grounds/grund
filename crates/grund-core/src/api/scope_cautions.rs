@@ -24,7 +24,8 @@ use crate::model::{
     Catalog, Code, Diagnostic, base_reads_dot, format_path, normalize_path_lexically,
 };
 use crate::scanner::{
-    Unread, extension_refusal, handed_outward_link, name_refusal, pruning_pattern,
+    Unread, extension_refusal, handed_outward_link, name_refusal, outward_link_below,
+    pruning_pattern,
 };
 use crate::workspace::scope_is_config_root;
 
@@ -142,7 +143,9 @@ fn handed_a_hidden_file(config: &Config, path: &Path, path_provided: bool) -> bo
 /// (§FS-check.2.2.2.5). A handed directory link out of the project is asked
 /// before the extensions and the exclude patterns, for the same reason as the
 /// hidden file: the walk refused it at the link gate before either was consulted
-/// (§FS-check.2.2.2.6).
+/// (§FS-check.2.2.2.6). Last, ahead of the extensions alone, an exclude pattern that
+/// pruned a file the walk would have read, and then an outward link the walk refused
+/// below the path: the one place under it the run never looked (§FS-check.2.2.2.6.1).
 ///
 /// Every arm names `path` as `display` spells it (§FS-workspace.5.3), while
 /// which arm speaks is still asked of the real path.
@@ -215,11 +218,21 @@ pub(super) fn empty_scan_warning(
                  the [schema.sources] exclude pattern `{pattern}`.",
                 shown
             ),
-            None => format!(
-                "nothing to scan — no files under `{}` matched grund's extensions ({}).",
-                shown,
-                config.extensions.join(", ")
-            ),
+            // §FS-check.2.2.2.6.1: the link is spelled from the path, as `display` spells it.
+            None => match outward_link_below(config.schema(), config.frame(), path) {
+                Some(link) => format!(
+                    "nothing to scan — nothing under `{}` was read: `{}` is a directory link out \
+                     of the project root, and grund does not follow one (name a file below it, \
+                     or move the target inside the project).",
+                    shown,
+                    display_scope(display, &path.join(link))
+                ),
+                None => format!(
+                    "nothing to scan — no files under `{}` matched grund's extensions ({}).",
+                    shown,
+                    config.extensions.join(", ")
+                ),
+            },
         },
     };
     Diagnostic {
