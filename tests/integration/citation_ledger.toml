@@ -44,6 +44,7 @@ owners = [
   "crates/grund-core/src/sources/disk.rs",
   "crates/grund-core/src/sources/identity.rs",
   "crates/grund-core/src/workspace/declared.rs",
+  "crates/grund-core/src/workspace/scope.rs",
 ]
 
 [[family]]
