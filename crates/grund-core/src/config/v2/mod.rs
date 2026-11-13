@@ -25,6 +25,7 @@ mod front_matter;
 mod measures;
 mod places;
 mod presentation;
+mod read_as_markdown;
 mod render;
 mod rules;
 mod schema;

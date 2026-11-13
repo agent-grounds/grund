@@ -9,6 +9,7 @@ use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::Path;
 
+use super::config_findings::load_warnings;
 use super::path_report::unread_resolution_source_cautions;
 use super::report::complete_report;
 use super::reporting::{reporting, workspace_block_projects};
@@ -217,6 +218,9 @@ fn check_workspace_context(
         report.errors.append(&mut project_report.errors);
         report.warnings.append(&mut project_report.warnings);
         report.verified_blocks |= project_report.verified_blocks;
+        // §FS-lsp.4.1: the version-2 reader's located load warnings, which `grund check`
+        // reports beside its other config findings (§FS-config-v2.checks).
+        (report.warnings).extend(load_warnings(&config, context.render_config().display()));
         if narrowed_workspace {
             unread_outside_report_scope.extend(unread_outside);
             continue;

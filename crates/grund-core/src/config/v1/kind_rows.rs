@@ -13,16 +13,30 @@ use std::path::Path;
 
 use super::kind_defaults::default_kind_index;
 use super::kind_table::ParsedKind;
-use super::kind_values::{
-    ValueLines, file_home_is_named_markdown, rule_kind_refusal, validate_kind_value_keys,
-};
+use super::kind_values::{ValueLines, judge_homes, rule_kind_refusal, validate_kind_value_keys};
 use super::values::bail_config;
 use crate::config::fields::Field;
+use crate::config::home_requirement::{Ask, Home};
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
 use crate::config::project::{KindGrounding, Project, Strength};
 use crate::config::record::{CODE_SOURCE_KIND, ConfigLocation};
 use crate::config::rows::{Extent, Form, Kind, Origin, Place, Row};
 use crate::model::format_path;
+
+/// A `[[kinds]]` entry's home, the one version 1 gives a row, at its header (§FS-config.3.4):
+/// what `home_requirement` judges (§AR-config.1.6).
+fn one_home(k: &KindConfig, line: usize) -> Vec<Home<'_>> {
+    let file = k.file.iter().map(|path| (path, true));
+    let folder = k.folder.iter().map(|path| (path, false));
+    file.chain(folder)
+        .map(|(path, file)| Home {
+            path,
+            file,
+            first: true,
+            line,
+        })
+        .collect()
+}
 
 /// Every rule a `[[kinds]]` entry has to satisfy before it can be a row
 /// (§FS-config.3.4): each entry names a kind, `folder` and `file` are
@@ -53,7 +67,15 @@ pub(super) fn lower_parsed_kinds(
     // and lowers to no rows below — the reader yields it for nothing else.
     for entry in &parsed {
         let k = &entry.config;
-        if let Some(refusal) = rule_kind_refusal(k, file_home_is_named_markdown(k)) {
+        let homes = one_home(k, entry.header_line);
+        if let Some(refusal) = rule_kind_refusal(k) {
+            return Err(anyhow!("{}: {refusal}", format_path(path)));
+        }
+        // §AR-config.1.6: the one judgement of a home, whose reading is version 1's name; it
+        // warns about nothing here, because no version-1 reading moves (§FS-config.5.2).
+        if k.rules
+            && let Err(refusal) = judge_homes(Ask::Rule, k, &homes, root, &project.schema.sources)
+        {
             return Err(anyhow!("{}: {refusal}", format_path(path)));
         }
         // §FS-config.3.4.10: an override belongs only to an ID namespace; an
@@ -137,6 +159,7 @@ pub(super) fn lower_parsed_kinds(
             path,
             k,
             &lines,
+            &homes,
             root,
             project.schema.ids.named_sections,
             &project.schema.sources,

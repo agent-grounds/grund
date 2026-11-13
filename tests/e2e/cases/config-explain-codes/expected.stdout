@@ -5,8 +5,13 @@ broken-stub: A stub's link does not lead to a declaration of its ID.
 chapter-cardinality: A declaration has more or fewer chapters of a name than a rule's have sentence allows.
 citation-cardinality: A declaration cites a target more or fewer times than a rule allows.
 config-fetch-names-nothing: A fetch key in a version-2 config named no executable, and was read for one more release as a kind whose fetch could not run; such a key is now refused when the config loads.
+config-index-not-markdown: A version-2 row's index names a file the configuration does not read as Markdown, so its folders are judged as under index = false for now.
+config-md-not-markdown: In version 2, an md entry of [schema.sources.extensions] maps .md to a language that does not read Markdown, and is read that way for now.
 config-multiline-string: A value in a version-2 config held a multi-line string, which version 2 does not read, and was read for one more release as before; such a value is now refused when the config loads.
 config-not-toml: A version-2 config held text TOML refuses that grund read for one more release as the readers before it did; such text is now refused when the config loads.
+config-rule-file-not-markdown: A version-2 rule kind's files entry is read by a source language, so a rule written as a Markdown heading there declares nothing.
+config-rule-folder-not-markdown: A version-2 rule kind's folders entry can hold no file read as Markdown, because no admitted language reads Markdown.
+config-value-home-absent: A version-2 value row's later home does not exist, and the row reads its other homes for now.
 conflict-marker: A scanned file holds an unresolved merge-conflict block.
 dangling: A citation names an ID that no declaration declares.
 declaration-near-miss: A heading opens like a declaration, but its ID does not match its kind's ID format.
@@ -56,6 +61,7 @@ reading-conflict: Two in-tree names of a file whose own name claims no reading r
 reading-moved: A link is read as its target's own name reads, which differs from what the link's name read it as before grund 0.22.0.
 redundant-config: A directory holds both grund.toml and .agents/grund.toml, and only the first is read.
 relative-section-parent: A relative section heading has no parent section one level up for its path to extend.
+rule-folder-file-not-markdown: A file in a version-2 rule kind's folder is read by a source language, so a rule written as a Markdown heading in it declares nothing.
 section-address-changed: A cited section's text has moved to another address, and the cited address now holds something else.
 section-heading-level: A section heading's Markdown depth does not match the depth of its section path.
 section-outside-declaration: A section heading sits outside every declaration's body.

@@ -54,8 +54,13 @@ Supported check finding codes:
   chapter-cardinality
   citation-cardinality
   config-fetch-names-nothing
+  config-index-not-markdown
+  config-md-not-markdown
   config-multiline-string
   config-not-toml
+  config-rule-file-not-markdown
+  config-rule-folder-not-markdown
+  config-value-home-absent
   config-version-1
   conflict-marker
   dangling
@@ -106,6 +111,7 @@ Supported check finding codes:
   reading-moved
   redundant-config
   relative-section-parent
+  rule-folder-file-not-markdown
   section-address-changed
   section-heading-level
   section-outside-declaration

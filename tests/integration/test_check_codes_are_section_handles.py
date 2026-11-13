@@ -46,7 +46,17 @@ MIGRATED = {
     "FS-imports": ("import-live", "import-missing"),
     "FS-check": ("config-version-1", "glob-citation", "off-format-citation"),
     "FS-citations": ("image-index-entry",),
-    "FS-config-v2": ("config-fetch-names-nothing", "config-multiline-string", "config-not-toml"),
+    "FS-config-v2": (
+        "config-fetch-names-nothing",
+        "config-index-not-markdown",
+        "config-md-not-markdown",
+        "config-multiline-string",
+        "config-not-toml",
+        "config-rule-file-not-markdown",
+        "config-rule-folder-not-markdown",
+        "config-value-home-absent",
+        "rule-folder-file-not-markdown",
+    ),
     "FS-rules": ("unreached-declaration",),
     "FS-scan": ("reading-conflict", "reading-moved", "unread-scan-root"),
     "FS-fields": (
@@ -133,15 +143,6 @@ NOT_YET_MIGRATED = (
 # §DF-imports) adds it to the selector constant and strikes it off here.
 SPECIFIED_AHEAD = {
     "FS-remote-projects": ("remote-missing", "remote-modified", "remote-orphan", "remote-stale"),
-    # Issue #1206's first pull request: implement moves these to MIGRATED["FS-config-v2"].
-    "FS-config-v2": (
-        "config-index-not-markdown",
-        "config-md-not-markdown",
-        "config-rule-file-not-markdown",
-        "config-rule-folder-not-markdown",
-        "config-value-home-absent",
-        "rule-folder-file-not-markdown",
-    ),
 }
 
 

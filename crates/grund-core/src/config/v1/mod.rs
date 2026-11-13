@@ -40,7 +40,7 @@ pub(super) use defaults::default_project;
 pub(crate) use defaults::{DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR};
 pub(crate) use kind_defaults::default_kind_folder;
 pub(super) use kind_values::{
-    ValueLines, file_home_is_named_markdown, rule_kind_refusal, validate_kind_value_keys,
+    ValueLines, judge_homes, rule_kind_refusal, validate_kind_value_keys,
 };
 pub(super) use values::{
     bail_config, list_elements, parse_bool, parse_string, parse_usize, split_outside_strings,

@@ -49,6 +49,25 @@ fn assert_rule_kind_loads(name: &str, toml: &str, home: &str) {
     );
 }
 
+/// §FS-config-v2.checks.config-rule-file-not-markdown: the row loads, and `home` is warned about
+/// at its `files` line, the one before `form`.
+fn assert_rule_home_warns(name: &str, toml: &str, home: &str) {
+    assert_rule_kind_loads(name, toml, home);
+    let config = load(name, toml, home).expect("loaded above");
+    let files = toml.lines().count() - 1;
+    let warned = config.project().load_warnings.0.iter().any(|warning| {
+        warning.code == crate::model::Code::CONFIG_RULE_FILE_NOT_MARKDOWN
+            && warning.at.line == files
+            && warning
+                .message
+                .contains(&format!("`{home}` is read as `rust`"))
+    });
+    assert!(
+        warned,
+        "{name}: expected config-rule-file-not-markdown at line {files}"
+    );
+}
+
 const MD_AS_JSON: &str =
     "languages = [\"markdown\", \"json\"]\n[schema.sources.extensions]\nmd = \"json\"\n";
 
@@ -112,12 +131,12 @@ fn v2_rule_home_second_file_read_as_json_is_refused() {
     assert_refused_at_form("v2_rule_home_second_file", toml, "rules/other.json");
 }
 
-/// §FS-config-v2.schema.sources.rules: a `source` language's entry keeps the name test on the
-/// first entry — a `.rs` home alone is refused, whatever reads it.
+/// §FS-config-v2.schema.sources.rules: a `source` language's entry is judged by its reading,
+/// never its name, so a `.rs` home alone loads with `config-rule-file-not-markdown`.
 #[test]
-fn v2_rule_home_rs_alone_is_refused() {
+fn v2_rule_home_rs_alone_warns() {
     let toml = v2("languages = [\"markdown\", \"rust\"]\n", "rules/rules.rs");
-    assert_refused_at_form("v2_rule_home_rs", &toml, "rules/rules.rs");
+    assert_rule_home_warns("v2_rule_home_rs", &toml, "rules/rules.rs");
 }
 
 /// §FS-config-v2.schema.sources.rules: a `.md` home `md = "rust"` reads as source keeps loading:
@@ -143,16 +162,16 @@ fn v2_rule_home_second_file_read_as_rust_loads() {
     assert_rule_kind_loads("v2_rule_home_second_rs_bare", &unwritten, "rules/more.rs");
 }
 
-/// §FS-config-v2.schema.sources.rules: the name test a `source` entry takes is the first entry's,
-/// so a later `.rs` after a `.txt` first entry stays refused though `txt = "markdown"` reads it.
+/// §FS-config-v2.schema.sources.rules, §AR-config.1.6: no entry is judged by the first one's
+/// name, so a later `.rs` after a `.txt` first entry `txt = "markdown"` reads loads and warns.
 #[test]
-fn v2_rule_home_second_file_read_as_rust_after_txt_is_refused() {
+fn v2_rule_home_second_file_read_as_rust_after_txt_warns() {
     let toml = "grund_config_version = 2\nproject_name = \"g179\"\n\
                 [schema.sources]\nlanguages = [\"markdown\", \"rust\"]\n\
                 [schema.sources.extensions]\ntxt = \"markdown\"\n\
                 [schema.kinds.RULE]\nfiles = [\"rules/rules.txt\", \"rules/more.rs\"]\n\
                 form = \"rule\"\n";
-    assert_refused_at_form("v2_rule_home_txt_then_rs", toml, "rules/more.rs");
+    assert_rule_home_warns("v2_rule_home_txt_then_rs", toml, "rules/more.rs");
 }
 
 /// §FS-config-v2.schema.sources.rules, §FS-config-v2.schema.sources.migration: what the real

@@ -68,6 +68,7 @@ mod off_format_citations;
 mod reference_scope;
 mod references;
 mod report;
+mod rule_folders;
 mod rule_obligations;
 mod section_lock;
 mod sections;

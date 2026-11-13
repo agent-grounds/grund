@@ -22,10 +22,20 @@ impl Code {
     pub const CITATION_CARDINALITY: Code = Code("citation-cardinality");
     /// §FS-config-v2.checks.config-fetch-names-nothing
     pub const CONFIG_FETCH_NAMES_NOTHING: Code = Code("config-fetch-names-nothing");
+    /// §FS-config-v2.checks.config-index-not-markdown
+    pub const CONFIG_INDEX_NOT_MARKDOWN: Code = Code("config-index-not-markdown");
+    /// §FS-config-v2.checks.config-md-not-markdown
+    pub const CONFIG_MD_NOT_MARKDOWN: Code = Code("config-md-not-markdown");
     /// §FS-config-v2.checks.config-multiline-string
     pub const CONFIG_MULTILINE_STRING: Code = Code("config-multiline-string");
     /// §FS-config-v2.checks.config-not-toml
     pub const CONFIG_NOT_TOML: Code = Code("config-not-toml");
+    /// §FS-config-v2.checks.config-rule-file-not-markdown
+    pub const CONFIG_RULE_FILE_NOT_MARKDOWN: Code = Code("config-rule-file-not-markdown");
+    /// §FS-config-v2.checks.config-rule-folder-not-markdown
+    pub const CONFIG_RULE_FOLDER_NOT_MARKDOWN: Code = Code("config-rule-folder-not-markdown");
+    /// §FS-config-v2.checks.config-value-home-absent
+    pub const CONFIG_VALUE_HOME_ABSENT: Code = Code("config-value-home-absent");
     /// §FS-check.checks.config-version-1
     pub const CONFIG_VERSION_1: Code = Code("config-version-1");
     /// §FS-declarations.checks.conflict-marker
@@ -127,6 +137,8 @@ impl Code {
     pub const REDUNDANT_CONFIG: Code = Code("redundant-config");
     /// §FS-declarations.checks.relative-section-parent
     pub const RELATIVE_SECTION_PARENT: Code = Code("relative-section-parent");
+    /// §FS-config-v2.checks.rule-folder-file-not-markdown
+    pub const RULE_FOLDER_FILE_NOT_MARKDOWN: Code = Code("rule-folder-file-not-markdown");
     /// §FS-section-lock.checks.section-address-changed
     pub const SECTION_ADDRESS_CHANGED: Code = Code("section-address-changed");
     /// §FS-declarations.checks.section-heading-level
@@ -181,8 +193,13 @@ impl Code {
         Code::CHAPTER_CARDINALITY,
         Code::CITATION_CARDINALITY,
         Code::CONFIG_FETCH_NAMES_NOTHING,
+        Code::CONFIG_INDEX_NOT_MARKDOWN,
+        Code::CONFIG_MD_NOT_MARKDOWN,
         Code::CONFIG_MULTILINE_STRING,
         Code::CONFIG_NOT_TOML,
+        Code::CONFIG_RULE_FILE_NOT_MARKDOWN,
+        Code::CONFIG_RULE_FOLDER_NOT_MARKDOWN,
+        Code::CONFIG_VALUE_HOME_ABSENT,
         Code::CONFIG_VERSION_1,
         Code::CONFLICT_MARKER,
         Code::DANGLING,
@@ -233,6 +250,7 @@ impl Code {
         Code::READING_MOVED,
         Code::REDUNDANT_CONFIG,
         Code::RELATIVE_SECTION_PARENT,
+        Code::RULE_FOLDER_FILE_NOT_MARKDOWN,
         Code::SECTION_ADDRESS_CHANGED,
         Code::SECTION_HEADING_LEVEL,
         Code::SECTION_OUTSIDE_DECLARATION,

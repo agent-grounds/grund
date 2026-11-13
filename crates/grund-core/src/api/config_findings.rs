@@ -109,13 +109,40 @@ fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Dia
     })
 }
 
+/// §FS-config-v2.checks.config-md-not-markdown: each warning the version-2 reader made of the
+/// file it loaded, at its config line, behind the `<config>:<line>:` breadcrumb
+/// (§FS-errors.2.2.1) that JSON carries as `path` and `line` too (§FS-errors.5.2.3). Version 1
+/// makes none (§FS-config.5.2).
+pub(super) fn load_warnings(config: &Config, display: Display<'_>) -> Vec<Diagnostic> {
+    let warnings = &config.project().load_warnings.0;
+    let warnings = warnings.iter().map(|warning| {
+        let file = config_file_under(&config.root, &warning.at.path);
+        Diagnostic {
+            code: warning.code,
+            message: format!(
+                "{}:{}: {}",
+                display.path(&file),
+                warning.at.line,
+                warning.message
+            ),
+            path: Some(file),
+            line: Some(warning.at.line),
+            column: None,
+            sites: Vec::new(),
+            authority: Vec::new(),
+        }
+    });
+    warnings.collect()
+}
+
 /// The findings a loaded config carries on its own — the redundant discovery
-/// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11)
-/// and a file read as version 1 (§FS-check.checks.config-version-1), in that
-/// order, which the report then sorts (§FS-check.checks.config-version-1.1). All
-/// are known from the file the run read rather than from the walk, which is why
-/// they arrive together. The version-2 reader's window warnings are spent from
-/// grund 0.22.0 (§FS-config-v2.checks.config-not-toml).
+/// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11),
+/// a file read as version 1 (§FS-check.checks.config-version-1) and the version-2
+/// reader's load warnings (§FS-config-v2.checks), in that order, which the report
+/// then sorts (§FS-check.checks.config-version-1.1). All are known from the file the
+/// run read rather than from the walk, which is why they arrive together. The
+/// version-2 reader's window warnings are spent from grund 0.22.0
+/// (§FS-config-v2.checks.config-not-toml).
 ///
 /// One list rather than a call each at each site: `grund check` and `grund config
 /// validate` name them per project ([`workspace_config_diagnostics`]) and `grund
@@ -129,6 +156,7 @@ pub(super) fn config_diagnostics<'a>(
         .into_iter()
         .chain(deprecated_config_location_warning(config))
         .chain(config_version_1_warning(config, display))
+        .chain(load_warnings(config, display))
 }
 
 /// The config findings a workspace names (§FS-check.4.11.3): the root's config,

@@ -61,6 +61,7 @@ mod frame;
 mod global_excludes;
 mod grounding;
 mod guidance;
+mod home_requirement;
 mod inputs;
 mod kind;
 mod kinds;
@@ -154,12 +155,13 @@ pub(crate) use discovery::{
 };
 #[cfg(test)]
 pub(crate) use discovery::{load_config, load_config_at};
-pub(crate) use file_reading::FileReading;
+pub(crate) use file_reading::{FileReading, Readings, written_language};
 pub(crate) use fmt_block::fmt_excluded;
 pub(crate) use grounding::{
     any_place_grounded, grounding_level_for_kind, grounding_setting, homeless_row_grounding,
     row_grounding, row_grounds_at_any_strength, soft_grounding_rungs,
 };
+pub(crate) use home_requirement::can_hold_markdown;
 pub(crate) use kind::escape_toml_basic;
 pub(crate) use kinds::{
     KindEntry, KindField, KindScope, KindTable, KindVerdict, Quote, install_kind_table,
@@ -178,6 +180,7 @@ pub(crate) use run_warnings::RunWarning;
 pub(crate) use scope_roots::{
     canonical_config_root, file_root_rows, root_scope_roots, unwalked_home_roots, unwalked_homes,
 };
+pub(crate) use sources::LanguageClass;
 pub(crate) use v1::{
     DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR, default_kind_folder, strip_comment,
 };
@@ -215,6 +218,8 @@ mod tests_lowering;
 mod tests_lowering_keys;
 #[cfg(test)]
 mod tests_non_citable_kinds;
+#[cfg(test)]
+mod tests_readings;
 #[cfg(test)]
 mod tests_records;
 #[cfg(test)]
