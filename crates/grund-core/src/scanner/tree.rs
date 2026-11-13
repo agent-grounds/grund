@@ -177,6 +177,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     let mut findings = Catalog {
         walked_dirs: walked.dirs,
         unread_roots: walked.unread_roots,
+        outside_root: walked.outside_root,
         reading_conflicts: walked.reading_conflicts,
         reading_moves: walked.reading_moves,
         failure_names: walked.failure_names,

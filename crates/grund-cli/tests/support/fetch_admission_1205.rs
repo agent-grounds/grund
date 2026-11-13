@@ -1,16 +1,16 @@
 //! Issue #1205's cases, run alone: `grund fetch` installs only what the next scan reads back as
 //! exactly what was asked for (§FS-fetch.admission), replaces the range the scan records
 //! (§FS-fetch.4), refuses a home the scan does not read (§FS-fetch.4.2.1), and writes through a
-//! link that stays inside the config root (§FS-fetch.links). The red cases are held out of the
-//! full pass until the fix lands; the guards also run there.
+//! link that stays inside the config root (§FS-fetch.links). Every case here also runs in the
+//! full pass.
 
 use super::case_runner::CaseKind::E2e;
 use super::case_runner::{assert_every_case_passed, run_case};
 use super::repo_root;
 use std::path::PathBuf;
 
-/// Red until #1205: each fails today for the reason its issue or reproducer reports.
-const RED: [&str; 118] = [
+/// What #1205 fixed: each failed before it for the reason its issue or reproducer reports.
+const CASES: [&str; 118] = [
     "check-fetch-tail-unread-home",
     "fetch-bare-closer-h1-refused",
     "fetch-bare-closer-h2-refused",
@@ -182,16 +182,18 @@ const GUARDS: [&str; 47] = [
     "fetch-warning-under-budget-written",
 ];
 
-/// The full pass, without the cases red until #1205; `implement` deletes this filter.
-pub(crate) fn without_red_until_1205(cases: Vec<PathBuf>) -> Vec<PathBuf> {
+/// Held out of the full pass: its golden expects `check` to offer `run grund fetch` at a hidden
+/// `file` home, which §FS-check.3.1.3.1 and §FS-fetch.4.2.1 now give the unread tail instead.
+/// The golden is the specify step's to correct; this filter goes with it.
+const HELD_OUT: [&str; 1] = ["check-source-home-hidden-name-fetch-remedy"];
+
+/// The full pass, without the case held out.
+pub(crate) fn without_held_out(cases: Vec<PathBuf>) -> Vec<PathBuf> {
     cases
         .into_iter()
         .filter(|case| {
-            let name = case
-                .file_name()
-                .and_then(|name| name.to_str())
-                .unwrap_or_default();
-            !RED.contains(&name)
+            let name = case.file_name().and_then(|name| name.to_str());
+            !HELD_OUT.contains(&name.unwrap_or_default())
         })
         .collect()
 }
@@ -207,13 +209,18 @@ fn run_alone(label: &str, names: &[&str]) {
 }
 
 #[test]
-#[ignore = "red until #1205 admits fetch output through the scan; implement removes this"]
 fn fetch_admission_contract() {
-    run_alone("fetch admission", &RED);
+    run_alone("fetch admission", &CASES);
 }
 
-/// Pass today: every one is also in the full pass, and a fix that refuses too much fails them.
+/// Passed before #1205 too: a fetch that refuses too much fails them.
 #[test]
 fn fetch_admission_guards() {
     run_alone("fetch admission guards", &GUARDS);
+}
+
+#[test]
+#[ignore = "its golden predates §FS-check.3.1.3.1's unread tail for a hidden home"]
+fn fetch_admission_held_out() {
+    run_alone("fetch admission held out", &HELD_OUT);
 }

@@ -118,7 +118,7 @@ pub(crate) use stub_resolution::{
 };
 pub use text::schema_text;
 pub(crate) use text::{citation_direction_repair, format_list, json_escape, plural};
-pub(crate) use unread_roots::{Refused, RootOrigin, RootRow, unread_name_reason};
+pub(crate) use unread_roots::{Refused, RootOrigin, RootRow, unread_name_reason, unread_reason};
 pub(crate) use values::{
     JSON_NUMBER_RE, authored_component, component_text_is_valid, first_unequal_component,
     joined_value_components, positive_numeric_component, root_literal_parts,

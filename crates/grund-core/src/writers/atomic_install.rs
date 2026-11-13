@@ -3,7 +3,8 @@
 //! original's permissions kept. `fetch` installs a snapshot through it
 //! (§FS-fetch.4, §FS-fetch.5, §REQ-no-data-loss.2) and `config migrate` replaces
 //! the config through it, asking it first to make sure the file did not change
-//! under the run (§FS-config-migrate.6.2, §FS-config-migrate.6.3). What it reads
+//! under the run (§FS-config-migrate.6.2, §FS-config-migrate.6.3); `fetch` asks the same of
+//! the home it read before its integration ran (§FS-fetch.6.1). What it reads
 //! of the file it replaces it asks sources for (§AR-system.2.13); what it writes
 //! is its own. Each caller maps a failure into its own refusal.
 
@@ -18,9 +19,27 @@ pub(crate) struct Install<'a> {
     pub(crate) bytes: &'a [u8],
     /// The temporary file is `.grund-<tag>-<pid>-<n>.tmp` beside the target.
     pub(crate) tag: &'a str,
-    /// The target's bytes when the run read it; `None` installs over whatever
-    /// is there (§FS-config-migrate.6.3).
-    pub(crate) expected: Option<&'a [u8]>,
+    /// What the target held when the run read it (§FS-config-migrate.6.3, §FS-fetch.6.1).
+    pub(crate) expected: Holds<'a>,
+}
+
+/// What the target must still hold just before the rename.
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum Holds<'a> {
+    /// These bytes, as the run read them.
+    Bytes(&'a [u8]),
+    /// Nothing: the run read no file there (§FS-fetch.6.1).
+    Nothing,
+}
+
+impl Holds<'_> {
+    /// Whether `current`, the target's bytes or `None` where there is no file, is what was read.
+    fn still(self, current: Option<&[u8]>) -> bool {
+        match self {
+            Holds::Bytes(expected) => current == Some(expected),
+            Holds::Nothing => current.is_none(),
+        }
+    }
 }
 
 /// Why an install left the target as it was.
@@ -33,7 +52,7 @@ pub(crate) enum InstallFailure {
     },
     /// A refusal no I/O error carries.
     Operational(String),
-    /// The target's bytes are no longer `expected` (§FS-config-migrate.6.3).
+    /// The target no longer holds `expected` (§FS-config-migrate.6.3, §FS-fetch.6.1).
     Changed,
 }
 
@@ -42,10 +61,7 @@ pub(crate) enum InstallFailure {
 /// byte for byte and no temporary file behind.
 pub(crate) fn atomic_install(path: &Path, install: Install<'_>) -> Result<(), InstallFailure> {
     let current = read_bytes(path).ok();
-    if install
-        .expected
-        .is_some_and(|expected| current.as_deref() != Some(expected))
-    {
+    if !install.expected.still(current.as_deref()) {
         return Err(InstallFailure::Changed);
     }
     if current.as_deref() == Some(install.bytes) {
@@ -111,13 +127,11 @@ pub(crate) fn atomic_install(path: &Path, install: Install<'_>) -> Result<(), In
         let _ = fs::remove_file(&temporary_path);
         return fail(io(err, format!("cannot write {}", path.display())));
     }
-    // §FS-config-migrate.6.3: read the target again just before the rename.
-    if let Some(expected) = install.expected {
-        concurrent_edit(path);
-        if read_bytes(path).ok().as_deref() != Some(expected) {
-            let _ = fs::remove_file(&temporary_path);
-            return fail(InstallFailure::Changed);
-        }
+    // §FS-config-migrate.6.3, §FS-fetch.6.1: read the target again just before the rename.
+    concurrent_edit(path);
+    if !install.expected.still(read_bytes(path).ok().as_deref()) {
+        let _ = fs::remove_file(&temporary_path);
+        return fail(InstallFailure::Changed);
     }
     if let Err(err) = fault(Stage::Rename).and_then(|_| fs::rename(&temporary_path, path)) {
         let _ = fs::remove_file(&temporary_path);

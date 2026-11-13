@@ -393,6 +393,10 @@ pub struct Catalog {
     /// with the row that made it a root, as the root gate recorded them
     /// (§AR-scanner.1.6, §FS-scan.checks.unread-scan-root).
     pub(crate) unread_roots: Vec<RootRow>,
+    /// The files the walk reached only by a link whose target leaves the config root, as the
+    /// walk recorded them (§FS-fmt.2.3.2): `fetch` asks it of the file it would write
+    /// (§FS-fetch.links), so no link is resolved a second time.
+    pub(crate) outside_root: std::collections::BTreeSet<PathBuf>,
     /// The names each of the walk's surviving failures also answered to, for the one
     /// question a narrowed run asks of them (§AR-scanner.1.entry, §FS-check.1.3.6.3).
     pub(crate) failure_names: FailureNames,

@@ -276,6 +276,11 @@ writes Markdown, so it refuses a `file` home that is a value source, in either
 format, at exit `2` and with the file untouched
 ([§FS-fetch.4](../functional-spec/FS-fetch.md#4-file-home-write)): move such a kind to a Markdown file or a folder without
 the source, or remove its `fetch`.
+A Markdown snapshot `grund fetch` writes may carry a value chapter like any
+other declaration. Fetch admits it at whatever depth `check` reads it, and
+refuses one `check` would report, such as a value root whose numbered
+components do not start at `.1`, with `check`'s own line and the tree unchanged
+([§FS-fetch.admission.3](../functional-spec/FS-fetch.md#admission3-the-structural-rules-check-applies-report-nothing-new)).
 
 > [!NOTE]
 > A `§` citation written in a YAML comment is read by nothing: it neither

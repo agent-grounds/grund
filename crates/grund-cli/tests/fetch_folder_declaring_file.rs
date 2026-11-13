@@ -125,7 +125,6 @@ fn a_created_snapshot_leaves_the_tree_green_and_fetches_again() {
 /// `<ID>.md` the fetch would create is a path the scan does not read, so the fetch is refused
 /// before the integration runs and the tree stays as it was (§DF-fetch-folder-declaring-file.3).
 #[test]
-#[ignore = "red until #1205 refuses a folder <ID>.md the scan does not read; implement removes this"]
 fn taking_the_declaration_out_where_markdown_is_not_read_is_refused() {
     let project = copy_of(
         "way-through-unread",

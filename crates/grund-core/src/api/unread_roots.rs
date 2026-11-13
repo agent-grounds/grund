@@ -8,7 +8,7 @@ use crate::model::remedies;
 use std::path::Path;
 
 use crate::config::{Config, file_extension};
-use crate::model::{Catalog, Code, Diagnostic, RootOrigin, RootRow, unread_name_reason};
+use crate::model::{Catalog, Code, Diagnostic, RootOrigin, RootRow, unread_reason};
 
 /// One located warning per unread root, at the line of the key that named it
 /// (§FS-scan.checks.unread-scan-root.location). A warning, so the exit code stays
@@ -72,7 +72,7 @@ fn extension_reason_and_fixes(
     ext: Option<&str>,
     version: u32,
 ) -> (String, Vec<String>) {
-    let reason = unread_name_reason(ext, version);
+    let reason = unread_reason(row.refused, ext, version);
     // Listing the extension is offered only where there is one to list. Each fix is a
     // case of the row's Fix, on the version's side (§FS-errors.5.5.1).
     let fixes: Vec<String> = match (&row.origin, ext, version == 2) {
@@ -103,12 +103,7 @@ fn hidden_reason_and_fixes(
     ext: Option<&str>,
     version: u32,
 ) -> (String, Vec<String>) {
-    let rule = match (row.refused.extension, ext) {
-        (false, _) => "grund reads no hidden file".to_string(),
-        (true, Some(_)) => unread_name_reason(ext, version),
-        (true, None) => "it has no extension".to_string(),
-    };
-    let reason = format!("its name begins with `.`, and {rule}");
+    let reason = unread_reason(row.refused, ext, version);
     let rename = match (row.refused.extension, version == 2) {
         (false, _) => remedies::unread_scan_root_hidden(version),
         (true, false) => remedies::unread_scan_root_hidden_list(1),

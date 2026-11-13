@@ -22,6 +22,23 @@ pub(crate) fn unread_name_reason(extension: Option<&str>, version: u32) -> Strin
     }
 }
 
+/// Why the scan reads no file at a name the name rules refuse: the hidden reason, naming the
+/// extension too where the list refuses it as well, or the extension reason alone
+/// (§FS-scan.checks.unread-scan-root.message, §DF-unread-hidden-root.2.1). `check`'s unread
+/// warning and `fetch`'s refusal of an unread home both give it (§FS-fetch.4.2.1), so a
+/// correction to it moves both.
+pub(crate) fn unread_reason(refused: Refused, extension: Option<&str>, version: u32) -> String {
+    if !refused.hidden {
+        return unread_name_reason(extension, version);
+    }
+    let rule = match (refused.extension, extension) {
+        (false, _) => "grund reads no hidden file".to_string(),
+        (true, Some(_)) => unread_name_reason(extension, version),
+        (true, None) => "it has no extension".to_string(),
+    };
+    format!("its name begins with `.`, and {rule}")
+}
+
 /// The configuration row that made a file a scan root, and where it was written:
 /// the `grund.toml` and the line of the key that named the file
 /// (§FS-scan.checks.unread-scan-root.location).

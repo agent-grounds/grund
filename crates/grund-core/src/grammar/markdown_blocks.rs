@@ -5,6 +5,26 @@
 
 use super::fence::{MarkdownFence, markdown_fence_delimiter};
 
+/// A fenced or raw-text block a Markdown text opens and does not close.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) struct OpenBlock {
+    /// 1-indexed line the block opens on.
+    pub(crate) line: usize,
+    /// A raw-text HTML block (`<pre>`, …) rather than a fence (§FS-check.1.1.5.1).
+    pub(crate) raw: bool,
+}
+
+/// §FS-fetch.admission.4: the block a whole Markdown text leaves open at its end, read line by
+/// line by the same machine the scan reads every Markdown file with (§FS-check.1.1.5.1), its
+/// front matter included (§FS-check.1.1.5.2).
+pub(crate) fn open_block(text: &str) -> Option<OpenBlock> {
+    let mut blocks = MarkdownBlocks::file(text);
+    for line in text.lines() {
+        blocks.line(line);
+    }
+    blocks.open_at()
+}
+
 /// What a Markdown line is to a reader asking whether it can be structure
 /// (§FS-check.1.1.5, §FS-check.1.1.5.1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -81,6 +101,8 @@ pub(crate) struct MarkdownBlocks {
     front_matter: usize,
     /// How many lines have been read.
     read: usize,
+    /// The line, 1-based, the open fence or raw-text block began on, 0 where none is open.
+    opened: usize,
 }
 
 impl MarkdownBlocks {
@@ -103,6 +125,16 @@ impl MarkdownBlocks {
         (self.front_matter > 0).then_some(self.front_matter)
     }
 
+    /// The line the fence or raw-text block still open after the last line read began on, and
+    /// whether it is a raw-text block.
+    fn open_at(&self) -> Option<OpenBlock> {
+        let raw = self.raw.is_some();
+        (self.fence.is_some() || raw).then_some(OpenBlock {
+            line: self.opened,
+            raw,
+        })
+    }
+
     /// Classify `line` and advance past it. Whichever context is open owns the
     /// line: inside a fence an HTML opener is fence content, and inside a
     /// raw-text block a fence opener is block content (§FS-check.1.1.5.1). Front
@@ -121,6 +153,9 @@ impl MarkdownBlocks {
         }
         let was_fenced = self.fence.is_some();
         if markdown_fence_delimiter(&mut self.fence, line) {
+            if !was_fenced {
+                self.opened = self.read;
+            }
             return MarkdownLine::FenceDelimiter;
         }
         if was_fenced {
@@ -130,6 +165,7 @@ impl MarkdownBlocks {
             // The opening line may close the block itself.
             if !contains_end_tag(line, tag) {
                 self.raw = Some(tag);
+                self.opened = self.read;
             }
             return MarkdownLine::RawHtml;
         }

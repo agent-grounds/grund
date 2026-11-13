@@ -88,8 +88,6 @@ fn external_facts_file_home_preserves_unowned_sibling_sections_byte_for_byte() {
 /// (§FS-fetch.4, §FS-fetch.admission.3).
 #[cfg(unix)]
 #[test]
-#[ignore = "red until #1205 replaces the range the scan records, keeping the near-miss sibling; \
-            implement removes this"]
 fn external_facts_file_home_writes_beside_a_malformed_declaration_heading() {
     let root = root("file-malformed-ownership");
     write(

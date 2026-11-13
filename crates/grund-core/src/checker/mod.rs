@@ -78,6 +78,7 @@ mod snapshots;
 mod spellings_report;
 mod support;
 mod unread_homes;
+mod value_declarations;
 mod value_mismatch;
 mod value_roots;
 mod values;
@@ -114,9 +115,12 @@ pub(crate) use sections::{out_of_scope_section_headings, workspace_out_of_scope_
 pub(crate) use spellings_report::name_every_spelling;
 pub(crate) use support::sort_diagnostics;
 pub(crate) use unread_homes::UnreadNames;
+pub(crate) use value_declarations::invalid_value_declarations;
 pub(crate) use values::{
     binding_aims_at_embedded_value_authority, binding_target_has_any_value_authority,
 };
+// §FS-fetch.admission.3: fetch judges its candidate by check's node-local half.
+pub(crate) use conform::conform;
 
 // What another component's tests read (§AR-core-module-layout.1.3): the managed
 // block path the drift cases drive, and the dangling sentence the scanner's
@@ -127,7 +131,6 @@ pub(crate) use crate::testing::check_agent_block_path;
 pub(crate) use agents::{Held, check_agent_block_path as compare_agent_block};
 #[cfg(test)]
 pub(crate) use support::dangling_message;
-#[cfg(test)]
 pub(crate) use support::diagnostic_cmp;
 
 // The cases that pin this component, one module per behaviour area

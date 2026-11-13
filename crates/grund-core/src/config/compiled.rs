@@ -50,7 +50,7 @@ impl ScanDemand {
 
 /// Why `fetch` refuses a `file` home, which picks the refusal's text and `check`'s tail
 /// (§FS-check.3.1.3.1).
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum RefusedHome {
     /// A whole-value kind's value source (§FS-fetch.4).
     ValueSource,
@@ -59,6 +59,10 @@ pub(crate) enum RefusedHome {
     /// The same file of a whole-value kind, which no comment there can declare, so
     /// only `check`'s tail differs (§FS-check.3.1.3.1).
     SourceFileValue,
+    /// A file the scan does not read, with the reason `check`'s unread warning gives
+    /// (§FS-fetch.4.2.1): a hidden name, an unlisted extension, or, for a folder home's
+    /// `<ID>.md`, a name read in a language other than Markdown.
+    Unread(String),
 }
 
 impl Compiled {
