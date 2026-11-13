@@ -673,9 +673,9 @@ warning: grund.toml:8: [schema.sources.extensions] maps `md` to `rust`, which do
 
 `md = "markdown"`, `md = "v1_markdown"`, what `config migrate` writes, and an `md` mapped to any `document` definition are silent. It fires only for a config file read as version 2, and never for version 1, which cannot map a suffix ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)).
 
-Where it fires, it is a CLI-level `warning:` on stderr whose text carries the config line ([§FS-errors.2.2.1](FS-errors.md#221-a-location-inside-the-message-text), [§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)), on `check`, `config validate` and `config show` and no other command, once per entry rather than once per scope. It leaves the exit code alone and stands in place of the `success` line ([§FS-check.4.11.6](FS-check.md#4116-it-stands-in-place-of-the-success-line)). `--ignore config-md-not-markdown` drops it and `--only config-md-not-markdown` selects it ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)). Under `--format=json` it is one warning finding carrying the code, its `path` the config file as a report path and its `line` the entry's, in the shape [§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report) gives a warning at a config line. The four load warnings below are this one in everything but their trigger, their line and their text.
+Where it fires, it is a CLI-level `warning:` on stderr whose text carries the config line ([§FS-errors.2.2.1](FS-errors.md#221-a-location-inside-the-message-text), [§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)), on `check`, `config validate` and `config show` and no other command, once per entry rather than once per scope. It leaves the exit code alone and stands in place of the `success` line ([§FS-check.4.11.6](FS-check.md#4116-it-stands-in-place-of-the-success-line)). `--ignore config-md-not-markdown` drops it and `--only config-md-not-markdown` selects it ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)). Under `--format=json` it is one warning finding carrying the code, its `path` the config file as a report path and its `line` the entry's, in the shape [§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report) gives a warning at a config line. The load warnings below are this one in everything but their trigger, their line and their text.
 
-When grund 1.0.0 refuses what this warning names, the code is spent as [§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable) is, and stays for the same reason; so are the three load warnings below that 1.0.0 refuses. The route is [§DF-markdown-homes-warn-before-1-0](../decisions/functional/DF-markdown-homes-warn-before-1-0.md#df-markdown-homes-warn-before-1-0-an-md-mapped-away-from-markdown-a-named-index-or-rule-home-not-read-as-markdown-and-an-absent-later-value-home-warn-from-0230-and-are-refused-from-100).
+When grund 1.0.0 refuses what this warning names, the code is spent as [§FS-config-v2.checks.config-fetch-names-nothing](FS-config-v2.md#checksconfig-fetch-names-nothing-a-rows-fetch-names-no-executable) is, and stays for the same reason; so are the load warnings below that 1.0.0 refuses. The route is [§DF-markdown-homes-warn-before-1-0](../decisions/functional/DF-markdown-homes-warn-before-1-0.md#df-markdown-homes-warn-before-1-0-an-md-mapped-away-from-markdown-a-named-index-or-rule-home-not-read-as-markdown-and-an-absent-later-value-home-warn-from-0230-and-are-refused-from-100).
 
 ### checks.config-index-not-markdown: A named index is not read as Markdown
 
@@ -696,6 +696,16 @@ warning: grund.toml:5: value home for kind `CONST` does not exist: values/absent
 ```
 
 A `folders` entry says `create the folder`. It never fires for version 1, whose row has exactly one home.
+
+### checks.config-value-home-invalid: A value row's later home is the wrong shape, outside the root, or not looked up
+
+A `form = "value"` row whose first `files` or `folders` entry holds, and one of whose later entries exists in the wrong shape (a `files` entry that is not a file, a `folders` entry that is not a folder), resolves outside the project root through a symlink, or cannot be looked up, earns one warning with code `config-value-home-invalid` per such entry, at the line of the key that lists it, from grund 0.23.0 through 0.x, and is refused at load from grund 1.0.0, as the first entry already is ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations)). Until then the walk reads that entry as grund 0.22.0 did, which judged only the first: an ID declared in it still resolves, nothing 0.22.0 skipped there is read, and a scan error 0.22.0 gave for it is still given. The words of the first entry's refusal open the message:
+
+```text
+warning: grund.toml:5: value home for kind `CONST` must be an existing file: values/sub; until then it is read as before grund 0.23.0; make it an existing file, or drop the entry; this becomes an error in grund 1.0.0
+```
+
+An entry outside the root says `name a path inside the project root, or drop the entry`, and one that cannot be looked up says `make the home and every directory above it accessible`. An absent entry is [§FS-config-v2.checks.config-value-home-absent](FS-config-v2.md#checksconfig-value-home-absent-a-value-rows-later-home-does-not-exist), and an entry the reader already refuses as a place (`..`, or a folder that links out of the root) keeps that refusal. It never fires for version 1, whose row has exactly one home.
 
 ### checks.config-rule-file-not-markdown: A rule kind's `files` entry is read as source
 

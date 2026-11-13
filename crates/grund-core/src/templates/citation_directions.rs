@@ -179,7 +179,7 @@ fn join_sentences(first: &str, second: Option<&str>) -> String {
 /// place, as the Project map does (§FS-init.2.3.4.4) — naming the kind would name
 /// something an agent can never write. The homeless kind has no place, so it
 /// keeps its name and says what it covers: its `title` where the project wrote
-/// one. Its unit is narrower again — a *source* file (not `.md`) that already
+/// one. Its unit is narrower again — a *source* file (not read as Markdown, §FS-fmt.2.3.1) that already
 /// cites something (§FS-config.3.9.2.4) — because the obligation constrains what a
 /// file cites and never whether it cites at all; a util that cites nothing is
 /// not a unit. In a non-citable home the opposite holds — a skill without a spec

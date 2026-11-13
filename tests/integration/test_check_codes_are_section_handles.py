@@ -55,6 +55,7 @@ MIGRATED = {
         "config-rule-file-not-markdown",
         "config-rule-folder-not-markdown",
         "config-value-home-absent",
+        "config-value-home-invalid",
         "rule-folder-file-not-markdown",
     ),
     "FS-rules": ("unreached-declaration",),

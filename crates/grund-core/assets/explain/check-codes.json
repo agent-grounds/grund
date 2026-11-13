@@ -536,6 +536,59 @@
   }
  },
  {
+  "code": "config-value-home-invalid",
+  "meaning": "A version-2 value row's later home is the wrong shape, resolves outside the root or cannot be looked up, and is read as before for now.",
+  "ramp": "error in grund 1.0.0",
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a files or folders entry after the first of a form = \"value\" table exists in the wrong shape, resolves outside the project root, or cannot be looked up",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "shape",
+      "text": "make it an existing {shape}, or drop the entry"
+     },
+     {
+      "label": "outside",
+      "text": "name a path inside the project root, or drop the entry"
+     },
+     {
+      "label": "lookup",
+      "text": "make the home and every directory above it accessible"
+     }
+    ]
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "note": null
+  }
+ },
+ {
   "code": "config-version-1",
   "meaning": "A config file is read as version 1; the warning names the command that migrates it.",
   "ramp": null,

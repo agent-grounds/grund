@@ -36,6 +36,8 @@ impl Code {
     pub const CONFIG_RULE_FOLDER_NOT_MARKDOWN: Code = Code("config-rule-folder-not-markdown");
     /// §FS-config-v2.checks.config-value-home-absent
     pub const CONFIG_VALUE_HOME_ABSENT: Code = Code("config-value-home-absent");
+    /// §FS-config-v2.checks.config-value-home-invalid
+    pub const CONFIG_VALUE_HOME_INVALID: Code = Code("config-value-home-invalid");
     /// §FS-check.checks.config-version-1
     pub const CONFIG_VERSION_1: Code = Code("config-version-1");
     /// §FS-declarations.checks.conflict-marker
@@ -200,6 +202,7 @@ impl Code {
         Code::CONFIG_RULE_FILE_NOT_MARKDOWN,
         Code::CONFIG_RULE_FOLDER_NOT_MARKDOWN,
         Code::CONFIG_VALUE_HOME_ABSENT,
+        Code::CONFIG_VALUE_HOME_INVALID,
         Code::CONFIG_VERSION_1,
         Code::CONFLICT_MARKER,
         Code::DANGLING,

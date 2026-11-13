@@ -134,7 +134,8 @@ pub(crate) fn can_hold_markdown(model: &SourceModel) -> bool {
 /// §FS-config.3.4.9, §FS-values.1: a value home is mandatory, existing, and physically inside the
 /// project root, and resolving both paths closes `..`, absolute and symlink escapes. A later
 /// entry that does not exist loads with `config-value-home-absent` and is not read
-/// (§FS-config-v2.checks.config-value-home-absent); every other failure is the first entry's.
+/// (§FS-config-v2.checks.config-value-home-absent); one that fails any other of these loads with
+/// `config-value-home-invalid` and is read as before (§FS-config-v2.checks.config-value-home-invalid).
 fn value_home(k: &KindConfig, home: Home<'_>, root: &Path, sources: &Sources) -> Verdict {
     let kind = &k.kind;
     let shape = if home.file { "file" } else { "folder" };
@@ -170,27 +171,53 @@ fn value_home(k: &KindConfig, home: Home<'_>, root: &Path, sources: &Sources) ->
         // §FS-fetch.4.3: a lookup that fails otherwise is refused by its reason, as the scan
         // names one (§FS-check.2.4.1), never as absent.
         Err(error) => {
-            return Verdict::Refused(format!(
-                "could not look up value home for kind `{kind}`: {}: {}\n\
-                 hint: make the home and every directory above it accessible",
+            let refusal = format!(
+                "could not look up value home for kind `{kind}`: {}: {}",
                 home.path,
                 io_reason(&error)
-            ));
+            );
+            let hint = remedies::config_value_home_invalid_lookup();
+            let first = Verdict::Refused(format!("{refusal}\nhint: {hint}"));
+            return later_invalid(home, refusal, remedies::config_value_home_invalid_lookup)
+                .unwrap_or(first);
         }
     };
-    if !resolved.starts_with(&canonical_root) {
-        return Verdict::Refused(format!(
+    let (refusal, remedy) = if !resolved.starts_with(&canonical_root) {
+        let refusal = format!(
             "value home for kind `{kind}` must normalize inside the project root: {}",
             home.path
-        ));
-    }
-    if (home.file && !resolved.is_file()) || (!home.file && !resolved.is_dir()) {
-        return Verdict::Refused(format!(
+        );
+        (refusal, remedies::config_value_home_invalid_outside())
+    } else if (home.file && !resolved.is_file()) || (!home.file && !resolved.is_dir()) {
+        let refusal = format!(
             "value home for kind `{kind}` must be an existing {shape}: {}",
             home.path
-        ));
-    }
-    Verdict::Holds
+        );
+        (refusal, remedies::config_value_home_invalid_shape(shape))
+    } else {
+        return Verdict::Holds;
+    };
+    let first = Verdict::Refused(refusal.clone());
+    later_invalid(home, refusal, || remedy).unwrap_or(first)
+}
+
+/// §FS-config-v2.checks.config-value-home-invalid: a later home that fails a check the first is
+/// refused for loads with this warning, in the refusal's words, and the walk reads it as grund
+/// 0.22.0 did; the first entry is refused (`None`).
+fn later_invalid(
+    home: Home<'_>,
+    refusal: String,
+    remedy: impl FnOnce() -> String,
+) -> Option<Verdict> {
+    (!home.first).then(|| {
+        Verdict::Warns(
+            Code::CONFIG_VALUE_HOME_INVALID,
+            format!(
+                "{refusal}; until then it is read as before grund 0.23.0; {}{UNTIL_1_0}",
+                remedy()
+            ),
+        )
+    })
 }
 
 /// §FS-fetch.4.1: whether the project reads what `grund fetch` writes at this home as Markdown:

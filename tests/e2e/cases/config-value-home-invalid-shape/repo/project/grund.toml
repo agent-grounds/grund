@@ -1,0 +1,6 @@
+grund_config_version = 2
+project_name = "g1206"
+
+[schema.kinds.CONST]
+form = "value"
+files = ["values/a.json", "values/sub"]

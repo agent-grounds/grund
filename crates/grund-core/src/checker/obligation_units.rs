@@ -55,9 +55,10 @@ impl ObligationUnit<'_> {
 ///   §FS-config.3.9.2.4) — every citation outside a configured home, source files
 ///   only. A README or a changelog is a document, and §FS-check.3.6 exempts it
 ///   for the same reason.
-/// * a **homed non-citable kind** — every scanned file in its home, `.md`
-///   included. Inheriting the Markdown exemption here would make `must` inert on
-///   the kinds that are usually all Markdown, which is most of them: the
+/// * a **homed non-citable kind** — every scanned file in its home, those read
+///   as Markdown (§FS-fmt.2.3.1) included. Inheriting the Markdown exemption
+///   here would make `must` inert on the kinds that are usually all Markdown,
+///   which is most of them: the
 ///   exemption reasons about implementation-versus-document, and a home the
 ///   maintainer named is neither guess.
 ///

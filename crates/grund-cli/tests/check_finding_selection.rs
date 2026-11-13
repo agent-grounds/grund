@@ -290,6 +290,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "config-rule-file-not-markdown",
         "config-rule-folder-not-markdown",
         "config-value-home-absent",
+        "config-value-home-invalid",
         "config-version-1",
         "conflict-marker",
         "dangling",

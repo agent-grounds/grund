@@ -46,9 +46,9 @@ pub(super) enum IndexCitationForm {
 /// clear (§DF-index-entry-form.2.3), the same trap `shorthand_rewritable` keeps
 /// §FS-check.3.13.1 out of.
 ///
-/// `line` is Markdown: §FS-config.3.4 requires `index` to name a `.md` file and
-/// `kind_index_targets` drops anything else, which is what lets the never-rewrite
-/// test below be asked in its Markdown form.
+/// `line` is Markdown: `kind_index_targets` keeps only an index read as Markdown
+/// (§FS-config.3.4.2.3, §FS-fmt.2.3.1), whatever its name, which is what lets the
+/// never-rewrite test below be asked in its Markdown form.
 ///
 /// Where the marker is looked for: it may be part of the recorded citation text or
 /// sit just before this occurrence of it, which is the same token either way. An
