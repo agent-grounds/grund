@@ -5,14 +5,14 @@ use std::path::{Path, PathBuf};
 use super::e2e::scan_e2e_cases;
 use super::file_pass::scan_file_text;
 use super::legacy::promote_local_legacy_citations;
-use super::merge::merge_findings;
+use super::merge::{drop_file_findings, merge_findings};
 use super::read_predicate::unread;
 pub(crate) use super::scan_error::ScanError;
 use super::scan_error::{
     FailureRoots, ScanFailure, failure_place, name_file_failure, scan_error_reason,
 };
 use super::section_locks::read_section_locks;
-use super::stub_homes::resolve_stubs;
+use super::stub_homes::{resolve_stubs, resolve_stubs_through};
 use super::value_json::{scan_value_sources, value_sources};
 use super::walk::{scan_roots, walk_scannable_files_reporting};
 use crate::config::{Frame, Schema};
@@ -105,6 +105,25 @@ pub(crate) fn scan_unwalked_file(
             .sort_by_key(|cite| (cite.line, cite.column));
     }
     Ok(findings)
+}
+
+/// The tree `before` read, with `file` read again by the walk's own pass on the text the frame
+/// holds for it (§AR-system.2.8.1): every other file's records are the ones `before` holds, so
+/// nothing is walked and no file but `file`, or a target only a stub in it names, is read. The
+/// stubs reading `file` again can move are judged again (§AR-scanner.4.6). Fetch asks it of the
+/// candidate it would install, held in front of the disk.
+pub(crate) fn scan_file_again(
+    before: &Catalog,
+    file: &Path,
+    schema: &Schema,
+    frame: Frame<'_>,
+) -> Result<Catalog> {
+    let mut after = before.clone();
+    drop_file_findings(&mut after, file);
+    merge_findings(&mut after, scan_unwalked_file(file, schema, frame, &[])?);
+    let (roots, _) = scan_roots(schema, frame, None, false)?;
+    resolve_stubs_through(schema, frame, &roots, file, &mut after);
+    Ok(after)
 }
 
 fn scan_file_results(

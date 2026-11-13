@@ -5,6 +5,7 @@
 //! scan's records are the answer. Every path a refusal names is spelled from the report base
 //! (§FS-errors.terms).
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use super::fetch::{FetchFailure, fetch_operational};
@@ -16,7 +17,7 @@ use crate::model::{
     scanned_path_key,
 };
 use crate::scanner::{ScanError, scan_error_message};
-use crate::sources::{canonical_path, link_metadata, path_is_dir, path_is_file, read_bytes};
+use crate::sources::{link_metadata, path_is_dir, path_is_file, read_bytes};
 
 /// The kind's snapshot home: one file, its declarations at H2, or one folder, at H1.
 pub(super) enum Home {
@@ -74,6 +75,31 @@ impl Before {
             .iter()
             .find(|(file, _)| scanned_path_key(file) == key)
             .map(|(_, record)| record.as_ref())
+    }
+
+    /// Each file the scan read that its walk did not, a stub's target, with the text it read.
+    pub(super) fn unwalked(&self) -> impl Iterator<Item = (PathBuf, String)> + '_ {
+        let walked: BTreeSet<PathBuf> = self
+            .catalog
+            .scanned_files
+            .iter()
+            .map(|path| scanned_path_key(path))
+            .collect();
+        self.catalog
+            .files
+            .iter()
+            .filter(move |(path, _)| !walked.contains(&scanned_path_key(path)))
+            .map(|(path, record)| (path.clone(), record.text().to_string()))
+    }
+
+    /// The walk's own spelling of the file at `path`, where the walk read it.
+    pub(super) fn walked(&self, path: &Path) -> Option<&Path> {
+        let key = scanned_path_key(path);
+        self.catalog
+            .scanned_files
+            .iter()
+            .find(|file| scanned_path_key(file) == key)
+            .map(PathBuf::as_path)
     }
 
     pub(super) fn error(&self, path: &Path) -> Option<&ScanError> {
@@ -206,9 +232,12 @@ fn place_in_file(
     })
 }
 
-/// §FS-fetch.links: where the bytes go when the target is a link. One that stays inside the
-/// config root is written through; one that leaves it, as the walk recorded it (§FS-fmt.2.3.2),
-/// or that dangles, is refused. A target the walk did not reach is resolved here.
+/// §FS-fetch.links: where the bytes go when the target is a link, decided by the walk's own record
+/// of it and nothing else. A link the walk reported as broken is refused; one it read as a file is
+/// refused where it recorded the file as outside the config root (§FS-fmt.2.3.2), and otherwise
+/// written through at the physical path the walk published for it (§AR-scanner.1.8); one it did
+/// not read as a file, an ignored link or a link to a directory, has no record to decide by and is
+/// refused. No link is resolved here.
 pub(super) fn link_target(
     request: &Request<'_>,
     before: &Before,
@@ -225,30 +254,23 @@ pub(super) fn link_target(
             request.shown(target)
         ))
     };
-    let Ok(physical) = canonical_path(target) else {
+    if before.error(target).is_some_and(ScanError::is_broken_link) {
         return Err(refuse(
             "the symlink target does not exist; create the target, or remove the link, and \
              fetch again",
         ));
+    }
+    let spellings = &request.config.frame().run.spellings;
+    let Some((walked, physical)) = before
+        .walked(target)
+        .and_then(|walked| Some((walked, spellings.physical(walked)?)))
+    else {
+        return Err(refuse(
+            "the scan does not read the symlink as a file; remove the link, or let the scan \
+             read it, and fetch again",
+        ));
     };
-    let key = scanned_path_key(target);
-    let walked = before.record(target).is_some();
-    let outward = if walked {
-        before
-            .catalog
-            .outside_root
-            .iter()
-            .any(|path| scanned_path_key(path) == key)
-    } else {
-        let root = request
-            .config
-            .frame()
-            .run
-            .spellings
-            .physical_root(&request.config.root);
-        !physical.starts_with(&root)
-    };
-    if outward {
+    if before.catalog.outside_root.contains(walked) {
         return Err(refuse(
             "the symlink target is outside the config root; replace the link with the file it \
              points to, and fetch again",

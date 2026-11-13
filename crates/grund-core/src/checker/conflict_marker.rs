@@ -43,9 +43,9 @@ pub(crate) fn conflict_marker_finding(
         [rest @ .., last] => format!("in {} and {last}", rest.join(", ")),
     };
     let (lines, sites) = if block.first == block.last {
-        (format!("line {}", block.first), vec![block.first])
+        (block_lines(block.first, None), vec![block.first])
     } else {
-        let lines = format!("lines {}\u{2013}{}", block.first, block.last);
+        let lines = block_lines(block.first, Some(block.last));
         (lines, vec![block.first, block.last])
     };
     Diagnostic {
@@ -65,5 +65,15 @@ pub(crate) fn conflict_marker_finding(
             })
             .collect(),
         authority: Vec::new(),
+    }
+}
+
+/// A block's lines as its finding writes them: `line <first>` for a block of one line, and
+/// `lines <first>–<last>` for a longer one. `fetch` writes the same words over the finding's
+/// sites to find them in the message (§FS-fetch.admission.3), so it parses none of its text.
+pub(crate) fn block_lines<T: std::fmt::Display>(first: T, last: Option<T>) -> String {
+    match last {
+        None => format!("line {first}"),
+        Some(last) => format!("lines {first}\u{2013}{last}"),
     }
 }

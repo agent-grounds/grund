@@ -3,14 +3,11 @@
 //! candidate is spliced where the scan put the requested declaration (§FS-fetch.4,
 //! §FS-fetch.5), and a finding the home already held is no reason to refuse.
 
-use super::fetch_admit::admit;
-use super::fetch_target::{Before, Home, Request, place};
+use super::tests_fetch_readback::{At, admit_during};
 use crate::config::load_config;
-use crate::grammar::parse_id_arg;
-use crate::scanner::scan_tree;
 use crate::testing::{scan_findings, test_root, write};
 
-fn file_toml(named_sections: bool) -> String {
+pub(super) fn file_toml(named_sections: bool) -> String {
     format!(
         "grund_config_version = 1\n\n[id]\nnamed_sections = {named_sections}\n\n\
          [[kinds]]\nkind = \"AR\"\nfile = \"docs/arch.md\"\n\n\
@@ -18,15 +15,9 @@ fn file_toml(named_sections: bool) -> String {
     )
 }
 
-const FOLDER_TOML: &str = "grund_config_version = 1\n\n[id]\nnamed_sections = true\n\n\
+pub(super) const FOLDER_TOML: &str = "grund_config_version = 1\n\n[id]\nnamed_sections = true\n\n\
      [[kinds]]\nkind = \"AR\"\nfolder = \"docs/ar\"\n\n\
      [scan]\ninclude = [\"docs\"]\nrespect_gitignore = false\n";
-
-/// Where a case's home is, relative to its root.
-enum At {
-    File(&'static str),
-    Folder(&'static str),
-}
 
 /// What admission makes of `output` for `local` in a tree of `files`: the bytes it would
 /// install, or the refusal's line.
@@ -38,37 +29,11 @@ fn admit_into(
     local: &str,
     output: &str,
 ) -> Result<String, String> {
-    let root = test_root(name);
-    write(&root.join("grund.toml"), toml);
-    for (path, text) in files {
-        write(&root.join(path), text);
-    }
-    let config = load_config(&root).expect("load config");
-    let (id, _) = parse_id_arg(local, &config.grammar).expect("parse the requested ID");
-    let (catalog, errors) =
-        scan_tree(config.schema(), config.frame(), None, false).expect("scan the tree");
-    let before = Before { catalog, errors };
-    let home = match at {
-        At::File(file) => Home::File(config.root.join(file)),
-        At::Folder(folder) => Home::Folder(config.root.join(folder)),
-    };
-    let request = Request {
-        config: &config,
-        id: &id,
-        local,
-        report_base: &config.root,
-        home,
-    };
-    let mut placing = None;
-    let placed = place(&request, &before, &mut placing).map_err(|failure| (failure, placing));
-    let mut diagnostic = None;
-    admit(&request, &before, placed, output, &mut diagnostic)
-        .map(|admitted| admitted.bytes)
-        .map_err(|failure| failure.message)
+    admit_during(name, toml, at, files, &[], local, output)
 }
 
 /// A file home holding `home`, admitting `output` for `AR-001-thing`.
-fn into_file(name: &str, home: &str, output: &str) -> Result<String, String> {
+pub(super) fn into_file(name: &str, home: &str, output: &str) -> Result<String, String> {
     admit_into(
         name,
         &file_toml(true),

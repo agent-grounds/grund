@@ -1,7 +1,8 @@
 //! What one case directory cannot hold about a link at a fetch target (§FS-fetch.links) and the
 //! paths a refusal names (§FS-fetch.7): a link target outside the copied tree, which a case cannot
-//! make; a dangling link under `md = "json"`, where §FS-fetch.4.2.1's reason for a data mapping is
-//! not settled, so only its shape is pinned; and a mode bit git does not carry.
+//! make, read by the walk or ignored by it; a dangling link under `md = "json"`, where
+//! §FS-fetch.4.2.1's reason for a data mapping is not settled, so only its shape is pinned; and a
+//! mode bit git does not carry.
 #![cfg(unix)]
 
 #[path = "support/external_facts.rs"]
@@ -125,6 +126,21 @@ fn links_a_file_home_that_is_an_outward_link_is_refused() {
     link(&proj, "docs/t.md", "../../outside/t.md");
     let err = refused(&base, &proj, "outward file home");
     assert_eq!(err, outward("docs/t.md"));
+}
+
+#[test]
+fn links_an_ignored_outward_link_is_refused_as_unread_by_the_walk() {
+    // The walk reads no file at an ignored link, so no record says where it leads.
+    let (base, proj) = project("ignored-outward", FOLDER, FETCHER);
+    fs::write(base.join("outside/T-1.md"), "").expect("write target");
+    write(&proj, "docs/t/.ignore", "T-1.md\n");
+    link(&proj, "docs/t/T-1.md", "../../../outside/T-1.md");
+    let err = refused(&base, &proj, "ignored outward link");
+    assert_eq!(
+        err,
+        "error: cannot fetch T-1 into docs/t/T-1.md: the scan does not read the symlink as a \
+         file; remove the link, or let the scan read it, and fetch again\n"
+    );
 }
 
 #[test]

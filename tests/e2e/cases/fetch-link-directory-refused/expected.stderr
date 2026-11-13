@@ -1,0 +1,1 @@
+error: cannot fetch T-1 into docs/t/T-1.md: the scan does not read the symlink as a file; remove the link, or let the scan read it, and fetch again

@@ -22,6 +22,12 @@ and writes the complete declaration to `docs/tickets.md`. The remaining
 commands resolve and query only that committed Markdown snapshot, so they keep
 working offline and never execute the integration.
 
+Fetch writes only what the next scan reads back as asked: the requested
+declaration once, the rest of `docs/tickets.md` reading as it did, and nothing new
+for `check` to report there. Output that would read any other way is refused with
+exit 2 and the file left as it was
+([§FS-fetch.admission](../../docs/functional-spec/FS-fetch.md#admission-admission-the-next-scan-reads-back-exactly-what-was-asked-for)).
+
 The e2e runner performs the mutating fetch from a copied repository and compares
 the entire result with `expected.repo`. No network or credentials are involved.
 The practical cost is deliberate: snapshot freshness is an explicit repository

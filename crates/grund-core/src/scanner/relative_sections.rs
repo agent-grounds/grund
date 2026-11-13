@@ -327,8 +327,7 @@ pub(crate) fn relative_answer(
 
 /// The canonical path of the relative heading titled `title` under a parent at `parent`,
 /// empty for the declaration itself, or `None` where the form's rules refuse it
-/// (§FS-declarations.section.relative.form). What needs no record of the file: the one
-/// reading the parent pass and [`unmarked_below_declaration`] share.
+/// (§FS-declarations.section.relative.form). It needs no record of the file.
 fn relative_section_path(parent: &str, title: &str, named_sections: bool) -> Option<String> {
     let form = relative_heading_form(title)?;
     let canonical = if parent.is_empty() {

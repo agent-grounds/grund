@@ -1,19 +1,18 @@
-//! The home as it would read after (§FS-fetch.admission.2, §FS-fetch.admission.3,
-//! §FS-fetch.admission.5): the selected project's scan with the candidate in front of the target,
-//! held to the tree as the scan read it before the integration ran. A line below the replaced
-//! range is compared by its distance from the end of the file, so a finding or a declaration the
-//! home already held is never new because the output's length moved it.
+//! The home as it would read after (§FS-fetch.admission.2, §FS-fetch.admission.5): the one
+//! scan's reading with the candidate read in place of the target (§FS-fetch.6.1), held to the
+//! tree as the scan read it before the integration ran. A line below the replaced range is
+//! compared by its distance from the end of the file, so a declaration the home already held is
+//! never new because the output's length moved it; clause 3 places its lines the same way, in
+//! `fetch_findings.rs`.
 
-use std::collections::BTreeMap;
 use std::path::Path;
 
 use super::fetch::{FetchFailure, fetch_operational};
 use super::fetch_splice::{Owned, first_differing_line, replace};
 use super::fetch_target::{Before, Request};
-use crate::checker::{conform, invalid_value_declarations};
-use crate::config::{Config, Frame};
+use crate::config::Config;
 use crate::grammar::render_catalog_id;
-use crate::model::{Catalog, Code, Declaration, Diagnostic, FileRecord, scanned_path_key};
+use crate::model::{Catalog, Declaration, FileRecord, scanned_path_key};
 
 /// Both readings of the home and where the output sits in each.
 pub(super) struct Readback<'a> {
@@ -34,11 +33,11 @@ pub(super) struct Readback<'a> {
 }
 
 impl Readback<'_> {
-    fn same(&self, path: &Path) -> bool {
+    pub(super) fn same(&self, path: &Path) -> bool {
         scanned_path_key(path) == scanned_path_key(self.path)
     }
 
-    fn after_record(&self) -> Option<&FileRecord> {
+    pub(super) fn after_record(&self) -> Option<&FileRecord> {
         self.after
             .files
             .iter()
@@ -48,7 +47,7 @@ impl Readback<'_> {
 
     /// Where line `line` of the target stands once the range is set aside: before it as itself,
     /// in it by its place in the range, after it by its distance from the end.
-    fn place(&self, after: bool, line: usize) -> String {
+    pub(super) fn place(&self, after: bool, line: usize) -> String {
         let (range, text) = if after {
             (Some(self.new), self.candidate)
         } else {
@@ -61,12 +60,15 @@ impl Readback<'_> {
             Some(range) if line >= range.first && line <= range.last => {
                 format!("@{}", line - range.first)
             }
-            Some(range) if line > range.last => format!("-{}", lines_in(text) - line),
+            // A line past the end is no line of the file, and stays as it is written.
+            Some(range) if line > range.last => lines_in(text)
+                .checked_sub(line)
+                .map_or_else(|| line.to_string(), |from_end| format!("-{from_end}")),
             _ => line.to_string(),
         }
     }
 
-    fn local(&self) -> &str {
+    pub(super) fn local(&self) -> &str {
         self.request.local
     }
 }
@@ -141,9 +143,10 @@ pub(super) fn keep_others(readback: &Readback<'_>) -> Result<(), FetchFailure> {
                 .record(readback.path)
                 .map_or("", FileRecord::text);
             let line = match decl.line.checked_sub(readback.new.last) {
-                Some(below) if below > 0 => {
-                    lines_in(before_text) - (lines_in(readback.candidate) - decl.line)
-                }
+                Some(below) if below > 0 => lines_in(readback.candidate)
+                    .checked_sub(decl.line)
+                    .and_then(|from_end| lines_in(before_text).checked_sub(from_end))
+                    .unwrap_or(decl.line),
                 _ => decl.line,
             };
             (line, written(readback.after, decl))
@@ -192,67 +195,6 @@ fn readings<'a>(
     found
 }
 
-/// §FS-fetch.admission.3: `check`'s node-local rules and the scan's invalid-value records report
-/// nothing new in the home, warnings included. The relational rules are not run.
-pub(super) fn no_new_findings(readback: &Readback<'_>) -> Result<(), FetchFailure> {
-    let config = readback.request.config;
-    let held = findings(readback, config, &readback.before.catalog);
-    let mut was: BTreeMap<(Code, String, String, String), usize> = BTreeMap::new();
-    for diagnostic in &held {
-        *was.entry(key(readback, false, config.frame(), diagnostic))
-            .or_default() += 1;
-    }
-    let mut found = findings(readback, readback.view, readback.after);
-    // §FS-fetch.admission.3: the first new finding in the order `grund check` prints them.
-    found.sort_by(crate::checker::diagnostic_cmp);
-    for diagnostic in found {
-        let held = was
-            .get_mut(&key(readback, true, readback.view.frame(), &diagnostic))
-            .filter(|count| **count > 0);
-        if let Some(count) = held {
-            *count -= 1;
-            continue;
-        }
-        return Err(new_finding(readback, &diagnostic));
-    }
-    Ok(())
-}
-
-/// The refusal for a finding the candidate adds, in the output or elsewhere in the home.
-fn new_finding(readback: &Readback<'_>, diagnostic: &Diagnostic) -> FetchFailure {
-    let local = readback.local();
-    let path = diagnostic.path.as_deref().unwrap_or(readback.path);
-    let line = diagnostic.line.unwrap_or_default();
-    let new = readback.new;
-    if readback.same(path) && line >= new.first && line <= new.last {
-        let at = line + 1 - new.first;
-        // §FS-fetch.3.2: an unmarked heading keeps fetch's own line.
-        if diagnostic.code == Code::UNMARKED_HEADING {
-            let heading = readback
-                .after_record()
-                .and_then(|record| record.line(line))
-                .unwrap_or_default();
-            return fetch_operational(format!(
-                "fetch output line {at}: heading `{}` is not a section of `{local}`; number it, \
-                 fence it, or make it a bold label",
-                heading.trim_end()
-            ));
-        }
-        return fetch_operational(format!("fetch output line {at}: {}", diagnostic.message));
-    }
-    let shown = readback.request.shown(path);
-    match diagnostic.line {
-        Some(line) => fetch_operational(format!(
-            "cannot fetch {local}: {shown}:{line}: {}",
-            diagnostic.message
-        )),
-        None => fetch_operational(format!(
-            "cannot fetch {local}: {shown}: {}",
-            diagnostic.message
-        )),
-    }
-}
-
 /// §FS-fetch.admission.5: the output spliced again at the range the candidate's own reading
 /// records reproduces the candidate byte for byte. A folder home's file is the output whole.
 pub(super) fn settled(readback: &Readback<'_>, output: &str) -> Result<(), FetchFailure> {
@@ -282,73 +224,6 @@ pub(super) fn settled(readback: &Readback<'_>, output: &str) -> Result<(), Fetch
         readback.request.shown(readback.path),
         first_differing_line(readback.candidate, &again)
     )))
-}
-
-/// The errors and warnings `check`'s node-local half reports in the home on one reading.
-fn findings(readback: &Readback<'_>, config: &Config, catalog: &Catalog) -> Vec<Diagnostic> {
-    let report = conform(config.schema(), catalog, config.frame());
-    report
-        .errors
-        .into_iter()
-        .chain(report.warnings)
-        .chain(invalid_value_declarations(catalog, config.frame()))
-        .filter(|diagnostic| {
-            diagnostic
-                .path
-                .as_deref()
-                .is_some_and(|path| readback.request.home.holds(path))
-        })
-        .collect()
-}
-
-/// A finding as clause 3 compares it: code, file, and its line and message with every line of
-/// the target placed by `Readback::place`.
-fn key(
-    readback: &Readback<'_>,
-    after: bool,
-    frame: Frame<'_>,
-    diagnostic: &Diagnostic,
-) -> (Code, String, String, String) {
-    let path = diagnostic.path.as_deref().unwrap_or(readback.path);
-    let in_target = readback.same(path);
-    let line = diagnostic.line.map_or_else(String::new, |line| {
-        if in_target {
-            readback.place(after, line)
-        } else {
-            line.to_string()
-        }
-    });
-    let shown = format!("{}:", frame.display_path(readback.path));
-    // A finding names lines of the target as `path:N` anywhere, and as `line N` or `lines N–M`
-    // in a finding on the target itself.
-    let mut markers = vec![shown.as_str()];
-    if in_target {
-        markers.extend(["line ", "lines ", "–"]);
-    }
-    let mut message = String::new();
-    let mut rest = diagnostic.message.as_str();
-    while let Some((at, marker)) = markers
-        .iter()
-        .filter_map(|marker| rest.find(marker).map(|at| (at, *marker)))
-        .min()
-    {
-        let from = at + marker.len();
-        let digits = rest[from..].bytes().take_while(u8::is_ascii_digit).count();
-        message.push_str(&rest[..from]);
-        let number = &rest[from..from + digits];
-        match number.parse::<usize>() {
-            Ok(line) => message.push_str(&readback.place(after, line)),
-            Err(_) => message.push_str(number),
-        }
-        rest = &rest[from + digits..];
-    }
-    message.push_str(rest);
-    (
-        diagnostic.code,
-        scanned_path_key(path).display().to_string(),
-        line,
-        message,
-    )
 }
 
 /// The target's declarations the scan read, stubs left out, the requested one included.

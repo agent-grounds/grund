@@ -60,7 +60,9 @@ ID's declaration, and a new file-home declaration goes in ID order
 [§FS-fetch.4](../functional-spec/FS-fetch.md#4-file-home-write)).
 
 The scan runs once, before the integration does, and the write is made against
-what it read: if the home is edited or created while the integration runs, fetch
+what it read; nothing else is read again, so a file the integration writes beside
+the home plays no part in what fetch admits. If the home is edited or created
+while the integration runs, fetch
 exits 2 with `<path> changed while the integration ran; fetch again` and leaves
 the change in place
 ([§FS-fetch.6.1](../functional-spec/FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)).
@@ -79,8 +81,9 @@ name; in a `folder` home the same holds for the `<ID>.md` fetch would create
 
 A home, or a folder home's `<ID>.md`, that is a symbolic link is written through
 when its target stays inside the config root, and the link stays. A link that
-leaves the root, or whose target does not exist, is refused with the tree
-unchanged; replace the link with the file it points to, or create the target
+leaves the root, whose target does not exist, or that the scan does not read as
+a file, such as one an ignore file skips, is refused with the tree unchanged;
+replace the link with the file it points to, create the target, or remove it
 ([§FS-fetch.links](../functional-spec/FS-fetch.md#links-a-link-at-the-target-is-written-through-when-it-stays-inside-the-config-root)).
 
 The `fetch` key must name a program: an empty or whitespace-only value names none. From grund 0.23.0, version 2 refuses it when the config loads, at the key's line, on every command that loads the config, and no selector suppresses that. Version 1 still loads the key and meets the rule at `grund fetch`, before running anything, and at `grund config migrate`. Either way the repair is the same: name the program, or, if the kind is not fetched, remove the key and any `[rules.resolution] <KIND>` (version 1: `resolve`). A setting of `warn` needs the key, so removing the key alone is a load error, and with both gone the kind's missing IDs are errors

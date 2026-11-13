@@ -114,6 +114,8 @@ A `fetch` key must name a program. Version 2 refuses an empty or whitespace-only
 
 Version 1 loads such a value and meets the rule at `grund fetch` and `grund config migrate`; the setting to remove with the key is `resolve`.
 
+A fetched kind's home must be a file the scan reads as Markdown, or a folder of such files: `grund fetch` refuses a home read as source or not read at all before running the program ([a home the scan does not read is refused](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)).
+
 ### `[scan]`
 
 `include`

@@ -1,20 +1,22 @@
 //! Admission (§FS-fetch.admission): fetch installs only what the selected project's own scan
 //! reads back as exactly what was asked for. The output is read alone as the scan reads one file
 //! at the target's path (clauses 1 and 4), the candidate is built where the scan put the
-//! requested declaration (§FS-fetch.4, §FS-fetch.5), and the home as it would read after is held
-//! to the tree as it read before (clauses 2, 3 and 5, in `fetch_readback.rs`). Fetch keeps no
+//! requested declaration (§FS-fetch.4, §FS-fetch.5), and the home as it would read after, the
+//! one scan's reading with the candidate read in place of the target (§FS-fetch.6.1), is held to
+//! the tree as it read before (clauses 2, 3 and 5, in `fetch_readback.rs`). Fetch keeps no
 //! heading test, line loop or depth limit of its own: every answer here is the scan's.
 
 use std::path::PathBuf;
 
 use super::atomic_install::Holds;
 use super::fetch::{FetchFailure, fetch_operational};
-use super::fetch_readback::{Readback, keep_others, no_new_findings, settled};
+use super::fetch_findings::no_new_findings;
+use super::fetch_readback::{Readback, keep_others, settled};
 use super::fetch_splice::{Owned, insert, replace};
 use super::fetch_target::{Before, Home, Request, Site, Target};
 use crate::grammar::{open_block, render_catalog_id};
 use crate::model::{Catalog, FileRecord, scanned_path_key};
-use crate::scanner::{scan_tree, scan_unwalked_file};
+use crate::scanner::{scan_file_again, scan_unwalked_file};
 
 /// What admission lets fetch install: the bytes at the target, against what the scan read there.
 pub(super) struct Admitted {
@@ -72,19 +74,24 @@ pub(super) fn admit(
         }
     };
     let config = request.config;
+    // §FS-fetch.6.1: the candidate in front of the target, and a file only a stub names at the
+    // bytes the scan read there, so nothing the integration wrote enters the reading.
     let view = config.with_buffers(
-        config
-            .run()
-            .buffers
-            .in_front([(target.path.clone(), candidate.clone())]),
+        config.run().buffers.in_front(
+            before
+                .unwalked()
+                .chain([(target.path.clone(), candidate.clone())]),
+        ),
     );
-    // §FS-fetch.admission: the home as it would read after, the candidate in place of the file.
-    let (after, _) = scan_tree(view.schema(), view.frame(), None, false).map_err(|err| {
-        fetch_operational(format!(
-            "cannot discover declarations for {}: {err:#}",
-            request.local
-        ))
-    })?;
+    // §FS-fetch.admission, §FS-fetch.6.1: the tree as the scan read it, with the candidate read
+    // in place of the target and no other file read again.
+    let after = scan_file_again(&before.catalog, &target.path, view.schema(), view.frame())
+        .map_err(|err| {
+            fetch_operational(format!(
+                "cannot discover declarations for {}: {err:#}",
+                request.local
+            ))
+        })?;
     let first = candidate[..start].matches('\n').count() + 1;
     let output_lines = output.trim_end().matches('\n').count() + 1;
     let readback = Readback {

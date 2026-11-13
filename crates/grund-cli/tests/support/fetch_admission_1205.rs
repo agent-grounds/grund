@@ -7,10 +7,9 @@
 use super::case_runner::CaseKind::E2e;
 use super::case_runner::{assert_every_case_passed, run_case};
 use super::repo_root;
-use std::path::PathBuf;
 
 /// What #1205 fixed: each failed before it for the reason its issue or reproducer reports.
-const CASES: [&str; 118] = [
+const CASES: [&str; 120] = [
     "check-fetch-tail-unread-home",
     "fetch-bare-closer-h1-refused",
     "fetch-bare-closer-h2-refused",
@@ -45,7 +44,9 @@ const CASES: [&str; 118] = [
     "fetch-id-file-prose-refused",
     "fetch-id-file-whitespace-filled",
     "fetch-link-dangling-refused",
+    "fetch-link-directory-refused",
     "fetch-link-file-home-inside-written",
+    "fetch-link-ignored-refused",
     "fetch-link-inside-written",
     "fetch-nested-declaration-comment-line-refused",
     "fetch-nested-hand-written-before-sibling-refused",
@@ -132,7 +133,7 @@ const CASES: [&str; 118] = [
 ];
 
 /// Pass today: what admission must not refuse, and the refusals that keep their words.
-const GUARDS: [&str; 47] = [
+const GUARDS: [&str; 50] = [
     "fetch-bare-closer-control-written",
     "fetch-bare-heading-fenced-written",
     "fetch-bare-heading-first-line-refused",
@@ -145,15 +146,18 @@ const GUARDS: [&str; 47] = [
     "fetch-closed-pre-written",
     "fetch-findings-below-mapped-written",
     "fetch-heading-indented-declaration-refused",
+    "fetch-home-file-created-during-integration-written",
     "fetch-home-insert-beside-nested-folder-created",
     "fetch-home-insert-beside-nested-written",
     "fetch-home-nested-output-refusal-first-refused",
     "fetch-home-non-declarations-replaced",
+    "fetch-home-sibling-change-during-integration-written",
     "fetch-home-sibling-holds-nested-folder-replaced",
     "fetch-home-sibling-holds-nested-replaced",
     "fetch-home-subsections-folder-replaced",
     "fetch-home-subsections-replaced",
     "fetch-home-unmarked-headings-replaced",
+    "fetch-outside-home-change-during-integration-written",
     "fetch-refetch-control-file-written",
     "fetch-refetch-final-bare-cr-no-sibling-written",
     "fetch-refetch-nbsp-indent-folder-created",
@@ -182,22 +186,6 @@ const GUARDS: [&str; 47] = [
     "fetch-warning-under-budget-written",
 ];
 
-/// Held out of the full pass: its golden expects `check` to offer `run grund fetch` at a hidden
-/// `file` home, which §FS-check.3.1.3.1 and §FS-fetch.4.2.1 now give the unread tail instead.
-/// The golden is the specify step's to correct; this filter goes with it.
-const HELD_OUT: [&str; 1] = ["check-source-home-hidden-name-fetch-remedy"];
-
-/// The full pass, without the case held out.
-pub(crate) fn without_held_out(cases: Vec<PathBuf>) -> Vec<PathBuf> {
-    cases
-        .into_iter()
-        .filter(|case| {
-            let name = case.file_name().and_then(|name| name.to_str());
-            !HELD_OUT.contains(&name.unwrap_or_default())
-        })
-        .collect()
-}
-
 fn run_alone(label: &str, names: &[&str]) {
     let root = repo_root();
     let cases = root.join("tests/e2e/cases");
@@ -217,10 +205,4 @@ fn fetch_admission_contract() {
 #[test]
 fn fetch_admission_guards() {
     run_alone("fetch admission guards", &GUARDS);
-}
-
-#[test]
-#[ignore = "its golden predates §FS-check.3.1.3.1's unread tail for a hidden home"]
-fn fetch_admission_held_out() {
-    run_alone("fetch admission held out", &HELD_OUT);
 }

@@ -13,7 +13,7 @@ use std::io::Error;
 use std::path::{Path, PathBuf};
 
 use super::walk::scan_roots;
-use super::walk_errors::{link_identity, unresolved_link_reason};
+use super::walk_errors::{BROKEN_LINK, link_identity, unresolved_link_reason};
 use crate::config::{Frame, Schema};
 use crate::model::{Code, FailureNames, ValueFormat, remedies};
 use crate::sources::{
@@ -76,6 +76,12 @@ impl ScanError {
             version: 2,
         };
         Self::new(path, reason.to_string(), failure)
+    }
+
+    /// Whether the walk reported a link here whose target does not exist (§FS-check.2.4.1): the
+    /// record `fetch` decides a dangling link at its target by (§FS-fetch.links).
+    pub(crate) fn is_broken_link(&self) -> bool {
+        self.reason == BROKEN_LINK
     }
 
     /// The code this failure is published under (§FS-check.2.4.3).

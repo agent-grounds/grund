@@ -1,0 +1,3 @@
+#!/bin/sh
+printf '## AR-002-other: Copy\n\nWritten while the fetch ran.\n' > zzz.md
+printf '## %s: Thing\n\nThe fetched body.\n' "$1"
