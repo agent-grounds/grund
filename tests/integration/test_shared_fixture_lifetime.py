@@ -4,9 +4,8 @@
 copies, once per process. This runs a process that builds it and exits, with a
 private, empty temporary directory, and names whatever that process left there.
 
-The test lands skipped, one commit before the fix, because the pre-commit hook
-runs this suite; implement removes the decorator. Run the module with the
-decorator lifted to see it fail before the fix.
+The test landed skipped, one commit before agent-grounds/grund#1392's fix,
+because the pre-commit hook runs this suite. The fix took the decorator off.
 """
 
 import os
@@ -23,7 +22,6 @@ BUILD_AND_EXIT = "import release_queue_fixture; release_queue_fixture.template()
 
 
 class SharedFixtureLifetimeTests(unittest.TestCase):
-    @unittest.skip("red until #1392 removes the fixture's root; implement removes this")
     def test_the_queue_template_is_gone_once_its_process_exits(self):
         with tempfile.TemporaryDirectory(prefix="grund-1392-template-tmp-") as private:
             run = subprocess.run(

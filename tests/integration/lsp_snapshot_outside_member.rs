@@ -7,11 +7,14 @@
 //! Its variant nests `api` at `apps/api`, so the snapshot of `apps/` keeps one
 //! member's findings and drops the other's, and narrowing cannot pass by blanking.
 
+#[path = "../../crates/grund-cli/tests/support/fixture_cleanup.rs"]
+mod fixture_cleanup;
 #[path = "../../crates/grund-cli/tests/support/tmpdir_leftovers.rs"]
 mod tmpdir_leftovers;
 
 use grund_core::{Finding, LspSnapshot, LspSnapshotOpts, Report, check, lsp_snapshot};
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -25,16 +28,44 @@ const MEMBER_CONFIG: &str = "grund_config_version = 1\n\n[reference]\nmarker = \
 
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
+/// One case's workspace, removed when the case drops it (§AR-ci-fixture-cleanup). `root`
+/// is the canonical spelling once the workspace is built, the one every case compares
+/// paths against.
+struct Workspace {
+    root: PathBuf,
+}
+
+impl Drop for Workspace {
+    fn drop(&mut self) {
+        fixture_cleanup::remove_fixture_tree(&self.root, "remove the workspace");
+    }
+}
+
+/// Claims a root for `what` with `create_dir` on the root itself, before anything is
+/// written. A name a leftover root already holds passes to the next serial, and the
+/// leftover is neither cleared nor adopted (§AR-ci.10.2).
+fn claim(what: &str) -> Workspace {
+    for _ in 0..128 {
+        let root = std::env::temp_dir().join(format!(
+            "grund-lsp-outside-member-{what}-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, Ordering::Relaxed)
+        ));
+        match fs::create_dir(&root) {
+            Ok(()) => return Workspace { root },
+            Err(err) if err.kind() == io::ErrorKind::AlreadyExists => continue,
+            Err(err) => panic!("claim {}: {err}", root.display()),
+        }
+    }
+    panic!("claim a workspace for {what}: 128 names in a row were already taken");
+}
+
 /// grund#858's workspace with its members at `members`, each named for its last
 /// component, and an empty `tools/sub/`. No section lock is written, so every
 /// citation of `format.1` is an error `check` from the root reports.
-fn workspace(what: &str, members: &[&str]) -> PathBuf {
-    let root = std::env::temp_dir().join(format!(
-        "grund-lsp-outside-member-{what}-{}-{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    let _ = fs::remove_dir_all(&root);
+fn workspace(what: &str, members: &[&str]) -> Workspace {
+    let mut workspace = claim(what);
+    let root = workspace.root.clone();
     fs::create_dir_all(root.join("tools/sub")).expect("create tools/sub");
     let write = |path: &str, body: &str| {
         let path = root.join(path);
@@ -70,7 +101,8 @@ fn workspace(what: &str, members: &[&str]) -> PathBuf {
             &format!("/// Wraps (\u{a7}FS-{name}.format.1).\npub fn wrap() {{}}\n"),
         );
     }
-    root.canonicalize().expect("canonical workspace root")
+    workspace.root = root.canonicalize().expect("canonical workspace root");
+    workspace
 }
 
 fn snapshot(path: PathBuf) -> LspSnapshot {
@@ -134,7 +166,8 @@ fn anchored_in(diagnostics: &[String], file: &str) -> bool {
 /// what `check(tools/sub)` reports: none of the members' errors.
 #[test]
 fn a_snapshot_outside_every_member_reports_what_check_reports() {
-    let root = workspace("issue", &["api", "web"]);
+    let fixture = workspace("issue", &["api", "web"]);
+    let root = &fixture.root;
     let whole = diagnostics(&root, &check(&root).expect("check(.)"));
     assert!(
         anchored_in(&whole, "api/src/lib.rs") && anchored_in(&whole, "web/src/lib.rs"),
@@ -164,7 +197,8 @@ fn a_snapshot_outside_every_member_reports_what_check_reports() {
 /// leaves every member's declarations in the snapshot.
 #[test]
 fn a_snapshot_outside_every_member_carries_every_members_records() {
-    let root = workspace("records", &["api", "web"]);
+    let fixture = workspace("records", &["api", "web"]);
+    let root = &fixture.root;
     let snapshot = snapshot(root.join("tools/sub"));
     let mut files: Vec<String> = snapshot
         .declarations
@@ -193,7 +227,8 @@ fn a_snapshot_outside_every_member_carries_every_members_records() {
 /// `api`'s errors and drops `web`'s, as `check(apps)` does.
 #[test]
 fn a_snapshot_outside_every_member_keeps_the_members_under_it() {
-    let root = workspace("nested", &["apps/api", "web"]);
+    let fixture = workspace("nested", &["apps/api", "web"]);
+    let root = &fixture.root;
     let scoped = diagnostics(&root, &check(&root.join("apps")).expect("check(apps)"));
     let snapped = diagnostics(&root, &snapshot(root.join("apps")).report);
     for file in ["apps/api/docs/FS-api-audit.md", "apps/api/src/lib.rs"] {
@@ -223,7 +258,8 @@ fn a_snapshot_outside_every_member_keeps_the_members_under_it() {
 /// and the narrowed report, silent, earns the one empty-scan caution of the anchor.
 #[test]
 fn a_snapshot_outside_every_member_narrows_the_absent_member_announcement() {
-    let root = workspace("absent", &["api", "web"]);
+    let fixture = workspace("absent", &["api", "web"]);
+    let root = &fixture.root;
     let config = fs::read_to_string(root.join("grund.toml")).expect("read grund.toml");
     fs::write(
         root.join("grund.toml"),
@@ -254,7 +290,6 @@ fn a_snapshot_outside_every_member_narrows_the_absent_member_announcement() {
 /// The four cases above, passing, leave nothing in their temporary directory: each one's
 /// workspace is removed once it is done with it (§AR-ci-fixture-cleanup).
 #[test]
-#[ignore = "red until #1392 removes the fixture's root; implement removes this"]
 fn the_snapshots_outside_every_member_leave_nothing_in_their_temporary_directory() {
     let left = tmpdir_leftovers::left_by(&[
         "a_snapshot_outside_every_member_reports_what_check_reports",
