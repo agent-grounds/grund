@@ -228,7 +228,7 @@ Maps a file suffix, written without its dot, to an admitted language; an entry o
 
 | Key | Type | Default | What it sets |
 |---|---|---|---|
-| `<suffix>` | string | — | The admitted language files with this suffix are read as. [§FS-config-v2.schema.sources.extensions](../functional-spec/FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language) |
+| `<suffix>` | string | — | The admitted language files with this suffix are read as. `md` maps only to a `document` language: any other warns, and becomes an error in grund 1.0.0. [§FS-config-v2.schema.sources.extensions](../functional-spec/FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language) |
 
 ### `[schema.sources.definitions.<name>]`
 
@@ -301,11 +301,11 @@ One row: its places, its form, and its fields. A row may list several places; a 
 
 | Key | Type | Default | What it sets |
 |---|---|---|---|
-| `files` | array of strings | `[]` | Files from the config root, in written order. A listed file belongs to this row even inside another row's folder. On a citable row with no folders, every declaration is a heading in one of these documents. A place is normalized (`./a/` is `a`), must stay inside the config root, and belongs to one row. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
+| `files` | array of strings | `[]` | Files from the config root, in written order. A listed file belongs to this row even inside another row's folder. On a citable row with no folders, every declaration is a heading in one of these documents. A place is normalized (`./a/` is `a`), must stay inside the config root, and belongs to one row. A rule row's files must each be read as Markdown, and a value row lists all its homes under this key or under `folders`, where a later one that does not exist warns. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `folders` | array of strings | `[]` | Folders from the config root, in written order. Each declaration is the H1 of its own file under one of them; a file in nested folders belongs to the deepest. A place is normalized, must stay inside the config root and outside every workspace member, belongs to one row, and a folder may not link out of the project root. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `citable` | boolean | `true` | `false` makes this a place: it cites, but declares no IDs. A non-citable row must list a place unless it is `code`, which is non-citable by name; `citable = true` on `code` is refused. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `scan` | boolean | `true` | `false` lists the kind in the Project map without walking any of its places; a scanned place nested under it is still walked. Refused on `code`: narrow its places or use `[schema.sources] exclude`. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
-| `index` | string or `false` | README.md (no E2E special case in v2) | The index file each folder keeps, which must list every declaration that folder owns; `false` opts out. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
+| `index` | string or `false` | README.md (no E2E special case in v2) | The index file each folder keeps, which must list every declaration that folder owns; `false` opts out. It must be read as Markdown: one that is not warns, is judged as `false`, and becomes an error in grund 1.0.0. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `id_format` | string | inherits `[schema] id_format` | This kind's ID template, overriding `[schema] id_format`. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `fetch` | string | — | The executable `grund fetch` runs to save a missing external snapshot. It must name a program: an empty or whitespace-only value names none and is refused at load, at its line. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `form` | `"prose"` \| `"value"` \| `"rule"` | `"prose"` | What a declaration is: ordinary `prose`, a first-class `value`, or an executable `rule`. [§FS-fields.declare.form](../functional-spec/FS-fields.md#declareform-form-is-a-row-key) |

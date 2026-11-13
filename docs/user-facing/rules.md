@@ -25,6 +25,12 @@ must = ["GOAL"]
 This keeps requirements tied to authority, because §GOAL-grounded-rules.
 ```
 
+Every home of a rule kind must be read as Markdown ([§FS-config-v2.schema.sources.rules](../functional-spec/FS-config-v2.md#schemasourcesrules-every-home-of-a-rule-kind-is-judged-by-its-reading)),
+because a rule is a Markdown heading. A version-2 `files` entry a `source` language
+reads, and a `folders` entry where no file can be read as Markdown, load with a
+warning that names grund 1.0.0, which refuses them; `check` warns about each file
+read as source in a rule folder (`rule-folder-file-not-markdown`).
+
 The title is a grammar island: formatting never inserts markers, links, or
 expanded shorthand into it. The rationale remains ordinary grounded Markdown.
 

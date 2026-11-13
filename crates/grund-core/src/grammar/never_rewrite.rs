@@ -171,7 +171,7 @@ pub(crate) fn string_literal_in(docstring: DocstringContent<'_>, line: &str, pos
 /// rewritten, because all of it is inside the literal.
 #[derive(Clone, Copy)]
 pub(crate) struct DocstringCursor<'l> {
-    /// `true` only for a `.py` file in a project that scans docstrings; otherwise
+    /// `true` only for a file whose docstrings are read (§FS-fmt.2.3.1); otherwise
     /// the docstring half of every view is empty and no work is done for it.
     scanning: bool,
     state: PythonDocstringScanState,

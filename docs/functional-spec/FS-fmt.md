@@ -40,7 +40,7 @@ grund fmt [<path>] [--check] [--marker] [--cross-refs] [--write]
 - `<path>` — directory or file the run is narrowed to; with none, the project the current directory discovers ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)).
 - `--check` — explicit form of the default behavior: report exactly what `--write` would change, across all four rewrite classes (including cross-references when `[fmt.cross_refs] enabled = true` and the scope contains Markdown); exit non-zero if any change would be made; do not write. Provided as a flag for CI clarity.
 - `--marker` — also rewrite bare citations (`FS-check`) to marker-prefixed (`§FS-check`). Off by default to preserve existing repos that have not opted in.
-- `--cross-refs` — in `.md` files only, also wrap each marker-prefixed citation in a clickable Markdown link to the declaration body ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)). This forces the cross-reference pass for one invocation; generated configs enable it, so every `fmt` scope containing Markdown runs it by default in both dry-run and write mode unless the repo opts out ([§FS-fmt.6.6](FS-fmt.md#66-why-generated-configs-enable-cross-references)). Implements [§DF-md-link-emission](../decisions/functional/DF-md-link-emission.md#df-md-link-emission-grund-fmt-may-emit-clickable-markdown-links-alongside--prefixed-citations).
+- `--cross-refs` — in files read as Markdown only, also wrap each marker-prefixed citation in a clickable Markdown link to the declaration body ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)). This forces the cross-reference pass for one run; generated configs enable it, so every `fmt` scope containing Markdown runs it by default in both dry-run and write mode unless the repo opts out ([§FS-fmt.6.6](FS-fmt.md#66-why-generated-configs-enable-cross-references)). Implements [§DF-md-link-emission](../decisions/functional/DF-md-link-emission.md#df-md-link-emission-grund-fmt-may-emit-clickable-markdown-links-alongside--prefixed-citations).
 - `--write` — write the transformed contents back to disk. Exit 0 even when changes were made ([§FS-fmt.3](FS-fmt.md#3-outputs)).
 
 `--check` and `--write` are mutually exclusive. Without either, the default is `--check`.
@@ -389,7 +389,7 @@ Under the default `enabled = true` nothing is scoped, because the pass was alrea
 
 #### 6.1.3 The carve-out follows the pass's own gate
 
-The dry run previews the index-entry wraps that `--write` applies, even when `[fmt.cross_refs] enabled = false`. The carve-out needs no `.md` test of its own: `index` must name a Markdown file ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)), which is a rule this scope clause is the reason for.
+The dry run previews the index-entry wraps that `--write` applies, even when `[fmt.cross_refs] enabled = false`. The carve-out asks no name of its own: `index` must name a file read as Markdown ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)), a rule this scope clause is the reason for.
 
 ### 6.2 Form
 

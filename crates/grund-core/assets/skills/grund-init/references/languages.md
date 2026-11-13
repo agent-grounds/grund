@@ -164,6 +164,8 @@ exclude = ["build/"]
 h = "c"
 ```
 
+Never map `md`: `.md` is always Markdown, and mapping it to a language that is not a `document` one warns until grund 1.0.0 refuses it.
+
 Only doc comments declare an ID in v2; `declarations = "any-comment"` keeps v1's reading.
 
 A v2 row may list several places, `[schema.kinds.FS] folders = ["docs/spec/core", "docs/spec/plugins"]`, and `[schema.kinds.code] folders = ["src", "scripts"]` names what v1's `include` did.
