@@ -1,7 +1,8 @@
 //! §AR-bindings.1 / §AR-bindings.2 — the production binaries the integration
 //! tests drive. Cargo names a package's own binaries to its tests and nobody
 //! else's, so a cross-package binary is found beside the running test and built
-//! on demand after a partial invocation.
+//! on demand after a partial invocation. `target/<profile>/` is found whatever
+//! directory Cargo keeps the running test executable in (§AR-ci-cargo-layout.1).
 #![allow(dead_code)]
 
 use std::path::PathBuf;

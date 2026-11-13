@@ -294,6 +294,7 @@ What measures the system:
 | [§AR-ci-pip-cache](AR-ci-pip-cache.md#ar-ci-pip-cache-a-tests-pip-install-leaves-no-built-wheel-in-the-users-pip-cache) | A test's pip install leaves no built wheel in the user's pip cache |
 | [§AR-ci-npm-cache](AR-ci-npm-cache.md#ar-ci-npm-cache-a-tests-throwaway-npm-package-leaves-nothing-in-the-users-npm-cache) | A test's throwaway npm package leaves nothing in the user's npm cache |
 | [§AR-ci-fixture-cleanup](AR-ci-fixture-cleanup.md#ar-ci-fixture-cleanup-a-fixtures-cleanup-failure-never-aborts-its-test-binary) | A fixture's cleanup failure never aborts its test binary |
+| [§AR-ci-cargo-layout](AR-ci-cargo-layout.md#ar-ci-cargo-layout-a-test-reads-only-what-cargo-promises-so-a-new-stable-cargo-cannot-break-it) | A test reads only what Cargo promises, so a new stable Cargo cannot break it |
 | [§AR-benchmarks](AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) | instruction-counting benchmarks for the hot CLI commands |
 | [§AR-goal-measurement](AR-goal-measurement.md#ar-goal-measurement-goal-and-requirement-meters-live-outside-goals) | goal and requirement meters live outside goals |
 
