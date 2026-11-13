@@ -7,9 +7,7 @@
 
 use std::path::{Path, PathBuf};
 
-use super::walk::{
-    Met, MetLinks, scan_roots, scan_roots_for, scannable_walk_builder, scannable_walker,
-};
+use super::walk::{Met, MetLinks, scan_roots, scannable_walk_builder, scannable_walker};
 use super::walk_boundaries::{
     is_scannable, outward_directory_link_root, owned_by_another_project, place_root,
 };
@@ -133,14 +131,20 @@ fn walked_root(frame: Frame<'_>, scan_root: &Path) -> Option<(PathBuf, PathBuf)>
     (!gated).then_some((canonical_scan_root, physical_root))
 }
 
-/// §FS-check.2.2.2.2: the `[schema.sources] exclude` pattern that kept a walk of
-/// the handed `path` from reading the first file it would read were the list empty,
-/// met on the way down from the root the path resolves to. `None` where no pattern
-/// did, under v1, and where the path reads nothing either way. Asked only of a scan
-/// that read nothing, so no run that read a file walks twice (§GOAL-fast-feedback).
-pub(crate) fn pruning_pattern(schema: &Schema, frame: Frame<'_>, path: &Path) -> Option<String> {
+/// §FS-check.2.2.2.2: the `[schema.sources] exclude` pattern that kept the run's walk from
+/// reading the first file it would read were the list empty, met on the way down from the roots
+/// [`caution_roots`] says it walked: the handed `path` alone, or the project's roots for a run
+/// given no path, wherever it started. `None` where no pattern did, under v1, and where the scope
+/// reads nothing either way. Asked only of a scan that read nothing, so no run that read a file
+/// walks twice (§GOAL-fast-feedback).
+pub(crate) fn pruning_pattern(
+    schema: &Schema,
+    frame: Frame<'_>,
+    path: &Path,
+    path_provided: bool,
+) -> Option<String> {
     let globs = ExcludeGlobs::of(schema)?;
-    let roots = scan_roots_for(schema, frame, Some(path), true, false, false).ok()?;
+    let (roots, _) = caution_roots(schema, frame, path, path_provided)?;
     let mut unexcluded = schema.clone();
     unexcluded.sources.model.as_mut()?.exclude.clear();
     roots.iter().find_map(|root| {
@@ -149,6 +153,28 @@ pub(crate) fn pruning_pattern(schema: &Schema, frame: Frame<'_>, path: &Path) ->
             .excluding_below(frame.root(), root, &file)
             .map(str::to_string)
     })
+}
+
+/// The roots the run's walk walked under an empty-scan caution's scope, and whether that scope is
+/// the project's whole root (§FS-check.2.2.2.2, §FS-check.2.2.2.6.1): the project's roots for a
+/// run given no path, whatever directory it started in, or for a path that resolves to the
+/// project root, and the path's own root for any other. `scan_roots` answers it
+/// from `path_provided`, as it answers the reporting walk, so a run given no path is never read
+/// as one handed its working directory, and every probe the caution chains asks one scope. A
+/// widened walk starts at the path and walks the project's roots beside it for the rules alone
+/// (§FS-check.1.3.6.1), so a path keeps only its first root, and a pattern or a link outside it
+/// is not the path's.
+fn caution_roots(
+    schema: &Schema,
+    frame: Frame<'_>,
+    path: &Path,
+    path_provided: bool,
+) -> Option<(Vec<PathBuf>, bool)> {
+    let (mut roots, whole) = scan_roots(schema, frame, Some(path), path_provided).ok()?;
+    if !whole {
+        roots.truncate(1);
+    }
+    Some((roots, whole))
 }
 
 /// §FS-check.2.2.2.6: whether the walk refused the handed `path` itself at the outward
@@ -174,10 +200,8 @@ pub(crate) fn handed_outward_link(schema: &Schema, frame: Frame<'_>, path: &Path
 /// (§FS-errors.4.1): the walk meets a directory's entries in the order the disk lists them, which
 /// two filesystems need not share. `None` where it refused none.
 ///
-/// It walks what the scan walked: the project's roots for a run given no path, whatever directory
-/// it started in, or a path that resolves to the project root, and the path itself for any other.
-/// `scan_roots` answers that from `path_provided`, as it answers the reporting walk, so a run
-/// given no path is never read as one handed its working directory. It walks with the walk's own
+/// It walks what the scan walked, the roots [`caution_roots`] names, which [`pruning_pattern`]
+/// asks too, so the two arms cannot read two scopes of one run. It walks with the walk's own
 /// builder and filter. The filter records each link as its gate prunes it, so the verdict is the
 /// walk's and not a second outward test, and no link is followed. The exclude patterns, the
 /// ignore files and the hidden rule keep out what they kept out of the scan, so a link the scan
@@ -191,12 +215,11 @@ pub(crate) fn outward_link_below(
     path: &Path,
     path_provided: bool,
 ) -> Option<PathBuf> {
-    let (roots, whole) = scan_roots(schema, frame, Some(path), path_provided).ok()?;
-    // §FS-check.1.3.6.1: a widened walk starts at the path, so the path is the first root.
-    let (roots, base) = if whole {
-        (roots.as_slice(), frame.root())
+    let (roots, whole) = caution_roots(schema, frame, path, path_provided)?;
+    let base = if whole {
+        frame.root()
     } else {
-        (roots.get(..1)?, roots.first()?.as_path())
+        roots.first()?.as_path()
     };
     roots
         .iter()
