@@ -291,3 +291,21 @@ collapse semantically and name sorted authorities, for example
 (version 2) entry says the same bare-kind rule, the existing config finding
 wins byte-for-byte and no rule tail is added.
 <!-- END chapter-rules -->
+
+## Init findings and pending paths
+
+An invalid rule withholds `init` writes. A rule whose object names an alias
+unavailable in member scope is instead reported and rendered as authored
+([rule scope](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#412-what-init-writes-anyway)).
+That member still exits `1` after writing, updating or finding its block
+current, including under `--check` and `--dry-run`. Located rule errors go to
+stdout; path events go to stderr. Under `--check`, pending paths such as
+`would-write`, `would-append` and `would-update` independently earn `1` and
+can coexist with a finding. A finding alone does not establish staleness;
+`exists` or `updated` describes only that path. The exit alone cannot be that
+member's staleness gate. Run `grund check` from the workspace root to judge
+the alias-pinned rule with the full vocabulary
+([init exits](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#41-what-earns-the-1)).
+Operational failures earn `2` before either verdict. Without findings or
+operational errors, `--dry-run` keeps `0` even with pending paths
+([preview exits](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#43-why---dry-run-keeps-0)).

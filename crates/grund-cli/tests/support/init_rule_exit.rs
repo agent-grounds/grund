@@ -75,7 +75,6 @@ fn assert_rule_report(output: &Output, events: &str) {
 
 /// §FS-init.4.1: help must name both causes and the existing stream/event split.
 #[test]
-#[ignore = "red until #1368 help explains rule findings and pending paths; implement removes this"]
 fn help_explains_both_exit_one_causes_and_reports() {
     let output = run(&repo_root(), &["init", "--help"]);
     assert!(output.status.success(), "{output:?}");
