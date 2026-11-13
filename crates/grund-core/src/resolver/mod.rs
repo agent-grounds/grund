@@ -114,7 +114,7 @@ pub(crate) use link_targets::{
 };
 pub(crate) use mount::Mounted;
 pub(crate) use point_body::point_body_pair;
-pub(crate) use project_scan::report_unwalked_path;
+pub(crate) use project_scan::{report_unwalked_path, scan_failure_refusal, stopping_failure};
 pub(crate) use section_lock::{
     EntryVerdict, LockJudgement, judge_section_locks, recorded_text_now_at,
 };
