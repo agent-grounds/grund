@@ -10,15 +10,15 @@ use std::path::Path;
 use super::fields::{FieldDraft, kind_checks};
 use super::walk::Reader;
 use crate::config::fetch_key::{fetch_key_name, fetch_key_repair, names_no_executable};
+use crate::config::home_requirement::{Ask, Home};
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
-use crate::config::project::{Project, Strength};
+use crate::config::project::{LoadWarning, Project, Strength};
 use crate::config::record::{CODE_SOURCE_KIND, ConfigLocation};
 use crate::config::rows::{Extent, Form, Kind, Origin, Place, Row};
-use crate::config::sources::LanguageClass;
-use crate::config::v1::{
-    ValueLines, file_home_is_named_markdown, rule_kind_refusal, validate_kind_value_keys,
-};
+use crate::config::v1::{ValueLines, judge_homes, rule_kind_refusal, validate_kind_value_keys};
+use crate::model::Code;
 
+use super::read_as_markdown::{index_not_markdown, md_not_markdown};
 use super::schema::RowDraft;
 use super::{places, sources, sources_model};
 
@@ -39,18 +39,42 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
     }
     // §FS-config-v2.schema.sources.rules: `form_prerequisites` asks the model, and
     // §FS-fetch.4.1: so does an absent value home's hint, for how a snapshot is read.
+    let md_lines: Vec<usize> = (r.sources.extensions.iter())
+        .filter(|(suffix, _, _)| suffix == "md")
+        .map(|(_, _, line)| *line)
+        .collect();
     sources_model::lower(&mut r);
+    let mut warnings = md_not_markdown(&r, &md_lines);
     for row in &r.rows {
-        form_prerequisites(&r, row, root)?;
+        warnings.extend(form_prerequisites(&r, row, root)?);
+        warnings.extend(index_not_markdown(&r, row));
     }
+    warnings.sort_by_key(|(line, _, _)| *line);
+    let path = r.path.to_path_buf();
+    r.project.load_warnings.0 = (warnings.into_iter())
+        .map(|(line, code, message)| LoadWarning {
+            code,
+            at: ConfigLocation {
+                path: path.clone(),
+                line,
+            },
+            message,
+        })
+        .collect();
     lower(&mut r);
     Ok(r.project)
 }
 
 /// §FS-fields.forms, §FS-fields.content.values: `form = "value"`, `form =
 /// "rule"` and a values field ask what v1's `values`, `rules` and
-/// `value_chapter` ask of their row, with v1's messages, at the v2 key.
-fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
+/// `value_chapter` ask of their row, with v1's messages, at the v2 key. Every
+/// `files` and `folders` entry is judged by `home_requirement` (§AR-config.1.6),
+/// and what a home that loads earns is returned as a warning at its line.
+fn form_prerequisites(
+    r: &Reader,
+    row: &RowDraft,
+    root: &Path,
+) -> Result<Vec<(usize, Code, String)>> {
     let values_field = r
         .fields
         .iter()
@@ -82,8 +106,27 @@ fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
         fetch: row.fetch.as_ref().map(|(fetch, _)| fetch.clone()),
     };
     let form_line = row.form.map_or(row.line, |(_, line)| line);
-    if let Some(refusal) = rule_kind_refusal(&k, file_homes_are_markdown(r, row, &k)) {
+    if let Some(refusal) = rule_kind_refusal(&k) {
         return r.fail(form_line, refusal);
+    }
+    let homes: Vec<Home<'_>> = (row.places.iter())
+        .filter(|place| place.extent != Extent::Complement)
+        .enumerate()
+        .map(|(index, place)| Home {
+            path: place.path(),
+            file: matches!(place.extent, Extent::File(_)),
+            first: index == 0,
+            line: place.line,
+        })
+        .collect();
+    let sources = &r.project.schema.sources;
+    let mut warnings = Vec::new();
+    if k.rules {
+        // §FS-config-v2.schema.sources.rules: every home, not only the first.
+        match judge_homes(Ask::Rule, &k, &homes, root, sources) {
+            Ok(found) => warnings.extend(found),
+            Err(refusal) => return r.fail(form_line, refusal),
+        }
     }
     let lines = ValueLines {
         header: row.line,
@@ -91,26 +134,16 @@ fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
         value_chapter: values_field.and_then(|field| field.content.map(|(_, line)| line)),
     };
     let named_sections = r.project.schema.ids.named_sections;
-    let sources = &r.project.schema.sources;
-    validate_kind_value_keys(r.path, &k, &lines, root, named_sections, sources)
-}
-
-/// §FS-config-v2.schema.sources.rules: whether every `file` place of `row` passes,
-/// asked of its language. A `document` language's entry does, and a `data` language's
-/// or one no admitted language reads does not. A `source` language's entry is read, so
-/// it keeps the name test on the row's first `files` entry (§DF-v2-rule-home-by-language.2.3),
-/// the one case the name still answers here. A row's `folder` places are not asked.
-fn file_homes_are_markdown(r: &Reader, row: &RowDraft, k: &KindConfig) -> bool {
-    let model = r.project.schema.sources.model.as_ref();
-    row.places.iter().all(|place| match &place.extent {
-        Extent::File(path) => model
-            .and_then(|model| model.language_of(Path::new(path)))
-            .is_some_and(|language| {
-                language.reads_markdown()
-                    || (language.class == LanguageClass::Source && file_home_is_named_markdown(k))
-            }),
-        Extent::Folder(_) | Extent::Complement => true,
-    })
+    warnings.extend(validate_kind_value_keys(
+        r.path,
+        &k,
+        &lines,
+        &homes,
+        root,
+        named_sections,
+        sources,
+    )?);
+    Ok(warnings)
 }
 
 /// §FS-config-v2.schema.places: what one row's keys must say together, each

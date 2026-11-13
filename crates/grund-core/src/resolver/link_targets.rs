@@ -105,11 +105,11 @@ pub(crate) fn index_link_targets_for<'c>(
         .rows
         .iter()
         .flat_map(|row| {
-            row.index_paths()
+            // §FS-fmt.2.3.1: an index the configuration reads as Markdown, never its name.
+            row.markdown_index_paths(schema, frame)
                 .into_iter()
                 .map(move |(folder, index)| (row, folder, index))
         })
-        .filter(|(_, _, index)| index.extension().and_then(|ext| ext.to_str()) == Some("md"))
         .map(|(row, folder, index)| {
             let file = frame.root().join(&index);
             (row.name.as_str(), folder, scanned_path_key(&index), file)

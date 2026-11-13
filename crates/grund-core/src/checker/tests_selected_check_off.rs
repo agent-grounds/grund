@@ -216,11 +216,17 @@ fn a_workspace_of_both_versions_names_only_a_shared_spelling() {
 /// `inline-citation-style` is on by default, and the code of the line itself
 /// needs no switch.
 const ALWAYS_ARMED: &[&str] = &[
+    "config-index-not-markdown",
+    "config-md-not-markdown",
+    "config-rule-file-not-markdown",
+    "config-rule-folder-not-markdown",
+    "config-value-home-absent",
     "config-version-1",
     "inline-citation-style",
     "invalid-section-lock",
     "reading-conflict",
     "reading-moved",
+    "rule-folder-file-not-markdown",
     "section-address-changed",
     "selected-check-off",
     "unread-scan-root",

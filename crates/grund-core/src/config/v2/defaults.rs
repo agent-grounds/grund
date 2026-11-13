@@ -8,8 +8,8 @@
 use std::collections::BTreeMap;
 
 use crate::config::project::{
-    CitationSyntax, FmtPresentation, Grounding, IdGrammar, Members, NoteStyle, OutputPresentation,
-    Presentation, Project, Rules, Schema, Sources,
+    CitationSyntax, FmtPresentation, Grounding, IdGrammar, LoadWarnings, Members, NoteStyle,
+    OutputPresentation, Presentation, Project, Rules, Schema, Sources,
 };
 use crate::config::record::ShorthandPolicy;
 use crate::config::rows::Nesting;
@@ -102,6 +102,7 @@ pub(super) fn default_project() -> Project {
             },
             rules_at_root: false,
         },
+        load_warnings: LoadWarnings::default(),
     }
 }
 

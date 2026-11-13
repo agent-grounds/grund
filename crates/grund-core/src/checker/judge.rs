@@ -3,6 +3,7 @@
 //! vocabulary, and where a verdict depends on bytes presentation decides it
 //! compares `Expected` and renders nothing (§AR-checker.1.3).
 
+use super::rule_folders::check_rule_folder_files;
 use crate::model::remedies;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -97,6 +98,8 @@ pub(crate) fn judge(
         };
         rules.resolution.get(kind).copied()
     };
+    // §FS-config-v2.checks.rule-folder-file-not-markdown: what only the walk sees of a rule folder.
+    check_rule_folder_files(schema, findings, frame, &mut report);
     // §FS-check.1.4.1: the warning is on where the pass below can choose it.
     arm_missing_snapshot(schema, targets, &resolve, &mut report.armed);
     // §FS-section-lock: one judgement of the locks, against `targets` by alias

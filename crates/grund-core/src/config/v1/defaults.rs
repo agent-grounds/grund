@@ -11,8 +11,8 @@ use super::kind_defaults::{
     default_kind_index, default_kind_title,
 };
 use crate::config::project::{
-    CitationSyntax, FmtPresentation, Grounding, IdGrammar, Members, NoteStyle, OutputPresentation,
-    Presentation, Project, Rules, Schema, Sources, Strength,
+    CitationSyntax, FmtPresentation, Grounding, IdGrammar, LoadWarnings, Members, NoteStyle,
+    OutputPresentation, Presentation, Project, Rules, Schema, Sources, Strength,
 };
 use crate::config::record::{DEFAULT_GROUNDING_LEVEL, ShorthandPolicy};
 use crate::config::rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
@@ -144,6 +144,7 @@ pub(in crate::config) fn default_project() -> Project {
             },
             rules_at_root: true,
         },
+        load_warnings: LoadWarnings::default(),
     }
 }
 

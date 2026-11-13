@@ -18,6 +18,7 @@ use super::point_sizes::LeadSizeWarning;
 use super::record::{ConfigLocation, ShorthandPolicy};
 use super::rows::{Nesting, Row};
 use super::sources::SourceModel;
+use crate::model::Code;
 
 /// The `[citations]` table under its concern's name (§AR-config.1.2): the
 /// direction rules, unchanged in shape from the record `Config` carried.
@@ -37,6 +38,31 @@ pub struct Project {
     pub schema: Schema,
     pub rules: Rules,
     pub presentation: Presentation,
+    /// What the version-2 reader warned about a file it loaded (§FS-config-v2.checks).
+    pub(crate) load_warnings: LoadWarnings,
+}
+
+/// §FS-config-v2.checks: one warning the version-2 reader made of a config it loaded, at the
+/// line that wrote what it names, which `check`, `config validate` and `config show` report
+/// beside the other config findings (§FS-errors.5.2.3). Its text carries no location: the
+/// report spells the file and line in front of it.
+#[derive(Clone, Debug)]
+pub(crate) struct LoadWarning {
+    pub(crate) code: Code,
+    pub(crate) at: ConfigLocation,
+    pub(crate) message: String,
+}
+
+/// The reader's warnings, which are not part of what a project means: a file and the file it
+/// prints load to equal projects whatever lines each warns at, as two places are equal wherever
+/// each was written (§AR-config.2).
+#[derive(Clone, Debug, Default)]
+pub(crate) struct LoadWarnings(pub(crate) Vec<LoadWarning>);
+
+impl PartialEq for LoadWarnings {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
 }
 
 /// §AR-config.1.1: the `[workspace]` block, each list with the line it was

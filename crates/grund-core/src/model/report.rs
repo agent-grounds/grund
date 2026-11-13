@@ -64,11 +64,17 @@ impl Code {
     /// the line in their text (§FS-errors.2.2.1) as well as in `line` (§FS-errors.5.2.3):
     /// the version-2 window's warnings (§FS-config-v2.checks.config-not-toml,
     /// §FS-config-v2.checks.config-multiline-string,
-    /// §FS-config-v2.checks.config-fetch-names-nothing).
-    const CLI_LEVEL_AT_A_LINE: [Code; 3] = [
+    /// §FS-config-v2.checks.config-fetch-names-nothing), and the version-2 reader's load
+    /// warnings that name grund 1.0.0 (§FS-config-v2.checks.config-md-not-markdown).
+    const CLI_LEVEL_AT_A_LINE: [Code; 8] = [
         Code::CONFIG_FETCH_NAMES_NOTHING,
+        Code::CONFIG_INDEX_NOT_MARKDOWN,
+        Code::CONFIG_MD_NOT_MARKDOWN,
         Code::CONFIG_MULTILINE_STRING,
         Code::CONFIG_NOT_TOML,
+        Code::CONFIG_RULE_FILE_NOT_MARKDOWN,
+        Code::CONFIG_RULE_FOLDER_NOT_MARKDOWN,
+        Code::CONFIG_VALUE_HOME_ABSENT,
     ];
 }
 

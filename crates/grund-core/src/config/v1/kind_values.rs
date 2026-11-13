@@ -9,16 +9,13 @@
 //! field, so one spelling has one set of prerequisites (§FS-fields.forms).
 
 use anyhow::Result;
-use std::fs;
-use std::io::ErrorKind;
 use std::path::Path;
 
 use super::values::bail_config;
-use crate::config::fetch_key_runs_nothing;
+use crate::config::home_requirement::{Ask, Home, Verdict, home_requirement, rule_kind_message};
 use crate::config::kind::KindConfig;
 use crate::config::project::Sources;
-use crate::model::normalize_path_lexically;
-use crate::sources::io_reason;
+use crate::model::Code;
 
 /// The lines a row's value refusals are located at: the key that wrote each,
 /// or the row's header (§FS-config.4.3).
@@ -31,16 +28,20 @@ pub(in crate::config) struct ValueLines {
 /// Every relationship `values` and `value_chapter` need of their own row
 /// (§FS-config.3.4.9, §FS-config.3.4.13, §FS-fields.forms). Located at the
 /// key's own line, so the message opens the line that has to change and the
-/// editor marks that same line (§FS-lsp.2.2.4.1). `sources` is what the project
-/// reads, which an absent home's hint asks (§FS-fetch.4.1).
+/// editor marks that same line (§FS-lsp.2.2.4.1). `homes` are every home of the
+/// row, each judged (§AR-config.1.6), and what a later absent one earns is
+/// returned as a warning at its own line (§FS-config-v2.checks.config-value-home-absent).
+/// `sources` is what the project reads, which an absent home's hint asks (§FS-fetch.4.1).
 pub(in crate::config) fn validate_kind_value_keys(
     path: &Path,
     k: &KindConfig,
     lines: &ValueLines,
+    homes: &[Home<'_>],
     root: &Path,
     named_sections: bool,
     sources: &Sources,
-) -> Result<()> {
+) -> Result<Vec<(usize, Code, String)>> {
+    let mut warnings = Vec::new();
     if k.values {
         let line = lines.values.unwrap_or(lines.header);
         if !k.citable {
@@ -53,21 +54,21 @@ pub(in crate::config) fn validate_kind_value_keys(
                 ),
             );
         }
-        let (home, expects_file) = match (&k.file, &k.folder) {
-            (Some(home), None) => (home, true),
-            (None, Some(home)) => (home, false),
-            _ => {
-                return bail_config(
-                    path,
-                    line,
-                    format!(
-                        "kind `{}` sets `values = true` without exactly one `file` or `folder` home",
-                        k.kind
-                    ),
-                );
-            }
-        };
-        validate_value_home(path, line, root, k, home, expects_file, sources)?;
+        if k.file.is_some() == k.folder.is_some() {
+            return bail_config(
+                path,
+                line,
+                format!(
+                    "kind `{}` sets `values = true` without exactly one `file` or `folder` home",
+                    k.kind
+                ),
+            );
+        }
+        // §AR-config.1.6: every home, not only the first.
+        match judge_homes(Ask::Value, k, homes, root, sources) {
+            Ok(found) => warnings.extend(found),
+            Err(message) => return bail_config(path, line, message),
+        }
     }
     // §FS-config.3.4.13: the chapter key's own relationships. Each is a
     // state in which no coordinate could ever exist, so the config is
@@ -116,155 +117,56 @@ pub(in crate::config) fn validate_kind_value_keys(
                 ),
             );
         }
-        let (home, expects_file) = match (&k.file, &k.folder) {
-            (Some(home), None) => (home, true),
-            (None, Some(home)) => (home, false),
-            _ => {
-                return bail_config(
-                    path,
-                    line,
-                    format!(
-                        "kind `{}` sets `value_chapter` without exactly one `file` or `folder` home",
-                        k.kind
-                    ),
-                );
-            }
-        };
-        validate_value_home(path, line, root, k, home, expects_file, sources)?;
+        if k.file.is_some() == k.folder.is_some() {
+            return bail_config(
+                path,
+                line,
+                format!(
+                    "kind `{}` sets `value_chapter` without exactly one `file` or `folder` home",
+                    k.kind
+                ),
+            );
+        }
+        match judge_homes(Ask::Value, k, homes, root, sources) {
+            Ok(found) => warnings.extend(found),
+            Err(message) => return bail_config(path, line, message),
+        }
     }
-    Ok(())
-}
-
-/// §FS-config-v2.schema.sources.rules: the name test on a row's first `file` home:
-/// version 1's whole answer, because `.md` is the one suffix it reads as Markdown, and
-/// version 2's only for an entry a `source` language reads (§DF-v2-rule-home-by-language.2.3).
-pub(in crate::config) fn file_home_is_named_markdown(k: &KindConfig) -> bool {
-    k.file
-        .as_deref()
-        .is_none_or(|file| Path::new(file).extension().and_then(|ext| ext.to_str()) == Some("md"))
+    Ok(warnings)
 }
 
 /// §FS-config.3.4.12, §FS-fields.forms: why a rule kind's row cannot hold
-/// rules, if it cannot — the refusal v1 writes unlocated and v2 at `form`.
-/// `file_homes_are_markdown` is the reader's answer for the row's `file` homes,
-/// which each version gives its own way (§FS-config-v2.schema.sources.rules).
-pub(in crate::config) fn rule_kind_refusal(
-    k: &KindConfig,
-    file_homes_are_markdown: bool,
-) -> Option<String> {
+/// rules, if it cannot — the refusal v1 writes unlocated and v2 at `form`. What
+/// each home is read as is `home_requirement`'s, asked of every home
+/// (§FS-config-v2.schema.sources.rules).
+pub(in crate::config) fn rule_kind_refusal(k: &KindConfig) -> Option<String> {
     let refused = k.rules
         && (!k.citable
             || !k.scan
             || (k.folder.is_none() && k.file.is_none())
-            || !file_homes_are_markdown
             || k.values
             || k.fetch.is_some());
-    refused.then(|| {
-        format!(
-            "kind `{}` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch`",
-            k.kind
-        )
-    })
+    refused.then(|| rule_kind_message(&k.kind))
 }
 
-/// §FS-fetch.4.1: whether the project reads what `grund fetch` writes at this home as
-/// Markdown. In v2 the language decides, of the `file` home or of the `<ID>.md` a `folder`
-/// home gets (§FS-fetch.5), and a name no language claims is read by nothing. v1 has no
-/// language to ask: the name must be Markdown's, and its effective `[scan] extensions`
-/// must list `md`, or nothing reads the file.
-fn snapshot_read_as_markdown(k: &KindConfig, sources: &Sources) -> bool {
-    let Some(model) = &sources.model else {
-        return file_home_is_named_markdown(k) && sources.extensions.iter().any(|ext| ext == "md");
-    };
-    // Any stem will do: a language goes by the final extension.
-    let written = k.file.as_deref().unwrap_or("<ID>.md");
-    model
-        .language_of(Path::new(written))
-        .is_some_and(|language| language.reads_markdown())
-}
-
-/// §FS-fetch.4.1: the one step past an absent home. Outside the root no step helps, so
-/// that hint names another path. Inside it, `grund fetch` writes Markdown, so it is the
-/// way through only for a key with something to run (§FS-fetch.2.1), asked of the project's
-/// own `root`, and a home whose snapshot is read as Markdown.
-fn absent_value_home_hint(
+/// §FS-config.3.4.9, §FS-config.3.4.12: every home of a row judged by `home_requirement`, the
+/// refusal of the first that refuses, at `line` for a value home and with the form's refusal for
+/// a rule home, or the warnings the rest earn at their own lines.
+pub(in crate::config) fn judge_homes(
+    ask: Ask,
     k: &KindConfig,
+    homes: &[Home<'_>],
     root: &Path,
-    shape: &str,
-    inside_root: bool,
     sources: &Sources,
-) -> String {
-    if !inside_root {
-        "hint: a value kind's home must be inside the project root; name a path inside it"
-            .to_string()
-    } else if snapshot_read_as_markdown(k, sources)
-        && k.fetch
-            .as_deref()
-            .is_some_and(|value| !fetch_key_runs_nothing(root, value))
-    {
-        format!(
-            "hint: a value kind's home must exist; create the empty {shape}, then run `grund fetch <ID>` to write the first snapshot"
-        )
-    } else {
-        format!("hint: a value kind's home must exist; create the {shape}")
-    }
-}
-
-/// A value home is mandatory, existing, and physically inside the project root
-/// (§FS-config.3.4.9, §FS-values.1). Resolving both paths closes `..`, absolute,
-/// and symlink escapes through the same located config error, with its named
-/// line preserved for the editor (§FS-lsp.2.2.4.1).
-fn validate_value_home(
-    config_path: &Path,
-    line: usize,
-    root: &Path,
-    k: &KindConfig,
-    home: &str,
-    expects_file: bool,
-    sources: &Sources,
-) -> Result<()> {
-    let kind = &k.kind;
-    let shape = if expects_file { "file" } else { "folder" };
-    let candidate = normalize_path_lexically(&root.join(home));
-    let canonical_root = fs::canonicalize(root).unwrap_or_else(|_| normalize_path_lexically(root));
-    let resolved = fs::canonicalize(&candidate).or_else(|error| {
-        if error.kind() != ErrorKind::NotFound {
-            // §FS-fetch.4.3: a lookup that fails otherwise is refused by its reason, as the
-            // scan names one (§FS-check.2.4.1), never as absent.
-            return bail_config(
-                config_path,
-                line,
-                format!(
-                    "could not look up value home for kind `{kind}`: {home}: {}\n\
-                     hint: make the home and every directory above it accessible",
-                    io_reason(&error)
-                ),
-            );
+) -> std::result::Result<Vec<(usize, Code, String)>, String> {
+    let mut warnings = Vec::new();
+    for home in homes {
+        match home_requirement(ask, k, *home, root, sources) {
+            Verdict::Holds => {}
+            Verdict::RefusesRow => return Err(rule_kind_message(&k.kind)),
+            Verdict::Refused(message) => return Err(message),
+            Verdict::Warns(code, message) => warnings.push((home.line, code, message)),
         }
-        // §FS-fetch.4.1: the first line stays as it is; the hint follows it.
-        let inside_root = candidate.starts_with(&canonical_root);
-        bail_config(
-            config_path,
-            line,
-            format!(
-                "value home for kind `{kind}` does not exist: {home}\n{}",
-                absent_value_home_hint(k, root, shape, inside_root, sources)
-            ),
-        )
-    })?;
-    if !resolved.starts_with(&canonical_root) {
-        return bail_config(
-            config_path,
-            line,
-            format!("value home for kind `{kind}` must normalize inside the project root: {home}"),
-        );
     }
-    if (expects_file && !resolved.is_file()) || (!expects_file && !resolved.is_dir()) {
-        return bail_config(
-            config_path,
-            line,
-            format!("value home for kind `{kind}` must be an existing {shape}: {home}"),
-        );
-    }
-    Ok(())
+    Ok(warnings)
 }

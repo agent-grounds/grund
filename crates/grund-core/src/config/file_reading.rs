@@ -5,26 +5,83 @@
 //! its name resolves to, so a remapped suffix is read as its target is, whole
 //! (§FS-config-v2.schema.sources.extensions). A v1 file, or one no admitted
 //! language claims, takes them from its extension and the project's `[scan]` keys
-//! (§FS-config.5.2). Nothing else derives any of them from a path
+//! (§FS-config.5.2), except its two readings, which [`Readings`] alone answers: a v2
+//! name no admitted language claims is neither read as Markdown nor has its docstrings
+//! read (§FS-fmt.2.3.1). Nothing else derives any of them from a path
 //! (§AR-system.principle).
 
 use std::path::Path;
 
 use super::compiled::Compiled;
-use super::project::{Schema, Sources};
+use super::project::{Schema, Sources, file_extension};
 use super::read_name::ReadName;
-use super::sources::{DeclarationMode, Language, LanguageClass};
+use super::sources::{DeclarationMode, Language, LanguageClass, SourceModel};
 use crate::grammar::{DocCommentRule, LexicalSettings, MultiLineStrings, extension_rule};
 use crate::model::{ValueFormat, is_hidden};
+
+/// The two readings a rule about which files it covers asks (§FS-fmt.2.3.1): whether a name is
+/// read as Markdown, and whether its docstrings are read. The one answer to both, for a file in
+/// the tree and for a name the config writes (§AR-config.1.6): no load site, checker or writer
+/// tests `.md` or `.py` itself.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) struct Readings {
+    pub(crate) markdown: bool,
+    pub(crate) docstrings: bool,
+}
+
+impl Readings {
+    /// §FS-fmt.2.3.1: in version 2 each reading is the `language` the name resolves to, and a
+    /// name no admitted language claims is neither; version 1's half is the name's final
+    /// `extension`, `.md` and `.py`, which is what version 1 reads as those.
+    pub(crate) fn of(
+        version_2: bool,
+        language: Option<&Language>,
+        extension: Option<&str>,
+    ) -> Self {
+        match language {
+            Some(language) => Self {
+                markdown: language.reads_markdown(),
+                docstrings: language.docstrings,
+            },
+            None if version_2 => Self {
+                markdown: false,
+                docstrings: false,
+            },
+            None => Self {
+                markdown: extension == Some("md"),
+                docstrings: extension == Some("py"),
+            },
+        }
+    }
+
+    /// §AR-config.1.6: the readings of a name the config writes, an `index` or a `files` or
+    /// `folders` entry, asked as a file of that spelling in the tree is: by the language its
+    /// final extension resolves to under `sources`, a version-2 file's model, or by the name.
+    pub(crate) fn of_written(sources: &Sources, name: &Path) -> Self {
+        let language = written_language(sources, name);
+        Self::of(sources.model.is_some(), language, file_extension(name))
+    }
+}
+
+/// §AR-config.1.6: the version-2 language a name the config writes resolves to under `sources`,
+/// which is a setting and no file's reading; `None` under version 1 or where no admitted
+/// language claims it. The one place a config-written name is asked its language.
+pub(crate) fn written_language<'s>(sources: &'s Sources, name: &Path) -> Option<&'s Language> {
+    model_language(sources.model.as_ref()?, name)
+}
+
+/// [`written_language`] under one version-2 `model`.
+pub(crate) fn model_language<'m>(model: &'m SourceModel, name: &Path) -> Option<&'m Language> {
+    model.language_of(name)
+}
 
 /// How the text scan, the value homes, the formatter, the editor, the checker and
 /// `show` read one file (§FS-config-v2.schema.sources).
 #[derive(Clone, Copy)]
 pub(crate) struct FileReading<'a> {
-    /// Read with the Markdown reader.
+    /// Read with the Markdown reader: read as Markdown (§FS-fmt.2.3.1).
     pub(crate) markdown: bool,
-    /// Read for Python's docstring positions: a v1 `.py`, or a v2 language that
-    /// reads docstrings.
+    /// Read for Python's docstring positions: its docstrings are read (§FS-fmt.2.3.1).
     pub(crate) python: bool,
     /// The file's v2 language, `None` for a v1 file or one no language claims.
     pub(crate) language: Option<&'a Language>,
@@ -50,14 +107,16 @@ impl<'a> FileReading<'a> {
         let (path, extension) = (name.spelling(), name.extension());
         let mut lexical = compiled.lexical(schema);
         let model = schema.sources.model.as_ref();
+        // §FS-fmt.2.3.1: the one answer, whichever branch the rest of the reading takes.
+        let reads = Readings::of(model.is_some(), name.language(), extension);
         match model.and_then(|model| Some((model, name.language()?))) {
             Some((model, language)) => {
                 lexical.comment_prefixes = &language.comment_prefixes;
                 lexical.docstring_python = language.docstrings;
                 lexical.grammar = compiled.grammar_for(&language.comment_prefixes);
                 Self {
-                    markdown: language.reads_markdown(),
-                    python: language.docstrings,
+                    markdown: reads.markdown,
+                    python: reads.docstrings,
                     language: Some(language),
                     declarations: Some(model.declarations),
                     extension,
@@ -67,8 +126,8 @@ impl<'a> FileReading<'a> {
                 }
             }
             None => Self {
-                markdown: extension == Some("md"),
-                python: extension == Some("py"),
+                markdown: reads.markdown,
+                python: reads.docstrings,
                 language: None,
                 declarations: None,
                 extension,

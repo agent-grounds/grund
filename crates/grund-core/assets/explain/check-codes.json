@@ -257,6 +257,86 @@
   }
  },
  {
+  "code": "config-index-not-markdown",
+  "meaning": "A version-2 row's index names a file the configuration does not read as Markdown, so its folders are judged as under index = false for now.",
+  "ramp": "error in grund 1.0.0",
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "an index key of a [schema.kinds] table names a file not read as Markdown",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "name a file a `document` language reads, or set `index = false`"
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "note": null
+  }
+ },
+ {
+  "code": "config-md-not-markdown",
+  "meaning": "In version 2, an md entry of [schema.sources.extensions] maps .md to a language that does not read Markdown, and is read that way for now.",
+  "ramp": "error in grund 1.0.0",
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "an md entry of [schema.sources.extensions] names a language not of class document",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "drop the entry, or map `md` to a `document` language"
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "note": null
+  }
+ },
+ {
   "code": "config-multiline-string",
   "meaning": "A value in a version-2 config held a multi-line string, which version 2 does not read, and was read for one more release as before; such a value is now refused when the config loads.",
   "ramp": null,
@@ -318,6 +398,139 @@
    "fix": {
     "kind": "none",
     "text": "it never fires"
+   },
+   "note": null
+  }
+ },
+ {
+  "code": "config-rule-file-not-markdown",
+  "meaning": "A version-2 rule kind's files entry is read by a source language, so a rule written as a Markdown heading there declares nothing.",
+  "ramp": "error in grund 1.0.0",
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a files entry of a form = \"rule\" table is read by a source language",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "move the rules into a file a `document` language reads"
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "note": null
+  }
+ },
+ {
+  "code": "config-rule-folder-not-markdown",
+  "meaning": "A version-2 rule kind's folders entry can hold no file read as Markdown, because no admitted language reads Markdown.",
+  "ramp": "error in grund 1.0.0",
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a form = \"rule\" table has a folders entry",
+      "by": "condition"
+     },
+     {
+      "text": "no suffix resolves to an admitted document language",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "admit one in [schema.sources] languages, such as `markdown`"
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "note": null
+  }
+ },
+ {
+  "code": "config-value-home-absent",
+  "meaning": "A version-2 value row's later home does not exist, and the row reads its other homes for now.",
+  "ramp": "error in grund 1.0.0",
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a files or folders entry after the first of a form = \"value\" table does not exist",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "file",
+      "text": "create the file, or drop the entry"
+     },
+     {
+      "label": "folder",
+      "text": "create the folder, or drop the entry"
+     }
+    ]
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "absent",
+    "text": "not in version 1"
    },
    "note": null
   }
@@ -2937,6 +3150,46 @@
    "fix": {
     "kind": "template",
     "text": "give the heading the parent it needs, or write its complete path"
+   },
+   "note": null
+  }
+ },
+ {
+  "code": "rule-folder-file-not-markdown",
+  "meaning": "A file in a version-2 rule kind's folder is read by a source language, so a rule written as a Markdown heading in it declares nothing.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a file in a folders entry of a form = \"rule\" table is read by a source language",
+      "by": "condition"
+     }
+    ]
+   },
+   "fix": {
+    "kind": "template",
+    "text": "give it a name a `document` language reads, or move it out of {folder}"
+   },
+   "note": null
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "fix": {
+    "kind": "absent",
+    "text": "not in version 1"
    },
    "note": null
   }

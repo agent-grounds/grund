@@ -123,12 +123,12 @@ fn no_caller_gets_a_reading_from_a_bare_spelling() {
     crate_sources(&src, &mut sources);
     assert!(sources.len() > 50, "the scan found the crate's sources");
     let rule = "config/read_name.rs";
-    // The other three ask of a path the config wrote, which is a setting and no file's reading.
+    // `file_reading.rs` asks of a path the config wrote, which is a setting and no file's reading
+    // (§AR-config.1.6), and migration asks of a probe it builds.
     let language_owners = [
         rule,
         "config/sources.rs",
-        "config/v1/kind_values.rs",
-        "config/v2/finish.rs",
+        "config/file_reading.rs",
         "config/migrate/records_gate.rs",
     ];
     let mut bypasses = Vec::new();

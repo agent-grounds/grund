@@ -42,11 +42,11 @@ pub(super) struct KindIndexTarget<'a> {
 /// A kind with no folder, or with `index = false`, is absent from this list and is
 /// therefore invisible to every rule below.
 ///
-/// Why a non-`.md` `index` is dropped rather than reported: every rule below is
-/// stated in terms of what `grund fmt --cross-refs` would write, and that pass
-/// runs on `.md` files only (§FS-fmt.6.1). A non-Markdown index is a file the
-/// formatter can never repair, and the honest report about one is no report at
-/// all rather than a finding with no fix.
+/// Why an index the configuration does not read as Markdown is dropped rather than
+/// reported: every rule below is stated in terms of what `grund fmt --cross-refs`
+/// would write, and that pass runs on files read as Markdown only (§FS-fmt.6.1,
+/// §FS-fmt.2.3.1). Its folder is judged as under `index = false`, which the load
+/// already warned about (§FS-config-v2.checks.config-index-not-markdown).
 pub(super) fn kind_index_targets<'a>(
     schema: &'a Schema,
     frame: Frame<'_>,
@@ -55,23 +55,15 @@ pub(super) fn kind_index_targets<'a>(
         .rows
         .iter()
         .flat_map(|row| {
-            row.index_paths()
+            row.markdown_index_paths(schema, frame)
                 .into_iter()
                 .map(move |(folder, index)| (row, folder, index))
         })
-        .filter_map(|(row, folder, index)| {
-            // §FS-config.3.4 rejects an `index` that does not name a `.md` file,
-            // so this filter never fires on a config that loaded; it states the
-            // Markdown assumption every rule below rests on.
-            if index.extension().and_then(|ext| ext.to_str()) != Some("md") {
-                return None;
-            }
-            Some(KindIndexTarget {
-                kind: row.name.as_str(),
-                folder,
-                index_key: scanned_path_key(&index),
-                index_file: frame.root().join(&index),
-            })
+        .map(|(row, folder, index)| KindIndexTarget {
+            kind: row.name.as_str(),
+            folder,
+            index_key: scanned_path_key(&index),
+            index_file: frame.root().join(&index),
         })
         .collect()
 }

@@ -14,7 +14,7 @@ use super::tree::ScanError;
 use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
 use super::value_yaml_subset::yaml_value_root;
 use super::yaml::parse_yaml;
-use crate::config::{Frame, NamesVerdict, Schema};
+use crate::config::{Extent, Frame, NamesVerdict, Schema};
 use crate::model::sort_path_key;
 use crate::model::{
     Catalog, DeclarationSource, ReadingConflict, ReadingMove, ValueFormat, normalize_path_lexically,
@@ -305,21 +305,36 @@ fn value_sources_in<'a>(
     };
     for row in schema.value_rows() {
         let kind = row.name.as_str();
+        // §FS-config-v2.checks.config-value-home-absent: a home after the row's first that does
+        // not exist loaded with a warning, and is not read.
+        let absent_later = |home: &str, error: Option<&std::io::Error>| {
+            let first = row.places.first().is_some_and(|place| match &place.extent {
+                Extent::File(path) | Extent::Folder(path) => path == home,
+                Extent::Complement => false,
+            });
+            !first && error.is_some_and(|error| error.kind() == std::io::ErrorKind::NotFound)
+        };
         // §FS-config-v2.schema.places: every file and folder of the row is a value home.
         for file in row.files() {
             let path = normalize_path_lexically(&frame.root().join(file));
+            if absent_later(file, frame.sources().try_is_file(&path).err().as_ref()) {
+                continue;
+            }
             if let Some(format) = format_of(&path) {
                 sources.push((path, kind, format));
             }
         }
-        for folder in row.folders() {
-            let folder = normalize_path_lexically(&frame.root().join(folder));
+        for home in row.folders() {
+            let folder = normalize_path_lexically(&frame.root().join(home));
             let selected_home = selected
                 .is_some_and(|(owner, home)| owner == kind && paths_same_location(home, &folder));
             let required = selected.is_none() || selected_home;
             // §FS-check.6.1.1: cover this effective input before its shared read.
             let disk = frame.sources();
             let listing = disk.list_dir(&folder);
+            if absent_later(home, listing.failure.as_ref()) {
+                continue;
+            }
             if required && let Some(error) = listing.failure {
                 return Err(UnreadHome { folder, error });
             }

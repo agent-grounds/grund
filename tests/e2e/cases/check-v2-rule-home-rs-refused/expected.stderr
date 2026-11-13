@@ -1,1 +1,1 @@
-error: grund.toml:9: kind `RULE` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch`
+warning: grund.toml:8: [schema.kinds.RULE] files entry `rules/rules.rs` is read as `rust`, which does not read Markdown, and every home of a rule kind must be; until then a rule written as a Markdown heading there declares nothing; move the rules into a file a `document` language reads; this becomes an error in grund 1.0.0

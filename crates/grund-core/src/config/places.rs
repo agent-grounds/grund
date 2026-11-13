@@ -151,6 +151,20 @@ impl Row {
             .map(|folder| (folder, Path::new(folder).join(name)))
             .collect()
     }
+
+    /// The `index_paths` the configuration reads as Markdown (§FS-fmt.2.3.1): a folder whose
+    /// index is not is judged as under `index = false`
+    /// (§FS-config-v2.checks.config-index-not-markdown), so every index rule, and the links
+    /// `--cross-refs` writes (§FS-fmt.6.1), ask this rather than the index's name.
+    pub(crate) fn markdown_index_paths(
+        &self,
+        schema: &Schema,
+        frame: Frame<'_>,
+    ) -> Vec<(&str, PathBuf)> {
+        (self.index_paths().into_iter())
+            .filter(|(_, index)| frame.reading(schema, &frame.root().join(index)).markdown)
+            .collect()
+    }
 }
 
 impl Schema {
