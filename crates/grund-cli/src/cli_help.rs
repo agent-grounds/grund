@@ -163,7 +163,7 @@ fn print_subcommand_help(cmd: &str) {
                 "  --dry-run      report what would be written/appended/updated without touching any file"
             );
             println!(
-                "  --check        the same report, as a gate: writes nothing, exits 1 if anything is pending"
+                "  --check        the same preview, no writes: exits 1 for rule findings or pending paths"
             );
             println!(
                 "  --no-vcs       scaffold into a target with no .git/.hg/.jj/.svn above it (refused by default)"
@@ -183,8 +183,23 @@ fn print_subcommand_help(cmd: &str) {
             println!("  --windsurf     create/update .windsurfrules");
             println!("  --zed          create/update .rules");
             println!();
+            // §FS-init.4.1: findings and pending paths are independent causes of `1`.
             println!(
-                "Exit:  0 written / updated / already current · 1 --check only: something is still pending · 2 missing or refused target, unknown flag or template, or unsupported newer block."
+                "Exit:  0 completed or previewed without rule findings (under --check, nothing pending) · 1 rule findings or --check pending paths · 2 I/O/config error, missing or refused target, unknown flag or template, or unsupported newer block."
+            );
+            println!("Rule findings: stdout (located errors); path events: stderr.");
+            println!(
+                "Pending paths include would-write, would-append and would-update. They can coexist with rule findings; a finding alone does not mean paths are stale."
+            );
+            println!(
+                "An exists or updated event describes that path, not the whole run's success. Current paths can still accompany a rule finding and exit 1, even with --check or --dry-run."
+            );
+            println!(
+                "Invalid rules withhold writes; rules unverifiable in member scope render as authored and still earn 1. At the workspace root, run grund check to judge alias-pinned rules."
+            );
+            // §FS-init.4.3: pending paths alone do not fail a dry-run preview.
+            println!(
+                "Without rule findings or operational errors, --dry-run keeps 0 even with pending paths."
             );
             println!();
             println!("Examples:");
@@ -194,7 +209,7 @@ fn print_subcommand_help(cmd: &str) {
             );
             println!("  grund init --dry-run               # preview without writing");
             println!(
-                "  grund init --check                 # the same preview as a gate: exit 1 if pending"
+                "  grund init --check                 # no writes; exit 1 for rule findings or pending paths"
             );
             println!(
                 "  grund init --name \"My Service\"      # auto-detect entrypoint, else AGENTS.md"

@@ -25,8 +25,8 @@ pub struct InitOpts {
     pub dry_run: bool,
     /// `--check` — the `--dry-run` preview taken as a verdict (§FS-init.1):
     /// writes nothing, reports what `--dry-run` reports, and leaves the caller
-    /// to exit `1` when any reported event is a change (§FS-init.4.1). It implies
-    /// `dry_run` inside `init` rather than opening a second path through it.
+    /// to exit `1` for rule findings or any change event (§FS-init.4.1). It
+    /// implies `dry_run` inside `init` rather than opening a second path through it.
     pub check: bool,
     /// `--no-vcs` — scaffold into a target no version-control marker covers
     /// (§FS-init.1.2.3). Lifts that rule and only that one; it is not `--force`,
@@ -64,7 +64,8 @@ impl InitEvent {
     /// current. Every verb but `exists` is a change — `wrote`/`appended`/
     /// `updated` and their `would-` forms alike. The one definition of the
     /// predicate: it suppresses the `next:` block (§FS-init.2.2.2) and it decides
-    /// the `--check` exit code (§FS-init.4.1), which is why those two agree.
+    /// the pending-path cause of `--check` exit 1 (§FS-init.4.1). Rule findings
+    /// independently earn 1 even when no event is a change.
     pub fn is_change(&self) -> bool {
         self.verb != "exists"
     }
@@ -75,8 +76,8 @@ impl InitEvent {
 pub struct InitOutput {
     pub events: Vec<InitEvent>,
     /// Located validation findings discovered before any write (§FS-rules.4).
-    /// They are ordinary report rows and make `init` exit 1, not operational
-    /// failures that would exit 2.
+    /// The CLI prints them on stdout and exits 1 even with current paths or
+    /// `--dry-run` (§FS-init.4.1); operational failures instead earn 2.
     pub errors: Vec<Finding>,
     /// Things the run could not do that the caller would otherwise have to
     /// notice for itself (§FS-init.2.3.4.17.4). Reported, never fatal.
@@ -94,10 +95,10 @@ pub struct InitOutput {
 }
 
 impl InitOutput {
-    /// Whether the run reported anything left to do — the verdict `--check`
-    /// draws from the report it just printed (§FS-init.4.1). Notes and the
-    /// `next:` block are deliberately not consulted: a note is a report, not a
-    /// finding.
+    /// Whether any path event reports a change (§FS-init.4.1). This is the
+    /// pending-path cause of `--check` exit 1; rule findings are independent.
+    /// Notes and the `next:` block are deliberately not consulted: a note is a
+    /// report, not a finding.
     pub fn has_pending_changes(&self) -> bool {
         self.events.iter().any(InitEvent::is_change)
     }

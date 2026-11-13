@@ -98,18 +98,19 @@ fn command_init(args: &[String]) -> ExitCode {
         }
     };
     render_init_output(&output);
+    // §FS-init.4.1: rule findings earn `1` even with current paths or `--dry-run`.
     if output.has_errors() {
         return ExitCode::from(1);
     }
-    // §FS-init.4.1: `--check` draws its verdict from the report it just printed —
-    // `1` when any reported path was a `would-…`, nothing else. `--dry-run`
-    // alone keeps `0` (§REQ-backwards-compatibility.1).
+    // §FS-init.4.1: pending paths independently earn `1` under `--check`.
+    // Without findings, `--dry-run` keeps `0` even with pending paths (§FS-init.4.3).
     if check && output.has_pending_changes() {
         return ExitCode::from(1);
     }
     ExitCode::SUCCESS
 }
 
+/// Rule findings go to stdout; path events go to stderr (§FS-init.4.1).
 fn render_init_output(output: &InitOutput) {
     // §FS-check.4.10.7, §FS-workspace.6.1.7: `init` expands the
     // outermost workspace above its target, so it carries the run's warnings

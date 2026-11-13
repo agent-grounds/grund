@@ -368,12 +368,23 @@ workspace the run's own `grund.toml` declares, so it resolves at the workspace
 root and in any run that loaded that workspace. A run rooted inside a member
 declares no `[workspace]` of its own and holds no namespace at all, so it cannot
 judge the alias either way: `grund check` and `grund init` report it at the
-rule's own heading as `invalid-rule`, the run exits nonzero, and `grund init`
+rule's own heading as `invalid-rule`, the run exits `1`, and `grund init`
 writes the managed block anyway with the rule's bullet rendered exactly as
 authored. That last part is what lets a member complete a `grund` upgrade: the
 block it writes is byte-for-byte what a run holding the whole workspace would
 write for it. One genuinely invalid rule beside it and nothing is written at
-all, which is the ordinary refusal.
+all, which is the ordinary refusal
+([§FS-rules.4.1.2](../functional-spec/FS-rules.md#412-what-init-writes-anyway)).
+
+That finding still earns `1` when the member's block is already current,
+including under `init --check` and `init --dry-run`. Located rule errors go to
+stdout; path events go to stderr. `would-write`, `would-append` and
+`would-update` identify pending paths under `--check`; they can coexist with
+the rule finding. An `exists` or `updated` event describes only that path.
+A finding alone does not establish staleness, so the exit alone cannot be
+that member's staleness gate. Run `grund check` from the workspace root to
+judge the rule with the full vocabulary
+([§FS-init.4.1](../functional-spec/FS-init.md#41-what-earns-the-1)).
 
 A citation counts for a rule wherever `grund check` resolves it, so a rule
 never disagrees with a `[citations.KIND]` obligation about the same citation.

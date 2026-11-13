@@ -72,6 +72,31 @@ naming the part that differs, and `grund init` refreshes it
 `init` writes the labelled one in their place. A grund older than the block reports
 it as malformed, so upgrade grund first rather than editing the block by hand.
 
+## Exit codes and reports
+
+`init` exits `1` for a rule finding in ordinary, `--check` and `--dry-run`
+runs. Independently, `--check` exits `1` when a path is pending. Operational
+errors earn `2` before either verdict. Otherwise the run exits `0`;
+`--dry-run` alone keeps `0` even with pending paths
+([§FS-init.4.1](../functional-spec/FS-init.md#41-what-earns-the-1),
+[§FS-init.4.3](../functional-spec/FS-init.md#43-why---dry-run-keeps-0)).
+
+Read the two reports separately: located rule errors are on stdout; path
+events are on stderr. Under `--check`, `would-write`, `would-append` and
+`would-update` identify pending paths, alongside pending scoped-file events.
+A rule finding and pending paths can coexist. A finding alone does not mean
+paths are stale; `exists` or `updated` describes only that path, not the whole
+run's success ([§FS-init.4.1](../functional-spec/FS-init.md#41-what-earns-the-1)).
+
+An invalid rule withholds writes. A rule whose alias cannot be judged in member
+scope is instead reported and rendered as authored
+([§FS-rules.4.1.2](../functional-spec/FS-rules.md#412-what-init-writes-anyway)).
+That member still exits `1` after writing, updating or finding every path
+current, including under `--check` and `--dry-run`. The exit alone therefore
+cannot serve as that member's staleness gate. Run `grund check` from the
+workspace root to judge the alias-pinned rule with the full vocabulary
+([§FS-init.4.1](../functional-spec/FS-init.md#41-what-earns-the-1)).
+
 ## `--scaffold`: a fresh repository
 
 ```bash

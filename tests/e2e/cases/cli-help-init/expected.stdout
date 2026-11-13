@@ -11,7 +11,7 @@ Options:
   --description TEXT  one-line project description written to grund.toml (shown next to this project in workspace member lists)
   --force        rewrite the canonical AGENTS.md and the --scaffold starter files; grund.toml is never overwritten
   --dry-run      report what would be written/appended/updated without touching any file
-  --check        the same report, as a gate: writes nothing, exits 1 if anything is pending
+  --check        the same preview, no writes: exits 1 for rule findings or pending paths
   --no-vcs       scaffold into a target with no .git/.hg/.jj/.svn above it (refused by default)
   --agents-md    create/update canonical AGENTS.md even when another entrypoint exists
   --claude       create/update CLAUDE.md and .claude/CLAUDE.md; creates only the first
@@ -22,13 +22,18 @@ Options:
   --windsurf     create/update .windsurfrules
   --zed          create/update .rules
 
-Exit:  0 written / updated / already current · 1 --check only: something is still pending · 2 missing or refused target, unknown flag or template, or unsupported newer block.
+Exit:  0 completed or previewed without rule findings (under --check, nothing pending) · 1 rule findings or --check pending paths · 2 I/O/config error, missing or refused target, unknown flag or template, or unsupported newer block.
+Rule findings: stdout (located errors); path events: stderr.
+Pending paths include would-write, would-append and would-update. They can coexist with rule findings; a finding alone does not mean paths are stale.
+An exists or updated event describes that path, not the whole run's success. Current paths can still accompany a rule finding and exit 1, even with --check or --dry-run.
+Invalid rules withhold writes; rules unverifiable in member scope render as authored and still earn 1. At the workspace root, run grund check to judge alias-pinned rules.
+Without rule findings or operational errors, --dry-run keeps 0 even with pending paths.
 
 Examples:
   grund init --scaffold              # full first-time scaffold
   grund init --template=none         # a grund.toml with no kinds, for a repo that declares its own
   grund init --dry-run               # preview without writing
-  grund init --check                 # the same preview as a gate: exit 1 if pending
+  grund init --check                 # no writes; exit 1 for rule findings or pending paths
   grund init --name "My Service"      # auto-detect entrypoint, else AGENTS.md
   grund init --claude --gemini        # create/update both agent entrypoints
   grund init --agents-md --cursor     # AGENTS.md beside the Cursor rules
