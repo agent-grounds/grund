@@ -381,7 +381,7 @@ A `must` or `should` rule, declared or given with `--rule`, earns the warning wh
 
 #### 2.2.2 The message names the likely cause
 
-The message follows what the run was given: the repo root with `[scan] include` set ([§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root)), an explicit path ([§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path)), a hidden file handed by name ([§FS-check.2.2.2.3](FS-check.md#2223-a-hidden-file)), a `[workspace]` block that put no project in scope ([§FS-check.2.2.2.4](FS-check.md#2224-no-project-in-scope)), or a repo root no config applies to, above a project config it did not read ([§FS-check.2.2.2.5](FS-check.md#2225-a-project-config-below-a-run-that-loaded-none)).
+The message follows what the run was given: the repo root with `[scan] include` set ([§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root)), an explicit path ([§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path)), a hidden file handed by name ([§FS-check.2.2.2.3](FS-check.md#2223-a-hidden-file)), a `[workspace]` block that put no project in scope ([§FS-check.2.2.2.4](FS-check.md#2224-no-project-in-scope)), a repo root no config applies to, above a project config it did not read ([§FS-check.2.2.2.5](FS-check.md#2225-a-project-config-below-a-run-that-loaded-none)), or an explicit path that is a directory link out of the project root ([§FS-check.2.2.2.6](FS-check.md#2226-a-directory-link-out-of-the-project)).
 
 ##### 2.2.2.1 The repo root
 
@@ -389,7 +389,7 @@ At repo root (no path, or `grund check .`), v1 names `[scan] include` and its li
 
 ##### 2.2.2.2 An explicit path
 
-When an explicit path was given, the message names that path and the recognized extensions, since the usual cause is pointing `grund` at a tree with no `.md`/source files. Under a v2 configuration the path can instead hold files grund reads that a `[schema.sources] exclude` pattern prunes ([§FS-config-v2.schema.sources.exclude.roots](FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters)); the extensions were never the cause there, so the message names the pattern that prunes the first file the walk would otherwise read on its way down from the path: ``warning: nothing to scan — every file under `src` that grund would read is excluded by the [schema.sources] exclude pattern `gen`.``
+When an explicit path was given, and it is not a directory link the walk refused at the project root ([§FS-check.2.2.2.6](FS-check.md#2226-a-directory-link-out-of-the-project)), the message names that path and the recognized extensions, since the usual cause is pointing `grund` at a tree with no `.md`/source files. Under a v2 configuration the path can instead hold files grund reads that a `[schema.sources] exclude` pattern prunes ([§FS-config-v2.schema.sources.exclude.roots](FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters)); the extensions were never the cause there, so the message names the pattern that prunes the first file the walk would otherwise read on its way down from the path: ``warning: nothing to scan — every file under `src` that grund would read is excluded by the [schema.sources] exclude pattern `gen`.``
 
 ##### 2.2.2.3 A hidden file
 
@@ -428,6 +428,16 @@ Past three, the names read `` `a/grund.toml`, `b/grund.toml`, `c/grund.toml` and
 ###### 2.2.2.5.2 The search is bounded and follows the scan
 
 The search runs only where its answer is read, in this message and in the invalid-ID hint of [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects), and only in a run that loaded no config, so no other run pays for it. It asks each directory at most three levels below the root for a config, so `a/b/c/grund.toml` is found and `a/b/c/d/grund.toml` is not. It enters only a directory the scan would enter: never a hidden one ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), one the defaults' `[scan] exclude` names, or one the ignore files exclude ([§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)). It does not look below a directory where it found a config, because what lies there is that project's own. A config only those rules hide is not named, and a run that finds none keeps [§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root)'s message.
+
+##### 2.2.2.6 A directory link out of the project
+
+When the explicit path is itself a directory link whose canonical target lies outside the project root, the walk does not follow it ([§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)), so it reads nothing below it, whatever its files' extensions are. The message names the path and that gate, and the way past it:
+
+```text
+warning: nothing to scan — `x` is a directory link out of the project root, and grund does not follow one (name a file below it, or move the target inside the project).
+```
+
+The extension list of [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path) was never the cause: `grund check x/a.md` reads the file below the link, because a path below a linked parent crosses no directory link ([§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)). The extensions wording would send the reader to `[scan] extensions` or `[schema.sources]`, which the run never consulted. The path is spelled as the user wrote it, so `x`, `x/` and `./x` each name their own spelling, and the case is asked before [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path)'s. It is the same gate wherever the project root is: a path in one workspace member that links into another member (`m/x -> ../n/y`, run from `m`) leaves `m`'s root and takes this message. A directory link that stays inside the project is walked as any directory is, and a real directory with no file grund reads keeps [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path)'s message. Whether an explicitly named outward link should instead be walked is not decided here; this point fixes only what the warning says while it is not. The exit code, the `empty-scan` code and the JSON form stay [§FS-check.2.2.3](FS-check.md#223-exit-code-json-and-what-suppresses-it)'s.
 
 #### 2.2.3 Exit code, JSON, and what suppresses it
 
