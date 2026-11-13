@@ -46,7 +46,7 @@ Each row is one input shape, the verdict before and after, and the route the mov
 | A hand-written declaration inside the replaced range (#1182, #1177) | exit 0, deleted | exit 2, named | 3.1 |
 | A heading shallower than the declaration after it (#1176), an indented sibling the scan reads (#1177) | exit 0, deleted or de-indented | exit 0, kept | restores [[§FS-fetch.4](../../functional-spec/FS-fetch.md#4-file-home-write)] |
 | The ID read under a heading `fetch` could not parse, or deeper than it looked (#1204, `# T-1 x: y`) | a duplicate written, or exit 2 "malformed" | replaced in place, or exit 2 "beside other content" | restores [[§FS-fetch.4](../../functional-spec/FS-fetch.md#4-file-home-write)] and [[§FS-fetch.5](../../functional-spec/FS-fetch.md#5-folder-home-write)]'s "when no declaration exists" |
-| A `file`-home fetch of an ID declared in another file | exit 0, a duplicate | exit 2, [[§FS-fetch.5.3](../../functional-spec/FS-fetch.md#53-a-declaration-outside-the-home-prevents-installation)]'s line | 3.1 |
+| A `file`-home fetch of an ID declared in another file, a healthy stub in the home to it included | exit 0, a duplicate | exit 2, [[§FS-fetch.5.3](../../functional-spec/FS-fetch.md#53-a-declaration-outside-the-home-prevents-installation)]'s line, before the integration runs | 3.1 |
 | A link inside the config root at the target (#1198) | exit 0, the link replaced by a copy | exit 0, written through, the link kept | restores [[§REQ-no-data-loss.2](../../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)] |
 | A link outward or dangling at the target (#1198) | exit 0 with the link cut, or exit 2 for a false reason | exit 2, named | restores [[§REQ-no-data-loss.2](../../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)] |
 | A home edited while the integration runs | exit 0, overwritten | exit 2, changed | restores [[§REQ-no-data-loss.2](../../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)] |
@@ -54,6 +54,9 @@ Each row is one input shape, the verdict before and after, and the route the mov
 | An untitled or indented declaration heading (`## T-1`, `## T-1:`, `  ## T-1: x`) the scan reads | exit 2 | exit 0 | 3.3 |
 | A near-miss sibling heading in the home (`## TICKET-bad: …`) | exit 2 "malformed declaration heading" | exit 0, the sibling kept | 3.3 |
 | A refusal naming a path | absolute | from the report base | none: the verdict does not move ([[§FS-errors.4](../../functional-spec/FS-errors.md#4-determinism)]) |
+
+A `folder` home's refusal of the same shape now also comes before the integration runs, by the
+same test, rather than once the output is read; its line and its exit do not move.
 
 The unread home and the `<ID>.md` with no ID are recorded on their own
 ([[§DF-fetch-unread-home](DF-fetch-unread-home.md#df-fetch-unread-home-fetch-refuses-a-home-the-scan-does-not-read-before-the-integration-runs)], [[§DF-fetch-refusals-follow-the-scan](DF-fetch-refusals-follow-the-scan.md#df-fetch-refusals-follow-the-scan-four-fetch-refusals-say-what-the-scan-reads-corrected-in-place-and-an-empty-idmd-is-filled)]).

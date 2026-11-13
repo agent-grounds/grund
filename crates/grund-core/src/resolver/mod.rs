@@ -93,7 +93,7 @@ pub use id_candidates::names_member_id_candidate;
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use alias_path::{fetch_place, load_alias_path};
+pub(crate) use alias_path::{fetch_place, load_alias_path, load_unscanned};
 pub(crate) use body::extract_declaration_body;
 pub(crate) use citation_target::{
     WorkspaceCheckTarget, citation_resolves, resolved_coordinate_target, target_for_citation,

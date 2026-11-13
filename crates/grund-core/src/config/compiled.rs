@@ -11,6 +11,7 @@ use super::project::{Project, Schema, Sources};
 use super::record::DEFAULT_GROUNDING_LEVEL;
 use super::rows::Row;
 use crate::grammar::{Grammar, GrammarKind, LexicalSettings, require_kinds};
+use crate::model::ExcludingRule;
 
 /// §AR-config.1.5: `compile(&Project)`.
 #[derive(Clone)]
@@ -48,7 +49,7 @@ impl ScanDemand {
     }
 }
 
-/// Why `fetch` refuses a `file` home, which picks the refusal's text and `check`'s tail
+/// Why `fetch` refuses a home, which picks the refusal's text and `check`'s tail
 /// (§FS-check.3.1.3.1).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum RefusedHome {
@@ -63,6 +64,9 @@ pub(crate) enum RefusedHome {
     /// (§FS-fetch.4.2.1): a hidden name, an unlisted extension, or, for a folder home's
     /// `<ID>.md`, a name read in a language other than Markdown.
     Unread(String),
+    /// A folder home's `<ID>.md` the walk's own read predicate keeps out of the scan, with the
+    /// rule that does (§FS-fetch.4.2.1): an ignore file or an `exclude` rule.
+    Excluded(ExcludingRule),
 }
 
 impl Compiled {

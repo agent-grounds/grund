@@ -32,7 +32,16 @@ that already refuses a value source and a source home, so the refused fetch runs
 refusal holds for the `<ID>.md` `fetch` would create, when the one scan run before the
 integration finds no file in the home declaring the ID ([[§FS-fetch.6.1](../../functional-spec/FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)]). The line's shape is
 [[§FS-fetch.4.2](../../functional-spec/FS-fetch.md#42-a-home-read-as-source-is-refused)]'s, and its reason is the one `check`'s unread warning gives, so the two say the
-same thing and a correction to that reason moves both. Three answers lose.
+same thing and a correction to that reason moves both.
+
+A folder home's `<ID>.md` that an ignore file ignores or an `exclude` rule matches is the same
+tree: the walk does not read it, so the snapshot is written and nothing reads it. It is refused the
+same way, asked of the walk's own read predicate rather than of a second reading of the ignore
+files, and its `<reason>` is the rule in the broken-stub line's words, with the rule's repair in
+place of a name, since the name is the ID's ([[§FS-fetch.4.2.1](../../functional-spec/FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)]). Admission's reading after
+the integration asks the same predicate, so a target the walk would not read is not there.
+
+Three answers lose.
 
 - **Keep writing an unread home.** Admission's "the requested declaration is there once"
   ([[§FS-fetch.admission.1](../../functional-spec/FS-fetch.md#admission1-the-requested-declaration-is-there-once-and-its-body-takes-in-all-of-the-output)]) is the only clause standing between a refresh and the deleted lines,
@@ -52,7 +61,8 @@ and one record, written by whichever pull request moves the verdict first and ci
 ## 3. Compatibility
 
 The verdict of `grund fetch <ID>` moves from exit 0 to exit 2 for a home the text scan does not
-read, on the route of [[§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids)]. It is the licence
+read, and for a folder home's `<ID>.md` the walk does not read when it is absent or a link to
+nothing, which 0.22.0 wrote and then never read, on the route of [[§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids)]. It is the licence
 [[§DF-fetch-source-home.3.5](DF-fetch-source-home.md#35-what-this-licenses)] and [[§DF-fetch-folder-value-source](DF-fetch-folder-value-source.md#df-fetch-folder-value-source-folder-fetch-refuses-an-id-already-declared-by-a-value-source)] withheld and left to another
 ticket.
 
@@ -70,7 +80,9 @@ suffix mapped to `markdown` — with no new key, after which `fetch` writes it a
 reads what it wrote.
 
 `check`'s tail at such a home moves from `— run grund fetch <ID>` to
-`— give the file a name the scan reads as Markdown` in the same release, under the third
+`— give the file a name the scan reads as Markdown`, or, at an `<ID>.md` an ignore file or an
+`exclude` rule keeps out of the walk, to `— the scan does not read <path>: <reason>; <repair>`
+([[§FS-check.3.1.3.1](../../functional-spec/FS-check.md#3131-a-home-fetch-refuses)]), in the same release, under the third
 exception of [[§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change)], the one for `check`'s fetch tail, and for
 its reason: a window would keep recommending on purpose a command that can only refuse. The base
 of the message, the code, the severity and the exit stay what they are.
@@ -83,11 +95,13 @@ This record is not a licence for refusing a home the scan reads, whatever its na
 - In grund 0.23.0, `grund fetch <ID>` refuses with exit 2, before running the integration, a
   `file` home the scan does not read — a name no listed language or `[scan] extensions` entry
   claims, such as `fs.dat`, or a hidden name such as `.fs.py` — and a `folder` home's `<ID>.md`
-  the scan does not read, when no file in the home declares the ID. It used to write the snapshot
+  the scan does not read, when no file in the home declares the ID, an `<ID>.md` an ignore file
+  or an `exclude` rule keeps out of the walk included. It used to write the snapshot
   and exit 0, though nothing then read it, and a later fetch could cut lines written below it. The
   refusal names the home and the reason `check` already gives for it, and leaves every file as it
-  was. Give the file a name a listed document language reads, such as `.md`, and fetch again.
-  `grund check` at such a home now says `give the file a name the scan reads as Markdown` in
-  place of `run grund fetch <ID>`. This verdict changes under
+  was. Give the file a name a listed document language reads, such as `.md`, or lift the rule
+  that keeps the `<ID>.md` out of the walk, and fetch again.
+  `grund check` at such a home now says `give the file a name the scan reads as Markdown`, or
+  names the rule and its repair, in place of `run grund fetch <ID>`. This verdict changes under
   [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids): the prior success violated [§REQ-no-data-loss.2](../../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own), and every finding
   names its location and the action to take ([[§FS-fetch.4.2.1](../../functional-spec/FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)], [[§DF-fetch-unread-home](DF-fetch-unread-home.md#df-fetch-unread-home-fetch-refuses-a-home-the-scan-does-not-read-before-the-integration-runs)]).

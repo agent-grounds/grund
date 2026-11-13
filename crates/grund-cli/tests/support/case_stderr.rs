@@ -160,6 +160,10 @@ const SCAN_PASSED_PATH_REPAIR_SUFFIX: &str =
 /// through (§FS-fetch.4.2.1), so the line keeps the bytes that point fixes rather than the cap.
 const FETCH_UNREAD_HOME_SUFFIX: &str = ", or remove its `fetch`";
 const FETCH_UNREAD_HOME_CLAUSE: &str = ", so the scan would not read what fetch writes; give the file";
+/// The same for a folder home's `<ID>.md` the walk skips, whose reason and repair both name the
+/// rule (§FS-fetch.4.2.1).
+const FETCH_EXCLUDED_HOME_CLAUSE: &str = ", so the scan would not read what fetch writes; ";
+const FETCH_EXCLUDED_HOME_SUFFIX: &str = ", and fetch again";
 
 /// A fetch that would delete a hand-written declaration names the file, the line and both IDs
 /// twice over (§FS-fetch.3.1), so the line keeps the bytes that point fixes rather than the cap.
@@ -209,6 +213,9 @@ fn assert_stderr_is_concise(name: &str, json_case: bool, migration_case: bool, s
             || (line.starts_with("error: ")
                 && line.contains(FETCH_UNREAD_HOME_CLAUSE)
                 && line.ends_with(FETCH_UNREAD_HOME_SUFFIX))
+            || (line.starts_with("error: kind `")
+                && line.contains(FETCH_EXCLUDED_HOME_CLAUSE)
+                && line.ends_with(FETCH_EXCLUDED_HOME_SUFFIX))
             || (line.starts_with("error: cannot fetch ")
                 && line.contains(FETCH_NESTED_DELETE_CLAUSE))
             || is_relayed_check_finding(line)

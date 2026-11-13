@@ -90,6 +90,7 @@ mod toml;
 mod tree;
 mod units;
 mod unmarked_headings;
+mod unread_home;
 mod value_binding_attempts;
 mod value_binding_split;
 mod value_context;
@@ -142,6 +143,7 @@ pub(crate) use tree::{
     ScanError, scan_file_again, scan_tree, scan_tree_strict, scan_tree_with_workspace,
     scan_unwalked_file,
 };
+pub(crate) use unread_home::fetch_refused_home;
 pub(crate) use value_json::folder_value_declarations;
 pub(crate) use walk::scan_roots_for;
 pub(crate) use walk_reporting::{walk_scannable_files, walk_scannable_files_reporting};

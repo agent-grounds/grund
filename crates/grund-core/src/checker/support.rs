@@ -8,6 +8,7 @@ use crate::grammar::{is_inside_inline_code, render_catalog_id};
 use crate::model::remedies;
 use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
 use crate::resolver::fetch_place;
+use crate::scanner::fetch_refused_home;
 use crate::sources::path_exists;
 
 /// §FS-check.3.1: the dangling message. A near same-kind ID is a likely typo; a
@@ -153,22 +154,29 @@ pub(super) fn missing_snapshot_message(
         (None, Some(escape), false) => remedies::missing_snapshot_escape(escape),
         (None, None, must) => {
             // §FS-fetch.4.2.1: the missing ID's own `<ID>.md`, since no file declares it.
-            let refused = frame
-                .fetch_refused_home(schema, frame.root(), &missing.kind, Some(spelling))
-                .map(|(_, reason)| reason);
+            let refused = fetch_refused_home(schema, frame, &missing.kind, Some(spelling));
             let tail = match (refused, must) {
                 // §FS-check.3.1.3.1: the scan reads no file there, so the repair is a name.
-                (Some(RefusedHome::Unread(_)), _) => UNREAD_HOME_TAIL.to_string(),
-                (Some(RefusedHome::ValueSource), true) => remedies::dangling_value_source(),
-                (Some(RefusedHome::ValueSource), false) => {
+                (Some((_, RefusedHome::Unread(_))), _) => UNREAD_HOME_TAIL.to_string(),
+                // §FS-check.3.1.3.1: the walk skips the `<ID>.md`, so the repair is the rule.
+                (Some((snapshot, RefusedHome::Excluded(rule))), _) => format!(
+                    "the scan does not read {}: {}; {}",
+                    frame.display.path(&snapshot),
+                    rule.reason(),
+                    rule.lift()
+                ),
+                (Some((_, RefusedHome::ValueSource)), true) => remedies::dangling_value_source(),
+                (Some((_, RefusedHome::ValueSource)), false) => {
                     remedies::missing_snapshot_value_source()
                 }
-                (Some(RefusedHome::SourceFile), true) => remedies::dangling_source_file(),
-                (Some(RefusedHome::SourceFile), false) => remedies::missing_snapshot_source_file(),
-                (Some(RefusedHome::SourceFileValue), true) => {
+                (Some((_, RefusedHome::SourceFile)), true) => remedies::dangling_source_file(),
+                (Some((_, RefusedHome::SourceFile)), false) => {
+                    remedies::missing_snapshot_source_file()
+                }
+                (Some((_, RefusedHome::SourceFileValue)), true) => {
                     remedies::dangling_source_file_value()
                 }
-                (Some(RefusedHome::SourceFileValue), false) => {
+                (Some((_, RefusedHome::SourceFileValue)), false) => {
                     remedies::missing_snapshot_source_file_value()
                 }
                 (None, must) => {

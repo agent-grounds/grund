@@ -9,15 +9,16 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use super::fetch::{FetchFailure, fetch_operational};
-use super::fetch_folder::place_in_folder;
+use super::fetch_folder::{already_declared, place_in_folder};
 use super::fetch_splice::Owned;
 use crate::config::Config;
 use crate::model::{
-    Catalog, Declaration, FileRecord, Id, OperationDiagnostic, format_path, relative_from_base,
-    scanned_path_key,
+    Catalog, Declaration, FileRecord, Id, OperationDiagnostic, format_path, paired_declarations,
+    relative_from_base, scanned_path_key,
 };
 use crate::scanner::{ScanError, scan_error_message};
 use crate::sources::{link_metadata, path_is_dir, path_is_file, read_bytes};
+use crate::workspace::WorkspaceCitationTarget;
 
 /// The kind's snapshot home: one file, its declarations at H2, or one folder, at H1.
 pub(super) enum Home {
@@ -64,6 +65,9 @@ impl Request<'_> {
 pub(super) struct Before {
     pub(super) catalog: Catalog,
     pub(super) errors: Vec<ScanError>,
+    /// The workspace's projects that scan parsed `§<alias>/<ID>` against, which every reading
+    /// of the home after it parses against too (§FS-workspace.1.2).
+    pub(super) targets: Vec<WorkspaceCitationTarget>,
 }
 
 impl Before {
@@ -153,6 +157,32 @@ pub(super) enum Site {
     Whole,
 }
 
+/// §FS-fetch.5.3, §FS-fetch.4: an ID the scan reads as declared in a file outside the home, a
+/// `file` home or a `folder` one, is refused before the integration runs. Pairing supplies
+/// targets even when unscanned, in path:line order, and a declaration reached through a stub is
+/// named at its target. This refusal precedes every judgement of the home's contents.
+pub(super) fn declared_elsewhere(
+    request: &Request<'_>,
+    before: &Before,
+) -> Result<(), FetchFailure> {
+    let elsewhere = before
+        .catalog
+        .declarations
+        .get(request.id)
+        .and_then(|decls| {
+            paired_declarations(decls)
+                .records()
+                .find(|record| !request.home.holds(&record.file))
+        });
+    match elsewhere {
+        Some(declaration) => Err(already_declared(
+            request.local,
+            &request.shown(&declaration.file),
+        )),
+        None => Ok(()),
+    }
+}
+
 /// §FS-fetch.4, §FS-fetch.5: the target and its site, or the refusal that names why the home
 /// cannot take the output.
 pub(super) fn place(
@@ -236,8 +266,9 @@ fn place_in_file(
 /// of it and nothing else. A link the walk reported as broken is refused; one it read as a file is
 /// refused where it recorded the file as outside the config root (§FS-fmt.2.3.2), and otherwise
 /// written through at the physical path the walk published for it (§AR-scanner.1.8); one it did
-/// not read as a file, an ignored link or a link to a directory, has no record to decide by and is
-/// refused. No link is resolved here.
+/// not read as a file, a link to a directory, has no record to decide by and is refused. A folder
+/// home's `<ID>.md` link the walk ignores was refused before this (§FS-fetch.4.2.1). No link is
+/// resolved here.
 pub(super) fn link_target(
     request: &Request<'_>,
     before: &Before,

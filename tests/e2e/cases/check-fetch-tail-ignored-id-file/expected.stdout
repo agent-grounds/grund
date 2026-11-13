@@ -1,0 +1,1 @@
+README.md:1: error: unknown reference T-7; no snapshot in docs/t — the scan does not read docs/t/T-7.md: docs/t/.ignore ignores it by T-7.md; stop ignoring it in docs/t/.ignore

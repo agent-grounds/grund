@@ -10,12 +10,12 @@ use super::fetch_splice::Owned;
 use super::fetch_target::{
     Before, Request, Site, Target, link_target, text_of, unscanned, with_io_source,
 };
-use crate::model::{paired_declarations, scanned_path_key, sort_path_key};
+use crate::model::{scanned_path_key, sort_path_key};
 use crate::scanner::folder_value_declarations;
 use crate::sources::{path_exists, path_is_dir, path_is_file, read_bytes};
 
 /// §FS-fetch.5: replace the one file that declares the ID, or create or fill `<ID>.md`, after
-/// refusing a declaration outside the home (§FS-fetch.5.3), a value source that declares it
+/// `declared_elsewhere` refused a declaration outside the home (§FS-fetch.5.3), refusing a value source that declares it
 /// (§FS-fetch.5.1), a file it would not replace that declares it (§FS-fetch.5.2), and a file
 /// that holds it beside other content (§FS-fetch.5.5).
 pub(super) fn place_in_folder(
@@ -25,20 +25,6 @@ pub(super) fn place_in_folder(
     diagnostic: &mut Option<anyhow::Error>,
 ) -> Result<Target, FetchFailure> {
     let local = request.local;
-    // §FS-fetch.5.3: pairing supplies targets even when unscanned, in path:line order. This
-    // refusal precedes every judgement of the home's contents.
-    if let Some(declaration) = before
-        .catalog
-        .declarations
-        .get(request.id)
-        .and_then(|decls| {
-            paired_declarations(decls)
-                .records()
-                .find(|record| !request.home.holds(&record.file))
-        })
-    {
-        return Err(already_declared(local, &request.shown(&declaration.file)));
-    }
     let snapshot = folder.join(format!("{local}.md"));
     if path_exists(folder) {
         if !path_is_dir(folder) {
@@ -225,7 +211,7 @@ fn refuse_declaring_file(
 }
 
 /// §FS-fetch.5.2, §FS-fetch.5.3: the one refusal of an ID another file already declares.
-fn already_declared(local: &str, shown: &str) -> FetchFailure {
+pub(super) fn already_declared(local: &str, shown: &str) -> FetchFailure {
     fetch_operational(format!(
         "cannot fetch {local}: {shown} already declares it; keep the fact in that file, or take \
          the declaration out of it and fetch again"

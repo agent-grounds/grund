@@ -1,0 +1,1 @@
+error: kind `T` cannot fetch into docs/t/T-1.md: .gitignore ignores it by docs/t/T-1.md, so the scan would not read what fetch writes; stop ignoring it in .gitignore, and fetch again

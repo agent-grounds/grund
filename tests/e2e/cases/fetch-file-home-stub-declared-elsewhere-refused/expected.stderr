@@ -1,0 +1,1 @@
+error: cannot fetch AR-001-thing: notes/t.md already declares it; keep the fact in that file, or take the declaration out of it and fetch again

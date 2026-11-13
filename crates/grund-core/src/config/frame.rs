@@ -73,9 +73,10 @@ impl<'a> Frame<'a> {
     /// A `folder` home: the `<ID>.md` for `unclaimed`, the local ID no file in the home
     /// declares, when the scan does not read it as Markdown (§FS-fetch.4.2.1); the caller's scan
     /// says which ID that is, and `None` asks nothing of a folder. The path and the kind decide,
-    /// and no file is read. What the refusal and the remedy that must not name the refused
-    /// command both ask (§FS-check.3.1.3.1).
-    pub(crate) fn fetch_refused_home(
+    /// and no file is read. The walk's own predicate, which reads ignore files, is asked after
+    /// this by `scanner::fetch_refused_home`, the one function the refusal and the remedy that
+    /// must not name the refused command both ask (§FS-check.3.1.3.1).
+    pub(crate) fn fetch_refused_by_name(
         &self,
         schema: &Schema,
         root: &Path,
@@ -84,7 +85,7 @@ impl<'a> Frame<'a> {
     ) -> Option<(PathBuf, RefusedHome)> {
         let row = schema.rows.iter().find(|row| row.name == kind)?;
         let Some(file) = row.file() else {
-            let home = root.join(row.folder()?).join(format!("{}.md", unclaimed?));
+            let home = self.fetch_snapshot_path(schema, root, kind, unclaimed?)?;
             let reason = self.unread_reason(schema, &home).or_else(|| {
                 let reading = self.reading(schema, &home);
                 let language = reading.language.map(|language| language.name.as_str());
@@ -112,6 +113,19 @@ impl<'a> Frame<'a> {
             RefusedHome::SourceFile
         };
         Some((home, reason))
+    }
+
+    /// The `<ID>.md` a `folder` home's fetch of `local` creates (§FS-fetch.5), `None` for a kind
+    /// with no folder home.
+    pub(crate) fn fetch_snapshot_path(
+        &self,
+        schema: &Schema,
+        root: &Path,
+        kind: &str,
+        local: &str,
+    ) -> Option<PathBuf> {
+        let row = schema.rows.iter().find(|row| row.name == kind)?;
+        Some(root.join(row.folder()?).join(format!("{local}.md")))
     }
 
     /// Why the walk's name rules keep `path` out of the scan, in the words of `check`'s unread

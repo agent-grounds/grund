@@ -13,8 +13,26 @@ use super::mount::MountLoader;
 use super::unread_block::settled_run_warnings;
 use crate::config::{ProjectRecords, Run};
 use crate::model::{Catalog, OperationDiagnostic, format_path, relative_from_base};
+use crate::workspace::WorkspaceCitationTarget;
 
 impl WorkspaceContext {
+    /// What a scan of one project of this context parses `§<alias>/<ID>` against: every project
+    /// it loaded, each with its own grammar, as the run that scans them all builds the list
+    /// (§FS-workspace.1.2, §AR-workspace.2). None outside a workspace.
+    pub(crate) fn citation_targets(&self) -> Vec<WorkspaceCitationTarget> {
+        if !self.workspace_loaded {
+            return Vec::new();
+        }
+        self.projects
+            .iter()
+            .map(|project| WorkspaceCitationTarget {
+                alias: project.alias.clone(),
+                schema: project.config.schema().clone(),
+                compiled: project.config.compiled().clone(),
+            })
+            .collect()
+    }
+
     /// The project an alias path names, or the refusal that says why none does: a
     /// missing import first, then an unknown alias (§FS-workspace.8.1,
     /// §FS-imports.checks.import-missing).
@@ -43,6 +61,13 @@ impl WorkspaceContext {
 /// (§FS-imports.writes.answer): the run's own tree and only the imports on that alias
 /// path, so an import it does not name cannot fail it. Only an alias nothing answers
 /// reads every edge, because its refusal lists every alias the run knows.
+/// The projects a workspace root's run loads, none of them scanned: what `grund fetch` of an
+/// unqualified ID asks for the citation targets `check` scans the root project with
+/// (§FS-workspace.1.2).
+pub(crate) fn load_unscanned(config: ProjectRecords) -> Result<WorkspaceContext> {
+    unscanned_context(config, None)
+}
+
 pub(crate) fn load_alias_path(config: ProjectRecords, alias: &str) -> Result<WorkspaceContext> {
     let along = unscanned_context(config.clone(), Some(alias))?;
     if along.project_by_alias(alias).is_some() || along.missing_import(alias).is_some() {

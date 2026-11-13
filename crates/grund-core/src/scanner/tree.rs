@@ -17,7 +17,7 @@ use super::value_json::{scan_value_sources, value_sources};
 use super::walk::{scan_roots, walk_scannable_files_reporting};
 use crate::config::{Frame, Schema};
 use crate::grammar::resolve_shorthand_citations;
-use crate::model::{Catalog, normalize_path_lexically, sort_path_key};
+use crate::model::{Catalog, normalize_path_lexically, scanned_path_key, sort_path_key};
 use crate::sources::{canonicalize_existing_prefix, paths_same_location};
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -111,18 +111,30 @@ pub(crate) fn scan_unwalked_file(
 /// holds for it (§AR-system.2.8.1): every other file's records are the ones `before` holds, so
 /// nothing is walked and no file but `file`, or a target only a stub in it names, is read. The
 /// stubs reading `file` again can move are judged again (§AR-scanner.4.6). Fetch asks it of the
-/// candidate it would install, held in front of the disk.
+/// candidate it would install, held in front of the disk. A `file` the walk did not read and
+/// would not read is not read here either, as `scan_tree` skips a buffer the walk would not
+/// read, so the reading holds no record of it (§AR-scanner.1.13). `workspace_targets` are the ones `before`
+/// was scanned with (§FS-workspace.1.2).
 pub(crate) fn scan_file_again(
     before: &Catalog,
     file: &Path,
     schema: &Schema,
     frame: Frame<'_>,
+    workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<Catalog> {
     let mut after = before.clone();
     drop_file_findings(&mut after, file);
-    merge_findings(&mut after, scan_unwalked_file(file, schema, frame, &[])?);
     let (roots, _) = scan_roots(schema, frame, None, false)?;
-    resolve_stubs_through(schema, frame, &roots, file, &mut after);
+    let key = scanned_path_key(file);
+    let walked = before
+        .scanned_files
+        .iter()
+        .any(|path| scanned_path_key(path) == key);
+    if walked || unread(schema, frame, &roots, file).is_none() {
+        let read = scan_unwalked_file(file, schema, frame, workspace_targets)?;
+        merge_findings(&mut after, read);
+    }
+    resolve_stubs_through(schema, frame, &roots, workspace_targets, file, &mut after);
     Ok(after)
 }
 

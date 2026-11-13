@@ -68,10 +68,11 @@ pub(super) fn resolve_stubs_through(
     schema: &Schema,
     frame: Frame<'_>,
     roots: &[PathBuf],
+    workspace_targets: &[WorkspaceCitationTarget],
     file: &Path,
     findings: &mut Catalog,
 ) {
-    let mut targets = UnwalkedTargets::new(schema, frame, roots, &[]);
+    let mut targets = UnwalkedTargets::new(schema, frame, roots, workspace_targets);
     let sources = frame.sources();
     let moves = |decl: &Declaration| {
         decl.is_stub
