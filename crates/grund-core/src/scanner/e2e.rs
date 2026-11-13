@@ -1,21 +1,17 @@
-use crate::sources::{
-    canonical_path, is_directory, observe_input, path_exists, path_holds_file, path_is_dir,
-    path_is_file,
-};
+use crate::sources::{canonical_path, path_exists, path_holds_file, path_is_dir, path_is_file};
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
-use std::sync::PoisonError;
 
 use super::e2e_case::{CaseFailure, read_e2e_case};
+use super::e2e_listing::walk_one_level;
 use super::scan_error::{
     FailureRoots, FileKind, ScanFailure, failure_place, publish_file_failure, publish_unlisted,
     publish_unlisted_fixture, read_failure_reason, scan_error_reason,
 };
 use super::tree::ScanError;
-use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walk_builder};
-use super::walk_errors::{LinkRecovery, walk_error_path, walk_error_reports};
+use super::walk::scan_roots;
 
-use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots};
+use crate::config::{Frame, Schema, root_scope_roots};
 use crate::grammar::{Grammar, literal_after_kind_placeholder, parse_id_arg};
 use crate::model::{Catalog, Declaration, DeclarationSource, Id};
 use crate::model::{configured_home_path_key, normalize_path_lexically, sort_path_key};
@@ -342,98 +338,6 @@ fn resolved_root(scope: &Path, cases_root: &Path) -> Option<(PathBuf, Option<Pat
             .starts_with(&scope)
             .then(|| (cases_root.to_path_buf(), None))
     }
-}
-
-/// What a walk one level below `dir` met, where no walk of the scan listed it
-/// (§AR-scanner.6.unlistable-root).
-struct OneLevel {
-    /// The case directories its filter recorded, as it spelled them.
-    cases: Vec<PathBuf>,
-    /// The directories it kept, as it spelled them. They hold cases only where `dir` lies below
-    /// the cases root, as the path a narrowed run was handed may.
-    kept: Vec<PathBuf>,
-    /// Its failure to list `dir`, at open or partway through, which ends the listing.
-    failure: Option<std::io::Error>,
-    /// What the ignore files in `dir` failed with, the rules this listing is filtered by: where
-    /// no walk lists `dir`, no other report names them (§FS-check.2.4.2).
-    ignore_failures: Vec<ScanError>,
-}
-
-/// `dir`, spelled under the configured folder, listed by the scan's own walker one level deep, so
-/// that `exclude` and the ignore files keep a case out of a cases root no walk listed by the same
-/// filter that keeps one out where the walk lists it (§FS-declarations.e2e-case.excluded). It is
-/// one walk of the root, never one probe per entry (§GOAL-fast-feedback). Of the walker's errors,
-/// its failure to list `dir` is the pass's, as it was when the pass listed `dir` itself, and so is
-/// a failure to parse the ignore files in `dir`, whose rules filter this listing. What else it
-/// meets is not read here, and stays the walk's to report where it reads it.
-fn walk_one_level(schema: &Schema, frame: Frame<'_>, dir: &Path, canonical: &Path) -> OneLevel {
-    let mut listed = OneLevel {
-        cases: Vec::new(),
-        kept: Vec::new(),
-        failure: None,
-        ignore_failures: Vec::new(),
-    };
-    let link_roots = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-    let looping_links = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-    let met = MetCases::default();
-    let physical_root = canonical_config_root(frame.root());
-    // §FS-check.6.1.1: the root is covered before its listing, as every walk root is.
-    if !observe_input(dir, true) {
-        listed.failure = Some(std::io::Error::other("watch input coverage failed"));
-        return listed;
-    }
-    let mut builder = match scannable_walk_builder(
-        schema,
-        frame,
-        dir,
-        canonical,
-        &physical_root,
-        &link_roots,
-        &looping_links,
-        Some(&met),
-    ) {
-        Ok(builder) => builder,
-        Err(err) => {
-            listed.failure = Some(std::io::Error::other(err.to_string()));
-            return listed;
-        }
-    };
-    let mut ignore_failure = None;
-    for entry in builder.max_depth(Some(1)).build() {
-        match entry {
-            // §AR-scanner.1.9: a directory's unparsable ignore file rides on its own entry.
-            Ok(entry) if entry.depth() == 0 => ignore_failure = entry.error().cloned(),
-            Ok(entry) if entry.depth() == 1 && entry.file_type().is_some_and(is_directory) => {
-                listed.kept.push(entry.into_path());
-            }
-            Err(err) if walk_error_path(&err) == Some(dir) => {
-                listed.failure = err.into_io_error();
-                if listed.failure.is_some() {
-                    break;
-                }
-            }
-            Ok(_) | Err(_) => {}
-        }
-    }
-    if let Some(err) = ignore_failure {
-        let filter = WalkDirFilter::new(
-            schema,
-            frame,
-            dir,
-            canonical,
-            &physical_root,
-            &link_roots,
-            &looping_links,
-        );
-        let mut recovery = LinkRecovery::default();
-        listed.ignore_failures =
-            walk_error_reports(err, &filter, &mut recovery, None, schema, frame, dir)
-                .into_iter()
-                .map(|(report, _)| report)
-                .collect();
-    }
-    listed.cases = std::mem::take(&mut *met.lock().unwrap_or_else(PoisonError::into_inner));
-    listed
 }
 
 /// `failed`, a canonical path at or below the canonical `cases_root`, spelled as the tree

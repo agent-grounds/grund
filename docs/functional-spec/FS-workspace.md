@@ -650,7 +650,8 @@ either, and is read with this same fallback shape ([§FS-workspace.1.2.1](FS-wor
 
 A run at the workspace root asks [§FS-check.2.2](FS-check.md#22-empty-scan)'s question of each
 project it loads, and a project whose own scan read nothing is named by its root,
-in [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path)'s message or its exclude-pattern form. That root is
+in [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path)'s message or its exclude-pattern form, or beside the
+outward link that [§FS-check.2.2.2.6.1](FS-check.md#22261-a-directory-link-out-of-the-project-below-the-path) names in its place. That root is
 a `<path>` in the report like any other, so it is spelled from the report base the
 run's other paths use and is never absolute ([§FS-config.3.6](FS-config.md#36-output--report-format)): the workspace
 root reads ``no files under `.` matched``, and a member reads its root from that

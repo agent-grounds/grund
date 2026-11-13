@@ -93,6 +93,12 @@ says so: `x` is a directory link out of the project root that grund does not
 follow. Name a file below it, which is read, or move the target inside the
 project
 ([§FS-check.2.2.2.6](../functional-spec/FS-check.md#2226-a-directory-link-out-of-the-project)).
+The same holds one level down: when `grund check real` reads nothing because
+the only thing under `real` is such a link, the warning names the link,
+`real/subx`, rather than grund's extensions. An exclude pattern that pruned a
+file under `real` is named ahead of it, and a directory that holds no file
+grund reads and no outward link still names the extensions
+([§FS-check.2.2.2.6.1](../functional-spec/FS-check.md#22261-a-directory-link-out-of-the-project-below-the-path)).
 
 A file reached by two names is one file, read as [How a linked file is read](sources.md#how-a-linked-file-is-read)
 says. A finding about what the file holds prints once, at the name listed first,

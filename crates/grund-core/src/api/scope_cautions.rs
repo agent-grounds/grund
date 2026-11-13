@@ -24,7 +24,8 @@ use crate::model::{
     Catalog, Code, Diagnostic, base_reads_dot, format_path, normalize_path_lexically,
 };
 use crate::scanner::{
-    Unread, extension_refusal, handed_outward_link, name_refusal, pruning_pattern,
+    Unread, extension_refusal, handed_outward_link, name_refusal, outward_link_below,
+    pruning_pattern,
 };
 use crate::workspace::scope_is_config_root;
 
@@ -142,7 +143,9 @@ fn handed_a_hidden_file(config: &Config, path: &Path, path_provided: bool) -> bo
 /// (§FS-check.2.2.2.5). A handed directory link out of the project is asked
 /// before the extensions and the exclude patterns, for the same reason as the
 /// hidden file: the walk refused it at the link gate before either was consulted
-/// (§FS-check.2.2.2.6).
+/// (§FS-check.2.2.2.6). Last, ahead of the extensions alone, an exclude pattern that
+/// pruned a file the walk would have read, and then an outward link the walk refused
+/// below the path: the one place under it the run never looked (§FS-check.2.2.2.6.1).
 ///
 /// Every arm names `path` as `display` spells it (§FS-workspace.5.3), while
 /// which arm speaks is still asked of the real path.
@@ -209,17 +212,26 @@ pub(super) fn empty_scan_warning(
             )
         }
         // §FS-check.2.2.2.2: under v2 a pattern can prune what the extensions admit.
-        _ => match pruning_pattern(config.schema(), config.frame(), path) {
+        _ => match pruning_pattern(config.schema(), config.frame(), path, path_provided) {
             Some(pattern) => format!(
                 "nothing to scan — every file under `{}` that grund would read is excluded by \
                  the [schema.sources] exclude pattern `{pattern}`.",
                 shown
             ),
-            None => format!(
-                "nothing to scan — no files under `{}` matched grund's extensions ({}).",
-                shown,
-                config.extensions.join(", ")
-            ),
+            // §FS-check.2.2.2.6.1: then the one place under it the run never looked.
+            None => match outward_link_shown(config, path, path_provided, display) {
+                Some(link) => format!(
+                    "nothing to scan — nothing under `{}` was read: `{}` is a directory link out \
+                     of the project root, and grund does not follow one (name a file below it, \
+                     or move the target inside the project).",
+                    shown, link
+                ),
+                None => format!(
+                    "nothing to scan — no files under `{}` matched grund's extensions ({}).",
+                    shown,
+                    config.extensions.join(", ")
+                ),
+            },
         },
     };
     Diagnostic {
@@ -231,6 +243,24 @@ pub(super) fn empty_scan_warning(
         sites: Vec::new(),
         authority: Vec::new(),
     }
+}
+
+/// §FS-check.2.2.2.6.1: the directory link out of the project the walk refused below the run's
+/// scope, as `display` spells a path: from the path as written, and from the project root for a
+/// run given no path, which walked the root wherever it started.
+fn outward_link_shown(
+    config: &Config,
+    path: &Path,
+    path_provided: bool,
+    display: Display<'_>,
+) -> Option<String> {
+    let link = outward_link_below(config.schema(), config.frame(), path, path_provided)?;
+    let scope = if path_provided {
+        path
+    } else {
+        config.frame().root()
+    };
+    Some(display_scope(display, &scope.join(link)))
 }
 
 /// `["a", "b"]`'s inside, as the empty-scan warning names `[scan] include` and
