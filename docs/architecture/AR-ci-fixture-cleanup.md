@@ -67,6 +67,14 @@ be removed still fails, with the removal error.**
 
 ## 3. One helper decides
 
+Temporary-root helpers retain ownership through setup and use as
+[§FS-repository-maintenance.4.1](../functional-spec/FS-repository-maintenance.md#41-lifetime-and-removal) requires, with independent allocations and
+occupied-candidate preservation from [§FS-repository-maintenance.4.2](../functional-spec/FS-repository-maintenance.md#42-independent-allocation-and-occupied-roots). Ownership
+starts immediately after the exclusive claim ([§AR-ci.10.2](AR-ci.md#102-the-root-is-claimed-not-adopted)), before fallible
+setup or canonicalization; their config-free base selection remains [§AR-ci.10.3](AR-ci.md#103-a-fixture-root-inherits-no-config-from-above-it).
+Their removal follows the same strict passing-path and non-raising unwinding
+policy as every other fixture here.
+
 The decision is made once ([§AR-system.principle](README.md#principle-one-fact-one-point-one-implementation)), by the helper
 `remove_fixture_tree` in the CLI tests' shared support, which a fixture `Drop`
 calls rather than restating. It removes the tree and, if the removal fails,

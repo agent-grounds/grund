@@ -6,6 +6,12 @@
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
+#[path = "../../grund-cli/tests/support/fixture_root_contract.rs"]
+mod fixture_root_contract;
+#[cfg(unix)]
+#[path = "../../grund-cli/tests/support/fixture_physical_root_contract.rs"]
+mod physical_root_contract;
+
 use crate::api::{CheckRun, run_check};
 use std::collections::BTreeMap;
 

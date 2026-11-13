@@ -143,3 +143,31 @@ A caller may supply its own executable or Cargo target, taking responsibility
 for that input. Preparing the executable must propagate a build failure as an
 error, never skip acceptance. These are internal acceptance requirements; the
 terminal behavior remains [§FS-check.6.2.2](FS-check.md#622-owned-terminal-screen).
+
+## 4. Temporary test roots have an owner
+
+### 4.1 Lifetime and removal
+
+The repository's temporary-root helpers retain ownership from successful leaf
+creation through setup and the caller's last use, including canonicalization,
+derived paths and constructors that consume a path. The root and its contents
+remain usable throughout that lifetime and are removed at its end, both on
+normal scope exit and while a test unwinds from a panic. Passing suites leave
+no owned roots or fixture contents in their temporary area; an empty shared
+base may remain. A panic does not opt a fixture out of removal.
+
+This covers core's `test_root` and `physical_test_root`, LSP's unit-test
+`test_root` and configured integration `support::test_root`, and the CLI's
+`off_grammar_precedence`, `off_grammar_compatibility` and
+`off_grammar_regressions` helpers. It adds no production API or retention
+environment variable.
+
+### 4.2 Independent allocation and occupied roots
+
+Repeated allocations with the same name on one thread have independent roots.
+Constructing or dropping either fixture must preserve the other's live files.
+Allocation exclusively claims an unoccupied leaf; an occupied candidate is
+refused without changing its contents, or a distinct candidate is chosen.
+Neither pre-clearing an occupied tree nor adopting it establishes ownership.
+Cleanup removes only the claimed leaf, never shared parents, historical roots
+or a refused candidate.

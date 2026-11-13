@@ -1,6 +1,9 @@
 use super::*;
 use std::fs;
 
+#[path = "../../grund-cli/tests/support/fixture_root_contract.rs"]
+mod fixture_root_contract;
+
 fn test_root(name: &str) -> PathBuf {
     let unique = format!(
         "{}-{}-{:?}",
