@@ -132,7 +132,8 @@ pub(crate) use legacy::{
 };
 pub(crate) use off_format::record_off_format_citations;
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
-#[cfg(test)]
+// Gated as its one reader outside this directory is, `api/tests_embedding_scan_errors.rs`.
+#[cfg(all(test, unix))]
 pub(crate) use scan_error::scan_error_message;
 pub(crate) use scan_error::{
     Absolute, FromBase, api_scan_error, reported_scan_failure, scan_failure_diagnostic,
