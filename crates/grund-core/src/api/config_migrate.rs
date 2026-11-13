@@ -227,28 +227,24 @@ fn lines(
     config: &str,
     root_dir: &Path,
 ) -> Vec<String> {
-    let v1_line = |map: &[(usize, usize)], at: usize| {
-        map.iter()
-            .find(|(v2, _)| *v2 == at)
-            .map_or(usize::MAX, |(_, v1)| *v1)
-    };
+    let v1_line =
+        |map: &[(usize, usize)], at: usize| map.iter().find(|(v2, _)| *v2 == at).map(|(_, v1)| *v1);
     let finding = |channel: &str, f: &Finding| {
-        let mut line = f.line;
-        if let Some(map) = line_map
-            && f.path.as_deref() == Some(config)
-        {
-            line = f.line.map(|at| v1_line(map, at));
-        }
+        let path = f.path.as_deref().unwrap_or("-");
+        let place = match (line_map, f.line) {
+            (Some(map), Some(at)) if f.path.as_deref() == Some(config) => {
+                config_line(config, at, v1_line(map, at))
+            }
+            _ => format!("{path}:{}", f.line.map_or("-".into(), |l| l.to_string())),
+        };
         let message = match line_map {
             Some(map) => v1_spelling(&config_lines(&f.message, config, |at| v1_line(map, at))),
             None => f.message.clone(),
         };
         format!(
-            "{channel} {} {} {}:{}:{} {message}",
+            "{channel} {} {} {place}:{} {message}",
             f.severity,
             f.code,
-            f.path.as_deref().unwrap_or("-"),
-            line.map_or("-".into(), |l| l.to_string()),
             f.column.map_or("-".into(), |c| c.to_string()),
         )
     };
@@ -307,25 +303,42 @@ pub(super) fn describes_config(finding: &Finding) -> bool {
             .is_some_and(|noun| !GENERATED_SECTIONS.contains(&noun))
 }
 
+/// One candidate config line as the comparison prints it: the version-1 line its
+/// key came from, or, where the key map holds none, the candidate's own line
+/// marked as the candidate's, so it compares equal to no version-1 line
+/// (§FS-config-migrate.5.2.1).
+fn config_line(config: &str, line: usize, v1: Option<usize>) -> String {
+    match v1 {
+        Some(v1) => format!("{config}:{v1}"),
+        None => format!("the candidate's {config}:{line}"),
+    }
+}
+
 /// Each `<config>:<line>` a message names, its line moved by `v1_line`: a
-/// message that points into the config points at the key's v1 line.
+/// message that points into the config points at the key's v1 line, and one the
+/// key map does not hold names the candidate's own (§FS-config-migrate.5.2.1).
 pub(super) fn config_lines(
     message: &str,
     config: &str,
-    v1_line: impl Fn(usize) -> usize,
+    v1_line: impl Fn(usize) -> Option<usize>,
 ) -> String {
     let prefix = format!("{config}:");
     let mut out = String::new();
     let mut rest = message;
     while let Some(at) = rest.find(&prefix) {
         let (head, tail) = rest.split_at(at + prefix.len());
-        out.push_str(head);
         let digits = tail.len() - tail.trim_start_matches(|c: char| c.is_ascii_digit()).len();
         // `sub/grund.toml:3` names another config, not this one.
         let other = rest[..at].ends_with(|c: char| c == '/' || c == '\\' || c.is_alphanumeric());
         match tail[..digits].parse::<usize>() {
-            Ok(line) if !other => out.push_str(&v1_line(line).to_string()),
-            _ => out.push_str(&tail[..digits]),
+            Ok(line) if !other => {
+                out.push_str(&rest[..at]);
+                out.push_str(&config_line(config, line, v1_line(line)));
+            }
+            _ => {
+                out.push_str(head);
+                out.push_str(&tail[..digits]);
+            }
         }
         rest = &tail[digits..];
     }

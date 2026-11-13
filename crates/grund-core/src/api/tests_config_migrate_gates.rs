@@ -201,7 +201,7 @@ fn report_gate_moves_only_this_configs_lines_inside_a_message() {
     let moved = config_lines(
         "grund.toml:5: x, see sub/grund.toml:5 and grund.toml:7",
         "grund.toml",
-        |line| line - 1,
+        |line| Some(line - 1),
     );
     assert_eq!(
         moved,
@@ -440,7 +440,6 @@ fn line_under(text: &str, under: &str, wanted: &str) -> usize {
 /// map holds no version-1 line for it, prints as the candidate's own line marked
 /// as the candidate's, never as a line neither file has.
 #[test]
-#[ignore = "red until #1387 prints the candidate's own line; implement removes this"]
 fn report_gate_names_an_unmapped_line_in_a_message_as_the_candidates() {
     let root = unwritten_place("unmapped-message");
     let (located, v1, candidate, map) = prepared(&root);
@@ -473,7 +472,6 @@ fn report_gate_names_an_unmapped_line_in_a_message_as_the_candidates() {
 /// in the breadcrumb its message carries, and stays a difference where the run
 /// as read names the same line number for the same finding.
 #[test]
-#[ignore = "red until #1387 prints the candidate's own line; implement removes this"]
 fn report_gate_names_an_unmapped_config_finding_at_the_candidates_line() {
     // `include = ["."]` makes version 1 name the scope version 2 names, `.`.
     let body = format!(

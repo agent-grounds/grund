@@ -94,7 +94,6 @@ fn candidate_line() -> (String, usize) {
 /// the written candidate, marked as the candidate's, and still refuses
 /// (§FS-config-migrate.5.4).
 #[test]
-#[ignore = "red until #1387 prints the candidate's own line; implement removes this"]
 fn migrate_names_an_unmapped_candidate_line_as_the_candidates_own() {
     let (_, line) = candidate_line();
     let fixture = Fixture::new("migrate", V1, CITING);
@@ -122,7 +121,6 @@ fn migrate_names_an_unmapped_candidate_line_as_the_candidates_own() {
 /// §FS-config-migrate.5.2.1: no comparison line names a config line that neither
 /// the version-1 file nor the candidate has.
 #[test]
-#[ignore = "red until #1387 stops printing usize::MAX; implement removes this"]
 fn migrate_never_names_a_config_line_neither_file_has() {
     let (candidate, _) = candidate_line();
     let fixture = Fixture::new("bounds", V1, CITING);
