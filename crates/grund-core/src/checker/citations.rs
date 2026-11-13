@@ -314,7 +314,7 @@ pub(super) fn empty_citation_obligation_warning(
     let row = can_apply_to_nothing(schema, citing_kind, matches!(obligor, Obligor::Rule(_)))?;
     if !findings.scanned_files.iter().any(|file| {
         file_home_kind(file, schema, frame).as_deref() == Some(citing_kind)
-            && !kind_entry_file(file, frame, row)
+            && !kind_entry_file(file, schema, frame, row)
     }) {
         return None;
     }
@@ -386,10 +386,11 @@ pub(super) fn empty_citation_obligation_warning(
 /// Whether `file` is the entry file excluded from a folder's content count:
 /// the effective citable index, or literal `README.md` for a non-citable home
 /// (§FS-check.2.2.1.1). `index = false` naturally has no entry path.
-fn kind_entry_file(file: &Path, frame: Frame<'_>, row: &Row) -> bool {
+fn kind_entry_file(file: &Path, schema: &Schema, frame: Frame<'_>, row: &Row) -> bool {
     // §FS-config-v2.schema.places.ownership: each folder has its own entry file.
     let entries: Vec<PathBuf> = if row.kind.is_some() {
-        row.index_paths()
+        // §FS-config-v2.checks.config-index-not-markdown: one not read as Markdown is none.
+        row.markdown_index_paths(schema, frame)
             .into_iter()
             .map(|(_, index)| index)
             .collect()

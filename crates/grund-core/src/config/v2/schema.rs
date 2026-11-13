@@ -289,8 +289,10 @@ pub(super) fn normalize_place(written: &str) -> Option<String> {
     Some(parts.join("/"))
 }
 
-/// Why an `index` value cannot name the folder's index: it must be a Markdown
-/// file inside the folder, as v1's is (§FS-config.3.4).
+/// Why an `index` value cannot name the folder's index: it must be a file inside
+/// the folder. Whether it is read as Markdown is the configuration's answer, not
+/// its name's (§FS-fmt.2.3.1), and is asked once the languages are known
+/// (§FS-config-v2.checks.config-index-not-markdown).
 fn index_name_error(name: &str) -> Option<&'static str> {
     let inside = !name.is_empty()
         && !name.contains('\\')
@@ -299,9 +301,6 @@ fn index_name_error(name: &str) -> Option<&'static str> {
             .all(|component| matches!(component, Component::Normal(_)));
     if !inside {
         return Some("must name a file inside the folder");
-    }
-    if Path::new(name).extension().and_then(|ext| ext.to_str()) != Some("md") {
-        return Some("must name a Markdown file");
     }
     None
 }

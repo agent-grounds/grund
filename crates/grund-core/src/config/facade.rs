@@ -362,6 +362,15 @@ impl Config {
         Self::from_records(self.project(), &run, self.compiled())
     }
 
+    /// This façade with a version-2 name no admitted language claims read by its name, as grund
+    /// 0.22.0 read it: the view `grund fetch` reads its output alone through, and no other
+    /// (§DF-one-reading-answer.2.6).
+    pub(crate) fn with_unclaimed_read_by_name(&self) -> Self {
+        let mut run = self.run().clone();
+        run.unclaimed_read_by_name = true;
+        Self::from_records(self.project(), &run, self.compiled())
+    }
+
     /// The façade over `project` with this run and this compiled grammar, which
     /// an edit that touches neither the ID grammar nor the scan demand keeps.
     fn with_project(&self, project: Project) -> Self {

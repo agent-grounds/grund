@@ -1,1 +1,1 @@
-
+warning: grund.toml:11: [schema.kinds.RULE] files entry `rules/more.rs` is read as `rust`, which does not read Markdown, and every home of a rule kind must be; until then a rule written as a Markdown heading there declares nothing; move the rules into a file a `document` language reads; this becomes an error in grund 1.0.0

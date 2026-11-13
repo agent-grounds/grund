@@ -13,6 +13,7 @@ use std::path::{Component, Path};
 use super::grounding::ParsedGrounding;
 use super::values::{bail_config, parse_bool, parse_string};
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
+use crate::config::{Readings, file_extension};
 use crate::grammar::id_grammar_literal_slash_error;
 use crate::grammar::named_section_component;
 
@@ -381,8 +382,9 @@ pub(super) fn parse_kinds_key(
 ///   `grund fmt --write` would then rewrite, a file outside the tree the config
 ///   describes (§FS-non-goals.11). `.` is rejected with them: it names the same
 ///   file by a path no message should have to print.
-/// * **It names a Markdown file.** `--cross-refs` runs on `.md` files only
-///   (§FS-fmt.6.1), so an index with any other extension is one the formatter can
+/// * **It names a Markdown file.** `--cross-refs` runs only on files read as
+///   Markdown (§FS-fmt.6.1), which version 1 reads by the name `.md`
+///   (§FS-fmt.2.3.1), so an index with any other extension is one the formatter can
 ///   never linkify — and §FS-check.3.17.3, whose whole licence is that
 ///   `grund fmt --write` fixes it, would be an error no command could clear
 ///   (§DF-index-entry-form.2.3).
@@ -399,7 +401,8 @@ fn kind_index_name_error(name: &str) -> Option<String> {
             "[[kinds]] `index` must be a relative path inside `folder` (`{name}` is not)"
         ));
     }
-    if Path::new(name).extension().and_then(|ext| ext.to_str()) != Some("md") {
+    // §FS-config.3.4.2.3: asked of the one reading, whose version-1 half is the name `.md`.
+    if !Readings::of(false, None, file_extension(Path::new(name))).markdown {
         return Some(format!(
             "[[kinds]] `index` must name a Markdown file (`{name}` is not a `.md` file)"
         ));

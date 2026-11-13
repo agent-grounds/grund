@@ -129,7 +129,7 @@ Read it as the two formats:
   `closed must` refuses any other named chapter, such as an `Alternatives`
   chapter, unless the kind declares it.
 - **ADR at `docs/`** is not a typo. A kind's index must be a file inside the
-  kind's place ([§FS-config.3.4.2.3](../../docs/functional-spec/FS-config.md#3423-a-named-index-is-a-markdown-file-inside-folder)), so the row's place is `docs/` and its index is
+  kind's place ([§FS-config.3.4.2.3](../../docs/functional-spec/FS-config.md#3423-a-named-index-is-a-file-inside-folder-that-is-read-as-markdown)), so the row's place is `docs/` and its index is
   `arc42/09_architecture_decisions.md`. The deeper `arc42` place and the two
   listed chapter files take everything else, which leaves `docs/adr/` to the
   records. The view does not print the index.

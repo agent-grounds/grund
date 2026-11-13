@@ -155,8 +155,9 @@ struct Row {
 
 const C_HOSTS: &[&str] = &["//", "/*", "*"];
 /// The prefixes a Markdown file reads a comment-led line through, v1's defaults:
-/// its own hosts, so a v2 `.md` reads as a v1 one does and no source language's
-/// hosts reach it (§FS-languages.prefixes, §FS-config-v2.schema.sources.definitions).
+/// its own hosts, so a v2 file read as Markdown (§FS-fmt.2.3.1) reads as a v1 `.md`
+/// does and no source language's hosts reach it (§FS-languages.prefixes,
+/// §FS-config-v2.schema.sources.definitions).
 const MARKDOWN_HOSTS: &[&str] = &["//", "#", ";", "--", "*", "/*"];
 
 const fn source(

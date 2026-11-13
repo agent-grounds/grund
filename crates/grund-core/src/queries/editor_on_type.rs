@@ -144,7 +144,8 @@ pub fn on_type_line_edits(
 /// so this is the same shape as `line_is_rewritable`'s walk and is called for the
 /// same reason — and it is called only once a rewrite is already in prospect, so an
 /// ordinary keystroke pays nothing (§GOAL-fast-feedback). Every document that is
-/// not a scanned `.py` returns the empty view without walking at all.
+/// not a file whose docstrings are read (§FS-fmt.2.3.1) returns the empty view without
+/// walking at all.
 pub(super) fn docstring_content_at<'a>(
     config: &Config,
     path: &Path,
