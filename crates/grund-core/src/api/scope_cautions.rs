@@ -218,14 +218,13 @@ pub(super) fn empty_scan_warning(
                  the [schema.sources] exclude pattern `{pattern}`.",
                 shown
             ),
-            // §FS-check.2.2.2.6.1: the link is spelled from the path, as `display` spells it.
-            None => match outward_link_below(config.schema(), config.frame(), path) {
+            // §FS-check.2.2.2.6.1: then the one place under it the run never looked.
+            None => match outward_link_shown(config, path, path_provided, display) {
                 Some(link) => format!(
                     "nothing to scan — nothing under `{}` was read: `{}` is a directory link out \
                      of the project root, and grund does not follow one (name a file below it, \
                      or move the target inside the project).",
-                    shown,
-                    display_scope(display, &path.join(link))
+                    shown, link
                 ),
                 None => format!(
                     "nothing to scan — no files under `{}` matched grund's extensions ({}).",
@@ -244,6 +243,24 @@ pub(super) fn empty_scan_warning(
         sites: Vec::new(),
         authority: Vec::new(),
     }
+}
+
+/// §FS-check.2.2.2.6.1: the directory link out of the project the walk refused below the run's
+/// scope, as `display` spells a path: from the path as written, and from the project root for a
+/// run given no path, which walked the root wherever it started.
+fn outward_link_shown(
+    config: &Config,
+    path: &Path,
+    path_provided: bool,
+    display: Display<'_>,
+) -> Option<String> {
+    let link = outward_link_below(config.schema(), config.frame(), path, path_provided)?;
+    let scope = if path_provided {
+        path
+    } else {
+        config.frame().root()
+    };
+    Some(display_scope(display, &scope.join(link)))
 }
 
 /// `["a", "b"]`'s inside, as the empty-scan warning names `[scan] include` and
