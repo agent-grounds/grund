@@ -105,11 +105,9 @@ class CancelDroppedGroupsTests(unittest.TestCase):
         return [next(arg for arg in call[2:] if arg.isdigit()) for call in self.calls()
                 if call[:2] == ["run", "cancel"]]
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_the_script_exists(self):
         self.assertTrue(SCRIPT.is_file(), f"{SCRIPT.relative_to(REPO_ROOT)} does not exist")
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_a_dropped_groups_run_is_cancelled_and_named(self):
         live, dropped = group(1380), group(1371, "7")
         result = self.sweep({"runs": [run(OWN, live), run(401, dropped, status="queued")],
@@ -120,7 +118,6 @@ class CancelDroppedGroupsTests(unittest.TestCase):
         self.assertIn("401", output)
         self.assertIn(dropped, output, "the cancellation does not name the group's branch")
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_the_runs_listed_are_ci_ymls_on_the_queue(self):
         self.sweep({"runs": [], "live": []})
         (listed,) = [call for call in self.calls() if call[:2] == ["run", "list"]]
@@ -130,7 +127,6 @@ class CancelDroppedGroupsTests(unittest.TestCase):
                 self.assertIn(flag, listed)
                 self.assertEqual(value, listed[listed.index(flag) + 1])
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_every_other_run_is_left_alone(self):
         # §AR-ci.12.2: a live branch's run, its own, another event's and a finished one.
         live = group(1375)
@@ -142,7 +138,6 @@ class CancelDroppedGroupsTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual([], self.cancelled())
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_every_dropped_group_is_cancelled_in_one_pass(self):
         live = group(1380)
         runs = [run(OWN, live), run(401, group(1371, "7")), run(402, group(1365, "8"), "queued"),
@@ -151,7 +146,6 @@ class CancelDroppedGroupsTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual(["401", "402", "403"], sorted(self.cancelled()))
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_a_failed_run_list_cancels_nothing_and_passes(self):
         result = self.sweep({"runs": [run(401, group(1371))], "live": [],
                              "runs_error": "HTTP 502: Bad Gateway"})
@@ -159,7 +153,6 @@ class CancelDroppedGroupsTests(unittest.TestCase):
         self.assertEqual([], self.cancelled())
         self.assertIn("HTTP 502: Bad Gateway", result.stdout + result.stderr)
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_a_failed_branch_list_cancels_nothing_and_passes(self):
         # §AR-ci.12.2: a branch list it could not read would make every group look dropped.
         result = self.sweep({"runs": [run(OWN, group(1380)), run(401, group(1371))],
@@ -168,7 +161,6 @@ class CancelDroppedGroupsTests(unittest.TestCase):
         self.assertEqual([], self.cancelled())
         self.assertIn("HTTP 403: Forbidden", result.stdout + result.stderr)
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_a_failed_cancel_goes_on_to_the_next_and_passes(self):
         live = group(1380)
         result = self.sweep({"runs": [run(OWN, live), run(401, group(1371)), run(402, group(1365))],

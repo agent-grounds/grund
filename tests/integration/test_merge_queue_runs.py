@@ -191,12 +191,10 @@ class MergeQueueRunTests(unittest.TestCase):
         # §AR-ci.12.1: a replaced run is cancelled, so it stops taking runners from a group.
         self.assertEqual([], concurrency_problems(self.written))
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_a_dropped_groups_run_is_cancelled_by_the_sweep(self):
         # §AR-ci.12.2: no concurrency key ends it, so a job of every group's run does.
         self.assertEqual([], sweep_problems(self.written))
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_a_required_check_stays_off_a_runner_on_a_cancelled_pull_request_or_group_run(self):
         # §AR-ci.12.1, §AR-ci.12.2: so the run frees as the suites stop; §AR-ci.13.2: elsewhere
         # it judges, a live group's failed need included.
@@ -208,7 +206,6 @@ class MergeQueueRunTests(unittest.TestCase):
                 self.assertEqual([], check_if_problems(name, field(header(body), "if"),
                                                        needs(header(body))))
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_the_required_checks_and_the_jobs_they_judge_run_on_every_event(self):
         # §AR-ci.13.2: a required check is an aggregate, so the jobs it needs must run here too.
         self.assertEqual([], every_event_problems(self.written))

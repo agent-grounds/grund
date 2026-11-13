@@ -21,7 +21,8 @@ env:
   # §FS-distribution.3.0.3: corpus pipes carry UTF-8 on every host.
   PYTHONUTF8: "1"
 
-# §AR-ci.12.1: a newer push cancels its pull request's replaced run; no other run cancels.
+# §AR-ci.12.1: a newer push cancels its pull request's replaced run; no concurrency group
+# cancels any other. A dropped merge-queue group's run is the sweep's (§AR-ci.12.2).
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -148,13 +149,13 @@ jobs:
     uses: ./.github/workflows/macos-suites.yml
 
   # §AR-ci.13.2: the required checks. Each runs no suite of its own; it runs whatever its
-  # needs did, and fails unless every one of them succeeded. A cancelled pull-request run
-  # alone asks no runner for them, so its group frees as its suites stop (§AR-ci.12.1).
+  # needs did, and fails unless every one of them succeeded. A cancelled pull-request or
+  # group run asks no runner for them, so it frees as its suites stop (§AR-ci.12.2).
   test-ubuntu:
     name: cargo test (ubuntu-latest)
     runs-on: ubuntu-latest
     needs: [leg-ubuntu, pre-commit, bench-build, bench, bench-record]
-    if: ${{ github.event_name != 'pull_request' || !cancelled() }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || !cancelled() }}
     steps:
       - name: every job it needs succeeded
         if: ${{ needs.leg-ubuntu.result != 'success' || needs.pre-commit.result != 'success' || needs.bench-build.result != 'success' || needs.bench.result != 'success' || needs.bench-record.result != 'success' }}
@@ -164,11 +165,30 @@ jobs:
     name: cargo test (windows-latest)
     runs-on: ubuntu-latest
     needs: [leg-windows]
-    if: ${{ github.event_name != 'pull_request' || !cancelled() }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || !cancelled() }}
     steps:
       - name: every job it needs succeeded
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
         run: exit 1
+
+  # §AR-ci.12.2: the sweep. On every group it `gh run cancel`s each unfinished merge_group
+  # run whose gh-readonly-queue branch the queue deleted, so a dropped group's run stops
+  # taking runners. No check needs it, and it exits 0 on a forge error.
+  cancel-dropped-groups:
+    name: cancel dropped merge-queue groups
+    if: github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: cancel the runs of dropped groups
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/cancel_dropped_groups.py "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
 
   # `pre-commit run --all-files` cannot reproduce the `commit-msg` stage — it takes a
   # message file, not a file list — so a trailer that lives only in a commit message

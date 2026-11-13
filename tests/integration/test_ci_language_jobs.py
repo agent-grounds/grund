@@ -397,7 +397,6 @@ class LanguageJobsTests(unittest.TestCase):
         # §AR-ci.13.2
         self.assertEqual([], required_check_problems(self.text))
 
-    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_each_required_check_fails_unless_every_need_succeeded(self):
         # §AR-ci.13.2
         self.assertEqual([], guard_problems(self.text))
