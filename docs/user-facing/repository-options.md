@@ -88,6 +88,11 @@ symlinks: outward directory targets are not scanned, including from inside a
 workspace member, while in-root directory links, file links, and intentional
 parent-relative `[scan] include` paths remain readable
 ([§FS-scan.scope.links](../functional-spec/FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)).
+Handing such a link to `grund check x` reads nothing below it, and the warning
+says so: `x` is a directory link out of the project root that grund does not
+follow. Name a file below it, which is read, or move the target inside the
+project
+([§FS-check.2.2.2.6](../functional-spec/FS-check.md#2226-a-directory-link-out-of-the-project)).
 
 A file reached by two names is one file, read as [How a linked file is read](sources.md#how-a-linked-file-is-read)
 says. A finding about what the file holds prints once, at the name listed first,

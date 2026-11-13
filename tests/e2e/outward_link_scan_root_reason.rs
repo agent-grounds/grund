@@ -119,14 +119,12 @@ impl Run {
 }
 
 #[test]
-#[ignore = "red until #1376 names the outward-link gate in the empty-scan warning; implement removes this"]
 fn an_outward_directory_link_is_named_as_the_reason() {
     let tree = Tree::new("bare");
     tree.grund(&["check", "x"]).assert_link_warning("x");
 }
 
 #[test]
-#[ignore = "red until #1376 names the outward-link gate in the empty-scan warning; implement removes this"]
 fn every_spelling_of_the_link_is_named_as_written() {
     let tree = Tree::new("spellings");
     for path in ["x/", "./x"] {
@@ -135,7 +133,6 @@ fn every_spelling_of_the_link_is_named_as_written() {
 }
 
 #[test]
-#[ignore = "red until #1376 names the outward-link gate in the empty-scan warning; implement removes this"]
 fn the_json_warning_carries_the_same_reason() {
     let tree = Tree::new("json");
     let run = tree.grund(&["check", "x", "--format=json"]);

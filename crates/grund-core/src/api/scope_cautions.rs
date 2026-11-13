@@ -23,7 +23,9 @@ use crate::grammar::id_shape;
 use crate::model::{
     Catalog, Code, Diagnostic, base_reads_dot, format_path, normalize_path_lexically,
 };
-use crate::scanner::{Unread, extension_refusal, name_refusal, pruning_pattern};
+use crate::scanner::{
+    Unread, extension_refusal, handed_outward_link, name_refusal, pruning_pattern,
+};
 use crate::workspace::scope_is_config_root;
 
 fn nothing_recognized(findings: &Catalog) -> bool {
@@ -137,7 +139,10 @@ fn handed_a_hidden_file(config: &Config, path: &Path, path_provided: bool) -> bo
 /// A root run no config applies to is asked next, before the root arms: when it
 /// holds a project config below, the include list those arms name is the
 /// defaults' and the scaffold they offer would compete with that project
-/// (§FS-check.2.2.2.5).
+/// (§FS-check.2.2.2.5). A handed directory link out of the project is asked
+/// before the extensions and the exclude patterns, for the same reason as the
+/// hidden file: the walk refused it at the link gate before either was consulted
+/// (§FS-check.2.2.2.6).
 ///
 /// Every arm names `path` as `display` spells it (§FS-workspace.5.3), while
 /// which arm speaks is still asked of the real path.
@@ -193,6 +198,16 @@ pub(super) fn empty_scan_warning(
             quoted_list(dirs),
             remedies::empty_scan_root(version)
         ),
+        // §FS-check.2.2.2.6: the walk refused the handed link before any extension or
+        // pattern was asked, so name that gate, not them.
+        _ if !scoped_to_root && handed_outward_link(config.schema(), config.frame(), path) => {
+            format!(
+                "nothing to scan — `{}` is a directory link out of the project root, and grund \
+                 does not follow one (name a file below it, or move the target inside the \
+                 project).",
+                shown
+            )
+        }
         // §FS-check.2.2.2.2: under v2 a pattern can prune what the extensions admit.
         _ => match pruning_pattern(config.schema(), config.frame(), path) {
             Some(pattern) => format!(
