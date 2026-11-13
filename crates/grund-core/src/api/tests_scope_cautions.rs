@@ -105,7 +105,6 @@ fn link_below_project(name: &str) -> crate::testing::Rooted<Config> {
 /// inside the project is walked and keeps §FS-check.2.2.2.2's extensions wording.
 #[cfg(unix)]
 #[test]
-#[ignore = "red until #1382 names the outward link below the path; implement removes this"]
 fn the_empty_scan_caution_names_an_outward_link_below_the_path() {
     let config = link_below_project("empty_scan_names_link_below");
     let message =

@@ -63,6 +63,7 @@ mod declaration_lines;
 mod e2e;
 mod e2e_case;
 mod e2e_case_failures;
+mod e2e_listing;
 mod embedded_value_context;
 mod embedded_values;
 mod extents;
@@ -134,8 +135,8 @@ pub(crate) use off_format::record_off_format_citations;
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
 pub(crate) use scan_error::{api_scan_error, scan_error_message};
 pub(crate) use scope_probe::{
-    effective_scope_reads_any_file, handed_outward_link, project_configs_below, pruning_pattern,
-    walk_reads_any_file,
+    effective_scope_reads_any_file, handed_outward_link, outward_link_below, project_configs_below,
+    pruning_pattern, walk_reads_any_file,
 };
 pub(crate) use section_locks::{may_give_locked_heading, section_locks_present};
 pub(crate) use slices::{SliceMiss, SliceSink, record_slices, section_row_title};

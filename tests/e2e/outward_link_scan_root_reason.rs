@@ -279,7 +279,6 @@ fn an_outward_link_whose_target_refuses_the_lookup_is_named_as_the_reason() {
 /// §FS-check.2.2.2.6.1: the walk refused `real/subx` below `real` at the outward-link gate, so
 /// the warning names that link, not the extensions `s.md` behind it would have passed.
 #[test]
-#[ignore = "red until #1382 names the outward link below the path; implement removes this"]
 fn an_outward_link_below_the_path_is_named_as_the_reason() {
     let tree = Tree::with_link_below("below");
     tree.grund(&["check", "real"])
@@ -288,7 +287,6 @@ fn an_outward_link_below_the_path_is_named_as_the_reason() {
 
 /// §FS-check.2.2.2.6.1: the link is spelled from the path as the user wrote it.
 #[test]
-#[ignore = "red until #1382 names the outward link below the path; implement removes this"]
 fn every_spelling_of_the_path_spells_the_link_below_it() {
     let tree = Tree::with_link_below("below-spellings");
     tree.grund(&["check", "real/"])
@@ -299,7 +297,6 @@ fn every_spelling_of_the_path_spells_the_link_below_it() {
 
 /// §FS-check.2.2.2.6.1: a link met deeper down is named by its path from the one handed.
 #[test]
-#[ignore = "red until #1382 names the outward link below the path; implement removes this"]
 fn an_outward_link_deeper_below_the_path_is_named_by_its_path() {
     let tree = Tree::new("below-deeper");
     tree.write("outside/sub/s.md", "# Notes\n\nSee \u{a7}FS-nope.\n");
@@ -311,7 +308,6 @@ fn an_outward_link_deeper_below_the_path_is_named_by_its_path() {
 /// §FS-check.2.2.2.6.1: a file of an extension grund does not read, beside the link, does not
 /// turn the message back to the extensions; the link is the one place the run never looked.
 #[test]
-#[ignore = "red until #1382 names the outward link below the path; implement removes this"]
 fn a_file_of_an_unread_extension_beside_the_link_does_not_hide_it() {
     let tree = Tree::with_link_below("below-beside-txt");
     tree.write("p/real/tool.txt", "a tool\n");
@@ -322,7 +318,6 @@ fn a_file_of_an_unread_extension_beside_the_link_does_not_hide_it() {
 /// §FS-check.2.2.2.6.1: grund does not look behind a link it does not follow, so a target with
 /// no file it would read takes the same message.
 #[test]
-#[ignore = "red until #1382 names the outward link below the path; implement removes this"]
 fn an_outward_link_whose_target_holds_no_read_file_is_still_named() {
     let tree = Tree::new("below-unread-target");
     tree.write("outside/none/tool.txt", "a tool\n");
@@ -335,7 +330,6 @@ fn an_outward_link_whose_target_holds_no_read_file_is_still_named() {
 /// named, whatever order the directory lists them in, so two runs name the same link. They are
 /// made in path order, which a directory that lists the newest first reverses.
 #[test]
-#[ignore = "red until #1382 names the outward link below the path; implement removes this"]
 fn of_several_outward_links_below_the_path_the_first_in_path_order_is_named() {
     let tree = Tree::new("below-several");
     tree.write("outside/sub/s.md", "# Notes\n\nSee \u{a7}FS-nope.\n");
@@ -349,7 +343,6 @@ fn of_several_outward_links_below_the_path_the_first_in_path_order_is_named() {
 /// §FS-check.2.2.2.6.1: the gate is the member's root in a member run, so a link from one member
 /// into another leaves it and is named, as §FS-check.2.2.2.6 names `m/x -> ../n/y`.
 #[test]
-#[ignore = "red until #1382 names the outward link below the path; implement removes this"]
 fn a_link_below_the_path_from_one_member_into_another_is_named() {
     let tree = Tree::new("below-member");
     tree.write(
@@ -374,7 +367,6 @@ fn a_link_below_the_path_from_one_member_into_another_is_named() {
 /// §FS-check.2.2.2.6.1, §FS-workspace.5.3: a member whose own scan read nothing because its only
 /// entry is an outward link is named by its root from the report base, beside that link.
 #[test]
-#[ignore = "red until #1382 names the outward link below the path; implement removes this"]
 fn a_workspace_run_names_the_link_below_a_member_that_read_nothing() {
     let tree = Tree::new("below-workspace-root");
     tree.write(
@@ -395,7 +387,6 @@ fn a_workspace_run_names_the_link_below_a_member_that_read_nothing() {
 
 /// §FS-check.2.2.2.6.1: the JSON warning's `message` carries the same text.
 #[test]
-#[ignore = "red until #1382 names the outward link below the path; implement removes this"]
 fn the_json_warning_names_the_link_below_the_path() {
     let tree = Tree::with_link_below("below-json");
     let run = tree.grund(&["check", "real", "--format=json"]);

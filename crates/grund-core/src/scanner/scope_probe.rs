@@ -1,13 +1,15 @@
 //! What a walk would read, asked without scanning (§AR-scanner.1.13): whether a
 //! root holds one file the scan reads, which file that is, the `exclude`
 //! pattern that kept a root from reading any, whether a handed path is a link
-//! the walk does not follow, and the project configs below a root no config
-//! applies to. Each asks with the reporting walk's own roots, gates, builder and
-//! filter, so a probe and the scan cannot disagree.
+//! the walk does not follow or holds one below it, and the project configs below
+//! a root no config applies to. Each asks with the reporting walk's own roots,
+//! gates, builder and filter, so a probe and the scan cannot disagree.
 
 use std::path::{Path, PathBuf};
 
-use super::walk::{scan_roots, scan_roots_for, scannable_walk_builder, scannable_walker};
+use super::walk::{
+    Met, MetLinks, scan_roots, scan_roots_for, scannable_walk_builder, scannable_walker,
+};
 use super::walk_boundaries::{
     is_scannable, outward_directory_link_root, owned_by_another_project, place_root,
 };
@@ -77,29 +79,7 @@ pub(crate) fn walk_reads_any_file(schema: &Schema, frame: Frame<'_>, scan_root: 
 /// The first file a walk of `scan_root` reads, in walk order: `walk_reads_any_file`'s
 /// hit, named.
 fn first_read_file(schema: &Schema, frame: Frame<'_>, scan_root: &Path) -> Option<PathBuf> {
-    if !path_exists(&scan_root) {
-        return None;
-    }
-    let canonical_scan_root = canonical_path(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
-    let physical_root = canonical_config_root(frame.root());
-    // §FS-config.3.5.1, §FS-workspace.6: the reporting walk's own scan-root
-    // gates, ahead of the branch below, because neither a file root nor a walk
-    // root ever reaches the filter.
-    if outward_directory_link_root(scan_root, &canonical_scan_root, &physical_root)
-        || frame
-            .run
-            .workspace
-            .boundary_roots
-            .iter()
-            .any(|root| canonical_scan_root.starts_with(root))
-        || owned_by_another_project(
-            &frame.run.workspace.project_roots,
-            &physical_root,
-            &canonical_scan_root,
-        )
-    {
-        return None;
-    }
+    let (canonical_scan_root, physical_root) = walked_root(frame, scan_root)?;
     if path_is_file(&scan_root) {
         return is_scannable(scan_root, schema).then(|| scan_root.to_path_buf());
     }
@@ -113,7 +93,7 @@ fn first_read_file(schema: &Schema, frame: Frame<'_>, scan_root: &Path) -> Optio
         &physical_root,
         &link_roots,
         &looping_links,
-        None,
+        Met::default(),
     ) else {
         return None;
     };
@@ -126,6 +106,31 @@ fn first_read_file(schema: &Schema, frame: Frame<'_>, scan_root: &Path) -> Optio
                 && is_scannable(entry.path(), schema)
         })
         .map(ignore::DirEntry::into_path)
+}
+
+/// `scan_root`'s canonical path and the project's physical root, where the reporting walk would
+/// walk the root at all: `None` where it is absent, or where one of the walk's own scan-root gates
+/// keeps it out (§FS-config.3.5.1, §FS-workspace.6). The probes ask the gates by hand, ahead of
+/// any walk, because neither a file root nor a walk root ever reaches the filter.
+fn walked_root(frame: Frame<'_>, scan_root: &Path) -> Option<(PathBuf, PathBuf)> {
+    if !path_exists(&scan_root) {
+        return None;
+    }
+    let canonical_scan_root = canonical_path(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
+    let physical_root = canonical_config_root(frame.root());
+    let gated = outward_directory_link_root(scan_root, &canonical_scan_root, &physical_root)
+        || frame
+            .run
+            .workspace
+            .boundary_roots
+            .iter()
+            .any(|root| canonical_scan_root.starts_with(root))
+        || owned_by_another_project(
+            &frame.run.workspace.project_roots,
+            &physical_root,
+            &canonical_scan_root,
+        );
+    (!gated).then_some((canonical_scan_root, physical_root))
 }
 
 /// §FS-check.2.2.2.2: the `[schema.sources] exclude` pattern that kept a walk of
@@ -163,6 +168,69 @@ pub(crate) fn handed_outward_link(schema: &Schema, frame: Frame<'_>, path: &Path
     })
 }
 
+/// §FS-check.2.2.2.6.1: the directory link out of the project root that the walk refused below the
+/// handed `path`, spelled from the path down (`subx`, `a/subx`), and the first in path order where
+/// it refused several (§FS-errors.4.1): the walk meets a directory's entries in the order the disk
+/// lists them, which two filesystems need not share. `None` where it refused none.
+///
+/// It walks what the scan walked under the path, the project's roots for a path that resolves to
+/// the project root and the path itself for any other (`scan_roots`), with the walk's own builder
+/// and filter. The filter records each link as its gate prunes it, so the verdict is the walk's
+/// and not a second outward test, and no link is followed. The exclude patterns, the ignore files
+/// and the hidden rule keep out what they kept out of the scan, so a link the scan never reached
+/// is not named. A link whose target another project of the run or an import owns is pruned as
+/// that project's (§FS-workspace.6), not as out of the project root, so it is not named either.
+/// Like `pruning_pattern`, asked only of a scan that read nothing, so no run that read a file
+/// walks twice (§GOAL-fast-feedback).
+pub(crate) fn outward_link_below(
+    schema: &Schema,
+    frame: Frame<'_>,
+    path: &Path,
+) -> Option<PathBuf> {
+    let (roots, whole) = scan_roots(schema, frame, Some(path), true).ok()?;
+    // §FS-check.1.3.6.1: a widened walk starts at the path, so the path is the first root.
+    let (roots, base) = if whole {
+        (roots.as_slice(), frame.root())
+    } else {
+        (roots.get(..1)?, roots.first()?.as_path())
+    };
+    roots
+        .iter()
+        .flat_map(|root| outward_links_refused(schema, frame, root))
+        .filter_map(|link| link.strip_prefix(base).ok().map(Path::to_path_buf))
+        .min_by_key(|link| sort_path_key(link))
+}
+
+/// The directory links a walk of `scan_root` refused as out of the project root, as the walk
+/// spelled them: the walk is run to its end with the filter recording them
+/// (§FS-check.2.2.2.6.1).
+fn outward_links_refused(schema: &Schema, frame: Frame<'_>, scan_root: &Path) -> Vec<PathBuf> {
+    let Some((canonical_scan_root, physical_root)) = walked_root(frame, scan_root) else {
+        return Vec::new();
+    };
+    let links = MetLinks::default();
+    let link_roots = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let looping_links = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let Ok(walker) = scannable_walker(
+        schema,
+        frame,
+        scan_root,
+        &canonical_scan_root,
+        &physical_root,
+        &link_roots,
+        &looping_links,
+        Met::outward_links(&links),
+    ) else {
+        return Vec::new();
+    };
+    walker.for_each(drop);
+    std::mem::take(
+        &mut *links
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner),
+    )
+}
+
 /// §FS-check.2.2.2.5.2: the project configs below `frame`'s root, each as the
 /// directory it governs and the file discovery would load there
 /// ([`config_file_in`], §FS-config.1), in path order. The directories asked are
@@ -188,7 +256,7 @@ pub(crate) fn project_configs_below(schema: &Schema, frame: Frame<'_>) -> Vec<(P
         &canonical_config_root(root),
         &link_roots,
         &looping_links,
-        None,
+        Met::default(),
     ) else {
         return Vec::new();
     };

@@ -31,7 +31,8 @@ use crate::model::{configured_home_path_key, scanned_decl_relative_path};
 /// that finding cannot afford (§DF-unread-opted-out-block).
 ///
 /// `link_roots` and `looping_links` are the filter's two outputs and belong to the
-/// caller, because the reporting walk reads both after the traversal.
+/// caller, because the reporting walk reads both after the traversal; `met` is what
+/// else it records of the directories it prunes, for the pass that reads them.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn scannable_walker(
     schema: &Schema,
@@ -41,7 +42,7 @@ pub(super) fn scannable_walker(
     physical_root: &Path,
     link_roots: &std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
     looping_links: &std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
-    met_cases: Option<&MetCases>,
+    met: Met,
 ) -> Result<ignore::Walk> {
     Ok(scannable_walk_builder(
         schema,
@@ -51,7 +52,7 @@ pub(super) fn scannable_walker(
         physical_root,
         link_roots,
         looping_links,
-        met_cases,
+        met,
     )?
     .build())
 }
@@ -61,10 +62,43 @@ pub(super) fn scannable_walker(
 /// than listing the cases root again (§FS-check.2.4.2, §AR-scanner.6.4).
 pub(super) type MetCases = std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>;
 
+/// The directory links one walk refused because their canonical target lies outside the project
+/// root, as the walk spelled them, for the empty-scan warning to name (§FS-check.2.2.2.6.1).
+pub(super) type MetLinks = std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>;
+
+/// What one walk records of the directories its filter prunes, for a pass that reads them once
+/// the traversal ends rather than listing the tree again. A recorder left `None` records nothing:
+/// the reporting walk asks for the case directories alone, and only the empty-scan probe's walk,
+/// run after a scan that read nothing, asks for the outward links (§GOAL-fast-feedback).
+#[derive(Clone, Default)]
+pub(super) struct Met {
+    cases: Option<MetCases>,
+    outward_links: Option<MetLinks>,
+}
+
+impl Met {
+    /// A walk that records into `cases` the case directories it meets and the configuration does
+    /// not keep out (§FS-declarations.e2e-case.excluded).
+    pub(super) fn cases(cases: &MetCases) -> Self {
+        Self {
+            cases: Some(std::sync::Arc::clone(cases)),
+            outward_links: None,
+        }
+    }
+
+    /// A walk that records into `links` every directory link its gate refuses as out of the
+    /// project root (§FS-check.2.2.2.6.1).
+    pub(super) fn outward_links(links: &MetLinks) -> Self {
+        Self {
+            cases: None,
+            outward_links: Some(std::sync::Arc::clone(links)),
+        }
+    }
+}
+
 /// [`scannable_walker`] before it is built, so a probe that only needs the walk's
 /// first levels bounds its depth without a second copy of its rules
-/// (§FS-check.2.2.2.5.2). `met_cases` is where the walk records the case directories
-/// it meets, and `None` for a walk that hands its cases to no pass.
+/// (§FS-check.2.2.2.5.2). `met` is what the walk records of the directories it prunes.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn scannable_walk_builder(
     schema: &Schema,
@@ -74,7 +108,7 @@ pub(super) fn scannable_walk_builder(
     physical_root: &Path,
     link_roots: &std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
     looping_links: &std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
-    met_cases: Option<&MetCases>,
+    met: Met,
 ) -> Result<WalkBuilder> {
     // §FS-check.6.1.3: include ignore discovery outside the source roots.
     if schema.sources.respect_gitignore && !crate::config::observe_ignore_inputs(scan_root) {
@@ -118,10 +152,7 @@ pub(super) fn scannable_walk_builder(
         link_roots,
         looping_links,
     );
-    let filter = WalkDirFilter {
-        met_cases: met_cases.cloned(),
-        ..filter
-    };
+    let filter = WalkDirFilter { met, ..filter };
     builder.filter_entry(move |entry| {
         !global
             .as_ref()
@@ -182,9 +213,10 @@ pub(super) struct WalkDirFilter {
     link_roots: std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
     looping_links: std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
     /// Where the walk records each E2E case directory it meets and the configuration does not
-    /// keep out, for the manifest pass; `None` for the read predicate's filter, which walks
-    /// nothing (§FS-declarations.e2e-case.excluded).
-    met_cases: Option<MetCases>,
+    /// keep out, for the manifest pass (§FS-declarations.e2e-case.excluded), and each outward
+    /// directory link it refuses, for the empty-scan probe (§FS-check.2.2.2.6.1); records
+    /// nothing for the read predicate's filter, which walks nothing.
+    met: Met,
 }
 
 impl WalkDirFilter {
@@ -228,7 +260,7 @@ impl WalkDirFilter {
             grammar: frame.grammar().clone(),
             link_roots: std::sync::Arc::clone(link_roots),
             looping_links: std::sync::Arc::clone(looping_links),
-            met_cases: None,
+            met: Met::default(),
         }
     }
 
@@ -259,16 +291,29 @@ impl WalkDirFilter {
     /// configuration does not keep out, for the manifest pass to read
     /// (§FS-declarations.e2e-case.excluded). The ignore files have been asked by then, since
     /// the walker asks them before this filter, and `exclude` is asked by `kept_out_by_exclude`.
+    ///
+    /// Where the empty-scan probe asks for them, `met` also records each directory link the gate
+    /// refuses as out of the project root, as the gate's own verdict, so the warning names the
+    /// link this walk pruned and judges none again (§FS-check.2.2.2.6.1).
     fn keep(&self, entry: &ignore::DirEntry) -> bool {
         let is_dir = entry.file_type().is_some_and(is_directory);
         let refusal = self.refusal(entry.path(), entry.depth(), is_dir, entry.path_is_symlink());
-        if let Some(met) = &self.met_cases
-            && is_dir
-            && refusal.is_some_and(|reason| self.met_case(entry.path(), reason))
-        {
+        let record = |met: &MetCases| {
             met.lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
                 .push(entry.path().to_path_buf());
+        };
+        if let Some(met) = &self.met.cases
+            && is_dir
+            && refusal.is_some_and(|reason| self.met_case(entry.path(), reason))
+        {
+            record(met);
+        }
+        // §FS-check.2.2.2.6.1: the gate refuses a directory link before anything below it.
+        if let Some(met) = &self.met.outward_links
+            && refusal == Some(Unread::OutsideProject)
+        {
+            record(met);
         }
         refusal.is_none()
     }
