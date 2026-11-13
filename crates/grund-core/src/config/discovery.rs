@@ -286,7 +286,12 @@ pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
     if let Some((dir, _)) = nearest_config(&walk_start) {
         // §FS-config.1.5: the project's identity resolves links once it is chosen.
         let root = super::canonical_config_root(&dir);
-        return config_at(&root, &run_cli_base(start, &walk_start, &root), None, invocation);
+        return config_at(
+            &root,
+            &run_cli_base(start, &walk_start, &root),
+            None,
+            invocation,
+        );
     }
     // Zero-config (§GOAL-zero-config): the "project root" is the current working
     // directory, never the path passed on the command line. Reports stay relative to

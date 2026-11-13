@@ -368,7 +368,9 @@ pub(super) fn path_starts_with(path: &Path, root: &Path) -> bool {
 /// Scan helper for point-query subcommands (`show`, `id`): any unreadable file
 /// is fatal — a partial view of the tree could miss the declaration entirely or
 /// allocate a colliding number (§FS-show.3, §FS-id.4). The failure names its path
-/// as a report does, the report base `.` (§FS-cli.3.4).
+/// as a report does, the report base `.` (§FS-cli.3.4). It is the one at the path the
+/// run was handed where there is one, before a directory that sorts ahead of it, as
+/// `show` stops at it (§AR-scanner.1.6).
 pub(crate) fn scan_tree_strict(
     schema: &Schema,
     frame: Frame<'_>,
@@ -376,7 +378,8 @@ pub(crate) fn scan_tree_strict(
     explicit_scope: bool,
 ) -> Result<Catalog> {
     let (findings, errors) = scan_tree(schema, frame, scope, explicit_scope)?;
-    if let Some(error) = errors.into_iter().next() {
+    let stop = errors.iter().find(|error| error.at_passed_path());
+    if let Some(error) = stop.or(errors.first()) {
         return Err(anyhow!(
             "{}: {}",
             frame.display_location(&error.path),

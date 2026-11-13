@@ -147,9 +147,7 @@ pub(crate) use tree::{
 pub(crate) use unread_home::fetch_refused_home;
 pub(crate) use value_json::folder_value_declarations;
 pub(crate) use walk::scan_roots_for;
-pub(crate) use walk_reporting::{
-    walk_scannable_files, walk_scannable_files_reporting, walk_scannable_files_with_sources,
-};
+pub(crate) use walk_reporting::{walk_scannable_files, walk_scannable_files_reporting};
 pub(crate) use walk_roots::unwalked_path_failure;
 
 // The cases that pin this component, one module per behaviour area
