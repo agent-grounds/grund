@@ -7,6 +7,9 @@
 //! Its variant nests `api` at `apps/api`, so the snapshot of `apps/` keeps one
 //! member's findings and drops the other's, and narrowing cannot pass by blanking.
 
+#[path = "../../crates/grund-cli/tests/support/tmpdir_leftovers.rs"]
+mod tmpdir_leftovers;
+
 use grund_core::{Finding, LspSnapshot, LspSnapshotOpts, Report, check, lsp_snapshot};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -245,5 +248,22 @@ fn a_snapshot_outside_every_member_narrows_the_absent_member_announcement() {
     assert_eq!(
         snapped, scoped,
         "lsp_snapshot(tools/sub) must report what check(tools/sub) reports"
+    );
+}
+
+/// The four cases above, passing, leave nothing in their temporary directory: each one's
+/// workspace is removed once it is done with it (§AR-ci-fixture-cleanup).
+#[test]
+#[ignore = "red until #1392 removes the fixture's root; implement removes this"]
+fn the_snapshots_outside_every_member_leave_nothing_in_their_temporary_directory() {
+    let left = tmpdir_leftovers::left_by(&[
+        "a_snapshot_outside_every_member_reports_what_check_reports",
+        "a_snapshot_outside_every_member_carries_every_members_records",
+        "a_snapshot_outside_every_member_keeps_the_members_under_it",
+        "a_snapshot_outside_every_member_narrows_the_absent_member_announcement",
+    ]);
+    assert!(
+        left.is_empty(),
+        "the four snapshot cases passed and left {left:?} in their temporary directory"
     );
 }
