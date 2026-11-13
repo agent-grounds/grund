@@ -4,11 +4,12 @@
 //! link below it names that link the same way (§FS-check.2.2.2.6.1), and so does a run over the
 //! project's whole root, given no path from anywhere in it or handed the root. The controls hold
 //! what must not move: a file below the link is read, a link inside the project is walked, an
-//! exclude pattern is named ahead of an outward link, a link the run's walk never reached and an
-//! E2E case the manifest pass reads are not named, and a real directory with no file grund reads
-//! and no outward link below it keeps the extensions wording (§FS-check.2.2.2.2). An outward link
-//! whose target refuses the lookup takes the same warning; git carries no mode, so that case
-//! builds its own tree and skips where mode 000 does not bar the user (root).
+//! exclude pattern is named ahead of an outward link, from wherever a run given no path starts
+//! too, a link the run's walk never reached and an E2E case the manifest pass reads are not named,
+//! and a real directory with no file grund reads and no outward link below it keeps the
+//! extensions wording (§FS-check.2.2.2.2). An outward link whose target refuses the lookup takes
+//! the same warning; git carries no mode, so that case builds its own tree and skips where mode
+//! 000 does not bar the user (root).
 #![cfg(unix)]
 
 use std::fs;
@@ -514,6 +515,32 @@ fn a_run_with_no_path_names_no_link_its_walk_never_reached() {
             run.report(),
             from_root.report()
         );
+    }
+}
+
+/// §FS-check.2.2.2.2, §FS-check.2.2.2.6.1, §FS-scan.path.none: a run given no path walks the
+/// project's roots wherever it started, and both the pattern and the link are asked of that one
+/// walk, so the pattern that pruned `gen` is named ahead of `real/subx` from the root and from
+/// every directory below it, the link's own and the excluded one among them.
+#[test]
+fn a_run_with_no_path_names_the_exclude_pattern_ahead_of_the_link_from_anywhere() {
+    let tree = Tree::lone("below-no-path-pattern");
+    tree.write(
+        "p/grund.toml",
+        "grund_config_version = 2\nproject_name = \"p\"\n\n[schema.sources]\nexclude = [\"gen\"]\n",
+    );
+    tree.write("p/gen/g.md", "# G\n\nSee \u{a7}FS-gen.\n");
+    let expected = "warning: nothing to scan — every file under `.` that grund would read is \
+                    excluded by the [schema.sources] exclude pattern `gen`.";
+    for dir in ["p", "p/bin", "p/real", "p/gen"] {
+        let run = tree.grund_in(dir, &["check"]);
+        assert_eq!(run.code, 0, "{}", run.report());
+        assert!(
+            run.stderr.lines().any(|line| line == expected),
+            "expected the line\n{expected}\n{}",
+            run.report()
+        );
+        assert!(!run.stderr.contains(LINK_WORDING), "{}", run.report());
     }
 }
 

@@ -212,7 +212,7 @@ pub(super) fn empty_scan_warning(
             )
         }
         // §FS-check.2.2.2.2: under v2 a pattern can prune what the extensions admit.
-        _ => match pruning_pattern(config.schema(), config.frame(), path) {
+        _ => match pruning_pattern(config.schema(), config.frame(), path, path_provided) {
             Some(pattern) => format!(
                 "nothing to scan — every file under `{}` that grund would read is excluded by \
                  the [schema.sources] exclude pattern `{pattern}`.",
