@@ -111,11 +111,15 @@ languages = ["markdown", "c", "cpp", "javascript"]
 h = "c"
 hpp = "cpp"
 mjs = "javascript"
+txt = "markdown"
 ```
 
 The file takes the target language whole: its reader, its comment hosts and its
-doc profile. A mapping also overrides the epoch, so `md = "notes"` takes `.md`
-away from Markdown. A key is a bare final extension: no dot, no `/`, and no
+doc profile. A mapping also overrides the epoch, so `txt = "markdown"` reads a
+`.txt` file as Markdown. `.md` is the one suffix that belongs to Markdown: `md`
+maps only to a `document` language, such as `md = "v1_markdown"`. Mapping it
+elsewhere warns (`config-md-not-markdown`) and becomes an error in grund 1.0.0
+([§FS-config-v2.schema.sources.extensions](../functional-spec/FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)). A key is a bare final extension: no dot, no `/`, and no
 glob character. The target must be a language `languages` admits; a mapping
 admits nothing by itself.
 

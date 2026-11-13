@@ -156,6 +156,8 @@ impl Row {
     /// index is not is judged as under `index = false`
     /// (§FS-config-v2.checks.config-index-not-markdown), so every index rule, and the links
     /// `--cross-refs` writes (§FS-fmt.6.1), ask this rather than the index's name.
+    /// §FS-config.3.4.2.3: the index paths whose file is read as Markdown (§FS-fmt.2.3.1); one
+    /// that is not is judged as under `index = false` until grund 1.0.0.
     pub(crate) fn markdown_index_paths(
         &self,
         schema: &Schema,

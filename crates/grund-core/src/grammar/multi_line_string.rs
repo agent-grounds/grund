@@ -432,7 +432,8 @@ fn template_close(lines: &[&str], from: Pos) -> Option<Pos> {
     None
 }
 
-/// The raw-line columns of a `.py` line that a docstring or an assigned-data span
+/// The raw-line columns of a line whose docstrings are read (§FS-fmt.2.3.1) that a
+/// docstring or an assigned-data span
 /// claims, where no form opens (§FS-languages.multi-line-string.bound): through
 /// the docstring's closer, or the whole line while it stays open.
 fn python_excluded(line: &str, state: &mut PythonDocstringScanState) -> Option<(usize, usize)> {
