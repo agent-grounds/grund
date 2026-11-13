@@ -21,6 +21,10 @@ pub(crate) struct ReadName<'a> {
     spelling: &'a Path,
     language: Option<&'a Language>,
     extension: Option<&'a str>,
+    /// Whether a version-2 name no admitted language claims is read by its name, as grund
+    /// 0.22.0 read it, which only `grund fetch`'s view of its output asks
+    /// (§DF-one-reading-answer.2.6).
+    unclaimed_by_name: bool,
 }
 
 impl<'a> ReadName<'a> {
@@ -39,6 +43,12 @@ impl<'a> ReadName<'a> {
         self.extension
     }
 
+    /// Whether a version-2 name no admitted language claims is read by its name
+    /// (§DF-one-reading-answer.2.6).
+    pub(super) fn unclaimed_by_name(&self) -> bool {
+        self.unclaimed_by_name
+    }
+
     /// The spelling read by its own name, which is every file the rule leaves alone.
     fn as_spelled(schema: &'a Schema, spelling: &'a Path) -> Self {
         let model = schema.sources.model.as_ref();
@@ -46,6 +56,7 @@ impl<'a> ReadName<'a> {
             spelling,
             language: model.and_then(|model| model.language_of(spelling)),
             extension: spelling.extension().and_then(|ext| ext.to_str()),
+            unclaimed_by_name: false,
         }
     }
 
@@ -193,7 +204,11 @@ impl<'f> Frame<'f> {
     where
         'f: 'b,
     {
-        FileReading::of(self.compiled, schema, self.read_name(schema, path))
+        let name = ReadName {
+            unclaimed_by_name: self.run.unclaimed_read_by_name,
+            ..self.read_name(schema, path)
+        };
+        FileReading::of(self.compiled, schema, name)
     }
 
     /// The format a value home takes `path` by, where it takes it (§FS-values.2.2): the spelling's

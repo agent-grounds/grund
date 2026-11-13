@@ -53,6 +53,10 @@ pub struct Run {
     /// Every in-tree name that reached a file, which the walk publishes here and the reading rule
     /// reads (§AR-scanner.1.8, §AR-config.1.6).
     pub(crate) spellings: Spellings,
+    /// Whether a version-2 name no admitted language claims is read by its name, as grund 0.22.0
+    /// read it: only the view `grund fetch` reads its output alone through sets it
+    /// (§DF-one-reading-answer.2.6).
+    pub(crate) unclaimed_read_by_name: bool,
 }
 
 /// §AR-config.1.5: the scope this invocation asked for.
@@ -271,6 +275,7 @@ impl Run {
             path_base: invocation.path_base,
             buffers: invocation.buffers.clone(),
             spellings: Spellings::default(),
+            unclaimed_read_by_name: false,
         }
     }
 

@@ -135,12 +135,15 @@ fn read_output_alone(request: &Request<'_>, output: &str) -> Result<(), FetchFai
         Home::File(file) => file.clone(),
         Home::Folder(folder) => folder.join(format!("{}.md", request.local)),
     };
-    let view = config.with_buffers(
-        config
-            .run()
-            .buffers
-            .in_front([(at.clone(), output.to_string())]),
-    );
+    // §DF-one-reading-answer.2.6: a name no admitted language claims is read as 0.22.0 read it.
+    let view = config
+        .with_buffers(
+            config
+                .run()
+                .buffers
+                .in_front([(at.clone(), output.to_string())]),
+        )
+        .with_unclaimed_read_by_name();
     let alone = scan_unwalked_file(&at, view.schema(), view.frame(), &[]).map_err(|err| {
         fetch_operational(format!(
             "cannot discover declarations for {}: {err:#}",

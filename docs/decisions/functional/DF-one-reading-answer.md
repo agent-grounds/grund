@@ -43,6 +43,10 @@ Taking the name test away moves four verdicts, each from `2` to whatever the run
 
 Version 1's readings are its names, so routing its questions through the one predicate changes no answer: its index must still be named `.md`, its rule homes still pass the name test, and its value row still has exactly one home ([§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning)).
 
+### 2.6 Fetch reads its output as before
+
+`grund fetch` reads its output alone as the scan reads one file at the target's path ([§FS-fetch.admission.1](../../functional-spec/FS-fetch.md#admission1-the-requested-declaration-is-there-once-and-its-body-takes-in-all-of-the-output)). Until the second pull request of [issue #1206](https://github.com/agent-grounds/grund/issues/1206) moves `fetch` onto the one answer, that reading takes a version-2 name no admitted language claims by its name, as grund 0.22.0 did, so an `<ID>.md` there is read as Markdown. A home no admitted language reads keeps the refusal placement gives it, not a refusal of the output, and no `fetch` outcome moves.
+
 ## 3. Rejected alternatives
 
 - **Keep `index = "x.rs"` refused while `index.md` under `md = "rust"` warns.** The two differ only in their names, so keeping the refusal keeps the name test this record removes.
