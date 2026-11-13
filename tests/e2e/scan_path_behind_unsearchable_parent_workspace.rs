@@ -4,7 +4,9 @@
 //! search must still fail at the path as given, with exit `2`, on `check` in text and JSON and on
 //! `list`, `cover`, `fmt`, `show` and `refs`, whether or not the root is a project of the run and
 //! whether the barred directory is outside every member or is a member itself, and in a workspace
-//! that loads no project at all, where the failure is the run's own. `show --batch` stops at the
+//! that loads no project at all, where the failure is the run's own. A command that walks from the
+//! path on the root's config, as `cover`, `fmt` and `id` do for a path in a barred member, fails
+//! there too, and so does a link into that member. `show --batch` stops at the
 //! same failure `show` does. It is never located only at the directory that refused the lookup,
 //! and the run never passes over a tree it did not read. The controls keep what must not move: a readable path is read, and a path whose
 //! lookup says not found is `path does not exist`. Every barred case skips where mode 000 does
@@ -17,7 +19,7 @@ mod fixture_cleanup;
 use fixture_cleanup::remove_fixture_tree;
 use std::fs;
 use std::io::Write;
-use std::os::unix::fs::PermissionsExt;
+use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
@@ -99,6 +101,12 @@ impl Workspace {
         let sub = self.base.join("w/docs/sub");
         fs::create_dir_all(&sub).expect("create docs/sub");
         fs::write(sub.join("y.md"), "y\n").expect("write docs/sub/y.md");
+        self
+    }
+
+    /// This workspace with the link `docs/ml -> ../m/docs`, from the root's home into the member.
+    fn with_member_link(self) -> Self {
+        symlink("../m/docs", self.base.join("w/docs/ml")).expect("create the link");
         self
     }
 
@@ -297,6 +305,61 @@ fn a_path_in_a_barred_member_is_a_permission_failure_at_the_path() {
         if include_root {
             let run = workspace.run(&["show", "FS-a", path]);
             failures.extend(run.permission_failure_at(path));
+        }
+    }
+    assert_none(failures);
+}
+
+/// R3-01: `cover`, `fmt` and `id` keep the root's config for a relative path in a barred member and
+/// walk from the path, where the member boundary dropped it and each passed with nothing said. Each
+/// fails at the path, `fmt --write` writes nothing, `id` mints nothing, and a link into the member
+/// fails at the link (R3-04), where `cover` and `fmt --check` passed.
+#[test]
+fn a_path_in_a_barred_member_fails_cover_fmt_and_id_at_the_path() {
+    let mut failures = Vec::new();
+    for include_root in [true, false] {
+        let workspace = Workspace::new("walked", include_root).with_member_link();
+        let Some(workspace) = workspace.bar("m") else {
+            return;
+        };
+        for path in ["m/docs/b.md", "m/docs", "m/docs/nothere.md"] {
+            let commands: [&[&str]; 5] = [
+                &["cover", path],
+                &["cover", path, "--lines", "1"],
+                &["cover", path, "--format", "json"],
+                &["fmt", "--check", path],
+                &["fmt", "--write", path],
+            ];
+            for args in commands {
+                let run = workspace.run(args);
+                failures.extend(run.permission_failure_at(path));
+                let wrote = run.stdout.lines().chain(run.stderr.lines());
+                if let Some(line) = wrote
+                    .filter(|l| l.starts_with("rewrote "))
+                    .find(|l| *l != "rewrote 0 lines")
+                {
+                    failures.push(format!("{}: wrote `{line}`", run.shown));
+                }
+            }
+            let id = workspace.run(&["id", "FS", "new thing", path]);
+            let line = format!("error: {path}: permission denied");
+            if id.code != 2 || !id.stdout.is_empty() || !id.stderr.lines().any(|l| l == line) {
+                failures.push(format!(
+                    "{}: want exit 2, empty stdout and `{line}`; got exit {}\n  stdout: {:?}\n  \
+                     stderr: {:?}",
+                    id.shown, id.code, id.stdout, id.stderr
+                ));
+            }
+        }
+        let line = format!("error: docs/ml: unreadable symlink: permission denied; {PASSED_FIX}");
+        for args in [&["cover", "docs/ml"][..], &["fmt", "--check", "docs/ml"]] {
+            let run = workspace.run(args);
+            if run.code != 2 || !run.stderr.lines().any(|l| l == line) {
+                failures.push(format!(
+                    "{}: want exit 2 and `{line}`; got exit {}\n  stderr: {:?}",
+                    run.shown, run.code, run.stderr
+                ));
+            }
         }
     }
     assert_none(failures);

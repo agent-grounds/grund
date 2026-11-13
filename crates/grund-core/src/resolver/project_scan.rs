@@ -79,23 +79,26 @@ pub(crate) fn report_unwalked_path(
 }
 
 /// The scan failure a `show` query stops at, with every failure of its project (§AR-scanner.1.6):
-/// the failure at the run's `<path>`, first in the project [`report_unwalked_path`] put it in,
-/// whichever project the query names; else the first failure of the first `fallback` project that
-/// met one. `show` falls back to the ID's project and `show --batch` to every project in order, so
-/// the two stop at the path whenever the path is what the run could not read.
+/// the failure at the run's `<path>`, wherever it sorts among the failures of whichever project
+/// holds it, since a walk that met the directory refusing the lookup lists that directory first;
+/// else the first failure of the first `fallback` project that met one. `show` falls back to the
+/// ID's project and `show --batch` to every project in order, so the two stop at the path whenever
+/// the path is what the run could not read.
 pub(crate) fn stopping_failure<'c>(
     projects: &'c [WorkspaceProject],
     fallback: impl IntoIterator<Item = &'c WorkspaceProject>,
 ) -> Option<(&'c ScanError, &'c [ScanError])> {
-    let at_path = |project: &&WorkspaceProject| {
-        project
-            .scan_errors
-            .first()
-            .is_some_and(ScanError::at_passed_path)
-    };
-    let failed = projects.iter().find(at_path);
-    let failed = failed.or_else(|| fallback.into_iter().find(|p| !p.scan_errors.is_empty()))?;
-    Some((failed.scan_errors.first()?, &failed.scan_errors))
+    let at_path = projects.iter().find_map(|project| {
+        let failures = project.scan_errors.as_slice();
+        Some((failures.iter().find(|f| f.at_passed_path())?, failures))
+    });
+    at_path.or_else(|| {
+        let failures = fallback
+            .into_iter()
+            .map(|project| project.scan_errors.as_slice())
+            .find(|failures| !failures.is_empty())?;
+        Some((failures.first()?, failures))
+    })
 }
 
 /// The refusal of a query that stops at `first` (§FS-distribution.3.3.2): a located filesystem

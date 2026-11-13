@@ -5,7 +5,9 @@
 //! alike, and never as `path does not exist`. The controls hold what must not move: a path whose
 //! lookup says not found, or that runs through a regular file, keeps `path does not exist`, a link
 //! to the same place keeps its line (§FS-scan.scope.links.owed.refused), and a readable path is
-//! read. Under `--path-base=invocation` the path is spelled from the working directory, because a
+//! read. Where the project's own walk meets the barred directory too, `show`, single or batched,
+//! and `id` still stop at the path rather than at the directory, which sorts first. Under
+//! `--path-base=invocation` the path is spelled from the working directory, because a
 //! path the lookup is refused on is known as neither a directory nor a file (§FS-cli.3.4). Git
 //! carries no mode, so the e2e corpus cannot hold these trees, and every barred case skips where
 //! mode 000 does not bar the user (root).
@@ -16,9 +18,10 @@ mod fixture_cleanup;
 
 use fixture_cleanup::remove_fixture_tree;
 use std::fs;
+use std::io::Write;
 use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 const CONFIG: &str = "grund_config_version = 2\nproject_name = \"p\"\n\n\
     [schema]\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
@@ -82,6 +85,23 @@ impl Tree {
         Some(tree)
     }
 
+    /// R3-02: the same file at `rr/sub/x.md`, not hidden, with `rr` at mode 000, so the project's
+    /// own walk meets `rr` and fails there too, a failure that sorts before the path; or `None`
+    /// where the mode does not bar this user.
+    fn visible(test: &str) -> Option<Self> {
+        let mut tree = Self::new(test);
+        let path = tree.base.join("p/rr");
+        fs::create_dir_all(path.join("sub")).expect("create the barred directory");
+        fs::write(path.join("sub/x.md"), "# Notes\n\nSee \u{a7}FS-nope.\n").expect("write");
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o000)).expect("set the mode");
+        tree.locked.push(path.clone());
+        if fs::metadata(path.join("sub/x.md")).is_ok() {
+            eprintln!("skipped: the mode does not bar this user, so no lookup is refused");
+            return None;
+        }
+        Some(tree)
+    }
+
     /// `grund <args>` from the project root.
     fn run(&self, args: &[&str]) -> Run {
         self.run_in(".", args)
@@ -89,18 +109,33 @@ impl Tree {
 
     /// `grund <args>` from `dir`, under the project root.
     fn run_in(&self, dir: &str, args: &[&str]) -> Run {
-        let output = Command::new(env!("CARGO_BIN_EXE_grund"))
+        let output = self.command(dir, args).output().expect("run grund");
+        Run::of(args, output)
+    }
+
+    /// `grund <args>` from the project root, with `input` on its stdin.
+    fn run_with_input(&self, args: &[&str], input: &str) -> Run {
+        let mut child = self
+            .command(".", args)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("run grund");
+        let mut stdin = child.stdin.take().expect("grund's stdin");
+        // A run that stops before reading its stdin closes the pipe; what it printed is the answer.
+        let _ = stdin.write_all(input.as_bytes());
+        drop(stdin);
+        Run::of(args, child.wait_with_output().expect("wait for grund"))
+    }
+
+    fn command(&self, dir: &str, args: &[&str]) -> Command {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_grund"));
+        command
             .args(args)
             .env("NO_COLOR", "1")
-            .current_dir(self.base.join("p").join(dir))
-            .output()
-            .expect("run grund");
-        Run {
-            shown: format!("grund {}", args.join(" ")),
-            code: output.status.code().expect("exited with a status"),
-            stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
-            stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
-        }
+            .current_dir(self.base.join("p").join(dir));
+        command
     }
 }
 
@@ -115,6 +150,15 @@ impl Drop for Tree {
 }
 
 impl Run {
+    fn of(args: &[&str], output: std::process::Output) -> Self {
+        Self {
+            shown: format!("grund {}", args.join(" ")),
+            code: output.status.code().expect("exited with a status"),
+            stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
+            stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
+        }
+    }
+
     /// What went wrong for §FS-scan.scope.homes.lookup.path, or `None`: exit `2`, the permission
     /// line at `path` exactly as given, and never `path does not exist`.
     fn permission_failure_at(&self, path: &str) -> Option<String> {
@@ -250,6 +294,38 @@ fn a_barred_path_fails_every_command_at_the_path() {
             .filter_map(|args| tree.run(args).permission_failure_at(path))
             .collect(),
     );
+}
+
+/// R3-02: where the project's own walk meets the barred `rr` and fails there first, `show`, read
+/// from stdin and from a glob as well as single, still stops at the path, where it stopped at `rr`,
+/// and `id` refuses there, the path and its reason (§FS-id.4), and mints nothing.
+#[test]
+fn a_query_stops_at_the_path_where_the_walk_meets_the_barred_directory_first() {
+    let Some(tree) = Tree::visible("visible") else {
+        return;
+    };
+    let mut failures = Vec::new();
+    for path in ["rr/sub/x.md", "rr/sub", "rr/sub/nothere.md"] {
+        failures.extend(
+            tree.run(&["show", "FS-a", path])
+                .permission_failure_at(path),
+        );
+        let batch = ["show", "--batch", "--format=json", path];
+        let run = tree.run_with_input(&batch, "{\"id\":\"FS-a\"}\n");
+        failures.extend(run.permission_failure_at(path));
+        let glob = ["show", "--batch", "--glob", "FS-*", "--format=json", path];
+        failures.extend(tree.run(&glob).permission_failure_at(path));
+        let id = tree.run(&["id", "FS", "new thing", path]);
+        let line = format!("error: {path}: permission denied");
+        if id.code != 2 || !id.stdout.is_empty() || !id.stderr.lines().any(|l| l == line) {
+            failures.push(format!(
+                "{}: want exit 2, empty stdout and `{line}`; got exit {}\n  stdout: {:?}\n  \
+                 stderr: {:?}",
+                id.shown, id.code, id.stdout, id.stderr
+            ));
+        }
+    }
+    assert_none(failures);
 }
 
 /// §FS-cli.3.4: a barred path is neither a known directory nor a known file, so the invocation

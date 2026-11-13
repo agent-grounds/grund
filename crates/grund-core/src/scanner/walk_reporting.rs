@@ -181,21 +181,25 @@ pub(crate) fn walk_scannable_files_with_sources(
         // §FS-config.3.5.1: a scan root reached through a directory link uses
         // the same canonical project-root boundary as a link met during descent.
 
+        // §AR-scanner.1.6: the path this walk was handed, unlooked-up, has no other reader, so
+        // no member boundary or owner takes it (§FS-scan.scope.homes.lookup.path).
+        let unread_passed = looked_up.is_err() && explicit_scope && !root_scope && position == 0;
         // §AR-workspace.6: a root scan starts outside member namespaces; an
         // included path at or below a member boundary belongs to the member scan,
         // and one in another project belongs there (§FS-workspace.6.2).
         if outward_link
-            || frame
-                .run
-                .workspace
-                .boundary_roots
-                .iter()
-                .any(|root| canonical_scan_root.starts_with(root))
-            || owned_by_another_project(
-                &frame.run.workspace.project_roots,
-                &physical_root,
-                &canonical_scan_root,
-            )
+            || (!unread_passed
+                && (frame
+                    .run
+                    .workspace
+                    .boundary_roots
+                    .iter()
+                    .any(|root| canonical_scan_root.starts_with(root))
+                    || owned_by_another_project(
+                        &frame.run.workspace.project_roots,
+                        &physical_root,
+                        &canonical_scan_root,
+                    )))
         {
             continue;
         }
