@@ -120,7 +120,7 @@ pub(crate) use agent_entrypoints::{
     existing_init_companion_agent_entrypoints, is_file_or_symlink, is_symlink_to,
     path_missing_without_following_symlinks,
 };
-pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is_numeric};
+pub(crate) use context::{file_home_kind, section_path_is_numeric};
 pub(crate) use declaration_lines::DeclarationLines;
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use e2e_case_failures::with_e2e_case_failures;
@@ -131,10 +131,7 @@ pub(crate) use legacy::{
 };
 pub(crate) use off_format::record_off_format_citations;
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
-pub(crate) use relative_sections::unmarked_below_declaration;
-pub(crate) use scan_error::{
-    Place, ScanFailure, api_scan_error, scan_error_message, scan_error_reason,
-};
+pub(crate) use scan_error::{api_scan_error, scan_error_message};
 pub(crate) use scope_probe::{
     effective_scope_reads_any_file, project_configs_below, pruning_pattern, walk_reads_any_file,
 };
@@ -146,9 +143,7 @@ pub(crate) use tree::{
 };
 pub(crate) use value_json::folder_value_declarations;
 pub(crate) use walk::scan_roots_for;
-pub(crate) use walk_reporting::{
-    walk_scannable_files, walk_scannable_files_reporting, walk_scannable_files_with_sources,
-};
+pub(crate) use walk_reporting::{walk_scannable_files, walk_scannable_files_reporting};
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).

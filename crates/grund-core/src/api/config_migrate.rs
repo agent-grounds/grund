@@ -22,7 +22,7 @@ use crate::model::{
     Code, Finding, GENERATED_SECTIONS, base_reads_dot, format_path, relative_from_base,
 };
 use crate::scanner::walk_scannable_files;
-use crate::writers::{Install, InstallFailure, atomic_install};
+use crate::writers::{Holds, Install, InstallFailure, atomic_install};
 
 /// The options of one `grund config migrate --to 2` run (§FS-config-migrate.1).
 #[derive(Clone, Debug)]
@@ -98,7 +98,7 @@ fn write(located: &Located, v1_text: &str, report: &MigrateReport) -> Result<(),
     let install = Install {
         bytes: candidate.as_bytes(),
         tag: "migrate",
-        expected: Some(v1_text.as_bytes()),
+        expected: Holds::Bytes(v1_text.as_bytes()),
     };
     atomic_install(&located.file, install).map_err(|failure| match failure {
         InstallFailure::Changed => MigrateFailure::Changed {

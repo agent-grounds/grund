@@ -1,19 +1,23 @@
-//! The explicit external-snapshot materializer (§FS-fetch). This module owns
-//! integration execution and output validation; every scanner and query remains
-//! a reader under §REQ-runs-offline. The snapshot-home discovery and the atomic
-//! install it ends in are `fetch_write.rs`.
+//! The explicit external-snapshot materializer (§FS-fetch). This module owns the
+//! order of a fetch and the integration's execution; every scanner and query
+//! remains a reader under §REQ-runs-offline. Where the output goes is
+//! `fetch_target.rs`, whether it is admitted `fetch_admit.rs` and
+//! `fetch_readback.rs`, the splice `fetch_splice.rs`, and the atomic install it
+//! ends in `fetch_write.rs`.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use super::fetch_write::{write_file_home, write_folder_home};
+use super::fetch_admit::admit;
+use super::fetch_target::{Before, Home, Request, place};
+use super::fetch_write::install;
 use crate::config::{
-    Config, KindConfig, ProjectRecords, RefusedHome, fetch_integration_path,
-    fetch_names_nothing_reason, fetch_runs_nothing, run_warning_findings,
+    KindConfig, ProjectRecords, RefusedHome, fetch_integration_path, fetch_names_nothing_reason,
+    fetch_runs_nothing, run_warning_findings,
 };
-use crate::grammar::{Grammar, MarkdownBlocks, markdown_line_records, parse_id_arg};
-use crate::model::{Finding, format_path, relative_from_base};
+use crate::grammar::parse_id_arg;
+use crate::model::Finding;
 use crate::resolver::{fetch_place, load_alias_path, settled_run_warnings};
-use crate::scanner::{Place, ScanFailure, unmarked_below_declaration};
+use crate::scanner::scan_tree;
 use crate::workspace::{resolve_workspace_config, split_qualified_id_arg};
 
 /// Which public CLI exit class a fetch refusal belongs to (§FS-fetch.7).
@@ -155,12 +159,43 @@ fn fetch_run(
     let fetch = kind.fetch.as_deref().ok_or_else(|| {
         fetch_operational(format!("kind `{}` has no fetch integration", kind.kind))
     })?;
-    refuse_home_without_markdown(&selected, kind, &report_base)?;
+    // The snapshot goes to the kind's first place on purpose: a fetched row's
+    // several places are unspecified (§FS-config-v2.schema.places), one is the home.
+    let home = match (&kind.file, &kind.folder) {
+        (Some(file), None) => Home::File(selected.root.join(file)),
+        (None, Some(folder)) => Home::Folder(selected.root.join(folder)),
+        _ => {
+            return Err(fetch_operational(format!(
+                "kind `{}` cannot fetch without exactly one snapshot home",
+                kind.kind
+            )));
+        }
+    };
+    // §FS-fetch.6.1: the one scan, after every refusal that needs none and before the spawn.
+    let (catalog, errors) =
+        scan_tree(selected.schema(), selected.frame(), None, false).map_err(|err| {
+            let message = format!("cannot discover declarations for {local}: {err:#}");
+            *diagnostic = Some(err);
+            fetch_operational(message)
+        })?;
+    let before = Before { catalog, errors };
+    let request = Request {
+        config: &selected,
+        id: &id,
+        local,
+        report_base: &report_base,
+        home,
+    };
+    refuse_home_without_markdown(&request, &before, kind)?;
     // §FS-imports.writes: asked last, so only a command that can run is named.
-    let place = fetch_place(selected.run(), &report_base, namespace.as_deref(), local);
-    if let Some(refusal) = place.import_refusal() {
+    let place_at = fetch_place(selected.run(), &report_base, namespace.as_deref(), local);
+    if let Some(refusal) = place_at.import_refusal() {
         return Err(fetch_operational(refusal));
     }
+    // §FS-fetch.6.1: where the output goes is the scan's answer, settled before the spawn and
+    // refused, if it must be, once the output is known to be one declaration.
+    let mut placing = None;
+    let placed = place(&request, &before, &mut placing).map_err(|failure| (failure, placing));
     let integration = fetch_integration_path(&selected.root, fetch);
 
     // §FS-fetch.2.1: immediately before the spawn, behind every earlier refusal.
@@ -199,180 +234,72 @@ fn fetch_run(
             "fetch integration `{fetch}` for {raw} emitted non-UTF-8 output"
         ))
     })?;
-
-    // The snapshot goes to the kind's first place on purpose: a fetched row's
-    // several places are unspecified (§FS-config-v2.schema.places), one is the home.
-    let (home, depth) = match (&kind.file, &kind.folder) {
-        (Some(file), None) => (FetchHome::File(selected.root.join(file)), 2),
-        (None, Some(folder)) => (FetchHome::Folder(selected.root.join(folder)), 1),
-        _ => {
-            return Err(fetch_operational(format!(
-                "kind `{}` cannot fetch without exactly one snapshot home",
-                kind.kind
-            )));
-        }
-    };
-    validate_fetched_declaration(snapshot, local, depth, &selected.grammar)?;
-    match home {
-        FetchHome::File(path) => write_file_home(
-            &path,
-            &selected.grammar,
-            &id,
-            // §FS-check.2.4.3: a file home is the row's own root, so `exclude` cannot prune it.
-            ScanFailure::Unread {
-                place: Place::Root,
-                version: selected.frame().version,
-            },
-            &report_base,
-            snapshot.as_bytes(),
-            diagnostic,
-        ),
-        // §FS-fetch.5.3: a member's refusal still names the file from the run's report base.
-        FetchHome::Folder(path) => write_folder_home(
-            &path,
-            &selected,
-            &id,
-            local,
-            &report_base,
-            snapshot.as_bytes(),
-            diagnostic,
-        ),
-    }
+    // §FS-fetch.admission: installed only if the next scan reads it back as what was asked for.
+    let admitted = admit(&request, &before, placed, snapshot, diagnostic)?;
+    install(
+        &admitted.install_at,
+        &request.shown(&admitted.path),
+        admitted.bytes.as_bytes(),
+        admitted.expected(),
+        diagnostic,
+    )
 }
 
-enum FetchHome {
-    File(PathBuf),
-    Folder(PathBuf),
-}
-
-/// §FS-fetch.4, §FS-fetch.4.2: a value source and a file read as source hold no
-/// Markdown declaration, and the answer is spelled from the run's report base
-/// (§FS-errors.4), as `FetchPlace` spells its target. A value source's way out
-/// names a folder without it, since one kept beside a fetched snapshot of its own ID
-/// is a duplicate (§FS-values.2.3); a source file's moves its declarations too, since
-/// one left there is what the scan goes on reading.
+/// §FS-fetch.4, §FS-fetch.4.2, §FS-fetch.4.2.1: a value source and a file read as source hold no
+/// Markdown, and a home the scan does not read would never be read back; the answer is spelled
+/// from the run's report base (§FS-errors.4), as `FetchPlace` spells its target. A value source's
+/// way out names a folder without it, since one kept beside a fetched snapshot of its own ID is a
+/// duplicate (§FS-values.2.3); a source file's moves its declarations too, since one left there
+/// is what the scan goes on reading. A folder home is asked about the requested ID's `<ID>.md`
+/// only where the scan read no file in the home declaring it (§FS-fetch.5.5).
 fn refuse_home_without_markdown(
-    selected: &Config,
+    request: &Request<'_>,
+    before: &Before,
     kind: &KindConfig,
-    report_base: &Path,
 ) -> std::result::Result<(), FetchFailure> {
-    let Some((home, reason)) =
-        selected
-            .frame()
-            .fetch_refused_home(selected.schema(), &selected.root, &kind.kind)
-    else {
+    let selected = request.config;
+    let claimed = before
+        .catalog
+        .declarations
+        .get(request.id)
+        .into_iter()
+        .flatten()
+        .any(|decl| !decl.is_stub && request.home.holds(&decl.file));
+    let unclaimed = (!claimed).then_some(request.local);
+    let Some((home, reason)) = selected.frame().fetch_refused_home(
+        selected.schema(),
+        &selected.root,
+        &kind.kind,
+        unclaimed,
+    ) else {
         return Ok(());
     };
-    let shown = format_path(&relative_from_base(report_base, &home));
+    let shown = request.shown(&home);
     let why = match reason {
-        RefusedHome::ValueSource => {
-            "a value source holds no Markdown; \
+        RefusedHome::ValueSource => "a value source holds no Markdown; \
              move the kind to a Markdown file or a folder without it, or remove its `fetch`"
-        }
+            .to_string(),
         RefusedHome::SourceFile | RefusedHome::SourceFileValue => {
             "a file read as source holds no Markdown; \
              move the kind and its declarations to a Markdown file or a folder, \
              or remove its `fetch`"
+                .to_string()
+        }
+        // §FS-fetch.4.2.1: version 1 names no document language, so its repair is Markdown.
+        RefusedHome::Unread(reason) => {
+            let name = if selected.frame().version == 1 {
+                "the scan reads as Markdown"
+            } else {
+                "a listed document language reads"
+            };
+            format!(
+                "{reason}, so the scan would not read what fetch writes; give the file a name \
+                 {name}, or remove its `fetch`"
+            )
         }
     };
     Err(fetch_operational(format!(
         "kind `{}` cannot fetch into {shown}: {why}",
         kind.kind
     )))
-}
-
-/// §FS-fetch.3: validate the complete stdout before any mutation.
-pub(super) fn validate_fetched_declaration(
-    text: &str,
-    requested: &str,
-    native_depth: usize,
-    grammar: &Grammar,
-) -> std::result::Result<(), FetchFailure> {
-    // §FS-check.1.1.5.1: the output is read by the one fence and raw-text block
-    // machine the scanner reads its snapshot with, so a heading shown inside
-    // either is content, never the declaration or one of its sections.
-    let mut blocks = MarkdownBlocks::default();
-    let mut declaration_count = 0usize;
-    let mut first_content = true;
-    for (index, line) in text.lines().enumerate() {
-        let trimmed = line.trim_start();
-        let block = blocks.line(line);
-        if block.in_fence() {
-            first_content = false;
-            continue;
-        }
-        let hashes = trimmed.bytes().take_while(|byte| *byte == b'#').count();
-        // §FS-fetch.3.1: a line below the requested declaration that the scanner would record
-        // as a declaration, conforming or near miss, is refused at any depth before the depth
-        // limit, by the scanner's own reading rather than this validator's heading test.
-        if declaration_count == 1
-            && block.may_be_heading()
-            && hashes > native_depth
-            && let Some(nested) = markdown_line_records(grammar, line)
-        {
-            return Err(fetch_operational(format!(
-                "fetch output nests declaration `{nested}` inside requested `{requested}`; \
-                 fetch output must hold only the requested declaration"
-            )));
-        }
-        // §FS-fetch.3.2: at subsection depth, a heading the next scan would call unmarked.
-        if declaration_count == 1
-            && block.may_be_heading()
-            && unmarked_below_declaration(grammar, line, native_depth + 1)
-        {
-            return Err(fetch_operational(format!(
-                "fetch output line {}: heading `{}` is not a section of `{requested}`; \
-                 number it, fence it, or make it a bold label",
-                index + 1,
-                line.trim_end()
-            )));
-        }
-        // An ATX heading's `#`s end at a space or a tab, as the scanner reads them
-        // (§FS-declarations.checks.unmarked-heading.1).
-        if block.may_be_heading()
-            && hashes > 0
-            && matches!(trimmed.as_bytes().get(hashes), Some(b' ' | b'\t'))
-        {
-            if hashes == native_depth {
-                let tail = &trimmed[hashes + 1..];
-                let Some((id, title)) = tail.split_once(':') else {
-                    return Err(fetch_operational(
-                        "fetch output declaration needs `: <title>`",
-                    ));
-                };
-                declaration_count += 1;
-                if declaration_count != 1 || !first_content {
-                    return Err(fetch_operational(
-                        "fetch output must contain exactly one declaration and no leading content",
-                    ));
-                }
-                if id.trim() != requested {
-                    return Err(fetch_operational(format!(
-                        "fetch output declares `{}` instead of requested `{requested}`",
-                        id.trim()
-                    )));
-                }
-                if title.trim().is_empty() {
-                    return Err(fetch_operational("fetch output declaration title is empty"));
-                }
-            } else if declaration_count == 0 || hashes != native_depth + 1 {
-                return Err(fetch_operational(format!(
-                    "fetch output heading depth {hashes} is invalid for a depth-{native_depth} declaration"
-                )));
-            }
-        } else if first_content && !line.trim().is_empty() {
-            return Err(fetch_operational(
-                "fetch output must begin with one Markdown declaration",
-            ));
-        }
-        if !line.trim().is_empty() {
-            first_content = false;
-        }
-    }
-    if declaration_count != 1 {
-        return Err(fetch_operational(
-            "fetch output must contain exactly one Markdown declaration",
-        ));
-    }
-    Ok(())
 }

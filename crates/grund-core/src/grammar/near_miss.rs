@@ -254,23 +254,13 @@ pub(crate) fn declaration_captures<'a>(
 
 /// The ID token, as written, that a Markdown line declares by
 /// §FS-declarations.line, were no fence open: the one reading the conflict-block owner
-/// reader (`scanner::conflict_blocks`) and [`markdown_line_records`] share with
-/// the scanner, so neither re-derives it. Conforming only: a conflict block's owner is
+/// reader (`scanner::conflict_blocks`) shares with the scanner, so it does not
+/// re-derive it. Conforming only: a conflict block's owner is
 /// a declaration by §FS-declarations.line, which a near miss is not.
 pub(crate) fn markdown_line_declares<'a>(grammar: &Grammar, line: &'a str) -> Option<&'a str> {
     let caps = declaration_captures(grammar, line, false, true)?;
     parse_id(&caps, grammar)?;
     Some(caps.name("id")?.as_str())
-}
-
-/// The token, as written, of every Markdown line the scanner records as a declaration,
-/// were no fence open: a conforming one by [`markdown_line_declares`] or a near miss by
-/// [`near_miss_heading`] (§FS-declarations.checks.declaration-near-miss.1), the two
-/// readings `file_pass` runs in that order. Fetch's nested-declaration refusal
-/// (§FS-fetch.3.1) asks this, so it refuses whatever the next scan would record.
-pub(crate) fn markdown_line_records<'a>(grammar: &Grammar, line: &'a str) -> Option<&'a str> {
-    markdown_line_declares(grammar, line)
-        .or_else(|| near_miss_heading(grammar, line, false, true).map(|(token, _, _)| token))
 }
 
 fn legacy_declaration_captures<'a>(

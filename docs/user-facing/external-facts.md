@@ -29,8 +29,10 @@ fence=$(printf '%s\n```\n' "$body" | grep -o '`\{3,\}' | sort | tail -n 1)
 printf '## %s: %s\n\n%s`markdown\n%s\n%s`\n' "$1" "$title" "$fence" "$body" "$fence"
 ````
 
-For a `file` home the declaration is H2; for a `folder` home it is H1, and body
-subsections must be exactly one level deeper than that declaration. The example
+For a `file` home the declaration is H2; for a `folder` home it is H1. Below it,
+a subsection is any heading the next `grund check` reads as a section of it, at the
+level `check` holds sections to, so `### 1. Notes` and `#### 1.1. Detail` under it
+are both kept. The example
 computes an outer backtick fence one character longer than any run in the
 provider body, so its own Markdown headings remain content but are not citable
 child headings; raw issue Markdown is not a declaration body.
@@ -38,15 +40,30 @@ A heading anywhere below the declaration that would itself declare an ID, of
 any kind and at any depth, is refused, so a fetcher that copies provider
 headings must fence them as the example does
 ([§FS-fetch.3.1](../functional-spec/FS-fetch.md#31-a-nested-declaration-is-refused)).
-A heading one level below the declaration must also carry a section path the
-project's configuration admits, such as `### 1. Notes`, or `### notes: Notes`
-with named sections on. Any other is refused rather than left for the next
-`grund check` to reject, so number it, fence it, or make it a bold label
+A heading the next scan would not read as a section, such as `### Other`, is
+refused rather than left for the next `grund check` to reject, so number it,
+fence it, or make it a bold label
 ([§FS-fetch.3.2](../functional-spec/FS-fetch.md#32-a-subsection-is-a-heading-the-next-scan-reads-as-a-section)).
-Grund validates the complete output before atomically replacing only that ID's
-snapshot. It preserves accepted bytes verbatim and inserts a new file-home
-declaration in ID order ([§FS-fetch.3](../functional-spec/FS-fetch.md#3-accepted-declaration),
+
+Grund does not install output on its own reading of it. It builds the file it
+would write, has your project's own scan read it, and installs it only when that
+reading is exactly what was asked for: the requested declaration once, every
+other declaration in the home reading as it did, no finding `check` would report
+on the home that it did not already report, every fence and raw-text block the
+output opens closed, and a second fetch of the same output changing nothing. The
+first of these that fails refuses the fetch with exit 2 and leaves the tree
+unchanged, with the line `check` would print where `check` has one
+([§FS-fetch.admission](../functional-spec/FS-fetch.md#admission-admission-the-next-scan-reads-back-exactly-what-was-asked-for)).
+Accepted bytes are kept verbatim, replacing only the range the scan reads as that
+ID's declaration, and a new file-home declaration goes in ID order
+([§FS-fetch.3](../functional-spec/FS-fetch.md#3-accepted-declaration),
 [§FS-fetch.4](../functional-spec/FS-fetch.md#4-file-home-write)).
+
+The scan runs once, before the integration does, and the write is made against
+what it read: if the home is edited or created while the integration runs, fetch
+exits 2 with `<path> changed while the integration ran; fetch again` and leaves
+the change in place
+([§FS-fetch.6.1](../functional-spec/FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)).
 
 A snapshot is Markdown, so fetch refuses a `file` home the scan reads as source,
 such as `fs.py`, or `fs.txt` under `txt = "python"`. It exits 2 before running the
@@ -55,6 +72,16 @@ or not it exists. Move the kind and its declarations to a Markdown file or a
 folder, or, for a kind that is not a value kind, remove its `fetch` and keep the
 declarations in the source file
 ([§FS-fetch.4.2](../functional-spec/FS-fetch.md#42-a-home-read-as-source-is-refused)).
+A home the scan does not read at all, such as `fs.dat` or a hidden `.fs.py`, is
+refused the same way, with the reason `check`'s unread warning gives for that
+name; in a `folder` home the same holds for the `<ID>.md` fetch would create
+([§FS-fetch.4.2.1](../functional-spec/FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)).
+
+A home, or a folder home's `<ID>.md`, that is a symbolic link is written through
+when its target stays inside the config root, and the link stays. A link that
+leaves the root, or whose target does not exist, is refused with the tree
+unchanged; replace the link with the file it points to, or create the target
+([§FS-fetch.links](../functional-spec/FS-fetch.md#links-a-link-at-the-target-is-written-through-when-it-stays-inside-the-config-root)).
 
 The `fetch` key must name a program: an empty or whitespace-only value names none. From grund 0.23.0, version 2 refuses it when the config loads, at the key's line, on every command that loads the config, and no selector suppresses that. Version 1 still loads the key and meets the rule at `grund fetch`, before running anything, and at `grund config migrate`. Either way the repair is the same: name the program, or, if the kind is not fetched, remove the key and any `[rules.resolution] <KIND>` (version 1: `resolve`). A setting of `warn` needs the key, so removing the key alone is a load error, and with both gone the kind's missing IDs are errors
 ([§FS-fetch.2.1](../functional-spec/FS-fetch.md#21-a-value-that-names-no-executable),

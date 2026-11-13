@@ -1,11 +1,11 @@
 use std::collections::BTreeMap;
 
 use super::spellings_report::PlaceNames;
+use super::value_declarations::invalid_value_declarations;
 use super::value_mismatch::{rendered_value_path, value_mismatch};
 use super::value_roots::root_binding_finding;
 use crate::config::{Frame, Schema, any_kind_holds_values, kind_uses_values, kind_value_chapter};
-use crate::grammar::{BindingSpellings, render_catalog_id};
-use crate::model::remedies;
+use crate::grammar::BindingSpellings;
 use crate::model::{
     Catalog, CheckReport, Code, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, Switch,
     ValueBinding, paired_declarations, value_binding_section_ends_in_coordinate,
@@ -29,37 +29,9 @@ pub(super) fn check_values(
     if value_authority(findings, schema) {
         report.armed.arm(Switch::Values);
     }
-    for site in &findings.invalid_value_declarations {
-        if site.id.as_ref().is_some_and(|id| {
-            findings
-                .declarations
-                .get(id)
-                .is_some_and(|decls| paired_declarations(decls).len() > 1)
-        }) {
-            continue;
-        }
-        report.errors.push(Diagnostic {
-            code: Code::INVALID_VALUE_DECLARATION,
-            path: Some(site.file.clone()),
-            line: Some(site.line),
-            column: site.column,
-            message: match &site.id {
-                Some(id) => format!(
-                    "invalid value declaration for {}: {}; {}",
-                    render_catalog_id(frame.grammar(), &findings.declarations, id),
-                    site.message,
-                    remedies::invalid_value_declaration()
-                ),
-                None => format!(
-                    "invalid value declaration: {}; {}",
-                    site.message,
-                    remedies::invalid_value_declaration()
-                ),
-            },
-            sites: Vec::new(),
-            authority: Vec::new(),
-        });
-    }
+    report
+        .errors
+        .extend(invalid_value_declarations(findings, frame));
     for site in &findings.invalid_value_bindings {
         let target = match site.binding_namespace.as_deref() {
             Some(alias) => workspace.get(alias).copied(),

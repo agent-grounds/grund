@@ -13,9 +13,12 @@ use std::path::{Path, PathBuf};
 
 use super::compiled::{Compiled, RefusedHome};
 use super::project::Schema;
+use super::project::file_extension;
 use super::run::Run;
 use crate::grammar::Grammar;
-use crate::model::{base_reads_dot, format_path, relative_from_base};
+use crate::model::{
+    Refused, base_reads_dot, format_path, is_hidden, relative_from_base, unread_reason,
+};
 
 /// §AR-checker.1: the frame a stage runs in. `Copy`, so a stage hands it down
 /// as freely as it would a reference.
@@ -63,24 +66,44 @@ impl<'a> Frame<'a> {
         &self.run.root
     }
 
-    /// The `file` home of `kind` under `root` that `fetch` refuses and why, `None` where
-    /// it writes: a whole-value kind's first place, when a value home reads that file as
-    /// a value source (§FS-fetch.4, §FS-values.terms), and any kind's, when the text scan
-    /// reads it as source (§FS-fetch.4.2). The path and the kind decide, and no file is
-    /// read. What the refusal and the remedy that must not name the refused command both
-    /// ask (§FS-check.3.1.3.1).
+    /// The home of `kind` under `root` that `fetch` refuses and why, `None` where it writes. A
+    /// `file` home: a whole-value kind's first place, when a value home reads that file as a
+    /// value source (§FS-fetch.4, §FS-values.terms); any kind's, when the scan does not read it
+    /// (§FS-fetch.4.2.1); and any kind's, when the text scan reads it as source (§FS-fetch.4.2).
+    /// A `folder` home: the `<ID>.md` for `unclaimed`, the local ID no file in the home
+    /// declares, when the scan does not read it as Markdown (§FS-fetch.4.2.1); the caller's scan
+    /// says which ID that is, and `None` asks nothing of a folder. The path and the kind decide,
+    /// and no file is read. What the refusal and the remedy that must not name the refused
+    /// command both ask (§FS-check.3.1.3.1).
     pub(crate) fn fetch_refused_home(
         &self,
         schema: &Schema,
         root: &Path,
         kind: &str,
+        unclaimed: Option<&str>,
     ) -> Option<(PathBuf, RefusedHome)> {
         let row = schema.rows.iter().find(|row| row.name == kind)?;
-        let home = root.join(row.file()?);
+        let Some(file) = row.file() else {
+            let home = root.join(row.folder()?).join(format!("{}.md", unclaimed?));
+            let reason = self.unread_reason(schema, &home).or_else(|| {
+                let reading = self.reading(schema, &home);
+                let language = reading.language.map(|language| language.name.as_str());
+                (!reading.markdown).then(|| match language {
+                    Some(language) => {
+                        format!("the scan reads `.md` as {language}, not as Markdown")
+                    }
+                    None => "the scan does not read `.md` as Markdown".to_string(),
+                })
+            })?;
+            return Some((home, RefusedHome::Unread(reason)));
+        };
+        let home = root.join(file);
         let reading = self.reading(schema, &home);
         let value_kind = schema.value_rows().any(|row| row.name == kind);
         let reason = if value_kind && reading.value_format().is_some() {
             RefusedHome::ValueSource
+        } else if let Some(reason) = self.unread_reason(schema, &home) {
+            RefusedHome::Unread(reason)
         } else if !reading.read_as_source() {
             return None;
         } else if value_kind {
@@ -89,6 +112,17 @@ impl<'a> Frame<'a> {
             RefusedHome::SourceFile
         };
         Some((home, reason))
+    }
+
+    /// Why the walk's name rules keep `path` out of the scan, in the words of `check`'s unread
+    /// warning (§FS-scan.checks.unread-scan-root.message), `None` where they read it.
+    fn unread_reason(&self, schema: &Schema, path: &Path) -> Option<String> {
+        let refused = Refused {
+            hidden: is_hidden(path),
+            extension: !schema.sources.lists_extension(path),
+        };
+        (refused.hidden || refused.extension)
+            .then(|| unread_reason(refused, file_extension(path), self.version))
     }
 
     /// The compiled ID grammar (§AR-config.1.5).

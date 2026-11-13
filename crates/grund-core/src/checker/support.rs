@@ -113,6 +113,10 @@ fn missing_places(schema: &Schema, frame: Frame<'_>, kind: &str) -> Option<Strin
     ))
 }
 
+/// `check`'s tail at a home `fetch` refuses because the scan does not read it, the same for
+/// `dangling` and `missing-snapshot` and in either config version (§FS-check.3.1.3.1).
+const UNREAD_HOME_TAIL: &str = "give the file a name the scan reads as Markdown";
+
 /// §FS-check.3.1.3 / §FS-check.4.12.1: a missing declaration in a fetch-enabled
 /// home. Existing typo/illustration hints replace the fetch action while the
 /// snapshot-specific base and fixed finding class remain. `schema` and `frame` are
@@ -148,10 +152,13 @@ pub(super) fn missing_snapshot_message(
         (None, Some(escape), true) => remedies::dangling_escape(escape),
         (None, Some(escape), false) => remedies::missing_snapshot_escape(escape),
         (None, None, must) => {
+            // §FS-fetch.4.2.1: the missing ID's own `<ID>.md`, since no file declares it.
             let refused = frame
-                .fetch_refused_home(schema, frame.root(), &missing.kind)
+                .fetch_refused_home(schema, frame.root(), &missing.kind, Some(spelling))
                 .map(|(_, reason)| reason);
             let tail = match (refused, must) {
+                // §FS-check.3.1.3.1: the scan reads no file there, so the repair is a name.
+                (Some(RefusedHome::Unread(_)), _) => UNREAD_HOME_TAIL.to_string(),
                 (Some(RefusedHome::ValueSource), true) => remedies::dangling_value_source(),
                 (Some(RefusedHome::ValueSource), false) => {
                     remedies::missing_snapshot_value_source()

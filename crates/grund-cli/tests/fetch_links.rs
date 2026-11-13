@@ -98,7 +98,6 @@ fn refused(base: &Path, proj: &Path, context: &str) -> String {
 }
 
 #[test]
-#[ignore = "red until #1205 refuses an outward link at a folder home; implement removes this"]
 fn links_an_outward_link_in_a_folder_home_is_refused() {
     let (base, proj) = project("outward-folder", FOLDER, FETCHER);
     fs::write(base.join("outside/T-1.md"), OLD).expect("write target");
@@ -110,7 +109,6 @@ fn links_an_outward_link_in_a_folder_home_is_refused() {
 }
 
 #[test]
-#[ignore = "red until #1205 refuses an outward link whatever its target holds; implement removes this"]
 fn links_an_outward_link_already_holding_the_output_is_refused() {
     let (base, proj) = project("outward-same", FOLDER, FETCHER);
     fs::write(base.join("outside/T-1.md"), OUT).expect("write target");
@@ -120,7 +118,6 @@ fn links_an_outward_link_already_holding_the_output_is_refused() {
 }
 
 #[test]
-#[ignore = "red until #1205 refuses a file home that is an outward link; implement removes this"]
 fn links_a_file_home_that_is_an_outward_link_is_refused() {
     let (base, proj) = project("outward-file", FILE, FILE_FETCHER);
     let home = "# Tickets\n\n## T-1: Old\n\nThe old body.\n\n## T-2: Other\n\nOther body.\n";
@@ -131,7 +128,6 @@ fn links_a_file_home_that_is_an_outward_link_is_refused() {
 }
 
 #[test]
-#[ignore = "red until #1205 refuses an unread folder home's <ID>.md first; implement removes this"]
 fn links_a_dangling_link_under_md_json_is_refused_as_unread() {
     let (base, proj) = project("dangling-md-json", FOLDER_MD_JSON, FETCHER);
     link(&proj, "docs/t/T-1.md", "../../gone.md");
@@ -170,7 +166,6 @@ fn refused_at_mode(base: &Path, proj: &Path, path: &Path, context: &str) -> Opti
 }
 
 #[test]
-#[ignore = "red until #1205 spells cannot-read-folder from the report base; implement removes this"]
 fn links_cannot_read_snapshot_folder_names_paths_from_the_report_base() {
     let (base, proj) = project("cannot-read-home", FOLDER, FETCHER);
     let home = proj.join("docs/t");
@@ -192,7 +187,6 @@ fn links_cannot_read_snapshot_folder_names_paths_from_the_report_base() {
 }
 
 #[test]
-#[ignore = "red until #1205 spells cannot-read from the report base; implement removes this"]
 fn links_cannot_read_a_home_file_names_it_from_the_report_base() {
     let (base, proj) = project("cannot-read-file", FOLDER, FETCHER);
     write(&proj, "docs/t/other.md", "# T-8: Another ticket\n");

@@ -114,7 +114,7 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    let cases = fetch_admission_1205::without_red_until_1205(discover_e2e_cases(&manifest_dir));
+    let cases = fetch_admission_1205::without_held_out(discover_e2e_cases(&manifest_dir));
     let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
     let compared = outcomes
         .iter()

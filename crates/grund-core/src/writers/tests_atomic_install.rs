@@ -6,7 +6,7 @@
 
 use std::path::{Path, PathBuf};
 
-use super::atomic_install::{FAULT, Install, InstallFailure, Stage, atomic_install};
+use super::atomic_install::{FAULT, Holds, Install, InstallFailure, Stage, atomic_install};
 use crate::testing::{test_root, write};
 
 const ORIGINAL: &str = "grund_config_version = 1\n";
@@ -39,7 +39,7 @@ fn install_with(
     let install = Install {
         bytes: REPLACEMENT.as_bytes(),
         tag: "migrate",
-        expected: Some(ORIGINAL.as_bytes()),
+        expected: Holds::Bytes(ORIGINAL.as_bytes()),
     };
     let result = atomic_install(path, install);
     FAULT.with(|fault| *fault.borrow_mut() = (None, None));

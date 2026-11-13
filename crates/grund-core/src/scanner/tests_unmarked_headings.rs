@@ -1,7 +1,7 @@
 //! Focused scanner boundaries for unmarked Markdown ATX headings
 //! (§FS-declarations.checks.unmarked-heading.1).
 
-use super::*;
+use super::context::markdown_heading_level;
 
 #[test]
 fn atx_recognition_accepts_only_markdown_indentation_hash_and_separator_bounds() {

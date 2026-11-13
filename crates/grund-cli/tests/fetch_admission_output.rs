@@ -54,7 +54,6 @@ fn copy_of(test: &str, case: &str) -> PathBuf {
 
 /// §FS-fetch.3: `fetch` keeps no depth limit, so a value chapter is written and its value is read.
 #[test]
-#[ignore = "red until #1205 drops fetch's depth limit for admission; implement removes this"]
 fn admission_output_a_fetched_value_chapter_resolves_its_value() {
     let project = copy_of("value", "fetch-value-chapter-written");
     assert_code(&run(&project, &["check"]), 0, "check before");
@@ -73,7 +72,6 @@ fn admission_output_a_fetched_value_chapter_resolves_its_value() {
 
 /// §FS-fetch.admission.3: output the next check would fault leaves a green tree green.
 #[test]
-#[ignore = "red until #1205 runs check's node-local rules on the candidate; implement removes this"]
 fn admission_output_a_refusal_leaves_a_green_tree_green() {
     for case in REFUSED_GREEN {
         let project = copy_of("green", case);

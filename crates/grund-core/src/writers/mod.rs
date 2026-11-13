@@ -76,6 +76,11 @@
 mod atomic_install;
 mod expected;
 mod fetch;
+mod fetch_admit;
+mod fetch_folder;
+mod fetch_readback;
+mod fetch_splice;
+mod fetch_target;
 mod fetch_write;
 mod fmt_anchor_row;
 mod fmt_complete_findings;
@@ -128,7 +133,7 @@ pub use init_plan::InitAgentEntrypointSelection;
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use atomic_install::{Install, InstallFailure, atomic_install};
+pub(crate) use atomic_install::{Holds, Install, InstallFailure, atomic_install};
 pub(crate) use expected::{WorkspaceBlocks, expected};
 pub(crate) use fmt_tree::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};
 pub(crate) use fmt_workspace::fmt_workspace_projects;
@@ -187,9 +192,7 @@ mod tests_agent_entrypoints;
 #[cfg(test)]
 mod tests_atomic_install;
 #[cfg(test)]
-mod tests_fetch_nested;
-#[cfg(test)]
-mod tests_fetch_subsections;
+mod tests_fetch_admit;
 #[cfg(test)]
 mod tests_fmt_conflicts;
 #[cfg(test)]
