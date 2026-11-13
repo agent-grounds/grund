@@ -16,7 +16,8 @@ pub(crate) struct OpenBlock {
 
 /// §FS-fetch.admission.4: the block a whole Markdown text leaves open at its end, read line by
 /// line by the same machine the scan reads every Markdown file with (§FS-check.1.1.5.1), its
-/// front matter included (§FS-check.1.1.5.2).
+/// front matter included (§FS-check.1.1.5.2). `fetch` asks it of its output rather than of the
+/// scan's record (§AR-scanner.2.8.2).
 pub(crate) fn open_block(text: &str) -> Option<OpenBlock> {
     let mut blocks = MarkdownBlocks::file(text);
     for line in text.lines() {

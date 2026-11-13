@@ -1,0 +1,5 @@
+#!/bin/sh
+printf '%s' '# T-1: Fetched
+
+The fetched body.
+'

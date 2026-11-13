@@ -77,6 +77,7 @@ mod atomic_install;
 mod expected;
 mod fetch;
 mod fetch_admit;
+mod fetch_findings;
 mod fetch_folder;
 mod fetch_readback;
 mod fetch_splice;
@@ -193,6 +194,8 @@ mod tests_agent_entrypoints;
 mod tests_atomic_install;
 #[cfg(test)]
 mod tests_fetch_admit;
+#[cfg(test)]
+mod tests_fetch_readback;
 #[cfg(test)]
 mod tests_fmt_conflicts;
 #[cfg(test)]

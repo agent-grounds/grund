@@ -1,8 +1,11 @@
 //! Fold one file's findings into the run's (§AR-scanner.2): every per-file
 //! record list the pass fills is appended here, so a record the pass learns to
-//! produce is carried to the run by one more line in one place.
+//! produce is carried to the run by one more line in one place, and taken back
+//! from it by one more line in the function beside it.
 
-use crate::model::Catalog;
+use std::path::Path;
+
+use crate::model::{Catalog, scanned_path_key};
 
 /// Append every record of one file's `source` to the run's `target`. A list
 /// missing here is silently dropped from every surface, which is how
@@ -53,4 +56,53 @@ pub(super) fn merge_findings(target: &mut Catalog, mut source: Catalog) {
     target.file_structure.extend(source.file_structure);
     target.files.extend(source.files);
     target.line_ownership.append(&mut source.line_ownership);
+}
+
+/// Take every record of `file` that [`merge_findings`] folded into `target` back out of it, so
+/// the file can be read again on new text and folded in once more (§AR-system.2.8.1). The two
+/// name the same lists: one folded in and not taken back leaves the old reading of the file
+/// beside the new one.
+pub(super) fn drop_file_findings(target: &mut Catalog, file: &Path) {
+    let key = scanned_path_key(file);
+    let kept = |path: &Path| scanned_path_key(path) != key;
+    for declarations in target.declarations.values_mut() {
+        declarations.retain(|decl| kept(&decl.file));
+    }
+    target
+        .declarations
+        .retain(|_, declarations| !declarations.is_empty());
+    target.citations.retain(|cite| kept(&cite.file));
+    target
+        .section_headings_outside_declarations
+        .retain(|heading| kept(&heading.file));
+    target
+        .unmarked_headings
+        .retain(|heading| kept(&heading.file));
+    target
+        .relative_section_parents
+        .retain(|heading| kept(&heading.file));
+    target
+        .legacy_citation_candidates
+        .retain(|candidate| kept(&candidate.file));
+    target
+        .local_section_citation_candidates
+        .retain(|candidate| kept(&candidate.file));
+    target.value_bindings.retain(|binding| kept(&binding.file));
+    target
+        .invalid_value_declarations
+        .retain(|site| kept(&site.file));
+    target
+        .invalid_value_bindings
+        .retain(|site| kept(&site.file));
+    target.escaped_citations.retain(|cite| kept(&cite.file));
+    target.glob_citations.retain(|cite| kept(&cite.file));
+    target.off_format_citations.retain(|cite| kept(&cite.file));
+    target
+        .near_miss_headings
+        .retain(|heading| kept(&heading.file));
+    target.conflict_blocks.retain(|block| kept(&block.file));
+    target.scanned_files.retain(|path| kept(path));
+    target.file_structure.retain(|path, _| kept(path));
+    target.files.retain(|path, _| kept(path));
+    target.line_ownership.retain(|owners| kept(&owners.file));
 }

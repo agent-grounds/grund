@@ -614,7 +614,7 @@ project's own scan read it, and installs it only if that reading is exactly what
 Each of the five points below is one clause, answered by one reading: the output alone, as the
 scan reads one file at the target's path; the tree as the scan read it before the integration ran
 ([[§FS-fetch.6.1](FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)]); and the home as it would read after, with the candidate in place of the file
-on disk. A clause that fails refuses the fetch with exit 2, empty stdout, the whole tree
+on disk and no other file read again. A clause that fails refuses the fetch with exit 2, empty stdout, the whole tree
 byte-identical, and the line the clause names. The clauses are judged in order, and only the
 first that fails is reported.
 
@@ -727,6 +727,14 @@ the one `fmt --write` asks ([[§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-t
 
   ```text
   error: cannot fetch <ID> into <path>: the symlink target does not exist; create the target, or remove the link, and fetch again
+  ```
+
+- A link the walk does not read as a file, one an ignore file skips or one to a directory, has
+  no record to decide it by, and the scan would not read what `fetch` wrote through it. It is
+  refused the same way, wherever it leads:
+
+  ```text
+  error: cannot fetch <ID> into <path>: the scan does not read the symlink as a file; remove the link, or let the scan read it, and fetch again
   ```
 
 `<path>` is the link, spelled from the report base ([[§FS-errors.terms](FS-errors.md#terms-terms)]). Where the home is also

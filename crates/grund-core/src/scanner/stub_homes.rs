@@ -58,6 +58,58 @@ pub(super) fn resolve_stubs(
     lend_citations(frame.grammar(), findings, targets.lendable);
 }
 
+/// Reach again the verdicts that reading `file` again can move, once [`resolve_stubs`] has
+/// reached every verdict of the tree (§AR-scanner.4.6, §AR-system.2.8.1): a stub declared in
+/// `file`, whose record is new, and a stub whose target is `file`. Every other stub keeps the
+/// verdict the tree's resolution reached, and what that resolution lent and gave stays as it
+/// was; a target paired for the first time gives the conflict blocks the catalog does not
+/// already hold, and lends nothing, since the reading is read for its structure, not its edges.
+pub(super) fn resolve_stubs_through(
+    schema: &Schema,
+    frame: Frame<'_>,
+    roots: &[PathBuf],
+    file: &Path,
+    findings: &mut Catalog,
+) {
+    let mut targets = UnwalkedTargets::new(schema, frame, roots, &[]);
+    let sources = frame.sources();
+    let moves = |decl: &Declaration| {
+        decl.is_stub
+            && (paths_same_location(&decl.file, file)
+                || decl.defined_in.as_ref().is_some_and(|target| {
+                    paths_same_location(
+                        &sources.stub_target(frame.root(), &decl.file, target),
+                        file,
+                    )
+                }))
+    };
+    for (id, decls) in &mut findings.declarations {
+        let verdicts: Vec<Option<Option<StubResolution>>> = decls
+            .iter()
+            .map(|decl| {
+                moves(decl).then(|| resolve_stub(frame, id, decl, decls.as_slice(), &mut targets))
+            })
+            .collect();
+        for (decl, verdict) in decls.iter_mut().zip(verdicts) {
+            if let Some(verdict) = verdict {
+                decl.stub_resolution = verdict;
+            }
+        }
+    }
+    for (path, record) in targets.files {
+        findings.files.entry(path).or_insert(record);
+    }
+    for block in targets.blocks {
+        let held = findings
+            .conflict_blocks
+            .iter()
+            .any(|other| other.file == block.file && other.first == block.first);
+        if !held {
+            findings.conflict_blocks.push(block);
+        }
+    }
+}
+
 /// Keep, of `candidates`, each citation a stub's target lends the declaration the
 /// stub pairs with, resolved as a walked citation is, in the catalog's lent set
 /// (§FS-declarations.stubs.target.5, §AR-scanner.4.6). A candidate is lent when the

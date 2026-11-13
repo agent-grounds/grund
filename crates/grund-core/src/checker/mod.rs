@@ -101,7 +101,7 @@ pub(crate) use agents::{section_in_block, stale_section_noun};
 #[cfg(test)]
 pub(crate) use chapter_rules::markdown_project;
 pub(crate) use citation_repair::repair_index_citations;
-pub(crate) use conflict_marker::conflict_marker_finding;
+pub(crate) use conflict_marker::{block_lines, conflict_marker_finding};
 pub(crate) use index_entries::KindIndexEntries;
 pub(crate) use index_files::KindIndexFiles;
 pub(crate) use judge::CheckWorkspace;
