@@ -15,10 +15,12 @@ The workflow is read as text, as `test_release_workflow.py` reads it, because
 the Python gate has no YAML parser. It is not named `test_*`, so `unittest
 discover` imports it only from the modules that use it."""
 
+import atexit
 import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -81,12 +83,37 @@ def _isolated(home):
                         "GIT_TERMINAL_PROMPT": "0"})
 
 
+def _remove_template(root):
+    """Removes the template's whole tree when the process exits, or writes why not, naming
+    `root` (§AR-ci.10.7).
+
+    Git writes its objects read-only, and Windows refuses to unlink a read-only file, so an
+    unlink or rmdir that fails clears the read-only bit and is made once more. Any other
+    failure, and one that clearing the bit does not cure, is written to stderr."""
+    def writable(function, path, failure):
+        if function not in (os.unlink, os.rmdir):
+            raise failure[1] if isinstance(failure, tuple) else failure
+        os.chmod(path, os.stat(path).st_mode | stat.S_IWRITE)
+        function(path)
+
+    try:
+        if sys.version_info >= (3, 12):
+            shutil.rmtree(root, onexc=writable)
+        else:
+            shutil.rmtree(root, onerror=writable)
+    except OSError as error:
+        print(f"release_queue_fixture: the queue template {root} was not removed: {error}",
+              file=sys.stderr)
+
+
 def template():
     """The origin every case copies, built once per process: {name: sha} beside it."""
     global _TEMPLATE
     if _TEMPLATE is not None:
         return _TEMPLATE
     root = Path(tempfile.mkdtemp(prefix="grund-983-queue-template-"))
+    # Its lifetime is the process: removal is registered before anything is built (§AR-ci.10.7).
+    atexit.register(_remove_template, root)
     env = _isolated(root)
     who = ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid")
     seed, origin = root / "seed", root / "origin.git"
