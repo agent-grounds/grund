@@ -1121,6 +1121,25 @@ are exercised separately and must fail. This controlled refusal supplements
 native macOS coverage under [§AR-ci.14.1](AR-ci.md#141-one-job-runs-every-suite); a Linux pass cannot establish a green
 native run. These are fixture obligations, not changes to either product contract.
 
+### 10.7 A fixture shared across a process ends with the process
+
+A fixture built once and shared by every case of a process has no scope of its
+own to end with: `release_queue_fixture.template()` builds the origin each
+release-helper case copies, and caches it until the process exits. Nothing that
+ends a case removes it, so every run leaves one more root in the temporary
+directory, under a name unique to that run ([§AR-ci.10.1](AR-ci.md#101-identity-not-the-clock)) that nothing reuses.
+Its lifetime is the process. Its removal is registered the moment its root is
+claimed, before anything is built in it, and runs when the process exits, so a
+build that fails half-way is removed too. That removal is as strict as a
+case's own ([§AR-ci.10.4](AR-ci.md#104-git-descendants-stay-inside-the-fixture-lifetime)): it takes the whole tree, read-only Git objects
+included, on every platform the gate runs on, and a removal that fails writes
+its error naming the root rather than leaving the root silently.
+
+Stated so a test can hold the fixture to it: **a process that builds the shared
+fixture and exits normally leaves nothing in its temporary directory.**
+`tests/integration/test_shared_fixture_lifetime.py` runs that process with a
+private, empty `TMPDIR` and names whatever it left there.
+
 ## 11. A release candidate is dispatched the same CI
 
 Beside push, pull request and merge-queue group ([§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request)), the workflow runs on `workflow_dispatch`, and that trigger is the release helpers': each dispatches it on its release commit and on the `-dev` advance built over it, and pushes neither to `main` until both have passed ([§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). A dispatched run is the CI a push to `main` gets and the macOS suites besides ([§AR-ci.14.2](AR-ci.md#142-a-release-candidate-runs-them-too)), never a narrower one, because the commit it judges is about to become `main`. It behaves as a push does: the benchmark job records counts without comparing ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)), and the commit-message job, given no `before` to scan from, narrows to the tip commit ([§AR-ci.8.2](AR-ci.md#82-the-scanned-range)). It records as a push does but stores nothing: the store of [§AR-ci.5.5](AR-ci.md#55-the-store-keeps-a-pushs-record) keeps a push's record alone, so a candidate's lasts as long as its artifact. `tests/integration/test_release_candidate_runs.py` holds the trigger to the helpers that use it.

@@ -7,6 +7,9 @@
 //! these trees, and every test skips where mode 000 does not bar the user (root).
 #![cfg(unix)]
 
+#[path = "support/tmpdir_leftovers.rs"]
+mod tmpdir_leftovers;
+
 use std::fs;
 use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::PathBuf;
@@ -426,4 +429,19 @@ fn making_the_directory_readable_ends_the_refusal() {
     tree.free();
     let run = tree.fmt(&["--write", "docs"]);
     assert_eq!(run.code, 0, "{}", run.stderr);
+}
+
+/// A passing import test leaves nothing in its temporary directory: the fixture removes the
+/// whole base it built, `lib` beside the scanned `w` included, and not only the tree it scans
+/// (§AR-ci-fixture-cleanup).
+#[test]
+#[ignore = "red until #1392 removes the fixture's root; implement removes this"]
+fn the_import_test_leaves_nothing_in_its_temporary_directory() {
+    let left = tmpdir_leftovers::left_by(&[
+        "a_rewrite_into_an_import_with_a_hole_refuses_and_leaves_the_file",
+    ]);
+    assert!(
+        left.is_empty(),
+        "the import test passed and left {left:?} in its temporary directory"
+    );
 }
