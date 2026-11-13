@@ -6,7 +6,8 @@ exactly the commit it tested, which is only true while `ci.yml` answers the
 on `main` (§AR-ci.8.2), and the three benchmark jobs hold its head to the absolute
 ceilings, once per shard, and record nothing (§AR-ci.5.1). Read as text by
 `ci_workflow.py`, with the leg's jobs in place of its calls (§AR-ci.13.5); each `if:` is
-read for every event `ci.yml` runs on."""
+read for every event `ci.yml` runs on. A group the queue dropped has its run cancelled by
+the sweep job (§AR-ci.12.2), whose script `test_cancel_dropped_groups.py` runs."""
 
 import re
 import unittest
@@ -27,6 +28,9 @@ PULL_REQUEST_KEY = "github.event.pull_request.number"
 OWN_RUN_KEY = "github.run_id"
 GROUP = f"ci-${{{{ {PULL_REQUEST_KEY} || {OWN_RUN_KEY} }}}}"
 CANCELS = "${{ github.event_name == 'pull_request' }}"
+# §AR-ci.12.2: the sweep, the one job that may cancel runs, and how it is called.
+SWEEP = "cancel-dropped-groups"
+SWEEP_CALL = 'python3 scripts/cancel_dropped_groups.py "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"'
 
 
 def runs(job_body, step, event):
@@ -107,6 +111,46 @@ def concurrency_problems(text):
     return problems
 
 
+def job_permissions(head):
+    """A job's own `permissions:` block, scope to access; `None` when it declares none."""
+    block = re.search(r"(?m)^    permissions:[ \t]*\n((?:      .*\n?)+)", head + "\n")
+    if not block:
+        return None
+    return dict(re.findall(r"(?m)^      ([\w-]+):[ \t]*([\w-]+)", block.group(1)))
+
+
+def sweep_problems(text):
+    """What keeps `ci.yml`'s sweep from §AR-ci.12.2: a merge_group-only job with no needs, a
+    short bound and the one write permission it uses, calling the script on its own run."""
+    found = jobs(text)
+    if SWEEP not in found:
+        return [f"no `{SWEEP}` job: a dropped group's run holds its runners to the end"]
+    head = header(found[SWEEP])
+    problems = []
+    for event in EVENTS:
+        if holds(field(head, "if"), event) != (event == "merge_group"):
+            problems.append(f"`{SWEEP}` must run on merge_group alone, and its `if:` "
+                            f"{'skips' if event == 'merge_group' else 'runs on'} {event}")
+    if needs(head):
+        problems.append(f"`{SWEEP}` needs {needs(head)}, so it waits behind the starved jobs")
+    timeout = field(head, "timeout-minutes")
+    if not (timeout and timeout.isdigit() and int(timeout) <= 5):
+        problems.append(f"`{SWEEP}` has `timeout-minutes: {timeout}`, not a bound of five")
+    if job_permissions(head) != {"actions": "write", "contents": "read"}:
+        problems.append(f"`{SWEEP}` has permissions {job_permissions(head)}, not "
+                        "`actions: write` and `contents: read` alone")
+    if not any(SWEEP_CALL in squash(step) for step in steps(found[SWEEP])):
+        problems.append(f"`{SWEEP}` does not run `{SWEEP_CALL}`")
+    if "GH_TOKEN" not in found[SWEEP]:
+        problems.append(f"`{SWEEP}` gives `gh` no GH_TOKEN")
+    for job, body in found.items():
+        if job != SWEEP and (job_permissions(header(body)) or {}).get("actions") == "write":
+            problems.append(f"`{job}` takes `actions: write`, which only the sweep may")
+        if SWEEP in needs(header(body)):
+            problems.append(f"`{job}` needs the sweep, so a forge error would reach a verdict")
+    return problems
+
+
 def concurrency_workflow(group=GROUP, cancel=CANCELS):
     """A workflow whose `concurrency:` block is `group` and `cancel`, for
     `concurrency_problems`; `cancel=None` leaves that key out (§AR-ci.12.1)."""
@@ -147,8 +191,15 @@ class MergeQueueRunTests(unittest.TestCase):
         # §AR-ci.12.1: a replaced run is cancelled, so it stops taking runners from a group.
         self.assertEqual([], concurrency_problems(self.written))
 
-    def test_a_required_check_stays_off_a_runner_on_a_cancelled_pull_request_run_alone(self):
-        # §AR-ci.12.1: so the group frees as the suites stop; §AR-ci.13.2: elsewhere it judges.
+    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
+    def test_a_dropped_groups_run_is_cancelled_by_the_sweep(self):
+        # §AR-ci.12.2: no concurrency key ends it, so a job of every group's run does.
+        self.assertEqual([], sweep_problems(self.written))
+
+    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
+    def test_a_required_check_stays_off_a_runner_on_a_cancelled_pull_request_or_group_run(self):
+        # §AR-ci.12.1, §AR-ci.12.2: so the run frees as the suites stop; §AR-ci.13.2: elsewhere
+        # it judges, a live group's failed need included.
         checks = {field(header(body), "name"): body for body in self.jobs.values()
                   if is_required_check(body)}
         self.assertEqual({"cargo test (ubuntu-latest)", "cargo test (windows-latest)"}, set(checks))
@@ -157,6 +208,7 @@ class MergeQueueRunTests(unittest.TestCase):
                 self.assertEqual([], check_if_problems(name, field(header(body), "if"),
                                                        needs(header(body))))
 
+    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_the_required_checks_and_the_jobs_they_judge_run_on_every_event(self):
         # §AR-ci.13.2: a required check is an aggregate, so the jobs it needs must run here too.
         self.assertEqual([], every_event_problems(self.written))
@@ -269,15 +321,25 @@ class RequiredCheckConditionTests(unittest.TestCase):
     def test_always_is_caught_for_holding_the_group(self):
         for condition in ("always()", "${{ always() }}"):
             with self.subTest(condition=condition):
+                # §AR-ci.12.1, §AR-ci.12.2: a replaced run's and a dropped group's.
                 problems = check_if_problems("c", condition, ["a"])
-                self.assertEqual(1, len(problems), problems)
+                self.assertEqual(2, len(problems), problems)
                 self.assertIn("not hold on a cancelled pull_request run", problems[0])
+                self.assertIn("not hold on a cancelled merge_group run", problems[1])
 
-    def test_plain_not_cancelled_is_caught_for_changing_the_queues_condition(self):
+    def test_plain_not_cancelled_is_caught_for_cancelling_a_push_or_dispatch(self):
+        # §AR-ci.12.1, §AR-ci.5.5.3: a push's and a dispatch's checks still run, whatever happens.
         problems = check_if_problems("c", "!cancelled()", ["a"])
-        self.assertEqual(3, len(problems), problems)
-        for event, problem in zip(("push", "merge_group", "workflow_dispatch"), problems):
+        self.assertEqual(2, len(problems), problems)
+        for event, problem in zip(("push", "workflow_dispatch"), problems):
             self.assertIn(f"hold on a cancelled {event} run", problem)
+
+    def test_the_pull_request_only_condition_is_caught_for_holding_a_dropped_group(self):
+        # §AR-ci.12.2: under it a cancelled group's checks would each wait for a runner.
+        problems = check_if_problems(
+            "c", "${{ github.event_name != 'pull_request' || !cancelled() }}", ["a"])
+        self.assertEqual(1, len(problems), problems)
+        self.assertIn("not hold on a cancelled merge_group run", problems[0])
 
     def test_success_is_caught(self):
         problems = check_if_problems("c", "success()", ["a"])
@@ -302,6 +364,64 @@ class RequiredCheckConditionTests(unittest.TestCase):
                 "${{ github.event_name != 'pull_request' || !cancelled() || needs.b.result == 'x' }}"):
             with self.subTest(condition=condition):
                 self.assertTrue(check_if_problems("c", condition, ["a"]))
+
+
+def sweep_workflow(**changes):
+    """A `ci.yml` with the sweep of §AR-ci.12.2 and one required check, for `sweep_problems`:
+    each keyword replaces one line of the sweep's header, `None` drops it, `permissions_block`
+    replaces its permissions and `extra` adds a job."""
+    extra = changes.pop("extra", "")
+    permissions = changes.pop("permissions_block",
+                              "    permissions:\n      actions: write\n      contents: read\n")
+    lines = {"if": "github.event_name == 'merge_group'", "runs-on": "ubuntu-latest",
+             "timeout-minutes": "5", "needs": None, **changes}
+    head = "".join(f"    {key}: {value}\n" for key, value in lines.items() if value is not None)
+    return ("name: CI\n\non:\n  merge_group:\n\njobs:\n"
+            f"  {SWEEP}:\n{head}{permissions}    steps:\n"
+            f"      - env:\n          GH_TOKEN: ${{{{ github.token }}}}\n"
+            f"        run: {SWEEP_CALL}\n" + extra)
+
+
+class SweepCheckTests(unittest.TestCase):
+    """§AR-ci.12.2: the sweep check passes the point's job and fails each way off it."""
+
+    def test_the_points_job_passes(self):
+        self.assertEqual([], sweep_problems(sweep_workflow()))
+
+    def test_no_sweep_is_caught(self):
+        problems = sweep_problems(sweep_workflow().replace(f"  {SWEEP}:", "  other:"))
+        self.assertEqual(1, len(problems), problems)
+        self.assertIn(f"no `{SWEEP}` job", problems[0])
+
+    def test_a_sweep_off_merge_group_alone_is_caught(self):
+        for condition in (None, "always()", "github.event_name != 'pull_request'",
+                          "github.event_name == 'push'"):
+            with self.subTest(condition=condition):
+                self.assertTrue(sweep_problems(sweep_workflow(**{"if": condition})))
+
+    def test_a_sweep_that_needs_a_job_is_caught(self):
+        problems = sweep_problems(sweep_workflow(needs="[leg-ubuntu]"))
+        self.assertEqual(1, len(problems), problems)
+        self.assertIn("waits behind", problems[0])
+
+    def test_a_sweep_without_a_short_bound_is_caught(self):
+        for timeout in (None, "30"):
+            with self.subTest(timeout=timeout):
+                self.assertTrue(sweep_problems(sweep_workflow(**{"timeout-minutes": timeout})))
+
+    def test_a_sweep_with_other_permissions_is_caught(self):
+        for block in ("", "    permissions: write-all\n",
+                      "    permissions:\n      actions: write\n      contents: write\n"):
+            with self.subTest(block=block):
+                self.assertTrue(sweep_problems(sweep_workflow(permissions_block=block)))
+
+    def test_another_job_that_cancels_or_needs_the_sweep_is_caught(self):
+        for extra in (f"  b:\n    runs-on: ubuntu-latest\n    needs: [{SWEEP}]\n"
+                      "    steps:\n      - run: exit 0\n",
+                      "  b:\n    runs-on: ubuntu-latest\n    permissions:\n"
+                      "      actions: write\n    steps:\n      - run: exit 0\n"):
+            with self.subTest(extra=extra):
+                self.assertEqual(1, len(sweep_problems(sweep_workflow(extra=extra))))
 
 
 class ConcurrencyCheckTests(unittest.TestCase):

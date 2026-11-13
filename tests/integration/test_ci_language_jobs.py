@@ -65,12 +65,14 @@ BENCH_ENV = {"LC_ALL": "C.UTF-8", "TZ": "UTC", "RAYON_NUM_THREADS": "4",
 EVENTS = ("pull_request", "push", "workflow_dispatch", "merge_group")
 # §AR-ci.13.2: what a need can end with.
 RESULTS = ("success", "failure", "cancelled", "skipped")
-# §AR-ci.12.1: a required check's `if:`, and whether it holds, by event and cancelled run.
-CHECK_IF = "${{ github.event_name != 'pull_request' || !cancelled() }}"
+# §AR-ci.12.1, §AR-ci.12.2: a required check's `if:`, and whether it holds, by event and
+# cancelled run: a cancelled pull-request run and a dropped group's ask no runner for it.
+CHECK_IF = ("${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' "
+            "|| !cancelled() }}")
 CHECK_IF_HOLDS = {
     ("pull_request", False): True, ("pull_request", True): False,
     ("push", False): True, ("push", True): True,
-    ("merge_group", False): True, ("merge_group", True): True,
+    ("merge_group", False): True, ("merge_group", True): False,
     ("workflow_dispatch", False): True, ("workflow_dispatch", True): True,
 }
 
@@ -395,6 +397,7 @@ class LanguageJobsTests(unittest.TestCase):
         # §AR-ci.13.2
         self.assertEqual([], required_check_problems(self.text))
 
+    @unittest.expectedFailure  # red until #1388 lands the sweep; implement removes this
     def test_each_required_check_fails_unless_every_need_succeeded(self):
         # §AR-ci.13.2
         self.assertEqual([], guard_problems(self.text))
