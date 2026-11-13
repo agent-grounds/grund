@@ -65,12 +65,14 @@ BENCH_ENV = {"LC_ALL": "C.UTF-8", "TZ": "UTC", "RAYON_NUM_THREADS": "4",
 EVENTS = ("pull_request", "push", "workflow_dispatch", "merge_group")
 # §AR-ci.13.2: what a need can end with.
 RESULTS = ("success", "failure", "cancelled", "skipped")
-# §AR-ci.12.1: a required check's `if:`, and whether it holds, by event and cancelled run.
-CHECK_IF = "${{ github.event_name != 'pull_request' || !cancelled() }}"
+# §AR-ci.12.1, §AR-ci.12.2: a required check's `if:`, and whether it holds, by event and
+# cancelled run: a cancelled pull-request run and a dropped group's ask no runner for it.
+CHECK_IF = ("${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' "
+            "|| !cancelled() }}")
 CHECK_IF_HOLDS = {
     ("pull_request", False): True, ("pull_request", True): False,
     ("push", False): True, ("push", True): True,
-    ("merge_group", False): True, ("merge_group", True): True,
+    ("merge_group", False): True, ("merge_group", True): False,
     ("workflow_dispatch", False): True, ("workflow_dispatch", True): True,
 }
 
@@ -152,7 +154,8 @@ def required_check_problems(text):
 def check_if_problems(name, condition, needed):
     """What keeps a required check's `if:` from the table of §AR-ci.12.1, whatever its needs ended
     with: skipped over a failed need it would read as passed (§AR-ci.13.2), and asking a runner on
-    a cancelled pull-request run it would hold its group."""
+    a cancelled pull-request run, or on a dropped group's cancelled run (§AR-ci.12.2), it would
+    hold that run open."""
     if not condition:
         return [f"{name!r} has no `if:`, so a failed need skips it and a skipped required check "
                 "passes"]
@@ -173,7 +176,7 @@ def check_if_problems(name, condition, needed):
 
 def guard_problems(text):
     """§AR-ci.13.2: the aggregate runs whatever its needs ended with, but on the cancelled run of
-    §AR-ci.12.1, and fails on any need that did not succeed."""
+    §AR-ci.12.1 or of a dropped group (§AR-ci.12.2), and fails on any need that did not succeed."""
     problems = []
     for aggregate in (i for i in instances(text) if i["aggregate"]):
         name = aggregate["name"]

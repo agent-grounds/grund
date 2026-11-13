@@ -262,7 +262,7 @@ path = "docs/architecture/AR-ci.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 1200, unit = "lines" }
+max_accepted = { value = 1244, unit = "lines" }
 until = "§AR-ci.5 and §AR-ci.3.4 leave for declarations of their own with their existing section citations migrated"
 reason = """
 Over the soft budget at 790 non-blank lines before issue #696 touched it, and promoted by the count of soft edits, so any staged edit is refused. Missing boundary: §AR-ci.5, the benchmark jobs, is a subject of its own with its own sub-structure (5.1 to 5.5, and the store's five children #696 adds), and it is the part #696 grows, by 19 lines to 809. Giving it a declaration of its own is a mapped migration of 171 citing sites across 37 files, which is outside #696. It alone would not bring the file under budget: §AR-ci.5 is 46 non-blank lines, and the bulk is §AR-ci.3.4, the Python gate's inputs, at 245, and §AR-ci.3.1, citations and links, at 199. So the entry retires once §AR-ci.5 and §AR-ci.3.4 have left.
@@ -284,6 +284,7 @@ Issue #1279 extends §AR-ci.10.2 with clean intermediate-parent preparation, exc
 Issue #1281 adds the non-UTF-8 filesystem-capability obligation at §AR-ci.10.6. Its 26 non-blank lines take the ceiling from 1152 to exactly 1178, with no growth allowance. The extraction boundary and retirement condition remain unchanged: migrating the benchmark and Python-input section citations is outside this fixture-portability specification commit.
 Issue #1307 adds the resolved LSP fixture-base contract at §AR-ci.10.3.1. The 21 added non-blank lines take the ceiling from 1178 to exactly 1199, with no growth allowance. The existing extraction boundary and retirement condition remain: migrating the benchmark and Python-input section citations is outside this fixture-only specification and failing-test commit.
 Issue #1191 adds §AR-ci.5.6, a benchmark shard's install bounded and tried again, and one sentence at §AR-ci.requirements.2 saying the two shard jobs carry its bound already. Main measured 1191 non-blank lines; the nine this adds take the ceiling to exactly 1200, with no growth allowance. The extraction boundary and retirement condition remain unchanged: the new point belongs to §AR-ci.5, whose move to a declaration of its own is the migration named above and outside this CI-flake specification and failing-test commit.
+Issue #1388 adds §AR-ci.12.2, the sweep that cancels a merge-queue group's run once the queue has dropped the group, and rewords the sentences of §AR-ci.12, §AR-ci.12.1 and §AR-ci.13.2 that said no such run is cancelled. Main already measured 1233 non-blank lines, past the 1200 above; the eleven this adds take the ceiling to exactly 1244, with no growth allowance. The extraction boundary and retirement condition remain unchanged: the new point belongs to §AR-ci.12, beside the cancellation it extends, and migrating the benchmark and Python-input section citations is outside this merge-queue correction.
 """
 [[exceptions]]
 path = "scripts/bench_record.py"
