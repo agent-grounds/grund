@@ -4,8 +4,11 @@
 //! Cargo and runs the binary it built.
 //!
 //! Whether the build script ran is read from `cargo build -v`, which prints a
-//! ``Running `…/build-script-build` `` line exactly when Cargo executes the script
-//! and prints nothing about it when the script's output is fresh.
+//! `Running` line naming the script's executable exactly when Cargo executes it
+//! and prints nothing about it when the script's output is fresh. Where that
+//! executable sits and how it is spelled is Cargo's layout, not a promise:
+//! `build-script-build` before 1.100, `build_script_build` since, and either is
+//! recognised (§AR-ci-cargo-layout.2).
 
 use std::ffi::OsStr;
 use std::fs;
@@ -183,9 +186,7 @@ impl Workspace {
             "cargo build in {}:\n{log}",
             dir.display()
         );
-        let reran = log.lines().any(|line| {
-            line.trim_start().starts_with("Running `") && line.contains("build-script-build")
-        });
+        let reran = log.lines().any(runs_build_script);
         assert!(
             reran || !cold,
             "{}: the first build into an empty target ran the build script, but the rerun \
@@ -262,6 +263,21 @@ impl Drop for Workspace {
 fn write(path: &Path, text: &str) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, text).unwrap();
+}
+
+/// Whether `line` is Cargo running a build script, under either spelling Cargo has
+/// printed (§AR-ci-cargo-layout.2). A script runs with no arguments, so the quoted
+/// command is its executable alone; the `rustc` line that compiles it, which names
+/// `build_script_build` as its crate, is a longer command and never matches.
+fn runs_build_script(line: &str) -> bool {
+    let Some(command) = line.trim_start().strip_prefix("Running `") else {
+        return false;
+    };
+    let program = command.trim_end().strip_suffix('`').unwrap_or(command);
+    matches!(
+        Path::new(program).file_stem().and_then(OsStr::to_str),
+        Some("build-script-build" | "build_script_build")
+    )
 }
 
 /// The rerun detector sees the cold build run the script, whatever Cargo spells it as

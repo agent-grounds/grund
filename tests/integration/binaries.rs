@@ -12,17 +12,27 @@ pub fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
-/// `target/<profile>/`, read off the running test binary's own location.
+/// `target/<profile>/`, read off the running test binary's own location, under
+/// either layout Cargo has kept it in (§AR-ci-cargo-layout.1): `<profile>/deps/`
+/// before 1.100, `<profile>/build/<package>/<hash>/out/` since.
 fn profile_dir() -> PathBuf {
     let exe = std::env::current_exe().expect("current test binary");
-    let deps = exe.parent().expect("deps dir");
-    assert_eq!(
-        deps.file_name().and_then(|name| name.to_str()),
-        Some("deps"),
-        "unexpected test binary location {}",
-        exe.display()
-    );
-    deps.parent().expect("profile dir").to_path_buf()
+    let up = |levels: usize| exe.ancestors().nth(levels);
+    let name = |levels: usize| up(levels).and_then(|dir| dir.file_name()?.to_str());
+    let profile = match (name(1), name(4)) {
+        (Some("deps"), _) => up(2),
+        (Some("out"), Some("build")) => up(5),
+        _ => None,
+    };
+    profile
+        .unwrap_or_else(|| {
+            panic!(
+                "unexpected test binary location {}: neither <profile>/deps/ nor \
+                 <profile>/build/<package>/<hash>/out/ (§AR-ci-cargo-layout.1)",
+                exe.display()
+            )
+        })
+        .to_path_buf()
 }
 
 fn binary(package: &str, name: &str) -> PathBuf {
