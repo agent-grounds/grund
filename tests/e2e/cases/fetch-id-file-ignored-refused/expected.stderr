@@ -1,0 +1,1 @@
+error: kind `T` cannot fetch into docs/t/T-1.md: docs/t/.ignore ignores it by T-1.md, so the scan would not read what fetch writes; stop ignoring it in docs/t/.ignore, and fetch again

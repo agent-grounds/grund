@@ -85,13 +85,19 @@ pub(super) fn admit(
     );
     // §FS-fetch.admission, §FS-fetch.6.1: the tree as the scan read it, with the candidate read
     // in place of the target and no other file read again.
-    let after = scan_file_again(&before.catalog, &target.path, view.schema(), view.frame())
-        .map_err(|err| {
-            fetch_operational(format!(
-                "cannot discover declarations for {}: {err:#}",
-                request.local
-            ))
-        })?;
+    let after = scan_file_again(
+        &before.catalog,
+        &target.path,
+        view.schema(),
+        view.frame(),
+        &before.targets,
+    )
+    .map_err(|err| {
+        fetch_operational(format!(
+            "cannot discover declarations for {}: {err:#}",
+            request.local
+        ))
+    })?;
     let first = candidate[..start].matches('\n').count() + 1;
     let output_lines = output.trim_end().matches('\n').count() + 1;
     let readback = Readback {

@@ -1,0 +1,6 @@
+#!/bin/sh
+: > ran.txt
+printf '%s' '## AR-001-thing: Thing
+
+Fetched body.
+'

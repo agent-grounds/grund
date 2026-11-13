@@ -12,7 +12,9 @@ before name what the scan does not read there.
 - An `<ID>.md` in a `folder` home that holds prose, a heading that declares nothing or a lone
   citation was refused as `snapshot file <path> already exists for a different ID`, although no
   ID is in it ([#1230](https://github.com/agent-grounds/grund/issues/1230)). An empty one was
-  refused the same way, with nothing in it to lose.
+  refused the same way, with nothing in it to lose. So was an `<ID>.md` the walk does not read at
+  all — one an ignore file ignores or an `exclude` rule matches, whatever it holds, a link
+  included — and a link at that path to a directory, although the scan reads no ID there either.
 - A home whose requested ID the scan reads beside other content, under a heading `fetch`'s own
   loop could not parse, was refused as `snapshot home has malformed declaration heading`,
   although `check` reads that heading.
@@ -29,11 +31,17 @@ Each line says what the scan reads there, in place, with no window.
 | Shape | Before | After |
 |---|---|---|
 | `<ID>.md` with text and no ID | `snapshot file <path> already exists for a different ID` | `snapshot file <path> already exists and the scan reads no ID in it; move or rename it, and fetch again` ([[§FS-fetch.5.5](../../functional-spec/FS-fetch.md#55-which-file-declares-and-what-idmd-may-hold)]) |
+| `<ID>.md` the walk does not read, present: an ignore file or an `exclude` rule keeps it out, a link included | `snapshot file <path> already exists for a different ID` | `kind `<KIND>` cannot fetch into <path>: <reason>, so the scan would not read what fetch writes; <repair>, and fetch again` ([[§FS-fetch.4.2.1](../../functional-spec/FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)]) |
+| `<ID>.md` a link to a directory | `snapshot file <path> already exists for a different ID` | `cannot fetch <ID> into <path>: the scan does not read the symlink as a file; …` ([[§FS-fetch.links](../../functional-spec/FS-fetch.md#links-a-link-at-the-target-is-written-through-when-it-stays-inside-the-config-root)]) |
 | The ID read beside other content | `snapshot home has malformed declaration heading `<heading>`` | `snapshot file <path> contains the requested ID beside other content` ([§FS-fetch.5.5]) |
 | A section at the wrong level | `fetch output heading depth <n> is invalid for a depth-<d> declaration` | `fetch output line <n>: <check's message>` ([[§FS-fetch.admission.3](../../functional-spec/FS-fetch.md#admission3-the-structural-rules-check-applies-report-nothing-new)]) |
 | A dangling link at the target | `cannot read snapshot folder <folder> at <path>: …` | `cannot fetch <ID> into <path>: the symlink target does not exist; …` ([[§FS-fetch.links](../../functional-spec/FS-fetch.md#links-a-link-at-the-target-is-written-through-when-it-stays-inside-the-config-root)]) |
 
-The first keeps `snapshot file <path> already exists` as its prefix and corrects only the tail.
+The first line stood for three shapes, so it has three successors. Where the scan reads the file,
+it keeps `snapshot file <path> already exists` as its prefix and corrects only the tail. Where the
+walk does not read the file, it becomes the unread-home line, refused before the integration runs,
+and a link to a directory becomes the link line; neither keeps the prefix, because neither file
+"already exists" for the scan.
 The exit stays 2 in every row, and the tree stays byte-identical. Two lines keep their words:
 `fetch output heading depth <n> is invalid` where the declaration's own heading is at the wrong
 level for the home, and `fetch output must contain exactly one declaration and no leading
@@ -59,7 +67,9 @@ The empty-file fill moves exit 2 to exit 0 and breaks no tree: the refused file 
 
 - In grund 0.23.0, four `grund fetch` refusals say what the scan reads, with no window: an
   `<ID>.md` holding text but no ID is refused as `snapshot file <path> already exists and the scan
-  reads no ID in it`, no longer `for a different ID`; a home holding the ID beside other content
+  reads no ID in it`, no longer `for a different ID`, an `<ID>.md` an ignore file or an `exclude`
+  rule keeps out of the walk is refused with the rule that does and its repair, and a link there
+  to a directory is named as a link the scan does not read; a home holding the ID beside other content
   says so, no longer `malformed declaration heading`; a section at the wrong level is refused with
   `check`'s own line, no longer `heading depth <n> is invalid`; and a dangling link at the target is
   named as one, no longer `cannot read snapshot folder`. Each still exits 2 with the tree as it

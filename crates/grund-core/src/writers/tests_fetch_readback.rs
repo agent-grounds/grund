@@ -38,7 +38,11 @@ pub(super) fn admit_during(
     let (id, _) = parse_id_arg(local, &config.grammar).expect("parse the requested ID");
     let (catalog, errors) =
         scan_tree(config.schema(), config.frame(), None, false).expect("scan the tree");
-    let before = Before { catalog, errors };
+    let before = Before {
+        catalog,
+        errors,
+        targets: Vec::new(),
+    };
     let home = match at {
         At::File(file) => Home::File(config.root.join(file)),
         At::Folder(folder) => Home::Folder(config.root.join(folder)),

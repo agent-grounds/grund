@@ -76,13 +76,16 @@ declarations in the source file
 ([§FS-fetch.4.2](../functional-spec/FS-fetch.md#42-a-home-read-as-source-is-refused)).
 A home the scan does not read at all, such as `fs.dat` or a hidden `.fs.py`, is
 refused the same way, with the reason `check`'s unread warning gives for that
-name; in a `folder` home the same holds for the `<ID>.md` fetch would create
+name; in a `folder` home the same holds for the `<ID>.md` fetch would create.
+An `<ID>.md` an ignore file ignores or an `exclude` rule matches is refused too,
+before the integration runs, naming the rule; lift the rule for that file and
+fetch again
 ([§FS-fetch.4.2.1](../functional-spec/FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)).
 
 A home, or a folder home's `<ID>.md`, that is a symbolic link is written through
 when its target stays inside the config root, and the link stays. A link that
 leaves the root, whose target does not exist, or that the scan does not read as
-a file, such as one an ignore file skips, is refused with the tree unchanged;
+a file, such as one to a directory, is refused with the tree unchanged;
 replace the link with the file it points to, create the target, or remove it
 ([§FS-fetch.links](../functional-spec/FS-fetch.md#links-a-link-at-the-target-is-written-through-when-it-stays-inside-the-config-root)).
 
@@ -113,8 +116,9 @@ in that file, or take the declaration out of it and fetch again
 Where the scan does not read `<ID>.md` as Markdown, taking the declaration out leaves
 the ID declared nowhere until it does, so change both together.
 
-A folder-home fetch also refuses when the selected project's scan finds the ID
-declared outside that home, in Markdown or a source comment. It exits 2, names
+A fetch also refuses, before the integration runs, when the selected project's
+scan finds the ID declared outside the home, in Markdown or a source comment, for
+a `folder` home and a `file` home alike. It exits 2, names
 the declaring file and leaves the entire tree unchanged. A stub pointing there
 stays intact, even when the scan reaches the target only through that stub.
 Keep the existing fact in its file, or remove its declaration and fetch again

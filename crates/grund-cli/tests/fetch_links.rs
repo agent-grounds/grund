@@ -130,7 +130,7 @@ fn links_a_file_home_that_is_an_outward_link_is_refused() {
 
 #[test]
 fn links_an_ignored_outward_link_is_refused_as_unread_by_the_walk() {
-    // The walk reads no file at an ignored link, so no record says where it leads.
+    // §FS-fetch.links: the home is one the scan does not read, so §FS-fetch.4.2.1 speaks first.
     let (base, proj) = project("ignored-outward", FOLDER, FETCHER);
     fs::write(base.join("outside/T-1.md"), "").expect("write target");
     write(&proj, "docs/t/.ignore", "T-1.md\n");
@@ -138,8 +138,9 @@ fn links_an_ignored_outward_link_is_refused_as_unread_by_the_walk() {
     let err = refused(&base, &proj, "ignored outward link");
     assert_eq!(
         err,
-        "error: cannot fetch T-1 into docs/t/T-1.md: the scan does not read the symlink as a \
-         file; remove the link, or let the scan read it, and fetch again\n"
+        "error: kind `T` cannot fetch into docs/t/T-1.md: docs/t/.ignore ignores it by T-1.md, \
+         so the scan would not read what fetch writes; stop ignoring it in docs/t/.ignore, and \
+         fetch again\n"
     );
 }
 

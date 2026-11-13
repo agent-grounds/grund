@@ -326,6 +326,26 @@ ID and does not read that path as Markdown; `<reason>` is then why it does not. 
 home that does declare the ID is replaced or refused as [[§FS-fetch.5](FS-fetch.md#5-folder-home-write)] says, and is not judged
 here.
 
+The walk not reading that path is the same refusal, whatever the path holds: an `<ID>.md` an
+ignore file ignores ([[§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)]) or an `exclude` rule matches, absent or present, a plain
+file or a link. Whether the walk reads it is asked of the walk's own read predicate, the one a
+stub's target asks ([[§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)]), from the config root and the roots the walk starts
+from, so a configured home a rule names is still read and is written. `<reason>` is then the
+rule, in the words of the broken-stub line, and since the file's name is the ID's, the repair is
+the rule rather than a name:
+
+```text
+error: kind `<KIND>` cannot fetch into <home>: <file> ignores it by <pattern>, so the scan would not read what fetch writes; stop ignoring it in <file>, and fetch again
+error: kind `<KIND>` cannot fetch into <home>: [schema.sources] exclude matches it by <pattern>, so the scan would not read what fetch writes; remove <pattern> from [schema.sources] exclude, and fetch again
+error: kind `<KIND>` cannot fetch into <home>: [scan] exclude names <entry>, so the scan would not read what fetch writes; remove <entry> from [scan] exclude, and fetch again
+```
+
+`<file>` is the ignore file from the config root and `<pattern>` and `<entry>` are as written,
+as the broken-stub line spells them. A link there takes this line ahead of [[§FS-fetch.links](FS-fetch.md#links-a-link-at-the-target-is-written-through-when-it-stays-inside-the-config-root)].
+Admission's reading after the integration holds the same predicate: a target the walk would not
+read is not read there either, so the requested declaration is not there
+([[§FS-fetch.admission.1](FS-fetch.md#admission1-the-requested-declaration-is-there-once-and-its-body-takes-in-all-of-the-output)]).
+
 `check` stops offering `run grund fetch` at such a home ([[§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)]).
 [[§DF-fetch-unread-home](../decisions/functional/DF-fetch-unread-home.md#df-fetch-unread-home-fetch-refuses-a-home-the-scan-does-not-read-before-the-integration-runs)] records the compatibility correction.
 
@@ -433,7 +453,10 @@ says.
 ### 5.3 A declaration outside the home prevents installation
 
 "When no declaration exists" is the selected project's scan's answer, not the home's. It is the
-same answer for a `file` home ([[§FS-fetch.4](FS-fetch.md#4-file-home-write)]), whose fetch is refused with the same line.
+same answer for a `file` home ([[§FS-fetch.4](FS-fetch.md#4-file-home-write)]), whose fetch is refused with the same line, by the
+same test. Both are refused before the integration runs, from the one scan
+([[§FS-fetch.6.1](FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)]), behind the refusals that need no scan and the home's own refusals of
+[[§FS-fetch.4](FS-fetch.md#4-file-home-write)] and [[§FS-fetch.4.2.1](FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)].
 Discovery asks that scan for the requested ID, with the ID's stubs paired by their verdicts
 ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), and a declaration whose record is in a file outside the
 home is an existing declaration, not an absent snapshot. Fetch can neither create beside it,
@@ -729,9 +752,11 @@ the one `fmt --write` asks ([[§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-t
   error: cannot fetch <ID> into <path>: the symlink target does not exist; create the target, or remove the link, and fetch again
   ```
 
-- A link the walk does not read as a file, one an ignore file skips or one to a directory, has
-  no record to decide it by, and the scan would not read what `fetch` wrote through it. It is
-  refused the same way, wherever it leads:
+- A link the walk does not read as a file for another reason than a rule that skips it, a link
+  to a directory, has no record to decide it by, and the scan would not read what `fetch` wrote
+  through it. It is refused the same way, wherever it leads. A folder home's `<ID>.md` link an
+  ignore file or an `exclude` rule skips is one the scan does not read, and takes
+  [[§FS-fetch.4.2.1](FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)]'s line instead:
 
   ```text
   error: cannot fetch <ID> into <path>: the scan does not read the symlink as a file; remove the link, or let the scan read it, and fetch again

@@ -1,0 +1,1 @@
+error: kind `T` cannot fetch into docs/t/T-1.md: [schema.sources] exclude matches it by docs/t/T-1.md, so the scan would not read what fetch writes; remove docs/t/T-1.md from [schema.sources] exclude, and fetch again

@@ -9,7 +9,8 @@ use super::case_runner::{assert_every_case_passed, run_case};
 use super::repo_root;
 
 /// What #1205 fixed: each failed before it for the reason its issue or reproducer reports.
-const CASES: [&str; 120] = [
+const CASES: [&str; 128] = [
+    "check-fetch-tail-ignored-id-file",
     "check-fetch-tail-unread-home",
     "fetch-bare-closer-h1-refused",
     "fetch-bare-closer-h2-refused",
@@ -21,6 +22,8 @@ const CASES: [&str; 120] = [
     "fetch-bare-heading-h4-refused",
     "fetch-bare-heading-indented-refused",
     "fetch-bare-heading-trailing-space-refused",
+    "fetch-file-home-declared-elsewhere-refused",
+    "fetch-file-home-stub-declared-elsewhere-refused",
     "fetch-folder-value-source-declares-refused",
     "fetch-heading-indented-deep-written",
     "fetch-heading-seven-hashes-written",
@@ -39,7 +42,11 @@ const CASES: [&str; 120] = [
     "fetch-home-nested-requested-id-refused",
     "fetch-id-file-citation-refused",
     "fetch-id-file-empty-filled",
+    "fetch-id-file-excluded-refused",
+    "fetch-id-file-gitignored-refused",
     "fetch-id-file-heading-refused",
+    "fetch-id-file-ignored-declares-refused",
+    "fetch-id-file-ignored-refused",
     "fetch-id-file-other-id-refused",
     "fetch-id-file-prose-refused",
     "fetch-id-file-whitespace-filled",
@@ -130,10 +137,11 @@ const CASES: [&str; 120] = [
     "fetch-value-chapter-prose-refused",
     "fetch-value-chapter-written",
     "fetch-warning-only-refused",
+    "fetch-workspace-member-qualified-glob-refused",
 ];
 
 /// Pass today: what admission must not refuse, and the refusals that keep their words.
-const GUARDS: [&str; 50] = [
+const GUARDS: [&str; 51] = [
     "fetch-bare-closer-control-written",
     "fetch-bare-heading-fenced-written",
     "fetch-bare-heading-first-line-refused",
@@ -157,6 +165,7 @@ const GUARDS: [&str; 50] = [
     "fetch-home-subsections-folder-replaced",
     "fetch-home-subsections-replaced",
     "fetch-home-unmarked-headings-replaced",
+    "fetch-id-file-excluded-home-written",
     "fetch-outside-home-change-during-integration-written",
     "fetch-refetch-control-file-written",
     "fetch-refetch-final-bare-cr-no-sibling-written",

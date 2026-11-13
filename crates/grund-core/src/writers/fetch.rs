@@ -8,7 +8,7 @@
 use std::path::Path;
 
 use super::fetch_admit::admit;
-use super::fetch_target::{Before, Home, Request, place};
+use super::fetch_target::{Before, Home, Request, declared_elsewhere, place};
 use super::fetch_write::install;
 use crate::config::{
     KindConfig, ProjectRecords, RefusedHome, fetch_integration_path, fetch_names_nothing_reason,
@@ -16,8 +16,8 @@ use crate::config::{
 };
 use crate::grammar::parse_id_arg;
 use crate::model::Finding;
-use crate::resolver::{fetch_place, load_alias_path, settled_run_warnings};
-use crate::scanner::scan_tree;
+use crate::resolver::{fetch_place, load_alias_path, load_unscanned, settled_run_warnings};
+use crate::scanner::{fetch_refused_home, scan_tree_with_workspace};
 use crate::workspace::{resolve_workspace_config, split_qualified_id_arg};
 
 /// Which public CLI exit class a fetch refusal belongs to (§FS-fetch.7).
@@ -127,7 +127,8 @@ fn fetch_run(
     let (namespace, local) =
         split_qualified_id_arg(raw).map_err(|err| fetch_operational(format!("{err:#}")))?;
     // §FS-imports.writes.answer: the ID query's selection, over the alias path alone.
-    let selected = if let Some(namespace) = namespace.as_deref() {
+    // §FS-workspace.1.2: the citation targets `check` scans the selected project with.
+    let (selected, targets) = if let Some(namespace) = namespace.as_deref() {
         let context =
             load_alias_path(ProjectRecords::of(root_config), namespace).map_err(|err| {
                 let message = format!("{err:#}");
@@ -136,14 +137,24 @@ fn fetch_run(
             })?;
         let config = context.render_config();
         *run_warnings = run_warning_findings(config, context.run_warnings.clone());
-        context
+        let selected = context
             .project_at_alias(namespace)
             .map_err(|err| fetch_operational(format!("{err:#}")))?
             .config
-            .clone()
+            .clone();
+        (selected, context.citation_targets())
     } else {
         *run_warnings = run_warning_findings(&root_config, settled_run_warnings(root_config.run()));
-        ProjectRecords::of(root_config)
+        let selected = ProjectRecords::of(root_config);
+        // A member that does not load fails `check` before any scan, so it costs fetch nothing.
+        let targets = if selected.project().workspace.declared {
+            load_unscanned(selected.clone())
+                .map(|context| context.citation_targets())
+                .unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+        (selected, targets)
     };
 
     let (id, section) =
@@ -173,12 +184,17 @@ fn fetch_run(
     };
     // §FS-fetch.6.1: the one scan, after every refusal that needs none and before the spawn.
     let (catalog, errors) =
-        scan_tree(selected.schema(), selected.frame(), None, false).map_err(|err| {
-            let message = format!("cannot discover declarations for {local}: {err:#}");
-            *diagnostic = Some(err);
-            fetch_operational(message)
-        })?;
-    let before = Before { catalog, errors };
+        scan_tree_with_workspace(selected.schema(), selected.frame(), None, false, &targets)
+            .map_err(|err| {
+                let message = format!("cannot discover declarations for {local}: {err:#}");
+                *diagnostic = Some(err);
+                fetch_operational(message)
+            })?;
+    let before = Before {
+        catalog,
+        errors,
+        targets,
+    };
     let request = Request {
         config: &selected,
         id: &id,
@@ -205,6 +221,8 @@ fn fetch_run(
             "cannot run fetch integration `{fetch}` for {raw}: {reason}"
         )));
     }
+    // §FS-fetch.5.3: a declaration outside either home stops the fetch before the spawn.
+    declared_elsewhere(&request, &before)?;
 
     // §FS-fetch.2: direct argv invocation, inherited environment, no shell and
     // no implicit stdin. Stdout is data and is never forwarded to the caller.
@@ -266,12 +284,9 @@ fn refuse_home_without_markdown(
         .flatten()
         .any(|decl| !decl.is_stub && request.home.holds(&decl.file));
     let unclaimed = (!claimed).then_some(request.local);
-    let Some((home, reason)) = selected.frame().fetch_refused_home(
-        selected.schema(),
-        &selected.root,
-        &kind.kind,
-        unclaimed,
-    ) else {
+    let Some((home, reason)) =
+        fetch_refused_home(selected.schema(), selected.frame(), &kind.kind, unclaimed)
+    else {
         return Ok(());
     };
     let shown = request.shown(&home);
@@ -297,6 +312,12 @@ fn refuse_home_without_markdown(
                  {name}, or remove its `fetch`"
             )
         }
+        // §FS-fetch.4.2.1: the file's name is the ID's, so the repair is the rule.
+        RefusedHome::Excluded(rule) => format!(
+            "{}, so the scan would not read what fetch writes; {}, and fetch again",
+            rule.reason(),
+            rule.lift()
+        ),
     };
     Err(fetch_operational(format!(
         "kind `{}` cannot fetch into {shown}: {why}",
