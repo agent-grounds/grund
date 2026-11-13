@@ -269,9 +269,9 @@ impl Grammar {
         let sec_suffix = format!(r"(?:{}{})?", sep_quoted, sec_group);
 
         let comment_prefix = comment_prefix_regex(comment_prefixes);
-        // Declaration grammar (§AR-scanner.2.1): Markdown-form is `#+` then ID,
-        // with the `#` mandatory in `.md`; code-form requires a comment prefix and
-        // then the ID directly (§DF-code-declarations-drop-hash).
+        // Declaration grammar (§AR-scanner.2.1): Markdown-form is `#+` then ID, with the `#`
+        // mandatory in a file read as Markdown (§FS-fmt.2.3.1); code-form requires a comment
+        // prefix and then the ID directly (§DF-code-declarations-drop-hash).
 
         // §FS-declarations.line.configured-slug: the ID need not end in a word character.
         // Match its delimiter explicitly so regex alternatives cannot claim a shorter prefix.

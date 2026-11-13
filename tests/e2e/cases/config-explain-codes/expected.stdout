@@ -12,6 +12,7 @@ config-not-toml: A version-2 config held text TOML refuses that grund read for o
 config-rule-file-not-markdown: A version-2 rule kind's files entry is read by a source language, so a rule written as a Markdown heading there declares nothing.
 config-rule-folder-not-markdown: A version-2 rule kind's folders entry can hold no file read as Markdown, because no admitted language reads Markdown.
 config-value-home-absent: A version-2 value row's later home does not exist, and the row reads its other homes for now.
+config-value-home-invalid: A version-2 value row's later home is the wrong shape, resolves outside the root or cannot be looked up, and is read as before for now.
 conflict-marker: A scanned file holds an unresolved merge-conflict block.
 dangling: A citation names an ID that no declaration declares.
 declaration-near-miss: A heading opens like a declaration, but its ID does not match its kind's ID format.

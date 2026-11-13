@@ -221,6 +221,7 @@ const ALWAYS_ARMED: &[&str] = &[
     "config-rule-file-not-markdown",
     "config-rule-folder-not-markdown",
     "config-value-home-absent",
+    "config-value-home-invalid",
     "config-version-1",
     "inline-citation-style",
     "invalid-section-lock",

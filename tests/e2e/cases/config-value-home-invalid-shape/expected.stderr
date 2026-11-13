@@ -1,0 +1,1 @@
+warning: grund.toml:6: value home for kind `CONST` must be an existing file: values/sub; until then it is read as before grund 0.23.0; make it an existing file, or drop the entry; this becomes an error in grund 1.0.0

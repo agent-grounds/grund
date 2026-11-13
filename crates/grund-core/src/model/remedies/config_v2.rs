@@ -43,6 +43,24 @@ pub(crate) fn config_value_home_absent_folder() -> String {
     fill(Code::CONFIG_VALUE_HOME_ABSENT, 2, Some("folder"), slots)
 }
 
+/// `config-value-home-invalid`'s *Fix*, case `shape` (§FS-config-v2.checks.config-value-home-invalid).
+pub(crate) fn config_value_home_invalid_shape(shape: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("shape", &shape)];
+    fill(Code::CONFIG_VALUE_HOME_INVALID, 2, Some("shape"), slots)
+}
+
+/// `config-value-home-invalid`'s *Fix*, case `outside` (§FS-config-v2.checks.config-value-home-invalid).
+pub(crate) fn config_value_home_invalid_outside() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::CONFIG_VALUE_HOME_INVALID, 2, Some("outside"), slots)
+}
+
+/// `config-value-home-invalid`'s *Fix*, case `lookup` (§FS-config-v2.checks.config-value-home-invalid).
+pub(crate) fn config_value_home_invalid_lookup() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::CONFIG_VALUE_HOME_INVALID, 2, Some("lookup"), slots)
+}
+
 /// `rule-folder-file-not-markdown`'s *Fix* (§FS-config-v2.checks.rule-folder-file-not-markdown).
 pub(crate) fn rule_folder_file_not_markdown(folder: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("folder", &folder)];

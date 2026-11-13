@@ -135,6 +135,46 @@ fn value_homes_first_against_later() {
     }
     assert!(matches!(judge("values/a.md", true, false), Verdict::Holds));
     assert!(matches!(judge("values", false, true), Verdict::Holds));
-    // A later home that exists in the wrong shape is refused, not warned about.
-    assert!(matches!(judge("values", true, false), Verdict::Refused(_)));
+    // §FS-config-v2.checks.config-value-home-invalid: a later home in the wrong shape warns, the
+    // first is refused.
+    assert!(matches!(judge("values", true, true), Verdict::Refused(_)));
+    assert!(warns(
+        &judge("values", true, false),
+        Code::CONFIG_VALUE_HOME_INVALID
+    ));
+    assert!(warns(
+        &judge("values/a.md", false, false),
+        Code::CONFIG_VALUE_HOME_INVALID
+    ));
+}
+
+/// §FS-config-v2.checks.config-value-home-invalid: a later value home that cannot be looked up
+/// warns, and the walk reads it as before; the first is refused with the hint.
+#[cfg(unix)]
+#[test]
+fn value_home_lookup_failure_first_against_later() {
+    use std::os::unix::fs::PermissionsExt;
+    let (root, sources) = project("home_requirement_value_lookup", &v2("\"markdown\"", ""));
+    write(&root.join("values/locked/b.json"), "{}");
+    let locked = root.join("values/locked");
+    std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o000)).unwrap();
+    let k = kind(false);
+    let judge = |first| {
+        home_requirement(
+            Ask::Value,
+            &k,
+            home("values/locked/b.json", true, first),
+            &root,
+            &sources,
+        )
+    };
+    // A user the mode does not stop (root) can look it up, so there is nothing to judge.
+    let blocked = std::fs::canonicalize(locked.join("b.json")).is_err();
+    let (first, later) = (judge(true), judge(false));
+    std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o755)).unwrap();
+    if !blocked {
+        return;
+    }
+    assert!(matches!(&first, Verdict::Refused(message) if message.contains("\nhint: ")));
+    assert!(warns(&later, Code::CONFIG_VALUE_HOME_INVALID));
 }

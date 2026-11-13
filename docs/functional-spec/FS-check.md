@@ -46,7 +46,7 @@ An error whose only named remedy the tool refuses to perform is one a repository
 ## 1. Inputs
 
 - Optional path argument, a directory or a single file, which narrows the report; with none, the run covers the project discovered from the current directory ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)).
-- The scanned tree may contain markdown (`.md`) and source files (Rust, Go, Java, TS, Python, etc.).
+- The scanned tree may hold Markdown and source files (Rust, Go, Java, TS, Python, etc.).
 - Optional `grund.toml` configuring the run per [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable) ([§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)).
 - Optional `[workspace]` config; when present and `check` is run at the workspace root, `check` validates alias-qualified cross-project citations per [§FS-workspace](FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace).
 - `--watch` — check immediately, then stay resident and check again when an effective local input changes, each run a plain `check` ([§FS-check.6](FS-check.md#6-watch-mode---watch)).
@@ -708,7 +708,7 @@ Under v2 the two keys are one ladder of strength-and-unit rungs, executed in ord
 
 Every scanned file resolves to exactly one `[[kinds]]` row, and that row's effective `require_grounding` decides whether the file is checked at all:
 
-- **A non-citable kind's home** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) governs **every** scanned file in it, `.md` included — a `folder` home's files, or the one document of a `file` home ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), which is a place a maintainer declared like any other and takes both keys on its row ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)).
+- **A non-citable kind's home** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) governs **every** scanned file in it, Markdown included — a `folder` home's files, or the one document of a `file` home ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), which is a place a maintainer declared like any other and takes both keys on its row ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)).
 - **A citable kind's folder home** governs the **source files** in it — a file the scan reads that is not read as Markdown ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule), [AR-scanner.1](../architecture/AR-scanner.md#1-tree-walk)), whatever its name.
 - **The homeless kind** ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) governs the source files no home claims, and a file claimed by two overlapping homes falls to it as well, the way its citing side already does ([§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as)).
 
