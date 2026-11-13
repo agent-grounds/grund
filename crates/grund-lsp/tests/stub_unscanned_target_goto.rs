@@ -1,6 +1,7 @@
 //! Real-server regression for goto on a citation of a stubbed ID whose target the
 //! scan does not reach: the user lands on the declaration in the target, never on
 //! the stub (§FS-lsp.1.3, §FS-declarations.stubs.pairing.4).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -70,5 +71,4 @@ fn goto_on_a_citation_lands_on_an_unscanned_targets_declaration() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

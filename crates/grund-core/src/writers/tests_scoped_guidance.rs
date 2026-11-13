@@ -4,6 +4,7 @@
 //! of an orphan's directory lose their block, a chapter rule written into its
 //! subject kind's scoped block, and the root section the swap of
 //! `finish_root_block` leaves out when no rule is declared (§FS-init.2.3.4.10).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
 
@@ -156,7 +157,7 @@ fn a_chapter_rule_renders_in_its_subject_kinds_scoped_block() {
 
 /// A version-2 project `t` whose GRUND kind is `docs/grund.md`, with `rows` added
 /// and `dirs` laid, so each scoped destination exists (§FS-init.2.3.5.11.4).
-fn init_v2(name: &str, rows: &str, dirs: &[&str]) -> std::path::PathBuf {
+fn init_v2(name: &str, rows: &str, dirs: &[&str]) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

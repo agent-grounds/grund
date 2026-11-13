@@ -1,17 +1,19 @@
 //! Test module: the row init's guidance names (§FS-init.2.2.2.3), which the
 //! `next:` block allocates in and the managed block's discovery rung leads its
 //! `--kind` example with (§FS-init.2.3.4.3).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::config::{Config, guided_kind, load_config};
 use crate::testing::{test_root, write};
 
-fn load(name: &str, kinds: &str) -> Config {
+fn load(name: &str, kinds: &str) -> crate::testing::Rooted<Config> {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
         &format!("grund_config_version = 1\n\n{kinds}"),
     );
-    load_config(&root).unwrap_or_else(|err| panic!("{name}: {err:#}"))
+    let config = load_config(&root).unwrap_or_else(|err| panic!("{name}: {err:#}"));
+    root.hold(config)
 }
 
 fn guided(config: &Config) -> Option<&str> {

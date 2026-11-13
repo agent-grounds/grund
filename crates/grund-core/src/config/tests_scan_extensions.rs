@@ -4,6 +4,7 @@
 //! (§FS-init.2.4.3, §FS-config.4). And what the list says of a file with no extension
 //! (§FS-scan.scope.extensions.empty): the one test's answers, and that every writer of the
 //! list leaves the record's reading following it.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::{Path, PathBuf};
 
@@ -121,10 +122,11 @@ fn the_empty_string_lists_a_name_whose_extension_is_not_utf8() {
 }
 
 /// The façade of a file holding `toml`.
-fn loaded(name: &str, toml: &str) -> Config {
+fn loaded(name: &str, toml: &str) -> crate::testing::Rooted<Config> {
     let root = test_root(&format!("scan-extensions-{name}"));
     write(&root.join("grund.toml"), toml);
-    load_config(&root).expect("the file loads")
+    let config = load_config(&root).expect("the file loads");
+    root.hold(config)
 }
 
 fn sources_of(config: &Config) -> &Sources {

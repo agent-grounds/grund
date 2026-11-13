@@ -1,12 +1,13 @@
 //! Test module: the scanner reads what grounding needs it to record as
 //! `ScanDemand` (§AR-scanner.2.7.3) — no structure for a level-1 tree, and for
 //! a level-2 row its own files alone.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::config::load_config;
 use crate::testing::{canonical_test_path, scan_findings, test_root, write};
 
 /// A tree with a runbook home and a source file outside every home.
-fn tree(name: &str, reference: &str) -> std::path::PathBuf {
+fn tree(name: &str, reference: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

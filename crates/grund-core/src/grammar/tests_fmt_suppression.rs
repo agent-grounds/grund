@@ -5,8 +5,9 @@
 //! tree per spelling. The on-type cases at the end are here for the same reason:
 //! the LSP live transform honours both scopes (§FS-lsp.1.4.3), and what it takes to
 //! see one is the document above the cursor, not a tree on disk.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 use crate::config::{fmt_excluded, validate_fmt_exclude};
@@ -115,7 +116,8 @@ fn a_malformed_glob_is_refused_at_config_load() {
 /// how this repository's own spec names the directive without writing one.
 #[test]
 fn a_markdown_directive_is_an_html_comment_whose_content_is_exact() {
-    let config = legacy_fs_folder_config(test_root("markdown_directive"));
+    let root = test_root("markdown_directive");
+    let config = legacy_fs_folder_config(root.to_path_buf());
     let directives = FmtDirectives::new(config.lexical(), true);
     for (line, expected) in [
         ("<!-- grund:fmt off -->", Some(false)),
@@ -142,7 +144,8 @@ fn a_markdown_directive_is_an_html_comment_whose_content_is_exact() {
 /// test constant silently open a region.
 #[test]
 fn a_source_directive_is_a_comment_line_and_never_a_string() {
-    let config = legacy_fs_folder_config(test_root("source_directive"));
+    let root = test_root("source_directive");
+    let config = legacy_fs_folder_config(root.to_path_buf());
     let directives = FmtDirectives::new(config.lexical(), false);
     for (line, expected) in [
         ("// grund:fmt off", Some(false)),
@@ -166,7 +169,8 @@ fn a_source_directive_is_a_comment_line_and_never_a_string() {
 /// redundant directive is a no-op, and every file starts with the rewrite on.
 #[test]
 fn a_region_runs_from_off_until_on_and_redundant_directives_are_no_ops() {
-    let config = legacy_fs_folder_config(test_root("region_state"));
+    let root = test_root("region_state");
+    let config = legacy_fs_folder_config(root.to_path_buf());
     let mut directives = FmtDirectives::new(config.lexical(), true);
     assert!(directives.rewriting(), "a file starts with the rewrite on");
     assert!(directives.consume("<!-- grund:fmt on -->", DocstringContent::default()));
@@ -183,7 +187,7 @@ fn a_region_runs_from_off_until_on_and_redundant_directives_are_no_ops() {
 
 /// A repository whose config is `extra` plus the `{kind}-{number}-{slug}`
 /// grammar the shorthand needs, with `FS-042-user-login` declared in it.
-fn suppression_repo(name: &str, extra: &str) -> PathBuf {
+fn suppression_repo(name: &str, extra: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

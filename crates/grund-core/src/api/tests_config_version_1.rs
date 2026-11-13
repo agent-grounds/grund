@@ -2,8 +2,9 @@
 //! (§FS-check.checks.config-version-1, §FS-config.5.3) — for an explicit `1` and
 //! an omitted version, never for version 2 or a project with no config file,
 //! and in the same bytes `config migrate` prints for a member still on version 1.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::check::{CheckOpts, check_with_projects};
 use super::config_findings::config_diagnostics;
@@ -14,7 +15,7 @@ use crate::{MigrateOpts, MigrateOutcome, config_migrate};
 
 /// A project whose config is `config` at `file` (none when `None`), under a
 /// fresh root.
-fn project(name: &str, file: &str, config: Option<&str>) -> PathBuf {
+fn project(name: &str, file: &str, config: Option<&str>) -> crate::testing::TemporaryRoot {
     let root = test_root(&format!("config-version-1-{name}"));
     write(&root.join("docs/FS-a.md"), "# FS-a: A\n\nText.\n");
     if let Some(config) = config {

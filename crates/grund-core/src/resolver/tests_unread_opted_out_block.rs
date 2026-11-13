@@ -24,6 +24,7 @@
 //! not, and both exist to hold a named release ahead of the running version.
 //! This finding names no release (§DF-unread-opted-out-block.2.3), so there is
 //! no deadline to guard and no version constant for a golden to disagree with.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::{Path, PathBuf};
 
@@ -76,7 +77,7 @@ fn the_documented_message_is_the_shipped_message() {
 ///
 /// Unix only: every caller is a symlink case and so `#[cfg(unix)]` too.
 #[cfg(unix)]
-fn opted_out_block(name: &str) -> PathBuf {
+fn opted_out_block(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

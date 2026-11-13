@@ -1,8 +1,9 @@
 //! Test module: the kind and place init's guidance names, and the refresh test
 //! that reads the same selection (§FS-init.2.2.2.3, §FS-init.2.2.2.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::testing::{test_root, write};
 use crate::writers::{InitAllocation, InitAllocationHome, InitFsHome, InitOpts, InitOutput, init};
@@ -14,7 +15,7 @@ const REQ_V1: &str = "grund_config_version = 1\n\n[[kinds]]\nkind = \"REQ\"\n\
                       folder = \"docs/req\"\n\n[scan]\ninclude = [\"README.md\"]\n";
 
 /// A fresh root holding `config`, a `README.md`, and every directory in `dirs`.
-fn tree(name: &str, config: &str, dirs: &[&str]) -> PathBuf {
+fn tree(name: &str, config: &str, dirs: &[&str]) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(&root.join("grund.toml"), config);
     write(&root.join("README.md"), "# Demo\n");

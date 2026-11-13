@@ -1,4 +1,5 @@
 //! Test module: strict formatter scan errors across the public API (§FS-fmt.3).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::*;
 use crate::scanner::ApiScanError;
@@ -24,7 +25,7 @@ fn public_fmt_api_preserves_every_strict_scan_error() {
         .expect("create second broken symlink");
 
     let error = format_references(FmtOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         cross_refs: true,
         ..FmtOpts::default()

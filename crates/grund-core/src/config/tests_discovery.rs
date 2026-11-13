@@ -4,6 +4,7 @@
 //! read the `.agents/` name at all (§FS-config.1, §FS-config.1.1, §FS-config.1.2,
 //! §FS-check.4.3, §FS-check.4.11, §DF-config-file-location). Also the guard every
 //! zero-config case here leans on: no config covers a fixture root (§AR-ci.10.3).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::{Path, PathBuf};
 
@@ -52,9 +53,9 @@ fn linked_path_discovery_keeps_the_lexical_config_and_canonical_root() {
 }
 
 /// A project whose `cases` links to `outside/cases`, with a stranger config above
-/// the target and `outside/sub/note.md` beside it, under a resolved root.
+/// the target and `outside/sub/note.md` beside it, under a resolved root it keeps owning.
 #[cfg(unix)]
-fn linked_project(name: &str) -> PathBuf {
+fn linked_project(name: &str) -> crate::testing::TemporaryRoot {
     let root = crate::testing::physical_test_root(name);
     let project = root.join("project");
     write(&project.join("grund.toml"), MARKER_AT_V2);
@@ -66,7 +67,7 @@ fn linked_project(name: &str) -> PathBuf {
         "grund_config_version = 2\n\n[schema]\nmarker = \"#\"\n",
     );
     std::os::unix::fs::symlink(root.join("outside/cases"), project.join("cases")).unwrap();
-    project
+    root.child("project")
 }
 
 /// §FS-config.1.5: a `..` names the directory the OS gives it, so `cases/..` is
@@ -81,8 +82,8 @@ fn a_dot_dot_resolves_as_the_os_reads_it_and_a_link_after_it_does_not() {
     for (path, marker, root) in [
         ("cases/../sub", "#", &outside),
         ("cases/../sub/note.md", "#", &outside),
-        ("docs/../cases/b", "@", &project),
-        ("docs/../docs/note.md", "@", &project),
+        ("docs/../cases/b", "@", &*project),
+        ("docs/../docs/note.md", "@", &*project),
     ] {
         let config = load_config(&project.join(path)).expect("load config");
         assert_eq!(
@@ -103,7 +104,7 @@ fn a_link_from_outside_every_project_reads_the_project_it_reaches() {
     std::os::unix::fs::symlink(project.join("docs"), &into).unwrap();
     for path in [into.clone(), into.join("note.md")] {
         let config = load_config(&path).expect("load config");
-        assert_eq!((config.marker.as_str(), &config.root), ("@", &project));
+        assert_eq!((config.marker.as_str(), &config.root), ("@", &*project));
     }
 }
 
@@ -343,7 +344,8 @@ fn no_config_under_either_name_stays_zero_config() {
 /// walk starts at.
 #[test]
 fn test_root_has_no_config_at_or_above_it() {
-    let root = canonical_test_path(&test_root("test_root_has_no_config_at_or_above_it"));
+    let owner = test_root("test_root_has_no_config_at_or_above_it");
+    let root = canonical_test_path(&owner);
 
     if let Some(config) = root.ancestors().find_map(config_file_in) {
         panic!(

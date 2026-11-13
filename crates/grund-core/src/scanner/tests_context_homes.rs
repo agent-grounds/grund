@@ -1,6 +1,7 @@
 //! Test module: which homes hold a path, the one list both "the one kind whose
 //! home holds it" and "is it in any home" are read from (§AR-scanner.4.7,
 //! §FS-declarations.stubs.shape).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::context::{file_home_kind, in_some_home};
 use crate::config::{Config, load_config};
@@ -8,7 +9,7 @@ use crate::testing::{test_root, write};
 
 /// One home `spec/fs` for FS, a nested citable home `spec/fs/ar` for AR, a
 /// non-citable place `notes`, a file home `GOALS.md`, and the complement `code`.
-fn project() -> Config {
+fn project() -> crate::testing::Rooted<Config> {
     let root = test_root("context_homes_holding");
     write(
         &root.join("grund.toml"),
@@ -19,7 +20,8 @@ fn project() -> Config {
          [[kinds]]\nkind = \"GOAL\"\nfile = \"GOALS.md\"\n\n\
          [[kinds]]\nkind = \"code\"\ncitable = false\n",
     );
-    load_config(&root).expect("load config")
+    let config = load_config(&root).expect("load config");
+    root.hold(config)
 }
 
 fn answers(config: &Config, relative: &str) -> (Option<String>, bool) {

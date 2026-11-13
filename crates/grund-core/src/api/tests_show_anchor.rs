@@ -2,12 +2,13 @@
 //! `grund fmt --cross-refs` derives for the same coordinate, under every
 //! `anchor_format` profile (§FS-show.3.1.3.1, §FS-output-shapes.4), and through a
 //! stub whose target the walk did not reach (§FS-fmt.6.2.1.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::*;
 use crate::queries::{ShowFormat, ShowMode, ShowOpts};
 use crate::testing::{test_root, write};
 use serde_json::Value;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 const PROFILES: [&str; 5] = ["github", "gitlab", "mkdocs", "pandoc", "none"];
 
@@ -140,7 +141,7 @@ fn show_anchor_equals_formatter_fragment_under_every_profile() {
 
 /// grund.93's tree: a stub in the walk to `notes/a.md`, which opens `# FS-a: A` and
 /// which `[scan] include` reaches only when `walked`, and a bare citation of `FS-a`.
-fn stub_tree(name: &str, stubs: &[&str], walked: bool) -> PathBuf {
+fn stub_tree(name: &str, stubs: &[&str], walked: bool) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     let include = if walked {
         r#"["docs", "notes"]"#

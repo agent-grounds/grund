@@ -5,6 +5,7 @@
 //! (§FS-languages.comment-wrapper), and the Lisp definition-starters of the
 //! position row (§FS-inline-citation-style.1.1.2). The whole-tree reading is
 //! pinned by the e2e cases `declare-line-prefix-forms*` and `inline-site-lisp`.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::{comment_envelope, declaration_id_on_line, render_id};
 use crate::model::BlockForm;
@@ -12,7 +13,8 @@ use crate::testing::{inline_style_findings, numbered_config, over_the_line_cap, 
 
 /// The ID a comment-prefixed source line declares, or `None`.
 fn declared(name: &str, line: &str) -> Option<String> {
-    let mut config = numbered_config(test_root(name));
+    let root = test_root(name);
+    let mut config = numbered_config(root.to_path_buf());
     config.rebuild_grammar().expect("rebuild the test grammar");
     declaration_id_on_line(&config.grammar, line, false, false)
         .map(|(id, _)| render_id(&config.grammar, &id))

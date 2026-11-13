@@ -6,6 +6,10 @@
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
+#[path = "../../grund-cli/tests/support/temporary_root.rs"]
+mod temporary_root;
+pub(crate) use temporary_root::{Rooted, TemporaryRoot};
+
 #[path = "../../grund-cli/tests/support/fixture_root_contract.rs"]
 mod fixture_root_contract;
 #[cfg(unix)]
@@ -122,22 +126,14 @@ pub(crate) fn check_agent_block_path(
 /// a covered base would hand every zero-config case the config it found there.
 /// The base is chosen once per process, and when no candidate is clean every
 /// case fails here with the reason rather than inverting.
-pub(crate) fn test_root(name: &str) -> PathBuf {
+pub(crate) fn test_root(name: &str) -> TemporaryRoot {
     static BASE: OnceLock<Result<PathBuf, String>> = OnceLock::new();
     let base = match BASE.get_or_init(|| uncovered_base(&temp_candidates())) {
         Ok(base) => base,
         Err(reason) => panic!("{reason}"),
     };
-    let unique = format!(
-        "{}-{}-{:?}",
-        name,
-        std::process::id(),
-        std::thread::current().id()
-    );
-    let dir = base.join("grund-lib-tests").join(unique);
-    let _ = std::fs::remove_dir_all(&dir);
-    std::fs::create_dir_all(&dir).expect("create test root");
-    dir
+    // §FS-repository-maintenance.4.1: the caller owns setup and use, including unwind.
+    TemporaryRoot::new(&base.join("grund-lib-tests"), name)
 }
 
 /// The temp directories a fixture root may sit under, in preference order: the
@@ -196,9 +192,8 @@ pub(crate) fn uncovered_base(candidates: &[PathBuf]) -> Result<PathBuf, String> 
 /// matches only as a substring and leaves a `/private` stub on the front of
 /// the result. Canonicalizing is a no-op wherever the two agree.
 #[cfg(unix)]
-pub(crate) fn physical_test_root(name: &str) -> PathBuf {
-    let root = test_root(name);
-    std::fs::canonicalize(&root).expect("canonicalize test root")
+pub(crate) fn physical_test_root(name: &str) -> TemporaryRoot {
+    test_root(name).physical()
 }
 
 pub(crate) fn write(path: &Path, text: &str) {
@@ -218,14 +213,14 @@ pub(crate) fn embedded_value_config(root: PathBuf) -> Config {
     config
 }
 
-pub(crate) fn scan_embedded_value(name: &str, source: &str) -> (Config, Catalog) {
+pub(crate) fn scan_embedded_value(name: &str, source: &str) -> (Rooted<Config>, Catalog) {
     let root = test_root(name);
     let path = root.join("docs/value.md");
     write(&path, source);
-    let config = embedded_value_config(root);
+    let config = embedded_value_config(root.to_path_buf());
     let (findings, errors) = scan_tree(&config, Some(&path), true).expect("scan value fixture");
     assert!(errors.is_empty(), "fixture should be readable: {errors:?}");
-    (config, findings)
+    (root.hold(config), findings)
 }
 
 /// A `Config` whose `FS` kind is the legacy `docs/functional-spec` folder.
@@ -476,8 +471,12 @@ pub(crate) fn run_resolver(
 /// A repo whose code moved out from under `[scan] include`: specs and `src/`
 /// are configured, `sim/` is not — the shape the issue behind
 /// §DF-check-full-scope reports.
-pub(crate) fn drifted_include_repo(name: &str) -> PathBuf {
-    let root = test_root(name);
+pub(crate) fn drifted_include_repo(name: &str) -> crate::testing::TemporaryRoot {
+    drifted_include_repo_at(test_root(name))
+}
+
+/// Populate a project while retaining its enclosing owner (§FS-repository-maintenance.4.1).
+pub(crate) fn drifted_include_repo_at(root: TemporaryRoot) -> TemporaryRoot {
     write(
         &root.join("grund.toml"),
         "grund_config_version = 1\n\n[scan]\ninclude = [\"docs\", \"src\"]\n",
@@ -563,7 +562,7 @@ pub(crate) fn symlink(target: &str, link: &Path) {
 /// because `[[kinds]]` replaces the defaults entirely, and one case here is
 /// about an e2e case directory.
 #[cfg(unix)]
-pub(crate) fn linked_repo(name: &str) -> PathBuf {
+pub(crate) fn linked_repo(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -584,18 +583,18 @@ pub(crate) fn linked_repo(name: &str) -> PathBuf {
 /// A repo whose `FS` kind is a folder with the default `README.md` index
 /// (§FS-config.3.4), holding one declaration — the fixture the kind-index
 /// cases share across their three modules.
-pub(crate) fn kind_index_repo(name: &str) -> PathBuf {
+pub(crate) fn kind_index_repo(name: &str) -> crate::testing::TemporaryRoot {
     kind_index_repo_with(name, "")
 }
 
 /// The same fixture off strict mode, where a bare ID-shaped token is a
 /// recognized citation (§FS-config.3.1) — the configuration the entry-form
 /// cases need, because that is where `fmt` and `check` can disagree.
-pub(crate) fn kind_index_repo_loose(name: &str) -> PathBuf {
+pub(crate) fn kind_index_repo_loose(name: &str) -> crate::testing::TemporaryRoot {
     kind_index_repo_with(name, "[reference]\nstrict = false\n\n")
 }
 
-fn kind_index_repo_with(name: &str, reference: &str) -> PathBuf {
+fn kind_index_repo_with(name: &str, reference: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

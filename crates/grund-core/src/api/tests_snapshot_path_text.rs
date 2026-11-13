@@ -1,6 +1,7 @@
 //! Test module: a path that does not resolve keeps its components and nothing else
 //! (§FS-scan.identity.unresolved), read at the public seam as text, because `Path` compares by
 //! component and `a/b/` equals `a/b`: an assertion between `PathBuf`s passes on the defect.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -12,8 +13,9 @@ use crate::sources::canonical_snapshot_path;
 use crate::testing::{symlink, test_root, write};
 
 /// A project at its canonical path, so what the tests expect is spelled as the snapshot spells it.
-fn project(name: &str) -> PathBuf {
-    let root = fs::canonicalize(test_root(name)).expect("canonical test root");
+fn project(name: &str) -> crate::testing::TemporaryRoot {
+    let root = test_root(name);
+    let root = root.physical();
     write(
         &root.join("grund.toml"),
         "grund_config_version = 2\nproject_name = \"Repro\"\n",

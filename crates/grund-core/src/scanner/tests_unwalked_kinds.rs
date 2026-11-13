@@ -1,8 +1,9 @@
 //! Test module: a place that is listed but not walked (§FS-config.3.4.7) — the
 //! `scan` key, what an unwalked kind keeps and loses, and the three
 //! combinations the config refuses.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::api::run_check;
 use crate::config::load_config;
@@ -14,14 +15,19 @@ use crate::writers::render_agents_append_block_at;
 /// home, under `require_grounding`. The home holds one citation-free
 /// Markdown file and one with a dangling citation, so "not walked" and
 /// "walked and clean" are told apart by what the run reports.
-fn templates_repo(name: &str, extra: &str) -> PathBuf {
+fn templates_repo(name: &str, extra: &str) -> crate::testing::TemporaryRoot {
     templates_repo_at(name, "templates", "[\"docs\"]", extra)
 }
 
 /// The same repository with the home and the `[scan] include` list spelled
 /// by the caller, so a case can put the unwalked home *under* a walk root —
 /// the arrangement in which leaving it out of the roots is not enough.
-fn templates_repo_at(name: &str, home: &str, include: &str, extra: &str) -> PathBuf {
+fn templates_repo_at(
+    name: &str,
+    home: &str,
+    include: &str,
+    extra: &str,
+) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

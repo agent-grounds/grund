@@ -5,15 +5,19 @@
 //! rather than in a reader quoting the report (agent-grounds/grund#408).
 
 use std::collections::BTreeSet;
+#[path = "support/temporary_root.rs"]
+mod temporary_root;
+use temporary_root::TemporaryRoot;
+
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
 /// One project under `[reference] shorthand = "canonical"`, with
 /// `FS-042-user-login` to expand to and `FS-004-quick-actions` carrying `body`.
-fn fixture(name: &str, body: &str) -> PathBuf {
-    let root = std::env::temp_dir().join(format!("grund-fmt-labels-{name}-{}", std::process::id()));
-    let _ = fs::remove_dir_all(&root);
+fn fixture(name: &str, body: &str) -> TemporaryRoot {
+    // §FS-repository-maintenance.4.1: own the leaf before fallible setup.
+    let root = TemporaryRoot::new(&std::env::temp_dir(), &format!("grund-fmt-labels-{name}"));
     fs::create_dir_all(root.join("docs/functional-spec")).expect("create fixture");
     fs::write(
         root.join("grund.toml"),

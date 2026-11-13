@@ -1,5 +1,6 @@
 //! Real-server parity for the body-owned Markdown error (§FS-declarations.checks.unmarked-heading,
 //! §FS-lsp.1.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -58,5 +59,4 @@ fn unmarked_heading_is_the_same_error_over_lsp() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

@@ -2,6 +2,7 @@
 //! (§FS-init.2.3.5.11) and what each destination's block renders
 //! (§FS-init.2.3.5.12): the deepest common directory over a row's places, the
 //! rows that stay at the root, and the grounding sentence each destination gets.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::scoped_guidance::destination;
 use super::*;
@@ -9,13 +10,14 @@ use crate::config::{Config, load_config};
 use crate::testing::{test_root, write};
 
 /// Load a version-2 config from its tables, written into a fresh test root.
-fn v2(name: &str, tables: &str) -> Config {
+fn v2(name: &str, tables: &str) -> crate::testing::Rooted<Config> {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
         &format!("grund_config_version = 2\nproject_name = \"t\"\n{tables}"),
     );
-    load_config(&root).expect("load config")
+    let config = load_config(&root).expect("load config");
+    root.hold(config)
 }
 
 /// The destination of `row` in `config`.

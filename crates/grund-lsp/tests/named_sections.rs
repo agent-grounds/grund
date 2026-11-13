@@ -1,5 +1,6 @@
 //! Real-server coverage for the named-section records shared with the CLI:
 //! diagnostics, hover, navigation, references, and highlights (§FS-lsp.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -143,7 +144,6 @@ fn named_sections_have_cli_parity_across_editor_surfaces() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 #[test]
@@ -222,7 +222,6 @@ fn section_citation_references_keep_the_exact_subtree() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 #[test]
@@ -291,5 +290,4 @@ fn named_heading_references_keep_dotted_descendants_with_a_custom_outer_separato
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

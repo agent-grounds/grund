@@ -1,4 +1,5 @@
 //! Shared note classification regressions for §FS-check.1.1.10.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::comment_line::{comment_strip_prefixes, line_citation_ranges};
 use super::inline_note_layout::{
@@ -23,7 +24,8 @@ fn word_character_marker_note_classification_preserves_containing_full_ids() {
             "FS_login_FS_logout",
         ),
     ] {
-        let mut config = Config::default_for(test_root("word_character_marker_note_containing_id"));
+        let root = test_root("word_character_marker_note_containing_id");
+        let mut config = Config::default_for(root.to_path_buf());
         config.marker = marker.into();
         config.id_format = format.into();
         config.slug_pattern = pattern.into();
@@ -86,7 +88,8 @@ fn word_character_marker_note_classification_keeps_overlapping_marker_ranges() {
         ("::", "::", 0),
         ("éé", "ééé", "é".len()),
     ] {
-        let mut config = Config::default_for(test_root("word_character_marker_note_overlap"));
+        let root = test_root("word_character_marker_note_overlap");
+        let mut config = Config::default_for(root.to_path_buf());
         config.marker = marker.into();
         config.id_format = "{kind}_{slug}".into();
         config.rebuild_grammar().unwrap();

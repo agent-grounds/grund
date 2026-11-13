@@ -2,9 +2,10 @@
 //! without a stub (§FS-check.3.18, §DF-index-entry-form.2.7). These cases pin the
 //! discriminator and the exact-site unused accounting; the CLI test pins the
 //! `show` / `list` surface.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 use crate::api::{FmtOpts, format_references};
@@ -16,7 +17,7 @@ use crate::testing::{
 };
 use crate::workspace::resolve_workspace_config;
 
-fn external_index_repo(name: &str, index: &str) -> PathBuf {
+fn external_index_repo(name: &str, index: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

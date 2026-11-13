@@ -1,16 +1,17 @@
 //! An E2E case's `args` is its parsed `command.args` on every structured surface,
 //! `[]` when it has none, and only the text form's first line says `grund check`
 //! (§FS-show.2.4, §FS-show.2.4.2, §FS-output-shapes.4.2, §FS-distribution.3.2.2.3).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::*;
 use crate::queries::{ShowFormat, ShowMode, ShowOpts};
 use crate::testing::{test_root, write};
 use serde_json::{Value, json};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Three cases: `login` has no `command.args`, `with-args` names `list`, and
 /// `bare` has a `command.args` that holds no words.
-fn cases(name: &str) -> PathBuf {
+fn cases(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

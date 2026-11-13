@@ -7,8 +7,9 @@
 //! scan would record no declaration; and inside it, where the scan's records say
 //! what that reading is. The second half is the premise: a case whose fence the
 //! scan reads differently is about the scanner, not about this rule.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::testing::{check_run, codes, findings, scan_findings, test_root, write};
 
@@ -47,7 +48,13 @@ fn an_ignore_refusal_is_saved_before_pairing() {
 
 const STUB: &str = "# FS-second: [../target.md](../target.md)\n";
 
-fn stub_repo(name: &str, target_name: &str, stub: &str, target: &str, scanned: bool) -> PathBuf {
+fn stub_repo(
+    name: &str,
+    target_name: &str,
+    stub: &str,
+    target: &str,
+    scanned: bool,
+) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     let include = if scanned {
         format!("[\"docs\", \"{target_name}\"]")

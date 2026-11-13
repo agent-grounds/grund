@@ -1,4 +1,5 @@
 //! Test module: config parsing, kind homes, and the parallel scan path (§FS-config, §FS-check)
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 #[cfg(unix)]
 use std::collections::BTreeMap;
@@ -29,9 +30,8 @@ fn report_path_rendering_uses_forward_slashes() {
 
 #[test]
 fn default_config_requires_marker_prefixed_citations() {
-    let config = Config::default_for(test_root(
-        "default_config_requires_marker_prefixed_citations",
-    ));
+    let root = test_root("default_config_requires_marker_prefixed_citations");
+    let config = Config::default_for(root.to_path_buf());
 
     assert!(
         config.strict,

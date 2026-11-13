@@ -1,5 +1,6 @@
 //! Workspace-folder discovery and lifecycle cases driven against a real server
 //! process (§FS-lsp.2.2, §AR-lsp.2).
+//! Guarded roots outlive server shutdown and assertions (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -92,7 +93,6 @@ fn nested_editor_folder_scans_the_discovered_project_root() {
     stop_server(&mut child, &mut stdin, &receiver, 3);
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 #[test]
@@ -129,7 +129,6 @@ fn every_initial_workspace_folder_gets_an_independent_snapshot() {
     stop_server(&mut child, &mut stdin, &receiver, 4);
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 /// §FS-lsp.2.2.5: on `workspace/didChangeWorkspaceFolders` an added folder is
@@ -191,7 +190,6 @@ fn workspace_folder_changes_rebuild_and_remove_project_snapshots() {
     stop_server(&mut child, &mut stdin, &receiver, 4);
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 /// §FS-lsp.2.2.5: keeping a folder that still resolves to a project keeps that
@@ -232,7 +230,6 @@ fn removing_one_of_two_folders_keeps_the_shared_project_snapshot() {
     stop_server(&mut child, &mut stdin, &receiver, 3);
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 #[test]
@@ -335,7 +332,6 @@ fn removing_one_symlink_alias_keeps_the_other_anchor_active() {
     stop_server(&mut child, &mut stdin, &receiver, 3);
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 /// §FS-lsp.2.2.1, §FS-config.1.5: a folder opened at `v2/e2e/cases`, a link out of the
@@ -394,5 +390,4 @@ fn a_folder_opened_through_a_link_out_of_its_project_keeps_the_project() {
     stop_server(&mut child, &mut stdin, &receiver, 2);
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

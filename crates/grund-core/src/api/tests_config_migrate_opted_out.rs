@@ -4,8 +4,7 @@
 //! unread-block probe itself. A compact block's report carries the one notice
 //! about no key, version 1's defaults left unwritten (§FS-config-migrate.8.1.3);
 //! a conservative one never does.
-
-use std::path::PathBuf;
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::config::migrate::{MigrateOutcome, MigrateReport};
 use crate::testing::{test_root, write};
@@ -19,7 +18,7 @@ const ENVELOPE: &str =
 
 /// A block at a fresh root whose `grund.toml` is `head` then `[workspace]`
 /// (`members = ["a"]`, member `a` on version 2), with the files of `files`.
-fn block(name: &str, head: &str, files: &[&str]) -> PathBuf {
+fn block(name: &str, head: &str, files: &[&str]) -> crate::testing::TemporaryRoot {
     let root = test_root(&format!("migrate-opted-out-{name}"));
     write(&root.join("a/grund.toml"), "grund_config_version = 2\n");
     for path in files {
@@ -30,9 +29,9 @@ fn block(name: &str, head: &str, files: &[&str]) -> PathBuf {
 }
 
 /// The preview of `root`'s config.
-fn preview(root: PathBuf) -> MigrateReport {
+fn preview(root: impl AsRef<std::path::Path>) -> MigrateReport {
     let opts = MigrateOpts {
-        path: root,
+        path: root.as_ref().to_path_buf(),
         write: false,
         drop_comments: false,
     };
@@ -157,7 +156,7 @@ fn a_missing_member_goes_conservative() {
     write(&root.join("a/grund.toml"), "grund_config_version = 2\n");
     let text = "[workspace]\ninclude_root = false\nmembers = [\"a\", \"b\"]\n";
     write(&root.join("grund.toml"), text);
-    let report = preview(root);
+    let report = preview(root.to_path_buf());
     assert!(!compact(&report), "{:?}", report.notices);
 }
 

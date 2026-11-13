@@ -1,6 +1,7 @@
 //! Focused first-class-value scanner cases: Markdown title boundaries and the
 //! exact attempted-binding delimiter and source-context contracts
 //! (§FS-values.2.1, §FS-values.3.1, §FS-values.3.2).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::PathBuf;
 
@@ -27,7 +28,7 @@ fn markdown_component_excludes_the_complete_numeric_coordinate_delimiter() {
     );
 }
 
-fn value_repo(name: &str, binding: &str) -> PathBuf {
+fn value_repo(name: &str, binding: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -45,7 +46,7 @@ fn value_repo(name: &str, binding: &str) -> PathBuf {
     root
 }
 
-fn source_value_repo(name: &str, source: &str) -> PathBuf {
+fn source_value_repo(name: &str, source: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -406,5 +407,4 @@ fn a_bare_value_id_is_a_binding_record_with_no_path() {
             .collect::<Vec<_>>(),
         vec![None, Some("1")]
     );
-    let _ = std::fs::remove_dir_all(root);
 }

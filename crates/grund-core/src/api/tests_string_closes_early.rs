@@ -6,8 +6,9 @@
 //! (§FS-config-v2.reader.6.multi-line). A string that closes at its end, a value refused
 //! before and a version-1 file keep what they had, and an array with an open line is refused
 //! for it first (§FS-config-v2.reader.5.strings.refusal).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::config_findings::config_diagnostics;
 use crate::config::load_config;
@@ -18,11 +19,11 @@ const HEAD: &str = "grund_config_version = 2\n\n[schema.kinds.code]\nfolders = [
                     [schema.kinds.SPEC]\nfiles = [\"specs/spec.md\"]\n";
 
 /// A clean version-2 project whose `grund.toml` is [`HEAD`] followed by `tail`.
-fn v2(name: &str, tail: &str) -> PathBuf {
+fn v2(name: &str, tail: &str) -> crate::testing::TemporaryRoot {
     project(name, &format!("{HEAD}{tail}"))
 }
 
-fn project(name: &str, config: &str) -> PathBuf {
+fn project(name: &str, config: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(&format!("string-closes-early-{name}"));
     write(&root.join("grund.toml"), config);
     write(&root.join("specs/spec.md"), "# SPEC-one: One\n\nLead.\n");

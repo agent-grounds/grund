@@ -8,8 +8,12 @@
 //! would walk up into this repository's own `grund.toml` (§FS-config.1). Each
 //! tree is built under the system temp directory instead.
 
+#[path = "support/temporary_root.rs"]
+mod temporary_root;
+use temporary_root::TemporaryRoot;
+
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Output};
 
 /// §FS-check.checks.config-version-1: the caution a version-1 config earns,
@@ -43,11 +47,12 @@ const FS_FOLDER: &[(&str, &str)] = &[
     ("docs/notes.md", "Login is \u{a7}FS-001-login.\n"),
 ];
 
-fn tree(name: &str, files: &[(&str, &str)]) -> PathBuf {
-    let root =
-        std::env::temp_dir().join(format!("grund-fs-home-lands-{name}-{}", std::process::id()));
-    let _ = fs::remove_dir_all(&root);
-    fs::create_dir_all(&root).expect("create fixture root");
+fn tree(name: &str, files: &[(&str, &str)]) -> TemporaryRoot {
+    // §FS-repository-maintenance.4.1: own the leaf before fallible setup.
+    let root = TemporaryRoot::new(
+        &std::env::temp_dir(),
+        &format!("grund-fs-home-lands-{name}"),
+    );
     for (path, text) in files {
         let path = root.join(path);
         fs::create_dir_all(path.parent().unwrap()).expect("create fixture parent");
@@ -58,7 +63,7 @@ fn tree(name: &str, files: &[(&str, &str)]) -> PathBuf {
 
 /// The same files twice: once with no config, once beside a `grund.toml` that
 /// omits `[[kinds]]`.
-fn pair(name: &str, files: &[(&str, &str)]) -> (PathBuf, PathBuf) {
+fn pair(name: &str, files: &[(&str, &str)]) -> (TemporaryRoot, TemporaryRoot) {
     let zero = tree(&format!("{name}-zero"), files);
     let mut with_config = files.to_vec();
     with_config.push(("grund.toml", KINDLESS_CONFIG));

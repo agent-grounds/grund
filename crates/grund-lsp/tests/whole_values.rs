@@ -1,6 +1,7 @@
 //! A binding aimed at a whole value declaration navigates to the declaration
 //! itself — the Markdown heading or the JSON key — and its mismatch is the CLI
 //! finding (§FS-lsp.1.1.2, §FS-lsp.1.3.5, §FS-values.3.1.2, §FS-values.7).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -115,5 +116,4 @@ fn whole_value_bindings_navigate_to_the_declaration_and_match_the_cli() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

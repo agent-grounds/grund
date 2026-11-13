@@ -1,7 +1,8 @@
 //! A value home's YAML sources (§FS-values.2.2): which files are sources in each
 //! config version, each read in its own format.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::config::load_config;
 use crate::model::{Catalog, DeclarationSource, ValueFormat};
@@ -10,8 +11,8 @@ use crate::testing::{scan_tree, test_root, write};
 const KIND: &str =
     "[[kinds]]\nkind = \"CONST\"\nfolder = \"values\"\nindex = false\nvalues = true\n";
 
-fn v1(name: &str, kinds: &str, scan: &str) -> PathBuf {
-    let root = test_root(name).canonicalize().expect("canonical fixture");
+fn v1(name: &str, kinds: &str, scan: &str) -> crate::testing::TemporaryRoot {
+    let root = test_root(name).physical();
     write(
         &root.join("grund.toml"),
         &format!(
@@ -23,8 +24,8 @@ fn v1(name: &str, kinds: &str, scan: &str) -> PathBuf {
     root
 }
 
-fn v2(name: &str, sources: &str) -> PathBuf {
-    let root = test_root(name).canonicalize().expect("canonical fixture");
+fn v2(name: &str, sources: &str) -> crate::testing::TemporaryRoot {
+    let root = test_root(name).physical();
     write(
         &root.join("grund.toml"),
         &format!(

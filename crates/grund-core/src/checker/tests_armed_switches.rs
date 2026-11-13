@@ -2,8 +2,7 @@
 //! one fixture per switch with it off, which arms none of its codes, and one
 //! with it on, which arms all of them — and a rule's empty subject reuses the
 //! obligation's conditions (§FS-check.2.2.1.4).
-
-use std::path::PathBuf;
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::api::{CheckOpts, check_with_run_warnings};
 use crate::model::{Finding, Switch};
@@ -13,7 +12,7 @@ use super::ArmedChecks;
 
 /// A version-2 project with an `FS` and a `REQ` kind, `extra` added to the `FS`
 /// table and `tail` after both.
-pub(super) fn v2(name: &str, extra: &str, tail: &str) -> PathBuf {
+pub(super) fn v2(name: &str, extra: &str, tail: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -29,11 +28,11 @@ pub(super) fn v2(name: &str, extra: &str, tail: &str) -> PathBuf {
 }
 
 pub(super) fn run(
-    root: PathBuf,
+    root: impl AsRef<std::path::Path>,
     flags: impl FnOnce(&mut CheckOpts),
 ) -> (Vec<Finding>, ArmedChecks) {
     let mut opts = CheckOpts {
-        path: root,
+        path: root.as_ref().to_path_buf(),
         path_provided: true,
         ..CheckOpts::default()
     };
@@ -43,7 +42,7 @@ pub(super) fn run(
     (output.report.warnings, armed)
 }
 
-pub(super) fn armed(root: PathBuf) -> ArmedChecks {
+pub(super) fn armed(root: impl AsRef<std::path::Path>) -> ArmedChecks {
     run(root, |_| {}).1
 }
 
@@ -217,7 +216,7 @@ fn a_kind_home_arms_misplaced_declaration() {
     pinned(
         Switch::KindHome,
         "misplaced-declaration",
-        armed(root),
+        armed(root.to_path_buf()),
         armed(v2("armed_home_on", "", "")),
     );
 }
@@ -238,7 +237,7 @@ fn an_optional_member_arms_its_absence() {
         Switch::OptionalMember,
         "optional-member-absent",
         armed(v2("armed_optional_off", "", "")),
-        armed(root),
+        armed(root.to_path_buf()),
     );
 }
 
@@ -272,7 +271,11 @@ fn an_import_arms_both_import_checks() {
 /// The rule twin of the e2e `check-rule-applies-to-nothing-declared` project:
 /// a `RULE-e2e` whose subject kind is homed by `e2e_home`, holding `files`
 /// (§FS-check.2.2.1.4).
-pub(super) fn rule_project(name: &str, e2e_home: &str, files: &[(&str, &str)]) -> PathBuf {
+pub(super) fn rule_project(
+    name: &str,
+    e2e_home: &str,
+    files: &[(&str, &str)],
+) -> crate::testing::TemporaryRoot {
     let rule = format!(
         "[schema.kinds.e2e]\n{e2e_home}\n\
          [schema.kinds.RULE]\nfolders = [\"docs/rules\"]\nindex = false\nform = \"rule\"\n"

@@ -11,9 +11,16 @@ use serde_json::{Value, json};
 use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Child, ChildStdin, Command, ExitStatus, Stdio};
+use std::process::{ChildStdin, Command, ExitStatus, Stdio};
 use std::sync::{Mutex, MutexGuard, mpsc};
 use std::time::{Duration, Instant};
+
+#[path = "../../../grund-cli/tests/support/temporary_root.rs"]
+mod temporary_root;
+pub(crate) use temporary_root::TemporaryRoot;
+
+mod child;
+pub use child::Child;
 
 /// The server under test. Inside this package Cargo names the binary it just
 /// built; compiled into another package — `tests/integration/` reuses this
@@ -38,7 +45,7 @@ pub fn copy_executable(source: &Path, destination: &Path, context: &str) {
 
 pub fn spawn_child(command: &mut Command, context: &str) -> Child {
     let _guard = executable_copy_and_spawn_guard();
-    command.spawn().expect(context)
+    Child::new(command.spawn().expect(context))
 }
 
 pub fn command_status(command: &mut Command, context: &str) -> ExitStatus {
@@ -57,13 +64,9 @@ pub fn server_binary() -> PathBuf {
 }
 
 /// A fresh configured fixture root under [`fixture_base`] (§AR-ci.10.3).
-pub fn test_root(name: &str) -> PathBuf {
-    let dir = fixture_base().join(format!(
-        "grund-lsp-{name}-{}-{:?}",
-        std::process::id(),
-        std::thread::current().id()
-    ));
-    let _ = fs::remove_dir_all(&dir);
+pub fn test_root(name: &str) -> TemporaryRoot {
+    // §FS-repository-maintenance.4.1: cleanup already owns any failed setup below.
+    let dir = TemporaryRoot::new(&fixture_base(), &format!("grund-lsp-{name}"));
     fs::create_dir_all(dir.join("docs")).expect("create docs dir");
     fs::write(
         dir.join("grund.toml"),
@@ -143,7 +146,7 @@ pub fn recv_response(receiver: &mpsc::Receiver<Value>, id: i64) -> Result<Value,
 
 pub fn recv_response_or_panic(
     receiver: &mpsc::Receiver<Value>,
-    child: &mut Child,
+    child: &mut std::process::Child,
     id: i64,
 ) -> Value {
     match recv_response(receiver, id) {
@@ -164,7 +167,7 @@ pub fn recv_response_or_panic(
 
 pub fn recv_diagnostics(
     receiver: &mpsc::Receiver<Value>,
-    child: &mut Child,
+    child: &mut std::process::Child,
     uri_suffix: &str,
 ) -> Vec<Value> {
     let deadline = Instant::now() + Duration::from_secs(5);
@@ -209,7 +212,7 @@ pub fn recv_diagnostics(
     }
 }
 
-pub fn wait_for_exit(child: &mut Child) {
+pub fn wait_for_exit(child: &mut std::process::Child) {
     let deadline = Instant::now() + Duration::from_secs(5);
     loop {
         if let Some(status) = child.try_wait().expect("poll child") {
@@ -316,7 +319,7 @@ pub fn start_server_with_initialize(
 pub fn hover_result(
     stdin: &mut ChildStdin,
     receiver: &mpsc::Receiver<Value>,
-    child: &mut Child,
+    child: &mut std::process::Child,
     id: i64,
     uri: &str,
     line: i64,

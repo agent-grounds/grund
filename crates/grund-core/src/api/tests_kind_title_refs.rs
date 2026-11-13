@@ -1,5 +1,6 @@
 //! Detailed refs metadata comes from the queried target (§FS-config.3.4.3,
 //! §FS-refs.3.2); public carrier construction remains compatible (§AR-bindings.2).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::*;
 use crate::queries::{LspSnapshot, LspSnapshotOpts, LspUsage, lsp_title_hover_body};
@@ -63,7 +64,7 @@ fn kind_title_refs_preserve_existing_public_records_and_undeclared_queries() {
         "grund_config_version = 1\n[id]\nformat = \"{kind}-{slug}\"\n",
     );
     let result = refs_with_metadata(RefsOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         id: "FS-authored".into(),
         section: None,
@@ -94,7 +95,7 @@ fn kind_title_refs_target_differs_from_caller_and_citers() {
     write(&root.join("target/src/user.rs"), "//! \u{a7}FS-authored\n");
     write(&root.join("src/user.rs"), "//! §target/FS-authored\n");
     let result = refs_with_metadata(RefsOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         id: "target/FS-authored".into(),
         section: None,
@@ -159,7 +160,7 @@ fn kind_title_snapshot_addition_preserves_existing_carrier_and_title_helper() {
     );
     write(&root.join("src/user.rs"), "//! \u{a7}FS-authored.1\n");
     let opts = LspSnapshotOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         open_documents: Default::default(),
     };

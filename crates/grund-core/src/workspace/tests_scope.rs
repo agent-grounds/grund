@@ -1,4 +1,5 @@
 //! Test module: workspace root-scope classification (§AR-core-module-layout.1.5)
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::Path;
 
@@ -8,9 +9,8 @@ use crate::testing::{canonical_test_path, test_root};
 
 #[test]
 fn workspace_root_scope_requires_canonical_root_for_explicit_path() {
-    let root = canonical_test_path(&test_root(
-        "workspace_root_scope_requires_canonical_root_for_explicit_path",
-    ));
+    let owner = test_root("workspace_root_scope_requires_canonical_root_for_explicit_path");
+    let root = canonical_test_path(&owner);
     let subdir = root.join("apps/api");
     std::fs::create_dir_all(&subdir).expect("create subdir");
     let config = Config::default_for(root.clone());

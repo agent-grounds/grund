@@ -4,6 +4,7 @@
 //! it, and holds the outcome the table names: *mapped* and *written* pass the
 //! records gate (§FS-config-migrate.5.1) with the spelling in the candidate, a
 //! *notice* is reported, a *refused* key names its repair.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -135,7 +136,6 @@ fn translate_case(index: usize, case: &Case) -> Result<MigrateReport, String> {
     };
     let prepared = translate(&located, false, false, &|| true, &|_| Ok(Vec::new()))
         .map_err(|error| format!("{error:#}"));
-    let _ = std::fs::remove_dir_all(&root);
     match prepared? {
         Prepared::Translated { report, .. } => Ok(*report),
         Prepared::AlreadyV2 => Err("read as version 2".into()),

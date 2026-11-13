@@ -6,6 +6,7 @@
 //! ordinary scope (§DF-undeclared-blind-spots). The gate also records a file root
 //! the extension filter or the hidden-file rule refuses, with its row, for `check`
 //! to name (§FS-scan.checks.unread-scan-root).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::model::{Refused, RootOrigin};
 use crate::testing::{
@@ -144,7 +145,11 @@ fn the_root_fence_preserves_intentional_external_and_in_root_scope() {
 
 /// A project whose `grund.toml` declares a `TXT` row with `home` as its `file`, on
 /// line 6, and `[scan] include = ["docs", <include>]` on line 9, with only `md` listed.
-fn unread_root_project(name: &str, home: &str, include: &str) -> crate::config::Config {
+fn unread_root_project(
+    name: &str,
+    home: &str,
+    include: &str,
+) -> crate::testing::Rooted<crate::config::Config> {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -154,7 +159,8 @@ fn unread_root_project(name: &str, home: &str, include: &str) -> crate::config::
         ),
     );
     write(&root.join("docs/a.md"), "# A\n");
-    crate::config::load_config_at(&root, &root).expect("load the project")
+    let config = crate::config::load_config_at(&root, &root).expect("load the project");
+    root.hold(config)
 }
 
 /// §AR-scanner.1.6: the root gate records a file root the extension filter refuses

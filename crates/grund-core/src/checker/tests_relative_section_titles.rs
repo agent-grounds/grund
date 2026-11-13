@@ -1,16 +1,16 @@
 //! Test module: a relative heading's display name
 //! (§FS-declarations.section.relative.shown), one case per surface that reads
 //! it — a chapter rule, a version-2 field and a `list --selector` row.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::api::{ListOpts, list};
 use crate::config::load_config;
 use crate::model::CheckReport;
 use crate::testing::{check_findings, check_run, scan_findings, test_root, write};
-use std::path::PathBuf;
 
 /// A project whose `FS-login` writes its chapters in the relative form, held to
 /// `RULE-terms`.
-fn chaptered(name: &str) -> PathBuf {
+fn chaptered(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

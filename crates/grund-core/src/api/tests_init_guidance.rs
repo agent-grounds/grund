@@ -1,4 +1,5 @@
 //! Test module: init next-step and scaffold guidance (§AR-core-module-layout.1.5)
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::testing::{test_root, write};
 use crate::writers::{InitFsHome, InitOpts, InitOutput, docs_scaffold, init};
@@ -9,7 +10,7 @@ fn init_next_guidance_uses_the_built_in_fs_folder() {
     write(&root.join("grund.toml"), "grund_config_version = 1\n");
 
     let init_output = init(InitOpts {
-        target: root,
+        target: root.to_path_buf(),
         docs: true,
         dry_run: true,
         // §FS-init.1.2.3: a bare temp root no VCS marker covers.
@@ -51,7 +52,7 @@ file = "specs/requirements.md"
     );
 
     let init_output = init(InitOpts {
-        target: root,
+        target: root.to_path_buf(),
         docs: true,
         dry_run: true,
         // §FS-init.1.2.3: a bare temp root no VCS marker covers.

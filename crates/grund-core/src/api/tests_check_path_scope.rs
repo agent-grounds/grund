@@ -4,8 +4,7 @@
 //! scope layer beside it is `tests_check_full_scope.rs`, and the two must not
 //! be confused: that one narrows the scan before any rule runs, this one
 //! narrows the report after every rule has run (§AR-resolver.3.3).
-
-use std::path::PathBuf;
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::testing::{check_run, codes, findings, graph_codes, test_root, write};
 
@@ -26,7 +25,7 @@ const CONFIG: &str = "grund_config_version = 1\n\
 /// kind home, cited once from `src/lib.rs`, and nothing else wrong. A
 /// whole-tree run over this is `success`, which is what makes a finding from a
 /// narrower run a disagreement rather than a discovery.
-fn widget_repo(name: &str) -> PathBuf {
+fn widget_repo(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(&root.join("grund.toml"), CONFIG);
     write(

@@ -1,5 +1,6 @@
 //! Test module: init's effective-scope decision and shared guidance renderer
 //! (§FS-init.2.2.2, §FS-config.3.5).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
 
@@ -13,7 +14,7 @@ use crate::writers::{InitAllocation, InitAllocationHome, InitFsHome, InitNext};
 fn effective_scope_recognizes_include_and_kind_home_files() {
     let include_root = test_root("effective_scope_recognizes_an_include_file");
     write(&include_root.join("notes/readable.md"), "Readable.\n");
-    let mut include_config = Config::default_for(include_root);
+    let mut include_config = Config::default_for(include_root.to_path_buf());
     include_config.include = Some(vec!["notes".to_string()]);
 
     assert!(
@@ -23,7 +24,7 @@ fn effective_scope_recognizes_include_and_kind_home_files() {
 
     let home_root = test_root("effective_scope_recognizes_a_kind_home_file");
     write(&home_root.join("docs/goals.md"), "# Goals\n");
-    let mut home_config = Config::default_for(home_root);
+    let mut home_config = Config::default_for(home_root.to_path_buf());
     home_config.include = Some(Vec::new());
 
     assert!(
@@ -59,7 +60,7 @@ fn effective_scope_rejects_files_the_scanner_skips() {
         "Unwalked kind home.\n",
     );
 
-    let mut config = Config::default_for(root);
+    let mut config = Config::default_for(root.to_path_buf());
     config.include = Some(vec!["content".to_string()]);
     config.exclude = vec!["excluded".to_string()];
     let fs = config

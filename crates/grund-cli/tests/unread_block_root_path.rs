@@ -4,8 +4,12 @@
 //! and a `group/README.md` nobody scans. The tree is named under the block root,
 //! so the block root itself is `.`, from every run base (§FS-check.4.10.5).
 
+#[path = "support/temporary_root.rs"]
+mod temporary_root;
+use temporary_root::TemporaryRoot;
+
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
 const TAIL: &str = ", so its citations are never checked. Set include_root = true, \
@@ -13,11 +17,12 @@ or configure another project's source scope to read it.\n";
 
 /// The issue's tree under the system temp directory, where no config above it
 /// is discovered.
-fn tree(name: &str) -> PathBuf {
-    let root = std::env::temp_dir()
-        .join(format!("grund-unread-block-root-{}", std::process::id()))
-        .join(name);
-    let _ = fs::remove_dir_all(&root);
+fn tree(name: &str) -> TemporaryRoot {
+    // §FS-repository-maintenance.4.2: claim a direct leaf without an unowned pid parent.
+    let root = TemporaryRoot::new(
+        &std::env::temp_dir(),
+        &format!("grund-unread-block-root-{name}"),
+    );
     fs::create_dir_all(root.join("group/a")).expect("create fixture");
     let files = [
         (

@@ -2,6 +2,7 @@
 //! what compares as one directory entry, the names a survivor keeps, and the guard that only a
 //! run with two or more failures resolves anything for it (§GOAL-fast-feedback). Unix-only:
 //! every tree here is about a link or a mode.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -67,7 +68,7 @@ fn issue_1337_selecting_a_whole_run_name_keeps_the_encounters_failure_place() {
 }
 
 /// `<root>/realE/cases` and `<root>/real`, with `e2e -> realE` and `ext -> real`.
-fn linked_tree(name: &str) -> PathBuf {
+fn linked_tree(name: &str) -> crate::testing::TemporaryRoot {
     let root = physical_test_root(name);
     fs::create_dir_all(root.join("realE/cases")).expect("create the directory");
     fs::create_dir_all(root.join("real")).expect("create the target");

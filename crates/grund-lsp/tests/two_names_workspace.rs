@@ -2,6 +2,7 @@
 //! it speaks of, because the member's table holds that name. A place finding stands at its own
 //! spelling, and a content finding reaches each open name once (§FS-scan.identity.findings,
 //! §FS-lsp.1.1, §AR-scanner.1.8).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 #![cfg(unix)]
 
 mod support;
@@ -10,7 +11,7 @@ use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use std::fs;
 use std::os::unix::fs::symlink;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::mpsc;
 use std::time::Duration;
 use support::*;
@@ -25,7 +26,7 @@ const MEMBER: &str = "grund_config_version = 2\nproject_name = \"api\"\n\
     [schema.kinds.AR]\nfolders = [\"docs/ar\"]\nindex = false\n";
 
 /// A workspace whose one member holds `name`, with `text` in it, and whose root reads `docs/`.
-fn workspace(case: &str, name: &str, text: &str) -> PathBuf {
+fn workspace(case: &str, name: &str, text: &str) -> TemporaryRoot {
     let root = test_root(case);
     let write = |path: &str, text: &str| {
         let path = root.join(path);
@@ -71,7 +72,7 @@ fn codes(diagnostics: &[Value], code: &str) -> usize {
 fn shown_then_exit(
     stdin: &mut impl std::io::Write,
     receiver: &mpsc::Receiver<Value>,
-    child: &mut std::process::Child,
+    child: &mut support::Child,
 ) -> BTreeMap<String, Vec<Value>> {
     send_message(
         stdin,

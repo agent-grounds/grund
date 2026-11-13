@@ -3,6 +3,7 @@
 //! (§AR-checker.1.3), the managed-block and index-target reads go through those
 //! bytes (§AR-checker.2.7, §AR-checker.2.16), and the merge keeps the single
 //! driver's order (§AR-checker.1.4).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -65,7 +66,7 @@ fn copy_tree(from: &Path, to: &Path) {
 /// non-symlink `CLAUDE.md` whose managed blocks `init` wrote under
 /// `anchor_format = "github"`, a dangling citation and two rule violations — copied
 /// so a case may edit it. `None` from a packaged crate, which carries no e2e tree.
-fn presentation_fixture(name: &str) -> Option<PathBuf> {
+fn presentation_fixture(name: &str) -> Option<crate::testing::TemporaryRoot> {
     let source = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/e2e/cases/check-presentation-only-drift-baseline/repo");
     if !source.is_dir() {
@@ -209,7 +210,7 @@ fn each_entrypoint_is_compared_against_its_own_bytes_and_a_probe_error_is_an_io_
 
 /// An `AR` kind whose index enrolls the inline declaration in `src/bus.rs` by its
 /// canonical bare-ID source link (§FS-check.3.18.3).
-fn external_index_repo(name: &str) -> PathBuf {
+fn external_index_repo(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

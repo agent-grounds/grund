@@ -2,6 +2,7 @@
 //! a failure under the anchor stays an error under any of them, in the tree where the name the
 //! whole run keeps is under the anchor neither as written nor resolved (§FS-check.1.3.6.3,
 //! §FS-lsp.1.1, §AR-scanner.1.entry). Unix-only: the tree is links and a mode.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -14,7 +15,7 @@ use crate::testing::{physical_test_root, symlink, write};
 
 /// A workspace root with `aa -> zz`, `realE/lnk -> ../zz` and `zz/x` barred, so its whole walk
 /// keeps `aa/x`; `None` where the mode does not bar this user.
-fn third_name_tree(name: &str) -> Option<PathBuf> {
+fn third_name_tree(name: &str) -> Option<crate::testing::TemporaryRoot> {
     let root = physical_test_root(name);
     write(
         &root.join("grund.toml"),

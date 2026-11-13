@@ -3,6 +3,7 @@
 //! home with no directory named `docs` on its path, is a stub, and the editor shows
 //! nothing at its heading (§FS-declarations.stubs.shape, §FS-declarations.checks.stub-shape,
 //! §FS-lsp.1.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -53,5 +54,4 @@ fn a_link_titled_heading_in_a_home_without_docs_is_a_stub_and_shows_nothing() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

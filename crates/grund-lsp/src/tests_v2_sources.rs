@@ -2,6 +2,7 @@
 //! on-type shorthand expansion (§FS-lsp.1.4) asks the declaration gate the scan
 //! asks (§FS-config-v2.schema.sources.declarations.gate), and reads a remapped
 //! suffix as the language it maps to, whole (§FS-config-v2.schema.sources.extensions).
+//! Source-derived fixture labels name one leaf (§FS-repository-maintenance.4.2).
 
 use super::*;
 
@@ -65,7 +66,7 @@ fn a_gated_line_expands_under_v2_and_is_kept_under_v1() {
 fn a_remapped_rust_suffix_keeps_its_raw_string() {
     let text = "/// See \u{a7}FS-001 \npub const S: &str = r#\"\n// \u{a7}FS-001 \n\"#;\n";
     for rel in ["src/a.rs", "src/b.rustdoc"] {
-        let name = format!("v2_remap_{rel}");
+        let name = format!("v2_remap_{}", rel.replace('/', "_"));
         assert_eq!(edits(&name, V2, rel, text, 0), expanded(), "{rel} comment");
         let kept = edits(&name, V2, rel, text, 2);
         assert!(
@@ -81,7 +82,7 @@ fn a_remapped_rust_suffix_keeps_its_raw_string() {
 fn a_remapped_markdown_suffix_keeps_its_fence() {
     let text = "# FS-002-b: B\n\nSee \u{a7}FS-001 \n\n```text\nexample \u{a7}FS-001 \n```\n";
     for rel in ["docs/FS-002-b.md", "docs/FS-002-b.mdx"] {
-        let name = format!("v2_remap_{rel}");
+        let name = format!("v2_remap_{}", rel.replace('/', "_"));
         assert_eq!(edits(&name, V2, rel, text, 2), expanded(), "{rel} prose");
         let kept = edits(&name, V2, rel, text, 5);
         assert!(kept.is_empty(), "{rel} rewrote inside a fence: {kept:?}");
@@ -94,7 +95,7 @@ fn a_remapped_markdown_suffix_keeps_its_fence() {
 fn a_remapped_python_suffix_reads_its_docstring() {
     let text = "def f():\n    \"\"\"Implements \u{a7}FS-001 \n    \"\"\"\n";
     for rel in ["src/m.py", "src/m.pyi"] {
-        let name = format!("v2_remap_{rel}");
+        let name = format!("v2_remap_{}", rel.replace('/', "_"));
         assert_eq!(
             edits(&name, V2, rel, text, 1),
             expanded(),

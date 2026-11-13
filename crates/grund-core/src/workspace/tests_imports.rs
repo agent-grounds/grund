@@ -2,6 +2,7 @@
 //! (§FS-imports.declaration.path): a symlink is followed exactly as far as the
 //! directory whose identity is then checked, and two spellings of one root are one
 //! target.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::expand_workspace_tree;
 use crate::config::load_config_at;
@@ -9,8 +10,8 @@ use crate::testing::{canonical_test_path, test_root, write};
 
 /// A consumer `app` beside a target `lib`, with `link` a symlink to `app` itself and
 /// `alias` one to `lib`, and `app` importing `dep` from `path`.
-fn consumer(name: &str, path: &str) -> std::path::PathBuf {
-    let base = canonical_test_path(&test_root(name));
+fn consumer(name: &str, path: &str) -> crate::testing::TemporaryRoot {
+    let base = test_root(name).physical();
     let app = base.join("app");
     let lib = base.join("lib");
     write(
@@ -26,7 +27,7 @@ fn consumer(name: &str, path: &str) -> std::path::PathBuf {
     );
     std::os::unix::fs::symlink(&app, base.join("link")).expect("link to app");
     std::os::unix::fs::symlink(&lib, base.join("alias")).expect("link to lib");
-    app
+    base.child("app")
 }
 
 /// §FS-imports.failures: a symlink that resolves to the consumer is the consumer.

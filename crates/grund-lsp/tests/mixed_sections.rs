@@ -1,13 +1,14 @@
 //! Real-server coverage for a mixed section coordinate, a name under a number
 //! (§FS-config.3.3.1): `### 1.goals: Goals` under `## 1. Overview` is one
 //! address, and the editor answers a citation of it as that section (§FS-lsp.1.3.3).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
 use serde_json::{Value, json};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::{Child, ChildStdin};
+use std::process::ChildStdin;
 use std::sync::mpsc;
 use support::*;
 
@@ -20,7 +21,7 @@ const TOKEN_END: i64 = 18;
 const IN_TAIL: i64 = 14;
 
 struct Fixture {
-    root: PathBuf,
+    root: TemporaryRoot,
     spec: PathBuf,
     usage: PathBuf,
 }
@@ -108,7 +109,7 @@ fn shut_down(
     mut stdin: ChildStdin,
     receiver: &mpsc::Receiver<Value>,
     mut child: Child,
-    root: &Path,
+    _root: &Path,
 ) {
     send_message(
         &mut stdin,
@@ -121,7 +122,6 @@ fn shut_down(
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }
 
 /// §FS-lsp.1.3.3: hover on `<§>FS-x.1.goals` previews the `1.goals` section, not

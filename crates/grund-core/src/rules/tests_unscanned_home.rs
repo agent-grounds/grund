@@ -4,6 +4,7 @@
 //! row, cited or not, judged as a scanned one since §FS-rules.7.11 closed (§AR-rules.3), and rules read
 //! the home out of the scan's one reading of the stub's target (§AR-scanner.4.6),
 //! never a reading of their own.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::facts::{NodeKey, RuleFacts};
 use super::markdown::adapt_markdown;
@@ -32,7 +33,7 @@ const UNCITED: &str = "AR-second is cited by FS 0 times; RULE-ar-cited requires 
 
 /// A stub of `AR-second` in `docs/` pointing at `source.rs`, which `[scan] include`
 /// leaves out, `FS-uses` citing `uses`, and a rule that every AR is cited.
-fn stub_repo(name: &str, uses: &str) -> (Config, Catalog) {
+fn stub_repo(name: &str, uses: &str) -> (crate::testing::Rooted<Config>, Catalog) {
     let root = test_root(name);
     write(&root.join("grund.toml"), CONFIG);
     write(
@@ -51,7 +52,7 @@ fn stub_repo(name: &str, uses: &str) -> (Config, Catalog) {
     write(&root.join("source.rs"), SOURCE);
     let config = load_config(&root).expect("load config");
     let (findings, _) = scan_tree(&config, None, false).expect("scan");
-    (config, findings)
+    (root.hold(config), findings)
 }
 
 fn label(facts: &RuleFacts, node: &NodeKey) -> String {

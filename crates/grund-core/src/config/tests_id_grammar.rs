@@ -6,6 +6,7 @@
 //! alias-path boundary (§FS-workspace.1) is the first such character, and it is
 //! asked of a *pattern* as a question about what the pattern matches — both
 //! directions are pinned below, because a substring test got both wrong.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::*;
 use crate::testing::{test_root, write};
@@ -150,7 +151,7 @@ fn id_grammar_rejects_a_slash_section_separator() {
     );
 
     // And the backstop under it, for a `Config` assembled in code.
-    let mut config = Config::default_for(root);
+    let mut config = Config::default_for(root.to_path_buf());
     config.section_separator = "/".into();
     let err = config
         .rebuild_grammar()
@@ -166,9 +167,8 @@ fn id_grammar_rejects_a_slash_section_separator() {
 /// caller can route around the rule the namespace grammar depends on.
 #[test]
 fn rebuilding_the_grammar_rejects_a_slash_in_the_slug_pattern() {
-    let mut config = Config::default_for(test_root(
-        "rebuilding_the_grammar_rejects_a_slash_in_the_slug_pattern",
-    ));
+    let root = test_root("rebuilding_the_grammar_rejects_a_slash_in_the_slug_pattern");
+    let mut config = Config::default_for(root.to_path_buf());
     config.slug_pattern = "[a-z][a-z0-9/-]*".into();
 
     let err = config

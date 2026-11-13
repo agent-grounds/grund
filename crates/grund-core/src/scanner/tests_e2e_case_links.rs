@@ -2,6 +2,7 @@
 //! that cannot be read, failed at the link, never an absent one; and a name that is not there at
 //! all stays absent (§FS-declarations.e2e-case.failure, §FS-scan.scope.links.unresolvable).
 //! Unix-only: every tree here is about a link.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::{Path, PathBuf};
 
@@ -12,7 +13,7 @@ use crate::config::Config;
 use crate::testing::{physical_test_root, symlink, write};
 
 /// A case directory `e2e/cases/b` holding only `expected.exit`.
-fn case_dir(name: &str) -> (PathBuf, PathBuf) {
+fn case_dir(name: &str) -> (crate::testing::TemporaryRoot, PathBuf) {
     let root = physical_test_root(name);
     let dir = root.join("e2e/cases/b");
     write(&dir.join("expected.exit"), "0\n");

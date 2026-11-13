@@ -1,6 +1,7 @@
 //! Focused embedded-section value proofs: exact markers, every supported
 //! source wrapper, strict physical shape, binding ownership, and formatter
 //! stability (§FS-values.2.4, §FS-values.5.1, §FS-values.8).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -21,7 +22,7 @@ fn invalid_lines(name: &str, body: &str, named: bool) -> Vec<usize> {
         &path,
         &format!("# FS-001-alpha: Alpha\n\n## 1. Price <!-- grund:value -->\n{body}"),
     );
-    let mut config = embedded_config(root);
+    let mut config = embedded_config(root.to_path_buf());
     config.named_sections = named;
     config.rebuild_grammar().expect("rebuild named grammar");
     let (findings, errors) = scan_tree(&config, Some(&path), true).expect("scan invalid shape");
@@ -277,7 +278,7 @@ fn an_invalid_nested_root_refuses_only_the_form_below_its_component() {
     assert_eq!(binding_lines, vec![9]);
 }
 
-fn write_local_format_fixture(name: &str) -> (PathBuf, PathBuf) {
+fn write_local_format_fixture(name: &str) -> (crate::testing::TemporaryRoot, PathBuf) {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

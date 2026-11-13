@@ -3,6 +3,7 @@
 //! §AR-scanner.4.4). A block opens only on a line that starts with an opener and
 //! closes at the first `*/` after it; a bare line is in declaration position only
 //! in a block whose `*/` is found.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::source_line::{BlockCommentLine, BlockCommentScanState};
 use super::{CommentBlockKind, comment_blocks, is_bare_block_line};
@@ -80,7 +81,8 @@ fn a_one_line_block_opens_and_closes_on_its_line() {
 /// starred and closer lines are not bare.
 #[test]
 fn only_a_closed_block_has_bare_lines() {
-    let config = numbered_config(test_root("only_a_closed_block_has_bare_lines"));
+    let root = test_root("only_a_closed_block_has_bare_lines");
+    let config = numbered_config(root.to_path_buf());
     let closed = ["/**", "FS-b: Beta", " * starred", "*/", "/*", "FS-c: Gamma"];
     let mut bare = vec![false; closed.len()];
     for (start, end, kind) in comment_blocks(&closed, false, config.lexical()) {
@@ -98,7 +100,8 @@ fn only_a_closed_block_has_bare_lines() {
 /// the file when it never does.
 #[test]
 fn comment_block_spans_equal_the_state_spans() {
-    let config = numbered_config(test_root("comment_block_spans_equal_the_state_spans"));
+    let root = test_root("comment_block_spans_equal_the_state_spans");
+    let config = numbered_config(root.to_path_buf());
     let lines = [
         "/**",
         "FS-b: Beta",

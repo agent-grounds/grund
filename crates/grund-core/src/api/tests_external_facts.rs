@@ -1,5 +1,6 @@
 //! Embedding contracts for external facts (§FS-id.1.2, §FS-id.2.1,
 //! §AR-bindings.2).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::*;
 use crate::testing::{test_root, write};
@@ -25,7 +26,7 @@ fn public_id_api_honors_width_for_a_per_kind_numeric_format() {
         "TICKET",
         "Another ticket",
         IdOpts {
-            path: root,
+            path: root.to_path_buf(),
             path_provided: true,
             width: 6,
         },

@@ -3,8 +3,9 @@
 //! published option it sets, which is a contract of its own (§AR-bindings.2):
 //! it defaults off, it widens the section filter when set, and with it off the
 //! same options return what they returned before the field existed.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 use crate::testing::{test_root, write};
@@ -13,7 +14,7 @@ use crate::testing::{test_root, write};
 /// and bare. `1.10` is the components `1` then `10`: a sibling of `1.1` and an
 /// ordinary child of `1`. It is the site that tells a string prefix from a
 /// component relation, and it does so under `--section 1.1` (§FS-refs.2).
-fn refs_descendants_repo(name: &str) -> PathBuf {
+fn refs_descendants_repo(name: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

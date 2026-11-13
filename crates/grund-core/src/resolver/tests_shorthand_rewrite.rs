@@ -503,7 +503,8 @@ fn on_type_refuses_the_lines_fmt_refuses() {
 #[cfg(unix)]
 #[test]
 fn expansion_survives_a_root_reached_by_another_path() {
-    let root = test_root("expansion_survives_a_root_reached_by_another_path");
+    // §FS-repository-maintenance.4.1: own both the project and its external alias.
+    let root = test_root("expansion_survives_a_root_reached_by_another_path").child("project");
     write(
         &root.join("grund.toml"),
         "grund_config_version = 1\n[id]\nformat = \"{kind}-{number}-{slug}\"\n",
@@ -516,7 +517,6 @@ fn expansion_survives_a_root_reached_by_another_path() {
         "{}-link",
         root.file_name().expect("test root name").to_string_lossy()
     ));
-    let _ = std::fs::remove_file(&link);
     std::os::unix::fs::symlink(&root, &link).expect("symlink the test root");
 
     // Both the document and the declarations are reached through the link,

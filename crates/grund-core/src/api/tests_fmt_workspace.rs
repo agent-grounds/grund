@@ -1,8 +1,8 @@
 //! Workspace-wide strict formatter preflight through the public API
 //! (§FS-fmt.3.3).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
-use std::path::PathBuf;
 
 use super::*;
 use crate::scanner::ApiScanError;
@@ -11,7 +11,7 @@ use crate::writers::FmtScanAbort;
 
 const ROOT_DOCUMENT: &str = "# FS-root-thing: Root concern\n\nRoot leans on §sub/FS-sub-thing.\n";
 
-fn build_workspace_fixture(name: &str, root_scan_error: bool) -> PathBuf {
+fn build_workspace_fixture(name: &str, root_scan_error: bool) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -49,7 +49,7 @@ fn public_fmt_api_aggregates_strict_workspace_scan_errors() {
     let root = build_workspace_fixture("fmt_workspace_api_errors", true);
 
     let error = format_references(FmtOpts {
-        path: root,
+        path: root.to_path_buf(),
         path_provided: true,
         cross_refs: true,
         ..FmtOpts::default()

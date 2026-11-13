@@ -2,8 +2,7 @@
 //! §FS-check.3.6) — the two keys on the `[[kinds]]` row against their
 //! `[reference]` defaults, which row governs which file, the unit each level
 //! cuts, and the obligations that follow the same unit (§FS-check.3.11).
-
-use std::path::PathBuf;
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use crate::api::{CheckRun, run_check};
 use crate::config::load_config;
@@ -13,7 +12,13 @@ use crate::testing::{check_run, findings, scan_tree, test_root, write};
 /// a `src/` tree outside every home, which is the homeless kind's complement
 /// (§FS-config.3.9.2). `reference` and `rows` are spelled by the caller,
 /// because what each case is about is where the two keys are written.
-fn repo(name: &str, reference: &str, rows: &str, skill: &str, code: &str) -> PathBuf {
+fn repo(
+    name: &str,
+    reference: &str,
+    rows: &str,
+    skill: &str,
+    code: &str,
+) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -189,7 +194,7 @@ fn a_file_with_no_section_at_the_level_is_one_unit() {
 /// A source tree at a level, spelled on the homeless row (§FS-config.3.9.2.3).
 /// The module doc grounds the file; one top-level block and one indented
 /// block are what the two ranks of §FS-check.3.6.2.2 tell apart.
-fn source_repo(name: &str, level: usize) -> PathBuf {
+fn source_repo(name: &str, level: usize) -> crate::testing::TemporaryRoot {
     repo(
         name,
         "",
@@ -374,7 +379,7 @@ fn an_inline_declaration_does_not_ground_a_non_citable_home() {
 /// A repo whose only non-citable home is a *single file* (§FS-config.3.4):
 /// the shape §FS-check.3.6.1 governs like any other home, and the one the
 /// keys were rejected on before they meant anything there.
-fn runbook_repo(name: &str, row: &str) -> PathBuf {
+fn runbook_repo(name: &str, row: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

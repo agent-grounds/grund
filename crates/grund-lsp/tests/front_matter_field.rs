@@ -1,6 +1,7 @@
 //! A front-matter coordinate in the editor (§FS-fields.front-matter.surfaces):
 //! its finding is the CLI's at the key's line, a citation of a key navigates to
 //! that line, and its hover is the key's slice (§FS-lsp.1.1.2, §FS-lsp.1.2.1).
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 mod support;
 
@@ -97,5 +98,4 @@ fn a_front_matter_key_resolves_navigates_and_hovers_as_the_cli_shows_it() {
     );
     drop(stdin);
     wait_for_exit(&mut child);
-    let _ = fs::remove_dir_all(root);
 }

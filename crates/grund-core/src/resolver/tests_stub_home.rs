@@ -2,6 +2,7 @@
 //! once per target per scan, through the input observation a watching run
 //! subscribes from (§FS-check.3.2.1, §FS-check.6.1.1, §AR-scanner.4.6). The e2e
 //! cases pin what `check` reports; these pin what the scan reads to report it.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -40,7 +41,7 @@ fn id(slug: &str) -> Id {
 
 /// A scanned `FS-first` with a section, and stubs of `FS-second` and `FS-third`
 /// in `docs/` pointing at `source.rs`, which `[scan] include` leaves out.
-fn stub_repo(name: &str) -> (Config, Catalog) {
+fn stub_repo(name: &str) -> (crate::testing::Rooted<Config>, Catalog) {
     let root = test_root(name);
     write(&root.join("grund.toml"), CONFIG);
     write(
@@ -54,7 +55,8 @@ fn stub_repo(name: &str) -> (Config, Catalog) {
         );
     }
     write(&root.join("source.rs"), SOURCE);
-    rescan(&root)
+    let (config, findings) = rescan(&root);
+    (root.hold(config), findings)
 }
 
 fn rescan(root: &Path) -> (Config, Catalog) {

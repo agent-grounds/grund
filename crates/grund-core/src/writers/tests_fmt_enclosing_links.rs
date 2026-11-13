@@ -3,6 +3,7 @@
 //! wrote is left with its link (§FS-citations.wrap.enclosing), and an unwrapped
 //! citation is wrapped fresh. The reading has one owner in the grammar; these
 //! cases pin it through the pass that writes, line by line.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::wrap_markdown_links;
 use crate::config::{Config, load_config};
@@ -14,7 +15,7 @@ const CANON: &str = "specs/FS-001-login.md#fs-001-login-a-user-logs-in";
 
 /// A project whose `FS` kind keeps `FS-001-login` under `docs/specs`, loaded and
 /// scanned: what the pass resolves a citation against.
-fn project(name: &str) -> (Config, Catalog) {
+fn project(name: &str) -> (crate::testing::Rooted<Config>, Catalog) {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -28,7 +29,7 @@ fn project(name: &str) -> (Config, Catalog) {
     );
     let config = load_config(&root).expect("load config");
     let findings = scan_findings(&config, &root);
-    (config, findings)
+    (root.hold(config), findings)
 }
 
 /// The pass over `line` in `docs/notes.md`, spelled under `config.root` as the

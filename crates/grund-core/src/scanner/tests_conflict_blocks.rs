@@ -1,6 +1,7 @@
 //! Test module: the conflict blocks the file pass records (§AR-scanner.2.9,
 //! §FS-declarations.body.conflict). Every marker line here is inside an indented
 //! string literal, so no line of this file is itself a marker line.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::Path;
 
@@ -62,7 +63,7 @@ fn recorded(root: &Path) -> Vec<String> {
     by_check
 }
 
-fn project(name: &str, files: &[(&str, &str)]) -> std::path::PathBuf {
+fn project(name: &str, files: &[(&str, &str)]) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(&root.join("grund.toml"), CONFIG);
     for (path, text) in files {

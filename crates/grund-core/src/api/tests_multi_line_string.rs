@@ -2,14 +2,15 @@
 //! surface (§FS-languages.multi-line-string, §FS-fmt.2.3.1). `check` and
 //! `fmt --check` must give each line of one fixture the same verdict: silent on
 //! the literal's interior, live again after its closer.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 use crate::testing::{check_run, test_root, write};
 
 /// A repo declaring `FS-042-user-login`, with one Rust file holding `source`.
-fn rust_repo(name: &str, source: &str) -> PathBuf {
+fn rust_repo(name: &str, source: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),

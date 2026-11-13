@@ -12,21 +12,23 @@ use crate::testing::{scan_tree, test_root, write};
 
 const HEAD: &str = "grund_config_version = 2\nproject_name = \"example\"\n[schema.sources]\nlanguages = [\"markdown\"]\n";
 
-fn load(name: &str, toml: &str) -> anyhow::Result<Config> {
+fn load(name: &str, toml: &str) -> anyhow::Result<crate::testing::Rooted<Config>> {
     let root = test_root(name);
     write(&root.join("grund.toml"), toml);
-    load_config(&root)
+    // §FS-repository-maintenance.4.1: keep the tree with its loaded path consumer.
+    let config = load_config(&root)?;
+    Ok(root.hold(config))
 }
 
 /// The refusal `load` raised, in full.
-fn refusal(result: anyhow::Result<Config>) -> String {
+fn refusal<T>(result: anyhow::Result<T>) -> String {
     match result {
         Ok(_) => panic!("the file should be refused"),
         Err(err) => format!("{err:#}"),
     }
 }
 
-fn loaded(name: &str, toml: &str) -> Config {
+fn loaded(name: &str, toml: &str) -> crate::testing::Rooted<Config> {
     load(name, toml).unwrap_or_else(|err| panic!("{name}: the file should load: {err:#}"))
 }
 

@@ -7,15 +7,16 @@
 //! obligation and a folder home, and `ungrounded` a default and a place it
 //! reaches. Each source is pinned off and on, as `tests_armed_switches` pins the
 //! rest.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::tests_armed_switches::{FOLDER, armed, pinned, rule_project, run, v2};
 use crate::model::Switch;
 use crate::testing::{test_root, write};
 
 /// A version-1 project with named sections, its one `AR` row carrying `extra`.
-fn v1(name: &str, extra: &str) -> PathBuf {
+fn v1(name: &str, extra: &str) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -176,7 +177,7 @@ fn only_an_obligation_that_can_apply_to_nothing_arms_its_line() {
 
 /// A version-1 project whose `[reference]` and `code` row set `require_grounding`
 /// to `default` and `code`, and whose `AR` row sets it `false`.
-fn grounding(name: &str, default: bool, code: bool) -> PathBuf {
+fn grounding(name: &str, default: bool, code: bool) -> crate::testing::TemporaryRoot {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -244,7 +245,7 @@ fn member(root: &Path, name: &str) {
 /// A workspace whose one member, `sub`, is a block and no project, its own
 /// `[workspace]` table carrying `lists`; each name in `present` is a project
 /// under it.
-fn nested_block(name: &str, lists: &str, present: &[&str]) -> PathBuf {
+fn nested_block(name: &str, lists: &str, present: &[&str]) -> crate::testing::TemporaryRoot {
     let root = v2(name, "", "[workspace]\nmembers = [\"sub\"]\n");
     write(
         &root.join("sub/grund.toml"),

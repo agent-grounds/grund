@@ -3,13 +3,17 @@
 //! deterministic finding order (§FS-errors.4.1), and the remedy each finding names
 //! clearing its site when it is followed (§FS-check.3.24.3).
 
+#[path = "support/temporary_root.rs"]
+mod temporary_root;
+use temporary_root::TemporaryRoot;
+
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Output};
 
-fn fixture(name: &str) -> PathBuf {
-    let root = std::env::temp_dir().join(format!("grund-cli-{name}-{}", std::process::id()));
-    let _ = fs::remove_dir_all(&root);
+fn fixture(name: &str) -> TemporaryRoot {
+    // §FS-repository-maintenance.4.1: own the leaf before fallible setup.
+    let root = TemporaryRoot::new(&std::env::temp_dir(), &format!("grund-cli-{name}"));
     fs::create_dir_all(root.join("docs")).expect("create fixture");
     fs::write(
         root.join("grund.toml"),

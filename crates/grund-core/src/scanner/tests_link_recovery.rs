@@ -2,6 +2,7 @@
 //! (§AR-scanner.1.9). Each link hands out its path once and explains one walker error of its kind;
 //! an error with no link left to explain it is the walk root's to report, so it never disappears.
 //! Each directory is listed once per walk root.
+//! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::fs;
 use std::io;
@@ -33,7 +34,7 @@ fn recovered(
 
 /// `<root>/docs` holding links `a` and `b` to a barred `<root>/real`; `None` where the mode does
 /// not bar this user (root), so nothing here fails to open.
-fn barred_tree(name: &str) -> Option<PathBuf> {
+fn barred_tree(name: &str) -> Option<crate::testing::TemporaryRoot> {
     let root = test_root(name);
     fs::create_dir_all(root.join("docs")).expect("create the home");
     fs::create_dir_all(root.join("real")).expect("create the target");
