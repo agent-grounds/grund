@@ -136,7 +136,7 @@ pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
 #[cfg(all(test, unix))]
 pub(crate) use scan_error::scan_error_message;
 pub(crate) use scan_error::{
-    Absolute, FromBase, api_scan_error, reported_scan_failure, scan_failure_diagnostic,
+    Absolute, api_scan_error, reported_scan_failure, scan_failure_diagnostic,
     scan_operation_failure,
 };
 pub(crate) use scope_probe::{

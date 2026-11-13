@@ -277,3 +277,74 @@ fn a_message_naming_the_report_base_reads_dot() {
     );
     assert_eq!(output.status.code(), Some(1));
 }
+
+/// The ignore file named after `stop ignoring it in ` in `line`, up to the comma or line end.
+fn ignore_file_named(line: &str) -> String {
+    let (_, rest) = line
+        .split_once("stop ignoring it in ")
+        .expect("the rule's way out");
+    rest.split(", and fetch again")
+        .next()
+        .expect("a name")
+        .trim_end()
+        .to_owned()
+}
+
+/// An ignore file outside the loaded root, here the global excludes file, is named by `fetch`'s
+/// refusal as `check`'s tail names it for the same home, with the broken-stub line's fallback
+/// rather than a `..` path that climbs out of the root (§FS-fetch.4.2.1, §FS-check.3.1.3.1,
+/// §FS-cli.3.4, §AR-config.1.7).
+#[test]
+fn fetch_and_check_name_an_ignore_file_outside_the_root_alike() {
+    let scratch = Scratch::new("outside-ignore");
+    let (home, xdg, root) = (
+        scratch.0.join("home"),
+        scratch.0.join("xdg"),
+        scratch.0.join("p"),
+    );
+    fs::create_dir_all(&home).expect("create the home");
+    // A global excludes file applies in a Git repository (§FS-scan.scope.ignore-files.global).
+    fs::create_dir_all(root.join(".git")).expect("mark the repository");
+    write(&xdg.join("git/ignore"), "T-1.md\n");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"p\"\n\n[schema.kinds.T]\n\
+         folders = [\"docs/t\"]\nid_format = \"{kind}-{number}\"\nindex = false\n\
+         fetch = \"scripts/fetch\"\n",
+    );
+    write(&root.join("notes.md"), "# Notes\n\nSee §T-1.\n");
+    let script = root.join("scripts/fetch");
+    write(&script, "#!/bin/sh\nprintf '# T-1: Fetched\\n'\n");
+    fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).expect("make it executable");
+    let run_isolated = |args: &[&str]| {
+        Command::new(env!("CARGO_BIN_EXE_grund"))
+            .args(args)
+            .current_dir(&root)
+            .env("NO_COLOR", "1")
+            .env("HOME", &home)
+            .env("XDG_CONFIG_HOME", &xdg)
+            .output()
+            .expect("run grund")
+    };
+    let fetch = error_lines(&run_isolated(&["fetch", "T-1"]));
+    let check = String::from_utf8_lossy(&run_isolated(&["check"]).stdout).into_owned();
+    let check = check
+        .lines()
+        .find(|line| line.contains("the scan does not read docs/t/T-1.md"))
+        .unwrap_or_else(|| panic!("check names the unread snapshot:\n{check}"))
+        .to_owned();
+    let (fetched, checked) = (ignore_file_named(&fetch), ignore_file_named(&check));
+    assert_eq!(fetched, checked, "fetch:\n{fetch}check:\n{check}");
+    assert!(
+        Path::new(&fetched).is_absolute(),
+        "an escaping spelling: {fetch}"
+    );
+    assert_eq!(
+        fs::canonicalize(&fetched).expect("the named file exists"),
+        fs::canonicalize(xdg.join("git/ignore")).expect("the ignore file exists"),
+    );
+    assert!(
+        fetch.starts_with("error: kind `T` cannot fetch into docs/t/T-1.md: "),
+        "fetch:\n{fetch}"
+    );
+}

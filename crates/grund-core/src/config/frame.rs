@@ -197,8 +197,9 @@ impl Display<'_> {
 }
 
 /// `path` as a report names it from `base`, with `..` for a target outside it and `base`
-/// itself `.`: the one spelling of a reported path (§AR-config.1.7, §FS-cli.3.4), which
-/// [`Display::path`] gives a run and a reader that holds only a base asks directly.
+/// itself `.`: the base-relative step of the one spelling (§AR-config.1.7, §FS-cli.3.4).
+/// [`Display::path`] gives a run it, absolute outside the loaded root; a reader that holds only
+/// a base asks it directly, for a path inside that base or one its point spells with a climb.
 pub(crate) fn report_path(base: &Path, path: &Path) -> String {
     let spelled = format_path(&relative_from_base(base, path));
     if spelled.is_empty() {

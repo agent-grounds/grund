@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 use super::walk::scan_roots;
 use super::walk_errors::{BROKEN_LINK, link_identity, loop_reason, unresolved_link_reason};
-use crate::config::{Display, Frame, Schema, report_path};
+use crate::config::{Display, Frame, Schema};
 use crate::model::{Code, Diagnostic, FailureNames, OperationDiagnostic, ValueFormat, remedies};
 use crate::sources::{
     io_reason, path_is_symlink, path_metadata, paths_same_location, physical_path_key,
@@ -83,19 +83,6 @@ impl ReportSpelling for Display<'_> {
 
     fn is_base(&self, path: &Path) -> bool {
         Display::is_base(self, path)
-    }
-}
-
-/// The spelling of a reader that holds only the report base (§AR-config.1.7).
-pub(crate) struct FromBase<'a>(pub(crate) &'a Path);
-
-impl ReportSpelling for FromBase<'_> {
-    fn path(&self, path: &Path) -> String {
-        report_path(self.0, path)
-    }
-
-    fn is_base(&self, path: &Path) -> bool {
-        path == self.0
     }
 }
 
