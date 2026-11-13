@@ -11,12 +11,12 @@ use std::path::{Path, PathBuf};
 use super::fetch::{FetchFailure, fetch_operational};
 use super::fetch_folder::{already_declared, place_in_folder};
 use super::fetch_splice::Owned;
-use crate::config::{Config, report_path};
+use crate::config::{Config, Display};
 use crate::model::{
     Catalog, Declaration, FileRecord, Id, OperationDiagnostic, paired_declarations,
     scanned_path_key,
 };
-use crate::scanner::{FromBase, ScanError, reported_scan_failure};
+use crate::scanner::{ScanError, reported_scan_failure};
 use crate::sources::{link_metadata, path_is_dir, path_is_file, read_bytes};
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -50,15 +50,17 @@ pub(super) struct Request<'a> {
     pub(super) config: &'a Config,
     pub(super) id: &'a Id,
     pub(super) local: &'a str,
-    pub(super) report_base: &'a Path,
+    /// How the run's report spells a path: the workspace's, as `check`'s (§FS-cli.3.4).
+    pub(super) display: Display<'a>,
     pub(super) home: Home,
 }
 
 impl Request<'_> {
-    /// `path` as a refusal names it, the one spelling of a reported path, the report base `.`
-    /// (§FS-errors.terms, §AR-config.1.7).
+    /// `path` as a refusal names it, the one spelling of a reported path, the report base `.`,
+    /// and a file outside the loaded root, such as a global ignore file, as `check` names it
+    /// (§FS-errors.terms, §AR-config.1.7, §FS-fetch.4.2.1).
     pub(super) fn shown(&self, path: &Path) -> String {
-        report_path(self.report_base, path)
+        self.display.path(path)
     }
 }
 
@@ -318,7 +320,7 @@ pub(super) fn unscanned(
     error: &ScanError,
     diagnostic: &mut Option<anyhow::Error>,
 ) -> FetchFailure {
-    let line = reported_scan_failure(error, &FromBase(request.report_base)).line();
+    let line = reported_scan_failure(error, &request.display).line();
     let failure = fetch_operational(line);
     with_io_source(request, &error.path, failure, diagnostic)
 }
