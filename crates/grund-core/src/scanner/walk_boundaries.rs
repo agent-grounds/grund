@@ -1,13 +1,15 @@
 //! The §AR-scanner.1 predicates that are not the traversal itself: which files
 //! the walk reads at all, and the ownership and canonical-root boundaries it may
-//! not carry a scan root across, shared by the reporting walk and the
-//! read-any-file probe (§FS-workspace.6.2).
+//! not carry a scan root across, shared by the reporting walk and the probes
+//! that ask what it would read (§FS-workspace.6.2).
 //!
 //! The two file tests sat in the per-file pass while the scanner was a file-name
 //! category, which is what made a §AR-scanner.2 file answer a §AR-scanner.1
 //! question; they read a path and the `[scan]` table and nothing of a line.
 
-use crate::sources::{link_metadata, path_is_dir};
+use crate::sources::{
+    canonical_path, link_metadata, path_is_dir, path_lookup, resolved_as_far_as_answered,
+};
 use std::path::{Path, PathBuf};
 
 use super::read_predicate::name_refusal;
@@ -30,6 +32,55 @@ pub(super) fn owned_by_another_project(
         .filter(|root| canonical.starts_with(root))
         .max_by_key(|root| root.components().count())
         .is_some_and(|owner| owner.as_path() != own_root)
+}
+
+/// A scan root as the walk's root gates read it: what the lookup said, where the root goes, and
+/// whether it is a directory link out of the project, opened or not.
+pub(super) struct PlacedRoot {
+    /// `path_lookup`'s answer, never `Ok(false)`. An `Err` is a lookup the disk refused, which
+    /// the walk reports only once every boundary has had its say.
+    pub(super) looked_up: std::io::Result<bool>,
+    /// Where the root goes: its canonical path; as far as the disk answers when the lookup was
+    /// refused; its spelling when only the canonicalization failed.
+    pub(super) canonical: PathBuf,
+    /// Whether the outward directory-link gate prunes the root.
+    pub(super) outward_link: bool,
+}
+
+/// The one place a scan root is looked up, placed, and judged against the outward directory-link
+/// gate. The reporting walk prunes on it, and the empty-scan warning asks it why a handed path
+/// read nothing, so the two cannot disagree (§FS-check.2.2.2.6). `None` where the lookup says the
+/// root is absent (§FS-scan.scope.homes.lookup).
+///
+/// A root the disk refused is placed as far as it answers, so the gate judges where it goes and
+/// not its spelling: a directory link out of the project gets the verdict it gets when its target
+/// opens (§FS-scan.scope.homes.lookup.outward). Of a root that opens, the gate asks
+/// `outward_directory_link_root` (§FS-config.3.5.1); of one that does not, only the link's name
+/// can answer, which `outward_unlooked_link_root` asks.
+pub(super) fn place_root(
+    scan_root: &Path,
+    physical_root: &Path,
+    schema: &Schema,
+) -> Option<PlacedRoot> {
+    let looked_up = path_lookup(scan_root);
+    if matches!(looked_up, Ok(false)) {
+        return None;
+    }
+    let canonical = canonical_path(scan_root).unwrap_or_else(|_| {
+        if looked_up.is_err() {
+            resolved_as_far_as_answered(scan_root)
+        } else {
+            scan_root.to_path_buf()
+        }
+    });
+    let outward_link = outward_directory_link_root(scan_root, &canonical, physical_root)
+        || (looked_up.is_err()
+            && outward_unlooked_link_root(scan_root, &canonical, physical_root, schema));
+    Some(PlacedRoot {
+        looked_up,
+        canonical,
+        outward_link,
+    })
 }
 
 /// Whether the scan root *is itself* a directory link pointing outside the
@@ -57,7 +108,7 @@ pub(super) fn outward_directory_link_root(
 /// The same gate for a root whose lookup failed, so `is_directory_symlink` cannot answer
 /// (§FS-scan.scope.homes.lookup.outward): `resolved` is where the root goes as far as the
 /// disk says, and only the link's name can tell a directory link from a file link.
-pub(super) fn outward_unlooked_link_root(
+fn outward_unlooked_link_root(
     scan_root: &Path,
     resolved: &Path,
     physical_root: &Path,
