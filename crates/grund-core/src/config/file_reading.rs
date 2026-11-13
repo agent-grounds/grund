@@ -107,8 +107,10 @@ impl<'a> FileReading<'a> {
         let (path, extension) = (name.spelling(), name.extension());
         let mut lexical = compiled.lexical(schema);
         let model = schema.sources.model.as_ref();
-        // §FS-fmt.2.3.1: the one answer, whichever branch the rest of the reading takes.
-        let reads = Readings::of(model.is_some(), name.language(), extension);
+        // §FS-fmt.2.3.1: the one answer, whichever branch the rest of the reading takes, but for
+        // fetch's output, read by its name as grund 0.22.0 read it (§DF-one-reading-answer.2.6).
+        let version_2 = model.is_some() && !name.unclaimed_by_name();
+        let reads = Readings::of(version_2, name.language(), extension);
         match model.and_then(|model| Some((model, name.language()?))) {
             Some((model, language)) => {
                 lexical.comment_prefixes = &language.comment_prefixes;
