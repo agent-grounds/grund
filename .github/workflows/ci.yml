@@ -150,7 +150,7 @@ jobs:
 
   # §AR-ci.13.2: the required checks. Each runs no suite of its own; it runs whatever its
   # needs did, and fails unless every one of them succeeded. A cancelled pull-request or
-  # group run asks no runner for them, so it frees as its suites stop (§AR-ci.12.2).
+  # group run asks no runner for them, so it frees as its suites stop (§AR-ci.12.1, §AR-ci.12.2).
   test-ubuntu:
     name: cargo test (ubuntu-latest)
     runs-on: ubuntu-latest
@@ -172,8 +172,8 @@ jobs:
         run: exit 1
 
   # §AR-ci.12.2: the sweep. On every group it `gh run cancel`s each unfinished merge_group
-  # run whose gh-readonly-queue branch the queue deleted, so a dropped group's run stops
-  # taking runners. No check needs it, and it exits 0 on a forge error.
+  # run whose gh-readonly-queue branch is gone or points at another commit, so a dropped
+  # group's run stops taking runners. No check needs it; it exits 0 on a forge error.
   cancel-dropped-groups:
     name: cancel dropped merge-queue groups
     if: github.event_name == 'merge_group'

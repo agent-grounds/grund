@@ -154,7 +154,8 @@ def required_check_problems(text):
 def check_if_problems(name, condition, needed):
     """What keeps a required check's `if:` from the table of §AR-ci.12.1, whatever its needs ended
     with: skipped over a failed need it would read as passed (§AR-ci.13.2), and asking a runner on
-    a cancelled pull-request run it would hold its group."""
+    a cancelled pull-request run, or on a dropped group's cancelled run (§AR-ci.12.2), it would
+    hold that run open."""
     if not condition:
         return [f"{name!r} has no `if:`, so a failed need skips it and a skipped required check "
                 "passes"]
@@ -175,7 +176,7 @@ def check_if_problems(name, condition, needed):
 
 def guard_problems(text):
     """§AR-ci.13.2: the aggregate runs whatever its needs ended with, but on the cancelled run of
-    §AR-ci.12.1, and fails on any need that did not succeed."""
+    §AR-ci.12.1 or of a dropped group (§AR-ci.12.2), and fails on any need that did not succeed."""
     problems = []
     for aggregate in (i for i in instances(text) if i["aggregate"]):
         name = aggregate["name"]

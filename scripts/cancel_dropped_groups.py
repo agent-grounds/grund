@@ -5,7 +5,10 @@ dropped, so it stops taking runners from the groups that can still land.
 
 lists the `ci.yml` runs on `merge_group` and the queue's live `gh-readonly-queue` branches,
 and cancels each run that is a `merge_group` run, has not completed, is not this run, and
-whose branch is no longer live, printing the run's id and branch.
+whose group is no longer live, printing the run's id and branch. A group is live only while
+its branch exists *and* points at the commit the run tests: the queue names a branch after
+its pull request and the commit the group is built on, so a pull request queued again on the
+same commit reuses a dropped group's name, while that group's run is still going.
 
 The sweep reaches no verdict, so it exits 0 on any forge error, naming the call that failed.
 When either list fails it cancels nothing, because a branch list it could not read would
@@ -52,18 +55,21 @@ def main(argv: list[str]) -> int:
         return 2
     repository, own = argv
     runs = listed("run", "list", "--repo", repository, "--workflow", "ci.yml", "--event",
-                  "merge_group", "--limit", LIMIT, "--json", "databaseId,headBranch,status,event")
+                  "merge_group", "--limit", LIMIT, "--json",
+                  "databaseId,headBranch,headSha,status,event")
     if runs is None:
         return 0
     refs = listed("api", f"repos/{repository}/git/matching-refs/heads/gh-readonly-queue/")
     if refs is None:
         return 0
-    live = {ref["ref"].removeprefix(PREFIX) for ref in refs}
+    # Each live branch and the commit it points at, the forge's word on which group it holds.
+    live = {ref["ref"].removeprefix(PREFIX): ref.get("object", {}).get("sha") for ref in refs}
     for run in runs:
         run_id = str(run.get("databaseId"))
         branch = run.get("headBranch")
+        head = run.get("headSha")
         if (run.get("event") != "merge_group" or run.get("status") == "completed"
-                or run_id == own or branch in live):
+                or run_id == own or (head and live.get(branch) == head)):
             continue
         ok, output = gh("run", "cancel", run_id, "--repo", repository)
         if ok:
