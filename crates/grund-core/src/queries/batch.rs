@@ -8,7 +8,7 @@ use crate::config::{display_location, run_warning_findings};
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Finding, FindingSite, ShowOutput};
 use crate::resolver::{
-    WorkspaceContext, load_reported_workspace_context, with_member_id_candidates,
+    WorkspaceContext, load_reported_workspace_context, stopping_failure, with_member_id_candidates,
 };
 use crate::scanner::resolve_id_arg;
 use crate::workspace::split_qualified_id_arg;
@@ -78,7 +78,8 @@ pub(crate) fn show_batch_data(
         let context = load_reported_workspace_context(&opts.path, path_provided)?;
         cautions = run_warning_findings(context.render_config(), context.run_warnings.clone());
         let selection = selection(&context, &globs)?;
-        if let Some(first) = context.projects.iter().find_map(|p| p.scan_errors.first()) {
+        // §AR-scanner.1.6: the failure `show` stops at, else the first any project met.
+        if let Some((first, _)) = stopping_failure(&context.projects, &context.projects) {
             let mut diagnostic = crate::model::OperationDiagnostic::new(
                 "filesystem",
                 first.code().as_str(),
@@ -219,11 +220,8 @@ fn show_batch_run(
     // workspace pass has already settled them.
     *run_warnings = run_warning_findings(context.render_config(), context.run_warnings.clone());
     let selection = selection(&context, &globs)?;
-    if let Some(first) = context
-        .projects
-        .iter()
-        .find_map(|project| project.scan_errors.first())
-    {
+    // §AR-scanner.1.6: the failure `show` stops at, else the first any project met.
+    if let Some((first, _)) = stopping_failure(&context.projects, &context.projects) {
         // §FS-cli.3.4: a scan failure at the report base names it `.`.
         return Err(anyhow!(
             "{}: {}",

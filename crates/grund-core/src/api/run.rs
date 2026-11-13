@@ -313,8 +313,9 @@ fn run_workspace_check(
     // §FS-check.3.5: `--require-grounding` reaches every member's run through the
     // invocation it was built from (`Run::members`), as `--full` does.
     let mut projects = load_workspace_projects(&mut root_config)?;
-    // §AR-scanner.1.6: each project is walked whole, never from the path.
-    report_unwalked_path(
+    // §AR-scanner.1.6: each project is walked whole, never from the path; a failure there that
+    // no project holds is the run's own, reported below with the projects' failures.
+    let unheld = report_unwalked_path(
         &mut projects,
         &root_config,
         narrowing.path,
@@ -459,6 +460,8 @@ fn run_workspace_check(
             ));
         }
     }
+    // §AR-scanner.1.6: at the path, inside the report scope, so no partition is owed.
+    had_scan_errors |= append_scan_errors(&mut report, unheld);
     // §FS-workspace.2.2, §FS-check.4.9: the caution and the announcements — see
     // this function's docs.
     report.warnings.extend(absent_only_workspace_caution(
