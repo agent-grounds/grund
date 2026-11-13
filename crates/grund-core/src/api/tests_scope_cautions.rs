@@ -1,5 +1,6 @@
-//! The empty-scan caution's hidden-file branch (§FS-check.2.2.2, §AR-scanner.1.13),
-//! and how it names the scope it read (§FS-workspace.5.3, §FS-config.3.6).
+//! The empty-scan caution's hidden-file branch (§FS-check.2.2.2, §AR-scanner.1.13), the
+//! outward link it names below a handed directory (§FS-check.2.2.2.6.1), and how it names
+//! the scope it read (§FS-workspace.5.3, §FS-config.3.6).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::scope_cautions::{display_scope, empty_scan_warning};
@@ -75,4 +76,50 @@ fn the_empty_scan_caution_names_a_symlinked_scope_from_the_report_base() {
     );
     assert_eq!(display_scope(config.display(), &link), ".");
     std::fs::remove_file(&link).expect("unlink the project");
+}
+
+/// A version-2 project `p` under a fresh root, beside `outside/sub/s.md`, a file the walk
+/// would read were it inside, with `p/real/subx -> ../../outside/sub` and `p/inward/inbin ->
+/// ../bin`, where `p/bin` holds only `tool.txt`.
+#[cfg(unix)]
+fn link_below_project(name: &str) -> crate::testing::Rooted<Config> {
+    let root = test_root(name);
+    let project = root.join("p");
+    write(
+        &project.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"p\"\n",
+    );
+    write(&root.join("outside/sub/s.md"), "# Notes\n");
+    write(&project.join("bin/tool.txt"), "a tool\n");
+    std::fs::create_dir_all(project.join("real")).expect("make real");
+    std::fs::create_dir_all(project.join("inward")).expect("make inward");
+    std::os::unix::fs::symlink("../../outside/sub", project.join("real/subx"))
+        .expect("link out of the project");
+    std::os::unix::fs::symlink("../bin", project.join("inward/inbin")).expect("link inward");
+    let config = load_config_at(&project, &project).expect("load the project");
+    root.hold(config)
+}
+
+/// §FS-check.2.2.2.6.1: a handed directory whose walk refused an outward link below it names
+/// that link, spelled from the path, rather than the extensions; one whose only link stays
+/// inside the project is walked and keeps §FS-check.2.2.2.2's extensions wording.
+#[cfg(unix)]
+#[test]
+#[ignore = "red until #1382 names the outward link below the path; implement removes this"]
+fn the_empty_scan_caution_names_an_outward_link_below_the_path() {
+    let config = link_below_project("empty_scan_names_link_below");
+    let message =
+        empty_scan_warning(&config, &config.root.join("real"), true, config.display()).message;
+    assert_eq!(
+        message,
+        "nothing to scan — nothing under `real` was read: `real/subx` is a directory link out \
+         of the project root, and grund does not follow one (name a file below it, or move the \
+         target inside the project)."
+    );
+    let message =
+        empty_scan_warning(&config, &config.root.join("inward"), true, config.display()).message;
+    assert!(
+        message.starts_with("nothing to scan — no files under `inward` matched grund's extensions"),
+        "{message}"
+    );
 }
