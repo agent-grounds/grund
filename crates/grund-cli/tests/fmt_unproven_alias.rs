@@ -7,10 +7,17 @@
 //! these trees, and every test skips where mode 000 does not bar the user (root).
 #![cfg(unix)]
 
+#[path = "support/fixture_cleanup.rs"]
+mod fixture_cleanup;
+#[path = "support/tmpdir_leftovers.rs"]
+mod tmpdir_leftovers;
+
 use std::fs;
+use std::io;
 use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// `§m/FS-001` names one holder where `m/docs/secret` is barred, and two where it can be read.
 const SHORTHAND: &str = "See \u{a7}m/FS-001 here.";
@@ -25,7 +32,11 @@ fn config(name: &str, format: &str, shorthand: &str, cross_refs: bool, rest: &st
     )
 }
 
+/// A case's fixture: `root` is the tree it scans, `w` inside a `base` claimed for this case alone,
+/// and whatever the case builds beside `w` sits in `base` too, so dropping the fixture removes all
+/// of it (§AR-ci-fixture-cleanup).
 struct Tree {
+    base: PathBuf,
     root: PathBuf,
     locked: Vec<PathBuf>,
 }
@@ -36,11 +47,37 @@ struct Run {
 }
 
 impl Tree {
+    /// Claims a base of its own for `test`, with `create_dir` on the base itself, before anything
+    /// is written. A name a leftover root already holds passes to the next serial, and the leftover
+    /// is neither cleared nor adopted (§AR-ci.10.2).
+    fn claim(test: &str) -> Self {
+        static NEXT: AtomicUsize = AtomicUsize::new(0);
+        for _ in 0..128 {
+            let base = std::env::temp_dir().join(format!(
+                "grund-alias-{test}-{}-{}",
+                std::process::id(),
+                NEXT.fetch_add(1, Ordering::Relaxed)
+            ));
+            match fs::create_dir(&base) {
+                Ok(()) => {
+                    return Self {
+                        root: base.join("w"),
+                        base,
+                        locked: Vec::new(),
+                    };
+                }
+                Err(err) if err.kind() == io::ErrorKind::AlreadyExists => continue,
+                Err(err) => panic!("claim {}: {err}", base.display()),
+            }
+        }
+        panic!("claim a base for {test}: 128 names in a row were already taken");
+    }
+
     /// A root citing `body` in `docs/FS-root.md`, and a member `m` holding `FS-001-login` and, in
     /// `m/docs/secret`, a second holder of number one.
     fn new(test: &str, body: &str, cross_refs: bool) -> Self {
-        let root = std::env::temp_dir().join(format!("grund-alias-{test}-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&root);
+        let tree = Self::claim(test);
+        let root = &tree.root;
         fs::create_dir_all(root.join("docs")).expect("create the home");
         fs::create_dir_all(root.join("m/docs/secret")).expect("create the member");
         let members = "\n[workspace]\nmembers = [\"m\"]\n";
@@ -68,10 +105,7 @@ impl Tree {
             "m/docs/secret/FS-001-hidden.md",
             "# FS-001-hidden: Second holder\n\nBody.\n".to_string(),
         );
-        Self {
-            root,
-            locked: Vec::new(),
-        }
+        tree
     }
 
     /// Bars the member's directory and says whether the mode bars this user.
@@ -137,9 +171,14 @@ impl Tree {
 }
 
 impl Drop for Tree {
+    /// Gives back what `bar` took, so the removal can read it, and removes the whole base, not
+    /// only the tree the case scans (§AR-ci-fixture-cleanup). A mode left in place fails the
+    /// removal, and the helper reports that failure (§AR-ci-fixture-cleanup.3).
     fn drop(&mut self) {
-        self.free();
-        let _ = fs::remove_dir_all(&self.root);
+        for path in self.locked.drain(..) {
+            let _ = fs::set_permissions(&path, fs::Permissions::from_mode(0o755));
+        }
+        fixture_cleanup::remove_fixture_tree(&self.base, "remove the fixture base");
     }
 }
 
@@ -199,8 +238,8 @@ fn a_broken_link_in_the_member_refuses_a_narrowed_rewrite() {
 fn a_link_out_of_the_member_leaves_its_proof_standing() {
     let mut tree = Tree::new("member-outward", SHORTHAND, true);
     fs::remove_file(tree.root.join("m/docs/secret/FS-001-hidden.md")).expect("drop the holder");
-    let outside = tree.root.with_extension("outside");
-    fs::create_dir_all(&outside).expect("create the target");
+    let outside = tree.base.join("outside");
+    fs::create_dir(&outside).expect("create the target");
     symlink(&outside, tree.root.join("m/docs/ext")).expect("make the link");
     fs::set_permissions(&outside, fs::Permissions::from_mode(0o000)).expect("set the mode");
     tree.locked.push(outside.clone());
@@ -208,8 +247,6 @@ fn a_link_out_of_the_member_leaves_its_proof_standing() {
         return;
     }
     let run = tree.fmt(&["--write"]);
-    tree.free();
-    fs::remove_dir_all(&outside).expect("remove the target");
     assert_eq!(run.code, 0, "{}", run.stderr);
     assert!(
         tree.body().contains("\u{a7}m/FS-001-login"),
@@ -310,12 +347,8 @@ fn a_whole_run_with_cross_refs_off_refuses_and_leaves_the_file() {
 /// An import's tree is held to the same proof: a whole run exited 0 with the wrong write in place.
 #[test]
 fn a_rewrite_into_an_import_with_a_hole_refuses_and_leaves_the_file() {
-    let base = std::env::temp_dir().join(format!("grund-alias-import-{}", std::process::id()));
-    let _ = fs::remove_dir_all(&base);
-    let mut tree = Tree {
-        root: base.join("w"),
-        locked: Vec::new(),
-    };
+    let mut tree = Tree::claim("import");
+    let base = tree.base.clone();
     fs::create_dir_all(tree.root.join("docs")).expect("create the home");
     fs::create_dir_all(base.join("lib/docs/secret")).expect("create the import");
     let write = |path: PathBuf, text: String| fs::write(path, text).expect("write");
@@ -353,8 +386,6 @@ fn a_rewrite_into_an_import_with_a_hole_refuses_and_leaves_the_file() {
     }
     let before = tree.body();
     let run = tree.fmt(&["--write"]);
-    tree.free();
-    let _keep = fs::remove_dir_all(base.join("lib"));
     assert_eq!(run.code, 2, "{}", run.stderr);
     assert!(
         run.stderr
@@ -426,4 +457,18 @@ fn making_the_directory_readable_ends_the_refusal() {
     tree.free();
     let run = tree.fmt(&["--write", "docs"]);
     assert_eq!(run.code, 0, "{}", run.stderr);
+}
+
+/// A passing import test leaves nothing in its temporary directory: the fixture removes the
+/// whole base it built, `lib` beside the scanned `w` included, and not only the tree it scans
+/// (§AR-ci-fixture-cleanup).
+#[test]
+fn the_import_test_leaves_nothing_in_its_temporary_directory() {
+    let left = tmpdir_leftovers::left_by(&[
+        "a_rewrite_into_an_import_with_a_hole_refuses_and_leaves_the_file",
+    ]);
+    assert!(
+        left.is_empty(),
+        "the import test passed and left {left:?} in its temporary directory"
+    );
 }
