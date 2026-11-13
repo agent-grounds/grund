@@ -51,7 +51,7 @@ pub(super) fn admit_during(
         config: &config,
         id: &id,
         local,
-        report_base: &config.root,
+        display: config.display(),
         home,
     };
     let mut placing = None;
