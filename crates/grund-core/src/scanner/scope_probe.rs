@@ -8,7 +8,9 @@
 use std::path::{Path, PathBuf};
 
 use super::walk::{scan_roots, scan_roots_for, scannable_walk_builder, scannable_walker};
-use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
+use super::walk_boundaries::{
+    is_scannable, outward_directory_link_root, owned_by_another_project, place_root,
+};
 use crate::config::ExcludeGlobs;
 use crate::config::{Frame, Schema, canonical_config_root, config_file_in, root_scope_roots};
 use crate::model::sort_path_key;
@@ -145,19 +147,19 @@ pub(crate) fn pruning_pattern(schema: &Schema, frame: Frame<'_>, path: &Path) ->
 }
 
 /// §FS-check.2.2.2.6: whether the walk refused the handed `path` itself at the outward
-/// directory-link gate. The walk records no reason when it skips a root, so this asks its
-/// question again with its own parts and derives nothing of its own: `scan_roots` resolves the
-/// path to the same first root the walk starts from, and `outward_directory_link_root` is the
-/// gate it applies. A path that resolves to the project root hands the walk no root of its own,
-/// so it is not asked. Like `pruning_pattern`, asked only of a scan that read nothing
-/// (§GOAL-fast-feedback).
+/// directory-link gate, whether its target opened or refused the lookup. The walk records no
+/// reason when it skips a root, so this asks its question again with its own parts and derives
+/// nothing of its own: `scan_roots` resolves the path to the same first root the walk starts
+/// from, and `place_root` is the lookup and the gate the walk applies to it. A path that resolves
+/// to the project root hands the walk no root of its own, so it is not asked. Like
+/// `pruning_pattern`, asked only of a scan that read nothing (§GOAL-fast-feedback).
 pub(crate) fn handed_outward_link(schema: &Schema, frame: Frame<'_>, path: &Path) -> bool {
     let Ok((roots, false)) = scan_roots(schema, frame, Some(path), true) else {
         return false;
     };
     roots.first().is_some_and(|root| {
-        let canonical = canonical_path(root).unwrap_or_else(|_| root.clone());
-        outward_directory_link_root(root, &canonical, &canonical_config_root(frame.root()))
+        place_root(root, &canonical_config_root(frame.root()), schema)
+            .is_some_and(|placed| placed.outward_link)
     })
 }
 

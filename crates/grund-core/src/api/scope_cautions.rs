@@ -133,9 +133,9 @@ fn handed_a_hidden_file(config: &Config, path: &Path, path_provided: bool) -> bo
 /// The CLI-level warning `check` reports when the tree walk matched no files
 /// (§FS-check.2.2): a scan that read nothing is almost always a misconfigured
 /// scope, so we say so instead of printing nothing and exiting `0`. This is a
-/// warning — it never changes the exit code. Which of the three messages it
-/// carries is a question about *why* nothing was read, so the hidden file is
-/// asked first: it was skipped before either of the arms below could decide.
+/// warning — it never changes the exit code. Which message it carries is a
+/// question about *why* nothing was read, so the hidden file is asked first: it
+/// was skipped before any of the arms below could decide.
 /// A root run no config applies to is asked next, before the root arms: when it
 /// holds a project config below, the include list those arms name is the
 /// defaults' and the scaffold they offer would compete with that project

@@ -2,11 +2,13 @@
 //! followed (§FS-scan.scope.links), and the empty-scan warning says so rather than blaming the
 //! extensions it never consulted (§FS-check.2.2.2.6). The controls hold what must not move: a file
 //! below the link is read, a link inside the project is walked, and a real directory with no file
-//! grund reads keeps the extensions wording (§FS-check.2.2.2.2).
+//! grund reads keeps the extensions wording (§FS-check.2.2.2.2). An outward link whose target
+//! refuses the lookup takes the same warning; git carries no mode, so that case builds its own
+//! tree and skips where mode 000 does not bar the user (root).
 #![cfg(unix)]
 
 use std::fs;
-use std::os::unix::fs::symlink;
+use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -18,13 +20,20 @@ const EXTENSIONS_WORDING: &str = "matched grund's extensions";
 
 /// `t/p` is a version-2 project, `t/outside` a tree beside it holding `a.md`. `p/x -> ../outside`
 /// leaves the project, `p/y -> in` stays in it, and `p/bin` holds only `tool.txt`.
-struct Tree(PathBuf);
+struct Tree {
+    root: PathBuf,
+    /// The directories set to mode 000, opened again before the tree is removed.
+    locked: Vec<PathBuf>,
+}
 
 impl Tree {
     fn new(test: &str) -> Self {
         let root = std::env::temp_dir().join(format!("grund-1376-{test}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
-        let tree = Self(root);
+        let tree = Self {
+            root,
+            locked: Vec::new(),
+        };
         tree.write(
             "p/grund.toml",
             "grund_config_version = 2\nproject_name = \"p\"\n\n[schema.kinds.FS]\n\
@@ -37,11 +46,11 @@ impl Tree {
         tree.write("p/in/b.md", "# B\n\nSee \u{a7}FS-nope.\n");
         tree.write("p/bin/tool.txt", "a tool\n");
         tree.write("outside/a.md", "# A\n\nSee \u{a7}FS-nope.\n");
-        symlink("../outside", tree.0.join("p/x")).expect("create the outward link");
-        symlink("in", tree.0.join("p/y")).expect("create the inward link");
+        tree.link("p/x", "../outside");
+        tree.link("p/y", "in");
         let status = Command::new("git")
             .args(["init", "-q", "."])
-            .current_dir(tree.0.join("p"))
+            .current_dir(tree.root.join("p"))
             .status()
             .expect("run git init");
         assert!(status.success(), "git init failed");
@@ -49,9 +58,27 @@ impl Tree {
     }
 
     fn write(&self, relative: &str, content: &str) {
-        let path = self.0.join(relative);
+        let path = self.root.join(relative);
         fs::create_dir_all(path.parent().expect("a parent")).expect("create the parent");
         fs::write(path, content).expect("write the fixture");
+    }
+
+    /// Creates the link `relative` pointing at `target`, written relative to the link.
+    fn link(&self, relative: &str, target: &str) {
+        symlink(target, self.root.join(relative)).expect("create the link");
+    }
+
+    /// Sets the directory `relative` to mode 000 and says whether that bars this user: it does
+    /// not bar root, and then every lookup below it answers and the test proves nothing.
+    fn bar(&mut self, relative: &str) -> bool {
+        let path = self.root.join(relative);
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o000)).expect("set the mode");
+        self.locked.push(path.clone());
+        let barred = fs::read_dir(&path).is_err();
+        if !barred {
+            eprintln!("skipped: the mode does not bar this user, so every lookup answers");
+        }
+        barred
     }
 
     /// Runs `grund` from inside the project `p`.
@@ -59,7 +86,7 @@ impl Tree {
         let output = Command::new(env!("CARGO_BIN_EXE_grund"))
             .args(args)
             .env("NO_COLOR", "1")
-            .current_dir(self.0.join("p"))
+            .current_dir(self.root.join("p"))
             .output()
             .expect("run grund");
         Run {
@@ -73,7 +100,10 @@ impl Tree {
 
 impl Drop for Tree {
     fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
+        for path in &self.locked {
+            let _ = fs::set_permissions(path, fs::Permissions::from_mode(0o755));
+        }
+        let _ = fs::remove_dir_all(&self.root);
     }
 }
 
@@ -115,6 +145,22 @@ impl Run {
     fn assert_read(&self) {
         assert_eq!(self.code, 1, "{}", self.report());
         assert!(self.stdout.contains("FS-nope"), "{}", self.report());
+    }
+
+    /// Exit `2` with the walk's own lookup failure at `path`, and no empty-scan warning at all.
+    fn assert_lookup_failure(&self, path: &str) {
+        assert_eq!(self.code, 2, "{}", self.report());
+        let expected = format!("error: {path}: unreadable symlink: permission denied");
+        assert!(
+            self.stderr.lines().any(|line| line.starts_with(&expected)),
+            "expected a line starting\n{expected}\n{}",
+            self.report()
+        );
+        assert!(
+            !self.stderr.contains("nothing to scan"),
+            "{}",
+            self.report()
+        );
     }
 }
 
@@ -168,4 +214,25 @@ fn a_directory_with_no_read_extension_keeps_the_extensions_wording() {
     let expected = format!("warning: nothing to scan — no files under `bin` {EXTENSIONS_WORDING}");
     assert!(run.stderr.starts_with(&expected), "{}", run.report());
     assert!(!run.stderr.contains(LINK_WORDING), "{}", run.report());
+}
+
+/// An outward link whose target refuses the lookup is pruned at the same gate, in silence, as one
+/// whose target opens (§FS-scan.scope.homes.lookup.outward), so it takes the same warning. The
+/// controls share the barred target and differ in one term of that gate each: `z.md` has a name
+/// the walk reads as a file, and `zin` stays inside the project. Both reach the walk's lookup
+/// failure at the root.
+#[test]
+fn an_outward_link_whose_target_refuses_the_lookup_is_named_as_the_reason() {
+    let mut tree = Tree::new("unlooked");
+    tree.write("locked/inner/a.md", "# A\n\nSee \u{a7}FS-nope.\n");
+    tree.write("p/lockedin/inner/a.md", "# A\n\nSee \u{a7}FS-nope.\n");
+    tree.link("p/z", "../locked/inner");
+    tree.link("p/z.md", "../locked/inner");
+    tree.link("p/zin", "lockedin/inner");
+    if !(tree.bar("locked") && tree.bar("p/lockedin")) {
+        return;
+    }
+    tree.grund(&["check", "z"]).assert_link_warning("z");
+    tree.grund(&["check", "z.md"]).assert_lookup_failure("z.md");
+    tree.grund(&["check", "zin"]).assert_lookup_failure("zin");
 }

@@ -10,9 +10,7 @@ use super::scan_error::FailureRoots;
 use super::tree::ScanError;
 use super::value_json::value_sources;
 use super::walk::{MetCases, WalkDirFilter, scan_roots, scannable_walker};
-use super::walk_boundaries::{
-    is_scannable, outward_directory_link_root, outward_unlooked_link_root, owned_by_another_project,
-};
+use super::walk_boundaries::{PlacedRoot, is_scannable, owned_by_another_project, place_root};
 use super::walk_errors::{
     LinkRecovery, root_lookup_failure, symlink_loop_report, walk_error_reports,
 };
@@ -22,8 +20,7 @@ use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
 use crate::model::{FailureNames, ReadingConflict, ReadingMove, Refused, RootRow};
 use crate::sources::{
-    canonical_path, is_directory, is_regular_file, path_is_file, path_lookup, paths_same_location,
-    physical_path_key, resolved_as_far_as_answered,
+    is_directory, is_regular_file, path_is_file, paths_same_location, physical_path_key,
 };
 
 /// The tree walk for the callers that ask a yes/no question about the tree and
@@ -173,33 +170,21 @@ pub(crate) fn walk_scannable_files_with_sources(
         }
         // §FS-scan.scope.homes.lookup: absent only when the lookup says so; the rest is reported
         // below, after the boundaries, so a root another scan owns stays that scan's.
-        let looked_up = path_lookup(&scan_root);
-        if matches!(looked_up, Ok(false)) {
+        let Some(PlacedRoot {
+            looked_up,
+            canonical: canonical_scan_root,
+            outward_link,
+        }) = place_root(&scan_root, &physical_root, schema)
+        else {
             continue;
-        }
-        // §FS-scan.scope.homes.lookup.outward: a root the disk refused is placed as far as it
-        // answers, so the boundaries below are judged on where it goes, not on its spelling.
-        let canonical_scan_root = canonical_path(&scan_root).unwrap_or_else(|_| {
-            if looked_up.is_err() {
-                resolved_as_far_as_answered(&scan_root)
-            } else {
-                scan_root.to_path_buf()
-            }
-        });
+        };
         // §FS-config.3.5.1: a scan root reached through a directory link uses
         // the same canonical project-root boundary as a link met during descent.
 
         // §AR-workspace.6: a root scan starts outside member namespaces; an
         // included path at or below a member boundary belongs to the member scan,
         // and one in another project belongs there (§FS-workspace.6.2).
-        if outward_directory_link_root(&scan_root, &canonical_scan_root, &physical_root)
-            || (looked_up.is_err()
-                && outward_unlooked_link_root(
-                    &scan_root,
-                    &canonical_scan_root,
-                    &physical_root,
-                    schema,
-                ))
+        if outward_link
             || frame
                 .run
                 .workspace
