@@ -1446,6 +1446,18 @@ would spend macOS slots and buy little. It is written once, in the reusable work
 ([§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)), so the next day's run finds them: a called workflow sees its caller's event,
 so a release candidate's call saves nothing.
 
+#### 14.1.1 A test item gated narrower than its module brings its own imports
+
+The suite job builds the test code with warnings denied, as each leg does
+([§AR-ci.13.7.1](AR-ci.md#1371-a-shard-links-the-test-targets-once)), and it compiles a `cfg` set no gate compiles: `unix` without
+`linux`. So a test item gated narrower than the module that holds it, such as a
+`#[cfg(target_os = "linux")]` test in a `#[cfg(unix)]` module, imports inside its own
+body what only it uses. Left at the top of the module, the import is unused wherever
+the module compiles without that item, `-D warnings` makes that an error, and on macOS
+the error stops the whole job and is seen only the next day ([§AR-ci.14](AR-ci.md#14-macos-runs-once-a-day)).
+agent-grounds/grund#1395 was a `PathBuf` left so. An `#[allow(unused_imports)]` on the
+import is no cure: it stays silent once no platform uses the import.
+
 ### 14.2 A release candidate runs them too
 
 No release ships with macOS broken. `ci.yml` calls the suite job on
