@@ -5,7 +5,7 @@
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::*;
 use crate::LspSnapshotOpts;
@@ -114,6 +114,7 @@ fn an_unsearchable_entry_finding_reads_as_the_entry_path() {
 #[test]
 fn an_existing_path_with_no_canonical_form_keeps_its_lexical_text() {
     use std::os::fd::AsRawFd;
+    use std::path::PathBuf; // §AR-ci.14.1.1: only this Linux test uses it
 
     let root = project("an_existing_path_with_no_canonical_form_keeps_its_lexical_text");
     let deleted = root.join("deleted");

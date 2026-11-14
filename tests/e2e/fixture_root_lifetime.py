@@ -25,6 +25,11 @@ def entries(root):
     return found
 
 
+def tail(text, lines=40):
+    """A child's last `lines` lines of output: a failure carries them (§AR-ci.requirements.5.1)."""
+    return '\n'.join(text.splitlines()[-lines:])
+
+
 def run(checkout, log_dir):
     """Build exactly this checkout's core lib-test target, then run it twice."""
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -33,7 +38,8 @@ def run(checkout, log_dir):
          '--message-format=json'], cwd=checkout, capture_output=True, text=True)
     (log_dir / 'build.stderr').write_text(build.stderr)
     if build.returncode:
-        raise RuntimeError(f'build failed ({build.returncode}); see {log_dir / "build.stderr"}')
+        raise RuntimeError(f'build failed ({build.returncode}); see {log_dir / "build.stderr"}\n'
+                           f'{tail(build.stderr)}')
     artifacts = [json.loads(line) for line in build.stdout.splitlines() if line.startswith('{')]
     binaries = [item['executable'] for item in artifacts
                 if item.get('reason') == 'compiler-artifact'
@@ -59,7 +65,8 @@ def run(checkout, log_dir):
             summaries = [line for line in output.splitlines() if line.startswith('test result:')]
             if suite.returncode or len(summaries) != 1 or 'test result: ok.' not in summaries[0]:
                 raise RuntimeError(f'run {number}: suite failed or missing summary '
-                                   f'({suite.returncode}); see {log_dir / f"run{number}.log"}')
+                                   f'({suite.returncode}); see {log_dir / f"run{number}.log"}\n'
+                                   f'{tail(output)}')
             leftover = entries(area)
             base = area / 'grund-lib-tests'
             roots = len(list(base.iterdir())) if base.is_dir() else 0

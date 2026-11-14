@@ -3,9 +3,7 @@
 The executable end-to-end test is §FS-repository-maintenance.4.1. When its
 build or a suite run fails, the failure carries that child's output and not
 only the log it was written to (§AR-ci.requirements.5.1), because the gate
-entry removes the log directory with the run. The two stub-cargo cases are
-skipped for the red specification commit of #1395; implement removes the
-decorator.
+entry removes the log directory with the run.
 """
 import importlib.util
 import json
@@ -57,8 +55,6 @@ class FixtureRootLifetime(unittest.TestCase):
                              'passing core suites left owned fixture roots')
 
     # §AR-ci.requirements.5.1: a failure prints its child processes' output.
-    @unittest.skip("red until #1395: the oracle's failure carries its child's output; "
-                   "implement removes this")
     @unittest.skipUnless(os.name == 'posix', 'stubs cargo with a shell script')
     def test_a_failed_build_carries_the_compiler_error(self):
         with tempfile.TemporaryDirectory(prefix='grund-1395-stub-') as scratch:
@@ -67,8 +63,6 @@ class FixtureRootLifetime(unittest.TestCase):
             self.assertIn(STUB_BUILD_ERROR, failure)
 
     # §AR-ci.requirements.5.1: a failure prints its child processes' output.
-    @unittest.skip("red until #1395: the oracle's failure carries its child's output; "
-                   "implement removes this")
     @unittest.skipUnless(os.name == 'posix', 'stubs cargo with a shell script')
     def test_a_failed_suite_run_carries_the_suite_output(self):
         with tempfile.TemporaryDirectory(prefix='grund-1395-stub-') as scratch:
