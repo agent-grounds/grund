@@ -590,6 +590,51 @@ front-matter coordinates of a declaration whose kind declares a `front-matter` f
 entries lie above the body span, have no heading, and are marked as lying in the front matter
 ([§FS-fields.front-matter.coordinates](FS-fields.md#front-mattercoordinates-its-coordinates)). No heading outside the body enters the map that way.
 
+#### section.map.nested: After a nested declaration, the enclosing body owns the heading
+
+Bodies nest in Markdown. A declaration heading deeper than an enclosing one opens a nested
+body, and that body ends at the next heading at its own level or shallower, while the
+enclosing body goes on ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)). A numbered, enabled named or relative
+heading that comes after the nested body has ended, and before the enclosing body ends, is a
+coordinate of the enclosing declaration. It is never a coordinate of the nested declaration
+the scan read last, and it is never dropped from every map. Where bodies nest several deep,
+the owner is the innermost declaration whose body holds the heading. This is the owner
+[§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) names for a plain heading in the same place, so
+the coordinate that check suggests is the one the numbered heading then has.
+
+```markdown
+## AR-ci: CI
+
+The CI lead.
+
+### AR-matrix: Matrix
+
+The matrix body.
+
+### 1. Pull-request workflows
+
+The pull-request workflows body.
+```
+
+`### 1. Pull-request workflows` is `AR-ci.1`. `grund AR-ci.1` prints it, `grund AR-ci --toc`
+lists it, and a citation of it checks clean. `AR-matrix` has no section `1`. The same
+holds in three other cases:
+
+- an enabled named heading in that place, `### pr: Pull-request workflows`, which is `AR-ci.pr`;
+- a heading under such a section, which takes its path from it, so `#### .1 Push` under a
+  `### 2. Workflows` there is `AR-ci.2.1`;
+- a nested declaration one level further down, so `#### 1.2 Second` after a `#### AR-x` inside
+  `### 1. Overview` is `AR-ci.1.2`.
+
+A heading admitted this way is a claimant like any other in that body. A `### 1.` before the
+nested declaration and another after it are a [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path) of
+`AR-ci.1`. A depth that does not match its path is a
+[§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch) finding. And an unmarked heading after it is
+suggested the next unused sibling ([§FS-declarations.checks.unmarked-heading.3](FS-declarations.md#checksunmarked-heading3-the-suggested-coordinate)). grund 0.22
+and earlier offered such a heading only to the nested declaration, which refused it, so it
+resolved nowhere and was judged by nothing. The verdicts this moves are
+[§DF-section-after-nested-declaration](../decisions/functional/DF-section-after-nested-declaration.md#df-section-after-nested-declaration-a-section-heading-after-a-nested-declaration-is-the-enclosing-declarations-coordinate).
+
 ### section.relative: A heading may write only the component it adds
 
 Inside a Markdown declaration body a heading may write only the component it adds and take the rest of its path from its parent: under `## format: Formatting`, the heading `### .1: Username` declares `format.1`. The heading's **canonical path** is its parent's path, a `.`, and its component; under the declaration heading itself it is the component alone. The canonical path is the section's one coordinate. Citations, `refs`, `list`, completion, query results, the section map and every diagnostic name `FS-login.format.1`; `.1` alone is never a coordinate, and no citation form addresses a section relative to anything.

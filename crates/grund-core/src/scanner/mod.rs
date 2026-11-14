@@ -212,6 +212,8 @@ mod tests_scan_error;
 #[cfg(test)]
 mod tests_scope_probe;
 #[cfg(test)]
+mod tests_section_after_nested_declaration;
+#[cfg(test)]
 mod tests_section_body_scope;
 #[cfg(test)]
 mod tests_section_outside_declaration;
