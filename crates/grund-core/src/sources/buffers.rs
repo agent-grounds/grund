@@ -288,18 +288,11 @@ impl<'a> Sources<'a> {
     /// candidates are observed before one is chosen, missing directories and
     /// followed links included (§FS-check.6.1.3).
     pub(crate) fn stub_target(self, root: &Path, stub_file: &Path, target: &Path) -> PathBuf {
+        let [markdown_relative, root_relative] = stub_target_candidates(root, stub_file, target);
         if target.is_absolute() {
             observe_input(target, false);
-            return target.to_path_buf();
+            return markdown_relative;
         }
-        let stub_file = if stub_file.is_absolute() {
-            stub_file.to_path_buf()
-        } else {
-            root.join(stub_file)
-        };
-        let markdown_relative =
-            normalize_path_lexically(&stub_file.parent().unwrap_or(root).join(target));
-        let root_relative = normalize_path_lexically(&root.join(target));
         observe_input(&markdown_relative, false);
         observe_input(&root_relative, false);
         if self.exists(&markdown_relative) {
@@ -308,4 +301,23 @@ impl<'a> Sources<'a> {
             root_relative
         }
     }
+}
+
+/// The two files a stub's link can name, before either is looked at (§FS-check.6.1.1): the one
+/// beside the stub, then the one under the config root. An absolute link names one file, given
+/// twice. The editor keeps both so that an edit to either is judged without reading the tree
+/// (§AR-lsp.3.2).
+pub(crate) fn stub_target_candidates(root: &Path, stub_file: &Path, target: &Path) -> [PathBuf; 2] {
+    if target.is_absolute() {
+        return [target.to_path_buf(), target.to_path_buf()];
+    }
+    let stub_file = if stub_file.is_absolute() {
+        stub_file.to_path_buf()
+    } else {
+        root.join(stub_file)
+    };
+    [
+        normalize_path_lexically(&stub_file.parent().unwrap_or(root).join(target)),
+        normalize_path_lexically(&root.join(target)),
+    ]
 }

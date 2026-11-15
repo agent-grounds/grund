@@ -22,7 +22,7 @@ const ANSWER_WAIT: Duration = Duration::from_secs(120);
 
 /// One project: three numbered FS declarations and one AR, a Markdown note and a
 /// Java source that cite nothing yet.
-fn fixture(root: &Path) {
+pub(super) fn fixture(root: &Path) {
     write(
         &root.join("grund.toml"),
         "grund_config_version = 1\nproject_name = \"typing\"\n\
@@ -48,7 +48,7 @@ fn fixture(root: &Path) {
 }
 
 /// The Markdown note with `line` as its body; the body is line 2.
-fn note(line: &str) -> String {
+pub(super) fn note(line: &str) -> String {
     format!("# Notes\n\n{line}\n")
 }
 
@@ -57,7 +57,7 @@ fn java(line: &str) -> String {
     format!("class Main {{\n    // {line}\n}}\n")
 }
 
-fn server_over(root: &Path) -> (Server, Connection) {
+pub(super) fn server_over(root: &Path) -> (Server, Connection) {
     let (connection, client) = Connection::memory();
     let folders = [(Url::from_directory_path(root).unwrap(), root.to_path_buf())];
     let server = Server::new(connection, folders.into_iter().collect(), true).unwrap();
@@ -65,17 +65,17 @@ fn server_over(root: &Path) -> (Server, Connection) {
 }
 
 /// The client end of a session, run on its own thread by [`drive`].
-struct Client {
-    connection: Connection,
+pub(super) struct Client {
+    pub(super) connection: Connection,
     /// Open while the loop thread's inputs are being recorded.
     window: Arc<AtomicBool>,
-    next: RefCell<i32>,
+    pub(super) next: RefCell<i32>,
     /// Every `publishDiagnostics` the client has read, in arrival order.
-    published: RefCell<Vec<PublishDiagnosticsParams>>,
+    pub(super) published: RefCell<Vec<PublishDiagnosticsParams>>,
 }
 
 impl Client {
-    fn notify(&self, method: &str, params: Value) {
+    pub(super) fn notify(&self, method: &str, params: Value) {
         let message = Notification::new(method.into(), params);
         self.connection.sender.send(message.into()).unwrap();
     }
@@ -111,7 +111,7 @@ impl Client {
         }
     }
 
-    fn open(&self, path: &Path, text: &str, version: i32) {
+    pub(super) fn open(&self, path: &Path, text: &str, version: i32) {
         let language = path.extension().unwrap().to_str().unwrap();
         self.notify(
             "textDocument/didOpen",
@@ -120,7 +120,7 @@ impl Client {
         );
     }
 
-    fn change(&self, path: &Path, text: &str, version: i32) {
+    pub(super) fn change(&self, path: &Path, text: &str, version: i32) {
         self.notify(
             "textDocument/didChange",
             json!({"textDocument": {"uri": uri(path), "version": version},
@@ -130,7 +130,7 @@ impl Client {
 
     /// The labels a completion at the end of `text`'s line `line` is offered, in
     /// wire order.
-    fn completion(&self, path: &Path, text: &str, line: u32) -> Vec<String> {
+    pub(super) fn completion(&self, path: &Path, text: &str, line: u32) -> Vec<String> {
         let typed = text.lines().nth(line as usize).unwrap();
         let result = self.request(
             "textDocument/completion",
@@ -150,7 +150,7 @@ impl Client {
     /// Wait until every edit sent so far is checked: a hover is a snapshot
     /// request, so it is answered only from a snapshot of the text it was sent
     /// against (§FS-lsp.responsiveness.3).
-    fn settle(&self, path: &Path) {
+    pub(super) fn settle(&self, path: &Path) {
         self.request(
             "textDocument/hover",
             json!({"textDocument": {"uri": uri(path)},
@@ -167,14 +167,14 @@ impl Client {
     }
 }
 
-fn uri(path: &Path) -> Url {
+pub(super) fn uri(path: &Path) -> Url {
     Url::from_file_path(path).unwrap()
 }
 
 /// Run `server`'s event loop on this thread under the check-input observer while
 /// `script` drives it from another, then shut the session down. Returns what the
 /// script returned and every input the loop thread read while a window was open.
-fn drive<T: Send + 'static>(
+pub(super) fn drive<T: Send + 'static>(
     mut server: Server,
     connection: Connection,
     script: impl FnOnce(&Client) -> T + Send + 'static,
@@ -247,7 +247,7 @@ fn beyond<'a>(observed: &'a [CheckInput], edited: &Path) -> Vec<&'a Path> {
 }
 
 /// What `$$FS-00` offers: the two declarations whose ID starts with `FS-00`.
-const AFTER_FS_00: [&str; 2] = ["FS-001-intro", "FS-002-login"];
+pub(super) const AFTER_FS_00: [&str; 2] = ["FS-001-intro", "FS-002-login"];
 
 fn assert_typing_answer(rel: &str, labels: Vec<String>, observed: &[CheckInput], root: &Path) {
     let mut sorted = labels.clone();
@@ -273,8 +273,6 @@ fn assert_typing_answer(rel: &str, labels: Vec<String>, observed: &[CheckInput],
 /// edited text and the catalog alone. Today the `didChange` rebuilds the project
 /// on the loop thread first, reading every scanned file.
 #[test]
-#[ignore = "red until #1386 moves the rebuild off the loop thread and answers typing requests \
-            from the catalog; implement removes this"]
 fn a_keystroke_in_markdown_prose_is_completed_without_reading_the_tree() {
     let root = test_root("typing_markdown_prose");
     fixture(&root);
@@ -290,8 +288,6 @@ fn a_keystroke_in_markdown_prose_is_completed_without_reading_the_tree() {
 /// §FS-lsp.responsiveness.4: the same for a `//` comment in a Java source, which
 /// the issue's GraalVM session types into as often as into a spec.
 #[test]
-#[ignore = "red until #1386 moves the rebuild off the loop thread and answers typing requests \
-            from the catalog; implement removes this"]
 fn a_keystroke_in_a_java_comment_is_completed_without_reading_the_tree() {
     let root = test_root("typing_java_comment");
     fixture(&root);
@@ -332,8 +328,6 @@ fn last_per_uri(published: &[PublishDiagnosticsParams]) -> BTreeMap<Url, Vec<Dia
 /// open document carries the version it was checked at, and none for an older
 /// version follows one for a newer. Today every publish carries no version.
 #[test]
-#[ignore = "red until #1386 publishes each open document's diagnostics with the version they \
-            were checked at; implement removes this"]
 fn a_drained_burst_publishes_what_a_fresh_server_does_in_version_order() {
     let root = test_root("typing_diagnostics_burst");
     fixture(&root);

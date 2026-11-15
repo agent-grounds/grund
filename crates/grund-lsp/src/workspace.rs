@@ -27,6 +27,9 @@ struct ProjectSnapshot {
     /// from (§FS-lsp.responsiveness.3, §AR-lsp.5.2). Optional for the same
     /// fixtures as `completion`.
     show: Option<grund_core::LspShowContext>,
+    /// `show`'s judge, built with it on the rebuild that loaded it, so a keystroke resolves no
+    /// walked path (§AR-lsp.3.2).
+    judge: Option<grund_core::TypingJudge>,
     /// The directories `snapshot.scanned_files` lie in, so a file created since
     /// the last scan is still recognized as this project's — a new file under a
     /// symlinked or parent-relative `[scan] include` has no root prefix and is
@@ -59,6 +62,7 @@ impl ProjectSnapshot {
             kind_titles: metadata.kind_titles,
             completion: None,
             show: None,
+            judge: None,
             scanned_dirs,
             read_outside_scan: BTreeSet::new(),
             index,
@@ -78,6 +82,7 @@ impl ProjectSnapshot {
             .filter(|path| !scanned.contains(path))
             .collect();
         project.completion = Some(loaded.completion);
+        project.judge = Some(loaded.show.typing_judge());
         project.show = Some(loaded.show);
         project
     }

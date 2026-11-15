@@ -1,7 +1,64 @@
 // Diagnostic publication and source-range transport (§FS-lsp.1.1).
 
 impl Server {
+    /// Publish what the installed snapshot reports, computed here: the session's
+    /// first diagnostics, before any rebuild has run (§FS-lsp.1.1).
     fn publish_diagnostics(&mut self) -> Result<()> {
+        let diagnostics = self.installed.diagnostics();
+        self.publish(diagnostics)
+    }
+
+    /// Publish `by_uri`, what the installed snapshot reports, each open document's
+    /// set with the version that snapshot checked (§FS-lsp.1.1), and clear every
+    /// URI that lost its diagnostics. Snapshots install in edit order, so no publish
+    /// for an older version follows one for a newer. A document opened or closed
+    /// since this snapshot's rebuild started is left to the rebuild that saw it,
+    /// which publishes it with the version it checked.
+    fn publish(&mut self, by_uri: BTreeMap<Url, Vec<Diagnostic>>) -> Result<()> {
+        let cleared: Vec<Url> = self
+            .diagnostic_uris
+            .iter()
+            .filter(|uri| !by_uri.contains_key(*uri) && self.settled(uri))
+            .cloned()
+            .collect();
+        for uri in cleared {
+            self.diagnostic_uris.remove(&uri);
+            self.send_diagnostics(uri, Vec::new())?;
+        }
+        for (uri, diagnostics) in by_uri {
+            if self.settled(&uri) {
+                self.diagnostic_uris.insert(uri.clone());
+                self.send_diagnostics(uri, diagnostics)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Whether `uri` is open now exactly when it was open to the installed snapshot.
+    fn settled(&self, uri: &Url) -> bool {
+        self.installed.docs.contains_key(uri) == self.open_docs.contains_key(uri)
+    }
+
+    fn send_diagnostics(&self, uri: Url, diagnostics: Vec<Diagnostic>) -> Result<()> {
+        let version = self.installed.versions.get(&uri).copied();
+        let params = PublishDiagnosticsParams {
+            uri,
+            diagnostics,
+            version,
+        };
+        let notification =
+            Notification::new("textDocument/publishDiagnostics".to_string(), params);
+        self.connection
+            .sender
+            .send(Message::Notification(notification))?;
+        Ok(())
+    }
+}
+
+impl Installed {
+    /// Every diagnostic this snapshot reports, by the URI it is shown on: computed
+    /// by the worker beside the rebuild (§AR-lsp.2.1.1).
+    fn diagnostics(&self) -> BTreeMap<Url, Vec<Diagnostic>> {
         let mut by_uri: BTreeMap<Url, Vec<Diagnostic>> = BTreeMap::new();
         for project in &self.projects {
             for finding in project.snapshot.report.errors.clone() {
@@ -32,33 +89,7 @@ impl Server {
         for (uri, diagnostic) in self.config_failure_diagnostics() {
             by_uri.entry(uri).or_default().push(diagnostic);
         }
-        let next_diagnostic_uris: BTreeSet<Url> = by_uri.keys().cloned().collect();
-        for uri in self.diagnostic_uris.difference(&next_diagnostic_uris) {
-            self.connection
-                .sender
-                .send(Message::Notification(Notification::new(
-                    "textDocument/publishDiagnostics".to_string(),
-                    PublishDiagnosticsParams {
-                        uri: uri.clone(),
-                        diagnostics: Vec::new(),
-                        version: None,
-                    },
-                )))?;
-        }
-        self.diagnostic_uris = next_diagnostic_uris;
-        for (uri, diagnostics) in by_uri {
-            self.connection
-                .sender
-                .send(Message::Notification(Notification::new(
-                    "textDocument/publishDiagnostics".to_string(),
-                    PublishDiagnosticsParams {
-                        uri,
-                        diagnostics,
-                        version: None,
-                    },
-                )))?;
-        }
-        Ok(())
+        by_uri
     }
 
     /// One `error` on each config that will not load, at the line its load
@@ -151,7 +182,7 @@ impl Server {
         let open = finding.sites.iter().filter_map(|site| {
             let site = snapshot.root.join(&site.path);
             let uri = path_uri(&site)?;
-            self.open_docs.contains_key(&uri).then_some((site, uri))
+            self.docs.contains_key(&uri).then_some((site, uri))
         });
         open.filter(|(site, _)| {
             *site != path

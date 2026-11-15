@@ -33,7 +33,7 @@ pub use identity::canonical_snapshot_path;
 pub use observe::{CheckInput, CheckInputObserver, with_check_input_observer};
 
 // What the other components read, each by this module's path (§AR-system.4).
-pub(crate) use buffers::{Buffers, Sources};
+pub(crate) use buffers::{Buffers, Sources, stub_target_candidates};
 pub(crate) use digest::sha256_hex;
 pub(crate) use disk::{
     Resolution, canonical_path, error_resolution, input_read_to_string, io_reason, is_directory,

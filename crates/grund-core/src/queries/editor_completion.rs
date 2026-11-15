@@ -259,3 +259,28 @@ impl LspCompletionContext {
         declared.chain(imports).collect()
     }
 }
+
+#[cfg(test)]
+impl LspCompletionContext {
+    /// Every candidate each project offers, sorted, as (alias, ID, title, path, kind order): what
+    /// the file-again sweep holds two catalogs to (§FS-lsp.responsiveness.4).
+    pub(crate) fn candidate_rows(&self) -> Vec<(String, String, String, String, usize)> {
+        let mut rows: Vec<_> = self
+            .projects
+            .iter()
+            .flat_map(|project| {
+                project.candidates.iter().map(|candidate| {
+                    (
+                        project.alias.clone(),
+                        candidate.id.clone(),
+                        candidate.title.clone(),
+                        candidate.path.clone(),
+                        candidate.kind_order,
+                    )
+                })
+            })
+            .collect();
+        rows.sort();
+        rows
+    }
+}

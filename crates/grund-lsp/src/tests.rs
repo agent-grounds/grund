@@ -259,3 +259,6 @@ mod v2_sources;
 
 #[path = "tests_typing.rs"]
 mod typing;
+
+#[path = "tests_typing_held.rs"]
+mod typing_held;

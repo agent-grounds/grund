@@ -125,17 +125,38 @@ pub(crate) fn scan_file_again(
     let mut after = before.clone();
     drop_file_findings(&mut after, file);
     let (roots, _) = scan_roots(schema, frame, None, false)?;
+    let would_read = || unread(schema, frame, &roots, file).is_none();
+    if let Some(read) = read_file_again(before, file, schema, frame, workspace_targets, would_read)?
+    {
+        merge_findings(&mut after, read);
+    }
+    resolve_stubs_through(schema, frame, &roots, workspace_targets, file, &mut after);
+    Ok(after)
+}
+
+/// The one step by which `scan_file_again` reads `file` again (§AR-system.2.8.1): the walk's own
+/// pass over the text the frame holds for it, behind the walk's read predicate. A file `before`
+/// walked is read; one it did not is read only where `would_read` says the walk would read it
+/// (§AR-scanner.1.13), and `None` is the answer otherwise. The editor's judgement of whether an
+/// edit left a file's declarations standing reads through this step too, and answers `would_read`
+/// with `false`: a file no walk read counts as changed there (§AR-lsp.3.2).
+pub(crate) fn read_file_again(
+    before: &Catalog,
+    file: &Path,
+    schema: &Schema,
+    frame: Frame<'_>,
+    workspace_targets: &[WorkspaceCitationTarget],
+    would_read: impl FnOnce() -> bool,
+) -> Result<Option<Catalog>> {
     let key = scanned_path_key(file);
     let walked = before
         .scanned_files
         .iter()
         .any(|path| scanned_path_key(path) == key);
-    if walked || unread(schema, frame, &roots, file).is_none() {
-        let read = scan_unwalked_file(file, schema, frame, workspace_targets)?;
-        merge_findings(&mut after, read);
+    if walked || would_read() {
+        return scan_unwalked_file(file, schema, frame, workspace_targets).map(Some);
     }
-    resolve_stubs_through(schema, frame, &roots, workspace_targets, file, &mut after);
-    Ok(after)
+    Ok(None)
 }
 
 fn scan_file_results(

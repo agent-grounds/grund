@@ -57,6 +57,7 @@ mod editor_completion;
 mod editor_hover;
 mod editor_on_type;
 mod editor_snapshot;
+mod editor_typing_judge;
 mod glob_scope;
 mod list_scope;
 mod report_scope;
@@ -79,6 +80,7 @@ pub use editor_snapshot::{
     LspCitation, LspDeclaration, LspFindingRange, LspShowContext, LspSnapshot, LspSnapshotOpts,
     LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
 };
+pub use editor_typing_judge::TypingJudge;
 pub use glob_scope::{
     check_coordinate_globs, glob_beside_section, reads_as_coordinate, reads_as_coordinate_glob,
 };

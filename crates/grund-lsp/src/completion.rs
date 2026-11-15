@@ -10,13 +10,14 @@ impl Server {
     }
 
     /// Marshal core byte edits without introducing protocol-side recognition
-    /// or rescanning (§AR-lsp.1, §FS-lsp.1.6.3, §FS-lsp.1.6.4).
-    fn completion(&self, params: Value) -> Result<lsp_types::CompletionList> {
+    /// or rescanning (§AR-lsp.1, §FS-lsp.1.6.3, §FS-lsp.1.6.4), against `text`,
+    /// the document as the request found it (§FS-lsp.responsiveness.4).
+    fn completion(&self, params: Value, text: Option<String>) -> Result<lsp_types::CompletionList> {
         let params: lsp_types::CompletionParams = serde_json::from_value(params)?;
         let position = params.text_document_position.position;
         let uri = params.text_document_position.text_document.uri;
         let mut result = lsp_types::CompletionList { is_incomplete: true, items: Vec::new() };
-        let (Some(path), Some(text)) = (uri.to_file_path().ok(), self.document_text(&uri)) else {
+        let (Some(path), Some(text)) = (uri.to_file_path().ok(), text) else {
             return Ok(result);
         };
         // §FS-imports.editor: an imported document is offered no edit.

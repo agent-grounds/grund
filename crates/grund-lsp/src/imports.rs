@@ -51,31 +51,38 @@ fn client_registers_watchers(params: &InitializeParams) -> bool {
         })
 }
 
-/// What wakes the event loop: a client message, the native watcher, or the
-/// client's channel closing.
+/// What wakes the event loop: a client message, a finished rebuild, the native
+/// watcher, or the client's channel closing (§AR-lsp.2.1.2).
 enum Wake {
     Client(Message),
+    Rebuilt(Built),
     Disk,
     Closed,
 }
 
 /// The project among `projects` whose root contains `path` most deeply.
-fn deepest_root<'a>(projects: &'a [ProjectSnapshot], path: &Path) -> Option<&'a ProjectSnapshot> {
+fn deepest_root<'a>(
+    projects: &'a [Arc<ProjectSnapshot>],
+    path: &Path,
+) -> Option<&'a ProjectSnapshot> {
     projects
         .iter()
-        .filter_map(|project| Some((project.containing_root_depth(path)?, project)))
+        .filter_map(|project| Some((project.containing_root_depth(path)?, &**project)))
         .max_by_key(|(depth, _)| *depth)
         .map(|(_, project)| project)
 }
 
 impl Server {
-    /// The next thing the event loop acts on. A native event opens a burst that
-    /// `check --watch`'s debounce ends (§FS-check.6.1.2), so events that never stop
-    /// still rebuild; while it runs the client is read as ever, and a request is
-    /// answered from the current snapshot rather than held behind the disk
-    /// (§FS-imports.editor).
+    /// The next thing the event loop acts on. A finished rebuild comes first, so
+    /// it is installed before the next message is read (§AR-lsp.2.1.3). A native
+    /// event opens a burst that `check --watch`'s debounce ends (§FS-check.6.1.2),
+    /// so events that never stop still rebuild; while it runs the client is read as
+    /// ever (§FS-imports.editor).
     fn wake(&mut self) -> Wake {
         loop {
+            if let Ok(built) = self.rebuilds.built.1.try_recv() {
+                return Wake::Rebuilt(built);
+            }
             let pending = self.watch.debounce.remaining(self.watch.clock.elapsed());
             if pending.is_some_and(|wait| wait.is_zero()) {
                 self.watch.debounce = grund_core::native_watch::Debounce::default();
@@ -83,6 +90,11 @@ impl Server {
             }
             let due = pending.map_or_else(crossbeam_channel::never, crossbeam_channel::after);
             crossbeam_channel::select! {
+                recv(self.rebuilds.built.1) -> built => {
+                    if let Ok(built) = built {
+                        return Wake::Rebuilt(built);
+                    }
+                }
                 recv(self.connection.receiver) -> message => {
                     return message.map_or(Wake::Closed, Wake::Client);
                 }
@@ -94,6 +106,9 @@ impl Server {
         }
     }
 
+}
+
+impl Installed {
     /// Every import root a folder's run mounted, transitive ones included.
     fn import_roots(&self) -> BTreeSet<PathBuf> {
         self.projects
@@ -107,9 +122,14 @@ impl Server {
     /// root's standalone run and rebuilt where `changed` says a folder's would be.
     /// One that will not load keeps its last snapshot: its refusal is the
     /// consumer's to publish, on the import line (§FS-imports.editor).
-    fn rebuild_imports(&mut self, changed: Option<&Path>, overlays: &BTreeMap<PathBuf, String>) {
+    fn rebuild_imports(
+        &mut self,
+        changed: Option<&[PathBuf]>,
+        overlays: &BTreeMap<PathBuf, String>,
+    ) {
         let roots = self.import_roots();
-        let mut previous: BTreeMap<PathBuf, ProjectSnapshot> = std::mem::take(&mut self.imports)
+        let mut previous: BTreeMap<PathBuf, Arc<ProjectSnapshot>> =
+            std::mem::take(&mut self.imports)
             .into_iter()
             .map(|project| (project.root.clone(), project))
             .collect();
@@ -118,8 +138,8 @@ impl Server {
                 continue;
             }
             let existing = previous.remove(&root);
-            if let (Some(path), Some(project)) = (changed, &existing)
-                && !project.might_cover(path)
+            if let (Some(paths), Some(project)) = (changed, &existing)
+                && !paths.iter().any(|path| project.might_cover(path))
             {
                 self.imports.extend(existing);
                 continue;
@@ -132,7 +152,7 @@ impl Server {
             match lsp_snapshot_with_completion(opts) {
                 Ok(snapshot) => self
                     .imports
-                    .push(ProjectSnapshot::with_completion(root, snapshot)),
+                    .push(Arc::new(ProjectSnapshot::with_completion(root, snapshot))),
                 Err(_) => self.imports.extend(existing),
             }
         }
@@ -143,10 +163,12 @@ impl Server {
         self.project_for_path(path).is_some_and(|owner| {
             self.imports
                 .iter()
-                .any(|import| std::ptr::eq(import, owner))
+                .any(|import| std::ptr::eq(&**import, owner))
         })
     }
+}
 
+impl Server {
     /// Watch the import roots outside every open folder, replacing the watch
     /// whenever that set changes (§AR-lsp.2.1).
     fn watch_imports(&mut self) {
