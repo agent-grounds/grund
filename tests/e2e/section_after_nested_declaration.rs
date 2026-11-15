@@ -133,8 +133,6 @@ fn a_section_before_the_nested_declaration_resolves() {
 /// The report: `check` advises numbering the plain heading as `AR-ci.1` (true today), and once it
 /// is numbered a citation of `AR-ci.1` checks clean (today: `missing section AR-ci.1`).
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
 fn the_coordinate_check_advises_resolves_once_the_heading_is_numbered() {
     let tree = Tree::new("advised", &[("ci.md", CI_PLAIN)], CI_NOTES);
     let advice = tree.run(&["check"]);
@@ -154,8 +152,6 @@ fn the_coordinate_check_advises_resolves_once_the_heading_is_numbered() {
 /// `grund AR-ci.1` prints the numbered heading after `AR-matrix` (today: `section not found`), and
 /// the nested declaration does not gain it.
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
 fn show_prints_the_section_after_the_nested_declaration() {
     let tree = Tree::new("show", &[("ci.md", CI_NUMBERED)], CI_NOTES);
     tree.assert_prints(
@@ -172,8 +168,6 @@ fn show_prints_the_section_after_the_nested_declaration() {
 
 /// `grund AR-ci --toc` lists the section after `AR-matrix` (today: the lead alone).
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
 fn toc_lists_the_section_after_the_nested_declaration() {
     let tree = Tree::new("toc", &[("ci.md", CI_NUMBERED)], CI_NOTES);
     tree.assert_prints(
@@ -185,8 +179,6 @@ fn toc_lists_the_section_after_the_nested_declaration() {
 
 /// An enabled named heading in the same place is `AR-named.pr` (today: `section not found`).
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
 fn a_named_section_after_the_nested_declaration_resolves() {
     let tree = Tree::new(
         "named",
@@ -209,8 +201,6 @@ fn a_named_section_after_the_nested_declaration_resolves() {
 /// `### .1 Push` under `## 1. Workflows` is `AR-rel.1.1` (today: a relative heading without a
 /// parent, and `missing section AR-rel.1`).
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
 fn a_relative_heading_under_a_section_after_the_nested_declaration_resolves() {
     let tree = Tree::new(
         "relative",
@@ -229,8 +219,6 @@ fn a_relative_heading_under_a_section_after_the_nested_declaration_resolves() {
 /// A nested declaration one level further down: `### 1.2 Second` after `### AR-deep-child` inside
 /// `## 1. Overview` is `AR-deep.1.2` (today: `section not found`).
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
 fn a_section_after_a_deeper_nested_declaration_resolves() {
     let tree = Tree::new(
         "deep",
@@ -255,8 +243,6 @@ fn a_section_after_a_deeper_nested_declaration_resolves() {
 /// `### 1.` after `### AR-two-inner` to `AR-two-outer` and `## 1.` after both to `AR-two`
 /// (today: both resolve nowhere).
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
 fn each_heading_belongs_to_the_innermost_body_that_holds_it() {
     let tree = Tree::new(
         "innermost",
@@ -286,8 +272,6 @@ fn each_heading_belongs_to_the_innermost_body_that_holds_it() {
 /// reports the duplicate and `show` refuses the coordinate (today: silence, and `show` picks the
 /// first).
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
 fn a_path_repeated_across_the_nested_declaration_is_a_duplicate_section() {
     let tree = Tree::new(
         "duplicate",
@@ -315,8 +299,6 @@ fn a_path_repeated_across_the_nested_declaration_is_a_duplicate_section() {
 /// `AR-sugg.2`, the next unused sibling (today: `AR-sugg.1`, the coordinate already taken, and
 /// a citation of `AR-sugg.1` fails as missing).
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
 fn an_unmarked_heading_after_such_a_section_is_advised_the_next_unused_coordinate() {
     let tree = Tree::new(
         "suggestion",

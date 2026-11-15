@@ -37,8 +37,6 @@ fn scan(name: &str, text: &str) -> (crate::config::Config, Catalog) {
 /// The report's shape, numbered and named: both headings after `FS-002-matrix` are coordinates of
 /// `FS-001-ci`, the nested declaration has none, and nothing is reported outside a body.
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
 fn a_heading_after_a_nested_declaration_is_the_enclosing_declarations() {
     let (config, findings) = scan(
         "section_after_nested_declaration",
@@ -65,8 +63,6 @@ fn a_heading_after_a_nested_declaration_is_the_enclosing_declarations() {
 /// Bodies nested two deep, and a nested declaration inside a section: each heading goes to the
 /// innermost declaration whose body holds it.
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
 fn the_innermost_enclosing_body_owns_the_heading() {
     let (_, findings) = scan(
         "section_after_nested_declaration_innermost",
@@ -84,8 +80,8 @@ fn the_innermost_enclosing_body_owns_the_heading() {
 /// `## 1.` before the nested declaration and `## 1.` after it are two claimants of `FS-001-ci.1`:
 /// the first holds the map, the second is on the duplicate list, and check reports it.
 #[test]
-#[ignore = "red until #1359 records a heading after a nested declaration on the enclosing \
-            declaration; implement removes this"]
+#[ignore = "its last assertion compares a bare code with error_codes, which yields code@line \
+            (duplicate-section@5); the supervisor rules on the assertion"]
 fn a_path_repeated_across_a_nested_declaration_is_a_duplicate() {
     let (config, findings) = scan(
         "section_after_nested_declaration_duplicate",
