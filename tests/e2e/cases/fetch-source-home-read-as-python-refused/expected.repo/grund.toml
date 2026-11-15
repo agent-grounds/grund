@@ -4,9 +4,6 @@ project_name = "r"
 [schema.sources]
 languages = ["markdown", "python"]
 
-[schema.sources.extensions]
-md = "python"
-
 [schema.kinds.FS]
-files = ["fs.md"]
+files = ["fs.py"]
 fetch = "scripts/fetch-fs"

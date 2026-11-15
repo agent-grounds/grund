@@ -115,10 +115,10 @@ fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Dia
     })
 }
 
-/// §FS-config-v2.checks.config-md-not-markdown: each warning the version-2 reader made of the
-/// file it loaded, at its config line, behind the `<config>:<line>:` breadcrumb
-/// (§FS-errors.2.2.1) that JSON carries as `path` and `line` too (§FS-errors.5.2.3). Version 1
-/// makes none (§FS-config.5.2).
+/// §FS-config-v2.checks: each warning the version-2 reader made of the file it loaded, at its
+/// config line, behind the `<config>:<line>:` breadcrumb (§FS-errors.2.2.1) that JSON carries as
+/// `path` and `line` too (§FS-errors.5.2.3). None since grund 1.0.0 refused the six it carried
+/// (§FS-config-v2.checks.config-md-not-markdown); version 1 makes none (§FS-config.5.2).
 pub(super) fn load_warnings(config: &Config, display: Display<'_>) -> Vec<Diagnostic> {
     let warnings = &config.project().load_warnings.0;
     let warnings = warnings.iter().map(|warning| {

@@ -1,17 +1,14 @@
 //! Black-box regressions for §FS-config-v2.checks.config-value-home-invalid: a version-2 value
-//! row's later entry that grund 0.22.0 loaded but that fails a check its first entry is refused
-//! for loads with that warning, and the walk reads it as before, so the run keeps 0.22.0's exit
-//! and scan errors. These two trees cannot be e2e cases: one's scan error runs past the corpus's
-//! stderr cap, and git carries no mode a fixture could keep unsearchable.
+//! row's later entry that fails a check its first entry is refused for is refused at load from
+//! grund 1.0.0, at the line that lists it, before any walk, so 0.22.0's scan error is never
+//! reached. These two trees cannot be e2e cases: git carries no mode a fixture could keep
+//! unsearchable, and the pair is kept together.
 #![cfg(unix)]
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::process::{Command, Output};
-
-const SCAN_REMEDY: &str = "make the path readable, or keep it out of the scan by removing it \
-    from the [schema.kinds] row that lists it, because exclude does not prune scan roots";
 
 struct Fixture {
     root: PathBuf,
@@ -58,35 +55,26 @@ impl Drop for Fixture {
     }
 }
 
-/// A later `folders` entry that is a file failed 0.22.0's scan with exit 2; it still does, in
-/// the same words, and the load adds the warning at the `folders` line instead of refusing.
+/// A later `folders` entry that is a file is refused at the `folders` line, in one line with no
+/// `hint:`, and the scan that failed in 0.22.0 never runs.
 #[test]
-fn later_folder_entry_that_is_a_file_keeps_the_scan_error() {
+fn later_folder_entry_that_is_a_file_is_refused_at_load() {
     let fixture = Fixture::new(
         "folder-is-file",
         "folders = [\"values/one\", \"values/a.json\"]",
     );
     let (code, stderr) = fixture.check();
     assert_eq!(code, Some(2), "{stderr}");
-    let scan = format!("error: values/a.json: read value home: not a directory; {SCAN_REMEDY}\n");
-    assert!(stderr.contains(&scan), "expected\n{scan}got:\n{stderr}");
-    let warning = "warning: grund.toml:6: value home for kind `CONST` must be an existing \
-        folder: values/a.json; until then it is read as before grund 0.23.0; make it an existing \
-        folder, or drop the entry; this becomes an error in grund 1.0.0\n";
-    assert!(
-        stderr.contains(warning),
-        "expected\n{warning}got:\n{stderr}"
-    );
-    assert!(
-        !stderr.contains("error: grund.toml"),
-        "refused at load:\n{stderr}"
-    );
+    let refusal = "error: grund.toml:6: value home for kind `CONST` must be an existing \
+        folder: values/a.json; make it an existing folder, or drop the entry; this became an \
+        error in grund 1.0.0\n";
+    assert_eq!(stderr, refusal);
 }
 
-/// A later `files` entry under a directory this user cannot search failed 0.22.0's scan with
-/// exit 2; it still does, and the load warns at the `files` line instead of refusing.
+/// A later `files` entry under a directory this user cannot search is refused at the `files`
+/// line by its reason, never as absent (§FS-fetch.4.3), in one line with no `hint:`.
 #[test]
-fn later_file_entry_that_cannot_be_looked_up_keeps_the_scan_error() {
+fn later_file_entry_that_cannot_be_looked_up_is_refused_at_load() {
     let mut fixture = Fixture::new(
         "lookup",
         "files = [\"values/a.json\", \"values/locked/b.json\"]",
@@ -102,18 +90,8 @@ fn later_file_entry_that_cannot_be_looked_up_keeps_the_scan_error() {
     }
     let (code, stderr) = fixture.check();
     assert_eq!(code, Some(2), "{stderr}");
-    let scan = "error: values/locked/b.json: could not read value JSON source: permission denied";
-    assert!(stderr.contains(scan), "expected\n{scan}\ngot:\n{stderr}");
-    let warning = "warning: grund.toml:6: could not look up value home for kind `CONST`: \
-        values/locked/b.json: permission denied; until then it is read as before grund 0.23.0; \
-        make the home and every directory above it accessible; this becomes an error in grund \
-        1.0.0\n";
-    assert!(
-        stderr.contains(warning),
-        "expected\n{warning}got:\n{stderr}"
-    );
-    assert!(
-        !stderr.contains("error: grund.toml"),
-        "refused at load:\n{stderr}"
-    );
+    let refusal = "error: grund.toml:6: could not look up value home for kind `CONST`: \
+        values/locked/b.json: permission denied; make the home and every directory above it \
+        accessible; this became an error in grund 1.0.0\n";
+    assert_eq!(stderr, refusal);
 }

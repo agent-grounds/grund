@@ -55,12 +55,15 @@ fn home(path: &str, file: bool, first: bool) -> Home<'_> {
     }
 }
 
-fn warns(verdict: &Verdict, code: Code) -> bool {
-    matches!(verdict, Verdict::Warns(warned, _) if *warned == code)
+/// One of the refusals grund 1.0.0 made of 0.23.0's warnings, given at the home's own line once
+/// every older question has its answer (§FS-config-v2.reader.4.order).
+fn refused_late(verdict: &Verdict) -> bool {
+    matches!(verdict, Verdict::RefusedLate(message) if message.ends_with(BECAME_1_0))
 }
 
 /// §FS-config-v2.schema.sources.rules: a rule `files` entry by its reading, in any position — a
-/// `document` language holds, a `source` one warns, a `data` one or none refuses the row.
+/// `document` language holds, a `source` one is refused at its line, a `data` one or none refuses
+/// the row.
 #[test]
 fn rule_file_homes_by_reading_in_every_position() {
     let toml = v2(
@@ -74,14 +77,15 @@ fn rule_file_homes_by_reading_in_every_position() {
             |path| home_requirement(Ask::Rule, &k, home(path, true, first), &root, &sources);
         assert!(matches!(judge("r/a.md"), Verdict::Holds));
         assert!(matches!(judge("r/a.txt"), Verdict::Holds));
-        assert!(warns(&judge("r/a.rs"), Code::CONFIG_RULE_FILE_NOT_MARKDOWN));
+        assert!(refused_late(&judge("r/a.rs")));
         assert!(matches!(judge("r/a.json"), Verdict::RefusesRow));
         assert!(matches!(judge("r/a.unclaimed"), Verdict::RefusesRow));
     }
 }
 
 /// §FS-config-v2.checks.config-rule-folder-not-markdown: a rule `folders` entry holds while any
-/// admitted name reads Markdown, and warns where none can, as the first entry or a later one.
+/// admitted name reads Markdown, and is refused at its line where none can, as the first entry or
+/// a later one.
 #[test]
 fn rule_folder_homes_by_whether_any_name_reads_markdown() {
     let k = kind(true);
@@ -93,10 +97,13 @@ fn rule_folder_homes_by_whether_any_name_reads_markdown() {
             home_requirement(Ask::Rule, &k, folder, &root, &sources),
             Verdict::Holds
         ));
-        assert!(warns(
-            &home_requirement(Ask::Rule, &k, folder, &bare_root, &bare),
-            Code::CONFIG_RULE_FOLDER_NOT_MARKDOWN
-        ));
+        assert!(refused_late(&home_requirement(
+            Ask::Rule,
+            &k,
+            folder,
+            &bare_root,
+            &bare
+        )));
     }
 }
 
@@ -114,7 +121,8 @@ fn rule_homes_in_version_1_read_the_name() {
 }
 
 /// §FS-config.3.4.9, §FS-config-v2.checks.config-value-home-absent: an absent first value home is
-/// refused and a later one warns, for a file and a folder alike; one that exists holds.
+/// refused with its hint and a later one at its own line, for a file and a folder alike; one that
+/// exists holds.
 #[test]
 fn value_homes_first_against_later() {
     let (root, sources) = project("home_requirement_value", &v2("\"markdown\"", ""));
@@ -128,28 +136,19 @@ fn value_homes_first_against_later() {
             matches!(judge(path, file, true), Verdict::Refused(_)),
             "{path}"
         );
-        assert!(
-            warns(&judge(path, file, false), Code::CONFIG_VALUE_HOME_ABSENT),
-            "{path}"
-        );
+        assert!(refused_late(&judge(path, file, false)), "{path}");
     }
     assert!(matches!(judge("values/a.md", true, false), Verdict::Holds));
     assert!(matches!(judge("values", false, true), Verdict::Holds));
-    // §FS-config-v2.checks.config-value-home-invalid: a later home in the wrong shape warns, the
-    // first is refused.
+    // §FS-config-v2.checks.config-value-home-invalid: a later home in the wrong shape is refused
+    // at its own line, the first at the key that asked.
     assert!(matches!(judge("values", true, true), Verdict::Refused(_)));
-    assert!(warns(
-        &judge("values", true, false),
-        Code::CONFIG_VALUE_HOME_INVALID
-    ));
-    assert!(warns(
-        &judge("values/a.md", false, false),
-        Code::CONFIG_VALUE_HOME_INVALID
-    ));
+    assert!(refused_late(&judge("values", true, false)));
+    assert!(refused_late(&judge("values/a.md", false, false)));
 }
 
 /// §FS-config-v2.checks.config-value-home-invalid: a later value home that cannot be looked up
-/// warns, and the walk reads it as before; the first is refused with the hint.
+/// is refused at its own line with no hint; the first is refused with the hint.
 #[cfg(unix)]
 #[test]
 fn value_home_lookup_failure_first_against_later() {
@@ -176,5 +175,6 @@ fn value_home_lookup_failure_first_against_later() {
         return;
     }
     assert!(matches!(&first, Verdict::Refused(message) if message.contains("\nhint: ")));
-    assert!(warns(&later, Code::CONFIG_VALUE_HOME_INVALID));
+    assert!(refused_late(&later));
+    assert!(matches!(&later, Verdict::RefusedLate(message) if !message.contains("hint:")));
 }

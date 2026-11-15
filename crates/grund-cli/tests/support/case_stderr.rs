@@ -125,6 +125,11 @@ const ABSORBED_SCAN_SENTENCE: &str = ": [workspace] members swallows this projec
 /// clause and keeps the bytes that point fixes rather than the cap.
 const PROMOTED_LOAD_WARNING_SUFFIX: &str = "; this became an error in grund 0.19.0";
 
+/// The six version-2 load warnings of grund 0.23.0 became refusals in 1.0.0, each in its
+/// warning's words (§DF-markdown-homes-refused-in-1-0.2.1), so it keeps the bytes the
+/// carried warning had rather than the cap.
+const PROMOTED_1_0_LOAD_WARNING_SUFFIX: &str = "; this became an error in grund 1.0.0";
+
 /// A migration preview that only listed comments refuse prints its complete
 /// report under `--full` and still exits `1` (§FS-config-migrate.1.3). Its
 /// `written:` lines spell a whole default, never wrapped (§FS-config-migrate.2.2),
@@ -206,6 +211,7 @@ fn assert_stderr_is_concise(name: &str, json_case: bool, migration_case: bool, s
         if line.starts_with("warning: ")
             || (line.starts_with("error: ") && line.contains(ABSORBED_SCAN_SENTENCE))
             || (line.starts_with("error: ") && line.ends_with(PROMOTED_LOAD_WARNING_SUFFIX))
+            || (line.starts_with("error: ") && line.ends_with(PROMOTED_1_0_LOAD_WARNING_SUFFIX))
             || (line.starts_with("error: ")
                 && line.ends_with(SCAN_EXCLUDE_DIRECTORY_REPAIR_SUFFIX))
             || (line.starts_with("error: ") && line.ends_with(SCAN_VALUE_SOURCE_REPAIR_SUFFIX))
@@ -456,6 +462,16 @@ mod stderr_concise_tests {
         );
         let panic_message = rejects(false, &other);
         assert!(panic_message.contains("too long"), "{panic_message}");
+    }
+
+    #[test]
+    fn nonzero_case_preserves_a_load_warning_promoted_in_1_0_0() {
+        let error = format!(
+            "error: grund.toml:8: [schema.sources.extensions] maps `md` to `rust`: {}; this \
+             became an error in grund 1.0.0",
+            "x".repeat(180)
+        );
+        assert_stderr_is_concise("case", false, false, &error);
     }
 
     #[test]

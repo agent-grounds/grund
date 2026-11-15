@@ -45,8 +45,11 @@ pub struct Project {
 /// §FS-config-v2.checks: one warning the version-2 reader made of a config it loaded, at the
 /// line that wrote what it names, which `check`, `config validate` and `config show` report
 /// beside the other config findings (§FS-errors.5.2.3). Its text carries no location: the
-/// report spells the file and line in front of it.
+/// report spells the file and line in front of it. No check makes one since grund 1.0.0 refused
+/// the six it carried (§DF-markdown-homes-refused-in-1-0.2.1); it is kept as the way the next
+/// deprecation's warning reaches every surface (§REQ-backwards-compatibility.2).
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 pub(crate) struct LoadWarning {
     pub(crate) code: Code,
     pub(crate) at: ConfigLocation,

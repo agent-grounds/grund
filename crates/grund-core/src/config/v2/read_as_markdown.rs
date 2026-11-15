@@ -1,20 +1,21 @@
-//! The version-2 load warnings about a name the configuration does not read as Markdown where a
-//! Markdown file is meant (§FS-config-v2.checks): each loads as written, and says what grund
-//! 1.0.0 refuses (§REQ-backwards-compatibility.2). Whether a name is read as Markdown is the one
-//! reading, never the name (§FS-fmt.2.3.1).
+//! The version-2 load refusals about a name the configuration does not read as Markdown where a
+//! Markdown file is meant (§FS-config-v2.checks), which grund 0.23.0 warned about and grund 1.0.0
+//! refuses (§DF-markdown-homes-refused-in-1-0.2.1). Each is asked of the lowered source model, so
+//! the reader gives them only once every older question has its answer
+//! (§FS-config-v2.reader.4.order). Whether a name is read as Markdown is the one reading, never
+//! the name (§FS-fmt.2.3.1).
 
 use std::path::Path;
 
 use super::schema::RowDraft;
 use super::walk::Reader;
-use crate::config::home_requirement::UNTIL_1_0;
+use crate::config::home_remedies::{BECAME_1_0, INDEX_NOT_MARKDOWN, MD_NOT_MARKDOWN};
 use crate::config::kind::KindIndex;
 use crate::config::{Readings, written_language};
-use crate::model::{Code, remedies};
 
 /// §FS-config-v2.checks.config-md-not-markdown: a `[schema.sources.extensions]` entry that maps
-/// `md` to a language that does not read Markdown loads, and is read as written until 1.0.0.
-pub(super) fn md_not_markdown(r: &Reader, lines: &[usize]) -> Vec<(usize, Code, String)> {
+/// `md` to a language that does not read Markdown is refused at each line that writes it.
+pub(super) fn md_not_markdown(r: &Reader, lines: &[usize]) -> Vec<(usize, String)> {
     let sources = &r.project.schema.sources;
     let Some(language) = written_language(sources, Path::new("name.md")) else {
         return Vec::new();
@@ -27,19 +28,18 @@ pub(super) fn md_not_markdown(r: &Reader, lines: &[usize]) -> Vec<(usize, Code, 
         .map(|line| {
             let message = format!(
                 "[schema.sources.extensions] maps `md` to `{name}`, which does not read Markdown; \
-                 `.md` is always Markdown, and until then a `.md` file is read as `{name}`; \
-                 {}{UNTIL_1_0}",
-                remedies::config_md_not_markdown()
+                 `.md` is always Markdown; {MD_NOT_MARKDOWN}{BECAME_1_0}"
             );
-            (*line, Code::CONFIG_MD_NOT_MARKDOWN, message)
+            (*line, message)
         })
         .collect()
 }
 
 /// §FS-config-v2.checks.config-index-not-markdown: an `index` that names a file the
-/// configuration does not read as Markdown (§FS-fmt.2.3.1) loads, and its folders are judged as
-/// under `index = false` until 1.0.0.
-pub(super) fn index_not_markdown(r: &Reader, row: &RowDraft) -> Option<(usize, Code, String)> {
+/// configuration does not read as Markdown (§FS-fmt.2.3.1) is refused at its line. A row that
+/// names none keeps the default `README.md`, which this never asks
+/// (§DF-markdown-homes-refused-in-1-0.2.5).
+pub(super) fn index_not_markdown(r: &Reader, row: &RowDraft) -> Option<(usize, String)> {
     let Some((KindIndex::Named(index), line)) = &row.index else {
         return None;
     };
@@ -49,8 +49,7 @@ pub(super) fn index_not_markdown(r: &Reader, row: &RowDraft) -> Option<(usize, C
     let kind = &row.name;
     let message = format!(
         "`[schema.kinds.{kind}] index` must name a Markdown file; `{index}` is not read as \
-         Markdown, so until then its folders are judged as under `index = false`; {}{UNTIL_1_0}",
-        remedies::config_index_not_markdown()
+         Markdown; {INDEX_NOT_MARKDOWN}{BECAME_1_0}"
     );
-    Some((*line, Code::CONFIG_INDEX_NOT_MARKDOWN, message))
+    Some((*line, message))
 }

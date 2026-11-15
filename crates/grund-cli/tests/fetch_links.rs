@@ -22,9 +22,10 @@ const FILE_FETCHER: &str = "#!/bin/sh\nprintf '## %s: Fetched\\n\\nThe fetched b
 const FOLDER: &str = "grund_config_version = 2\nproject_name = \"demo\"\n\n\
                       [schema.kinds.T]\nfolders = [\"docs/t\"]\nid_format = \"{kind}-{number}\"\n\
                       index = false\nfetch = \"scripts/fetch\"\n";
-const FOLDER_MD_JSON: &str = "grund_config_version = 2\nproject_name = \"demo\"\n\n\
-                              [schema.sources]\nlanguages = [\"markdown\", \"json\"]\n\n\
-                              [schema.sources.extensions]\nmd = \"json\"\n\n\
+// `md` mapped to `json` is refused at load (§FS-config-v2.checks.config-md-not-markdown), so
+// the snapshot is left unread by admitting no language that reads Markdown.
+const FOLDER_MD_UNREAD: &str = "grund_config_version = 2\nproject_name = \"demo\"\n\n\
+                              [schema.sources]\nlanguages = [\"json\"]\n\n\
                               [schema.kinds.T]\nfolders = [\"docs/t\"]\n\
                               id_format = \"{kind}-{number}\"\nindex = false\n\
                               fetch = \"scripts/fetch\"\n";
@@ -145,11 +146,15 @@ fn links_an_ignored_outward_link_is_refused_as_unread_by_the_walk() {
 }
 
 #[test]
-fn links_a_dangling_link_under_md_json_is_refused_as_unread() {
-    let (base, proj) = project("dangling-md-json", FOLDER_MD_JSON, FETCHER);
+fn links_a_dangling_link_where_md_is_unread_is_refused_as_unread() {
+    let (base, proj) = project("dangling-md-unread", FOLDER_MD_UNREAD, FETCHER);
     link(&proj, "docs/t/T-1.md", "../../gone.md");
-    let err = refused(&base, &proj, "dangling link under md = json");
-    // §FS-fetch.4.2.1 speaks first; its <reason> for a data mapping is not settled, so no more.
+    let err = refused(
+        &base,
+        &proj,
+        "dangling link where no admitted language reads .md",
+    );
+    // §FS-fetch.4.2.1 speaks first; its <reason> is not what this pins, so no more.
     assert!(
         err.starts_with("error: kind `T` cannot fetch into "),
         "unread refusal expected, got {err:?}"

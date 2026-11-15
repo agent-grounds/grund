@@ -10,7 +10,7 @@ slug_pattern = "[a-z][a-z0-9-]*"
 languages = ["markdown", "rust"]
 
 [schema.sources.extensions]
-md = "rust"
+txt = "rust"
 
 [schema.kinds.FS]
 folders = ["fs"]

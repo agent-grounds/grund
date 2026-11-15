@@ -258,80 +258,66 @@
  },
  {
   "code": "config-index-not-markdown",
-  "meaning": "A version-2 row's index names a file the configuration does not read as Markdown, so its folders are judged as under index = false for now.",
-  "ramp": "error in grund 1.0.0",
+  "meaning": "A version-2 row's index named a file the configuration did not read as Markdown, and its folders were judged as under index = false for one more release; such an index is now refused when the config loads.",
+  "ramp": null,
   "2": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "clauses",
-    "clauses": [
-     {
-      "text": "an index key of a [schema.kinds] table names a file not read as Markdown",
-      "by": "condition"
-     }
-    ]
+    "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "name a file a `document` language reads, or set `index = false`"
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   },
   "1": {
    "severity": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "always"
    },
    "fix": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   }
  },
  {
   "code": "config-md-not-markdown",
-  "meaning": "In version 2, an md entry of [schema.sources.extensions] maps .md to a language that does not read Markdown, and is read that way for now.",
-  "ramp": "error in grund 1.0.0",
+  "meaning": "In version 2, an md entry of [schema.sources.extensions] mapped .md to a language that did not read Markdown, and was read that way for one more release; such an entry is now refused when the config loads.",
+  "ramp": null,
   "2": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "clauses",
-    "clauses": [
-     {
-      "text": "an md entry of [schema.sources.extensions] names a language not of class document",
-      "by": "condition"
-     }
-    ]
+    "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "drop the entry, or map `md` to a `document` language"
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   },
   "1": {
    "severity": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "always"
    },
    "fix": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   }
@@ -404,186 +390,132 @@
  },
  {
   "code": "config-rule-file-not-markdown",
-  "meaning": "A version-2 rule kind's files entry is read by a source language, so a rule written as a Markdown heading there declares nothing.",
-  "ramp": "error in grund 1.0.0",
+  "meaning": "A version-2 rule kind's files entry was read by a source language, so a rule written as a Markdown heading there declared nothing, for one more release; such an entry is now refused when the config loads.",
+  "ramp": null,
   "2": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "clauses",
-    "clauses": [
-     {
-      "text": "a files entry of a form = \"rule\" table is read by a source language",
-      "by": "condition"
-     }
-    ]
+    "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "move the rules into a file a `document` language reads"
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   },
   "1": {
    "severity": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "always"
    },
    "fix": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   }
  },
  {
   "code": "config-rule-folder-not-markdown",
-  "meaning": "A version-2 rule kind's folders entry can hold no file read as Markdown, because no admitted language reads Markdown.",
-  "ramp": "error in grund 1.0.0",
+  "meaning": "A version-2 rule kind's folders entry could hold no file read as Markdown, because no admitted language read Markdown, and loaded for one more release; such an entry is now refused when the config loads.",
+  "ramp": null,
   "2": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "clauses",
-    "clauses": [
-     {
-      "text": "a form = \"rule\" table has a folders entry",
-      "by": "condition"
-     },
-     {
-      "text": "no suffix resolves to an admitted document language",
-      "by": "condition"
-     }
-    ]
+    "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "admit one in [schema.sources] languages, such as `markdown`"
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   },
   "1": {
    "severity": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "always"
    },
    "fix": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   }
  },
  {
   "code": "config-value-home-absent",
-  "meaning": "A version-2 value row's later home does not exist, and the row reads its other homes for now.",
-  "ramp": "error in grund 1.0.0",
+  "meaning": "A version-2 value row's later home did not exist, and the row read its other homes for one more release; such a home is now refused when the config loads.",
+  "ramp": null,
   "2": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "clauses",
-    "clauses": [
-     {
-      "text": "a files or folders entry after the first of a form = \"value\" table does not exist",
-      "by": "condition"
-     }
-    ]
+    "kind": "always"
    },
    "fix": {
-    "kind": "cases",
-    "cases": [
-     {
-      "label": "file",
-      "text": "create the file, or drop the entry"
-     },
-     {
-      "label": "folder",
-      "text": "create the folder, or drop the entry"
-     }
-    ]
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   },
   "1": {
    "severity": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "always"
    },
    "fix": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   }
  },
  {
   "code": "config-value-home-invalid",
-  "meaning": "A version-2 value row's later home is the wrong shape, resolves outside the root or cannot be looked up, and is read as before for now.",
-  "ramp": "error in grund 1.0.0",
+  "meaning": "A version-2 value row's later home was the wrong shape, resolved outside the root or could not be looked up, and was read as before for one more release; such a home is now refused when the config loads.",
+  "ramp": null,
   "2": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "clauses",
-    "clauses": [
-     {
-      "text": "a files or folders entry after the first of a form = \"value\" table exists in the wrong shape, resolves outside the project root, or cannot be looked up",
-      "by": "condition"
-     }
-    ]
+    "kind": "always"
    },
    "fix": {
-    "kind": "cases",
-    "cases": [
-     {
-      "label": "shape",
-      "text": "make it an existing {shape}, or drop the entry"
-     },
-     {
-      "label": "outside",
-      "text": "name a path inside the project root, or drop the entry"
-     },
-     {
-      "label": "lookup",
-      "text": "make the home and every directory above it accessible"
-     }
-    ]
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   },
   "1": {
    "severity": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "spent",
+    "text": "spent from grund 1.0.0 and never fires"
    },
    "enabled": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "always"
    },
    "fix": {
-    "kind": "absent",
-    "text": "not in version 1"
+    "kind": "none",
+    "text": "it never fires"
    },
    "note": null
   }

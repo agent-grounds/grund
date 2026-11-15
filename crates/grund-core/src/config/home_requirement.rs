@@ -10,15 +10,15 @@ use std::path::Path;
 
 use super::fetch_key_runs_nothing;
 use super::file_reading::{Readings, model_language, written_language};
+use super::home_remedies::{
+    BECAME_1_0, RULE_FILE_NOT_MARKDOWN, RULE_FOLDER_NOT_MARKDOWN, VALUE_HOME_LOOKUP,
+    VALUE_HOME_OUTSIDE, value_home_absent, value_home_wrong_shape,
+};
 use super::kind::KindConfig;
 use super::project::Sources;
 use super::sources::{LanguageClass, SourceModel};
-use crate::model::{Code, normalize_path_lexically, remedies};
+use crate::model::normalize_path_lexically;
 use crate::sources::io_reason;
-
-/// The clause every load warning that grund 1.0.0 turns into a refusal ends with
-/// (§FS-config-v2.checks.config-md-not-markdown, §REQ-backwards-compatibility.2).
-pub(in crate::config) const UNTIL_1_0: &str = "; this becomes an error in grund 1.0.0";
 
 /// One home of a row as written: its path under the config root, whether a `files` entry lists
 /// it, whether it is the row's first, and the line of the key that lists it.
@@ -48,8 +48,10 @@ pub(in crate::config) enum Verdict {
     RefusesRow,
     /// Refused at the line of the key that asked, with this message.
     Refused(String),
-    /// Loads, with this warning at the home's line.
-    Warns(Code, String),
+    /// Refused at the home's own line with this message, once every older question about every
+    /// row has its answer (§FS-config-v2.reader.4.order): one of the refusals grund 1.0.0 made
+    /// of grund 0.23.0's warnings (§DF-markdown-homes-refused-in-1-0.2.1).
+    RefusedLate(String),
 }
 
 /// §AR-config.1.6: what `ask` asks of `home`, on the row `k` under `sources` and `root`.
@@ -97,24 +99,22 @@ pub(in crate::config) fn rule_home_message(
 }
 
 /// §FS-config-v2.schema.sources.rules: a `files` entry read as Markdown holds; one a `source`
-/// language reads loads with `config-rule-file-not-markdown`; one a `data` language or no
-/// admitted language reads refuses the row. A `folders` entry holds unless no suffix could be
-/// read as Markdown there, which the configuration alone decides. Version 1 asks the same
-/// reading, which is its name, and accepts a folder on its presence.
+/// language reads is refused at its line (§FS-config-v2.checks.config-rule-file-not-markdown);
+/// one a `data` language or no admitted language reads refuses the row. A `folders` entry holds
+/// unless no suffix could be read as Markdown there, which the configuration alone decides
+/// (§FS-config-v2.checks.config-rule-folder-not-markdown). Version 1 asks the same reading,
+/// which is its name, and accepts a folder on its presence.
 fn rule_home(kind: &str, home: Home<'_>, sources: &Sources) -> Verdict {
     let model = sources.model.as_ref();
     let path = Path::new(home.path);
     if !home.file {
         return match model {
-            Some(model) if !can_hold_markdown(model) => Verdict::Warns(
-                Code::CONFIG_RULE_FOLDER_NOT_MARKDOWN,
-                format!(
-                    "[schema.kinds.{kind}] folders entry `{}` can hold no file read as Markdown, \
-                     because no admitted language reads Markdown; {}{UNTIL_1_0}",
-                    home.path,
-                    remedies::config_rule_folder_not_markdown()
-                ),
-            ),
+            Some(model) if !can_hold_markdown(model) => Verdict::RefusedLate(format!(
+                "[schema.kinds.{kind}] folders entry `{}` can hold no file read as Markdown, \
+                 because no admitted language reads Markdown; \
+                 {RULE_FOLDER_NOT_MARKDOWN}{BECAME_1_0}",
+                home.path,
+            )),
             _ => Verdict::Holds,
         };
     }
@@ -122,17 +122,12 @@ fn rule_home(kind: &str, home: Home<'_>, sources: &Sources) -> Verdict {
         return Verdict::Holds;
     }
     match written_language(sources, path) {
-        Some(language) if language.class == LanguageClass::Source => Verdict::Warns(
-            Code::CONFIG_RULE_FILE_NOT_MARKDOWN,
-            format!(
-                "[schema.kinds.{kind}] files entry `{}` is read as `{}`, which does not read \
-                 Markdown, and every home of a rule kind must be; until then a rule written as a \
-                 Markdown heading there declares nothing; {}{UNTIL_1_0}",
-                home.path,
-                language.name,
-                remedies::config_rule_file_not_markdown()
-            ),
-        ),
+        Some(language) if language.class == LanguageClass::Source => Verdict::RefusedLate(format!(
+            "[schema.kinds.{kind}] files entry `{}` is read as `{}`, which does not read \
+                 Markdown, and every home of a rule kind must be; \
+                 {RULE_FILE_NOT_MARKDOWN}{BECAME_1_0}",
+            home.path, language.name,
+        )),
         _ => Verdict::RefusesRow,
     }
 }
@@ -155,9 +150,9 @@ pub(crate) fn can_hold_markdown(model: &SourceModel) -> bool {
 
 /// §FS-config.3.4.9, §FS-values.1: a value home is mandatory, existing, and physically inside the
 /// project root, and resolving both paths closes `..`, absolute and symlink escapes. A later
-/// entry that does not exist loads with `config-value-home-absent` and is not read
-/// (§FS-config-v2.checks.config-value-home-absent); one that fails any other of these loads with
-/// `config-value-home-invalid` and is read as before (§FS-config-v2.checks.config-value-home-invalid).
+/// entry that does not exist (§FS-config-v2.checks.config-value-home-absent), or fails any other
+/// of these (§FS-config-v2.checks.config-value-home-invalid), is refused at its own line in one
+/// line ending "or drop the entry", with no `hint:` (§DF-markdown-homes-refused-in-1-0.2.4).
 fn value_home(k: &KindConfig, home: Home<'_>, root: &Path, sources: &Sources) -> Verdict {
     let kind = &k.kind;
     let shape = if home.file { "file" } else { "folder" };
@@ -167,19 +162,11 @@ fn value_home(k: &KindConfig, home: Home<'_>, root: &Path, sources: &Sources) ->
         Ok(resolved) => resolved,
         // §FS-config-v2.checks.config-value-home-absent: words of the first entry's refusal.
         Err(error) if error.kind() == ErrorKind::NotFound && !home.first => {
-            return Verdict::Warns(
-                Code::CONFIG_VALUE_HOME_ABSENT,
-                format!(
-                    "value home for kind `{kind}` does not exist: {}; until then the row reads \
-                     its other homes; {}{UNTIL_1_0}",
-                    home.path,
-                    if home.file {
-                        remedies::config_value_home_absent_file()
-                    } else {
-                        remedies::config_value_home_absent_folder()
-                    }
-                ),
-            );
+            return Verdict::RefusedLate(format!(
+                "value home for kind `{kind}` does not exist: {}; {}{BECAME_1_0}",
+                home.path,
+                value_home_absent(shape)
+            ));
         }
         Err(error) if error.kind() == ErrorKind::NotFound => {
             // §FS-fetch.4.1: the first line stays as it is; the hint follows it.
@@ -198,10 +185,8 @@ fn value_home(k: &KindConfig, home: Home<'_>, root: &Path, sources: &Sources) ->
                 home.path,
                 io_reason(&error)
             );
-            let hint = remedies::config_value_home_invalid_lookup();
-            let first = Verdict::Refused(format!("{refusal}\nhint: {hint}"));
-            return later_invalid(home, refusal, remedies::config_value_home_invalid_lookup)
-                .unwrap_or(first);
+            let first = Verdict::Refused(format!("{refusal}\nhint: {VALUE_HOME_LOOKUP}"));
+            return later_invalid(home, refusal, VALUE_HOME_LOOKUP).unwrap_or(first);
         }
     };
     let (refusal, remedy) = if !resolved.starts_with(&canonical_root) {
@@ -209,37 +194,25 @@ fn value_home(k: &KindConfig, home: Home<'_>, root: &Path, sources: &Sources) ->
             "value home for kind `{kind}` must normalize inside the project root: {}",
             home.path
         );
-        (refusal, remedies::config_value_home_invalid_outside())
+        (refusal, VALUE_HOME_OUTSIDE.to_string())
     } else if (home.file && !resolved.is_file()) || (!home.file && !resolved.is_dir()) {
         let refusal = format!(
             "value home for kind `{kind}` must be an existing {shape}: {}",
             home.path
         );
-        (refusal, remedies::config_value_home_invalid_shape(shape))
+        (refusal, value_home_wrong_shape(shape))
     } else {
         return Verdict::Holds;
     };
     let first = Verdict::Refused(refusal.clone());
-    later_invalid(home, refusal, || remedy).unwrap_or(first)
+    later_invalid(home, refusal, &remedy).unwrap_or(first)
 }
 
 /// §FS-config-v2.checks.config-value-home-invalid: a later home that fails a check the first is
-/// refused for loads with this warning, in the refusal's words, and the walk reads it as grund
-/// 0.22.0 did; the first entry is refused (`None`).
-fn later_invalid(
-    home: Home<'_>,
-    refusal: String,
-    remedy: impl FnOnce() -> String,
-) -> Option<Verdict> {
-    (!home.first).then(|| {
-        Verdict::Warns(
-            Code::CONFIG_VALUE_HOME_INVALID,
-            format!(
-                "{refusal}; until then it is read as before grund 0.23.0; {}{UNTIL_1_0}",
-                remedy()
-            ),
-        )
-    })
+/// refused for is refused at its own line, in the refusal's words and the remedy's; the first
+/// entry keeps its own refusal (`None`).
+fn later_invalid(home: Home<'_>, refusal: String, remedy: &str) -> Option<Verdict> {
+    (!home.first).then(|| Verdict::RefusedLate(format!("{refusal}; {remedy}{BECAME_1_0}")))
 }
 
 /// §FS-fetch.4.1: whether the project reads what `grund fetch` writes at this home as Markdown:

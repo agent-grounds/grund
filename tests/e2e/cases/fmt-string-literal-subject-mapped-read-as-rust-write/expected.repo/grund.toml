@@ -5,7 +5,7 @@ project_name = "fixture"
 languages = ["markdown", "rust"]
 
 [schema.sources.extensions]
-md = "rust"
+txt = "rust"
 
 [schema.kinds.FS]
 folders = ["fs"]

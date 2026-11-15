@@ -69,6 +69,18 @@ def apart_from_the_fetch_key_refusal(found):
     ]
 
 
+def apart_from_the_markdown_homes_refusals(found):
+    """§DF-markdown-homes-refused-in-1-0: the tree's claims less the landed `1.0.0`
+    the six version-2 load refusals close with, in their source and in the goldens
+    that print them, judged on their own, so a window pinned for another ramp does
+    not move with them."""
+    return [
+        claim
+        for claim in found
+        if not (claim.release == "1.0.0" and claim.direction == ramps.LANDED)
+    ]
+
+
 class ClauseReadingTests(unittest.TestCase):
     def test_a_pending_clause_names_its_release(self):
         (claim,) = claims('"… becomes an error in grund 0.14.0"')
@@ -385,10 +397,16 @@ class ThisRepositoryTests(unittest.TestCase):
         So is the off-format flip (§FS-check.checks.off-format-citation.1), whose
         pair refuses a 0.20.x release (§FS-distribution.4.2), and the `fetch` key
         refusal (§FS-config-v2.checks.config-fetch-names-nothing), whose landed
-        `0.23.0` raises the tree's floor past this one."""
+        `0.23.0` raises the tree's floor past this one, and the six markdown-home
+        refusals (§DF-markdown-homes-refused-in-1-0), whose landed `1.0.0` raises
+        it past that."""
         floor, _ = ramps.release_window(
-            apart_from_the_fetch_key_refusal(
-                apart_from_the_off_format_flip(apart_from_the_integrations_retirement(self.claims))
+            apart_from_the_markdown_homes_refusals(
+                apart_from_the_fetch_key_refusal(
+                    apart_from_the_off_format_flip(
+                        apart_from_the_integrations_retirement(self.claims)
+                    )
+                )
             )
         )
         self.assertEqual(floor, "0.22.0")
