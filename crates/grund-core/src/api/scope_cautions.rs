@@ -395,3 +395,8 @@ pub(super) fn display_scope(display: Display<'_>, path: &Path) -> String {
         .map(|spelled| report_path(base, &spelled))
         .unwrap_or_else(|| display.path(path))
 }
+
+// Scaffold for #1206's specify commit, where the catalog's cases are written ahead of the
+// caution that gives them (§FS-check.2.2.2.2): implement removes it.
+const _: fn(u32) -> String = remedies::empty_scan_admit;
+const _: fn(u32, String, String) -> String = remedies::empty_scan_unmap;

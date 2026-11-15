@@ -1,0 +1,11 @@
+grund_config_version = 2
+project_name = "g208"
+
+[schema.sources]
+languages = ["python"]
+
+[schema.kinds.TICKET]
+folders = ["docs/tickets"]
+id_format = "{kind}-{number}"
+index = false
+fetch = "scripts/fetch-ticket"

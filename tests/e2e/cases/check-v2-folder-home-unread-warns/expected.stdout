@@ -1,0 +1,1 @@
+grund.toml:8: warning: [schema.kinds.FS] folder `fs` is not read — no language in [schema.sources] languages reads `.txt`, so nothing in it is checked. Give the files in it an extension a listed language reads.

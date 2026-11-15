@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "keep"
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.kinds.FS]
+files = ["docs/fs.md"]
+
+[schema.kinds.NOTE]
+folders = ["notes"]
+index = false

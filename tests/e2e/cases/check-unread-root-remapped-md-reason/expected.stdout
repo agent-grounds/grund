@@ -1,0 +1,1 @@
+grund.toml:11: warning: [schema.kinds.FS] file `fs/a.md` is not read — the scan reads `.md` as `json`, a data language only a value kind reads, so nothing in it is checked. Drop the `md` entry from [schema.sources.extensions].

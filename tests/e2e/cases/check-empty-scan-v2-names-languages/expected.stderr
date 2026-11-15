@@ -1,0 +1,1 @@
+warning: nothing to scan — no language in [schema.sources] languages is read for declarations, so no file under `.` was read; admit one in [schema.sources] languages, such as `markdown`.

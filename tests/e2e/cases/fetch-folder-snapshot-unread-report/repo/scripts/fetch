@@ -1,0 +1,2 @@
+#!/bin/sh
+printf '# %s: Alpha\n\nFetched body.\n' "$1"

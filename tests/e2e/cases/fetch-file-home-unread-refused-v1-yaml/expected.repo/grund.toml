@@ -1,0 +1,10 @@
+grund_config_version = 1
+project_name = "r229"
+
+[[kinds]]
+kind = "FS"
+file = "fs.yaml"
+fetch = "./fetcher.sh"
+
+[scan]
+extensions = ["md"]

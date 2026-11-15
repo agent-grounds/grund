@@ -1,0 +1,79 @@
+# DF-reading-at-fetch-and-unread-homes: folder fetch and the unread-home reasons follow how the configuration reads a file, and a folder home nothing in which is read is named
+
+**Date:** 2026-11-15
+
+## status: Accepted
+
+## 1. Context
+
+[§DF-one-reading-answer](DF-one-reading-answer.md#df-one-reading-answer-whether-a-file-is-read-as-markdown-or-has-its-docstrings-read-is-the-configurations-one-answer-never-its-name-and-every-home-of-a-row-is-judged-by-it) made "is this file read as Markdown" the configuration's one answer at load, in the checker and in the scan, and left `fetch` to the second pull request of [issue #1206](https://github.com/agent-grounds/grund/issues/1206) ([§DF-one-reading-answer.2.6](DF-one-reading-answer.md#26-fetch-reads-its-output-as-before)). [§DF-fetch-unread-home](DF-fetch-unread-home.md#df-fetch-unread-home-fetch-refuses-a-home-the-scan-does-not-read-before-the-integration-runs) and [§DF-fetch-refusals-follow-the-scan](DF-fetch-refusals-follow-the-scan.md#df-fetch-refusals-follow-the-scan-four-fetch-refusals-say-what-the-scan-reads-corrected-in-place-and-an-empty-idmd-is-filled) then put `fetch`'s refusals of a home the scan does not read onto the scan. Five things still answered from a name, or said a cause that was not the one:
+
+- Folder fetch chose the file it replaces by its name. A file the scan reads as Markdown under another name, `fs/a.txt` under `txt = "markdown"`, that declares the ID was refused as one that `already declares it`, though `fetch` replaces the same file named `fs/a.md` (grund.214). An `fs/a.md` the scan reads as source under `md = "python"` that declares the ID was let through to the integration, which ran, and was refused only after it, by an admission that read the output as Python: `fetch output must begin with one Markdown declaration`.
+- Why a name is not read had no answer for a name a listed `data` language reads. `fs.json` under `languages = ["markdown", "json"]`, or `fs.md` under `md = "json"`, was said to be a name `no language in [schema.sources] languages reads`, which the configuration contradicts, and was told to take an extension a listed language reads, which it already has (grund.230, #1185, #1186). The warning, the broken-stub line and `fetch`'s refusal all said it.
+- A folder home in which nothing was read earned nothing of its own, in version 1 (#1153) or version 2 (#1183). The run printed the empty-scan caution, which names `[scan] include` and the scaffold, neither of which reads the home, or `success` where another file was read.
+- Version 2's empty-scan caution named the recognized extensions as `()` where no listed language reads for declarations, which names nothing to match and no key to change (#1190).
+- Version 2's refusal of a rule kind whose `files` entry a `data` language or no language reads said `rules = true`, a key the file does not have, and named neither the entry nor how it is read (#1188).
+
+## 2. Decision
+
+### 2.1 Folder fetch follows the reading
+
+What a folder fetch replaces is the file the scan reads as Markdown that declares the requested ID, whatever its name, and a file the scan reads in another language that declares it is refused before the integration runs, an `<ID>.md` included ([§FS-fetch.5](../../functional-spec/FS-fetch.md#5-folder-home-write), [§FS-fetch.5.2](../../functional-spec/FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation), [§FS-fetch.5.5](../../functional-spec/FS-fetch.md#55-which-file-declares-and-what-idmd-may-hold)). So `fs/a.txt` under `txt = "markdown"` is replaced in place, or refused as holding the ID beside other content, exactly as `fs/a.md` is, and an `fs/a.md` read as Python that declares the ID takes the line of [§FS-fetch.5.2](../../functional-spec/FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation) and runs nothing. A file it replaces stays refused when a file beside it declares the ID, as with `fs/a.md`, and a home already refused for a value source or a source file keeps that refusal and its words.
+
+### 2.2 Fetch reads its output as Markdown
+
+This supersedes [§DF-one-reading-answer.2.6](DF-one-reading-answer.md#26-fetch-reads-its-output-as-before). Every target `fetch` writes is now one the scan reads as Markdown, since [§FS-fetch.4.2.1](../../functional-spec/FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused) and [§FS-fetch.5.2](../../functional-spec/FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation) refuse every other before the integration runs, so admission reads the output alone as Markdown, the reading its target already has ([§FS-fetch.admission.1](../../functional-spec/FS-fetch.md#admission1-the-requested-declaration-is-there-once-and-its-body-takes-in-all-of-the-output)). The reading by name that [§DF-one-reading-answer.2.6](DF-one-reading-answer.md#26-fetch-reads-its-output-as-before) kept for a version-2 name no admitted language claims existed only so that no `fetch` outcome moved before this record, and goes with it. No placement refusal is ever preceded by a refusal of the output.
+
+### 2.3 A name a `data` language reads has its own reason
+
+A name a listed `data` language reads, by its suffix or through a `[schema.sources.extensions]` entry, is read as data, which only a value kind's value pass reads, and its reason says so: ``the scan reads `.<ext>` as `<language>`, a data language only a value kind reads`` ([§FS-scan.checks.unread-scan-root.message](../../functional-spec/FS-scan.md#checksunread-scan-rootmessage-the-message)). It is a row of the one table, so the warning, the broken-stub line ([§FS-declarations.stubs.target.3](../../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)) and `fetch`'s refusal ([§FS-fetch.4.2.1](../../functional-spec/FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)) say it alike. It is never said of a name no listed language claims, which keeps the version-2 cell.
+
+### 2.4 What is offered for a data reading
+
+The fix has the file read without changing anything else its row says. Dropping the entry is offered for `.md`, which is always Markdown once a `[schema.sources.extensions]` entry stops mapping it away. `form = "value"` is offered only on a citable row that sets neither `form` nor `fetch`: a value kind would read a `.md` file as data, where it does not parse; a row that sets `form` would become another form; a fetched row's snapshot is Markdown; and a `citable = false` row declares nothing. Every other row is told to give the file an extension a listed document language reads ([§FS-scan.checks.unread-scan-root.message](../../functional-spec/FS-scan.md#checksunread-scan-rootmessage-the-message)).
+
+### 2.5 A folder home nothing in which is read is named
+
+A configured folder home, in either version and for every kind, earns one `unread-scan-root` warning at its `folder` or `folders` key when the run read nothing in it, though the walk refused one of its files by extension or language ([§FS-scan.checks.unread-scan-root.folder](../../functional-spec/FS-scan.md#checksunread-scan-rootfolder-a-folder-home-in-which-nothing-is-read)). Its reason is the one table's cell for the first such file, and its fix is the edit after which the home is read. Two limits keep what [§FS-scan.checks.unread-scan-root.silent](../../functional-spec/FS-scan.md#checksunread-scan-rootsilent-what-stays-silent) already said. A hidden file never counts, so a fresh home holding only `.gitkeep` stays silent, and a file the value pass reads counts as read. Like a file root's warning, it is a finding about the default scope, so it stands in place of the empty-scan caution ([§FS-check.2.2.2.1](../../functional-spec/FS-check.md#2221-the-repo-root)).
+
+### 2.6 An empty scan under version 2 names the languages
+
+Where version 2's recognized extensions are none, the caution says that no listed language is read for declarations and names the key that changes it: admitting a language, or dropping the `[schema.sources.extensions]` entry that maps a readable suffix to a `data` language ([§FS-check.2.2.2.2](../../functional-spec/FS-check.md#2222-an-explicit-path)).
+
+### 2.7 Version 2's rule-home refusal speaks version 2
+
+A version-2 rule kind whose `files` entry a `data` language or no admitted language reads is refused, still at its `form` key, in words that name `form = "rule"`, the entry and how it is read ([§FS-fields.forms](../../functional-spec/FS-fields.md#forms-form-lowers-to-the-version-1-contracts)). Every other prerequisite of the form keeps version 1's words.
+
+## 3. Compatibility
+
+### 3.1 Who breaks
+
+| Tree | Before | From grund 0.23.0 |
+|---|---|---|
+| folder fetch, a file read as Markdown under another name declares the ID, a broken stub included (grund.214) | refused, exit 2, `already declares it` | replaced in place, exit 0; beside other content, refused with `contains the requested ID beside other content` |
+| folder fetch, a file read as Markdown under another name holds a stub whose target in the home declares the ID | refused, exit 2, `already declares it` | refused, exit 2, `snapshot folder has multiple declarations for requested ID`, as the same stub in `fs/a.md` is |
+| folder fetch, an `<ID>.md` read as source declares the ID | the integration runs, then refused, exit 2, `fetch output must begin with one Markdown declaration` | refused before the integration runs, exit 2, `already declares it` |
+| an unread file root, stub target or fetch home a listed `data` language reads | its reason says no listed language reads it | the data row and its fix; the exit does not move |
+| a folder home nothing in which is read, a file in it refused by extension or language (#1153, #1183) | silent, `success`, or the empty-scan caution | `unread-scan-root` at the `folder` or `folders` key; the exit stays `0` |
+| a version-2 empty scan with no language read for declarations (#1190) | the caution names `()` | the caution names the languages; the exit stays `0` |
+| a version-2 rule kind whose `files` entry a `data` language or none reads (#1188) | refused, exit 2, in version 1's words | refused, exit 2, in version 2's words |
+
+The third row is the `md`-to-source folder tree [§DF-fetch-folder-declaring-file.3](DF-fetch-folder-declaring-file.md#3-compatibility) describes, which [§DF-fetch-unread-home](DF-fetch-unread-home.md#df-fetch-unread-home-fetch-refuses-a-home-the-scan-does-not-read-before-the-integration-runs), the one record of the unread-home refusal, already refuses at a file home; here its folder `<ID>.md` takes placement's refusal before the output's.
+
+One verdict moves, and it loosens: grund.214's file read as Markdown under another name, a broken stub in one included, is written where it was refused. The stub beside its target was already refused, and [§DF-fetch-folder-declaring-file.3](DF-fetch-folder-declaring-file.md#3-compatibility) gives the ambiguity it now takes. No run that passed fails. A run that read another file keeps its exit and loses its `success` line where a folder home in it was not read, which is the line [§FS-check.2.1.3](../../functional-spec/FS-check.md#213-the-success-line) withholds for a run that checked less than it was given. Version 1 gains only the folder warning.
+
+### 3.2 Messages corrected in place
+
+Six messages are corrected in place in 0.23.0, under the sixth exception of [§FS-errors.requirements.prefix-windows](../../functional-spec/FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change): the reason a name is not read where a `data` language reads it, version 2's empty-scan caution, version 2's rule-home refusal, the beside-other-content refusal at a file read as Markdown under another name, the ambiguity refusal at a stub in one beside its target, and the declaring-file refusal at an `<ID>.md` read as source. No window, because each old message names, on purpose, a cause that is not what keeps the file out, or a key the file does not have, and a window would keep saying it. Should this record miss 0.23.0, each change keeps its old text as a prefix instead.
+
+## 4. Rejected
+
+- **Offering `form = "value"` for every data reading.** It turns a rule kind into a value kind, does not parse a `.md` file, and contradicts a fetched row's Markdown snapshot.
+- **A code of its own for folder homes.** The blind spot is the one `unread-scan-root` names, one directory wide, and one code keeps one selector for it.
+- **Counting hidden files.** A fresh home holding only `.gitkeep` would warn, which is the noise [§FS-scan.checks.unread-scan-root.silent](../../functional-spec/FS-scan.md#checksunread-scan-rootsilent-what-stays-silent) kept out.
+- **Keeping admission's reading by name.** It existed so that no `fetch` outcome moved before placement followed the reading; once placement does, it can only refuse an output after the integration ran, where the refusal before it was due.
+- **Refusing at load a rule folder no admitted language reads as Markdown.** No new load refusal ships before 1.0.0 ([§DF-markdown-homes-warn-before-1-0](DF-markdown-homes-warn-before-1-0.md#df-markdown-homes-warn-before-1-0-an-md-mapped-away-from-markdown-a-named-index-or-rule-home-not-read-as-markdown-and-an-absent-later-value-home-warn-from-0230-and-are-refused-from-100)), and `config-rule-folder-not-markdown` already warns.
+
+## release-note: Release note
+
+- [§DF-reading-at-fetch-and-unread-homes](DF-reading-at-fetch-and-unread-homes.md#df-reading-at-fetch-and-unread-homes-folder-fetch-and-the-unread-home-reasons-follow-how-the-configuration-reads-a-file-and-a-folder-home-nothing-in-which-is-read-is-named), [§FS-fetch.5.5](../../functional-spec/FS-fetch.md#55-which-file-declares-and-what-idmd-may-hold), [§FS-scan.checks.unread-scan-root.folder](../../functional-spec/FS-scan.md#checksunread-scan-rootfolder-a-folder-home-in-which-nothing-is-read): **folder fetch, and `check`'s reasons for a file it does not read, follow how the configuration reads the file.** **What now works:** `grund fetch <ID>` into a folder home replaces a file the scan reads as Markdown under another name, such as `fs/a.txt` under `txt = "markdown"`, as it replaces `fs/a.md`, and refuses a stub in such a file beside its target in the home as ambiguous, as it refuses one in `fs/a.md`; it used to refuse both with `already declares it`. **What is refused sooner:** an `<ID>.md` the scan reads as source that declares the ID is refused before the integration runs, with `already declares it`, in place of `fetch output must begin with one Markdown declaration` after it ran. **What now warns:** a configured folder home in which nothing was read, though a file in it is refused by its extension or language, warns with `unread-scan-root` at its `folder` or `folders` key in both versions, in place of the empty-scan caution or `success`. **What says the true cause:** a name a listed `data` language reads, such as `fs.json`, is said to be read as data, which only a value kind reads, in `check`'s warning, the broken-stub line and `fetch`'s refusal; a version-2 empty scan with no language read for declarations names the languages rather than `()`; and a version-2 rule kind whose `files` entry is not read as Markdown is refused in words that name `form = "rule"`, the entry and its language. No run that passed fails because of this record. Part of [issue #1206](https://github.com/agent-grounds/grund/issues/1206).

@@ -37,6 +37,60 @@ pub(crate) fn unread_scan_root_hidden_language(version: u32) -> String {
     fill(Code::UNREAD_SCAN_ROOT, version, Some("hidden-language"), slots)
 }
 
+/// `unread-scan-root`'s *Fix*, case `hidden-document` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_hidden_document(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("hidden-document"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `unmap` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_unmap(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("unmap"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `value` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_value(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("value"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `document` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_document(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("document"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `folder-add` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_folder_add(version: u32, language: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("language", &language)];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("folder-add"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `folder-add-document` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_folder_add_document(version: u32, language: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("language", &language)];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("folder-add-document"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `folder-language` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_folder_language(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("folder-language"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `folder-document` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_folder_document(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("folder-document"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `folder-value` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_folder_value(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("folder-value"), slots)
+}
+
 /// `unread-scan-root`'s *Fix*, case `drop` (§FS-scan.checks.unread-scan-root).
 pub(crate) fn unread_scan_root_drop(version: u32) -> String {
     let slots: &[(&str, &dyn Display)] = &[];
@@ -71,4 +125,10 @@ pub(crate) fn unread_scan_root_give(version: u32) -> String {
 pub(crate) fn unread_scan_root_hidden_list(version: u32) -> String {
     let slots: &[(&str, &dyn Display)] = &[];
     fill(Code::UNREAD_SCAN_ROOT, version, Some("hidden-list"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `folder-rename` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_folder_rename(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("folder-rename"), slots)
 }

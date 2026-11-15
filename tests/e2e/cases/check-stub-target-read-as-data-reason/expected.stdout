@@ -1,0 +1,1 @@
+docs/architecture/AR-c.md:1: error: stub link target src/c/router.json is not scanned: the scan reads `.json` as `json`, a data language only a value kind reads

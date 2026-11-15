@@ -76,6 +76,14 @@ mod fetch_folder_elsewhere;
 #[path = "support/fetch_admission_1205.rs"]
 mod fetch_admission_1205;
 
+// §FS-scan.checks.unread-scan-root.folder: issue #1206's second pull request, its cases run alone.
+#[path = "support/fetch_and_unread_homes_1206.rs"]
+mod fetch_and_unread_homes_1206;
+
+// §FS-languages.fence.comment-block: grund#641's cases, run alone.
+#[path = "support/doc_comment_fenced_heading.rs"]
+mod doc_comment_fenced_heading;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
@@ -116,7 +124,15 @@ fn e2e_cases_match_expected_reports() {
     let manifest_dir = repo_root();
     // §REQ-one-answer.proof.delivery.payment: the cases overlap, each one run and compared
     // on one worker, outcomes in corpus order (§AR-workspace.9.3).
-    let cases = discover_e2e_cases(&manifest_dir);
+    // Red until #1206: its cases run alone in the ignored contract; implement removes this.
+    let cases = discover_e2e_cases(&manifest_dir)
+        .into_iter()
+        .filter(|case| {
+            !fetch_and_unread_homes_1206::RED_UNTIL_1206
+                .iter()
+                .any(|red| case.ends_with(red))
+        })
+        .collect::<Vec<_>>();
     let outcomes = ordered_pool::in_order(&cases, |case| run_case(&manifest_dir, case, E2e));
     let compared = outcomes
         .iter()
@@ -408,39 +424,6 @@ fn chapter_subject_name_is_its_whole_path() {
     .map(|name| run_case(&root, &cases.join(name), E2e))
     .collect::<Vec<_>>();
     assert_every_case_passed("chapter subject whole path", &outcomes);
-}
-
-/// §FS-languages.fence.comment-block: grund#641's tree, a heading inside a fence in a
-/// `///`, `/** */` or docstring block is no section on any surface, while a citation in
-/// the fence stays live, a value marker on a fenced heading is an illustration, and an
-/// unclosed fence ends with its own comment block.
-#[test]
-fn a_fenced_heading_in_a_doc_comment_is_not_a_section() {
-    let root = repo_root();
-    let cases = root.join("tests/e2e/cases");
-    let outcomes = [
-        "toc",
-        "block-toc",
-        "docstring-toc",
-        "inner-tilde-toc",
-        "go-toc",
-        "full",
-        "refs-json",
-        "check-missing",
-        "check-level",
-        "check-duplicate",
-        "fmt",
-        "citation-live",
-        "unclosed-ends-with-block",
-        "value-marker",
-    ]
-    .iter()
-    .map(|name| {
-        let case = cases.join(format!("doc-comment-fenced-heading-{name}"));
-        run_case(&root, &case, E2e)
-    })
-    .collect::<Vec<_>>();
-    assert_every_case_passed("doc-comment fenced heading", &outcomes);
 }
 
 /// Completion scripts participate in the same two independent runs as every

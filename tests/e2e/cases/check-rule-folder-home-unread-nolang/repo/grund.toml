@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "g199"
+
+[schema.sources]
+languages = ["json", "rust"]
+
+[schema.kinds.FS]
+files = ["src/a.rs"]
+
+[schema.kinds.RULE]
+folders = ["rules"]
+form = "rule"

@@ -1,0 +1,2 @@
+values/CONST-001-room.md:1: error: CONST-001-room is not listed in values/README.md (the index file does not exist): an entry is a `§`-marked Markdown link to the declaration; write `[§CONST-001-room](CONST-001-room.md#const-001-room-fetched)` in values/README.md — became an error in grund 0.13.0
+values/CONST-001-room.md:1: warning: declared but never cited: CONST-001-room; cite it

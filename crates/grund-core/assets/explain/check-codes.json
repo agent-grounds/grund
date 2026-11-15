@@ -1065,8 +1065,21 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "Rename it, or move what needs checking into a file that is not hidden"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "hidden",
+      "text": "Rename it, or move what needs checking into a file that is not hidden"
+     },
+     {
+      "label": "admit",
+      "text": "admit one in [schema.sources] languages, such as `markdown`"
+     },
+     {
+      "label": "unmap",
+      "text": "[schema.sources.extensions] maps `{ext}` to `{language}`: drop that entry"
+     }
+    ]
    },
    "note": null
   },
@@ -4027,7 +4040,7 @@
  },
  {
   "code": "unread-scan-root",
-  "meaning": "A file the config names as a scan root is not read, because its name is hidden or its extension is not scanned.",
+  "meaning": "A file or folder the config names as a scan root is not read, because a file's name is hidden or its extension is not read for declarations.",
   "ramp": null,
   "2": {
    "severity": {
@@ -4038,7 +4051,7 @@
     "kind": "clauses",
     "clauses": [
      {
-      "text": "a files entry of a [schema.kinds] table names a file that is not read for its name",
+      "text": "a files entry of a [schema.kinds] table names a file that is not read for its name, or a folders entry names a folder whose files are all unread, one refused for its name",
       "by": "condition"
      }
     ]
@@ -4057,6 +4070,42 @@
      {
       "label": "hidden-language",
       "text": "Rename the file to a name that is not hidden and an extension a listed language reads"
+     },
+     {
+      "label": "hidden-document",
+      "text": "Rename the file to a name that is not hidden and an extension a listed document language reads"
+     },
+     {
+      "label": "unmap",
+      "text": "Drop the `md` entry from [schema.sources.extensions]"
+     },
+     {
+      "label": "value",
+      "text": "Set `form = \"value\"` on the row, or give the file an extension a listed document language reads"
+     },
+     {
+      "label": "document",
+      "text": "Give the file an extension a listed document language reads"
+     },
+     {
+      "label": "folder-add",
+      "text": "Add `{language}` to [schema.sources] languages, or give the files in it an extension a listed language reads"
+     },
+     {
+      "label": "folder-add-document",
+      "text": "Add `{language}` to [schema.sources] languages, or give the files in it an extension a listed document language reads"
+     },
+     {
+      "label": "folder-language",
+      "text": "Give the files in it an extension a listed language reads"
+     },
+     {
+      "label": "folder-document",
+      "text": "Give the files in it an extension a listed document language reads"
+     },
+     {
+      "label": "folder-value",
+      "text": "Set `form = \"value\"` on the row, or give the files in it an extension a listed document language reads"
      },
      {
       "label": "drop",
@@ -4079,7 +4128,7 @@
     "kind": "clauses",
     "clauses": [
      {
-      "text": "a [[kinds]] file home or a [scan] include entry names a file that is not read for its name",
+      "text": "a [[kinds]] file home or a [scan] include entry names a file that is not read for its name, or a [[kinds]] folder home names a folder whose files are all unread, one refused for its name",
       "by": "condition"
      }
     ]
@@ -4110,6 +4159,10 @@
      {
       "label": "hidden-list",
       "text": "Rename the file to a name that is not hidden and an extension the list holds"
+     },
+     {
+      "label": "folder-rename",
+      "text": "Rename the files in it to an extension the list holds"
      },
      {
       "label": "place",

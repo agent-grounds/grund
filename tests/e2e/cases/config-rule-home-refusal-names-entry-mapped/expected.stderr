@@ -1,0 +1,1 @@
+error: grund.toml:12: [schema.kinds.RULE] sets `form = "rule"`, but files entry `rules/rules.md` is read as `json`, not as Markdown; move the rules into a file read as Markdown
