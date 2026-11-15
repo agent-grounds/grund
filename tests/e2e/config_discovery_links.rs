@@ -133,6 +133,56 @@ fn v1_narrowed_checks_keep_the_projects_read_failure() {
     Tree::new("v1", V1, "tests/e2e").check_scopes("tests/e2e", 2, &[READ_ERROR, V1_WARNING]);
 }
 
+/// §FS-config.3.6.1, §FS-check.1.3.6.3: a path spelled through a link above the project is
+/// the same path as its resolved spelling, so its in-scope read failure still exits 2.
+#[test]
+#[ignore = "red until #1399 keeps the below-root spelling of a path through a linked ancestor; implement removes this"]
+fn a_path_through_a_linked_ancestor_keeps_the_projects_read_failure() {
+    let tree = Tree::new("v1-ancestor", V1, "tests/e2e");
+    let link = Link::to(&tree.0, &format!("{}-link", tree.0.display()));
+    let mut failures = Vec::new();
+    for path in ["tests/e2e", "tests/e2e/b", "tests/e2e/b/expected.exit"] {
+        let real = tree.0.join("project").join(path);
+        let linked = link.0.join("project").join(path);
+        tree.expect(
+            &["check", linked.to_str().unwrap()],
+            2,
+            &[READ_ERROR, V1_WARNING],
+            &mut failures,
+        );
+        let (real_run, linked_run) = (
+            tree.run(&["check", real.to_str().unwrap()]),
+            tree.run(&["check", linked.to_str().unwrap()]),
+        );
+        if (real_run.code, &real_run.stderr) != (linked_run.code, &linked_run.stderr) {
+            failures.push(format!(
+                "grund check {path}: the linked spelling differs from the real one\n\
+                 real {:?}:\n{}linked {:?}:\n{}",
+                real_run.code, real_run.stderr, linked_run.code, linked_run.stderr
+            ));
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+/// A directory link beside a tree, `l -> r`, removed with the test.
+struct Link(PathBuf);
+
+impl Link {
+    fn to(target: &Path, at: &str) -> Self {
+        let link = PathBuf::from(at);
+        let _ = fs::remove_file(&link);
+        std::os::unix::fs::symlink(target, &link).unwrap();
+        Self(link)
+    }
+}
+
+impl Drop for Link {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.0);
+    }
+}
+
 /// §FS-config.1.5: a config above the target cannot replace the governing project.
 #[test]
 fn a_target_side_config_cannot_replace_the_projects_config() {
