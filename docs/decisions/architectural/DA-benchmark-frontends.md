@@ -14,6 +14,7 @@ The scenarios of [§AR-benchmarks.1.7](../../architecture/AR-benchmarks.md#17-fr
 
 - **No core-library scenario.** Every frontend calls the core, and a CLI scenario already counts it together with the start-up cost an agent actually pays. That is .3.3's reason, and it still holds.
 - **The language server: yes,** as the `grund-lsp` binary driven over stdio by a scripted session (`initialize`, `didOpen`, `hover`, `shutdown`), the same session its PGO training uses ([§DA-pgo-release](DA-pgo-release.md#da-pgo-release-distributed-binaries-are-pgo-built-trained-on-the-benchmark-workload)). It runs in the pull-request tier.
+- **The language server while the author types: yes, as a second session,** *typing*, written beside the training one and not trained on. It counts only what the event loop does for a keystroke's `didChange` and `completion`, from the one `#[inline(never)]` function the harness toggles collection on at ([§AR-benchmarks.1.7](../../architecture/AR-benchmarks.md#17-frontends)). One row runs in the pull-request tier and one, on a workspace-sized fixture, nightly.
 - **Python: yes,** with Callgrind's collection toggled on at the extension's entry point, so interpreter start-up does not drown the signal. It runs in the nightly tier.
 - **Node: waived until shown repeatable,** because V8's JIT and garbage-collector threads make instruction counts move between runs. The inventory records the waiver and this reason.
 
@@ -22,6 +23,10 @@ The scenarios of [§AR-benchmarks.1.7](../../architecture/AR-benchmarks.md#17-fr
 ### 3.1 A frontend is measured as the process its host runs
 
 The language server is a binary, so .3.3's argument applies to it unchanged: the editor pays for the server's start-up, its framing and its rescans, and a scenario that runs the binary counts all of them. Driving it with the session PGO already trains on keeps one definition of "what an editor does", as [§AR-benchmarks.1.5](../../architecture/AR-benchmarks.md#15-the-same-command-list-trains-pgo) keeps one for the CLI. The session is fed on stdin, so Callgrind counts the server and not the client that wrote it.
+
+#### 3.1.1 A keystroke is measured as the loop's share of it
+
+*Added 2026-11-15 (#1386).* Once a rebuild leaves the event loop ([§AR-lsp.2.1.1](../../architecture/AR-lsp.md#211-one-worker-rebuilds-off-the-loop)), what an author waits for on a key is no longer the process: it is the loop's handling of that key's `didChange` and `completion`, while the rebuild runs elsewhere. A row that counted the whole process would count a background rebuild whose amount depends on when the worker happens to be idle, and two runs of one binary would differ by more than the same-binary bound ([§AR-benchmarks.7.3](../../architecture/AR-benchmarks.md#73-the-same-binary-bound)). So the typing rows toggle Callgrind's collection on at the one function the loop handles a typing message in, as the Python row toggles on at the extension's entry point (section 3.2). That function must survive LTO, so it is `#[inline(never)]` and named in the harness, and it must do the same work whether the worker is idle or busy, so installing a rebuild, publishing and dropping a replaced snapshot stay outside it. The session is defined in `train.py` beside the training one so there is still one definition of what an editor does, and it is not trained on, so the release's language-server training evidence keeps its bytes ([§FS-distribution-candidate.7.1](../../functional-spec/FS-distribution-candidate.md#71-each-product-trains-on-its-own-workload)).
 
 ### 3.2 Python is measured from its entry point, not from the interpreter's start
 
@@ -34,6 +39,7 @@ The gate is implementable only because a binary's count does not move between ru
 ## 4. Consequences
 
 - The pull-request tier gains a `grund-lsp` row, and the release's language-server training evidence keeps its bytes.
+- The pull-request tier gains a `grund-lsp` typing row and the nightly tier a workspace-sized one; neither moves the training session or its evidence.
 - The nightly tier gains a Python row and the extension build it needs.
 - The `node` mode stays waived, with a reason that holds rather than an issue to wait for.
 

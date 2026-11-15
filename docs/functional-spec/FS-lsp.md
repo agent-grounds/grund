@@ -20,6 +20,13 @@ fetcher, snapshot).
 - **snapshot (narrowed)** — [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations). In this spec, within the server's own state, it
   also names the immutable scan result one request is answered from; elsewhere the shared
   definition applies.
+- **typing request** — A `textDocument/completion` or `textDocument/onTypeFormatting`
+  request: one that reads only the document's live text and its project's declarations, so
+  it can be answered before the snapshot is rebuilt ([§FS-lsp.responsiveness.4](FS-lsp.md#responsiveness4-a-typing-request-waits-for-no-rebuild-while-the-declarations-stand)).
+- **snapshot request** — A hover, definition, references, occurrence-highlight or
+  document-link request: one that reads positions and bodies a rebuild recorded, so it is
+  answered from a snapshot built from exactly the text it was sent against
+  ([§FS-lsp.responsiveness.3](FS-lsp.md#responsiveness3-a-citation-hover-reads-nothing-the-snapshot-did-not)).
 
 ## requirements: What the editor surface holds to
 
@@ -60,6 +67,11 @@ owned path also publishes the independent missing-section finding. Ownerless and
 forms receive no guessed target.
 
 `textDocument/publishDiagnostics` pushes `grund check` results as the user edits. Each unknown reference, missing section, duplicate declaration, broken stub, citation-direction violation, hard chapter-rule violation, and `invalid-rule` becomes a diagnostic with the same path, line, code, severity, message, and title/citation range as the CLI's shared core report ([§FS-rules.9](FS-rules.md#9-managed-guidance-and-editor-parity)). The advisory `should` / `should-not` suggestions channel ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)) is opt-in on the CLI and is not pushed as diagnostics. Severity follows the engine's severity model ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization) — not configurable).
+
+When edits arrive faster than the server rechecks, it checks the latest text rather than every
+keystroke's, so a version merged into a later recheck publishes nothing of its own. Each publish for
+an open document carries the document version it was checked at, and a publish for an older version
+never follows one for a newer.
 
 Where each diagnostic anchors is [§FS-lsp.1.1.1](FS-lsp.md#111-where-a-diagnostic-anchors). Value, named-section, and missing-snapshot findings are transported from the core report rather than derived by the server ([§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)), and the `[workspace]` warnings on the run's warning channel are published too ([§FS-lsp.1.1.3](FS-lsp.md#113-workspace-warnings-on-the-runs-warning-channel)).
 
@@ -313,9 +325,14 @@ Core owns semantic recognition, candidate selection, byte edits and cached
 context; LSP owns request/response mapping and UTF-16 conversion. Read the
 existing owner snapshot and overlays ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)), never a shell-completion
 rescan per request. Preserve public struct constructors. Requests observe
-preceding notified document changes; declaration edits and close notifications
-refresh or restore the catalog used for navigation. Completion lists have
-`isIncomplete = true`, so further typing refreshes choices.
+preceding notified document changes. A request always reads the document's live
+text, the text of the last notification before it. It reads the catalog either
+through the comparison of [§FS-lsp.responsiveness.4](FS-lsp.md#responsiveness4-a-typing-request-waits-for-no-rebuild-while-the-declarations-stand), when the edits before it
+left the declarations unchanged, or by waiting for the rebuild that covers them.
+Either way its answer is the one the server would give had it rebuilt after
+every notification: only when the answer is sent moves. Declaration edits and
+close notifications refresh or restore the catalog used for navigation.
+Completion lists have `isIncomplete = true`, so further typing refreshes choices.
 
 Preserve live-transform timing ([§FS-lsp.1.4.1](FS-lsp.md#141-when-each-rewrite-fires)) and its distinct exclusions
 ([§FS-lsp.1.4.3](FS-lsp.md#143-where-the-expansion-refuses), [§FS-lsp.1.4.4](FS-lsp.md#144-where-the-trigger-conversion-refuses)). Before/after-conversion requests, immediate
@@ -473,14 +490,20 @@ correct answer nobody waits for is not a working editor integration: the server 
 over a workspace the CLI clears in a moment shows no error and no partial result, only a window in
 which nothing arrives.
 
-The budget is [§GOAL-fast-feedback.1](../goals.md#1-performance-targets), the one the scan itself is held to. Holding it is not only a
-property of the scan: a snapshot built inside the budget and then read quadratically is outside it
-again, so the work the server does *after* a snapshot exists is bound here as well.
+The budget is [§GOAL-fast-feedback.1](../goals.md#1-performance-targets): the one the scan itself is held to, and the editor target it
+sets for citation completion. Holding it is not only a property of the scan: a snapshot built inside
+the budget and then read quadratically is outside it again, so the work the server does *after* a
+snapshot exists is bound here as well, and so is what a request waits for before it is answered.
 
-The bound is a complexity and not a deadline. A figure in milliseconds would be a promise about one
-machine, and this project measures cost by counting work rather than by timing it; a cost that
-grows faster than its input is wrong on every machine, and one that does not is still right on a
-slow one.
+Each bound is a complexity, and instruction counts gate it. This project measures cost by counting
+work rather than by timing it: a cost that grows faster than its input is wrong on every machine,
+and one that does not is still right on a slow one.
+
+One answer also carries a deadline, because the author waits for it on every key: the completion of
+[§FS-lsp.responsiveness.4](FS-lsp.md#responsiveness4-a-typing-request-waits-for-no-rebuild-while-the-declarations-stand). A figure in milliseconds is a promise about one machine, so the deadline
+names its reference: the GraalVM workspace and the machine recorded in `docs/benchmarks.md`, where the
+figure is measured, with the build and the commit it was taken at. That record holds the deadline;
+CI does not, because a wall-clock figure on a shared runner cannot gate anything.
 
 ### responsiveness.1: Publishing a diagnostic set is linear in the findings
 
@@ -513,13 +536,41 @@ references reply each find their document by one resolution of the request's own
 Once a snapshot exists, a citation hover ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)) answers from it: the hover loads no
 workspace, and reads no file and observes no checking input that the snapshot's own build did not
 already read. Its cost therefore grows with the answer, the cited body, and not with the tree the
-snapshot was built over, which is what keeps a keystroke-adjacent request inside
-[§GOAL-fast-feedback.1](../goals.md#1-performance-targets) on a large workspace.
+snapshot was built over. A hover, highlight or link sent after an edit waits for the rebuild that
+covers that edit, never for a backlog of rebuilds behind it: each is a snapshot request, answered
+from a snapshot built from exactly the text it was sent against. That promise holds for a client
+that cancels the requests it no longer needs, because a snapshot request left uncancelled seals the
+rebuild of its own version; one the client cancels is answered `RequestCancelled`.
 
 What the hover answers does not move: its body stays byte for byte what `grund <ID> --toc` prints
 over the same input ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview), [§REQ-one-answer.text.parity](../requirements/REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)), stubs, named sections, value
 bindings and cross-project aliases included, and an open document's unsaved text is the input it
 reads, as it is for every other answer ([§FS-lsp.4.1](FS-lsp.md#41-how-parity-is-held)).
+
+### responsiveness.4: A typing request waits for no rebuild while the declarations stand
+
+A typing request — a completion ([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion)) or the live transform's on-type request
+([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)) — is answered from its own text and the project's declarations, without waiting
+for the snapshot to be rebuilt, whenever the edits before it left those declarations unchanged. Its
+cost is the edited document plus the catalog it filters, never the tree: between reading an edit and
+answering the typing request after it, the server reads no input except the edited document. On the
+reference [§FS-lsp.responsiveness](FS-lsp.md#responsiveness-what-an-answer-may-cost) names, grund's share of that answer is under 10 ms, which leaves
+the rest of [§GOAL-fast-feedback.1](../goals.md#1-performance-targets)'s 100 ms to the editor.
+
+"Unchanged" is judged by reading the edited document again as the scan reads it, under its
+project's config, and comparing the declarations that reading gives with the ones the installed
+catalog holds for that file. It is judged again each time a rebuild is installed, against the
+catalog installed at that moment, so a rebuild of an older text never stands in for a later one: a
+heading renamed, and renamed back before the rebuild of the rename lands, never offers the name it
+held in between. A document the one-file reading cannot judge exactly counts as changed: a config or
+ignore file, a stub or a stub's target, a file no project scanned.
+
+After an edit that did change the declarations, a typing request waits for the rebuild of every
+project that rebuild covers, not only the project that owns the document, because each of them may
+offer the IDs that changed — *deferred*: answering it from a catalog patched by the one-file reading,
+so that it too meets the deadline, is the follow-up. Either way its answer is the one a full rebuild
+gives, never an ID that has gone and never one short of an ID that is new
+([§FS-lsp.requirements.no-guess](FS-lsp.md#requirementsno-guess-no-answer-is-a-guess--realized)).
 
 ## 5. Out of scope
 

@@ -67,6 +67,7 @@ Speed is an ordering principle. `grund` runs in editors, save loops, commits, an
 - Under 100 ms on this repo.
 - Under 1 s on a 10k-file repo.
 - At most one allocation per file; zero on hot regex paths where possible.
+- In an editor, citation completions show within 100 ms of typing the trigger (`$$`) and of each keystroke after it, without the author asking for them (Ctrl+Space), on a workspace the size of GraalVM's, the editor's own time included.
 
 ### 2. How we get there
 

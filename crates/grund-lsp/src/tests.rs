@@ -256,3 +256,6 @@ mod hover_snapshot;
 
 #[path = "tests_v2_sources.rs"]
 mod v2_sources;
+
+#[path = "tests_typing.rs"]
+mod typing;
