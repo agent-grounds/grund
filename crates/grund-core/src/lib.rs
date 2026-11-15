@@ -317,6 +317,10 @@ pub use queries::{
     cites_clause, link_hover_citations, list_sizes_with_run_warnings, lsp_hover_with_kind_title,
     lsp_title_hover_body, on_type_line_edits, usage_clause, usage_over_paths,
 };
+// The editor's judge of whether a keystroke's text leaves the installed declarations standing
+// (§FS-lsp.responsiveness.4).
+#[doc(hidden)]
+pub use queries::TypingJudge;
 pub use queries::{
     ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, ShowFormat, ShowMode,
     ShowOpts, ShowQueryError, list_sizes,

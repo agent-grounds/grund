@@ -235,7 +235,7 @@ fn a_citation_hover_shows_the_unsaved_body_as_saved() {
 
 /// Folder `b` stubs `FS-t`, declared in `a/src/s.rs`, outside `b`'s scan;
 /// `b/docs/use.md` cites it on its first line. Returns `a`, `b` and that file.
-fn cross_folder_fixture(root: &Path) -> (PathBuf, PathBuf, PathBuf) {
+pub(super) fn cross_folder_fixture(root: &Path) -> (PathBuf, PathBuf, PathBuf) {
     let config = |kind: &str, include: &str| {
         format!(
             "grund_config_version = 1\n[reference]\nstrict = true\nrequire_grounding = false\n\
@@ -259,11 +259,11 @@ fn cross_folder_fixture(root: &Path) -> (PathBuf, PathBuf, PathBuf) {
 }
 
 /// The text of `a/src/s.rs` declaring `FS-t` with `lead`.
-fn declaring(lead: &str) -> String {
+pub(super) fn declaring(lead: &str) -> String {
     format!("/// FS-t: T\n///\n/// {lead}\npub fn t() {{}}\n")
 }
 
-fn server_over_folders(folders: &[&PathBuf]) -> (Server, Connection) {
+pub(super) fn server_over_folders(folders: &[&PathBuf]) -> (Server, Connection) {
     let (connection, client) = Connection::memory();
     let server = Server::new(
         connection,

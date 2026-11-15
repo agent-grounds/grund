@@ -67,6 +67,7 @@ mod e2e_listing;
 mod embedded_value_context;
 mod embedded_values;
 mod extents;
+mod file_again_judgement;
 mod file_pass;
 mod folder_homes;
 mod front_matter;
@@ -135,6 +136,7 @@ pub(crate) use legacy::{
 pub(crate) use off_format::record_off_format_citations;
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
 // Gated as its one reader outside this directory is, `api/tests_embedding_scan_errors.rs`.
+pub(crate) use file_again_judgement::file_again_keeps_declarations;
 #[cfg(all(test, unix))]
 pub(crate) use scan_error::scan_error_message;
 pub(crate) use scan_error::{
@@ -184,6 +186,8 @@ mod tests_escape_position;
 mod tests_excluding_rule;
 #[cfg(test)]
 pub(crate) mod tests_failure_lines;
+#[cfg(test)]
+mod tests_file_again_judgement;
 #[cfg(test)]
 mod tests_file_pass;
 #[cfg(test)]

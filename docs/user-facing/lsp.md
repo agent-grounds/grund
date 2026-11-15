@@ -104,8 +104,15 @@ image as they are, as `grund fmt` leaves them
 ([§FS-lsp.1.2.1](../functional-spec/FS-lsp.md#121-citation-preview)).
 
 The server advertises the final character of each initially loaded project's
-marker and trigger, including multi-character introducers. Continued typing may
-need the client's usual manual completion command. After changing introducer
+marker and trigger, including multi-character introducers. Completion and `$$`
+answer as you type, from the declarations the project already has
+([§FS-lsp.responsiveness.4](../functional-spec/FS-lsp.md#responsiveness4-a-typing-request-waits-for-no-rebuild-while-the-declarations-stand)); diagnostics follow each recheck of what you edited
+and may trail your typing by about one recheck ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)). Right after you
+add, rename or remove a declaration, or edit `grund.toml`, the next completion
+waits for that recheck. A hover, highlight or link sent right after an edit
+waits for its recheck too, the one that covers the text it was sent against and
+never a backlog of rechecks behind it; that holds for a client that cancels the
+requests it no longer needs ([§FS-lsp.responsiveness.3](../functional-spec/FS-lsp.md#responsiveness3-a-citation-hover-reads-nothing-the-snapshot-did-not)). After changing introducer
 characters or adding workspace folders, manual requests use current config;
 restart the server to update automatic trigger characters.
 
@@ -213,7 +220,8 @@ Import the result explicitly:
 The imported template launches the installed `grund-lsp` from the IntelliJ
 project root and maps every effective scan extension. It does not install the
 plugin or edit IntelliJ-owned configuration. If `[scan].extensions` changes,
-regenerate and import the directory again.
+regenerate and import the directory again. The completion popup opens on `$$`
+as you type, with no extra LSP4IJ setting.
 
 Open a file containing a `§` citation and verify hover, navigation, and
 diagnostics as described in [Check the wiring](#check-the-wiring). A first-party

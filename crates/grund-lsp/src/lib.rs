@@ -20,9 +20,10 @@ use lsp_types::{
 use serde_json::Value;
 use serde_json::json;
 use std::cell::RefCell;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub fn run() -> Result<()> {
     let (connection, io_threads) = Connection::stdio();
@@ -193,12 +194,36 @@ include!("workspace.rs");
 include!("completion.rs");
 include!("imports.rs");
 
+include!("rebuilds.rs");
+include!("installed.rs");
+include!("held.rs");
+#[cfg(test)]
+include!("tests_rebuild_gate.rs");
+
 struct Server {
     connection: Connection,
     /// Folder identity stays keyed by the URI the client supplied. Distinct
     /// symlink aliases may canonicalize to one path, but removing either URI
     /// must leave the other anchor active (§FS-lsp.2.2.5).
     workspace_folders: BTreeMap<Url, PathBuf>,
+    watch: ImportWatch,
+    /// Every open document as the client's latest edit left it: what a typing
+    /// request answers from and the next rebuild reads (§FS-lsp.responsiveness.4).
+    open_docs: BTreeMap<Url, String>,
+    /// Each open document's version, as the client numbered its latest edit.
+    versions: BTreeMap<Url, i32>,
+    diagnostic_uris: BTreeSet<Url>,
+    /// The snapshot every answer reads, replaced whole when a rebuild is
+    /// installed (§AR-lsp.2.1.3).
+    installed: Installed,
+    rebuilds: Rebuilds,
+}
+
+/// What one rebuild leaves behind, which the worker builds and the loop installs
+/// whole (§AR-lsp.2.1.1, §AR-lsp.2.1.3). A snapshot request answers from it alone,
+/// the documents it was built from included, so its answer is the one for the
+/// text it was sent against (§FS-lsp.responsiveness.3).
+struct Installed {
     /// Last successful project-root discovery for each folder anchor. This is
     /// what lets a temporarily invalid config keep serving its last snapshot.
     folder_roots: BTreeMap<Url, PathBuf>,
@@ -207,18 +232,30 @@ struct Server {
     /// are published on that config until it loads (§FS-lsp.2.2.4.1).
     folder_config_failures: BTreeMap<Url, ConfigFailure>,
     scan_config_failures: BTreeMap<PathBuf, ConfigFailure>,
-    projects: Vec<ProjectSnapshot>,
+    /// Shared with the rebuild that starts from them, which replaces only the
+    /// projects its edits cover.
+    projects: Vec<Arc<ProjectSnapshot>>,
     /// One project per import root no folder's project holds (§AR-lsp.2.1).
-    imports: Vec<ProjectSnapshot>,
-    watch: ImportWatch,
-    open_docs: BTreeMap<Url, String>,
-    diagnostic_uris: BTreeSet<Url>,
+    imports: Vec<Arc<ProjectSnapshot>>,
+    /// The open documents this snapshot was built from, and their versions, which
+    /// its diagnostics are published for (§FS-lsp.1.1).
+    docs: BTreeMap<Url, String>,
+    versions: BTreeMap<Url, i32>,
     definition_link_support: bool,
     /// Per-snapshot line cache so a file is read and split at most once between
-    /// refreshes, rather than once per token: `document_links` and `references`
+    /// rebuilds, rather than once per token: `document_links` and `references`
     /// walk every citation on a file and each used to re-read the whole file
-    /// (§AR-lsp.5). Cleared in `refresh` whenever the snapshot is rebuilt.
+    /// (§AR-lsp.5). Each rebuild starts it empty.
     line_cache: RefCell<BTreeMap<PathBuf, Vec<String>>>,
+}
+
+/// The server answers from what is installed, so it reads as the snapshot it holds.
+impl std::ops::Deref for Server {
+    type Target = Installed;
+
+    fn deref(&self) -> &Installed {
+        &self.installed
+    }
 }
 
 impl Server {
@@ -230,16 +267,12 @@ impl Server {
         let mut server = Self {
             connection,
             workspace_folders,
-            folder_roots: BTreeMap::new(),
-            folder_config_failures: BTreeMap::new(),
-            scan_config_failures: BTreeMap::new(),
-            projects: Vec::new(),
-            imports: Vec::new(),
             watch: ImportWatch::default(),
             open_docs: BTreeMap::new(),
+            versions: BTreeMap::new(),
             diagnostic_uris: BTreeSet::new(),
-            definition_link_support,
-            line_cache: RefCell::new(BTreeMap::new()),
+            installed: Installed::new(definition_link_support),
+            rebuilds: Rebuilds::default(),
         };
         server.refresh();
         Ok(server)
@@ -252,185 +285,55 @@ impl Server {
             .unwrap_or("$$")
     }
 
+    /// Every message in the order the client sent it, each finished rebuild
+    /// installed between two of them, and the next rebuild handed to the worker
+    /// whenever it is idle (§AR-lsp.2.1.2).
     fn event_loop(&mut self) -> Result<()> {
         loop {
-            let message = match self.wake() {
-                Wake::Client(message) => message,
-                Wake::Closed => return Ok(()),
+            let flow = match self.wake() {
+                Wake::Client(message) => self.accept(message)?,
+                Wake::Rebuilt(built) => self.install(built)?,
                 // §AR-lsp.2.1: the server's own watcher saw an import root change.
                 Wake::Disk => {
-                    self.refresh();
-                    self.publish_diagnostics()?;
-                    continue;
+                    self.stale();
+                    Flow::Continue
+                }
+                // The client sent everything it will: what it sent is still answered, and
+                // a write to a reader that has gone too ends nothing worse (§AR-lsp.2.1.2).
+                Wake::Closed => {
+                    let _ = self.drain();
+                    return Ok(());
                 }
             };
-            match message {
-                Message::Request(request) => {
-                    if request.method == "shutdown" {
-                        return self.shut_down(request.id);
-                    }
-                    // A request that fails (bad params, resolution error) is
-                    // answered with an error response, never fatal to the
-                    // session (§FS-lsp.1).
-                    self.handle_request(request)?;
-                }
-                Message::Notification(notification) => {
-                    let method = notification.method.clone();
-                    // A malformed notification (params that do not deserialize,
-                    // say) or a failing one goes to stderr and is skipped: one
-                    // bad message cannot tear the session down (§FS-lsp.1).
-                    if let Err(err) = self.handle_notification(notification) {
-                        eprintln!("grund-lsp: notification `{method}` failed: {err:#}");
-                    }
-                }
-                Message::Response(_) => {}
+            if flow == Flow::Exit {
+                return Ok(());
             }
+            self.dispatch();
         }
     }
 
-    /// Rebuild every project's snapshot. The whole-workspace answer, for the
-    /// events that can change anything anywhere: startup, `initialized`, a
-    /// watched-file create or delete, a workspace-folder change.
+    /// Rebuild every project's snapshot on this thread, over the documents open
+    /// now: the session's first snapshot, built before the client is answered at
+    /// all. Every later rebuild is the worker's (§AR-lsp.2.1.1).
     fn refresh(&mut self) {
-        self.rebuild(None);
-    }
-
-    /// Rebuild only the projects whose scan can see `path`. Each edit still
-    /// rebuilds a whole project snapshot — a full scan, plus the direction
-    /// classification pass for projects with `[citations]` — which is
-    /// acceptable at the current scale; an incremental rescan keyed off the
-    /// changed document is the natural optimization for large repos, left as
-    /// future work. What multi-root discovery adds is *other* projects, and a
-    /// keystroke in one editor folder cannot change the verdicts of a project
-    /// that never reads that file, so those are left standing (§AR-lsp.2.1).
-    ///
-    /// A path *no* project claims falls back to rebuilding everything. It is
-    /// the shape a newly created file takes under a symlinked or
-    /// parent-relative include root — outside every project root, and in no
-    /// scan yet — and guessing "nobody's" there would leave the editor silent
-    /// on a file the CLI checks. Answering it costs a full refresh, which is
-    /// what every edit cost before this scoping existed.
-    fn refresh_document(&mut self, uri: &Url) {
-        let scope = uri.to_file_path().ok().map(normalize_path).filter(|path| {
-            self.projects
-                .iter()
-                .chain(&self.imports)
-                .any(|project| project.might_cover(path))
-        });
-        self.rebuild(scope);
-    }
-
-    /// `changed` scopes the rebuild: `None` rebuilds every project, `Some(path)`
-    /// rebuilds only the projects that cover `path` and carries the rest over
-    /// untouched.
-    ///
-    /// One failing project never takes the others with it. A folder whose
-    /// config will not load, or whose scan errors out, is noted on stderr and
-    /// keeps whatever snapshot it last had — so a half-typed `grund.toml` in one
-    /// editor folder cannot silently freeze diagnostics across the whole
-    /// session, which is what collecting the batch into one `Result` did
-    /// (§FS-lsp.2.2.4, §REQ-never-crashes). A config that will not load, at
-    /// discovery or in the scan, is also recorded for `publish_diagnostics` to
-    /// put on that config (§FS-lsp.2.2.4.1).
-    fn rebuild(&mut self, changed: Option<PathBuf>) {
-        let mut roots = BTreeSet::new();
-        let mut discoverable_roots = BTreeSet::new();
-        self.folder_config_failures.clear();
-        for (folder_uri, folder) in &self.workspace_folders {
-            match project_root(folder_uri, folder) {
-                Ok(root) => {
-                    self.folder_roots.insert(folder_uri.clone(), root.clone());
-                    discoverable_roots.insert(root.clone());
-                    roots.insert(root);
-                }
-                Err(err) => {
-                    eprintln!(
-                        "grund-lsp: workspace folder `{}` has no usable config: {err:#}",
-                        folder.display()
-                    );
-                    let previous_root = self.folder_roots.get(folder_uri).cloned();
-                    if let Some(failure) = ConfigFailure::of(&err, previous_root.clone()) {
-                        self.folder_config_failures
-                            .insert(folder_uri.clone(), failure);
-                    }
-                    roots.extend(previous_root);
-                }
-            }
-        }
-        let overlays = self.open_document_overlays();
-        let mut previous: BTreeMap<PathBuf, ProjectSnapshot> = std::mem::take(&mut self.projects)
-            .into_iter()
-            .map(|project| (project.root.clone(), project))
-            .collect();
-        let mut projects = Vec::new();
-        // A root no folder discovers any more has no scan of its own to fail:
-        // what is wrong with it is the folder's failure, recorded above.
-        self.scan_config_failures
-            .retain(|root, _| discoverable_roots.contains(root));
-        for root in roots {
-            let existing = previous.remove(&root);
-            // Discovery itself failed for every anchor that last named this
-            // root. Calling `lsp_snapshot` would rediscover the same broken
-            // config, so retain the existing snapshot directly (§FS-lsp.2.2.4).
-            if !discoverable_roots.contains(&root) {
-                projects.extend(existing);
-                continue;
-            }
-            let unaffected = match (&changed, &existing) {
-                (Some(path), Some(project)) => !project.might_cover(path),
-                _ => false,
-            };
-            if unaffected {
-                projects.extend(existing);
-                continue;
-            }
-            match lsp_snapshot_with_completion(LspSnapshotOpts {
-                path: root.clone(),
-                // A discovered project root is the whole project, so its
-                // configured include paths govern just as for a root CLI run.
-                path_provided: true,
-                open_documents: overlays.clone(),
-            }) {
-                Ok(snapshot) => {
-                    self.scan_config_failures.remove(&root);
-                    projects.push(ProjectSnapshot::with_completion(root, snapshot));
-                }
-                Err(err) => {
-                    eprintln!("grund-lsp: scan of `{}` failed: {err:#}", root.display());
-                    // §FS-lsp.2.2.4.1: a member's config, say, that fails in the scan.
-                    let retained = existing.as_ref().map(|project| project.root.clone());
-                    match ConfigFailure::of(&err, retained) {
-                        Some(failure) => self.scan_config_failures.insert(root, failure),
-                        None => self.scan_config_failures.remove(&root),
-                    };
-                    projects.extend(existing);
-                }
-            }
-        }
-        self.projects = projects;
-        self.rebuild_imports(changed.as_deref(), &overlays);
+        self.installed.docs = self.open_docs.clone();
+        self.installed.versions = self.versions.clone();
+        self.installed.rebuild(&self.workspace_folders, &Scope::All);
         self.watch_imports();
-        // The rebuilt snapshot reflects the new document contents, so any cached
-        // lines from before the edit are stale.
-        self.line_cache.borrow_mut().clear();
     }
 
-    fn handle_request(&mut self, request: Request) -> Result<()> {
+    /// Answer `request` from the installed snapshot.
+    fn respond(&self, request: Request) -> Result<()> {
         let id = request.id.clone();
         let method = request.method.clone();
         let outcome = match method.as_str() {
             "textDocument/hover" => self.hover(request.params).and_then(to_value),
-            // §FS-lsp.1.6: completion requests share notification ordering.
-            "textDocument/completion" => self.completion(request.params).and_then(to_value),
             "textDocument/definition" => self.definition(request.params).and_then(to_value),
             "textDocument/references" => self.references(request.params).and_then(to_value),
             "textDocument/documentHighlight" => {
                 self.document_highlights(request.params).and_then(to_value)
             }
             "textDocument/documentLink" => self.document_links(request.params).and_then(to_value),
-            "textDocument/onTypeFormatting" => {
-                self.on_type_formatting(request.params).and_then(to_value)
-            }
             _ => {
                 let response = Response::new_err(
                     id,
@@ -440,6 +343,16 @@ impl Server {
                 return self.send_response(response);
             }
         };
+        self.send_outcome(id, &method, outcome)
+    }
+
+    /// Send what answering one request gave, an error response where it failed.
+    fn send_outcome(
+        &self,
+        id: lsp_server::RequestId,
+        method: &str,
+        outcome: Result<Value>,
+    ) -> Result<()> {
         let response = match outcome {
             Ok(value) => Response::new_ok(id, value),
             Err(err) => {
@@ -459,30 +372,19 @@ impl Server {
         Ok(())
     }
 
-    fn handle_notification(&mut self, notification: Notification) -> Result<()> {
+    /// Every notification but an edit's and a cancellation: each one that changes
+    /// what a rebuild reads is counted as an edit, and its rebuild publishes
+    /// (§AR-lsp.2.1.2).
+    fn handle_change(&mut self, notification: Notification) -> Result<()> {
         match notification.method.as_str() {
-            "initialized" => {
-                self.refresh();
-                self.publish_diagnostics()?;
-            }
+            "initialized" => self.rescan(),
             "textDocument/didOpen" => {
                 let params: lsp_types::DidOpenTextDocumentParams =
                     serde_json::from_value(notification.params)?;
-                let uri = params.text_document.uri;
-                self.open_docs
-                    .insert(uri.clone(), params.text_document.text);
-                self.refresh_document(&uri);
-                self.publish_diagnostics()?;
-            }
-            "textDocument/didChange" => {
-                let params: lsp_types::DidChangeTextDocumentParams =
-                    serde_json::from_value(notification.params)?;
-                let uri = params.text_document.uri;
-                if let Some(text) = full_change_text(params.content_changes) {
-                    self.open_docs.insert(uri.clone(), text);
-                }
-                self.refresh_document(&uri);
-                self.publish_diagnostics()?;
+                let document = params.text_document;
+                self.open_docs.insert(document.uri.clone(), document.text);
+                self.versions.insert(document.uri.clone(), document.version);
+                self.edit(document.uri, Verdict::Unjudged);
             }
             "textDocument/didSave" => {
                 let params: lsp_types::DidSaveTextDocumentParams =
@@ -492,24 +394,21 @@ impl Server {
                     self.open_docs.insert(uri.clone(), text);
                 } else {
                     self.open_docs.remove(&uri);
+                    self.versions.remove(&uri);
                 }
-                self.refresh_document(&uri);
-                self.publish_diagnostics()?;
+                self.edit(uri, Verdict::Unreadable);
             }
             "textDocument/didClose" => {
                 let params: lsp_types::DidCloseTextDocumentParams =
                     serde_json::from_value(notification.params)?;
                 let uri = params.text_document.uri;
                 self.open_docs.remove(&uri);
-                self.refresh_document(&uri);
-                self.publish_diagnostics()?;
+                self.versions.remove(&uri);
+                self.edit(uri, Verdict::Unreadable);
             }
-            "workspace/didChangeWatchedFiles" => {
-                // Creates and deletes, so a project that has never read the
-                // path yet may still gain or lose a file: rebuild everything.
-                self.refresh();
-                self.publish_diagnostics()?;
-            }
+            // Creates and deletes, so a project that has never read the path yet
+            // may still gain or lose a file: rebuild everything.
+            "workspace/didChangeWatchedFiles" => self.stale(),
             "workspace/didChangeWorkspaceFolders" => {
                 let params: lsp_types::DidChangeWorkspaceFoldersParams =
                     serde_json::from_value(notification.params)?;
@@ -517,12 +416,11 @@ impl Server {
                 // one mixed event still applies (§FS-lsp.2.2.5).
                 for (folder_uri, _) in workspace_folder_paths(&params.event.removed) {
                     self.workspace_folders.remove(&folder_uri);
-                    self.folder_roots.remove(&folder_uri);
+                    self.installed.folder_roots.remove(&folder_uri);
                 }
                 self.workspace_folders
                     .extend(workspace_folder_paths(&params.event.added));
-                self.refresh();
-                self.publish_diagnostics()?;
+                self.stale();
             }
             _ => {}
         }
@@ -890,14 +788,18 @@ impl Server {
         Ok(Some(links))
     }
 
-    fn on_type_formatting(&self, params: Value) -> Result<Option<Vec<TextEdit>>> {
+    /// `text` is the whole document as the request found it, not just the edited
+    /// line: the shorthand rewrite has to know whether the line sits inside a
+    /// fenced block, exactly as `grund fmt` does (§FS-lsp.1.4.3).
+    fn on_type_formatting(
+        &self,
+        params: Value,
+        text: Option<String>,
+    ) -> Result<Option<Vec<TextEdit>>> {
         let params: DocumentOnTypeFormattingParams = serde_json::from_value(params)?;
         let uri = params.text_document_position.text_document.uri;
         let position = params.text_document_position.position;
-        // The whole document, not just the edited line: the shorthand rewrite has
-        // to know whether the line sits inside a fenced block, exactly as
-        // `grund fmt` does (§FS-lsp.1.4.3).
-        let Some(text) = self.document_text(&uri) else {
+        let Some(text) = text else {
             return Ok(Some(Vec::new()));
         };
         let Some(path) = uri.to_file_path().ok() else {
@@ -916,8 +818,10 @@ impl Server {
         on_type_replacement_for_line(&path, &text, position, &declared_ids)
     }
 
-    /// The edited document's full text — the open-buffer copy when the client has
-    /// one, else the file on disk, the same fallback `line_text` uses.
+    /// The edited document's full text as the client's latest edit left it — the
+    /// open-buffer copy when the client has one, else the file on disk, the same
+    /// fallback `line_text` uses. What a typing request answers against
+    /// (§FS-lsp.responsiveness.4).
     fn document_text(&self, uri: &Url) -> Option<String> {
         if let Some(text) = self.open_docs.get(uri) {
             return Some(text.clone());
@@ -1066,7 +970,9 @@ impl Server {
             })
             .unwrap_or_else(|| single_line_range(path, line, 1, fallback_width))
     }
+}
 
+impl Installed {
     /// The one project that answers for `path`. A containing root claims the
     /// document, the deepest one when project trees nest; a project that merely
     /// scans the path — through a symlinked or parent-relative `[scan] include`
@@ -1089,7 +995,7 @@ impl Server {
             .iter()
             .filter(|project| project.snapshot.scanned_files.contains(&path));
         let owner = scanned.next()?;
-        scanned.next().is_none().then_some(owner)
+        scanned.next().is_none().then_some(&**owner)
     }
 
     /// Diagnostics normally follow the same exact owner as requests. Two shapes
@@ -1112,7 +1018,7 @@ impl Server {
             {
                 return None;
             }
-            let mut candidates = self.projects.iter().filter(|project| {
+            let mut candidates = self.projects.iter().map(Arc::as_ref).filter(|project| {
                 project
                     .snapshot
                     .report
@@ -1133,18 +1039,18 @@ impl Server {
     }
 
     fn open_document_overlays(&self) -> BTreeMap<PathBuf, String> {
-        self.open_docs
+        self.docs
             .iter()
             .filter_map(|(uri, text)| uri.to_file_path().ok().map(|path| (path, text.clone())))
             .collect()
     }
 
-    /// The full text of `path` — the live editor buffer if the document is open,
-    /// otherwise the on-disk contents. Matches `line_text`'s lookup so cached and
-    /// uncached reads agree.
+    /// The full text of `path` — the buffer this snapshot was built from if the
+    /// document was open, otherwise the on-disk contents. Matches `line_text`'s
+    /// lookup so cached and uncached reads agree.
     fn file_text(&self, path: &Path) -> Option<String> {
         if let Some(uri) = path_uri(path)
-            && let Some(text) = self.open_docs.get(&uri)
+            && let Some(text) = self.docs.get(&uri)
         {
             return Some(text.clone());
         }
@@ -1179,7 +1085,7 @@ enum Token<'a> {
 }
 
 impl<'a> Token<'a> {
-    fn range(&self, server: &Server) -> Range {
+    fn range(&self, server: &Installed) -> Range {
         match self {
             Token::Citation(citation) => citation_range(citation, server),
             Token::Declaration(decl) => declaration_range(decl, server),
@@ -1215,7 +1121,7 @@ fn title_hover(range: Range, text: &str, usage: LspUsage, kind_title: Option<&st
     }
 }
 
-fn citation_range(citation: &LspCitation, server: &Server) -> Range {
+fn citation_range(citation: &LspCitation, server: &Installed) -> Range {
     token_range(
         server,
         &citation.path,
@@ -1225,15 +1131,15 @@ fn citation_range(citation: &LspCitation, server: &Server) -> Range {
     )
 }
 
-fn declaration_range(decl: &LspDeclaration, server: &Server) -> Range {
+fn declaration_range(decl: &LspDeclaration, server: &Installed) -> Range {
     token_range(server, &decl.path, decl.line, decl.column, &decl.text)
 }
 
-fn stub_range(stub: &LspStub, server: &Server) -> Range {
+fn stub_range(stub: &LspStub, server: &Installed) -> Range {
     token_range(server, &stub.path, stub.line, stub.column, &stub.text)
 }
 
-fn token_range(server: &Server, path: &Path, line: usize, column: usize, text: &str) -> Range {
+fn token_range(server: &Installed, path: &Path, line: usize, column: usize, text: &str) -> Range {
     let zero_line = line.saturating_sub(1) as u32;
     let line_text = server.cached_line(path, line);
     if let Some(line_text) = line_text {
