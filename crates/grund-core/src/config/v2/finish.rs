@@ -12,11 +12,10 @@ use super::walk::Reader;
 use crate::config::fetch_key::{fetch_key_name, fetch_key_repair, names_no_executable};
 use crate::config::home_requirement::{Ask, Home};
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
-use crate::config::project::{LoadWarning, Project, Strength};
+use crate::config::project::{Project, Strength};
 use crate::config::record::{CODE_SOURCE_KIND, ConfigLocation};
 use crate::config::rows::{Extent, Form, Kind, Origin, Place, Row};
 use crate::config::v1::{ValueLines, judge_homes, rule_kind_refusal, validate_kind_value_keys};
-use crate::model::Code;
 
 use super::read_as_markdown::{index_not_markdown, md_not_markdown};
 use super::schema::RowDraft;
@@ -44,23 +43,17 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
         .map(|(_, _, line)| *line)
         .collect();
     sources_model::lower(&mut r);
-    let mut warnings = md_not_markdown(&r, &md_lines);
+    // §FS-config-v2.reader.4.order: the refusals grund 1.0.0 made of 0.23.0's warnings ask the
+    // lowered source model, so they are given only once every row has passed every older check,
+    // and among them the earliest line is refused.
+    let mut late = md_not_markdown(&r, &md_lines);
     for row in &r.rows {
-        warnings.extend(form_prerequisites(&r, row, root)?);
-        warnings.extend(index_not_markdown(&r, row));
+        late.extend(form_prerequisites(&r, row, root)?);
+        late.extend(index_not_markdown(&r, row));
     }
-    warnings.sort_by_key(|(line, _, _)| *line);
-    let path = r.path.to_path_buf();
-    r.project.load_warnings.0 = (warnings.into_iter())
-        .map(|(line, code, message)| LoadWarning {
-            code,
-            at: ConfigLocation {
-                path: path.clone(),
-                line,
-            },
-            message,
-        })
-        .collect();
+    if let Some((line, message)) = late.into_iter().min_by_key(|(line, _)| *line) {
+        return r.fail(line, message);
+    }
     // §FS-scan.checks.unread-scan-root.message: offer only a valid, row-preserving form edit.
     r.project.schema.value_form_repairs.0 = r
         .rows
@@ -75,8 +68,8 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
             }
             let mut candidate = row.clone();
             candidate.form = Some((Form::Value, row.line));
-            form_prerequisites(&r, &candidate, root)
-                .is_ok()
+            // A later home refused at load is unmet (§FS-config-v2.reader.4.order).
+            matches!(form_prerequisites(&r, &candidate, root), Ok(late) if late.is_empty())
                 .then(|| row.name.clone())
         })
         .collect();
@@ -88,12 +81,9 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
 /// "rule"` and a values field ask what v1's `values`, `rules` and
 /// `value_chapter` ask of their row, with v1's messages, at the v2 key. Every
 /// `files` and `folders` entry is judged by `home_requirement` (§AR-config.1.6),
-/// and what a home that loads earns is returned as a warning at its line.
-fn form_prerequisites(
-    r: &Reader,
-    row: &RowDraft,
-    root: &Path,
-) -> Result<Vec<(usize, Code, String)>> {
+/// and the refusal a home earns at its own line is returned for the caller to give
+/// once every row has passed every older check (§FS-config-v2.reader.4.order).
+fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<Vec<(usize, String)>> {
     let values_field = r
         .fields
         .iter()
@@ -139,11 +129,11 @@ fn form_prerequisites(
         })
         .collect();
     let sources = &r.project.schema.sources;
-    let mut warnings = Vec::new();
+    let mut late = Vec::new();
     if k.rules {
         // §FS-config-v2.schema.sources.rules: every home, not only the first.
         match judge_homes(Ask::Rule, &k, &homes, root, sources) {
-            Ok(found) => warnings.extend(found),
+            Ok(found) => late.extend(found),
             Err(refusal) => return r.fail(form_line, refusal),
         }
     }
@@ -153,7 +143,7 @@ fn form_prerequisites(
         value_chapter: values_field.and_then(|field| field.content.map(|(_, line)| line)),
     };
     let named_sections = r.project.schema.ids.named_sections;
-    warnings.extend(validate_kind_value_keys(
+    late.extend(validate_kind_value_keys(
         r.path,
         &k,
         &lines,
@@ -162,7 +152,7 @@ fn form_prerequisites(
         named_sections,
         sources,
     )?);
-    Ok(warnings)
+    Ok(late)
 }
 
 /// §FS-config-v2.schema.places: what one row's keys must say together, each

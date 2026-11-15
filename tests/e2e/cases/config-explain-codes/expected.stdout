@@ -5,14 +5,14 @@ broken-stub: A stub's link does not lead to a declaration of its ID.
 chapter-cardinality: A declaration has more or fewer chapters of a name than a rule's have sentence allows.
 citation-cardinality: A declaration cites a target more or fewer times than a rule allows.
 config-fetch-names-nothing: A fetch key in a version-2 config named no executable, and was read for one more release as a kind whose fetch could not run; such a key is now refused when the config loads.
-config-index-not-markdown: A version-2 row's index names a file the configuration does not read as Markdown, so its folders are judged as under index = false for now.
-config-md-not-markdown: In version 2, an md entry of [schema.sources.extensions] maps .md to a language that does not read Markdown, and is read that way for now.
+config-index-not-markdown: A version-2 row's index named a file the configuration did not read as Markdown, and its folders were judged as under index = false for one more release; such an index is now refused when the config loads.
+config-md-not-markdown: In version 2, an md entry of [schema.sources.extensions] mapped .md to a language that did not read Markdown, and was read that way for one more release; such an entry is now refused when the config loads.
 config-multiline-string: A value in a version-2 config held a multi-line string, which version 2 does not read, and was read for one more release as before; such a value is now refused when the config loads.
 config-not-toml: A version-2 config held text TOML refuses that grund read for one more release as the readers before it did; such text is now refused when the config loads.
-config-rule-file-not-markdown: A version-2 rule kind's files entry is read by a source language, so a rule written as a Markdown heading there declares nothing.
-config-rule-folder-not-markdown: A version-2 rule kind's folders entry can hold no file read as Markdown, because no admitted language reads Markdown.
-config-value-home-absent: A version-2 value row's later home does not exist, and the row reads its other homes for now.
-config-value-home-invalid: A version-2 value row's later home is the wrong shape, resolves outside the root or cannot be looked up, and is read as before for now.
+config-rule-file-not-markdown: A version-2 rule kind's files entry was read by a source language, so a rule written as a Markdown heading there declared nothing, for one more release; such an entry is now refused when the config loads.
+config-rule-folder-not-markdown: A version-2 rule kind's folders entry could hold no file read as Markdown, because no admitted language read Markdown, and loaded for one more release; such an entry is now refused when the config loads.
+config-value-home-absent: A version-2 value row's later home did not exist, and the row read its other homes for one more release; such a home is now refused when the config loads.
+config-value-home-invalid: A version-2 value row's later home was the wrong shape, resolved outside the root or could not be looked up, and was read as before for one more release; such a home is now refused when the config loads.
 conflict-marker: A scanned file holds an unresolved merge-conflict block.
 dangling: A citation names an ID that no declaration declares.
 declaration-near-miss: A heading opens like a declaration, but its ID does not match its kind's ID format.

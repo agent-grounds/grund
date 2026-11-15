@@ -5,7 +5,6 @@ project_name = "g1206"
 languages = ["markdown", "rust"]
 
 [schema.sources.extensions]
-md = "rust"
 fsdoc = "markdown"
 
 [schema.kinds.FS]

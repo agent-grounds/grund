@@ -56,22 +56,20 @@ fn assert_rule_kind_loads(name: &str, toml: &str, home: &str) {
     );
 }
 
-/// §FS-config-v2.checks.config-rule-file-not-markdown: the row loads, and `home` is warned about
-/// at its `files` line, the one before `form`.
-fn assert_rule_home_warns(name: &str, toml: &str, home: &str) {
-    assert_rule_kind_loads(name, toml, home);
-    let config = load(name, toml, home).expect("loaded above");
+/// §FS-config-v2.checks.config-rule-file-not-markdown: the config is refused at load at `home`'s
+/// `files` line, the one before `form`, naming grund 1.0.0.
+fn assert_rule_home_refused(name: &str, toml: &str, home: &str) {
+    let err = match load(name, toml, home) {
+        Ok(_) => panic!("{name}: `{home}` should be refused"),
+        Err(err) => format!("{err:#}"),
+    };
     let files = toml.lines().count() - 1;
-    let warned = config.project().load_warnings.0.iter().any(|warning| {
-        warning.code == crate::model::Code::CONFIG_RULE_FILE_NOT_MARKDOWN
-            && warning.at.line == files
-            && warning
-                .message
-                .contains(&format!("`{home}` is read as `rust`"))
-    });
+    let at =
+        format!("grund.toml:{files}: [schema.kinds.RULE] files entry `{home}` is read as `rust`");
+    assert!(err.contains(&at), "{name}: expected `{at}`, got: {err}");
     assert!(
-        warned,
-        "{name}: expected config-rule-file-not-markdown at line {files}"
+        err.ends_with("; this became an error in grund 1.0.0"),
+        "{name}: {err}"
     );
 }
 
@@ -139,46 +137,52 @@ fn v2_rule_home_second_file_read_as_json_is_refused() {
 }
 
 /// §FS-config-v2.schema.sources.rules: a `source` language's entry is judged by its reading,
-/// never its name, so a `.rs` home alone loads with `config-rule-file-not-markdown`.
+/// never its name, so a `.rs` home alone is refused at its line.
 #[test]
-fn v2_rule_home_rs_alone_warns() {
+fn v2_rule_home_rs_alone_is_refused() {
     let toml = v2("languages = [\"markdown\", \"rust\"]\n", "rules/rules.rs");
-    assert_rule_home_warns("v2_rule_home_rs", &toml, "rules/rules.rs");
+    assert_rule_home_refused("v2_rule_home_rs", &toml, "rules/rules.rs");
 }
 
-/// §FS-config-v2.schema.sources.rules: a `.md` home `md = "rust"` reads as source keeps loading:
-/// a rule in a block eligible to declare is in force there.
+/// §FS-config-v2.reader.4.order: a `.md` home `md = "rust"` reads as source is refused at the
+/// `md` entry, the earlier of the two lines grund 1.0.0 refuses
+/// (§FS-config-v2.checks.config-md-not-markdown).
 #[test]
-fn v2_rule_home_md_read_as_rust_loads() {
+fn v2_rule_home_md_read_as_rust_is_refused_at_the_md_entry() {
     let sources = "languages = [\"markdown\", \"rust\"]\n\
                    [schema.sources.extensions]\nmd = \"rust\"\n";
     let toml = v2(sources, "rules/rules.md");
-    assert_rule_kind_loads("v2_rule_home_md_as_rust", &toml, "rules/rules.md");
+    let err = match load("v2_rule_home_md_as_rust", &toml, "rules/rules.md") {
+        Ok(_) => panic!("`md = \"rust\"` should be refused"),
+        Err(err) => format!("{err:#}"),
+    };
+    let at = "grund.toml:6: [schema.sources.extensions] maps `md` to `rust`";
+    assert!(err.contains(at), "expected `{at}`, got: {err}");
 }
 
-/// §FS-config-v2.schema.sources.rules: a later entry a `source` language reads keeps loading
-/// after a `.md` first entry, with `[schema.sources]` written or left out.
+/// §FS-config-v2.schema.sources.rules: a later entry a `source` language reads is refused after
+/// a `.md` first entry, with `[schema.sources]` written or left out.
 #[test]
-fn v2_rule_home_second_file_read_as_rust_loads() {
+fn v2_rule_home_second_file_read_as_rust_is_refused() {
     let row = "[schema.kinds.RULE]\nfiles = [\"rules/rules.md\", \"rules/more.rs\"]\n\
                form = \"rule\"\n";
     let head = "grund_config_version = 2\nproject_name = \"g179\"\n";
     let listed = format!("{head}[schema.sources]\nlanguages = [\"markdown\", \"rust\"]\n{row}");
-    assert_rule_kind_loads("v2_rule_home_second_rs", &listed, "rules/more.rs");
+    assert_rule_home_refused("v2_rule_home_second_rs", &listed, "rules/more.rs");
     let unwritten = format!("{head}{row}");
-    assert_rule_kind_loads("v2_rule_home_second_rs_bare", &unwritten, "rules/more.rs");
+    assert_rule_home_refused("v2_rule_home_second_rs_bare", &unwritten, "rules/more.rs");
 }
 
 /// §FS-config-v2.schema.sources.rules, §AR-config.1.6: no entry is judged by the first one's
-/// name, so a later `.rs` after a `.txt` first entry `txt = "markdown"` reads loads and warns.
+/// name, so a later `.rs` after a `.txt` first entry `txt = "markdown"` reads is refused.
 #[test]
-fn v2_rule_home_second_file_read_as_rust_after_txt_warns() {
+fn v2_rule_home_second_file_read_as_rust_after_txt_is_refused() {
     let toml = "grund_config_version = 2\nproject_name = \"g179\"\n\
                 [schema.sources]\nlanguages = [\"markdown\", \"rust\"]\n\
                 [schema.sources.extensions]\ntxt = \"markdown\"\n\
                 [schema.kinds.RULE]\nfiles = [\"rules/rules.txt\", \"rules/more.rs\"]\n\
                 form = \"rule\"\n";
-    assert_rule_home_warns("v2_rule_home_txt_then_rs", toml, "rules/more.rs");
+    assert_rule_home_refused("v2_rule_home_txt_then_rs", toml, "rules/more.rs");
 }
 
 /// §FS-config-v2.schema.sources.rules, §FS-config-v2.schema.sources.migration: what the real

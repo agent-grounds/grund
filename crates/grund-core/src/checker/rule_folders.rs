@@ -2,28 +2,29 @@
 //! folder by a `source` language, which only the walk can see, so `check` says it after the walk
 //! rather than the configuration at load (§FS-config-v2.schema.sources.rules).
 
-use crate::config::{Extent, Form, Frame, LanguageClass, Owners, Schema, can_hold_markdown};
+use crate::config::{Extent, Form, Frame, LanguageClass, Owners, Schema};
 use crate::model::{Catalog, CheckReport, Code, Diagnostic, remedies};
 
 /// §FS-config-v2.checks.rule-folder-file-not-markdown: one warning at line 1 of each scanned
-/// file a `source` language reads in a `form = "rule"` row's folder. Never for version 1, and
-/// never in a folder `config-rule-folder-not-markdown` already names.
+/// file a `source` language reads in a `form = "rule"` row's folder. Never for version 1; a
+/// folder that can hold no Markdown is refused at load, so the walk never reaches one
+/// (§FS-config-v2.checks.config-rule-folder-not-markdown).
 pub(super) fn check_rule_folder_files(
     schema: &Schema,
     catalog: &Catalog,
     frame: Frame<'_>,
     report: &mut CheckReport,
 ) {
-    let Some(model) = schema.sources.model.as_ref() else {
+    if schema.sources.model.is_none() {
         return;
-    };
+    }
     let rule_rows = schema.rows.iter().any(|row| {
         row.kind
             .as_ref()
             .is_some_and(|kind| kind.form == Form::Rule)
             && row.folders().next().is_some()
     });
-    if !rule_rows || !can_hold_markdown(model) {
+    if !rule_rows {
         return;
     }
     let owners = Owners::new(schema, frame);

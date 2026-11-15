@@ -1,1 +1,1 @@
-warning: grund.toml:9: `[schema.kinds.FS] index` must name a Markdown file; `x.rs` is not read as Markdown, so until then its folders are judged as under `index = false`; name a file a `document` language reads, or set `index = false`; this becomes an error in grund 1.0.0
+error: grund.toml:9: `[schema.kinds.FS] index` must name a Markdown file; `x.rs` is not read as Markdown; name a file a `document` language reads, or set `index = false`; this became an error in grund 1.0.0

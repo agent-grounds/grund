@@ -40,12 +40,15 @@ fn version_2_reads_by_the_language() {
         "readings_v2_mapped",
         &v2(
             "\"markdown\", \"rust\", \"python\"",
-            "[schema.sources.extensions]\ntxt = \"markdown\"\nmd = \"rust\"\n",
+            "[schema.sources.extensions]\ntxt = \"markdown\"\n",
         ),
     );
+    // `md` mapped away from Markdown is refused at load
+    // (§FS-config-v2.checks.config-md-not-markdown), so a source name stands in for it.
     for (name, markdown, docstrings) in [
         ("a.txt", true, false),
-        ("a.md", false, false),
+        ("a.md", true, false),
+        ("a.rs", false, false),
         ("a.py", false, true),
     ] {
         let (written, tree) = both(&mapped, name);

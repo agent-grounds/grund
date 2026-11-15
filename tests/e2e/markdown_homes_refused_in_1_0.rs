@@ -247,7 +247,6 @@ const CASES: &[Case] = &[
 /// on `check` and on `fmt`, which never showed the warning, and `1` on `config validate`, in one
 /// line that names 1.0.0 and carries no "until then" clause (§FS-config.4.3).
 #[test]
-#[ignore = "red until #1397 refuses the six 0.23.0 load warnings at load; implement removes this"]
 fn each_of_the_six_is_refused_at_load_on_every_command() {
     for case in CASES {
         let tree = case.tree();
@@ -280,7 +279,6 @@ fn each_of_the_six_is_refused_at_load_on_every_command() {
 /// value home's refusal is that one line, with no `hint:` line beside it
 /// (§FS-config-v2.checks.config-value-home-absent).
 #[test]
-#[ignore = "red until #1397 refuses the six 0.23.0 load warnings at load; implement removes this"]
 fn each_refusal_is_these_exact_bytes() {
     let mut wrong = Vec::new();
     for case in CASES {
@@ -301,7 +299,6 @@ fn each_refusal_is_these_exact_bytes() {
 /// through a symlink is refused at the line that lists it.
 #[test]
 #[cfg(unix)]
-#[ignore = "red until #1397 refuses the six 0.23.0 load warnings at load; implement removes this"]
 fn a_later_value_home_outside_the_root_is_refused() {
     let tree = Tree::new(
         "value-invalid-outside",
@@ -326,7 +323,6 @@ fn a_later_value_home_outside_the_root_is_refused() {
 /// §FS-config-v2.reader.4.order: two of the six in one file, and the earliest line is refused, in
 /// whichever order the file writes them.
 #[test]
-#[ignore = "red until #1397 refuses the six 0.23.0 load warnings at load; implement removes this"]
 fn the_earliest_of_the_six_is_refused() {
     let value_first = Tree::new(
         "order-value-first",
@@ -425,7 +421,6 @@ fn a_rule_row_refused_before_keeps_its_refusal_at_form() {
 /// §FS-config-v2.checks.config-md-not-markdown: a workspace member's refusal names the member's
 /// own file.
 #[test]
-#[ignore = "red until #1397 refuses the six 0.23.0 load warnings at load; implement removes this"]
 fn a_workspace_member_refusal_names_the_members_file() {
     let case = &CASES[0];
     let tree = Tree::new(
@@ -466,7 +461,6 @@ const CODES: [&str; 6] = [
 /// `--ignore` are still accepted and select nothing, and `--only` says the check is spent
 /// (§FS-check.1.4.1).
 #[test]
-#[ignore = "red until #1397 refuses the six 0.23.0 load warnings at load; implement removes this"]
 fn each_code_is_spent_and_its_selectors_still_accepted() {
     let tree = clean_tree("spent");
     for code in CODES {
@@ -490,7 +484,6 @@ fn each_code_is_spent_and_its_selectors_still_accepted() {
 
 /// §FS-config-v2.checks.config-md-not-markdown: no selector suppresses a load refusal.
 #[test]
-#[ignore = "red until #1397 refuses the six 0.23.0 load warnings at load; implement removes this"]
 fn no_selector_suppresses_the_refusal() {
     for case in CASES {
         let tree = case.tree();
@@ -511,7 +504,6 @@ fn no_selector_suppresses_the_refusal() {
 /// §FS-config-v2.checks.config-md-not-markdown: `config explain` answers for each code as spent,
 /// on any tree, one whose config is refused included.
 #[test]
-#[ignore = "red until #1397 refuses the six 0.23.0 load warnings at load; implement removes this"]
 fn explain_answers_for_each_code_as_spent() {
     let tree = CASES[0].tree();
     for code in CODES {

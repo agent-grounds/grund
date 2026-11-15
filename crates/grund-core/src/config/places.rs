@@ -153,9 +153,11 @@ impl Row {
     }
 
     /// §FS-config.3.4.2.3: the `index_paths` the configuration reads as Markdown
-    /// (§FS-fmt.2.3.1). A folder whose index is not is judged as under `index = false` until grund
-    /// 1.0.0 (§FS-config-v2.checks.config-index-not-markdown), so every index rule, and the links
-    /// `--cross-refs` writes (§FS-fmt.6.1), ask this rather than the index's name.
+    /// (§FS-fmt.2.3.1). A named index that is not is refused at load
+    /// (§FS-config-v2.checks.config-index-not-markdown), so only the default `README.md` can be
+    /// dropped here, and its folder is judged as under `index = false`
+    /// (§DF-markdown-homes-refused-in-1-0.2.5); every index rule, and the links `--cross-refs`
+    /// writes (§FS-fmt.6.1), ask this rather than the index's name.
     pub(crate) fn markdown_index_paths(
         &self,
         schema: &Schema,

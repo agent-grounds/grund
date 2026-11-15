@@ -17,7 +17,6 @@ use crate::config::home_requirement::{
 };
 use crate::config::kind::KindConfig;
 use crate::config::project::Sources;
-use crate::model::Code;
 
 /// The lines a row's value refusals are located at: the key that wrote each,
 /// or the row's header (§FS-config.4.3).
@@ -31,8 +30,9 @@ pub(in crate::config) struct ValueLines {
 /// (§FS-config.3.4.9, §FS-config.3.4.13, §FS-fields.forms). Located at the
 /// key's own line, so the message opens the line that has to change and the
 /// editor marks that same line (§FS-lsp.2.2.4.1). `homes` are every home of the
-/// row, each judged (§AR-config.1.6), and what a later absent one earns is
-/// returned as a warning at its own line (§FS-config-v2.checks.config-value-home-absent).
+/// row, each judged (§AR-config.1.6), and the refusal a later one earns is
+/// returned with its own line, for the reader to give once every older question
+/// has its answer (§FS-config-v2.reader.4.order).
 /// `sources` is what the project reads, which an absent home's hint asks (§FS-fetch.4.1).
 pub(in crate::config) fn validate_kind_value_keys(
     path: &Path,
@@ -42,8 +42,8 @@ pub(in crate::config) fn validate_kind_value_keys(
     root: &Path,
     named_sections: bool,
     sources: &Sources,
-) -> Result<Vec<(usize, Code, String)>> {
-    let mut warnings = Vec::new();
+) -> Result<Vec<(usize, String)>> {
+    let mut late = Vec::new();
     if k.values {
         let line = lines.values.unwrap_or(lines.header);
         if !k.citable {
@@ -68,7 +68,7 @@ pub(in crate::config) fn validate_kind_value_keys(
         }
         // §AR-config.1.6: every home, not only the first.
         match judge_homes(Ask::Value, k, homes, root, sources) {
-            Ok(found) => warnings.extend(found),
+            Ok(found) => late.extend(found),
             Err(message) => return bail_config(path, line, message),
         }
     }
@@ -130,11 +130,11 @@ pub(in crate::config) fn validate_kind_value_keys(
             );
         }
         match judge_homes(Ask::Value, k, homes, root, sources) {
-            Ok(found) => warnings.extend(found),
+            Ok(found) => late.extend(found),
             Err(message) => return bail_config(path, line, message),
         }
     }
-    Ok(warnings)
+    Ok(late)
 }
 
 /// §FS-config.3.4.12, §FS-fields.forms: why a rule kind's row cannot hold
@@ -153,22 +153,23 @@ pub(in crate::config) fn rule_kind_refusal(k: &KindConfig) -> Option<String> {
 
 /// §FS-config.3.4.9, §FS-config.3.4.12: every home of a row judged by `home_requirement`, the
 /// refusal of the first that refuses, at `line` for a value home and with the form's refusal for
-/// a rule home, or the warnings the rest earn at their own lines.
+/// a rule home, or the refusals the rest earn at their own lines, which the version-2 reader
+/// gives only once every older question has its answer (§FS-config-v2.reader.4.order).
 pub(in crate::config) fn judge_homes(
     ask: Ask,
     k: &KindConfig,
     homes: &[Home<'_>],
     root: &Path,
     sources: &Sources,
-) -> std::result::Result<Vec<(usize, Code, String)>, String> {
-    let mut warnings = Vec::new();
+) -> std::result::Result<Vec<(usize, String)>, String> {
+    let mut late = Vec::new();
     for home in homes {
         match home_requirement(ask, k, *home, root, sources) {
             Verdict::Holds => {}
             Verdict::RefusesRow => return Err(rule_home_message(&k.kind, *home, sources)),
             Verdict::Refused(message) => return Err(message),
-            Verdict::Warns(code, message) => warnings.push((home.line, code, message)),
+            Verdict::RefusedLate(message) => late.push((home.line, message)),
         }
     }
-    Ok(warnings)
+    Ok(late)
 }

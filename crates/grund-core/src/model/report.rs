@@ -65,7 +65,7 @@ impl Code {
     /// the version-2 window's warnings (§FS-config-v2.checks.config-not-toml,
     /// §FS-config-v2.checks.config-multiline-string,
     /// §FS-config-v2.checks.config-fetch-names-nothing), and the version-2 reader's load
-    /// warnings that name grund 1.0.0 (§FS-config-v2.checks.config-md-not-markdown).
+    /// warnings, spent from grund 1.0.0 (§FS-config-v2.checks.config-md-not-markdown).
     const CLI_LEVEL_AT_A_LINE: [Code; 9] = [
         Code::CONFIG_FETCH_NAMES_NOTHING,
         Code::CONFIG_INDEX_NOT_MARKDOWN,

@@ -45,8 +45,9 @@ pub(super) struct KindIndexTarget<'a> {
 /// Why an index the configuration does not read as Markdown is dropped rather than
 /// reported: every rule below is stated in terms of what `grund fmt --cross-refs`
 /// would write, and that pass runs on files read as Markdown only (§FS-fmt.6.1,
-/// §FS-fmt.2.3.1). Its folder is judged as under `index = false`, which the load
-/// already warned about (§FS-config-v2.checks.config-index-not-markdown).
+/// §FS-fmt.2.3.1). Only the default `README.md` can be such an index, because a named one
+/// is refused at load (§FS-config-v2.checks.config-index-not-markdown), and its folder is
+/// judged as under `index = false` (§DF-markdown-homes-refused-in-1-0.2.5).
 pub(super) fn kind_index_targets<'a>(
     schema: &'a Schema,
     frame: Frame<'_>,

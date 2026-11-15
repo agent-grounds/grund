@@ -164,7 +164,7 @@ exclude = ["build/"]
 h = "c"
 ```
 
-Never map `md`: `.md` is always Markdown, and mapping it to a language that is not a `document` one warns until grund 1.0.0 refuses it.
+Never map `md`: `.md` is always Markdown, and a config that maps it to a language that is not a `document` one is refused.
 
 Treat `unread-scan-root` as a coverage gap: a configured folder home with no file
 read names its first visible file refused by extension or language, while an
