@@ -25,9 +25,39 @@ def entries(root):
     return found
 
 
-def tail(text, lines=40):
-    """A child's last `lines` lines of output: a failure carries them (§AR-ci.requirements.5.1)."""
-    return '\n'.join(text.splitlines()[-lines:])
+BOUND = 400  # stops a runaway child flooding the log, not an ordinary failure
+
+
+def carried(lines, log):
+    """A failed child's `lines` for its error, head and tail when past BOUND, naming `log`.
+
+    The gate entry removes the log with its run, so the error carries the output
+    (§AR-ci.requirements.5.1).
+    """
+    if len(lines) <= BOUND:
+        return '\n'.join(lines)
+    cut = f'[{len(lines) - BOUND} lines cut here; all of them are in {log}]'
+    return '\n'.join([*lines[:BOUND // 2], cut, *lines[-(BOUND // 2):]])
+
+
+def build_failure(build):
+    """Each compiler message a failed build wrote, then cargo's own `error:` lines.
+
+    `--message-format=json` puts every diagnostic on stdout as a `compiler-message`, and
+    leaves on stderr only manifest warnings and, after them, cargo's `error:` lines, so
+    the compiler's error is read from stdout (§AR-ci.requirements.5.1).
+    """
+    lines = []
+    for line in build.stdout.splitlines():
+        try:
+            item = json.loads(line) if line.startswith('{') else {}
+        except ValueError:
+            item = {}
+        if item.get('reason') == 'compiler-message':
+            lines += (item.get('message', {}).get('rendered') or '').splitlines()
+    stderr = build.stderr.splitlines()
+    first = next((at for at, line in enumerate(stderr) if line.startswith('error')), 0)
+    return lines + stderr[first:]
 
 
 def run(checkout, log_dir):
@@ -36,10 +66,12 @@ def run(checkout, log_dir):
     build = subprocess.run(
         ['cargo', 'test', '-q', '-p', 'grund-core', '--lib', '--no-run',
          '--message-format=json'], cwd=checkout, capture_output=True, text=True)
+    logs = f'{log_dir / "build.stdout"} and {log_dir / "build.stderr"}'
+    (log_dir / 'build.stdout').write_text(build.stdout)
     (log_dir / 'build.stderr').write_text(build.stderr)
     if build.returncode:
-        raise RuntimeError(f'build failed ({build.returncode}); see {log_dir / "build.stderr"}\n'
-                           f'{tail(build.stderr)}')
+        raise RuntimeError(f'build failed ({build.returncode}); see {logs}\n'
+                           f'{carried(build_failure(build), logs)}')
     artifacts = [json.loads(line) for line in build.stdout.splitlines() if line.startswith('{')]
     binaries = [item['executable'] for item in artifacts
                 if item.get('reason') == 'compiler-artifact'
@@ -60,13 +92,17 @@ def run(checkout, log_dir):
         for number in [1, 2]:
             suite = subprocess.run([binaries[0], '-q'], cwd=checkout / 'crates/grund-core',
                                    env=environment, capture_output=True, text=True)
-            output = suite.stdout + suite.stderr
-            (log_dir / f'run{number}.log').write_text(output)
+            output, log = suite.stdout + suite.stderr, log_dir / f'run{number}.log'
+            log.write_text(output)
             summaries = [line for line in output.splitlines() if line.startswith('test result:')]
             if suite.returncode or len(summaries) != 1 or 'test result: ok.' not in summaries[0]:
+                # §AR-ci.requirements.5.1: libtest's failures section, each failure with its
+                # panic message, through the summary and stderr; without one, all the output.
+                lines = output.splitlines()
+                first = next((at for at, line in enumerate(lines) if line == 'failures:'), 0)
                 raise RuntimeError(f'run {number}: suite failed or missing summary '
-                                   f'({suite.returncode}); see {log_dir / f"run{number}.log"}\n'
-                                   f'{tail(output)}')
+                                   f'({suite.returncode}); see {log}\n'
+                                   f'{carried(lines[first:], log)}')
             leftover = entries(area)
             base = area / 'grund-lib-tests'
             roots = len(list(base.iterdir())) if base.is_dir() else 0
