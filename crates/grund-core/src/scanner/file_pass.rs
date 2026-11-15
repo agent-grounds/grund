@@ -36,7 +36,7 @@ use super::qualified_citations::{
 };
 use super::record::{CommentFences, HeadingLine, bare_block_line, declaration_eligible, zone_of};
 use super::relative_sections::HeldHeadings;
-use super::section_record::record_section_heading;
+use super::section_record::{HeldSections, read_section_heading};
 use super::tree::heading_level_for_line;
 use super::units::record_file_structure;
 use super::unmarked_headings::assign_unmarked_heading_owners;
@@ -165,6 +165,7 @@ pub(super) fn scan_file_text(
     // recognition happen in this same fence-aware pass. Plain ATX headings wait until body spans
     // are known before becoming reportable candidates.
     let mut held_headings = HeldHeadings::default();
+    let mut held_sections = HeldSections::default();
     let mut total_lines = 0usize;
     // §FS-values.3.1.1.1: a literal that closed the line before, held for one line.
     let mut split = None;
@@ -385,11 +386,9 @@ pub(super) fn scan_file_text(
         }
         let mut embedded_marker_attached = false;
         if let Some(caps) = section_caps
-            && let Some(decl) = current.as_mut()
             && let Some(sec) = section_path(&caps)
         {
-            embedded_marker_attached = record_section_heading(
-                decl,
+            let section = read_section_heading(
                 &caps,
                 sec,
                 scan_line,
@@ -398,10 +397,9 @@ pub(super) fn scan_file_text(
                 is_md,
                 lineno,
                 embedded_marker,
-                schema,
-                path,
-                findings,
             );
+            embedded_marker_attached =
+                held_sections.offer(section, is_md, current.as_mut(), schema, path, findings);
         }
         if is_md
             && structure
@@ -440,10 +438,10 @@ pub(super) fn scan_file_text(
                 scan.column_offset + embedded_marker.unwrap() + 1,
                 MISPLACED_MARKER,
             );
-            // §FS-values.2.4: a relative heading's marker is the parent pass's to attach.
-            findings
-                .invalid_value_declarations
-                .extend(held_headings.hold_marker(lineno, site));
+            // §FS-values.2.4: a held heading's marker is the pass that settles it to attach.
+            let site = held_sections.hold_marker(lineno, site);
+            let site = site.and_then(|site| held_headings.hold_marker(lineno, site));
+            findings.invalid_value_declarations.extend(site);
         }
 
         let citation_line = CitationLine {
@@ -595,6 +593,8 @@ pub(super) fn scan_file_text(
 
     close_declaration(&mut current, findings);
     record.total_lines = total_lines;
+    // §AR-scanner.2.2.5: before the parent pass, which reads these sections as parents.
+    held_sections.settle(findings, &record, schema, path);
     held_headings.hold_doc_comment(findings, &mut record, path);
     held_headings.resolve(findings, &mut record, grammar.named_sections, schema);
     // §AR-scanner.2.8.2: every declaration's and section's extents, on every run.
