@@ -12,6 +12,7 @@ use super::compiled::{Compiled, compile};
 use super::project::Project;
 use super::record::Config;
 use super::run::{Invocation, Run};
+use super::scope_roots::spelled_under_root;
 use super::{v1, v2, validate};
 use crate::model::{format_path, normalize_path_lexically, relative_from_base};
 use crate::sources::{
@@ -217,15 +218,15 @@ pub(crate) fn nearest_config(start: &Path) -> Option<(PathBuf, PathBuf)> {
 }
 
 /// The CLI base of a run rooted at the canonical `root`, from the lexical `start`
-/// (§FS-config.3.6.1, §FS-cli.3.4, §FS-config.1.5). Under the root it keeps the path's
+/// (§FS-config.3.6.1, §FS-cli.3.4, §FS-config.1.5). From the root down it keeps the path's
 /// own spelling, as a finding names the in-tree link path, so a path through a directory
-/// link is spelled from the path given; a start the root does not prefix, as one reached
-/// through a link above the root, resolves.
+/// link is spelled from the path given; a start reached through a link above the root
+/// resolves only that part, through [`spelled_under_root`]. A start no ancestor of which
+/// resolves to the root resolves whole.
 pub(crate) fn cli_base_of(start: &Path, root: &Path) -> PathBuf {
-    if start.starts_with(root) {
-        return start.to_path_buf();
-    }
-    resolved_start(start).unwrap_or_else(|| start.to_path_buf())
+    spelled_under_root(start, root)
+        .or_else(|| resolved_start(start))
+        .unwrap_or_else(|| start.to_path_buf())
 }
 
 /// The CLI base of a run for the path argument `start`, discovered from `walk_start` and

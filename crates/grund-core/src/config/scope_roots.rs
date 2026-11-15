@@ -24,6 +24,23 @@ pub(crate) fn canonical_config_root(root: &Path) -> PathBuf {
     fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf())
 }
 
+/// The absolute `path` spelled under `root` (§FS-config.3.6.1): as written when the root prefixes
+/// it, else `root` joined to what lies below the topmost of its lexical ancestors that resolves to
+/// the root. Only the part above the root resolves, so a path reached through a link above the
+/// root is the same path as its resolved spelling, and a link from the root down — a kind home
+/// linked out of the project — is never followed. `None` when no ancestor resolves to the root.
+pub(crate) fn spelled_under_root(path: &Path, root: &Path) -> Option<PathBuf> {
+    if path.starts_with(root) {
+        return Some(path.to_path_buf());
+    }
+    let canonical_root = canonical_config_root(root);
+    let ancestors: Vec<&Path> = path.ancestors().collect();
+    let at = ancestors.into_iter().rev().find(|ancestor| {
+        fs::canonicalize(ancestor).is_ok_and(|resolved| resolved == canonical_root)
+    })?;
+    Some(root.join(path.strip_prefix(at).ok()?))
+}
+
 /// The roots a walk of the whole config root starts from (§FS-config.3.5).
 ///
 /// Without `--full` that is `[scan] include`, or the root itself when the key is

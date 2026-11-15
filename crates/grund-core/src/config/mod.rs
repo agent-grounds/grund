@@ -177,7 +177,8 @@ pub(crate) use record::{
 pub(crate) use report_paths::{display_path, published_finding, run_warning_findings};
 pub(crate) use run_warnings::RunWarning;
 pub(crate) use scope_roots::{
-    canonical_config_root, file_root_rows, root_scope_roots, unwalked_home_roots, unwalked_homes,
+    canonical_config_root, file_root_rows, root_scope_roots, spelled_under_root,
+    unwalked_home_roots, unwalked_homes,
 };
 pub(crate) use sources::LanguageClass;
 pub(crate) use v1::{
