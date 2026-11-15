@@ -1,6 +1,7 @@
 # DF-one-reading-answer: whether a file is read as Markdown, or has its docstrings read, is the configuration's one answer, never its name, and every home of a row is judged by it
 
 **Date:** 2026-11-12
+**Superseded in part by:** [§DF-reading-at-fetch-and-unread-homes](DF-reading-at-fetch-and-unread-homes.md#df-reading-at-fetch-and-unread-homes-folder-fetch-and-the-unread-home-reasons-follow-how-the-configuration-reads-a-file-and-a-folder-home-nothing-in-which-is-read-is-named), for [§DF-one-reading-answer.2.6](DF-one-reading-answer.md#26-fetch-reads-its-output-as-before): `grund fetch` reads its output alone as Markdown, the reading every target it writes has, from grund 0.23.0.
 
 ## status: Accepted
 

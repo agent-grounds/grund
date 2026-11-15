@@ -197,6 +197,15 @@ All five codes, and the front-matter field's two codes `unreadable-front-matter`
 
 `form = "value"` means what v1's `values = true` means ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations)), and `form = "rule"` what v1's `rules = true` means ([§FS-config.3.4.12](FS-config.md#3412-rules--rule-declaration-kinds)): the same declarations, the same findings, and the same prerequisites, refused with the same messages located at the `form` key. A `form = "rule"` kind with a `content = "values"` field is v1's `rules = true` with `value_chapter`. There is no second interpretation path: both readers lower into the one record, and the prerequisites are checked once, on it.
 
+One prerequisite of `form = "rule"` is refused in version 2's own words, still at the `form` key: a `files` entry that is not read as Markdown, because a `data` language reads it or no admitted language does ([§FS-config-v2.schema.sources.rules](FS-config-v2.md#schemasourcesrules-every-home-of-a-rule-kind-is-judged-by-its-reading)). Version 1's message names `rules = true`, a key a version-2 file does not have, and names neither the entry nor how it is read, so the refusal names the first such entry in the order the key writes them, and the language that reads it:
+
+```text
+error: grund.toml:12: [schema.kinds.RULE] sets `form = "rule"`, but files entry `rules/rules.md` is read as `json`, not as Markdown; move the rules into a file read as Markdown
+error: grund.toml:12: [schema.kinds.RULE] sets `form = "rule"`, but no admitted language reads files entry `rules/notes.txt`; move the rules into a file read as Markdown
+```
+
+A `files` entry a `source` language reads keeps its load warning ([§FS-config-v2.checks.config-rule-file-not-markdown](FS-config-v2.md#checksconfig-rule-file-not-markdown-a-rule-kinds-files-entry-is-read-as-source)), and every other prerequisite keeps version 1's words at the `form` key ([§DF-reading-at-fetch-and-unread-homes.2.7](../decisions/functional/DF-reading-at-fetch-and-unread-homes.md#27-version-2s-rule-home-refusal-speaks-version-2)).
+
 A kind whose declarations have no authored body to hold a field takes no fields and cannot be closed. Each is refused at the field's header or at `closed`:
 
 - `form = "value"`: `CONST is form = "value": its children are numbered components, so it takes no fields` (`… so it cannot be closed` at `closed`);

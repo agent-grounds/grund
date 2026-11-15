@@ -1,0 +1,1 @@
+grund.toml:4: warning: [schema.kinds.FS] file `fs.json` is not read — the scan reads `.json` as `json`, a data language only a value kind reads, so nothing in it is checked. Set `form = "value"` on the row, or give the file an extension a listed document language reads.

@@ -1,0 +1,1 @@
+grund.toml:6: warning: [schema.kinds.FS] file `.fs.json` is not read — its name begins with `.`, and the scan reads `.json` as `json`, a data language only a value kind reads, so nothing in it is checked. Rename the file to a name that is not hidden and an extension a listed document language reads.

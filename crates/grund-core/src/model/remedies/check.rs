@@ -139,6 +139,18 @@ pub(crate) fn empty_scan_hidden(version: u32) -> String {
     fill(Code::EMPTY_SCAN, version, Some("hidden"), slots)
 }
 
+/// `empty-scan`'s *Fix*, case `admit` (§FS-check.2.2).
+pub(crate) fn empty_scan_admit(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::EMPTY_SCAN, version, Some("admit"), slots)
+}
+
+/// `empty-scan`'s *Fix*, case `unmap` (§FS-check.2.2).
+pub(crate) fn empty_scan_unmap(version: u32, ext: impl Display, language: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("ext", &ext), ("language", &language)];
+    fill(Code::EMPTY_SCAN, version, Some("unmap"), slots)
+}
+
 /// `empty-scan`'s *Fix*, case `no-kinds` (§FS-check.2.2).
 pub(crate) fn empty_scan_no_kinds(version: u32) -> String {
     let slots: &[(&str, &dyn Display)] = &[];

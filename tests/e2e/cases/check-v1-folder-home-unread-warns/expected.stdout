@@ -1,0 +1,1 @@
+grund.toml:9: warning: [[kinds]] CONST home `values` is not read — extension md is not in [scan] extensions, so nothing in it is checked. Add "md" to [scan] extensions.

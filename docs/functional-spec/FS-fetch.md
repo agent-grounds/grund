@@ -314,7 +314,9 @@ error: kind `<KIND>` cannot fetch into <home>: <reason>, so the scan would not r
 `<home>` is spelled from the report base ([[§FS-errors.terms](FS-errors.md#terms-terms)]). `<reason>` is the one `check`'s
 unread warning gives for that name ([[§FS-scan.checks.unread-scan-root.message](FS-scan.md#checksunread-scan-rootmessage-the-message)]), so a
 correction to that reason moves both: ``no language in [schema.sources] languages reads `.dat` ``
-or ``its name begins with `.`, and grund reads no hidden file`` in a version-2 file, and
+or ``its name begins with `.`, and grund reads no hidden file`` in a version-2 file, the data row
+``the scan reads `.json` as `json`, a data language only a value kind reads`` for a name a listed
+`data` language reads, such as `fs.json`, and
 `extension dat is not in [scan] extensions` in a version-1 file, whose line says `a name the
 scan reads as Markdown` in place of `a name a listed document language reads`, since version 1
 has no language to list. A home that declares the requested ID, one that declares nothing and
@@ -377,8 +379,8 @@ A Markdown home file that cannot be decoded as UTF-8 is a home that cannot be re
 
 ## 5. Folder-home write
 
-For `folder = "<home>"`, grund replaces the Markdown file that currently declares the requested
-ID, or creates `<home>/<ID>.md` when no declaration exists. It never replaces a
+For `folder = "<home>"`, grund replaces the file read as Markdown that currently declares the
+requested ID, whatever its name, or creates `<home>/<ID>.md` when no declaration exists. It never replaces a
 different-ID file. Multiple existing declarations for the requested ID are ambiguous
 and refused. The declaring file or new file contains the accepted stdout verbatim. Which file
 declares, and what an existing `<ID>.md` that declares nothing may hold, is [[§FS-fetch.5.5](FS-fetch.md#55-which-file-declares-and-what-idmd-may-hold)]'s.
@@ -410,8 +412,8 @@ records the compatibility correction.
 
 ### 5.2 A file it does not replace that declares the ID prevents installation
 
-Discovery walks the home as the scan does, and reads every file the walk yields under a
-name other than `.md` through the scan's own pass, in whichever language that file is
+Discovery walks the home as the scan does, and reads every file the walk yields that the
+scan does not read as Markdown through the scan's own pass, in whichever language that file is
 read. A file in which that pass records a declaration of the requested ID is an existing
 declaration, not an absent snapshot. Fetch can neither create beside it, which leaves a
 duplicate, nor replace it, which overwrites what the file holds around the declaration
@@ -431,10 +433,11 @@ A Markdown file in the home that also declares the ID does not permit installati
 this refusal comes ahead of every judgement of that Markdown file: it names the other
 file whichever the walk reaches first, a Markdown file holding the ID beside other content
 and a stub whose target is that file included. What the first paragraph of [§FS-fetch.5](FS-fetch.md#5-folder-home-write)
-replaces is a file named `.md`, so a file the scan reads as Markdown under another name
-takes this refusal rather than a replacement. The refusal holds whether or not the scan
-reads `<ID>.md` as Markdown, and a stub the pass records under a name other than `.md` counts
-as declaring, whatever its target, including one that does not exist yet.
+replaces is a file the scan reads as Markdown, whatever its name, so `fs/a.txt` under
+`txt = "markdown"` is replaced as `fs/a.md` is, and an `fs/a.md` the scan reads as source under
+`md = "python"` takes this refusal rather than a replacement. The refusal holds whether or not
+the scan reads `<ID>.md` as Markdown, and a stub the pass records in a file it does not read as
+Markdown counts as declaring, whatever its target, including one that does not exist yet.
 
 What declares is the scan's answer, and fetch keeps no second reader of comments. A file
 that declares only other IDs, that only cites the ID, or that holds the ID's text where
@@ -492,13 +495,13 @@ keeps no second reader of comments or stubs:
 - A declaration in the home beside one outside it does not permit installation. This refusal
   comes ahead of every judgement of the home's contents, so a Markdown file holding the ID
   beside other content takes this refusal rather than its own, and so do a value source
-  ([§FS-fetch.5.1](FS-fetch.md#51-existing-value-source-declarations-prevent-installation)) and a file [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation) would refuse. A stub the pass reads under a name
-  other than `.md`, whose target outside the home declares the ID, is therefore named at that
-  target. [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation) names such a stub only when nothing outside the home declares the ID.
+  ([§FS-fetch.5.1](FS-fetch.md#51-existing-value-source-declarations-prevent-installation)) and a file [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation) would refuse. A stub the pass reads in a file the
+  scan does not read as Markdown, whose target outside the home declares the ID, is therefore
+  named at that target. [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation) names such a stub only when nothing outside the home declares the ID.
 - A broken stub in the home, with nothing declared outside the home, stays the home's own
-  declaration. In a file named `.md` it is replaced, and under another name
-  [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation) refuses it. That is also the way through for a healthy one in a `.md` file: with the
-  declaration taken out of the target the stub is broken, and the fetch replaces it.
+  declaration. In a file the scan reads as Markdown, whatever its name, it is replaced, and in
+  any other [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation) refuses it. That is also the way through for a healthy one in a file read as Markdown: with
+  the declaration taken out of the target the stub is broken, and the fetch replaces it.
 
 What the scan does not read cannot refuse: a file in a language the project does not admit or
 under an extension `[scan] extensions` does not list, one under an excluded directory, and one
@@ -533,8 +536,8 @@ A file [§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-
 
 ### 5.5. Which file declares, and what `<ID>.md` may hold
 
-The declaring file is the file named `.md` in which the selected project's scan reads the
-requested ID, under whatever heading the scan reads as declaring it and at whatever depth
+The declaring file is the file the selected project's scan reads as Markdown, whatever its
+name, and in which it reads the requested ID, under whatever heading the scan reads as declaring it and at whatever depth
 ([[§FS-fetch.3](FS-fetch.md#3-accepted-declaration)]). Its whole content is replaced, so it may hold nothing beyond the range the
 scan records for that declaration ([[§FS-fetch.4](FS-fetch.md#4-file-home-write)]) but blank lines. A file that holds anything
 else beside it — a group heading above it, prose before it, another declaration — is refused,
@@ -543,6 +546,13 @@ with the path spelled from the report base ([[§FS-errors.terms](FS-errors.md#te
 ```text
 error: snapshot file <path> contains the requested ID beside other content
 ```
+
+So a file read as Markdown under another name, such as `fs/a.txt` under `txt = "markdown"`, is
+replaced or refused as `fs/a.md` is: with these words, or, where it holds a stub whose target in
+the home declares the ID, as the ambiguity [§FS-fetch.5](FS-fetch.md#5-folder-home-write) refuses, with `snapshot folder has
+multiple declarations for requested ID`. It is never refused with the line of
+[[§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)], which is for a file the scan reads in another language
+([§DF-reading-at-fetch-and-unread-homes.2.1](../decisions/functional/DF-reading-at-fetch-and-unread-homes.md#21-folder-fetch-follows-the-reading)).
 
 "When no declaration exists" never licenses overwriting a file that holds text. Where the
 scan reads no declaration of the ID and `<home>/<ID>.md` exists, the file is filled when it
@@ -635,7 +645,7 @@ difference, a rewind included, and 2 when a ref cannot be obtained
 ([[§FS-fetch.4](FS-fetch.md#4-file-home-write)]), or the output whole in a `folder` home ([[§FS-fetch.5](FS-fetch.md#5-folder-home-write)]) — has the selected
 project's own scan read it, and installs it only if that reading is exactly what was asked for.
 Each of the five points below is one clause, answered by one reading: the output alone, as the
-scan reads one file at the target's path; the tree as the scan read it before the integration ran
+scan reads one file at the target's path, which is as Markdown ([[§FS-fetch.admission.1](FS-fetch.md#admission1-the-requested-declaration-is-there-once-and-its-body-takes-in-all-of-the-output)]); the tree as the scan read it before the integration ran
 ([[§FS-fetch.6.1](FS-fetch.md#61-one-scan-read-before-the-integration-runs-and-installed-against)]); and the home as it would read after, with the candidate in place of the file
 on disk and no other file read again. A clause that fails refuses the fetch with exit 2, empty stdout, the whole tree
 byte-identical, and the line the clause names. The clauses are judged in order, and only the
@@ -648,7 +658,10 @@ bytes stay verbatim ([[§FS-fetch.3](FS-fetch.md#3-accepted-declaration)]): admi
 
 ### admission.1: The requested declaration is there once, and its body takes in all of the output
 
-Read from the output alone. The first line declares the requested ID at the level the home
+Read from the output alone, as Markdown: every target `fetch` writes is one the scan reads as
+Markdown, since a home it does not read so is refused before the integration runs
+([[§FS-fetch.4.2.1](FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)], [[§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)]), so that reading is the target's own and no placement
+refusal is ever preceded by a refusal of the output ([§DF-reading-at-fetch-and-unread-homes.2.2](../decisions/functional/DF-reading-at-fetch-and-unread-homes.md#22-fetch-reads-its-output-as-markdown)). The first line declares the requested ID at the level the home
 takes ([[§FS-fetch.3](FS-fetch.md#3-accepted-declaration)]); no later heading the scan reads as declaring an ID stands inside it
 ([[§FS-fetch.3.1](FS-fetch.md#31-a-nested-declaration-is-refused)]); and no later heading ends it before the output does. A heading that ends it —
 a bare `##` or `#`, or any heading at or above the declaration's level that declares nothing —

@@ -124,3 +124,20 @@ fn alternatives(fixes: &[String]) -> String {
         [init @ .., last] => format!("{}, or {last}", init.join(", ")),
     }
 }
+
+// Scaffold for #1206's specify commit, where the catalog's cases are written ahead of the
+// findings that give them (§FS-scan.checks.unread-scan-root.folder): implement removes it.
+const _: [fn(u32) -> String; 8] = [
+    remedies::unread_scan_root_hidden_document,
+    remedies::unread_scan_root_unmap,
+    remedies::unread_scan_root_value,
+    remedies::unread_scan_root_document,
+    remedies::unread_scan_root_folder_language,
+    remedies::unread_scan_root_folder_document,
+    remedies::unread_scan_root_folder_value,
+    remedies::unread_scan_root_folder_rename,
+];
+const _: [fn(u32, String) -> String; 2] = [
+    remedies::unread_scan_root_folder_add,
+    remedies::unread_scan_root_folder_add_document,
+];

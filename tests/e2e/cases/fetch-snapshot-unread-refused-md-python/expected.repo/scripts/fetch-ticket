@@ -1,0 +1,2 @@
+#!/bin/sh
+printf '# %s: A ticket\n\nThe body.\n' "$1"

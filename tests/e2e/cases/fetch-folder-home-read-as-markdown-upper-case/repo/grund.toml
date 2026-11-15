@@ -1,0 +1,13 @@
+grund_config_version = 2
+project_name = "g214"
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.sources.extensions]
+MD = "markdown"
+
+[schema.kinds.FS]
+folders = ["fs"]
+index = false
+fetch = "./fetcher.sh"
