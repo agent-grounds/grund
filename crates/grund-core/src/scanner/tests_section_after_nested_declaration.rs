@@ -54,7 +54,7 @@ fn a_heading_after_a_nested_declaration_is_the_enclosing_declarations() {
     assert!(
         !error_codes(&report)
             .iter()
-            .any(|code| code == "section-outside-declaration"),
+            .any(|code| code.starts_with("section-outside-declaration@")),
         "{:?}",
         error_codes(&report)
     );
@@ -80,8 +80,6 @@ fn the_innermost_enclosing_body_owns_the_heading() {
 /// `## 1.` before the nested declaration and `## 1.` after it are two claimants of `FS-001-ci.1`:
 /// the first holds the map, the second is on the duplicate list, and check reports it.
 #[test]
-#[ignore = "its last assertion compares a bare code with error_codes, which yields code@line \
-            (duplicate-section@5); the supervisor rules on the assertion"]
 fn a_path_repeated_across_a_nested_declaration_is_a_duplicate() {
     let (config, findings) = scan(
         "section_after_nested_declaration_duplicate",
@@ -101,7 +99,7 @@ fn a_path_repeated_across_a_nested_declaration_is_a_duplicate() {
     assert!(
         error_codes(&report)
             .iter()
-            .any(|code| code == "duplicate-section"),
+            .any(|code| code.starts_with("duplicate-section@")),
         "{:?}",
         error_codes(&report)
     );
