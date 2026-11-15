@@ -187,6 +187,59 @@ new grammar. An ad-hoc refusal still has the shape of
 [§FS-errors.2.5](FS-errors.md#25-refused-input), and a missing piece here is a chapter name, never a
 kind, so no `known kinds:` line follows it.
 
+A `NAME` whose whitespace stands around an `or` between two words is not
+answered here: [§FS-rule-refusals.sentences.presence-or](FS-rule-refusals.md#sentencespresence-or-or-between-chapter-names-is-refused-for-the-or) answers it first.
+
+### sentences.presence-or: `or` between chapter names is refused for the `or`
+
+A presence `NAME` ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)) is the text between the count and the
+trailing `chapter` or `chapters`. Where that text, split at whitespace, holds
+the word `or` with a word before it and a word after it, the author wrote a
+choice between chapters, not one chapter title with spaces in it, and the
+sentence is refused for the `or`:
+
+```text
+"or" between chapter names is not accepted; a presence rule counts one NAME.
+```
+
+The words on either side may be anything, `chapter` included, so
+`exactly one dearer chapter or unsold chapter` is refused the same way, and
+whitespace around the `NAME` does not hide the `or`. The test is on the word
+as typed: `or` in lower case, standing alone. A `NAME` that is `or` alone is
+one token and is accepted as before; an `or` with no word on one side, a
+capitalised `OR`, or an `or` inside a word such as `order` leaves the `NAME`
+to [§FS-rule-refusals.sentences.whitespace](FS-rule-refusals.md#sentenceswhitespace-presence-name-whitespace-refusal), whose bytes do not move.
+
+No form is offered ([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)). The rule language has
+no chapter disjunction: one presence rule per name requires every chapter
+rather than any one of them, which judges other units than the typed sentence
+named ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)). What could not be
+supplied is a chapter name, never a kind, so no `known kinds:` line follows on
+`check --rule`, and a configured rule declaration's `invalid-rule` finding
+carries the same reason after `is not a valid rule: ` ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)). The
+refusal stands where the whitespace refusal stood, in the predicate stage of
+[§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails), so every earlier stage still wins and the exit
+code is the same `2`. Only the reason moves, for input that was refused
+already, and no sentence is newly accepted or newly refused.
+
+In the repository of [§FS-rule-refusals.sentences.rewrite.fs-only](FS-rule-refusals.md#sentencesrewritefs-only-exact-rows-where-fs-is-the-only-kind), whose one kind is `FS`,
+these are the exact refusals. Each `error:` line opens with the reason, and no
+line follows it:
+
+| Refused sentence | Exact reason |
+|---|---|
+| `Each FS must have exactly one dearer or unsold chapter.` | `"or" between chapter names is not accepted; a presence rule counts one NAME.` |
+| `Each FS must have at least one dearer or unsold chapter.` | `"or" between chapter names is not accepted; a presence rule counts one NAME.` |
+| `Each FS must have at least 2 dearer or unsold chapters.` | `"or" between chapter names is not accepted; a presence rule counts one NAME.` |
+| `Each FS must have exactly one dearer chapter or unsold chapter.` | `"or" between chapter names is not accepted; a presence rule counts one NAME.` |
+| `Each FS must have exactly one  dearer or unsold chapter.` | `"or" between chapter names is not accepted; a presence rule counts one NAME.` |
+| `Each FS must have exactly one dearer or chapter.` | `chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbids whitespace anywhere.` |
+| `Each FS must have exactly one dearer OR unsold chapter.` | `chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbids whitespace anywhere.` |
+
+Whether a presence rule should accept a choice between chapters is a grammar
+question this point does not answer; if one is ever accepted, this refusal goes
+with it.
+
 ### sentences.named-sections: A subject that needs named sections is answered with one they make valid
 
 Whether named sections are on is read under the project that configures the
@@ -743,6 +796,7 @@ spellings, rather than changing the shared kind reason on other surfaces.
 | a prohibition without `cite any` | `cite [count] KINDS` becomes `cite any KINDS` | the predicate is anything else |
 | a presence object not ending in `chapter` | its last word becomes `chapter` or `chapters`, as the count takes | no word precedes it |
 | a presence noun of the wrong number | `chapter` or `chapters`, as the count takes | — |
+| a presence `NAME` holding `or` between two words ([§FS-rule-refusals.sentences.presence-or](FS-rule-refusals.md#sentencespresence-or-or-between-chapter-names-is-refused-for-the-or)) | — | always |
 | a presence `NAME` with whitespace ([§FS-rule-refusals.sentences.whitespace](FS-rule-refusals.md#sentenceswhitespace-presence-name-whitespace-refusal)) | the `NAME` trimmed of its surrounding whitespace | the `NAME` is empty or has whitespace inside |
 | a chapter subject in a presence rule ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)) | — | always |
 | a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says | scope cannot be reconstructed, rebuilding it drops a typed component ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)), no configured kind is recovered, or the subject holds a clause; `known kinds:` follows only for the latter two |
@@ -801,6 +855,7 @@ configured rule declaration's finding carries the same text after
 | `FS-login should have at most 2 requirements chapter.` | `chapter count has the wrong singular/plural spelling; accepted form: FS-login should have at most 2 requirements chapters.` | none |
 | `FS-login must have exactly one  requirements chapter.` | `chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: FS-login must have exactly one requirements chapter. NAME forbids whitespace anywhere.` | none |
 | `FS-login must have exactly one Goal and hypothesis chapter.` | `chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbids whitespace anywhere.` | none |
+| `FS-login must have exactly one dearer or unsold chapter.` | `"or" between chapter names is not accepted; a presence rule counts one NAME.` | none |
 | `FS-login.requirements must have exactly one should chapter.` | `chapter subjects cannot have chapters` | none |
 | `The requirements chapter of each FS should have at least one should chapter.` | `chapter subjects cannot have chapters` | none |
 | `FS-*.requirements must cite at least one FS.` | `literal subject "FS-*.requirements" does not match the configured ID grammar; accepted form: The requirements chapter of each FS must cite at least one FS.` | none |
@@ -897,7 +952,7 @@ as one table so it does not depend on how one phrase of another point is read:
 | 3. conjunction | clauses joined by `and` ([§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction)) | `Each FS may not cite any FS and must cite at least one FS.` | `conjunctions are not accepted` |
 | 4. modality | no accepted modality, `may not` included | `Each POLICY may not cite any FS.` | `modality "may not" is not accepted` |
 | 5. the rest of the subject | unsupported `Every KIND` or `The NAME chapter of every KIND`, an unknown or non-citable kind, named sections off, the section grammar, a numbered chapter, the ID grammar, a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)), then a whose clause, in the order of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) | `Each POLICY must cite no FS.` | `unknown kind "POLICY"` |
-| 6. the predicate | the verb, quantifier (including `cite every`), count (including per-target numeric `at most 1 times`) and object kind, an object kind followed by a whose clause included, and a chapter subject that would have chapters | `Each FS must cite no FS.` | `"cite no" is not accepted` |
+| 6. the predicate | the verb, quantifier (including `cite every`), count (including per-target numeric `at most 1 times`) and object kind, an object kind followed by a whose clause included, a chapter subject that would have chapters, and a presence `NAME`, its `or` between two words ([§FS-rule-refusals.sentences.presence-or](FS-rule-refusals.md#sentencespresence-or-or-between-chapter-names-is-refused-for-the-or)) before its whitespace | `Each FS must cite no FS.` | `"cite no" is not accepted` |
 
 The examples are read in a repository whose one kind is `FS`, with named
 sections on. Two sentences the table of [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) gives whole,
