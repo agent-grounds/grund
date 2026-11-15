@@ -20,6 +20,8 @@ mod modal_chapter;
 mod offer_scope;
 #[path = "rules_contract/paste_back.rs"]
 mod paste_back;
+#[path = "rules_contract/presence_or.rs"]
+mod presence_or;
 #[path = "rules_contract/refusal_forms.rs"]
 mod refusal_forms;
 #[path = "rules_contract/refusal_order.rs"]

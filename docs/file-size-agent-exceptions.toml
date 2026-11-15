@@ -382,3 +382,14 @@ until = "the rule vocabulary and the ad-hoc --rule parse move into a sibling fil
 reason = """
 Under the soft budget by one line before #908 touched it (349 lines). #908 threads the project's rules through vocabulary and the four functions that build on it, so the place-refusal hint can name the grounding setting a row lacks (FS-rule-refusals.sentences.rewrite.no-form.place); that is one parameter and one argument at each, not new logic, and it takes the file to 355. Missing boundary: vocabulary, workspace_vocabulary, declared_workspace_vocabulary, add_workspace_targets and the parse_ad_hoc family build and use the rule vocabulary, a seam of their own beside the chapter-rule check that sequences evaluation, and can move to a sibling checker file, which is a refactor outside a message fix.
 """
+[[exceptions]]
+path = "docs/functional-spec/FS-rule-refusals.md"
+match = "exact"
+rules = ["docs"]
+kind = "deferred"
+max_accepted = { value = 1015, unit = "lines" }
+until = "the accepted-form rewrite (§FS-rule-refusals.sentences.rewrite with its per-refusal and FS-only tables) and the selector refusals (§FS-rule-refusals.selectors) leave for declarations of their own, with their existing section citations migrated"
+issue = "agent-grounds/grund#1374"
+reason = """
+Over the soft budget before issue #1374 touched it, with its soft edits already spent, so any edit is refused. Missing boundary: the accepted-form rewrite (sentences.rewrite, its by-refusal and fs-only tables) and the selector refusals are subjects of their own with their own sub-structure, but moving either out is a mapped migration of the section citations some 75 files make to this declaration, outside a refusal-message fix. #1374 adds the presence-or point beside the whitespace refusal it pre-empts, and, as requirements.next-refusal binds, one row to each of the by-refusal, fs-only and order tables. The ceiling accepts exactly the measured 1015 non-blank lines and permits no growth.
+"""
