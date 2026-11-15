@@ -5,6 +5,8 @@
 mod completion_overlap;
 #[path = "lsp_completion_support.rs"]
 mod completion_support;
+#[path = "lsp_completion_typing.rs"]
+mod completion_typing;
 #[path = "lsp_completion_workspace.rs"]
 mod completion_workspace;
 
