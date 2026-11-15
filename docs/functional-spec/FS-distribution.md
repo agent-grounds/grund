@@ -243,7 +243,7 @@ from the lossless host envelope; these are the only permitted differences:
   frontend message parsing to infer classes or locations.
 - Show uses existing engine query JSON when available and typed metadata to pin
   it; optional kind_title placement and E2E/value shapes are preserved. Batch
-  preserves input/exhaustive order and the JSON-only CLI mode. Refs/list/cover
+  preserves input/exhaustive order and the CLI's JSON batch bytes. Refs/list/cover
   and size rows use their fixed command fields/key orders; host envelope fields
   and null optional metadata do not invent extra CLI keys. Size measurements
   lower to lead_<unit>/full_<unit> pairs in caller unit order. Test total/summary
@@ -358,7 +358,8 @@ All flags affecting engine behavior map to current core mechanisms. Output-only
 CLI switches (refs total/summary, id explain, format exit code) become returned
 records/derived fields, not fake process options. The omitted showBatch mode
 format is deliberate: typed results plus canonical json are always returned;
-the existing engine batch CLI operation is json-only.
+the bindings project the CLI's JSON batch bytes, the one batch
+format that is data; its `text` and `md` framing is for reading ([§FS-show.3.3](FS-show.md#33-batch-query)).
 
 ##### 3.2.1.1 Exclusions and later adaptation
 

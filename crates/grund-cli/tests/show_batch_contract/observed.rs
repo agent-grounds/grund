@@ -11,16 +11,19 @@ const CHILD: &str = "observed::show_batch_observed_child";
 /// The CLI arguments the child runs, one per line; absent, the child is a no-op.
 const ARGS: &str = "GRUND_SHOW_BATCH_OBSERVED_ARGS";
 
-/// Runs `grund show --batch --format=json <extra_args>` in `repo` with `stdin`
-/// in the re-spawned child, logging each workspace load to `load_log`, and
-/// returns its output with libtest's own header taken off stdout (§AR-ci.3.3.1).
+/// Runs `grund show --batch --format=<format> <extra_args>` in `repo` with
+/// `stdin` in the re-spawned child, logging each workspace load to `load_log`,
+/// and returns its output with libtest's own header taken off stdout
+/// (§AR-ci.3.3.1).
 pub(crate) fn run_observed(
     repo: &Path,
+    format: &str,
     extra_args: &[&str],
     stdin: &str,
     load_log: &Path,
 ) -> Output {
-    let mut cli_args = vec!["show", "--batch", "--format=json"];
+    let format = format!("--format={format}");
+    let mut cli_args = vec!["show", "--batch", &format];
     cli_args.extend_from_slice(extra_args);
     let mut command = Command::new(std::env::current_exe().expect("this test executable"));
     // One test thread, so libtest names the child before running it and the

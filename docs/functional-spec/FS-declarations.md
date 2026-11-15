@@ -404,7 +404,7 @@ generates a query for each ([§FS-show.2.6.2](FS-show.md#262-exhaustive-generati
 ([§FS-completions.2.1](FS-completions.md#21-arguments-and-candidate-modes)), the editor's snapshot holds each for completion and navigation
 ([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion), [§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)), and `list --selector` selects a chapter among them
 ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A section path the target declares twice is one generated query, which
-`show --batch --all` answers with the failed envelope of an ambiguous section
+`show --batch --all` answers with the failed record of an ambiguous section
 ([§FS-show.2.6.3](FS-show.md#263-query-failures-and-run-level-failures)), so the batch exits `1` on the tree `check` already fails. Before grund
 0.19.0 those four readers saw none of an outside target's sections
 ([§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190)).
