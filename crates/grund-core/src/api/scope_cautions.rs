@@ -20,6 +20,7 @@ use super::unread_configs::UnreadConfigs;
 use crate::checker::{ScanScope, scope_read_any_file};
 use crate::config::{
     Config, Display, format_guidance, kind_prefixes, report_path, source_scope_name,
+    spelled_under_root,
 };
 use crate::grammar::id_shape;
 use crate::model::{Catalog, Code, Diagnostic, format_path, normalize_path_lexically};
@@ -388,9 +389,9 @@ pub(super) fn display_scope(display: Display<'_>, path: &Path) -> String {
         return format_path(path);
     }
     let base = display.base();
-    // §AR-config.1.7: either way the one spelling, the base `.`.
-    path.ancestors()
-        .find(|ancestor| canonical_path(ancestor).is_ok_and(|resolved| resolved == base))
-        .map(|ancestor| report_path(ancestor, path))
+    // §AR-config.1.7: either way the one spelling, the base `.`; §FS-config.3.6.1: only the
+    // part of the path above the base resolves.
+    spelled_under_root(path, base)
+        .map(|spelled| report_path(base, &spelled))
         .unwrap_or_else(|| display.path(path))
 }

@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use super::scan_error::{FailureRoots, Place, ScanError, failure_place};
 use super::walk_boundaries::is_directory_symlink;
 use super::walk_errors::root_lookup_failure;
-use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots};
+use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots, spelled_under_root};
 use crate::model::normalize_path_lexically;
 use crate::sources::{canonical_path, path_lookup};
 
@@ -121,13 +121,13 @@ fn resolve_scan_roots(
         };
         let resolved = canonical_path(scope).unwrap_or_else(|_| lexical_scope.clone());
         // §FS-config.3.5.1, §FS-config.3.5.2.1: keep the lexical spelling for an
-        // in-tree link and an external directory-link root; resolve other roots.
-        let scope =
-            if lexical_scope.starts_with(frame.root()) || is_directory_symlink(&lexical_scope) {
-                lexical_scope
-            } else {
-                walk_root_under_config_root(frame, &resolved)
-            };
+        // in-tree link and an external directory-link root; resolve other roots. A path
+        // through a link above the root resolves only that part (§FS-config.3.6.1).
+        let scope = match spelled_under_root(&lexical_scope, frame.root()) {
+            Some(spelled) => spelled,
+            None if is_directory_symlink(&lexical_scope) => lexical_scope,
+            None => walk_root_under_config_root(frame, &resolved),
+        };
         if resolved == canonical_config_root(frame.root()) {
             return Ok((root_scope_roots(schema, frame.root(), full), true));
         }

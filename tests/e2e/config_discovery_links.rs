@@ -136,7 +136,6 @@ fn v1_narrowed_checks_keep_the_projects_read_failure() {
 /// §FS-config.3.6.1, §FS-check.1.3.6.3: a path spelled through a link above the project is
 /// the same path as its resolved spelling, so its in-scope read failure still exits 2.
 #[test]
-#[ignore = "red until #1399 keeps the below-root spelling of a path through a linked ancestor; implement removes this"]
 fn a_path_through_a_linked_ancestor_keeps_the_projects_read_failure() {
     let tree = Tree::new("v1-ancestor", V1, "tests/e2e");
     let link = Link::to(&tree.0, &format!("{}-link", tree.0.display()));
