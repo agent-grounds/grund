@@ -18,6 +18,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 #[path = "show_batch_contract/observed.rs"]
 mod observed;
 
+#[path = "show_batch_contract/formats.rs"]
+mod formats;
+
 static NEXT_ROOT: AtomicUsize = AtomicUsize::new(0);
 
 struct Repo(PathBuf);
@@ -85,12 +88,17 @@ fn run_batch(repo: &Repo, extra_args: &[&str], stdin: &str) -> Output {
     run_batch_at(repo.path(), extra_args, stdin)
 }
 
-/// An unobserved run: its assertions are on output, which any build of the
-/// binary gives, so it may spawn the uplifted binary (§AR-ci.3.3.1).
+/// An unobserved run in `json`; [`run_batch_in`] takes any format.
 fn run_batch_at(repo: &Path, extra_args: &[&str], stdin: &str) -> Output {
+    run_batch_in(repo, "json", extra_args, stdin)
+}
+
+/// An unobserved run in `format`: its assertions are on output, which any build
+/// of the binary gives, so it may spawn the uplifted binary (§AR-ci.3.3.1).
+fn run_batch_in(repo: &Path, format: &str, extra_args: &[&str], stdin: &str) -> Output {
     let mut command = Command::new(env!("CARGO_BIN_EXE_grund"));
     command
-        .args(["show", "--batch", "--format=json"])
+        .args(["show", "--batch", &format!("--format={format}")])
         .args(extra_args);
     run_piped(command, repo, stdin)
 }
@@ -98,7 +106,7 @@ fn run_batch_at(repo: &Path, extra_args: &[&str], stdin: &str) -> Output {
 /// An observed run: the same command, its workspace loads logged to `load_log`
 /// by a process this test's own featured build made (§AR-ci.3.3.1).
 fn run_batch_observed(repo: &Repo, extra_args: &[&str], stdin: &str, load_log: &Path) -> Output {
-    observed::run_observed(repo.path(), extra_args, stdin, load_log)
+    observed::run_observed(repo.path(), "json", extra_args, stdin, load_log)
 }
 
 /// Runs `command` in `dir` with `stdin` written to it and its streams captured;

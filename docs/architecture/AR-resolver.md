@@ -137,6 +137,31 @@ The loader exposes an opt-in test-only counting observer, compiled in only by th
 for many explicit queries and one for exhaustive discovery; in a build without
 the feature those tests are ignored, naming it, rather than run against a log
 nobody wrote ([§AR-ci.3.3](AR-ci.md#33-test-only-observers), [§AR-ci.3.3.1](AR-ci.md#331-an-observation-is-read-from-a-process-the-tests-own-build-made)).
+The format the batch prints in changes none of this: one per-coordinate answer
+serves the single read, the editor and the batch in every format, and how each
+failed query's hint is built from the same context is [§AR-resolver.3.1.1](AR-resolver.md#311-a-batch-builds-every-hint-from-its-one-context).
+
+#### 3.1.1 A batch builds every hint from its one context
+
+A failed query's `hint:` lines in a `text` or `md` batch
+([§FS-show.3.3.2](../functional-spec/FS-show.md#332-a-failure-stays-in-its-place)) are built from the context the batch already loaded, and never
+by resolving configuration again. The project the query names, its alias's or
+the current one, supplies both inputs a hint reads: the ID format an invalid-ID
+hint names ([§FS-show.3.5.1](../functional-spec/FS-show.md#351-an-id-the-grammar-rejects)) and the section separator a missing-section hint
+cuts the query at ([§FS-show.3.5](../functional-spec/FS-show.md#35-the-hint-for-each-failure)). One function chooses the hint lines for a
+failure, and the single read calls it with the context it loaded too, so the two
+print the same lines for the same failure.
+
+The single read built them otherwise before, and that is what this point rules
+out for a batch: the invalid-ID hint came from `query_format_hint(path, …)`,
+which resolves and expands the workspace configuration again, and the
+missing-section hint from `effective_config(path)`, the configuration at the
+path rather than the project's. Either, done once per failed query, would be a
+configuration resolution per coordinate in a run [§AR-resolver.3.1](AR-resolver.md#31-grund-show---batch-loads-once) loads once,
+and the load-count observer would not see it, because `resolve_workspace_config`
+records no load. The hint travels on the batch's failure record beside its
+message; the JSON envelope does not print it, so it stays hint-free
+([§FS-output-shapes.6.1.2](../functional-spec/FS-output-shapes.md#612-from-0160)).
 
 ### 3.2 `grund cover` drops no file
 

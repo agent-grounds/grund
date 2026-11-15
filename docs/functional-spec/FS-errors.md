@@ -56,6 +56,8 @@ The two are never mixed: `grund check 2>/dev/null` shows you the findings and on
 - the bare message a *failed query* prints when it has no result to put on stdout ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure) — an ID query on a missing ID);
 - `grund init`'s file-by-file transcript ([§FS-errors.6](FS-errors.md#6-the-grund-init-transcript) — `init`'s real output is the scaffold on disk; the transcript is progress), and `grund integrations --write`'s transcript in the same shape ([§FS-errors.6](FS-errors.md#6-the-grund-init-transcript)).
 
+One command keeps a failed query's bare message and its `hint:` lines off stderr: `show --batch`, in every format, prints each query's outcome on stdout, a failure in its place among the answers, so its stderr carries only the run's warnings, a glob's `note:` and run-level `error:` lines ([§FS-show.3.3](FS-show.md#33-batch-query), [§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)). Its JSON form is [§FS-errors.5.3](FS-errors.md#53-show---batch).
+
 ## 2. The Fixed Shapes
 
 ### 2.1 Located finding
@@ -154,12 +156,13 @@ collides with an existing declaration:
 
 - No prefix at all, on **stderr**, exit `1`. There is no single site to point at and no result to return, so stdout is empty; this line plus the exit code is what tells the caller what happened.
 - Distinct from [§FS-errors.2.2](FS-errors.md#22-cli-level-message): there is no `error:` prefix, because this is not a launch/run failure — the command ran fine, the request was just unsatisfiable.
+- A batch is the exception to the stream: `show --batch` prints the same message, and the `hint:` lines below it, on **stdout**, in the failed query's place among the answers, in `text` and `md` as `json` carries it inside its envelope, and stderr stays empty for it ([§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)). Its exit is the batch's aggregate ([§FS-show.3.3](FS-show.md#33-batch-query)).
 
 How ambiguity and hint lines read is [§FS-errors.2.3.1](FS-errors.md#231-ambiguity-and-hint-lines); who uses the shape is [§FS-errors.2.3.2](FS-errors.md#232-who-uses-it).
 
 #### 2.3.1 Ambiguity and hint lines
 
-Ambiguity messages list every site in the order [§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites) defines, except an ambiguous number-only shorthand's, which lists its candidate IDs in ID order ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates)). A `hint:` line may follow on stderr where the next step is obvious ([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)).
+Ambiguity messages list every site in the order [§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites) defines, except an ambiguous number-only shorthand's, which lists its candidate IDs in ID order ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates)). A `hint:` line may follow on stderr where the next step is obvious ([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)), or on stdout below a batch's failed query ([§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)).
 
 A missing-target stub beside another home appends repair guidance after the complete
 ambiguity prefix, as [§FS-declarations.stubs.repair](FS-declarations.md#stubsrepair-a-missing-target-beside-another-declaration-explains-the-repair) defines.
@@ -168,7 +171,7 @@ that array continues to represent the original ambiguity list.
 
 #### 2.3.2 Who uses it
 
-Used by ID queries (missing or invalid ID and missing section — [§FS-show.3](FS-show.md#3-outputs); ambiguous ID — [§FS-show.2.2.1](FS-show.md#221-ambiguous-id); ambiguous section — [§FS-show.2.2.2](FS-show.md#222-ambiguous-section); broken stub — [§FS-show.2.3.4](FS-show.md#234-broken-stub)), by `refs` resolver rejections after its compatibility window ([§FS-refs.4](FS-refs.md#4-exit-codes)), and by `grund id` for a satisfiable query context whose requested allocation has no result (empty slug — [§FS-id.3](FS-id.md#3-slug-derivation); proposed-ID collision — [§FS-id.5](FS-id.md#5-collision-check)), and by `grund config explain` for a target the version it answers in does not know ([§FS-config-explain.5](FS-config-explain.md#5-a-target-the-version-does-not-know)). `check` does not use this shape — every line it prints is a located finding (stdout) or a CLI-level message (stderr).
+Used by ID queries (missing or invalid ID and missing section — [§FS-show.3](FS-show.md#3-outputs); ambiguous ID — [§FS-show.2.2.1](FS-show.md#221-ambiguous-id); ambiguous section — [§FS-show.2.2.2](FS-show.md#222-ambiguous-section); broken stub — [§FS-show.2.3.4](FS-show.md#234-broken-stub)) when they read one coordinate, while a batch query prints the same message on stdout in its place ([§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)), by `refs` resolver rejections after its compatibility window ([§FS-refs.4](FS-refs.md#4-exit-codes)), and by `grund id` for a satisfiable query context whose requested allocation has no result (empty slug — [§FS-id.3](FS-id.md#3-slug-derivation); proposed-ID collision — [§FS-id.5](FS-id.md#5-collision-check)), and by `grund config explain` for a target the version it answers in does not know ([§FS-config-explain.5](FS-config-explain.md#5-a-target-the-version-does-not-know)). `check` does not use this shape — every line it prints is a located finding (stdout) or a CLI-level message (stderr).
 
 ### 2.4 Text success line
 
@@ -675,9 +678,10 @@ A run-level finding in `grund check`'s report — about the run, not a finding a
 
 ### 5.3 `show --batch`
 
-`show --batch --format=json` is the explicit query-stream exception. Every
+`show --batch` is the explicit query-stream exception in every format
+([§FS-show.3.3](FS-show.md#33-batch-query)); this is its JSON form. Every
 well-formed query, including a failed one, produces one ordered stdout envelope
-([§FS-output-shapes.4.1](FS-output-shapes.md#41-show---batch---formatjson)); stderr
+([§FS-output-shapes.4.1](FS-output-shapes.md#41-show---batch---formatjson)), hint-free; stderr
 is reserved for invocation, batch-input, configuration, and scan failures that
 abort the run. A batch-input error uses raw
 `error: batch input line <N>: <reason>` text because no data-producing phase

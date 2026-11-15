@@ -22,7 +22,9 @@ snapshot).
 - **section map** — What `--toc` returns: the nested map of the coordinates a body records,
   without their prose.
 - **batch query** — One `--batch` invocation answering an ordered stream of coordinates, or
-  every coordinate in scope, from a single load.
+  every coordinate in scope, from a single load, in any `--format`.
+- **header** — The `==> <coordinate> <==` line a `text` or `md` batch prints above each answer:
+  framing between slices, never part of one.
 
 ## requirements: What every read holds to
 
@@ -34,25 +36,26 @@ Three requirements on `show` as a whole, each carrying a mark as [§FS-config.re
 
 ### requirements.authored-bytes: A slice is the author's bytes, selected and never rewritten — realized
 
-Every slice selects text the author wrote and generates none of its own: the lead, the section map and the full body are cuts of one body, each heading line the same bytes `--full` prints but for a relative heading's canonical path ([§FS-show.2.1](FS-show.md#21-whole-declaration-default), [§FS-show.2.1.2](FS-show.md#212-section-map---toc), [§FS-show.2.2](FS-show.md#22-section)); a fetched snapshot and a value-source declaration print their committed source slice ([§FS-show.2](FS-show.md#2-behavior)); and `md` injects nothing, not even the kind's title ([§FS-show.3.1.2](FS-show.md#312-md)). Three rewrites are named and are the only ones: a source declaration loses its comment wrapper, leaving the Markdown its author wrote ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-prefixes)); `text` and `json` flatten cross-reference wrappers back to the bare citation ([§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)); and a relative heading prints its canonical path on the lines a reader copies a coordinate from, each line of the section map and a selected section's own first line in every mode ([§FS-declarations.section.relative.shown](FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown), [§FS-declarations.section.relative.shown.selected](FS-declarations.md#sectionrelativeshownselected-a-selected-sections-own-heading-names-its-path)). An E2E case, which has no prose, prints a manifest composed from its case directory instead ([§FS-show.2.4](FS-show.md#24-e2e-cases)). Serves [§GOAL-token-economy.2](../goals.md#2-what-this-rules-out-1).
+Every slice selects text the author wrote and generates none of its own: the lead, the section map and the full body are cuts of one body, each heading line the same bytes `--full` prints but for a relative heading's canonical path ([§FS-show.2.1](FS-show.md#21-whole-declaration-default), [§FS-show.2.1.2](FS-show.md#212-section-map---toc), [§FS-show.2.2](FS-show.md#22-section)); a fetched snapshot and a value-source declaration print their committed source slice ([§FS-show.2](FS-show.md#2-behavior)); and `md` injects nothing, not even the kind's title ([§FS-show.3.1.2](FS-show.md#312-md)); a `text` or `md` batch's header sits between slices, never inside one ([§FS-show.3.3.1](FS-show.md#331-the-header)). Three rewrites are named and are the only ones: a source declaration loses its comment wrapper, leaving the Markdown its author wrote ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-prefixes)); `text` and `json` flatten cross-reference wrappers back to the bare citation ([§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)); and a relative heading prints its canonical path on the lines a reader copies a coordinate from, each line of the section map and a selected section's own first line in every mode ([§FS-declarations.section.relative.shown](FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown), [§FS-declarations.section.relative.shown.selected](FS-declarations.md#sectionrelativeshownselected-a-selected-sections-own-heading-names-its-path)). An E2E case, which has no prose, prints a manifest composed from its case directory instead ([§FS-show.2.4](FS-show.md#24-e2e-cases)). Serves [§GOAL-token-economy.2](../goals.md#2-what-this-rules-out-1).
 
 ### requirements.next-step: A failed query names its next step — realized, one case deferred
 
-Every failed query tells its reader what to do. A missing ID, a missing section and an ID the grammar rejects each get a `hint:` naming the command that answers it, and an existing path passed to the bare form gets `grund check <arg>` ([§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure), [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects), [§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)); an ambiguity or a broken stub names instead the sites to edit or the candidates to choose from ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates), [§FS-show.3.4](FS-show.md#34-what-a-failed-query-prints)); and a hint is withheld where the result line already names the answer ([§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure)). A path that reads as a second coordinate gets the batch command that reads both ([§FS-show.1.4.1](FS-show.md#141-a-second-coordinate-in-the-path-slot)). The hint for a missing fetched snapshot, `run grund fetch <qualified-ID>`, is specified but not given: `show` prints the generic missing-ID hint ([§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure)). **Deferred** to its own change. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
+Every failed query tells its reader what to do. A missing ID, a missing section and an ID the grammar rejects each get a `hint:` naming the command that answers it, and an existing path passed to the bare form gets `grund check <arg>` ([§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure), [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects), [§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)); an ambiguity or a broken stub names instead the sites to edit or the candidates to choose from ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates), [§FS-show.3.4](FS-show.md#34-what-a-failed-query-prints)); and a hint is withheld where the result line already names the answer ([§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure)). A path that reads as a second coordinate gets the batch command that reads both ([§FS-show.1.4.1](FS-show.md#141-a-second-coordinate-in-the-path-slot)), and a failed query in a `text` or `md` batch keeps its hint, in its place among the answers ([§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)). The hint for a missing fetched snapshot, `run grund fetch <qualified-ID>`, is specified but not given: `show` prints the generic missing-ID hint ([§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure)). **Deferred** to its own change. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
 
 ## 1. Inputs
 
 ```
 grund [show] <ID> [<path>] [--section <s>] [--brief | --toc | --full] [--format <text|md|json>]
-grund show --batch [<path>] --format=json [--brief | --toc | --full] [--path <path>]
-grund show --batch --all [<path>] --format=json [--brief | --toc | --full] [--path <path>]
+grund show --batch [<path>] [--brief | --toc | --full] [--format <text|md|json>] [--path <path>]
+grund show --batch --all [<path>] [--brief | --toc | --full] [--format <text|md|json>] [--path <path>]
 ```
 
 The first form reads one coordinate: `<ID>` names it ([§FS-show.1.1](FS-show.md#11-id), [§FS-show.1.2](FS-show.md#12-the-number-only-shorthand)), `show` itself
 may be omitted ([§FS-show.1.3](FS-show.md#13-show-is-optional)), `<path>` picks the tree ([§FS-show.1.4](FS-show.md#14-path-and---path)), `--section` or the dotted
 form picks a section ([§FS-show.1.5](FS-show.md#15---section-s)), one slice flag picks how much ([§FS-show.1.6](FS-show.md#16-how-much---brief-the-default---toc---full)), and `--format`
 picks the shape ([§FS-show.1.7](FS-show.md#17---format)). The two `--batch` forms answer many coordinates from one
-load: an explicit query stream ([§FS-show.1.8](FS-show.md#18---batch-an-explicit-query-stream)) or every coordinate in scope ([§FS-show.1.9](FS-show.md#19---batch---all-every-coordinate-in-scope)).
+load: an explicit query stream ([§FS-show.1.8](FS-show.md#18---batch-an-explicit-query-stream)) or every coordinate in scope ([§FS-show.1.9](FS-show.md#19---batch---all-every-coordinate-in-scope)). Every form takes
+every format: how a format prints does not depend on how the queries are selected ([§FS-show.3.3](FS-show.md#33-batch-query)).
 
 ### 1.1 `<ID>`
 
@@ -95,13 +98,13 @@ What `<path>` means is [§FS-scan.path.show](FS-scan.md#pathshow-show-resolves-t
 - it is coordinate-shaped: an unqualified ID, optionally with an inline section, that the effective ID grammar accepts ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — the grammar of the configuration discovered from the working directory, else the default one. Only its shape is checked; it is never resolved. A spelling with a `/` is a path and never a coordinate here;
 - the run is not `--batch`.
 
-Then stderr keeps `error: path does not exist: <path>` byte for byte as its first line and appends one line, built from the invocation's own coordinates:
+Then stderr keeps `error: path does not exist: <path>` byte for byte as its first line and appends one line, built from the invocation's own coordinates and its own format:
 
 ```text
-hint: `show` reads one coordinate, so `<path>` is the path; read both with `printf '%s\n' '{"id":"<ID>"}' '{"id":"<path>"}' | grund show --batch --format=json`
+hint: `show` reads one coordinate, so `<path>` is the path; read both with `printf '%s\n' '{"id":"<ID>"}' '{"id":"<path>"}' | grund show --batch`
 ```
 
-`<ID>` is the first operand as typed, inline section included; where `--section <s>` named the section, the first object is `{"id":"<ID>","section":"<s>"}` instead. The `%s\n` is printed literally, as the shell command needs it. Appending is what [§FS-errors.3](FS-errors.md#3-message-text) permits: the existing message survives as a verbatim prefix, and the hint changes nothing else. Stdout stays empty, the exit stays `2`, and stderr stays raw text under `--format=json` ([§FS-errors.2.2.4](FS-errors.md#224-under---formatjson), [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)). The path is never re-read as a query and nothing is resolved because of the hint.
+`<ID>` is the first operand as typed, inline section included; where `--section <s>` named the section, the first object is `{"id":"<ID>","section":"<s>"}` instead. The `%s\n` is printed literally, as the shell command needs it. The command asks the batch for the format the read asked for, since a batch takes every format ([§FS-show.1.8](FS-show.md#18---batch-an-explicit-query-stream)): it ends `grund show --batch` after a `text` read, the default, whether or not `--format text` was written, and `grund show --batch --format=json` or `grund show --batch --format=md` after a `json` or an `md` read, however the flag was spelled. Appending is what [§FS-errors.3](FS-errors.md#3-message-text) permits: the existing message survives as a verbatim prefix, and the hint changes nothing else. Stdout stays empty, the exit stays `2`, and stderr stays raw text under `--format=json` ([§FS-errors.2.2.4](FS-errors.md#224-under---formatjson), [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)). The path is never re-read as a query and nothing is resolved because of the hint.
 
 No hint is appended for a missing `--path`, which was named as a path on purpose; for a missing positional operand that is not coordinate-shaped, such as `docs/nope`; or for any `--batch` run; nor when the configuration cannot be loaded, in which case the error line and exit `2` stand alone. A coordinate-shaped operand that does exist, such as a directory named `FS-cli`, is scanned as before and the run succeeds.
 
@@ -124,8 +127,10 @@ No hint is appended for a missing `--path`, which was named as a path on purpose
 
 ### 1.8 `--batch`: an explicit query stream
 
-`--batch` is available only on the explicit `show` subcommand and requires
-`--format=json`. Without `--all`, it reads one query object per non-empty stdin
+`--batch` is available only on the explicit `show` subcommand and takes any
+`--format` ([§FS-show.1.7](FS-show.md#17---format)), `text` by default; how each format prints the stream is [§FS-show.3.3](FS-show.md#33-batch-query), and
+an unknown format is refused as the single read refuses it, ``error: unsupported show format `<f>` ``
+with exit `2`. Without `--all`, it reads one query object per non-empty stdin
 line: `{"id":"api/FS-login","section":"3.1"}`. `id` is required and must be a
 string; `section` is optional and must be a string or `null`; unknown fields,
 malformed JSON, and any other shape are batch-input errors. The `id` field
@@ -429,7 +434,7 @@ unqualified; IDs in every other loaded project use that project's stable alias.
 When a workspace excludes its root and therefore has no current project, every
 generated ID is qualified. Duplicate declarations or section claimants generate
 one coordinate and let normal resolution report its ambiguity. The glob form filters this
-same generation, keeping its order and its failed envelopes ([§FS-show.2.6.3](FS-show.md#263-query-failures-and-run-level-failures)); a pattern's
+same generation, keeping its order and its failed records ([§FS-show.2.6.3](FS-show.md#263-query-failures-and-run-level-failures)); a pattern's
 scope decides which projects' coordinates it can keep
 ([§FS-coordinate-globs.scope](FS-coordinate-globs.md#scope-scope)).
 
@@ -437,7 +442,8 @@ scope decides which projects' coordinates it can keep
 
 A well-formed query that names an invalid, missing, or ambiguous ID; a missing or
 ambiguous section; a broken stub; an unknown project alias; or both an inline and
-explicit section produces that query's failed envelope ([§FS-show.3](FS-show.md#3-outputs)) and does not stop
+explicit section produces that query's failed record — an envelope in `json`, the failure
+under its header in `text` and `md` ([§FS-show.3.3](FS-show.md#33-batch-query), [§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)) — and does not stop
 later records. Malformed input or invocation, configuration failure, and any scan
 failure are run-level errors: stdout stays empty, stderr carries the error, and no
 query is attempted. In particular, malformed explicit input is diagnosed as
@@ -449,7 +455,7 @@ query is attempted. In particular, malformed explicit input is diagnosed as
 - `1` — ID not found, ambiguous ID (multiple homes — [§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), ambiguous section (two headings claiming the requested path — [§FS-show.2.2.2](FS-show.md#222-ambiguous-section)), broken stub ([§FS-show.2.3.4](FS-show.md#234-broken-stub)), or section not found in declaration.
 - `2` — I/O error, or a CLI-level failure that stops the query before it runs: the commonest is a qualified ID naming a project this run does not hold, which exits `2` with `error: unknown project alias` however many segments the path has ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)). An ID the grammar rejects is *not* one of these — `invalid ID` is a failed query, `1` ([§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects)).
 
-Stdout carries the body (or, with `--format=json`, the result object — one JSON object, never NDJSON, per [§FS-errors.5.1.1](FS-errors.md#511-query-results)). Stderr carries errors. Stdout is empty on error.
+For a single read, stdout carries the body (or, with `--format=json`, the result object — one JSON object, never NDJSON, per [§FS-errors.5.1.1](FS-errors.md#511-query-results)). Stderr carries errors. Stdout is empty on error. A batch is the one exception, in every format ([§FS-show.3.3](FS-show.md#33-batch-query)).
 
 Format variants are [§FS-show.3.1](FS-show.md#31-format-variants), link flattening [§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json), batch queries [§FS-show.3.3](FS-show.md#33-batch-query), what a failed query prints [§FS-show.3.4](FS-show.md#34-what-a-failed-query-prints), and each failure's hint [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure).
 
@@ -493,18 +499,97 @@ Nothing else changes: an ordinary Markdown link in the prose, a citation that is
 
 ### 3.3 Batch query
 
-A batch query is the explicit exception to the single-coordinate stream shape. It
-emits one NDJSON envelope on stdout for every well-formed query, in query order;
-query failures move inside their envelope so they cannot hide later outcomes.
-Stderr is empty for all per-query successes and failures. The aggregate exits `0`
+A batch query is the one exception to the single read's stream shape, and it is
+the same exception in every format: every well-formed query's outcome goes to
+stdout as one record, in query order, a failure in its place among the answers,
+so no outcome can hide a later one. `json` prints each record as one NDJSON
+envelope ([§FS-output-shapes.4.1](FS-output-shapes.md#41-show---batch---formatjson)). `text` and `md` print each record as a header that
+names its coordinate ([§FS-show.3.3.1](FS-show.md#331-the-header)) above exactly the bytes the single read
+prints for that coordinate in the same format and mode, or, for a failed query,
+above the failure ([§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)). Stderr carries no per-query outcome, success or
+failure, in any format: only the run's warnings, a glob's note
+([§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note)), and a run-level error. The aggregate exits `0`
 when every query succeeds (including an empty explicit stream or empty exhaustive
-catalog), `1` after emitting all records when any query fails, and `2` with empty
-stdout for a malformed invocation/input or configuration/scan failure. These
-batch rules do not change any single-coordinate byte, stream, or exit behavior.
+catalog, which print nothing), `1` after printing all records when any query
+fails, and `2` with empty stdout for a malformed invocation/input or
+configuration/scan failure ([§FS-show.2.6.3](FS-show.md#263-query-failures-and-run-level-failures)). These batch rules do not change any
+single-coordinate byte, stream, or exit behavior: a single read prints no header.
+
+The framing is for reading; JSON is for parsing. A body is its author's bytes and
+may hold any line, a header's shape included, so no text framing can be split
+unambiguously: a program that has to separate the answers reads `--format json`,
+whose envelopes carry the query, the result and the failure as fields. Decided in
+[§DF-show-format-orthogonal](../decisions/functional/DF-show-format-orthogonal.md#df-show-format-orthogonal-shows---format-answers-every-query-form-and-a-text-or-md-batch-heads-each-answer--coordinate-).
+
+#### 3.3.1 The header
+
+Each record of a `text` or `md` batch opens with one line of its own,
+`==> <coordinate> <==`, and the body follows on the next line. Every header but
+the first follows one empty line: the previous record's bytes, a line break where
+they do not already end in one, then one more line break. Nothing follows the last
+record. A declaration with no lead in the default mode ([§FS-show.2.1.4](FS-show.md#214-a-declaration-with-no-lead-prints-nothing)) gets its
+header and nothing under it. `md` frames exactly as `text` does: the header is
+framing, not body, so it is the same line in both, and in `md` it renders as a
+paragraph above the body's own heading line.
+
+A succeeded query's coordinate is spelled as the exhaustive form generates
+coordinates ([§FS-show.2.6.2](FS-show.md#262-exhaustive-generation)): the ID the query resolved to, unqualified in the
+current project and prefixed with its project's alias and `/` in any other, then,
+where a section was read, that section's path joined by the section separator of
+the project that declares the ID ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). A shorthand is shown as the full
+ID it resolved to, and an alias that names the current project is dropped. So
+`{"id":"FS-042"}` resolving to `FS-042-user-login` is headed
+`==> FS-042-user-login <==`, and section `1` of `FS-api` in a member `api` whose
+separator is `:` is headed `==> api/FS-api:1 <==`, the coordinate a reader pastes
+back into `grund show`.
+
+A failed query is headed by the query as written: its `id`, and where it carries a
+separate `section`, that `id` joined to the section by the run's section separator,
+the one the configuration discovered at the run's path sets. So
+`{"id":"FS-show","section":"9.9"}` is headed `==> FS-show.9.9 <==`, and
+`{"id":"FS-nope"}` is headed `==> FS-nope <==`.
+
+#### 3.3.2 A failure stays in its place
+
+In `text` and `md`, a failed query's header is followed by its message — the same
+bytes the JSON envelope's `error.message` carries ([§FS-output-shapes.4.1](FS-output-shapes.md#41-show---batch---formatjson)) — and then
+the `hint:` lines the single read prints below that message for the same failure
+([§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure)), all on stdout and none on stderr. A query with a separate `section` fails as the
+single read that names that section with `--section` fails, so
+`{"id":"FS-show","section":"9.9"}` is hinted `grund FS-show --toc`, where the inline
+`{"id":"FS-show.9.9"}` is hinted `grund FS-show.9 --toc`. No line carries an `error:` prefix.
+A failure the single read refuses at launch instead, an unknown project alias
+among them, keeps its message and earns no hint, as the single read prints none;
+the lines only the bare `grund <ID>` form prints, the subcommand hint and the
+breadcrumb of [§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb), never appear, because a batch is always the explicit
+`show` form. `json` keeps the failure inside its envelope, hint-free
+([§FS-output-shapes.6.1.2](FS-output-shapes.md#612-from-0160)).
+
+Each hint reads the configuration of the project the query names, its alias's or
+the current one, from the one load the batch made ([§FS-show.2.6](FS-show.md#26-batch-resolution)): an invalid ID's
+hint names that project's ID format ([§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects)), and a missing section's
+hint cuts the query at that project's section separator ([§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure)). Below a
+workspace root whose member `api` sets the separator `:`, a batch of a good query,
+a missing ID and a missing section prints, and exits `1`:
+
+```text
+==> FS-root.1 <==
+## 1. One
+
+Root one.
+
+==> FS-nope <==
+ID not found: FS-nope
+hint: run `grund list` to see every declared ID, or `grund id <KIND> "<title>"` to propose a new one
+
+==> api/FS-api:9 <==
+section not found: FS-api:9
+hint: run `grund api/FS-api --toc` to print the lead with the section map
+```
 
 ### 3.4 What a failed query prints
 
-A failed query (`1`) prints the bare result line and, where the next step is obvious, one extra `hint:` line on stderr below it — never on stdout. With `--format=json`, stderr instead carries one finding JSON object per [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output), with `path` and `line` set to `null` because the failure has no single source location. The hint each failure gets is [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure).
+A failed single read (`1`) prints the bare result line and, where the next step is obvious, one extra `hint:` line on stderr below it — never on stdout. A `text` or `md` batch prints the same lines on stdout instead, in the failed query's place ([§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)). A single read with `--format=json` instead carries on stderr one finding JSON object per [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output), with `path` and `line` set to `null` because the failure has no single source location. The hint each failure gets is [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure).
 
 `ambiguous ID`, `ambiguous section` and `broken stub` get no hint: the fix (run `grund check`, then edit the duplicate, renumber one of the two headings, or repair the stub) is already stated in [§FS-show.2.2.1](FS-show.md#221-ambiguous-id) / [§FS-show.2.2.2](FS-show.md#222-ambiguous-section) / [§FS-show.2.3.4](FS-show.md#234-broken-stub) and the message names the sites.
 
@@ -512,7 +597,7 @@ A failed query (`1`) prints the bare result line and, where the next step is obv
 
 - `ID not found: <ID>` → `hint: run \`grund list\` to see every declared ID, or \`grund id <KIND> "<title>"\` to propose a new one` — withheld in the one case where the result line already names the answer, a workspace run whose refusal carries a `did you mean <alias>/<ID>?` clause ([§FS-workspace.8.1.1](FS-workspace.md#811-an-unqualified-id-another-project-declares))
 - a missing snapshot for an ID whose parsed kind carries `fetch` in the loaded config → `hint: run grund fetch <qualified-ID>` — this remains offline and is the prescribed materialization hint ([§FS-check.4.12](FS-check.md#412-missing-snapshot), [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)). It excepts a kind whose `file` home [§FS-fetch.4](FS-fetch.md#4-file-home-write) refuses, which that command cannot help ([§FS-check.3.1.3.1](FS-check.md#3131-a-home-fetch-refuses)). This branch is specified but not implemented today: `show` currently emits the generic `ID not found` hint.
-- `section not found: <ID>.<s>` → `hint: run \`grund <ID> --toc\` to print the lead with the section map`
+- `section not found: <ID>.<s>` → `hint: run \`grund <ID> --toc\` to print the lead with the section map`, where `<ID>` is the query as written, alias included, cut before its last section separator: the separator of the project the query names, its alias's or the current one, so in a member `api` whose separator is `:`, `api/FS-api:9` gets `grund api/FS-api --toc`, from a single read as from a batch ([§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place))
 - a `<ID>` argument that does not match its kind's effective format → `invalid ID` and a format hint, [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects)
 - an existing filesystem path refused as an unknown project alias by the bare query → the migration breadcrumb of [§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)
 
