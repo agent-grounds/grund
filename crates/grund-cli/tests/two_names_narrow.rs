@@ -88,8 +88,8 @@ fn a_content_finding_keeps_the_whole_runs_first_name() {
     agree(&tree, &["aa/b.md", "zz/b-link.md"], line);
 }
 
-/// An empty first home holds nothing before the link's own root, so the run was handed one file
-/// and not what the next root held.
+/// An unread first home warns only in the whole report; the explicit path keeps the same content
+/// finding (§FS-scan.checks.unread-scan-root.scope).
 #[test]
 fn an_empty_first_home_changes_nothing() {
     let config = "grund_config_version = 2\nproject_name = \"n\"\n[schema.sources]\n\
@@ -99,7 +99,19 @@ fn an_empty_first_home_changes_nothing() {
     tree.put("bb/a.md", "# FS-a: A\n\n\u{a7}FS-gone and \u{a7}FS-a.\n");
     tree.link("notes/link.md", "../bb/a.md");
     let line = "bb/a.md:3: error: unknown reference FS-gone (also at notes/link.md:3)\n";
-    agree(&tree, &["notes/link.md"], line);
+    let whole = tree.grund(&["check"]);
+    assert_eq!(
+        whole.stdout,
+        format!(
+            "{line}grund.toml:6: warning: [schema.kinds.FS] folder `aa` is not read — no language in [schema.sources] languages reads `.txt`, so nothing in it is checked. Give the files in it an extension a listed language reads.\n"
+        )
+    );
+    assert_eq!(whole.code, 1);
+    assert_eq!(whole.stderr, "");
+    let explicit = tree.grund(&["check", "notes/link.md"]);
+    assert_eq!(explicit.stdout, line);
+    assert_eq!(explicit.code, 1);
+    assert_eq!(explicit.stderr, "");
 }
 
 /// A file with one line of its own under each home, which the whole run reports at both names.

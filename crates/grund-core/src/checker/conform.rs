@@ -113,7 +113,7 @@ fn check_declaration_homes(
                 authority: Vec::new(),
             });
         }
-        check_broken_stubs(findings, id, decls, &repair, frame, report);
+        check_broken_stubs(schema, findings, id, decls, &repair, frame, report);
     }
 }
 
@@ -229,6 +229,7 @@ fn explain_unlisted_project_placement(schema: &Schema, frame: Frame<'_>, report:
 /// Missing-target messages connect to the duplicate without adding sites
 /// (§AR-system.2.2).
 fn check_broken_stubs(
+    schema: &Schema,
     findings: &Catalog,
     id: &Id,
     decls: &[Declaration],
@@ -255,7 +256,11 @@ fn check_broken_stubs(
             StubResolution::UnlistedExtension(extension) => format!(
                 "stub link target {} is not scanned: {}",
                 format_path(target),
-                unread_name_reason(extension.as_deref(), frame.version)
+                unread_name_reason(
+                    extension.as_deref(),
+                    frame.version,
+                    frame.reading(schema, target).data_language(),
+                )
             ),
             StubResolution::Excluded(rule) => excluded_target_message(target, rule, frame),
             StubResolution::NotRead | StubResolution::LacksId => format!(

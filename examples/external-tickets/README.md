@@ -2,8 +2,8 @@
 
 This example teaches the fetch-backed external-fact workflow specified by
 [§FS-fetch](../../docs/functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot). The repository uses ordinary slug IDs by default and a numeric
-`GH` override. `repo/docs/guide.md` cites a ticket before its snapshot
-exists; `repo/scripts/fetch-ticket` is a deterministic local stand-in for a
+`GH` override. `repo/docs/guide.md` cites a committed ticket snapshot;
+`repo/scripts/fetch-ticket` is a deterministic local stand-in for a
 GitHub, Jira, or Linear integration.
 
 From inside `repo/`, the complete workflow is:
@@ -16,17 +16,28 @@ grund show GH-1234
 grund refs GH-1234
 ```
 
-The first check exits 0 with the fixed `missing-snapshot` warning. Fetch is the
+The first check exits 0. Fetch is the
 only command that executes the repository integration; it is silent on success
-and writes the complete declaration to `docs/tickets.md`. The remaining
+and replaces the complete declaration in `docs/tickets/local.txt`. The remaining
 commands resolve and query only that committed Markdown snapshot, so they keep
 working offline and never execute the integration.
 
 Fetch writes only what the next scan reads back as asked: the requested
-declaration once, the rest of `docs/tickets.md` reading as it did, and nothing new
+declaration once, every other declaration reading as it did, and nothing new
 for `check` to report there. Output that would read any other way is refused with
 exit 2 and the file left as it was
 ([§FS-fetch.admission](../../docs/functional-spec/FS-fetch.md#admission-admission-the-next-scan-reads-back-exactly-what-was-asked-for)).
+
+This version-2 project maps `txt = "markdown"`, so the existing `local.txt` is
+read as Markdown and replaced in place, even though its name differs from the ID.
+Fetch does not create a second `GH-1234.md` beside it. The folder can also contain
+a nested snapshot under another name; the same reading decides which file to
+replace. Two files declaring the ID, or content beside it in the same file, are
+refused without a write
+([§FS-fetch.5.5](../../docs/functional-spec/FS-fetch.md#55-which-file-declares-and-what-idmd-may-hold)).
+A home nothing reads as Markdown is refused before the integration runs, naming
+the cause. A data mapping is named as data, rather than as an unlisted language
+([§FS-fetch.4.2.1](../../docs/functional-spec/FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)).
 
 The e2e runner performs the mutating fetch from a copied repository and compares
 the entire result with `expected.repo`. No network or credentials are involved.
@@ -52,9 +63,8 @@ $ grund check
 error: grund.toml:6: `[schema.kinds.GH] fetch` names no executable; name the program, or if this kind is not fetched remove the key and any `[rules.resolution] GH`, and its missing IDs are then errors; this became an error in grund 0.23.0
 ```
 
-This example's own config is version 1, which still loads the key. With
-`fetch = ""` in `repo/grund.toml`, `grund check` keeps working and `grund fetch`
-is what refuses, before running anything:
+Version 1 still loads a blank `fetch` key. In a version-1 project, `grund check`
+keeps working and `grund fetch` is what refuses, before running anything:
 
 ```text
 $ grund fetch GH-1234

@@ -1,6 +1,10 @@
 # Sources: which files a v2 project reads, and which comments declare
 
-This runnable mini-repository demonstrates a version-2 `[schema.sources]` table ([§FS-config-v2.schema.sources](../../docs/functional-spec/FS-config-v2.md#schemasources-schemasources)). It is for a polyglot repository that wants to say exactly which files grund reads and how. Here that means three things: a suffix the epoch does not know, a comment syntax of the project's own, and a generated directory the scan must not read. Open `repo/grund.toml` first, then the three source files it names.
+This runnable mini-repository demonstrates a version-2 `[schema.sources]` table
+([§FS-config-v2.schema.sources](../../docs/functional-spec/FS-config-v2.md#schemasources-schemasources)).
+It maps suffixes to C and Markdown, defines a comment syntax of its own, and
+excludes a generated directory. Open `repo/grund.toml` first, then the files it
+names.
 
 The configuration, in full:
 
@@ -19,6 +23,7 @@ exclude = ["generated/"]
 [schema.sources.extensions]
 # `.h` is not an epoch suffix; read it as C.
 h = "c"
+txt = "markdown"
 note = "notes"
 
 [schema.sources.definitions.notes]
@@ -40,12 +45,16 @@ The list on stdout is the golden below; stderr is empty:
 ```text
 AR-tokenizer     src/parser.h:1  The tokenizer splits a line into tokens
 FS-parser        docs/fs/FS-parser.md:1  The parser reads one expression per line
+FS-reading       docs/fs/FS-reading.txt:1  A mapped suffix is read as Markdown
 TERM-expression  notes/glossary.note:1  What one line of input reads as
 ```
 
 Each line is one setting at work:
 
 - **A remapped suffix.** `src/parser.h` is read as C because `h = "c"` maps it ([§FS-config-v2.schema.sources.extensions](../../docs/functional-spec/FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)). Without the entry no admitted language claims `.h`, and the file is not read at all.
+- **Markdown by its reading.** `docs/fs/FS-reading.txt` is read as Markdown through
+  `txt = "markdown"`; its citation and declaration work just as in a file named
+  `.md` ([§FS-fmt.2.3.1](../../docs/functional-spec/FS-fmt.md#231-string-literal-exclusion-rule)).
 - **A custom language.** `notes/glossary.note` declares through `%%`, a prefix no built-in language has. The `notes` definition supplies it, and `note = "notes"` maps the suffix to it ([§FS-config-v2.schema.sources.definitions](../../docs/functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language)). Its doc profile is `none`, so every `%%` comment may declare.
 - **A doc comment declares, an ordinary comment does not.** `src/parser.h` holds two declaration-shaped lines. The first is `/// AR-tokenizer: …`, a doc comment. The second is a `// FS-parser: …` note inside a function body. Under `declarations = "doc-comments"` only the first declares ([§FS-config-v2.schema.sources.declarations](../../docs/functional-spec/FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare)). The note's citation of `FS-parser` still resolves.
 - **An excluded directory.** `src/generated/parser_gen.h` declares `AR-tokenizer` a second time. `generated/` keeps the scan out of every `generated` directory, so the copy is never read ([§FS-config-v2.schema.sources.exclude](../../docs/functional-spec/FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)).
@@ -65,3 +74,12 @@ The trade-offs:
 - A `none` profile cannot tell documentation from a note. Give a definition a `doc_comments` profile when its comments should be held to the doc-comment rule.
 
 The [sources guide](../../docs/user-facing/sources.md) has the full epoch table, the limits of each comment host, and how a v1 configuration migrates.
+
+If no visible file in a configured folder home is read, `grund check` locates one
+`unread-scan-root` warning at its `folders` key and names the first refused file's
+language or extension. For example, removing the `note` mapping and `notes` from
+`languages` leaves the `notes` home unread. Restore both to read
+`notes/glossary.note`; admitting a data
+language alone does not read declarations there. Empty or hidden-only homes stay
+silent, and a value source read by a value kind counts as read
+([§FS-scan.checks.unread-scan-root.folder](../../docs/functional-spec/FS-scan.md#checksunread-scan-rootfolder-a-folder-home-in-which-nothing-is-read)).

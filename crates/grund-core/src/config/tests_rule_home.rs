@@ -1,7 +1,7 @@
 //! Test module: whether a rule kind's `file` home is Markdown is the reader's
 //! question (§FS-config-v2.schema.sources.rules) — its name in version 1, the language
 //! `[schema.sources]` maps it to in version 2 — refused at `form` with the
-//! message of §FS-config.3.4.12 when the answer is no.
+//! message of §FS-fields.forms when the answer is no.
 
 use super::migrate::{GateResult, Located, Prepared, translate};
 use super::*;
@@ -31,7 +31,14 @@ fn assert_refused_at_form(name: &str, toml: &str, home: &str) {
         Err(err) => format!("{err:#}"),
     };
     let form = toml.lines().count();
-    let at = format!("grund.toml:{form}: {REFUSAL}");
+    let reading = if toml.contains("languages = [\"json\"]") {
+        format!("no admitted language reads files entry `{home}`")
+    } else {
+        format!("files entry `{home}` is read as `json`, not as Markdown")
+    };
+    let at = format!(
+        "grund.toml:{form}: [schema.kinds.RULE] sets `form = \"rule\"`, but {reading}; move the rules into a file read as Markdown"
+    );
     assert!(err.contains(&at), "{name}: expected `{at}`, got: {err}");
 }
 

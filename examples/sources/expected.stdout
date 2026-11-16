@@ -1,3 +1,4 @@
 AR-tokenizer     src/parser.h:1  The tokenizer splits a line into tokens
 FS-parser        docs/fs/FS-parser.md:1  The parser reads one expression per line
+FS-reading       docs/fs/FS-reading.txt:1  A mapped suffix is read as Markdown
 TERM-expression  notes/glossary.note:1  What one line of input reads as

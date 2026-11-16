@@ -6,6 +6,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+use super::folder_homes::FolderReads;
 use super::json::{JsonNode, JsonReader};
 use super::scan_error::{
     FileKind, Place, ScanFailure, publish_unlisted, publish_value_source_failure,
@@ -59,7 +60,7 @@ pub(super) fn scan_value_sources(
     frame: Frame<'_>,
     findings: &mut Catalog,
     errors: &mut Vec<ScanError>,
-) {
+) -> FolderReads {
     let sources = match value_sources_in(schema, frame, None, errors) {
         Ok(sources) => sources,
         // §AR-scanner.1.relisted: the walk lists a home too, so its listing failure is
@@ -74,10 +75,10 @@ pub(super) fn scan_value_sources(
                 failure,
                 errors,
             );
-            return;
+            return FolderReads::default();
         }
     };
-    scan_sources(schema, frame, sources, findings, errors);
+    scan_sources(schema, frame, sources, findings, errors)
 }
 
 /// The catalog's value declarations for one selected folder home and owner
@@ -111,12 +112,14 @@ fn scan_sources(
     sources: Vec<ValueSource<'_>>,
     findings: &mut Catalog,
     errors: &mut Vec<ScanError>,
-) {
+) -> FolderReads {
+    let mut coverage = FolderReads::default();
     // §AR-scanner.1.8: grouped through the run's table, which keeps every spelling.
     let spellings = &frame.run.spellings;
     let mut grouped = BTreeMap::<PathBuf, (Vec<PathBuf>, Vec<&str>)>::new();
     let mut formats = BTreeMap::new();
     for (path, kind, format) in sources {
+        coverage.entered(&path, findings);
         formats.insert(path.clone(), format);
         let (paths, owners) = grouped.entry(spellings.resolve(&path)).or_default();
         if !paths.contains(&path) {
@@ -178,6 +181,7 @@ fn scan_sources(
                 continue;
             }
         };
+        coverage.read(path);
         match read_value_root(&text, format) {
             Ok(root) => enroll_value_root(frame, path, &owners, &text, root, format, findings),
             Err(message) => {
@@ -189,6 +193,7 @@ fn scan_sources(
             duplicate_owned_source(&paths, findings);
         }
     }
+    coverage
 }
 
 /// A value source's read or classification failure (§FS-values.5.3.1), with

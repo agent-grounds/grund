@@ -181,6 +181,7 @@ pub(crate) use scope_roots::{
     unwalked_home_roots, unwalked_homes,
 };
 pub(crate) use sources::LanguageClass;
+pub(crate) use sources::builtin_text_for_suffix;
 pub(crate) use v1::{
     DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR, default_kind_folder, strip_comment,
 };

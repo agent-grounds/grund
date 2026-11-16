@@ -1,19 +1,17 @@
-grund_config_version = 1
+grund_config_version = 2
+project_name = "external-tickets"
 
-[reference]
-strict = true
+[schema.sources]
+languages = ["markdown"]
 
-[id]
-format = "{kind}-{slug}"
-slug_pattern = "[a-z][a-z-]*"
+[schema.sources.extensions]
+txt = "markdown"
 
-[[kinds]]
-kind = "GH"
-file = "docs/tickets.md"
-format = "{kind}-{number}"
-resolve = "should"
+[schema.kinds.GH]
+folders = ["docs/tickets"]
+id_format = "{kind}-{number}"
+index = false
 fetch = "scripts/fetch-ticket"
 
-[scan]
-include = ["docs"]
-respect_gitignore = false
+[rules.resolution]
+GH = "warn"

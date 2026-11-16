@@ -295,7 +295,9 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         &mut errors,
         &mut findings,
     );
-    scan_value_sources(schema, frame, &mut findings, &mut errors);
+    // §FS-scan.checks.unread-scan-root.folder: both passes must finish before coverage is joined.
+    let coverage = scan_value_sources(schema, frame, &mut findings, &mut errors);
+    coverage.discharge(walked.folder_names, frame, &mut findings);
     read_section_locks(frame, &mut findings, &mut errors);
     // §FS-workspace.1.2: when the citing-grammar pass and the target-grammar pass both
     // fire on the same line they emit in source order *per pass*; one sort at the end

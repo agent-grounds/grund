@@ -28,6 +28,7 @@ pub(super) fn default_project() -> Project {
             ..Members::default()
         },
         schema: Schema {
+            value_form_repairs: Default::default(),
             // §FS-config-v2.defaults.1: citations are marked, with no opt-out.
             citation: CitationSyntax {
                 marker: "§".to_string(),

@@ -68,6 +68,7 @@ pub(in crate::config) fn default_project() -> Project {
             ..Members::default()
         },
         schema: Schema {
+            value_form_repairs: Default::default(),
             citation: CitationSyntax {
                 marker: DEFAULT_MARKER.to_string(),
                 // §AR-config.3.2 `strict`.

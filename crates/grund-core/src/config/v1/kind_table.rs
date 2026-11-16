@@ -37,6 +37,8 @@ pub(super) struct ParsedKind {
     /// The line `file` was written on, which a finding about the home anchors at
     /// (§FS-scan.checks.unread-scan-root.location).
     pub(super) file_line: Option<usize>,
+    /// The authored folder key anchors its unread-home warning (§FS-scan.checks.unread-scan-root.folder).
+    pub(super) folder_line: Option<usize>,
     /// The line `fetch` was written on, which a report about the key anchors at (§FS-fetch.2.1).
     pub(super) fetch_line: Option<usize>,
 }
@@ -68,6 +70,7 @@ impl ParsedKind {
             rules_line: None,
             value_chapter_line: None,
             file_line: None,
+            folder_line: None,
             fetch_line: None,
         }
     }
@@ -255,6 +258,7 @@ pub(super) fn parse_kinds_key(
             let folder = parse_string(path, line_no, value)?;
             if let Some(slot) = current_kind.as_mut() {
                 slot.config.folder = Some(folder);
+                slot.folder_line = Some(line_no);
             } else {
                 bail_config(
                     path,

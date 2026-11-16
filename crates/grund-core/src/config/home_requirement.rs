@@ -74,6 +74,28 @@ pub(in crate::config) fn rule_kind_message(kind: &str) -> String {
     )
 }
 
+/// §FS-fields.forms: the failed home prerequisite names the version-2 entry and its reading;
+/// other row prerequisites and version 1 retain the general row refusal.
+pub(in crate::config) fn rule_home_message(
+    kind: &str,
+    home: Home<'_>,
+    sources: &Sources,
+) -> String {
+    if sources.model.is_none() {
+        return rule_kind_message(kind);
+    }
+    let reading = match written_language(sources, Path::new(home.path)) {
+        Some(language) => format!(
+            "files entry `{}` is read as `{}`, not as Markdown",
+            home.path, language.name
+        ),
+        None => format!("no admitted language reads files entry `{}`", home.path),
+    };
+    format!(
+        "[schema.kinds.{kind}] sets `form = \"rule\"`, but {reading}; move the rules into a file read as Markdown"
+    )
+}
+
 /// §FS-config-v2.schema.sources.rules: a `files` entry read as Markdown holds; one a `source`
 /// language reads loads with `config-rule-file-not-markdown`; one a `data` language or no
 /// admitted language reads refuses the row. A `folders` entry holds unless no suffix could be
