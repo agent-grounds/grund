@@ -86,3 +86,5 @@ mod tests_prohibition_targets;
 mod tests_scoped_guidance;
 #[cfg(test)]
 mod tests_setup_instructions;
+#[cfg(test)]
+mod tests_trigger_sentence;
