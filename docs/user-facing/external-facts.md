@@ -71,9 +71,11 @@ first of these that fails refuses the fetch with exit 2 and leaves the tree
 unchanged, with the line `check` would print where `check` has one
 ([§FS-fetch.admission](../functional-spec/FS-fetch.md#admission-admission-the-next-scan-reads-back-exactly-what-was-asked-for)).
 Accepted bytes are kept verbatim, replacing only the range the scan reads as that
-ID's declaration, and a new file-home declaration goes in ID order
+ID's declaration at its existing position. A new file-home declaration follows
+the effective ID format's field order, comparing `{number}` numerically and slug
+text lexically, including digits within slugs
 ([§FS-fetch.3](../functional-spec/FS-fetch.md#3-accepted-declaration),
-[§FS-fetch.4](../functional-spec/FS-fetch.md#4-file-home-write)).
+[§FS-fetch.4.order](../functional-spec/FS-fetch.md#4order-insertion-follows-the-effective-format-comparing-the-number-numerically)).
 
 The scan runs once, before the integration does, and the write is made against
 what it read; nothing else is read again, so a file the integration writes beside
