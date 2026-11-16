@@ -1066,6 +1066,40 @@ Keep the entire existing message, including any relative-heading clause from [§
 
 `<field heading>` is the authored `#` run, a space, the matched field's name, `: `, and its configured title if present, otherwise the parsed heading text. Thus both `## Schema` and `## schema` for a field named `schema` with `title = "Schema"` are shown `## schema: Schema`. This is repair guidance only: field identity stays [§FS-fields.identity.name](FS-fields.md#identityname-a-field-is-the-direct-section-of-its-name). The bare heading still produces `unmarked-heading` and an absent required field still produces `missing-field` at the declaration line; numbering the heading leaves the field missing, while the named edit declares it. Codes, severity, locations, exit status and structured output shape stay unchanged. Appending follows [§FS-errors.3](FS-errors.md#3-message-text); version-1 output, including a synthesized value-chapter field, stays byte-identical under [§FS-fields.v1](FS-fields.md#v1-version-1-is-unchanged).
 
+##### checks.unmarked-heading.2.3: A complete path that lacks only a title or has a `_` is also shown its fault
+
+A heading whose path is already written in place needs no number: it lacks a title, or a named component carries a `_`. The message names that fault and shows the heading that repairs it with the authored path kept, because "number it" alone sends the author to the one part that is already right.
+
+The clause applies to a heading whose text does not begin with `.` (a dotted heading is [§FS-declarations.checks.unmarked-heading.2.1](FS-declarations.md#checksunmarked-heading21-a-dotted-heading-is-also-shown-the-relative-form)'s) and has one of these shapes, where a *path* is one or more components joined by `.`, each a number `[0-9]+` or a word `[a-z][a-z0-9_-]*`:
+
+- **No title.** A path of two or more components with nothing after it (`### requirements.1`); a name-bearing path followed by `:` and nothing else (`### requirements.3:`); or a purely numeric path followed by `.` and nothing else (`## 1.`). A lone component with nothing after it, such as `## 1`, `## background` or `## open_questions`, reads as a title rather than a path and gets no clause.
+- **A `_` in a named component.** A name-bearing path, written in one of the no-title forms or followed by `: ` and a title (`### requirements.size_format: Size format`, `## open_questions: Open Questions`), in which some component contains `_`.
+
+The *corrected path* is the authored path with every `_` replaced by `-`. A heading with neither fault, or whose corrected path is not a section path with every name in `[a-z][a-z0-9-]*` ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names)), such as `## Notes_here: Notes` or `## _draft: Draft`, gets no clause. The *shown heading* is the authored `#` run, a space, the corrected path, then the title syntax the path requires, `: ` on a name-bearing path and `. ` on a purely numeric one ([§FS-config.3.3.1](FS-config.md#331-named-components)), then the authored title, or `Untitled` when there is none.
+
+Keep the entire existing message, including any clause from [§FS-declarations.checks.unmarked-heading.2.1](FS-declarations.md#checksunmarked-heading21-a-dotted-heading-is-also-shown-the-relative-form) or [§FS-declarations.checks.unmarked-heading.2.2](FS-declarations.md#checksunmarked-heading22-a-direct-field-title-or-name-is-also-shown-the-field-form), as a contiguous prefix, then append one clause, where `<path>` is the authored path without a trailing `:` or `.`:
+
+```text
+; the section path <path> needs a title after it, written <shown heading>
+; the section path <path> has a _, which a section name ([a-z][a-z0-9-]*) never takes, written <shown heading>
+; the section path <path> has a _, which a section name ([a-z][a-z0-9-]*) never takes, and needs a title after it, written <shown heading>
+```
+
+The first is for a heading with no title, the second for one with a `_` and a title, the third for one with both. So, in a version-2 declaration whose `## requirements: Requirements` holds `### requirements.2: Two` and nothing else:
+
+| Heading | Appended clause |
+|---|---|
+| `### requirements.1` | `; the section path requirements.1 needs a title after it, written ### requirements.1: Untitled` |
+| `### requirements.3:` | `; the section path requirements.3 needs a title after it, written ### requirements.3: Untitled` |
+| `## 1.` | `; the section path 1 needs a title after it, written ## 1. Untitled` |
+| `### requirements.size_format: Size format` | `; the section path requirements.size_format has a _, which a section name ([a-z][a-z0-9-]*) never takes, written ### requirements.size-format: Size format` |
+| `## open_questions: Open Questions` | `; the section path open_questions has a _, which a section name ([a-z][a-z0-9-]*) never takes, written ## open-questions: Open Questions` |
+| `### requirements.size_format:` | `; the section path requirements.size_format has a _, which a section name ([a-z][a-z0-9-]*) never takes, and needs a title after it, written ### requirements.size-format: Untitled` |
+
+The clause is appended only where writing the shown heading in place of the authored one would declare a recognized section, because a repair that trades this error for another is no repair: named sections are enabled where the corrected path is name-bearing; the corrected path has as many components as the heading is ATX levels deeper than its containing declaration's heading; a path of two or more components has, as the path without its last component, a usable section of that declaration ([§FS-declarations.section.relative.parent](FS-declarations.md#sectionrelativeparent-the-parent)); and the corrected path is not already a section of that declaration. Otherwise the message is unchanged: `### requirements.1` beside a declared `### requirements.1: One`, `### extra.1` with no `extra` section, and `## requirements.page_size: Page size`, two components at one level deep, get no clause.
+
+This is repair guidance only. The `number it (<suggested heading>)` part and its coordinate stay [§FS-declarations.checks.unmarked-heading.3](FS-declarations.md#checksunmarked-heading3-the-suggested-coordinate), byte for byte. Codes, severity, location, exit status, structured output shape and the LSP finding stay unchanged; the clause is an append, so a consumer matching the existing text as a prefix, and every `code` consumer, reads the finding as before ([§FS-errors.3](FS-errors.md#3-message-text)). A version-1 project gets the clause under the same shapes and the same guard.
+
 #### checks.unmarked-heading.3: The suggested coordinate
 
 The suggested coordinate is guidance, not a rewrite. Its path depth follows the written ATX depth relative to the containing declaration. At each depth, grund uses the nearest preceding citable or already-suggested parent and appends one above the largest existing or earlier-suggested numeric sibling; it never fills a hole or reuses a coordinate. With no parent it starts one above the largest root numeric coordinate, or at `1` when none exists. If the authored heading skips a depth, missing parents are filled with `.1`. A named parent may therefore receive a numeric child such as `goals.1`. The suggested heading preserves the authored `#` depth and title and inserts the complete coordinate in that valid numeric or mixed form. The suggestion is always this complete-path heading, for a plain heading and a dotted one alike; the relative form is offered only beside it ([§FS-declarations.checks.unmarked-heading.2.1](FS-declarations.md#checksunmarked-heading21-a-dotted-heading-is-also-shown-the-relative-form)). A titleless ATX heading has no authored title to preserve, so its otherwise-identical suggestion uses the literal title `Untitled`; applying that complete suggested heading produces a recognized section and clears the error.
