@@ -54,7 +54,7 @@ fn per_target_once_accepted_word_judges_physical_sites_on_both_surfaces() {
                             let exit = i32::from(shown && modality == "must");
                             let authority = if configured { "RULE-once" } else { "--rule" };
                             let message = format!(
-                                "SYS-overview.components cites AR-target 2 times; {authority} requires at most 1; add or remove those citations until the count fits"
+                                "SYS-overview.components cites AR-target 2 times; {authority} requires at most 1; add or remove those citations until the count fits; counted at docs/sys.md:5 (AR-target), docs/sys.md:6 (AR-target)"
                             );
                             let expected = if !shown {
                                 if json {
@@ -67,7 +67,12 @@ fn per_target_once_accepted_word_judges_physical_sites_on_both_surfaces() {
                                     "severity": if modality == "must" { "error" } else { "warning" },
                                     "path": "docs/sys.md", "line": 3,
                                     "code": "citation-cardinality", "message": message,
-                                    "sites": null, "authority": [authority]
+                                    // §FS-rules.7.3.1: each counted line once.
+                                    "sites": [
+                                        {"path": "docs/sys.md", "line": 5},
+                                        {"path": "docs/sys.md", "line": 6}
+                                    ],
+                                    "authority": [authority]
                                 });
                                 if modality == "should" {
                                     row.as_object_mut().unwrap().remove("severity");

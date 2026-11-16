@@ -8,7 +8,8 @@
 //! one order, and that a diagnostic *about* a rule still names it.
 
 use super::RuleAnchor;
-use super::engine::{Direction, evaluate, unresolved_subject_diagnostic};
+use super::engine::bare::evaluate;
+use super::engine::{Direction, unresolved_subject_diagnostic};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts};
 use super::sentence::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,

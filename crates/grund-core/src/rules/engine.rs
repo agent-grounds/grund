@@ -8,7 +8,7 @@ mod resolution;
 mod selectors;
 mod unreached;
 
-use super::facts::{Completeness, NodeKey, RuleFacts, SiteKey};
+use super::facts::{Completeness, NodeKey, RuleFacts, SiteKey, SiteMeta};
 use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
 };
@@ -18,7 +18,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use authority::Authority;
 pub(crate) use authority::one_rules_authority;
-use cites::evaluate_cites;
+use cites::{counted_citations, evaluate_cites};
 use index::FactIndex;
 pub(crate) use precedence::{Direction, citation_precedence, direction_rule};
 pub(crate) use resolution::unresolved_subject_diagnostic;
@@ -30,7 +30,14 @@ use selectors::{
 use unreached::report_unreached;
 
 #[cfg(test)]
+mod tests_counted;
+#[cfg(test)]
 mod tests_mixed_ramp;
+
+/// One finding the engine returns, and beside it the citations its count read, each the fact's own
+/// `SiteMeta`: empty for every finding but a count above zero (§AR-rules.5, §FS-rules.7.3.1). The
+/// checker renders them; the pair is the existing boundary types, not a new one.
+pub(crate) type RuleFinding = (Diagnostic, Vec<SiteMeta>);
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 struct SemanticRule {
@@ -48,7 +55,7 @@ pub(crate) fn evaluate(
     rules: &[ParsedRule],
     precedence: &[Direction],
     facts: &RuleFacts,
-) -> Vec<Diagnostic> {
+) -> Vec<RuleFinding> {
     evaluate_level(rules, precedence, facts, RuleLevel::Required, true)
 }
 
@@ -59,7 +66,7 @@ pub(crate) fn evaluate_suggestions(
     rules: &[ParsedRule],
     precedence: &[Direction],
     facts: &RuleFacts,
-) -> Vec<Diagnostic> {
+) -> Vec<RuleFinding> {
     evaluate_level(rules, precedence, facts, RuleLevel::Recommended, false)
 }
 
@@ -71,7 +78,7 @@ fn evaluate_level(
     facts: &RuleFacts,
     level: RuleLevel,
     include_invalid: bool,
-) -> Vec<Diagnostic> {
+) -> Vec<RuleFinding> {
     let index = FactIndex::new(facts);
     let mut groups: BTreeMap<SemanticRule, BTreeSet<String>> = BTreeMap::new();
     let precedence = reported_by_direction(precedence);
@@ -79,7 +86,7 @@ fn evaluate_level(
     for rule in rules {
         if let Some(diagnostic) = unresolved_subject_diagnostic_indexed(rule, facts, &index) {
             if include_invalid {
-                out.push(diagnostic);
+                out.push((diagnostic, Vec::new()));
             }
             continue;
         }
@@ -104,7 +111,7 @@ fn evaluate_level(
         out.extend(own.into_iter().filter(|finding| {
             !reported
                 .iter()
-                .any(|direction| same_place(direction, finding))
+                .any(|direction| same_place(direction, &finding.0))
         }));
     }
     out
@@ -161,7 +168,7 @@ fn evaluate_one(
     authority: &Authority,
     facts: &RuleFacts,
     index: &FactIndex<'_>,
-    out: &mut Vec<Diagnostic>,
+    out: &mut Vec<RuleFinding>,
 ) {
     let subjects = select_subjects(&rule.subject, facts, index);
     // §FS-rules.4: every positive cardinality conclusion is closed-world, and
@@ -272,15 +279,17 @@ fn evaluate_one(
                 // §FS-rules.3.4: a numbered section of the subject's own body
                 // reaches it here, an ordinary site since §FS-rules.7.8 landed, and a
                 // citing kind counts wherever a pinned target matches it (§FS-config.3.9.3).
-                let count = index
+                let read: Vec<_> = index
                     .citations_to(&subject)
                     .iter()
+                    .copied()
                     .filter(|(_, from, _)| {
                         index
                             .declaration_kind(from)
                             .is_some_and(|kind| target_kind_matches(&rule.targets, kind, facts))
                     })
-                    .count();
+                    .collect();
+                let count = read.len();
                 if !rule.cardinality.contains(count) {
                     let message = format!(
                         "{} is cited by {} {count} times; {authority} requires {}; {}",
@@ -289,7 +298,17 @@ fn evaluate_one(
                         rule.cardinality.wording(),
                         remedies::uncited_unit()
                     );
-                    push_node(out, facts, &subject, Code::UNCITED_UNIT, message, authority);
+                    // §FS-rules.7.4: the citing citations, wherever they are written.
+                    let counted = counted_citations(facts, read);
+                    push_counted(
+                        out,
+                        facts,
+                        &subject,
+                        Code::UNCITED_UNIT,
+                        message,
+                        authority,
+                        counted,
+                    );
                 }
             }
         }
@@ -297,28 +316,45 @@ fn evaluate_one(
 }
 
 fn push_node(
-    out: &mut Vec<Diagnostic>,
+    out: &mut Vec<RuleFinding>,
     facts: &RuleFacts,
     node: &NodeKey,
     code: Code,
     message: String,
     authority: &Authority,
 ) {
+    push_counted(out, facts, node, code, message, authority, Vec::new());
+}
+
+/// A finding at `node` with the citations its count read beside it (§AR-rules.5).
+fn push_counted(
+    out: &mut Vec<RuleFinding>,
+    facts: &RuleFacts,
+    node: &NodeKey,
+    code: Code,
+    message: String,
+    authority: &Authority,
+    counted: Vec<SiteMeta>,
+) {
     let Some(meta) = facts.nodes.get(node) else {
         return;
     };
-    out.push(Diagnostic {
-        code,
-        path: Some(meta.anchor.path.clone().into()),
-        line: Some(meta.anchor.line),
-        column: meta.anchor.column,
-        message,
-        sites: Vec::new(),
-        authority: authority.origins.clone(),
-    });
+    out.push((
+        Diagnostic {
+            code,
+            path: Some(meta.anchor.path.clone().into()),
+            line: Some(meta.anchor.line),
+            column: meta.anchor.column,
+            message,
+            sites: Vec::new(),
+            authority: authority.origins.clone(),
+        },
+        counted,
+    ));
 }
+
 fn push_site(
-    out: &mut Vec<Diagnostic>,
+    out: &mut Vec<RuleFinding>,
     facts: &RuleFacts,
     site: &SiteKey,
     code: Code,
@@ -328,13 +364,46 @@ fn push_site(
     let Some(meta) = facts.sites.get(site) else {
         return;
     };
-    out.push(Diagnostic {
-        code,
-        path: Some(meta.anchor.path.clone().into()),
-        line: Some(meta.anchor.line),
-        column: meta.anchor.column,
-        message,
-        sites: Vec::new(),
-        authority: authority.origins.clone(),
-    });
+    out.push((
+        Diagnostic {
+            code,
+            path: Some(meta.anchor.path.clone().into()),
+            line: Some(meta.anchor.line),
+            column: meta.anchor.column,
+            message,
+            sites: Vec::new(),
+            authority: authority.origins.clone(),
+        },
+        Vec::new(),
+    ));
+}
+
+/// The engine's findings without what their counts read, for the tests that judge only the
+/// findings themselves.
+#[cfg(test)]
+pub(crate) mod bare {
+    use super::{Diagnostic, Direction, ParsedRule, RuleFacts, RuleFinding};
+
+    fn strip(findings: Vec<RuleFinding>) -> Vec<Diagnostic> {
+        findings
+            .into_iter()
+            .map(|(diagnostic, _)| diagnostic)
+            .collect()
+    }
+
+    pub(crate) fn evaluate(
+        rules: &[ParsedRule],
+        precedence: &[Direction],
+        facts: &RuleFacts,
+    ) -> Vec<Diagnostic> {
+        strip(super::evaluate(rules, precedence, facts))
+    }
+
+    pub(crate) fn evaluate_suggestions(
+        rules: &[ParsedRule],
+        precedence: &[Direction],
+        facts: &RuleFacts,
+    ) -> Vec<Diagnostic> {
+        strip(super::evaluate_suggestions(rules, precedence, facts))
+    }
 }

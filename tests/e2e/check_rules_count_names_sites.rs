@@ -8,9 +8,9 @@
 //! a price record held to one item cites it and then the item's own section, the count reads 2,
 //! and the row named neither site.
 //!
-//! These are not goldens because a golden has no skip, and every test here but the controls is
-//! red until the engine hands the counted citations to the checker. The trees are built in the
-//! temp directory, so run them with a `TMPDIR` that no git tree or grund config encloses.
+//! They were written before the fix, as tests rather than goldens because a golden has no skip;
+//! the golden case `check-rules-count-names-sites` pins the issue's own fixture. The trees are
+//! built in the temp directory, so run them with a `TMPDIR` that no git tree or grund config encloses.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -283,7 +283,6 @@ fn a_zero_count_and_an_uncounted_file_keep_what_they_print_today() {
 /// as written, the `cite each` row with its target ID still after `<subject> cites `, and the
 /// inbound rows with citations from other files; the zero count is unchanged.
 #[test]
-#[ignore = "red until #1366 a count row above zero appends `; counted at …`; implement removes this"]
 fn every_count_above_zero_names_the_citations_it_counted() {
     let tree = Tree::new("text");
     let stdout = [
@@ -315,7 +314,6 @@ fn every_count_above_zero_names_the_citations_it_counted() {
 /// `{path, line}` in the clause's order; the zero count keeps `null` (§FS-rules.7.6,
 /// §FS-errors.5.1).
 #[test]
-#[ignore = "red until #1366 a count row above zero fills `sites` with what it counted; implement removes this"]
 fn json_sites_carry_every_counted_line_in_text_order() {
     let tree = Tree::new("json");
     let stdout = [
@@ -370,7 +368,6 @@ fn json_sites_carry_every_counted_line_in_text_order() {
 /// is in the plain count's list and not in the `cite each` row's. Two citations on one line are
 /// two entries in column order, not in the order of what they cite, and one site.
 #[test]
-#[ignore = "red until #1366 a cite-each row lists only its own target's citations; implement removes this"]
 fn a_cite_each_row_lists_only_its_own_targets_citations() {
     let tree = Tree::new("cite-each");
     tree.write(
@@ -427,7 +424,6 @@ fn a_cite_each_row_lists_only_its_own_targets_citations() {
 /// the subject's title, and exits 1 (§FS-check.1.3.6.2,
 /// §FS-check.requirements.narrow-never-lenient). Before #1366 it printed `success`.
 #[test]
-#[ignore = "red until #1366 a narrowed run reports a count row at its counted sites; implement removes this"]
 fn a_check_of_a_counted_citing_file_reports_the_count_it_is_part_of() {
     let tree = Tree::new("scoped-p3");
     tree.assert_prints(
@@ -443,7 +439,6 @@ fn a_check_of_a_counted_citing_file_reports_the_count_it_is_part_of() {
 /// A check of PRICE-002 reports its own row and both inbound rows one of its citations is
 /// counted in; before #1366 it printed only its own.
 #[test]
-#[ignore = "red until #1366 a narrowed run reports a count row at its counted sites; implement removes this"]
 fn a_check_of_a_record_reports_every_count_its_citations_are_in() {
     let tree = Tree::new("scoped-p2");
     tree.assert_prints(
@@ -468,7 +463,6 @@ fn a_check_of_a_record_reports_every_count_its_citations_are_in() {
 /// `--path-base=invocation docs/prices` a counted citation inside is named from there, and a
 /// subject outside, brought into scope by its counted sites, from `../` (§FS-errors.3.1).
 #[test]
-#[ignore = "red until #1366 the counted list is spelled from the report base; implement removes this"]
 fn the_counted_list_is_spelled_from_the_report_base() {
     let tree = Tree::new("path-base");
     let base = "docs/prices";
@@ -507,7 +501,6 @@ fn the_counted_list_is_spelled_from_the_report_base() {
 /// (§FS-rules.7.3.1, §FS-scan.identity.findings.content).
 #[cfg(unix)]
 #[test]
-#[ignore = "red until #1366 the counted list follows the identity clause; implement removes this"]
 fn on_a_file_with_two_names_the_list_follows_the_identity_clause() {
     let tree = Tree::new("two-names");
     fs::create_dir_all(tree.0.join("docs/more")).expect("create docs/more");

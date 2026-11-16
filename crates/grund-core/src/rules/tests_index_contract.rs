@@ -2,7 +2,7 @@
 //! §AR-rules.3.1). These semantic guards pass before the optimization; the
 //! failing cost regression is the optimized black-box test in tests/e2e/.
 
-use super::engine::{evaluate, evaluate_suggestions};
+use super::engine::bare::{evaluate, evaluate_suggestions};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use super::{
     Cardinality, ParsedRule, RuleAnchor, RuleLevel, RulePolarity, RuleRelation, RuleSubject,

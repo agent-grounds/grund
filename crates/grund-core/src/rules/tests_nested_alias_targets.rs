@@ -6,7 +6,7 @@
 //! no clause after the message. A numbered-section site counts as any other from
 //! 0.18.0 (§FS-rules.7.8), so neither closed window's clause is left to print.
 
-use super::engine::{evaluate, evaluate_suggestions};
+use super::engine::bare::{evaluate, evaluate_suggestions};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use super::{
     Cardinality, ParsedRule, RuleAnchor, RuleLevel, RulePolarity, RuleRelation, RuleSubject,

@@ -26,7 +26,8 @@ const TRIAL_FINDING: &str = "docs/fs/FS-demo.md:6: error: FS-demo.requirements c
 /// three findings. This is the report the ticket says a trial run cannot escape.
 const UNSCOPED: &str = concat!(
     "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one 2 times; ",
-    "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
+    "RULE-overview requires exactly once; add or remove those citations until the count fits",
+    "; counted at docs/ar/AR-overview.md:5 (AR-one), docs/ar/AR-overview.md:5 (AR-one)\n",
     "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one-more 0 times; ",
     "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
     "docs/fs/FS-demo.md:6: error: FS-demo.requirements cites REQ 0 times; ",
@@ -96,7 +97,8 @@ fn the_code_axis_and_the_authority_axis_intersect() {
     );
     let expected = concat!(
         "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one 2 times; ",
-        "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
+        "RULE-overview requires exactly once; add or remove those citations until the count fits",
+        "; counted at docs/ar/AR-overview.md:5 (AR-one), docs/ar/AR-overview.md:5 (AR-one)\n",
         "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one-more 0 times; ",
         "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
         "docs/fs/FS-demo.md:6: error: FS-demo.requirements cites REQ 0 times; ",
@@ -289,7 +291,9 @@ fn every_finding_record_carries_the_authority_that_produced_it() {
     let expected = concat!(
         "{\"severity\":\"error\",\"path\":\"docs/ar/AR-overview.md\",\"line\":3,",
         "\"code\":\"citation-cardinality\",\"message\":\"AR-overview.system-overview cites ",
-        "AR-one 2 times; RULE-overview requires exactly once; add or remove those citations until the count fits\",\"sites\":null,",
+        "AR-one 2 times; RULE-overview requires exactly once; add or remove those citations until the count fits",
+        "; counted at docs/ar/AR-overview.md:5 (AR-one), docs/ar/AR-overview.md:5 (AR-one)\",",
+        "\"sites\":[{\"path\":\"docs/ar/AR-overview.md\",\"line\":5}],",
         "\"authority\":[\"RULE-overview\"]}\n",
         "{\"severity\":\"error\",\"path\":\"docs/ar/AR-overview.md\",\"line\":3,",
         "\"code\":\"citation-cardinality\",\"message\":\"AR-overview.system-overview cites ",

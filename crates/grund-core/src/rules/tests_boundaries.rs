@@ -1,7 +1,8 @@
 //! Executable parser/facts/engine boundary drivers (§AR-rules.6).
 
 use super::RuleAnchor;
-use super::engine::{Direction, evaluate, evaluate_suggestions};
+use super::engine::Direction;
+use super::engine::bare::{evaluate, evaluate_suggestions};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use super::markdown::adapt_markdown;
 use super::sentence::{

@@ -8,7 +8,7 @@ use super::super::tests_nested_alias_targets::{
     Required, assert_ordinary, at_most, cites, cites_each, codes, facts,
 };
 use super::super::{ParsedRule, RuleAnchor, RuleLevel};
-use super::{evaluate, evaluate_suggestions};
+use super::bare::{evaluate, evaluate_suggestions};
 
 /// [`facts`] with `API-a` citing its own `AR-b` once more at line 5, through
 /// the mixed path `<§>AR-b.goals.1`, a name under a number.

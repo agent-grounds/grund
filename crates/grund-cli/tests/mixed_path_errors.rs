@@ -147,7 +147,6 @@ fn names_as_written(repo: &Repo, sentence: &str, code: &str, list: &str, lines: 
 /// where the ordinary run's names `GOAL-g`; it is what shows the author which
 /// citation counted. It covers every count case `ordinary_error` runs below.
 #[test]
-#[ignore = "red until #1366 a count row lists each counted citation as written; implement removes this"]
 fn the_counted_list_names_a_mixed_citation_as_written() {
     let two = "; counted at docs/fs/x.md:3 (GOAL-g), docs/fs/x.md:5 (GOAL-g.1.goals)";
     for (sentence, code) in [

@@ -9,7 +9,8 @@ use std::fs;
 
 const TEXT_FINDINGS: &str = concat!(
     "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one 2 times; ",
-    "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
+    "RULE-overview requires exactly once; add or remove those citations until the count fits",
+    "; counted at docs/ar/AR-overview.md:5 (AR-one), docs/ar/AR-overview.md:5 (AR-one)\n",
     "docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one-more 0 times; ",
     "RULE-overview requires exactly once; add or remove those citations until the count fits\n",
     "docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ (RULE-requirements); add such a citation within it\n",
@@ -23,15 +24,18 @@ fn chapter_scope_and_exact_once_coverage_are_hard_findings() {
     assert_v1_run(&output, 1, TEXT_FINDINGS, "");
 }
 
-/// §FS-rules.7.6: rule-derived JSON adds no source-list field, and same-anchor
-/// rows sort by target-ID bytes even where one target prefixes another.
+/// §FS-rules.7.6: rule-derived JSON adds no source-list field but a count row's counted sites,
+/// each line once (§FS-rules.7.3.1), and same-anchor rows sort by target-ID bytes even where
+/// one target prefixes another.
 #[test]
 fn rule_findings_have_exact_ndjson_codes_and_bytes() {
     let output = run(&fixture(), &["check", ".", "--format", "json"]);
     let expected = concat!(
         "{\"severity\":\"error\",\"path\":\"docs/ar/AR-overview.md\",\"line\":3,",
         "\"code\":\"citation-cardinality\",\"message\":\"AR-overview.system-overview cites ",
-        "AR-one 2 times; RULE-overview requires exactly once; add or remove those citations until the count fits\",\"sites\":null,",
+        "AR-one 2 times; RULE-overview requires exactly once; add or remove those citations until the count fits",
+        "; counted at docs/ar/AR-overview.md:5 (AR-one), docs/ar/AR-overview.md:5 (AR-one)\",",
+        "\"sites\":[{\"path\":\"docs/ar/AR-overview.md\",\"line\":5}],",
         "\"authority\":[\"RULE-overview\"]}\n",
         "{\"severity\":\"error\",\"path\":\"docs/ar/AR-overview.md\",\"line\":3,",
         "\"code\":\"citation-cardinality\",\"message\":\"AR-overview.system-overview cites ",
