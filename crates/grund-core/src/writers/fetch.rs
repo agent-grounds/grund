@@ -289,9 +289,13 @@ fn fetch_run(
             .status
             .code()
             .map_or_else(|| "signal".to_string(), |code| code.to_string());
-        return Err(fetch_operational(format!(
-            "fetch integration `{fetch}` for {raw} exited {status}"
-        )));
+        let mut message = format!("fetch integration `{fetch}` for {raw} exited {status}");
+        // §FS-fetch.2.2: failed stderr explains either status, with its line breaks intact.
+        if !output.stderr.is_empty() {
+            message.push('\n');
+            message.push_str(&String::from_utf8_lossy(&output.stderr));
+        }
+        return Err(fetch_operational(message));
     }
     let snapshot = std::str::from_utf8(&output.stdout).map_err(|_| {
         fetch_operational(format!(

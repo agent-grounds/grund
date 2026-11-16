@@ -29,6 +29,22 @@ fence=$(printf '%s\n```\n' "$body" | grep -o '`\{3,\}' | sort | tail -n 1)
 printf '## %s: %s\n\n%s`markdown\n%s\n%s`\n' "$1" "$title" "$fence" "$body" "$fence"
 ````
 
+If the integration exits nonzero or is terminated by a signal, grund exits 2
+and appends its captured stderr after the error naming the integration, ID and
+status. Diagnostic line breaks are preserved, and invalid UTF-8 bytes are
+displayed with replacement characters. Empty diagnostics keep the existing
+error; successful integrations' stderr stays quiet
+([§FS-fetch.2.2](../functional-spec/FS-fetch.md#22-captured-stderr-explains-an-unsuccessful-integration)).
+For example, if the integration reports an expired credential:
+
+```text
+$ grund fetch GH-1234
+error: fetch integration `scripts/fetch-ticket` for GH-1234 exited 1
+fetch-ticket: credential expired; run gh auth login
+```
+
+Run `gh auth login` and retry `grund fetch GH-1234` to refresh the snapshot.
+
 For a `file` home the declaration is H2; for a `folder` home it is H1. Below it,
 a subsection is any heading the next `grund check` reads as a section of it, at the
 level `check` holds sections to, so `### 1. Notes` and `#### 1.1. Detail` under it

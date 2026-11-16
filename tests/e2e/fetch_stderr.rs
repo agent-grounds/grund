@@ -92,21 +92,18 @@ fn assert_reason(id: &str, status: &str, reason: &str) {
 
 /// §FS-fetch.2.2: a missing dependency's explanation survives a failed refetch.
 #[test]
-#[ignore = "red until #1358 retains failed integration stderr; implement removes this"]
 fn fetch_stderr_missing_cli_reason_reaches_user() {
     assert_reason("GR-1", "1", "fetch-ticket: gdev-cli is not on PATH");
 }
 
 /// §FS-fetch.2.2: an unknown ticket has its own explanation, without creating a snapshot.
 #[test]
-#[ignore = "red until #1358 retains failed integration stderr; implement removes this"]
 fn fetch_stderr_unknown_ticket_reason_reaches_user() {
     assert_reason("GR-404", "1", "fetch-ticket: GR-404: Issue Does Not Exist");
 }
 
 /// §FS-fetch.2.2: line breaks survive, and diagnostic bytes are displayed lossily.
 #[test]
-#[ignore = "red until #1358 retains failed integration stderr; implement removes this"]
 fn fetch_stderr_multiline_non_utf8_reason_reaches_user() {
     assert_reason(
         "GR-4",
@@ -117,7 +114,6 @@ fn fetch_stderr_multiline_non_utf8_reason_reaches_user() {
 
 /// §FS-fetch.2.2: the shared unsuccessful-status path also keeps signal diagnostics.
 #[test]
-#[ignore = "red until #1358 retains failed integration stderr; implement removes this"]
 fn fetch_stderr_signal_reason_reaches_user() {
     assert_reason(
         "GR-5",
