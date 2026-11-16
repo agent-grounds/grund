@@ -173,7 +173,7 @@ accepted, as they are on the next scan.
 
 For `file = "<home>"`, grund replaces only the declaration whose ID exactly matches
 the requested ID. If it is absent, grund inserts the declaration among sibling H2
-declarations in ID order. The file's preamble, other declarations, line endings, and
+declarations in ID order ([§FS-fetch.4.order](FS-fetch.md#4order-insertion-follows-the-effective-format-comparing-the-number-numerically)). The file's preamble, other declarations, line endings, and
 all bytes outside the owned declaration remain unchanged.
 
 The owned declaration is the one the selected project's scan reads in the home, wherever it
@@ -209,6 +209,22 @@ must already exist ([§FS-config.3.4.9](FS-config.md#349-values--first-class-val
 the configuration loads, before any integration runs, and the refusal names the way
 through ([§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through)). Nor does it hold for a home the text scan reads as source, which is
 refused whether or not it exists ([§FS-fetch.4.2](FS-fetch.md#42-a-home-read-as-source-is-refused)).
+
+### 4.order: Insertion follows the effective format, comparing the number numerically
+
+For an absent ID, grund inserts before the first sibling H2 declaration whose ID
+compares greater, or appends when there is none. Comparison follows the fields of
+the requested kind's effective ID format from left to right: `{number}` compares
+by numeric value, independent of zero-padding; kind and slug text compare lexically.
+Digits within slug text remain text. Thus `{kind}-{slug}-{number}` puts
+`TICKET-alpha-9` before `TICKET-zeta-1`, while `{kind}-{number}-{slug}` puts
+`TICKET-9-zeta` before `TICKET-100-alpha`. With `{kind}-{number}`, `GR-9`,
+`GR-100`, `GR-1000`, `GR-80923` is the order, whether the format is set on the
+kind or inherited from the project.
+
+This rule chooses an insertion point; it does not sort existing siblings. Fetching
+an already declared ID replaces it at its existing position ([§FS-fetch.4](FS-fetch.md#4-file-home-write)), even
+when the file's declarations are out of order.
 
 ### 4.1. An absent value home is refused with the way through
 
