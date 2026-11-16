@@ -1,6 +1,9 @@
 //! §FS-citations.checks.mixed-path and §FS-rules.7.12: mixed paths use ordinary
 //! findings; independent warning windows, suggestions and strengths survive.
 //! The configured-prohibition and count fixtures port issue-710's triage probe.
+//! A count's list names each citation as written (§FS-rules.7.3.1), so the
+//! mixed and ordinary runs agree up to that list, and the mixed run's names
+//! `GOAL-g.1.goals`.
 
 use serde_json::Value;
 use std::fs;
@@ -13,6 +16,8 @@ static NEXT: AtomicUsize = AtomicUsize::new(0);
 /// has no version 2 spelling (§FS-check.checks.config-version-1).
 const CONFIG_VERSION_1: &str = "config-version-1";
 const MIXED: &str = "a citation of a name under a number is now checked";
+/// Where a count row's list of the citations it counted begins (§FS-rules.7.3.1).
+const COUNTED: &str = "; counted at ";
 const CONFIG: &str = "grund_config_version = 1\n\
     [reference]\nstrict = true\nrequire_grounding = false\n\
     [id]\nformat = \"{kind}-{slug}\"\nnamed_sections = true\n\
@@ -83,6 +88,18 @@ fn json(output: &Output) -> Vec<Value> {
         .collect()
 }
 
+/// Each finding with its message cut before the counted list, which names every
+/// citation as written and so differs between a mixed and an ordinary spelling
+/// (§FS-rules.7.3.1, §FS-rules.7.12); every other field is kept whole.
+fn before_the_list(mut ds: Vec<Value>) -> Vec<Value> {
+    for d in &mut ds {
+        let message = d["message"].as_str().unwrap();
+        let head = message.split(COUNTED).next().unwrap().to_string();
+        d["message"] = Value::String(head);
+    }
+    ds
+}
+
 fn ordinary_error(repo: &Repo, args: &[&str], code: &str) {
     let output = repo.run(args);
     let ds = json(&output);
@@ -101,9 +118,69 @@ fn ordinary_error(repo: &Repo, args: &[&str], code: &str) {
     let ordinary = repo.run(args);
     assert_eq!(ordinary.status.code(), Some(1), "{ordinary:?}");
     assert_eq!(
-        ds,
-        json(&ordinary),
-        "ordinary codes, messages, sites and authority"
+        before_the_list(ds),
+        before_the_list(json(&ordinary)),
+        "ordinary codes, messages up to the counted list, sites and authority"
+    );
+}
+
+/// The one count finding `--rule <sentence>` raises names, in its list, every
+/// citation it counted as written, `lines` of `docs/fs/x.md` in order, and its
+/// `sites` are those lines (§FS-rules.7.3.1).
+fn names_as_written(repo: &Repo, sentence: &str, code: &str, list: &str, lines: &[usize]) {
+    let output = repo.run(&["check", "--format", "json", "--rule", sentence]);
+    let ds = json(&output);
+    assert_eq!(output.status.code(), Some(1), "{ds:#?}");
+    assert_eq!(ds.len(), 1, "{ds:#?}");
+    assert_eq!(ds[0]["code"], code, "{ds:#?}");
+    let message = ds[0]["message"].as_str().unwrap();
+    assert!(message.ends_with(list), "{sentence}: {message}");
+    let sites: Vec<Value> = lines
+        .iter()
+        .map(|line| serde_json::json!({"path": "docs/fs/x.md", "line": line}))
+        .collect();
+    assert_eq!(ds[0]["sites"], Value::Array(sites), "{ds:#?}");
+}
+
+/// §FS-rules.7.12 and §FS-rules.7.3.1: a count's ordinary message carries the
+/// counted list, which names the mixed citation as written, `GOAL-g.1.goals`,
+/// where the ordinary run's names `GOAL-g`; it is what shows the author which
+/// citation counted. It covers every count case `ordinary_error` runs below.
+#[test]
+#[ignore = "red until #1366 a count row lists each counted citation as written; implement removes this"]
+fn the_counted_list_names_a_mixed_citation_as_written() {
+    let two = "; counted at docs/fs/x.md:3 (GOAL-g), docs/fs/x.md:5 (GOAL-g.1.goals)";
+    for (sentence, code) in [
+        ("Each FS must cite at most 1 GOAL.", "citation-cardinality"),
+        (
+            "Each FS must cite exactly one GOAL.",
+            "citation-cardinality",
+        ),
+        (
+            "Each FS must cite each GOAL at most once.",
+            "citation-cardinality",
+        ),
+        (
+            "Each FS must cite each GOAL exactly once.",
+            "citation-cardinality",
+        ),
+        ("Each GOAL must be cited by at most 1 FS.", "uncited-unit"),
+        ("Each GOAL must be cited by exactly one FS.", "uncited-unit"),
+    ] {
+        let repo = Repo::prepared("", "See \u{a7}GOAL-g.\n\nAgain \u{a7}GOAL-g.1.goals.");
+        names_as_written(&repo, sentence, code, two, &[3, 5]);
+    }
+    let repo = Repo::prepared(
+        "",
+        "See \u{a7}GOAL-g.\n\nAgain \u{a7}GOAL-g.\n\nMixed \u{a7}GOAL-g.1.goals.",
+    );
+    names_as_written(
+        &repo,
+        "Each FS must cite at most 1 GOAL.",
+        "citation-cardinality",
+        "; counted at docs/fs/x.md:3 (GOAL-g), docs/fs/x.md:5 (GOAL-g), \
+         docs/fs/x.md:7 (GOAL-g.1.goals)",
+        &[3, 5, 7],
     );
 }
 
