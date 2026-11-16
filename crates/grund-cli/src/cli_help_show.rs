@@ -7,8 +7,9 @@ fn print_show_help() {
     println!(
         "Usage:  grund [show] <ID>[.<section>] [PATH] [--section S] [--brief|--toc|--full] [--format text|md|json] [--path PATH]"
     );
+    // §FS-show.1.8: a batch takes every format, in the single read's order.
     println!(
-        "        grund show --batch [--all | --glob PATTERN...] [PATH] --format=json [--brief|--toc|--full] [--path PATH]"
+        "        grund show --batch [--all | --glob PATTERN...] [PATH] [--brief|--toc|--full] [--format text|md|json] [--path PATH]"
     );
     println!();
     println!("Modes form an ordered ladder (each adds to the previous):");
@@ -51,6 +52,8 @@ fn print_show_help() {
     println!("  grund FS-login --toc             # lead + section map");
     println!("  grund FS-login.3.1               # the lead of that nested section");
     println!("  grund FS-login --full            # the whole declaration body");
+    // §FS-show.3.3.1: a text batch heads each answer with its coordinate.
+    println!("  grund show --batch --glob 'FS-login.*' # each top-level section, headed ==> <coordinate> <==");
     println!(
         "  printf '%s\\n' '{{\"id\":\"FS-login\"}}' | grund show --batch --format=json"
     );

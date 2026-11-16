@@ -203,7 +203,7 @@ fn batch_glob_filters_the_generated_batch() {
         "batch_glob_filters_the_generated_batch",
         &[
             "show-batch-glob-json",
-            "show-batch-glob-requires-json",
+            "show-batch-glob-default-text",
             "show-batch-glob-toc-json",
             "show-batch-glob-all-is-redundant",
             "show-batch-glob-ignores-stdin",

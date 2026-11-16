@@ -56,7 +56,7 @@ fn command_refs_sites(line: RefsSiteLine) -> ExitCode {
         Some(source) => RefsSites::From(source.clone()),
         None => RefsSites::Globs(line.globs.clone()),
     };
-    let (warnings, result) = grund_core::refs_sites_with_text_annotations(RefsSitesOpts {
+    let (warnings, result, hints) = grund_core::refs_sites_with_text_annotations(RefsSitesOpts {
         path: path.clone(),
         path_provided,
         sites,
@@ -74,6 +74,7 @@ fn command_refs_sites(line: RefsSiteLine) -> ExitCode {
                 // §FS-errors.2.2.5: a scan failure prints `check`'s line, the record's own.
                 message: ApiScanError::printed(&err),
                 sites,
+                hints: &hints,
                 path: &path,
                 path_provided,
             };
@@ -146,6 +147,7 @@ fn refs_sites_refused(
     let RefsSiteRefusal {
         message,
         sites,
+        hints,
         path,
         path_provided,
     } = refusal;
@@ -162,7 +164,12 @@ fn refs_sites_refused(
     let format = format
         .or_else(|| effective_config(path).ok().map(|config| config.output_format))
         .unwrap_or_else(|| "text".to_string());
-    render_show_error(&source, path, false, &format, &message, sites)
+    let refusal = ShowRefusal {
+        message: &message,
+        sites,
+        hints,
+    };
+    render_show_error(&source, path, false, &format, refusal)
 }
 
 /// What a failed site-mode run left to render: the error's text, an ambiguous
@@ -170,6 +177,7 @@ fn refs_sites_refused(
 struct RefsSiteRefusal<'a> {
     message: String,
     sites: &'a [FindingSite],
+    hints: &'a [String],
     path: &'a Path,
     path_provided: bool,
 }

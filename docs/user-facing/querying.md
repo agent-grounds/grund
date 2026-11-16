@@ -150,7 +150,26 @@ gives the recipe and its limits.
 `grund show --batch --glob` generates the queries `--all` would and keeps the ones a
 pattern matches, in one scan and with no stdin ([§FS-show.1.9](../functional-spec/FS-show.md#19---batch---all-every-coordinate-in-scope)). With `--toc` each
 answer carries the unit's section map ([§FS-show.2.1.2](../functional-spec/FS-show.md#212-section-map---toc)), so expanding a chapter's
-subpoints is one command:
+subpoints is one command. Read at a terminal, each answer is headed by the
+coordinate it answers, `==> <coordinate> <==`, above what `grund <coordinate> --toc`
+prints for it ([§FS-show.3.3.1](../functional-spec/FS-show.md#331-the-header)):
+
+```console
+$ grund show --batch --glob 'FS-config.requirements' --toc
+==> FS-config.requirements <==
+## requirements: What the config contract holds to
+
+Eight requirements on the key set as a whole, each carrying a **mark**: …
+
+### requirements.1: Every default is overridable where it has a meaning — directional
+### requirements.2: Zero config works — realized
+…
+### requirements.8: A project's meaning is self-contained — realized
+```
+
+`--format md` frames the answers the same way, and a script reads `--format json`,
+one envelope per answer, where the query, the result and the section map are fields
+([§FS-show.3.3](../functional-spec/FS-show.md#33-batch-query)):
 
 ```console
 $ grund show --batch --glob 'FS-config.requirements' --toc --format json \
@@ -159,11 +178,11 @@ $ grund show --batch --glob 'FS-config.requirements' --toc --format json \
 ```
 
 `<ID>{,.**}` is a point and its whole subtree, so `--glob 'FS-config.requirements{,.**}'`
-answers the chapter and each of its points, one envelope each. The explicit form,
-`grund show --batch --toc --format json`, reads `{"id", "section"}` queries as NDJSON on
-stdin instead ([§FS-show.1.8](../functional-spec/FS-show.md#18---batch-an-explicit-query-stream)), for a set no pattern names.
+answers the chapter and each of its points, one answer each. The explicit form,
+`grund show --batch --toc` (or `grund show --batch --toc --format json` for a
+script), reads `{"id", "section"}` queries as NDJSON on stdin instead ([§FS-show.1.8](../functional-spec/FS-show.md#18---batch-an-explicit-query-stream)), for a set no pattern names.
 
-Each output line answers one query, in input order:
+Under `--format json` each output line answers one query, in input order:
 
 ```text
 {"query": {"id", "section"},
@@ -177,8 +196,25 @@ Read `.result.sections[]`: `path` is the section path under `.result.id`
 (`requirements.1`), so cite or fetch it as `<id>.<path>`
 (`FS-config.requirements.1`); `title` is its heading text, `depth` how far
 below the queried unit it sits, and `anchor` the fragment a web link to that
-heading takes ([Link a citation from one read](#link-a-citation-from-one-read)). A query that does not resolve answers
-`"ok":false` with an `error` object instead of a `result`, and the batch exits 1:
+heading takes ([Link a citation from one read](#link-a-citation-from-one-read)). A query that does not resolve keeps its
+place among the answers and the batch exits 1. In `text` and `md` its header is the
+query as written, and under it come the message and the hint the single read
+prints, on stdout ([§FS-show.3.3.2](../functional-spec/FS-show.md#332-a-failure-stays-in-its-place)):
+
+```console
+$ printf '%s\n' '{"id":"FS-show","section":"1.8"}' '{"id":"FS-nope"}' | grund show --batch --brief
+==> FS-show.1.8 <==
+### 1.8 `--batch`: an explicit query stream
+
+`--batch` is available only on the explicit `show` subcommand and takes any …
+
+==> FS-nope <==
+ID not found: FS-nope
+hint: run `grund list` to see every declared ID, or `grund id <KIND> "<title>"` to propose a new one
+```
+
+In `json` the failure answers `"ok":false` with an `error` object instead of a
+`result`:
 
 ```console
 $ echo '{"id":"FS-nope"}' | grund show --batch --brief --format json
@@ -189,17 +225,35 @@ $ echo '{"id":"FS-nope"}' | grund show --batch --brief --format json
 
 The same query stream fetches bodies instead of maps. `--brief` returns the
 heading and first paragraph of each unit, `--full` the whole body, and no slice
-flag the lead; the answer is the `result` object above without `sections`:
+flag the lead, each under its header:
+
+```console
+$ grund show --batch --glob 'FS-config.requirements.*' --brief
+==> FS-config.requirements.1 <==
+### requirements.1: Every default is overridable where it has a meaning — directional
+
+The obligation this places on a key added from here on falls on the admission …
+
+==> FS-config.requirements.2 <==
+### requirements.2: Zero config works — realized
+
+Every key is optional, and no config file anywhere up the walk means the canonical …
+…
+```
+
+The framing is for reading. A body is its author's bytes and may hold a line that
+looks like a header, so a program that splits the answers reads `--format json`,
+where each answer is the `result` object above without `sections`:
 
 ```console
 $ echo '{"id":"FS-show","section":"1.8"}' | grund show --batch --brief --format json | jq -c '{query, ok, result: (.result | keys)}'
 {"query":{"id":"FS-show","section":"1.8"},"ok":true,"result":["anchor","body","id","kind_title","line","path","section"]}
 ```
 
-`grund show --batch --full --format json` reads the same queries and returns
-every subsection's text in `body`. `--glob` reads the bodies a pattern selects, and to
-read every declaration and section in scope without writing the queries, pass
-`--all`: both read no stdin and generate one query per coordinate, in one scan
+`grund show --batch --full` reads the same queries and returns every subsection's
+text. `--glob` reads the bodies a pattern selects, and to read every declaration and
+section in scope without writing the queries, pass `--all`: both read no stdin and
+generate one query per coordinate, in one scan
 ([§FS-show.1.9](../functional-spec/FS-show.md#19---batch---all-every-coordinate-in-scope)):
 
 ```console
@@ -225,8 +279,9 @@ changed line range belongs to with `grund cover FILE --lines N-M`
 ```console
 $ grund list --glob 'FS-config.requirements.*' --total
 8
-$ grund show --batch --glob 'FS-config.requirements.*' --brief --format json | head -1 | cut -c1-120
-{"query":{"id":"FS-config","section":"requirements.1"},"ok":true,"result":{"id":"FS-config","section":"requirements.1","
+$ grund show --batch --glob 'FS-config.requirements.*' --brief | head -2
+==> FS-config.requirements.1 <==
+### requirements.1: Every default is overridable where it has a meaning — directional
 $ grund cover docs/functional-spec/FS-config.md --lines 96-101
 docs/functional-spec/FS-config.md:96-101
   96-99  FS-config.requirements.1

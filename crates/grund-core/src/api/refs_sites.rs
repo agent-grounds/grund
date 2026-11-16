@@ -9,6 +9,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use super::cover::{cited_id, target_config};
+use super::guidance::query_failure_hints;
 use super::refs::{RefHit, RefsOutput};
 use super::refs_query::{hit_path, refs_scan_errors, site_key};
 use super::report::context_run_warnings;
@@ -18,6 +19,7 @@ use crate::grammar::{path_at_or_under, render_catalog_id};
 use crate::model::{Citation, Declaration, Finding, Id, ShowRenderMode};
 use crate::queries::{GlobSelection, read_globs, reported_scope, reports_site};
 use crate::resolver::{WorkspaceContext, load_classifying_workspace_context};
+use crate::scanner::ApiScanError;
 use crate::sources::paths_same_location;
 
 /// What a `refs` run selects its sites by when it names no one ID (§FS-refs.1.1).
@@ -51,24 +53,28 @@ pub struct RefsSitesOpts {
 #[doc(hidden)]
 pub fn refs_sites_with_run_warnings(opts: RefsSitesOpts) -> (Vec<Finding>, Result<RefsOutput>) {
     let mut cautions = Vec::new();
-    let result = refs_sites_run(opts, &mut cautions, None);
+    let result = refs_sites_run(opts, &mut cautions, None, &mut Vec::new());
     (cautions, result)
 }
 
 /// §FS-refs.3.1.1 / §FS-refs.3.3.1: the CLI's text-only classification, beside
-/// the unchanged site-mode records and run warnings, without a second scan.
+/// the unchanged site-mode records and run warnings, without a second scan. A
+/// `--from` source refused as `grund <ID>` refuses it brings that read's `hint:`
+/// lines, built from this run's context (§FS-refs.from, §AR-resolver.3.1.1).
 #[doc(hidden)]
 pub fn refs_sites_with_text_annotations(
     opts: RefsSitesOpts,
 ) -> (
     Vec<Finding>,
     Result<(RefsOutput, BTreeSet<(String, usize, usize)>)>,
+    Vec<String>,
 ) {
     let mut cautions = Vec::new();
     let mut entries = BTreeSet::new();
-    let result =
-        refs_sites_run(opts, &mut cautions, Some(&mut entries)).map(|output| (output, entries));
-    (cautions, result)
+    let mut hints = Vec::new();
+    let result = refs_sites_run(opts, &mut cautions, Some(&mut entries), &mut hints)
+        .map(|output| (output, entries));
+    (cautions, result, hints)
 }
 
 /// One selected site, with the index of the project whose catalog holds it.
@@ -81,6 +87,7 @@ fn refs_sites_run(
     opts: RefsSitesOpts,
     cautions: &mut Vec<Finding>,
     index_entries: Option<&mut BTreeSet<(String, usize, usize)>>,
+    hints: &mut Vec<String>,
 ) -> Result<RefsOutput> {
     // §FS-coordinate-globs.errors.shape: what the grammar alone refuses, before discovery.
     let globs = match &opts.sites {
@@ -97,7 +104,13 @@ fn refs_sites_run(
             (glob_sites(&context, &selection), selection.note())
         }
         // §AR-resolver.3.3: the same project catalog resolves operands in every mode.
-        RefsSites::From(source) => (from_sites(&context, source, scope.as_ref())?, None),
+        RefsSites::From(source) => {
+            let sites = from_sites(&context, source, scope.as_ref()).inspect_err(|error| {
+                // §FS-refs.from: the source's refusal is `show`'s, hint included.
+                *hints = query_failure_hints(&context, source, &ApiScanError::printed(error));
+            })?;
+            (sites, None)
+        }
     };
     // §AR-resolver.3.3: each mode lists the report scope's sites (§FS-refs.1.1).
     sites.retain(|site| {

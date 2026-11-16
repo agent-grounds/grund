@@ -1,1 +1,1 @@
-show --batch --glob 'FS-login.requirements.*' {repo} --format json
+show --batch --glob 'FS-login.requirements.*' {repo}

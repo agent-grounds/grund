@@ -5,12 +5,10 @@
 //! every hint read from the project the query names out of the one load
 //! (§FS-show.3.5, §AR-resolver.3.1.1).
 //!
-//! Every test here is red until #1385 lets `--batch` answer in a format other
-//! than `json`; the implementing change removes each `ignore`. The renderer they
-//! pin has no function of its own yet, so the unit-level asks — the body under a
-//! header is the single read, the header's spelling, one hint for a single read
-//! and a batch — are pinned here at the process boundary, against single reads
-//! of the same binary.
+//! The unit-level asks — the body under a header is the single read, the header's
+//! spelling, one hint for a single read and a batch — are pinned here at the
+//! process boundary, against single reads of the same binary, so they hold for
+//! whatever the binary answers through.
 
 use super::{
     MALFORMED_INPUT, MANY_QUERIES_INPUT, NEXT_ROOT, Repo, assert_empty_succeeded,
@@ -79,7 +77,6 @@ fn assert_framed(output: &Output, code: i32, expected: &str, context: &str) {
 /// whole, an empty one succeeds silently, and many queries or `--all` succeed
 /// with stderr empty (§FS-show.3.3, §FS-show.2.6.3).
 #[test]
-#[ignore = "red until #1385 lets --batch answer in text and md; implement removes this"]
 fn show_batch_aggregate_is_the_same_in_every_format() {
     let repo = Repo::new("formats-aggregate");
     for format in FORMATS {
@@ -98,10 +95,6 @@ fn show_batch_aggregate_is_the_same_in_every_format() {
 #[cfg_attr(
     not(feature = "test-workspace-load-count"),
     ignore = "reads the workspace-load observer; run with --features grund/test-workspace-load-count"
-)]
-#[cfg_attr(
-    feature = "test-workspace-load-count",
-    ignore = "red until #1385 lets --batch answer in text and md; implement removes this"
 )]
 fn show_batch_loads_one_workspace_in_every_format() {
     let repo = Repo::new("formats-loads");
@@ -126,7 +119,6 @@ fn show_batch_loads_one_workspace_in_every_format() {
 /// as written, and the query after it is still answered, headed by the full ID;
 /// the aggregate exits `1` with stderr empty (§FS-show.2.6.3, §FS-show.3.3.2).
 #[test]
-#[ignore = "red until #1385 lets --batch answer in text and md; implement removes this"]
 fn show_batch_framed_ambiguous_shorthand_is_a_query_failure_and_continues() {
     let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/e2e/cases/check-shorthand-citation-ambiguous-and-unknown/repo");
@@ -150,7 +142,6 @@ fn show_batch_framed_ambiguous_shorthand_is_a_query_failure_and_continues() {
 /// generates it: a member's with its alias, the current project's alias dropped
 /// (§FS-show.3.3, §FS-show.3.3.1, §FS-show.2.6.2).
 #[test]
-#[ignore = "red until #1385 lets --batch answer in text and md; implement removes this"]
 fn show_batch_framed_bodies_equal_single_reads() {
     let repo = Repo::new("formats-bodies");
     // (query id, query section, the header, the coordinate the single read takes)
@@ -210,7 +201,6 @@ fn show_batch_framed_bodies_equal_single_reads() {
 /// read with `--section`, on stdout; an unknown alias keeps its message and earns
 /// no hint (§FS-show.3.3.1, §FS-show.3.3.2, §FS-show.3.5).
 #[test]
-#[ignore = "red until #1385 lets --batch answer in text and md; implement removes this"]
 fn show_batch_framed_failure_keeps_the_single_read_hint_in_place() {
     let repo = Repo::new("formats-failures");
     // (query line, the header, the single read that fails the same way): a
@@ -316,7 +306,6 @@ fn format_hint(format: &str) -> String {
 /// separate section is headed with the run's separator (§FS-show.3.3.1,
 /// §FS-show.3.3.2, §FS-show.3.5, §FS-show.3.5.1).
 #[test]
-#[ignore = "red until #1385 lets --batch answer in text with each hint from the owning project; implement removes this"]
 fn show_batch_text_reads_each_hint_from_the_project_the_query_names() {
     let repo = member_format_repo();
     let input = concat!(
@@ -352,7 +341,6 @@ fn show_batch_text_reads_each_hint_from_the_project_the_query_names() {
 /// the query names, so `api/FS-001-api:9` and its shorthand `api/FS-001:9` each
 /// get a `--toc` command that answers (§FS-show.3.5).
 #[test]
-#[ignore = "red until #1385 cuts the missing-section hint at the owning project's separator; implement removes this"]
 fn show_single_read_cuts_a_missing_section_hint_at_the_member_separator() {
     let repo = member_format_repo();
     for (coordinate, hinted) in [
@@ -380,7 +368,6 @@ fn show_single_read_cuts_a_missing_section_hint_at_the_member_separator() {
 /// either framed format, so there is one hint for a single read and a batch
 /// (§FS-show.3.3.2, §FS-show.3.5).
 #[test]
-#[ignore = "red until #1385 lets --batch answer in text and md; implement removes this"]
 fn show_batch_framed_hint_equals_the_single_read_hint() {
     let repo = member_format_repo();
     let failures = [

@@ -1,9 +1,8 @@
 //! `grund show --batch` answers in every `--format`, its `text` and `md` forms heading each
 //! answer `==> <coordinate> <==` and keeping a failed query's message and hint in its place on
 //! stdout (§FS-show.1.8, §FS-show.3.3, §FS-show.3.3.1, §FS-show.3.3.2). Each test mirrors one
-//! golden case under `tests/e2e/cases/` that the implementing change adds or rewrites, with the
-//! exact stdout, stderr and exit code, because a golden case has no skip: until #1385 lands,
-//! every one of them is ignored and fails when run, the batch refusing any format but `json`.
+//! golden case under `tests/e2e/cases/` where one exists, with the exact stdout, stderr and
+//! exit code, so the bytes are pinned in Rust as well as by the golden.
 //! The `json` goldens stay as they are and keep passing, byte for byte (§FS-output-shapes.4.1).
 
 use std::io::Write;
@@ -89,7 +88,6 @@ const NOT_FOUND_HINT: &str = "hint: run `grund list` to see every declared ID, o
 /// the same arguments with no `--format` answer in `text`, each match under its header
 /// (§FS-show.1.8, §FS-show.1.9, §FS-show.3.3.1).
 #[test]
-#[ignore = "red until #1385 lets --batch answer in text; implement removes this"]
 fn show_batch_glob_default_text() {
     let repo = case_repo("show-batch-glob-json");
     let run = grund(
@@ -111,7 +109,6 @@ fn show_batch_glob_default_text() {
 /// outcome in query order on stdout, a failure's message and hint under its header, the
 /// unknown alias with no hint, stderr empty and the aggregate `1` (§FS-show.3.3.2).
 #[test]
-#[ignore = "red until #1385 lets --batch answer in text; implement removes this"]
 fn show_batch_mixed_text() {
     let repo = case_repo("show-batch-mixed-json");
     let run = grund(
@@ -133,7 +130,6 @@ fn show_batch_mixed_text() {
 /// Mirrors `show-batch-mixed-md`: `md` frames as `text` does, the header above each body's
 /// own declaration heading, and a failure prints the same lines as in `text` (§FS-show.3.3.1).
 #[test]
-#[ignore = "red until #1385 lets --batch answer in md; implement removes this"]
 fn show_batch_mixed_md() {
     let repo = case_repo("show-batch-mixed-json");
     let run = grund(
@@ -155,7 +151,6 @@ fn show_batch_mixed_md() {
 /// Mirrors `show-batch-all-text`: `--all --brief` with no `--format`, every generated
 /// coordinate under its header, a member's qualified (§FS-show.2.6.2, §FS-show.3.3.1).
 #[test]
-#[ignore = "red until #1385 lets --batch --all answer in text; implement removes this"]
 fn show_batch_all_text() {
     let repo = case_repo("show-batch-all-json");
     let run = grund(
@@ -179,7 +174,6 @@ fn show_batch_all_text() {
 /// `## 1. One` are told apart by their headers, the member's spelled with its alias and its
 /// own separator `:`, the coordinate a reader pastes back (§FS-show.3.3.1).
 #[test]
-#[ignore = "red until #1385 lets --batch --glob answer in text; implement removes this"]
 fn workspace_show_batch_glob_qualified_text() {
     let repo = case_repo("workspace-show-batch-glob-qualified");
     let run = grund(
@@ -198,7 +192,6 @@ fn workspace_show_batch_glob_qualified_text() {
 /// Mirrors `show-batch-format-unknown`: `--batch` refuses an unknown format as the single
 /// read refuses it, exit `2` with empty stdout (§FS-show.1.8).
 #[test]
-#[ignore = "red until #1385 refuses an unknown batch format as the single read does; implement removes this"]
 fn show_batch_format_unknown() {
     let repo = case_repo("show-batch-mixed-json");
     let run = grund(
@@ -225,7 +218,6 @@ fn second_coordinate(first: &str, tail: &str) -> String {
 /// the batch command it offers takes no `--format`, since the batch answers in `text`
 /// (§FS-show.1.4.1).
 #[test]
-#[ignore = "red until #1385 builds the second-coordinate hint from the read's format; implement removes this"]
 fn show_second_coordinate_hint() {
     let repo = PathBuf::from(case_repo("show-second-coordinate-hint"));
     let run = grund(&crate_dir().join(repo), &["FS-alpha", "FS-beta"], None);
@@ -236,7 +228,6 @@ fn show_second_coordinate_hint() {
 /// Mirrors the rewritten `show-second-coordinate-hint-section-flag`: the `--section` object
 /// keeps its place, and the command again takes no `--format` (§FS-show.1.4.1).
 #[test]
-#[ignore = "red until #1385 builds the second-coordinate hint from the read's format; implement removes this"]
 fn show_second_coordinate_hint_section_flag() {
     let repo = PathBuf::from(case_repo("show-second-coordinate-hint-section-flag"));
     let run = grund(
@@ -252,7 +243,6 @@ fn show_second_coordinate_hint_section_flag() {
 /// is the default's tail and `md` asks for `md`, while `json` keeps the tail the golden
 /// `show-second-coordinate-hint-json` pins (§FS-show.1.4.1).
 #[test]
-#[ignore = "red until #1385 builds the second-coordinate hint from the read's format; implement removes this"]
 fn show_second_coordinate_hint_follows_the_format() {
     let repo = crate_dir().join(case_repo("show-second-coordinate-hint"));
     let first = "{\"id\":\"FS-alpha\"}";
@@ -274,7 +264,6 @@ fn show_second_coordinate_hint_follows_the_format() {
 /// Mirrors the rewritten `cli-help-show`: the batch usage line takes `--format` as the
 /// single read's does, and a text batch joins the examples (§FS-cli.2.3, §FS-show.1.8).
 #[test]
-#[ignore = "red until #1385 shows --format in the batch usage line and a text batch example; implement removes this"]
 fn cli_help_show() {
     let repo = crate_dir().join(case_repo("cli-help-show"));
     let run = grund(&repo, &["help", "show"], None);
@@ -285,7 +274,6 @@ fn cli_help_show() {
 /// its accepted selector selects, succeeds: the batch it names takes no `--format`
 /// (§FS-rule-refusals.selectors, §FS-show.1.8, §FS-show.3.3.1).
 #[test]
-#[ignore = "red until #1385 lets --batch answer in text; implement removes this"]
 fn list_selector_refusal_hint_runs_as_printed() {
     let repo = crate_dir().join(case_repo("list-selector-refused-numbered-section"));
     let refusal = grund(&repo, &["list", "--selector", "FS.requirements.1"], None);

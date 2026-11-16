@@ -1,5 +1,5 @@
-/// Print one declaration body, or opt into a one-context JSON query stream
-/// (§FS-show). The single-coordinate form remains the default command — a bare
+/// Print one declaration body, or opt into a one-context query stream in any
+/// format (§FS-show, §FS-show.1.8). The single-coordinate form remains the default command — a bare
 /// `grund <ID>` lands here (§FS-cli.1).
 fn command_show(args: &[String]) -> ExitCode {
     command_show_impl(args, false)
@@ -166,10 +166,12 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             eprintln!("error: {error:#}");
             return ExitCode::from(2);
         }
-        if format != "json" {
-            eprintln!("error: --batch requires --format=json");
+        // §FS-show.1.8: every format answers a batch; an unknown one is refused as
+        // the single read refuses it.
+        let Some(show_format) = parse_show_format(&format) else {
+            eprintln!("error: unsupported show format `{format}`");
             return ExitCode::from(2);
-        }
+        };
         if section_override.is_some() {
             eprintln!("error: --section cannot be used with --batch");
             return ExitCode::from(2);
@@ -178,7 +180,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             path = PathBuf::from(positional_path);
             path_provided = true;
         }
-        return command_show_batch(path, path_provided, mode, all, &globs);
+        return command_show_batch(path, path_provided, mode, show_format, all, &globs);
     }
     let Some(id_arg) = id_arg else {
         eprintln!("error: show requires an ID");
@@ -197,11 +199,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
     opts.section = section_override;
     opts.mode = mode;
     opts.format = show_format;
-    let (run_warnings, result) = show_with_scope(
-        &id_arg,
-        opts,
-        path_provided,
-    );
+    let (run_warnings, result, hints) = show_with_scope(&id_arg, opts, path_provided);
     render_run_warnings(&run_warnings);
     match result {
         Ok(output) => {
@@ -224,10 +222,15 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
                 .unwrap_or(&[]);
             if is_missing_positional_path(&message, path_positional) {
                 eprintln!("error: {message}");
-                print_second_coordinate_hint(&id_arg, &path, section_flag.as_deref());
+                print_second_coordinate_hint(&id_arg, &path, section_flag.as_deref(), show_format);
                 return ExitCode::from(2);
             }
-            render_show_error(&id_arg, &path, default_invocation, &format, &message, sites)
+            let refusal = ShowRefusal {
+                message: &message,
+                sites,
+                hints: &hints,
+            };
+            render_show_error(&id_arg, &path, default_invocation, &format, refusal)
         }
     }
 }
@@ -239,8 +242,14 @@ fn is_missing_positional_path(message: &str, path_positional: bool) -> bool {
 
 /// §FS-show.1.4.1: a missing positional path shaped like a coordinate (under the
 /// grammar discovered from the working directory) was meant as a second read, so
-/// the refusal shows the batch form that reads both. Shape only; nothing resolves.
-fn print_second_coordinate_hint(id_arg: &str, path: &Path, section: Option<&str>) {
+/// the refusal shows the batch form that reads both, in the read's own format.
+/// Shape only; nothing resolves.
+fn print_second_coordinate_hint(
+    id_arg: &str,
+    path: &Path,
+    section: Option<&str>,
+    format: ShowFormat,
+) {
     let Some(operand) = path.to_str() else {
         return;
     };
@@ -261,10 +270,25 @@ fn print_second_coordinate_hint(id_arg: &str, path: &Path, section: Option<&str>
         ),
         None => format!("{{\"id\":\"{}\"}}", json_escape(id_arg)),
     };
+    // §FS-show.1.4.1: the batch asked for the read's format, the default `text` unnamed.
+    let format = match format {
+        ShowFormat::Text => "",
+        ShowFormat::Markdown => " --format=md",
+        ShowFormat::Json => " --format=json",
+        _ => "",
+    };
     eprintln!(
-        "hint: `show` reads one coordinate, so `{operand}` is the path; read both with `printf '%s\\n' '{first}' '{{\"id\":\"{}\"}}' | grund show --batch --format=json`",
+        "hint: `show` reads one coordinate, so `{operand}` is the path; read both with `printf '%s\\n' '{first}' '{{\"id\":\"{}\"}}' | grund show --batch{format}`",
         json_escape(operand)
     );
+}
+
+/// A refused single read: its message, the sites an ambiguous refusal names, and
+/// the `hint:` lines the core built from the read's own context (§FS-show.3.5).
+struct ShowRefusal<'a> {
+    message: &'a str,
+    sites: &'a [FindingSite],
+    hints: &'a [String],
 }
 
 /// Render query refusals, limiting the filesystem-check migration breadcrumb
@@ -274,9 +298,13 @@ fn render_show_error(
     path: &Path,
     default_invocation: bool,
     format: &str,
-    message: &str,
-    sites: &[FindingSite],
+    refusal: ShowRefusal<'_>,
 ) -> ExitCode {
+    let ShowRefusal {
+        message,
+        sites,
+        hints,
+    } = refusal;
     if default_invocation && message.starts_with("unknown project alias") && Path::new(id_arg).exists() {
         eprintln!("invalid ID `{id_arg}`");
         print_id_format_hint(path, id_arg);
@@ -295,30 +323,13 @@ fn render_show_error(
         return ExitCode::from(2);
     }
     eprintln!("{message}");
-    if message.starts_with("invalid ID") {
-        print_id_format_hint(path, id_arg);
-        if default_invocation && looks_like_subcommand_typo(id_arg) {
-            eprintln!("hint: run `grund --help` for the list of subcommands");
-        }
-    } else if message.starts_with("ID not found:") {
-        // §FS-show.3.5: the hint gives way where the line already names the
-        // project that declares the ID (§FS-workspace.8.1.1.7).
-        if !names_member_id_candidate(message) {
-            eprintln!(
-                "hint: run `grund list` to see every declared ID, or `grund id <KIND> \"<title>\"` to propose a new one"
-            );
-        }
-    } else if message.starts_with("section not found:") {
-        let base_id = effective_config(path)
-            .ok()
-            .and_then(|config| {
-                id_arg
-                    // coordinate-lexer: hint text for a refusal already made
-                    .rsplit_once(&config.section_separator)
-                    .map(|(base, _)| base.to_string())
-            })
-            .unwrap_or_else(|| id_arg.to_string());
-        eprintln!("hint: run `grund {base_id} --toc` to print the lead with the section map");
+    // §FS-show.3.5, §AR-resolver.3.1.1: the one hint a batch prints for the same failure.
+    for hint in hints {
+        eprintln!("{hint}");
+    }
+    if message.starts_with("invalid ID") && default_invocation && looks_like_subcommand_typo(id_arg)
+    {
+        eprintln!("hint: run `grund --help` for the list of subcommands");
     }
     ExitCode::FAILURE
 }

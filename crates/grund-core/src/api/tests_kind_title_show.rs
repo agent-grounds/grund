@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::model::json_escape;
-use crate::queries::{BatchShowQuery, ShowFormat, ShowMode, ShowOpts, show_batch_with_scope};
+use crate::queries::{BatchShowQuery, ShowFormat, ShowMode, ShowOpts};
 use crate::testing::{test_root, write};
 use std::path::Path;
 
@@ -160,6 +160,7 @@ fn kind_title_show_e2e_and_json_values_keep_their_alternate_shapes() {
                 ShowOpts {
                     path: root.clone(),
                     mode,
+                    format: ShowFormat::Json,
                     ..ShowOpts::default()
                 },
                 true,
@@ -172,8 +173,8 @@ fn kind_title_show_e2e_and_json_values_keep_their_alternate_shapes() {
             {
                 assert_eq!(record.query.id, id);
                 assert_eq!(
-                    record.result.as_ref().unwrap(),
-                    &read(&root, id, mode, ShowFormat::Json).json.unwrap()
+                    record.result.as_ref().unwrap().json.as_ref(),
+                    read(&root, id, mode, ShowFormat::Json).json.as_ref()
                 );
             }
             assert_eq!(
@@ -241,6 +242,7 @@ fn kind_title_show_workspace_and_batch_select_each_targets_title() {
         ),
         ShowOpts {
             path: root.clone(),
+            format: ShowFormat::Json,
             ..ShowOpts::default()
         },
         true,
@@ -264,7 +266,8 @@ fn kind_title_show_workspace_and_batch_select_each_targets_title() {
         let expected = format!(
             "{{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\"{metadata},\"anchor\":\"fs-authored-authored\",\"path\":\"{prefix}docs/FS-authored.md\",\"line\":1}}"
         );
-        assert_eq!(records[index].result.as_ref().unwrap(), &expected);
+        let answer = records[index].result.as_ref().unwrap();
+        assert_eq!(answer.json.as_ref(), Some(&expected));
         assert_eq!(
             read(&root, queries[index], ShowMode::Lead, ShowFormat::Json)
                 .json
@@ -272,7 +275,7 @@ fn kind_title_show_workspace_and_batch_select_each_targets_title() {
             expected
         );
     }
-    let failure = records[3].result.as_ref().unwrap_err();
+    let failure = records[3].result.as_ref().err().expect("FS-missing fails");
     assert_eq!(failure.code, "not-found");
     assert_eq!(failure.message, "ID not found: FS-missing");
     assert!(failure.sites.is_empty());
