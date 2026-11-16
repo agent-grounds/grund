@@ -1,0 +1,7 @@
+wrote AGENTS.md
+exists grund.toml
+
+next:
+  1. run `grund check`
+  2. allocate an ID:  ID=$(grund id CONST "…")  then add it to config/constants.json
+see AGENTS.md for the full workflow.

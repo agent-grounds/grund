@@ -1,0 +1,17 @@
+order · grund.toml · v2
+
+kinds and places
+  FS    kind                  docs/fs/
+          field reason        `## reason: Reason for Existence` (must, first)
+          field terminology   `## terminology: Terminology` (must, directly after reason)
+          field requirements  `## requirements: Requirements` (must, last)
+  code  complement            every scanned file no other row claims
+
+citations
+  FS    —
+  code  —
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading

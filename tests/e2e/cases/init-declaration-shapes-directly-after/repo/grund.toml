@@ -1,0 +1,27 @@
+grund_config_version = 2
+project_name = "order"
+
+[presentation]
+rules = "root"
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.kinds.FS]
+folders = ["docs/fs"]
+index = false
+
+[schema.kinds.FS.fields.reason]
+title = "Reason for Existence"
+presence = "must"
+position = "first"
+
+[schema.kinds.FS.fields.terminology]
+title = "Terminology"
+presence = "must"
+after = "reason"
+
+[schema.kinds.FS.fields.requirements]
+title = "Requirements"
+presence = "must"
+position = "last"

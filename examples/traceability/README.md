@@ -125,25 +125,25 @@ charger-trace · grund.toml · v2
 kinds and places
   STK      kind                  requirements/stakeholder-needs.md
   SYS      kind                  requirements/system.md
-             field verification  must · first · one of Inspection, Analysis, Demonstration, Test
-             field rationale     must · after verification · titled `Rationale`
-             field trace         must · after rationale · titled `Traces to`
-             closed must
+             field verification  `## verification: <one of Inspection, Analysis, Demonstration, Test>` (must, first): the title is the value
+             field rationale     `## rationale: Rationale` (must, directly after verification)
+             field trace         `## trace: Traces to` (must, directly after rationale)
+             closed              no other chapter except numbered ones (must)
   SWR      kind                  requirements/software.md
-             field verification  must · first · one of Inspection, Analysis, Demonstration, Test
-             field rationale     must · after verification · titled `Rationale`
-             field trace         must · after rationale · titled `Traces to`
-             closed must
+             field verification  `## verification: <one of Inspection, Analysis, Demonstration, Test>` (must, first): the title is the value
+             field rationale     `## rationale: Rationale` (must, directly after verification)
+             field trace         `## trace: Traces to` (must, directly after rationale)
+             closed              no other chapter except numbered ones (must)
   PAR      kind                  requirements/parameters.md
-             field <number>      may · values
+             field <number>      `# <ID>: <title>` with only `## 1. <number or word>`, `## 2. …` under it in `requirements/parameters.md`: part 1 is `§<ID>.1`; a unit is a part of its own
   DES      kind                  design/software-design.md
-             field trace         must · last · titled `Traces to`
+             field trace         `## trace: Traces to` (must, last)
   src      place                 src/
   TC       kind                  tests/
   ANA      kind                  verification/analyses.md
-             field verdict       must · first · one of Pass, Fail
-             field trace         must · after verdict · titled `Traces to`
-             closed must
+             field verdict       `## verdict: <one of Pass, Fail>` (must, first): the title is the value
+             field trace         `## trace: Traces to` (must, directly after verdict)
+             closed              no other chapter except numbered ones (must)
   results  place                 verification/results/
   RULE     kind                  plans/verification-plan.md
   code     complement            every scanned file no other row claims
@@ -170,6 +170,7 @@ citations                        grounded
 must = check error · warn = check warning · should = suggestion (check --suggestions)
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading
 ```
 
 Read it as the V:
@@ -190,9 +191,14 @@ Read it as the V:
   `src/` must cite something ([§FS-config-v2.rules.grounding](../../docs/functional-spec/FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole)), and the file
   must cite the design. A documented function whose comment cites nothing is an
   error.
-- **`closed must`** admits the three attributes and numbered sections, and no
-  other named chapter. A requirement gains no attribute the schema does not
-  list.
+- **`no other chapter except numbered ones (must)`** admits the three
+  attributes and numbered sections, and no other named chapter. A requirement
+  gains no attribute the schema does not list.
+- **A field sits one level below its declaration.** Each field line shows its
+  heading under a declaration written `# <ID>: …`, and the legend's last line
+  says so. `requirements/software.md` declares `## SWR-001: …`, so it writes the
+  same fields one level down, `### verification: Test` and
+  `### trace: Traces to`.
 
 The table does not show the other direction. "Each SWR must be cited by at least
 one TC or ANA" is a rule declaration in `plans/verification-plan.md`

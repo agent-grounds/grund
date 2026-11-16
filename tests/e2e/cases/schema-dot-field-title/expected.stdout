@@ -7,7 +7,7 @@ digraph schema {
   node [shape=box];
   subgraph cluster_unruled {
     label="no direction rule names these";
-    n0 [label="RFC\nkind\nrfcs/text/\nfield summary: must · first · titled `Summary`\nfield motivation: must · after summary · titled `Motivation`\nfield guide-level-explanation: must · after motivation · titled `Guide-level explanation`\nfield drawbacks: may · after guide-level-explanation · titled `Drawbacks & \"open\" *questions*`\nfield amendments: may · last\nclosed must"];
+    n0 [label="RFC\nkind\nrfcs/text/\nfield summary: `## summary: Summary` (must, first)\nfield motivation: `## motivation: Motivation` (must, directly after summary)\nfield guide-level-explanation: `## guide-level-explanation: Guide-level explanation` (must, directly after motivation)\nfield drawbacks: `## drawbacks: Drawbacks & \"open\" *questions*` (may, directly after guide-level-explanation)\nfield amendments: `## amendments: <title>` (may, last)\nclosed: no other chapter except numbered ones (must)"];
     n1 [label="code\ncomplement\nevery scanned file no other row claims"];
   }
 }

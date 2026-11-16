@@ -34,8 +34,8 @@ use grund_core::{CheckFindingSelection, Code};
 // §AR-config.6.3: the schema view the engine lowers and `grund schema` prints
 // (§FS-schema, §DA-engine-renders-nothing).
 use grund_core::{
-    EdgeTarget, Extent, NodeClass, ScaffoldNote, SchemaEdge, SchemaNode, SchemaSlot, SchemaView,
-    schema_text, schema_view,
+    EdgeTarget, Extent, FIELD_DEPTH, NodeClass, SHAPE_DECLARATION, ScaffoldNote, SchemaEdge,
+    SchemaNode, SchemaView, schema_text, schema_view,
 };
 
 // §FS-config-migrate: the one record `grund config migrate --to 2` returns, which

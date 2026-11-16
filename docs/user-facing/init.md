@@ -241,8 +241,8 @@ a symlink to `AGENTS.md`, each scoped directory gets the same symlink
 ([§FS-init.2.3.5.14](../functional-spec/FS-init.md#23514-writing-scoped-files)), and the report names each one:
 `linked docs/spec/CLAUDE.md -> AGENTS.md`, `removed old/AGENTS.md`.
 
-A scoped file, or a declared field, moves the block from v19 to v21, or from
-v20 to v22 where a rule kind is enabled ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)). To keep every
+A scoped file, or a declared field, moves the block from v47 to v49, or from
+v48 to v50 where a rule kind is enabled ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)). To keep every
 row in the root file, set `[presentation] rules = "root"`: the root block is
 then what a version-1 config renders, plus the declaration shapes. A
 version-1 config always renders at the root.

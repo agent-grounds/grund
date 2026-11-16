@@ -3,7 +3,7 @@ example · grund.toml · v2
 kinds and places
   GOAL    kind                docs/goals.md
   FS      kind                docs/fs/
-            field status      should · first · one of Draft, Accepted
+            field status      `## status: <one of Draft, Accepted>` (should, first): the title is the value
   AR      kind                docs/ar/
   test    place               tests/
   vendor  place, not scanned  vendor/
@@ -22,3 +22,4 @@ citations                     grounded
 must = check error · warn = check warning · should = suggestion (check --suggestions)
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading

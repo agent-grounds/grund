@@ -331,32 +331,39 @@ exits 2 before anything is checked
 ## The agent is told the shape
 
 `grund init` writes each kind's fields into the managed block as a
-`### Declaration shapes` section, in the words of `grund schema`'s field lines,
-so an agent reads the shape before it writes a declaration rather than learning
-it from the finding ([§FS-init.2.3.5.12.2](../functional-spec/FS-init.md#235122-declaration-shapes)):
+`### Declaration shapes` section, one bullet per field in the words of
+`grund schema`'s shape lines, so an agent reads the shape before it writes a
+declaration rather than learning it from the finding
+([§FS-init.2.3.5.12.2](../functional-spec/FS-init.md#235122-declaration-shapes)):
 
 ```markdown
 ### Declaration shapes
 
-`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:
+`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them. Each heading is shown under a declaration written `# <ID>: …`; a field always sits one level below its declaration's heading:
 
 - **FS**
-  - field terms must · first · titled `Terms`
+  - `## reason: Reason for Existence` (must, first)
+  - `## terminology: Terminology` (must, directly after reason)
 - **DF**
-  - field status must · first · one of Proposed, Accepted, Superseded
-  - closed must
+  - `## status: <one of Proposed, Accepted, Superseded>` (must, first): the title is the value
+  - no other chapter except numbered ones (must)
 ```
 
-A field that sets a `title` names it last, `titled` and the title as a code
-span, because that is the heading text `check` holds the chapter to byte for
-byte ([§FS-schema.4.1](../functional-spec/FS-schema.md#41-fields-are-lines-inside-their-kinds-node)).
+Each bullet is the heading to write, as a code span, with the field's `title`
+in it byte for byte, since that is the text `check` holds the heading to; a
+field with no `title` shows `<title>` there. Its presence and placement follow
+in `check`'s own words, `directly after reason` for `after = "reason"`, and a
+scalar's values stand in for its title, which is its value
+([§FS-schema.4.1](../functional-spec/FS-schema.md#41-fields-are-lines-inside-their-kinds-node)).
+A front-matter field is the `---` or `+++` block at the top of the file, with a
+bullet per key nested under it.
 
 The section sits in the `AGENTS.md` of the directory above the kind's places,
 or in the root block under `[presentation] rules = "root"`
 ([scoped guidance](init.md#scoped-guidance-in-a-version-2-config)). A declared
 field moves the block to v49, or v50 where a rule kind is enabled, so the first
 `grund check` after adding one reports the block outdated until `grund init`
-runs.
+runs ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)).
 
 ## Fields beside chapter rules
 

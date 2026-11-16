@@ -2,8 +2,8 @@ widget-sync · grund.toml · v2
 
 kinds and places
   draft  kind              draft-ietf-wsync-widget-sync.md
-           field security  must · titled `Security Considerations`
-           field iana      must · titled `IANA Considerations`
+           field security  `## security: Security Considerations` (must)
+           field iana      `## iana: IANA Considerations` (must)
   RFC    kind              references/
   impl   place             src/
   test   place             tests/
@@ -20,3 +20,4 @@ must = check error · warn = check warning · should = suggestion (check --sugge
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
 must/warn/should skip an uncited file of a place or the complement · [rules.citations.<ROW>.grounding] makes it a finding
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading

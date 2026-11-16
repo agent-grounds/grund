@@ -6,7 +6,7 @@
 use std::collections::BTreeMap;
 use std::path::{Component, Path};
 
-use crate::config::{Extent, Project, Row, Run, SchemaView};
+use crate::config::{Extent, FIELD_DEPTH, Project, Row, Run, SHAPE_DECLARATION, SchemaView};
 use crate::grammar::agents_block_heading;
 
 use super::citation_directions::{
@@ -236,8 +236,11 @@ fn shaped_kinds(project: &Project) -> Vec<String> {
 }
 
 /// The `### Declaration shapes` section over the kinds `here` admits, in row
-/// order, worded as `grund schema` words a field line with single spaces
-/// (§FS-init.2.3.5.12.2); `None` when none of them has a shape.
+/// order: a bullet per kind, and under it each shape line `grund schema` prints
+/// beneath that kind's node, without the `field <name>`, `key <name>` or `closed`
+/// the view prints before it, a front-matter field's nested one level deeper
+/// (§FS-init.2.3.5.12.2). The lead places every heading a bullet shows
+/// (§FS-schema.4.1.1). `None` when none of the kinds has a shape.
 pub(crate) fn declaration_shapes_section(
     project: &Project,
     here: &dyn Fn(&str) -> bool,
@@ -252,15 +255,14 @@ pub(crate) fn declaration_shapes_section(
             continue;
         }
         bullets.push_str(&format!("- **{}**\n", node.name));
-        // §FS-fields.front-matter.record: a key's bullet nests under its field's.
-        for (depth, line) in lines {
-            let indent = "  ".repeat(depth + 1);
-            bullets.push_str(&format!("{indent}- {line}\n"));
+        for line in lines {
+            let indent = "  ".repeat(line.depth + 1);
+            bullets.push_str(&format!("{indent}- {}\n", line.text));
         }
     }
     (!bullets.is_empty()).then(|| {
         format!(
-            "### Declaration shapes\n\n`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:\n\n{bullets}"
+            "### Declaration shapes\n\n`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them. Each heading is shown under a declaration written `{SHAPE_DECLARATION}`; {FIELD_DEPTH}:\n\n{bullets}"
         )
     })
 }

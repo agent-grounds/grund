@@ -171,8 +171,8 @@ must = "file"
     assert!(!block.contains("### Declaration shapes") && !block.contains("### Scoped guidance"));
 }
 
-/// §FS-init.2.3.5.12.2: a kind's shape renders in the words of `grund schema`'s
-/// field lines, in its destination's block, and a version-1 config renders none.
+/// §FS-init.2.3.5.12.2: a kind's shape renders as `grund schema`'s shape lines
+/// (§FS-schema.4.1), in its destination's block, and a version-1 config renders none.
 #[test]
 fn a_kinds_shape_renders_in_its_destination_in_the_schema_views_words() {
     let config = v2(
@@ -194,7 +194,7 @@ position = "first"
             .declaration_shapes(config.project(), "docs/df")
             .as_deref(),
         Some(
-            "### Declaration shapes\n\n`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:\n\n- **DF**\n  - field status must · first · one of Proposed, Accepted\n  - closed must\n"
+            "### Declaration shapes\n\n`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them. Each heading is shown under a declaration written `# <ID>: …`; a field always sits one level below its declaration's heading:\n\n- **DF**\n  - `## status: <one of Proposed, Accepted>` (must, first): the title is the value\n  - no other chapter except numbered ones (must)\n"
         )
     );
 }

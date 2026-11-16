@@ -332,7 +332,6 @@ fn block_version(agents: &str) -> String {
 }
 
 #[test]
-#[ignore = "red until #1373 prints each field as the heading to write in the block; implement removes this"]
 fn block_shows_each_field_as_the_heading_to_write() {
     let tree = Tree::full("block");
     let section = shapes_section(&tree.init());
@@ -343,7 +342,6 @@ fn block_shows_each_field_as_the_heading_to_write() {
 }
 
 #[test]
-#[ignore = "red until #1373 prints shape lines and the depth legend line in the table; implement removes this"]
 fn schema_table_shows_each_field_as_the_heading_to_write() {
     let tree = Tree::report("table");
     let run = tree.grund(&["schema"]);
@@ -377,7 +375,6 @@ citations
 }
 
 #[test]
-#[ignore = "red until #1373 prints front matter, keys and every value home as shape lines; implement removes this"]
 fn schema_table_shows_front_matter_and_every_value_home() {
     let tree = Tree::full("table-full");
     let run = tree.grund(&["schema"]);
@@ -447,7 +444,6 @@ const GRAPH_COMMENTS: [&str; 4] = [
 ];
 
 #[test]
-#[ignore = "red until #1373 labels Mermaid nodes with the shape lines; implement removes this"]
 fn mermaid_labels_the_shape_lines() {
     let tree = Tree::new("mermaid", RFC_CONFIG);
     let [header, must, may, any] = GRAPH_COMMENTS;
@@ -470,7 +466,6 @@ fn mermaid_labels_the_shape_lines() {
 }
 
 #[test]
-#[ignore = "red until #1373 labels DOT nodes with the shape lines; implement removes this"]
 fn dot_labels_the_shape_lines() {
     let tree = Tree::new("dot", RFC_CONFIG);
     let [header, must, may, any] = GRAPH_COMMENTS;
@@ -496,7 +491,6 @@ fn dot_labels_the_shape_lines() {
 
 /// The table node §FS-schema.4.1.5 shows for the issue's RFC kind, with the case's `drawbacks`.
 #[test]
-#[ignore = "red until #1373 prints the issue's RFC kind as specified; implement removes this"]
 fn schema_table_shows_the_issues_rfc_kind() {
     let tree = Tree::new("table-rfc", RFC_CONFIG);
     let run = tree.grund(&["schema"]);
@@ -517,7 +511,6 @@ fn schema_table_shows_the_issues_rfc_kind() {
 }
 
 #[test]
-#[ignore = "red until #1373 adds the depth legend line and shape lines to the table; implement removes this"]
 fn legend_says_where_a_field_heading_sits_under_a_level_two_declaration() {
     // The traceability example declares `## SWR-001: …`, so its fields sit at `###`.
     let repo =
@@ -646,7 +639,6 @@ fn migrate_tree(test: &str, fetch: bool) -> Tree {
 }
 
 #[test]
-#[ignore = "red until #1373 prints the value kind's shape line in migrate's refusal; implement removes this"]
 fn config_migrate_refusal_prints_the_value_kind_shape_line() {
     let would_write = [
         (
@@ -673,7 +665,6 @@ fn config_migrate_refusal_prints_the_value_kind_shape_line() {
 }
 
 #[test]
-#[ignore = "red until #1373 prints lines a document can be written from as shown; implement removes this"]
 fn a_document_written_as_each_rendered_line_shows_checks_clean() {
     let tree = Tree::full("as-shown");
     let section = shapes_section(&tree.init());

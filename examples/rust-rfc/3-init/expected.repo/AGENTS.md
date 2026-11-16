@@ -48,20 +48,20 @@ Anything not listed above is allowed.
 
 ### Declaration shapes
 
-`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:
+`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them. Each heading is shown under a declaration written `# <ID>: …`; a field always sits one level below its declaration's heading:
 
 - **RFC**
-  - field summary must · first · titled `Summary`
-  - field motivation must · after summary · titled `Motivation`
-  - field guide-level-explanation must · after motivation · titled `Guide-level explanation`
-  - field reference-level-explanation must · after guide-level-explanation · titled `Reference-level explanation`
-  - field drawbacks must · after reference-level-explanation · titled `Drawbacks`
-  - field rationale-and-alternatives must · after drawbacks · titled `Rationale and alternatives`
-  - field prior-art must · after rationale-and-alternatives · titled `Prior art`
-  - field unresolved-questions must · after prior-art · titled `Unresolved questions`
-  - field future-possibilities must · after unresolved-questions · titled `Future possibilities`
-  - field amendments may · after future-possibilities · titled `Amendments`
-  - closed must
+  - `## summary: Summary` (must, first)
+  - `## motivation: Motivation` (must, directly after summary)
+  - `## guide-level-explanation: Guide-level explanation` (must, directly after motivation)
+  - `## reference-level-explanation: Reference-level explanation` (must, directly after guide-level-explanation)
+  - `## drawbacks: Drawbacks` (must, directly after reference-level-explanation)
+  - `## rationale-and-alternatives: Rationale and alternatives` (must, directly after drawbacks)
+  - `## prior-art: Prior art` (must, directly after rationale-and-alternatives)
+  - `## unresolved-questions: Unresolved questions` (must, directly after prior-art)
+  - `## future-possibilities: Future possibilities` (must, directly after unresolved-questions)
+  - `## amendments: Amendments` (may, directly after future-possibilities)
+  - no other chapter except numbered ones (must)
 
 ### Clickable citations
 

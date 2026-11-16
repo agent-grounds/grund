@@ -2,13 +2,14 @@ madr · grund.toml · v2
 
 kinds and places
   ADR   kind                     docs/adr/0004-cache-availability.md
-          field front-matter     must · closed must
-            key status           must · one of proposed, accepted, rejected, deprecated
-            key date             must
-            key decision-makers  may
-          field context          must
-          field decision         must
-          closed must
+          field front-matter     `---` YAML or `+++` TOML front matter at the top of the file (must)
+            key status           `status: <one of proposed, accepted, rejected, deprecated>` (must)
+            key date             `date: <value>` (must)
+            key decision-makers  `decision-makers: <value>` (may)
+            closed               no other key (must)
+          field context          `## context: <title>` (must)
+          field decision         `## decision: <title>` (must)
+          closed                 no other chapter except numbered ones (must)
   code  complement               every scanned file no other row claims
 
 citations
@@ -18,3 +19,4 @@ citations
 must = check error · warn = check warning · should = suggestion (check --suggestions)
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading

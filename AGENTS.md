@@ -78,17 +78,17 @@ Anything not listed above is allowed.
 
 ### Declaration shapes
 
-`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:
+`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them. Each heading is shown under a declaration written `# <ID>: …`; a field always sits one level below its declaration's heading:
 
 - **FS**
-  - field terms must · first · titled `Terms`
+  - `## terms: Terms` (must, first)
 - **AR**
-  - field placement must · first
-  - field terms must · after placement · titled `Terms`
+  - `## placement: <title>` (must, first)
+  - `## terms: Terms` (must, directly after placement)
 - **DF**
-  - field status must · first · one of Accepted, Superseded
+  - `## status: <one of Accepted, Superseded>` (must, first): the title is the value
 - **DA**
-  - field status must · first · one of Accepted, Superseded
+  - `## status: <one of Accepted, Superseded>` (must, first): the title is the value
 
 ### Chapter rules
 

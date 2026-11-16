@@ -96,15 +96,15 @@ kiro-checkout · grund.toml · v2
 
 kinds and places
   REQ     kind                  .kiro/specs/coupon-codes/requirements.md, .kiro/specs/free-shipping/requirements.md
-            closed must
+            closed              no other chapter except numbered ones (must)
   DESIGN  kind                  .kiro/specs/coupon-codes/design.md, .kiro/specs/free-shipping/design.md
-            field overview      must · first · titled `Overview`
-            field architecture  may · after overview · titled `Architecture`
-            field components    may · after architecture · titled `Components and Interfaces`
-            field data-models   may · after components · titled `Data Models`
-            field properties    may · after data-models · titled `Correctness Properties`
-            field errors        may · after properties · titled `Error Handling`
-            field testing       must · after errors · titled `Testing Strategy`
+            field overview      `## overview: Overview` (must, first)
+            field architecture  `## architecture: Architecture` (may, directly after overview)
+            field components    `## components: Components and Interfaces` (may, directly after architecture)
+            field data-models   `## data-models: Data Models` (may, directly after components)
+            field properties    `## properties: Correctness Properties` (may, directly after data-models)
+            field errors        `## errors: Error Handling` (may, directly after properties)
+            field testing       `## testing: Testing Strategy` (must, directly after errors)
   tasks   place                 .kiro/specs/
   STEER   kind                  .kiro/steering/
   RULE    kind                  .kiro/steering/traceability.md
@@ -132,6 +132,7 @@ citations                       grounded
 must = check error · warn = check warning · should = suggestion (check --suggestions)
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading
 ```
 
 Read it as Kiro:
@@ -139,8 +140,8 @@ Read it as Kiro:
 - **REQ** is the contract, so everything else cites it. It cites only another
   spec's requirements, as free-shipping's introduction cites the coupon
   discount, or the product steering. A prohibition reaches the whole file, the
-  introduction above the declaration included. `closed must` keeps a
-  requirements block to numbered requirements.
+  introduction above the declaration included. `no other chapter except numbered ones (must)`
+  keeps a requirements block to numbered requirements.
 - **DESIGN must REQ**: a design says which requirements it meets. Its fields are
   Kiro's chapters, from Overview to Testing Strategy. The five between them are
   optional, because Kiro writes Correctness Properties only in the IDE.

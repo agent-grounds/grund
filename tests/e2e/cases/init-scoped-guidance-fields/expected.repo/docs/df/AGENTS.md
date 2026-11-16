@@ -5,9 +5,9 @@ These rules cover the files under `docs/df/`; the rest of this project's grund g
 
 ### Declaration shapes
 
-`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:
+`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them. Each heading is shown under a declaration written `# <ID>: …`; a field always sits one level below its declaration's heading:
 
 - **DF**
-  - field status must · first · one of Proposed, Accepted, Superseded
-  - closed must
+  - `## status: <one of Proposed, Accepted, Superseded>` (must, first): the title is the value
+  - no other chapter except numbered ones (must)
 <!-- END GRUND MANAGED BLOCK -->
