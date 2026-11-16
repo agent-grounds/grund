@@ -11,7 +11,6 @@ use std::path::Path;
 
 /// §FS-lsp.2.4.1.1: preview teaches the client setting, its location and purpose.
 #[test]
-#[ignore = "red until #1369 teaches the LSP4IJ formatter override; implement removes this"]
 fn preview_teaches_live_transform_client_configuration() {
     let sandbox = Sandbox::with_binary(&workspace_binary(), "formatting-preview");
     let project = sandbox.project("project");
@@ -22,7 +21,6 @@ fn preview_teaches_live_transform_client_configuration() {
 
 /// §FS-lsp.2.4.1.1: both successful write outcomes print the delivered README.
 #[test]
-#[ignore = "red until #1369 teaches the LSP4IJ formatter override; implement removes this"]
 fn writes_teach_live_transform_client_configuration() {
     let sandbox = Sandbox::with_binary(&workspace_binary(), "formatting-write");
     let project = sandbox.project("project");
@@ -46,7 +44,6 @@ fn writes_teach_live_transform_client_configuration() {
 
 /// §FS-lsp.2.3: the IntelliJ guide teaches the same setup and a typing example.
 #[test]
-#[ignore = "red until #1369 teaches the LSP4IJ formatter override; implement removes this"]
 fn guide_teaches_live_transform_client_configuration() {
     let guide = fs::read_to_string(
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/user-facing/lsp.md"),
