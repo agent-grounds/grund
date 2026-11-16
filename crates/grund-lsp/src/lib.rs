@@ -290,7 +290,10 @@ impl Server {
     /// whenever it is idle (§AR-lsp.2.1.2).
     fn event_loop(&mut self) -> Result<()> {
         loop {
-            let flow = match self.wake() {
+            let wake = self.wake();
+            #[cfg(test)]
+            let from_client = matches!(wake, Wake::Client(_));
+            let flow = match wake {
                 Wake::Client(message) => self.accept(message)?,
                 Wake::Rebuilt(built) => self.install(built)?,
                 // §AR-lsp.2.1: the server's own watcher saw an import root change.
@@ -309,6 +312,11 @@ impl Server {
                 return Ok(());
             }
             self.dispatch();
+            // A case moves the rebuild gate only once the loop has taken what it sent.
+            #[cfg(test)]
+            if from_client {
+                self.rebuilds.took();
+            }
         }
     }
 

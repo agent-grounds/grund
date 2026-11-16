@@ -75,6 +75,7 @@ fn an_exit_behind_a_held_shutdown_ends_the_session_once_it_is_answered() {
     let shutdown = Request::new(1.into(), "shutdown".into(), Value::Null);
     client.sender.send(shutdown.into()).unwrap();
     notify(&client, "exit", Value::Null);
+    hold.taken(3);
     assert!(
         ends.recv_timeout(QUIET).is_err(),
         "the session ended before the rebuild of the open was let through"
@@ -134,11 +135,13 @@ fn a_panicked_rebuild_of_a_rename_never_offers_the_old_name() {
         client.change(&spec, SIGNIN, 2);
         let params = completion_params(&notes, &text, 2);
         let held = send(client, "textDocument/completion", params.clone());
+        hold.taken(client.sent.get());
         hold.release(1);
         let refused = answer(client, held, &mut Vec::new());
         // A hover is answered from the last snapshot, so only after the failed rebuild is.
         client.settle(&notes);
         let later = send(client, "textDocument/completion", params);
+        hold.taken(client.sent.get());
         unanswered(client, &[later], "the failed rebuild runs again first");
         hold.open();
         let later = labels(&result(answer(client, later, &mut Vec::new())));

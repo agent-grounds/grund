@@ -70,14 +70,21 @@ pub(super) struct Client {
     /// Open while the loop thread's inputs are being recorded.
     window: Arc<AtomicBool>,
     pub(super) next: RefCell<i32>,
+    /// How many messages the client has sent, for [`RebuildHold::taken`].
+    pub(super) sent: std::cell::Cell<usize>,
     /// Every `publishDiagnostics` the client has read, in arrival order.
     pub(super) published: RefCell<Vec<PublishDiagnosticsParams>>,
 }
 
 impl Client {
     pub(super) fn notify(&self, method: &str, params: Value) {
-        let message = Notification::new(method.into(), params);
-        self.connection.sender.send(message.into()).unwrap();
+        self.post(Notification::new(method.into(), params).into());
+    }
+
+    /// Send `message`, counted.
+    pub(super) fn post(&self, message: Message) {
+        self.sent.set(self.sent.get() + 1);
+        self.connection.sender.send(message).unwrap();
     }
 
     /// Send `method` and read up to its answer, keeping every publish on the way.
@@ -87,8 +94,7 @@ impl Client {
             *next += 1;
             *next
         };
-        let request = Request::new(id.into(), method.into(), params);
-        self.connection.sender.send(request.into()).unwrap();
+        self.post(Request::new(id.into(), method.into(), params).into());
         loop {
             let message = self
                 .connection
@@ -187,6 +193,7 @@ pub(super) fn drive<T: Send + 'static>(
             connection,
             window: open,
             next: RefCell::new(0),
+            sent: std::cell::Cell::new(0),
             published: RefCell::new(Vec::new()),
         };
         let out = script(&client);

@@ -22,6 +22,9 @@ struct RebuildGate {
     events: crossbeam_channel::Sender<Rebuilding>,
     /// Whether the next rebuild to start panics.
     panic_next: std::sync::atomic::AtomicBool,
+    /// How many client messages the loop has taken, each with the rebuild it records handed on.
+    taken: std::sync::Mutex<usize>,
+    took: std::sync::Condvar,
 }
 
 impl RebuildGate {
@@ -50,6 +53,16 @@ impl RebuildGate {
 
     fn leave(&self, seq: u64) {
         let _ = self.events.send(Rebuilding::Finished { seq });
+    }
+}
+
+impl Rebuilds {
+    /// Count a client message the loop has taken and dispatched.
+    fn took(&self) {
+        if let Some(gate) = &self.gate {
+            *gate.taken.lock().unwrap() += 1;
+            gate.took.notify_all();
+        }
     }
 }
 
@@ -118,6 +131,16 @@ impl RebuildHold {
         }
     }
 
+    /// Wait until the loop has taken the first `sent` messages the client sent, each dispatched,
+    /// so that a gate moved after this cannot overtake one of them: what a case calls between
+    /// sending and moving the gate whenever no answer it read already says so.
+    fn taken(&self, sent: usize) {
+        let taken = self.gate.taken.lock().unwrap();
+        let wait = |taken: &mut usize| *taken < sent;
+        let (taken, waited) = self.gate.took.wait_timeout_while(taken, REBUILD_WAIT, wait).unwrap();
+        assert!(!waited.timed_out(), "the loop took {} of {sent} messages", *taken);
+    }
+
     /// Every rebuild event not read yet.
     fn rest(&self) -> Vec<Rebuilding> {
         self.events.try_iter().collect()
@@ -133,6 +156,8 @@ impl Server {
             turn: std::sync::Condvar::new(),
             events,
             panic_next: std::sync::atomic::AtomicBool::new(false),
+            taken: std::sync::Mutex::new(0),
+            took: std::sync::Condvar::new(),
         });
         self.rebuilds.gate = Some(Arc::clone(&gate));
         RebuildHold {
@@ -153,5 +178,4 @@ impl Server {
         self.drain()?;
         taken
     }
-
 }
