@@ -8,7 +8,35 @@ the way `grund check` does, and their JSON shapes are made to feed one another.
 What each command does is specified at the point every recipe cites; this page
 only puts the recipes side by side ([§FS-init.2.3.4.3.1](../functional-spec/FS-init.md#23431-structural-queries)).
 
-Every example below was run in the `grund` repository itself.
+Unless a workspace fixture is named, the examples below were run in the `grund`
+repository itself.
+
+## Recover a member's qualified ID
+
+At a workspace root, an unqualified show query searches the root project. If
+only member `company` declares `ACT-001-founding-contract`, the refusal names
+the spelling that resolves there, even when only the member config knows kind
+`ACT`:
+
+```console
+$ grund ACT-001-founding-contract --brief
+ID not found: ACT-001-founding-contract; did you mean company/ACT-001-founding-contract?
+$ grund company/ACT-001-founding-contract --brief
+# ACT-001-founding-contract: Founding contract
+
+The founders sign the founding contract.
+```
+
+The first command still exits 1; follow the qualified suggestion to read the
+body ([§FS-workspace.8.1.1.4](../functional-spec/FS-workspace.md#8114-each-project-is-asked-in-its-own-grammar)).
+For `grund refs ACT-001-founding-contract`, a root that does not know `ACT`
+keeps the invalid-ID refusal but offers `grund refs
+company/ACT-001-founding-contract` in its text hint. Use that command to list
+the member declaration's citation sites. Refs JSON keeps `invalid-id` and no
+hint; a root-valid ID with no local citations still gives the usual empty
+answer ([§FS-workspace.8.2.2.1](../functional-spec/FS-workspace.md#8221-a-member-only-kind-replaces-the-text-format-hint)).
+The existing [workspace example](../../examples/workspace/README.md) shows the
+same recovery with `api/FS-session` and `web/FS-session`.
 
 ## Select units: `list --glob`, `list --selector`, `list --kind`
 

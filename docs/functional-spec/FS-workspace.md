@@ -1051,11 +1051,9 @@ projects — and picking one would be a guess
 
 ##### 8.1.1.4 Each project is asked in its own grammar
 
-The written ID text is re-parsed
-with the candidate project's `[id]` config and rendered back with it, the way
-a qualified citation already is ([§FS-workspace.1.2](FS-workspace.md#12-whose-grammar-reads-the-id), [§FS-workspace.4](FS-workspace.md#4-resolution)). In a mixed-format workspace one text
-is a different ID in each project, so carrying the current project's parse
-across the boundary would find nothing and report no candidate at all.
+Re-parse and render the written ID in each candidate project's grammar, as a qualified citation does ([§FS-workspace.1.2](FS-workspace.md#12-whose-grammar-reads-the-id), [§FS-workspace.4](FS-workspace.md#4-resolution)): in a mixed-format workspace the same text can denote different IDs, so carrying the current project's parse would miss the candidate.
+Current-grammar rejection must not pre-empt the search: a kind may exist only in a loaded member. An actual member declaration earns the same `ID not found: <written ID>` refusal with qualified candidates and `not-found` classification ([§FS-workspace.8.1.1.8](FS-workspace.md#8118---format-json-keeps-its-shape)), for bare/explicit show, the programmatic show API and explicit batch queries.
+Mere parseability is insufficient. Without an actual declaration, preserve the original failure, including `invalid ID` and its format hint when the current grammar rejects the text ([§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects)).
 
 ##### 8.1.1.5 A one-project run offers none
 
@@ -1159,6 +1157,11 @@ projects, `<§>FS-login` from inside `api`.
 *root's* `FS-login` only (root is the current project), and those already
 include the `<§>root/FS-login` sites in members. `grund refs root/FS-login` is
 the same query in this context and is the canonical form for scripts.
+
+##### 8.2.2.1 A member-only kind replaces the text format hint
+
+When the current grammar rejects an unqualified ID but a loaded member actually declares it, text ID-mode `refs` keeps `invalid ID`, exit `1` and empty stdout, replacing its format hint with the qualified ID and a usable `grund refs <alias>/<ID>` command. Discovery inherits candidate ordering/capping ([§FS-workspace.8.1.1.3](FS-workspace.md#8113-several-candidates-are-listed-never-chosen)), own-grammar declaration checks ([§FS-workspace.8.1.1.4](FS-workspace.md#8114-each-project-is-asked-in-its-own-grammar)), loaded scope ([§FS-workspace.8.1.1.5](FS-workspace.md#8115-a-one-project-run-offers-none)) and section dropping ([§FS-workspace.8.1.1.6](FS-workspace.md#8116-the-section-is-not-carried)).
+Only text guidance changes: public refs records and the original failure stay unchanged; JSON keeps its hint-free `invalid-id` stderr finding ([§FS-refs.4](FS-refs.md#4-exit-codes)). No member's citation hits are searched. Root-valid empty queries still succeed with their existing note; qualified, member-local and narrowed queries keep their scope. Without a real candidate, keep the original format hint.
 
 #### 8.2.3 `--summary`
 
