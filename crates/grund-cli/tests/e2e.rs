@@ -80,6 +80,10 @@ mod fetch_admission_1205;
 #[path = "support/doc_comment_fenced_heading.rs"]
 mod doc_comment_fenced_heading;
 
+// §FS-config.3.4.5.1: red contracts are explicitly runnable before implementation.
+#[path = "support/kind_heads.rs"]
+mod kind_heads;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,

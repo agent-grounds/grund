@@ -235,7 +235,7 @@ fn citable_names_still_collide_and_names_are_unique() {
         &root.join("grund.toml"),
         "grund_config_version = 1\n\n\
              [[kinds]]\nkind = \"DA\"\nfolder = \"docs/da\"\n\n\
-             [[kinds]]\nkind = \"DAT\"\nfolder = \"docs/dat\"\n",
+             [[kinds]]\nkind = \"DA-X\"\nfolder = \"docs/da-x\"\n",
     );
     assert!(
         config_error(&root).contains("collide"),

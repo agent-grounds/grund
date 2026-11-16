@@ -233,7 +233,7 @@ note: no configured kind in scope starts with "POLICY-"
 ```
 
 The quoted prefix is the ID atom's text before its first operator, a `{` included. A kind can
-start it when that prefix and the kind followed by the literal its format writes after `{kind}`
+start it when that prefix and the kind head ([§FS-config.3.2.9](FS-config.md#329-kind-head))
 are each a prefix of the other; a kind whose format does not begin with `{kind}` can start
 every pattern. The `; did you mean "…"?` clause ([§FS-errors.3.2](FS-errors.md#32-the-unknown-project-recovery-shape)) appears only when exactly
 one kind matches with ASCII case ignored, and offers the pattern with that kind's spelling.

@@ -6,9 +6,20 @@
 
 use super::agreement_evidence::{Call, capture};
 use super::agreement_tree::{CONFIG_SLUG, Tree};
+use super::sections;
 use grund_core::LspSnapshotOpts;
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
+
+/// Row P05, closed: `show` reports and `fmt --cross-refs` writes one anchor, the
+/// rendered heading's with its closing `#` run taken off, `fs.md#1-steps`
+/// (§FS-declarations.heading.rendered-text, §REQ-one-answer.writes.anchors).
+#[test]
+fn the_anchor_is_one_and_the_headings() {
+    if let Err(divergence) = sections::the_anchor_is_one_and_the_headings() {
+        panic!("{divergence}");
+    }
+}
 
 /// §REQ-one-answer.proof.evidence.closed: reject new disagreements and stale
 /// ledger rows, in both directions, without changing any row's ruling.

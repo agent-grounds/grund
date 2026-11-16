@@ -321,8 +321,9 @@ kinds that file declares.
 ## 4. Validation runs once, after lowering
 
 Meaning validation, as opposed to spelling, runs once on the `Project` in
-`config/validate.rs`, whichever reader produced it: prefix-freedom of citable
-names, uniqueness of names and of the complement, home and value prerequisites,
+`config/validate.rs`, whichever reader produced it: format-aware collision checks
+of citable names ([§FS-config.3.4.5.1](../functional-spec/FS-config.md#3451-citable-names-and-formats-must-distinguish-their-tokens)),
+uniqueness of names and of the complement, home and value prerequisites,
 the grounding pair, and the marker that `strict` requires. Spelling errors, such
 as an unknown key, a wrong type or a value outside a closed set, stay with the
 reader that read the spelling. Each rule runs once, at the point the v1 reader
@@ -330,7 +331,15 @@ used to raise it: the `[reference]` meanings before the `[[kinds]]` table is
 lowered and its entries refused, the member lists and `[citations]` after the
 grammar compiles. That way a file with several errors reports the same first error.
 
-An error keeps the text and the `path:line` anchor it has today
+Validation and glob notes read one kind-head calculation in grammar's shared
+format utilities ([§FS-config.3.2.9](../functional-spec/FS-config.md#329-kind-head)).
+Canonical boundary checks use the actual parsed kind's effective format,
+including shorthand and qualification ([§FS-config.3.2](../functional-spec/FS-config.md#32-id--id-grammar)).
+Malformed-token attribution and sentence recovery share the ASCII name-boundary
+predicate while retaining their respective unique-match and longest-match policies.
+
+An error keeps its existing text and `path:line` anchor; a collision error
+appends its distinguishing reason to that text
 ([§FS-config.4.3](../functional-spec/FS-config.md#43-invalid-config-behavior)), because each validated value carries the `ConfigLocation` it
 was read from. `tests/integration/test_config_lowering_equivalence.py` holds
 `grund config show` and `grund config validate`, output and exit code, for every

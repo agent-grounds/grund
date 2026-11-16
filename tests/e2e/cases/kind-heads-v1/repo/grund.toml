@@ -1,0 +1,10 @@
+grund_config_version = 1
+[id]
+format = "{kind}-{slug}"
+[[kinds]]
+kind = "GRUND"
+file = "docs/grund.md"
+[[kinds]]
+kind = "GR"
+file = "docs/tickets.md"
+format = "{kind}-{number}"

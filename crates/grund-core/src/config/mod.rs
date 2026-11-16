@@ -215,6 +215,8 @@ mod tests_guided_kind;
 #[cfg(test)]
 mod tests_id_grammar;
 #[cfg(test)]
+mod tests_kind_heads;
+#[cfg(test)]
 mod tests_kind_index;
 #[cfg(test)]
 mod tests_lowering;

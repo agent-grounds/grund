@@ -318,6 +318,7 @@ const WIDENING: &[(&str, &str)] = &[
     ("init", "S4"),
     ("inline", "S4"),
     ("integrations", "S4"),
+    ("kind", "S4"),
     ("line", "S4"),
     ("list", "S4"),
     ("marker", "S4"),
@@ -408,16 +409,6 @@ fn difference_rows() -> Vec<String> {
 /// shares, so §REQ-one-answer.differences does not list them. P05 left it when
 /// §DF-closing-hashes-are-not-the-heading corrected the anchor on every surface.
 const LEDGER_ONLY: &[&str] = &["G01"];
-
-/// Row P05, closed: `show` reports and `fmt --cross-refs` writes one anchor, the
-/// rendered heading's with its closing `#` run taken off, `fs.md#1-steps`
-/// (§FS-declarations.heading.rendered-text, §REQ-one-answer.writes.anchors).
-#[test]
-fn the_anchor_is_one_and_the_headings() {
-    if let Err(divergence) = sections::the_anchor_is_one_and_the_headings() {
-        panic!("{divergence}");
-    }
-}
 
 /// What is wrong between this file's trees and deferrals and the rows
 /// §REQ-one-answer.differences lists, both ways round: a listed row with no tree
