@@ -178,7 +178,7 @@ fn the_shorthand_point_names_the_label_each_of_its_expansions_is_reported_under(
          but the declaration-local one is reported as `{local}`"
     );
     let named_text = spec_section(
-        "### 3.6 An expanded shorthand names the text it writes",
+        "### 3.6 An expansion or a link names the text it writes",
         "### ",
     );
     assert!(
