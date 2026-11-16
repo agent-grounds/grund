@@ -68,7 +68,12 @@ shape renders ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-curren
 it. A current block whose text no longer matches what `init` would write — after a
 config edit, a migration, or a member joining the workspace — is reported stale,
 naming the part that differs, and `grund init` refreshes it
-([§FS-check.3.5.4](../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). Blocks up to v30 spell the heading `(vN)`; both spellings are read, and
+([§FS-check.3.5.4](../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)).
+`[schema.sources] fenced` is one such edit: the Rules bullet on how to mention an
+ID without citing it then ends “or use a fenced code block not tagged `mermaid`”,
+naming the fences left unread, and with `fenced = []` it reads as before
+([Reading the citations in a diagram fence](sources.md#reading-the-citations-in-a-diagram-fence)).
+Blocks up to v30 spell the heading `(vN)`; both spellings are read, and
 `init` writes the labelled one in their place. A grund older than the block reports
 it as malformed, so upgrade grund first rather than editing the block by hand.
 
