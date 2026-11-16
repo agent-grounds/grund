@@ -122,39 +122,103 @@ drawn beside it ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schem
 ### 4.1 Fields are lines inside their kind's node
 
 A kind's fields follow its node, in header order, one line each: `field <name>`,
-then its presence, its placement where one is set (`first`, `last`, or
-`after <field>`), and its content where it is not prose (`one of A, B` for a
-scalar field, `values` for a value chapter), and last its title where the field sets
-`title` (`titled` and the title as a code span), joined by ` · `. A value kind's
-numbered children are one line, `field <number>`. A kind whose
-`closed` strength is not `may` adds the line `closed <strength>` after its fields.
-These are the slots the checks read ([§FS-fields.record](FS-fields.md#record-the-record)), so the view and
-`grund check` cannot describe two shapes. A `front-matter` field adds `closed <strength>`
-to its own line where that is not `may`, and each of its keys follows as `key <name>`, two
-columns deeper, with its presence and its `one of A, B` ([§FS-fields.front-matter.record](FS-fields.md#front-matterrecord-the-record-and-what-renders-it)).
+then the field's **shape line**, which shows what an author writes and says what
+`grund check` then holds it to. A named field's shape line has three parts:
 
-The title is the exact text a field's heading must carry, which `grund check` holds
-byte for byte ([§FS-fields.identity.match](FS-fields.md#identitymatch-titles-and-values-match-byte-for-byte)), so the view names it before the author
-writes rather than after `check` refuses the heading ([§FS-fields.requirements.record](FS-fields.md#requirementsrecord-the-agent-and-a-schema-view-read-the-shape-the-checks-read--realized)). It is
-written as a Markdown code span: the title's bytes between fences of backticks one
-longer than the longest run of backticks inside it, with one space inside each fence
-where the title begins or ends with a backtick. A control character in it is written
-as its TOML basic-string escape (`\n`, `\t`, `\r`, otherwise `\uXXXX`), so the line
-stays one line. Only a prose field or a value chapter can carry a title; a scalar,
-a `front-matter` field and its keys, and a value kind's `field <number>` cannot, and
-their lines do not change. A field with no title prints the line it printed before
-titles were shown. For the issue's RFC kind, with an untitled `amendments`:
+1. the heading to write, as a code span: `## <name>: <title>`, with the field's
+   `title` where it sets one, `<title>` where it sets none, and
+   `<one of A, B>` for a scalar field;
+2. in parentheses, its presence, then its placement where one is set, joined by
+   `, `: `first`, `last`, or `directly after <field>` ([§FS-fields.order.after](FS-fields.md#orderafter-after-means-directly-after));
+3. after a colon, what the chapter holds where it is not prose:
+   `the title is the value` for a scalar ([§FS-fields.content.one-of](FS-fields.md#contentone-of-a-scalars-value-is-its-display-name)), and for a value
+   chapter ``only values, each `### <field>.<name>: <title>` with parts `#### .1: <number or word>`; a unit is a part of its own``,
+   `<field>` being the field's own name ([§FS-fields.content.values](FS-fields.md#contentvalues-a-values-field-is-the-value-chapter), [§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)).
+
+A kind whose `closed` strength is not `may` adds the line `closed` after its fields,
+whose text is `no other chapter except numbered ones (<strength>)` ([§FS-fields.declare.closed](FS-fields.md#declareclosed-closed-is-a-strength-on-the-row)).
+These are the slots the checks read ([§FS-fields.record](FS-fields.md#record-the-record)), so the view and
+`grund check` cannot describe two shapes, and the words are check's own:
+`directly after` is what `misplaced-field` says. The strength words are the
+legend's ([§FS-schema.8](FS-schema.md#8-the-table)).
+
+#### 4.1.1 A heading is shown under a declaration written `# <ID>: …`
+
+A field is always its declaration's direct section ([§FS-fields.identity.name](FS-fields.md#identityname-a-field-is-the-direct-section-of-its-name)), one
+level below the declaration's heading, so its depth is a fact about the field
+once the declaration's depth is fixed. Every heading a shape line shows is
+written under a declaration written `# <ID>: …`, which is also how a doc-comment
+declaration body writes its sections. A declaration written `## SWR-001: …`
+writes the same field at `###`, and the table's legend says so once
+([§FS-schema.8.4](FS-schema.md#84-the-legend-says-where-a-fields-heading-sits)) rather than every line.
+
+#### 4.1.2 The code span and the placeholders
+
+The heading is the exact text `grund check` holds the field's heading to, its
+title byte for byte ([§FS-fields.identity.match](FS-fields.md#identitymatch-titles-and-values-match-byte-for-byte)), so the view shows it before the
+author writes rather than after `check` refuses the heading
+([§FS-fields.requirements.record](FS-fields.md#requirementsrecord-the-agent-and-a-schema-view-read-the-shape-the-checks-read--realized)). Each code span on a shape line is written as a
+Markdown code span: its bytes between fences of backticks one longer than the
+longest run of backticks inside it, with one space inside each fence where it
+begins or ends with a backtick. A control character in a title is written as its
+TOML basic-string escape (`\n`, `\t`, `\r`, otherwise `\uXXXX`), so the line stays
+one line.
+
+Where the author's own text goes, a line shows a placeholder in angle brackets,
+never a plausible value an author could copy: `<title>`, `<one of A, B>`,
+`<name>`, `<value>`, `<ID>` and `<number or word>`. A value part is shown as
+`<number or word>`, which is narrower than the one-line text check accepts,
+because a citation binds a number only to a part that is exactly that number
+([§FS-values.4](FS-values.md#4-exact-equality)); `a unit is a part of its own` says where the unit goes.
+
+#### 4.1.3 Front matter is no heading
+
+A `front-matter` field is the block at the top of its declaration's file and not
+a section ([§FS-fields.identity.name](FS-fields.md#identityname-a-field-is-the-direct-section-of-its-name)), so its line never shows a heading. Its text is
+`` `---` YAML or `+++` TOML front matter at the top of the file (<presence>) ``.
+Each of its keys follows as `key <name>`, two columns deeper, with the text
+`` `<name>: <one of A, B>` (<presence>) ``, or `` `<name>: <value>` (<presence>) `` for a key
+with no values. Where the field's own `closed` is not `may`, a last line `closed`,
+two columns deeper too, has the text `no other key (<strength>)`
+([§FS-fields.front-matter.record](FS-fields.md#front-matterrecord-the-record-and-what-renders-it)).
+
+#### 4.1.4 A value kind's line names the file its values take
+
+A value kind's numbered children are one line, `field <number>`. It carries no
+parentheses, because its presence is always `may` and it takes no placement.
+Its text names the form its home holds, by the rule the scan reads a value home
+by ([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources), [§FS-config-v2.schema.sources.values](FS-config-v2.md#schemasourcesvalues-a-value-home-reads-a-file-by-its-language)), so it cannot show a form the
+scan would not read:
+
+- a file the scan reads with the JSON reader: `` `{"<ID>": [<number or word>, …], …}` in `<file>` ``;
+- a file it reads with the YAML reader: `` `<ID>: [<number or word>, …]` in `<file>` ``;
+- any other file: `` `# <ID>: <title>` with only `## 1. <number or word>`, `## 2. …` under it in `<file>` `` ([§FS-values.2.1](FS-values.md#21-markdown-declarations));
+- a folder: each of those forms the folder can hold, Markdown first, then JSON,
+  then YAML, each ending `in a Markdown file in`, `in a JSON file in` or
+  `in a YAML file in` and the folder as a code span, joined by `, ` and by
+  `, or ` before the last.
+
+The forms are followed by ``: part 1 is `§<ID>.1`; a unit is a part of its own``:
+element *i* of a member declares part *i*+1 ([§FS-values.2.2.1](FS-values.md#221-source-shape)), which is the one
+thing a reader cannot infer from the file. A fetched value kind's file is written
+by its integration ([§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)), so its line teaches no form to write by hand:
+it is `` written by `grund fetch` into `<home>`: part 1 is `§<ID>.1` ``.
+
+#### 4.1.5 The issue's RFC kind
+
+For the issue's RFC kind, with an untitled `amendments`:
 
 ```text
   RFC   kind                             rfcs/text/
-          field summary                  must · first · titled `Summary`
-          field motivation               must · after summary · titled `Motivation`
-          field guide-level-explanation  must · after motivation · titled `Guide-level explanation`
-          field amendments               may · last
-          closed must
+          field summary                  `## summary: Summary` (must, first)
+          field motivation               `## motivation: Motivation` (must, directly after summary)
+          field guide-level-explanation  `## guide-level-explanation: Guide-level explanation` (must, directly after motivation)
+          field amendments               `## amendments: <title>` (may, last)
+          closed                         no other chapter except numbered ones (must)
 ```
 
-The form, and the forms it was chosen over, are [§DF-field-line-names-its-title](../decisions/functional/DF-field-line-names-its-title.md#df-field-line-names-its-title-a-field-line-names-the-heading-title-the-field-is-held-to).
+The form, and the forms it was chosen over, are [§DF-shape-line-shows-the-heading](../decisions/functional/DF-shape-line-shows-the-heading.md#df-shape-line-shows-the-heading-a-fields-line-shows-the-heading-to-write-with-its-placement-and-content-in-checks-words),
+which supersedes [§DF-field-line-names-its-title](../decisions/functional/DF-field-line-names-its-title.md#df-field-line-names-its-title-a-field-line-names-the-heading-title-the-field-is-held-to).
 
 ### 4.2 A node no direction rule names is set apart
 
@@ -242,7 +306,8 @@ may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
 ```
 
-and a fourth legend line where [§FS-schema.8.3](FS-schema.md#83-the-legend-says-an-obligation-skips-an-uncited-file) asks for one.
+then the line [§FS-schema.8.3](FS-schema.md#83-the-legend-says-an-obligation-skips-an-uncited-file) asks for where it asks for one, and last the line
+[§FS-schema.8.4](FS-schema.md#84-the-legend-says-where-a-fields-heading-sits) asks for where some kind prints a field line.
 
 Sections are separated by one blank line. Columns are padded with spaces, two
 between columns: the name column is as wide as the longest row name, the strength
@@ -295,7 +360,7 @@ fixture · grund.toml · v2
 kinds and places
   GOAL    kind                docs/goals.md
   FS      kind                docs/fs/
-            field status      should · first · one of Draft, Accepted
+            field status      `## status: <one of Draft, Accepted>` (should, first): the title is the value
   AR      kind                docs/ar/
   test    place               tests/
   vendor  place, not scanned  vendor/
@@ -314,6 +379,7 @@ citations                     grounded
 must = check error · warn = check warning · should = suggestion (check --suggestions)
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading
 ```
 
 ### 8.2 With no grund.toml, a note names what `grund init --scaffold` writes
@@ -348,7 +414,7 @@ A place's or the complement's `must`, `warn` and `should` judge only its files t
 must/warn/should skip an uncited file of a place or the complement · [rules.citations.<ROW>.grounding] makes it a finding
 ```
 
-and in version 1 the same line ending `· require_grounding makes it a finding`. Where every such row is grounded, or none carries an obligation, the legend keeps its three lines, as in [§FS-schema.8.1](FS-schema.md#81-the-table-for-one-small-project). The Mermaid and DOT comments carry the legend's first two lines only ([§FS-schema.9](FS-schema.md#9-the-mermaid-source)), so they do not change. The `place` row of the config of agent-grounds/grund#151 —
+and in version 1 the same line ending `· require_grounding makes it a finding`. Where every such row is grounded, or none carries an obligation, the legend has no such line, as in [§FS-schema.8.1](FS-schema.md#81-the-table-for-one-small-project). The Mermaid and DOT comments carry the legend's first two lines only ([§FS-schema.9](FS-schema.md#9-the-mermaid-source)), so they do not change. The `place` row of the config of agent-grounds/grund#151 —
 
 ```toml
 grund_config_version = 2
@@ -386,6 +452,22 @@ A|B = one obligation, met by citing either · — = no direction rule names it
 must/warn/should skip an uncited file of a place or the complement · [rules.citations.<ROW>.grounding] makes it a finding
 ```
 
+### 8.4 The legend says where a field's heading sits
+
+A shape line shows each heading under a declaration written `# <ID>: …`
+([§FS-schema.4.1.1](FS-schema.md#411-a-heading-is-shown-under-a-declaration-written--id-)), so a table that printed `## verification: …` and nothing more
+would give the wrong depth for a declaration written `## SWR-001: …`, as
+`examples/traceability` declares one. Where some kind prints a field line, the
+legend gains a last line:
+
+```text
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading
+```
+
+after the line of [§FS-schema.8.3](FS-schema.md#83-the-legend-says-an-obligation-skips-an-uncited-file) where both apply. Where no kind prints a field
+line, the legend has no such line, as in [§FS-schema.8.3](FS-schema.md#83-the-legend-says-an-obligation-skips-an-uncited-file)'s example. The Mermaid
+and DOT comments carry the legend's first two lines only, so they do not change.
+
 ## 9. The Mermaid source
 
 `--format mermaid` prints a `flowchart LR`, ready to paste into a fenced
@@ -399,8 +481,12 @@ the project (`alias/KIND`, `*/KIND`), `x<i>["…"]` labelled as written; the
 `no direction rule names these` subgraph holding the unruled nodes; one
 `class <ids> place` and one `class <ids> unscanned` line where such nodes exist;
 then the edges. A node's label lines are its name, its class word, its places, its
-field lines as `field <name>: <facts>`, and its badge. A `front-matter` field's keys follow
-its field line as `key <name>: <facts>` ([§FS-fields.front-matter.record](FS-fields.md#front-matterrecord-the-record-and-what-renders-it)). Node identifiers are
+field lines as `field <name>: <shape line>`, its `closed` line as `closed: <text>`, and its
+badge ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)). A `front-matter` field's keys, and its own `closed`, follow its
+field line as `key <name>: <text>` and `closed: <text>` ([§FS-fields.front-matter.record](FS-fields.md#front-matterrecord-the-record-and-what-renders-it)).
+The scalar of [§FS-schema.8.1](FS-schema.md#81-the-table-for-one-small-project) is the label line
+``field status: `## status: #lt;one of Draft, Accepted#gt;` (should, first): the title is the value``,
+its placeholder's brackets escaped as [§FS-schema.11](FS-schema.md#11-escaping) says. Node identifiers are
 generated, `n` with the row's position, `j` with the junction's, and `x` with the
 order a target outside the project is first named, and never come from user text.
 
@@ -409,7 +495,9 @@ order a target outside the project is first named, and never come from user text
 `--format dot` prints one `digraph schema` with `rankdir=LR` and
 `node [shape=box]`, ready for `dot -Tsvg`. The comments come first inside it, as
 `//` lines, the same as Mermaid's. A node's label lines are Mermaid's, a `front-matter`
-field's key lines included. Then every ruled node, `n<i> [label="…"]` with
+field's key lines included, each escaped for DOT rather than for Mermaid, so the same
+scalar is ``field status: `## status: <one of Draft, Accepted>` (should, first): the title is the value``
+and a JSON value home's `{"<ID>": …}` writes each `"` as `\"`. Then every ruled node, `n<i> [label="…"]` with
 its label lines joined by `\n` and its style where its class has one; every
 junction, `j<i> [label="any of", shape=circle]`; every target outside the project
 (`alias/KIND`, `*/KIND`), `x<i> [label="…"]`, numbered as in Mermaid; the unruled nodes inside
@@ -419,12 +507,14 @@ junction. grund runs neither Mermaid nor Graphviz.
 
 ## 11. Escaping
 
-Every title and path is escaped for the printer it reaches, so no configuration
+Every title, shape line and path is escaped for the printer it reaches, so no configuration
 can break the source or the table ([§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)). DOT labels use DOT string
 escapes (`\"`, `\\`, and a newline as `\n`). Mermaid labels are quoted, with `"`
 written `#quot;`, `<` as `#lt;`, `>` as `#gt;` and `&` as `#amp;`. The table
 writes a control character as its TOML basic-string escape: `\n`, `\t`, `\r`,
-otherwise `\uXXXX`.
+otherwise `\uXXXX`. A shape line's own placeholders and code spans
+([§FS-schema.4.1.2](FS-schema.md#412-the-code-span-and-the-placeholders)) are escaped like any other text: a Mermaid label writes
+`<title>` as `#lt;title#gt;`, and the table and the managed block write them as they are.
 
 ## 12. Exit codes and streams
 
@@ -451,8 +541,8 @@ exit `1`: the command makes no query that can fail ([§FS-cli.5](FS-cli.md#5-exi
   citations or their counts ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)); there is no instance overlay, no
   `--toc`, and no browser hosting.
 - **No change to `grund config show`** ([§FS-fields.record](FS-fields.md#record-the-record)). The managed block prints
-  the view's field lines ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)), so a change to their wording, such as
-  naming a field's title ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)), is a block-version change
+  the view's shape lines ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)), so a change to their wording, such as
+  showing a field's heading ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)), is a block-version change
   ([§FS-init.2.3.7](FS-init.md#237-the-block-version)).
 
 ## 14. Where an agent learns it

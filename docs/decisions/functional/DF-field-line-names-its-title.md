@@ -1,10 +1,11 @@
 # DF-field-line-names-its-title: A field line names the heading title the field is held to
 
 **Date:** 2026-10-29
+**Superseded by:** [§DF-shape-line-shows-the-heading](DF-shape-line-shows-the-heading.md#df-shape-line-shows-the-heading-a-fields-line-shows-the-heading-to-write-with-its-placement-and-content-in-checks-words) — a line that names the title but writes the placement as `after <field>` and the content as `one of` or `values` still left out what `grund check` holds, and agents wrote shapes check refused (agent-grounds/grund#1373). Each field's line now shows the heading to write, which answers the depth objection of [§DF-field-line-names-its-title.3](DF-field-line-names-its-title.md#3-alternatives-considered); the code span of [§DF-field-line-names-its-title.2.2](DF-field-line-names-its-title.md#22-the-title-is-a-code-span) carries over unchanged.
 
 Settles how `grund schema` and the managed block's `### Declaration shapes` name a field's configured `title`, as [§FS-schema.4.1](../../functional-spec/FS-schema.md#41-fields-are-lines-inside-their-kinds-node) and [§FS-init.2.3.5.12.2](../../functional-spec/FS-init.md#235122-declaration-shapes) specify, and why that moves the block's bytes under the pairs [§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version) already advanced. Serves [§FS-fields.requirements.record](../../functional-spec/FS-fields.md#requirementsrecord-the-agent-and-a-schema-view-read-the-shape-the-checks-read--realized): the title is a slot the checks compare byte for byte ([§FS-fields.identity.match](../../functional-spec/FS-fields.md#identitymatch-titles-and-values-match-byte-for-byte)), so a view that omits it tells an agent the shape only after the fact. Reported as [grund#1070](https://github.com/agent-grounds/grund/issues/1070).
 
-## status: Accepted
+## status: Superseded
 
 ## 1. Context
 

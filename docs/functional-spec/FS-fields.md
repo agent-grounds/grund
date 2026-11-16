@@ -63,7 +63,7 @@ The loader refuses, at the key that makes it so, a shape that contradicts itself
 
 ### requirements.record: The agent and a schema view read the shape the checks read — realized
 
-A kind's shape is one record, and the checks, `grund schema` ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)) and the managed block read it; `config show` prints it back only as configuration ([§FS-config.4.2](FS-config.md#42-grund-config-show-path), [§FS-fields.record](FS-fields.md#record-the-record)). The block renders each kind's shape in the words of the schema view's field lines, in the scoped block of the directory above the kind's places or in the root block under `rules = "root"` ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)), while the view of every kind at once is `grund schema`. Each reads the record the checks read, its slots in header order with placement as data, rather than describing the shape again. Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work), for which a shape the agent is never told is enforced only after the fact.
+A kind's shape is one record, and the checks, `grund schema` ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)) and the managed block read it; `config show` prints it back only as configuration ([§FS-config.4.2](FS-config.md#42-grund-config-show-path), [§FS-fields.record](FS-fields.md#record-the-record)). The block renders each kind's shape in the words of the schema view's shape lines, each field as the heading to write with its presence, its placement and what it holds ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)), in the scoped block of the directory above the kind's places or in the root block under `rules = "root"` ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)), while the view of every kind at once is `grund schema`. Each reads the record the checks read, its slots in header order with placement as data, rather than describing the shape again. Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work), for which a shape the agent is never told is enforced only after the fact.
 
 ## declare: Declaring the shape
 
@@ -432,27 +432,28 @@ Each strength reaches its channel as [§FS-fields.strengths.table](FS-fields.md#
 
 ### front-matter.record: The record, and what renders it
 
-The front-matter slot carries its presence, its own `closed`, and its keys in header order, each key with its presence and its `one_of` values ([§FS-fields.record](FS-fields.md#record-the-record)). Every view prints its keys nested under its field line, in the view's own words for a field line:
+The front-matter slot carries its presence, its own `closed`, and its keys in header order, each key with its presence and its `one_of` values ([§FS-fields.record](FS-fields.md#record-the-record)). Its line is never a heading, because the field is the block at the top of the file and no section ([§FS-fields.identity.name](FS-fields.md#identityname-a-field-is-the-direct-section-of-its-name), [§FS-schema.4.1.3](FS-schema.md#413-front-matter-is-no-heading)). Every view prints its keys, and then its own `closed` where it is not `may`, nested under its field line, in the words of a shape line:
 
-- `grund schema` ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)) prints the field line, `field front-matter`, with its presence and, where it is not `may`, `closed <strength>`, joined by ` · `. Each key follows as a line of its own, `key <name>`, two columns deeper than the field line, its facts in the facts column: its presence, then `one of …` where it has values;
-- Mermaid and DOT ([§FS-schema.9](FS-schema.md#9-the-mermaid-source), [§FS-schema.10](FS-schema.md#10-the-dot-source)) print the label lines `field front-matter: must · closed must` and `key status: must · one of proposed, accepted`;
-- the managed block's `### Declaration shapes` ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)) prints `  - field front-matter must · closed must`, then `    - key status must · one of proposed, accepted`.
+- `grund schema` ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)) prints the field line, `field front-matter`, with the text `` `---` YAML or `+++` TOML front matter at the top of the file (must) ``. Each key follows as a line of its own, `key <name>`, two columns deeper than the field line, its text in the facts column: `` `status: <one of proposed, accepted>` (must) ``, or `` `date: <value>` (must) `` for a key with no values. The field's own `closed` follows its keys as `closed`, two columns deeper too, with the text `no other key (must)`;
+- Mermaid and DOT ([§FS-schema.9](FS-schema.md#9-the-mermaid-source), [§FS-schema.10](FS-schema.md#10-the-dot-source)) print the same text after `field front-matter: `, `key <name>: ` and `closed: `, escaped for each;
+- the managed block's `### Declaration shapes` ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)) prints ``  - `---` YAML or `+++` TOML front matter at the top of the file (must)``, then ``    - `status: <one of proposed, accepted>` (must)`` for each key and `    - no other key (must)`.
 
 So the ticket's kind renders in `grund schema` as:
 
 ```text
   ADR   kind                     docs/adr/0004-cache-availability.md
-          field front-matter     must · closed must
-            key status           must · one of proposed, accepted, rejected, deprecated
-            key date             must
-            key decision-makers  may
-          field context          must
-          field decision         must
-          closed must
+          field front-matter     `---` YAML or `+++` TOML front matter at the top of the file (must)
+            key status           `status: <one of proposed, accepted, rejected, deprecated>` (must)
+            key date             `date: <value>` (must)
+            key decision-makers  `decision-makers: <value>` (may)
+            closed               no other key (must)
+          field context          `## context: <title>` (must)
+          field decision         `## decision: <title>` (must)
+          closed                 no other chapter except numbered ones (must)
   code  complement               every scanned file no other row claims
 ```
 
-The managed block's version pair does not move for this ([§FS-init.2.3.7.1](FS-init.md#2371-the-current-version)). Every released grund refuses `closed` on a field and refuses a `keys` table, so every config that loads today renders the same bytes, `[fields.front-matter]` with only `presence` set included. The config JSON schema gives the field a definition of its own, which admits `presence`, `closed` and `keys`, and gives a key one that admits `presence` and `one_of`. `grund config explain` answers for both tables and both new codes ([§REQ-discoverable-offline](../requirements/REQ-discoverable-offline.md#req-discoverable-offline-the-installed-grund-answers-for-every-setting-and-every-check-code)).
+Rendering the field's `closed` and its keys moved no version pair when it landed ([§FS-init.2.3.7.1](FS-init.md#2371-the-current-version)): every release before it refused `closed` on a field and refused a `keys` table, so every config a release loaded rendered the same bytes after it, `[fields.front-matter]` with only `presence` set included. Its words since are the v49/v50 shape lines above. The config JSON schema gives the field a definition of its own, which admits `presence`, `closed` and `keys`, and gives a key one that admits `presence` and `one_of`. `grund config explain` answers for both tables and both new codes ([§REQ-discoverable-offline](../requirements/REQ-discoverable-offline.md#req-discoverable-offline-the-installed-grund-answers-for-every-setting-and-every-check-code)).
 
 ### front-matter.placement: Which declaration has it
 
