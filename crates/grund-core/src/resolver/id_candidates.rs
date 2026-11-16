@@ -1,5 +1,5 @@
 //! The member-candidate clause (§AR-system.2.10): when an unqualified `ID not
-//! found:` refusal can name the projects of this run that *do* declare the ID
+//! found:` or current-grammar refusal can name the projects that *do* declare the ID
 //! (§FS-workspace.8.1.1).
 //!
 //! It sits with the loaded project set rather than with `show`, because the
@@ -53,10 +53,9 @@ pub fn names_member_id_candidate(message: &str) -> bool {
 /// holds every member's findings is not loaded a second time to answer
 /// (§GOAL-fast-feedback).
 ///
-/// Everything else is left exactly as raised: a qualified lookup already named
-/// its project, an ID the current grammar rejects fails earlier as `invalid ID`,
-/// and the `ID not found:` prefix stays the first token because it is what
-/// selects the `not-found` code (§FS-errors.5.2).
+/// §FS-workspace.8.1.1.4: current-grammar rejection also reaches this rule;
+/// a real member declaration earns `not-found`, while no candidate preserves
+/// the original failure. Qualified lookups and unrelated errors stay unchanged.
 pub(crate) fn with_member_id_candidates(
     err: anyhow::Error,
     context: &WorkspaceContext,
@@ -67,36 +66,61 @@ pub(crate) fn with_member_id_candidates(
         return err;
     }
     let message = format!("{err:#}");
-    if !message.starts_with("ID not found:") {
+    let source = err.downcast_ref::<crate::model::OperationDiagnostic>();
+    let invalid_id =
+        source.is_some_and(|source| source.class == "query" && source.code == "invalid-id");
+    if !invalid_id && !message.starts_with("ID not found:") {
         return err;
     }
-    match member_id_candidate_clause(context, raw_id) {
+    let candidates = member_id_candidates(context, raw_id);
+    match member_id_candidate_clause(&candidates) {
         Some(clause) => {
-            // §FS-distribution.3.3.2: retain source classification and candidates.
-            if let Some(source) = err.downcast_ref::<crate::model::OperationDiagnostic>() {
+            let message = if invalid_id {
+                format!("ID not found: {raw_id}{clause}")
+            } else {
+                format!("{message}{clause}")
+            };
+            // §FS-distribution.3.3.2: retain diagnostic metadata and candidates.
+            if let Some(source) = source {
                 let mut diagnostic = source.clone();
-                diagnostic.message = format!("{message}{clause}");
-                diagnostic.details =
-                    serde_json::json!({"candidates": member_id_candidates(context, raw_id)});
+                diagnostic.code = "not-found";
+                diagnostic.message = message;
+                diagnostic.details["candidates"] = serde_json::json!(candidates);
                 diagnostic.into()
             } else {
-                anyhow!("{message}{clause}")
+                anyhow!(message)
             }
         }
         None => err,
     }
 }
 
-/// The clause itself, or `None` when no other project in the run declares the
-/// ID — where there is nothing to name, the refusal is printed unchanged.
-fn member_id_candidate_clause(context: &WorkspaceContext, raw_id: &str) -> Option<String> {
-    let candidates = member_id_candidates(context, raw_id);
+/// §FS-workspace.8.1.1.2: append a clause only when another project declares
+/// the ID; where there is nothing to name, the refusal stays unchanged.
+fn member_id_candidate_clause(candidates: &[String]) -> Option<String> {
     (!candidates.is_empty()).then(|| {
         format!(
             "{MEMBER_CANDIDATE_CLAUSE}{}?",
-            join_alternatives(&candidates)
+            join_alternatives(candidates)
         )
     })
+}
+
+/// §FS-workspace.8.2.2.1: refs keeps its failure data and offers qualified
+/// commands only as text guidance, using the same declaration-backed candidates.
+pub(crate) fn member_id_refs_hint(
+    context: &WorkspaceContext,
+    qualified_alias: Option<&str>,
+    raw_id: &str,
+) -> Option<String> {
+    if qualified_alias.is_some() {
+        return None;
+    }
+    let commands = member_id_candidates(context, raw_id)
+        .iter()
+        .map(|id| format!("`grund refs {id}`"))
+        .collect::<Vec<_>>();
+    (!commands.is_empty()).then(|| format!("hint: run {}", join_alternatives(&commands)))
 }
 
 /// Every project other than the one the lookup ran against that declares the ID

@@ -104,7 +104,7 @@ pub(crate) use context::{
     load_resolved_workspace_context, load_workspace_context, load_workspace_projects,
 };
 pub(crate) use e2e_body::show_e2e_case;
-pub(crate) use id_candidates::{join_alternatives, with_member_id_candidates};
+pub(crate) use id_candidates::{join_alternatives, member_id_refs_hint, with_member_id_candidates};
 #[cfg(test)]
 use link_targets::heading_anchor;
 pub(crate) use link_targets::{

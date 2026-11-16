@@ -293,15 +293,21 @@ fn controls(version: u8) {
             assert!(!err(&run).contains(QUALIFIED), "{run:?}");
         }
     }
-    // Narrowed and member-local runs do not load the workspace candidate set.
-    for prefix in [vec![], vec!["refs"]] {
-        let mut args = prefix;
-        args.extend([ID, "docs/decisions"]);
-        let run = tree.run(&args);
-        assert_eq!(run.status.code(), Some(1));
-        assert!(err(&run).contains("config show"));
-        assert!(!err(&run).contains(QUALIFIED));
-    }
+    // §FS-scan.projects.narrowed: a root subdirectory outside members still loads them.
+    streams(
+        &tree.run(&[ID, "docs/decisions"]),
+        1,
+        "",
+        &format!("{}\n", refusal()),
+        &mut errors,
+    );
+    streams(
+        &tree.run(&["refs", ID, "docs/decisions"]),
+        1,
+        "",
+        &format!("invalid ID `{ID}`\nhint: run `grund refs {QUALIFIED}`\n"),
+        &mut errors,
+    );
     streams(
         &tree.run(&[ID, "company", "--brief"]),
         0,
@@ -331,8 +337,9 @@ fn controls(version: u8) {
 macro_rules! red {
     ($name:ident, $scenario:ident, $version:expr) => {
         #[test]
-        #[ignore = "red until #1363 member-only kinds reach candidate guidance; implement removes this"]
-        fn $name() { $scenario($version); }
+        fn $name() {
+            $scenario($version);
+        }
     };
 }
 
