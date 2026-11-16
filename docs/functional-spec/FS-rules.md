@@ -301,7 +301,51 @@ absence is reported once ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)).
 Every resolved physical citation site inside the subject unit whose target is
 in the object set counts once. An ordinary `must cite at least one` failure at
 zero reuses `missing-citation`; every other count failure uses
-`citation-cardinality`.
+`citation-cardinality`. The `distinct` spelling counts the declarations those
+sites name rather than the sites ([§FS-rules.3.2.1](FS-rules.md#321-counting-distinct-cited-declarations)).
+
+#### 3.2.1 Counting distinct cited declarations
+
+```text
+<subject> must|should cite at least N distinct <KIND> [or <KIND> ...].
+<subject> must|should cite at most N distinct <KIND> [or <KIND> ...].
+<subject> must|should cite exactly N distinct <KIND> [or <KIND> ...].
+```
+
+`distinct` is written once, right after the count, and covers the whole `or`
+list. The count is the number of different declarations that own the targets
+of the sites [§FS-rules.3.2](FS-rules.md#32-outbound-citation-count) counts, through the same site filter: a target that
+is a declaration owns itself, and a chapter is owned by the declaration whose
+body holds it ([§FS-rules.5.2](FS-rules.md#52-family-clauses)). So `§SRC-x`, `§SRC-x.2` and `§SRC-x.outcome`
+count once between them, and a subject in its own target set counts itself
+once. Counts are spelled as in [§FS-rules.3.2](FS-rules.md#32-outbound-citation-count), so `exactly one distinct SRC` and
+`at most 1 distinct SRC` are sentences. `at least one distinct SRC` is not: it
+means what `at least one SRC` means, and it is refused with that form
+([§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals)).
+
+`distinct` counts only what a subject cites. Per-target coverage, a
+prohibition and an inbound count refuse it, and so does a `distinct` written
+before a later object kind ([§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals)). A failure is
+`citation-cardinality` with the row of its own [§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinality) gives it, and the
+`counted at` list of a count above zero names every site it read, so it adds up
+to the sites and not to the count ([§FS-rules.7.3.1](FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted)). The counting mode is part
+of the deduplication key, so `at least 3 SRC` and `at least 3 distinct SRC` are
+two constraints ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)).
+
+Whether `distinct` is the keyword is decided in the rule's scope, from the
+same kind table its object kinds are judged in, and never from the scan.
+Where `distinct` is not a citable kind of the rule's own project, it is the
+keyword whenever an object follows it after the count, so
+`at least 3 distinct SRCX` is refused as `unknown kind "SRCX"`, and
+`distinct mem/SRC` gets what `mem/SRC` gets in the same scope: accepted where
+the alias resolves to a project that configures `SRC`, unverifiable in a scope
+with no workspace vocabulary, and refused where the workspace holds no
+`mem` ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)). Where `distinct` is such a kind, `at least 3 distinct.`
+keeps counting it, and `distinct` followed by more is the keyword only where
+what follows it is accepted as the object kinds, citable or unverifiable;
+otherwise the sentence is read as before. A member run and the workspace root
+therefore read one sentence the same way. The decision is
+[§DF-distinct-target-counts](../decisions/functional/DF-distinct-target-counts.md#df-distinct-target-counts-an-outbound-count-may-count-distinct-cited-declarations-spelled-distinct-after-the-count).
 
 ### 3.3 Per-target coverage
 
@@ -591,6 +635,20 @@ inbound_count(s, T, n) :- s in S,
 forbidden_site(s, p) :- s in S, cites(p, _, t), t in T, site_in(p, s).
 ```
 
+The `distinct` spelling of the outbound count ([§FS-rules.3.2.1](FS-rules.md#321-counting-distinct-cited-declarations)) counts the
+declarations that own the counted targets rather than the sites, over `decl`
+and the `owns` relation below, and adds no relation:
+
+```text
+owner_of(t, d) :- decl(t, _), d = t.
+owner_of(t, d) :- owns(d, t).
+distinct_count(s, T, n) :- s in S,
+                           n = count { d : cites(p, _, t), t in T, site_in(p, s), owner_of(t, d) }.
+```
+
+It reports `unreached(d, N)` as the outbound count does, and a chapter subject's
+`NAME` is read as a handle path, as every citation family reads it.
+
 Positive families report where `not within(n, cardinality)`. Prohibitions
 report every `forbidden_site`. Negation and aggregates are closed-world only
 when the snapshot is complete ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
@@ -690,7 +748,10 @@ configuration, serialized fact format, or selection workflow is added.
 
 Before evaluation, constraints deduplicate by `(subject selector, modality,
 relation, normalized target set, cardinality)`. Normalization preserves no
-authored spelling beyond what appears in a finding.
+authored spelling beyond what appears in a finding. The normalized target set
+carries its counting mode, by site, per target or distinct
+([§FS-rules.3.2.1](FS-rules.md#321-counting-distinct-cited-declarations)), so `at least 3 SRC` and `at least 3 distinct SRC` are two
+constraints and report two findings.
 
 Rules-only duplicates produce one finding per failing unit or site. The tail
 contains every contributing rule ID in bytewise order, for example
@@ -708,7 +769,8 @@ pairing below it is decided on the findings, unit by unit, rather than by
 discarding the rule before it runs. It applies only where an existing
 `[citations]` entry and a rule express the same local bare citing kind,
 declaration-wide unit over every declaration of that kind, modality/level, `cite` relation, normalized target
-entry, and cardinality. Where, for one unit or site, config reports its existing
+entry, and cardinality. A direction counts sites, so it never absorbs a
+`distinct` rule. Where, for one unit or site, config reports its existing
 `missing-citation`, `suggested-citation`, `forbidden-citation`, or
 `discouraged-citation` finding and the rule reports the same code there on the
 same channel, config's finding wins byte-for-byte and the rule's is dropped: no
@@ -850,6 +912,16 @@ Other ordinary counts and every per-target `cite each` miss use
 For `cite each`, `<target-set>` is the one canonical target ID and one row
 is emitted per off-count target.
 
+A `distinct` count ([§FS-rules.3.2.1](FS-rules.md#321-counting-distinct-cited-declarations)) uses `citation-cardinality` at every count,
+zero included, with a row of its own whose noun is the declarations it counted:
+
+```text
+<subject> cites <actual> distinct <target-set>; <RULE-ID> requires <count>; add or remove those citations until the count fits
+```
+
+The row above keeps every byte for the counts it reports, and a rule of each
+spelling on one subject gives one row of each.
+
 A `citation-cardinality` row whose count is above zero does not end at its
 template: it appends the citations it counted, as [§FS-rules.7.3.1](FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted) says. A count
 of zero, `missing-citation`'s among them, has none to name and ends where its
@@ -876,7 +948,10 @@ one clause naming every citation the count read:
   the declaration that holds it ([§FS-rules.5.1](FS-rules.md#51-facts-and-identity)), is one; a `cite each` row
   reads only the citations of its one target; a chapter subject's row reads only
   those written inside the chapter; and a citation a stub's target lends is
-  listed where it is written ([§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
+  listed where it is written ([§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)). A `distinct` row reads every
+  site the plain count would and lists each, so its list adds up to the sites
+  and not to its count, which is the declarations they name: three citations
+  of one source are three entries under `cites 1 distinct SRC`.
 - **Entry form.** `<path>:<line>` is where the citation is written, its path
   named as the report names every path ([§FS-errors.3.1](FS-errors.md#31-one-base-for-every-path-in-the-line)), at the name a whole run
   gives a file with two names ([§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name)).

@@ -80,7 +80,7 @@ It has these fields:
 | `subject` | one normalized local kind, declaration, quantified named chapter, or exact named-chapter selector; a kind or quantified chapter selector may carry one whose filter, a `(field path, value)` pair ([§FS-rules.2.2](../functional-spec/FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)) |
 | `modality` | required or recommended, paired with positive or prohibiting polarity |
 | `relation` | `have chapter`, `cite`, or `be cited by`; per-target coverage is `cite` with per-target cardinality |
-| `targets` | a chapter name or a bytewise-sorted, duplicate-free set of qualified kinds, with aggregate or per-target mode |
+| `targets` | a chapter name or a bytewise-sorted, duplicate-free set of qualified kinds, with aggregate, per-target or distinct mode; distinct counts the declarations owning the counted targets ([§FS-rules.3.2.1](../functional-spec/FS-rules.md#321-counting-distinct-cited-declarations)) |
 | `cardinality` | inclusive normalized lower and upper bounds; unbounded sides are absent and a prohibition is an upper bound of zero |
 
 Normalization erases spelling alternatives such as `one` versus decimal `1`

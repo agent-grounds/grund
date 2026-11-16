@@ -391,9 +391,9 @@ path = "docs/functional-spec/FS-rule-refusals.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 1015, unit = "lines" }
+max_accepted = { value = 1050, unit = "lines" }
 until = "the accepted-form rewrite (§FS-rule-refusals.sentences.rewrite with its per-refusal and FS-only tables) and the selector refusals (§FS-rule-refusals.selectors) leave for declarations of their own, with their existing section citations migrated"
-issue = "agent-grounds/grund#1374"
+issue = "agent-grounds/grund#1367"
 reason = """
-Over the soft budget before issue #1374 touched it, with its soft edits already spent, so any edit is refused. Missing boundary: the accepted-form rewrite (sentences.rewrite, its by-refusal and fs-only tables) and the selector refusals are subjects of their own with their own sub-structure, but moving either out is a mapped migration of the section citations some 75 files make to this declaration, outside a refusal-message fix. #1374 adds the presence-or point beside the whitespace refusal it pre-empts, and, as requirements.next-refusal binds, one row to each of the by-refusal, fs-only and order tables. The ceiling accepts exactly the measured 1015 non-blank lines and permits no growth.
+Over the soft budget before issue #1374 touched it, with its soft edits already spent, so any edit is refused. Missing boundary: the accepted-form rewrite (sentences.rewrite, its by-refusal and fs-only tables) and the selector refusals are subjects of their own with their own sub-structure, but moving either out is a mapped migration of the section citations some 75 files make to this declaration, outside a refusal-message fix. #1374 adds the presence-or point beside the whitespace refusal it pre-empts, and, as requirements.next-refusal binds, one row to each of the by-refusal, fs-only and order tables. #1374 left it at exactly the measured 1015 non-blank lines. Issue #1367 adds the outbound count's `distinct` spelling, and requirements.next-refusal binds its refusals to the same tables: eleven exact rows to the sentences table, four rows to the by-refusal table, two numbered cases to rewrite.same-units, the stage-6 cell of the order table, and two short paragraphs saying how a reparse drops a redundant `distinct` and where stage 6 reads it. Each belongs beside the rows it extends, and moving a table out is the same mapped migration, still outside a grammar addition. The ceiling accepts exactly the measured 1050 non-blank lines and permits no growth.
 """

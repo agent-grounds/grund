@@ -241,6 +241,23 @@ impl KindTable {
         }
     }
 
+    /// A workspace table of one project per `(alias, citable kinds)`, the reading project's alias
+    /// empty: the object table of a vocabulary a test builds by hand at a workspace root.
+    #[cfg(test)]
+    pub(crate) fn of_citable_projects(projects: &[(&str, &[&str])]) -> Self {
+        let mut table = Self {
+            projects: Vec::new(),
+            workspace: true,
+        };
+        for (alias, kinds) in projects {
+            let names = kinds.iter().map(|kind| kind.to_string()).collect();
+            let mut project = Self::of_citable(&names).projects.remove(0);
+            project.alias = alias.to_string();
+            table.projects.push(project);
+        }
+        table
+    }
+
     /// Adds the projects a rule's run loaded, by alias, to the table of the
     /// project whose config reads the rule (§FS-rules.4.1.1): holding any is what
     /// lets a pinned or `*/` object be judged rather than found unverifiable.
