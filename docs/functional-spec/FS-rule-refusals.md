@@ -91,7 +91,8 @@ guidance of [§FS-rule-refusals.sentences.rewrite.no-form.place](FS-rule-refusal
 and then, for the path subject and the unknown kind, the line
 `known kinds: GOAL, REQ, FS, AR, RULE`. The three chapter subjects that offer
 none, `FS-login.*`, `Each chapter of each FS` and `FS-login.2`, print the reason
-alone, because what is missing is chapter scope and not a kind
+alone, because what is missing is chapter scope and not a kind, and so do the
+two `distinct` refusals that offer none, whose missing piece is a counting mode
 ([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)):
 
 | Refused sentence | Exact reason and accepted rewrite(s) |
@@ -115,6 +116,16 @@ alone, because what is missing is chapter scope and not a kind
 | `Every AR must cite at least one FS.` | `quantifier "every" is not accepted; accepted form: Each AR must cite at least one FS.` |
 | `The design chapter of every AR must cite at least one FS.` | `quantifier "every" is not accepted; accepted form: The design chapter of each AR must cite at least one FS.` |
 | `AR-trace.design must cite every FS exactly once.` | `quantifier "every" is not accepted; accepted form: AR-trace.design must cite each FS exactly once.` |
+| `Each FS must cite at least one distinct GOAL.` | `"distinct" is redundant after "at least one"; accepted form: Each FS must cite at least one GOAL.` |
+| `Each FS must cite at least 1 distinct GOAL.` | `numeric "at least 1" is not canonical; accepted form: Each FS must cite at least one GOAL.` |
+| `Each FS must cite exactly 1 distinct GOAL.` | `numeric "exactly 1" is not canonical; accepted form: Each FS must cite exactly one distinct GOAL.` |
+| `Each FS must cite each distinct GOAL at least once.` | `"distinct" has no meaning per target; accepted form: Each FS must cite each GOAL at least once.` |
+| `Each FS must not cite any distinct GOAL.` | `"distinct" has no meaning in a prohibition; accepted form: Each FS must not cite any GOAL.` |
+| `Each FS must not cite at least 2 distinct GOAL.` | `a prohibition must use "cite any"; accepted form: Each FS must not cite any GOAL.` |
+| `Each FS must cite at least 3 distinct GOAL or distinct REQ.` | `"distinct" must follow the count; accepted form: Each FS must cite at least 3 distinct GOAL or REQ.` |
+| `Each FS must cite at least 3 GOAL or distinct REQ.` | `"distinct" must follow the count`, and no rewrite |
+| `Each FS must be cited by at least 2 distinct GOAL.` | `"distinct" counts only outbound citations`, and no rewrite |
+| `Each FS must cite at least 3 distinct POLICY.` | `unknown kind "POLICY"`, and no rewrite |
 
 `FS-missing must cite at least one GOAL.` is syntactically valid and therefore
 is not a pre-scan refusal. After scanning it produces the exact resolution
@@ -653,8 +664,8 @@ that is accepted and judges other units goes green over the unit its author
 asked about, or flags another one, and nothing in the refusal says so. Where no
 accepted sentence judges the same units, the refusal is its reason alone
 ([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)). What could not be supplied is chapter
-scope, not a kind, so no `known kinds:` line follows on `check --rule`. Two
-refusals meet this:
+scope or a counting mode, not a kind, so no `known kinds:` line follows on
+`check --rule`. Four refusals meet this:
 
 1. A refused chapter path, in any spelling, rebuilt by
    [§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)'s four steps. Where step 3 drops a component
@@ -671,6 +682,15 @@ refusals meet this:
    accepted sentence counts the chapters under a chapter. So no form is offered,
    whether the subject is a literal `ID.PATH` or `The NAME chapter of each KIND`,
    and with or without a whose clause.
+3. A `distinct` before a later object kind where none follows the count,
+   `cite at least 3 GOAL or distinct REQ`. `distinct` counts declarations over
+   the whole `or` list ([§FS-rules.3.2.1](FS-rules.md#321-counting-distinct-cited-declarations)), so dropping it counts the `REQ` sites
+   and moving it after the count counts different `GOAL` too: either judges
+   what the sentence did not say. Where `distinct` also follows the count, the
+   later one restates it and is dropped.
+4. A `distinct` in an inbound count, `be cited by at least 2 distinct GOAL`. No
+   accepted sentence counts different citers ([§DF-distinct-target-counts](../decisions/functional/DF-distinct-target-counts.md#df-distinct-target-counts-an-outbound-count-may-count-distinct-cited-declarations-spelled-distinct-after-the-count)), and
+   dropping `distinct` counts citation sites instead.
 
 Every other rebuilt subject keeps the units that were typed, and keeps its form.
 That covers `every` repaired to `each`
@@ -798,6 +818,10 @@ spellings, rather than changing the shared kind reason on other surfaces.
 | a presence `NAME` holding `or` between two words ([§FS-rule-refusals.sentences.presence-or](FS-rule-refusals.md#sentencespresence-or-or-between-chapter-names-is-refused-for-the-or)) | — | always |
 | a presence `NAME` with whitespace ([§FS-rule-refusals.sentences.whitespace](FS-rule-refusals.md#sentenceswhitespace-presence-name-whitespace-refusal)) | the `NAME` trimmed of its surrounding whitespace | the `NAME` is empty or has whitespace inside |
 | a chapter subject in a presence rule ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)) | — | always |
+| `distinct` after `at least one` ([§FS-rules.3.2.1](FS-rules.md#321-counting-distinct-cited-declarations)) | drops `distinct` | — |
+| `distinct` in per-target coverage or a prohibition | drops `distinct` | — |
+| `distinct` before a later object kind | drops each `distinct` after the first object kind | `distinct` does not also follow the count ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)); no `known kinds:` follows |
+| `distinct` in an inbound count | — | always; no `known kinds:` follows |
 | a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says | scope cannot be reconstructed, rebuilding it drops a typed component ([§FS-rule-refusals.sentences.rewrite.same-units](FS-rule-refusals.md#sentencesrewritesame-units-a-form-judges-the-units-the-typed-sentence-named-or-none-is-offered)), no configured kind is recovered, or the subject holds a clause; `known kinds:` follows only for the latter two |
 | the ID grammar for a subject `The` cut short at a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | — | always; `known kinds:` follows |
 | a path subject, `Each file in …` | — | always; `known kinds:` follows |
@@ -808,6 +832,14 @@ spellings, rather than changing the shared kind reason on other surfaces.
 | an object kind followed by a whose clause | — | always; `known kinds:` follows on `check --rule`, as before |
 | an unknown or malformed object kind | — | always; `known kinds:` follows |
 | no modality, an unknown verb, a count that is not accepted, a count with no object | — | always |
+
+A form that keeps a `distinct` the repaired sentence makes redundant is
+refused when it is parsed again, and the next pass drops it
+([§FS-rule-refusals.sentences.rewrite.reparsed](FS-rule-refusals.md#sentencesrewritereparsed-a-form-is-parsed-before-it-is-offered)): `at least 1 distinct GOAL` is
+offered `at least one GOAL`, and `must not cite at least 2 distinct GOAL` is
+offered `must not cite any GOAL`, while `exactly 1 distinct GOAL` keeps it.
+Where `distinct` follows the count, every other refusal is the one the same
+sentence without `distinct` gets ([§DF-distinct-target-counts](../decisions/functional/DF-distinct-target-counts.md#df-distinct-target-counts-an-outbound-count-may-count-distinct-cited-declarations-spelled-distinct-after-the-count)).
 
 Every row keeps the subject and modality as typed, so the presence, per-target
 and count refusals no longer answer with `Each FS must` or
@@ -951,12 +983,17 @@ as one table so it does not depend on how one phrase of another point is read:
 | 3. conjunction | clauses joined by `and` ([§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction)) | `Each FS may not cite any FS and must cite at least one FS.` | `conjunctions are not accepted` |
 | 4. modality | no accepted modality, `may not` included | `Each POLICY may not cite any FS.` | `modality "may not" is not accepted` |
 | 5. the rest of the subject | unsupported `Every KIND` or `The NAME chapter of every KIND`, an unknown or non-citable kind, named sections off, the section grammar, a numbered chapter, the ID grammar, a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)), then a whose clause, in the order of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) | `Each POLICY must cite no FS.` | `unknown kind "POLICY"` |
-| 6. the predicate | the verb, quantifier (including `cite every`), count (including per-target numeric `at most 1 times`) and object kind, an object kind followed by a whose clause included, a chapter subject that would have chapters, and a presence `NAME`, its `or` between two words ([§FS-rule-refusals.sentences.presence-or](FS-rule-refusals.md#sentencespresence-or-or-between-chapter-names-is-refused-for-the-or)) before its whitespace | `Each FS must cite no FS.` | `"cite no" is not accepted` |
+| 6. the predicate | the verb, quantifier (including `cite every`), count (including per-target numeric `at most 1 times`) and object kind, an object kind followed by a whose clause included, a chapter subject that would have chapters, a presence `NAME`, its `or` between two words ([§FS-rule-refusals.sentences.presence-or](FS-rule-refusals.md#sentencespresence-or-or-between-chapter-names-is-refused-for-the-or)) before its whitespace, and last a `distinct` the predicate does not admit ([§FS-rules.3.2.1](FS-rules.md#321-counting-distinct-cited-declarations)) | `Each FS must cite no FS.` | `"cite no" is not accepted` |
 
 The examples are read in a repository whose one kind is `FS`, with named
 sections on. Two sentences the table of [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) gives whole,
 `Each FS must cite no AR.` and `Each FS must cite a GOAL.`, are refused for that
 row before stage 1; both end in `.`, so no sentence can tell.
+
+A `distinct` refusal is the last of stage 6, read once the count and every
+object kind are accepted, so `Each FS must cite at least one distinct POLICY.`
+is refused for its unknown kind and `Each FS must cite at least 1 distinct
+GOAL.` for its count (§FS-rules.3.2.1).
 
 Per-target numeric upper-one is a predicate-stage refusal. Missing terminal
 periods, fixed-word and phase-1 subject refusals, conjunctions, modalities and

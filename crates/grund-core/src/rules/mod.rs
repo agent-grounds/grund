@@ -38,6 +38,10 @@ mod tests_boundaries;
 #[cfg(test)]
 mod tests_chapter_path_reasons;
 #[cfg(test)]
+mod tests_distinct_count;
+#[cfg(test)]
+mod tests_distinct_keyword;
+#[cfg(test)]
 mod tests_grammar_properties;
 #[cfg(test)]
 mod tests_index_contract;
