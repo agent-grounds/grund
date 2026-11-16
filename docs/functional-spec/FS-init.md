@@ -944,7 +944,7 @@ Several things in the generated entrypoint are *substituted in* rather than fixe
 
 ##### 2.3.8.1 What the config fills in
 
-From that config the block fills in the ID shape (`<KIND>-<NNN>-<slug>`, `<KIND>-<slug>`, …, derived from `[id].format`), one worked example citation, the `[id].section_separator`, the marker and `$$`-trigger from `[reference]`, the `KIND ∈ {…}` set from `[[kinds]]` (``no `KIND` is declared yet`` where there is none, [§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet)), the discovery rung's `--kind` example from the same kinds ([§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding)), a raw-readable link list of each kind's configured declaration home and title ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), a config-version-aware sentence on whether bare ID-shaped tokens count as citations, and the inline citation style sentences defined by [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering).
+From that config the block fills in the ID shape (`<KIND>-<NNN>-<slug>`, `<KIND>-<slug>`, …, derived from `[id].format`), one worked example citation, the `[id].section_separator`, the marker and `$$`-trigger from `[reference]` with the example ID the trigger sentence names ([§FS-init.2.3.8.4](FS-init.md#2384-the-trigger-sentence-names-the-id-that-follows)), the `KIND ∈ {…}` set from `[[kinds]]` (``no `KIND` is declared yet`` where there is none, [§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet)), the discovery rung's `--kind` example from the same kinds ([§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding)), a raw-readable link list of each kind's configured declaration home and title ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), a config-version-aware sentence on whether bare ID-shaped tokens count as citations, and the inline citation style sentences defined by [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering).
 
 For version 1, the bare-token explanation retains its existing wording for both
 `[reference] strict = true` and `strict = false`, including the latter's advice
@@ -964,6 +964,14 @@ The worked example citation is written in the escaped illustration form — `<§
 ##### 2.3.8.3 A config that fails to load
 
 The generator–checker symmetry of [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints) extends to reading the config: an existing `grund.toml` that fails to load is an error (`exit 2`, the message and location `grund check` gives for the same file), never a silent fall back to defaults. The block is rendered *from* that config, so substituting defaults would write agent instructions describing a repository the user does not have — an unparseable `[reference] conversation`, `marker`, or kind set would drop exactly the guidance it selects while `init` reported success — and the two commands would disagree about a file both of them read.
+
+##### 2.3.8.4 The trigger sentence names the ID that follows
+
+The block's one sentence about the `$$`-trigger teaches what a grund-aware editor does with it ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)): the configured trigger becomes the configured marker once a token with an ID's shape follows it, so the sentence names that following ID and never says that the trigger alone becomes the marker. A reader told only to type `$$` types it, sees nothing happen, and takes a working server for a broken one (agent-grounds/grund#1370); a bare trigger stays as typed on purpose, so money, shell variables and LaTeX are left alone ([§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker)).
+
+It illustrates with the trigger written straight before an example ID, in one inline code span, so neither `grund fmt`'s trigger pass nor the editor rewrites the illustration ([§FS-citations.zones](FS-citations.md#zones-where-citation-text-is-never-rewritten)). The example ID is the effective `[id].format` of the kind init's guidance names ([§FS-init.2.2.2.3](FS-init.md#2223-the-kind-the-guidance-names)), filled with that kind and the worked citation example's number and slug ([§FS-init.2.3.8.2](FS-init.md#2382-the-worked-example-is-escaped)), so typing it in the host repo converts as the sentence says; a config with no citable kind fills the format with `FS`, as the worked citation example does. Under the default trigger and the one kind `FS` with format `{kind}-{slug}`, the example is `$$FS-user-login`.
+
+The sentence says the trigger converts when the token has its kind's shape, never when the ID is *recognized* or *resolves*: the editor converts an ID no declaration carries just the same ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)).
 
 #### 2.3.9 Delimiters
 
