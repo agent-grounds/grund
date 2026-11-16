@@ -62,7 +62,7 @@ pub struct Grammar {
     /// `\A`, the configured `[id] section_separator` and a section path the section
     /// grammar admits: what follows the ID of a coordinate, read by
     /// [`Grammar::opens_section_suffix`] (§FS-declarations.line.section-suffix.3).
-    section_suffix_re: Regex,
+    pub(super) section_suffix_re: Regex,
     pub(crate) section_re: Regex,
     /// Bare-token detection retains its word boundary (§FS-check.1.1.10).
     /// Both full-ID patterns capture the optional `<namespace>/` prefix
@@ -102,7 +102,7 @@ pub struct Grammar {
     /// Per-kind full-ID parsers and render templates. Detection uses one union
     /// regex, then parsing selects the already-known kind's exact grammar
     /// (§FS-config.3.2, §FS-config.3.4.10.1).
-    kind_parsers: Vec<(String, Regex)>,
+    pub(super) kind_parsers: Vec<(String, Regex)>,
     pub(super) kind_elements: BTreeMap<String, Vec<IdElement>>,
     pub(super) overridden_kinds: BTreeSet<String>,
     /// What `build` was handed, for [`Grammar::with_named_sections`].
