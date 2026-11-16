@@ -68,6 +68,7 @@ mod embedded_value_context;
 mod embedded_values;
 mod extents;
 mod file_pass;
+mod folder_homes;
 mod front_matter;
 mod global_excludes;
 mod json;
@@ -225,6 +226,8 @@ mod tests_stub_homes;
 mod tests_toml;
 #[cfg(test)]
 mod tests_unmarked_headings;
+#[cfg(test)]
+mod tests_unread_homes;
 #[cfg(test)]
 mod tests_unwalked_kinds;
 #[cfg(all(test, unix))]

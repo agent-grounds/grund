@@ -233,10 +233,13 @@ fn lower_rows(path: &Path, parsed: &[ParsedKind], project: &mut Project) {
             if let Some(resolve) = resolve {
                 resolution.entry(k.kind.clone()).or_insert(resolve);
             }
-            let source = entry.file_line.map(|line| ConfigLocation {
-                path: path.to_path_buf(),
-                line,
-            });
+            let source = entry
+                .file_line
+                .or(entry.folder_line)
+                .map(|line| ConfigLocation {
+                    path: path.to_path_buf(),
+                    line,
+                });
             let fetch_source = entry.fetch_line.map(|line| ConfigLocation {
                 path: path.to_path_buf(),
                 line,
@@ -284,11 +287,8 @@ fn lower_row(
         places: extent
             .into_iter()
             .map(|extent| Place {
-                // §FS-scan.checks.unread-scan-root.location: a file home is located at
-                // its `file` key; a folder's key has no finding to anchor yet.
-                source: matches!(extent, Extent::File(_))
-                    .then(|| source.clone())
-                    .flatten(),
+                // §FS-scan.checks.unread-scan-root.location: each home anchors at its key.
+                source: source.clone(),
                 extent,
                 scanned: k.scan,
             })

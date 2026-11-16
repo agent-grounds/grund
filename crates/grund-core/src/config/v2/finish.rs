@@ -61,6 +61,25 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
             message,
         })
         .collect();
+    // §FS-scan.checks.unread-scan-root.message: offer only a valid, row-preserving form edit.
+    r.project.schema.value_form_repairs.0 = r
+        .rows
+        .iter()
+        .filter_map(|row| {
+            if row.form.is_some()
+                || row.fetch.is_some()
+                || row.closed.is_some()
+                || r.fields.iter().any(|field| field.kind == row.name)
+            {
+                return None;
+            }
+            let mut candidate = row.clone();
+            candidate.form = Some((Form::Value, row.line));
+            form_prerequisites(&r, &candidate, root)
+                .is_ok()
+                .then(|| row.name.clone())
+        })
+        .collect();
     lower(&mut r);
     Ok(r.project)
 }

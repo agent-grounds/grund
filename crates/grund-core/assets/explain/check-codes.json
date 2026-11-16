@@ -4080,6 +4080,26 @@
       "text": "Drop the `md` entry from [schema.sources.extensions]"
      },
      {
+      "label": "unmap-admit",
+      "text": "Drop the `md` entry from [schema.sources.extensions] and add `markdown` to [schema.sources] languages, keeping the existing languages"
+     },
+     {
+      "label": "document-admit",
+      "text": "Add `markdown` to [schema.sources] languages, keeping the existing languages, and {rename}"
+     },
+     {
+      "label": "document-unmap",
+      "text": "Drop the `md` entry from [schema.sources.extensions] and {rename}"
+     },
+     {
+      "label": "document-unmap-admit",
+      "text": "Drop the `md` entry from [schema.sources.extensions] and add `markdown` to [schema.sources] languages, keeping the existing languages, and {rename}"
+     },
+     {
+      "label": "value-repair",
+      "text": "Set `form = \"value\"` on the row, or {repair}"
+     },
+     {
       "label": "value",
       "text": "Set `form = \"value\"` on the row, or give the file an extension a listed document language reads"
      },

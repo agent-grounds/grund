@@ -18,6 +18,7 @@ use crate::grammar::{id_grammar_literal_slash_error, id_grammar_v2_slash_error};
 
 /// One `[schema.kinds.<NAME>]` row as written, each key at its line, before the
 /// checks that need every row (§FS-config-v2.schema.places).
+#[derive(Clone)]
 pub(super) struct RowDraft {
     pub(super) name: String,
     /// The row's header line.
@@ -41,6 +42,7 @@ pub(super) struct RowDraft {
 /// One place as written (§FS-config-v2.schema.places.boundaries): its extent
 /// under the normalized path, the line of its key, and the entry as written,
 /// which a refusal quotes.
+#[derive(Clone)]
 pub(super) struct PlaceDraft {
     pub(super) extent: Extent,
     pub(super) line: usize,

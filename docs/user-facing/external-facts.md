@@ -100,14 +100,19 @@ docs/arch.md:7: warning: no snapshot for AR-002-other in docs/arch.md — [[kind
 
 ([§FS-check.3.1.3.2](../functional-spec/FS-check.md#3132-a-key-fetch-has-nothing-to-run-for)).
 
-For a folder home, fetch replaces an existing Markdown snapshot even when its
-filename differs from the ID. If a recognized value source in that home already
+For a folder home, fetch replaces the one snapshot the scan reads as Markdown,
+even in a nested directory or when its filename differs from the ID. For example,
+`txt = "markdown"` lets fetch replace `tickets/local.txt` in place; it creates
+`<ID>.md` only when no file in the home declares the ID. A snapshot holding the ID
+beside other content, or two files declaring it, is refused with the tree unchanged
+([§FS-fetch.5.5](../functional-spec/FS-fetch.md#55-which-file-declares-and-what-idmd-may-hold)).
+If a recognized value source in that home already
 declares the requested ID, fetch instead exits 2 and names the source, leaving
 all files unchanged. Keep that fact in the value source, or move it out of the
 value home before fetching. A table holding only other IDs does not block fetching
 ([§FS-fetch.5.1](../functional-spec/FS-fetch.md#51-existing-value-source-declarations-prevent-installation)).
 
-In a `folder` home, a file the scan reads under a name other than `.md` that
+In a `folder` home, a file the scan reads in another language that
 already declares the ID stops the fetch: grund exits 2, names that file and
 changes nothing, because a new `<ID>.md` beside it would be a duplicate and
 replacing it would overwrite what it holds around the declaration. Keep the fact
@@ -115,6 +120,13 @@ in that file, or take the declaration out of it and fetch again
 ([§FS-fetch.5.2](../functional-spec/FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation)).
 Where the scan does not read `<ID>.md` as Markdown, taking the declaration out leaves
 the ID declared nowhere until it does, so change both together.
+
+A listed data language is a different reason from an unclaimed suffix: a home
+such as `fs.json` is read as data, and only a value kind reads that data. A fetched
+snapshot needs a document language instead. If `md = "json"` remaps `.md` to
+data, drop that mapping; changing the fetched kind to a value kind cannot make
+its Markdown output valid JSON
+([§FS-scan.checks.unread-scan-root.message](../functional-spec/FS-scan.md#checksunread-scan-rootmessage-the-message)).
 
 A fetch also refuses, before the integration runs, when the selected project's
 scan finds the ID declared outside the home, in Markdown or a source comment, for

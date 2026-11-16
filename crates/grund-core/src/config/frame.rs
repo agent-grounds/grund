@@ -133,8 +133,14 @@ impl<'a> Frame<'a> {
             hidden: is_hidden(path),
             extension: !schema.sources.lists_extension(path),
         };
-        (refused.hidden || refused.extension)
-            .then(|| unread_reason(refused, file_extension(path), self.version))
+        (refused.hidden || refused.extension).then(|| {
+            unread_reason(
+                refused,
+                file_extension(path),
+                self.version,
+                self.reading(schema, path).data_language(),
+            )
+        })
     }
 
     /// The compiled ID grammar (§AR-config.1.5).

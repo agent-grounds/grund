@@ -196,6 +196,8 @@ mod tests_atomic_install;
 mod tests_fetch_admit;
 #[cfg(test)]
 mod tests_fetch_readback;
+#[cfg(all(test, unix))]
+mod tests_fetch_reading;
 #[cfg(test)]
 mod tests_fmt_conflicts;
 #[cfg(test)]

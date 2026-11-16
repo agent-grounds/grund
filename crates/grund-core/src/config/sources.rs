@@ -104,6 +104,25 @@ pub(crate) struct SourceModel {
 }
 
 impl SourceModel {
+    /// The first mapping to data whose removal restores an admitted text reader, in byte
+    /// order: the empty-scan caution names that edit (§FS-check.2.2.2.2).
+    pub(crate) fn data_mapping_hiding_text(&self) -> Option<(&str, &str)> {
+        self.extensions
+            .iter()
+            .filter(|(suffix, name)| {
+                self.admitted
+                    .iter()
+                    .any(|language| language.name == *name && language.class == LanguageClass::Data)
+                    && self.admitted.iter().any(|language| {
+                        language.builtin
+                            && language.class != LanguageClass::Data
+                            && language.suffixes.contains(suffix)
+                    })
+            })
+            .min_by(|(a, _), (b, _)| a.cmp(b))
+            .map(|(suffix, name)| (suffix.as_str(), name.as_str()))
+    }
+
     /// §FS-config-v2.schema.sources: the language `path`'s final extension maps to —
     /// a `[schema.sources.extensions]` entry first, then an admitted row's epoch
     /// suffix — or `None` when no admitted language reads it.
@@ -258,6 +277,21 @@ pub(crate) fn builtin(name: &str) -> Option<Language> {
         docstrings: row.profile == DocProfile::Python,
         builtin: true,
     })
+}
+
+/// The epoch reader of the required class that would claim `suffix` if admitted
+/// (§FS-scan.checks.unread-scan-root.folder): rule homes need a document reader.
+pub(crate) fn builtin_text_for_suffix(suffix: &str, document: bool) -> Option<&'static str> {
+    EPOCH
+        .iter()
+        .find(|row| {
+            (if document {
+                row.class == LanguageClass::Document
+            } else {
+                row.class != LanguageClass::Data
+            }) && row.suffixes.contains(&suffix)
+        })
+        .map(|row| row.name)
 }
 
 /// §FS-config-v2.schema.sources.languages: the names an omitted `languages` admits.

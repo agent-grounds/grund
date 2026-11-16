@@ -34,6 +34,9 @@ pub enum FetchFailureKind {
 pub struct FetchFailure {
     pub kind: FetchFailureKind,
     pub message: String,
+    /// A declaration the scan already found needs no integration output to refuse
+    /// (§FS-fetch.5.2, §FS-fetch.5.3).
+    pub(super) before_integration: bool,
 }
 
 impl std::fmt::Display for FetchFailure {
@@ -48,6 +51,7 @@ fn fetch_query(message: impl Into<String>) -> FetchFailure {
     FetchFailure {
         kind: FetchFailureKind::Query,
         message: message.into(),
+        before_integration: false,
     }
 }
 
@@ -55,6 +59,7 @@ pub(super) fn fetch_operational(message: impl Into<String>) -> FetchFailure {
     FetchFailure {
         kind: FetchFailureKind::Operational,
         message: message.into(),
+        before_integration: false,
     }
 }
 
@@ -240,8 +245,7 @@ fn fetch_run(
     if let Some(refusal) = place_at.import_refusal() {
         return Err(fetch_operational(refusal));
     }
-    // §FS-fetch.6.1: where the output goes is the scan's answer, settled before the spawn and
-    // refused, if it must be, once the output is known to be one declaration.
+    // §FS-fetch.6.1: placement is settled before the spawn; content refusals speak after output.
     let mut placing = None;
     let placed = place(&request, &before, &mut placing).map_err(|failure| (failure, placing));
     let integration = fetch_integration_path(&selected.root, fetch);
@@ -255,6 +259,16 @@ fn fetch_run(
     }
     // §FS-fetch.5.3: a declaration outside either home stops the fetch before the spawn.
     declared_elsewhere(&request, &before)?;
+
+    // §FS-fetch.5.2: after the existing pre-spawn refusals, propagate placement's declaring-file
+    // refusal before running the integration. Other placement refusals still follow the output.
+    let placed = match placed {
+        Err((failure, source)) if failure.before_integration => {
+            *diagnostic = source;
+            return Err(failure);
+        }
+        other => other,
+    };
 
     // §FS-fetch.2: direct argv invocation, inherited environment, no shell and
     // no implicit stdin. Stdout is data and is never forwarded to the caller.

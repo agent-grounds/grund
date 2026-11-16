@@ -362,13 +362,26 @@ impl Config {
         Self::from_records(self.project(), &run, self.compiled())
     }
 
-    /// This façade with a version-2 name no admitted language claims read by its name, as grund
-    /// 0.22.0 read it: the view `grund fetch` reads its output alone through, and no other
-    /// (§DF-one-reading-answer.2.6).
-    pub(crate) fn with_unclaimed_read_by_name(&self) -> Self {
-        let mut run = self.run().clone();
-        run.unclaimed_read_by_name = true;
-        Self::from_records(self.project(), &run, self.compiled())
+    /// §FS-fetch.admission.1: integration output is Markdown, independent of the home's
+    /// language. Its isolated buffer uses the ordinary reading with a document model;
+    /// the candidate at the actual home still uses the project's unchanged sources.
+    pub(crate) fn for_markdown_output(&self, path: &Path) -> anyhow::Result<Self> {
+        use super::sources::{DeclarationMode, SourceModel, builtin};
+        let mut project = self.project().clone();
+        project.schema.sources.model = Some(SourceModel {
+            admitted: vec![builtin("markdown").expect("the Markdown epoch language")],
+            extensions: path
+                .extension()
+                .and_then(|suffix| suffix.to_str())
+                .map(|suffix| (suffix.to_string(), "markdown".to_string()))
+                .into_iter()
+                .collect(),
+            definitions: Vec::new(),
+            declarations: DeclarationMode::AnyComment,
+            exclude: Vec::new(),
+        });
+        let compiled = super::compiled::compile(&project)?;
+        Ok(Self::from_records(&project, self.run(), &compiled))
     }
 
     /// The façade over `project` with this run and this compiled grammar, which

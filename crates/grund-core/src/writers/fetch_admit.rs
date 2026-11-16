@@ -1,6 +1,6 @@
 //! Admission (§FS-fetch.admission): fetch installs only what the selected project's own scan
-//! reads back as exactly what was asked for. The output is read alone as the scan reads one file
-//! at the target's path (clauses 1 and 4), the candidate is built where the scan put the
+//! reads back as exactly what was asked for. The output is read alone as Markdown
+//! (clauses 1 and 4), the candidate is built where the scan put the
 //! requested declaration (§FS-fetch.4, §FS-fetch.5), and the home as it would read after, the
 //! one scan's reading with the candidate read in place of the target (§FS-fetch.6.1), is held to
 //! the tree as it read before (clauses 2, 3 and 5, in `fetch_readback.rs`). Fetch keeps no
@@ -38,8 +38,8 @@ impl Admitted {
 }
 
 /// §FS-fetch.admission: the clauses in order, the first that fails refusing the fetch. Placement
-/// was settled from the scan before the integration ran; its refusal speaks once the output is
-/// known to be one declaration, as it always has.
+/// was settled from the scan before the integration ran; its remaining content refusals speak
+/// once the output is known to be one declaration.
 pub(super) fn admit(
     request: &Request<'_>,
     before: &Before,
@@ -127,15 +127,13 @@ pub(super) fn admit(
     })
 }
 
-/// §FS-fetch.admission.1, §FS-fetch.admission.4: the output alone, as the scan reads one file at
-/// the target's path.
+/// §FS-fetch.admission.1, §FS-fetch.admission.4: the output alone, read as Markdown.
 fn read_output_alone(request: &Request<'_>, output: &str) -> Result<(), FetchFailure> {
     let config = request.config;
     let at = match &request.home {
         Home::File(file) => file.clone(),
         Home::Folder(folder) => folder.join(format!("{}.md", request.local)),
     };
-    // §DF-one-reading-answer.2.6: a name no admitted language claims is read as 0.22.0 read it.
     let view = config
         .with_buffers(
             config
@@ -143,7 +141,10 @@ fn read_output_alone(request: &Request<'_>, output: &str) -> Result<(), FetchFai
                 .buffers
                 .in_front([(at.clone(), output.to_string())]),
         )
-        .with_unclaimed_read_by_name();
+        .for_markdown_output(&at)
+        .map_err(|err| {
+            fetch_operational(format!("cannot read fetch output as Markdown: {err:#}"))
+        })?;
     let alone = scan_unwalked_file(&at, view.schema(), view.frame(), &[]).map_err(|err| {
         fetch_operational(format!(
             "cannot discover declarations for {}: {err:#}",

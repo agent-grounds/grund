@@ -1,0 +1,4 @@
+# FS-reading: A mapped suffix is read as Markdown
+
+The reading follows `txt = "markdown"`, as the parser's declaration does for its
+own name: §FS-parser.

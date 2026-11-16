@@ -389,9 +389,9 @@ pub struct Catalog {
     /// §FS-check.3.29 probes. Carried rather than judged here: the walk knows what
     /// it reached, and nothing about workspaces (§AR-workspace.1).
     pub walked_dirs: Vec<PathBuf>,
-    /// The configured file roots the extension list kept out of the walk, each
-    /// with the row that made it a root, as the root gate recorded them
-    /// (§AR-scanner.1.6, §FS-scan.checks.unread-scan-root).
+    /// The configured file roots the name rules kept out, and folder homes where neither pass
+    /// read anything despite an eligible refused file, with the row that named each root
+    /// (§FS-scan.checks.unread-scan-root.folder, §FS-scan.checks.unread-scan-root.message).
     pub(crate) unread_roots: Vec<RootRow>,
     /// The files the walk reached only by a link whose target leaves the config root, as the
     /// walk recorded them (§FS-fmt.2.3.2): `fetch` asks it of the file it would write

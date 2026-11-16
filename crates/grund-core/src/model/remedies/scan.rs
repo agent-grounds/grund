@@ -49,6 +49,36 @@ pub(crate) fn unread_scan_root_unmap(version: u32) -> String {
     fill(Code::UNREAD_SCAN_ROOT, version, Some("unmap"), slots)
 }
 
+/// `unread-scan-root`'s *Fix*, case `unmap-admit` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_unmap_admit(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("unmap-admit"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `document-admit` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_document_admit(version: u32, rename: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("rename", &rename)];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("document-admit"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `document-unmap` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_document_unmap(version: u32, rename: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("rename", &rename)];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("document-unmap"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `document-unmap-admit` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_document_unmap_admit(version: u32, rename: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("rename", &rename)];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("document-unmap-admit"), slots)
+}
+
+/// `unread-scan-root`'s *Fix*, case `value-repair` (§FS-scan.checks.unread-scan-root).
+pub(crate) fn unread_scan_root_value_repair(version: u32, repair: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("repair", &repair)];
+    fill(Code::UNREAD_SCAN_ROOT, version, Some("value-repair"), slots)
+}
+
 /// `unread-scan-root`'s *Fix*, case `value` (§FS-scan.checks.unread-scan-root).
 pub(crate) fn unread_scan_root_value(version: u32) -> String {
     let slots: &[(&str, &dyn Display)] = &[];

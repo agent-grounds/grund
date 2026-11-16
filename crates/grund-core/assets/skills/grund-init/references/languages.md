@@ -166,6 +166,20 @@ h = "c"
 
 Never map `md`: `.md` is always Markdown, and mapping it to a language that is not a `document` one warns until grund 1.0.0 refuses it.
 
+Treat `unread-scan-root` as a coverage gap: a configured folder home with no file
+read names its first visible file refused by extension or language, while an
+empty or hidden-only home stays silent. A listed data language reads declarations
+only through a value kind; preserve authored `form`, `fetch`, fields and `closed`.
+Offer value form only when its existing prerequisites hold. A remapped `.md` asks
+you to drop the mapping and, if needed, add `markdown` to the existing languages.
+A rename also needs an admitted reader and may need that mapping removed. A rule
+folder needs a document reader; admitting a source language alone cannot read its
+Markdown rule headings. Fetch needs a
+home read as Markdown, and in a folder it replaces a file read that way even
+under a mapped suffix such as `.txt`
+([checking guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/checking.md),
+[external facts](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/external-facts.md)).
+
 Only doc comments declare an ID in v2; `declarations = "any-comment"` keeps v1's reading.
 
 A v2 row may list several places, `[schema.kinds.FS] folders = ["docs/spec/core", "docs/spec/plugins"]`, and `[schema.kinds.code] folders = ["src", "scripts"]` names what v1's `include` did.

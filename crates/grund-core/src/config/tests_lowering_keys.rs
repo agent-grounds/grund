@@ -19,6 +19,13 @@ const FS_ROW: &str = "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n";
 /// line changes that key's field and nothing beside it.
 fn fields(project: &Project) -> BTreeMap<&'static str, String> {
     let schema = &project.schema;
+    // Config filenames differ between the two inputs; keep the authored source line.
+    let mut rows = schema.rows.clone();
+    for place in rows.iter_mut().flat_map(|row| &mut row.places) {
+        if let Some(source) = &mut place.source {
+            source.path = "grund.toml".into();
+        }
+    }
     let notes = &schema.notes;
     let sources = &schema.sources;
     let ids = &schema.ids;
@@ -124,7 +131,7 @@ fn fields(project: &Project) -> BTreeMap<&'static str, String> {
             format!("{:?}", notes.warn_on_suggested),
         ),
         ("schema.leads", format!("{:?}", schema.leads)),
-        ("schema.rows", format!("{:?}", schema.rows)),
+        ("schema.rows", format!("{rows:?}")),
         ("schema.nesting", format!("{:?}", schema.nesting)),
         ("rules.citations", format!("{:?}", project.rules.citations)),
         (

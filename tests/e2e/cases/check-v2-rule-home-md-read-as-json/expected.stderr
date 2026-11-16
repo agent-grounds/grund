@@ -1,1 +1,1 @@
-error: grund.toml:12: kind `RULE` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch`
+error: grund.toml:12: [schema.kinds.RULE] sets `form = "rule"`, but files entry `rules/rules.md` is read as `json`, not as Markdown; move the rules into a file read as Markdown

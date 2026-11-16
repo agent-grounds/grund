@@ -10,7 +10,7 @@ use super::scan_error::FailureRoots;
 use super::tree::ScanError;
 use super::value_json::value_sources;
 use super::walk::{Met, MetCases, WalkDirFilter, scan_roots, scannable_walker};
-use super::walk_boundaries::{PlacedRoot, is_scannable, owned_by_another_project, place_root};
+use super::walk_boundaries::{PlacedRoot, owned_by_another_project, place_root};
 use super::walk_errors::{
     LinkRecovery, root_lookup_failure, symlink_loop_report, walk_error_reports,
 };
@@ -68,10 +68,12 @@ pub(crate) struct WalkedTree {
     /// answered it: only such a `fmt --write` writes a section lock
     /// (§FS-section-lock.write).
     pub(crate) root_scope: bool,
-    /// The configured file roots a name rule refused, each with the row that made it
-    /// a root and the rules that refused it, for `check`'s report (§AR-scanner.1.6,
-    /// §FS-scan.checks.unread-scan-root).
+    /// Refused file roots and folder homes with eligible refused content. Either successful
+    /// read pass discharges a folder row (§FS-scan.checks.unread-scan-root.folder).
     pub(crate) unread_roots: Vec<RootRow>,
+    /// Eligible text spellings in candidate unread homes, before identity deduplication
+    /// (§FS-scan.checks.unread-scan-root.folder).
+    pub(crate) folder_names: Vec<PathBuf>,
     /// The files read under neither name, gone from `files` (§FS-scan.checks.reading-conflict).
     pub(crate) reading_conflicts: Vec<ReadingConflict>,
     /// The links whose reading moved under the rule (§FS-scan.checks.reading-moved).
@@ -153,6 +155,8 @@ pub(crate) fn walk_scannable_files_with_sources(
     // §AR-scanner.1.6: the file roots a name rule refused, with their rows,
     // and the rows themselves, read only once a root is refused.
     let mut unread_roots = Vec::new();
+    // §FS-scan.checks.unread-scan-root.folder: record evidence in this traversal alone.
+    let mut folder_homes = super::folder_homes::FolderHomes::new(schema, frame);
     let mut file_rows = None;
     let mut value_homes: Option<Option<Vec<PathBuf>>> = None;
     // §FS-declarations.e2e-case.excluded: the case directories every root's walk met.
@@ -322,11 +326,12 @@ pub(crate) fn walk_scannable_files_with_sources(
             if entry.file_type().is_some_and(is_directory) {
                 dirs.push(entry.path().to_path_buf());
             }
-            if !entry
-                .file_type()
-                .is_some_and(|file_type| is_regular_file(file_type))
-                || !is_scannable(entry.path(), schema)
-            {
+            if !entry.file_type().is_some_and(is_regular_file) {
+                continue;
+            }
+            let refusal = name_refusal(entry.path(), schema);
+            folder_homes.refused(entry.path(), refusal);
+            if refusal.is_some() {
                 continue;
             }
             if root_is_aliased || entry.path_is_symlink() || under_link(&link_roots, entry.path()) {
@@ -381,6 +386,13 @@ pub(crate) fn walk_scannable_files_with_sources(
         handed = files.len();
         files.extend(rest.into_iter().filter(&kept));
     }
+    // §FS-scan.checks.unread-scan-root.folder: retain entry eligibility before choosing a name.
+    unread_roots.extend(folder_homes.rows());
+    let folder_names = files
+        .iter()
+        .filter(|path| unread_roots.iter().any(|row| row.folder_contains(path)))
+        .cloned()
+        .collect();
     // §AR-scanner.1.8: while the list is in walk order, so the first name is first-seen's.
     let whole_project = !explicit_scope || root_scope || frame.run.scope.resolution_wide;
     let verdicts = settle_names(schema, frame, &files, handed, &resolved, whole_project)?;
@@ -436,6 +448,7 @@ pub(crate) fn walk_scannable_files_with_sources(
         dirs,
         root_scope,
         unread_roots,
+        folder_names,
         reading_conflicts: verdicts.conflicts,
         reading_moves: verdicts.moves,
         e2e_cases,

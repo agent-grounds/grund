@@ -12,7 +12,9 @@ use anyhow::Result;
 use std::path::Path;
 
 use super::values::bail_config;
-use crate::config::home_requirement::{Ask, Home, Verdict, home_requirement, rule_kind_message};
+use crate::config::home_requirement::{
+    Ask, Home, Verdict, home_requirement, rule_home_message, rule_kind_message,
+};
 use crate::config::kind::KindConfig;
 use crate::config::project::Sources;
 use crate::model::Code;
@@ -163,7 +165,7 @@ pub(in crate::config) fn judge_homes(
     for home in homes {
         match home_requirement(ask, k, *home, root, sources) {
             Verdict::Holds => {}
-            Verdict::RefusesRow => return Err(rule_kind_message(&k.kind)),
+            Verdict::RefusesRow => return Err(rule_home_message(&k.kind, *home, sources)),
             Verdict::Refused(message) => return Err(message),
             Verdict::Warns(code, message) => warnings.push((home.line, code, message)),
         }

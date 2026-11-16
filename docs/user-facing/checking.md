@@ -231,8 +231,9 @@ A run-level `error:` line says what failed by its reason and its fix, and the re
 Some warnings are about what the run did not read rather than what it found.
 A file the configuration names as a scan root — a `[[kinds]]` `file` home, a
 version-2 `files` entry, or an `[scan] include` entry that is a file — is read
-only if `[scan] extensions` lists its extension and its name does not begin with
-`.`. When either rule keeps it out, the file stays unread and `check` says so at
+only if its name is not hidden and its configured reader reads declarations:
+version 1 uses `[scan] extensions`, and version 2 uses `[schema.sources] languages`
+and its extension mappings. When either rule keeps it out, the file stays unread and `check` says so at
 the line of the key that named it, keeping the exit code at 0 and withholding
 `success`:
 
@@ -247,6 +248,35 @@ rules gets one warning naming both. A row that names the file only as a place in
 the Project map says so with `scan = false`. `--ignore
 unread-scan-root` drops the warning
 ([§FS-scan.checks.unread-scan-root](../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)).
+
+A configured folder home earns the same located warning when nothing in it is
+read and the walk refused at least one visible file by extension or language.
+The reason and repair come from the first such file in path order. An empty or
+absent home, a `.gitkeep`-only home, and content deliberately excluded or ignored
+stay silent. A file read by the value pass counts too
+([§FS-scan.checks.unread-scan-root.folder](../functional-spec/FS-scan.md#checksunread-scan-rootfolder-a-folder-home-in-which-nothing-is-read)).
+For example, a folder holding `.txt` files with only Markdown admitted says:
+
+```text
+grund.toml:8: warning: [schema.kinds.FS] folder `fs` is not read — no language in [schema.sources] languages reads `.txt`, so nothing in it is checked. Give the files in it an extension a listed language reads.
+```
+
+A listed data language is named as data, which only a value kind reads. The
+repair preserves an authored `form`, `fetch`, fields and `closed`, and a non-citable row.
+It offers value form only when the existing value-form prerequisites still hold. A
+remapped `.md` asks you to drop the mapping and, if needed, add `markdown` to the
+existing languages. A rename also names any required admission or mapping removal.
+Rule folders need a document reader: admitting Rust cannot read a Markdown rule
+heading in `terms.rs`. Rename it to a suffix an admitted document language reads,
+such as `.md`, admitting `markdown` and removing a conflicting mapping if needed
+([§FS-scan.checks.unread-scan-root.folder](../functional-spec/FS-scan.md#checksunread-scan-rootfolder-a-folder-home-in-which-nothing-is-read)).
+Hidden data files still need
+a name that is not hidden as well as a document reader
+([§FS-scan.checks.unread-scan-root.message](../functional-spec/FS-scan.md#checksunread-scan-rootmessage-the-message)).
+If the whole v2 scan has no language read for declarations, its empty-scan caution
+names the key to change: admit a language such as `markdown` in `languages`, or
+drop the `md` mapping that prevents it from reading Markdown
+([§FS-check.2.2.2.2](../functional-spec/FS-check.md#2222-an-explicit-path)).
 
 `grund check --watch` checks immediately and updates the terminal after saves;
 Ctrl-C restores an owned alternate screen and returns the last completed status.

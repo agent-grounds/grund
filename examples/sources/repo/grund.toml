@@ -12,6 +12,7 @@ exclude = ["generated/"]
 [schema.sources.extensions]
 # `.h` is not an epoch suffix; read it as C.
 h = "c"
+txt = "markdown"
 note = "notes"
 
 [schema.sources.definitions.notes]

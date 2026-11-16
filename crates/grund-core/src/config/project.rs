@@ -122,7 +122,22 @@ pub struct Schema {
     /// on `[schema.leads.words]` (§FS-config-v2.schema.measures).
     pub lead_thresholds: Vec<Threshold>,
     pub rows: Vec<Row>,
+    /// Rows for which adding value form preserves all authored prerequisites
+    /// (§FS-scan.checks.unread-scan-root.message).
+    pub(crate) value_form_repairs: ValueFormRepairs,
     pub nesting: Nesting,
+}
+
+/// Repair metadata, like place locations: printing a default explicitly does not change
+/// the schema's meaning (§AR-config.2), but a repair preserves a key the author wrote
+/// (§FS-scan.checks.unread-scan-root.message).
+#[derive(Clone, Debug, Default)]
+pub(crate) struct ValueFormRepairs(pub(crate) std::collections::BTreeSet<String>);
+
+impl PartialEq for ValueFormRepairs {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
 }
 
 /// §AR-config.1.2: how a citation is written (§FS-config.3.1).

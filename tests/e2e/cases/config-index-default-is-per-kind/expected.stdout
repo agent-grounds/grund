@@ -1,1 +1,2 @@
 docs/functional-spec/FS-001-login.md:1: warning: declared but never cited: FS-001-login (its index entry at docs/functional-spec/README.md:3 does not count as a use); cite it
+grund.toml:9: warning: [[kinds]] E2E home `e2e/cases` is not read — extension exit is not in [scan] extensions, so nothing in it is checked. Add "exit" to [scan] extensions.

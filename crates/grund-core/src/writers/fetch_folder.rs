@@ -57,7 +57,10 @@ pub(super) fn place_in_folder(
     files.dedup();
     refuse_declaring_file(request, before, &files, diagnostic)?;
     let mut matches = Vec::new();
-    for path in files.iter().filter(|path| is_replaceable_markdown(path)) {
+    for path in files
+        .iter()
+        .filter(|path| request.config.reading(path).markdown)
+    {
         if let Some(error) = before.error(path) {
             return Err(match read_bytes(path) {
                 Err(err) => {
@@ -175,7 +178,7 @@ fn refuse_value_source(request: &Request<'_>, folder: &Path) -> Result<(), Fetch
 /// §FS-fetch.5.2: in the walk's sorted order, the first file the Markdown branch would not
 /// replace that declares the ID, or that the scan could not read, decides. A file the scan could
 /// not read gets the line `grund check` prints for it (§FS-check.2.4), unless an undecodable
-/// `.md` file comes earlier: §FS-fetch.5.4 names the first, so a declaring file still comes
+/// file read as Markdown comes earlier: §FS-fetch.5.4 names the first, so a declaring file still comes
 /// ahead of every judgement of a Markdown file.
 fn refuse_declaring_file(
     request: &Request<'_>,
@@ -193,7 +196,7 @@ fn refuse_declaring_file(
             .any(|decl| scanned_path_key(&decl.file) == scanned_path_key(path))
     };
     for (position, path) in files.iter().enumerate() {
-        if is_replaceable_markdown(path) {
+        if request.config.reading(path).markdown {
             continue;
         }
         if declares(path) {
@@ -201,7 +204,7 @@ fn refuse_declaring_file(
         }
         if let Some(error) = before.error(path) {
             let earlier = files[..position].iter().find_map(|earlier| {
-                (is_replaceable_markdown(earlier) && read_bytes(earlier).is_ok())
+                (request.config.reading(earlier).markdown && read_bytes(earlier).is_ok())
                     .then(|| before.error(earlier))
                     .flatten()
             });
@@ -213,13 +216,10 @@ fn refuse_declaring_file(
 
 /// §FS-fetch.5.2, §FS-fetch.5.3: the one refusal of an ID another file already declares.
 pub(super) fn already_declared(local: &str, shown: &str) -> FetchFailure {
-    fetch_operational(format!(
+    let mut failure = fetch_operational(format!(
         "cannot fetch {local}: {shown} already declares it; keep the fact in that file, or take \
          the declaration out of it and fetch again"
-    ))
-}
-
-/// §FS-fetch.5: what the Markdown branch replaces is a file named `.md`.
-fn is_replaceable_markdown(path: &Path) -> bool {
-    path.extension().and_then(|ext| ext.to_str()) == Some("md")
+    ));
+    failure.before_integration = true;
+    failure
 }
