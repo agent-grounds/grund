@@ -273,6 +273,7 @@ fn the_declaration_local_rewrite_is_previewed_and_written_on_its_own_lines() {
 /// either run's report.
 fn a_link_row_applied_by_hand_gives_the_line_the_write_leaves() {
     let mut applied_rows = 0;
+    let mut applied_paths = std::collections::BTreeSet::new();
     for shape in shapes() {
         let previewed = shape.materialize("preview-items-check");
         let written = shape.materialize("preview-items-write");
@@ -281,8 +282,9 @@ fn a_link_row_applied_by_hand_gives_the_line_the_write_leaves() {
         run_grund(&["fmt", "--write"], &written);
         let after = snapshot(&written);
         for row in stdout(&preview).lines() {
-            let Some((site, detail)) = row.split_once(": ").and_then(|(path, rest)| {
-                let (line, label) = rest.split_once(": ")?;
+            // A row is `path:line: label`: the site is everything before the first `: `.
+            let Some((site, detail)) = row.split_once(": ").and_then(|(head, label)| {
+                let (path, line) = head.rsplit_once(':')?;
                 Some(((path.to_string(), line.parse::<usize>().ok()?), label))
             }) else {
                 continue;
@@ -306,7 +308,14 @@ fn a_link_row_applied_by_hand_gives_the_line_the_write_leaves() {
             by_hand.push_str(&read[cursor..]);
             assert_eq!(by_hand, after[&path][number - 1], "{}: {row}", shape.name);
             applied_rows += 1;
+            applied_paths.insert(path);
         }
     }
     assert!(applied_rows > 0, "the corpus holds no `markdown link` row");
+    for path in ["docs/heading-notes.md", "docs/link-notes.md"] {
+        assert!(
+            applied_paths.contains(path),
+            "no `markdown link` row of {path} was applied by hand: {applied_paths:?}",
+        );
+    }
 }
