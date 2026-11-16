@@ -1,5 +1,6 @@
 use anyhow::{Result, anyhow};
 use regex::Regex;
+use std::cmp::Ordering;
 
 use super::compiled::Grammar;
 use super::glob_candidate::CandidateReading;
@@ -117,6 +118,25 @@ pub(super) fn id_pattern(
 }
 
 impl Grammar {
+    /// Compare IDs by `kind`'s effective format field order (§FS-fetch.4.order).
+    /// Literals are shared, numbers compare by value, and kind/slug text stays
+    /// lexical, including digits within a slug. Absent fields precede present ones.
+    pub(crate) fn compare_in_format(&self, kind: &str, left: &Id, right: &Id) -> Ordering {
+        let elements = self.kind_elements.get(kind).unwrap_or(&self.elements);
+        for element in elements {
+            let order = match element {
+                IdElement::Literal(_) => Ordering::Equal,
+                IdElement::Kind => left.kind.cmp(&right.kind),
+                IdElement::Number => left.num.cmp(&right.num),
+                IdElement::Slug => left.slug.cmp(&right.slug),
+            };
+            if !order.is_eq() {
+                return order;
+            }
+        }
+        Ordering::Equal
+    }
+
     /// Render an identity without source context (§FS-config.3.2.8).
     /// A component that is `None` while its
     /// placeholder is in the format — the shorthand `Id` a shorthand citation
