@@ -2,8 +2,8 @@
 tier of about 40 rows, split into six to eight shards, and a nightly tier that brings it to
 100-200 rows. §AR-benchmarks.1.6.1, §AR-benchmarks.1.7, §AR-benchmarks.1.8 — the waivers
 that deferred to #699 are scenarios, every designated mode but `node` names scenarios, the
-language server is measured with its PGO session, and a pair of rows straddles the
-parallel-scan threshold.
+language server is measured with its PGO session and, a keystroke at a time, with its typing
+session, and a pair of rows straddles the parallel-scan threshold.
 
 Static reads, the fixture generator and `train.py`: no Valgrind, so it runs in pre-commit.
 """
@@ -27,6 +27,7 @@ SHARDS = REPO / "scripts/bench_shards.py"
 TRAIN = REPO / "scripts/distribution/train.py"
 GENERATOR = REPO / "scripts/generate_large_benchmark_fixture.py"
 TREE = REPO / "crates/grund-core/src/scanner/tree.rs"
+LSP_SOURCES = REPO / "crates/grund-lsp/src"
 
 TIERS = {"pr", "nightly"}
 FRONTENDS = {"lsp", "python"}
@@ -88,10 +89,21 @@ def shards_module():
     return module
 
 
-def generate(root, files, citations=False):
+def generate(root, files, citations=False, extra=()):
     args = [sys.executable, "-I", str(GENERATOR), "--root", str(root), "--files", str(files)]
-    subprocess.run(args + (["--citations"] if citations else []), check=True,
+    subprocess.run(args + (["--citations"] if citations else []) + list(extra), check=True,
                    capture_output=True, text=True)
+
+
+def framed(data):
+    """The messages of framed JSON-RPC, in order."""
+    messages = []
+    while data:
+        head, _, rest = data.partition(b"\r\n\r\n")
+        length = int(re.search(rb"Content-Length: (\d+)", head).group(1))
+        messages.append(json.loads(rest[:length]))
+        data = rest[length:]
+    return messages
 
 
 class TheCatalogHasTwoTiers(unittest.TestCase):
@@ -352,6 +364,41 @@ class TheFrontendsAreMeasured(unittest.TestCase):
         self.assertEqual(["initialize", "initialized"]
                          + ["textDocument/didOpen", "textDocument/hover"] * opened
                          + ["shutdown", "exit"], methods)
+
+    def test_the_typing_session_types_eleven_keys_in_markdown_then_in_java(self):
+        """The typing session opens a Markdown spec and sends each key as a `didChange` and a
+        `completion`, then does the same in a Java `//` comment."""
+        with tempfile.TemporaryDirectory() as tmp:
+            generate(Path(tmp), 8, extra=["--members", "2", "--feature", "sources"])
+            result = subprocess.run([sys.executable, "-I", str(TRAIN), "typing", "--root", tmp],
+                                    capture_output=True, check=False)
+        self.assertEqual(0, result.returncode, result.stderr.decode("utf-8", "replace"))
+        messages = framed(result.stdout)
+        keys = ["textDocument/didChange", "textDocument/completion"] * 11
+        self.assertEqual(["initialize", "initialized", "textDocument/didOpen"] + keys
+                         + ["textDocument/didOpen"] + keys + ["shutdown", "exit"],
+                         [message["method"] for message in messages])
+        opened = [message["params"]["textDocument"]["languageId"] for message in messages
+                  if message["method"] == "textDocument/didOpen"]
+        self.assertEqual(["markdown", "java"], opened)
+        lines = [message["params"]["contentChanges"][0]["text"].splitlines()[-1]
+                 for message in messages if message["method"] == "textDocument/didChange"]
+        self.assertEqual([" see $$FS-002", " see $$FS-0Z"], [lines[7], lines[10]])
+        self.assertEqual(["// see $$FS-002", "// see $$FS-0Z"], [lines[18], lines[21]])
+
+    def test_the_typing_rows_count_from_the_one_function_never_inlined(self):
+        """A `pr` and a `nightly` row run the typing session, and the harness toggles collection
+        on at a `grund-lsp` function that is `#[inline(never)]`, so the rows never count
+        nothing (§AR-lsp.2.1.1)."""
+        typing = [row for row in self.frontend_rows("lsp") if row["args"] == ["typing"]]
+        self.assertEqual(["pr", "nightly"], [row["tier"] for row in typing])
+        entries = re.search(r'const TYPING_ENTRIES: \[&str; 1\] = \["grund_lsp::Server::(\w+)"\];',
+                            HARNESS.read_text(encoding="utf-8"))
+        self.assertIsNotNone(entries, "the harness names no `TYPING_ENTRIES`")
+        sources = "\n".join(path.read_text(encoding="utf-8")
+                            for path in sorted(LSP_SOURCES.glob("*.rs")))
+        self.assertRegex(sources, r"#\[inline\(never\)\]\s+fn " + entries.group(1) + r"\(",
+                         f"`{entries.group(1)}` is not a `#[inline(never)]` function of grund-lsp")
 
     def test_the_training_evidence_keeps_its_bytes(self):
         result = subprocess.run([sys.executable, "-I", str(TRAIN), "describe", "grund-lsp"],

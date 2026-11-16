@@ -3,7 +3,8 @@
 
 §AR-benchmarks.1.1: one generator makes every fixture. With no option it writes the plain
 fixture of `--files` declarations; §AR-benchmarks.1.2: `--feature` adds the one feature a
-fixture isolates, and `--members` makes a workspace of plain member projects.
+fixture isolates, and `--members` makes a workspace of member projects, plain or, with the
+`sources` feature, half Java sources (§AR-benchmarks.1.7).
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ MANIFEST = "manifest.json"
 DEFAULT_FILE_COUNT = 10_000
 DEFAULT_COMPONENT_COUNT = 100
 # §AR-benchmarks.1.2: the features a fixture can isolate, each in a fixture of its own.
-FEATURES = ("rules", "named-sections", "values", "external-facts", "cross-refs")
+FEATURES = ("rules", "named-sections", "values", "external-facts", "cross-refs", "sources")
 # §FS-section-lock: the fingerprints of the two cited relative sections every
 # named-sections declaration repeats verbatim, as `grund fmt --write` records them.
 SECTION_FINGERPRINTS = {"format.1": "8f332b6fe87bb346", "parse.1": "be879e46c73e3d05"}
@@ -37,6 +38,10 @@ RULES = {
 def id_for(index: int, feature: str | None = None) -> str:
     if feature == "cross-refs":
         return f"FS-feature-{index:05d}"
+    if feature == "sources":
+        # §AR-benchmarks.1.7: written as grund writes it back, so the typing session's
+        # `$$FS-002` narrows key by key to one declaration, as an author's citation does.
+        return canonical_id(index)
     return f"FS-{index:05d}-feature-{index:05d}"
 
 
@@ -61,6 +66,10 @@ respect_gitignore = false
     if project is not None:
         base = base.replace("grund_config_version = 1\n",
                             f'grund_config_version = 1\nproject_name = "{project}"\n', 1)
+    if feature == "sources":
+        # §AR-benchmarks.1.7: the typing session's Java document is scanned beside the specs.
+        base = base.replace('include = ["docs"]', 'include = ["docs", "src"]', 1).replace(
+            'extensions = ["md"]', 'extensions = ["md", "java"]', 1)
     base += FEATURE_CONFIG.get(feature, "")
     if not citations:
         return base
@@ -174,6 +183,30 @@ def declaration_body(index: int, file_count: int, component_count: int,
     return heading + belongs + f"and cites §{next_ident} so every declaration is used.\n"
 
 
+def source_body(index: int, declarations: int, component_count: int) -> str:
+    """§AR-benchmarks.1.7: a Java class that cites one declaration in its `/** */` doc-comment
+    and the next in a `//` comment, as code beside a spec cites it."""
+    component = (index - 1) % component_count
+    cited = (index - 1) % declarations + 1
+    following = cited % declarations + 1
+    cites = (id_for(cited, "sources"), id_for(following, "sources"))
+    return (f"package bench.c{component:03d};\n\n"
+            f"/** Feature {index:05d} implements §{cites[0]}. */\n"
+            f"public final class Feature{index:05d} {{\n"
+            f"    // It reads its input as §{cites[1]} says.\n"
+            f"    public int feature() {{\n        return {index};\n    }}\n}}\n")
+
+
+def source_files(root: Path, sources: int, declarations: int, component_count: int) -> None:
+    """§AR-benchmarks.1.7: the `sources` feature's Java half, under `src/`."""
+    for index in range(1, sources + 1):
+        component = (index - 1) % component_count
+        directory = root / "src" / "bench" / f"c{component:03d}"
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / f"Feature{index:05d}.java").write_text(
+            source_body(index, declarations, component_count), encoding="utf-8")
+
+
 def feature_files(root: Path, file_count: int, feature: str | None) -> None:
     """The files beside the declarations that the feature needs to scan clean."""
     if feature == "rules":
@@ -237,16 +270,20 @@ def generate_fixture(
         shutil.rmtree(root)
 
     if members:
-        generate_workspace(root, file_count, component_count, members)
+        generate_workspace(root, file_count, component_count, members, feature)
     else:
         generate_project(root, file_count, component_count, citations, feature)
     write_manifest(root)
 
 
-def generate_workspace(root: Path, file_count: int, component_count: int, members: int) -> None:
-    """§FS-workspace: plain member projects that cite into each other by alias."""
+def generate_workspace(root: Path, file_count: int, component_count: int, members: int,
+                       feature: str | None = None) -> None:
+    """§FS-workspace: member projects that cite into each other by alias, plain or with the
+    `sources` feature's Java half."""
     if members < 2 or file_count < members:
         raise ValueError("--members must be at least 2 and at most --files")
+    if feature not in (None, "sources"):
+        raise ValueError("--members takes no --feature but sources")
     names = [f"m{number:02d}" for number in range(1, members + 1)]
     root.mkdir(parents=True)
     listed = ", ".join(f'"members/{name}"' for name in names)
@@ -255,11 +292,13 @@ def generate_workspace(root: Path, file_count: int, component_count: int, member
         f"[workspace]\nmembers = [{listed}]\ninclude_root = false\n", encoding="utf-8")
     for number, name in enumerate(names):
         member = root / "members" / name
-        generate_project(member, file_count // members, component_count, project=name)
+        generate_project(member, file_count // members, component_count, feature=feature,
+                         project=name)
         peer = names[(number + 1) % members]
-        first = member / "docs" / "functional-spec" / "component-000" / f"{id_for(1)}.md"
+        first = (member / "docs" / "functional-spec" / "component-000"
+                 / f"{id_for(1, feature)}.md")
         first.write_text(first.read_text(encoding="utf-8")
-                         + f"\nIt leans on §{peer}/{id_for(1)} in the next member.\n",
+                         + f"\nIt leans on §{peer}/{id_for(1, feature)} in the next member.\n",
                          encoding="utf-8")
 
 
@@ -269,6 +308,9 @@ def generate_project(root: Path, file_count: int, component_count: int,
     root.mkdir(parents=True)
     (root / "grund.toml").write_text(fixture_config(citations, feature, project),
                                      encoding="utf-8")
+    # §AR-benchmarks.1.7: the `sources` feature gives half its files to Java sources.
+    sources = file_count // 2 if feature == "sources" else 0
+    file_count -= sources
 
     # §FS-check.3.18: the FS kind's default index requires every declaration to
     # be listed as a link, or `grund check` errors on this fixture instead of
@@ -294,6 +336,7 @@ def generate_project(root: Path, file_count: int, component_count: int,
     index_path = root / "docs" / "functional-spec" / "README.md"
     index_path.write_text("".join(index_lines), encoding="utf-8")
     feature_files(root, file_count, feature)
+    source_files(root, sources, file_count, component_count)
 
 
 def parse_args() -> argparse.Namespace:
@@ -308,7 +351,8 @@ def parse_args() -> argparse.Namespace:
         "--files",
         type=int,
         default=DEFAULT_FILE_COUNT,
-        help="number of Markdown declaration files to generate",
+        help="number of files to generate: Markdown declarations, half of them Java sources "
+        "under the sources feature",
     )
     parser.add_argument(
         "--components",
@@ -331,7 +375,7 @@ def parse_args() -> argparse.Namespace:
         "--members",
         type=int,
         default=0,
-        help="make a workspace of this many plain member projects sharing --files",
+        help="make a workspace of this many member projects sharing --files",
     )
     return parser.parse_args()
 

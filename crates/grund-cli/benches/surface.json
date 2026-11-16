@@ -93,7 +93,7 @@
   "modes": {
     "parallel-scan": {"scenarios": ["check_par_256", "check"]},
     "workspace": {"scenarios": ["check_workspace", "list_workspace", "check_workspace_json", "check_workspace_large", "list_workspace_large", "list_workspace_json", "cover_workspace", "refs_workspace"]},
-    "lsp": {"scenarios": ["lsp", "lsp_canonical", "lsp_workspace", "lsp_named_sections"]},
+    "lsp": {"scenarios": ["lsp", "lsp_canonical", "lsp_workspace", "lsp_named_sections", "lsp_typing", "lsp_typing_large"]},
     "python": {"scenarios": ["python_check", "python_list", "python_show_brief", "python_show_full", "python_refs", "python_cover", "python_fmt"]},
     "node": {"waiver": "V8's JIT and garbage-collector threads move the Node addon's instruction counts between runs of one build, so a count would not hold the same-binary bound; it stays waived until its counts are shown repeatable."},
     "sequential-scan": {"scenarios": ["check_seq_255"]},

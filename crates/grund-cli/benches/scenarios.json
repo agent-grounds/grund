@@ -140,6 +140,20 @@
       "citations": false,
       "subject": "FS-feature-00001",
       "feature": "cross-refs"
+    },
+    "typing": {
+      "dir": "target/bench-fixtures/typing-repo",
+      "files": 254,
+      "citations": false,
+      "feature": "sources",
+      "members": 2
+    },
+    "typing-large": {
+      "dir": "target/bench-fixtures/typing-large-repo",
+      "files": 5000,
+      "citations": false,
+      "feature": "sources",
+      "members": 10
     }
   },
   "scenarios": [
@@ -854,6 +868,22 @@
       "ceiling_from": {
         "ir": 931792446,
         "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "lsp_typing",
+      "args": [
+        "typing"
+      ],
+      "fixture": "typing",
+      "frontend": "lsp",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 86000000,
+      "ceiling_from": {
+        "ir": 68350495,
+        "commit": "c6482908a153af08cb678660efcaaeb5db02e2c6"
       },
       "pgo": false
     },
@@ -2650,6 +2680,23 @@
       "ceiling_from": {
         "ir": 13081850381,
         "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "lsp_typing_large",
+      "args": [
+        "typing"
+      ],
+      "fixture": "typing-large",
+      "frontend": "lsp",
+      "tier": "nightly",
+      "group": "frontends",
+      "limit_pct": 12.5,
+      "ceiling_ir": 169000000,
+      "ceiling_from": {
+        "ir": 134863456,
+        "commit": "c6482908a153af08cb678660efcaaeb5db02e2c6"
       },
       "pgo": false
     }
