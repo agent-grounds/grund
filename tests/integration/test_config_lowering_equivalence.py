@@ -35,6 +35,12 @@ gaining a `[workspace]` whose member `api` configures `AR`, so the three records
 of that config, at capture lines 34, 549 and 550, hold its show digest and an
 empty validate stderr. Those bytes are the same before and after the flip.
 
+Issue #1364 adds `[schema.sources] fenced`, and a v2 `config show` prints every
+`[schema.sources]` key with its default (§FS-config-v2.schema.sources.effective),
+so the show digest of the seven v2 records at capture lines 2, 3, 567, 579, 1015,
+1016 and 1017 moves by the one line `fenced = []`. Their show exit and stderr and
+every validate field remain.
+
 The captures are not regenerated to make this test pass. `--capture` exists to
 take them, once, from a binary whose behaviour is the reference.
 """

@@ -83,7 +83,7 @@ fn key_cases() -> Vec<KeyCase> {
             "hint_sources",
             HEAD,
             "include = [\"src\"]",
-            "unknown key `include` in [schema.sources] (expected languages, declarations, exclude, or respect_gitignore)",
+            "unknown key `include` in [schema.sources] (expected languages, declarations, exclude, respect_gitignore, or fenced)",
         ),
         key_case(
             "hint_definition",

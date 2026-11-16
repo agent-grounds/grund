@@ -368,6 +368,8 @@ impl Config {
     pub(crate) fn for_markdown_output(&self, path: &Path) -> anyhow::Result<Self> {
         use super::sources::{DeclarationMode, SourceModel, builtin};
         let mut project = self.project().clone();
+        // §FS-config-v2.schema.sources.fenced: the scan at the target reads the same fences.
+        let fenced = project.schema.sources.fenced().to_vec();
         project.schema.sources.model = Some(SourceModel {
             admitted: vec![builtin("markdown").expect("the Markdown epoch language")],
             extensions: path
@@ -379,6 +381,7 @@ impl Config {
             definitions: Vec::new(),
             declarations: DeclarationMode::AnyComment,
             exclude: Vec::new(),
+            fenced,
         });
         let compiled = super::compiled::compile(&project)?;
         Ok(Self::from_records(&project, self.run(), &compiled))

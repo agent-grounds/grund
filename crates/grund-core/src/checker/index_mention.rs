@@ -45,7 +45,8 @@ fn line_names_file(line: &str, file_name: &str) -> bool {
 ///
 /// One pass over the index's lines. A line inside a fenced block is not the page
 /// saying anything, by the one fence reader every Markdown surface shares
-/// (§FS-check.1.1.5), and a declaration heading declares the ID rather than
+/// (§FS-check.1.1.5), unless `[schema.sources] fenced` selects the fence, whose
+/// citations the page does say (§FS-config-v2.schema.sources.fenced); a declaration heading declares the ID rather than
 /// mentioning it — the same test the entry-form pass applies (§FS-fmt.6.4).
 /// Inline code is deliberately *not* excluded, which is what lets one sentence be
 /// true both of a citation the scan recorded and discarded (§FS-check.3.17.4) and
@@ -63,16 +64,17 @@ fn line_names_file(line: &str, file_name: &str) -> bool {
 pub(super) fn index_mentions<'a>(
     frame: Frame<'_>,
     marker: &str,
+    fenced: &[String],
     declaration_heading: impl Fn(usize) -> bool,
     lines: &[&str],
     unentered: &[(&'a Id, &'a Declaration)],
 ) -> BTreeSet<&'a Id> {
     let mut mentioned: BTreeSet<&Id> = BTreeSet::new();
     // §FS-check.1.1.5.2: the whole index, so a fence opener in its front matter opens nothing.
-    let mut blocks = MarkdownBlocks::lines(lines.iter().copied());
+    let mut blocks = MarkdownBlocks::lines(lines.iter().copied()).selecting(fenced);
     for (index, line) in lines.iter().enumerate() {
         let block = blocks.line(line);
-        if block.in_fence() {
+        if !block.citations_live() {
             continue;
         }
         if declaration_heading(index + 1) {

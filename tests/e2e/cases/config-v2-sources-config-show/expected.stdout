@@ -15,6 +15,7 @@ languages = ["markdown", "rust", "notes"]
 declarations = "any-comment"
 exclude = ["generated", "/docs/archive"]
 respect_gitignore = false
+fenced = []
 
 [schema.sources.extensions]
 rustdoc = "rust"

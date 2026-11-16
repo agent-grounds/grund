@@ -149,7 +149,8 @@ export type ConfigValues = {
   readonly sources?: { readonly languages: readonly { readonly name: string; readonly class: string;
     readonly suffixes: readonly string[]; readonly comment_prefixes: readonly string[]; readonly doc_comments: string;
     readonly docstrings: boolean; readonly builtin: boolean }[]; readonly extensions: Readonly<Record<string, string>>;
-    readonly declarations: string; readonly exclude: readonly string[] };
+    readonly declarations: string; readonly exclude: readonly string[];
+    readonly fenced: readonly string[] };
   readonly fmt: { readonly exclude: readonly string[]; readonly cross_refs: { readonly enabled: boolean; readonly anchor_format: string } };
   readonly output: { readonly format: string; readonly relative_paths: boolean; readonly color: string };
   readonly workspace: { readonly members: readonly string[]; readonly optional_members: readonly string[]; readonly include_root: boolean };

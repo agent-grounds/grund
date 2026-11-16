@@ -1,5 +1,5 @@
 //! Test module: which Markdown lines a heading can stand on (§FS-check.1.1.5.1,
-//! §FS-check.1.1.5.2).
+//! §FS-check.1.1.5.2), and which fences read their citations (§FS-languages.fence.language).
 //! The e2e cases pin what `check` and `show` make of a raw-text HTML block; these
 //! pin the boundaries of the one state machine every reader walks.
 
@@ -10,7 +10,7 @@ fn kinds(text: &str) -> Vec<MarkdownLine> {
     text.lines().map(|line| blocks.line(line)).collect()
 }
 
-use MarkdownLine::{FenceDelimiter, Fenced, FrontMatter, RawHtml, Text};
+use MarkdownLine::{FenceDelimiter, Fenced, FrontMatter, RawHtml, Selected, Text};
 
 /// A whole file read as every whole-file reader reads it (§FS-check.1.1.5.2).
 fn file_kinds(text: &str) -> Vec<MarkdownLine> {
@@ -171,4 +171,79 @@ fn front_matter_is_live_but_neither_heading_nor_rewritable() {
     assert_eq!(kinds("---\n# a\n---\n"), [Text, Text, Text]);
     assert!(!FrontMatter.may_be_heading() && !FrontMatter.in_fence());
     assert!(!FrontMatter.rewritable() && Text.rewritable() && RawHtml.rewritable());
+}
+
+/// The tags a project selects in these tests (§FS-config-v2.schema.sources.fenced).
+fn mermaid() -> Vec<String> {
+    vec!["mermaid".to_string()]
+}
+
+/// Each line of `text` as a reader selecting `fenced` reads it.
+fn selected_kinds(text: &str, fenced: &[String]) -> Vec<MarkdownLine> {
+    let mut blocks = MarkdownBlocks::file(text).selecting(fenced);
+    text.lines().map(|line| blocks.line(line)).collect()
+}
+
+/// §FS-languages.fence.language: a selected fence's content reads its citations and is
+/// still a fence for everything else; its delimiter lines stay inert.
+#[test]
+fn a_selected_fence_is_a_fence_whose_citations_are_live() {
+    assert!(Selected.citations_live() && Selected.in_fence());
+    assert!(!Selected.may_be_heading() && !Selected.rewritable());
+    assert!(!Fenced.citations_live() && !FenceDelimiter.citations_live());
+    assert!(Text.citations_live() && RawHtml.citations_live() && FrontMatter.citations_live());
+}
+
+/// §FS-languages.fence.language: the tag is the first word of the info string, after any
+/// opener, compared literally; `Mermaid`, `{.mermaid}` and an empty info string are not it.
+#[test]
+fn only_a_fence_whose_first_word_is_listed_is_selected() {
+    let fenced = mermaid();
+    for opener in [
+        "```mermaid",
+        "```mermaid title=\"x\"",
+        "```   mermaid",
+        "~~~mermaid",
+        "   ````mermaid",
+    ] {
+        let close = if opener.contains('~') { "~~~" } else { "````" };
+        let text = format!("{opener}\n# FS-a: b\n{close}\nafter");
+        assert_eq!(
+            selected_kinds(&text, &fenced),
+            [FenceDelimiter, Selected, FenceDelimiter, Text],
+            "{opener}"
+        );
+    }
+    for opener in ["```Mermaid", "```{.mermaid}", "```", "```text mermaid"] {
+        let text = format!("{opener}\nx\n```");
+        assert_eq!(
+            selected_kinds(&text, &fenced),
+            [FenceDelimiter, Fenced, FenceDelimiter],
+            "{opener}"
+        );
+    }
+}
+
+/// §FS-languages.fence.language: a reader that selects nothing, every writer among them,
+/// reads a selected fence as any other fence; an unclosed one stays selected to the end.
+#[test]
+fn selection_is_the_readers_and_an_unclosed_fence_keeps_it() {
+    let text = "```mermaid\nx\n\ny";
+    assert_eq!(file_kinds(text), [FenceDelimiter, Fenced, Fenced, Fenced]);
+    assert_eq!(
+        selected_kinds(text, &mermaid()),
+        [FenceDelimiter, Selected, Selected, Selected]
+    );
+}
+
+/// §FS-languages.fence.language: the lines a whole file holds in a selected fence, and none
+/// at all when nothing is selected.
+#[test]
+fn selected_fence_lines_lists_only_selected_content() {
+    let lines = ["a", "```mermaid", "b", "```", "```text", "c", "```"];
+    assert_eq!(
+        selected_fence_lines(&lines, &mermaid()),
+        std::collections::BTreeSet::from([3])
+    );
+    assert!(selected_fence_lines(&lines, &[]).is_empty());
 }

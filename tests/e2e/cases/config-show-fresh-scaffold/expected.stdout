@@ -15,6 +15,7 @@ languages = ["markdown", "json", "rust", "c", "cpp", "java", "kotlin", "scala", 
 declarations = "doc-comments"
 exclude = []
 respect_gitignore = true
+fenced = []
 
 [schema.notes.lines]
 must = 3

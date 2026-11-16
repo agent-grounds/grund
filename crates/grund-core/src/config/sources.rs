@@ -101,6 +101,9 @@ pub(crate) struct SourceModel {
     pub(crate) declarations: DeclarationMode,
     /// `[schema.sources] exclude`: gitignore-style globs at the config root.
     pub(crate) exclude: Vec<String>,
+    /// `[schema.sources] fenced`: the tags of the Markdown fences whose citations are
+    /// read, in written order (§FS-config-v2.schema.sources.fenced).
+    pub(crate) fenced: Vec<String>,
 }
 
 impl SourceModel {

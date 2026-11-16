@@ -12,7 +12,9 @@
 //! (`writers/init_render.rs`).
 
 use super::assets::{AGENTS_PROJECT_NAMESPACES_TEMPLATE, AGENTS_TEMPLATE, canonical_template_text};
-use super::citation_directions::{citation_directions_placeholder, citation_directions_section};
+use super::citation_directions::{
+    citation_directions_placeholder, citation_directions_section, join_english_list,
+};
 use super::clickable_citations::{ConversationSurface, clickable_citations_section};
 use crate::config::{Compiled, KindConfig, Place, Project, Run, guided_kind, kind_prefixes};
 use crate::grammar::{
@@ -118,6 +120,7 @@ fn agents_template_substitutions(
         ("{SECTION_HEADING_NOTE}", section_heading_note),
         ("{INLINE_CITATION_STYLE}", inline_citation_style),
         ("{MARKER}", marker.to_string()),
+        ("{UNSELECTED_FENCES}", unselected_fences(project)),
         ("{TRIGGER_EXAMPLE}", trigger_example),
         ("{TRIGGER}", project.presentation.trigger.clone()),
         ("{DECLARATION_MAP}", declaration_map(project)),
@@ -139,6 +142,24 @@ fn agents_template_substitutions(
         ),
         ("{WORKSPACE_MEMBERS}", workspace.members.clone()),
     ]
+}
+
+/// The `### Rules` marker bullet's fence clause (§FS-init.2.3.4.2): empty where
+/// `[schema.sources] fenced` lists no tag, so the bullet keeps its bytes, and otherwise
+/// ` not tagged ` and the tags, in written order, joined as a prohibition's targets are
+/// (§FS-init.2.3.5.4), since a fence they select is no longer a way not to cite.
+fn unselected_fences(project: &Project) -> String {
+    let tags: Vec<String> = project
+        .schema
+        .sources
+        .fenced()
+        .iter()
+        .map(|tag| format!("`{tag}`"))
+        .collect();
+    if tags.is_empty() {
+        return String::new();
+    }
+    format!(" not tagged {}", join_english_list(&tags, "or"))
 }
 
 /// `format` filled with `kind` and the worked citation example's number and slug

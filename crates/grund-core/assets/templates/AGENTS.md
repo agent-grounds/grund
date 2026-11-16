@@ -30,7 +30,7 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 
 - **Spec first.** For behavior or design changes, write or update the most-specific spec point before code.
 - **Cite as you write.** Place `{MARKER}<ID>` at the point a claim or behavior is made — on the doc-comment for a whole behavior, inline beside the clause it enforces.
-- **Marker = live citation.** A `{MARKER}`-prefixed token resolves and is checked wherever it appears — including inside Markdown backticks. To mention an ID without citing it, write `<{MARKER}><ID>`, omit the marker, or use a fenced code block.
+- **Marker = live citation.** A `{MARKER}`-prefixed token resolves and is checked wherever it appears — including inside Markdown backticks. To mention an ID without citing it, write `<{MARKER}><ID>`, omit the marker, or use a fenced code block{UNSELECTED_FENCES}.
 - **Inline citation style.** {INLINE_CITATION_STYLE}
 - **Always cite the most-specific point.**{CITATION_DIRECTIONS}
 

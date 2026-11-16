@@ -140,9 +140,13 @@ impl Table {
                 "section_separator",
                 "heading_depth",
             ]),
-            Table::Sources => {
-                Keys::Closed(&["languages", "declarations", "exclude", "respect_gitignore"])
-            }
+            Table::Sources => Keys::Closed(&[
+                "languages",
+                "declarations",
+                "exclude",
+                "respect_gitignore",
+                "fenced",
+            ]),
             Table::Extensions => Keys::Names("a suffix"),
             Table::Definition(_) => {
                 Keys::Closed(&["class", "comment_prefixes", "doc_comments", "docstrings"])

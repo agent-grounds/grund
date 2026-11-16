@@ -135,6 +135,8 @@ pub(super) fn translate(
             .filter(|name| !name.contains('/'))
             .map(|name| format!("{}/", glob_escape(name)))
             .collect(),
+        // §FS-config-v2.schema.sources.fenced: v1 selects no fence, so its translation none.
+        fenced: Vec::new(),
     };
     Languages { model, refusals }
 }

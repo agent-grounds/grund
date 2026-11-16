@@ -1,6 +1,6 @@
 {"project":"examples/cochange/repo","show":[0,"f80d62210a487f08",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"examples/external-tickets/expected.repo","show":[0,"000e010bbd64c56c",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"examples/external-tickets/repo","show":[0,"000e010bbd64c56c",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"examples/external-tickets/expected.repo","show":[0,"1f69786bfecef3fb",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"examples/external-tickets/repo","show":[0,"1f69786bfecef3fb",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"examples/rules/repo","show":[0,"df54b62311a11e74",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"examples/scheme-numbered-slug/repo","show":[0,"98287765b8aa59b0",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"examples/scheme-numbered/repo","show":[0,"4179c02501ace7a8",""],"validate":[0,"e3b0c44298fc1c14",""]}
@@ -564,7 +564,7 @@
 {"project":"tests/e2e/cases/init-invalid-config-is-an-error/repo","show":[2,"e3b0c44298fc1c14","error: grund.toml:4: unknown [reference] conversation `plain` (expected link)\n"],"validate":[1,"e3b0c44298fc1c14","error: grund.toml:4: unknown [reference] conversation `plain` (expected link)\n"]}
 {"project":"tests/e2e/cases/init-kind-scan-false-block/expected.repo","show":[0,"485c4ed211320a81",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-kind-scan-false-block/repo","show":[0,"485c4ed211320a81",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"tests/e2e/cases/init-no-workspace-members/expected.repo","show":[0,"70a7174f2e2b0a68",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"tests/e2e/cases/init-no-workspace-members/expected.repo","show":[0,"a44658350e1a6347",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-non-citable-kind-block/expected.repo","show":[0,"6680989d25c557cf",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-non-citable-kind-block/repo","show":[0,"6680989d25c557cf",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-populated-configured-form/repo","show":[0,"52a6bf9dfcf0f59f",""],"validate":[0,"e3b0c44298fc1c14",""]}
@@ -576,7 +576,7 @@
 {"project":"tests/e2e/cases/init-workspace-member-descriptions/repo/apps/api","show":[0,"d8f9e500f04ce99b",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-workspace-member-descriptions/repo/packages/core","show":[0,"0b803bb2fa935630",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-workspace-member/expected.repo","show":[0,"73f25d271e3adee6",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"tests/e2e/cases/init-workspace-member/expected.repo/apps/api","show":[0,"2d82ad17ddeabfb7",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"tests/e2e/cases/init-workspace-member/expected.repo/apps/api","show":[0,"4a06e177d451af94",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-workspace-member/repo","show":[0,"73f25d271e3adee6",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-workspace-pinned-rule-invalid-sibling/expected.repo","show":[0,"6f3dbe5690bc4fdd",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-workspace-pinned-rule-invalid-sibling/expected.repo/member","show":[0,"1d9b042416597608",""],"validate":[0,"e3b0c44298fc1c14",""]}
@@ -1012,9 +1012,9 @@
 {"project":"tests/e2e/cases/workspace-include-root-false-unread-check-full/repo","show":[0,"1b33b39b692a5a5b",""],"validate":[0,"e3b0c44298fc1c14","warning: group/grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.\n"]}
 {"project":"tests/e2e/cases/workspace-include-root-false-unread-check-full/repo/group","show":[0,"01f57a6d4cf9addd",""],"validate":[0,"e3b0c44298fc1c14","warning: grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.\n"]}
 {"project":"tests/e2e/cases/workspace-include-root-false-unread-check-full/repo/group/alpha","show":[0,"89eb982b8db8c54d",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"tests/e2e/cases/workspace-include-root-false-unread-check/repo","show":[0,"c1389e863f8fce74",""],"validate":[0,"e3b0c44298fc1c14","warning: group/grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.\n"]}
-{"project":"tests/e2e/cases/workspace-include-root-false-unread-check/repo/group","show":[0,"3140a4fae232ffb3",""],"validate":[0,"e3b0c44298fc1c14","warning: grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.\n"]}
-{"project":"tests/e2e/cases/workspace-include-root-false-unread-check/repo/group/alpha","show":[0,"d470c03a42b03538",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"tests/e2e/cases/workspace-include-root-false-unread-check/repo","show":[0,"b2e81510a0c18425",""],"validate":[0,"e3b0c44298fc1c14","warning: group/grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.\n"]}
+{"project":"tests/e2e/cases/workspace-include-root-false-unread-check/repo/group","show":[0,"330141ff8917878c",""],"validate":[0,"e3b0c44298fc1c14","warning: grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.\n"]}
+{"project":"tests/e2e/cases/workspace-include-root-false-unread-check/repo/group/alpha","show":[0,"ff1c3b00084c0de6",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/workspace-include-root-false-unread-expansion-error/repo","show":[0,"1d86dbe93903d030",""],"validate":[1,"e3b0c44298fc1c14","error: broken/grund.toml:5: invalid [workspace] member `/broken` (expected relative path or trailing /* glob)\n"]}
 {"project":"tests/e2e/cases/workspace-include-root-false-unread-expansion-error/repo/broken","show":[2,"e3b0c44298fc1c14","error: grund.toml:5: invalid [workspace] member `/broken` (expected relative path or trailing /* glob)\n"],"validate":[1,"e3b0c44298fc1c14","error: grund.toml:5: invalid [workspace] member `/broken` (expected relative path or trailing /* glob)\n"]}
 {"project":"tests/e2e/cases/workspace-include-root-false-unread-expansion-error/repo/group","show":[0,"01f57a6d4cf9addd",""],"validate":[0,"e3b0c44298fc1c14","warning: grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.\n"]}

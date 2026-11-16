@@ -1,9 +1,12 @@
 // The one answer to "is this Markdown line structure". A fence is one context
 // that answers no; a raw-text HTML block is another, and a file's front matter is
 // the third. Keeping all three in one state machine is what stops a reader from
-// knowing one and not the others.
+// knowing one and not the others. Whether a fence's citations are read is asked
+// here too, so no reader learns a fence's tag on its own.
 
-use super::fence::{MarkdownFence, markdown_fence_delimiter};
+use std::collections::BTreeSet;
+
+use super::fence::{MarkdownFence, delimiter_run, markdown_fence_delimiter};
 
 /// A fenced or raw-text block a Markdown text opens and does not close.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -26,6 +29,21 @@ pub(crate) fn open_block(text: &str) -> Option<OpenBlock> {
     blocks.open_at()
 }
 
+/// The lines, 1-based, inside a fence `fenced` selects in a whole Markdown file's
+/// `lines`: where a citation is read but no `fmt` pass writes a link
+/// (§FS-languages.fence.language). Empty, and nothing walked, where `fenced` is.
+pub(crate) fn selected_fence_lines(lines: &[&str], fenced: &[String]) -> BTreeSet<usize> {
+    if fenced.is_empty() {
+        return BTreeSet::new();
+    }
+    let mut blocks = MarkdownBlocks::lines(lines.iter().copied()).selecting(fenced);
+    (1..)
+        .zip(lines)
+        .filter(|(_, line)| blocks.line(line) == MarkdownLine::Selected)
+        .map(|(number, _)| number)
+        .collect()
+}
+
 /// What a Markdown line is to a reader asking whether it can be structure
 /// (§FS-check.1.1.5, §FS-check.1.1.5.1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -36,6 +54,10 @@ pub(crate) enum MarkdownLine {
     FenceDelimiter,
     /// A line inside a fence: neither structure nor citations.
     Fenced,
+    /// A line inside a fence `[schema.sources] fenced` selects: still a fence for
+    /// everything but citations, so never structure and never rewritten, but its
+    /// citations are live (§FS-languages.fence.language).
+    Selected,
     /// A line of a raw-text HTML block, its opener and closer included: never
     /// structure, but its citations stay live (§FS-check.1.1.5.1).
     RawHtml,
@@ -46,10 +68,17 @@ pub(crate) enum MarkdownLine {
 }
 
 impl MarkdownLine {
-    /// The fence's delimiter or its content: the context in which nothing is
-    /// read at all (§FS-check.1.1.5).
+    /// The fence's delimiter or its content, a selected fence's included: the
+    /// context no writer rewrites and no structure reader reads (§FS-check.1.1.5,
+    /// §FS-languages.fence.language).
     pub(crate) fn in_fence(self) -> bool {
-        matches!(self, Self::FenceDelimiter | Self::Fenced)
+        matches!(self, Self::FenceDelimiter | Self::Fenced | Self::Selected)
+    }
+
+    /// Whether a citation on this line is read: everywhere but an unselected fence
+    /// and every fence's delimiter lines (§FS-languages.fence.language).
+    pub(crate) fn citations_live(self) -> bool {
+        !matches!(self, Self::FenceDelimiter | Self::Fenced)
     }
 
     /// Whether a heading-shaped line here is a heading (§FS-check.1.1.5.1).
@@ -92,10 +121,16 @@ const RAW_TEXT_TAGS: [&str; 4] = ["pre", "script", "style", "textarea"];
 /// this one machine, so the contexts never nest differently on two surfaces. A
 /// reader of a whole file starts it with [`MarkdownBlocks::file`]; a reader of a
 /// declaration body, which starts at its heading and so below any front matter,
-/// starts it with `default()`.
+/// starts it with `default()`. A reader that reads citations names the fence tags
+/// the project selects with [`MarkdownBlocks::selecting`]; every other reader selects
+/// none, so to it a selected fence is a fence like any other (§FS-languages.fence.language).
 #[derive(Clone, Copy, Default)]
-pub(crate) struct MarkdownBlocks {
+pub(crate) struct MarkdownBlocks<'a> {
     fence: Option<MarkdownFence>,
+    /// `[schema.sources] fenced`: the tags whose fences read their citations.
+    fenced: &'a [String],
+    /// Whether the open fence's tag is one of `fenced`.
+    selected: bool,
     /// The tag of the open raw-text block, which only its own end tag closes.
     raw: Option<&'static str>,
     /// The last line of the front matter, 0 where there is none.
@@ -106,7 +141,7 @@ pub(crate) struct MarkdownBlocks {
     opened: usize,
 }
 
-impl MarkdownBlocks {
+impl<'a> MarkdownBlocks<'a> {
     /// The machine for a whole Markdown file, its front matter found once
     /// (§FS-check.1.1.5.2).
     pub(crate) fn file(text: &str) -> Self {
@@ -114,11 +149,17 @@ impl MarkdownBlocks {
     }
 
     /// [`MarkdownBlocks::file`] for a file already split into its lines.
-    pub(crate) fn lines<'a>(lines: impl IntoIterator<Item = &'a str>) -> Self {
+    pub(crate) fn lines<'l>(lines: impl IntoIterator<Item = &'l str>) -> Self {
         Self {
             front_matter: front_matter_extent(lines).unwrap_or(0),
             ..Self::default()
         }
+    }
+
+    /// The same machine reading the fences tagged with one of `fenced` as selected
+    /// (§FS-config-v2.schema.sources.fenced, §FS-languages.fence.language).
+    pub(crate) fn selecting(self, fenced: &'a [String]) -> Self {
+        Self { fenced, ..self }
     }
 
     /// The last line, 1-based, of the file's front matter (§FS-check.1.1.5.2).
@@ -156,11 +197,18 @@ impl MarkdownBlocks {
         if markdown_fence_delimiter(&mut self.fence, line) {
             if !was_fenced {
                 self.opened = self.read;
+                // §FS-languages.fence.language: the opener's tag, compared literally.
+                self.selected = fence_tag(line)
+                    .is_some_and(|tag| self.fenced.iter().any(|selected| selected == tag));
             }
             return MarkdownLine::FenceDelimiter;
         }
         if was_fenced {
-            return MarkdownLine::Fenced;
+            return if self.selected {
+                MarkdownLine::Selected
+            } else {
+                MarkdownLine::Fenced
+            };
         }
         if let Some(tag) = raw_text_opener(line) {
             // The opening line may close the block itself.
@@ -172,6 +220,15 @@ impl MarkdownBlocks {
         }
         MarkdownLine::Text
     }
+}
+
+/// The tag of the fence `line` opens: the first word of its info string, the text after the
+/// opening run with surrounding whitespace stripped, up to the first space or tab; `None` where
+/// the info string is empty (§FS-languages.fence.language). Asked only of a line the fence
+/// reader has just read as an opener, so it reads the same run.
+fn fence_tag(line: &str) -> Option<&str> {
+    let (_, _, info) = delimiter_run(line)?;
+    info.split([' ', '\t']).find(|word| !word.is_empty())
 }
 
 /// The raw-text tag `line` opens a block with: at most three leading spaces,

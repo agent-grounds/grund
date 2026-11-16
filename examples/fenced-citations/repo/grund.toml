@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "fenced-citations-example"
+
+[schema.sources]
+# Read the citations in every ```mermaid fence; every other fence stays an illustration.
+fenced = ["mermaid"]
+
+[schema.kinds.AR]
+files = ["docs/ar.md"]

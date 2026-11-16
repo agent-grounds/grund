@@ -189,6 +189,12 @@ pub(crate) fn file_extension(path: &Path) -> Option<&str> {
 }
 
 impl Sources {
+    /// The tags of the Markdown fences whose citations are read, `[]` for a v1 file, which
+    /// has no such key (§FS-config-v2.schema.sources.fenced).
+    pub(crate) fn fenced(&self) -> &[String] {
+        self.model.as_ref().map_or(&[], |model| &model.fenced)
+    }
+
     /// Hold `extensions` as the effective list, and with it what the list says of a file with no
     /// extension, so no record holds one without the other (§FS-scan.scope.extensions.empty). Every
     /// writer of the list comes through here. It records what the list holds and names no version:
