@@ -1,2 +1,2 @@
-docs/functional-spec/FS-001-alpha.md:3: markdown link
+docs/functional-spec/FS-001-alpha.md:3: markdown link: §FS-001-alpha → [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha)
 src/app.rs:2: trigger → marker, bare → marker

@@ -133,14 +133,17 @@ impl FmtRow {
 }
 
 /// What one line's rewrites did (§FS-fmt.3.5.1): the counts, the text each
-/// expansion wrote (§FS-fmt.3.6), and a link's repeated-anchor detail
-/// (§DF-repeated-heading-anchor.decision.row).
+/// expansion wrote (§FS-fmt.3.6), a link's repeated-anchor detail
+/// (§DF-repeated-heading-anchor.decision.row), and each link it wrote, before
+/// and after (§FS-fmt.3.6.2).
 #[derive(Default)]
 pub(super) struct LineRewrite {
     pub(super) counts: FmtCounts,
     /// `written → canonical` for each expansion, in source order (§FS-fmt.3.6.1).
     pub(super) expansions: Vec<String>,
     pub(super) anchor_detail: Option<String>,
+    /// `replaced → written` for each link, in source order (§FS-fmt.3.6.2).
+    pub(super) links: Vec<String>,
 }
 
 const LINK_LABEL: &str = "markdown link";
@@ -149,8 +152,8 @@ impl LineRewrite {
     /// The row text (§FS-fmt.3.5.1): the first kind that fired with the expansion
     /// detail, then every other kind that fired, in label order, as one `, `
     /// list that follows the label with `; ` when it has detail and `, ` when not.
-    /// A `markdown link` keeps its repeated-anchor detail wherever it stands; being
-    /// last, it ends the row. Empty when nothing fired.
+    /// A `markdown link` keeps its own detail wherever it stands; being last, it
+    /// ends the row. Empty when nothing fired.
     pub(super) fn label(&self) -> String {
         let counts = &self.counts;
         let kinds = [
@@ -166,16 +169,18 @@ impl LineRewrite {
         let mut fired = kinds
             .iter()
             .filter(|(count, _)| *count > 0)
-            .map(
-                |(_, kind)| match (&self.anchor_detail, *kind == LINK_LABEL) {
-                    (Some(detail), true) => format!("{LINK_LABEL}: {detail}"),
-                    _ => kind.to_string(),
-                },
-            );
+            .map(|(_, kind)| {
+                if *kind == LINK_LABEL {
+                    self.link_label()
+                } else {
+                    kind.to_string()
+                }
+            });
         let Some(mut row) = fired.next() else {
             return String::new();
         };
-        // §FS-fmt.3.6: only an expansion writes into the ID, so only it has detail here.
+        // §FS-fmt.3.6: the leading label carries the expansions' detail; a link's
+        // own detail rides on its label, leading or trailing (§FS-fmt.3.6.2).
         let detailed = !self.expansions.is_empty();
         if detailed {
             row.push_str(": ");
@@ -188,50 +193,194 @@ impl LineRewrite {
         }
         row
     }
+
+    /// `markdown link`, then `: ` and its detail where it has any: the
+    /// repeated-anchor note, then `; ` and the items where both are present
+    /// (§FS-fmt.3.6.2). Both are appended, so the label alone, and the label with
+    /// the note, stay prefixes of it (§FS-fmt.3.5.1).
+    fn link_label(&self) -> String {
+        let mut label = LINK_LABEL.to_string();
+        let items = (!self.links.is_empty()).then(|| self.links.join(", "));
+        let detail = [self.anchor_detail.clone(), items];
+        let detail = detail.into_iter().flatten().collect::<Vec<_>>();
+        if !detail.is_empty() {
+            label.push_str(": ");
+            label.push_str(&detail.join("; "));
+        }
+        label
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{FmtCounts, LineRewrite};
 
-    fn rewrite(counts: [usize; 5], expansions: &[&str], anchor: Option<&str>) -> String {
+    fn line(
+        counts: [usize; 4],
+        expansions: &[&str],
+        anchor: Option<&str>,
+        links: &[&str],
+    ) -> LineRewrite {
         LineRewrite {
             counts: FmtCounts {
                 triggers_marked: counts[0],
                 citations_marked: counts[1],
                 local_sections_expanded: counts[2],
                 shorthands_expanded: counts[3],
-                links_written: counts[4],
+                links_written: links.len(),
                 section_lock_entries: 0,
             },
             expansions: expansions.iter().map(|it| it.to_string()).collect(),
             anchor_detail: anchor.map(str::to_string),
+            links: links.iter().map(|it| it.to_string()).collect(),
         }
-        .label()
     }
+
+    fn rewrite(
+        counts: [usize; 4],
+        expansions: &[&str],
+        anchor: Option<&str>,
+        links: &[&str],
+    ) -> String {
+        line(counts, expansions, anchor, links).label()
+    }
+
+    const NOTE: &str = "repeated heading anchor #1-overview \u{2192} #1-overview-1, \
+                        numbered since grund 0.18";
+    const ALPHA: &str = "[\u{a7}SRC-501-alpha](SRC-501-alpha.md) \u{2192} \
+                         [\u{a7}SRC-501-alpha](SRC-501-alpha.md#src-501-alpha-alpha-source-report)";
+    const BETA: &str = "\u{a7}SRC-502-beta \u{2192} \
+                        [\u{a7}SRC-502-beta](SRC-502-beta.md#src-502-beta-beta-source-report)";
+    const B1: &str = "[\u{a7}FS-b.1](functional-spec/FS-ab.md#1-overview) \u{2192} \
+                      [\u{a7}FS-b.1](functional-spec/FS-ab.md#1-overview-1)";
 
     // §FS-fmt.3.5.1: every kind is named once, in label order.
     #[test]
     fn all_five_kinds_on_one_line_are_named_once_each() {
         assert_eq!(
-            rewrite([2, 1, 1, 3, 4], &["\u{a7}1 \u{2192} \u{a7}FS-a.1"], None),
+            rewrite(
+                [2, 1, 1, 3],
+                &["\u{a7}1 \u{2192} \u{a7}FS-a.1"],
+                None,
+                &["l"]
+            ),
             "trigger \u{2192} marker: \u{a7}1 \u{2192} \u{a7}FS-a.1; bare \u{2192} marker, \
-             local section \u{2192} canonical, shorthand \u{2192} canonical, markdown link"
+             local section \u{2192} canonical, shorthand \u{2192} canonical, markdown link: l"
         );
         assert_eq!(
-            rewrite([0, 3, 0, 0, 2], &[], None),
-            "bare \u{2192} marker, markdown link"
+            rewrite([0, 3, 0, 0], &[], None, &["a", "b"]),
+            "bare \u{2192} marker, markdown link: a, b"
         );
-        assert_eq!(rewrite([0; 5], &[], None), "");
+        assert_eq!(rewrite([0; 4], &[], None, &[]), "");
     }
 
-    // §FS-fmt.3.6: the repeated-anchor note stays on the link, leading or trailing.
+    // §FS-fmt.3.6.2.3: re-pointed and fresh, each alone and in source order.
     #[test]
-    fn a_link_keeps_its_anchor_detail_leading_or_trailing() {
-        assert_eq!(rewrite([0, 0, 0, 0, 1], &[], Some("d")), "markdown link: d");
+    fn a_link_row_lists_each_link_before_and_after() {
         assert_eq!(
-            rewrite([1, 0, 0, 0, 2], &[], Some("d")),
-            "trigger \u{2192} marker, markdown link: d"
+            rewrite([0; 4], &[], None, &[ALPHA]),
+            format!("markdown link: {ALPHA}")
         );
+        assert_eq!(
+            rewrite([0; 4], &[], None, &[BETA]),
+            format!("markdown link: {BETA}")
+        );
+        assert_eq!(
+            rewrite([0; 4], &[], None, &[ALPHA, BETA]),
+            format!("markdown link: {ALPHA}, {BETA}")
+        );
+    }
+
+    // §FS-fmt.3.6.2.2, §FS-fmt.3.6.2.3: a dropped title holding `, ` is one item.
+    #[test]
+    fn a_title_the_write_drops_stays_inside_its_item() {
+        let login = "[\u{a7}FS-login](functional-spec/FS-login.md \"Login, again\") \u{2192} \
+                     [\u{a7}FS-login](functional-spec/FS-login.md#fs-login-login)";
+        assert_eq!(
+            rewrite([0; 4], &[], None, &[login, BETA]),
+            format!("markdown link: {login}, {BETA}")
+        );
+    }
+
+    // §FS-fmt.3.6.2.3: trailing a marking, a trigger, and an expansion's detail.
+    #[test]
+    fn a_trailing_link_names_its_items_after_its_label() {
+        assert_eq!(
+            rewrite([0, 1, 0, 0], &[], None, &[BETA]),
+            format!("bare \u{2192} marker, markdown link: {BETA}")
+        );
+        assert_eq!(
+            rewrite([1, 0, 0, 0], &[], None, &[BETA]),
+            format!("trigger \u{2192} marker, markdown link: {BETA}")
+        );
+        assert_eq!(
+            rewrite(
+                [0, 0, 0, 1],
+                &["\u{a7}SRC-504 \u{2192} \u{a7}SRC-504-delta"],
+                None,
+                &[BETA]
+            ),
+            format!(
+                "shorthand \u{2192} canonical: \u{a7}SRC-504 \u{2192} \u{a7}SRC-504-delta; \
+                 markdown link: {BETA}"
+            )
+        );
+        assert_eq!(
+            rewrite(
+                [2, 1, 0, 2],
+                &[
+                    "\u{a7}SRC-501 \u{2192} \u{a7}SRC-501-alpha",
+                    "\u{a7}SRC-503 \u{2192} \u{a7}SRC-503-gamma"
+                ],
+                None,
+                &[ALPHA, BETA]
+            ),
+            format!(
+                "trigger \u{2192} marker: \u{a7}SRC-501 \u{2192} \u{a7}SRC-501-alpha, \
+                 \u{a7}SRC-503 \u{2192} \u{a7}SRC-503-gamma; bare \u{2192} marker, \
+                 shorthand \u{2192} canonical, markdown link: {ALPHA}, {BETA}"
+            )
+        );
+    }
+
+    // §FS-fmt.3.6.2: the repeated-anchor note comes first, then `; ` and the items,
+    // leading or trailing.
+    #[test]
+    fn a_link_keeps_its_anchor_note_before_its_items() {
+        assert_eq!(
+            rewrite([0; 4], &[], Some(NOTE), &[B1]),
+            format!("markdown link: {NOTE}; {B1}")
+        );
+        assert_eq!(
+            rewrite([0, 1, 0, 0], &[], Some(NOTE), &[BETA, B1]),
+            format!("bare \u{2192} marker, markdown link: {NOTE}; {BETA}, {B1}")
+        );
+    }
+
+    // §FS-fmt.3.5.1, §FS-errors.3: the row an earlier release printed, which named
+    // no item, is a prefix of the row that names them.
+    #[test]
+    fn every_old_row_is_a_prefix_of_its_new_row() {
+        let cases = [
+            line([0; 4], &[], None, &[ALPHA]),
+            line([0; 4], &[], None, &[ALPHA, BETA]),
+            line([0, 1, 0, 0], &[], None, &[BETA]),
+            line([1, 0, 0, 0], &[], None, &[BETA]),
+            line(
+                [0, 0, 0, 1],
+                &["\u{a7}SRC-504 \u{2192} \u{a7}SRC-504-delta"],
+                None,
+                &[BETA],
+            ),
+            line([0; 4], &[], Some(NOTE), &[B1]),
+            line([0, 1, 0, 0], &[], Some(NOTE), &[BETA, B1]),
+        ];
+        for mut rewrite in cases {
+            let new = rewrite.label();
+            rewrite.links.clear();
+            let old = rewrite.label();
+            assert!(new.starts_with(&old), "{old:?} is not a prefix of {new:?}");
+            assert_ne!(new, old);
+        }
     }
 }

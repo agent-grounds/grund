@@ -1,3 +1,3 @@
-docs/functional-spec/FS-001-alpha.md:3: bare → marker, markdown link
-docs/functional-spec/FS-001-alpha.md:5: markdown link
-docs/functional-spec/FS-002-beta.md:3: markdown link
+docs/functional-spec/FS-001-alpha.md:3: bare → marker, markdown link: §FS-002-beta → [§FS-002-beta](FS-002-beta.md#fs-002-beta-beta)
+docs/functional-spec/FS-001-alpha.md:5: markdown link: [§FS-002-beta](FS-002-beta.md) → [§FS-002-beta](FS-002-beta.md#fs-002-beta-beta)
+docs/functional-spec/FS-002-beta.md:3: markdown link: §FS-001-alpha → [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha)

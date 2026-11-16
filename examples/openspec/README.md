@@ -349,13 +349,13 @@ The handle is the coordinate and the title declares nothing
 ([§FS-config.3.3.1](../../docs/functional-spec/FS-config.md#331-named-components)). So retitling `Borrow a Book` to `Check Out a Book` while
 keeping `.borrow-a-book` breaks no citation. On a copy of `2-check/repo`,
 `grund check` still prints `success`, and `grund fmt --check` lists the four
-Markdown links whose anchor follows the title:
+Markdown links whose anchor follows the title, each before and after:
 
 ```text
-openspec/changes/add-loan-holds/proposal.md:16: markdown link
-openspec/changes/add-loan-holds/specs/loans/spec.md:55: markdown link
-openspec/changes/add-loan-holds/tasks.md:20: markdown link
-openspec/specs/notices/spec.md:13: markdown link
+openspec/changes/add-loan-holds/proposal.md:16: markdown link: [§SPEC-loans.requirements.borrow-a-book](../../specs/loans/spec.md#borrow-a-book-requirement-borrow-a-book) → [§SPEC-loans.requirements.borrow-a-book](../../specs/loans/spec.md#borrow-a-book-requirement-check-out-a-book)
+openspec/changes/add-loan-holds/specs/loans/spec.md:55: markdown link: [§SPEC-loans.requirements.borrow-a-book](../../../../specs/loans/spec.md#borrow-a-book-requirement-borrow-a-book) → [§SPEC-loans.requirements.borrow-a-book](../../../../specs/loans/spec.md#borrow-a-book-requirement-check-out-a-book)
+openspec/changes/add-loan-holds/tasks.md:20: markdown link: [§SPEC-loans.requirements.borrow-a-book](../../specs/loans/spec.md#borrow-a-book-requirement-borrow-a-book) → [§SPEC-loans.requirements.borrow-a-book](../../specs/loans/spec.md#borrow-a-book-requirement-check-out-a-book)
+openspec/specs/notices/spec.md:13: markdown link: [§SPEC-loans.requirements.borrow-a-book](../loans/spec.md#borrow-a-book-requirement-borrow-a-book) → [§SPEC-loans.requirements.borrow-a-book](../loans/spec.md#borrow-a-book-requirement-check-out-a-book)
 ```
 
 `grund fmt --write` rewrites those four lines. Renaming the handle is a rename

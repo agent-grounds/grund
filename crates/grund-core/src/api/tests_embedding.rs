@@ -87,7 +87,8 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     assert_eq!(fmt_output.changes.len(), 1);
     assert_eq!(
         fmt_output.changes[0].label,
-        "trigger → marker, markdown link"
+        "trigger → marker, markdown link: \u{a7}FS-001-alpha → \
+         [\u{a7}FS-001-alpha](functional-spec/FS-001-alpha.md#fs-001-alpha-alpha)"
     );
 
     let proposed = propose_id(

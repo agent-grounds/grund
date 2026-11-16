@@ -11,7 +11,8 @@
 //!
 //! The six shapes are the forms §FS-fmt.7.2 names. `clean-markdown` rewrites
 //! every class, including the citations inside section headings that other
-//! files link to (§FS-fmt.6.3.3), and meets no scan error, though `check`
+//! files link to (§FS-fmt.6.3.3) and the links a `markdown link` row's items are
+//! hardest to apply (§FS-fmt.3.6.2.1), and meets no scan error, though `check`
 //! reports its absent-target line (§FS-fmt.7.5.2). `strict-abort` is the whole-declaration-set path refusing up
 //! front (§FS-fmt.3.2). `partial-source` is a source-only scope, where no rewrite
 //! needs the whole set, so the run reports its rewrites *and* names the path it
@@ -216,6 +217,19 @@ const EXPANDING_HEADINGS: &str = "# FS-002-beta: Beta\n\nBeta builds on alpha.\n
 /// The links into those headings, from another file, each on its own line.
 const HEADING_NOTES: &str = "# Heading notes\n\nThe shorthand heading: \u{a7}FS-002-beta.1\n\n\
      The local heading: \u{a7}FS-002-beta.2\n";
+/// Two declarations in one file whose sections share a heading, so the second's
+/// anchor is the repeat's numbered one (§DF-repeated-heading-anchor).
+const REPEATED_HEADINGS: &str = "# FS-003-gamma: Gamma\n\n## 1. Overview\n\nFirst.\n\n# \
+     FS-004-delta: Delta\n\n## 1. Overview\n\nSecond.\n";
+/// The two lines a `markdown link` row's items are hardest to apply on
+/// (§FS-fmt.3.6.2.1): a link already right beside one the write re-points to a
+/// repeat's numbered anchor, under the repeated-anchor note, with the same old
+/// destination; and a link already right beside a fresh one of the same
+/// citation, which the first match of the fresh item's text would wrongly name.
+const LINK_NOTES: &str = "# Link notes\n\n\
+     See [\u{a7}FS-003-gamma.1](FS-003-gamma.md#1-overview) and \
+     [\u{a7}FS-004-delta.1](FS-003-gamma.md#1-overview).\n\n\
+     See [\u{a7}FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha), then \u{a7}FS-001-alpha again.\n";
 const CITING_SOURCE: &str = "//! FS-001-alpha: Alpha\n//!\n//! Alpha is the first thing.\n\n\
      // Cites $$FS-001-alpha from a comment.\n";
 
@@ -225,6 +239,8 @@ fn build_clean_markdown(root: &Path) {
     write(root, "docs/notes.md", CITING_NOTES);
     write(root, "docs/FS-002-beta.md", EXPANDING_HEADINGS);
     write(root, "docs/heading-notes.md", HEADING_NOTES);
+    write(root, "docs/FS-003-gamma.md", REPEATED_HEADINGS);
+    write(root, "docs/link-notes.md", LINK_NOTES);
 }
 
 fn build_strict_abort(root: &Path) {

@@ -4,7 +4,6 @@
 
 use std::path::Path;
 
-use super::fmt_anchor_row::anchor_detail;
 use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_rewrite::FmtLineOpts;
 use super::fmt_row::LineRewrite;
@@ -52,9 +51,8 @@ pub(super) fn suppressed_line(
     if wrapped.line == line {
         return unchanged();
     }
-    // §FS-fmt.3.5.1: the index link is accounted for like any other.
+    // §FS-fmt.3.5.1, §FS-fmt.3.6.2: the index link is accounted for like any other.
     let mut rewrite = LineRewrite::default();
-    rewrite.counts.links_written = wrapped.written();
-    rewrite.anchor_detail = anchor_detail(&wrapped.repointed);
+    wrapped.account(line, &mut rewrite);
     (wrapped.line, rewrite)
 }

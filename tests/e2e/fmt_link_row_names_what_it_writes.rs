@@ -88,14 +88,12 @@ const TITLE_ROWS: &[Row] = &[Row {
 }];
 
 #[test]
-#[ignore = "red until #1378 names each written link in the markdown link row; implement removes this"]
 fn the_issues_four_rows_name_the_link_before_and_after() {
     let project = Project::new("readme", "docs/sources/README.md", README);
     project.assert_rows("docs/sources/README.md", README_ROWS);
 }
 
 #[test]
-#[ignore = "red until #1378 names each written link in the markdown link row; implement removes this"]
 fn a_dropped_title_holding_a_comma_is_one_item() {
     let project = Project::new("titles", "docs/sources/titles.md", TITLES);
     project.assert_rows("docs/sources/titles.md", TITLE_ROWS);

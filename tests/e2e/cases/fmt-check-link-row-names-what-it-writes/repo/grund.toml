@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "grund-1378"
+
+[schema]
+id_format = "{kind}-{number}-{slug}"
+
+[schema.kinds.SRC]
+folders = ["docs/sources"]
+index = false

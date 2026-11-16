@@ -94,13 +94,18 @@ fn report(root: &Path, flag: &str) -> Vec<String> {
 
 /// `path:line: <kind>[: <from> → <to>][; |, ]<kind>, …` → `(line, kind)` for
 /// every kind the row names, the leading one first (§FS-fmt.3.5.1, §FS-fmt.3.6).
-/// An expansion's detail begins with the marker, which no kind does.
+/// An expansion's detail begins with the marker, which no kind does. `markdown
+/// link` is the last kind and its detail ends the row (§FS-fmt.3.6.2): its items
+/// hold an author's destination, which may carry `, ` or `; `, so the row is cut
+/// after the label rather than split through them (§FS-fmt.3.6.2.2).
 fn reported_labels(root: &Path) -> Vec<(usize, String)> {
     let mut labels = Vec::new();
     for flag in ["--marker", "--cross-refs"] {
         for rest in report(root, flag) {
             let (line, row) = rest.split_once(": ").expect("path:line: <kind>");
             let line: usize = line.parse().expect("line number");
+            const LINK: &str = "markdown link";
+            let row = row.find(LINK).map_or(row, |at| &row[..at + LINK.len()]);
             for part in row.split("; ").flat_map(|part| part.split(", ")) {
                 let kind = part.split(": ").next().expect("kind");
                 if !kind.starts_with('\u{a7}') {
@@ -196,15 +201,15 @@ fn a_line_with_several_rewrites_is_one_row_under_the_first_label() {
             // §FS-fmt.3.5.1: marked then expanded leads with the trigger, expanded
             // then wrapped with the shorthand; both still name what they write, and
             // every other kind follows the detail after `; `.
-            "3: trigger \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; shorthand \u{2192} canonical, markdown link",
-            "5: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link",
+            "3: trigger \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; shorthand \u{2192} canonical, markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login)",
+            "5: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login)",
             // §FS-fmt.3.5.2: one row however many local tokens, led by the local label
             // unless an earlier rewrite fired; a withheld token (§FS-fmt.2.4.6) has no detail.
-            "7: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1, \u{a7}2 \u{2192} \u{a7}FS-004-quick-actions.2; markdown link",
-            "9: trigger \u{2192} marker: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; local section \u{2192} canonical, markdown link",
-            "11: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; markdown link",
+            "7: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1, \u{a7}2 \u{2192} \u{a7}FS-004-quick-actions.2; markdown link: \u{a7}FS-004-quick-actions.1 \u{2192} [\u{a7}FS-004-quick-actions.1](FS-004-quick-actions.md#1-one), \u{a7}FS-004-quick-actions.2 \u{2192} [\u{a7}FS-004-quick-actions.2](FS-004-quick-actions.md#2-two)",
+            "9: trigger \u{2192} marker: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; local section \u{2192} canonical, markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login), \u{a7}FS-004-quick-actions.1 \u{2192} [\u{a7}FS-004-quick-actions.1](FS-004-quick-actions.md#1-one)",
+            "11: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; markdown link: \u{a7}FS-004-quick-actions.1 \u{2192} [\u{a7}FS-004-quick-actions.1](FS-004-quick-actions.md#1-one)",
             // §FS-fmt.3.5.1: wrapping never leads an expansion; it follows it.
-            "13: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link",
+            "13: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login)",
         ]
     );
     // §FS-fmt.3.6: a bare citation marked on a line that expanded a shorthand
@@ -212,7 +217,7 @@ fn a_line_with_several_rewrites_is_one_row_under_the_first_label() {
     let marked = report(&root, "--marker");
     assert!(
         marked.contains(
-            &"13: bare \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; shorthand \u{2192} canonical, markdown link".to_string()
+            &"13: bare \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; shorthand \u{2192} canonical, markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login), \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login)".to_string()
         ),
         "fmt --check --marker rows: {marked:?}"
     );

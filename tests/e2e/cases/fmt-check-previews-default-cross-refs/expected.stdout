@@ -1,3 +1,3 @@
-docs/notes.md:3: shorthand → canonical: §SPEC-001 → §SPEC-001-checkout; markdown link
-docs/notes.md:5: shorthand → canonical: §SPEC-003 → §SPEC-003-refunds; markdown link
-docs/notes.md:7: markdown link
+docs/notes.md:3: shorthand → canonical: §SPEC-001 → §SPEC-001-checkout; markdown link: §SPEC-001-checkout → [§SPEC-001-checkout](spec.md#spec-001-checkout-the-customer-can-pay-for-a-basket)
+docs/notes.md:5: shorthand → canonical: §SPEC-003 → §SPEC-003-refunds; markdown link: §SPEC-003-refunds → [§SPEC-003-refunds](spec.md#spec-003-refunds-a-paid-basket-can-be-refunded-once)
+docs/notes.md:7: markdown link: §SPEC-003-refunds → [§SPEC-003-refunds](spec.md#spec-003-refunds-a-paid-basket-can-be-refunded-once)

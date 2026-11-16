@@ -494,7 +494,8 @@ not permission to return a string in place of typed data.
   Completed partial run carries changes and scan errors; refusal partial may
   contain no changes. No made-up rollback or atomic-all-files guarantee.
   `label` is the CLI row after `path:line: `, with the same kinds appended
-  ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)) and the same `; creates the file` or `; deletes the file`
+  ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)), the same text an expansion or a link writes
+  ([§FS-fmt.3.6](FS-fmt.md#36-an-expansion-or-a-link-names-the-text-it-writes)), and the same `; creates the file` or `; deletes the file`
   ([§FS-section-lock.write.report](FS-section-lock.md#writereport-what-fmt-reports)), so a caller comparing `label` exactly breaks
   as an exact-line script does; it should read `counts` and `lockFile` instead.
   `counts:{triggersMarked,citationsMarked,localSectionsExpanded,shorthandsExpanded,

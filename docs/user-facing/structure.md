@@ -276,11 +276,15 @@ copy with [`examples/relative-sections-lock/`](../../examples/relative-sections-
 Read the preview before you write, and describe the change from the write's
 report. A preview row names every kind of rewrite its line gets: the first kind
 leads, with the text an expansion writes, and the others follow
-([§FS-fmt.3.5.1](../functional-spec/FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)). Under `--marker` a Markdown line is marked and then linked:
+([§FS-fmt.3.5.1](../functional-spec/FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)). A `markdown link` names each link before and after, so you can
+apply one line by hand when the file holds other changes you are not ready to
+write, and it is the only review an anchor gets before it is written: `grund
+check` does not read anchors
+([§FS-fmt.3.6.2](../functional-spec/FS-fmt.md#362-a-written-link-names-the-link-before-and-after)). Under `--marker` a Markdown line is marked and then linked:
 
 ```text
 $ grund fmt --marker
-docs/runbook.md:3: bare → marker, markdown link
+docs/runbook.md:3: bare → marker, markdown link: §FS-reserve.1 → [§FS-reserve.1](../requirements.md#1-hold-time)
 src/inventory/reserve.py:3: bare → marker
 $ grund fmt --marker --write
 rewrote 2 lines: 2 citations marked, 1 link written
@@ -290,14 +294,15 @@ rewrote 2 lines: 2 citations marked, 1 link written
 
 The totals count every occurrence, so a citation marked and then linked counts
 once in each, and a link counts only when it is new or points somewhere new
-([§FS-fmt.3.7](../functional-spec/FS-fmt.md#37-the---write-report)). After a rename, the lock file of the old ID is deleted and
+([§FS-fmt.3.7](../functional-spec/FS-fmt.md#37-the---write-report)). After a rename, the notes row shows the whole link because the
+rename moved its file part while the anchor stayed; the lock file of the old ID is deleted and
 the lock file of the new one is created, and the report says so instead of
 counting lines in each
 ([§FS-section-lock.write.report](../functional-spec/FS-section-lock.md#writereport-what-fmt-reports)):
 
 ```text
 $ grund fmt
-docs/notes.md:1: markdown link
+docs/notes.md:1: markdown link: [§FS-sign-in.code.1](functional-spec/FS-login.md#1-a-code-expires-after-ten-minutes) → [§FS-sign-in.code.1](functional-spec/FS-sign-in.md#1-a-code-expires-after-ten-minutes)
 .grund/sections/FS-login.lock:1: section lock: drop FS-login.code.1; deletes the file
 .grund/sections/FS-sign-in.lock:1: section lock: add FS-sign-in.code.1; creates the file
 $ grund fmt --write

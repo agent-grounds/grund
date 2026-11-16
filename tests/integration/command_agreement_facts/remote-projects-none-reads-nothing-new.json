@@ -51,8 +51,8 @@
     ],
     "refusals": {},
     "fmt": {
-      "changes": [{"path":".grund/notes.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/fs.md","line":5,"label":"markdown link","counts":{"links_written":1}}],
-      "writeChanges": [{"path":".grund/notes.md","line":3,"label":"markdown link","counts":{"links_written":1}},{"path":"docs/fs.md","line":5,"label":"markdown link","counts":{"links_written":1}}],
+      "changes": [{"path":".grund/notes.md","line":3,"label":"markdown link: §GOAL-local → [§GOAL-local](../docs/goals.md#goal-local-a-local-goal)","counts":{"links_written":1}},{"path":"docs/fs.md","line":5,"label":"markdown link: §GOAL-local → [§GOAL-local](goals.md#goal-local-a-local-goal)","counts":{"links_written":1}}],
+      "writeChanges": [{"path":".grund/notes.md","line":3,"label":"markdown link: §GOAL-local → [§GOAL-local](../docs/goals.md#goal-local-a-local-goal)","counts":{"links_written":1}},{"path":"docs/fs.md","line":5,"label":"markdown link: §GOAL-local → [§GOAL-local](goals.md#goal-local-a-local-goal)","counts":{"links_written":1}}],
       "written": {".grund/notes.md":{"3":"An explicitly scanned note under `.grund/` still cites [§GOAL-local](../docs/goals.md#goal-local-a-local-goal) and §GOAL-gone."},"docs/fs.md":{"5":"Serves [§GOAL-local](goals.md#goal-local-a-local-goal), and cites §GOAL-x, which only the unread copy under `.grund/remotes/x/` declares."}}
     }
   },

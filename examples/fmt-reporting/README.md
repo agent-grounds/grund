@@ -22,8 +22,8 @@ echo $?    # 1: rewrites are pending
 ```
 
 ```text
-docs/notes.md:1: markdown link
-docs/runbook.md:1: bare → marker, markdown link
+docs/notes.md:1: markdown link: [§FS-sign-in.code.1](functional-spec/FS-login.md#1-a-code-expires-after-ten-minutes) → [§FS-sign-in.code.1](functional-spec/FS-sign-in.md#1-a-code-expires-after-ten-minutes)
+docs/runbook.md:1: bare → marker, markdown link: §FS-sign-in → [§FS-sign-in](functional-spec/FS-sign-in.md#fs-sign-in-login)
 .grund/sections/FS-login.lock:1: section lock: drop FS-login.code.1; deletes the file
 .grund/sections/FS-sign-in.lock:1: section lock: add FS-sign-in.code.1; creates the file
 ```
@@ -31,7 +31,12 @@ docs/runbook.md:1: bare → marker, markdown link
 The runbook row leads with `bare → marker`, the first change its line gets, and
 names `markdown link` after it, because `--marker` marks the citation and the
 link pass then wraps what it marked
-([§FS-fmt.6.5](../../docs/functional-spec/FS-fmt.md#65-interaction-with---marker)). The lock rows say that the run moves the
+([§FS-fmt.6.5](../../docs/functional-spec/FS-fmt.md#65-interaction-with---marker)); its link item is the fresh link around the citation `--marker`
+just marked. The notes row shows the whole link, before and after, because the
+rename moved its file part, `FS-login.md` to `FS-sign-in.md`, while the anchor
+stayed: an item names the link, not only its anchor
+([§FS-fmt.3.6.2](../../docs/functional-spec/FS-fmt.md#362-a-written-link-names-the-link-before-and-after)). Each row can be applied by hand, one line at a time,
+by replacing the text left of `→` with the text right of it. The lock rows say that the run moves the
 entry from one lock file to another: the old file is left with no entry, so the
 write deletes it, and the new one does not exist yet, so the write creates it.
 

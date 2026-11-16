@@ -1,2 +1,2 @@
-docs/use.md:3: trigger → marker, markdown link
+docs/use.md:3: trigger → marker, markdown link: §FS-login.format.1 → [§FS-login.format.1](functional-spec/FS-login.md#1-username)
 .grund/sections/FS-login.lock:1: section lock: add FS-login.format.1; creates the file

@@ -8,6 +8,10 @@
 //! built, one previewed and one written, and the lines that actually differ
 //! after the write are compared to the lines the preview named.
 //!
+//! A `markdown link` row also says what each link becomes (§FS-fmt.3.6.2), so the
+//! last case here holds that text to the disk too: applying the row by hand gives
+//! the line the write leaves.
+//!
 //! Unix only: the corpus needs real broken symlinks.
 
 #![cfg(unix)]
@@ -16,6 +20,69 @@
 mod fmt_shapes;
 
 use fmt_shapes::{changed_sites, reported_sites, run_grund, shapes, snapshot, stderr, stdout};
+
+const LINK_LABEL: &str = "markdown link: ";
+const ARROW: &str = " \u{2192} ";
+const NOTE: &str = "repeated heading anchor ";
+
+/// The end of a link's destination in `text`, which opens with `[`: the byte
+/// after the `)` that closes the `(` after its label (§FS-fmt.3.6.2.2).
+fn link_end(text: &str) -> usize {
+    let open = text.find("](").expect("a link's label closes") + 2;
+    let mut depth = 1;
+    let bytes = text.as_bytes();
+    let mut at = open;
+    while depth > 0 {
+        match bytes[at] {
+            b'\\' => at += 1,
+            b'(' => depth += 1,
+            b')' => depth -= 1,
+            _ => {}
+        }
+        at += 1;
+    }
+    at
+}
+
+/// The items of a row's `markdown link` detail, `(replaced, written)`, read by
+/// their brackets rather than by splitting on `, ` (§FS-fmt.3.6.2.2), after the
+/// repeated-anchor note where it fires.
+fn link_items(detail: &str) -> Vec<(String, String)> {
+    let mut rest = match detail.strip_prefix(NOTE) {
+        Some(note) => &note[note.find("; ").expect("the note ends with `; `") + 2..],
+        None => detail,
+    };
+    let mut items = Vec::new();
+    while !rest.is_empty() {
+        let left = if rest.starts_with('[') {
+            link_end(rest)
+        } else {
+            rest.find(ARROW).expect("a fresh item's citation token")
+        };
+        let after = rest[left..].strip_prefix(ARROW).expect("an item's arrow");
+        let right = link_end(after);
+        items.push((rest[..left].to_string(), after[..right].to_string()));
+        rest = after[right..].strip_prefix(", ").unwrap_or(&after[right..]);
+    }
+    items
+}
+
+/// Whether `left` stands at `at` in `line` as a span the link pass replaces
+/// (§FS-fmt.3.6.2.1): a whole wrap, or a citation token in no wrap and not the
+/// start of a longer token.
+fn is_span(line: &str, at: usize, left: &str) -> bool {
+    if left.starts_with('[') {
+        return true;
+    }
+    let before = line[..at].ends_with('[');
+    let mut after = line[at + left.len()..].chars();
+    let continues = match after.next() {
+        Some(c) if c.is_alphanumeric() || c == '-' || c == '_' => true,
+        Some('.') => after.next().is_some_and(char::is_alphanumeric),
+        _ => false,
+    };
+    !before && !continues
+}
 
 /// The declaration-local sites §FS-fmt.7.5.2 requires the rewritable shape to
 /// hold: one whose target section exists and one whose target does not
@@ -196,4 +263,50 @@ fn the_declaration_local_rewrite_is_previewed_and_written_on_its_own_lines() {
         "{absent:?} cites a section the declaration does not record, so neither mode \
          rewrites it (§FS-fmt.2.4.6)\n  listed: {listed:?}\n  changed: {changed:?}",
     );
+}
+
+#[test]
+/// §FS-fmt.3.6.2.1 — for every preview row whose only kind is `markdown link`,
+/// replacing each item's left side with its right side in the line the write read,
+/// in source order and each after the last, gives the line on disk after the
+/// write. The line is read from the disk before the write and after it, not from
+/// either run's report.
+fn a_link_row_applied_by_hand_gives_the_line_the_write_leaves() {
+    let mut applied_rows = 0;
+    for shape in shapes() {
+        let previewed = shape.materialize("preview-items-check");
+        let written = shape.materialize("preview-items-write");
+        let before = snapshot(&written);
+        let preview = run_grund(&["fmt", "--check"], &previewed);
+        run_grund(&["fmt", "--write"], &written);
+        let after = snapshot(&written);
+        for row in stdout(&preview).lines() {
+            let Some((site, detail)) = row.split_once(": ").and_then(|(path, rest)| {
+                let (line, label) = rest.split_once(": ")?;
+                Some(((path.to_string(), line.parse::<usize>().ok()?), label))
+            }) else {
+                continue;
+            };
+            let Some(detail) = detail.strip_prefix(LINK_LABEL) else {
+                continue;
+            };
+            let (path, number) = site;
+            let read = &before[&path][number - 1];
+            let (mut by_hand, mut cursor) = (String::new(), 0);
+            for (left, right) in link_items(detail) {
+                let at = read[cursor..]
+                    .match_indices(&left)
+                    .map(|(at, _)| cursor + at)
+                    .find(|at| is_span(read, *at, &left))
+                    .unwrap_or_else(|| panic!("{row}: {left:?} is not on {read:?} after {cursor}"));
+                by_hand.push_str(&read[cursor..at]);
+                by_hand.push_str(&right);
+                cursor = at + left.len();
+            }
+            by_hand.push_str(&read[cursor..]);
+            assert_eq!(by_hand, after[&path][number - 1], "{}: {row}", shape.name);
+            applied_rows += 1;
+        }
+    }
+    assert!(applied_rows > 0, "the corpus holds no `markdown link` row");
 }

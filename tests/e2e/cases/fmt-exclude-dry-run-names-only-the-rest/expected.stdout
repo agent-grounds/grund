@@ -1,1 +1,1 @@
-docs/functional-spec/FS-002-beta.md:3: trigger → marker: §FS-001 → §FS-001-alpha; bare → marker, shorthand → canonical, markdown link
+docs/functional-spec/FS-002-beta.md:3: trigger → marker: §FS-001 → §FS-001-alpha; bare → marker, shorthand → canonical, markdown link: §FS-001-alpha → [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha), §FS-001-alpha → [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha), §FS-001-alpha → [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha), §FS-001-alpha → [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha)

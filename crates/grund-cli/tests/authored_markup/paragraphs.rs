@@ -121,7 +121,14 @@ fn a_stale_wrap_after_a_label_that_is_no_definition_is_rederived() {
         );
         let check = grund(&["fmt", "--check"], &dir);
         assert_eq!(check.status.code(), Some(1), "{name}: {}", stdout(&check));
-        assert_eq!(stdout(&check), "docs/notes.md:1: markdown link\n", "{name}");
+        // §FS-fmt.3.6.2: the row names the whole wrap before and after.
+        assert_eq!(
+            stdout(&check),
+            format!(
+                "docs/notes.md:1: markdown link: {stale} \u{2192} [§ADR-use-redis](adr/{REDIS_LINK})\n"
+            ),
+            "{name}"
+        );
         grund(&["fmt", "--write"], &dir);
         assert_eq!(
             read(&dir, "docs/notes.md"),
