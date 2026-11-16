@@ -1052,8 +1052,7 @@ projects — and picking one would be a guess
 ##### 8.1.1.4 Each project is asked in its own grammar
 
 Re-parse and render the written ID in each candidate project's grammar, as a qualified citation does ([§FS-workspace.1.2](FS-workspace.md#12-whose-grammar-reads-the-id), [§FS-workspace.4](FS-workspace.md#4-resolution)): in a mixed-format workspace the same text can denote different IDs, so carrying the current project's parse would miss the candidate.
-Current-grammar rejection must not pre-empt the search: a kind may exist only in a loaded member. An actual member declaration earns the same `ID not found: <written ID>` refusal with qualified candidates and `not-found` classification ([§FS-workspace.8.1.1.8](FS-workspace.md#8118---format-json-keeps-its-shape)), for bare/explicit show, the programmatic show API and explicit batch queries.
-Mere parseability is insufficient. Without an actual declaration, preserve the original failure, including `invalid ID` and its format hint when the current grammar rejects the text ([§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects)).
+Current-grammar rejection must not pre-empt the search: a kind may exist only in a loaded member. An actual member declaration earns the same `ID not found: <written ID>` refusal with qualified candidates and `not-found` classification ([§FS-workspace.8.1.1.8](FS-workspace.md#8118---format-json-keeps-its-shape)), for bare/explicit show, the programmatic show API and explicit batch queries. Without an actual declaration, preserve the original failure, including `invalid ID` and its format hint when the current grammar rejects the text ([§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects)).
 
 ##### 8.1.1.5 A one-project run offers none
 
