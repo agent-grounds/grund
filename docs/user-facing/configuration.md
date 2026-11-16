@@ -115,6 +115,18 @@ One row per kind: where its declarations live and how they are read. `kinds = []
 | `resolve` | `"must"` \| `"should"` | must when fetch is set, else absent | How a missing external snapshot is reported: `must` as a dangling citation, `should` as a warning. [§FS-config.3.4.10.2](../functional-spec/FS-config.md#34102-fetch-and-resolve) |
 | `fetch` | string | — | The executable `grund fetch` runs to save a missing external snapshot. It must name a program: an empty or whitespace-only value names none and is reported at its line. [§FS-config.3.4.10.2](../functional-spec/FS-config.md#34102-fetch-and-resolve) |
 
+In either config version, citable names may prefix each other when their tokens
+remain distinguishable: `GR` with `{kind}-{number}` can sit beside `GRUND` with
+`{kind}-{slug}`. For a prefix-related pair, the next character in the longer name
+must be an ASCII letter or digit, and both effective formats must begin with
+`{kind}` and produce heads that do not prefix each other. A head is the kind name
+plus the literal immediately after `{kind}`. Thus `GR` beside `GR-X` needs a
+rename even with different separators; separator-free `{kind}{number}` on `GR`
+beside `GRUND` needs unambiguous formats. Duplicate names remain invalid,
+including non-citable rows; non-citable kinds are exempt from the prefix rule
+([§FS-config.3.4.5.1](../functional-spec/FS-config.md#3451-citable-names-and-formats-must-distinguish-their-tokens),
+[§FS-config.3.2.9](../functional-spec/FS-config.md#329-kind-head)).
+
 ### `[scan]`
 
 What the scan walks and reads. [§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned)

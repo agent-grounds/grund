@@ -314,15 +314,13 @@ pub(super) fn enabled(vocabulary: &RuleVocabulary) -> Option<RuleVocabulary> {
     })
 }
 
-/// Step 1: the configured kind the text names or starts with, longest first.
+/// Step 1: the configured kind the text names or starts with, longest first
+/// (§FS-rule-refusals.sentences.rewrite.recovered), including an exact name.
 fn recovered_kind<'a>(head: &str, vocabulary: &'a RuleVocabulary) -> Option<&'a str> {
     vocabulary
         .kinds
         .iter()
-        .filter(|kind| {
-            head.strip_prefix(kind.as_str())
-                .is_some_and(|rest| !rest.starts_with(|c: char| c.is_ascii_alphanumeric()))
-        })
+        .filter(|kind| crate::grammar::kind_name_at_boundary(head, kind))
         .max_by_key(|kind| kind.len())
         .map(String::as_str)
 }

@@ -319,6 +319,7 @@
             "id": "FS-config.3.4",
             "href": "docs/functional-spec/FS-config.md#34-kinds--recognized-kinds"
           },
+          "x-grund-note": "In either config version, citable names may prefix each other when their tokens\nremain distinguishable: `GR` with `{kind}-{number}` can sit beside `GRUND` with\n`{kind}-{slug}`. For a prefix-related pair, the next character in the longer name\nmust be an ASCII letter or digit, and both effective formats must begin with\n`{kind}` and produce heads that do not prefix each other. A head is the kind name\nplus the literal immediately after `{kind}`. Thus `GR` beside `GR-X` needs a\nrename even with different separators; separator-free `{kind}{number}` on `GR`\nbeside `GRUND` needs unambiguous formats. Duplicate names remain invalid,\nincluding non-citable rows; non-citable kinds are exempt from the prefix rule\n([§FS-config.3.4.5.1](../functional-spec/FS-config.md#3451-citable-names-and-formats-must-distinguish-their-tokens),\n[§FS-config.3.2.9](../functional-spec/FS-config.md#329-kind-head)).",
           "items": {
             "type": "object",
             "properties": {

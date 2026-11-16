@@ -1,3 +1,3 @@
-# GH-1234: Ship the external-facts workflow
+# GR-80923: Ship the external-facts workflow
 
 The old committed snapshot, replaced at this same path by an explicit fetch.

@@ -27,7 +27,6 @@ fn pair(version: u8, default: &str, rows: &[(&str, Option<&str>)]) -> String {
 /// ASCII upper/lower letters and digits are boundaries that preserve unique
 /// malformed-token attribution; effective formats may be inherited or overridden.
 #[test]
-#[ignore = "red until #1357 format-aware admission; implement removes this"]
 fn kind_heads_admit_distinct_heads_in_both_readers_and_orders() {
     let root = test_root("kind_heads_admit");
     let mut failures = Vec::new();
@@ -77,7 +76,6 @@ fn kind_heads_admit_distinct_heads_in_both_readers_and_orders() {
 /// Refusals distinguish remedies while keeping the whole old diagnostic as a
 /// prefix. Different separators do not repair an unsafe name boundary.
 #[test]
-#[ignore = "red until #1357 appended collision reasons; implement removes this"]
 fn kind_heads_collision_errors_preserve_prefix_and_explain_remedy() {
     let root = test_root("kind_heads_reasons");
     let mut failures = Vec::new();

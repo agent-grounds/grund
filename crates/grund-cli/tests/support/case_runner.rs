@@ -94,15 +94,7 @@ include!("case_args_tests.rs");
 
 pub fn discover_e2e_cases(manifest_dir: &Path) -> Vec<PathBuf> {
     let cases_dir = manifest_dir.join("tests/e2e/cases");
-    // §FS-config.3.4.5.1: red until #1357; only these new cases are temporarily
-    // owned by kind_heads_reciprocal_contract's ignored test. Implement removes
-    // this filter and the test's ignore marker together.
-    let cases = discover_case_dirs(&cases_dir, |path| {
-        !matches!(
-            path.file_name().and_then(|s| s.to_str()),
-            Some("kind-heads-v1" | "kind-heads-v2")
-        )
-    });
+    let cases = discover_case_dirs(&cases_dir, |_| true);
     assert!(
         !cases.is_empty(),
         "expected at least one e2e case under {}",

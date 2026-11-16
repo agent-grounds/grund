@@ -1,3 +1,3 @@
-# Release guide
+# GRUND-why: Why
 
-The rollout follows §GH-1234.
+The rollout follows §GR-80923.

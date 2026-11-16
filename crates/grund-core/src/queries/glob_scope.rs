@@ -8,10 +8,10 @@
 
 use anyhow::Result;
 
-use crate::config::{Config, DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR};
+use crate::config::{DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR};
 use crate::grammar::{
-    CoordinateGlob, GlobMatcher, GlobOperator, GlobQualifier, GlobRefusal, GlobStage,
-    literal_after_kind_placeholder, render_citation_id,
+    CoordinateGlob, GlobMatcher, GlobOperator, GlobQualifier, GlobRefusal, GlobStage, kind_head,
+    render_citation_id,
 };
 use crate::model::{Citation, OperationDiagnostic};
 use crate::resolver::WorkspaceContext;
@@ -184,19 +184,6 @@ fn projects_read(
     }
 }
 
-/// The ID head a kind's IDs begin with — the kind and the literal its format writes
-/// after `{kind}` — or `None` for a format that does not begin with `{kind}`, whose IDs
-/// can begin with anything.
-fn kind_head(config: &Config, kind: &str, format: Option<&str>) -> Option<String> {
-    let format = format.unwrap_or(&config.id_format);
-    format.starts_with("{kind}").then(|| {
-        format!(
-            "{kind}{}",
-            literal_after_kind_placeholder(format).unwrap_or("")
-        )
-    })
-}
-
 /// The note for a valid pattern no configured citable kind in scope can start, with the
 /// one kind it names with ASCII case ignored as its suggestion (§FS-coordinate-globs.errors.note).
 fn note(context: &WorkspaceContext, glob: &CoordinateGlob, scope: &[usize]) -> Option<String> {
@@ -214,7 +201,10 @@ fn note(context: &WorkspaceContext, glob: &CoordinateGlob, scope: &[usize]) -> O
     for &index in scope {
         let config = &context.projects[index].config;
         for kind in config.kinds.iter().filter(|kind| kind.citable) {
-            let head = kind_head(config, &kind.kind, kind.format.as_deref())?;
+            let head = kind_head(
+                &kind.kind,
+                kind.format.as_deref().unwrap_or(&config.id_format),
+            )?;
             if overlaps(&head, false) {
                 return None;
             }

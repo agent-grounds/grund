@@ -205,15 +205,11 @@ fn off_grammar_heading<'line, 'grammar>(
 }
 
 impl Grammar {
+    /// Exactly one nonempty malformed name owns the token
+    /// (§FS-citations.recognized.off-format, §FS-declarations.checks.declaration-near-miss.1).
     pub(crate) fn legacy_kind_and_format<'a>(&'a self, token: &str) -> Option<(&'a str, &'a str)> {
         let mut matches = self.legacy.kinds.iter().filter(|(kind, _)| {
-            token.strip_prefix(kind).is_some_and(|rest| {
-                !rest.is_empty()
-                    && rest
-                        .chars()
-                        .next()
-                        .is_some_and(|ch| !ch.is_ascii_alphanumeric())
-            })
+            token.len() > kind.len() && super::kind_name_at_boundary(token, kind)
         });
         let first = matches.next()?;
         matches

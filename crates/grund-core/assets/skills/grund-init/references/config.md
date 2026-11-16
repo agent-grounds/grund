@@ -5,7 +5,7 @@
 | `--template` and `--scaffold` | With little or no `docs/` or `tests/` structure, use `grund init --scaffold`: the default `--template=software-development` lays canonical kinds and starter files. With meaningful docs or tests, omit `--scaffold` and add only missing grund files. For an existing taxonomy, use `grund init --template=none`, add the repo's version-2 `[schema.kinds.<KIND>]` tables to `grund.toml`, then run `grund init` again. `--template=none --scaffold` is refused because `none` has no starter files. |
 | `[reference].strict` (version 1 only) | Version 2 has fixed marked-only recognition and no strict switch ([config-derived guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#2381-what-the-config-fills-in)). For version 1, recommend the default `strict = true` for first adoption, especially with noisy ID-like tokens or deliberate citation hygiene. Use `strict = false` only for existing bare citations that need a compatibility window before `grund fmt --marker`. |
 | `[rules.citations.grounding] must` (v2); `[reference].require_grounding` (v1) | Recommend leaving it off initially (no v2 `must` rung, v1 `false`); turn it on (v2 `must = "file"`, v1 `true`) only with broad spec-to-code citation coverage or an explicit request for strict co-change discipline. |
-| `[schema] id_format` (v2); `[id] format` (v1) | Use `{kind}-{number}-{slug}` for fresh repos or stable IDs with readable names; `{kind}-{number}` for existing ADR/RFC-style numbered IDs; `{kind}-{slug}` for title/slug-based docs where numeric allocation would feel artificial. A kind override uses `[schema.kinds.<KIND>] id_format` in v2, `[[kinds]] format` in v1. |
+| `[schema] id_format` (v2); `[id] format` (v1) | Use `{kind}-{number}-{slug}` for fresh repos or stable IDs with readable names; `{kind}-{number}` for existing ADR/RFC-style numbered IDs; `{kind}-{slug}` for title/slug-based docs where numeric allocation would feel artificial. A kind override uses `[schema.kinds.<KIND>] id_format` in v2, `[[kinds]] format` in v1. `GR` tickets with `{kind}-{number}` may coexist with slug-based `GRUND`; prefix-related names need an ASCII letter/digit boundary and known, non-overlapping heads (name plus following literal). `GR` beside `GR-X` still needs a rename; separator-free `GR` beside `GRUND` needs unambiguous formats. See [configuration](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/configuration.md). |
 | `[schema.kinds.<KIND>]` (v2); `[[kinds]]` (v1) | Start from defaults. Add custom kinds for existing categories such as `ADR`, `RFC`, `REQ`, `API`, `SEC`, or `OPS`; remove defaults only when they would clearly confuse the project. |
 | Source scope | In v2, configure actual places with `[schema.kinds.<KIND>] folders`/`files`; the `code` complement covers unplaced files, and `[schema.sources] exclude` prunes generated paths. In v1, `[scan] include` lists actual directories, such as `["docs", "e2e", "src", "crates", "tests"]` for a Rust workspace. |
 | `[fmt.cross_refs].anchor_format` (v1; v2 writes only `github` anchors) | Use `github` for GitHub or no evident renderer; `gitlab` for GitLab; `mkdocs` when `mkdocs.yml` exists; `pandoc` with evident Pandoc config/build scripts; `none` for file-only links without section anchors. |
@@ -60,7 +60,7 @@ Default: `{kind}-{number}-{slug}`.
    └─────────────────────────────── citation marker (writing only)
 ```
 
-Pick one per repo and keep it stable — mixing is unsupported because citations would look identical but resolve under different rules.
+Pick a repository default and keep it stable; use an explicit per-kind override for a different ID shape.
 
 | Scheme                                     | Example             | Benefit                                                                                                          | Trade-off                                                                |
 |--------------------------------------------|---------------------|------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
@@ -109,6 +109,20 @@ CONST-api-version: ['1.10']
 ```
 
 A `§` citation inside a YAML comment is read by nothing, so cite provenance from Markdown. A finding at a YAML source is reported as one at a JSON source is, and a source that cannot be read or parsed exits `2`.
+
+A fetched tracker kind can keep its prefix beside the canonical kinds. For example, with default `{kind}-{slug}` IDs, version 2 writes:
+
+```toml
+[schema.kinds.GRUND]
+files = ["docs/grund.md"]
+
+[schema.kinds.GR]
+files = ["docs/tickets.md"]
+id_format = "{kind}-{number}"
+fetch = "scripts/fetch-ticket"
+```
+
+In version 1, use `[[kinds]]` rows with `kind = "GRUND"` / `kind = "GR"`, singular `file`, and `format` for the override. `GR-` and `GRUND-` heads distinguish these IDs without a member or alias. `GR` beside `GR-X` is still refused because the name boundary is punctuation, even with distinct heads; rename a kind. A separator-free `GR` format beside `GRUND` instead needs unambiguous formats. The [external facts guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/external-facts.md) shows the workflow; only explicit fetch runs the integration, while reads use the committed snapshots offline.
 
 A `fetch` key must name a program. Version 2 refuses an empty or whitespace-only value when the config loads, so `grund config validate` exits 1 and every other command exits 2, at the key's line. In version 2, name the program, or remove the key together with any `[rules.resolution]` entry for the kind and let its missing IDs be errors ([a value that names no executable](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-fetch.md#21-a-value-that-names-no-executable)).
 

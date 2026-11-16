@@ -17,8 +17,37 @@ resolve = "should"
 fetch = "scripts/fetch-ticket"
 ```
 
-The executable receives exactly one argument, the local ID, and prints one
-complete Markdown declaration to stdout. Save the following as `scripts/fetch-ticket`
+A tracker's `GR` prefix can also coexist with the `GRUND` kind in the same
+project. With default `{kind}-{slug}` IDs, add these rows in version 1:
+
+```toml
+[[kinds]]
+kind = "GRUND"
+file = "docs/grund.md"
+
+[[kinds]]
+kind = "GR"
+file = "docs/tickets.md"
+format = "{kind}-{number}"
+fetch = "scripts/fetch-ticket"
+```
+
+For version 2, use `[schema.kinds.GRUND] files = ["docs/grund.md"]` and
+`[schema.kinds.GR] files = ["docs/tickets.md"]`, spelling the override
+`id_format = "{kind}-{number}"`. Keep the provider's own prefix in the executable.
+The [offline example](../../examples/external-tickets/) fetches `GR-80923`;
+`GRUND-why` cites it, and its snapshot cites `GRUND-why`. No workspace alias is
+needed. Their heads, `GR-` and `GRUND-`, cannot prefix each other. `GR` beside
+`GR-X` is still refused even with distinct separators: the `-` after `GR` in
+the longer name could give a malformed token two owners. Rename a kind in that
+case; a separator-free `GR` format beside `GRUND` instead needs formats whose
+heads do not overlap
+([§FS-config.3.4.5.1](../functional-spec/FS-config.md#3451-citable-names-and-formats-must-distinguish-their-tokens),
+[§FS-config.3.2.9](../functional-spec/FS-config.md#329-kind-head)).
+
+For the `GH` configuration above, the executable receives exactly one argument,
+the local ID, and prints one complete Markdown declaration to stdout.
+Save the following as `scripts/fetch-ticket`
 and run `chmod +x scripts/fetch-ticket` before the first fetch:
 
 ````sh
