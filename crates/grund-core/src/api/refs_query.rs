@@ -22,7 +22,9 @@ use crate::config::display_path;
 use crate::grammar::{path_at_or_under, render_catalog_id, render_citation_id};
 use crate::model::Citation;
 use crate::queries::{declaration_ambiguity_refusal, reported_scope, reports_site};
-use crate::resolver::{WorkspaceContext, WorkspaceProject, load_classifying_workspace_context};
+use crate::resolver::{
+    WorkspaceContext, WorkspaceProject, load_classifying_workspace_context, member_id_refs_hint,
+};
 use crate::scanner::{ApiScanError, api_scan_error, resolve_id_arg};
 use crate::workspace::split_qualified_id_arg;
 
@@ -148,10 +150,11 @@ pub(super) fn refs_impl_with_annotations(
     ) {
         Ok(resolved) => resolved,
         Err(error) => {
-            // §FS-show.3.5.1: carry prose separately; structured formats stay templates.
-            *hint = error
-                .wants_format_hint()
-                .then(|| invalid_id_hint(render_config, &opts.id, Some(raw_id)));
+            // §FS-workspace.8.2.2.1: candidate commands replace only text format advice.
+            *hint = error.wants_format_hint().then(|| {
+                member_id_refs_hint(&context, alias.as_deref(), raw_id)
+                    .unwrap_or_else(|| invalid_id_hint(render_config, &opts.id, Some(raw_id)))
+            });
             // §FS-distribution.3.3.2: retain original resolver data.
             *details = error.diagnostic().details;
             return Ok(RefsWithMetadata {

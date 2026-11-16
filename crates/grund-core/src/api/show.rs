@@ -186,7 +186,15 @@ impl<'c, 'a> ShowSource<'c, 'a> {
         let config = &project.config;
         let (id, inline_section) =
             resolve_id_arg(raw_id, config.schema(), config.frame(), &project.findings)
-                .map_err(|error| anyhow::Error::new(error.diagnostic()))?;
+                // §FS-workspace.8.1.1.4: a rejected grammar must still ask members.
+                .map_err(|error| {
+                    with_member_id_candidates(
+                        error.diagnostic().into(),
+                        context,
+                        alias.as_deref(),
+                        raw_id,
+                    )
+                })?;
         if opts_section.is_some() && inline_section.is_some() {
             return Err(anyhow!(crate::model::OperationDiagnostic::new(
                 "query",
