@@ -1,0 +1,72 @@
+grund_config_version = 2
+project_name = "shown"
+
+[presentation]
+rules = "root"
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.kinds.FS]
+folders = ["docs/fs"]
+index = false
+closed = "must"
+
+[schema.kinds.FS.fields.reason]
+title = "Reason for Existence"
+presence = "must"
+position = "first"
+
+[schema.kinds.FS.fields.terminology]
+title = "Terminology"
+presence = "must"
+after = "reason"
+
+[schema.kinds.FS.fields.notes]
+presence = "may"
+
+[schema.kinds.FS.fields.requirements]
+title = "Requirements"
+presence = "must"
+position = "last"
+
+[schema.kinds.DS]
+folders = ["docs/design"]
+index = false
+
+[schema.kinds.DS.fields.risk]
+presence = "must"
+position = "first"
+one_of = ["Low", "Medium", "High"]
+
+[schema.kinds.DS.fields.values]
+title = "Values"
+presence = "must"
+content = "values"
+
+[schema.kinds.ADR]
+folders = ["docs/adr"]
+index = false
+
+[schema.kinds.ADR.fields.front-matter]
+presence = "must"
+closed = "must"
+
+[schema.kinds.ADR.fields.front-matter.keys.status]
+presence = "must"
+one_of = ["proposed", "accepted"]
+
+[schema.kinds.ADR.fields.front-matter.keys.date]
+presence = "must"
+
+[schema.kinds.ADR.fields.context]
+presence = "must"
+
+[schema.kinds.CONST]
+files = ["config/constants.json"]
+form = "value"
+
+[schema.kinds.MCONST]
+folders = ["consts"]
+index = false
+form = "value"

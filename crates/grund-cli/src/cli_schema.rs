@@ -69,7 +69,8 @@ fn schema_header(view: &SchemaView) -> String {
 }
 
 /// §FS-schema.8: the legend's three lines; the graph formats print the first two
-/// and their own third (§FS-schema.9).
+/// and their own third (§FS-schema.9). The table adds the lines of §FS-schema.8.3
+/// and §FS-schema.8.4 after them where each applies.
 const SCHEMA_LEGEND: [&str; 3] = [
     "must = check error · warn = check warning · should = suggestion (check --suggestions)",
     "may = allowed · must not / warn not / should not = forbidden at that strength",
@@ -99,6 +100,14 @@ fn schema_uncited_line(view: &SchemaView) -> Option<String> {
             "must/warn/should skip an uncited file of a place or the complement · {remedy} makes it a finding"
         )
     })
+}
+
+/// §FS-schema.8.4: the table legend's last line, where some kind prints a field
+/// line, which places every heading a shape line shows (§FS-schema.4.1.1). The
+/// graph formats never print it.
+fn schema_depth_line(view: &SchemaView) -> Option<String> {
+    let fields = view.nodes.iter().any(|node| !node.slots.is_empty());
+    fields.then(|| format!("## = under a declaration written {SHAPE_DECLARATION} · {FIELD_DEPTH}"))
 }
 
 /// §FS-schema.9: the third comment line of the graph formats.
@@ -150,11 +159,6 @@ fn schema_places(node: &SchemaNode) -> String {
         })
         .collect();
     places.join(", ")
-}
-
-/// §FS-schema.4.1: a slot's name and its facts, in the one wording core keeps.
-fn schema_slot(slot: &SchemaSlot) -> (String, String) {
-    slot.field_line()
 }
 
 /// §FS-schema.6: a badge's ladder, `<strength> · <unit>` rungs joined by `, `.

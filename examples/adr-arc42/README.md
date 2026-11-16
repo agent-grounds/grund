@@ -96,11 +96,11 @@ carrel · grund.toml · v2
 
 kinds and places
   ADR    kind                  docs/
-           field status        must · first · one of Proposed, Accepted, Deprecated, Superseded
-           field context       must · after status · titled `Context`
-           field decision      must · after context · titled `Decision`
-           field consequences  must · after decision · titled `Consequences`
-           closed must
+           field status        `## status: <one of Proposed, Accepted, Deprecated, Superseded>` (must, first): the title is the value
+           field context       `## context: Context` (must, directly after status)
+           field decision      `## decision: Decision` (must, directly after context)
+           field consequences  `## consequences: Consequences` (must, directly after decision)
+           closed              no other chapter except numbered ones (must)
   arc42  place                 docs/arc42/
   QG     kind                  docs/arc42/01_introduction_and_goals.md
   QS     kind                  docs/arc42/10_quality_requirements.md
@@ -118,6 +118,7 @@ citations                      grounded
 must = check error · warn = check warning · should = suggestion (check --suggestions)
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading
 ```
 
 Read it as the two formats:
@@ -126,8 +127,8 @@ Read it as the two formats:
   Context, Decision and Consequences, each *directly* after the one before and
   titled as adr-tools titles it.
   Nygard's post lists Status after Decision; `after` can state either order.
-  `closed must` refuses any other named chapter, such as an `Alternatives`
-  chapter, unless the kind declares it.
+  `no other chapter except numbered ones (must)` refuses any other named
+  chapter, such as an `Alternatives` chapter, unless the kind declares it.
 - **ADR at `docs/`** is not a typo. A kind's index must be a file inside the
   kind's place ([§FS-config.3.4.2.3](../../docs/functional-spec/FS-config.md#3423-a-named-index-is-a-file-inside-folder-that-is-read-as-markdown)), so the row's place is `docs/` and its index is
   `arc42/09_architecture_decisions.md`. The deeper `arc42` place and the two

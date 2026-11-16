@@ -212,8 +212,9 @@ pub use config::{PathBase, with_report_path_base};
 pub use api::schema_view;
 #[doc(hidden)]
 pub use config::{
-    BadgeRung, EdgeTarget, Extent, FieldContent, Junction, NodeClass, Placement, ScaffoldNote,
-    SchemaEdge, SchemaNode, SchemaSlot, SchemaView, Strength,
+    BadgeRung, EdgeTarget, Extent, FIELD_DEPTH, FieldContent, Junction, NodeClass, Placement,
+    SHAPE_DECLARATION, ScaffoldNote, SchemaEdge, SchemaNode, SchemaSlot, SchemaView, ShapeLine,
+    Strength, ValueFiles, ValueForm, ValueHome,
 };
 #[doc(hidden)]
 pub use model::schema_text;

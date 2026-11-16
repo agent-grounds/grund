@@ -6,6 +6,6 @@ flowchart LR
   classDef place stroke-dasharray:5 5
   classDef unscanned stroke-dasharray:2 2
   subgraph unruled["no direction rule names these"]
-    n0["RFC<br/>kind<br/>rfcs/text/<br/>field summary: must · first · titled `Summary`<br/>field motivation: must · after summary · titled `Motivation`<br/>field guide-level-explanation: must · after motivation · titled `Guide-level explanation`<br/>field drawbacks: may · after guide-level-explanation · titled `Drawbacks #amp; #quot;open#quot; *questions*`<br/>field amendments: may · last<br/>closed must"]
+    n0["RFC<br/>kind<br/>rfcs/text/<br/>field summary: `## summary: Summary` (must, first)<br/>field motivation: `## motivation: Motivation` (must, directly after summary)<br/>field guide-level-explanation: `## guide-level-explanation: Guide-level explanation` (must, directly after motivation)<br/>field drawbacks: `## drawbacks: Drawbacks #amp; #quot;open#quot; *questions*` (may, directly after guide-level-explanation)<br/>field amendments: `## amendments: #lt;title#gt;` (may, last)<br/>closed: no other chapter except numbered ones (must)"]
     n1["code<br/>complement<br/>every scanned file no other row claims"]
   end

@@ -2,11 +2,11 @@ carrel · grund.toml · v2
 
 kinds and places
   ADR    kind                  docs/
-           field status        must · first · one of Proposed, Accepted, Deprecated, Superseded
-           field context       must · after status · titled `Context`
-           field decision      must · after context · titled `Decision`
-           field consequences  must · after decision · titled `Consequences`
-           closed must
+           field status        `## status: <one of Proposed, Accepted, Deprecated, Superseded>` (must, first): the title is the value
+           field context       `## context: Context` (must, directly after status)
+           field decision      `## decision: Decision` (must, directly after context)
+           field consequences  `## consequences: Consequences` (must, directly after decision)
+           closed              no other chapter except numbered ones (must)
   arc42  place                 docs/arc42/
   QG     kind                  docs/arc42/01_introduction_and_goals.md
   QS     kind                  docs/arc42/10_quality_requirements.md
@@ -24,3 +24,4 @@ citations                      grounded
 must = check error · warn = check warning · should = suggestion (check --suggestions)
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading

@@ -14,7 +14,8 @@ use super::project::{Project, Strength};
 use super::record::Config;
 use super::rows::{Extent, Row};
 use super::schema_scaffold_note::ScaffoldNote;
-use super::schema_slot::SchemaSlot;
+use super::schema_slot::{SchemaSlot, ShapeLine, kind_closed_line};
+use super::schema_value_files::value_files;
 use super::slots::{Content, Handle};
 
 /// §AR-config.6.3: one project's schema view.
@@ -74,24 +75,13 @@ pub struct SchemaNode {
 }
 
 impl SchemaNode {
-    /// §FS-schema.4.1: the lines `grund schema` prints under this node, one per
-    /// slot, one per front-matter key one level deeper than its field's
-    /// (§FS-fields.front-matter.record), and one for a `closed` that is not `may`,
-    /// each with its depth and a single space where the view pads columns — the
-    /// managed block's declaration shape (§FS-init.2.3.5.12.2).
-    pub fn shape_lines(&self) -> Vec<(usize, String)> {
-        let mut lines: Vec<(usize, String)> = Vec::new();
-        for slot in &self.slots {
-            let (name, facts) = slot.field_line();
-            lines.push((0, format!("field {name} {facts}")));
-            for (key, facts) in slot.key_lines() {
-                lines.push((1, format!("key {key} {facts}")));
-            }
-        }
-        if let Some(closed) = self.closed {
-            lines.push((0, format!("closed {}", closed.as_str())));
-        }
-        lines
+    /// §FS-schema.4.1: the lines `grund schema` prints under this node — each
+    /// slot's shape lines, a front-matter field's nested one level deeper
+    /// (§FS-schema.4.1.3), then one for a `closed` that is not `may` — which the
+    /// managed block's declaration shape prints as bullets (§FS-init.2.3.5.12.2).
+    pub fn shape_lines(&self) -> Vec<ShapeLine> {
+        let slots = self.slots.iter().flat_map(SchemaSlot::shape_lines);
+        slots.chain(self.closed.map(kind_closed_line)).collect()
     }
 }
 
@@ -339,6 +329,7 @@ fn node(project: &Project, row: &Row) -> SchemaNode {
             },
             // §FS-schema.4.1: the title the checks hold the heading to.
             title: slot.title.map(str::to_string),
+            files: matches!(slot.handle, Handle::Numbered).then(|| value_files(project, row)),
         });
     SchemaNode {
         name: row.name.clone(),

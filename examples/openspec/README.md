@@ -107,17 +107,17 @@ larkspur-lending · grund.toml · v2
 
 kinds and places
   SPEC     kind                  openspec/specs/
-             field purpose       must · first · titled `Purpose`
-             field requirements  must · after purpose · titled `Requirements`
-             closed must
+             field purpose       `## purpose: Purpose` (must, first)
+             field requirements  `## requirements: Requirements` (must, directly after purpose)
+             closed              no other chapter except numbered ones (must)
   change   place                 openspec/changes/
   DELTA    kind                  openspec/changes/add-loan-holds/specs/
-             field purpose       may · first · titled `Purpose`
-             field added         may · titled `ADDED Requirements`
-             field modified      may · titled `MODIFIED Requirements`
-             field removed       may · titled `REMOVED Requirements`
-             field renamed       may · titled `RENAMED Requirements`
-             closed must
+             field purpose       `## purpose: Purpose` (may, first)
+             field added         `## added: ADDED Requirements` (may)
+             field modified      `## modified: MODIFIED Requirements` (may)
+             field removed       `## removed: REMOVED Requirements` (may)
+             field renamed       `## renamed: RENAMED Requirements` (may)
+             closed              no other chapter except numbered ones (must)
   archive  place, not scanned    openspec/changes/archive/
   test     place                 tests/
   code     complement            every scanned file no other row claims
@@ -136,6 +136,7 @@ citations                        grounded
 must = check error · warn = check warning · should = suggestion (check --suggestions)
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading
 ```
 
 Read it as OpenSpec:

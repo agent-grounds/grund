@@ -1,0 +1,17 @@
+grund_config_version = 2
+project_name = "settlement"
+
+[presentation]
+rules = "root"
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.kinds.DS]
+folders = ["docs/design"]
+index = false
+
+[schema.kinds.DS.fields.values]
+title = "Values"
+presence = "must"
+content = "values"

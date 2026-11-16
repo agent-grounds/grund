@@ -79,6 +79,7 @@ mod run;
 mod run_warnings;
 mod schema_scaffold_note;
 mod schema_slot;
+mod schema_value_files;
 mod schema_view;
 mod scope_roots;
 mod slots;
@@ -138,7 +139,9 @@ pub(crate) use run::{Invocation, Selection, scope_is_config_root};
 #[allow(unused_imports)]
 pub use run::{Run, RunScope, RunWorkspace};
 pub use schema_scaffold_note::ScaffoldNote;
-pub use schema_slot::SchemaSlot;
+pub use schema_slot::{
+    FIELD_DEPTH, SHAPE_DECLARATION, SchemaSlot, ShapeLine, ValueFiles, ValueForm, ValueHome,
+};
 pub(crate) use schema_view::config_file_read;
 pub use schema_view::{
     BadgeRung, EdgeTarget, Junction, NodeClass, SchemaEdge, SchemaNode, SchemaView,
@@ -232,6 +235,8 @@ mod tests_scan_demand;
 mod tests_scan_exclude;
 #[cfg(test)]
 mod tests_scan_extensions;
+#[cfg(test)]
+mod tests_schema_slot;
 #[cfg(test)]
 mod tests_schema_view;
 #[cfg(test)]

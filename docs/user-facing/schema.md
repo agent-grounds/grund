@@ -36,7 +36,7 @@ example · grund.toml · v2
 kinds and places
   GOAL    kind                docs/goals.md
   FS      kind                docs/fs/
-            field status      should · first · one of Draft, Accepted
+            field status      `## status: <one of Draft, Accepted>` (should, first): the title is the value
   AR      kind                docs/ar/
   test    place               tests/
   vendor  place, not scanned  vendor/
@@ -55,15 +55,24 @@ citations                     grounded
 must = check error · warn = check warning · should = suggestion (check --suggestions)
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading
 ```
 
 - **kinds and places.** One line per row of the configuration, its class as a
   word: `kind` declares IDs, `place` is a folder whose files cite and are
   checked but declare nothing, `place, not scanned` is never read, and the
   `complement` is every scanned file no other row claims. A kind's fields follow
-  it, one `field` line each: presence, placement, what the chapter may say,
-  and last the heading title the field is held to, where it sets one
-  (``field terms  must · first · titled `Terms` ``).
+  it, one `field` line each, and the line is the heading to write: the field's
+  name and its title, then its presence and placement in `check`'s words, then
+  what the chapter holds
+  (`` field terminology  `## terminology: Terminology` (must, directly after reason) ``).
+  A title the field leaves open is `<title>`, and a scalar's is `<one of …>`,
+  with `: the title is the value` after it; a value chapter names the `###` roots
+  and `####` parts it holds. Front matter is no heading: its line is the
+  `---` or `+++` block at the top of the file, with a line per key under it.
+  A value kind's line, `field <number>`, is the form its values take in each
+  of its homes, and the citation part 1 answers to, `§<ID>.1`
+  ([§FS-schema.4.1](../functional-spec/FS-schema.md#41-fields-are-lines-inside-their-kinds-node)).
   A row with several places lists every one, comma-separated in written order
   (`docs/a/, docs/b/`). In a version-2 config, a `code` row that lists places
   is the complement, drawn with those places (`crates/, scripts/`) and no
@@ -101,6 +110,16 @@ grounds both its place and the complement, so it has no such line;
 [`examples/places/`](../../examples/places/) shows one
 ([§FS-schema.8.3](../functional-spec/FS-schema.md#83-the-legend-says-an-obligation-skips-an-uncited-file)).
 
+Where some kind prints a field line, the legend's last line says where each
+heading sits. A field line shows its heading under a declaration written
+`# <ID>: …`, so as `##`; a declaration written `## SWR-001: …` writes the same
+field at `###`, since a field always sits one level below its declaration's
+heading ([§FS-schema.8.4](../functional-spec/FS-schema.md#84-the-legend-says-where-a-fields-heading-sits)):
+
+```text
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading
+```
+
 ## Mermaid and DOT
 
 `--format mermaid` and `--format dot` print the same facts as graph source on
@@ -122,7 +141,7 @@ flowchart LR
   classDef place stroke-dasharray:5 5
   classDef unscanned stroke-dasharray:2 2
   n0["GOAL<br/>kind<br/>docs/goals.md<br/>grounded: must · file"]
-  n1["FS<br/>kind<br/>docs/fs/<br/>field status: should · first · one of Draft, Accepted<br/>grounded: must · file"]
+  n1["FS<br/>kind<br/>docs/fs/<br/>field status: `## status: #lt;one of Draft, Accepted#gt;` (should, first): the title is the value<br/>grounded: must · file"]
   n2["AR<br/>kind<br/>docs/ar/<br/>grounded: must · file"]
   n3["test<br/>place<br/>tests/<br/>grounded: warn · h2"]
   j0(("any of"))

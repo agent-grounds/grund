@@ -20,6 +20,8 @@ The hidden record `ScaffoldNote`, which `SchemaView.scaffold` carries for the no
 
 The hidden escaper `schema_text`, which writes a control character as its TOML basic-string escape for every line of `grund schema` and for a titled field's title in [§FS-schema.4.1](../../functional-spec/FS-schema.md#41-fields-are-lines-inside-their-kinds-node), was added on the `fix/issue-1070` branch above `e6264e3194`. The CLI's table and graph printers name it.
 
+The hidden constants `FIELD_DEPTH` and `SHAPE_DECLARATION`, which the managed block's lead and `grund schema`'s legend each say once ([§FS-schema.4.1.1](../../functional-spec/FS-schema.md#411-a-heading-is-shown-under-a-declaration-written--id-), [§FS-schema.8.4](../../functional-spec/FS-schema.md#84-the-legend-says-where-a-fields-heading-sits)), and the hidden records `ShapeLine`, `ValueFiles`, `ValueForm` and `ValueHome`, which `SchemaNode::shape_lines` returns and `SchemaSlot.files` carries for a field's shape line ([§FS-schema.4.1](../../functional-spec/FS-schema.md#41-fields-are-lines-inside-their-kinds-node)), were added on the `fix/issue-1373` branch above `3ff7eb1847`. The CLI names the two constants to print the legend's depth line, and reaches the records through `SchemaNode` without naming them; it no longer names `SchemaSlot`.
+
 The record `ValueFormat`, which `DeclarationSource::Json` carries for the format a value source is written in ([§FS-values.2.2.3](../../functional-spec/FS-values.md#223-how-a-yaml-source-is-read)), was added on the `fix/issue-1049` branch above `d7799c9cf5`. No frontend names it; it reaches them as a data type of `Catalog`.
 
 The hidden module `native_watch`, the native watcher that `check --watch` runs and an editor server falls back on for the import roots its client cannot watch, its backend behind grund-core's `native-watch` feature and the debounce both coalesce its events by outside it ([§FS-imports.editor](../../functional-spec/FS-imports.md#editor-the-editor-reads-the-import-graph-the-command-line-reads)), was added on the `fix/issue-1080` branch above `0b117ae12d`. The CLI and the LSP server name it; the bindings never enable the feature, so they link no backend.
@@ -44,18 +46,18 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 275 |
+| Public root names | 281 |
 | Rustdoc-visible | 118 |
-| `#[doc(hidden)]` | 157 |
+| `#[doc(hidden)]` | 163 |
 | Named, a related API, or a data type of one | 143 |
-| Outside that closure | 132 |
-| Named by a frontend or its tests | 165 |
-| Reached structurally only | 52 |
+| Outside that closure | 138 |
+| Named by a frontend or its tests | 166 |
+| Reached structurally only | 57 |
 | No repository consumer of either kind | 58 |
 | Disposition frozen at 1.0 | 118 |
-| Disposition hidden | 157 |
+| Disposition hidden | 163 |
 
-The two count columns do not line up, and they are not meant to: 58 names have no repository consumer while 132 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 58 names have no repository consumer while 138 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
@@ -161,6 +163,7 @@ The two count columns do not line up, and they are not meant to: 58 names have n
 | `fetch_snapshot_with_run_warnings` | writers | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
 | `FetchFailure` | writers | visible | no | none found | via fetch_snapshot_with_run_warnings → FetchFailure `grund-cli/src/cli_fetch.rs:8` | frozen at 1.0 |
 | `FetchFailureKind` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `FIELD_DEPTH` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:37` | — | hidden |
 | `FieldContent` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
 | `FileHeading` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
 | `FileStructure` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
@@ -304,7 +307,7 @@ The two count columns do not line up, and they are not meant to: 58 names have n
 | `schema_view` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:36` | — | hidden |
 | `SchemaEdge` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
 | `SchemaNode` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
-| `SchemaSlot` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
+| `SchemaSlot` | config | `#[doc(hidden)]` | no | none found | via SchemaView → SchemaNode → SchemaSlot `grund-cli/src/lib.rs:38` | hidden |
 | `SchemaView` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
 | `SectionHeadingOutsideDeclaration` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
 | `SectionInfo` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
@@ -312,6 +315,8 @@ The two count columns do not line up, and they are not meant to: 58 names have n
 | `setup_fresh_path` | templates | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
 | `setup_instructions` | templates | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
 | `SetupPart` | templates | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `SHAPE_DECLARATION` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:37` | — | hidden |
+| `ShapeLine` | config | `#[doc(hidden)]` | no | none found | via SchemaNode → ShapeLine `grund-cli/src/cli_schema_table.rs:68` | hidden |
 | `ShorthandPolicy` | config | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → ShorthandPolicy `grund-cli/src/lib.rs:13` | hidden |
 | `show` | api | visible | named | none found | none found | frozen at 1.0 |
 | `show_batch_with_globs` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:28` | — | hidden |
@@ -332,7 +337,10 @@ The two count columns do not line up, and they are not meant to: 58 names have n
 | `ValueBinding` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
 | `ValueComponent` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
 | `ValueComponentKind` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `ValueFiles` | config | `#[doc(hidden)]` | no | none found | via SchemaView → SchemaNode → SchemaSlot → ValueFiles `grund-cli/src/lib.rs:38` | hidden |
+| `ValueForm` | config | `#[doc(hidden)]` | no | none found | via SchemaView → SchemaNode → SchemaSlot → ValueFiles → ValueHome → ValueForm `grund-cli/src/lib.rs:38` | hidden |
 | `ValueFormat` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `ValueHome` | config | `#[doc(hidden)]` | no | none found | via SchemaView → SchemaNode → SchemaSlot → ValueFiles → ValueHome `grund-cli/src/lib.rs:38` | hidden |
 | `ValueRootOrigin` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
 | `with_check_input_observer` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch.rs:117` | — | hidden |
 | `with_report_path_base` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli.rs:74` | — | hidden |

@@ -86,17 +86,17 @@ skerry · grund.toml · v2
 
 kinds and places
   RFC    kind                                 rfcs/text/
-           field summary                      must · first · titled `Summary`
-           field motivation                   must · after summary · titled `Motivation`
-           field guide-level-explanation      must · after motivation · titled `Guide-level explanation`
-           field reference-level-explanation  must · after guide-level-explanation · titled `Reference-level explanation`
-           field drawbacks                    must · after reference-level-explanation · titled `Drawbacks`
-           field rationale-and-alternatives   must · after drawbacks · titled `Rationale and alternatives`
-           field prior-art                    must · after rationale-and-alternatives · titled `Prior art`
-           field unresolved-questions         must · after prior-art · titled `Unresolved questions`
-           field future-possibilities         must · after unresolved-questions · titled `Future possibilities`
-           field amendments                   may · after future-possibilities · titled `Amendments`
-           closed must
+           field summary                      `## summary: Summary` (must, first)
+           field motivation                   `## motivation: Motivation` (must, directly after summary)
+           field guide-level-explanation      `## guide-level-explanation: Guide-level explanation` (must, directly after motivation)
+           field reference-level-explanation  `## reference-level-explanation: Reference-level explanation` (must, directly after guide-level-explanation)
+           field drawbacks                    `## drawbacks: Drawbacks` (must, directly after reference-level-explanation)
+           field rationale-and-alternatives   `## rationale-and-alternatives: Rationale and alternatives` (must, directly after drawbacks)
+           field prior-art                    `## prior-art: Prior art` (must, directly after rationale-and-alternatives)
+           field unresolved-questions         `## unresolved-questions: Unresolved questions` (must, directly after prior-art)
+           field future-possibilities         `## future-possibilities: Future possibilities` (must, directly after unresolved-questions)
+           field amendments                   `## amendments: Amendments` (may, directly after future-possibilities)
+           closed                             no other chapter except numbered ones (must)
   crate  place                                src/
   test   place                                tests/
   code   complement                           every scanned file no other row claims
@@ -110,6 +110,7 @@ citations                                     grounded
 must = check error · warn = check warning · should = suggestion (check --suggestions)
 may = allowed · must not / warn not / should not = forbidden at that strength
 A|B = one obligation, met by citing either · — = no direction rule names it
+## = under a declaration written # <ID>: … · a field always sits one level below its declaration's heading
 ```
 
 Read it as the template:
@@ -118,11 +119,14 @@ Read it as the template:
   comes directly after the one before it, so the template's order is the only
   order. An absent field is skipped, and the next one takes its place, so
   dropping a section is one finding, not one for every section after it.
-- **`closed must`** admits the ten fields and nothing else. A named chapter
-  the template does not have, such as the older template's
-  `## detailed-design: Detailed design`, is an error. Each field's `title`, not
-  shown here but written in [`grund.toml`](1-schema/repo/grund.toml), is the
-  template's heading, byte for byte.
+- **Each line is the heading to write.** The code span is the template's
+  heading, byte for byte, its title the field's `title` in
+  [`grund.toml`](1-schema/repo/grund.toml), and `directly after` is `after` in
+  `check`'s words.
+- **`no other chapter except numbered ones (must)`** admits the ten fields and
+  numbered chapters, and nothing else. A named chapter the template does not
+  have, such as the older template's `## detailed-design: Detailed design`, is
+  an error.
 - **`amendments`** is `may`. Only an amended RFC carries it, after Future
   possibilities, as accepted RFCs append their amendment notes.
 - **`crate` and `test` must cite RFC, in every file.** Each file in `src/` and
@@ -199,17 +203,17 @@ The `next:` steps name the repository's own kind and place, `RFC` in
 
 ```markdown
 - **RFC**
-  - field summary must · first · titled `Summary`
-  - field motivation must · after summary · titled `Motivation`
-  - field guide-level-explanation must · after motivation · titled `Guide-level explanation`
-  - field reference-level-explanation must · after guide-level-explanation · titled `Reference-level explanation`
-  - field drawbacks must · after reference-level-explanation · titled `Drawbacks`
-  - field rationale-and-alternatives must · after drawbacks · titled `Rationale and alternatives`
-  - field prior-art must · after rationale-and-alternatives · titled `Prior art`
-  - field unresolved-questions must · after prior-art · titled `Unresolved questions`
-  - field future-possibilities must · after unresolved-questions · titled `Future possibilities`
-  - field amendments may · after future-possibilities · titled `Amendments`
-  - closed must
+  - `## summary: Summary` (must, first)
+  - `## motivation: Motivation` (must, directly after summary)
+  - `## guide-level-explanation: Guide-level explanation` (must, directly after motivation)
+  - `## reference-level-explanation: Reference-level explanation` (must, directly after guide-level-explanation)
+  - `## drawbacks: Drawbacks` (must, directly after reference-level-explanation)
+  - `## rationale-and-alternatives: Rationale and alternatives` (must, directly after drawbacks)
+  - `## prior-art: Prior art` (must, directly after rationale-and-alternatives)
+  - `## unresolved-questions: Unresolved questions` (must, directly after prior-art)
+  - `## future-possibilities: Future possibilities` (must, directly after unresolved-questions)
+  - `## amendments: Amendments` (may, directly after future-possibilities)
+  - no other chapter except numbered ones (must)
 ```
 
 An agent learns the order and the handles before it writes. It learns each

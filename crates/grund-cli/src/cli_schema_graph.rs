@@ -43,24 +43,18 @@ fn schema_graph_text(graph: SchemaGraph, raw: &str) -> String {
 }
 
 /// §FS-schema.9, §FS-schema.10: a node's label lines — its name, class word,
-/// places, field lines, `closed`, its own `default`, and its badge — each escaped
-/// and joined by the printer's line break.
+/// places, shape lines, its own `default`, and its badge — each escaped and
+/// joined by the printer's line break.
 fn schema_graph_label(graph: SchemaGraph, node: &SchemaNode) -> String {
     let mut lines = vec![
         node.name.clone(),
         schema_class_word(node.class).to_string(),
         schema_places(node),
     ];
-    for slot in &node.slots {
-        let (name, facts) = schema_slot(slot);
-        lines.push(format!("field {name}: {facts}"));
-        // §FS-fields.front-matter.record: its keys follow their field's line.
-        for (key, facts) in slot.key_lines() {
-            lines.push(format!("key {key}: {facts}"));
-        }
-    }
-    if let Some(closed) = node.closed {
-        lines.push(format!("closed {}", closed.as_str()));
+    // §FS-schema.4.1: `field <name>: <shape line>`, a front-matter field's keys
+    // and its own `closed` after it, and the kind's `closed: <text>`.
+    for line in node.shape_lines() {
+        lines.push(format!("{}: {}", line.key, line.text));
     }
     if let Some(level) = node.default {
         lines.push(format!("everything else: {}", schema_strength(level)));

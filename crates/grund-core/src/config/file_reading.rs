@@ -70,6 +70,32 @@ pub(crate) fn written_language<'s>(sources: &'s Sources, name: &Path) -> Option<
     model_language(sources.model.as_ref()?, name)
 }
 
+/// §FS-schema.4.1.4: the format a value home would read a name the config writes in, asked as
+/// a file of that spelling is (§AR-config.1.6), so the schema view names only a form the scan
+/// reads. `None` is no value source: the text scan's Markdown declaration.
+pub(crate) fn written_value_format(sources: &Sources, name: &Path) -> Option<ValueFormat> {
+    let extension = name.extension().and_then(|ext| ext.to_str());
+    value_format(written_language(sources, name), extension, sources, name)
+}
+
+/// The one rule a value home picks a file's reader by (§FS-values.2.2,
+/// §FS-config-v2.schema.sources.values), for a file's reading and for a written name alike.
+fn value_format(
+    language: Option<&Language>,
+    extension: Option<&str>,
+    sources: &Sources,
+    path: &Path,
+) -> Option<ValueFormat> {
+    match (language, extension) {
+        (Some(language), _) => (language.class == LanguageClass::Data).then_some(ValueFormat::Json),
+        (None, Some("json")) => Some(ValueFormat::Json),
+        (None, Some("yaml" | "yml")) => {
+            (!sources.lists_extension(path)).then_some(ValueFormat::Yaml)
+        }
+        (None, _) => None,
+    }
+}
+
 /// [`written_language`] under one version-2 `model`.
 pub(crate) fn model_language<'m>(model: &'m SourceModel, name: &Path) -> Option<&'m Language> {
     model.language_of(name)
@@ -147,16 +173,7 @@ impl<'a> FileReading<'a> {
     /// or `.yml`, unless the effective `[scan] extensions` claim it as scan input
     /// (§FS-values.2.2).
     pub(crate) fn value_format(&self) -> Option<ValueFormat> {
-        match (self.language, self.extension) {
-            (Some(language), _) => {
-                (language.class == LanguageClass::Data).then_some(ValueFormat::Json)
-            }
-            (None, Some("json")) => Some(ValueFormat::Json),
-            (None, Some("yaml" | "yml")) => {
-                (!self.sources.lists_extension(self.path)).then_some(ValueFormat::Yaml)
-            }
-            (None, _) => None,
-        }
+        value_format(self.language, self.extension, self.sources, self.path)
     }
 
     /// Whether the text scan reads this file as source (§FS-fetch.4.2), which asks the

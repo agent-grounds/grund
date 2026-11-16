@@ -1,0 +1,13 @@
+grund_config_version = 2
+project_name = "scoped"
+
+[presentation]
+rules = "root"
+
+[schema.kinds.FS]
+folders = ["docs/fs"]
+index = false
+
+[schema.kinds.FS.fields.reason]
+presence = "must"
+position = "first"

@@ -63,24 +63,12 @@ fn schema_table(view: &SchemaView) -> String {
             cells: vec![(2, text(&node.name)), (class_at, schema_class_word(node.class).to_string())],
             last: Some(text(&schema_places(node))),
         });
-        for slot in &node.slots {
-            let (name, facts) = schema_slot(slot);
+        // §FS-schema.4.1: each shape line in the last column; what nests under a
+        // front-matter field two columns deeper (§FS-schema.4.1.3).
+        for line in node.shape_lines() {
             kinds.push(SchemaTableLine {
-                cells: vec![(field_at, format!("field {}", text(&name)))],
-                last: Some(text(&facts)),
-            });
-            // §FS-fields.front-matter.record: each key two columns deeper.
-            for (key, facts) in slot.key_lines() {
-                kinds.push(SchemaTableLine {
-                    cells: vec![(field_at + 2, format!("key {}", text(&key)))],
-                    last: Some(text(&facts)),
-                });
-            }
-        }
-        if let Some(closed) = node.closed {
-            kinds.push(SchemaTableLine {
-                cells: vec![(field_at, format!("closed {}", closed.as_str()))],
-                last: None,
+                cells: vec![(field_at + 2 * line.depth, text(&line.key))],
+                last: Some(text(&line.text)),
             });
         }
     }
@@ -160,7 +148,7 @@ fn schema_table(view: &SchemaView) -> String {
         out.push_str(line);
         out.push('\n');
     }
-    if let Some(line) = schema_uncited_line(view) {
+    for line in [schema_uncited_line(view), schema_depth_line(view)].into_iter().flatten() {
         out.push_str(&line);
         out.push('\n');
     }

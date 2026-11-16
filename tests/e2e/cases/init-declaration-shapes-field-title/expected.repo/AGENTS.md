@@ -38,15 +38,15 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 
 ### Declaration shapes
 
-`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:
+`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them. Each heading is shown under a declaration written `# <ID>: …`; a field always sits one level below its declaration's heading:
 
 - **RFC**
-  - field summary must · first · titled `Summary`
-  - field motivation must · after summary · titled `Motivation`
-  - field guide-level-explanation must · after motivation · titled `Guide-level explanation`
-  - field drawbacks may · after guide-level-explanation · titled `Drawbacks & "open" *questions*`
-  - field amendments may · last
-  - closed must
+  - `## summary: Summary` (must, first)
+  - `## motivation: Motivation` (must, directly after summary)
+  - `## guide-level-explanation: Guide-level explanation` (must, directly after motivation)
+  - `## drawbacks: Drawbacks & "open" *questions*` (may, directly after guide-level-explanation)
+  - `## amendments: <title>` (may, last)
+  - no other chapter except numbered ones (must)
 
 ### Clickable citations
 

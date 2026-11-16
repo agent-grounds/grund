@@ -6,6 +6,6 @@ flowchart LR
   classDef place stroke-dasharray:5 5
   classDef unscanned stroke-dasharray:2 2
   subgraph unruled["no direction rule names these"]
-    n0["ADR<br/>kind<br/>docs/adr/0004-cache-availability.md<br/>field front-matter: must · closed must<br/>key status: must · one of proposed, accepted, rejected, deprecated<br/>key date: must<br/>key decision-makers: may<br/>field context: must<br/>field decision: must<br/>closed must"]
+    n0["ADR<br/>kind<br/>docs/adr/0004-cache-availability.md<br/>field front-matter: `---` YAML or `+++` TOML front matter at the top of the file (must)<br/>key status: `status: #lt;one of proposed, accepted, rejected, deprecated#gt;` (must)<br/>key date: `date: #lt;value#gt;` (must)<br/>key decision-makers: `decision-makers: #lt;value#gt;` (may)<br/>closed: no other key (must)<br/>field context: `## context: #lt;title#gt;` (must)<br/>field decision: `## decision: #lt;title#gt;` (must)<br/>closed: no other chapter except numbered ones (must)"]
     n1["code<br/>complement<br/>every scanned file no other row claims"]
   end

@@ -6,7 +6,7 @@ flowchart LR
   classDef place stroke-dasharray:5 5
   classDef unscanned stroke-dasharray:2 2
   n0["GOAL<br/>kind<br/>docs/goals.md<br/>grounded: must · file"]
-  n1["FS<br/>kind<br/>docs/fs/<br/>field status: should · first · one of Draft, Accepted<br/>grounded: must · file"]
+  n1["FS<br/>kind<br/>docs/fs/<br/>field status: `## status: #lt;one of Draft, Accepted#gt;` (should, first): the title is the value<br/>grounded: must · file"]
   n2["AR<br/>kind<br/>docs/ar/<br/>grounded: must · file"]
   n3["test<br/>place<br/>tests/<br/>grounded: warn · h2"]
   j0(("any of"))

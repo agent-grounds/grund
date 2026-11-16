@@ -12,8 +12,8 @@ Anything not listed above is allowed.
 
 ### Declaration shapes
 
-`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:
+`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them. Each heading is shown under a declaration written `# <ID>: …`; a field always sits one level below its declaration's heading:
 
 - **FS**
-  - field terms must · first · titled `Terms`
+  - `## terms: Terms` (must, first)
 <!-- END GRUND MANAGED BLOCK -->

@@ -1,0 +1,21 @@
+grund_config_version = 2
+project_name = "limits"
+
+[presentation]
+rules = "root"
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.kinds.CONST]
+files = ["config/constants.json"]
+form = "value"
+
+[schema.kinds.YCONST]
+files = ["config/constants.yaml"]
+form = "value"
+
+[schema.kinds.MCONST]
+folders = ["consts"]
+index = false
+form = "value"

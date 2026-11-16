@@ -7,7 +7,7 @@ digraph schema {
   node [shape=box];
   subgraph cluster_unruled {
     label="no direction rule names these";
-    n0 [label="ADR\nkind\ndocs/adr/0004-cache-availability.md\nfield front-matter: must · closed must\nkey status: must · one of proposed, accepted, rejected, deprecated\nkey date: must\nkey decision-makers: may\nfield context: must\nfield decision: must\nclosed must"];
+    n0 [label="ADR\nkind\ndocs/adr/0004-cache-availability.md\nfield front-matter: `---` YAML or `+++` TOML front matter at the top of the file (must)\nkey status: `status: <one of proposed, accepted, rejected, deprecated>` (must)\nkey date: `date: <value>` (must)\nkey decision-makers: `decision-makers: <value>` (may)\nclosed: no other key (must)\nfield context: `## context: <title>` (must)\nfield decision: `## decision: <title>` (must)\nclosed: no other chapter except numbered ones (must)"];
     n1 [label="code\ncomplement\nevery scanned file no other row claims"];
   }
 }
