@@ -94,6 +94,11 @@ impl Compiled {
             .find(|(hosts, _)| hosts == comment_prefixes)
             .map_or(&self.grammar, |(_, grammar)| grammar)
     }
+
+    /// The project's grammar and every host grammar, each a grammar some file reads with.
+    pub(crate) fn grammars(&self) -> impl Iterator<Item = &Grammar> {
+        std::iter::once(&self.grammar).chain(self.hosts.iter().map(|(_, grammar)| grammar))
+    }
 }
 
 /// §AR-config.1.5: compile the grammar and the scan demand of `project`.

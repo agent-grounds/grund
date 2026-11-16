@@ -28,8 +28,8 @@ pub(super) struct NearMissGrammar {
     format: String,
     decl_pattern: String,
     docstring_pattern: String,
-    decl_re: once_cell::sync::OnceCell<Regex>,
-    docstring_re: once_cell::sync::OnceCell<Regex>,
+    pub(super) decl_re: once_cell::sync::OnceCell<Regex>,
+    pub(super) docstring_re: once_cell::sync::OnceCell<Regex>,
     /// The bytes a line in declaration position can start with — `#`, and the
     /// first byte of every configured comment prefix. The gate below rejects on
     /// this and on the absence of the declaration colon before the regex is
@@ -106,18 +106,26 @@ impl NearMissGrammar {
             return None;
         }
         let caps = if in_py_docstring {
-            self.docstring_re
-                .get_or_init(|| {
-                    Regex::new(&self.docstring_pattern).expect("near-miss pattern compiles")
-                })
-                .captures(line)
+            self.docstring_re().captures(line)
         } else {
-            self.decl_re
-                .get_or_init(|| Regex::new(&self.decl_pattern).expect("near-miss pattern compiles"))
+            self.decl_re()
                 .captures(line)
                 .filter(|caps| is_md || caps.name("mdhashes").is_none())
         }?;
         caps.name("near")
+    }
+
+    /// The declaration-position pattern, compiled on first use as the type says.
+    pub(super) fn decl_re(&self) -> &Regex {
+        self.decl_re
+            .get_or_init(|| Regex::new(&self.decl_pattern).expect("near-miss pattern compiles"))
+    }
+
+    /// The Python-docstring pattern, compiled on the same terms.
+    pub(super) fn docstring_re(&self) -> &Regex {
+        self.docstring_re.get_or_init(|| {
+            Regex::new(&self.docstring_pattern).expect("near-miss pattern compiles")
+        })
     }
 }
 
@@ -306,8 +314,8 @@ pub(crate) fn declaration_id_on_line(
 /// (§FS-config.3.2.5, §FS-declarations.checks.declaration-near-miss), kept out of the canonical parser's fields.
 #[derive(Clone)]
 pub(super) struct LegacyGrammar {
-    decl_re: Regex,
-    docstring_decl_re: Regex,
+    pub(super) decl_re: Regex,
+    pub(super) docstring_decl_re: Regex,
     kinds: Vec<(String, String)>,
     pub(super) section_path_re: Regex,
 }

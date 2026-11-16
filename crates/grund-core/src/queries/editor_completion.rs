@@ -7,8 +7,8 @@ use std::path::{Path, PathBuf};
 use super::editor_on_type::{docstring_content_at, line_is_rewritable};
 use crate::config::{Config, fmt_excluded, report_path};
 use crate::grammar::{
-    MarkdownLinks, alias_continuation, in_escape_position, never_rewrite_context_in, parse_id_arg,
-    render_declaration_id,
+    Grammar, MarkdownLinks, alias_continuation, in_escape_position, never_rewrite_context_in,
+    parse_id_arg, render_declaration_id,
 };
 use crate::model::{format_path, paired_declarations, relative_from_base};
 use crate::resolver::WorkspaceContext;
@@ -139,6 +139,30 @@ impl LspCompletionContext {
                 .iter()
                 .all(|project| project.scan_errors.is_empty()),
         }
+    }
+
+    /// Settle every grammar a typing request reads through on the calling thread: each
+    /// project's own, and the compiled grammar and host grammars its file readings and its
+    /// judge's views share (§AR-lsp.2.1.1). The server asks it of each snapshot it installs, on
+    /// its event loop, so the first key after an install compiles and caches nothing.
+    pub fn settle(&self) {
+        for grammar in self.grammars() {
+            grammar.settle();
+        }
+    }
+
+    /// How many patterns those grammars compile on first use have not compiled yet, for a case
+    /// that holds an installed snapshot to being settled.
+    #[doc(hidden)]
+    pub fn unsettled(&self) -> usize {
+        self.grammars().map(Grammar::unsettled).sum()
+    }
+
+    fn grammars(&self) -> impl Iterator<Item = &Grammar> {
+        self.projects.iter().flat_map(|project| {
+            let config = &project.config;
+            std::iter::once(&config.grammar).chain(config.compiled().grammars())
+        })
     }
 
     /// Initial, deduplicated final introducer characters (§FS-lsp.1.6.1).

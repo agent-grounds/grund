@@ -102,6 +102,7 @@ mod qualified_context;
 mod relative_heading;
 mod section_paths;
 mod settings;
+mod settle;
 mod shorthand;
 mod source_line;
 mod string_reading;

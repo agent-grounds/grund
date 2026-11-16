@@ -375,11 +375,12 @@ impl Server {
         }
     }
 
-    /// Install a finished rebuild between two messages (§AR-lsp.2.1.3): swap the snapshot, judge
-    /// the edits it does not reflect again against it (§FS-lsp.responsiveness.4), publish with
-    /// the versions it checked (§FS-lsp.1.1), then answer what waited on it, in arrival order. A
-    /// rebuild that panicked swaps nothing in: the edits it covered stay as they were judged, and
-    /// its scope waits for the next rebuild (§AR-lsp.2.1.1).
+    /// Install a finished rebuild between two messages (§AR-lsp.2.1.3): swap the snapshot, settle
+    /// its grammars on this thread (§AR-lsp.2.1.1), judge the edits it does not reflect again
+    /// against it (§FS-lsp.responsiveness.4), publish with the versions it checked (§FS-lsp.1.1),
+    /// then answer what waited on it, in arrival order. A rebuild that panicked swaps nothing in:
+    /// the edits it covered stay as they were judged, and its scope waits for the next rebuild
+    /// (§AR-lsp.2.1.1).
     fn install(&mut self, built: Built) -> Result<Flow> {
         self.fold();
         let Built {
@@ -394,6 +395,7 @@ impl Server {
             Some((state, diagnostics)) => {
                 let replaced = std::mem::replace(&mut self.installed, state);
                 drop(replaced);
+                self.installed.settle();
                 self.watch_imports();
                 self.judge_again(seq);
                 if self.rebuilds.stale_all.is_some_and(|stale| stale <= seq) {

@@ -33,6 +33,17 @@ impl Installed {
         }
     }
 
+    /// Settle every grammar a keystroke reaches in this snapshot, on the calling thread: the event
+    /// loop's, which a cache taken on the worker would not serve (§AR-lsp.2.1.1). A project
+    /// carried over from the last snapshot is settled already, and costs one look per pattern.
+    fn settle(&self) {
+        for project in self.projects.iter().chain(&self.imports) {
+            if let Some(completion) = &project.completion {
+                completion.settle();
+            }
+        }
+    }
+
     /// Rebuild the projects `scope` covers from `folders` and this snapshot's documents, and
     /// carry the rest over untouched (§AR-lsp.2.1). A keystroke in one editor folder cannot change
     /// the verdicts of a project that never reads that file, so those are left standing. A path

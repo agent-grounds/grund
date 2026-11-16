@@ -144,7 +144,9 @@ impl Server {
     /// text by the verdicts already reached. Nothing in it branches on the worker: `dispatch`
     /// merges the recorded edit into the queue and seals for a held request, and the caller sends
     /// the answer, both outside it, as installing a rebuild, publishing and dropping the snapshot
-    /// it replaced are. Never inlined, so a profiler can count it alone in an optimized build
+    /// it replaced are. Every pattern it reaches was settled for this thread as its snapshot was
+    /// installed, so a key after an install compiles none and allocates no search cache the key
+    /// before it did not. Never inlined, so a profiler can count it alone in an optimized build
     /// (§AR-benchmarks.7.3).
     #[inline(never)]
     fn keystroke(&mut self, key: Key) -> Result<Option<Response>> {

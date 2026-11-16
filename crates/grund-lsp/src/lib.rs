@@ -327,6 +327,7 @@ impl Server {
         self.installed.docs = self.open_docs.clone();
         self.installed.versions = self.versions.clone();
         self.installed.rebuild(&self.workspace_folders, &Scope::All);
+        self.installed.settle();
         self.watch_imports();
     }
 

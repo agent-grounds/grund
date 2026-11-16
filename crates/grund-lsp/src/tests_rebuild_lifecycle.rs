@@ -1,7 +1,8 @@
 //! What the loop does at the edges of its rebuilds (§AR-lsp.2.1.1, §AR-lsp.2.1.2): an `exit` sent
-//! behind a held `shutdown`, a rebuild that panics, and a save that carries no text. Each case
-//! drives the real event loop, its worker behind the gate of `tests_rebuild_gate.rs` where the
-//! case needs a rebuild held.
+//! behind a held `shutdown`, a rebuild that panics, a save that carries no text, and the patterns
+//! each install settles. The cases drive the real event loop, its worker behind the gate of
+//! `tests_rebuild_gate.rs` where a case needs a rebuild held; the last installs through the
+//! synchronous handlers.
 
 use super::held_client::{
     LOGIN, QUIET, SIGNIN, SPEC, answer, completion_params, fresh, labels, opened_then_held, result,
@@ -196,4 +197,44 @@ fn a_save_without_text_keeps_naming_the_open_documents_version() {
         [Some(1), Some(2), Some(2)],
         "each publish for the open notes names its version"
     );
+}
+
+/// §AR-lsp.2.1.1: every snapshot the loop installs, the session's first among them, has compiled
+/// each pattern a keystroke reaches before the keystroke reads it, so no keystroke compiles one.
+/// The search cache the install takes with each pattern is not visible outside `regex`; the
+/// patterns are, and the install settles both in one pass.
+#[test]
+fn every_installed_snapshot_compiles_its_patterns_before_a_key() {
+    let root = test_root("rebuild_lifecycle_settled");
+    fixture(&root);
+    let spec = root.join(SPEC);
+    let (mut server, _client) = server_over(&root);
+    let unsettled = |server: &Server| {
+        let installed = &server.installed;
+        let projects = installed.projects.iter().chain(&installed.imports);
+        let completions: Vec<_> = projects.filter_map(|p| p.completion.as_ref()).collect();
+        assert!(!completions.is_empty(), "the fixture offers completion");
+        completions.iter().map(|c| c.unsettled()).sum::<usize>()
+    };
+    assert_eq!(unsettled(&server), 0, "the session's first snapshot");
+    for (method, params) in [
+        (
+            "textDocument/didOpen",
+            json!({"textDocument": {"uri": uri(&spec),
+            "languageId": "markdown", "version": 1, "text": LOGIN}}),
+        ),
+        (
+            "textDocument/didChange",
+            json!({"textDocument": {"uri": uri(&spec), "version": 2},
+            "contentChanges": [{"text": SIGNIN}]}),
+        ),
+    ] {
+        let notification = Notification::new(method.into(), params);
+        server.handle_notification(notification).unwrap();
+        assert_eq!(
+            unsettled(&server),
+            0,
+            "the snapshot installed after {method}"
+        );
+    }
 }
