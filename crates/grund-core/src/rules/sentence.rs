@@ -182,6 +182,10 @@ pub(crate) enum RuleRelation {
 pub(crate) enum TargetMode {
     Aggregate,
     PerTarget,
+    /// The `distinct` outbound count: different declarations owning the counted targets,
+    /// not sites (§FS-rules.3.2.1). Being part of the target set, it is part of the
+    /// deduplication key (§FS-rules.6).
+    Distinct,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]

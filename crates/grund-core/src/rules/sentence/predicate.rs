@@ -6,7 +6,7 @@
 use super::count::{CountSpelling, count_prefix, per_target};
 use super::forms::{Form, Refusal, refuse};
 use super::subjects::EVERY_IS_UNSUPPORTED;
-use super::targets::kind_targets;
+use super::targets::{Objects, objects};
 use super::{Cardinality, RulePolarity, RuleRelation, RuleTargets, RuleVocabulary, TargetMode};
 
 pub(super) fn parse_predicate(
@@ -29,9 +29,17 @@ pub(super) fn parse_predicate(
                 prohibition(text),
             ));
         };
+        let objects = objects(rest, vocab, unverifiable)?;
+        if objects.distinct() {
+            // §FS-rules.3.2.1: nothing is counted, so nothing is counted distinctly.
+            return Err(refuse(
+                "\"distinct\" has no meaning in a prohibition",
+                Form::One(format!("cite any {}", objects.plain)),
+            ));
+        }
         return Ok((
             RuleRelation::Cite,
-            kind_targets(rest, TargetMode::Aggregate, vocab, unverifiable)?,
+            objects.targets(TargetMode::Aggregate),
             Cardinality::NONE,
         ));
     }
@@ -49,9 +57,21 @@ pub(super) fn parse_predicate(
     {
         let (kind, card) =
             coverage.map_err(|refusal| refusal.within(|rest| format!("cite each {rest}")))?;
+        let objects = objects(kind, vocab, unverifiable)?;
+        if objects.distinct() {
+            // §FS-rules.3.2.1: each target is counted alone, so `distinct` has nothing to merge.
+            return Err(refuse(
+                "\"distinct\" has no meaning per target",
+                Form::One(format!(
+                    "cite each {}{}",
+                    objects.plain,
+                    &rest[kind.len()..]
+                )),
+            ));
+        }
         return Ok((
             RuleRelation::Cite,
-            kind_targets(kind, TargetMode::PerTarget, vocab, unverifiable)?,
+            objects.targets(TargetMode::PerTarget),
             card,
         ));
     }
@@ -73,23 +93,60 @@ pub(super) fn parse_predicate(
         }
         let (card, kinds, _) =
             count_prefix(rest).map_err(|refusal| refusal.within(|rest| format!("cite {rest}")))?;
-        return Ok((
-            RuleRelation::Cite,
-            kind_targets(kinds, TargetMode::Aggregate, vocab, unverifiable)?,
-            card,
-        ));
+        let count = &rest[..rest.len() - kinds.len()];
+        let objects = objects(kinds, vocab, unverifiable)?;
+        let mode = outbound_mode(&objects, card)
+            .map_err(|refusal| refusal.within(|kinds| format!("cite {count}{kinds}")))?;
+        return Ok((RuleRelation::Cite, objects.targets(mode), card));
     }
     if let Some(rest) = text.strip_prefix("be cited by ") {
         let (card, kinds, _) = count_prefix(rest)
             .map_err(|refusal| refusal.within(|rest| format!("be cited by {rest}")))?;
+        let objects = objects(kinds, vocab, unverifiable)?;
+        if objects.distinct() {
+            // §FS-rule-refusals.sentences.rewrite.same-units: no accepted sentence counts
+            // different citers, and dropping `distinct` counts sites instead.
+            return Err(refuse(
+                "\"distinct\" counts only outbound citations",
+                Form::None { kind: false },
+            ));
+        }
         return Ok((
             RuleRelation::BeCitedBy,
-            kind_targets(kinds, TargetMode::Aggregate, vocab, unverifiable)?,
+            objects.targets(TargetMode::Aggregate),
             card,
         ));
     }
     // §FS-rule-refusals.sentences.rewrite.no-form: the sentence does not say which verb it meant.
     Err(refuse("verb is not accepted", Form::None { kind: false }))
+}
+
+/// How an outbound count counts its object kinds (§FS-rules.3.2.1): by site, or, where
+/// `distinct` follows the count, by the different declarations the sites name. A `distinct`
+/// the count does not admit is refused with the object kinds it offers in place of the ones
+/// it read (§FS-rule-refusals.sentences.rewrite.by-refusal): `at least one` already counts one
+/// declaration, so `distinct` is dropped; a `distinct` before a later kind is dropped where
+/// one also follows the count, and otherwise no form is offered, because either repair counts
+/// something not written (§FS-rule-refusals.sentences.rewrite.same-units).
+fn outbound_mode(objects: &Objects, card: Cardinality) -> Result<TargetMode, Refusal> {
+    if !objects.distinct() {
+        return Ok(TargetMode::Aggregate);
+    }
+    if card == Cardinality::AT_LEAST_ONE {
+        return Err(refuse(
+            "\"distinct\" is redundant after \"at least one\"",
+            Form::One(objects.plain.clone()),
+        ));
+    }
+    if objects.later {
+        let form = if objects.counted {
+            Form::One(format!("distinct {}", objects.plain))
+        } else {
+            Form::None { kind: false }
+        };
+        return Err(refuse("\"distinct\" must follow the count", form));
+    }
+    Ok(TargetMode::Distinct)
 }
 
 /// §FS-rule-refusals.sentences.rewrite.by-refusal: a prohibited `cite [count] KINDS` becomes

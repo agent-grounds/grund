@@ -81,6 +81,8 @@ The complete accepted sentence forms, with representative findings, are:
 - `Each FS must cite at least 2 REQ.` → `citation-cardinality`, including at zero, because the floor is above one.
 - `FS-login.requirements should cite at most 2 REQ.` → suggestion `citation-cardinality`.
 - `FS-login.requirements must cite exactly one REQ.` → `citation-cardinality`.
+- `Each FS must cite at least 2 distinct REQ or GOAL.` → `citation-cardinality`, including at zero, counting different declarations rather than citations.
+- `FS-login.requirements should cite at most 2 distinct REQ.` → suggestion `citation-cardinality`.
 - `AR-overview.system-overview must cite each AR at least once.` → one `citation-cardinality` per missed AR.
 - `AR-overview.system-overview must cite each AR at least 2 times.` → one `citation-cardinality` per short-counted AR.
 - `AR-overview.system-overview must cite each AR at most once.` → one `citation-cardinality` per repeated AR.
@@ -105,6 +107,27 @@ Object kinds may be local
 itself with its whole alias path (`group/api/REQ` in member `group/api`), which
 judges exactly like the bare kind. A namespaced object kind needs the workspace
 in scope: a run without one says so at the rule's heading and still writes the block.
+
+Sites or sources? An outbound count counts citations: `Each COUNTRY must cite
+at least 3 SRC.` passes a chapter that cites one source three times. To count
+sources, write `distinct` right after the count, once for the whole `or` list:
+`Each COUNTRY must cite at least 3 distinct SRC.` counts the different
+declarations the citations name, so citing `SRC-x`, `SRC-x.2` and `SRC-x.outcome`
+are one source between them, and a subject that cites itself counts once. It
+fails as `citation-cardinality` at every count, zero included, with a row of
+its own, which still lists every citation it read, so three entries can stand
+under one source:
+
+```text
+docs/countries/COUNTRY-001-rs.md:3: error: COUNTRY-001-rs.truck-mass cites 1 distinct SRC; RULE-001-country-truck-mass requires at least 3; add or remove those citations until the count fits; counted at docs/countries/COUNTRY-001-rs.md:5 (SRC-220-rs-vehicle-rulebook), docs/countries/COUNTRY-001-rs.md:6 (SRC-220-rs-vehicle-rulebook), docs/countries/COUNTRY-001-rs.md:7 (SRC-220-rs-vehicle-rulebook)
+```
+
+The two spellings are two rules, and both can stand. `distinct` is refused
+where it adds nothing or means nothing: after `at least one`, in `cite each`,
+in a prohibition, in `be cited by`, and before a later kind of the `or` list.
+A kind of your own named `distinct` keeps its meaning: `at least 3 distinct.`
+counts it, and `distinct` is read as the keyword only when an accepted kind
+follows it ([distinct counts](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#321-counting-distinct-cited-declarations)).
 
 Per-target `at most once` allows zero or one physical citation to each target;
 two sites citing the same target produce `citation-cardinality`, with
@@ -137,6 +160,16 @@ Common refusals are intentional. A sentence is refused for the first stage it fa
 - `FS-login.2 must cite at least one REQ.` → `numbered chapter subjects can detach when headings move` (no rewrite)
 - With named sections off, `FS-login.requirements must cite at least one REQ.` → `named chapter subjects require [id] named_sections = true; accepted form after enabling it: FS-login.requirements must cite at least one REQ.`
 - `Each POLICY must cite at least one GOAL.` → `unknown kind "POLICY"`, then `known kinds: GOAL, REQ, FS, AR, RULE`
+- `Each FS must cite at least one distinct GOAL.` → `"distinct" is redundant after "at least one"; accepted form: Each FS must cite at least one GOAL.`
+- `Each FS must cite at least 1 distinct GOAL.` → `numeric "at least 1" is not canonical; accepted form: Each FS must cite at least one GOAL.`
+- `Each FS must cite exactly 1 distinct GOAL.` → `numeric "exactly 1" is not canonical; accepted form: Each FS must cite exactly one distinct GOAL.`
+- `Each FS must cite each distinct GOAL at least once.` → `"distinct" has no meaning per target; accepted form: Each FS must cite each GOAL at least once.`
+- `Each FS must not cite any distinct GOAL.` → `"distinct" has no meaning in a prohibition; accepted form: Each FS must not cite any GOAL.`
+- `Each FS must not cite at least 2 distinct GOAL.` → `a prohibition must use "cite any"; accepted form: Each FS must not cite any GOAL.`
+- `Each FS must cite at least 3 distinct GOAL or distinct REQ.` → `"distinct" must follow the count; accepted form: Each FS must cite at least 3 distinct GOAL or REQ.`
+- `Each FS must cite at least 3 GOAL or distinct REQ.` → `"distinct" must follow the count` (no rewrite: dropping it or moving it would count something else)
+- `Each FS must be cited by at least 2 distinct GOAL.` → `"distinct" counts only outbound citations` (no rewrite)
+- `Each FS must cite at least 3 distinct POLICY.` → `unknown kind "POLICY"`, then `known kinds: GOAL, REQ, FS, AR, RULE`
 <!-- END chapter-rules-refused -->
 
 A refused subject's offer keeps its recoverable chapter and declaration scope.

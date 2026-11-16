@@ -8,9 +8,8 @@
 //! a country record cites one source three times, the plain rule passes, and the sentence that
 //! says what the project means is refused as `unknown kind "distinct SRC"`.
 //!
-//! These are not goldens because a golden has no skip, and every test here but the control is
-//! red until the sentence front end reads `distinct`; implement turns them into the case
-//! `tests/e2e/cases/check-rule-distinct-count`. The trees are built in the temp directory, so
+//! They were written before the sentence front end read `distinct`, as Rust tests rather than
+//! goldens because a golden has no skip. The trees are built in the temp directory, so
 //! run them with a `TMPDIR` that no git tree or grund config encloses.
 
 use std::fs;
@@ -207,7 +206,7 @@ impl Drop for Tree {
     }
 }
 
-/// The control, green today and after: the issue's own sentence counts sites, so Serbia's three
+/// The control: the issue's own sentence counts sites, so Serbia's three
 /// citations of one source pass it and Croatia's two fail it, with #1366's row and list
 /// (§FS-rules.3.2, §FS-rules.7.3.1). It proves the fixture sound, so a red test below is about
 /// `distinct` alone.
@@ -221,7 +220,6 @@ fn the_plain_count_keeps_its_verdict_and_bytes() {
 /// lists all three citations, so the list adds up to the sites and not the count; Croatia fails
 /// both rules, one row each; Slovenia passes both. The plain row keeps #1366's bytes.
 #[test]
-#[ignore = "red until #1367 counts `at least 3 distinct SRC`; implement removes this"]
 fn one_source_cited_three_times_is_one_distinct_source() {
     let tree = Tree::new(
         "text",
@@ -245,7 +243,6 @@ fn one_source_cited_three_times_is_one_distinct_source() {
 
 /// The same rows in JSON: `sites` holds every counted line, and `authority` the one rule.
 #[test]
-#[ignore = "red until #1367 counts `at least 3 distinct SRC`; implement removes this"]
 fn the_distinct_row_fills_sites_in_json() {
     let tree = Tree::new(
         "json",
@@ -274,7 +271,6 @@ fn the_distinct_row_fills_sites_in_json() {
 
 /// Three different sources satisfy the distinct rule, and its run succeeds.
 #[test]
-#[ignore = "red until #1367 counts `at least 3 distinct SRC`; implement removes this"]
 fn three_different_sources_satisfy_the_distinct_rule() {
     let tree = Tree::new("pass", &[SLOVENIA], &[RULE_DISTINCT]);
     tree.assert_prints(&["check"], &["success".to_string()], "", 0);
@@ -283,7 +279,6 @@ fn three_different_sources_satisfy_the_distinct_rule() {
 /// The issue's trial sentence on `check --rule … --only-rule`: today exit 2 and
 /// `unknown kind "distinct SRC"`; after, the rows of the sentence, authored by `--rule`.
 #[test]
-#[ignore = "red until #1367 counts `at least 3 distinct SRC`; implement removes this"]
 fn the_issue_trial_sentence_reports_each_record() {
     let tree = Tree::new("trial", &[SERBIA, CROATIA, SLOVENIA], &[RULE_PLAIN]);
     let stdout = [
@@ -309,7 +304,6 @@ fn the_issue_trial_sentence_reports_each_record() {
 /// name, on both surfaces: a configured rule's `invalid-rule` row after
 /// `<RULE> is not a valid rule: `, and `check --rule` on stderr.
 #[test]
-#[ignore = "red until #1367 refuses a `distinct` the predicate does not admit; implement removes this"]
 fn a_misplaced_distinct_is_refused_for_what_it_is_on_both_surfaces() {
     let redundant = "The truck-mass chapter of each COUNTRY must cite at least one distinct SRC.";
     let unknown =

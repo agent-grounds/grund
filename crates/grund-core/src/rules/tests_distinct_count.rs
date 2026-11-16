@@ -6,9 +6,8 @@
 //! (§FS-rules.6). Issue #1367 is the report: one `SRC` cited three times satisfied
 //! `must cite at least 3 SRC`, and no sentence could ask for three different ones.
 //!
-//! Each rule is parsed from its sentence, so every test that names `distinct` is red until the
-//! sentence front end accepts it, with `unknown kind "distinct SRC"`. The plain counts are the
-//! controls, green today and after.
+//! Each rule is parsed from its sentence, so every test that names `distinct` also pins that the
+//! sentence front end accepts it. The plain counts are the controls.
 
 use super::RuleAnchor;
 use super::engine::evaluate;
@@ -187,7 +186,6 @@ fn about(rules: &[ParsedRule], subject: &str) -> Vec<(String, Vec<String>)> {
 /// declaration, and the row lists all three sites, so its list adds up to the sites; a subject
 /// that cites no `SRC` is a zero count, which names no site.
 #[test]
-#[ignore = "red until #1367 counts distinct cited declarations; implement removes this"]
 fn a_declaration_its_section_and_its_chapter_count_once() {
     let distinct = rule("RULE-d", "Each COUNTRY must cite at least 2 distinct SRC.");
     assert_eq!(
@@ -211,7 +209,6 @@ fn a_declaration_its_section_and_its_chapter_count_once() {
 
 /// §FS-rules.3.2.1: one `distinct` covers the whole `or` list, so a `SRC` and a `DOC` are two.
 #[test]
-#[ignore = "red until #1367 counts distinct cited declarations; implement removes this"]
 fn an_or_list_counts_across_its_kinds() {
     let distinct = rule(
         "RULE-d",
@@ -230,7 +227,6 @@ fn an_or_list_counts_across_its_kinds() {
 /// §FS-rules.3.2.1: a subject in its own target set counts itself once, whether it cites itself
 /// bare or at a chapter, beside the other declaration it cites.
 #[test]
-#[ignore = "red until #1367 counts distinct cited declarations; implement removes this"]
 fn a_subject_in_its_own_target_set_counts_itself_once() {
     let exactly = rule("RULE-d", "Each SRC must cite exactly 2 distinct SRC.");
     assert_eq!(about(&[exactly], "SRC-z"), []);
@@ -247,7 +243,6 @@ fn a_subject_in_its_own_target_set_counts_itself_once() {
 /// §FS-rules.7.3, §FS-rules.7.3.1: `exactly one` and `at most 1` are bounds the form takes; a
 /// zero count is `citation-cardinality` too, and names no site.
 #[test]
-#[ignore = "red until #1367 counts distinct cited declarations; implement removes this"]
 fn exactly_one_and_at_most_one_bound_the_count() {
     assert_eq!(
         findings(&[rule(
@@ -271,7 +266,6 @@ fn exactly_one_and_at_most_one_bound_the_count() {
 /// §FS-rules.6: two distinct rules of one meaning are one finding naming both, while a distinct
 /// rule and a plain rule of the same count are two constraints and two findings.
 #[test]
-#[ignore = "red until #1367 counts distinct cited declarations; implement removes this"]
 fn the_counting_mode_is_part_of_the_deduplication_key() {
     let twin = [
         rule("RULE-a", "Each COUNTRY must cite at least 4 distinct SRC."),
@@ -305,7 +299,7 @@ fn the_counting_mode_is_part_of_the_deduplication_key() {
 }
 
 /// §FS-rules.3.2, §FS-rules.7.3: the plain count beside them keeps counting sites, with its row
-/// and its counted citations as #1366 gives them. A control, green today.
+/// and its counted citations as #1366 gives them. A control.
 #[test]
 fn the_plain_count_still_counts_sites() {
     assert_eq!(

@@ -49,6 +49,18 @@ its two physical citations to `AR-one` violate the ceiling. The finding keeps
 spelling: replace per-target `at most 1 times` with `at most once`, then rerun
 `grund init` to update guidance. An invalid numeric title stops init before writes.
 
+`RULE-overview-sources` says `AR-overview.system-overview must cite at least 3 distinct AR.`
+The plain `at least 3 AR` would pass, because the chapter has three citations of
+AR declarations; `distinct` counts the declarations they name instead, which are
+two, `AR-overview` and `AR-one`
+([§FS-rules.3.2.1](../../docs/functional-spec/FS-rules.md#321-counting-distinct-cited-declarations)). Its finding still lists all three citations:
+
+```text
+docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites 2 distinct AR; RULE-overview-sources requires at least 3; add or remove those citations until the count fits; counted at docs/ar/AR-overview.md:5 (AR-overview), docs/ar/AR-overview.md:5 (AR-one), docs/ar/AR-overview.md:5 (AR-one)
+```
+
+`RULE-overview-pair`, `exactly 2 distinct AR`, is its passing counterpart.
+
 See the [chapter-rules guide](../../docs/user-facing/rules.md) for every accepted
 sentence, every common refusal and any rewrite offered, and the finding
 produced by each family.
@@ -140,6 +152,9 @@ Each FS should cite at least one GOAL.
 FS-demo.requirements must cite at least 2 REQ.
 The requirements chapter of each FS should cite at most 2 REQ.
 FS-demo.requirements must cite exactly one REQ.
+AR-overview.system-overview must cite at least 3 distinct AR.
+AR-overview.system-overview should cite at most 2 distinct AR or FS.
+AR-overview.system-overview must cite exactly 2 distinct AR.
 AR-overview.system-overview must cite each AR at least once.
 AR-overview.system-overview must cite each AR at least 2 times.
 AR-overview.system-overview must cite each AR at most once.
@@ -156,7 +171,7 @@ FS-demo.requirements should not cite any AR or GOAL.
 
 The deliberate violations in this repository produce, verbatim, the findings
 in [`expected.stdout`](expected.stdout): `chapter-cardinality`, rule and config
-forms of `missing-citation`, aggregate and per-target `citation-cardinality`,
+forms of `missing-citation`, aggregate, distinct and per-target `citation-cardinality`,
 `uncited-unit`, `forbidden-citation`, `invalid-rule`, `suggested-citation`,
 `discouraged-citation`, and `unreached-declaration`. `FS-good` and
 `RULE-chapter-pass` supply passing instances; the two `RULE-inbound*` and two `RULE-positive*` declarations show
@@ -200,6 +215,11 @@ and any accepted rewrite grund reports. Some refusals offer no rewrite
 - `FS-demo.2 must cite at least one REQ.` → `FS-demo.requirements must cite at least one REQ.`
 - With named sections disabled, enable them before writing `FS-demo.requirements must cite at least one REQ.`
 - `Each POLICY must cite at least one GOAL.` → use a configured kind, as in `Each FS must cite at least one GOAL.`
+- `Each FS must cite at least one distinct GOAL.` → `"distinct" is redundant after "at least one"; accepted form: Each FS must cite at least one GOAL.`
+- `Each FS must cite each distinct GOAL at least once.` → `"distinct" has no meaning per target; accepted form: Each FS must cite each GOAL at least once.`
+- `Each FS must not cite any distinct GOAL.` → `"distinct" has no meaning in a prohibition; accepted form: Each FS must not cite any GOAL.`
+- `Each FS must cite at least 3 GOAL or distinct REQ.` → `"distinct" must follow the count` (no rewrite: either repair counts something not written)
+- `Each FS must be cited by at least 2 distinct GOAL.` → `"distinct" counts only outbound citations` (no rewrite)
 
 The three `RULE-every-*` declarations exercise these unsupported quantifiers
 in the runnable repository; their `invalid-rule` findings and complete `each`
