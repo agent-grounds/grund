@@ -24,8 +24,9 @@ use super::support::{heading_marks, section_depth};
 use crate::config::{Frame, Schema};
 use crate::grammar::render_catalog_id;
 use crate::model::{
-    Catalog, CheckReport, Code, Diagnostic, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
-    Switch, UnmarkedHeading, named_section_path, paired_declarations,
+    Catalog, CheckReport, Code, Diagnostic, LANDED_CLAUSE, PathFaultHint,
+    SectionHeadingOutsideDeclaration, Site, Switch, UnmarkedHeading, named_section_path,
+    paired_declarations,
 };
 use crate::resolver::WorkspaceProject;
 use crate::scanner::section_path_is_numeric;
@@ -99,13 +100,15 @@ pub(super) fn check_section_headings(
             // §FS-declarations.checks.unmarked-heading.2.2: append after the whole message.
             let field =
                 field_heading_hint(heading, findings, schema, frame.version).unwrap_or_default();
+            // §FS-declarations.checks.unmarked-heading.2.3: the path's own fault, appended last.
+            let fault = heading.fault_hint.as_ref().map_or(String::new(), fault_clause);
             Diagnostic {
                 code: Code::UNMARKED_HEADING,
                 path: Some(heading.file.clone()),
                 line: Some(heading.line),
                 column: None,
                 message: format!(
-                    "unmarked heading inside {rendered_owner}; {}{LANDED_CLAUSE}{relative}{field}",
+                    "unmarked heading inside {rendered_owner}; {}{LANDED_CLAUSE}{relative}{field}{fault}",
                     remedies::unmarked_heading(
                         &suggested_heading,
                         format!(
@@ -340,6 +343,22 @@ fn field_heading_hint(
         name = field.name,
     ))
 }
+
+/// The clause naming what a complete path already in place lacks, and the heading
+/// that repairs it with the path kept (§FS-declarations.checks.unmarked-heading.2.3).
+fn fault_clause(hint: &PathFaultHint) -> String {
+    let fault = match (hint.underscore, hint.missing_title) {
+        (true, true) => format!("{UNDERSCORE_FAULT}, and needs a title after it"),
+        (true, false) => UNDERSCORE_FAULT.to_string(),
+        _ => "needs a title after it".to_string(),
+    };
+    format!(
+        "; the section path {} {fault}, written {}",
+        hint.path, hint.heading
+    )
+}
+
+const UNDERSCORE_FAULT: &str = "has a _, which a section name ([a-z][a-z0-9-]*) never takes";
 
 /// `<ID>` for the declaration, `<ID><sep><path>` for a section of it.
 fn coordinate(owner: &str, separator: &str, path: &str) -> String {

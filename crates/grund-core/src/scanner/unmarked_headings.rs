@@ -2,8 +2,11 @@ use std::collections::BTreeMap;
 
 use super::extents::DeclarationBodies;
 use super::relative_sections::usable_section;
-use crate::grammar::relative_heading_hint;
-use crate::model::{Catalog, FileRecord, RelativeHint, UnmarkedHeading, UnmarkedHeadingCandidate};
+use crate::grammar::{Grammar, path_fault, relative_heading_hint};
+use crate::model::{
+    Catalog, Declaration, FileRecord, PathFaultHint, RelativeHint, UnmarkedHeading,
+    UnmarkedHeadingCandidate, named_section_path,
+};
 
 /// Retain only Markdown headings owned by a declaration body, choose the
 /// nearest nested owner, and assign deterministic unused section paths
@@ -12,6 +15,7 @@ pub(super) fn assign_unmarked_heading_owners(
     findings: &mut Catalog,
     mut candidates: Vec<UnmarkedHeadingCandidate>,
     record: &FileRecord,
+    grammar: &Grammar,
 ) {
     #[derive(Clone)]
     struct KnownPath {
@@ -87,6 +91,12 @@ pub(super) fn assign_unmarked_heading_owners(
                         ),
                     })
             });
+        let fault_hint = findings
+            .declarations
+            .values()
+            .flatten()
+            .find(|decl| decl.line == body_start)
+            .and_then(|decl| fault_hint(&candidate, decl, body_end, grammar.named_sections));
         findings.unmarked_headings.push(UnmarkedHeading {
             file: candidate.file,
             line: candidate.line,
@@ -99,6 +109,7 @@ pub(super) fn assign_unmarked_heading_owners(
             owner_line: body_start,
             suggested_path,
             relative_hint,
+            fault_hint,
         });
     }
 
@@ -185,4 +196,32 @@ pub(super) fn assign_unmarked_heading_owners(
         }
         format!("1{}", "0".repeat(digits.len()))
     }
+}
+
+/// The fault of a heading whose complete path is already in place, where writing
+/// the repairing heading instead would declare a recognized section of `decl`,
+/// whose body ends on `end` (§FS-declarations.checks.unmarked-heading.2.3): named
+/// sections on for a name-bearing path, one component per ATX level below the
+/// declaration, a parent [`usable_section`] accepts, and a path not already
+/// declared.
+fn fault_hint(
+    candidate: &UnmarkedHeadingCandidate,
+    decl: &Declaration,
+    end: usize,
+    named_sections: bool,
+) -> Option<PathFaultHint> {
+    let fault = path_fault(&candidate.title)?;
+    let corrected = fault.corrected.as_str();
+    let declares = (named_sections || !named_section_path(corrected))
+        && corrected.split('.').count() + decl.heading_level == candidate.heading_level
+        && corrected
+            .rsplit_once('.')
+            .is_none_or(|(parent, _)| usable_section(decl, end, parent))
+        && !decl.sections.contains_key(corrected);
+    declares.then(|| PathFaultHint {
+        path: fault.path.to_string(),
+        missing_title: fault.title.is_none(),
+        underscore: fault.underscore,
+        heading: fault.shown_heading(candidate.heading_level),
+    })
 }

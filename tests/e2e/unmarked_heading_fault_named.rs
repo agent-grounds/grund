@@ -132,7 +132,6 @@ fn assert_message(findings: &[(String, String)], site: &str, expected: &str) {
 }
 
 #[test]
-#[ignore = "red until #1372 appends the fault clause of FS-declarations.checks.unmarked-heading.2.3; implement removes this"]
 fn a_path_with_no_title_is_told_a_title_must_follow_it() {
     let findings = Tree::new("no-title").findings();
     assert_message(
@@ -170,7 +169,6 @@ fn a_path_with_no_title_is_told_a_title_must_follow_it() {
 }
 
 #[test]
-#[ignore = "red until #1372 appends the fault clause of FS-declarations.checks.unmarked-heading.2.3; implement removes this"]
 fn an_underscore_in_a_handle_is_named_and_shown_hyphenated() {
     let findings = Tree::new("underscore").findings();
     assert_message(
@@ -198,7 +196,6 @@ fn an_underscore_in_a_handle_is_named_and_shown_hyphenated() {
 }
 
 #[test]
-#[ignore = "red until #1372 appends the fault clause of FS-declarations.checks.unmarked-heading.2.3; implement removes this"]
 fn both_faults_on_one_heading_are_named_in_one_clause() {
     let findings = Tree::new("both").findings();
     assert_message(

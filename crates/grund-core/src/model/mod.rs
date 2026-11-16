@@ -68,6 +68,7 @@ pub use expected::{Expected, ExpectedEntrypoint, ExpectedSection, ScopedExpectat
 pub(crate) use failure::OperationContext;
 pub use failure::OperationDiagnostic;
 pub(crate) use failure_names::FailureNames;
+pub(crate) use headings::PathFaultHint;
 pub use headings::{
     NearMissHeading, RelativeHint, RelativeSectionParent, SectionHeadingOutsideDeclaration,
     UnmarkedHeading,
