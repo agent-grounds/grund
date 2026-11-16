@@ -138,6 +138,14 @@ fn presence(rest: &str) -> Result<(Cardinality, &str), Refusal> {
             });
         return Err(refuse("chapter presence must end in \"chapter\"", form));
     };
+    if joins_with_or(name) {
+        // §FS-rule-refusals.sentences.presence-or: refused for the `or`, before its whitespace.
+        return Err(refuse(
+            "\"or\" between chapter names is not accepted",
+            Form::None { kind: false },
+        )
+        .trailing("a presence rule counts one NAME."));
+    }
     if name.is_empty() || name.trim() != name || name.chars().any(char::is_whitespace) {
         // §FS-rule-refusals.sentences.whitespace: the NAME trimmed, where that leaves one token.
         let trimmed = name.trim();
@@ -159,6 +167,16 @@ fn presence(rest: &str) -> Result<(Cardinality, &str), Refusal> {
         ));
     }
     Ok((card, name))
+}
+
+/// Whether a presence `NAME`, split at whitespace, holds the lower-case word
+/// `or` with a word before it and a word after it: a choice between chapters
+/// rather than one title with spaces in it
+/// (§FS-rule-refusals.sentences.presence-or). `or` alone, an `or` at either
+/// end, `OR` and `order` are not.
+fn joins_with_or(name: &str) -> bool {
+    let words: Vec<&str> = name.split_whitespace().collect();
+    words.len() > 2 && words[1..words.len() - 1].contains(&"or")
 }
 
 /// Whether a presence count takes `chapters` (§FS-rules.3.1).
