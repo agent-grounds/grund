@@ -3,10 +3,11 @@
 //! and the hand-off of the declaration it closes. A declaration and a near miss
 //! read these the same way (§FS-config.3.2.5), so they are read once here.
 
-use std::path::PathBuf;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 
 use crate::grammar::{STUB_LINK_HEADING, cut_at_block_closer};
-use crate::model::{Catalog, Declaration};
+use crate::model::{Catalog, Declaration, DeclarationSource, Id};
 
 /// A declaration line's `tail` after its ID: whether it is a stub, the file a
 /// stub's link names, and the title of a declaration that is not one
@@ -36,6 +37,42 @@ pub(super) fn stub_and_title(
         None,
         (!trimmed.is_empty()).then(|| trimmed.to_string()),
     )
+}
+
+/// The declaration a matched line or a near miss opens at `line` of `file`, as
+/// written (§AR-scanner.2.1, §FS-config.3.2.5), with what [`stub_and_title`] read
+/// off it. Its body is the line alone until the post-pass assigns the real span
+/// once every declaration and heading of the file is known (§AR-scanner.2.4.1),
+/// and its stub is resolved after the walk, once every declaration is in
+/// (§AR-scanner.4.6).
+pub(super) fn text_declaration(
+    authored_id: &str,
+    id: Id,
+    file: &Path,
+    line: usize,
+    heading_level: usize,
+    (is_stub, defined_in, title): (bool, Option<PathBuf>, Option<String>),
+) -> Declaration {
+    Declaration {
+        authored_id: Some(authored_id.to_string()),
+        id,
+        file: file.to_path_buf(),
+        line,
+        heading_level,
+        sections: BTreeMap::new(),
+        duplicate_sections: Vec::new(),
+        is_stub,
+        defined_in,
+        stub_resolution: None,
+        e2e_case: None,
+        title,
+        body_start: line,
+        body_end: line,
+        body_has_content: false,
+        source: DeclarationSource::Text,
+        value_valid: None,
+        front_matter: None,
+    }
 }
 
 /// Hand the declaration the pass was filling to `findings`: a new declaration
