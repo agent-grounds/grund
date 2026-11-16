@@ -59,6 +59,18 @@ The test is of the string alone. Under version 2 a whitespace-only value is refu
 
 The check comes immediately before the spawn would, so every refusal `grund fetch` makes before running the integration stands in front of it, as they stand in front of a spawn failure.
 
+### 2.2 Captured stderr explains an unsuccessful integration
+
+Grund captures the integration's stderr. On a non-zero exit or termination by signal,
+it appends any nonempty captured diagnostic to the operational error on grund's stderr,
+keeping ``error: fetch integration `<fetch>` for <ID> exited <status>`` as a verbatim
+prefix, where `<status>` is the exit code or `signal`. Multiline diagnostics retain
+their line breaks; invalid UTF-8 is displayed with replacement characters, never
+treated as invalid snapshot data. Empty stderr leaves the existing message unchanged.
+Successful integrations' stderr is suppressed. These explanations preserve the
+message shape and exit verdict ([§FS-errors.2.2](FS-errors.md#22-cli-level-message));
+appending after the existing prefix follows [§FS-errors.3](FS-errors.md#3-message-text).
+
 ## 3. Accepted declaration
 
 The complete stdout must be UTF-8 and hold one Markdown declaration of the requested local ID,
