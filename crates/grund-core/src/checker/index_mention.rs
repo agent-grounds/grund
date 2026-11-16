@@ -46,11 +46,12 @@ fn line_names_file(line: &str, file_name: &str) -> bool {
 /// One pass over the index's lines. A line inside a fenced block is not the page
 /// saying anything, by the one fence reader every Markdown surface shares
 /// (§FS-check.1.1.5), unless `[schema.sources] fenced` selects the fence, whose
-/// citations the page does say (§FS-config-v2.schema.sources.fenced); a declaration heading declares the ID rather than
-/// mentioning it — the same test the entry-form pass applies (§FS-fmt.6.4).
-/// Inline code is deliberately *not* excluded, which is what lets one sentence be
-/// true both of a citation the scan recorded and discarded (§FS-check.3.17.4) and
-/// of a markerless mention it never recorded at all.
+/// citations the page does say (§FS-config-v2.schema.sources.fenced); a
+/// declaration heading declares the ID rather than mentioning it — the same test
+/// the entry-form pass applies (§FS-fmt.6.4). Inline code is deliberately *not*
+/// excluded, which is what lets one sentence be true both of a citation the scan
+/// recorded and discarded (§FS-check.3.17.4) and of a markerless mention it never
+/// recorded at all.
 ///
 /// Whether a 1-indexed line is a declaration heading is `declaration_heading`'s
 /// answer, the one `KindIndexEntries` gives the entry rule and the unused carve-out
