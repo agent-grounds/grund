@@ -171,6 +171,76 @@ one record. Each shard digests its own rows' fixtures, so merge joins their `fix
 as one bundle and refuses a fixture two partials digest differently, any other differing
 identity field, two binaries, two tiers, and a scenario two partials both measured ([§AR-benchmarks.7.1.1](architecture/AR-benchmarks.md#711-one-record-per-revision-merged-from-its-shards)).
 
+## Editor Typing
+
+How long `grund-lsp` takes to answer each keystroke's completion: the wall-clock record
+[§DA-benchmark-instruction-counting.3.4](decisions/architectural/DA-benchmark-instruction-counting.md#34-not-both-for-now) keeps for the deadline [§FS-lsp.responsiveness](functional-spec/FS-lsp.md#responsiveness-what-an-answer-may-cost)
+names. CI holds no wall-clock figure. The `lsp_typing` and `lsp_typing_large` rows count
+the instructions a keystroke costs ([§AR-benchmarks.1.7](architecture/AR-benchmarks.md#17-frontends)), and this record is re-measured by
+hand. The driver is `scripts/lsp_typing_latency.py`. It opens one file, types
+`$$FS-002`, two backspaces and `Z` into it as `didChange` messages, and times the
+completion after each one. `paced` sends the next key once the last is answered;
+`burst <ms>` sends one every that many milliseconds whether or not it was answered.
+
+### The GraalVM Workspace: Pending
+
+The deadline's reference is the GraalVM workspace, as a member folder and as the workspace
+root. Those figures are not recorded yet, for main or for this change: the machine below has
+no grund configuration in a GraalVM checkout to take them on. They are taken with the
+command below, once with each binary, for main and for the change, PGO-built and plain release:
+
+```sh
+GRUND_LSP=<grund-lsp> python3 scripts/lsp_typing_latency.py <graal>/<member> <graal>/<member>/<spec>.md "" paced
+GRUND_LSP=<grund-lsp> python3 scripts/lsp_typing_latency.py <graal> <graal>/<member>/<spec>.md "" paced
+```
+
+### A Generated Workspace
+
+Until then, the same session runs on the `typing-large` benchmark fixture: 5,000 files in
+ten member projects, half of them Java sources that cite in `//` and `/** */` comments.
+It was measured on 2026-11-16 on an Intel Core Ultra 9 285K (24 cores) under Linux 7.0, with
+`RAYON_NUM_THREADS` unset, for four builds:
+
+- main at `ed34a2aa66`, built `cargo build --release --locked -p grund-lsp`;
+- main at `ed34a2aa66`, PGO-built as the release builds it:
+  `bash scripts/pgo-build.sh --product grund-lsp --target-dir <dir>`;
+- this change at `c6482908a1`, built the same two ways.
+
+The machine was shared with other work, at a load average of 37 to 70, so the slowest
+answers are noisy. Each line gives the fastest and the slowest of the eleven answers, in
+milliseconds:
+
+```text
+                                           main release   main PGO   change release   change PGO
+Markdown, member folder, paced                  32-45        30-104          1-5             1-10
+Markdown, workspace root, paced                276-292      270-923          1-6             2-8
+Java // comment, workspace root, paced         281-1060     262-301          1-4             1-9
+Markdown, workspace root, one key per 80 ms    611-8517     671-3596         1-3             1-9
+```
+
+Paced, main answers each key after the whole project is rebuilt. That takes about 35 ms
+for one member project and about 270 ms for the workspace root's ten. In the burst, every
+key queues behind the rebuilds of the keys before it, so the last key is answered seconds
+late. With the change, a completion is answered from the document's own text and the
+declarations already installed ([§FS-lsp.responsiveness.4](functional-spec/FS-lsp.md#responsiveness4-a-typing-request-waits-for-no-rebuild-while-the-declarations-stand)), and the rebuild runs on its own
+thread. Its answers stay within 10 ms whatever the workspace's size, built either way, and
+the burst leaves no backlog. The PGO build is trained on the language-server session of
+`scripts/distribution/train.py`, not on the typing one, so it can treat the typing path as
+cold code. Its figures are listed beside the plain release build's.
+
+To reproduce, generate the fixture and run the driver with each binary:
+
+```sh
+F="$HOME/ag/tmp/typing-large"
+python3 scripts/generate_large_benchmark_fixture.py --root "$F" --files 5000 --feature sources --members 10
+SPEC="$F/members/m01/docs/functional-spec/component-000/FS-001-feature-00001.md"
+JAVA="$F/members/m01/src/bench/c000/Feature00001.java"
+GRUND_LSP=<grund-lsp> python3 scripts/lsp_typing_latency.py "$F/members/m01" "$SPEC" "" paced
+GRUND_LSP=<grund-lsp> python3 scripts/lsp_typing_latency.py "$F" "$SPEC" "" paced
+GRUND_LSP=<grund-lsp> python3 scripts/lsp_typing_latency.py "$F" "$JAVA" "//" paced
+GRUND_LSP=<grund-lsp> python3 scripts/lsp_typing_latency.py "$F" "$SPEC" "" burst 80
+```
+
 ## Instructions
 
 Keep this report as an archive. Write future local measurements to a separate file
