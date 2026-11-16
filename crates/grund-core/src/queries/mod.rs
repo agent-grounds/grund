@@ -68,10 +68,7 @@ mod show_query;
 mod size_output;
 mod sizes;
 
-pub use batch::{
-    BatchShowFailure, BatchShowQuery, BatchShowRecord, BatchShowRun, show_batch_with_globs,
-    show_batch_with_scope,
-};
+pub use batch::{BatchShowFailure, BatchShowQuery, BatchShowRecord, BatchShowRun};
 pub use editor_completion::{CitationCompletion, LspCompletionContext};
 pub use editor_hover::{
     LspUsage, citation_under_title, cites_clause, link_hover_citations, lsp_hover_with_kind_title,
@@ -129,5 +126,6 @@ mod tests_stub_home;
 #[cfg(test)]
 mod tests_workspace_message_paths;
 
-// §FS-distribution.3.1: the additive full-data batch adapter.
-pub(crate) use batch::show_batch_data;
+// §FS-show.2.6, §FS-show.3.3: what the one batch loop in `api` answers through.
+pub(crate) use batch::{batch_globs, batch_query_failure, batch_selection, written_coordinate};
+pub(crate) use batch_generation::{answered_coordinate, exhaustive_batch_queries};

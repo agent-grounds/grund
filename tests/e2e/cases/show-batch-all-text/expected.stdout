@@ -1,0 +1,29 @@
+==> FS-alpha <==
+# FS-alpha: Alpha
+
+Alpha lead.
+
+==> FS-alpha.1 <==
+## 1. Numeric
+
+Numeric lead.
+
+==> FS-alpha.1.1 <==
+### 1.1 Child
+
+Child body.
+
+==> FS-alpha.goals <==
+## goals: Named
+
+Named body.
+
+==> member/FS-beta <==
+# FS-beta: Beta
+
+Beta lead.
+
+==> member/FS-beta.2 <==
+## 2. Member section
+
+Member body.

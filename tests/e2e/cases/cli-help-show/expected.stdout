@@ -2,7 +2,7 @@ grund show — print a coordinate's lead, so an agent pulls a single fact into
 context without loading the whole document. `show` is the default command.
 
 Usage:  grund [show] <ID>[.<section>] [PATH] [--section S] [--brief|--toc|--full] [--format text|md|json] [--path PATH]
-        grund show --batch [--all | --glob PATTERN...] [PATH] --format=json [--brief|--toc|--full] [--path PATH]
+        grund show --batch [--all | --glob PATTERN...] [PATH] [--brief|--toc|--full] [--format text|md|json] [--path PATH]
 
 Modes form an ordered ladder (each adds to the previous):
   --brief                heading + first paragraph    e.g. grund --brief FS-login
@@ -37,6 +37,7 @@ Examples:
   grund FS-login --toc             # lead + section map
   grund FS-login.3.1               # the lead of that nested section
   grund FS-login --full            # the whole declaration body
+  grund show --batch --glob 'FS-login.*' # each top-level section, headed ==> <coordinate> <==
   printf '%s\n' '{"id":"FS-login"}' | grund show --batch --format=json
   grund show --batch --all --format=json # every coordinate, one scan
   grund show --batch --glob 'FS-login{,.**}' --toc --format json # one ID and its sections

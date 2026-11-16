@@ -1,0 +1,26 @@
+==> FS-alpha <==
+# FS-alpha: Alpha
+
+Alpha lead.
+
+Alpha second paragraph.
+
+==> FS-alpha.1 <==
+# FS-alpha: Alpha
+## 1. Numeric
+
+Numeric lead.
+
+==> FS-missing <==
+ID not found: FS-missing
+hint: run `grund list` to see every declared ID, or `grund id <KIND> "<title>"` to propose a new one
+
+==> missing/FS-alpha <==
+unknown project alias `missing`
+known aliases: root, member
+
+==> FS-alpha.1 <==
+# FS-alpha: Alpha
+## 1. Numeric
+
+Numeric lead.

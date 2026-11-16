@@ -31,13 +31,15 @@ bodies. Drop `--total` to see the rows.
 ## Step 2: read every point in one scan
 
 ```bash
-grund show --batch --glob 'FS-login.requirements.*' examples/review-checklist/2-bodies/repo --format json
+grund show --batch --glob 'FS-login.requirements.*' examples/review-checklist/2-bodies/repo
 ```
 
 `.*` is the chapter's children, one level down. The batch reads the three bodies in one scan,
-one JSON record per line, in the order `show --batch --all` would generate them
-([§FS-show.1.9](../../docs/functional-spec/FS-show.md#19---batch---all-every-coordinate-in-scope)); `2-bodies/expected.stdout` holds them. Add `--toc` for each point's section
-map instead, or `--brief` for its first paragraph.
+in the order `show --batch --all` would generate them
+([§FS-show.1.9](../../docs/functional-spec/FS-show.md#19---batch---all-every-coordinate-in-scope)), each under a `==> <coordinate> <==` header that names the point it
+answers ([§FS-show.3.3.1](../../docs/functional-spec/FS-show.md#331-the-header)); `2-bodies/expected.stdout` holds them. `--format json` gives the same
+bodies as records, one JSON object per line, for a script to read. Add `--toc` for each
+point's section map instead, or `--brief` for its first paragraph.
 
 ## Step 3: name the points a change touched
 

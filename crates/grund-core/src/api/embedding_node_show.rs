@@ -27,7 +27,7 @@ fn show(r: &EmbeddingRequest) -> Result<Value, Value> {
 }
 
 fn show_batch(r: &EmbeddingRequest) -> Result<Value, Value> {
-    let (cautions, result) = crate::queries::show_batch_data(
+    let (cautions, result) = super::show_batch::show_batch_data(
         batch_queries(r),
         &r.strings("globs"),
         show_opts(r),

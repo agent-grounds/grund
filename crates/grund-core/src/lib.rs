@@ -315,8 +315,7 @@ pub use queries::{
     LspShowContext, LspSnapshot, LspSnapshotOpts, LspSnapshotWithCompletion,
     LspSnapshotWithMetadata, LspStub, LspUsage, can_replace_trigger_at, citation_under_title,
     cites_clause, link_hover_citations, list_sizes_with_run_warnings, lsp_hover_with_kind_title,
-    lsp_title_hover_body, on_type_line_edits, show_batch_with_globs, show_batch_with_scope,
-    usage_clause, usage_over_paths,
+    lsp_title_hover_body, on_type_line_edits, usage_clause, usage_over_paths,
 };
 pub use queries::{
     ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, ShowFormat, ShowMode,
@@ -375,7 +374,8 @@ pub use api::{
     lsp_snapshot_with_completion, lsp_snapshot_with_metadata, node_embedding_call, node_request,
     parse_cover_line_range, propose_id_with_run_warnings, reference_style,
     refs_sites_with_run_warnings, refs_with_metadata, render_finding_sites_json,
-    show_from_snapshot, show_with_scope, validate_config,
+    show_batch_with_globs, show_batch_with_scope, show_from_snapshot, show_with_scope,
+    validate_config,
 };
 pub use api::{
     CheckOpts, CheckOutput, CompleteIdsOpts, CoverCitation, CoverEntry, CoverLineOwner,

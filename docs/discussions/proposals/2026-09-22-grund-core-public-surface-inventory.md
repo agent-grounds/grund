@@ -319,8 +319,8 @@ The two count columns do not line up, and they are not meant to: 58 names have n
 | `ShapeLine` | config | `#[doc(hidden)]` | no | none found | via SchemaNode → ShapeLine `grund-cli/src/cli_schema_table.rs:68` | hidden |
 | `ShorthandPolicy` | config | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → ShorthandPolicy `grund-cli/src/lib.rs:13` | hidden |
 | `show` | api | visible | named | none found | none found | frozen at 1.0 |
-| `show_batch_with_globs` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:28` | — | hidden |
-| `show_batch_with_scope` | queries | `#[doc(hidden)]` | no | none found | none found | hidden |
+| `show_batch_with_globs` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:28` | — | hidden |
+| `show_batch_with_scope` | api | `#[doc(hidden)]` | no | none found | none found | hidden |
 | `show_from_snapshot` | api | `#[doc(hidden)]` | related API | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
 | `show_with_scope` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
 | `ShowFormat` | queries | visible | data type of `ShowOpts` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | frozen at 1.0 |
