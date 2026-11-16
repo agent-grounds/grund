@@ -122,7 +122,7 @@ fn cover_lines_conflict(r: &EmbeddingRequest) -> Result<(), Value> {
 pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
     match r.operation.as_str() {
         "show" => {
-            let (cautions, result, _) = show_with_scope(r.arg(0), show_opts(r), r.explicit);
+            let (cautions, result, _) = show_with_scope(r.arg(0), show_opts(r), r.explicit, false);
             let output = result.map_err(|e| error_data(e, &cautions))?;
             let mut data = output.data();
             // §FS-distribution.3.3.3: output paths are logical, never native absolutes.

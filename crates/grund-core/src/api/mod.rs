@@ -100,7 +100,6 @@ pub use fmt::{
     FmtChange, FmtCounts, FmtLockFile, FmtOpts, FmtOutput, format_references,
     format_references_with_run_warnings,
 };
-pub use guidance::query_format_hint;
 pub use id::{IdOpts, IdProposal, IdProposalOutcome, propose_id, propose_id_with_run_warnings};
 pub use list::{
     ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot, list, list_with_run_warnings,
@@ -115,7 +114,7 @@ pub use refs_sites::{
     RefsSites, RefsSitesOpts, refs_sites_with_run_warnings, refs_sites_with_text_annotations,
 };
 pub use report::render_finding_sites_json;
-pub use show::{show, show_from_snapshot, show_with_scope};
+pub use show::{ShowHints, show, show_from_snapshot, show_with_scope};
 pub use show_batch::{show_batch_with_globs, show_batch_with_scope};
 
 // What another component's tests read (§AR-core-module-layout.1.3): the same run

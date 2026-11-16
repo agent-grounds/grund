@@ -6,7 +6,9 @@ use std::path::PathBuf;
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use grund_core::{RefsOpts, query_format_hint, refs, refs_outcome, refs_with_metadata_and_hint};
+use grund_core::{
+    RefsOpts, ShowOpts, refs, refs_outcome, refs_with_metadata_and_hint, show_with_scope,
+};
 
 const GLOBAL: &str = "{kind}-{slug}";
 static NEXT: AtomicU64 = AtomicU64::new(0);
@@ -139,7 +141,16 @@ impl Fixture {
             assert_eq!(failure["message"], message);
             assert_eq!(failure.as_object().unwrap().len(), 7);
         }
-        assert_eq!(query_format_hint(&self.root, &operand).unwrap(), hint);
+        // §AR-resolver.3.1.1: the core's single read returns the hint it built from its load.
+        let mut opts = ShowOpts::default();
+        opts.path = self.root.clone();
+        let (_, result, hints) = show_with_scope(&operand, opts, true, false);
+        assert_eq!(
+            result.err().map(|error| format!("{error:#}")),
+            Some(message.clone())
+        );
+        assert_eq!(hints.lines, [hint.clone()]);
+        assert!(!hints.path_breadcrumb);
         let error = refs(self.opts(&operand)).unwrap_err();
         assert_eq!(format!("{error:#}"), format!("{message}\n{hint}"));
         let outcome = refs_outcome(self.opts(&operand)).unwrap();

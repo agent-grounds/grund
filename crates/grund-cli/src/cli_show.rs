@@ -199,7 +199,10 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
     opts.section = section_override;
     opts.mode = mode;
     opts.format = show_format;
-    let (run_warnings, result, hints) = show_with_scope(&id_arg, opts, path_provided);
+    // §FS-show.3.5.2: the bare form is the core's to know; whether the breadcrumb
+    // replaces a refusal comes back with its hints.
+    let (run_warnings, result, hints) =
+        show_with_scope(&id_arg, opts, path_provided, default_invocation);
     render_run_warnings(&run_warnings);
     match result {
         Ok(output) => {
@@ -228,9 +231,10 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             let refusal = ShowRefusal {
                 message: &message,
                 sites,
-                hints: &hints,
+                hints: &hints.lines,
+                path_breadcrumb: hints.path_breadcrumb,
             };
-            render_show_error(&id_arg, &path, default_invocation, &format, refusal)
+            render_show_error(&id_arg, default_invocation, &format, refusal)
         }
     }
 }
@@ -283,19 +287,20 @@ fn print_second_coordinate_hint(
     );
 }
 
-/// A refused single read: its message, the sites an ambiguous refusal names, and
-/// the `hint:` lines the core built from the read's own context (§FS-show.3.5).
+/// A refused single read: its message, the sites an ambiguous refusal names, the
+/// `hint:` lines the core built from the read's own context (§FS-show.3.5), and
+/// whether the core found the filesystem-path breadcrumb's case (§FS-show.3.5.2).
 struct ShowRefusal<'a> {
     message: &'a str,
     sites: &'a [FindingSite],
     hints: &'a [String],
+    path_breadcrumb: bool,
 }
 
-/// Render query refusals, limiting the filesystem-check migration breadcrumb
-/// to the guarded existing-path case (§FS-show.3.5.2).
+/// Render query refusals, the filesystem-check migration breadcrumb in place of
+/// one where the core found its guarded existing-path case (§FS-show.3.5.2).
 fn render_show_error(
     id_arg: &str,
-    path: &Path,
     default_invocation: bool,
     format: &str,
     refusal: ShowRefusal<'_>,
@@ -304,10 +309,14 @@ fn render_show_error(
         message,
         sites,
         hints,
+        path_breadcrumb,
     } = refusal;
-    if default_invocation && message.starts_with("unknown project alias") && Path::new(id_arg).exists() {
+    if path_breadcrumb {
         eprintln!("invalid ID `{id_arg}`");
-        print_id_format_hint(path, id_arg);
+        // §AR-resolver.3.1.1: its format hint, built from the context the read loaded.
+        for hint in hints {
+            eprintln!("{hint}");
+        }
         eprintln!("hint: run `grund check {id_arg}` to validate a path");
         return ExitCode::FAILURE;
     }
@@ -344,13 +353,6 @@ fn print_bare_query_json(code: &'static str, message: &str, sites: &[FindingSite
         json_escape(message),
         render_finding_sites_json(sites)
     );
-}
-
-/// §FS-show.3.5.1: the core selects the loaded key and effective kind template.
-fn print_id_format_hint(path: &Path, operand: &str) {
-    if let Ok(hint) = grund_core::query_format_hint(path, operand) {
-        eprintln!("{hint}");
-    }
 }
 
 fn show_query_error_code(message: &str) -> Option<&'static str> {

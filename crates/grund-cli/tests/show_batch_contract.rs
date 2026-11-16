@@ -364,10 +364,6 @@ fn show_batch_loads_one_workspace_for_many_queries_and_for_all() {
     not(feature = "test-workspace-load-count"),
     ignore = "reads the configuration-resolution observer; run with --features grund/test-workspace-load-count"
 )]
-#[cfg_attr(
-    feature = "test-workspace-load-count",
-    ignore = "red until #1420 builds the breadcrumb's hint from the loaded context; implement removes this"
-)]
 fn show_path_breadcrumb_resolves_configuration_once() {
     let repo = Repo::new("breadcrumb-resolutions");
     let run = |name: &str, operand: &str| {

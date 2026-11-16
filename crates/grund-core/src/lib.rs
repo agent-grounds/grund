@@ -194,8 +194,7 @@ pub use config::PointSizeUnit;
 // outside the embedding result records.
 #[doc(hidden)]
 pub use api::{
-    query_format_hint, refs_sites_with_text_annotations, refs_with_metadata_and_hint,
-    refs_with_text_annotations,
+    refs_sites_with_text_annotations, refs_with_metadata_and_hint, refs_with_text_annotations,
 };
 #[doc(hidden)]
 pub use config::{
@@ -370,7 +369,7 @@ pub use writers::{
 #[doc(hidden)]
 pub use api::{
     ApiFailure, ApiFailureSite, ApiOutcome, ApiPartialOutput, EmbeddingRequest, ReferenceStyle,
-    RefsSites, RefsSitesOpts, RefsWithMetadata, check_with_run_warnings,
+    RefsSites, RefsSitesOpts, RefsWithMetadata, ShowHints, check_with_run_warnings,
     complete_ids_with_run_warnings, config_run_warnings, config_warnings,
     cover_lines_with_run_warnings, cover_text_with_run_warnings, cover_with_globs,
     cover_with_run_warnings, effective_config, effective_project, embedding_call,

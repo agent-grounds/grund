@@ -27,13 +27,25 @@ use crate::resolver::{
 use super::guidance::query_failure_hints;
 use super::report::context_run_warnings;
 use crate::scanner::{ApiScanError, resolve_id_arg};
+use crate::sources::path_exists;
 use crate::workspace::split_qualified_id_arg;
 
 /// Programmatic declaration read. This mirrors `grund show` resolution but
 /// returns the structured body instead of printing it.
 
 pub fn show(id_arg: &str, opts: ShowOpts) -> Result<ShowOutput> {
-    show_with_scope(id_arg, opts, true).1
+    show_with_scope(id_arg, opts, true, false).1
+}
+
+/// What a refused single read prints below its refusal: the `hint:` lines built
+/// from the context the read loaded (§FS-show.3.5, §AR-resolver.3.1.1), and
+/// whether the bare form's filesystem-path breadcrumb takes the refusal's place
+/// (§FS-show.3.5.2), in which case `lines` is the breadcrumb's format hint.
+#[doc(hidden)]
+#[derive(Debug, Default)]
+pub struct ShowHints {
+    pub lines: Vec<String>,
+    pub path_breadcrumb: bool,
 }
 
 /// The ID read behind `grund <ID>` (§FS-show).
@@ -43,19 +55,24 @@ pub fn show(id_arg: &str, opts: ShowOpts) -> Result<ShowOutput> {
 /// unresolvable ID — leaves an `Err` with nowhere to carry a caution the reader is
 /// already owed (§FS-check.4.10.7, §FS-workspace.6.1.7). A refused query's `hint:`
 /// lines come back beside it too, built from the context the read loaded, as a
-/// batch builds them (§FS-show.3.5, §AR-resolver.3.1.1).
+/// batch builds them (§FS-show.3.5, §AR-resolver.3.1.1). `bare` says the read is
+/// the bare `grund <arg>` form, the one form whose refusal may be the
+/// filesystem-path breadcrumb, which the returned hints then say it is
+/// (§FS-show.3.5.2).
 #[doc(hidden)]
 pub fn show_with_scope(
     id_arg: &str,
     opts: ShowOpts,
     path_provided: bool,
-) -> (Vec<Finding>, Result<ShowOutput>, Vec<String>) {
+    bare: bool,
+) -> (Vec<Finding>, Result<ShowOutput>, ShowHints) {
     let mut run_warnings = Vec::new();
-    let mut hints = Vec::new();
+    let mut hints = ShowHints::default();
     let output = show_run(
         id_arg,
         opts,
         path_provided,
+        bare,
         &mut run_warnings,
         &mut serde_json::Value::Null,
         &mut hints,
@@ -75,9 +92,10 @@ pub(super) fn show_data(
         id,
         opts,
         explicit,
+        false,
         &mut warnings,
         &mut metadata,
-        &mut Vec::new(),
+        &mut ShowHints::default(),
     );
     (warnings, result.map(|out| (out, metadata)))
 }
@@ -86,9 +104,10 @@ fn show_run(
     id_arg: &str,
     opts: ShowOpts,
     path_provided: bool,
+    bare: bool,
     run_warnings: &mut Vec<Finding>,
     metadata: &mut serde_json::Value,
-    hints: &mut Vec<String>,
+    hints: &mut ShowHints,
 ) -> Result<ShowOutput> {
     // §AR-config.1.5: a command-line run has no buffers; the editor's answer is
     // `show_from_snapshot`, over the context its snapshot loaded with them.
@@ -104,10 +123,33 @@ fn show_run(
         metadata,
     );
     if let Err(error) = &answer {
-        // §AR-resolver.3.1.1: the hint reads the context this read loaded, never a second one.
-        *hints = query_failure_hints(&context, id_arg, &ApiScanError::printed(error));
+        *hints = refusal_hints(&context, id_arg, &ApiScanError::printed(error), bare);
     }
     answer
+}
+
+/// A refused single read's hints, chosen by the one function a batch asks, over
+/// the context the read loaded and never a second one (§AR-resolver.3.1.1).
+///
+/// The filesystem-path breadcrumb is decided here and nowhere else
+/// (§FS-show.3.5.2): the bare form, a refusal that begins `unknown project alias`,
+/// and an operand that exists relative to the working directory. Its format hint
+/// is the invalid-ID hint of §FS-show.3.5.1, so the chooser is asked as that
+/// refusal, the `invalid ID` line the breadcrumb prints. Every other refusal is
+/// asked as itself, so an unknown alias the breadcrumb does not replace still
+/// earns no hint, and nothing walks the tree for one.
+fn refusal_hints(context: &WorkspaceContext, id_arg: &str, message: &str, bare: bool) -> ShowHints {
+    let path_breadcrumb =
+        bare && message.starts_with("unknown project alias") && path_exists(id_arg);
+    let lines = if path_breadcrumb {
+        query_failure_hints(context, id_arg, &format!("invalid ID `{id_arg}`"))
+    } else {
+        query_failure_hints(context, id_arg, message)
+    };
+    ShowHints {
+        lines,
+        path_breadcrumb,
+    }
 }
 
 /// The editor's citation preview, answered from the context its snapshot was
