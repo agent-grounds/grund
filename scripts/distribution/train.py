@@ -9,8 +9,9 @@ PGO reader. The language server is driven through an editor session over stdio.
 the evidence it records.
 
 §AR-benchmarks.1.7: the benchmark harness reads the same definitions. `session --root <dir>`
-prints the editor session as framed JSON-RPC for `grund-lsp`'s stdin, and `python-call`
-runs one catalog row through the Python extension, once.
+prints the editor session as framed JSON-RPC for `grund-lsp`'s stdin, `typing --root <dir>`
+prints the typing session beside it, which nothing trains on, and `python-call` runs one
+catalog row through the Python extension, once.
 
 Plain Python 3.6 syntax and the standard library only, because `pgo-build.sh`'s
 `find_python` accepts any Python 3.6 or newer to run it; in the manylinux2014 image the
@@ -35,6 +36,9 @@ LSP = ["initialize", "initialized", "textDocument/didOpen README.md",
        "shutdown", "exit"]
 # `show`'s depth flags, as the native APIs name the mode (§AR-benchmarks.1.2).
 MODES = {"--brief": "brief", "--full": "full"}
+# §AR-benchmarks.1.7: the keys the typing session types, a backspace written "\b": a citation,
+# two backspaces that widen it, and a key that matches nothing.
+KEYS = ("$", "$", "F", "S", "-", "0", "0", "2", "\b", "\b", "Z")
 
 
 def subset():
@@ -91,13 +95,18 @@ def documents(repo):
     return sorted(found)[:3]
 
 
+def opening(repo, process_id=None):
+    """The messages every session starts with: the client's `initialize` on `repo`."""
+    return [("initialize", {"processId": process_id, "rootUri": uri(repo),
+                            "workspaceFolders": [{"uri": uri(repo), "name": "grund"}],
+                            "capabilities": {}}, True),
+            ("initialized", {}, False)]
+
+
 def session(repo, process_id=None):
     """§AR-benchmarks.1.7, §DA-pgo-release: the editor session `LSP` describes, written once
     for the training client and the benchmark: `(method, params, is_request)` in order."""
-    messages = [("initialize", {"processId": process_id, "rootUri": uri(repo),
-                                "workspaceFolders": [{"uri": uri(repo), "name": "grund"}],
-                                "capabilities": {}}, True),
-                ("initialized", {}, False)]
+    messages = opening(repo, process_id)
     for document in documents(repo):
         path = os.path.join(repo, document)
         with open(path, encoding="utf-8") as handle:
@@ -115,16 +124,61 @@ def session(repo, process_id=None):
     return messages + [("shutdown", {}, True), ("exit", {}, False)]
 
 
+def typed_documents(repo):
+    """The documents the typing session types into, each with the comment its line opens
+    with: the first Markdown spec by path, an index left out, and the first Java source."""
+    specs, sources = [], []
+    for directory, folders, files in os.walk(repo):
+        folders[:] = [name for name in folders if not name.startswith(".")]
+        for name in files:
+            relative = os.path.relpath(os.path.join(directory, name), repo).replace(os.sep, "/")
+            if name.endswith(".java"):
+                sources.append(relative)
+            elif name.endswith(".md") and name != "README.md":
+                specs.append(relative)
+    return [(min(specs), ""), (min(sources), "//")]
+
+
+def typing(repo):
+    """§AR-benchmarks.1.7: the typing session, which nothing trains on. It opens a Markdown spec
+    and types `KEYS` on a new last line, each as a full-text `didChange` and then a
+    `completion`, as LSP4IJ sends them, then does the same in a Java `//` comment."""
+    messages = opening(repo)
+    for document, comment in typed_documents(repo):
+        path = os.path.join(repo, document)
+        with open(path, encoding="utf-8") as handle:
+            text = handle.read()
+        if not text.endswith("\n"):
+            text += "\n"
+        address = uri(path)
+        language = "java" if document.endswith(".java") else "markdown"
+        messages.append(("textDocument/didOpen", {"textDocument": {
+            "uri": address, "languageId": language, "version": 1, "text": text}}, False))
+        lead, typed, line = comment + " see ", "", text.count("\n")
+        for version, key in enumerate(KEYS, start=2):
+            typed = typed[:-1] if key == "\b" else typed + key
+            messages.append(("textDocument/didChange", {
+                "textDocument": {"uri": address, "version": version},
+                "contentChanges": [{"text": text + lead + typed + "\n"}]}, False))
+            trigger = ({"triggerKind": 2, "triggerCharacter": "$"} if key == "$"
+                       else {"triggerKind": 3})
+            messages.append(("textDocument/completion", {
+                "textDocument": {"uri": address},
+                "position": {"line": line, "character": len(lead + typed)},
+                "context": trigger}, True))
+    return messages + [("shutdown", {}, True), ("exit", {}, False)]
+
+
 def frame(message):
     body = json.dumps(message).encode("utf-8")
     return b"Content-Length: %d\r\n\r\n" % len(body) + body
 
 
-def framed_session(repo):
+def framed_session(repo, messages=session):
     """§AR-benchmarks.1.7: the session as the bytes a client writes, requests numbered from 1,
     with no process ID, so one fixture always gives the server one input."""
     out, next_id = [], 0
-    for method, params, request in session(os.path.abspath(repo)):
+    for method, params, request in messages(os.path.abspath(repo)):
         message = {"jsonrpc": "2.0", "method": method, "params": params}
         if request:
             next_id += 1
@@ -330,9 +384,9 @@ def main(argv):
     if argv[:1] == ["describe"]:
         print(json.dumps(workload(argv[1])))
         return 0
-    if argv[:2] == ["session", "--root"] and len(argv) == 3:
+    if argv[:1] in (["session"], ["typing"]) and argv[1:2] == ["--root"] and len(argv) == 3:
         out = getattr(sys.stdout, "buffer", sys.stdout)
-        out.write(framed_session(argv[2]))
+        out.write(framed_session(argv[2], session if argv[0] == "session" else typing))
         out.flush()
         return 0
     if argv[:1] == ["python-call"]:

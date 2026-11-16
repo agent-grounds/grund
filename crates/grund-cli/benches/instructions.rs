@@ -18,7 +18,8 @@
 //! row, and neither the whole `pr` tier.
 //!
 //! §AR-benchmarks.1.7: a row with a `frontend` measures `grund-lsp` fed its editor session
-//! on stdin, or the Python extension counted from its entry point.
+//! on stdin, or the Python extension counted from its entry point. A `grund-lsp` row whose
+//! session is the typing one counts only the event loop's share of each keystroke.
 //!
 //! §AR-benchmarks.5: the binary under test is `GRUND_BENCH_BIN` when it is set, so
 //! one harness on one fixture bundle measures a base revision's binary and its own.
@@ -74,6 +75,22 @@ const PYTHON_VAR: &str = "GRUND_BENCH_PYTHON";
 /// where Callgrind's collection toggles on; a toggle holds for its own thread only.
 #[cfg(feature = "bench")]
 const PYTHON_ENTRIES: [&str; 2] = ["_native::call", "rayon_core::registry::ThreadBuilder::run"];
+/// §AR-benchmarks.1.7: the `train.py` session a `frontend: lsp` row's `args` name when it counts
+/// a keystroke rather than the whole process.
+#[cfg(feature = "bench")]
+const TYPING_SESSION: &str = "typing";
+/// §AR-benchmarks.1.7, §DA-benchmark-frontends.3.1.1: where a typing row's collection toggles on,
+/// the one `#[inline(never)]` function that holds the event loop's whole share of a keystroke
+/// (§AR-lsp.2.1.1). It runs on the loop thread alone, so no worker thread is named.
+#[cfg(feature = "bench")]
+const TYPING_ENTRIES: [&str; 1] = ["grund_lsp::Server::keystroke"];
+/// §AR-benchmarks.7.3: the allocator a typing row's process runs with. glibc's fastbins leave
+/// the frees the writer thread and the rebuild worker make to be coalesced by the next large
+/// allocation on the arena, at moments their timing picks, so a keystroke would count work
+/// that is not its own; with none, each free coalesces on the thread that makes it. A fixed
+/// value the harness sets, not one of the caller's variables (§AR-benchmarks.3.1).
+#[cfg(feature = "bench")]
+const TYPING_ALLOCATOR: (&str, &str) = ("GLIBC_TUNABLES", "glibc.malloc.mxfast=0");
 /// §AR-benchmarks.3.1: the runtime pins the measured process reads; every other variable stays
 /// cleared, and the build-only `CARGO_INCREMENTAL` and `RUSTFLAGS` are not among them.
 #[cfg(feature = "bench")]
@@ -171,15 +188,25 @@ fn selected() -> Vec<String> {
 
 /// §AR-ci.5.2: the row's relative `soft_limits`, and its `hard_limits` ceiling only when the
 /// ceilings are switched on and the binary is the harness's own. §AR-benchmarks.1.7: a Python
-/// row counts from the extension's entry point, not from the interpreter's start.
+/// row counts from the extension's entry point, not from the interpreter's start, and a typing
+/// row from the function that handles a keystroke, not from the server's start.
 /// §AR-benchmarks.3.1: every row, whatever its frontend, runs under the runtime pins.
 #[cfg(feature = "bench")]
 fn limits(scenario: &Scenario) -> BinaryBenchmarkConfig {
     let mut callgrind = Callgrind::default();
-    if scenario.frontend.as_deref() == Some("python") {
+    let typing = scenario.frontend.as_deref() == Some("lsp") && scenario.args == [TYPING_SESSION];
+    let entries: &[&str] = match scenario.frontend.as_deref() {
+        Some("python") => &PYTHON_ENTRIES,
+        Some("lsp") if typing => &TYPING_ENTRIES,
+        _ => &[],
+    };
+    if !entries.is_empty() {
         callgrind.args(
-            std::iter::once("collect-atstart=no".to_owned())
-                .chain(PYTHON_ENTRIES.map(|entry| format!("toggle-collect={entry}"))),
+            std::iter::once("collect-atstart=no".to_owned()).chain(
+                entries
+                    .iter()
+                    .map(|entry| format!("toggle-collect={entry}")),
+            ),
         );
     }
     callgrind.soft_limits([(EventKind::Ir, scenario.limit_pct)]);
@@ -188,6 +215,9 @@ fn limits(scenario: &Scenario) -> BinaryBenchmarkConfig {
     }
     let mut config = BinaryBenchmarkConfig::default();
     config.pass_through_envs(RUNTIME_PINS);
+    if typing {
+        config.env(TYPING_ALLOCATOR.0, TYPING_ALLOCATOR.1);
+    }
     config.tool(callgrind);
     config
 }
@@ -375,19 +405,24 @@ fn stdin_file(scenario: &Scenario, extension: &str, bytes: &[u8]) -> PathBuf {
     path
 }
 
-/// §AR-benchmarks.1.7, §DA-benchmark-frontends: the editor session `train.py` defines for
-/// PGO training, printed for this fixture, for `grund-lsp` to read on stdin.
+/// §AR-benchmarks.1.7, §DA-benchmark-frontends: the editor session `train.py` defines that the
+/// row's `args` name, printed for this fixture, for `grund-lsp` to read on stdin: `session`, the
+/// one PGO trains on, or `typing`, which nothing trains on.
 #[cfg(feature = "bench")]
 fn lsp_session(scenario: &Scenario, root: &Path) -> PathBuf {
     let output = ProcessCommand::new("python3")
         .arg(Path::new(REPO).join("scripts/distribution/train.py"))
-        .arg("session")
+        .args(&scenario.args)
         .arg("--root")
         .arg(root)
         .stderr(Stdio::inherit())
         .output()
-        .expect("run scripts/distribution/train.py session");
-    assert!(output.status.success(), "train.py session failed");
+        .expect("run scripts/distribution/train.py");
+    assert!(
+        output.status.success(),
+        "train.py {} failed",
+        scenario.args.join(" ")
+    );
     stdin_file(scenario, "jsonrpc", &output.stdout)
 }
 
