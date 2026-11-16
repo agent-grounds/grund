@@ -166,9 +166,10 @@ new accepted sentence or selector, exit change, or evaluation change follows.
 ### sentences.whitespace: Presence-name whitespace refusal
 
 A presence `NAME` containing whitespace anywhere, including internal spaces,
-tabs, and Unicode whitespace, remains refused. The released reason remains a
-verbatim contiguous prefix under [§FS-errors.3](FS-errors.md#3-message-text), and the explanation
-`NAME forbids whitespace anywhere.` remains the end of the message. Between
+tabs, and Unicode whitespace, remains refused. Unless it holds `or` between
+two words, which [§FS-rule-refusals.sentences.presence-or](FS-rule-refusals.md#sentencespresence-or-or-between-chapter-names-is-refused-for-the-or) answers first, the released
+reason remains a verbatim contiguous prefix under [§FS-errors.3](FS-errors.md#3-message-text), and the
+explanation `NAME forbids whitespace anywhere.` remains the end of the message. Between
 them stands the accepted form [§FS-rule-refusals.sentences.rewrite](FS-rule-refusals.md#sentencesrewrite-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced) builds: the sentence as typed with
 the `NAME` trimmed of its surrounding whitespace. An empty `NAME`, or one with
 whitespace inside, leaves no token to keep, so no form is offered and only the
@@ -186,9 +187,6 @@ An empty `NAME` uses the same refusal. This adds guidance without admitting any
 new grammar. An ad-hoc refusal still has the shape of
 [§FS-errors.2.5](FS-errors.md#25-refused-input), and a missing piece here is a chapter name, never a
 kind, so no `known kinds:` line follows it.
-
-A `NAME` whose whitespace stands around an `or` between two words is not
-answered here: [§FS-rule-refusals.sentences.presence-or](FS-rule-refusals.md#sentencespresence-or-or-between-chapter-names-is-refused-for-the-or) answers it first.
 
 ### sentences.presence-or: `or` between chapter names is refused for the `or`
 
@@ -219,8 +217,9 @@ supplied is a chapter name, never a kind, so no `known kinds:` line follows on
 carries the same reason after `is not a valid rule: ` ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)). The
 refusal stands where the whitespace refusal stood, in the predicate stage of
 [§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails), so every earlier stage still wins and the exit
-code is the same `2`. Only the reason moves, for input that was refused
-already, and no sentence is newly accepted or newly refused.
+code is the same `2`. Only the reason moves, in place and with no window
+([§DF-presence-or-refusal](../decisions/functional/DF-presence-or-refusal.md#df-presence-or-refusal-a-presence-name-holding-or-between-two-words-is-refused-for-the-or-corrected-in-place)), for input that was refused already, and no
+sentence is newly accepted or newly refused.
 
 In the repository of [§FS-rule-refusals.sentences.rewrite.fs-only](FS-rule-refusals.md#sentencesrewritefs-only-exact-rows-where-fs-is-the-only-kind), whose one kind is `FS`,
 these are the exact refusals. Each `error:` line opens with the reason, and no
