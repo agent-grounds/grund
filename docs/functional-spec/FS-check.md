@@ -88,7 +88,7 @@ How a token inside a Markdown link destination is read is [§FS-citations.recogn
 
 #### 1.1.5 Contexts read as neither prose nor code
 
-That nothing inside a fenced code block is a citation, and which other contexts skip one, is [§FS-citations.recognized.contexts](FS-citations.md#recognizedcontexts-contexts-read-as-neither-prose-nor-code). What opens and closes a fence is [§FS-languages.fence](FS-languages.md#fence-fences).
+Which fenced code blocks hold no citation, and which other contexts skip one, is [§FS-citations.recognized.contexts](FS-citations.md#recognizedcontexts-contexts-read-as-neither-prose-nor-code). What opens and closes a fence, and its tag, is [§FS-languages.fence](FS-languages.md#fence-fences).
 
 ##### 1.1.5.1 A raw HTML block holds no heading
 
@@ -1108,7 +1108,7 @@ Between them sits a third case, and it lands here: a citation `grund fmt --write
 
 The look is at text rather than at citations, and it is deliberately narrow. The index **mentions** the ID when some line of the index file carries either the ID as `grund` renders it — with or without the marker, with or without a section suffix, as an ID-shaped token on its own boundaries, so a longer ID containing this one is not a mention of it — or the file name of the declaration the finding is located at, as a whole name, so `overview.md` is not mentioned by `my-overview.md` and not by `overview.markdown`.
 
-Two kinds of line are not looked at. A line inside a Markdown fenced code block, by the one fence reader every surface shares ([§FS-languages.fence](FS-languages.md#fence-fences)), because an index that illustrates the form in an example has listed nothing. And a declaration heading: a citation riding on one is not an entry either ([§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)), and a line that declares an ID is not a page mentioning it.
+Two kinds of line are not looked at. A line inside a Markdown fenced code block that `[schema.sources] fenced` does not select, by the one fence reader every surface shares ([§FS-languages.fence](FS-languages.md#fence-fences)), because an index that illustrates the form in an example has listed nothing. A selected fence's lines are looked at, so a diagram in the index mentions what it cites, and a citation there is still no entry, because `fmt` wraps nothing in a fence ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule), [§FS-languages.fence.language](FS-languages.md#fencelanguage-a-fences-tag-and-the-fences-fenced-selects)). And a declaration heading: a citation riding on one is not an entry either ([§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)), and a line that declares an ID is not a page mentioning it.
 
 Inline code is **not** excluded. An index that shows the ID in an inline span has mentioned it, which is what makes one sentence true both of a citation the scan recorded and discarded ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)) and of a markerless mention it never recorded at all. A mention is never itself a finding and never satisfies the rule ([§FS-check.3.18.6](FS-check.md#3186-and-nothing-more)): it chooses the words of a finding this rule has already raised. Where the index file could not be read there is no text to look at, so [§FS-check.3.18.7](FS-check.md#3187-a-missing-index-file)'s parenthesis is said with the not-listed wording of [§FS-check.3.18.5.2](FS-check.md#31852-what-not-listed-says) and never with "appears".
 
