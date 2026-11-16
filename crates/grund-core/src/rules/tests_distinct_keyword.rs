@@ -5,8 +5,7 @@
 //! §FS-rule-refusals.sentences.rewrite.same-units). Issue #1367 is the report: the keyword was
 //! read as part of a kind name, `unknown kind "distinct SRC"`.
 //!
-//! The tests marked ignored are red until #1367 adds the keyword; the others are controls, green
-//! today and after, which pin that a kind named `distinct` keeps the readings it has.
+//! The controls pin that a kind named `distinct` keeps the readings it had before the keyword.
 
 use super::RuleAnchor;
 use super::sentence::{
@@ -64,7 +63,6 @@ fn distinct_over(targets: &RuleTargets, values: &[&str]) -> bool {
 /// §FS-rules.3.2.1: the issue's sentence is accepted, an outbound count over `SRC` in a mode of
 /// its own, with its count and relation as the plain count reads them.
 #[test]
-#[ignore = "red until #1367 reads `distinct` after the count as the keyword; implement removes this"]
 fn the_issue_sentence_is_a_distinct_outbound_count() {
     let vocab = vocabulary(&["COUNTRY", "SRC", "RULE"]);
     let title = "The truck-mass chapter of each COUNTRY must cite at least 3 distinct SRC.";
@@ -95,7 +93,6 @@ fn the_issue_sentence_is_a_distinct_outbound_count() {
 /// §FS-rules.3.2.1: `distinct` covers the whole `or` list, and every count spelling but
 /// `at least one` takes it.
 #[test]
-#[ignore = "red until #1367 reads `distinct` after the count as the keyword; implement removes this"]
 fn distinct_covers_the_or_list_at_every_bound() {
     let vocab = vocabulary(&["FS", "GOAL", "REQ"]);
     for count in [
@@ -118,7 +115,6 @@ fn distinct_covers_the_or_list_at_every_bound() {
 /// §FS-rules.3.2.1: where `distinct` is no citable kind, it is the keyword whenever an object
 /// follows it, so an unknown kind after it is refused under its own name.
 #[test]
-#[ignore = "red until #1367 reads `distinct` after the count as the keyword; implement removes this"]
 fn an_unknown_kind_after_distinct_is_refused_under_its_own_name() {
     let vocab = vocabulary(&["COUNTRY", "SRC", "RULE"]);
     assert_eq!(
@@ -137,7 +133,7 @@ fn an_unknown_kind_after_distinct_is_refused_under_its_own_name() {
 }
 
 /// §FS-rules.3.2.1: with a citable kind named `distinct`, the bare count keeps counting it and
-/// an object `distinct` does not admit is read as before. Controls, green today.
+/// an object `distinct` does not admit is read as before. Controls.
 #[test]
 fn a_kind_named_distinct_keeps_its_readings() {
     let vocab = vocabulary(&["COUNTRY", "SRC", "distinct"]);
@@ -159,7 +155,6 @@ fn a_kind_named_distinct_keeps_its_readings() {
 /// §FS-rules.3.2.1: with a citable kind named `distinct`, `distinct` followed by a citable kind
 /// is the keyword.
 #[test]
-#[ignore = "red until #1367 reads `distinct` after the count as the keyword; implement removes this"]
 fn a_kind_named_distinct_still_lets_the_keyword_count_a_citable_kind() {
     let vocab = vocabulary(&["COUNTRY", "SRC", "distinct"]);
     let (rule, _) = parse("Each COUNTRY must cite at least 3 distinct SRC.", &vocab)
@@ -172,7 +167,6 @@ fn a_kind_named_distinct_still_lets_the_keyword_count_a_citable_kind() {
 /// workspace in scope, accepted at the workspace root, and refused, with the same reason, where
 /// the workspace holds no such alias.
 #[test]
-#[ignore = "red until #1367 reads `distinct` after the count as the keyword; implement removes this"]
 fn a_namespaced_object_after_distinct_reads_as_it_does_alone() {
     let member = vocabulary(&["COUNTRY", "SRC"]);
     let root = vocabulary_in(
@@ -210,7 +204,6 @@ fn a_namespaced_object_after_distinct_reads_as_it_does_alone() {
 /// §FS-rule-refusals.sentences, §FS-rule-refusals.sentences.rewrite.by-refusal: every refusal a
 /// `distinct` moves, in the repository of the sentences table, with its exact reason and form.
 #[test]
-#[ignore = "red until #1367 refuses a `distinct` the predicate does not admit; implement removes this"]
 fn each_distinct_refusal_gives_its_reason_and_form() {
     let vocab = vocabulary(&["GOAL", "REQ", "FS", "AR", "RULE"]);
     let rows = [

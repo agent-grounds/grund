@@ -1,7 +1,8 @@
 //! The `cites` relation's count over one subject (§FS-rules.5.1–5.3): every site
 //! a target matches counts, one pinned at the rule's own nested alias included
 //! (§FS-config.3.9.3). Mixed sites are ordinary (§FS-rules.7.12). Every count above zero hands
-//! the checker the citations it read (§FS-rules.7.3.1), through [`counted_citations`].
+//! the checker the citations it read (§FS-rules.7.3.1), through [`counted_citations`]. The
+//! `distinct` spelling counts the declarations those same rows name (§FS-rules.3.2.1).
 
 use super::super::facts::{NodeKey, RuleFacts, SiteMeta};
 use super::super::{Cardinality, RuleLevel, RuleTargets, TargetMode};
@@ -11,7 +12,7 @@ use super::selectors::{citation_matches_targets, label, target_nodes, target_wor
 use super::{RuleFinding, SemanticRule, push_counted};
 use crate::model::Code;
 use crate::model::remedies;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// The citations a count read, one per row whatever the count makes of them (§FS-rules.7.3.1):
 /// both count arms, outbound and inbound, call this one helper over the rows they counted. Each is
@@ -79,6 +80,10 @@ pub(super) fn evaluate_cites(
                 .copied()
                 .filter(|(_, _, target)| citation_matches_targets(target, &targets, index))
                 .collect();
+            if *mode == TargetMode::Distinct {
+                distinct(rule, authority, facts, index, subject, read, out);
+                continue;
+            }
             let count = read.len();
             if !rule.cardinality.contains(count) {
                 let ordinary = rule.cardinality == Cardinality::AT_LEAST_ONE && count == 0;
@@ -122,4 +127,45 @@ pub(super) fn evaluate_cites(
             }
         }
     }
+}
+
+/// The `distinct` count over the rows the plain count read (§FS-rules.3.2.1): the different
+/// declarations owning their targets, a declaration owning itself (§FS-rules.5.2). It fails as
+/// `citation-cardinality` at every count, zero included, with a row of its own
+/// (§FS-rules.7.3), and names every row it read, so its list adds up to the sites and not to
+/// the count (§FS-rules.7.3.1).
+fn distinct(
+    rule: &SemanticRule,
+    authority: &Authority,
+    facts: &RuleFacts,
+    index: &FactIndex<'_>,
+    subject: &NodeKey,
+    read: Vec<&CitationRow>,
+    out: &mut Vec<RuleFinding>,
+) {
+    let owners: BTreeSet<&NodeKey> = read
+        .iter()
+        .map(|(_, _, target)| index.owner(target).unwrap_or(target))
+        .collect();
+    let count = owners.len();
+    if rule.cardinality.contains(count) {
+        return;
+    }
+    let message = format!(
+        "{} cites {count} distinct {}; {authority} requires {}; {}",
+        label(facts, subject),
+        target_wording(&rule.targets),
+        rule.cardinality.wording(),
+        remedies::citation_cardinality()
+    );
+    let counted = counted_citations(facts, read);
+    push_counted(
+        out,
+        facts,
+        subject,
+        Code::CITATION_CARDINALITY,
+        message,
+        authority,
+        counted,
+    );
 }

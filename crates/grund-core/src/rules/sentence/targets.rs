@@ -72,17 +72,119 @@ fn known_target(
     Err(refuse(reason, missing))
 }
 
-pub(super) fn kind_targets(
+/// The object kinds after a predicate's count, and where the keyword `distinct` was written
+/// among them (§FS-rules.3.2.1). Each predicate decides what a `distinct` means for it, once
+/// every object kind is accepted, so a `distinct` refusal is the last of its stage
+/// (§FS-rule-refusals.sentences.order).
+pub(super) struct Objects {
+    /// The accepted object kinds, sorted and deduplicated.
+    pub(super) values: Vec<String>,
+    /// `distinct` right after the count, covering the whole `or` list.
+    pub(super) counted: bool,
+    /// `distinct` before a later object kind (§FS-rule-refusals.sentences.rewrite.same-units).
+    pub(super) later: bool,
+    /// The object kinds as typed with every keyword `distinct` dropped, which is the text a
+    /// form that drops it offers (§FS-rule-refusals.sentences.rewrite.by-refusal).
+    pub(super) plain: String,
+}
+
+impl Objects {
+    /// Whether `distinct` is written anywhere among the object kinds.
+    pub(super) fn distinct(&self) -> bool {
+        self.counted || self.later
+    }
+
+    /// The targets, counted in `mode`.
+    pub(super) fn targets(self, mode: TargetMode) -> RuleTargets {
+        RuleTargets::Kinds {
+            values: self.values,
+            mode,
+        }
+    }
+}
+
+const DISTINCT: &str = "distinct";
+
+/// Read the object kinds `text` names, the keyword `distinct` included (§FS-rules.3.2.1).
+/// Whether a leading `distinct ` is the keyword is decided by the kind table of the rule's
+/// scope, never by the scan: where `distinct` is no citable kind of the rule's own project it
+/// always is, so `distinct SRCX` is refused as `unknown kind "SRCX"` and `distinct mem/SRC`
+/// gets what `mem/SRC` gets; where it is one, only when what follows it is accepted, so
+/// `at least 3 distinct.` and every sentence it refused keep their readings
+/// (§DF-distinct-target-counts.2.3).
+pub(super) fn objects(
     text: &str,
-    mode: TargetMode,
     vocab: &RuleVocabulary,
     unverifiable: &mut Option<String>,
-) -> Result<RuleTargets, Refusal> {
-    let mut values = text
-        .split(" or ")
-        .map(|target| known_target(target, vocab, unverifiable))
-        .collect::<Result<Vec<_>, _>>()?;
+) -> Result<Objects, Refusal> {
+    if let Some(rest) = keyword(text) {
+        if !configured(vocab) {
+            return read_list(rest, vocab, unverifiable).map(|objects| Objects {
+                counted: true,
+                ..objects
+            });
+        }
+        let mut scratch = unverifiable.clone();
+        if let Ok(objects) = read_list(rest, vocab, &mut scratch) {
+            *unverifiable = scratch;
+            return Ok(Objects {
+                counted: true,
+                ..objects
+            });
+        }
+    }
+    read_list(text, vocab, unverifiable)
+}
+
+/// What follows a `distinct ` that opens `text`, where something does.
+fn keyword(text: &str) -> Option<&str> {
+    text.strip_prefix(DISTINCT)?
+        .strip_prefix(' ')
+        .filter(|rest| !rest.is_empty())
+}
+
+/// Whether `distinct` is a citable kind of the rule's own project (§FS-rules.3.2.1).
+fn configured(vocab: &RuleVocabulary) -> bool {
+    vocab.objects.verdict(KindScope::Project(""), DISTINCT) == KindVerdict::Citable
+}
+
+/// The `or` list of object kinds, a later object kind's leading `distinct` read by the same
+/// scope rule as the count's, one kind at a time. The first kind is the one after the count,
+/// whose `distinct` [`objects`] has already decided, so it is read as written.
+fn read_list(
+    text: &str,
+    vocab: &RuleVocabulary,
+    unverifiable: &mut Option<String>,
+) -> Result<Objects, Refusal> {
+    let mut values = Vec::new();
+    let mut plain = Vec::new();
+    let mut later = false;
+    for (at, target) in text.split(" or ").enumerate() {
+        let marked = keyword(target).filter(|_| at > 0).and_then(|rest| {
+            if !configured(vocab) {
+                return Some((rest, known_target(rest, vocab, unverifiable)));
+            }
+            let mut scratch = unverifiable.clone();
+            let read = known_target(rest, vocab, &mut scratch).ok()?;
+            *unverifiable = scratch;
+            Some((rest, Ok(read)))
+        });
+        let (written, value) = match marked {
+            Some((rest, value)) => {
+                later = true;
+                (rest, value?)
+            }
+            None => (target, known_target(target, vocab, unverifiable)?),
+        };
+        values.push(value);
+        plain.push(written);
+    }
     values.sort();
     values.dedup();
-    Ok(RuleTargets::Kinds { values, mode })
+    Ok(Objects {
+        values,
+        counted: false,
+        later,
+        plain: plain.join(" or "),
+    })
 }

@@ -211,7 +211,7 @@ fn guide_marked_rows_execute_against_the_released_parser() {
         }
         accepted_count += 1;
     }
-    assert_eq!(accepted_count, 23, "accepted guide-row inventory drifted");
+    assert_eq!(accepted_count, 25, "accepted guide-row inventory drifted");
 
     let refused = marked(
         guide.as_bytes(),
@@ -263,7 +263,7 @@ fn guide_marked_rows_execute_against_the_released_parser() {
         assert_eq!(text(&output.stderr), format!("error: {reason}\n{after}"));
         refused_count += 1;
     }
-    assert_eq!(refused_count, 21, "refused guide-row inventory drifted");
+    assert_eq!(refused_count, 31, "refused guide-row inventory drifted");
 }
 
 /// The guide may not teach the emptiness rule in words the specification does
