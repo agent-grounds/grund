@@ -144,6 +144,11 @@ fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
             "",
         ),
         (
+            "FS-login must have exactly one dearer or unsold chapter.",
+            "\"or\" between chapter names is not accepted; a presence rule counts one NAME.",
+            "",
+        ),
+        (
             "FS-login.requirements must have exactly one should chapter.",
             "chapter subjects cannot have chapters",
             "",

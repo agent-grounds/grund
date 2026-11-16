@@ -48,7 +48,6 @@ fn wrong_rows(root: &Path, rows: &[(&str, &str)]) -> Vec<String> {
 /// §FS-rule-refusals.sentences.presence-or: the point's exact rows, and the
 /// `FS-login` row of §FS-rule-refusals.sentences.rewrite.fs-only.
 #[test]
-#[ignore = "red until #1374 refuses an `or` between presence names for the `or`; implement removes this"]
 fn check_rule_refuses_or_between_chapter_names_for_the_or() {
     let rows = [
         (
@@ -150,7 +149,6 @@ fn a_name_that_is_or_alone_is_still_a_name() {
 /// §FS-rule-refusals.sentences.presence-or: a configured rule declaration
 /// carries the same reason after `is not a valid rule: ` (§FS-rules.7.1).
 #[test]
-#[ignore = "red until #1374 refuses an `or` between presence names for the `or`; implement removes this"]
 fn a_rule_declaration_naming_two_chapters_with_or_is_invalid_for_the_or() {
     let root = scratch_from(
         &case_repo("check-rules-modal-chapter-declaration"),
