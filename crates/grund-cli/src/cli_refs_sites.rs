@@ -164,12 +164,14 @@ fn refs_sites_refused(
     let format = format
         .or_else(|| effective_config(path).ok().map(|config| config.output_format))
         .unwrap_or_else(|| "text".to_string());
+    // §FS-show.3.5.2: `refs` is never the bare form, so no breadcrumb replaces the refusal.
     let refusal = ShowRefusal {
         message: &message,
         sites,
         hints,
+        path_breadcrumb: false,
     };
-    render_show_error(&source, path, false, &format, refusal)
+    render_show_error(&source, false, &format, refusal)
 }
 
 /// What a failed site-mode run left to render: the error's text, an ambiguous

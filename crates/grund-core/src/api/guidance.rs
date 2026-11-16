@@ -1,30 +1,9 @@
 //! Query repair hints shared with process frontends (§FS-show.3.5.1).
 
-use anyhow::Result;
-use std::path::Path;
-
 use super::unread_configs::UnreadConfigs;
 use crate::config::{Config, format_guidance};
 use crate::resolver::{WorkspaceContext, names_member_id_candidate};
-use crate::workspace::{expand_workspace_tree, resolve_workspace_config, split_qualified_id_arg};
-
-/// §FS-show.3.5.1: select the query's project before describing its format.
-/// This only reads configuration; it neither resolves nor reclassifies the query.
-#[doc(hidden)]
-pub fn query_format_hint(path: &Path, operand: &str) -> Result<String> {
-    let mut config = resolve_workspace_config(path)?;
-    let Ok((alias, raw)) = split_qualified_id_arg(operand) else {
-        return Ok(invalid_id_hint(&config, operand, None));
-    };
-    if let Some(alias) = alias {
-        let projects = expand_workspace_tree(&mut config)?;
-        if let Some(project) = projects.iter().find(|project| project.alias == alias) {
-            return Ok(invalid_id_hint(&project.config, operand, Some(raw)));
-        }
-        return Ok(invalid_id_hint(&config, operand, None));
-    }
-    Ok(invalid_id_hint(&config, operand, Some(raw)))
-}
+use crate::workspace::split_qualified_id_arg;
 
 /// §FS-show.3.5.1: the one hint a grammar-rejected `operand` earns, for every
 /// query refusal adapter. It names the effective template of `selected`'s kind
