@@ -26,6 +26,8 @@ mod tests_comments;
 #[cfg(test)]
 mod tests_gates;
 #[cfg(test)]
+mod tests_gates_string_forms;
+#[cfg(test)]
 mod tests_mapping;
 
 use anyhow::{Context, Result};

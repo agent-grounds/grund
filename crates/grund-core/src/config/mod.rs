@@ -237,6 +237,8 @@ mod tests_schema_view;
 #[cfg(test)]
 mod tests_slots;
 #[cfg(test)]
+mod tests_string_forms;
+#[cfg(test)]
 mod tests_v2_fields;
 #[cfg(test)]
 mod tests_v2_lowering;
