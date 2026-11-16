@@ -260,5 +260,11 @@ mod v2_sources;
 #[path = "tests_typing.rs"]
 mod typing;
 
+#[path = "tests_held_client.rs"]
+mod held_client;
+
 #[path = "tests_typing_held.rs"]
 mod typing_held;
+
+#[path = "tests_rebuild_lifecycle.rs"]
+mod rebuild_lifecycle;

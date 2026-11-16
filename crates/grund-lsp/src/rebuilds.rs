@@ -38,18 +38,32 @@ struct Pending {
     inputs: Option<Inputs>,
 }
 
+/// What the loop records as a message arrives, for `dispatch` to apply before the next one,
+/// outside the counted keystroke (§AR-lsp.2.1.1).
+enum Recorded {
+    /// An edit, merged into the rebuild still to start.
+    Edit { seq: u64, scope: Scope },
+    /// A request held on the rebuild ending at this edit, which it seals.
+    Seal(u64),
+}
+
 /// One rebuild handed to the worker.
 struct Job {
     seq: u64,
     scope: Scope,
     inputs: Inputs,
     state: Installed,
+    /// A case's ask that this rebuild panic, as a defect in the scan would make it.
+    #[cfg(test)]
+    panics: bool,
 }
 
 /// A finished rebuild: the snapshot with the diagnostics computed over it, or nothing where the
-/// rebuild panicked, which leaves the last snapshot standing (§AR-lsp.2.1.3).
+/// rebuild panicked, which leaves the last snapshot standing and its scope to rebuild again
+/// (§AR-lsp.2.1.1).
 struct Built {
     seq: u64,
+    scope: Scope,
     outcome: Option<(Installed, BTreeMap<Url, Vec<Diagnostic>>)>,
 }
 
@@ -61,8 +75,12 @@ impl Job {
             scope,
             inputs,
             mut state,
+            #[cfg(test)]
+            panics,
         } = self;
-        let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
+        let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            #[cfg(test)]
+            assert!(!panics, "a rebuild panics, as the case asked");
             state.docs = inputs.docs;
             state.versions = inputs.versions;
             state.rebuild(&inputs.folders, &scope);
@@ -74,6 +92,7 @@ impl Job {
         }
         Built {
             seq,
+            scope,
             outcome: outcome.ok(),
         }
     }
@@ -90,8 +109,10 @@ fn work(
         #[cfg(test)]
         let seq = job.seq;
         #[cfg(test)]
+        let mut job = job;
+        #[cfg(test)]
         if let Some(gate) = &gate {
-            gate.enter(&job);
+            job.panics = gate.enter(&job);
         }
         let outcome = job.run();
         // Told before the result goes, so a case that saw the result install has the event too.
@@ -114,14 +135,22 @@ struct Rebuilds {
     /// The edit the worker's rebuild ends at, while it runs.
     in_flight: Option<u64>,
     queue: VecDeque<Pending>,
+    /// What the loop recorded since `dispatch` last brought the queue up to date, in arrival
+    /// order.
+    recorded: Vec<Recorded>,
     /// Requests that wait on a rebuild, in arrival order.
     held: Vec<Held>,
-    /// The documents edited since the installed snapshot, each with its latest edit and how that
-    /// text was judged against the installed catalog (§FS-lsp.responsiveness.4).
+    /// Every document edited this session, with its latest edit and how that text stands against
+    /// the installed catalog (§FS-lsp.responsiveness.4).
     edited: BTreeMap<Url, Edited>,
     /// The latest edit that can change any project — a folder or watched-file change, a disk event
     /// — while no snapshot reflects it yet.
     stale_all: Option<u64>,
+    /// What rebuilds that panicked covered while no rebuild was queued to take it: the next
+    /// rebuild to start rebuilds it again (§AR-lsp.2.1.1).
+    failed: Option<Scope>,
+    /// The client sent `exit` while its `shutdown` was held (§AR-lsp.2.1.2).
+    exited: bool,
     /// The worker, spawned by the first rebuild it is handed.
     jobs: Option<crossbeam_channel::Sender<Job>>,
     built: (
@@ -139,9 +168,12 @@ impl Default for Rebuilds {
             installed: 0,
             in_flight: None,
             queue: VecDeque::new(),
+            recorded: Vec::new(),
             held: Vec::new(),
             edited: BTreeMap::new(),
             stale_all: None,
+            failed: None,
+            exited: false,
             jobs: None,
             built: crossbeam_channel::unbounded(),
             #[cfg(test)]
@@ -151,10 +183,22 @@ impl Default for Rebuilds {
 }
 
 impl Rebuilds {
-    /// Count one edit, merged into the last rebuild still to start where no request seals it.
-    fn edit(&mut self, scope: Scope) -> u64 {
+    /// Count one edit and record it for `dispatch`, which merges it into the queue.
+    fn record(&mut self, scope: Scope) -> u64 {
         self.seq += 1;
-        let seq = self.seq;
+        self.recorded.push(Recorded::Edit {
+            seq: self.seq,
+            scope,
+        });
+        self.seq
+    }
+
+    /// Merge the edit at `seq` into the last rebuild still to start where no request seals it,
+    /// with whatever a rebuild that panicked left to rebuild again.
+    fn enqueue(&mut self, seq: u64, mut scope: Scope) {
+        if let Some(failed) = self.failed.take() {
+            scope.add(failed);
+        }
         match self.queue.back_mut() {
             Some(last) if last.seals == 0 => {
                 last.seq = seq;
@@ -167,12 +211,21 @@ impl Rebuilds {
                 inputs: None,
             }),
         }
-        seq
     }
 
-    /// The installed snapshot reflects every edit counted so far.
+    /// A rebuild over `scope` panicked: the next rebuild to start rebuilds it again, the one
+    /// queued or else the next an edit or a held typing request asks for (§AR-lsp.2.1.1).
+    fn fail(&mut self, scope: Scope) {
+        match (self.queue.front_mut(), &mut self.failed) {
+            (Some(next), _) => next.scope.add(scope),
+            (None, Some(failed)) => failed.add(scope),
+            (None, None) => self.failed = Some(scope),
+        }
+    }
+
+    /// The installed snapshot reflects every edit counted so far, and no rebuild is still to run.
     fn current(&self) -> bool {
-        self.installed == self.seq
+        self.installed == self.seq && self.in_flight.is_none() && self.queue.is_empty()
     }
 
     /// A request held for the rebuild ending at `seq` has gone: that rebuild takes later edits
@@ -205,10 +258,35 @@ impl Server {
         }
     }
 
-    /// Seal the rebuild that ends at `seq` for a request held on it, taking its inputs now.
+    /// Bring the queue up to date with what the loop recorded, in arrival order: each edit merged
+    /// into the rebuild still to start, each seal applied (§AR-lsp.2.1.2). Between two messages,
+    /// so the documents a seal takes are the ones its request was sent against.
+    fn fold(&mut self) {
+        let mut recorded = std::mem::take(&mut self.rebuilds.recorded);
+        for item in recorded.drain(..) {
+            match item {
+                Recorded::Edit { seq, scope } => self.rebuilds.enqueue(seq, scope),
+                Recorded::Seal(seq) => self.seal(seq),
+            }
+        }
+        self.rebuilds.recorded = recorded;
+    }
+
+    /// Seal the rebuild that ends at `seq` for a request held on it, taking its inputs now. Where
+    /// none is outstanding, the request is a typing request held by edits a rebuild that panicked
+    /// left unreflected, and that rebuild runs again for it (§AR-lsp.2.1.1).
     fn seal(&mut self, seq: u64) {
         if self.rebuilds.in_flight == Some(seq) {
             return;
+        }
+        if !matches!(self.rebuilds.queue.back(), Some(last) if last.seq == seq) {
+            let scope = self.rebuilds.failed.take().unwrap_or(Scope::All);
+            self.rebuilds.queue.push_back(Pending {
+                seq,
+                scope,
+                seals: 0,
+                inputs: None,
+            });
         }
         let unread = matches!(self.rebuilds.queue.back(),
             Some(last) if last.seq == seq && last.inputs.is_none());
@@ -223,9 +301,11 @@ impl Server {
         }
     }
 
-    /// Hand the next rebuild to the worker when it is idle (§AR-lsp.2.1.1). Outside the counted
-    /// keystroke: whether it runs depends on the worker, and a keystroke's cost must not (R3).
+    /// Hand the next rebuild to the worker when it is idle (§AR-lsp.2.1.1), once the queue holds
+    /// what the loop recorded. Outside the counted keystroke: whether it runs depends on the
+    /// worker, and a keystroke's cost must not (R3).
     fn dispatch(&mut self) {
+        self.fold();
         if self.rebuilds.in_flight.is_some() {
             return;
         }
@@ -238,6 +318,8 @@ impl Server {
             scope: pending.scope,
             inputs,
             state: self.installed.base(),
+            #[cfg(test)]
+            panics: false,
         };
         self.rebuilds.in_flight = Some(pending.seq);
         if self.rebuilds.jobs.is_none() {
@@ -295,30 +377,38 @@ impl Server {
 
     /// Install a finished rebuild between two messages (§AR-lsp.2.1.3): swap the snapshot, judge
     /// the edits it does not reflect again against it (§FS-lsp.responsiveness.4), publish with
-    /// the versions it checked (§FS-lsp.1.1), then answer what waited on it, in arrival order.
+    /// the versions it checked (§FS-lsp.1.1), then answer what waited on it, in arrival order. A
+    /// rebuild that panicked swaps nothing in: the edits it covered stay as they were judged, and
+    /// its scope waits for the next rebuild (§AR-lsp.2.1.1).
     fn install(&mut self, built: Built) -> Result<Flow> {
-        let Built { seq, outcome } = built;
+        self.fold();
+        let Built {
+            seq,
+            scope,
+            outcome,
+        } = built;
         self.rebuilds.in_flight = None;
-        if let Some((state, diagnostics)) = outcome {
-            let replaced = std::mem::replace(&mut self.installed, state);
-            drop(replaced);
-            self.watch_imports();
-            self.publish(diagnostics)?;
-        }
         self.rebuilds.installed = seq;
-        self.rebuilds.edited.retain(|_, edit| edit.seq > seq);
-        for edit in self.rebuilds.edited.values_mut() {
-            edit.verdict = edit.verdict.again();
-        }
-        if self.rebuilds.stale_all.is_some_and(|stale| stale <= seq) {
-            self.rebuilds.stale_all = None;
+        let rebuilt = outcome.is_some();
+        match outcome {
+            Some((state, diagnostics)) => {
+                let replaced = std::mem::replace(&mut self.installed, state);
+                drop(replaced);
+                self.watch_imports();
+                self.judge_again(seq);
+                if self.rebuilds.stale_all.is_some_and(|stale| stale <= seq) {
+                    self.rebuilds.stale_all = None;
+                }
+                self.publish(diagnostics)?;
+            }
+            None => self.rebuilds.fail(scope),
         }
         let (due, waiting) = std::mem::take(&mut self.rebuilds.held)
             .into_iter()
             .partition::<Vec<_>, _>(|held| held.seq <= seq);
         self.rebuilds.held = waiting;
         for held in due {
-            if self.answer_held(held)? == Flow::Exit {
+            if self.answer_held(held, rebuilt)? == Flow::Exit {
                 return Ok(Flow::Exit);
             }
         }
