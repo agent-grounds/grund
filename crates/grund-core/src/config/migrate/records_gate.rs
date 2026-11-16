@@ -12,12 +12,13 @@ use std::path::Path;
 use super::candidate::may_default;
 use super::opted_out::Block;
 use super::places::inside_home;
+use crate::config::file_reading::string_reading;
 use crate::config::grounding::configured_row_grounding;
 use crate::config::kind::KindResolution;
 use crate::config::project::{Project, Strength};
 use crate::config::rows::{Extent, Place, Row};
 use crate::config::sources::DeclarationMode;
-use crate::grammar::{DocCommentRule, extension_rule};
+use crate::grammar::{DocCommentRule, StringReading, extension_rule};
 
 /// One section of the comparison, as a line per reading.
 pub(super) type Section = (&'static str, String);
@@ -205,13 +206,24 @@ pub(super) fn reduce(p: &Project, root: &Path, block: Block) -> Vec<Section> {
     ]
 }
 
-/// One suffix as the records gate reads it: the suffix, its reader class,
-/// comment prefixes, docstring reading, note-measurement rule and eligibility.
-type SuffixReading = (String, bool, Vec<String>, bool, DocCommentRule, bool);
+/// One suffix as the records gate reads it: the suffix, its reader class, comment
+/// prefixes, docstring reading, multi-line string and quote reading, note-measurement
+/// rule and eligibility.
+type SuffixReading = (
+    String,
+    bool,
+    Vec<String>,
+    bool,
+    StringReading,
+    DocCommentRule,
+    bool,
+);
 
-/// The source model suffix by suffix: reader class, comment prefixes, docstring
-/// reading, note-measurement rule and declaration eligibility, with the exclusions
-/// as globs and the gitignore switch.
+/// The source model suffix by suffix (§FS-config-migrate.5.1): reader class, comment
+/// prefixes, docstring reading, the multi-line string and quote reading a file of the
+/// suffix reads, which [`string_reading`] answers as it does for the file itself
+/// (§FS-languages.multi-line-string.suffix), note-measurement rule and declaration
+/// eligibility, with the exclusions as globs and the gitignore switch.
 fn sources(p: &Project) -> (Vec<SuffixReading>, Vec<String>, bool) {
     let sources = &p.schema.sources;
     let mut suffixes = Vec::new();
@@ -228,6 +240,7 @@ fn sources(p: &Project) -> (Vec<SuffixReading>, Vec<String>, bool) {
                     suffix == "md",
                     sources.comment_prefixes.clone(),
                     python,
+                    string_reading(None, Some(suffix)),
                     rule,
                     true,
                 ));
@@ -244,11 +257,13 @@ fn sources(p: &Project) -> (Vec<SuffixReading>, Vec<String>, bool) {
                 let Some(language) = model.language_of(Path::new(&probe)) else {
                     continue;
                 };
+                let strings = string_reading(Some(language), Some(&suffix));
                 suffixes.push((
                     suffix,
                     language.reads_markdown(),
                     language.comment_prefixes.clone(),
                     language.docstrings,
+                    strings,
                     language.measurement_rule(),
                     model.declarations == DeclarationMode::AnyComment,
                 ));

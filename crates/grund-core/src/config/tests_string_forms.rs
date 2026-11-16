@@ -106,8 +106,6 @@ fn a_builtin_reads_its_own_row_over_its_own_and_a_mapped_suffix() {
 /// through a `source` definition reads the row its own suffix names, so `java = "myjava"` reads
 /// Java text blocks and the citation inside one is string data.
 #[test]
-#[ignore = "red until #1406 a source definition's files read the row their own suffix names; \
-            implement removes this"]
 fn a_source_definition_over_java_reads_text_blocks() {
     let toml = v2(
         "languages = [\"markdown\", \"myjava\"]\n[schema.sources.extensions]\njava = \"myjava\"\n\
@@ -122,8 +120,6 @@ fn a_source_definition_over_java_reads_text_blocks() {
 /// strings and Rust's quote reading, so the citation after `'static` is reported and the one in
 /// the raw string is not, as version 1 reads the same file.
 #[test]
-#[ignore = "red until #1406 a source definition's files read the row and quote reading their \
-            own suffix names; implement removes this"]
 fn a_source_definition_over_rs_reads_raw_strings_and_lifetimes() {
     let toml = v2(
         "languages = [\"markdown\", \"myrs\"]\n[schema.sources.extensions]\nrs = \"myrs\"\n\
@@ -138,8 +134,6 @@ fn a_source_definition_over_rs_reads_raw_strings_and_lifetimes() {
 /// prime, which no row of the forms table names, so the citation after `f'` is reported, as it
 /// is under the built-in `haskell` and under version 1.
 #[test]
-#[ignore = "red until #1406 a source definition's files read the quote reading their own suffix \
-            names, Haskell primes included; implement removes this"]
 fn a_source_definition_over_hs_reads_haskell_primes() {
     let toml = v2(
         "languages = [\"markdown\", \"myhs\"]\n[schema.sources.extensions]\nhs = \"myhs\"\n\

@@ -4,13 +4,16 @@
 use super::multi_line_forms::{Language, Skip};
 use super::never_rewrite::{is_escaped, qualified_suppressed_in_source};
 use super::source_line::prefix_forms;
+use super::string_reading::StringReading;
 
-/// The resolved source language and comment hosts, shared by every qualified
+/// The resolved string reading and comment hosts, shared by every qualified
 /// detection pass (§FS-citations.recognized.contexts). A caller already walking
 /// a comment block can supply its content range instead of rediscovering it.
 #[derive(Clone, Copy)]
 pub(crate) struct QualifiedSource<'a> {
-    pub(crate) forms: Option<&'a str>,
+    /// The row and quote reading config resolved the file to
+    /// (§FS-languages.multi-line-string.suffix).
+    pub(crate) forms: StringReading,
     pub(crate) comment_prefixes: &'a [String],
     pub(crate) comment_range: Option<(usize, usize)>,
 }
@@ -46,12 +49,13 @@ impl QualifiedSource<'_> {
         qualified_suppressed_in_source(line, entry, false, pos)
     }
 
-    /// Find only a supported comment before the site, using the existing bounded
-    /// language reading for Rust characters/lifetimes (§FS-citations.recognized.contexts).
+    /// Find only a supported comment before the site, using the file's quote reading
+    /// for Rust characters and lifetimes and for Haskell primes
+    /// (§FS-citations.recognized.contexts, §FS-languages.multi-line-string.suffix).
     /// This does not change the multi-line form search or its quote policy.
     fn comment_start(&self, line: &str, entry: usize, pos: usize) -> Option<usize> {
         let bytes = line.as_bytes();
-        let language = self.forms.and_then(Language::of);
+        let language = self.forms.row;
         let mut quote = None;
         let mut i = entry;
         while i < pos && i < bytes.len() {
@@ -86,9 +90,7 @@ impl QualifiedSource<'_> {
                     continue;
                 }
                 // A Haskell identifier's primes are not character-literal openers.
-                let prime = matches!(self.forms, Some("hs" | "lhs"))
-                    && bytes[i] == b'\''
-                    && follows_word(line, i);
+                let prime = self.forms.prime && bytes[i] == b'\'' && follows_word(line, i);
                 if matches!(bytes[i], b'\'' | b'"' | b'`') && !prime && !is_escaped(bytes, i) {
                     quote = Some(bytes[i]);
                 }

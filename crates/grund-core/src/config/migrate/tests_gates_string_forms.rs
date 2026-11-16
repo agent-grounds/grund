@@ -80,8 +80,6 @@ fn differs_on_sources(lines: &[String]) {
 /// none. A candidate that maps `h = "c"` is the same on every other column, and the gate names the
 /// difference on the `sources` line rather than calling the records equal.
 #[test]
-#[ignore = "red until #1406 the records gate compares each suffix's multi-line string and quote \
-            reading; implement removes this"]
 fn records_gate_catches_h_mapped_to_c_losing_cpp_raw_strings() {
     let (v1, v2, root) = edited(
         "h-to-c",
@@ -140,8 +138,6 @@ fn haskell_txt(txt: &str) -> String {
 /// No pair of readings of `.hs` itself isolates the prime: after the fix every reading of `.hs`
 /// but a foreign built-in's has it, and a foreign built-in brings its own measurement rule.
 #[test]
-#[ignore = "red until #1406 the records gate compares each suffix's multi-line string and quote \
-            reading, Haskell primes included; implement removes this"]
 fn records_gate_catches_a_lost_haskell_prime_reading() {
     let root = test_root("migrate-string-forms-haskell-prime");
     write(&root.join("docs/FS-a.md"), "# FS-a: A\n\nText.\n");

@@ -104,6 +104,7 @@ mod section_paths;
 mod settings;
 mod shorthand;
 mod source_line;
+mod string_reading;
 
 pub use compiled::Grammar;
 
@@ -197,6 +198,7 @@ pub(crate) use source_line::{
     PythonDocstringScanState, SourceScanLine, is_lone_block_marker, longest_form_at, prefix_forms,
     source_scan_line,
 };
+pub(crate) use string_reading::StringReading;
 
 // What another component's tests read (§AR-core-module-layout.1.1): the GitHub
 // slugger, which the scanner's file-pass cases assert their anchors against.

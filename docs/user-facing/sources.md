@@ -114,8 +114,11 @@ mjs = "javascript"
 txt = "markdown"
 ```
 
-The file takes the target language whole: its reader, its comment hosts and its
-doc profile. A mapping also overrides the epoch, so `txt = "markdown"` reads a
+The file takes the target language whole: its reader, its comment hosts, its
+doc profile and, for a built-in, its multi-line strings and quote reading. So
+`txt = "rust"` reads Rust raw strings and lifetimes in a `.txt` file, and
+`h = "c"` reads no C++ raw string in a `.h` file, because the built-in `c`
+reads no multi-line form ([§FS-languages.multi-line-string.suffix](../functional-spec/FS-languages.md#multi-line-stringsuffix-which-row-and-which-quote-reading-a-file-reads)). A mapping also overrides the epoch, so `txt = "markdown"` reads a
 `.txt` file as Markdown. `.md` is the one suffix that belongs to Markdown: `md`
 maps only to a `document` language, such as `md = "v1_markdown"`. Mapping it
 elsewhere warns (`config-md-not-markdown`) and becomes an error in grund 1.0.0
@@ -190,6 +193,15 @@ refuses a definition that cannot work, at the line that breaks it:
 
 A prefix is literal. It matches byte for byte at the first non-blank column, and
 the longest prefix wins.
+
+A definition has no key for multi-line strings or for how a `'` is read. A
+`source` definition's files read the ones their own suffix names, as a
+version-1 file does: `java = "myjava"` still reads Java text blocks,
+`rs = "myrs"` Rust raw strings and lifetimes, `hs = "myhs"` Haskell primes, and
+a definition over `.txt` reads none. A definition over such a suffix cannot opt
+out; the one way to read it without them is to map it to a built-in that has
+none. A `document` or `data` definition's files read none
+([§FS-languages.multi-line-string.suffix](../functional-spec/FS-languages.md#multi-line-stringsuffix-which-row-and-which-quote-reading-a-file-reads)).
 
 ## Which comments declare
 
