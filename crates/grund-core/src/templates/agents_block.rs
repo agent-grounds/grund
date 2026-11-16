@@ -66,17 +66,14 @@ fn agents_template_substitutions(
     let sep = ids.section_separator.as_str();
     let marker = project.schema.citation.marker.as_str();
     let id_shape = id_shape(&ids.format);
-    let id_example = ids
-        .format
-        .replace("{kind}", "FS")
-        .replace("{number}", "042")
-        .replace("{slug}", "user-login");
+    let id_example = example_id(&ids.format, "FS");
     // §FS-init.2.3.8.2: the worked example illustrates a non-existent ID, so it is
     // rendered in the `<marker>`-escaped form (§FS-workspace.1).
     let cite_example = format!("<{marker}>{id_example}{sep}3{sep}1");
     // §FS-init.2.3.4.4.2: a config with no citable kind says so rather than
     // naming the empty set.
     let kind_configs = project.kind_configs();
+    let trigger_example = trigger_example(project, &kind_configs);
     let citable = kind_prefixes(&kind_configs);
     let kinds_set = if citable.is_empty() {
         "no `KIND` is declared yet".to_string()
@@ -121,6 +118,7 @@ fn agents_template_substitutions(
         ("{SECTION_HEADING_NOTE}", section_heading_note),
         ("{INLINE_CITATION_STYLE}", inline_citation_style),
         ("{MARKER}", marker.to_string()),
+        ("{TRIGGER_EXAMPLE}", trigger_example),
         ("{TRIGGER}", project.presentation.trigger.clone()),
         ("{DECLARATION_MAP}", declaration_map(project)),
         (
@@ -141,6 +139,35 @@ fn agents_template_substitutions(
         ),
         ("{WORKSPACE_MEMBERS}", workspace.members.clone()),
     ]
+}
+
+/// `format` filled with `kind` and the worked citation example's number and slug
+/// (§FS-init.2.3.8.2): the one example ID both the citation example and the
+/// trigger example (§FS-init.2.3.8.4) are built from.
+fn example_id(format: &str, kind: &str) -> String {
+    format
+        .replace("{kind}", kind)
+        .replace("{number}", "042")
+        .replace("{slug}", "user-login")
+}
+
+/// The trigger sentence's example clause (§FS-init.2.3.8.4): `, e.g.` and the
+/// configured trigger written straight before an example ID of the kind init's
+/// guidance names, in that kind's effective format, so typing it converts in the
+/// host repo; `FS` in the repository format where no kind is citable. Empty in
+/// the non-strict compatibility mode, read from the switch the scanner reads,
+/// where a bare ID-shaped token is a citation and the block must stay clean
+/// (§FS-init.2.3.8.2).
+fn trigger_example(project: &Project, kinds: &[KindConfig]) -> String {
+    if !project.schema.citation.strict {
+        return String::new();
+    }
+    let format = &project.schema.ids.format;
+    let id = match guided_kind(kinds) {
+        Some(row) => example_id(row.format.as_deref().unwrap_or(format), &row.kind),
+        None => example_id(format, "FS"),
+    };
+    format!(", e.g. `{}{id}`,", project.presentation.trigger)
 }
 
 /// The discovery rung (§FS-init.2.3.4.3): its `--kind` example names the kind

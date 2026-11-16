@@ -48,7 +48,6 @@ fn assert_names_the_following_id(block: &str, example: &str, marker: &str) {
 /// `{kind}-{slug}`, the default trigger and marker — no longer reads that a bare
 /// `$$` becomes `§`, and names `$$FS-user-login` instead.
 #[test]
-#[ignore = "red until #1370 rewords the trigger sentence; implement removes this"]
 fn the_trigger_sentence_names_a_following_id_of_the_projects_kind() {
     let block = block(
         "trigger_sentence_one_fs_kind",
@@ -67,7 +66,6 @@ fn the_trigger_sentence_names_a_following_id_of_the_projects_kind() {
 /// the configured trigger, so it converts in the host repo: a lone `REQ` row
 /// with its own numbered format and the trigger `%%` gives `%%REQ-042-user-login`.
 #[test]
-#[ignore = "red until #1370 rewords the trigger sentence; implement removes this"]
 fn the_trigger_example_follows_the_guided_kinds_effective_format_and_trigger() {
     let block = block(
         "trigger_sentence_numbered_req_kind",
@@ -83,7 +81,6 @@ fn the_trigger_example_follows_the_guided_kinds_effective_format_and_trigger() {
 /// §FS-init.2.3.8.4: with no citable kind the format is filled with `FS`, as
 /// the worked citation example's is.
 #[test]
-#[ignore = "red until #1370 rewords the trigger sentence; implement removes this"]
 fn with_no_citable_kind_the_trigger_example_falls_back_to_fs() {
     let block = block(
         "trigger_sentence_no_citable_kind",
@@ -92,4 +89,40 @@ fn with_no_citable_kind_the_trigger_example_falls_back_to_fs() {
          [schema.kinds.skill]\nfolders = [\"skills\"]\ncitable = false\n",
     );
     assert_names_the_following_id(&block, "$$FS-user-login", "§");
+}
+
+/// §FS-init.2.3.8.4: under v1 `[reference] strict = false` a bare ID-shaped
+/// token is a citation, so the sentence names a following ID with no example,
+/// and the fresh block stays clean (§FS-init.2.3.8.2).
+#[test]
+fn in_non_strict_mode_the_trigger_sentence_carries_no_example() {
+    let block = block(
+        "trigger_sentence_non_strict",
+        "grund_config_version = 1\nproject_name = \"demo\"\n\n\
+         [reference]\nmarker = \"§\"\nstrict = false\n\n\
+         [id]\nformat = \"{kind}-{number}-{slug}\"\n",
+    );
+    let sentence = block
+        .lines()
+        .flat_map(|line| line.split_inclusive(". "))
+        .find(|sentence| sentence.contains("grund-aware editor"))
+        .unwrap_or_else(|| panic!("no trigger sentence:\n{block}"));
+    assert!(
+        sentence.contains("Type `$$` followed by an ID in a grund-aware editor;"),
+        "the sentence names a following ID: {sentence}"
+    );
+    assert!(
+        sentence.contains("`§`"),
+        "it says what the trigger becomes: {sentence}"
+    );
+    for absent in ["e.g.", "user-login", "<KIND>"] {
+        assert!(
+            !sentence.contains(absent),
+            "no example in non-strict mode: {sentence}"
+        );
+    }
+    let lower = sentence.to_lowercase();
+    for word in ["recogni", "resolv"] {
+        assert!(!lower.contains(word), "`{word}` misleads: {sentence}");
+    }
 }
