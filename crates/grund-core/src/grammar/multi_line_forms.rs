@@ -7,7 +7,7 @@ use super::never_rewrite::is_escaped;
 use super::source_line::is_python_string_prefix;
 
 /// One row family of the form table (§FS-languages.multi-line-string.forms).
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Language {
     Rust,
     /// `java` `kt` `kts` `scala` `swift`, and `dart`, which also writes `'''`; all

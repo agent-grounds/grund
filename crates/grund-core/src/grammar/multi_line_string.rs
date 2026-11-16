@@ -14,6 +14,7 @@ use std::collections::HashMap;
 use super::multi_line_forms::{Closer, Language, Skip, is_identifier_byte, quote_run};
 use super::never_rewrite::is_escaped;
 use super::source_line::{PythonDocstringScanState, source_scan_line};
+use super::string_reading::StringReading;
 
 /// The entry state of a line that begins inside a form whose closer is on a later
 /// line: every byte of it is inside the literal.
@@ -23,7 +24,7 @@ pub(crate) const WHOLE_LINE: usize = usize::MAX;
 /// recognized multi-line form an earlier line opened: `0` for a line that begins
 /// in code, the end of the form's closer on the line that closes it, and
 /// [`WHOLE_LINE`] on a line between (§FS-languages.multi-line-string). Empty for a
-/// file whose extension the form table does not name.
+/// file that reads no row of the form table (§FS-languages.multi-line-string.suffix).
 #[derive(Default)]
 pub(crate) struct MultiLineStrings {
     entries: Vec<usize>,
@@ -36,13 +37,13 @@ impl MultiLineStrings {
         entries: Vec::new(),
     };
 
-    /// Read `text` by the row of §FS-languages.multi-line-string.forms that the
-    /// suffix `forms` names, the one config resolved the file's language to.
+    /// Read `text` by the row of §FS-languages.multi-line-string.forms that `reading`
+    /// holds, the one config resolved the file to (§FS-languages.multi-line-string.suffix).
     /// `docstring_python` is whether the file reads docstrings: where it does, a
     /// docstring and an assigned-data span keep their own rules and open no form
     /// (§FS-languages.multi-line-string.bound).
-    pub(crate) fn of(forms: Option<&str>, text: &str, docstring_python: bool) -> Self {
-        let Some(language) = forms.and_then(Language::of) else {
+    pub(crate) fn of(reading: StringReading, text: &str, docstring_python: bool) -> Self {
+        let Some(language) = reading.row else {
             return Self::default();
         };
         let lines = text.lines().collect::<Vec<_>>();

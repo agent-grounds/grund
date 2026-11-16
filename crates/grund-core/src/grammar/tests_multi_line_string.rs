@@ -6,13 +6,17 @@ use std::path::Path;
 
 use super::multi_line_string::{MultiLineStrings, WHOLE_LINE};
 use super::never_rewrite::{is_inside_string_literal, qualified_suppressed_in_source};
+use super::string_reading::StringReading;
 
 const W: usize = WHOLE_LINE;
 
 /// The entry state of every line of `text`, read as a file named `name`.
 fn entries(name: &str, text: &str) -> Vec<usize> {
     let literals = MultiLineStrings::of(
-        Path::new(name).extension().and_then(|e| e.to_str()),
+        Path::new(name)
+            .extension()
+            .and_then(|e| e.to_str())
+            .map_or(StringReading::NONE, StringReading::of_suffix),
         text,
         true,
     );

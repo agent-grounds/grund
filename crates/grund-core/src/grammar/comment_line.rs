@@ -5,6 +5,7 @@ use super::never_rewrite::is_inside_string_literal;
 use super::qualified_context::QualifiedSource;
 use super::settings::{AliasGrammar, LexicalSettings};
 use super::source_line::{PrefixForms, longest_form_at, prefix_forms};
+use super::string_reading::StringReading;
 use crate::model::BlockForm;
 
 /// Every recognized citation token on one line, as byte ranges into it
@@ -33,7 +34,7 @@ fn citation_token_ranges(
     // §AR-scanner.2.3.2: note classification reads the same
     // qualified-comment policy as both scanner passes, not the bare-token toggle.
     let qualified = QualifiedSource {
-        forms: None,
+        forms: StringReading::NONE,
         comment_prefixes: lexical.comment_prefixes,
         comment_range: Some((0, line.len())),
     };

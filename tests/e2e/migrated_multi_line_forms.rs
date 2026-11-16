@@ -212,8 +212,6 @@ fn check_version_1_multi_line_forms() {
 /// `0`, and previews the file [`MIGRATED`] holds. Today the report gate refuses: the candidate
 /// reports every interior and misses `src/lib.rs:2`.
 #[test]
-#[ignore = "red until #1406 a source definition's files read the row and quote reading their own \
-            suffix names; implement removes this"]
 fn config_migrate_keeps_multi_line_forms() {
     let tree = Tree::new("migrate", VERSION_1);
     let output = tree.run(&["config", "migrate", "--to", "2"]);
@@ -234,8 +232,6 @@ fn config_migrate_keeps_multi_line_forms() {
 /// tree under the config migration writes reports what version 1 reports, and nothing else.
 /// Today it reports the six interiors and misses `src/lib.rs:2`.
 #[test]
-#[ignore = "red until #1406 a source definition's files read the row and quote reading their own \
-            suffix names; implement removes this"]
 fn check_migrated_multi_line_forms() {
     let tree = Tree::new("migrated", MIGRATED);
     let output = tree.run(&["check", "--suggestions"]);

@@ -7,8 +7,9 @@
 //! language claims, takes them from its extension and the project's `[scan]` keys
 //! (§FS-config.5.2), except its two readings, which [`Readings`] alone answers: a v2
 //! name no admitted language claims is neither read as Markdown nor has its docstrings
-//! read (§FS-fmt.2.3.1). Nothing else derives any of them from a path
-//! (§AR-system.principle).
+//! read (§FS-fmt.2.3.1). Its string forms are [`string_reading`]'s answer alone, which reads a
+//! `source` definition's file by its own suffix (§FS-languages.multi-line-string.suffix).
+//! Nothing else derives any of them from a path (§AR-system.principle).
 
 use std::path::Path;
 
@@ -16,7 +17,9 @@ use super::compiled::Compiled;
 use super::project::{Schema, Sources, file_extension};
 use super::read_name::ReadName;
 use super::sources::{DeclarationMode, Language, LanguageClass, SourceModel};
-use crate::grammar::{DocCommentRule, LexicalSettings, MultiLineStrings, extension_rule};
+use crate::grammar::{
+    DocCommentRule, LexicalSettings, MultiLineStrings, StringReading, extension_rule,
+};
 use crate::model::{ValueFormat, is_hidden};
 
 /// The two readings a rule about which files it covers asks (§FS-fmt.2.3.1): whether a name is
@@ -75,6 +78,27 @@ pub(crate) fn model_language<'m>(model: &'m SourceModel, name: &Path) -> Option<
     model.language_of(name)
 }
 
+/// §FS-languages.multi-line-string.suffix, §AR-config.1.6: the multi-line string row and the
+/// quote reading a file reads, from the `language` its name resolves to and its final
+/// `extension`. A built-in reads its own, the ones its epoch suffixes name, over a mapped suffix
+/// too, because a mapping takes it whole (§FS-config-v2.schema.sources.extensions). A `source`
+/// definition, which has no key for either, a version-1 file and a name no admitted language
+/// claims read the ones their extension names; a `document` or `data` definition reads none. Its
+/// two callers are [`FileReading::source_forms`] and the records gate (§FS-config-migrate.5.1),
+/// and nothing else works out which row or quote reading a file reads.
+pub(crate) fn string_reading(
+    language: Option<&Language>,
+    extension: Option<&str>,
+) -> StringReading {
+    let suffix = match language {
+        Some(language) if language.builtin => language.suffixes.first().map(String::as_str),
+        Some(language) if language.class == LanguageClass::Source => extension,
+        Some(_) => None,
+        None => extension,
+    };
+    suffix.map_or(StringReading::NONE, StringReading::of_suffix)
+}
+
 /// How the text scan, the value homes, the formatter, the editor, the checker and
 /// `show` read one file (§FS-config-v2.schema.sources).
 #[derive(Clone, Copy)]
@@ -87,7 +111,9 @@ pub(crate) struct FileReading<'a> {
     pub(crate) language: Option<&'a Language>,
     /// `[schema.sources] declarations`, `None` for a v1 file.
     declarations: Option<DeclarationMode>,
-    /// The chosen name's final extension, which keys a v1 file's recognizer and string forms.
+    /// The chosen name's final extension, which keys a v1 file's recognizer, and the string forms
+    /// of every file but a built-in's or a `document` or `data` definition's
+    /// (§FS-languages.multi-line-string.suffix).
     extension: Option<&'a str>,
     /// The spelling handed, which the name rules below ask (§FS-scan.identity.reading.entry).
     path: &'a Path,
@@ -208,20 +234,18 @@ impl<'a> FileReading<'a> {
         self.markdown || self.declarations.is_none() || block_declares == Some(true)
     }
 
-    /// The string literals that span lines, by the form row the file's language
-    /// names (§FS-languages.multi-line-string.forms): a v2 built-in's own, none
-    /// for a definition, and a v1 file's extension's.
+    /// The string literals that span lines, by the form row the file reads
+    /// (§FS-languages.multi-line-string.forms, §FS-languages.multi-line-string.suffix): a
+    /// built-in's own, a `source` definition's and a v1 file's extension's, and none for a
+    /// `document` or `data` definition.
     pub(crate) fn literals(&self, text: &str) -> MultiLineStrings {
         MultiLineStrings::of(self.source_forms(), text, self.lexical.docstring_python)
     }
 
-    /// The resolved language suffix for bounded literal and qualified-comment
-    /// reading (§FS-config-v2.schema.sources.extensions, §AR-scanner.2.3.2).
-    pub(crate) fn source_forms(&self) -> Option<&'a str> {
-        match self.language {
-            Some(language) if language.builtin => language.suffixes.first().map(String::as_str),
-            Some(_) => None,
-            None => self.extension,
-        }
+    /// The row and quote reading the literal spans and the qualified-comment search read this
+    /// file by, [`string_reading`]'s answer (§FS-languages.multi-line-string.suffix,
+    /// §AR-scanner.2.3.2).
+    pub(crate) fn source_forms(&self) -> StringReading {
+        string_reading(self.language, self.extension)
     }
 }

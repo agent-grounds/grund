@@ -109,7 +109,11 @@ Before anything is written, the candidate is held to two comparisons
 ([§FS-config-migrate.5](../functional-spec/FS-config-migrate.md#5-equivalence-two-gates)):
 
 - **the records**: the candidate, loaded as any version-2 file is, means the
-  same project as the version-1 file;
+  same project as the version-1 file. Suffix by suffix, that includes the
+  multi-line strings and quote reading a file of the suffix reads
+  ([§FS-languages.multi-line-string.suffix](../functional-spec/FS-languages.md#multi-line-stringsuffix-which-row-and-which-quote-reading-a-file-reads)),
+  so a candidate that maps `.h` to the built-in `c`, which reads no C++ raw
+  string, differs on the `sources` line;
 - **the report**: `grund check --suggestions` on this tree, run once with each
   file, gives the same findings and the same exit.
 
