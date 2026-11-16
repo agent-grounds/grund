@@ -342,7 +342,7 @@ The candidate is loaded through the v2 reader, the path a file on disk goes thro
 
 - the version, and where the config was found;
 - the dropped `[output]` preferences ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices));
-- the source model, compared suffix by suffix: each suffix's reader class, comment prefixes, docstring reading, note-measurement rule and declaration eligibility, rather than the language names that carry them;
+- the source model, compared suffix by suffix: each suffix's reader class, comment prefixes, docstring reading, the multi-line string and quote reading ([§FS-languages.multi-line-string.suffix](FS-languages.md#multi-line-stringsuffix-which-row-and-which-quote-reading-a-file-reads)), note-measurement rule and declaration eligibility, rather than the language names that carry them. The multi-line string and quote reading is the one a file of that suffix reads, not the suffix that names it, so `.cc` read under version 1 and `.cc` mapped to the built-in `cpp` compare equal, while `.h` read under version 1 and `.h` mapped to the built-in `c` do not. A suffix that differs in any of these is a difference on the `sources` line ([§FS-config-migrate.5.4](FS-config-migrate.md#54-the-result-and-a-difference));
 - grounding, compared as the effective pair each row resolves to, rather than as v1's inherited keys or v2's whole ladders;
 - `include`, compared as the set of derived scan roots;
 - the nesting rule, when no two v1 homes nest, because the rule then decides nothing;
