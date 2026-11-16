@@ -162,7 +162,11 @@ CITED = (
 
 # FS-fmt.md grew by 2080 bytes in §FS-fmt.7.4.4 and §FS-fmt.3.2: a rewrite into another project
 # needs that project's proof, citing §REQ-no-wrong-citation.3 rather than restating it (grund#1266).
-BASELINES = {"FS-show.md": 71962, "FS-fmt.md": 106387}
+
+# FS-fmt.md grew by 8358 bytes in §FS-fmt.3.6 and the new §FS-fmt.3.6.2: a markdown link row
+# names each link it writes, before and after, a point of fmt's own report that cites
+# §FS-non-goals.1 for why check does not read the anchor rather than restating it (grund#1378).
+BASELINES = {"FS-show.md": 71962, "FS-fmt.md": 114745}
 
 
 def _flat(text):

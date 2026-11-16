@@ -29,7 +29,7 @@ On a tree it can read whole, a second run with the same flags and configuration 
 
 ### requirements.next-class: A rewrite class added from here on joins every list that names the classes — directional
 
-The rewrite classes are enumerated rather than open-ended: the passes a fence stops ([§FS-fmt.2.3.3](FS-fmt.md#233-a-fenced-code-block-is-an-illustration)), the rewrites a suppressed scope withholds ([§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)), the label order of the dry-run report ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)) and the totals of the `--write` summary ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)) each name them. A class added from here on joins each of those lists in the change that adds it, rather than leaning on *every* to reach it: it stops at every never-rewrite zone ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten)), takes a label of its own and a place in that order, and a unit in the totals, and leaves a tree it wrote at the fixed point of [§FS-fmt.requirements.fixed-point](FS-fmt.md#requirementsfixed-point-a-tree-fmt-has-written-is-a-fixed-point--realized). A class that writes characters into an ID token also names the text it writes, which [§FS-fmt.3.6](FS-fmt.md#36-an-expanded-shorthand-names-the-text-it-writes) requires today of the shorthand expansions alone, and runs only against a complete declaration set ([§FS-fmt.7.4](FS-fmt.md#74-no-write-without-a-complete-model)). This binds classes added from here on; it is not a claim about the five written today. Serves [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own) and [§REQ-no-wrong-citation.3](../requirements/REQ-no-wrong-citation.md#3-no-wrong-write), which each new class extends.
+The rewrite classes are enumerated rather than open-ended: the passes a fence stops ([§FS-fmt.2.3.3](FS-fmt.md#233-a-fenced-code-block-is-an-illustration)), the rewrites a suppressed scope withholds ([§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)), the label order of the dry-run report ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)) and the totals of the `--write` summary ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)) each name them. A class added from here on joins each of those lists in the change that adds it, rather than leaning on *every* to reach it: it stops at every never-rewrite zone ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten)), takes a label of its own and a place in that order, and a unit in the totals, and leaves a tree it wrote at the fixed point of [§FS-fmt.requirements.fixed-point](FS-fmt.md#requirementsfixed-point-a-tree-fmt-has-written-is-a-fixed-point--realized). A class that writes characters into an ID token or a link destination also names the text it writes, which [§FS-fmt.3.6](FS-fmt.md#36-an-expansion-or-a-link-names-the-text-it-writes) requires today of the expansions and the links, and runs only against a complete declaration set ([§FS-fmt.7.4](FS-fmt.md#74-no-write-without-a-complete-model)). This binds classes added from here on; it is not a claim about the five written today. Serves [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own) and [§REQ-no-wrong-citation.3](../requirements/REQ-no-wrong-citation.md#3-no-wrong-write), which each new class extends.
 
 ## 1. Inputs
 
@@ -157,7 +157,7 @@ shorthand, [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation)
 protected site and supplies the manual full replacement for an owned token, or full-citation/
 escape guidance where no target is known.
 
-The rewrite fires only on a whole token ([§FS-fmt.2.4.2](FS-fmt.md#242-only-a-whole-token-is-a-shorthand)) outside a numeric run ([§FS-fmt.2.4.1](FS-fmt.md#241-a-shorthand-in-a-numeric-run-is-not-rewritten)). A typed trigger expands under both policies ([§FS-fmt.2.4.3](FS-fmt.md#243-a-typed-trigger-expands-under-both-policies)), a qualified citation follows the aliased project ([§FS-fmt.2.4.4](FS-fmt.md#244-a-qualified-shorthand-follows-the-aliased-project)), the declaration set is scanned on first use ([§FS-fmt.2.4.5](FS-fmt.md#245-the-declaration-set-is-scanned-on-first-use)), an absent target section withholds the declaration-local rewrite and nothing else ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and the report labels a number-only expansion `shorthand → canonical` and a declaration-local one `local section → canonical`, each with the text it writes ([§FS-fmt.3.6](FS-fmt.md#36-an-expanded-shorthand-names-the-text-it-writes)).
+The rewrite fires only on a whole token ([§FS-fmt.2.4.2](FS-fmt.md#242-only-a-whole-token-is-a-shorthand)) outside a numeric run ([§FS-fmt.2.4.1](FS-fmt.md#241-a-shorthand-in-a-numeric-run-is-not-rewritten)). A typed trigger expands under both policies ([§FS-fmt.2.4.3](FS-fmt.md#243-a-typed-trigger-expands-under-both-policies)), a qualified citation follows the aliased project ([§FS-fmt.2.4.4](FS-fmt.md#244-a-qualified-shorthand-follows-the-aliased-project)), the declaration set is scanned on first use ([§FS-fmt.2.4.5](FS-fmt.md#245-the-declaration-set-is-scanned-on-first-use)), an absent target section withholds the declaration-local rewrite and nothing else ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and the report labels a number-only expansion `shorthand → canonical` and a declaration-local one `local section → canonical`, each with the text it writes ([§FS-fmt.3.6](FS-fmt.md#36-an-expansion-or-a-link-names-the-text-it-writes)).
 
 #### 2.4.1 A shorthand in a numeric run is not rewritten
 
@@ -306,20 +306,20 @@ Two exit `2`s that mean opposite things must not be spelled the same, so every l
 
 ### 3.5 The dry-run report
 
-With `--check` (or no flag, the implicit dry run), the report lists one `path:line: <kind>` line per changed line ([§FS-errors.2.1](FS-errors.md#21-located-finding) shape), where `<kind>` names the rewrite: `trigger → marker` (a typed trigger sequence rewritten to the marker, [§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker)), `bare → marker` (a bare citation marked, [§FS-fmt.2.2](FS-fmt.md#22-bare-to-marker-with---marker), with `--marker`), `shorthand → canonical` (a number-only shorthand expanded, [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)), `local section → canonical` (a declaration-local section token expanded, [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)), or `markdown link` (a citation wrapped or re-derived, [§FS-fmt.6](FS-fmt.md#6-cross-reference-emission), with `--cross-refs`). A line that fires several rewrites is still one row, led by the first label and naming every other kind that fired ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)), and a declaration-local expansion has a label of its own ([§FS-fmt.3.5.2](FS-fmt.md#352-a-declaration-local-expansion-carries-its-own-label)).
+With `--check` (or no flag, the implicit dry run), the report lists one `path:line: <kind>` line per changed line ([§FS-errors.2.1](FS-errors.md#21-located-finding) shape), where `<kind>` names the rewrite: `trigger → marker` (a typed trigger sequence rewritten to the marker, [§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker)), `bare → marker` (a bare citation marked, [§FS-fmt.2.2](FS-fmt.md#22-bare-to-marker-with---marker), with `--marker`), `shorthand → canonical` (a number-only shorthand expanded, [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)), `local section → canonical` (a declaration-local section token expanded, [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)), or `markdown link` (a citation wrapped or re-derived, [§FS-fmt.6](FS-fmt.md#6-cross-reference-emission), with `--cross-refs`), which names each link it writes, before and after ([§FS-fmt.3.6.2](FS-fmt.md#362-a-written-link-names-the-link-before-and-after)). A line that fires several rewrites is still one row, led by the first label and naming every other kind that fired ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)), and a declaration-local expansion has a label of its own ([§FS-fmt.3.5.2](FS-fmt.md#352-a-declaration-local-expansion-carries-its-own-label)).
 
 #### 3.5.1 A line with several rewrites carries the first label
 
-A line that fires more than one rewrite leads with the first of `trigger → marker`, `bare → marker`, `local section → canonical`, `shorthand → canonical` and `markdown link` that fired on it, in that order. It is the order the rewrites run in, so the leading label names the first change the line received: a typed `$$FS-042` that is marked and then expanded leads with `trigger → marker`, a line that expands a declaration-local token and a number-only shorthand leads with `local section → canonical`, and a citation that is expanded and then wrapped leads with `shorthand → canonical`. That label, with any expansion detail ([§FS-fmt.3.6](FS-fmt.md#36-an-expanded-shorthand-names-the-text-it-writes)), is the row an earlier release printed, so that row stays a prefix of this one ([§FS-errors.3](FS-errors.md#3-message-text)).
+A line that fires more than one rewrite leads with the first of `trigger → marker`, `bare → marker`, `local section → canonical`, `shorthand → canonical` and `markdown link` that fired on it, in that order. It is the order the rewrites run in, so the leading label names the first change the line received: a typed `$$FS-042` that is marked and then expanded leads with `trigger → marker`, a line that expands a declaration-local token and a number-only shorthand leads with `local section → canonical`, and a citation that is expanded and then wrapped leads with `shorthand → canonical`. That label, with any expansion detail ([§FS-fmt.3.6](FS-fmt.md#36-an-expansion-or-a-link-names-the-text-it-writes)), is the row an earlier release printed, so that row stays a prefix of this one ([§FS-errors.3](FS-errors.md#3-message-text)).
 
 Every other kind that fired follows, in the same order and named once, as one list joined by `, `; the list follows the label with `, ` when the label carries no detail and with `; ` when it does:
 
 ```text
-docs/runbook.md:3: bare → marker, markdown link
-docs/spec.md:3: trigger → marker: §FS-042 → §FS-042-user-login; shorthand → canonical, markdown link
+docs/runbook.md:3: bare → marker, markdown link: §FS-042-user-login → [§FS-042-user-login](functional-spec/FS-042-user-login.md#fs-042-user-login-user-login)
+docs/spec.md:3: trigger → marker: §FS-042 → §FS-042-user-login; shorthand → canonical, markdown link: §FS-042-user-login → [§FS-042-user-login](functional-spec/FS-042-user-login.md#fs-042-user-login-user-login)
 ```
 
-The expansion detail stays on the leading label ([§FS-fmt.3.6.1](FS-fmt.md#361-a-declaration-local-expansion-shares-its-lines-one-row)), and a listed kind carries none, except that a listed `markdown link` keeps its repeated-anchor detail ([§DF-repeated-heading-anchor.decision.row](../decisions/functional/DF-repeated-heading-anchor.md#decisionrow-the-changed-link-names-the-versions)) as `: <detail>`, which, the link being last, ends the row. A section-lock row never joins the list; its `; creates the file` or `; deletes the file` ends its own row ([§FS-section-lock.write.report](FS-section-lock.md#writereport-what-fmt-reports)).
+The expansion detail stays on the leading label ([§FS-fmt.3.6.1](FS-fmt.md#361-a-declaration-local-expansion-shares-its-lines-one-row)), and a listed kind carries none, except that a listed `markdown link` keeps its repeated-anchor detail ([§DF-repeated-heading-anchor.decision.row](../decisions/functional/DF-repeated-heading-anchor.md#decisionrow-the-changed-link-names-the-versions)) as `: <detail>` and then names the links it writes ([§FS-fmt.3.6.2](FS-fmt.md#362-a-written-link-names-the-link-before-and-after)), which, the link being last, end the row. Both are appended after the label, so the row an earlier release printed is still a prefix of this one. A section-lock row never joins the list; its `; creates the file` or `; deletes the file` ends its own row ([§FS-section-lock.write.report](FS-section-lock.md#writereport-what-fmt-reports)).
 
 A rewrite that changed nothing is never named: a withheld token ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), an excluded or suppressed citation, one left unwrapped ([§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)), or a link already right ([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)).
 
@@ -327,13 +327,91 @@ A rewrite that changed nothing is never named: a withheld token ([§FS-fmt.2.4.6
 
 A line that expands a declaration-local token, however many it expands, is one row like any other ([§FS-fmt.3.6.1](FS-fmt.md#361-a-declaration-local-expansion-shares-its-lines-one-row)), labelled `local section → canonical` unless a rewrite earlier in [§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)'s order fired on it too; then it joins the list after the leading label, so the row still names it. A token [§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one) withholds is not expanded, so it neither changes the line nor appears in its row. The label is its own rather than `shorthand → canonical` because the ID it writes into the token is the owner's, read from where the token stands rather than from what the token spells, and that is what a reviewer of the row has to check.
 
-### 3.6 An expanded shorthand names the text it writes
+### 3.6 An expansion or a link names the text it writes
 
-A line that expanded a shorthand names the text it will write, appended to whichever label won: `shorthand → canonical: <§>FS-042 → <§>FS-042-user-login`, `trigger → marker: <§>FS-042 → <§>FS-042-user-login` where a typed trigger was marked and expanded at once ([§FS-fmt.2.4.3](FS-fmt.md#243-a-typed-trigger-expands-under-both-policies)), and `bare → marker: <§>FS-042 → <§>FS-042-user-login` where `--marker` marked a bare citation on a line that expanded a shorthand. Several expansions on one line are listed in source order, joined by `, `. A declaration-local expansion names the text it writes the same way, under its own label ([§FS-fmt.3.5.2](FS-fmt.md#352-a-declaration-local-expansion-carries-its-own-label)) or whichever won: `local section → canonical: <§>1 → <§>FS-004-quick-actions.1`. The labels left — `bare → marker` and `trigger → marker` on a line that expanded nothing, and `markdown link`, which never wins on a line that expanded one ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)) — carry no such detail and need none: they move markup around a citation and leave the ID token byte-identical, so a wrong one dangles, duplicates, or fails to resolve and `grund check` names it. They are still named wherever they fire ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)), because a reviewer has to know the markup changes at all, and a `markdown link` keeps its repeated-anchor note whether it leads, trails or sits beside a fresh wrap. Expanding a shorthand, number-only or declaration-local, is the one rewrite that writes characters *into* the ID, information the source did not carry, and a wrong one is invisible to every later pass ([§FS-fmt.2.4.1.1](FS-fmt.md#2411-why-a-numeric-run-is-withheld)), so the only review available is before the fact ([§DF-shorthand-numeric-run.2.7](../decisions/functional/DF-shorthand-numeric-run.md#27-invention-is-reported-in-full-whatever-the-rule-decides)). Naming the line and the rewrite class is enough to review the former and not the latter.
+A line that expanded a shorthand names the text it will write, appended to whichever label won: `shorthand → canonical: <§>FS-042 → <§>FS-042-user-login`, `trigger → marker: <§>FS-042 → <§>FS-042-user-login` where a typed trigger was marked and expanded at once ([§FS-fmt.2.4.3](FS-fmt.md#243-a-typed-trigger-expands-under-both-policies)), and `bare → marker: <§>FS-042 → <§>FS-042-user-login` where `--marker` marked a bare citation on a line that expanded a shorthand. Several expansions on one line are listed in source order, joined by `, `. A declaration-local expansion names the text it writes the same way, under its own label ([§FS-fmt.3.5.2](FS-fmt.md#352-a-declaration-local-expansion-carries-its-own-label)) or whichever won: `local section → canonical: <§>1 → <§>FS-004-quick-actions.1`. A line that writes a link names each link it writes after its `markdown link` label, whether that label leads or trails ([§FS-fmt.3.6.2](FS-fmt.md#362-a-written-link-names-the-link-before-and-after)).
+
+Only `bare → marker` and `trigger → marker`, on a line that expanded nothing, carry no such detail and need none: they move markup around a citation and leave the ID token byte-identical, so a wrong one dangles, duplicates, or fails to resolve and `grund check` names it. They are still named wherever they fire ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)), because a reviewer has to know the markup changes at all. The other two write text the source did not carry, and nothing after the write reviews it:
+
+- Expanding a shorthand, number-only or declaration-local, writes characters *into* the ID, and a wrong one is invisible to every later pass ([§FS-fmt.2.4.1.1](FS-fmt.md#2411-why-a-numeric-run-is-withheld)), so the only review available is before the fact ([§DF-shorthand-numeric-run.2.7](../decisions/functional/DF-shorthand-numeric-run.md#27-invention-is-reported-in-full-whatever-the-rule-decides)).
+- A link writes a destination and an anchor the source never held, and `grund check` deliberately reads neither ([§FS-non-goals.1](FS-non-goals.md#1-markdown-link-validation)): it passes a link with no anchor and one with a stale anchor alike. So the preview is the one place a written destination is reviewed before it lands, and it can be, because the dry run predicts `--write` exactly ([§FS-fmt.7.3](FS-fmt.md#73-preview-equivalence)).
+
+Naming the line and the rewrite class is enough to review markup that moves and not text that is written. A caller who cannot run `--write` on a whole file, because it holds other pending rewrites, applies one line's rewrite by hand from its row.
 
 #### 3.6.1 A declaration-local expansion shares its line's one row
 
 A line that also expands a declaration-local section token ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)) is still one changed line, so it is still one row. That row names every expansion written into the line — each declaration-local `<§>2.1 → <§>FS-001-nine.2.1` and each shorthand `<§>FS-042.1 → <§>FS-042-user-login.1` — in the order their tokens stand in the source line, separated by `, `, whichever label won. The declaration-local detail is no reason to drop the shorthand's: the shorthand is the expansion this point exists to show, and a row that names only the other one tells a reviewer the line holds one rewrite when `--write` makes two.
+
+#### 3.6.2 A written link names the link before and after
+
+A `markdown link` label, leading or trailing, is followed by `: ` and one item per link the line writes, in source order, joined by `, `. An item is `<the text the write replaces> → <the text it writes>`:
+
+- a **re-pointed** link, an existing wrap whose destination the write changes ([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)), reads `[<§>ID](old destination) → [<§>ID](new destination)`: the citation says which link it is, and the whole destination shows a moved file part, or a title the write drops, and not only a moved anchor;
+- a **fresh** link, a citation the write wraps ([§FS-fmt.6.2](FS-fmt.md#62-form)), reads `<§>ID → [<§>ID](destination)`, and a workspace-qualified one `<§>alias/ID → [<§>alias/ID](destination)`.
+
+A link that is already right writes nothing and is not listed, which is how the `--write` totals count links already ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)); nor is a link the write withholds ([§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)), an author's link, an image or a value binding. Where the repeated-anchor note fires ([§DF-repeated-heading-anchor.decision.row](../decisions/functional/DF-repeated-heading-anchor.md#decisionrow-the-changed-link-names-the-versions)) it is printed as before, then `; ` and the items, so what the list holds never depends on whether the note fired. An expansion's detail stays on the leading label ([§FS-fmt.3.6](FS-fmt.md#36-an-expansion-or-a-link-names-the-text-it-writes)); `markdown link` is last in [§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)'s order, so its items end the row.
+
+##### 3.6.2.1 Each left side is one span the pass replaces
+
+Each item's left side is exactly the bytes of one span the link pass replaces, and replacing every span with its right side gives the line `--write` leaves. A fresh span is one whole citation token; a re-pointed span runs from the wrap's `[` to the `)` that closes it. The spans stand in source order and each starts after the previous one ends, so the row says what each span becomes without naming a column. A text search for the left side is not this rule: `<§>FS-1` is also the start of `<§>FS-10`, which fmt leaves alone when it does not resolve, and the same text can stand earlier on the line inside a link that is already right or inside inline code.
+
+The spans are read on the line as the row's earlier kinds leave it: in `bare → marker, markdown link: <§>FS-1 → [<§>FS-1](…)`, `<§>FS-1` is the citation after `--marker` marked it. When `markdown link` is the line's only kind, that line is the one on disk.
+
+##### 3.6.2.2 An item is read by its brackets
+
+Items are joined by `, `, but a re-pointed item's left side is the author's own destination, which may hold `, ` or ` → ` — a link title is the plain case. So an item is not found by splitting the row: each side of it ends at the `)` that closes its `(`, and the next item begins after the `, ` that follows the right side's closing `)` (or, for a fresh item's left side, after its one citation token).
+
+##### 3.6.2.3 Every combination, as a row
+
+Each case shows the source line, then its row (`…` elides an anchor):
+
+```text
+the issue's four rows: three re-pointed, one fresh
+  | [§SRC-501-alpha](SRC-501-alpha.md) | link, no anchor |
+  docs/sources/README.md:5: markdown link: [§SRC-501-alpha](SRC-501-alpha.md) → [§SRC-501-alpha](SRC-501-alpha.md#src-501-alpha-alpha-source-report)
+  | [§SRC-503-gamma](SRC-503-gamma.md#stale) | link, stale anchor |
+  docs/sources/README.md:7: markdown link: [§SRC-503-gamma](SRC-503-gamma.md#stale) → [§SRC-503-gamma](SRC-503-gamma.md#src-503-gamma-gamma-source-report)
+  | §SRC-504-delta | marked, not linked |
+  docs/sources/README.md:8: markdown link: §SRC-504-delta → [§SRC-504-delta](SRC-504-delta.md#src-504-delta-delta-source-report)
+
+re-pointed and fresh, in source order
+  | [§SRC-501-alpha](SRC-501-alpha.md) and §SRC-502-beta | mixed |
+  docs/sources/README.md:11: markdown link: [§SRC-501-alpha](SRC-501-alpha.md) → [§SRC-501-alpha](SRC-501-alpha.md#src-501-alpha-alpha-source-report), §SRC-502-beta → [§SRC-502-beta](SRC-502-beta.md#src-502-beta-beta-source-report)
+
+a title the write drops, holding `, `: read by its brackets
+  See [§FS-login](functional-spec/FS-login.md "Login, again") and §FS-logout.
+  docs/use.md:7: markdown link: [§FS-login](functional-spec/FS-login.md "Login, again") → [§FS-login](functional-spec/FS-login.md#fs-login-login), §FS-logout → [§FS-logout](functional-spec/FS-logout.md#…)
+
+a correct link and a fresh one with the same citation: only the fresh one is listed
+  | See [§SRC-501-alpha](SRC-501-alpha.md#src-501-alpha-alpha-source-report), then §SRC-501-alpha again. | same citation |
+  docs/sources/README.md:9: markdown link: §SRC-501-alpha → [§SRC-501-alpha](SRC-501-alpha.md#src-501-alpha-alpha-source-report)
+
+trailing a marking (--marker)
+  | SRC-502-beta | bare |
+  docs/sources/README.md:12: bare → marker, markdown link: §SRC-502-beta → [§SRC-502-beta](SRC-502-beta.md#src-502-beta-beta-source-report)
+
+trailing a typed trigger
+  | $$SRC-503-gamma | trigger |
+  docs/sources/README.md:13: trigger → marker, markdown link: §SRC-503-gamma → [§SRC-503-gamma](SRC-503-gamma.md#src-503-gamma-gamma-source-report)
+
+trailing an expansion's detail
+  | §SRC-504 | shorthand |
+  docs/sources/README.md:14: shorthand → canonical: §SRC-504 → §SRC-504-delta; markdown link: §SRC-504-delta → [§SRC-504-delta](SRC-504-delta.md#src-504-delta-delta-source-report)
+
+every kind on one line (--marker)
+  | §SRC-501 and SRC-502-beta and $$SRC-503 | shorthand, bare, trigger |
+  docs/sources/README.md:10: trigger → marker: §SRC-501 → §SRC-501-alpha, §SRC-503 → §SRC-503-gamma; bare → marker, shorthand → canonical, markdown link: §SRC-501-alpha → [§SRC-501-alpha](SRC-501-alpha.md#…), §SRC-502-beta → [§SRC-502-beta](SRC-502-beta.md#…), §SRC-503-gamma → [§SRC-503-gamma](SRC-503-gamma.md#…)
+
+the repeated-anchor note, leading
+  See [§FS-a.1](functional-spec/FS-ab.md#1-overview) and [§FS-b.1](functional-spec/FS-ab.md#1-overview).
+  docs/use.md:3: markdown link: repeated heading anchor #1-overview → #1-overview-1, numbered since grund 0.18; [§FS-b.1](functional-spec/FS-ab.md#1-overview) → [§FS-b.1](functional-spec/FS-ab.md#1-overview-1)
+
+the note, trailing, beside a fresh link (--marker)
+  Read FS-a, then [§FS-b.1](functional-spec/FS-ab.md#1-overview).
+  docs/use.md:5: bare → marker, markdown link: repeated heading anchor #1-overview → #1-overview-1, numbered since grund 0.18; §FS-a → [§FS-a](functional-spec/FS-ab.md#fs-a-a), [§FS-b.1](functional-spec/FS-ab.md#1-overview) → [§FS-b.1](functional-spec/FS-ab.md#1-overview-1)
+```
+
+Every row an earlier release printed for these lines is a prefix of its row here ([§FS-errors.3](FS-errors.md#3-message-text)): the items are appended, and nothing before them moves.
 
 ### 3.7 The `--write` report
 
@@ -574,7 +652,7 @@ Equality is of the **(path, reason)** pairs, not of the bytes of the line. The o
 
 ### 7.3 Preview-equivalence
 
-The line set `fmt --check` prints is the change set `fmt --write` applies to the same tree: the same files, the same line numbers, and on each line every kind of rewrite its row named ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)). The write's totals count those kinds ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)), and a lock file previewed as created or deleted is created or deleted. The dry run is the write run with the write withheld, not a second computation of the same question.
+The line set `fmt --check` prints is the change set `fmt --write` applies to the same tree: the same files, the same line numbers, and on each line every kind of rewrite its row named ([§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)) and the text each expansion and each link was named as writing ([§FS-fmt.3.6](FS-fmt.md#36-an-expansion-or-a-link-names-the-text-it-writes)). The write's totals count those kinds ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)), and a lock file previewed as created or deleted is created or deleted. The dry run is the write run with the write withheld, not a second computation of the same question.
 
 So neither mode may hold a refusal, a carve-out, or a scope rule the other does not. The out-of-root write refusal is named by both and listed as a rewrite by neither ([§FS-fmt.2.3.2.1](FS-fmt.md#2321-the-dry-run-refuses-the-same-file)); the index carve-out is previewed exactly where it is applied ([§FS-fmt.6.1.3](FS-fmt.md#613-the-carve-out-follows-the-passs-own-gate), [§FS-fmt.2.5.3](FS-fmt.md#253-a-kinds-index-is-still-linkified)); the cross-reference pass turns itself on for both alike ([§FS-fmt.6.6](FS-fmt.md#66-why-generated-configs-enable-cross-references)); a suppressed scope is silent in both ([§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)). A rewrite the dry run lists and `--write` will never perform is a finding no edit can clear, so `fmt --check` on that tree could never go green, and every gate built on it is permanently red for a reason no contributor can act on.
 
