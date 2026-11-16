@@ -97,6 +97,7 @@ mod multi_line_forms;
 mod multi_line_string;
 mod near_miss;
 mod never_rewrite;
+mod path_fault;
 mod qualified_context;
 mod relative_heading;
 mod section_paths;
@@ -177,6 +178,7 @@ pub(crate) use never_rewrite::{
     is_escaped, is_inside_inline_code, markdown_never_rewrite_context, never_rewrite_context_in,
     string_literal_in,
 };
+pub(crate) use path_fault::path_fault;
 pub(crate) use qualified_context::QualifiedSource;
 pub(crate) use relative_heading::{
     expand_relative_heading, may_hold_relative_heading, relative_heading_form,

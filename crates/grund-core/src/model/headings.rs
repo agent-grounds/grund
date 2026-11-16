@@ -34,6 +34,21 @@ pub struct UnmarkedHeading {
     /// For a dotted heading whose suggested coordinate has a usable parent, the
     /// relative heading that declares it (§FS-declarations.checks.unmarked-heading.2.1).
     pub relative_hint: Option<RelativeHint>,
+    /// For a heading whose complete path lacks only a title or has a `_`, and
+    /// whose repair would declare a section, that fault and the repairing
+    /// heading (§FS-declarations.checks.unmarked-heading.2.3).
+    pub(crate) fault_hint: Option<PathFaultHint>,
+}
+
+/// The clause an unmarked heading whose path is already in place appends: the
+/// authored path, which faults it has, and the heading that repairs them with
+/// the path kept (§FS-declarations.checks.unmarked-heading.2.3).
+#[derive(Clone)]
+pub(crate) struct PathFaultHint {
+    pub(crate) path: String,
+    pub(crate) missing_title: bool,
+    pub(crate) underscore: bool,
+    pub(crate) heading: String,
 }
 
 /// The clause a dotted unmarked heading's message appends: the parent's path
