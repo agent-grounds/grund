@@ -136,7 +136,8 @@ pub(crate) use fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
 pub(crate) use glob_candidate::{CandidateReading, GlobOperator, read_loose_candidate};
 pub(crate) use heading_text::{atx_heading_text, reduce_heading_text, without_closing_sequence};
 pub(crate) use id_format::{
-    id_shape, id_token_end_at, literal_after_kind_placeholder, parse_longest_id_prefix,
+    id_shape, id_token_end_at, kind_head, kind_name_at_boundary, literal_after_kind_placeholder,
+    parse_longest_id_prefix,
 };
 pub(crate) use id_rules::{
     id_grammar_key_slash_error, id_grammar_literal_slash_error, id_grammar_v2_slash_error,

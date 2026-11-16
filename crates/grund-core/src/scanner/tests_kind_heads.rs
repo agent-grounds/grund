@@ -5,7 +5,6 @@ use crate::config::load_config;
 use crate::testing::{scan_findings, test_root, write};
 
 #[test]
-#[ignore = "red until #1357 GR/GRUND config admission; implement removes this"]
 fn kind_heads_scan_canonical_and_off_format_citations_once() {
     let root = test_root("kind_heads_scan");
     write(

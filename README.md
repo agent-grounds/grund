@@ -279,19 +279,27 @@ repository; every other command reads that committed snapshot offline. From the 
 
 ```toml
 [[kinds]]
-kind = "GH"
+kind = "GR"
 file = "docs/tickets.md"
 format = "{kind}-{number}"
 resolve = "should"
 fetch = "scripts/fetch-ticket"
+
+[[kinds]]
+kind = "GRUND"
+file = "docs/guide.md"
 ```
+
+With `{kind}-{slug}` as the default, `GRUND-why` cites `GR-80923` and its snapshot
+cites `GRUND-why` back. Their distinct `GR-` and `GRUND-` heads let both kinds live
+in one project.
 
 ```console
 $ grund check
-… no snapshot for GH-1234 in docs/tickets.md — run grund fetch GH-1234
-$ grund fetch GH-1234
-$ grund GH-1234
-The issue requests committed snapshots that resolve offline.
+… no snapshot for GR-80923 in docs/tickets.md — run grund fetch GR-80923
+$ grund fetch GR-80923
+$ grund GR-80923
+The issue requests committed snapshots that resolve offline, supporting §GRUND-why.
 ```
 
 The [external facts guide](docs/user-facing/external-facts.md) has the fetch contract

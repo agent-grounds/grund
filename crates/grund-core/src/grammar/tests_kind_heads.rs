@@ -29,7 +29,6 @@ fn grammar(default: &str, rows: &[(&str, &str)]) -> Grammar {
 /// This bypasses config validation to expose the format-selection bug directly:
 /// the shorter GR name sorts before GRUND but has different literals.
 #[test]
-#[ignore = "red until #1357 parsed-kind boundary selection; implement removes this"]
 fn kind_heads_canonical_boundary_uses_longer_parsed_kind() {
     for reverse in [false, true] {
         let mut rows = [
@@ -55,7 +54,6 @@ fn kind_heads_canonical_boundary_uses_longer_parsed_kind() {
 /// Already-loadable unrelated names isolate the author's alias case. Both
 /// fmt's trigger and LSP's live transform call this exact shared entry point.
 #[test]
-#[ignore = "red until #1357 alias-qualified parsed-kind literals; implement removes this"]
 fn kind_heads_alias_trigger_and_lsp_use_override_literals() {
     let grammar = grammar(
         "{kind}-{number}-{slug}",
@@ -69,7 +67,6 @@ fn kind_heads_alias_trigger_and_lsp_use_override_literals() {
 /// the name need not lead the token. The default's literals are not a fallback
 /// for either supported shape.
 #[test]
-#[ignore = "red until #1357 parsed-kind selection for every format; implement removes this"]
 fn kind_heads_override_boundary_supports_separator_free_and_non_leading() {
     for (format, token, end) in [
         ("{kind}{number}:{slug}", "ADR7:Upper", 4),

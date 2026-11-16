@@ -3,7 +3,7 @@
 //! a closed set, a `[[kinds]]` entry no row can hold — stays with the reader
 //! that read it; what is judged here is what the records say together: the
 //! marker `strict` requires, the inline-note budget, the grounding pair, one
-//! complement, unique and prefix-free names, the member lists, and the
+//! complement, unique and distinguishable citable kinds, the member lists, and the
 //! `[citations]` rules against the final kind set.
 //!
 //! Every error keeps the text and the `path:line` anchor it had when the reader
@@ -21,6 +21,7 @@ use super::project::{KindGrounding, Project};
 use super::record::Config;
 use super::v1::bail_config;
 use super::workspace_block::validate_workspace_lists;
+use crate::grammar::{kind_head, kind_name_at_boundary};
 use crate::model::{OperationDiagnostic, format_path};
 
 /// §AR-config.4: the `[reference]` meanings, which read no `[[kinds]]` row:
@@ -51,11 +52,11 @@ pub(super) fn reference(path: &Path, project: &Project) -> Result<()> {
 }
 
 /// §AR-config.4: the meanings of the final kind table — the grounding pair per
-/// row and globally, one complement, unique and prefix-free names.
+/// row and globally, one complement, unique and distinguishable citable kinds.
 pub(super) fn kinds(path: &Path, project: &Project) -> Result<()> {
     let kinds = project.kind_configs();
     validate_kind_grounding(path, project, &kinds)?;
-    validate_kind_table(path, &kinds)?;
+    validate_kind_table(path, &kinds, &project.schema.ids.format)?;
     // §FS-config.3.4.8: both grounding keys resolve per row against these
     // defaults, so the cross-section rule is asked once the kind table is final
     // — the built-in table included.
@@ -212,8 +213,8 @@ fn grounding_key_site(grounding: &KindGrounding) -> Option<(&'static str, usize)
 }
 
 /// The rules over the whole kind table (§FS-config.3.4): one complement, unique
-/// names, and no citable name a prefix of another's.
-fn validate_kind_table(path: &Path, kinds: &[KindConfig]) -> Result<()> {
+/// names, and distinguishable citable tokens (§FS-config.3.4.5.1).
+fn validate_kind_table(path: &Path, kinds: &[KindConfig], default_format: &str) -> Result<()> {
     // §FS-config.3.9.2.1: the homeless kind is the complement of every configured home,
     // and a complement is one place. Two rows claiming it would leave the fallback
     // with no single answer, so the second is refused rather than resolved by order.
@@ -241,22 +242,38 @@ fn validate_kind_table(path: &Path, kinds: &[KindConfig]) -> Result<()> {
             ));
         }
     }
-    // Reject kinds whose name is a prefix of another kind's name (§FS-config.3.4 —
-    // tokenization would be ambiguous). Scoped to *citable* kinds: `DAT-foo` parses as
-    // `DA` or `DAT`, and a name that never appears in an ID never tokenizes.
-    for (i, a) in kinds.iter().enumerate() {
-        for (j, b) in kinds.iter().enumerate() {
-            if i != j
-                && a.citable
+    // §FS-config.3.4.5.1: proper-prefix names need an ASCII alphanumeric boundary
+    // first, then known, non-overlapping effective heads. Non-citable rows are exempt.
+    for a in kinds {
+        for b in kinds {
+            if a.citable
                 && b.citable
-                && a.kind.len() <= b.kind.len()
+                && a.kind.len() < b.kind.len()
                 && b.kind.starts_with(a.kind.as_str())
             {
+                let reason = if kind_name_at_boundary(&b.kind, &a.kind) {
+                    "the longer name has no ASCII letter or digit after the shorter name; rename a kind to distinguish malformed tokens"
+                } else {
+                    let head = |kind: &KindConfig| {
+                        kind_head(&kind.kind, kind.format.as_deref().unwrap_or(default_format))
+                    };
+                    match (head(a), head(b)) {
+                        (Some(a), Some(b)) if !a.starts_with(&b) && !b.starts_with(&a) => continue,
+                        (Some(_), Some(_)) => {
+                            "effective kind heads overlap; choose unambiguous formats whose heads do not prefix each other"
+                        }
+                        _ => {
+                            "an effective kind head is unknown; choose formats beginning with {kind} and heads that do not prefix each other"
+                        }
+                    }
+                };
+                // §FS-errors.3: retain every byte of the existing message as a prefix.
                 return Err(anyhow!(
-                    "{}: kinds `{}` and `{}` collide (one is a prefix of the other)",
+                    "{}: kinds `{}` and `{}` collide (one is a prefix of the other); {}",
                     format_path(path),
                     a.kind,
-                    b.kind
+                    b.kind,
+                    reason
                 ));
             }
         }

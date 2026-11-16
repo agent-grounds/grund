@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use regex::Regex;
 use std::cmp::Ordering;
 
-use super::compiled::Grammar;
+use super::compiled::{Grammar, QUALIFIED_CITATION_PREFIX};
 use super::glob_candidate::CandidateReading;
 use super::shorthand::parse_id_arg_with_shorthand;
 use crate::model::Id;
@@ -423,11 +423,19 @@ impl Grammar {
         if next.is_alphanumeric() || next == '_' {
             return false;
         }
+        // §FS-config.3.2: canonical parsing owns kind selection, including shorthand,
+        // non-leading formats and qualified triggers; malformed-name boundaries do not.
+        let token = &rest[..end];
+        let token = QUALIFIED_CITATION_PREFIX
+            .find(token)
+            .map_or(token, |alias| &token[alias.end()..]);
+        let Ok(parsed) = parse_id_arg_with_shorthand(token, self) else {
+            return false;
+        };
         let elements = self
             .kind_elements
-            .iter()
-            .find(|(kind, _)| rest.starts_with(kind.as_str()))
-            .map_or(&self.elements, |(_, elements)| elements);
+            .get(&parsed.id.kind)
+            .unwrap_or(&self.elements);
         let Some(literal) = format_literal_in(elements, next) else {
             return true;
         };
@@ -590,4 +598,24 @@ pub(crate) fn literal_after_kind_placeholder(format: &str) -> Option<&str> {
     let rest = &format[start..];
     let end = rest.find('{').unwrap_or(rest.len());
     Some(&rest[..end])
+}
+
+/// The effective kind head, known only for a leading `{kind}` (§FS-config.3.2.9).
+/// Both lowered config validation and glob notes read this same calculation.
+pub(crate) fn kind_head(kind: &str, format: &str) -> Option<String> {
+    format.starts_with("{kind}").then(|| {
+        format!(
+            "{kind}{}",
+            literal_after_kind_placeholder(format).unwrap_or("")
+        )
+    })
+}
+
+/// A name followed by no ASCII letter or digit (§FS-citations.recognized.off-format,
+/// §FS-rule-refusals.sentences.rewrite.recovered). Callers choose whether an exact
+/// name counts and whether to require uniqueness or prefer the longest match.
+pub(crate) fn kind_name_at_boundary(token: &str, kind: &str) -> bool {
+    token
+        .strip_prefix(kind)
+        .is_some_and(|rest| !rest.starts_with(|ch: char| ch.is_ascii_alphanumeric()))
 }

@@ -7,11 +7,14 @@ languages = ["markdown"]
 [schema.sources.extensions]
 txt = "markdown"
 
-[schema.kinds.GH]
+[schema.kinds.GR]
 folders = ["docs/tickets"]
 id_format = "{kind}-{number}"
 index = false
 fetch = "scripts/fetch-ticket"
 
+[schema.kinds.GRUND]
+files = ["docs/guide.md"]
+
 [rules.resolution]
-GH = "warn"
+GR = "warn"

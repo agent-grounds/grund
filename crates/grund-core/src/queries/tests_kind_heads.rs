@@ -5,7 +5,6 @@ use super::{can_replace_trigger_at, on_type_line_edits};
 use crate::testing::{test_root, write};
 
 #[test]
-#[ignore = "red until #1357 alias-qualified LSP literals; implement removes this"]
 fn kind_heads_lsp_keeps_trigger_before_override_continuation() {
     let root = test_root("kind_heads_lsp");
     let config = "grund_config_version = 2\n[schema]\nid_format = \"{kind}-{number}-{slug}\"\n\

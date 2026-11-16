@@ -4,7 +4,7 @@
 //! entries once the file is read — the refusals of an entry no row can hold, and
 //! the rows the rest lower into — is `kind_rows.rs` (§AR-config.3.1); and the
 //! rules over the whole lowered table — unique names, one complement,
-//! prefix-free citable names, the grounding pair — are `config/validate.rs`'s
+//! distinguishable citable kinds, the grounding pair — are `config/validate.rs`'s
 //! (§AR-config.4).
 
 use anyhow::Result;

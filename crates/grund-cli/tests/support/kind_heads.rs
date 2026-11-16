@@ -37,7 +37,6 @@ impl Drop for Fixture {
 }
 
 #[test]
-#[ignore = "red until #1357 GR/GRUND config admission; implement removes this"]
 fn kind_heads_reciprocal_contract() {
     let root = repo_root();
     let outcomes = ["kind-heads-v1", "kind-heads-v2"]
@@ -71,7 +70,6 @@ fn json(root: &Path, args: &[&str]) -> Vec<Value> {
 }
 
 #[test]
-#[ignore = "red until #1357 GR/GRUND config admission; implement removes this"]
 fn kind_heads_queries_dangling_and_glob_contract() {
     for version in [1, 2] {
         let fixture = repo_root().join(format!("tests/e2e/cases/kind-heads-v{version}/repo"));
@@ -150,7 +148,6 @@ fn kind_heads_queries_dangling_and_glob_contract() {
 /// §FS-fmt.2.1: a reachable alias-qualified trigger in an already-loadable
 /// config must not consume the default's boundary in place of its kind's.
 #[test]
-#[ignore = "red until #1357 alias-qualified trigger literals; implement removes this"]
 fn kind_heads_alias_fmt_keeps_off_format_trigger() {
     let temp = Fixture::new();
     let root = temp.path();
@@ -173,7 +170,6 @@ fn kind_heads_alias_fmt_keeps_off_format_trigger() {
 /// §FS-config.3.2 / §FS-fmt.6.3.1: scanner, shorthand resolution and accepted
 /// shorthand links must use the longer matched kind's own literal separators.
 #[test]
-#[ignore = "red until #1357 GR/GRUND admission and parsed-kind literals; implement removes this"]
 fn kind_heads_per_kind_literals_survive_scan_and_fmt() {
     let temp = Fixture::new();
     let root = temp.path();
