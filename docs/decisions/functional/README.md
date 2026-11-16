@@ -246,6 +246,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-prohibition-targets-join-with-or](DF-prohibition-targets-join-with-or.md#df-prohibition-targets-join-with-or-a-prohibitions-targets-join-with-or) — a prohibition's targets join with "or"
 - [§DF-directions-only-from-rules](DF-directions-only-from-rules.md#df-directions-only-from-rules-the-citation-directions-section-renders-only-the-rules-a-config-declares) — the Citation directions section renders only the rules a config declares
 - [§DF-field-line-names-its-title](DF-field-line-names-its-title.md#df-field-line-names-its-title-a-field-line-names-the-heading-title-the-field-is-held-to) — a field line names the heading title the field is held to
+- [§DF-trigger-sentence-names-the-id](DF-trigger-sentence-names-the-id.md#df-trigger-sentence-names-the-id-the-blocks-trigger-sentence-names-the-id-that-follows-the-trigger) — the block's trigger sentence names the ID that follows the trigger
 
 ## The one-answer rulings
 
