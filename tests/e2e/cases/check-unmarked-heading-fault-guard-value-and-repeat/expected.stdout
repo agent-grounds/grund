@@ -1,0 +1,12 @@
+docs/twice.md:7: error: unmarked heading inside FS-twice; number it (### requirements.1: requirements.1) as FS-twice.requirements.1, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path requirements.1 needs a title after it, written ### requirements.1: Untitled
+docs/twice.md:11: error: unmarked heading inside FS-twice; number it (### requirements.2: requirements.1) as FS-twice.requirements.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
+values/named.md:3: error: invalid value declaration for CONST-named: value component heading must contain a nonempty component; correct what the reason names
+values/named.md:3: error: unmarked heading inside CONST-named; number it (## 2. extra:) as CONST-named.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
+values/next.md:3: error: invalid value declaration for CONST-next: value component heading must contain a nonempty component; correct what the reason names
+values/next.md:3: error: unmarked heading inside CONST-next; number it (## 2. 2.) as CONST-next.2, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path 2 needs a title after it, written ## 2. Untitled
+values/skip.md:3: error: invalid value declaration for CONST-skip: value component heading must contain a nonempty component; correct what the reason names
+values/skip.md:3: error: unmarked heading inside CONST-skip; number it (## 2. 5.) as CONST-skip.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/twice.md:1: warning: declared but never cited: FS-twice; cite it
+values/named.md:1: warning: declared but never cited: CONST-named; cite it
+values/next.md:1: warning: declared but never cited: CONST-next; cite it
+values/skip.md:1: warning: declared but never cited: CONST-skip; cite it
