@@ -87,7 +87,7 @@ A citation is the marker `§`, the ID, and an optional `.<section>` — with the
 §api/FS-user-login.3.1    # the same section, in the `api` project of a workspace
 ```
 
-Type `$$` in a `grund`-aware editor and it's rewritten to `§` automatically. Both marker and trigger are configurable in `grund.toml`.
+Type `$$` followed by an ID, e.g. `$$FS-user-login`, in a `grund`-aware editor; the trigger becomes `§` as soon as the ID has its kind's shape, and a bare `$$` is left alone ([§FS-lsp.1.4](../functional-spec/FS-lsp.md#14-live-trigger-transform)). Both marker and trigger are configurable in `grund.toml`.
 
 With the default `{kind}-{number}-{slug}` scheme, a persisted shorthand such as
 `<§>FS-042` is an error and `grund fmt --write` expands it to the descriptive full
@@ -430,8 +430,8 @@ catalog lists every finding code, its severity, and the setting that turns it on
   its inner link and is left as it stands: search for `[[§` to find one, and
   take the outer brackets out by hand ([§DF-fmt-preserves-authored-markup](../decisions/functional/DF-fmt-preserves-authored-markup.md#df-fmt-preserves-authored-markup-fmt-leaves-a-citation-in-every-link-form-its-author-wrote-and-in-an-image-and-check-credits-only-the-ones-that-go-somewhere)).
 
-- **Typing and expanding.** `$$` becomes `§`, and a persisted number-only
-  shorthand is expanded to the full ID.
+- **Typing and expanding.** `$$` followed by an ID becomes `§`, and a persisted
+  number-only shorthand is expanded to the full ID.
 - **Following an edge backwards.** `grund refs <ID>` lists every citation of an
   ID. Run it before renaming or moving a declaration, then follow the
   [post-rename maintenance workflow](#maintaining-declarations).
