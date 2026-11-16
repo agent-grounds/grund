@@ -5,7 +5,7 @@
 //! (§FS-rules.checks.unreached-declaration).
 
 use super::RuleAnchor;
-use super::engine::evaluate;
+use super::engine::bare::evaluate;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts};
 use super::sentence::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,

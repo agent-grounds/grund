@@ -4,7 +4,7 @@
 //! semantic group yields.
 
 use super::RuleAnchor;
-use super::engine::evaluate;
+use super::engine::bare::evaluate;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts};
 use super::sentence::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
@@ -318,7 +318,7 @@ fn the_recommended_level_reports_the_absence_without_a_ramp_clause() {
         level: RuleLevel::Recommended,
         ..chapter_rule("RULE-outbound")
     };
-    let suggestions = super::engine::evaluate_suggestions(&[recommended], &[], &facts());
+    let suggestions = super::engine::bare::evaluate_suggestions(&[recommended], &[], &facts());
     let absence = suggestions
         .iter()
         .find(|diagnostic| diagnostic.code == "unreached-declaration")

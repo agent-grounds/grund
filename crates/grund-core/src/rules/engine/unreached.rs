@@ -7,9 +7,9 @@ use super::super::facts::{NodeKey, RuleFacts};
 use super::super::{RuleLevel, RulePolarity, RuleRelation, RuleSubject, Whose};
 use super::authority::Authority;
 use super::index::FactIndex;
-use super::{SemanticRule, label, push_node};
+use super::{RuleFinding, SemanticRule, label, push_node};
 use crate::model::remedies;
-use crate::model::{Code, Diagnostic, LANDED_CLAUSE};
+use crate::model::{Code, LANDED_CLAUSE};
 
 /// §FS-rules.checks.unreached-declaration: one finding per semantic rule group
 /// per unreached declaration, located at the declaration's title line because
@@ -29,7 +29,7 @@ pub(super) fn report_unreached(
     facts: &RuleFacts,
     index: &FactIndex<'_>,
     selected: &[NodeKey],
-    out: &mut Vec<Diagnostic>,
+    out: &mut Vec<RuleFinding>,
 ) {
     if rule.polarity != RulePolarity::Positive
         || !matches!(rule.relation, RuleRelation::Cite | RuleRelation::BeCitedBy)

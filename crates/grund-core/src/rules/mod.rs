@@ -18,6 +18,11 @@ pub(crate) struct RuleAnchor {
     pub(crate) column: Option<usize>,
 }
 
+/// What opens the list of citations a count row names (§FS-rules.7.3.1): the one marker the
+/// checker writes it with and the identity pass finds it by, reading nothing else of the message
+/// (§AR-scanner.1.8).
+pub(crate) const COUNTED_AT: &str = "; counted at ";
+
 // The engine consumes the normalized representation through the component
 // boundary, never through the sentence front end itself (§AR-rules.2,
 // §AR-rules.4).

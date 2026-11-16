@@ -16,9 +16,11 @@ use crate::rules::markdown::{MarkdownProject, adapt_markdown, adapt_workspace};
 use crate::rules::sentence::{ParsedRule, RuleSubject, RuleVocabulary, parse_rule};
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::counted_list::with_counted_lists;
 use super::direction_findings::directions;
 use super::fields::pair_fields_with_rules;
 use super::rule_obligations::{arm_rule_directions, empty_rule_obligations};
+use super::spellings_report::PlaceNames;
 
 /// What the rules adapter reads of one project's records: the façade stays out of
 /// both components (§AR-config.5, §AR-rules.3). `name` is the scope a standalone
@@ -399,15 +401,21 @@ pub(crate) fn check_chapter_rules(
         &parsed_rules,
     ));
     let precedence = directions(findings, rules, schema, frame, &parsed_rules);
+    // §FS-rules.7.3.1: a count above zero names what it read, on every channel.
+    let spellings = PlaceNames::new(schema, frame);
     // §FS-rules.7: one channel per level, so the absence arrives among the
     // errors its level already fills and every caller's own sort orders it.
     // §FS-rules.7.10: a rule declared through a stub reports on the ordinary channels.
-    report
-        .errors
-        .extend(evaluate(&parsed_rules, &precedence, &facts));
-    report
-        .suggestions
-        .extend(evaluate_suggestions(&parsed_rules, &precedence, &facts));
+    report.errors.extend(with_counted_lists(
+        evaluate(&parsed_rules, &precedence, &facts),
+        &spellings,
+        frame,
+    ));
+    report.suggestions.extend(with_counted_lists(
+        evaluate_suggestions(&parsed_rules, &precedence, &facts),
+        &spellings,
+        frame,
+    ));
     // §FS-rules.6: a field that expresses a rule reports a shared absence once.
     pair_fields_with_rules(findings, schema, frame, report);
 }

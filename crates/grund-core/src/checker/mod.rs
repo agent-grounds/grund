@@ -46,6 +46,7 @@ mod citation_repair;
 mod citations;
 mod conflict_marker;
 mod conform;
+mod counted_list;
 mod direction_findings;
 mod fields;
 mod finding_sides;

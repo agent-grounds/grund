@@ -3,7 +3,7 @@
 //! §FS-rules.5.1 counts, is the same code's ordinary error with no clause after
 //! its message, and nothing is left on the warnings channel.
 
-use super::engine::{evaluate, evaluate_suggestions};
+use super::engine::bare::{evaluate, evaluate_suggestions};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use super::{
     Cardinality, ParsedRule, RuleAnchor, RuleLevel, RulePolarity, RuleRelation, RuleSubject,

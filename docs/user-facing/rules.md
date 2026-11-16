@@ -409,6 +409,22 @@ it pushed out of bounds — was a warning; from 0.18.0 it is an ordinary error
 and fails the run. Move or remove the citation, loosen the count, or
 `--ignore` the code. [§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity) [§FS-rules.3.4](../functional-spec/FS-rules.md#34-inbound-citation-count-and-prohibition) [§FS-rules.7.8](../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)
 
+So a count can read a citation you do not think of as a second one, and the
+row says which. A `citation-cardinality` or `uncited-unit` row whose count is
+above zero ends with every citation it counted, where it is written and as it
+is written, in path, line and column order:
+
+```text
+docs/prices/PRICE-001-diesel-retail.md:1: error: PRICE-001-diesel-retail cites INPUT or LABOR 2 times; RULE-001-price-item requires exactly one; add or remove those citations until the count fits; counted at docs/prices/PRICE-001-diesel-retail.md:7 (INPUT-001-diesel), docs/prices/PRICE-001-diesel-retail.md:12 (INPUT-001-diesel.1)
+```
+
+`--format json` carries the same lines in the row's `sites`, each line once. A
+zero count names nothing and keeps `"sites":null`. Because the row names its
+sites, `grund check <citing file>` reports, and exits `1` on, every count that
+file's citations are part of, anchored at the subject's title as a whole run
+anchors it, so a narrowed run never passes a count the whole run fails.
+[§FS-rules.7.3.1](../functional-spec/FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted)
+
 A rule reads a declaration written behind a stub on what its target says, even
 where the target is outside `[scan] include`: the target's citations count, its
 chapters are counted, and a forbidden citation there is reported at its line in

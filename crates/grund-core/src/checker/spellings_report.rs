@@ -14,6 +14,7 @@ use crate::model::remedies;
 use crate::model::{
     Catalog, CheckReport, Citation, Code, Diagnostic, ReadingConflict, ReadingMove, Site,
 };
+use crate::rules::COUNTED_AT;
 use crate::scanner::file_home_kind;
 use crate::sources::Spellings;
 
@@ -298,7 +299,10 @@ fn finish_channel(channel: &mut Vec<Diagnostic>, names: &PlaceNames<'_>, frame: 
 /// already has as a site of that line, and `sites` holds every spelling of every line it speaks of,
 /// once. A finding's own sites are kept: they are other lines of the same text, or other files
 /// (§FS-check.1.3.6.2). The rule wrote its message from first names ([`PlaceNames::settle`]), so
-/// this pass reads no message and edits none of it but the clause it adds.
+/// this pass reads no message and edits none of it but the clause it adds. The clause closes the
+/// line, except on a count row that names the citations it counted: there it goes before that
+/// list, found by the one marker the rules module exports, [`COUNTED_AT`], and nothing else of
+/// the message is read (§FS-scan.identity.findings.content, §FS-rules.7.3.1).
 fn name_every_site(
     finding: &mut Diagnostic,
     reached: &[PathBuf],
@@ -317,7 +321,12 @@ fn name_every_site(
         .map(|name| format!("{}:{line}", frame.display_path(name)))
         .collect();
     if !others.is_empty() {
-        finding.message = format!("{} (also at {})", finding.message, others.join(", "));
+        let clause = format!(" (also at {})", others.join(", "));
+        let at = finding
+            .message
+            .find(COUNTED_AT)
+            .unwrap_or(finding.message.len());
+        finding.message.insert_str(at, &clause);
     }
     let mut sites: Vec<Site> = reached
         .iter()
