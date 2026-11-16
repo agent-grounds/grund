@@ -50,9 +50,13 @@ fn folder_evidence_uses_first_eligible_file_and_every_home() {
             .iter()
             .find(|row| row.written == home)
             .expect("each home");
+        // The loaded root may be spelled differently from the fixture's (a Windows 8.3
+        // temp name), so compare the components below it.
         assert!(
             matches!(&row.origin, RootOrigin::FolderHome { first_refused, .. }
-            if first_refused == &root.join(file))
+            if first_refused.ends_with(file)),
+            "{home}: {:?}",
+            row.origin
         );
         assert_eq!(row.config, std::path::Path::new("grund.toml"));
         assert_eq!(row.line, 6);
