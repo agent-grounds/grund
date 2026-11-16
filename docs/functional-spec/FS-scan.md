@@ -351,6 +351,8 @@ docs/fs/a.md:5: error: unknown reference FS-gone (also at notes/link.md:5)
 {"severity":"error","path":"docs/fs/a.md","line":5,"code":"dangling","message":"unknown reference FS-gone (also at notes/link.md:5)","sites":[{"path":"docs/fs/a.md","line":5},{"path":"notes/link.md","line":5}],"authority":null}
 ```
 
+The clause closes the line, except on a count row that names the citations it counted: there it stands directly after the remedy and before `; counted at`, so the count's list closes the line instead ([§FS-rules.7.3.1](FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted)).
+
 A citation-direction finding about a declaration is one of these, whether the declaration owes a citation or holds one it must not, while the same code about a file stays at its spelling ([§FS-scan.identity.findings.place](FS-scan.md#identityfindingsplace-a-place-finding-is-judged-at-each-spelling)):
 
 ```text

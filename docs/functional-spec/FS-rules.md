@@ -850,11 +850,89 @@ Other ordinary counts and every per-target `cite each` miss use
 For `cite each`, `<target-set>` is the one canonical target ID and one row
 is emitted per off-count target.
 
+A `citation-cardinality` row whose count is above zero does not end at its
+template: it appends the citations it counted, as [§FS-rules.7.3.1](FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted) says. A count
+of zero, `missing-citation`'s among them, has none to name and ends where its
+template ends.
+
 A chapter subject whose declaration has no such chapter reports
 `unreached-declaration` instead, located at the declaration rather than at a
 chapter title there is none of
 ([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)). It never reuses the
 `cites <target-set> 0 times` line, which would name a unit that does not exist.
+
+#### 7.3.1 A count above zero names the citations it counted
+
+A `citation-cardinality` row whose count is above zero, over or under what its
+rule requires and on every channel, keeps the whole of its message and appends
+one clause naming every citation the count read:
+
+```text
+; counted at <path>:<line> (<citation>), <path>:<line> (<citation>), …
+```
+
+- **Entries.** There is one entry per citation the count read, whatever the
+  count makes of them. A citation of a numbered section, which counts toward
+  the declaration that holds it ([§FS-rules.5.1](FS-rules.md#51-facts-and-identity)), is one; a `cite each` row
+  reads only the citations of its one target; a chapter subject's row reads only
+  those written inside the chapter; and a citation a stub's target lends is
+  listed where it is written ([§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
+- **Entry form.** `<path>:<line>` is where the citation is written, its path
+  named as the report names every path ([§FS-errors.3.1](FS-errors.md#31-one-base-for-every-path-in-the-line)), at the name a whole run
+  gives a file with two names ([§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name)).
+  `<citation>` is the citation as written, without its `§`: a citation of the
+  item's own numbered section shows as `INPUT-001-diesel.1`, which is the one an
+  author does not think of as a second item.
+- **Order.** Entries are sorted by path, then line, then column, with no cap.
+  Two citations on one line are two entries.
+- **`sites`.** JSON `sites` holds each distinct `{ path, line }` of the entries
+  once, in the same order, so two citations on one line are one site
+  ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)).
+- **The title.** The subject's declaration or chapter title is the row's
+  location and not a site, unless a counted citation is written on that line:
+  then the text names it, and it is a site.
+- **Zero.** A count of zero has nothing to name. Its row keeps its message
+  byte for byte, with no clause, and `"sites":null`.
+
+So a price record held to one priced item, which cites the item at line 7 and
+the item's own section at line 12, is told where both are:
+
+```text
+docs/prices/PRICE-001-diesel-retail.md:1: error: PRICE-001-diesel-retail cites INPUT or LABOR 2 times; RULE-001-price-item requires exactly one; add or remove those citations until the count fits; counted at docs/prices/PRICE-001-diesel-retail.md:7 (INPUT-001-diesel), docs/prices/PRICE-001-diesel-retail.md:12 (INPUT-001-diesel.1)
+```
+
+The clause is the finding's own words after the remedy segment, which a message
+may carry, and not part of the remedy ([§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read)): the *Fix* cells of
+`citation-cardinality` and `uncited-unit` and `grund config explain` stay as
+they are. Appended after the whole message, it keeps that message a verbatim
+contiguous prefix, so it ships in one release with no window
+([§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change)).
+
+On a file with two names, the identity clause ` (also at <path>:<line>)` stays
+directly after the remedy, where it stands on every row, and `; counted at …`
+follows it, so the released two-name row stays a prefix as well
+([§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name)):
+
+```text
+docs/prices/PRICE-002-haul.md:1: error: PRICE-002-haul cites INPUT or LABOR 2 times; RULE-001-price-item requires exactly one; add or remove those citations until the count fits (also at docs/more/haul-link.md:1); counted at docs/prices/PRICE-002-haul.md:5 (INPUT-001-diesel), docs/prices/PRICE-002-haul.md:8 (LABOR-001-driver)
+```
+
+`section-address-changed` writes its list before the identity clause
+([§FS-section-lock.checks.section-address-changed](FS-section-lock.md#checkssection-address-changed-a-cited-sections-text-sits-at-another-address)). Those bytes are released, so
+it keeps that order, and the difference is deliberate.
+
+A row that names its sites is in scope at any of them. A run narrowed to a path
+reports the row when its subject or any counted citation is in scope, kept
+whole and anchored at the subject ([§FS-check.1.3.6.2](FS-check.md#1362-a-finding-that-spans-several-sites-is-in-scope-at-any-of-them)), because a narrower run
+never passes what a wider run fails about the files it reports
+([§FS-check.requirements.narrow-never-lenient](FS-check.md#requirementsnarrow-never-lenient-a-narrower-run-never-passes-what-a-wider-run-fails-about-the-files-it-reports--realized)). So `grund check` of a citing file
+reports, and exits 1 on, every count that file's citations are part of, while a
+file whose citations no count read stays out of it.
+
+`chapter-cardinality` ([§FS-rules.7.2](FS-rules.md#72-chapter-cardinality)) does not take the clause. It counts
+chapters, not citations, and names them by coordinate inside the subject's own
+body ([§FS-rules.7.2.1](FS-rules.md#721-display-name-comparison-context)), so it has no `path:line` to put in `sites` and no other
+file to bring into scope.
 
 ### 7.4 Inbound citation cardinality
 
@@ -863,6 +941,12 @@ chapter title there is none of
 ```text
 <subject> is cited by <source-set> <actual> times; <RULE-ID> requires <count>; add or remove the citations of it until the count fits
 ```
+
+An `uncited-unit` row whose count is above zero appends the clause of
+[§FS-rules.7.3.1](FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted) as a `citation-cardinality` row does, `sites` included.
+Its entries are the citations of the subject from the rule's source kinds, as
+often as not written in other files than the subject's, so a run narrowed to
+any of those files reports the row, anchored at the subject.
 
 The code covers zero, surplus, and other off-count inbound cardinalities. A
 chapter subject whose declaration has no such chapter reports
@@ -906,9 +990,12 @@ row is carried the same way, because a rule whose subject's kind has no local
 declaration is a check that run judged nothing with ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)), and
 `--ignore empty-citation-obligation` removes those.
 
-Rule-derived JSON adds no `sites` list — a rule finding names one site, so the
-multi-site field stays `null` on every one of them. It does carry the rule
-authority as a field: every rule-derived message names its rule authority, and
+A `citation-cardinality` or `uncited-unit` row whose count is above zero names
+the citations it counted, and its JSON `sites` carries them
+([§FS-rules.7.3.1](FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted)). Every other rule finding names one site, so its `sites` stays
+`null`, but for the spellings of a file with two names, which every content
+finding carries ([§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name)). Rule-derived JSON also
+carries the rule authority as a field: every rule-derived message names its rule authority, and
 the same origins are the record's `authority`, a bytewise-sorted list of rule
 origins ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output),
 [§FS-output-shapes.1](FS-output-shapes.md#1-finding-object)). A chapter subject
@@ -947,7 +1034,10 @@ grund 0.18.0, where a required-level finding that exists only because
 [§FS-rules.5.1](FS-rules.md#51-facts-and-identity) counts a citation to a numbered section became an error on the
 ordinary `must` channel. Such a finding is now the same code's ordinary error,
 its message byte for byte the one a finding of that code without such a site
-prints, with no clause after it: the code was an error throughout and only these
+prints, with no ramp clause after it, but for the counted list of a count row
+([§FS-rules.7.3.1](FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted)): that list names each citation as written, so the section
+citation shows there as `<ID>.<n>` where a plain one shows as `<ID>`, which is
+what tells the author which citation counted. The code was an error throughout and only these
 findings warned, so no finding is left to tell apart and the landed change has no
 line of its own for the release guard to read, as with
 [§FS-distribution.4.2.4](FS-distribution.md#424-the-scalar-clause-is-the-refs-warnings)'s scalar clause. What counts is specified at
@@ -1021,7 +1111,10 @@ The mixed-citation window shipped in 0.18.0 and closes in 0.19.0. A resolved
 mixed citation counts as an ordinary site under [§FS-rules.5.1](FS-rules.md#51-facts-and-identity). Required
 prohibitions and upper-bound findings, including outbound, per-target and
 inbound `at most` and `exactly` counts, use the ordinary errors, messages and
-exit behavior ([§FS-rules.7.5](FS-rules.md#75-prohibition-and-recommendation-reuse), [§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)), with no mixed-path clause. This
+exit behavior ([§FS-rules.7.5](FS-rules.md#75-prohibition-and-recommendation-reuse), [§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)), with no mixed-path clause. A
+count's ordinary message carries the counted list of [§FS-rules.7.3.1](FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted), which
+names a mixed citation as written, `GOAL-g.1.goals`, as it names every citation
+it counted. This
 also applies to configured citation directions ([§FS-check.3.11](FS-check.md#311-missing-required-citation),
 [§FS-check.3.12](FS-check.md#312-forbidden-citation)).
 

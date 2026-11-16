@@ -190,7 +190,15 @@ replaceability here; it is not an implementation target
 ## 5. Report boundary and consumers
 
 The engine returns internal `Diagnostic` values with code, channel, message,
-stable fact anchor, and secondary anchors. It does not construct the published
+stable fact anchor, and secondary anchors. Beside each count finding,
+`evaluate` returns the citations that count read, each with its path, line,
+column and the citation as written (`SiteMeta`'s label,
+[§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)). The engine cannot render them: naming a path takes the run's
+spellings and report base, which it never sees, so the checker writes the
+counted list and its `sites` from them where the base is known
+([§FS-rules.7.3.1](../functional-spec/FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted)). `Site`, which holds only a path and a line, does not carry
+them, and neither does `Diagnostic`, where a field for two codes would touch
+every finding built. It does not construct the published
 `Finding` or `Report`, render text/JSON, select suggestions, or map an exit code.
 The checker merges and orders diagnostics through its existing report boundary;
 the api then exposes one report to both CLI and LSP. Neither frontend may parse
