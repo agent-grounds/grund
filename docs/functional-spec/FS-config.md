@@ -297,11 +297,9 @@ slug_pattern       = "[a-z0-9][a-z0-9-]*"
 
 `format` is a template: `{kind}`, `{number}`, `{slug}` are placeholders; everything else is literal. `{kind}` is required. `{number}` and `{slug}` are individually optional — but **at least one** of them must appear, because a bare kind would not identify a declaration. The literal characters between placeholders may be anything — `-`, `_`, `.`, `:`, etc.
 
-The chosen format is the repository default. A citable `[[kinds]]` row may set
-its own `format` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)), which is authoritative for IDs of that kind. Every
-consumer selects the kind from the token first and then applies that kind's
-grammar, so ordinary slug IDs and numeric ticket IDs may coexist without
-ambiguity. Kinds without an override retain the `[id].format` grammar exactly.
+The chosen format is the repository default. A citable `[[kinds]]` row may set its own `format` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)), which is authoritative for IDs of that kind. Every consumer selects the kind from the token first and then applies that kind's grammar, so ordinary slug IDs and numeric ticket IDs may coexist without ambiguity. Kinds without an override retain the `[id].format` grammar exactly.
+
+Canonical token consumers select the effective format of the kind identified by the full-ID or shorthand parser, including alias-qualified tokens. They do not select the first kind name that prefixes the text. Separator-free formats such as `{kind}{number}` and non-leading `{kind}` remain supported; canonical parsing is distinct from the ASCII punctuation-boundary test used to attribute malformed tokens ([§FS-citations.recognized.off-format](FS-citations.md#recognizedoff-format-a-marked-token-its-kinds-format-does-not-spell-is-reported-never-dropped)).
 
 #### 3.2.1 The three canonical shapes
 
@@ -327,19 +325,7 @@ No ID the grammar can build may contain a `/`, and what that forbids depends on 
 
 #### 3.2.5 Off-grammar declarations stay readable
 
-The effective format is the **authoring and conformance grammar**, not a reason
-to make a persisted declaration unreadable. A heading in declaration position
-whose exact token starts with a configured citable kind, ends at the
-declaration colon, and carries no `/` ([§FS-config.3.2.3](FS-config.md#323-no-id-contains-a-)) is retained in that project's catalog
-even when the token does not match the kind's effective format. Its exact written spelling, body,
-sections, and location remain available to readers, and it earns the
-`declaration-near-miss` finding ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)). Exact marker-prefixed candidates
-that normal grammar rejects become citations only when that same project's
-catalog contains an exact declaration spelling; an unmarked candidate or a
-marked candidate with no exact declaration gains no compatibility meaning. Such a marked candidate
-still cites nothing, but where it opens with a configured kind and no other reading claims its
-marker, `check` reports it as an off-format citation ([§FS-citations.recognized.off-format](FS-citations.md#recognizedoff-format-a-marked-token-its-kinds-format-does-not-spell-is-reported-never-dropped)). This catalog-backed boundary is decided in
-[§DF-off-grammar-declaration-compatibility](../decisions/functional/DF-off-grammar-declaration-compatibility.md#df-off-grammar-declaration-compatibility-persisted-declarations-remain-readable-without-relaxing-the-authoring-grammar).
+The effective format is the **authoring and conformance grammar**, not a reason to make a persisted declaration unreadable. A heading in declaration position whose exact token starts with a configured citable kind, ends at the declaration colon, and carries no `/` ([§FS-config.3.2.3](FS-config.md#323-no-id-contains-a-)) is retained in that project's catalog even when the token does not match the kind's effective format. Its exact written spelling, body, sections, and location remain available to readers, and it earns the `declaration-near-miss` finding ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)). Exact marker-prefixed candidates that normal grammar rejects become citations only when that same project's catalog contains an exact declaration spelling; an unmarked candidate or a marked candidate with no exact declaration gains no compatibility meaning. Such a marked candidate still cites nothing, but where it opens with a configured kind and no other reading claims its marker, `check` reports it as an off-format citation ([§FS-citations.recognized.off-format](FS-citations.md#recognizedoff-format-a-marked-token-its-kinds-format-does-not-spell-is-reported-never-dropped)). This catalog-backed boundary is decided in [§DF-off-grammar-declaration-compatibility](../decisions/functional/DF-off-grammar-declaration-compatibility.md#df-off-grammar-declaration-compatibility-persisted-declarations-remain-readable-without-relaxing-the-authoring-grammar).
 
 #### 3.2.6 Resolving an off-grammar citation
 
@@ -363,6 +349,10 @@ the forms those authoring surfaces create.
 For an ID accepted by the effective grammar, the authored digits of `{number}` are its source spelling. Reading and reporting preserve that spelling, including leading zeroes, under both the repository default and a per-kind override ([§FS-config.3.4.10.1](FS-config.md#34101-format)); the version-2 spellings of those settings have the same behavior ([§FS-config-v2.schema.1](FS-config-v2.md#schema1-schema)). With `{kind}-{number}`, declarations `ADR-0001` and `ADR-0002` therefore appear with those IDs in text reports and machine-readable ID strings. A diagnostic for an unresolved citation `ADR-0007` names `ADR-0007`, and a suggestion of the first declaration names `ADR-0001`. Visible citation text retains its own spelling; it does not rename the target declaration. The target declaration's source spelling is part of the heading text a generated link anchors on ([§FS-fmt.6.2.2](FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)), independently of an equivalent citation's spelling: `# ADR-0001: Use Postgres` and `# ADR-0002: Use Redis` yield `#adr-0001-use-postgres` and `#adr-0002-use-redis`, even when cited as `ADR-1` or `ADR-002`. A section headed `## 1. Why` still yields `#1-why`.
 
 Spelling is distinct from numeric identity: `ADR-1`, `ADR-001` and `ADR-0001` still select the same kind and number, and declaring two of them is a duplicate under the existing collision rules ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)). Numeric fields remain numbers. Lookup and collisions use numeric identity; ordering and next-number derivation retain their existing rules. Allocation alone chooses a minimum width ([§FS-id.1.2](FS-id.md#12-number-width)); reading a four-digit declaration does not change the default or explicit allocation width, nor repad existing headings, filenames or citations ([§DF-id-number-width.4](../decisions/functional/DF-id-number-width.md#4-what-happens-at-the-rollover)).
+
+#### 3.2.9 Kind head
+
+A kind's **head** is its name followed by the literal immediately after a leading `{kind}` in its effective format: its per-kind override when present, otherwise the inherited repository default. An empty following literal yields the bare name, as in `{kind}{number}`. A format that does not begin with `{kind}` has no known head. Thus `GR` with `{kind}-{number}` has head `GR-`, and `GRUND` with `{kind}-{slug}` has head `GRUND-`. This definition is shared by collision validation ([§FS-config.3.4.5.1](FS-config.md#3451-citable-names-and-formats-must-distinguish-their-tokens)) and coordinate-glob notes ([§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note)).
 
 ### 3.3 Section paths — arbitrary nesting depth
 
@@ -576,9 +566,17 @@ A v1 config that writes the top-level key `kinds = []` declares an empty kind se
 
 **Names are unique across the whole table.** `[citations.<kind>]` and `grund list --kind` key on a name, so two rows wearing one name is a config with no answer to "which".
 
-##### 3.4.5.1 Citable names are prefix-free
+##### 3.4.5.1 Citable names and formats must distinguish their tokens
 
-No citable kind's name may be a prefix of another citable kind's name. `kind = "DA"` and `kind = "DAT"` together are invalid because a token starting with `DAT-` would parse as either kind. The rule is about *tokenization*, so it stops where tokenization does: a non-citable kind's name never appears in an ID, so `skill` beside a citable `SKI` is fine and a config that spells it loads. grund validates this on load and refuses ambiguous configs with a single error pointing at the offending pair (per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior)).
+After rejecting duplicate names, validation considers every pair of citable kinds in this order:
+
+1. If neither name is a proper prefix of the other, this pair passes. A non-leading `{kind}` format does not newly refuse such a pair.
+2. For a proper-prefix pair, the character immediately after the shorter name in the longer name must be an ASCII letter or digit. Otherwise the pair is refused: malformed-token attribution could name both kinds. `DA` beside `DA-X` is invalid even with different format separators; rename a kind.
+3. Both effective heads ([§FS-config.3.2.9](FS-config.md#329-kind-head)) must be known, and neither head may prefix the other. Otherwise the pair is refused. Choose unambiguous formats; an arbitrary separator is not necessarily enough.
+
+Thus `DA` beside `DAT` loads under `{kind}-{slug}`, as do `GR` tickets with `{kind}-{number}` beside `GRUND` with `{kind}-{slug}`. Separator-free shorter `GR` beside `GRUND` stays refused because head `GR` prefixes `GRUND-`. Non-citable kinds remain exempt: `skill` beside citable `SKI` loads. Names remain unique across citable and non-citable rows.
+
+The single load error names the offending pair ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). It preserves the entire existing message as a prefix, including `(one is a prefix of the other)`, then appends a reason distinguishing a name-boundary collision requiring renaming from unknown or overlapping heads requiring unambiguous formats ([§FS-errors.3](FS-errors.md#3-message-text)).
 
 ##### 3.4.5.2 `code` is reserved to the homeless kind
 

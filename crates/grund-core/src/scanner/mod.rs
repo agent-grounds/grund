@@ -195,6 +195,8 @@ mod tests_front_matter;
 #[cfg(test)]
 mod tests_inline_site;
 #[cfg(test)]
+mod tests_kind_heads;
+#[cfg(test)]
 mod tests_line_owners;
 #[cfg(all(test, unix))]
 mod tests_link_recovery;

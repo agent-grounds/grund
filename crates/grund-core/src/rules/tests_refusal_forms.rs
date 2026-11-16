@@ -38,6 +38,54 @@ fn vocabulary() -> RuleVocabulary {
 /// could not be supplied is a kind.
 type Row = (&'static str, &'static str, bool);
 
+/// §FS-config.3.4.5.1 / §FS-rule-refusals.sentences.rewrite.recovered:
+/// recovery uses a name boundary and retains the longer kind's identity.
+#[test]
+fn kind_heads_recovery_keeps_the_named_kind() {
+    let mut vocabulary = vocabulary();
+    vocabulary.kinds = BTreeSet::from(["GR".into(), "GRUND".into()]);
+    vocabulary.objects = KindTable::of_citable(&vocabulary.kinds);
+    vocabulary.id_grammars = vec![
+        crate::grammar::Grammar::build(
+            "{kind}-{slug}",
+            &[
+                crate::grammar::GrammarKind {
+                    name: "GR".into(),
+                    format: Some("{kind}-{number}".into()),
+                },
+                crate::grammar::GrammarKind {
+                    name: "GRUND".into(),
+                    format: None,
+                },
+            ],
+            r"\d+",
+            "[a-z][a-z0-9-]*",
+            ".",
+            true,
+            &["///".into()],
+        )
+        .expect("recovery grammar"),
+    ];
+    for kind in ["GR", "GRUND"] {
+        let sentence = format!("{kind}_*.requirements must cite at least one GR.");
+        let anchor = RuleAnchor {
+            path: "RULE-x.md".into(),
+            line: 1,
+            column: None,
+        };
+        let refusal = parse_rule(&sentence, "RULE-x".into(), anchor, &vocabulary)
+            .expect_err("malformed subject");
+        assert!(!refusal.unrecovered);
+        assert!(
+            refusal.message.contains(&format!(
+                "accepted form: The requirements chapter of each {kind} must cite at least one GR."
+            )),
+            "{}",
+            refusal.message
+        );
+    }
+}
+
 /// Every row whose refusal is not exactly its own, so one never hides another.
 fn wrong(rows: &[Row]) -> Vec<String> {
     let vocabulary = vocabulary();

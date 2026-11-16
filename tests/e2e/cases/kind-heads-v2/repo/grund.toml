@@ -1,0 +1,6 @@
+grund_config_version = 2
+[schema.kinds.GRUND]
+files = ["docs/grund.md"]
+[schema.kinds.GR]
+files = ["docs/tickets.md"]
+id_format = "{kind}-{number}"

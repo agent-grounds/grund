@@ -234,6 +234,8 @@ mod tests_inline_code_span;
 #[cfg(test)]
 mod tests_inline_note_layout;
 #[cfg(test)]
+mod tests_kind_heads;
+#[cfg(test)]
 mod tests_line_prefix_forms;
 #[cfg(test)]
 mod tests_managed_block_label;

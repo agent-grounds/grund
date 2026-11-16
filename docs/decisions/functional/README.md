@@ -282,4 +282,6 @@ The rulings the one-answer work is built from, one record per step family, each 
 - [§DF-section-after-nested-declaration](DF-section-after-nested-declaration.md#df-section-after-nested-declaration-a-section-heading-after-a-nested-declaration-is-the-enclosing-declarations-coordinate) — a section heading after a nested declaration is the enclosing declaration's coordinate
 - [§DF-reading-at-fetch-and-unread-homes](DF-reading-at-fetch-and-unread-homes.md#df-reading-at-fetch-and-unread-homes-folder-fetch-and-the-unread-home-reasons-follow-how-the-configuration-reads-a-file-and-a-folder-home-nothing-in-which-is-read-is-named) — folder fetch and the unread-home reasons follow how the configuration reads a file, and a folder home nothing in which is read is named
 
+- [§DF-format-aware-kind-collisions](DF-format-aware-kind-collisions.md#df-format-aware-kind-collisions-admit-prefix-related-kinds-when-their-formats-distinguish-them) — admit prefix-related kinds when their formats distinguish them
+
 This index is navigational — citations should target the decision ID directly, never this file.

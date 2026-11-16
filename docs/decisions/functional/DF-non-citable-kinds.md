@@ -47,7 +47,16 @@ An earlier draft of this decision kept `code` unwritable, on the grounds that a 
 
 `prefix` was accurate while every row of the table declared IDs. `citable = false` makes it wrong for half the table, and *kind* is the word the rest of grund already uses — the `{kind}` placeholder of `[id] format`, the `--kind` selector, the `[citations.<kind>]` key, and the parsed ID's own field. Across `docs/` the word *kind* outnumbers *prefix* by roughly three to one, and [§FS-list.1](../../functional-spec/FS-list.md#1-inputs) used to have to translate between the two names mid-sentence.
 
-Under the rename, prefix-freedom becomes a *derived* property of citable kinds rather than a rule about the schema's own vocabulary ([§FS-config.3.4.5](../../functional-spec/FS-config.md#345-name-rules)) — which is what lets it be scoped correctly. The rule exists because `DAT-foo` parses as either `DA` or `DAT`; a name that never appears in an ID never tokenizes, so `skill` beside a citable `SKI` is a config that should load, and under the old framing it was rejected.
+In this 2026-08-25 decision, at the rename (0.12.0), bare-name prefix-freedom became a *derived*
+property of citable kinds rather than a rule about the schema's own vocabulary
+([§FS-config.3.4.5](../../functional-spec/FS-config.md#345-name-rules)). Its rationale
+treated `DAT-foo` as potentially either `DA` or `DAT`; this ambiguity depends on
+the format and does not hold under `{kind}-…`. A name that never appears in an
+ID never tokenizes, so exempting non-citable kinds was still necessary.
+The later format-aware rule replaces the bare-name restriction
+([§DF-format-aware-kind-collisions](DF-format-aware-kind-collisions.md#df-format-aware-kind-collisions-admit-prefix-related-kinds-when-their-formats-distinguish-them));
+this paragraph records the older rationale rather than requiring `DA`/`DAT`
+to remain refused.
 
 The cost is a stutter — `[[kinds]] kind = "skill"`. `name` avoids it and was the runner-up, but it is generic where `kind` is the term the schema is already committed to: the stutter is paid once at authoring time, the mismatch on every read of the three surfaces above. `prefix` still loads through the deprecation window of [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) ([§FS-config.3.4.6](../../functional-spec/FS-config.md#346-prefix-the-former-spelling-of-kind-removed-in-0130)) — one match arm and a "both set" error, which is cheaper than invoking the pre-1.0 licence of [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise).
 
