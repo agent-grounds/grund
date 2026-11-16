@@ -383,7 +383,7 @@ The user-facing LSP setup guide ships example LSP-client snippets for the editor
 - **Emacs** — `eglot-server-programs` or `lsp-mode` registration (~5 lines).
 - **VSCode / VSCodium** — install a generic LSP client extension and point it at `grund-lsp`. Under default Workspace Trust handling, Simple LSP Client 0.1.22 and `zsol.vscode-glspc` 0.2.1 require a trusted folder because they do not declare untrusted-workspace support. The guide explains Restricted Mode's disabled-client symptoms (status-bar badge, no hover or diagnostics, no `grund-lsp` process), **Workspaces: Manage Workspace Trust**, and optional trust of a parent covering descendant folders, including sibling checkouts beneath that parent; user settings register the server once but do not grant trust. No first-party VSCode extension duplicates the LSP server or is published to a marketplace ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)); the terminal-link extension the binary carries is not an LSP client ([§FS-integrations.3.2](FS-integrations.md#32-editor-clients-vscode-codium)).
 - **Sublime Text** — LSP package client configuration for Markdown and scanned source syntaxes.
-- **IntelliJ family** — generate the import directory with [§FS-lsp.2.4.1](FS-lsp.md#241-preview-and-write), then explicitly import it through LSP4IJ's **Settings | Languages & Frameworks | Language Servers**, **+ | New Language Server**, **Import from custom template...** flow.
+- **IntelliJ family** — generate the import directory with [§FS-lsp.2.4.1](FS-lsp.md#241-preview-and-write), then explicitly import it through LSP4IJ's **Settings | Languages & Frameworks | Language Servers**, **+ | New Language Server**, **Import from custom template...** flow. The IntelliJ guide teaches the live-transform client configuration from [§FS-lsp.2.4.1.1](FS-lsp.md#2411-live-transform-client-configuration) and demonstrates typing a citation in a mapped Markdown or Java file.
 
 This repository keeps IntelliJ's `.idea/` settings local: no files beneath it
 are tracked, and the repository's `.gitignore` ignores the directory and its
@@ -409,6 +409,30 @@ extension.
 `grund-lsp integrations lsp4ij` is a read-only preview. It prints the complete generated `template.json` object followed by the exact explicit IntelliJ import steps from [§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor) on stdout, writes no file or directory, leaves stderr empty, and exits `0`. `grund-lsp integrations lsp4ij --write <directory>` treats `<directory>` as the LSP4IJ import root and creates exactly `template.json` and `README.md`; success prints `created <directory>` and the import steps on stdout and exits `0`; the written README contains the same explicit import steps as preview. Repeating the write against those two byte-identical files is an idempotent success that prints `unchanged <directory>` and the same steps.
 
 A pre-existing root with a missing, extra, or byte-different entry is a conflict: every existing byte remains untouched, stdout is empty, and one `error:` message on stderr tells the user to move or remove the root before retrying ([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)). There is no force option.
+
+##### 2.4.1.1 Live-transform client configuration
+
+The embedded README supplies one set of setup instructions to the preview,
+generated `README.md`, and successful write output, including an unchanged
+repeat. After the existing numbered import sequence, these instructions tell
+the user to select the imported **grund LSP** server under **Settings |
+Languages & Frameworks | Language Servers** and set or merge the following
+JSON in its **Client configuration**, preserving other client settings and
+other entries within `format`:
+
+```json
+{"format":{"existingFormatterOverrideable":true}}
+```
+
+The guidance explains that when IntelliJ has a formatter for a language,
+LSP4IJ otherwise withholds on-type formatting requests from grund-lsp. This
+includes Java, and Markdown when a formatter is installed. The setting lets
+those requests reach the existing live trigger transform ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)), so
+the default `$$` becomes `§` while typing a citation. The user-facing IntelliJ
+guide gives the same actionable guidance and a typing example with its expected
+transformed text. Configuration is entered through LSP4IJ's settings, without
+adding a file to the generated import directory; the two-file output and
+conflict rules of [§FS-lsp.2.4.1](FS-lsp.md#241-preview-and-write) remain in force.
 
 #### 2.4.2 Language mappings
 
