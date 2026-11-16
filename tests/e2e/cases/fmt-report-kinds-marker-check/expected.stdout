@@ -1,7 +1,7 @@
-docs/architecture/AR-ledger.md:3: bare → marker, markdown link
-docs/architecture/README.md:5: markdown link
-docs/runbook.md:3: bare → marker, markdown link
-requirements.md:5: bare → marker, markdown link
-requirements.md:17: bare → marker, markdown link
+docs/architecture/AR-ledger.md:3: bare → marker, markdown link: §FS-reserve → [§FS-reserve](../../requirements.md#fs-reserve-an-order-reserves-stock-before-payment), §FS-restock → [§FS-restock](../../requirements.md#fs-restock-a-delivery-restocks-its-items)
+docs/architecture/README.md:5: markdown link: [§AR-ledger](AR-ledger.md) → [§AR-ledger](AR-ledger.md#ar-ledger-stock-moves-are-ledger-entries)
+docs/runbook.md:3: bare → marker, markdown link: §FS-reserve.1 → [§FS-reserve.1](../requirements.md#1-hold-time)
+requirements.md:5: bare → marker, markdown link: §GOAL-no-oversell → [§GOAL-no-oversell](docs/goals.md#goal-no-oversell-we-never-sell-stock-we-do-not-have)
+requirements.md:17: bare → marker, markdown link: §FS-reserve.1 → [§FS-reserve.1](requirements.md#1-hold-time)
 src/inventory/reserve.py:3: bare → marker
 src/inventory/reserve.py:7: bare → marker

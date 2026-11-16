@@ -1,0 +1,4 @@
+docs/sources/README.md:5: markdown link: [§SRC-501-alpha](SRC-501-alpha.md) → [§SRC-501-alpha](SRC-501-alpha.md#src-501-alpha-alpha-source-report)
+docs/sources/README.md:6: markdown link: [§SRC-502-beta](SRC-502-beta.md) → [§SRC-502-beta](SRC-502-beta.md#src-502-beta-beta-source-report)
+docs/sources/README.md:7: markdown link: [§SRC-503-gamma](SRC-503-gamma.md#stale) → [§SRC-503-gamma](SRC-503-gamma.md#src-503-gamma-gamma-source-report)
+docs/sources/README.md:8: markdown link: §SRC-504-delta → [§SRC-504-delta](SRC-504-delta.md#src-504-delta-delta-source-report)

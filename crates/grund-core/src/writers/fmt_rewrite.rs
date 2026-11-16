@@ -17,7 +17,6 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use super::fmt_anchor_row::anchor_detail;
 use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_local_sections::expand_local_section_citations;
 use super::fmt_row::{FmtRow, LineRewrite};
@@ -203,10 +202,13 @@ pub(crate) struct FmtLineOpts<'a> {
 /// `expand_shorthand_citations` returns `None` for "unchanged" exactly so the
 /// common line can be moved through untouched.
 ///
-/// Why a shorthand expansion names the text it wrote in the label: the other
-/// three rewrites move markup around an unchanged ID token, so `grund check` can
-/// still see a mistake in them; this one writes the slug *into* the token, and a
-/// wrong one is a well-formed citation of the wrong declaration.
+/// Why an expansion and a link name the text they write in the row
+/// (§FS-fmt.3.6): marking a trigger or a bare citation moves markup around an
+/// unchanged ID token, so `grund check` can still see a mistake in it. An
+/// expansion writes the slug *into* the token, and a wrong one is a well-formed
+/// citation of the wrong declaration; a link writes a destination and an anchor
+/// `check` never reads (§FS-non-goals.1). The preview is the only review either
+/// gets before it lands (§FS-fmt.3.6.2).
 ///
 /// Why the declaration-local and shorthand details can be merged by offset
 /// (§FS-fmt.3.6.1): both are recorded as offsets into one line, the local pass's
@@ -296,8 +298,8 @@ fn fmt_line_at(
             opts.shorthand_targets,
             opts.settled,
         );
-        rewrite.counts.links_written = wrapped.written();
-        rewrite.anchor_detail = anchor_detail(&wrapped.repointed);
+        // §FS-fmt.3.6.2: the count, the note and the items, from the one record.
+        wrapped.account(&final_line, &mut rewrite);
         unproven_aliases.extend(wrapped.unproven_aliases);
         final_line = wrapped.line;
     }

@@ -34,8 +34,8 @@
     "findings": [],
     "refusals": {},
     "fmt": {
-      "changes": [{"path":"README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
-      "writeChanges": [{"path":"README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "changes": [{"path":"README.md","line":3,"label":"markdown link: §ADR-cache → [§ADR-cache](docs/adr/cache.md#adr-cache-cache-availability)","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"README.md","line":3,"label":"markdown link: §ADR-cache → [§ADR-cache](docs/adr/cache.md#adr-cache-cache-availability)","counts":{"links_written":1}}],
       "written": {"README.md":{"3":"The decisions are [§ADR-cache](docs/adr/cache.md#adr-cache-cache-availability)."}}
     },
     "absentQuery": "ADR-absent"

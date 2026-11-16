@@ -201,6 +201,8 @@ mod tests_fmt_conflicts;
 #[cfg(test)]
 mod tests_fmt_enclosing_links;
 #[cfg(test)]
+mod tests_fmt_link_items;
+#[cfg(test)]
 mod tests_fmt_rewrite;
 #[cfg(test)]
 mod tests_id;

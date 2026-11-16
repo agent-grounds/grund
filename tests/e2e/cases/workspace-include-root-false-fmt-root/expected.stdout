@@ -1,2 +1,2 @@
-apps/api/docs/FS-api.md:3: markdown link
-packages/web/docs/FS-web.md:3: markdown link
+apps/api/docs/FS-api.md:3: markdown link: §web/FS-web → [§web/FS-web](../../../packages/web/docs/FS-web.md#fs-web-web-behavior)
+packages/web/docs/FS-web.md:3: markdown link: §api/FS-api → [§api/FS-api](../../../apps/api/docs/FS-api.md#fs-api-api-behavior)

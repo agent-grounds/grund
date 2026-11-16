@@ -13,7 +13,11 @@
 //! downward instead of sideways (§DF-show-cross-ref-flattening, §AR-system.4).
 
 use std::collections::BTreeSet;
+use std::ops::Range;
 use std::path::Path;
+
+use super::fmt_anchor_row::anchor_detail;
+use super::fmt_row::LineRewrite;
 
 use super::fmt_shorthand_links::{accepted_shorthand_link, collect_local_accepted_shorthand_links};
 use super::fmt_value_bindings::markdown_citation_is_value_binding;
@@ -66,22 +70,70 @@ pub(crate) fn wrap_markdown_links(
     .line
 }
 
-/// One line after the link pass, and what the pass wrote on it (§FS-fmt.3.7): the
-/// wraps it made fresh, and the `(old, new)` destination of each wrap it
-/// re-pointed. A wrap whose destination was already right is in neither.
-/// `unproven_aliases` names each project a link was withheld from, its scan having
-/// met an error (§FS-fmt.7.4.4).
+/// One link the pass writes on a line (§FS-fmt.3.6.2): the span of the line it
+/// read that the write replaces, and the text the write puts there. The link
+/// count, the repeated-anchor note and the row's items are all readings of this
+/// one record, so the preview cannot name a link the write does not write
+/// (§DF-fmt-link-row-names-what-it-writes.2.2). A wrap whose destination was
+/// already right writes nothing and has none.
+pub(super) struct WrittenLink {
+    /// §FS-fmt.3.6.2.1: a fresh span is one whole citation token; a re-pointed
+    /// one runs from the wrap's `[` to the `)` that closes it.
+    pub(super) span: Range<usize>,
+    pub(super) written: String,
+    /// Where the destination opens, counted from the span's start, in both the
+    /// replaced and the written text, for a wrap the pass re-pointed; `None` for
+    /// one it made fresh.
+    repointed_at: Option<usize>,
+}
+
+impl WrittenLink {
+    /// The bytes this link replaces in `read`, the line the pass read.
+    pub(super) fn replaced<'a>(&self, read: &'a str) -> &'a str {
+        &read[self.span.clone()]
+    }
+
+    /// The `(old, new)` destination of a re-pointed wrap, up to the `)` that
+    /// closes it, and `None` for a fresh one.
+    fn destinations<'a>(&'a self, read: &'a str) -> Option<(&'a str, &'a str)> {
+        let at = self.repointed_at?;
+        let replaced = self.replaced(read);
+        // Both end with the `)` that closes the destination.
+        Some((
+            &replaced[at..replaced.len() - 1],
+            &self.written[at..self.written.len() - 1],
+        ))
+    }
+
+    /// The row's item for this link (§FS-fmt.3.6.2): the text replaced, then the
+    /// text written. Each side ends at the `)` that closes its `(`, or for a fresh
+    /// left side at its one citation token (§FS-fmt.3.6.2.2).
+    fn item(&self, read: &str) -> String {
+        format!("{} \u{2192} {}", self.replaced(read), self.written)
+    }
+}
+
+/// One line after the link pass, and what the pass wrote on it (§FS-fmt.3.7): one
+/// record per link it wrote, in source order, each span starting after the last
+/// ends (§FS-fmt.3.6.2.1). `unproven_aliases` names each project a link was
+/// withheld from, its scan having met an error (§FS-fmt.7.4.4).
 pub(super) struct WrappedLine {
     pub(super) line: String,
-    pub(super) fresh: usize,
-    pub(super) repointed: Vec<(String, String)>,
+    pub(super) links: Vec<WrittenLink>,
     pub(super) unproven_aliases: BTreeSet<String>,
 }
 
 impl WrappedLine {
-    /// The links this line counts as written (§FS-fmt.3.7).
-    pub(super) fn written(&self) -> usize {
-        self.fresh + self.repointed.len()
+    /// Account for this line's links in its rewrite (§FS-fmt.3.5.1), given `read`,
+    /// the line the pass read: the count the `--write` totals sum (§FS-fmt.3.7),
+    /// the repeated-anchor note (§DF-repeated-heading-anchor.decision.row) and the
+    /// items (§FS-fmt.3.6.2), all read from the one record, for the ordinary pass
+    /// and the index carve-out alike.
+    pub(super) fn account(&self, read: &str, rewrite: &mut LineRewrite) {
+        let links = &self.links;
+        rewrite.counts.links_written = links.len();
+        rewrite.anchor_detail = anchor_detail(links.iter().filter_map(|it| it.destinations(read)));
+        rewrite.links = links.iter().map(|it| it.item(read)).collect();
     }
 }
 
@@ -105,8 +157,7 @@ pub(super) fn wrap_markdown_links_with_targets(
     let mut output = String::new();
     let mut cursor = 0;
     let mut binding_end = 0;
-    let mut fresh = 0;
-    let mut repointed = Vec::new();
+    let mut written_links = Vec::new();
     let mut unproven_aliases = BTreeSet::new();
     for citation in
         markdown_link_citations(line, links, config, findings, workspace, shorthand_targets)
@@ -186,31 +237,40 @@ pub(super) fn wrap_markdown_links_with_targets(
         // §FS-citations.wrap.recognized: a wrap's whole destination is re-derived,
         // to the `)` that balances its `(`; one that never closes is wrapped fresh.
         if let CitationLink::Wrap(wrap) = reading {
-            output.push_str(&line[cursor..wrap.url_start]);
             // §FS-fmt.3.7: a re-derived destination is a link written only if it moved.
             let old = &line[wrap.url_start..wrap.close];
             if old != target {
-                repointed.push((old.to_string(), target.clone()));
+                // §FS-fmt.3.6.2.1: the span runs from the wrap's `[` to its `)`.
+                let span = (marker_start - 1)..(wrap.close + 1);
+                let opening = &line[span.start..wrap.url_start];
+                written_links.push(WrittenLink {
+                    written: format!("{opening}{target})"),
+                    repointed_at: Some(opening.len()),
+                    span,
+                });
             }
+            output.push_str(&line[cursor..wrap.url_start]);
             output.push_str(&target);
             cursor = wrap.close;
             continue;
         }
-        fresh += 1;
+        // §FS-fmt.3.6.2.1: a fresh span is the one whole citation token.
+        let span = marker_start..marked_end;
+        let citation = &line[span.clone()];
+        let written = format!("[{citation}]({target})");
         output.push_str(&line[cursor..marker_start]);
-        let citation = &line[marker_start..marked_end];
-        output.push('[');
-        output.push_str(citation);
-        output.push_str("](");
-        output.push_str(&target);
-        output.push(')');
+        output.push_str(&written);
+        written_links.push(WrittenLink {
+            written,
+            repointed_at: None,
+            span,
+        });
         cursor = marked_end;
     }
     output.push_str(&line[cursor..]);
     WrappedLine {
         line: output,
-        fresh,
-        repointed,
+        links: written_links,
         unproven_aliases,
     }
 }

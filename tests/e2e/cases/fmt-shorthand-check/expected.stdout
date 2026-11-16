@@ -1,1 +1,1 @@
-docs/notes.md:1: shorthand → canonical: §FS-042 → §FS-042-user-login; markdown link
+docs/notes.md:1: shorthand → canonical: §FS-042 → §FS-042-user-login; markdown link: §FS-042-user-login → [§FS-042-user-login](functional-spec/FS-042-user-login.md#fs-042-user-login-user-login)

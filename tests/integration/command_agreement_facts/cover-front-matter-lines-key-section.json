@@ -42,8 +42,8 @@
     "findings": [],
     "refusals": {},
     "fmt": {
-      "changes": [{"path":"README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
-      "writeChanges": [{"path":"README.md","line":3,"label":"markdown link","counts":{"links_written":1}}],
+      "changes": [{"path":"README.md","line":3,"label":"markdown link: §METRIC-net-revenue → [§METRIC-net-revenue](bundle/metrics/net-revenue.md#metric-net-revenue-net-revenue-monthly)","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"README.md","line":3,"label":"markdown link: §METRIC-net-revenue → [§METRIC-net-revenue](bundle/metrics/net-revenue.md#metric-net-revenue-net-revenue-monthly)","counts":{"links_written":1}}],
       "written": {"README.md":{"3":"The metric is [§METRIC-net-revenue](bundle/metrics/net-revenue.md#metric-net-revenue-net-revenue-monthly)."}}
     },
     "absentQuery": "METRIC-absent"

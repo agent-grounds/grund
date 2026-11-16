@@ -1,1 +1,1 @@
-docs/use.md:3: markdown link: repeated heading anchor #1-overview → #1-overview-1, numbered since grund 0.18
+docs/use.md:3: markdown link: repeated heading anchor #1-overview → #1-overview-1, numbered since grund 0.18; [§FS-b.1](functional-spec/FS-ab.md#1-overview) → [§FS-b.1](functional-spec/FS-ab.md#1-overview-1)

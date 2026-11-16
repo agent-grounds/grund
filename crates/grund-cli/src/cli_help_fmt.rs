@@ -43,9 +43,12 @@ fn print_fmt_help() {
     println!(
         "With neither --check nor --write, fmt previews every change --write would apply and exits 1 if any."
     );
+    // §FS-fmt.3.6.2: a link row names each link before and after.
     println!(
-        "Each preview row names every kind of rewrite its line gets: `bare → marker, markdown link`."
+        "Each preview row names every kind of rewrite its line gets, and the text an expansion or a link writes:"
     );
+    // The marker is escaped so the example is not a live citation of this file.
+    println!("`bare → marker, markdown link: \u{a7}FS-1 → [\u{a7}FS-1](FS-1.md#fs-1-login)`.");
     println!(
         "--write prints `rewrote N lines:` and its totals, e.g. `rewrote 7 lines: 6 citations marked, 6 links written`,"
     );

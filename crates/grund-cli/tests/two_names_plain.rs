@@ -125,14 +125,20 @@ fn a_handed_name_under_an_excluded_directory_decides_nothing() {
     }
     // `fmt` handed that name finds in the file what it finds under the plain one, and refuses nothing.
     let by_handed = tree.grund(&["fmt", "build/license.rs", "--check"]);
-    assert_eq!(by_handed.stdout, "build/license.rs:3: markdown link\n");
+    assert_eq!(
+        by_handed.stdout,
+        "build/license.rs:3: markdown link: \u{a7}FS-a \u{2192} [\u{a7}FS-a](../docs/fs/a.md#fs-a-a)\n"
+    );
     assert!(
         !by_handed.stderr.contains("differently"),
         "{}",
         by_handed.stderr
     );
     let by_plain = tree.grund(&["fmt", "docs/license.md", "--check"]);
-    assert_eq!(by_plain.stdout, "docs/license.md:3: markdown link\n");
+    assert_eq!(
+        by_plain.stdout,
+        "docs/license.md:3: markdown link: \u{a7}FS-a \u{2192} [\u{a7}FS-a](fs/a.md#fs-a-a)\n"
+    );
 }
 
 /// Where the plain run reaches no name there is nothing for it to agree with, so the names the run

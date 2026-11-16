@@ -93,11 +93,11 @@ fn assert_second_write_is_empty(args: &[&str], repo: &Path) {
 }
 
 const MARKER_DRY_RUN: &str = "\
-docs/architecture/AR-ledger.md:3: bare \u{2192} marker, markdown link
-docs/architecture/README.md:5: markdown link
-docs/runbook.md:3: bare \u{2192} marker, markdown link
-requirements.md:5: bare \u{2192} marker, markdown link
-requirements.md:17: bare \u{2192} marker, markdown link
+docs/architecture/AR-ledger.md:3: bare \u{2192} marker, markdown link: \u{a7}FS-reserve \u{2192} [\u{a7}FS-reserve](../../requirements.md#fs-reserve-an-order-reserves-stock-before-payment), \u{a7}FS-restock \u{2192} [\u{a7}FS-restock](../../requirements.md#fs-restock-a-delivery-restocks-its-items)
+docs/architecture/README.md:5: markdown link: [\u{a7}AR-ledger](AR-ledger.md) \u{2192} [\u{a7}AR-ledger](AR-ledger.md#ar-ledger-stock-moves-are-ledger-entries)
+docs/runbook.md:3: bare \u{2192} marker, markdown link: \u{a7}FS-reserve.1 \u{2192} [\u{a7}FS-reserve.1](../requirements.md#1-hold-time)
+requirements.md:5: bare \u{2192} marker, markdown link: \u{a7}GOAL-no-oversell \u{2192} [\u{a7}GOAL-no-oversell](docs/goals.md#goal-no-oversell-we-never-sell-stock-we-do-not-have)
+requirements.md:17: bare \u{2192} marker, markdown link: \u{a7}FS-reserve.1 \u{2192} [\u{a7}FS-reserve.1](requirements.md#1-hold-time)
 src/inventory/reserve.py:3: bare \u{2192} marker
 src/inventory/reserve.py:7: bare \u{2192} marker
 ";
@@ -138,7 +138,7 @@ fn a_rename_says_which_lock_file_it_deletes_and_which_it_creates() {
     assert_eq!(
         fmt(&[], &e2e_case("fmt-report-kinds-rename-check"), 1),
         "\
-docs/notes.md:1: markdown link
+docs/notes.md:1: markdown link: [\u{a7}FS-sign-in.code.1](functional-spec/FS-login.md#1-a-code-expires-after-ten-minutes) \u{2192} [\u{a7}FS-sign-in.code.1](functional-spec/FS-sign-in.md#1-a-code-expires-after-ten-minutes)
 .grund/sections/FS-login.lock:1: section lock: drop FS-login.code.1; deletes the file
 .grund/sections/FS-sign-in.lock:1: section lock: add FS-sign-in.code.1; creates the file
 "
@@ -233,17 +233,17 @@ fn the_kinds_after_an_expansion_follow_its_detail_after_a_semicolon() {
     assert_eq!(
         rows("--cross-refs"),
         [
-            ":3: trigger \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; shorthand \u{2192} canonical, markdown link",
-            ":5: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link",
-            ":7: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1, \u{a7}2 \u{2192} \u{a7}FS-004-quick-actions.2; markdown link",
-            ":9: trigger \u{2192} marker: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; local section \u{2192} canonical, markdown link",
-            ":11: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; markdown link",
-            ":13: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link",
+            ":3: trigger \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; shorthand \u{2192} canonical, markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login)",
+            ":5: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login)",
+            ":7: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1, \u{a7}2 \u{2192} \u{a7}FS-004-quick-actions.2; markdown link: \u{a7}FS-004-quick-actions.1 \u{2192} [\u{a7}FS-004-quick-actions.1](FS-004-quick-actions.md#1-one), \u{a7}FS-004-quick-actions.2 \u{2192} [\u{a7}FS-004-quick-actions.2](FS-004-quick-actions.md#2-two)",
+            ":9: trigger \u{2192} marker: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; local section \u{2192} canonical, markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login), \u{a7}FS-004-quick-actions.1 \u{2192} [\u{a7}FS-004-quick-actions.1](FS-004-quick-actions.md#1-one)",
+            ":11: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1; markdown link: \u{a7}FS-004-quick-actions.1 \u{2192} [\u{a7}FS-004-quick-actions.1](FS-004-quick-actions.md#1-one)",
+            ":13: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login)",
         ]
     );
     assert_eq!(
         rows("--marker")[5],
-        ":13: bare \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; shorthand \u{2192} canonical, markdown link"
+        ":13: bare \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login; shorthand \u{2192} canonical, markdown link: \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login), \u{a7}FS-042-user-login \u{2192} [\u{a7}FS-042-user-login](FS-042-user-login.md#fs-042-user-login-login)"
     );
     // §FS-fmt.3.7: each occurrence counts, in the label order.
     let repo = copy_of(&fixture("several"), "several-write");
@@ -266,12 +266,14 @@ fn the_kinds_after_an_expansion_follow_its_detail_after_a_semicolon() {
 
 #[test]
 fn a_trailing_markdown_link_keeps_its_repeated_anchor_detail() {
-    // §FS-fmt.3.6, §DF-repeated-heading-anchor.decision.row: the detail ends the
-    // row. The first link is already right, so it is no link written.
+    // §FS-fmt.3.6.2, §DF-repeated-heading-anchor.decision.row: the note, then the
+    // items, which end the row. The first link is already right, so it is no link
+    // written and is not listed.
     assert_eq!(
         fmt(&["--check"], &fixture("anchor"), 1),
         "docs/use.md:3: trigger \u{2192} marker, markdown link: repeated heading anchor \
-         #1-overview \u{2192} #1-overview-1, numbered since grund 0.18\n"
+         #1-overview \u{2192} #1-overview-1, numbered since grund 0.18; \
+         [\u{a7}FS-b.1](functional-spec/FS-ab.md#1-overview) \u{2192} [\u{a7}FS-b.1](functional-spec/FS-ab.md#1-overview-1), \u{a7}FS-a \u{2192} [\u{a7}FS-a](functional-spec/FS-ab.md#fs-a-a)\n"
     );
     let repo = copy_of(&fixture("anchor"), "anchor-write");
     assert_eq!(

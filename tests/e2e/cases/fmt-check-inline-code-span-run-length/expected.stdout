@@ -1,4 +1,4 @@
-docs/goals.md:7: markdown link
-docs/goals.md:9: markdown link
-docs/goals.md:11: markdown link
-docs/goals.md:15: markdown link
+docs/goals.md:7: markdown link: [§GOAL-a](goals.md#goal-a-stale) → [§GOAL-a](goals.md#goal-a-a-goal)
+docs/goals.md:9: markdown link: [§GOAL-a](goals.md#goal-a-stale) → [§GOAL-a](goals.md#goal-a-a-goal)
+docs/goals.md:11: markdown link: [§GOAL-a](goals.md#goal-a-stale) → [§GOAL-a](goals.md#goal-a-a-goal)
+docs/goals.md:15: markdown link: [§GOAL-a](goals.md#goal-a-stale) → [§GOAL-a](goals.md#goal-a-a-goal)

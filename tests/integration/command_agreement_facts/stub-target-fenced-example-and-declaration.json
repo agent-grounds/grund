@@ -36,8 +36,8 @@
       "stubs": []
     },
     "fmt": {
-      "changes": [{"path":"docs/uses.md","line":1,"label":"markdown link","counts":{"links_written":1}}],
-      "writeChanges": [{"path":"docs/uses.md","line":1,"label":"markdown link","counts":{"links_written":1}}],
+      "changes": [{"path":"docs/uses.md","line":1,"label":"markdown link: §FS-second → [§FS-second](../target.md#fs-second-second)","counts":{"links_written":1}}],
+      "writeChanges": [{"path":"docs/uses.md","line":1,"label":"markdown link: §FS-second → [§FS-second](../target.md#fs-second-second)","counts":{"links_written":1}}],
       "written": {"docs/uses.md":{"1":"Uses [§FS-second](../target.md#fs-second-second)."}}
     }
   },

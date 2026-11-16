@@ -7,16 +7,18 @@
 /// The release whose `fmt --cross-refs` first numbers a repeated heading's anchor.
 const NUMBERED_SINCE: &str = "0.18";
 
-/// The detail of a line's `markdown link` (§FS-fmt.3.6), from the destinations
-/// its link pass re-pointed, `(old, new)`: the repeated-anchor note when every
+/// The repeated-anchor note of a line's `markdown link` (§FS-fmt.3.6.2), from the
+/// destinations its link pass re-pointed, `(old, new)`: the repeated-anchor note when every
 /// one of them only gained a repeat's number — `#1-overview` → `#1-overview-1`,
 /// or `_1` under mkdocs — and `None` when there is none or any other moved. A
 /// wrap the pass made fresh has no old anchor and does not decide it, so the note
 /// stands whether the link leads its row or trails another kind
 /// (§FS-fmt.3.5.1).
-pub(super) fn anchor_detail(repointed: &[(String, String)]) -> Option<String> {
+pub(super) fn anchor_detail<'a>(
+    repointed: impl IntoIterator<Item = (&'a str, &'a str)>,
+) -> Option<String> {
     let moved = repointed
-        .iter()
+        .into_iter()
         .map(|(old, new)| numbered_move(old, new))
         .collect::<Option<Vec<_>>>()?;
     (!moved.is_empty()).then(|| {
@@ -44,17 +46,14 @@ fn numbered_move(old: &str, new: &str) -> Option<String> {
 mod tests {
     use super::anchor_detail;
 
-    fn moved(pairs: &[(&str, &str)]) -> Vec<(String, String)> {
-        let owned = pairs
-            .iter()
-            .map(|(old, new)| (old.to_string(), new.to_string()));
-        owned.collect()
+    fn moved<'a>(pairs: &[(&'a str, &'a str)]) -> Vec<(&'a str, &'a str)> {
+        pairs.to_vec()
     }
 
     #[test]
     fn a_link_moved_to_the_numbered_anchor_names_both() {
         assert_eq!(
-            anchor_detail(&moved(&[("a.md#1-overview", "a.md#1-overview-1")])).as_deref(),
+            anchor_detail(moved(&[("a.md#1-overview", "a.md#1-overview-1")])).as_deref(),
             Some(
                 "repeated heading anchor #1-overview \u{2192} #1-overview-1, \
                  numbered since grund 0.18"
@@ -64,10 +63,10 @@ mod tests {
 
     #[test]
     fn any_other_move_keeps_the_plain_row() {
-        assert_eq!(anchor_detail(&[]), None);
-        assert_eq!(anchor_detail(&moved(&[("a.md#one", "a.md#two")])), None);
+        assert_eq!(anchor_detail(moved(&[])), None);
+        assert_eq!(anchor_detail(moved(&[("a.md#one", "a.md#two")])), None);
         assert_eq!(
-            anchor_detail(&moved(&[
+            anchor_detail(moved(&[
                 ("a.md#1-overview", "a.md#1-overview-1"),
                 ("a.md#one", "b.md#one")
             ])),

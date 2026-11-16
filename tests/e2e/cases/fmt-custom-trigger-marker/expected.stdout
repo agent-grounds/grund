@@ -1,1 +1,1 @@
-docs/functional-spec/FS-001-alpha.md:3: trigger → marker, markdown link
+docs/functional-spec/FS-001-alpha.md:3: trigger → marker, markdown link: @FS-002-beta → [@FS-002-beta](FS-002-beta.md#fs-002-beta-beta)
