@@ -8,7 +8,7 @@
 //! config work every walking command shares, not something `check` owns
 //! (§AR-core-module-layout.1).
 
-use crate::sources::{canonical_path, lookup_refused, path_lookup};
+use crate::sources::{canonical_path, lookup_refused, path_lookup, record_test_config_resolution};
 use anyhow::Result;
 use std::path::{Component, Path, PathBuf};
 
@@ -42,6 +42,8 @@ pub(crate) use crate::config::scope_is_config_root;
 /// a run that holds one has them judged where its workspace is expanded
 /// (§FS-config.3.9.5.2, [`crate::config::install_kind_table`]).
 pub(crate) fn open(invocation: &Invocation) -> Result<Config> {
+    // §AR-resolver.3.1.1: a test can count the resolutions a run makes.
+    record_test_config_resolution();
     let mut config = discover_config(invocation)?;
     if invocation.selection != Selection::Discovery {
         config = config_for_member_scope(config, invocation)?;

@@ -38,7 +38,8 @@ windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_
 # `iai-callgrind`. Off by default so `cargo test --all-targets` / `cargo build
 # --all-targets` compile a no-op bench target and never need Valgrind.
 bench = ["dep:iai-callgrind"]
-# Enables the core's test-only workspace-load observer for the batch contract.
+# Enables the core's test-only workspace-load and configuration-resolution
+# observers for the batch contract.
 test-workspace-load-count = ["grund-core/test-workspace-load-count"]
 # Private watch observation and injection; absent from distributed builds (§AR-bindings.3).
 test-watch = []

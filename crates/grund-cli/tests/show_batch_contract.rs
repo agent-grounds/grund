@@ -1,8 +1,10 @@
 //! Black-box contract for one-context batch declaration reads
-//! (§FS-show.1, §FS-show.2.6, §FS-output-shapes.4.1, §AR-resolver.3.1).
+//! (§FS-show.1, §FS-show.2.6, §FS-output-shapes.4.1, §AR-resolver.3.1), and for
+//! the hint a read builds from that one context, the single read's breadcrumb
+//! included (§FS-show.3.5.2, §AR-resolver.3.1.1).
 //!
-//! The tests that count workspace loads read an observer only the
-//! `test-workspace-load-count` feature compiles in, so a build without it
+//! The tests that count workspace loads or configuration resolutions read an
+//! observer only the `test-workspace-load-count` feature compiles in, so a build without it
 //! ignores them, naming the feature, and every other assertion of the same
 //! case sits in a test that runs in every build (§AR-ci.3.3). Those tests read
 //! their count from this test executable re-spawned into the CLI, never from
@@ -150,6 +152,13 @@ fn records(output: &Output) -> Vec<Value> {
 /// `test-workspace-load-count` may call this: in a build without the feature
 /// nothing writes the log, and an unwritten log reads as zero loads (§AR-ci.3.3).
 fn loads(path: &Path) -> usize {
+    fs::read_to_string(path).unwrap_or_default().lines().count()
+}
+
+/// Reads the configuration-resolution observer's log, one line per resolution a
+/// run made (§AR-resolver.3.1.1). The same rule as [`loads`]: only a test ignored
+/// without `test-workspace-load-count` may call this (§AR-ci.3.3).
+fn resolutions(path: &Path) -> usize {
     fs::read_to_string(path).unwrap_or_default().lines().count()
 }
 
@@ -343,6 +352,55 @@ fn show_batch_loads_one_workspace_for_many_queries_and_for_all() {
         stderr(&all)
     );
     assert_many_queries_succeeded(&explicit, &all);
+}
+
+/// The bare form's filesystem-path breadcrumb (§FS-show.3.5.2) prints the format
+/// hint of an invalid ID, and builds it from the context the read loaded, as every
+/// show failure's hint is built (§AR-resolver.3.1.1): it resolves configuration as
+/// often as the same unknown alias with no path behind it, and as an invalid ID,
+/// never once more. The count is the test-only observer's (§AR-ci.3.3).
+#[test]
+#[cfg_attr(
+    not(feature = "test-workspace-load-count"),
+    ignore = "reads the configuration-resolution observer; run with --features grund/test-workspace-load-count"
+)]
+#[cfg_attr(
+    feature = "test-workspace-load-count",
+    ignore = "red until #1420 builds the breadcrumb's hint from the loaded context; implement removes this"
+)]
+fn show_path_breadcrumb_resolves_configuration_once() {
+    let repo = Repo::new("breadcrumb-resolutions");
+    let run = |name: &str, operand: &str| {
+        let log = repo.path().join(format!("{name}.resolutions"));
+        let output = observed::run_observed_resolutions(repo.path(), &[operand], &log);
+        (resolutions(&log), output)
+    };
+    let (breadcrumb, breadcrumb_run) = run("breadcrumb", "docs/FS-alpha.md");
+    let (unknown_alias, unknown_alias_run) = run("unknown-alias", "docs/FS-gone.md");
+    let (invalid_id, invalid_id_run) = run("invalid-id", "FS-");
+
+    // Each run is the refusal it stands for, so no count compares other failures:
+    // the unknown alias exits `1` only through the breadcrumb, `2` without it.
+    assert_eq!(
+        [&breadcrumb_run, &unknown_alias_run, &invalid_id_run].map(|run| run.status.code()),
+        [Some(1), Some(2), Some(1)],
+        "stderr was {:?}, {:?} and {:?}",
+        stderr(&breadcrumb_run),
+        stderr(&unknown_alias_run),
+        stderr(&invalid_id_run)
+    );
+    assert!(
+        unknown_alias > 0 && unknown_alias == invalid_id,
+        "the controls resolved configuration {unknown_alias} and {invalid_id} times; \
+         both are one load, so the observer must see each resolve alike, and at least once"
+    );
+    assert_eq!(
+        breadcrumb, unknown_alias,
+        "the breadcrumb `grund docs/FS-alpha.md` resolved configuration {breadcrumb} times, \
+         the same unknown alias with no path behind it {unknown_alias} and `grund FS-` \
+         {invalid_id}: its hint resolved configuration again rather than reading the \
+         context the read loaded (§AR-resolver.3.1.1)"
+    );
 }
 
 fn run_single(repo: &Repo, coordinate: &str, extra_args: &[&str]) -> Output {
