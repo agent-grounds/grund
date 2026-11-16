@@ -445,7 +445,7 @@ for the affected clients.
 | [Querying grund](docs/user-facing/querying.md) | selectors, batch reads, `refs`, `cover` — [runnable example](examples/refs-unused/) of `refs` on what nothing cites |
 | [Reviewing code](docs/user-facing/reviewing.md) | a citation's blast radius, diff recipes |
 | [Chapter rules](docs/user-facing/rules.md) | checked rules in controlled English — [runnable example](examples/rules/) |
-| [Sources](docs/user-facing/sources.md) | which files a version-2 project reads, and which comments declare — [runnable example](examples/sources/) |
+| [Sources](docs/user-facing/sources.md) | which files a version-2 project reads, and which comments declare, and which Markdown fences have their citations read — [runnable example](examples/sources/), [diagram fences](examples/fenced-citations/) |
 | [Fields](docs/user-facing/fields.md) | a version-2 kind's chapters as fields, their order, titles and values checked, and front matter as a field — [runnable example](examples/fields/), [front matter](examples/front-matter/) |
 | [Values](docs/user-facing/values.md) | one value, declared once, checked wherever it is quoted |
 | [External facts](docs/user-facing/external-facts.md) | cite tickets as committed offline snapshots |

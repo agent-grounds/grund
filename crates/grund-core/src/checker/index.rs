@@ -18,7 +18,7 @@ use super::index_form::{
 use super::index_mention::index_mentions;
 use super::spellings_report::PlaceNames;
 use crate::config::{Frame, Owners, Schema};
-use crate::grammar::{MarkdownLinks, front_matter_extent, render_catalog_id};
+use crate::grammar::{MarkdownLinks, front_matter_extent, render_catalog_id, selected_fence_lines};
 use crate::model::{
     Catalog, CheckReport, Citation, Code, Declaration, Diagnostic, Id, paired_declarations,
     scanned_decl_relative_path, scanned_path_key, section_resolves,
@@ -317,8 +317,11 @@ pub(super) fn check_kind_indexes(
             .unwrap_or_default();
         // §FS-citations.wrap: the index is the document a reference is read in.
         let links = MarkdownLinks::new(text.as_deref().unwrap_or_default());
-        // §FS-check.3.17.4: `fmt` writes no link in front matter (§FS-check.1.1.5.2).
+        // §FS-check.3.17.4: `fmt` writes no link in front matter (§FS-check.1.1.5.2), nor
+        // in a fence, though a selected one's citations are read
+        // (§FS-config-v2.schema.sources.fenced).
         let front_matter = front_matter_extent(lines.iter().copied());
+        let in_fence = selected_fence_lines(&lines, schema.sources.fenced());
         // §FS-check.3.17.4: a bare citation is an entry only where `fmt --write`
         // may wrap it. A link through this index path to a target outside the
         // physical config root is readable but not writable by the formatter.
@@ -356,9 +359,10 @@ pub(super) fn check_kind_indexes(
             // §FS-fmt.6.4.1: `fmt` skips a section citation with no link target and
             // reports `rewrote 0 lines`. The physical-root predicate above is the
             // other §FS-check.3.17.4 gate; only the bare form is gated.
-            let in_front_matter = front_matter.is_some_and(|last| citation.line <= last);
+            let unlinkable = front_matter.is_some_and(|last| citation.line <= last)
+                || in_fence.contains(&citation.line);
             let form = if form == IndexCitationForm::Bare
-                && (!bare_repairable || !section_known || in_front_matter)
+                && (!bare_repairable || !section_known || unlinkable)
             {
                 IndexCitationForm::Ignored
             } else {
@@ -388,6 +392,7 @@ pub(super) fn check_kind_indexes(
             index_mentions(
                 frame,
                 &schema.citation.marker,
+                schema.sources.fenced(),
                 |line| index_entries.on_declaration_heading(&target.index_file, line),
                 &lines,
                 &unentered,

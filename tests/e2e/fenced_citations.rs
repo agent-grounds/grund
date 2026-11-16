@@ -170,7 +170,6 @@ fn the_pre_twin_prints_what_a_selected_fence_must() {
 /// diagram's citation of `AR-gateway` is a use `refs` lists, and the unused warning is gone
 /// (today: `unknown key 'fenced'`; a build that only accepted the key would print the control).
 #[test]
-#[ignore = "red until #1364 reads a selected fence's citations; implement removes this"]
 fn the_issue_example_reads_the_mermaid_fence() {
     let tree = Tree::new("issue", SELECTED, &[("README.md", ISSUE)]);
     tree.assert_prints(&["check"], ISSUE_CHECK, 1);
@@ -186,7 +185,6 @@ fn the_issue_example_reads_the_mermaid_fence() {
 /// `mermaid`, so their dangling citations stay unread, while the one `mermaid` fence is read and
 /// keeps `AR-gateway` from being unused.
 #[test]
-#[ignore = "red until #1364 matches a fence's tag literally; implement removes this"]
 fn only_the_literal_tag_is_selected() {
     let readme = "**Fences**\n\n```mermaid\ngateway[\"\u{a7}AR-gateway\"]\n```\n\n\
                   ```Mermaid\nx[\"\u{a7}AR-gone-capital\"]\n```\n\n\
@@ -199,7 +197,6 @@ fn only_the_literal_tag_is_selected() {
 /// The tag is the first word after any opener: words after it, spaces before it, tildes, a longer
 /// backtick run holding a shorter one, and an indented opener each select the fence.
 #[test]
-#[ignore = "red until #1364 reads the tag after every fence opener; implement removes this"]
 fn the_tag_is_the_first_word_after_any_opener() {
     let readme = "**Fences**\n\n\
                   ```mermaid title=\"Architecture\"\n\
@@ -223,7 +220,6 @@ fn the_tag_is_the_first_word_after_any_opener() {
 /// A selected fence that never closes runs to end of file, and its citations stay live there; the
 /// declaration-shaped line inside it declares nothing.
 #[test]
-#[ignore = "red until #1364 keeps an unclosed selected fence live; implement removes this"]
 fn an_unclosed_selected_fence_stays_live_to_end_of_file() {
     let readme = "**Demo**\n\n```mermaid\ngateway[\"\u{a7}AR-gateway\"]\n\n\
                   \u{23} AR-later: Later\n\u{a7}AR-gone-eof\n";
@@ -239,7 +235,6 @@ fn an_unclosed_selected_fence_stays_live_to_end_of_file() {
 /// does, so the label line outside any `%%` comment is read too
 /// (§FS-config-v2.schema.sources.fenced).
 #[test]
-#[ignore = "red until #1364 reads a selected fence with the Markdown reader; implement removes this"]
 fn a_definition_sharing_the_tag_does_not_read_the_fence() {
     let config = "grund_config_version = 2\nproject_name = \"demo\"\n[schema.sources]\n\
                   languages = [\"markdown\", \"mermaid\"]\nfenced = [\"mermaid\"]\n\
@@ -260,7 +255,6 @@ fn a_definition_sharing_the_tag_does_not_read_the_fence() {
 /// `# AR-inside: Inside` in a selected fence declares nothing, so the prose citation of it is
 /// unknown, while the fence's citation of `AR-gateway` is a use.
 #[test]
-#[ignore = "red until #1364 reads a selected fence's citations and nothing else; implement removes this"]
 fn a_declaration_line_in_a_selected_fence_declares_nothing() {
     let readme = "**Demo**\n\n```mermaid\n# AR-inside: Inside\ngateway[\"\u{a7}AR-gateway\"]\n\
                   ```\n\nSee \u{a7}AR-inside.\n";
@@ -275,7 +269,6 @@ fn a_declaration_line_in_a_selected_fence_declares_nothing() {
 /// `## 1. Inside` in a selected fence in `AR-gateway`'s body is no section, so `AR-gateway.1` is
 /// missing, while the fence's dangling citation is reported.
 #[test]
-#[ignore = "red until #1364 reads a selected fence's citations and nothing else; implement removes this"]
 fn a_numbered_heading_in_a_selected_fence_is_no_section() {
     let tree = Tree::new(
         "section",
@@ -299,7 +292,6 @@ fn a_numbered_heading_in_a_selected_fence_is_no_section() {
 
 /// `<§>AR-nonexistent` in a selected fence is an escape, not a citation, so the run is clean.
 #[test]
-#[ignore = "red until #1364 reads a selected fence's citations; implement removes this"]
 fn an_escaped_id_in_a_selected_fence_is_no_citation() {
     let readme = "**Demo**\n\n```mermaid\n\
                   gateway[\"\u{a7}AR-gateway\"] --> x[\"<\u{a7}>AR-nonexistent\"]\n```\n";
@@ -309,7 +301,6 @@ fn an_escaped_id_in_a_selected_fence_is_no_citation() {
 /// A `grund:fmt off` line in a selected fence opens no region: `fmt --write` still marks and links
 /// the trigger after the fence, as it does with no `fenced` key, and leaves the fence's bytes.
 #[test]
-#[ignore = "red until #1364 keeps a selected fence's directives inert; implement removes this"]
 fn a_fmt_directive_in_a_selected_fence_toggles_nothing() {
     let fence = "```mermaid\n<!-- grund:fmt off -->\ngateway[\"\u{a7}AR-gone\"]\n```\n";
     let readme = format!("**Demo**\n\n{fence}\nOutside cites \u{24}\u{24}AR-gateway.\n");
@@ -337,7 +328,6 @@ fn a_fmt_directive_in_a_selected_fence_toggles_nothing() {
 /// after a selected fence and none of the fence's bytes, and `check` then reports the shorthand
 /// left inside it, which a second `fmt --write` does not fix (§FS-citations.rewrite-exemption).
 #[test]
-#[ignore = "red until #1364 reads a selected fence's citations; implement removes this"]
 fn fmt_leaves_a_selected_fence_byte_for_byte() {
     let config = "grund_config_version = 2\nproject_name = \"demo\"\n[schema]\n\
                   id_format = \"{kind}-{number}-{slug}\"\n[schema.sources]\nfenced = [\"mermaid\"]\n\
@@ -374,7 +364,6 @@ fn fmt_leaves_a_selected_fence_byte_for_byte() {
 
 /// A tag outside `[A-Za-z0-9][A-Za-z0-9_+.#-]*` is refused at the `fenced` line.
 #[test]
-#[ignore = "red until #1364 reads and validates [schema.sources] fenced; implement removes this"]
 fn a_malformed_fence_tag_is_refused_at_its_line() {
     for (case, tag) in [
         ("attribute", "{.mermaid}"),
@@ -400,7 +389,6 @@ fn a_malformed_fence_tag_is_refused_at_its_line() {
 
 /// Every character the tag grammar admits loads, and `mermaid` and `Mermaid` are two tags.
 #[test]
-#[ignore = "red until #1364 reads and validates [schema.sources] fenced; implement removes this"]
 fn tags_of_the_grammar_load_and_compare_case_sensitively() {
     let config = "grund_config_version = 2\nproject_name = \"demo\"\n[schema.sources]\n\
                   fenced = [\"mermaid\", \"Mermaid\", \"c++\", \"c#\", \"objective-c\", \"x.y\", \
@@ -412,7 +400,6 @@ fn tags_of_the_grammar_load_and_compare_case_sensitively() {
 
 /// A tag written twice is refused at the `fenced` line.
 #[test]
-#[ignore = "red until #1364 reads and validates [schema.sources] fenced; implement removes this"]
 fn a_duplicate_fence_tag_is_refused_at_its_line() {
     let config = "grund_config_version = 2\nproject_name = \"demo\"\n[schema.sources]\n\
                   fenced = [\"mermaid\", \"dot\", \"mermaid\"]\n\
@@ -445,7 +432,6 @@ fn shown(line: &str) -> String {
 /// `config show` prints `fenced` after `respect_gitignore`, `[]` where it is omitted and the
 /// written list in its order, and what it prints loads back to the same output.
 #[test]
-#[ignore = "red until #1364 prints fenced in the effective config; implement removes this"]
 fn config_show_prints_fenced_and_loads_it_back() {
     let plain = Tree::new("show-plain", PLAIN, &[]);
     plain.assert_prints(&["config", "show"], &shown("fenced = []"), 0);
@@ -463,7 +449,6 @@ fn config_show_prints_fenced_and_loads_it_back() {
 /// `config explain` documents the key like its siblings, and lists it after `respect_gitignore`
 /// in the table's own entry.
 #[test]
-#[ignore = "red until #1364 documents fenced for config explain; implement removes this"]
 fn config_explain_names_fenced() {
     let tree = Tree::new("explain", PLAIN, &[]);
     let output = tree.run(&["config", "explain", "[schema.sources] fenced"]);
@@ -500,7 +485,6 @@ fn config_explain_names_fenced() {
 /// In a kind's index, a selected fence's line mentions what it cites, so the missing entry is
 /// said with "appears"; the citation there is still no entry, and draws no not-a-link error.
 #[test]
-#[ignore = "red until #1364 looks at a selected fence in an index; implement removes this"]
 fn a_selected_fence_in_an_index_mentions_but_lists_nothing() {
     let config = "grund_config_version = 2\nproject_name = \"demo\"\n[schema.sources]\n\
                   fenced = [\"mermaid\"]\n[schema.kinds.FS]\nfolders = [\"docs/fs\"]\n";
@@ -565,7 +549,6 @@ fn init(name: &str, config: &str) -> (Tree, String, String) {
 /// tags in written order joined with "or", and changes nothing else, its version included; the
 /// rewritten block is current for `init --check`.
 #[test]
-#[ignore = "red until #1364 renders the fence clause from fenced; implement removes this"]
 fn init_names_only_the_unselected_fences() {
     let (_plain, plain_report, plain_agents) = init("init-plain", PLAIN);
     assert_eq!(plain_agents.matches(TODAY).count(), 1, "{plain_agents}");
@@ -604,7 +587,6 @@ fn init_names_only_the_unselected_fences() {
 
 /// `fenced = []` selects nothing, so the block is today's, byte for byte.
 #[test]
-#[ignore = "red until #1364 reads [schema.sources] fenced; implement removes this"]
 fn init_with_an_empty_fenced_writes_todays_block() {
     let (_plain, plain_report, plain_agents) = init("init-empty-plain", PLAIN);
     let config = "grund_config_version = 2\nproject_name = \"demo\"\n[schema.sources]\n\

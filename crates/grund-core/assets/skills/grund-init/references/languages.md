@@ -182,6 +182,8 @@ under a mapped suffix such as `.txt`
 
 Only doc comments declare an ID in v2; `declarations = "any-comment"` keeps v1's reading.
 
+A Markdown fence is never read for citations, so a Mermaid diagram whose labels cite IDs loses its check when it moves inline. Where the evidence shows such diagrams, recommend `fenced = ["mermaid"]` under `[schema.sources]`: those fences' citations are then read as a `<pre>` block's are, nothing in them is a heading, and `fmt` rewrites none of it; an illustration in a named fence then needs the `<§>` escape ([fenced citations](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/sources.md#reading-the-citations-in-a-diagram-fence)).
+
 A v2 row may list several places, `[schema.kinds.FS] folders = ["docs/spec/core", "docs/spec/plugins"]`, and `[schema.kinds.code] folders = ["src", "scripts"]` names what v1's `include` did.
 Ownership in one line: a file listed in a row's `files` is that row's, otherwise the deepest folder holding it decides, and a file in no place is `code`'s ([ownership](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder)).
 

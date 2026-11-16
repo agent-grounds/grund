@@ -16,24 +16,9 @@ pub(crate) struct MarkdownFence {
 /// formatting, on-type rewrites, and body rendering share this state machine so
 /// every surface agrees on which lines are examples rather than live text.
 pub(crate) fn markdown_fence_delimiter(open: &mut Option<MarkdownFence>, line: &str) -> bool {
-    let bytes = line.as_bytes();
-    let indent = bytes.iter().take_while(|byte| **byte == b' ').count();
-    if indent > 3 || indent == bytes.len() {
+    let Some((delimiter, run, tail)) = delimiter_run(line) else {
         return false;
-    }
-    let delimiter = bytes[indent];
-    if delimiter != b'`' && delimiter != b'~' {
-        return false;
-    }
-    let run = bytes[indent..]
-        .iter()
-        .take_while(|byte| **byte == delimiter)
-        .count();
-    if run < 3 {
-        return false;
-    }
-    let tail = &line[indent + run..];
-
+    };
     match *open {
         Some(fence) => {
             if delimiter == fence.byte
@@ -57,4 +42,24 @@ pub(crate) fn markdown_fence_delimiter(open: &mut Option<MarkdownFence>, line: &
             true
         }
     }
+}
+
+/// A delimiter line's character, its run length and the text after the run, which on an
+/// opener is its info string: at most three spaces of indentation, then three or more
+/// backticks or tildes (§FS-check.1.1.5).
+pub(super) fn delimiter_run(line: &str) -> Option<(u8, usize, &str)> {
+    let bytes = line.as_bytes();
+    let indent = bytes.iter().take_while(|byte| **byte == b' ').count();
+    if indent > 3 || indent == bytes.len() {
+        return None;
+    }
+    let delimiter = bytes[indent];
+    if delimiter != b'`' && delimiter != b'~' {
+        return None;
+    }
+    let run = bytes[indent..]
+        .iter()
+        .take_while(|byte| **byte == delimiter)
+        .count();
+    (run >= 3).then(|| (delimiter, run, &line[indent + run..]))
 }

@@ -11,7 +11,8 @@ A version-2 `grund.toml` says in one table, `[schema.sources]`, which files grun
 reads, which reader and comment syntax each one takes, and which comments may
 declare an ID. The contract is [§FS-config-v2.schema.sources](../functional-spec/FS-config-v2.md#schemasources-schemasources); this guide covers
 choosing languages, remapping a suffix, defining a language of your own, keeping
-generated trees out, and moving a version-1 file over. The runnable
+generated trees out, reading a diagram fence's citations, and moving a version-1
+file over. The runnable
 [`examples/sources`](../../examples/sources/) does all of it in one small tree.
 
 ## Version 1 and version 2
@@ -278,6 +279,55 @@ How it composes with the other filters ([§FS-config-v2.schema.sources.exclude.r
 
 `[presentation.fmt] exclude` uses the same grammar with a different effect: it
 keeps `grund fmt` from rewriting a file that the scan still reads.
+
+## Reading the citations in a diagram fence
+
+A Markdown fence is an illustration by default: grund reads no citation in it,
+which is what lets a document show citation syntax in a ```` ```text ```` block
+without the `<§>` escape. A diagram is the exception that hurts. A Mermaid
+flowchart whose labels cite the components they draw renders as a diagram only
+inside a ```` ```mermaid ```` fence, and there its citations go unchecked: a
+label naming a renamed declaration passes, and the declaration the diagram still
+cites is reported as never cited.
+
+`fenced` names the fences whose citations are read
+([§FS-config-v2.schema.sources.fenced](../functional-spec/FS-config-v2.md#schemasourcesfenced-fenced-names-the-fences-whose-citations-are-read)):
+
+```toml
+[schema.sources]
+fenced = ["mermaid"]
+```
+
+- **Matching.** A fence is selected when its tag, the first word of its info
+  string, is in the list
+  ([§FS-languages.fence.language](../functional-spec/FS-languages.md#fencelanguage-a-fences-tag-and-the-fences-fenced-selects)).
+  ```` ```mermaid ````, ```` ```mermaid title="Flow" ```` and `~~~mermaid` are
+  selected; ```` ```Mermaid ````, ```` ```{.mermaid} ```` and a fence with no
+  info string are not. Tags compare case-sensitively, and a tag outside
+  `[A-Za-z0-9][A-Za-z0-9_+.#-]*`, or one written twice, is refused at the
+  `fenced` line.
+- **What is read.** A selected fence's citations are read as a `<pre>` block's
+  are: each one resolves, counts as a use in `refs`, `cover` and the unused
+  warning, and is reported where it dangles. Nothing else in it is read. A
+  heading-shaped line there declares nothing and opens no section, and a
+  `grund:fmt` line toggles nothing.
+- **Escapes.** To show an ID in a selected fence without citing it, escape it
+  as `<§>AR-example`, as in a `<pre>` block or front matter. A fence whose tag
+  the list does not name stays an illustration and needs no escape.
+- **`fmt` leaves every fence alone.** No `grund fmt` pass and no editor
+  expansion rewrites a byte inside a fence, because a Markdown link inside a
+  Mermaid label breaks the diagram. Under `shorthand = "canonical"`, a shorthand
+  citation in a selected fence is therefore reported and not expanded: write the
+  full ID there by hand.
+- **Scope.** The list is the project's own. It applies to every file the
+  Markdown reader reads and to no fence inside a source file's comment block. A
+  language definition named like a tag does not read its fences, and a tag
+  admits no file. A workspace member selects its own fences.
+
+The block `grund init` writes follows the list: with `fenced = ["mermaid"]`, its
+rule on mentioning an ID ends "or use a fenced code block not tagged `mermaid`."
+The runnable [`examples/fenced-citations`](../../examples/fenced-citations/)
+reads one diagram.
 
 ## Moving a version-1 file
 

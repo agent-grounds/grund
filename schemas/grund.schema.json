@@ -1058,6 +1058,20 @@
                     "href": "docs/functional-spec/FS-config-v2.md#schemasources-schemasources"
                   }
                 },
+                "fenced": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_+.#-]*$"
+                  },
+                  "uniqueItems": true,
+                  "default": [],
+                  "description": "Tags of the Markdown fences whose citations are read, as a `<pre>` block's are: a fence is selected when the first word of its info string is one of them, compared case-sensitively. A selected fence stays a fence for everything else, so nothing in it is a heading or a declaration and `fmt` rewrites none of it.",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.sources.fenced",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemasourcesfenced-fenced-names-the-fences-whose-citations-are-read"
+                  }
+                },
                 "extensions": {
                   "type": "object",
                   "x-grund-key": "<suffix>",

@@ -117,7 +117,6 @@ fn without_the_key_the_fence_is_not_read() {
 /// The issue's `mermaid` fence, selected: the server reads its citations exactly as it reads
 /// the `<pre>` twin's, diagnostics and hover alike.
 #[test]
-#[ignore = "red until #1364 reads a selected fence's citations in the server; implement removes this"]
 fn a_selected_fence_is_diagnosed_and_hovered_like_its_pre_twin() {
     let (diagnostics, hover) = observe("fenced-selected", SELECTED, ISSUE);
     assert_eq!(diagnostics, DIAGNOSED);

@@ -46,6 +46,7 @@ pub(super) fn lower(r: &mut Reader) {
         definitions,
         declarations: draft.declarations.unwrap_or(DeclarationMode::DocComments),
         exclude: draft.exclude,
+        fenced: draft.fenced,
     };
     let sources = &mut r.project.schema.sources;
     sources.set_extensions(model.text_suffixes());
@@ -66,11 +67,12 @@ pub(super) fn render(out: &mut String, sources: &Sources) {
     let names: Vec<String> = model.admitted.iter().map(|l| l.name.clone()).collect();
     let _ = writeln!(
         out,
-        "\n[schema.sources]\nlanguages = {}\ndeclarations = \"{}\"\nexclude = {}\nrespect_gitignore = {}",
+        "\n[schema.sources]\nlanguages = {}\ndeclarations = \"{}\"\nexclude = {}\nrespect_gitignore = {}\nfenced = {}",
         list(&names),
         model.declarations.name(),
         list(&model.exclude),
-        sources.respect_gitignore
+        sources.respect_gitignore,
+        list(&model.fenced)
     );
     if !model.extensions.is_empty() {
         let _ = writeln!(out, "\n[schema.sources.extensions]");

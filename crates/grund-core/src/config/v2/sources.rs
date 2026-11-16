@@ -18,6 +18,8 @@ pub(super) struct SourcesDraft {
     pub(super) languages: Option<(Vec<String>, usize)>,
     pub(super) declarations: Option<DeclarationMode>,
     pub(super) exclude: Vec<String>,
+    /// §FS-config-v2.schema.sources.fenced: the fence tags, in written order.
+    pub(super) fenced: Vec<String>,
     /// `[schema.sources.extensions]`: suffix, language, line.
     pub(super) extensions: Vec<(String, String, usize)>,
     pub(super) definitions: Vec<DefinitionDraft>,
@@ -75,9 +77,41 @@ pub(super) fn sources_key(r: &mut Reader, key: &str, value: &str, line: usize) -
         "respect_gitignore" => {
             r.project.schema.sources.respect_gitignore = parse_bool(r.path, line, value)?;
         }
+        "fenced" => r.sources.fenced = fence_tags(r, line, value)?,
         _ => return Ok(false),
     }
     Ok(true)
+}
+
+/// §FS-config-v2.schema.sources.fenced: the fence tags, each of the tag grammar and none
+/// written twice, refused at the `fenced` line. Tags compare case-sensitively.
+fn fence_tags(r: &mut Reader, line: usize, value: &str) -> Result<Vec<String>> {
+    let tags = r.string_list(line, value)?;
+    for (index, tag) in tags.iter().enumerate() {
+        if !fence_tag_grammar(tag) {
+            return r.fail(
+                line,
+                format!(
+                    "invalid fence tag `{tag}` in [schema.sources] fenced (expected [A-Za-z0-9][A-Za-z0-9_+.#-]*)"
+                ),
+            );
+        }
+        if tags[..index].contains(tag) {
+            return r.fail(
+                line,
+                format!("fence tag `{tag}` is listed twice in [schema.sources] fenced"),
+            );
+        }
+    }
+    Ok(tags)
+}
+
+/// §FS-config-v2.schema.sources.fenced: `[A-Za-z0-9][A-Za-z0-9_+.#-]*`.
+fn fence_tag_grammar(tag: &str) -> bool {
+    tag.starts_with(|c: char| c.is_ascii_alphanumeric())
+        && tag
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '_' | '+' | '.' | '#' | '-'))
 }
 
 /// The glob characters a suffix may not hold (§FS-config-v2.schema.sources.extensions),

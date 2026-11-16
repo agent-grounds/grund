@@ -708,6 +708,16 @@
                   "description": "Skip what `.gitignore` and other ignore files exclude, stub targets included: a stub whose target they exclude is broken, because a target the scan does not read declares nothing.",
                   "default": true
                 },
+                "fenced": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_+.#-]*$"
+                  },
+                  "uniqueItems": true,
+                  "default": [],
+                  "description": "Tags of the Markdown fences whose citations are read, as a `<pre>` block's are: a fence is selected when the first word of its info string is one of them, compared case-sensitively. A selected fence stays a fence for everything else, so nothing in it is a heading or a declaration and `fmt` rewrites none of it."
+                },
                 "extensions": {
                   "type": "object",
                   "x-grund-key": "<suffix>",

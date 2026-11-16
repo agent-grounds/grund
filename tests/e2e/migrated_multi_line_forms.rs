@@ -46,6 +46,7 @@ const MIGRATED: &str = "\
     declarations = \"any-comment\"\n\
     exclude = [\"target/\", \"node_modules/\", \".git/\", \"dist/\", \"build/\", \".venv/\"]\n\
     respect_gitignore = true\n\
+    fenced = []\n\
     \n\
     [schema.sources.extensions]\n\
     md = \"v1_markdown\"\n\

@@ -102,7 +102,8 @@ fn sources(c: &Config) -> Option<Value> {
         .collect();
     Some(
         json!({"languages":languages.collect::<Vec<_>>(),"extensions":extensions,
-        "declarations":model.declarations.name(),"exclude":model.exclude}),
+        "declarations":model.declarations.name(),"exclude":model.exclude,
+        "fenced":model.fenced}),
     )
 }
 

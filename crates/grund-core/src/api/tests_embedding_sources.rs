@@ -64,6 +64,7 @@ class = "data"
             "extensions": {"pyi": "python", "note": "notes", "rec": "records"},
             "declarations": "doc-comments",
             "exclude": ["generated", "src/**/vendor/**"],
+            "fenced": [],
         })
     );
     assert_eq!(
@@ -86,4 +87,22 @@ fn a_v1_snapshot_publishes_no_source_model() {
         json!(["//", "#", ";", "--", "*", "/*"])
     );
     assert_eq!(config["scan"]["docstring_python"], json!(true));
+}
+
+/// `fenced` is published as written, in its order, beside the other source keys
+/// (§FS-config-v2.schema.sources.effective.bindings, §FS-config-v2.schema.sources.fenced).
+#[test]
+fn a_v2_snapshot_publishes_fenced_in_written_order() {
+    let root = test_root("a_v2_snapshot_publishes_fenced_in_written_order");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"fixture\"\n[schema.sources]\n\
+         fenced = [\"mermaid\", \"dot\"]\n[schema.kinds.FS]\n",
+    );
+    let config = effective_config(&root);
+    assert_eq!(
+        config["sources"]["fenced"],
+        json!(["mermaid", "dot"]),
+        "{config}"
+    );
 }
