@@ -10,7 +10,7 @@
 //! `docs/file-size-human-exceptions.toml` records what is still to go.
 
 use anyhow::Result;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -25,7 +25,7 @@ use super::context::{
     assign_declaration_bodies, in_some_home, inline_citation_sites, markdown_heading_level,
     resolve_citation_owners,
 };
-use super::declaration_line::{close_declaration, stub_and_title};
+use super::declaration_line::{close_declaration, stub_and_title, text_declaration};
 use super::embedded_value_context::{
     EMBEDDED_VALUE_MARKER, MISPLACED_MARKER, authored_heading_level,
     embedded_value_marker_for_line, invalid_embedded_marker, push_invalid_embedded_marker,
@@ -50,8 +50,8 @@ use crate::grammar::{
     source_scan_line,
 };
 use crate::model::{
-    Catalog, Citation, Declaration, DeclarationSource, FileRecord, FileText, HeadingKind, Id,
-    NearMissHeading, UnmarkedHeadingCandidate,
+    Catalog, Citation, Declaration, FileRecord, FileText, HeadingKind, Id, NearMissHeading,
+    UnmarkedHeadingCandidate,
 };
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -236,7 +236,7 @@ pub(super) fn scan_file_text(
             close_declaration(&mut current, findings);
             // §FS-declarations.line.configured-slug: the matched delimiter belongs to the tail.
             let tail = &scan_line[caps.name("id").unwrap().end()..];
-            let (is_stub, defined_in, title) = stub_and_title(tail, stub_home, in_block);
+            let stub = stub_and_title(tail, stub_home, in_block);
             let heading_level =
                 heading_level_for_line(scan_line, is_md || scan.in_py_docstring || bare, &caps);
             record.headings.push(heading.record(
@@ -245,30 +245,15 @@ pub(super) fn scan_file_text(
                 None,
                 HeadingKind::Declaration,
             ));
-            current = Some(Declaration {
-                authored_id: Some(caps.name("id").unwrap().as_str().to_string()),
+            let authored = caps.name("id").unwrap().as_str();
+            current = Some(text_declaration(
+                authored,
                 id,
-                file: path.to_path_buf(),
-                line: lineno,
+                path,
+                lineno,
                 heading_level,
-                sections: BTreeMap::new(),
-                duplicate_sections: Vec::new(),
-                is_stub,
-                defined_in,
-                // §AR-scanner.4.6: recorded after the walk, once every declaration is in.
-                stub_resolution: None,
-                e2e_case: None,
-                title,
-                // §AR-scanner.2.4.1: real body span is assigned in the post-pass
-                // below once every declaration and (for Markdown) every heading
-                // on the file is known. Default to the single declaration line.
-                body_start: lineno,
-                body_end: lineno,
-                body_has_content: false,
-                source: DeclarationSource::Text,
-                value_valid: None,
-                front_matter: None,
-            });
+                stub,
+            ));
             if let Some(marker_start) = embedded_marker {
                 push_invalid_embedded_marker(
                     findings,
@@ -310,8 +295,7 @@ pub(super) fn scan_file_text(
                 .find(text)
                 .map(|start| start + text.len())
                 .unwrap_or(0);
-            let (is_stub, defined_in, title) =
-                stub_and_title(&scan_line[token_end..], stub_home, in_block);
+            let stub = stub_and_title(&scan_line[token_end..], stub_home, in_block);
             let heading_level = if is_md || scan.in_py_docstring || bare {
                 scan_line
                     .trim_start()
@@ -331,26 +315,15 @@ pub(super) fn scan_file_text(
             // §FS-config.3.2.5 / §AR-scanner.2.1: retain a rejected declaration-position
             // token as an ordinary catalog declaration, with exact spelling and all
             // body/section state from this same file pass.
-            current = Some(Declaration {
-                authored_id: Some(text.to_string()),
-                id: Id::legacy(kind.to_string(), text),
-                file: path.to_path_buf(),
-                line: lineno,
+            let id = Id::legacy(kind.to_string(), text);
+            current = Some(text_declaration(
+                text,
+                id,
+                path,
+                lineno,
                 heading_level,
-                sections: BTreeMap::new(),
-                duplicate_sections: Vec::new(),
-                is_stub,
-                defined_in,
-                stub_resolution: None,
-                e2e_case: None,
-                title,
-                body_start: lineno,
-                body_end: lineno,
-                body_has_content: false,
-                source: DeclarationSource::Text,
-                value_valid: None,
-                front_matter: None,
-            });
+                stub,
+            ));
             // §FS-declarations.checks.declaration-near-miss.5: its title is read below.
             declared = true;
         }
