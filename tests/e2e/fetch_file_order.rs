@@ -106,7 +106,6 @@ impl Tree {
 
 /// §FS-fetch.4.order: unpadded per-kind numbers in a version-2 workspace member.
 #[test]
-#[ignore = "red until #1361 compares the number numerically; implement removes this"]
 fn workspace_member_inserts_unpadded_numbers_in_numeric_order() {
     let tree = Tree::new();
     tree.write(
@@ -128,7 +127,6 @@ fn workspace_member_inserts_unpadded_numbers_in_numeric_order() {
 
 /// §FS-fetch.4.order: inherited project format still compares numerically past width three.
 #[test]
-#[ignore = "red until #1361 compares the number numerically; implement removes this"]
 fn project_format_inserts_numbers_across_the_padding_boundary() {
     let tree = Tree::new();
     tree.project(".", "{kind}-{number}", false);
@@ -145,7 +143,6 @@ fn project_format_inserts_numbers_across_the_padding_boundary() {
 
 /// §FS-fetch.4.order: number-before-slug precedence, with lexical slug tie-breaking.
 #[test]
-#[ignore = "red until #1361 compares the number numerically; implement removes this"]
 fn number_before_slug_uses_numeric_precedence_then_lexical_slug() {
     let tree = Tree::new();
     tree.project(".", "{kind}-{number}-{slug}", true);
@@ -175,7 +172,6 @@ fn slug_digits_stay_lexical_before_the_number() {
 
 /// §FS-fetch.4.order: a tied slug reaches numeric comparison in a slug-first format too.
 #[test]
-#[ignore = "red until #1361 compares the number numerically; implement removes this"]
 fn slug_before_number_compares_tied_slugs_by_numeric_value() {
     let tree = Tree::new();
     tree.project(".", "{kind}-{slug}-{number}", true);

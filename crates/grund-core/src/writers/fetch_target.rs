@@ -225,9 +225,8 @@ fn place_in_file(
     let site = match declaring.as_slice() {
         [decl] => Site::Replace(Owned::of(record, decl.line, decl.body_end)),
         [] => {
-            // §FS-fetch.4: ID order among the home's own declarations at the home's level.
+            // §FS-fetch.4.order: first greater sibling in the requested kind's format order.
             let grammar = &request.config.grammar;
-            let requested = grammar.render(request.id, 3);
             let mut siblings: Vec<&Declaration> = before
                 .catalog
                 .declarations
@@ -240,10 +239,11 @@ fn place_in_file(
                 })
                 .collect();
             siblings.sort_by_key(|decl| decl.line);
-            match siblings
-                .iter()
-                .find(|decl| grammar.render(&decl.id, 3) > requested)
-            {
+            match siblings.iter().find(|decl| {
+                grammar
+                    .compare_in_format(&request.id.kind, &decl.id, request.id)
+                    .is_gt()
+            }) {
                 Some(next) => Site::Insert(
                     record.line_start(next.line).unwrap_or(record.text().len()),
                     next.line,
