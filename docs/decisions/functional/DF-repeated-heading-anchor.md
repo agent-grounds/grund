@@ -20,7 +20,7 @@ So in the example the second `## 1. Overview` anchors at `#1-overview-1`, for th
 
 ### decision.row: The changed link names the versions
 
-A link an older grund wrote to the unnumbered anchor is now stale, and `fmt --check` fails on it. That is a verdict flip, taken on the route of a loud, mechanical migration ([§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)). Where the only change on a line is a link whose old anchor is the unnumbered slug of the heading it now numbers, its dry-run row ([§FS-fmt.3.5](../../functional-spec/FS-fmt.md#35-the-dry-run-report)) reads `markdown link: repeated heading anchor #1-overview → #1-overview-1, numbered since grund 0.18`, rather than the bare `markdown link`. The fix is the one command `grund fmt --cross-refs --write`, and the release note names both.
+A link an older grund wrote to the unnumbered anchor is now stale, and `fmt --check` fails on it. That is a verdict flip, taken on the route of a loud, mechanical migration ([§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)). Where the only change on a line is a link whose old anchor is the unnumbered slug of the heading it now numbers, its dry-run row ([§FS-fmt.3.5](../../functional-spec/FS-fmt.md#35-the-dry-run-report)) opens with `markdown link: repeated heading anchor #1-overview → #1-overview-1, numbered since grund 0.18`, rather than the bare `markdown link`. The fix is the one command `grund fmt --cross-refs --write`, and the release note names both.
 
 ## rejected: Rejected alternatives
 

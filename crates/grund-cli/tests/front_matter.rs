@@ -341,7 +341,12 @@ fn fmt_never_rewrites_front_matter() {
         reported.contains("README.md:3:"),
         "fmt --check:\n{reported}"
     );
-    assert!(!reported.contains(METRIC), "fmt --check:\n{reported}");
+    // The README row may name the metric file as its link's destination; no row's site is it.
+    let site = format!("{METRIC}:");
+    assert!(
+        !reported.lines().any(|row| row.starts_with(&site)),
+        "fmt --check:\n{reported}"
+    );
 
     fx.expect(0, &["fmt", "--write"]);
     assert_eq!(fx.read(METRIC), cited());
