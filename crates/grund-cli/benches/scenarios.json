@@ -880,10 +880,10 @@
       "frontend": "lsp",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 86000000,
+      "ceiling_ir": 78000000,
       "ceiling_from": {
-        "ir": 68350495,
-        "commit": "c6482908a153af08cb678660efcaaeb5db02e2c6"
+        "ir": 62282833,
+        "commit": "cb2428afa02edd2b83f32c0616d53e1cddb5a9c6"
       },
       "pgo": false
     },
