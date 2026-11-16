@@ -353,7 +353,17 @@ impl Server {
         method: &str,
         outcome: Result<Value>,
     ) -> Result<()> {
-        let response = match outcome {
+        self.send_response(self.outcome_response(id, method, outcome))
+    }
+
+    /// The response for what answering one request gave, an error response where it failed.
+    fn outcome_response(
+        &self,
+        id: lsp_server::RequestId,
+        method: &str,
+        outcome: Result<Value>,
+    ) -> Response {
+        match outcome {
             Ok(value) => Response::new_ok(id, value),
             Err(err) => {
                 eprintln!("grund-lsp: request `{method}` failed: {err:#}");
@@ -363,8 +373,7 @@ impl Server {
                     err.to_string(),
                 )
             }
-        };
-        self.send_response(response)
+        }
     }
 
     fn send_response(&self, response: Response) -> Result<()> {
@@ -384,19 +393,21 @@ impl Server {
                 let document = params.text_document;
                 self.open_docs.insert(document.uri.clone(), document.text);
                 self.versions.insert(document.uri.clone(), document.version);
-                self.edit(document.uri, Verdict::Unjudged);
+                self.edit(document.uri, true);
             }
             "textDocument/didSave" => {
                 let params: lsp_types::DidSaveTextDocumentParams =
                     serde_json::from_value(notification.params)?;
                 let uri = params.text_document.uri;
+                // Read from disk when the save carries no text; the document is still open at
+                // its version, which the saved file holds, so its publishes keep naming it
+                // (§FS-lsp.1.1).
                 if let Some(text) = params.text {
                     self.open_docs.insert(uri.clone(), text);
                 } else {
                     self.open_docs.remove(&uri);
-                    self.versions.remove(&uri);
                 }
-                self.edit(uri, Verdict::Unreadable);
+                self.edit(uri, false);
             }
             "textDocument/didClose" => {
                 let params: lsp_types::DidCloseTextDocumentParams =
@@ -404,7 +415,7 @@ impl Server {
                 let uri = params.text_document.uri;
                 self.open_docs.remove(&uri);
                 self.versions.remove(&uri);
-                self.edit(uri, Verdict::Unreadable);
+                self.edit(uri, false);
             }
             // Creates and deletes, so a project that has never read the path yet
             // may still gain or lose a file: rebuild everything.

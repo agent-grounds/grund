@@ -129,6 +129,7 @@ pub(crate) use declaration_lines::DeclarationLines;
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use e2e_case_failures::with_e2e_case_failures;
 pub(crate) use embedded_value_context::without_value_tag;
+pub(crate) use file_again_judgement::file_again_keeps_declarations;
 pub(crate) use legacy::{
     collect_local_legacy_markdown_citations, configured_catalog_ids, legacy_catalog_ids,
     match_legacy_tail, promote_legacy_candidate, resolve_id_arg, sort_citations,
@@ -136,7 +137,6 @@ pub(crate) use legacy::{
 pub(crate) use off_format::record_off_format_citations;
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
 // Gated as its one reader outside this directory is, `api/tests_embedding_scan_errors.rs`.
-pub(crate) use file_again_judgement::file_again_keeps_declarations;
 #[cfg(all(test, unix))]
 pub(crate) use scan_error::scan_error_message;
 pub(crate) use scan_error::{

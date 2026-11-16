@@ -5,134 +5,10 @@
 //! request the client cancels is answered cancelled. Each case drives the real event loop through
 //! the typing harness, its worker behind a gate it releases rebuild by rebuild.
 
+use super::held_client::*;
 use super::hover_snapshot::{cross_folder_fixture, declaring, server_over_folders};
-use super::typing::{AFTER_FS_00, Client, drive, fixture, note, server_over, uri};
+use super::typing::{AFTER_FS_00, drive, fixture, note, server_over, uri};
 use super::*;
-use std::time::Duration;
-
-/// How long a case listens for an answer it expects not to come.
-const QUIET: Duration = Duration::from_millis(300);
-
-/// How long a case waits for an answer it expects.
-const ANSWER: Duration = Duration::from_secs(120);
-
-const SPEC: &str = "docs/functional-spec/FS-002-login.md";
-const LOGIN: &str = "# FS-002-login: Login\n\nThe lead.\n";
-const SIGNIN: &str = "# FS-002-signin: Sign in\n\nThe lead.\n";
-
-/// Send a request without waiting for its answer; returns its id.
-fn send(client: &Client, method: &str, params: Value) -> i32 {
-    let id = {
-        let mut next = client.next.borrow_mut();
-        *next += 1;
-        *next
-    };
-    let request = Request::new(id.into(), method.into(), params);
-    client.connection.sender.send(request.into()).unwrap();
-    id
-}
-
-/// The next response within `wait`, keeping a publish where the harness keeps it.
-fn next_response(client: &Client, wait: Duration) -> Option<Response> {
-    loop {
-        match client.connection.receiver.recv_timeout(wait).ok()? {
-            Message::Response(response) => return Some(response),
-            Message::Notification(notification)
-                if notification.method == "textDocument/publishDiagnostics" =>
-            {
-                let params = serde_json::from_value(notification.params).unwrap();
-                client.published.borrow_mut().push(params);
-            }
-            _ => {}
-        }
-    }
-}
-
-/// Read up to the answer to `id`, keeping every other response in `strays`.
-fn answer(client: &Client, id: i32, strays: &mut Vec<Response>) -> Response {
-    loop {
-        match next_response(client, ANSWER) {
-            Some(response) if response.id == id.into() => return response,
-            Some(response) => strays.push(response),
-            None => panic!("no answer to request {id}"),
-        }
-    }
-}
-
-/// Listen briefly and fail if any of `ids` is answered meanwhile.
-fn unanswered(client: &Client, ids: &[i32], why: &str) {
-    while let Some(response) = next_response(client, QUIET) {
-        assert!(
-            !ids.iter().any(|id| response.id == (*id).into()),
-            "request {:?} was answered while the rebuild was held: {why}",
-            response.id
-        );
-    }
-}
-
-fn position(path: &Path, line: u32, character: usize) -> Value {
-    json!({"textDocument": {"uri": uri(path)},
-           "position": {"line": line, "character": character}})
-}
-
-/// A completion at the end of `text`'s line `line`.
-fn completion_params(path: &Path, text: &str, line: u32) -> Value {
-    let typed = text.lines().nth(line as usize).unwrap();
-    let mut params = position(path, line, typed.encode_utf16().count());
-    params["context"] = json!({"triggerKind": 3});
-    params
-}
-
-fn labels(result: &Value) -> Vec<String> {
-    let mut labels: Vec<String> = result["items"]
-        .as_array()
-        .expect("completion items")
-        .iter()
-        .map(|item| item["label"].as_str().unwrap().to_string())
-        .collect();
-    labels.sort();
-    labels
-}
-
-fn result(response: Response) -> Value {
-    assert!(response.error.is_none(), "{:?}", response.error);
-    response.result.unwrap_or(Value::Null)
-}
-
-/// What a fresh server, with no gate, answers for `method` at each of `at` once `open` are open.
-fn fresh(folders: &[&PathBuf], open: &[(&Path, &str)], method: &str, at: &[Value]) -> Vec<Value> {
-    let (server, connection) = server_over_folders(folders);
-    let open: Vec<(PathBuf, String)> = open
-        .iter()
-        .map(|(path, text)| (path.to_path_buf(), text.to_string()))
-        .collect();
-    let (method, at) = (method.to_string(), at.to_vec());
-    let (results, _) = drive(server, connection, move |client| {
-        for (path, text) in &open {
-            client.open(path, text, 1);
-        }
-        client.settle(&open[0].0);
-        at.into_iter()
-            .map(|params| {
-                let id = send(client, &method, params);
-                result(answer(client, id, &mut Vec::new()))
-            })
-            .collect()
-    });
-    results
-}
-
-/// Open `open` and settle with every rebuild let through, then close the gate and drop what the
-/// worker announced so far.
-fn opened_then_held(client: &Client, hold: &RebuildHold, open: &[(&Path, &str)]) {
-    hold.open();
-    for (path, text) in open {
-        client.open(path, text, 1);
-    }
-    client.settle(open[0].0);
-    hold.close();
-    hold.rest();
-}
 
 /// Case 1, §FS-lsp.responsiveness.4: a key typed into prose is completed while the rebuild of
 /// its edit is held, with what a full rebuild offers.
@@ -245,6 +121,9 @@ fn five_held_edits_yield_exactly_one_further_rebuild_over_the_latest_text() {
         for version in 2..=6 {
             client.change(&path, &text(version), version);
         }
+        // Answered from the judgement, so only once the loop has taken every edit before it:
+        // they merge before the first rebuild may finish (§FS-lsp.responsiveness.4).
+        client.completion(&path, &text(6), 2);
         hold.open();
         client.settle(&path);
         let further: Vec<BTreeMap<Url, String>> = hold
@@ -428,6 +307,67 @@ fn a_heading_renamed_back_before_its_rebuild_lands_never_offers_the_name_between
     });
     assert_eq!(answers.len(), 1, "{answers:?}");
     assert_eq!(labels(&answers[0]), AFTER_FS_00, "never FS-002-signin");
+}
+
+/// §FS-lsp.responsiveness.4 (R4): a key typed after a heading is renamed back, and before the
+/// stale rebuild of the rename lands, is answered from the catalog the text stands in; that
+/// stale catalog's install judges the edit again, so the `$$` typed next waits for the rebuild of
+/// the name back, and no answer ever offers the name between.
+#[test]
+fn a_key_typed_before_the_stale_rebuild_lands_is_judged_again_when_it_installs() {
+    let root = test_root("typing_held_rename_back_early_key");
+    fixture(&root);
+    let (notes, spec) = (root.join("docs/notes.md"), root.join(SPEC));
+    let (typed, dollars) = (note("see $$FS-00"), note("see $$"));
+    let (mut server, connection) = server_over(&root);
+    let hold = server.hold_rebuilds();
+    let (paths, texts) = (
+        (notes.clone(), spec.clone()),
+        (typed.clone(), dollars.clone()),
+    );
+    let ((early, late), _) = drive(server, connection, move |client| {
+        let ((notes, spec), (typed, dollars)) = (paths, texts);
+        opened_then_held(client, &hold, &[(&notes, &typed), (&spec, LOGIN)]);
+        client.change(&spec, SIGNIN, 2);
+        hold.started();
+        client.change(&spec, LOGIN, 3);
+        let early = send(
+            client,
+            "textDocument/completion",
+            completion_params(&notes, &typed, 2),
+        );
+        let early = result(answer(client, early, &mut Vec::new()));
+        hold.release(1);
+        hold.finished();
+        // The rename back's rebuild starts once the stale catalog is installed.
+        hold.started();
+        client.change(&notes, &dollars, 2);
+        let late = send(
+            client,
+            "textDocument/completion",
+            completion_params(&notes, &dollars, 2),
+        );
+        unanswered(
+            client,
+            &[late],
+            "the stale catalog no longer holds the text",
+        );
+        hold.open();
+        let late = result(answer(client, late, &mut Vec::new()));
+        client.settle(&notes);
+        (early, late)
+    });
+    let at = completion_params(&notes, &dollars, 2);
+    let open = [(&*notes, &*dollars), (&*spec, LOGIN)];
+    let fresh = fresh(&[&root], &open, "textDocument/completion", &[at]);
+    for offered in [&early, &late] {
+        assert!(
+            !labels(offered).iter().any(|label| label == "FS-002-signin"),
+            "the name between was offered: {offered}"
+        );
+    }
+    assert_eq!(labels(&early), AFTER_FS_00);
+    assert_eq!(late, fresh[0], "a fresh server answers `$$` otherwise");
 }
 
 /// Case 8, §FS-lsp.responsiveness.4 (R4): an edit to a file two folders' projects read holds the

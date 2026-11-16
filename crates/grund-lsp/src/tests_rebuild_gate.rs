@@ -20,11 +20,16 @@ struct RebuildGate {
     permits: std::sync::Mutex<Option<usize>>,
     turn: std::sync::Condvar,
     events: crossbeam_channel::Sender<Rebuilding>,
+    /// Whether the next rebuild to start panics.
+    panic_next: std::sync::atomic::AtomicBool,
 }
 
 impl RebuildGate {
-    /// Announce `job` and wait for a permit to run it.
-    fn enter(&self, job: &Job) {
+    /// Announce `job` and wait for a permit to run it; true where the case asked it to panic.
+    fn enter(&self, job: &Job) -> bool {
+        let panics = self
+            .panic_next
+            .swap(false, std::sync::atomic::Ordering::SeqCst);
         let started = Rebuilding::Started {
             seq: job.seq,
             docs: job.inputs.docs.clone(),
@@ -33,10 +38,10 @@ impl RebuildGate {
         let mut permits = self.permits.lock().unwrap();
         loop {
             match permits.as_mut() {
-                None => return,
+                None => return panics,
                 Some(left) if *left > 0 => {
                     *left -= 1;
-                    return;
+                    return panics;
                 }
                 Some(_) => permits = self.turn.wait(permits).unwrap(),
             }
@@ -74,6 +79,13 @@ impl RebuildHold {
     /// Let no further rebuild through until a release or an open.
     fn close(&self) {
         *self.gate.permits.lock().unwrap() = Some(0);
+    }
+
+    /// Make the next rebuild to start panic inside the worker, as a defect in the scan would.
+    fn panic_next(&self) {
+        self.gate
+            .panic_next
+            .store(true, std::sync::atomic::Ordering::SeqCst);
     }
 
     /// Let `count` more rebuilds through.
@@ -120,6 +132,7 @@ impl Server {
             permits: std::sync::Mutex::new(Some(0)),
             turn: std::sync::Condvar::new(),
             events,
+            panic_next: std::sync::atomic::AtomicBool::new(false),
         });
         self.rebuilds.gate = Some(Arc::clone(&gate));
         RebuildHold {
