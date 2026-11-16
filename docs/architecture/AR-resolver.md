@@ -152,15 +152,29 @@ cuts the query at ([§FS-show.3.5](../functional-spec/FS-show.md#35-the-hint-for
 failure, and the single read calls it with the context it loaded too, so the two
 print the same lines for the same failure.
 
+That holds for the bare form's filesystem-path breadcrumb too
+([§FS-show.3.5.2](../functional-spec/FS-show.md#352-the-filesystem-path-migration-breadcrumb)). Its refusal is an unknown alias, but the format hint it prints
+is the invalid-ID hint of [§FS-show.3.5.1](../functional-spec/FS-show.md#351-an-id-the-grammar-rejects), so the same function builds it, from the
+context the single read loaded and for the project an invalid ID with that alias
+is hinted from, the run's own, since the alias names none. Only the breadcrumb
+asks for that line: a batch query with the same unknown alias still earns no hint,
+and an unknown-alias refusal that prints no breadcrumb builds none.
+
 The single read built them otherwise before, and that is what this point rules
-out for a batch: the invalid-ID hint came from `query_format_hint(path, …)`,
-which resolves and expands the workspace configuration again, and the
-missing-section hint from `effective_config(path)`, the configuration at the
-path rather than the project's. Either, done once per failed query, would be a
-configuration resolution per coordinate in a run [§AR-resolver.3.1](AR-resolver.md#31-grund-show---batch-loads-once) loads once,
-and the load-count observer would not see it, because `resolve_workspace_config`
-records no load. The hint travels on the batch's failure record beside its
-message; the JSON envelope does not print it, so it stays hint-free
+out, for a batch and for the single read alike: the invalid-ID hint came from
+`query_format_hint(path, …)`, which resolves and expands the workspace
+configuration again, and the missing-section hint from `effective_config(path)`,
+the configuration at the path rather than the project's. Either, done once per
+failed query, would be a configuration resolution per coordinate in a run
+[§AR-resolver.3.1](AR-resolver.md#31-grund-show---batch-loads-once) loads once, and the breadcrumb's, the last to stay, resolved and
+expanded every workspace config a second time in a read that had loaded them.
+The load-count observer counts loader entries, so it sees none of these. The same
+test-only feature therefore also records every configuration resolution, each
+entry of `open()`, the one function that builds a `Run` ([§AR-config.1.5](AR-config.md#15-run-and-compiled)) and the
+one `resolve_workspace_config` and `effective_config` both enter, to a log of its
+own, so a test holds a refusal to as many resolutions as the same read makes
+without its hint ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)). The hint travels on the batch's failure record
+beside its message; the JSON envelope does not print it, so it stays hint-free
 ([§FS-output-shapes.6.1.2](../functional-spec/FS-output-shapes.md#612-from-0160)).
 
 ### 3.2 `grund cover` drops no file

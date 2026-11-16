@@ -22,17 +22,29 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PRE_COMMIT = REPO_ROOT / ".pre-commit-config.yaml"
 
-# Each feature the `cargo-test` hook passes, as it passes it, to the test file
-# that reads its observation, the helper that reads it there, and the variable
-# that asks the observed process for it.
+# Each feature the `cargo-test` hook passes, as it passes it, to every observation
+# it compiles in: the test file that reads it, the helper that reads it there, and
+# the variable that asks the observed process for it.
 OBSERVERS = {
     "grund/test-workspace-load-count": (
-        "crates/grund-cli/tests/show_batch_contract.rs",
-        "loads",
-        "GRUND_TEST_WORKSPACE_LOAD_LOG",
+        (
+            "crates/grund-cli/tests/show_batch_contract.rs",
+            "loads",
+            "GRUND_TEST_WORKSPACE_LOAD_LOG",
+        ),
+        (
+            "crates/grund-cli/tests/show_batch_contract.rs",
+            "resolutions",
+            "GRUND_TEST_CONFIG_RESOLUTION_LOG",
+        ),
     ),
 }
 RELINKED = "CARGO_BIN_EXE_"
+
+
+def _observations():
+    """Every `(feature, test file, reader, variable)` the observers above name."""
+    return [(feature, *observation) for feature, observations in OBSERVERS.items() for observation in observations]
 
 
 def _top_level_fns(text):
@@ -148,13 +160,13 @@ class FeatureGatedObserverTests(unittest.TestCase):
         self.assertEqual(set(OBSERVERS), passed)
 
     def test_a_test_reading_an_observer_is_ignored_naming_its_feature_without_it(self):
-        for feature, (path, reader, _variable) in OBSERVERS.items():
+        for feature, path, reader, _variable in _observations():
             fns = _top_level_fns((REPO_ROOT / path).read_text(encoding="utf-8"))
             readers = _tests_reading(fns, reader)
-            with self.subTest(feature=feature):
+            with self.subTest(feature=feature, reader=reader):
                 self.assertTrue(readers, f"no test in {path} reads `{reader}` any more")
             for fn in readers:
-                with self.subTest(feature=feature, test=fn["name"]):
+                with self.subTest(feature=feature, reader=reader, test=fn["name"]):
                     reason = _ignore_reason(fn["attrs"], feature.rpartition("/")[2])
                     self.assertIsNotNone(
                         reason,
@@ -164,14 +176,14 @@ class FeatureGatedObserverTests(unittest.TestCase):
                     self.assertIn(feature, reason, f'{path}: {fn["name"]}\'s ignore reason does not name {feature}')
 
     def test_an_observed_run_never_spawns_an_artifact_another_build_relinks(self):
-        for feature, (path, _reader, variable) in OBSERVERS.items():
+        for feature, path, _reader, variable in _observations():
             files = [REPO_ROOT / path, *_module_files(REPO_ROOT / path)]
             texts = {file.relative_to(REPO_ROOT): file.read_text(encoding="utf-8") for file in files}
             fns = [dict(fn, file=file) for file, text in texts.items() for fn in _top_level_fns(text)]
             every = "\n".join(texts.values())
             observed = _spellings(every, variable)
             relinked = _spellings(every, RELINKED)
-            with self.subTest(feature=feature):
+            with self.subTest(feature=feature, variable=variable):
                 self.assertTrue(
                     any(re.search(s, _uncommented(fn["body"])) for fn in fns for s in observed),
                     f"no fn in {path} or its modules names {variable} any more, so its "

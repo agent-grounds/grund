@@ -45,7 +45,9 @@ pub(crate) use identity::{
     canonicalize_existing_prefix, paths_same_location, physical_path_key,
     resolved_as_far_as_answered,
 };
-pub(crate) use observe::{check_input_observer, observe_input, record_test_workspace_load};
+pub(crate) use observe::{
+    check_input_observer, observe_input, record_test_config_resolution, record_test_workspace_load,
+};
 #[cfg(all(test, unix))]
 pub(crate) use realpath_count::realpaths_during;
 pub(crate) use spellings::Spellings;

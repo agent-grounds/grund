@@ -1,0 +1,3 @@
+invalid ID `docs/FS-root.md`
+hint: this repo's [id] format is `{kind}-{slug}` (run `grund config show`); `grund list` shows the IDs that exist
+hint: run `grund check docs/FS-root.md` to validate a path

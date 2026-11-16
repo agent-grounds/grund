@@ -53,6 +53,7 @@ path = "examples/grund-binding-oracle.rs"
 # (§AR-lsp.2.1): only grund-cli and grund-lsp enable it, so the bindings never link it.
 native-watch = ["dep:notify"]
 test-binding-writes = []
-# Black-box CLI tests use this opt-in observer to prove a batch loads one
-# workspace context. It is absent from normal builds.
+# Black-box CLI tests use these opt-in observers to prove a batch loads one
+# workspace context, and that a refused read resolves configuration no more
+# often than its load does. It is absent from normal builds.
 test-workspace-load-count = []

@@ -233,6 +233,29 @@ fn the_refusal_names_the_config_below() {
     ));
 }
 
+/// §FS-show.3.5.2: the bare form's breadcrumb over a path that exists under the
+/// tree prints the same hint, naming the config below, above its `grund check` line.
+#[test]
+fn the_path_breadcrumb_names_the_config_below() {
+    let tree = Tree::new("breadcrumb");
+    tree.project("suite/grund.toml");
+    let operand = "suite/specs/FS-login.md";
+    let run = tree.run(&[operand]);
+    let hint = format!(
+        "hint: no grund.toml applies here, so grund read `{operand}` against its defaults. {}: {}\n",
+        one("suite/grund.toml"),
+        query_routes_one("suite")
+    );
+    assert_eq!(
+        run.stderr,
+        format!(
+            "invalid ID `{operand}`\n{hint}hint: run `grund check {operand}` to validate a path\n"
+        )
+    );
+    assert_eq!(run.code, Some(1));
+    assert_eq!(run.stdout, "");
+}
+
 /// §FS-check.2.2.3: the JSON warning keeps its code and shape, and carries the
 /// text message.
 #[test]

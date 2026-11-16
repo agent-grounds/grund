@@ -109,3 +109,25 @@ pub(crate) fn record_test_workspace_load() {
 
 #[cfg(not(feature = "test-workspace-load-count"))]
 pub(crate) fn record_test_workspace_load() {}
+
+/// Test-only observation seam for §AR-resolver.3.1.1: an opted-in black-box test
+/// counts every configuration resolution, each entry of `open()`, which a loader
+/// makes once and a hint built by resolving again makes a second time. Its own
+/// log, so a reader of the load log above counts what it always did (§AR-ci.3.3).
+#[cfg(feature = "test-workspace-load-count")]
+pub(crate) fn record_test_config_resolution() {
+    use std::io::Write;
+
+    let Some(path) = std::env::var_os("GRUND_TEST_CONFIG_RESOLUTION_LOG") else {
+        return;
+    };
+    let mut log = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .expect("open GRUND_TEST_CONFIG_RESOLUTION_LOG");
+    writeln!(log, "resolution").expect("write GRUND_TEST_CONFIG_RESOLUTION_LOG");
+}
+
+#[cfg(not(feature = "test-workspace-load-count"))]
+pub(crate) fn record_test_config_resolution() {}
