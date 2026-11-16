@@ -37,6 +37,7 @@ How a citation is written, and what counts as one.
 - [§DF-unmarked-markdown-headings](DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph) — in-body Markdown ATX headings participate in the knowledge graph
 - [§DF-escape-position-is-not-a-citation](DF-escape-position-is-not-a-citation.md#df-escape-position-is-not-a-citation-an-escape-position-is-not-a-citation-in-either-strict-mode) — an escape position is not a citation, in either strict mode
 - [§DF-inline-code-span-closes-on-its-own-run](DF-inline-code-span-closes-on-its-own-run.md#df-inline-code-span-closes-on-its-own-run-an-inline-code-span-closes-on-a-run-of-its-own-length) — an inline code span closes on a run of its own length
+- [§DF-fenced-citations](DF-fenced-citations.md#df-fenced-citations-a-markdown-fence-is-read-for-citations-only-when-schemasources-fenced-names-its-tag) — a Markdown fence is read for citations only when `[schema.sources] fenced` names its tag
 
 ## Cross-reference links
 

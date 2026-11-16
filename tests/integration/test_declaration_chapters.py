@@ -169,7 +169,11 @@ CITED = (
 
 # FS-show.md grew by 7393 bytes, most in §FS-show.3.3.1 and .3.3.2: every format answers a batch,
 # a text or md one heading each answer and keeping a failure's hint in place (grund#1385).
-BASELINES = {"FS-show.md": 79355, "FS-fmt.md": 114745}
+
+# FS-fmt.md grew by 181 bytes in §FS-fmt.2.3.3 and §FS-fmt.2.5.2.2: every pass stops at a fence
+# `[schema.sources] fenced` selects too, and a directive in any fence toggles nothing, citing
+# §DF-fenced-citations.2.3 for why rather than restating it (grund#1364).
+BASELINES = {"FS-show.md": 79355, "FS-fmt.md": 114926}
 
 
 def _flat(text):
