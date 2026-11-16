@@ -303,7 +303,10 @@ Exit codes are unchanged ([§FS-refs.4](FS-refs.md#4-exit-codes)). `--total` ren
   ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)). Both text and
   JSON leave stdout empty. Text uses the bare query-failure shape
   ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)); only invalid format
-  keeps the configured-format `hint:`. JSON emits exactly one failed-query
+  keeps the configured-format `hint:`, except that an actual declaration of a
+  member-only kind earns the qualified-command text hint of
+  [§FS-workspace.8.2.2.1](FS-workspace.md#8221-a-member-only-kind-replaces-the-text-format-hint).
+  JSON emits exactly one failed-query
   finding object on stderr, with `code` `invalid-id` or `ambiguous` and
   `sites:null`, and emits no hint ([§FS-errors.5](FS-errors.md#5-json-format)).
   It is also exit `1` when the ID has more than one home or its section path

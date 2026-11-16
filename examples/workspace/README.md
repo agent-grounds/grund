@@ -45,6 +45,18 @@ The platform-level coordinator is §root/FS-platform.
 
 ## Run it
 
+From this example's `repo/` directory, try `grund FS-session --brief`. The
+root has no such declaration, so the refusal suggests `api/FS-session` and
+`web/FS-session`; `grund api/FS-session --brief` reads the selected member's
+declaration. The same suggestion rule applies when the root config does not
+even declare the member's kind ([§FS-workspace.8.1.1.4](../../docs/functional-spec/FS-workspace.md#8114-each-project-is-asked-in-its-own-grammar)).
+
+Refs keeps its root-local meaning: here `grund refs FS-session` succeeds with
+an empty answer because `FS` is valid at the root. If a kind exists only in a
+member, an unqualified refs query instead keeps `invalid ID` and offers the
+qualified `grund refs <alias>/<ID>` command as its text hint; JSON stays
+`invalid-id` ([§FS-workspace.8.2.2.1](../../docs/functional-spec/FS-workspace.md#8221-a-member-only-kind-replaces-the-text-format-hint)).
+
 ```bash
 grund examples/workspace/repo
 echo $?    # 0

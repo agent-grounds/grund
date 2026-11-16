@@ -134,7 +134,7 @@ path = "docs/functional-spec/FS-workspace.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 1192, unit = "lines" }
+max_accepted = { value = 1193, unit = "lines" }
 until = "workspace concerns move into independently declared child specs with stable replacements for existing FS-workspace section citations"
 reason = """
 This file is the single normative contract for workspace configuration, resolution, command scope, nested boundaries, and alias IDs. The issue-232 one-line correction belongs in §FS-workspace.5 so its existing citations remain stable. Missing boundary: independently declared child specifications for those concerns, plus a migration for the section citations that currently target this declaration.
@@ -146,6 +146,8 @@ Issue 823 adds the member diagnostic point under the existing §FS-workspace.5.1
 Issue #921 adds one sentence to §FS-workspace.2.2.2, pointing at the init point that keeps a member list while an optional member is absent, so the workspace side of the boundary names it. The split boundary above remains; the ceiling accepts the measured 1183 non-blank lines, with no growth allowance.
 
 Issue #1080 specifies imports in their own declaration, FS-imports, and adds here only what the workspace points must say about them: an import's alias joins the sibling level of §FS-workspace.3, and §FS-workspace.7 names an import as the unpinned way to cite a neighbouring repository, in one new paragraph. The file already measured 1191 non-blank lines on arrival. The split boundary above remains; the ceiling accepts the measured 1192 non-blank lines, with no growth allowance.
+
+Issue #1363 makes the existing own-grammar candidate precedence explicit at §FS-workspace.8.1.1.4 and defines the text-only refs hint exception at §FS-workspace.8.2.2.1. Moving either promise elsewhere would require the independent child specifications and stable citation migration named above; that separate boundary remains deferred. Concise paragraphs keep the file at 1193 non-blank lines, accepted without growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-check.md"
