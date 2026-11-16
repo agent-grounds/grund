@@ -49,6 +49,9 @@ pub(crate) struct PathFaultHint {
     pub(crate) missing_title: bool,
     pub(crate) underscore: bool,
     pub(crate) heading: String,
+    /// The path the shown heading declares, which a later heading of the same
+    /// body is not shown again.
+    pub(crate) corrected: String,
 }
 
 /// The clause a dotted unmarked heading's message appends: the parent's path

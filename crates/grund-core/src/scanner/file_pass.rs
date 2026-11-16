@@ -623,7 +623,8 @@ pub(super) fn scan_file_text(
     markers.record(path, &record, grammar, findings);
     due.settle_sections(findings, schema, text, is_md, record.front_matter);
     if has_unmarked_headings {
-        assign_unmarked_heading_owners(findings, held_headings.unmarked, &record, grammar);
+        let homes = due.value_declarations.then_some((schema, frame, path));
+        assign_unmarked_heading_owners(findings, held_headings.unmarked, &record, grammar, homes);
     }
     due.validate_values(
         path,
