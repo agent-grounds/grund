@@ -178,6 +178,7 @@ fn a_hover_sent_before_a_further_edit_is_answered_against_its_own_version() {
         client.change(&path, &text, 2);
         let id = send(client, "textDocument/hover", params);
         client.change(&path, &note("See nothing."), 3);
+        hold.taken(client.sent.get());
         unanswered(client, &[id], "a hover waits for its edit's snapshot");
         hold.open();
         let hover = result(answer(client, id, &mut Vec::new()));
@@ -224,6 +225,7 @@ fn a_completion_after_a_heading_edit_waits_for_the_rebuilt_catalog() {
             "textDocument/completion",
             completion_params(&notes, &typed, 2),
         );
+        hold.taken(client.sent.get());
         unanswered(client, &[id], "the edit renamed a declaration");
         hold.open();
         labels(&result(answer(client, id, &mut Vec::new())))
@@ -279,6 +281,7 @@ fn a_heading_renamed_back_before_its_rebuild_lands_never_offers_the_name_between
         client.change(&spec, SIGNIN, 2);
         hold.started();
         client.change(&spec, LOGIN, 3);
+        hold.taken(client.sent.get());
         hold.release(1);
         hold.finished();
         let (_, docs) = hold.started();
@@ -347,6 +350,7 @@ fn a_key_typed_before_the_stale_rebuild_lands_is_judged_again_when_it_installs()
             "textDocument/completion",
             completion_params(&notes, &dollars, 2),
         );
+        hold.taken(client.sent.get());
         unanswered(
             client,
             &[late],
@@ -402,6 +406,7 @@ fn an_edit_to_a_file_two_projects_cover_holds_typing_in_both() {
             .into_iter()
             .map(|params| send(client, "textDocument/completion", params))
             .collect();
+        hold.taken(client.sent.get());
         unanswered(client, &ids, "both projects read the renamed declaration");
         hold.open();
         ids.into_iter()

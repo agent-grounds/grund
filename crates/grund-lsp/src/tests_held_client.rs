@@ -25,8 +25,7 @@ pub(super) fn send(client: &Client, method: &str, params: Value) -> i32 {
         *next += 1;
         *next
     };
-    let request = Request::new(id.into(), method.into(), params);
-    client.connection.sender.send(request.into()).unwrap();
+    client.post(Request::new(id.into(), method.into(), params).into());
     id
 }
 
