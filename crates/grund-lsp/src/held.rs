@@ -105,13 +105,14 @@ impl Server {
                 return Ok(Flow::Exit);
             }
             self.hold(request, HeldKind::Shutdown);
+        } else if SNAPSHOT_REQUESTS.contains(&method)
+            && (!self.rebuilds.current() || self.rebuilds.failed.is_some())
+        {
+            // §AR-lsp.2.1.2: one queue, so any rebuild outstanding holds every other request, and
+            // a snapshot request seals the panicked rebuild's scope to run again (§AR-lsp.2.1.1).
+            self.hold(request, HeldKind::Snapshot);
         } else if !self.rebuilds.current() {
-            // §AR-lsp.2.1.2: one queue, so any rebuild outstanding holds every other request.
-            let kind = match SNAPSHOT_REQUESTS.contains(&method) {
-                true => HeldKind::Snapshot,
-                false => HeldKind::Unsupported,
-            };
-            self.hold(request, kind);
+            self.hold(request, HeldKind::Unsupported);
         } else {
             self.respond(request)?;
         }
@@ -304,17 +305,25 @@ impl Server {
     /// Answer a request the rebuild ending at its edit released; `rebuilt` is false where that
     /// rebuild panicked, which left the last snapshot standing (§AR-lsp.2.1.1).
     fn answer_held(&mut self, held: Held, rebuilt: bool) -> Result<Flow> {
+        // The failed rebuild reflects none of the edits the request waited on: refused, not
+        // answered from the snapshot (§FS-lsp.responsiveness.3) or the catalog
+        // (§FS-lsp.responsiveness.4) they outgrew.
+        let refused = match &held.kind {
+            HeldKind::Snapshot => !rebuilt,
+            HeldKind::Typing(_) => {
+                !rebuilt && self.typing_waits(typing_uri(&held.request).as_ref())
+            }
+            HeldKind::Unsupported | HeldKind::Shutdown => false,
+        };
         match held.kind {
-            HeldKind::Snapshot | HeldKind::Unsupported => self.respond(held.request)?,
-            // The failed rebuild reflects none of the edits the request waited on: refused, not
-            // answered from a catalog they outgrew (§FS-lsp.responsiveness.4).
-            HeldKind::Typing(_) if !rebuilt && self.typing_waits(typing_uri(&held.request).as_ref()) => {
+            _ if refused => {
                 self.send_response(Response::new_err(
                     held.request.id,
                     lsp_server::ErrorCode::RequestFailed as i32,
                     "the rebuild of the edits before this request failed".into(),
                 ))?;
             }
+            HeldKind::Snapshot | HeldKind::Unsupported => self.respond(held.request)?,
             HeldKind::Typing(text) => {
                 let response = self.typing_answer(held.request, text);
                 self.send_response(response)?;

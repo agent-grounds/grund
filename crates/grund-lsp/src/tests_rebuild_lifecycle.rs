@@ -5,8 +5,8 @@
 //! synchronous handlers.
 
 use super::held_client::{
-    LOGIN, QUIET, SIGNIN, SPEC, answer, completion_params, fresh, labels, opened_then_held, result,
-    send, unanswered,
+    LOGIN, QUIET, SIGNIN, SPEC, answer, completion_params, fresh, labels, opened_then_held,
+    position, result, send, unanswered,
 };
 use super::typing::{Client, drive, fixture, note, server_over, uri};
 use super::*;
@@ -138,9 +138,8 @@ fn a_panicked_rebuild_of_a_rename_never_offers_the_old_name() {
         let held = send(client, "textDocument/completion", params.clone());
         hold.taken(client.sent.get());
         hold.release(1);
+        // Refused as the failed rebuild installs, so the completion after it meets its scope.
         let refused = answer(client, held, &mut Vec::new());
-        // A hover is answered from the last snapshot, so only after the failed rebuild is.
-        client.settle(&notes);
         let later = send(client, "textDocument/completion", params);
         hold.taken(client.sent.get());
         unanswered(client, &[later], "the failed rebuild runs again first");
@@ -162,6 +161,59 @@ fn a_panicked_rebuild_of_a_rename_never_offers_the_old_name() {
     assert!(
         !later.iter().any(|label| label == "FS-002-login"),
         "{later:?}"
+    );
+}
+
+/// §AR-lsp.2.1.1, §FS-lsp.responsiveness.3: a hover held on a rebuild of a heading rename that
+/// panics is refused rather than answered from the snapshot before the rename, and a hover sent
+/// after it waits for that rebuild to run again and is then what a fresh server answers.
+#[test]
+fn a_hover_held_on_a_panicked_rebuild_is_refused_and_the_next_waits_for_it_again() {
+    let root = test_root("rebuild_lifecycle_panic_hover");
+    fixture(&root);
+    let (notes, spec) = (root.join("docs/notes.md"), root.join(SPEC));
+    let cited = note("See \u{a7}FS-002-login.");
+    let at = position(&notes, 2, 6);
+    let (mut server, connection) = server_over(&root);
+    let hold = server.hold_rebuilds();
+    let (paths, text, params) = ((notes.clone(), spec.clone()), cited.clone(), at.clone());
+    let ((before, refused, later), _) = drive(server, connection, move |client: &Client| {
+        let (notes, spec) = paths;
+        opened_then_held(client, &hold, &[(&notes, &text), (&spec, LOGIN)]);
+        let before = send(client, "textDocument/hover", params.clone());
+        let before = result(answer(client, before, &mut Vec::new()));
+        hold.panic_next();
+        client.change(&spec, SIGNIN, 2);
+        let held = send(client, "textDocument/hover", params.clone());
+        hold.taken(client.sent.get());
+        hold.release(1);
+        let refused = answer(client, held, &mut Vec::new());
+        let later = send(client, "textDocument/hover", params);
+        hold.taken(client.sent.get());
+        unanswered(client, &[later], "the failed rebuild runs again first");
+        hold.open();
+        let later = result(answer(client, later, &mut Vec::new()));
+        (before, refused, later)
+    });
+    assert_ne!(
+        before,
+        Value::Null,
+        "the citation resolves before the rename"
+    );
+    let error = refused
+        .error
+        .expect("the hover held on the failed rebuild is refused");
+    assert_eq!(error.code, -32803, "RequestFailed: {error:?}");
+    let open = [(&*notes, &*cited), (&*spec, SIGNIN)];
+    let fresh = fresh(&[&root], &open, "textDocument/hover", &[at]);
+    assert_eq!(
+        fresh[0],
+        Value::Null,
+        "the renamed declaration no longer resolves"
+    );
+    assert_eq!(
+        later, fresh[0],
+        "a fresh server answers those buffers otherwise"
     );
 }
 
