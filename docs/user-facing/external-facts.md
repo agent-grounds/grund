@@ -170,8 +170,8 @@ the ID declared nowhere until it does, so change both together.
 
 A listed data language is a different reason from an unclaimed suffix: a home
 such as `fs.json` is read as data, and only a value kind reads that data. A fetched
-snapshot needs a document language instead. If `md = "json"` remaps `.md` to
-data, drop that mapping; changing the fetched kind to a value kind cannot make
+snapshot needs a document language instead, so give it a name a listed
+document language reads; changing the fetched kind to a value kind cannot make
 its Markdown output valid JSON
 ([§FS-scan.checks.unread-scan-root.message](../functional-spec/FS-scan.md#checksunread-scan-rootmessage-the-message)).
 

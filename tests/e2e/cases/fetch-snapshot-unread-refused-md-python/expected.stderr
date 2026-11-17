@@ -1,1 +1,1 @@
-error: kind `TICKET` cannot fetch into docs/tickets/TICKET-1234.md: the scan reads `.md` as python, not as Markdown, so the scan would not read what fetch writes; give the file a name a listed document language reads, or remove its `fetch`
+error: grund.toml:8: [schema.sources.extensions] maps `md` to `python`, which does not read Markdown; `.md` is always Markdown; drop the entry, or map `md` to a `document` language; this became an error in grund 1.0.0

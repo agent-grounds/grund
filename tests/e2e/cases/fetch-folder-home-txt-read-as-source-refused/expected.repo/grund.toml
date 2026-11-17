@@ -5,7 +5,7 @@ project_name = "src"
 languages = ["markdown", "python"]
 
 [schema.sources.extensions]
-md = "python"
+txt = "python"
 
 [schema.kinds.FS]
 folders = ["fs"]

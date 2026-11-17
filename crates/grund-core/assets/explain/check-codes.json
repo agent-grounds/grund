@@ -4008,24 +4008,8 @@
       "text": "Rename the file to a name that is not hidden and an extension a listed document language reads"
      },
      {
-      "label": "unmap",
-      "text": "Drop the `md` entry from [schema.sources.extensions]"
-     },
-     {
-      "label": "unmap-admit",
-      "text": "Drop the `md` entry from [schema.sources.extensions] and add `markdown` to [schema.sources] languages, keeping the existing languages"
-     },
-     {
       "label": "document-admit",
       "text": "Add `markdown` to [schema.sources] languages, keeping the existing languages, and {rename}"
-     },
-     {
-      "label": "document-unmap",
-      "text": "Drop the `md` entry from [schema.sources.extensions] and {rename}"
-     },
-     {
-      "label": "document-unmap-admit",
-      "text": "Drop the `md` entry from [schema.sources.extensions] and add `markdown` to [schema.sources] languages, keeping the existing languages, and {rename}"
      },
      {
       "label": "value-repair",

@@ -264,18 +264,18 @@ grund.toml:8: warning: [schema.kinds.FS] folder `fs` is not read — no language
 A listed data language is named as data, which only a value kind reads. The
 repair preserves an authored `form`, `fetch`, fields and `closed`, and a non-citable row.
 It offers value form only when the existing value-form prerequisites still hold. A
-remapped `.md` asks you to drop the mapping and, if needed, add `markdown` to the
-existing languages. A rename also names any required admission or mapping removal.
+rename also names any required admission. A `.md` file is never read as data: an
+`md` mapping to a language that does not read Markdown is refused at load.
 Rule folders need a document reader: admitting Rust cannot read a Markdown rule
 heading in `terms.rs`. Rename it to a suffix an admitted document language reads,
-such as `.md`, admitting `markdown` and removing a conflicting mapping if needed
+such as `.md`
 ([§FS-scan.checks.unread-scan-root.folder](../functional-spec/FS-scan.md#checksunread-scan-rootfolder-a-folder-home-in-which-nothing-is-read)).
 Hidden data files still need
 a name that is not hidden as well as a document reader
 ([§FS-scan.checks.unread-scan-root.message](../functional-spec/FS-scan.md#checksunread-scan-rootmessage-the-message)).
 If the whole v2 scan has no language read for declarations, its empty-scan caution
 names the key to change: admit a language such as `markdown` in `languages`, or
-drop the `md` mapping that prevents it from reading Markdown
+drop the mapping, such as `rs = "json"`, that keeps a listed language from reading its suffix
 ([§FS-check.2.2.2.2](../functional-spec/FS-check.md#2222-an-explicit-path)).
 
 `grund check --watch` checks immediately and updates the terminal after saves;

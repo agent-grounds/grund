@@ -397,10 +397,10 @@ Under a v2 configuration the recognized extensions can be none at all: no listed
 warning: nothing to scan — no language in [schema.sources] languages is read for declarations, so no file under `.` was read; admit one in [schema.sources] languages, such as `markdown`.
 ```
 
-Where a `[schema.sources.extensions]` entry maps to a `data` language a suffix that a listed language would read without it, dropping that entry is the edit, so the message names the first such suffix in byte order, and the language it is mapped to, instead:
+Where a `[schema.sources.extensions]` entry maps to a `data` language a suffix that a listed language would read without it, dropping that entry is the edit, so the message names the first such suffix in byte order, and the language it is mapped to, instead; that suffix is never `md`, since an `md` entry that names a `data` language is refused at load from grund 1.0.0 ([§FS-config-v2.checks.config-md-not-markdown](FS-config-v2.md#checksconfig-md-not-markdown-md-is-mapped-away-from-markdown)). Under `languages = ["rust", "json"]` and `rs = "json"`:
 
 ```text
-warning: nothing to scan — no language in [schema.sources] languages is read for declarations, so no file under `.` was read; [schema.sources.extensions] maps `md` to `json`: drop that entry.
+warning: nothing to scan — no language in [schema.sources] languages is read for declarations, so no file under `.` was read; [schema.sources.extensions] maps `rs` to `json`: drop that entry.
 ```
 
 Version 1 always lists an extension, so it keeps the list ([§DF-reading-at-fetch-and-unread-homes.2.6](../decisions/functional/DF-reading-at-fetch-and-unread-homes.md#26-an-empty-scan-under-version-2-names-the-languages)).

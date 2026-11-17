@@ -84,16 +84,9 @@ impl<'a> Frame<'a> {
         let row = schema.rows.iter().find(|row| row.name == kind)?;
         let Some(file) = row.file() else {
             let home = self.fetch_snapshot_path(schema, root, kind, unclaimed?)?;
-            let reason = self.unread_reason(schema, &home).or_else(|| {
-                let reading = self.reading(schema, &home);
-                let language = reading.language.map(|language| language.name.as_str());
-                (!reading.markdown).then(|| match language {
-                    Some(language) => {
-                        format!("the scan reads `.md` as {language}, not as Markdown")
-                    }
-                    None => "the scan does not read `.md` as Markdown".to_string(),
-                })
-            })?;
+            // A `.md` the scan reads is read as Markdown: an `md` entry that names another
+            // class is refused at load (§FS-config-v2.checks.config-md-not-markdown).
+            let reason = self.unread_reason(schema, &home)?;
             return Some((home, RefusedHome::Unread(reason)));
         };
         let home = root.join(file);

@@ -378,8 +378,9 @@ fn an_older_refusal_on_a_later_row_wins() {
     assert_eq!(run.code, 2, "{}", run.shown());
     assert_eq!(
         run.stderr,
-        "error: grund.toml:13: kind `RULE` sets `rules = true` but rule kinds must be citable, \
-         scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch`\n",
+        "error: grund.toml:13: [schema.kinds.RULE] sets `form = \"rule\"`, but no admitted \
+         language reads files entry `rules/other.json`; move the rules into a file read as \
+         Markdown\n",
         "{}",
         run.shown()
     );
@@ -387,7 +388,8 @@ fn an_older_refusal_on_a_later_row_wins() {
 
 /// §FS-config-v2.reader.4.order, the owner's guard on #1397: a rule row whose later entry is read as
 /// source and whose last is read by no admitted language keeps the rule-kind refusal at `form`,
-/// which grund 0.22.x gave it, naming no release. A control: green before the change.
+/// at the line grund 0.22.x gave it, in 0.23.0's
+/// words (§FS-fields.forms), naming no release. A control: green before the change.
 #[test]
 fn a_rule_row_refused_before_keeps_its_refusal_at_form() {
     let tree = Tree::new(
@@ -409,9 +411,9 @@ fn a_rule_row_refused_before_keeps_its_refusal_at_form() {
         assert_eq!(run.code, code, "{}", run.shown());
         assert_eq!(
             run.stderr,
-            "error: grund.toml:12: kind `RULE` sets `rules = true` but rule kinds must be \
-             citable, scanned Markdown kinds with a `file` or `folder` home and without `values` \
-             or `fetch`\n",
+            "error: grund.toml:12: [schema.kinds.RULE] sets `form = \"rule\"`, but no admitted \
+             language reads files entry `rules/other.json`; move the rules into a file read as \
+             Markdown\n",
             "{}",
             run.shown()
         );

@@ -3,8 +3,6 @@ project_name = "g199"
 
 [schema.sources]
 languages = ["markdown", "json", "rust"]
-[schema.sources.extensions]
-md = "json"
 
 [schema.kinds.FS]
 files = ["src/a.rs"]

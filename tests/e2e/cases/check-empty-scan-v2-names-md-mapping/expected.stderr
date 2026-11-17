@@ -1,2 +1,0 @@
-warning: nothing to scan — no language in [schema.sources] languages is read for declarations, so no file under `.` was read; [schema.sources.extensions] maps `md` to `json`: drop that entry.
-warning: grund.toml:8: [schema.sources.extensions] maps `md` to `json`, which does not read Markdown; `.md` is always Markdown, and until then a `.md` file is read as `json`; drop the entry, or map `md` to a `document` language; this becomes an error in grund 1.0.0
