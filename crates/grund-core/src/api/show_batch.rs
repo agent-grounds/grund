@@ -9,15 +9,15 @@
 use anyhow::Result;
 
 use super::guidance::query_failure_hints;
-use super::show::ShowSource;
-use crate::config::{display_path, run_warning_findings};
+use super::show::{ShowSource, load_show_context};
+use crate::config::display_path;
 use crate::model::{Finding, OperationDiagnostic, ShowOutput};
 use crate::queries::{
     BatchShowQuery, BatchShowRecord, BatchShowRun, ShowFormat, ShowOpts, ShowQueryError,
     batch_globs, batch_query_failure, batch_selection, exhaustive_batch_queries,
     written_coordinate,
 };
-use crate::resolver::{load_reported_workspace_context, stopping_failure};
+use crate::resolver::stopping_failure;
 use crate::scanner::{ApiScanError, scan_operation_failure};
 
 /// One query's answer from the batch's one context, before an adapter keeps
@@ -53,11 +53,7 @@ fn batch_answers(
     // §AR-resolver.3.1: this is the batch's only loader entry. Exhaustive
     // discovery reads the returned catalog and never starts a preliminary scan.
     // §AR-resolver.3.3: every query resolves against the whole owning project.
-    let context = load_reported_workspace_context(&opts.path, path_provided)?;
-    // §FS-check.4.10.11, §FS-workspace.6.1.7: the run's `[workspace]` warnings come
-    // back beside the records, because the batch refuses after the workspace pass
-    // has already settled them.
-    *run_warnings = run_warning_findings(context.render_config(), context.run_warnings.clone());
+    let (context, scope) = load_show_context(&opts.path, path_provided, run_warnings)?;
     let selection = batch_selection(&context, &globs)?;
     // §AR-scanner.1.6: the failure `show` stops at, else the first any project met.
     if let Some((first, _)) = stopping_failure(&context.projects, &context.projects) {
@@ -67,7 +63,7 @@ fn batch_answers(
     }
     let queries = match queries {
         Some(queries) => queries,
-        None => exhaustive_batch_queries(&context, &opts.path, path_provided, selection.as_ref())?,
+        None => exhaustive_batch_queries(&context, scope.as_ref(), selection.as_ref()),
     };
     let note = selection.and_then(|selection| selection.note());
     let answers = queries
