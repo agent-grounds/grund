@@ -370,7 +370,7 @@ pub use writers::{
 pub use api::{
     ApiFailure, ApiFailureSite, ApiOutcome, ApiPartialOutput, EmbeddingRequest, ReferenceStyle,
     RefsSites, RefsSitesHints, RefsSitesOpts, RefsWithMetadata, ShowHints, check_with_run_warnings,
-    complete_ids_with_run_warnings, config_run_warnings, config_warnings,
+    complete_ids_with_run_warnings, config_run_warnings, config_v2_toml, config_warnings,
     cover_lines_with_run_warnings, cover_text_with_run_warnings, cover_with_globs,
     cover_with_run_warnings, effective_config, effective_project, embedding_call,
     format_references_with_run_warnings, list_with_run_warnings, lsp_snapshot,

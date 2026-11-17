@@ -66,7 +66,8 @@ fn print_config_warnings(warnings: Vec<String>) {
 /// `grund config show` (§FS-config.4.2). The effective configuration is read and
 /// printed in this one function, so its record is never named: the root alias
 /// that named it was removed in 0.19.0 (§FS-distribution.3.1), and the record
-/// itself is hidden until this reads `Project` (§AR-config.5).
+/// itself is hidden until this reads `Project` (§AR-config.5). It resolves the
+/// configuration once and prints everything from that one `Config` (§AR-resolver.3.4).
 fn command_config_show(path: &Path) -> ExitCode {
     let config = match effective_config(path) {
         Ok(config) => config,
@@ -79,8 +80,9 @@ fn command_config_show(path: &Path) -> ExitCode {
     // to the effective value (§FS-config.4.2).
     print_config_warnings(config_warnings(&config));
     // §FS-config.4.2: a v2 config prints in v2 spelling, which the engine writes
-    // from the `Project`; a v1 config keeps its bytes.
-    if let Ok(Some(toml)) = effective_project(path).map(|project| project.v2_toml()) {
+    // from the `Project`; a v1 config keeps its bytes. That `Project` is the loaded
+    // config's, never a second resolution of `path` (§AR-resolver.3.4).
+    if let Some(toml) = config_v2_toml(&config) {
         print!("{toml}");
         return ExitCode::SUCCESS;
     }

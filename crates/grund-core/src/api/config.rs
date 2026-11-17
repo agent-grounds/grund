@@ -31,6 +31,18 @@ pub fn config_run_warnings(config: &Config) -> Vec<Finding> {
     public_run_warnings(config, settled_run_warnings(config.run()))
 }
 
+/// The v2 spelling of a `Config` a caller already holds, or `None` for a v1
+/// config, whose bytes `grund config show` keeps (§FS-config.4.2): rendered by
+/// `Project::v2_toml` (§AR-config.7.4) from the `Project` that `Config` was built
+/// from, so `config show` prints it from the one configuration it resolved
+/// rather than resolving the path again through [`effective_project`]
+/// (§AR-resolver.3.4). A function over the `Config`, not a method on it, so the
+/// façade §AR-config.5 shrinks does not widen.
+#[doc(hidden)]
+pub fn config_v2_toml(config: &Config) -> Option<String> {
+    config.project().v2_toml()
+}
+
 pub fn effective_config(path: &Path) -> Result<Config> {
     open(&Invocation::new(path, true, Selection::Discovery))
 }

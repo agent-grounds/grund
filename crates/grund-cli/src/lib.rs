@@ -22,7 +22,7 @@ use grund_core::{
     RefsOpts, RefsOutput, RefsQueryFailure, RefsSites, RefsSitesOpts, Report, SetupPart,
     ShowFormat, ShowMode, ShowOpts, ShowQueryError, check_coordinate_globs,
     check_with_run_warnings, cites_clause, complete_ids_with_run_warnings, config_run_warnings,
-    config_warnings, cover_lines, cover_with_globs, effective_config, effective_project,
+    config_v2_toml, config_warnings, cover_lines, cover_with_globs, effective_config,
     fetch_snapshot_with_run_warnings, format_references, glob_beside_section, guide_sections, init,
     list_sizes, list_with_run_warnings, propose_id_with_run_warnings, reads_as_coordinate,
     reads_as_coordinate_glob, render_finding_sites_json, setup_fresh_path, setup_instructions,
