@@ -62,7 +62,7 @@ Adoption edits the file's text, and it edits only three things: the `languages` 
 
 ### 4.1 `languages` is renamed in place, never widened
 
-A definition whose every entry is adopted leaves `languages`. The rows its suffixes were adopted into take its place, in the order of each row's first adopted entry. A definition that keeps an entry stays listed, and the rows adopted from it follow it directly. A row already listed, or listed earlier by the same edit, is not listed twice. Nothing else enters the list: never the default set, and never a row no suffix was adopted into. The value is written as a one-line array, and the key and any comment after the value stay. On the example of [§FS-config-adopt-builtins.5.2](FS-config-adopt-builtins.md#52-stderr-is-the-report), `languages = ["v1_markdown", "v1_c_family", "v1_plain", "v1_shell"]` becomes `languages = ["markdown", "java", "v1_plain", "shell"]`.
+A definition whose every entry is adopted leaves `languages`. The rows its suffixes were adopted into take its place, in the order of each row's first adopted entry. A definition that keeps an entry stays listed, and the rows adopted from it follow it directly. A row already listed, or listed earlier by the same edit, is not listed twice. Nothing else enters the list: never the default set, and never a row no suffix was adopted into. A value on one line is written back as a one-line array, and the key and any comment after the value stay. A value written across lines keeps its lines and the comments on them: each name is rewritten where it stands, and a line goes only when the list drops every name on it and nothing else stands on it, so a comment on that line is listed ([§FS-config-adopt-builtins.7](FS-config-adopt-builtins.md#7-comments)). On the example of [§FS-config-adopt-builtins.5.2](FS-config-adopt-builtins.md#52-stderr-is-the-report), `languages = ["v1_markdown", "v1_c_family", "v1_plain", "v1_shell"]` becomes `languages = ["markdown", "java", "v1_plain", "shell"]`.
 
 ### 4.2 Entries and definitions
 
@@ -157,7 +157,7 @@ A comment on a line adoption removes cannot be kept, and is listed. That is an a
 
 ```text
 comments on lines adoption removes (--write refuses; --drop-comments drops exactly these):
-  grund.toml:23  above [schema.sources.extensions] java
+  grund.toml:21  above [schema.sources.extensions] java
 ```
 
 Each entry is `  <config>:<first>-<last>  <where>`, or `  <config>:<line>  <where>` for one line, in file order. `<where>` is `above <key or header>`, `after <key>` for a trailing comment, or `inside [schema.sources.definitions.<name>]`. Without `--drop-comments` a write with a listed comment is refused with exit `1`, and a preview exits `1` with empty stdout, both naming the cause. With it, exactly those comments are dropped and nothing else, and the write names them again ([§FS-config-adopt-builtins.8.2](FS-config-adopt-builtins.md#82-what-it-says-after-the-write)).

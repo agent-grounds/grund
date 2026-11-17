@@ -37,7 +37,7 @@ pub fn config_adopt(opts: &AdoptOpts) -> Result<AdoptOutcome, AdoptFailure> {
     };
     // §FS-config-adopt-builtins.6.4: only a candidate that reads as planned is compared.
     if report.load_error.is_none() && report.readings.is_empty() {
-        report.compared = Some(compare(&located, &report.candidate)?);
+        report.compared = Some(compare(&located, &opts.path, &report.candidate)?);
         if !still_holds(&located, &text) {
             return Err(AdoptFailure::Changed {
                 config: located.config,
@@ -54,11 +54,20 @@ pub fn config_adopt(opts: &AdoptOpts) -> Result<AdoptOutcome, AdoptFailure> {
 /// §FS-config-adopt-builtins.6.4: `check --suggestions` on the root with the file as read and with
 /// the candidate in its place, as migration's report gate runs it (§FS-config-migrate.5.2): the
 /// two exits, and each finding only one of the runs reports.
-fn compare(located: &Located, candidate: &str) -> Result<Compared, AdoptFailure> {
+///
+/// Both runs start from `invocation`, the path the command was given, as `grund check` with no
+/// path starts from where it stands: no path narrows the run, so it covers the root, and each
+/// finding is spelled from the report base the heading is, `--path-base invocation` included
+/// (§FS-config-adopt-builtins.1.2).
+fn compare(
+    located: &Located,
+    invocation: &Path,
+    candidate: &str,
+) -> Result<Compared, AdoptFailure> {
     let run = || {
         check_with_projects(CheckOpts {
-            path: located.root.clone(),
-            path_provided: true,
+            path: invocation.to_path_buf(),
+            path_provided: false,
             include_suggestions: true,
             ..CheckOpts::default()
         })

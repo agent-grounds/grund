@@ -7,7 +7,7 @@
 use std::path::Path;
 
 use super::plan::{Decision, plan};
-use super::record::{AdoptFailure, AdoptOutcome, AdoptReport, KeptWhy};
+use super::record::{AdoptComment, AdoptFailure, AdoptOutcome, AdoptReport, KeptWhy};
 use super::{Prepared, gate::gate, prepare};
 use crate::api::BETWEEN_CHECKS;
 use crate::config::discovery::config_with_spans;
@@ -325,4 +325,56 @@ fn a_config_rewritten_between_the_checks_is_not_written() {
         edit
     );
     assert_eq!(entries(&root), ["docs", "grund.toml", "src"]);
+}
+
+/// §FS-config-adopt-builtins.4.1, §FS-config-adopt-builtins.7: across lines, a name the list drops,
+/// here `cf`, whose row `java` is listed already, takes its line only when nothing else stands on
+/// it, and only that line's comment is listed; dropped beside another name, it leaves the line and
+/// its comment where they are.
+#[test]
+fn a_dropped_name_takes_its_line_only_when_it_stands_alone() {
+    let head = "grund_config_version = 2\n\n[schema.sources]\n";
+    let fs = "[schema.kinds.FS]\nfolders = [\"docs\"]\nindex = false\n";
+    let cf = "\n[schema.sources.extensions]\njava = \"cf\"\n\n[schema.sources.definitions.cf]\n\
+              class = \"source\"\ncomment_prefixes = [\"//\", \"/*\", \"*\"]\n\
+              doc_comments = \"c-family\"\n\n";
+    let alone = AdoptComment {
+        first: 6,
+        last: 6,
+        place: "after [schema.sources] languages".into(),
+    };
+    let cases = [
+        (
+            "alone",
+            "languages = [\n  \"markdown\",\n  \"cf\", # the C family\n  \"java\",\n]\n",
+            "languages = [\n  \"markdown\",\n  \"java\",\n]\n",
+            vec![alone],
+        ),
+        (
+            "beside",
+            "languages = [\"markdown\", \"cf\", # c\n  \"java\"]\n",
+            "languages = [\"markdown\", # c\n  \"java\"]\n",
+            vec![],
+        ),
+    ];
+    for (name, languages, adopted, comments) in cases {
+        let root = test_root(&format!("adopt-dropped-{name}"));
+        write(
+            &root.join("grund.toml"),
+            &format!("{head}{languages}{cf}{fs}"),
+        );
+        write(
+            &root.join("docs/FS-login.md"),
+            "# FS-login: Login\n\nText.\n",
+        );
+        let Prepared::Planned { report, .. } =
+            prepare(&located(&root), false, false).expect("the file plans")
+        else {
+            panic!("{name}: the file adopts");
+        };
+        assert_eq!(report.candidate, format!("{head}{adopted}\n{fs}"), "{name}");
+        assert_eq!(report.comments, comments, "{name}");
+        assert_eq!(report.load_error, None, "{name}");
+        assert!(report.readings.is_empty(), "{name}: {:?}", report.readings);
+    }
 }

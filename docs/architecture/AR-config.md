@@ -671,7 +671,10 @@ The candidate is the file's own text with three edits: the `languages` value,
 the lines of adopted entries, and the tables of definitions nothing still names
 ([§FS-config-adopt-builtins.4](../functional-spec/FS-config-adopt-builtins.md#4-the-candidate)). Their line spans come from the key locations the
 version-2 reader already records, read once in the load that built the model;
-the edit parses nothing again. A comment on a removed line is found from the
+the edit parses no key again. Inside a `languages` value written across lines
+it finds each name by the reader's own rule for where a string ends
+([§FS-config.3.11](../functional-spec/FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string)), and rewrites it where it stands
+([§FS-config-adopt-builtins.4.1](../functional-spec/FS-config-adopt-builtins.md#41-languages-is-renamed-in-place-never-widened)). A comment on a removed line is found from the
 same spans ([§FS-config-adopt-builtins.7](../functional-spec/FS-config-adopt-builtins.md#7-comments)).
 
 ### 10.3 The gate reuses migration's parts
