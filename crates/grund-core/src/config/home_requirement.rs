@@ -11,8 +11,8 @@ use std::path::Path;
 use super::fetch_key_runs_nothing;
 use super::file_reading::{Readings, model_language, written_language};
 use super::home_remedies::{
-    BECAME_1_0, RULE_FILE_NOT_MARKDOWN, RULE_FOLDER_NOT_MARKDOWN, VALUE_HOME_LOOKUP,
-    VALUE_HOME_OUTSIDE, value_home_absent, value_home_wrong_shape,
+    BECAME_1_0, RULE_FILE_NOT_MARKDOWN, VALUE_HOME_LOOKUP, VALUE_HOME_OUTSIDE, value_home_absent,
+    value_home_wrong_shape,
 };
 use super::kind::KindConfig;
 use super::project::Sources;
@@ -109,11 +109,12 @@ fn rule_home(kind: &str, home: Home<'_>, sources: &Sources) -> Verdict {
     let path = Path::new(home.path);
     if !home.file {
         return match model {
+            // §AR-config.9.1: the admission is worded once, as empty-scan's `admit` Fix.
             Some(model) if !can_hold_markdown(model) => Verdict::RefusedLate(format!(
                 "[schema.kinds.{kind}] folders entry `{}` can hold no file read as Markdown, \
-                 because no admitted language reads Markdown; \
-                 {RULE_FOLDER_NOT_MARKDOWN}{BECAME_1_0}",
+                 because no admitted language reads Markdown; {}{BECAME_1_0}",
                 home.path,
+                crate::model::remedies::empty_scan_admit(2),
             )),
             _ => Verdict::Holds,
         };

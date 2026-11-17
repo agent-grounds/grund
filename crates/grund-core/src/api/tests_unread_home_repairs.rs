@@ -3,7 +3,6 @@
 
 use super::unread_roots::unread_root_warnings;
 use crate::config::load_config;
-use crate::model::Code;
 use crate::testing::{scan_tree, test_root, write};
 
 #[test]
@@ -39,35 +38,30 @@ fn data_repairs_do_not_overwrite_forms_fetches_or_places() {
     }
 }
 
+/// §FS-scan.checks.unread-scan-root.message: a hidden name a listed data language reads keeps
+/// its own rename, and is never offered `form = "value"`.
 #[test]
-fn remapped_markdown_and_hidden_data_keep_their_own_repairs() {
-    for (file, repair) in [
-        (
-            "fs.md",
-            "Drop the `md` entry from [schema.sources.extensions]",
+fn hidden_data_keeps_its_own_repair() {
+    let root = test_root("unread_special_data_repairs");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\n[schema.sources]\nlanguages = [\"markdown\", \"json\"]\n\
+         [schema.kinds.FS]\nfiles = [\".fs.json\"]\n",
+    );
+    write(&root.join(".fs.json"), "body\n");
+    let config = load_config(&root).expect("project");
+    let (findings, _) = scan_tree(&config, None, false).expect("scan");
+    let warnings = unread_root_warnings(&config, &findings);
+    assert_eq!(warnings.len(), 1);
+    let message = &warnings[0].message;
+    assert!(
+        message.ends_with(
+            "Rename the file to a name that is not hidden and an extension a listed document \
+             language reads."
         ),
-        (
-            ".fs.json",
-            "Drop the `md` entry from [schema.sources.extensions] and rename the file to a name that is not hidden and an extension it reads",
-        ),
-    ] {
-        let root = test_root("unread_special_data_repairs");
-        write(
-            &root.join("grund.toml"),
-            &format!(
-                "grund_config_version = 2\n[schema.sources]\nlanguages = [\"markdown\", \"json\"]\n\
-             [schema.sources.extensions]\nmd = \"json\"\n[schema.kinds.FS]\nfiles = [\"{file}\"]\n"
-            ),
-        );
-        write(&root.join(file), "body\n");
-        let config = load_config(&root).expect("project");
-        let (findings, _) = scan_tree(&config, None, false).expect("scan");
-        let warnings = unread_root_warnings(&config, &findings);
-        assert_eq!(warnings.len(), 1);
-        let message = &warnings[0].message;
-        assert!(message.ends_with(&format!("{repair}.")), "{message}");
-        assert!(!message.contains("form = \"value\""), "{message}");
-    }
+        "{message}"
+    );
+    assert!(!message.contains("form = \"value\""), "{message}");
 }
 
 /// §FS-check.2.2.2.2: dropping a mapping is offered only when it restores an admitted text
@@ -77,9 +71,9 @@ fn empty_scan_caution_names_the_mapping_that_restores_a_text_reader() {
     for (name, sources, expected) in [
         (
             "order",
-            "languages = [\"python\", \"markdown\", \"json\"]\n\
-            [schema.sources.extensions]\npy = \"json\"\nmd = \"json\"",
-            "[schema.sources.extensions] maps `md` to `json`: drop that entry.",
+            "languages = [\"rust\", \"python\", \"json\"]\n\
+            [schema.sources.extensions]\nrs = \"json\"\npy = \"json\"",
+            "[schema.sources.extensions] maps `py` to `json`: drop that entry.",
         ),
         (
             "python",
@@ -90,7 +84,7 @@ fn empty_scan_caution_names_the_mapping_that_restores_a_text_reader() {
         (
             "unadmitted",
             "languages = [\"json\"]\n\
-            [schema.sources.extensions]\nmd = \"json\"",
+            [schema.sources.extensions]\npy = \"json\"",
             "admit one in [schema.sources] languages, such as `markdown`.",
         ),
     ] {
@@ -216,89 +210,40 @@ fn unread_value_form_repairs_preserve_fields_closed_and_existing_prerequisites()
     }
 }
 
-/// §FS-scan.checks.unread-scan-root.message, §FS-scan.checks.unread-scan-root.folder:
-/// dropping md's data mapping also admits its reader when necessary, for either home shape.
-#[test]
-fn unread_md_unmap_repairs_are_complete_for_files_and_folders() {
-    for folder in [false, true] {
-        for admitted in [false, true] {
-            let root = test_root(&format!("unread_md_complete_{folder}_{admitted}"));
-            let languages = if admitted {
-                "[\"json\", \"markdown\"]"
-            } else {
-                "[\"json\"]"
-            };
-            let (row, file) = if folder {
-                (
-                    "folders = [\"fs\"]\nindex = false\nform = \"rule\"",
-                    "fs/a.md",
-                )
-            } else {
-                ("files = [\"fs.md\"]\nform = \"prose\"", "fs.md")
-            };
-            let toml = format!(
-                "grund_config_version = 2\n[schema.sources]\nlanguages = {languages}\n[schema.sources.extensions]\nmd = \"json\"\n[schema.kinds.FS]\n{row}\n"
-            );
-            write(&root.join("grund.toml"), &toml);
-            write(&root.join(file), "# FS-a: A\n");
-            let message = warning(&root);
-            let expected = if admitted {
-                "Drop the `md` entry from [schema.sources.extensions]."
-            } else {
-                "Drop the `md` entry from [schema.sources.extensions] and add `markdown` to [schema.sources] languages, keeping the existing languages."
-            };
-            assert!(message.ends_with(expected), "{message}");
-            assert!(!message.contains("form = \"value\""));
-            let repaired = toml
-                .replace("md = \"json\"\n", "")
-                .replace("[\"json\"]", "[\"json\", \"markdown\"]");
-            write(&root.join("grund.toml"), &repaired);
-            assert_repaired(&root);
-        }
-    }
-}
-
 /// §FS-scan.checks.unread-scan-root.message: a rename with no text reader includes admission,
-/// and a hidden name still needs the rename even when restoring a mapping as well.
+/// and a hidden name still needs the rename.
 #[test]
 fn unread_rename_repairs_admit_a_reader_and_unhide_the_name() {
-    for (file, mapping, languages) in [
-        ("fs.json", false, "[\"json\"]"),
-        (".fs.json", false, "[\"json\"]"),
-        ("fs.dat", false, "[\"json\"]"),
-        (".fs.md", true, "[\"json\"]"),
-        (".fs.json", true, "[\"json\", \"markdown\"]"),
+    for (file, languages) in [
+        ("fs.json", "[\"json\"]"),
+        (".fs.json", "[\"json\"]"),
+        ("fs.dat", "[\"json\"]"),
+        (".fs.md", "[\"json\"]"),
+        (".fs.json", "[\"json\", \"markdown\"]"),
     ] {
-        let root = test_root(&format!("unread_rename_admission_{file}_{mapping}"));
-        let mapping_text = if mapping {
-            "[schema.sources.extensions]\nmd = \"json\"\n"
-        } else {
-            ""
-        };
+        let root = test_root(&format!(
+            "unread_rename_admission_{file}_{}",
+            languages.len()
+        ));
         let toml = format!(
-            "grund_config_version = 2\n[schema.sources]\nlanguages = {languages}\n{mapping_text}[schema.kinds.FS]\nfiles = [\"{file}\"]\nform = \"prose\"\n"
+            "grund_config_version = 2\n[schema.sources]\nlanguages = {languages}\n[schema.kinds.FS]\nfiles = [\"{file}\"]\nform = \"prose\"\n"
         );
         write(&root.join("grund.toml"), &toml);
         write(&root.join(file), "# FS-a: A\n");
         let message = warning(&root);
-        if languages == "[\"json\"]" {
-            assert!(
-                message.contains("add `markdown`") || message.contains("Add `markdown`"),
-                "{message}"
-            );
-        }
-        if mapping {
-            assert!(message.contains("Drop the `md` entry"), "{message}");
-        }
+        assert_eq!(
+            message.contains("add `markdown`") || message.contains("Add `markdown`"),
+            languages == "[\"json\"]",
+            "{message}"
+        );
         if file.starts_with('.') {
             assert!(
-                message.contains("rename the file to a name that is not hidden"),
+                message.contains("ename the file to a name that is not hidden"),
                 "{message}"
             );
         }
         std::fs::rename(root.join(file), root.join("fs.md")).expect("offered rename");
         let repaired = toml
-            .replace("md = \"json\"\n", "")
             .replace("[\"json\"]", "[\"json\", \"markdown\"]")
             .replace(&format!("[\"{file}\"]"), "[\"fs.md\"]");
         write(&root.join("grund.toml"), &repaired);
@@ -306,86 +251,49 @@ fn unread_rename_repairs_admit_a_reader_and_unhide_the_name() {
     }
 }
 
-/// §FS-scan.checks.unread-scan-root.folder: every offered repair for a Markdown rule
-/// restores a document reading, including admission and mapping removal when required.
+/// §FS-scan.checks.unread-scan-root.folder: the offered repair for a Markdown rule restores a
+/// document reading, never a source admission. A rule folder no admitted language reads as
+/// Markdown is refused at load (§FS-config-v2.checks.config-rule-folder-not-markdown), so a
+/// document reader is always admitted here.
 #[test]
 fn unread_rule_folder_source_suffix_repairs_read_the_markdown_rule() {
-    for (name, languages, mapping, repair) in [
-        (
-            "document_admitted",
-            "[\"markdown\"]",
-            "",
-            "Give the files in it an extension a listed document language reads.",
-        ),
-        (
-            "json_only",
-            "[\"json\"]",
-            "",
-            "Add `markdown` to [schema.sources] languages, keeping the existing languages, and give the files in it an extension it reads.",
-        ),
-        (
-            "json_mapping",
-            "[\"json\"]",
-            "[schema.sources.extensions]\nmd = \"json\"\n",
-            "Drop the `md` entry from [schema.sources.extensions] and add `markdown` to [schema.sources] languages, keeping the existing languages, and give the files in it an extension it reads.",
-        ),
-    ] {
-        let root = test_root(&format!("unread_rule_source_suffix_{name}"));
-        let toml = format!(
-            "grund_config_version = 2\n[schema.sources]\nlanguages = {languages}\n{mapping}\
-             [schema.kinds.FS]\n[schema.kinds.RULE]\nfolders = [\"rules\"]\n\
-             index = false\nform = \"rule\"\n"
-        );
-        write(&root.join("grund.toml"), &toml);
-        write(
-            &root.join("rules/terms.rs"),
-            "# RULE-terms: Each FS must cite at least one RULE.\n\nEvery spec is held to a rule.\n",
-        );
-        let before = load_config(&root).expect("unrepaired rule configuration loads");
-        assert_eq!(
-            super::config_findings::held_config_diagnostics(&before)
-                .iter()
-                .any(|warning| warning.code == Code::CONFIG_RULE_FOLDER_NOT_MARKDOWN),
-            languages == "[\"json\"]"
-        );
-        let message = warning(&root);
-        assert!(message.ends_with(repair), "{message}");
-        assert!(!message.contains("Add `rust`"), "{message}");
-        assert!(
-            !message.contains(", or "),
-            "only one repair offered: {message}"
-        );
+    let root = test_root("unread_rule_source_suffix_document_admitted");
+    let toml = "grund_config_version = 2\n[schema.sources]\nlanguages = [\"markdown\"]\n\
+                [schema.kinds.FS]\n[schema.kinds.RULE]\nfolders = [\"rules\"]\n\
+                index = false\nform = \"rule\"\n";
+    write(&root.join("grund.toml"), toml);
+    write(
+        &root.join("rules/terms.rs"),
+        "# RULE-terms: Each FS must cite at least one RULE.\n\nEvery spec is held to a rule.\n",
+    );
+    let message = warning(&root);
+    assert!(
+        message.ends_with("Give the files in it an extension a listed document language reads."),
+        "{message}"
+    );
+    assert!(!message.contains("Add `rust`"), "{message}");
+    assert!(
+        !message.contains(", or "),
+        "only one repair offered: {message}"
+    );
 
-        // Apply the sole offered edit independently to each original configuration.
-        std::fs::rename(root.join("rules/terms.rs"), root.join("rules/terms.md"))
-            .expect("offered document rename");
-        write(
-            &root.join("grund.toml"),
-            &toml
-                .replace("md = \"json\"\n", "")
-                .replace("[\"json\"]", "[\"json\", \"markdown\"]"),
-        );
-        let config = load_config(&root).expect("complete repair preserves loader prerequisites");
-        assert!(super::config_warnings(&config).is_empty());
-        assert!(config.reading(&root.join("rules/terms.md")).markdown);
-        if languages == "[\"json\"]" {
-            assert_eq!(
-                config.reading(&root.join("preserved.json")).data_language(),
-                Some("json")
-            );
-        }
-        let (findings, errors) = scan_tree(&config, None, false).expect("repaired rule scan");
-        assert!(errors.is_empty(), "{errors:?}");
-        assert!(unread_root_warnings(&config, &findings).is_empty());
-        assert!(
-            findings
-                .declarations
-                .keys()
-                .any(|id| { id.kind == "RULE" && id.slug.as_deref() == Some("terms") }),
-            "RULE-terms resolves: {:?}",
-            findings.declarations
-        );
-    }
+    // Apply the sole offered edit.
+    std::fs::rename(root.join("rules/terms.rs"), root.join("rules/terms.md"))
+        .expect("offered document rename");
+    let config = load_config(&root).expect("complete repair preserves loader prerequisites");
+    assert!(super::config_warnings(&config).is_empty());
+    assert!(config.reading(&root.join("rules/terms.md")).markdown);
+    let (findings, errors) = scan_tree(&config, None, false).expect("repaired rule scan");
+    assert!(errors.is_empty(), "{errors:?}");
+    assert!(unread_root_warnings(&config, &findings).is_empty());
+    assert!(
+        findings
+            .declarations
+            .keys()
+            .any(|id| { id.kind == "RULE" && id.slug.as_deref() == Some("terms") }),
+        "RULE-terms resolves: {:?}",
+        findings.declarations
+    );
 }
 
 /// §FS-scan.checks.unread-scan-root.folder: source admission remains useful for a non-rule

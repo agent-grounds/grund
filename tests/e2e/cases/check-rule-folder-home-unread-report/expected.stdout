@@ -1,2 +1,2 @@
-grund.toml:13: warning: [schema.kinds.RULE] folder `rules` is not read — the scan reads `.md` as `json`, a data language only a value kind reads, so nothing in it is checked. Drop the `md` entry from [schema.sources.extensions].
+grund.toml:11: warning: [schema.kinds.RULE] folder `rules` is not read — the scan reads `.json` as `json`, a data language only a value kind reads, so nothing in it is checked. Give the files in it an extension a listed document language reads.
 src/a.rs:1: warning: declared but never cited: FS-a; cite it

@@ -1,5 +1,6 @@
 //! A source declaration discovered by the one pre-integration scan refuses the fetch before
-//! the integration runs, even when its name ends in `.md` (§FS-fetch.5.2).
+//! the integration runs, even when a mapping reads a document suffix as source, as `fs/a.txt`
+//! under `txt = "python"` (§FS-fetch.5.2).
 
 use super::fetch_snapshot;
 use crate::testing::{test_root, write};
@@ -11,11 +12,11 @@ fn a_source_reading_declares_before_the_integration_runs() {
     write(
         &root.join("grund.toml"),
         "grund_config_version = 2\n[schema.sources]\nlanguages = [\"markdown\", \"python\"]\n\
-         [schema.sources.extensions]\nmd = \"python\"\n[schema.kinds.FS]\n\
+         [schema.sources.extensions]\ntxt = \"python\"\n[schema.kinds.FS]\n\
          folders = [\"fs\"]\nindex = false\nfetch = \"./fetcher\"\n",
     );
     let original = "\"\"\"FS-a: Alpha\n\nLocal body.\n\"\"\"\nx = 1\n";
-    write(&root.join("fs/a.md"), original);
+    write(&root.join("fs/a.txt"), original);
     write(
         &root.join("fetcher"),
         "#!/bin/sh\ntouch spawned\nprintf '# FS-a: Alpha\\n'\n",
@@ -24,12 +25,12 @@ fn a_source_reading_declares_before_the_integration_runs() {
         .expect("executable integration");
     let error = fetch_snapshot("FS-a", &root).expect_err("the source file already declares it");
     assert!(
-        error.message.contains("fs/a.md already declares it"),
+        error.message.contains("fs/a.txt already declares it"),
         "{error}"
     );
     assert!(!root.join("spawned").exists());
     assert_eq!(
-        std::fs::read_to_string(root.join("fs/a.md")).unwrap(),
+        std::fs::read_to_string(root.join("fs/a.txt")).unwrap(),
         original
     );
 }

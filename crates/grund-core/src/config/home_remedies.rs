@@ -19,10 +19,6 @@ pub(in crate::config) const INDEX_NOT_MARKDOWN: &str =
 pub(in crate::config) const RULE_FILE_NOT_MARKDOWN: &str =
     "move the rules into a file a `document` language reads";
 
-/// §FS-config-v2.checks.config-rule-folder-not-markdown
-pub(in crate::config) const RULE_FOLDER_NOT_MARKDOWN: &str =
-    "admit one in [schema.sources] languages, such as `markdown`";
-
 /// §FS-config-v2.checks.config-value-home-absent: a later home of `shape`, `file` or `folder`.
 pub(in crate::config) fn value_home_absent(shape: &str) -> String {
     format!("create the {shape}, or drop the entry")

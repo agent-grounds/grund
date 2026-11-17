@@ -308,7 +308,8 @@ one are all refused, and an absent one is not created.
 
 In a version-2 file a home is read as source when the language its name resolves to
 ([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)) is of class `source`, whatever the suffix: `fs.py`,
-and equally `fs.txt` under `txt = "python"` or `fs.md` under `md = "python"`. A version-1
+and equally `fs.txt` under `txt = "python"`; `md = "python"` is refused at load from grund
+1.0.0 ([§FS-config-v2.checks.config-md-not-markdown](FS-config-v2.md#checksconfig-md-not-markdown-md-is-mapped-away-from-markdown)). A version-1
 file has no language to ask, so there it is a home not named `.md` whose extension is in the
 effective `[scan] extensions` ([§FS-scan.scope.extensions](FS-scan.md#scopeextensions-an-extension-makes-a-file-readable-not-declarable)). The name decides, and an `exclude`
 or `include` entry does not change the answer: a `file` home is a scan root, read whether or
@@ -462,8 +463,8 @@ this refusal comes ahead of every judgement of that Markdown file: it names the 
 file whichever the walk reaches first, a Markdown file holding the ID beside other content
 and a stub whose target is that file included. What the first paragraph of [§FS-fetch.5](FS-fetch.md#5-folder-home-write)
 replaces is a file the scan reads as Markdown, whatever its name, so `fs/a.txt` under
-`txt = "markdown"` is replaced as `fs/a.md` is, and an `fs/a.md` the scan reads as source under
-`md = "python"` takes this refusal rather than a replacement. The refusal holds whether or not
+`txt = "markdown"` is replaced as `fs/a.md` is, and an `fs/a.txt` the scan reads as source under
+`txt = "python"` takes this refusal rather than a replacement. The refusal holds whether or not
 the scan reads `<ID>.md` as Markdown, and a stub the pass records in a file it does not read as
 Markdown counts as declaring, whatever its target, including one that does not exist yet.
 

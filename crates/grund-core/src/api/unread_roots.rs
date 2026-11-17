@@ -6,9 +6,7 @@
 use crate::model::remedies;
 use std::path::Path;
 
-use crate::config::{
-    Config, Form, Readings, builtin_text_for_suffix, can_hold_markdown, file_extension,
-};
+use crate::config::{Config, Form, builtin_text_for_suffix, can_hold_markdown, file_extension};
 use crate::model::{Catalog, Code, Diagnostic, RootOrigin, RootRow, unread_reason};
 
 /// One located warning per unread root, at the line of the key that named it
@@ -65,48 +63,31 @@ pub(super) fn unread_root_message(row: &RootRow, v2: bool) -> String {
         Readers {
             document: true,
             text: true,
-            unmap: true,
-            md_mapped: false,
         },
     )
 }
 
-/// Repairs ask the actual admitted readers, including the counterfactual mapping removal
-/// (§FS-scan.checks.unread-scan-root.message).
+/// Repairs ask the actual admitted readers (§FS-scan.checks.unread-scan-root.message). No
+/// repair drops an `md` entry: one that hides Markdown is refused at load
+/// (§FS-config-v2.checks.config-md-not-markdown), so a `.md` file is read as Markdown or not
+/// at all, never as data.
 #[derive(Clone, Copy)]
 struct Readers {
     document: bool,
     text: bool,
-    unmap: bool,
-    md_mapped: bool,
 }
 
 impl Readers {
     fn of(config: &Config) -> Self {
-        let mut sources = config.schema().sources.clone();
-        let Some(model) = sources.model.as_ref() else {
+        let Some(model) = config.schema().sources.model.as_ref() else {
             return Self {
                 document: true,
                 text: true,
-                unmap: true,
-                md_mapped: false,
             };
         };
-        let document = can_hold_markdown(model);
-        let text = !model.text_suffixes().is_empty();
-        let md_mapped = model.extensions.iter().any(|(suffix, _)| suffix == "md");
-        sources
-            .model
-            .as_mut()
-            .expect("v2 model")
-            .extensions
-            .retain(|(suffix, _)| suffix != "md");
-        let unmap = Readings::of_written(&sources, Path::new("name.md")).markdown;
         Self {
-            document,
-            text,
-            unmap,
-            md_mapped,
+            document: can_hold_markdown(model),
+            text: !model.text_suffixes().is_empty(),
         }
     }
 }
@@ -180,7 +161,7 @@ fn extension_reason_and_fixes(
 ) -> (String, Vec<String>) {
     let reason = unread_reason(row.refused, ext, version, data);
     if data.is_some() {
-        return (reason, data_fixes(ext, version, value, false, readers));
+        return (reason, data_fixes(version, value, false, readers));
     }
     // Listing the extension is offered only where there is one to list. Each fix is a
     // case of the row's Fix, on the version's side (§FS-errors.5.5.1).
@@ -224,7 +205,7 @@ fn hidden_reason_and_fixes(
                 readers.text
             }) =>
         {
-            markdown_repair(2, false, true, readers)
+            markdown_repair(2, false, true)
         }
         (true, true) if data.is_some() => remedies::unread_scan_root_hidden_document(2),
         (false, _) => remedies::unread_scan_root_hidden(version),
@@ -247,24 +228,11 @@ fn alternatives(fixes: &[String]) -> String {
     }
 }
 
-/// The data-row repairs preserve authored forms and fetches, and restore Markdown's mapping
-/// before suggesting another reader (§FS-scan.checks.unread-scan-root.message).
-fn data_fixes(
-    ext: Option<&str>,
-    version: u32,
-    value: bool,
-    folder: bool,
-    readers: Readers,
-) -> Vec<String> {
-    if ext == Some("md") {
-        return vec![if readers.unmap {
-            remedies::unread_scan_root_unmap(version)
-        } else {
-            remedies::unread_scan_root_unmap_admit(version)
-        }];
-    }
+/// The data-row repairs preserve authored forms and fetches, and admit a Markdown reader
+/// before suggesting a rename to one (§FS-scan.checks.unread-scan-root.message).
+fn data_fixes(version: u32, value: bool, folder: bool, readers: Readers) -> Vec<String> {
     if !readers.document {
-        let mut repair = markdown_repair(version, folder, false, readers);
+        let mut repair = markdown_repair(version, folder, false);
         if value {
             repair.replace_range(..1, &repair[..1].to_ascii_lowercase());
             repair = remedies::unread_scan_root_value_repair(version, repair);
@@ -298,7 +266,7 @@ fn folder_reason_and_fixes(
 ) -> (String, Vec<String>) {
     let reason = unread_reason(row.refused, ext, version, data);
     let fixes = if data.is_some() {
-        data_fixes(ext, version, value, true, readers)
+        data_fixes(version, value, true, readers)
     } else if version == 1 {
         vec![match ext {
             Some(ext) => remedies::unread_scan_root_add(1, ext),
@@ -324,7 +292,7 @@ fn folder_reason_and_fixes(
 /// (§FS-scan.checks.unread-scan-root.message, §FS-scan.checks.unread-scan-root.folder).
 fn text_repair(version: u32, folder: bool, rule: bool, readers: Readers) -> String {
     if !(if rule { readers.document } else { readers.text }) {
-        return markdown_repair(version, folder, false, readers);
+        return markdown_repair(version, folder, false);
     }
     match (folder, rule) {
         (true, true) => remedies::unread_scan_root_folder_document(version),
@@ -334,9 +302,9 @@ fn text_repair(version: u32, folder: bool, rule: bool, readers: Readers) -> Stri
     }
 }
 
-/// Restore a usable document reader before the rename, preserving existing languages
+/// Admit a usable document reader before the rename, preserving existing languages
 /// (§FS-scan.checks.unread-scan-root.message).
-fn markdown_repair(version: u32, folder: bool, hidden: bool, readers: Readers) -> String {
+fn markdown_repair(version: u32, folder: bool, hidden: bool) -> String {
     let rename = if hidden {
         "rename the file to a name that is not hidden and an extension it reads"
     } else if folder {
@@ -344,9 +312,5 @@ fn markdown_repair(version: u32, folder: bool, hidden: bool, readers: Readers) -
     } else {
         "give the file an extension it reads"
     };
-    match (readers.md_mapped, readers.unmap) {
-        (true, true) => remedies::unread_scan_root_document_unmap(version, rename),
-        (true, false) => remedies::unread_scan_root_document_unmap_admit(version, rename),
-        (false, _) => remedies::unread_scan_root_document_admit(version, rename),
-    }
+    remedies::unread_scan_root_document_admit(version, rename)
 }

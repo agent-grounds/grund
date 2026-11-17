@@ -1,8 +1,8 @@
 //! What one case directory cannot hold about a link at a fetch target (§FS-fetch.links) and the
 //! paths a refusal names (§FS-fetch.7): a link target outside the copied tree, which a case cannot
-//! make, read by the walk or ignored by it; a dangling link under `md = "json"`, where
-//! §FS-fetch.4.2.1's reason for a data mapping is not settled, so only its shape is pinned; and a
-//! mode bit git does not carry.
+//! make, read by the walk or ignored by it; a dangling link where no admitted language reads
+//! Markdown, whose §FS-fetch.4.2.1 reason only its shape is pinned for; and a mode bit git does
+//! not carry.
 #![cfg(unix)]
 
 #[path = "support/external_facts.rs"]

@@ -1,7 +1,7 @@
 # DF-v2-rule-home-by-language: a version-2 rule kind's `file` home is Markdown by the language `[schema.sources]` reads it as
 
 **Date:** 2026-11-04
-**Superseded in part by:** [§DF-markdown-homes-warn-before-1-0](DF-markdown-homes-warn-before-1-0.md#df-markdown-homes-warn-before-1-0-an-md-mapped-away-from-markdown-a-named-index-or-rule-home-not-read-as-markdown-and-an-absent-later-value-home-warn-from-0230-and-are-refused-from-100), for [§DF-v2-rule-home-by-language.2.2](DF-v2-rule-home-by-language.md#22-a-folder-home-is-left-as-it-is) and [§DF-v2-rule-home-by-language.2.3](DF-v2-rule-home-by-language.md#23-a-home-a-source-language-reads-keeps-the-answer-it-had): a rule kind's folder that can hold no Markdown, and a `files` entry a `source` language reads in any position, warn from grund 0.23.0 and are refused from 1.0.0.
+**Superseded in part by:** [§DF-markdown-homes-warn-before-1-0](DF-markdown-homes-warn-before-1-0.md#df-markdown-homes-warn-before-1-0-an-md-mapped-away-from-markdown-a-named-index-or-rule-home-not-read-as-markdown-and-a-later-value-home-that-is-absent-or-does-not-hold-warn-from-0230-and-are-refused-from-100), for [§DF-v2-rule-home-by-language.2.2](DF-v2-rule-home-by-language.md#22-a-folder-home-is-left-as-it-is) and [§DF-v2-rule-home-by-language.2.3](DF-v2-rule-home-by-language.md#23-a-home-a-source-language-reads-keeps-the-answer-it-had): a rule kind's folder that can hold no Markdown, and a `files` entry a `source` language reads in any position, warn from grund 0.23.0 and are refused from 1.0.0.
 
 ## status: Accepted
 
