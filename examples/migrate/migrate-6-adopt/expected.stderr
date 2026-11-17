@@ -1,0 +1,10 @@
+grund.toml: adopting version 2's built-in languages, preview, nothing written
+adopts: md: definition v1_markdown → built-in markdown
+  reads differently: comments behind `;` and `--` are now read
+adopts: java: definition v1_c_family → built-in java
+  reads differently: `#` is no longer a comment host
+adopts: sh: definition v1_shell → built-in shell, opt-in, listed in languages
+  reads differently: `//`, `/*` and `*` are no longer comment hosts
+added: bash, zsh: admitted with shell
+kept: gradle: definition v1_plain and gradle = "v1_plain"; version 2 has no built-in language for `.gradle`
+compared: the candidate reads as planned; grund check --suggestions: exit 1 → 1, no finding changes

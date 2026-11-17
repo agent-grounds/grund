@@ -264,7 +264,6 @@ fn holds(output: &Output, out: &str, err: &str, code: i32) {
 /// §FS-config-adopt-builtins.5.3, §FS-config-adopt-builtins.6.4: the preview prints the candidate
 /// on stdout and the plan on stderr, exits `0`, and writes nothing.
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_previews_the_candidate_and_every_reading_that_changes() {
     let tree = Tree::new("preview", &migrated(), ISSUE_FILES);
     let output = tree.run(&["config", "adopt-builtins"]);
@@ -281,7 +280,6 @@ fn adopt_previews_the_candidate_and_every_reading_that_changes() {
 /// the write replaces the file with the candidate, and `check` on the result still reports the
 /// citation the issue's hand edit lost, while `src/extra.bash` is now read.
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_writes_and_check_still_reports_the_gradle_typo() {
     let tree = Tree::new("write", &migrated(), ISSUE_FILES);
     let output = tree.run(&["config", "adopt-builtins", "--write"]);
@@ -305,7 +303,6 @@ fn adopt_writes_and_check_still_reports_the_gradle_typo() {
 /// §FS-config-adopt-builtins.9: on the written file, both a preview and a write print only the
 /// kept suffix and the no-op line, exit `0` with empty stdout, and leave the file alone.
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_a_second_time_is_a_no_op() {
     let tree = Tree::new("noop", &candidate(), ISSUE_FILES);
     let path = tree.0.join("grund.toml");
@@ -330,7 +327,6 @@ fn adopt_a_second_time_is_a_no_op() {
 /// §FS-config-adopt-builtins.8.1: a config that is a symbolic link is refused, exit `1`.
 #[cfg(unix)]
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_refuses_a_symbolic_link() {
     let tree = Tree::new("symlink", &migrated(), ISSUE_FILES);
     fs::rename(tree.0.join("grund.toml"), tree.0.join("real.toml")).expect("move the config");
@@ -355,7 +351,6 @@ fn adopt_refuses_a_symbolic_link() {
 /// §FS-config-adopt-builtins.7: a comment on a mapping adoption removes refuses the write without
 /// `--drop-comments`, exit `1`, and the file is unchanged.
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_refuses_to_lose_a_comment() {
     let tree = Tree::new("comment", &migrated_with_comment(), ISSUE_FILES);
     let output = tree.run(&["config", "adopt-builtins", "--write"]);
@@ -369,7 +364,6 @@ fn adopt_refuses_to_lose_a_comment() {
 /// §FS-config-adopt-builtins.7, §FS-config-adopt-builtins.8.2: with `--drop-comments` the write
 /// drops exactly the listed comment and names it again.
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_drops_exactly_the_listed_comment() {
     let tree = Tree::new("drop", &migrated_with_comment(), ISSUE_FILES);
     let output = tree.run(&["config", "adopt-builtins", "--write", "--drop-comments"]);
@@ -389,7 +383,6 @@ fn adopt_drops_exactly_the_listed_comment() {
 
 /// §FS-config-adopt-builtins.10: a version-1 file is exit `2`, pointing to migration.
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_sends_a_version_1_file_to_migration() {
     let tree = Tree::new("version-1", VERSION_1, ISSUE_FILES);
     let output = tree.run(&["config", "adopt-builtins", "--write"]);
@@ -401,7 +394,6 @@ fn adopt_sends_a_version_1_file_to_migration() {
 
 /// §FS-config-adopt-builtins.1.2: `--to` and `--format` are unknown flags, exit `2`.
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_refuses_to_and_format() {
     let tree = Tree::new("flags", &migrated(), ISSUE_FILES);
     let to = tree.run(&["config", "adopt-builtins", "--to", "3"]);
@@ -414,7 +406,6 @@ fn adopt_refuses_to_and_format() {
 /// §FS-config-adopt-builtins.1.1, §FS-config-adopt-builtins.1.2: `--path-base invocation` from
 /// `src/` spells the config from there.
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_spells_paths_from_the_invocation() {
     let tree = Tree::new("path-base", &migrated(), ISSUE_FILES);
     let output = tree.run_in(
@@ -465,7 +456,6 @@ const ADOPTS_MD: &str = "adopts: md: definition v1_markdown \u{2192} built-in ma
 /// `source` definition is kept, because built-in `json` reads it as `data`; `.md` is still
 /// adopted, with no `reads differently:` line since it reads the same.
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_keeps_a_suffix_its_row_would_reclassify() {
     let notes = "[schema.sources.definitions.notes]\nclass = \"source\"\n\
                  comment_prefixes = [\"//\"]\n\n";
@@ -493,7 +483,6 @@ fn adopt_keeps_a_suffix_its_row_would_reclassify() {
 /// §FS-config-adopt-builtins.2, §FS-config-adopt-builtins.4.1, §FS-config-adopt-builtins.4.2:
 /// `kt = "java"` maps to a built-in already, so it is not in play and stays as it is.
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_leaves_a_suffix_already_mapped_to_a_builtin() {
     let config = format!(
         "grund_config_version = 2\n\n[schema.sources]\nlanguages = [\"v1_markdown\", \"java\"]\n\n\
@@ -518,7 +507,6 @@ fn adopt_leaves_a_suffix_already_mapped_to_a_builtin() {
 /// §FS-config-adopt-builtins.2, §FS-config-adopt-builtins.9: with `languages` omitted no
 /// definition is admitted, so there is nothing to adopt, preview or write.
 #[test]
-#[ignore = "red until #1384 adds grund config adopt-builtins; implement removes this"]
 fn adopt_has_nothing_to_adopt_when_languages_is_omitted() {
     let config = format!(
         "grund_config_version = 2\n\n[schema.sources.definitions.v1_plain]\nclass = \"source\"\n\
@@ -559,7 +547,6 @@ const MARKDOWN_ONLY: &str = concat!(
 /// the default prefixes are built-in `markdown`'s hosts, so migration names `markdown` and writes
 /// no mapping and no definition. Today it writes `v1_markdown`.
 #[test]
-#[ignore = "red until #1384 names a built-in where it reads as version 1; implement removes this"]
 fn migrate_names_builtin_markdown_for_the_default_prefixes() {
     let docs = [("docs/FS-login.md", "# FS-login: Login\n\nUsers log in.\n")];
     let tree = Tree::new("markdown-only", MARKDOWN_ONLY, &docs);

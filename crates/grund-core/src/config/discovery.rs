@@ -466,6 +466,21 @@ pub(super) fn project_config(
     Ok(settled(project, &compiled, run, invocation))
 }
 
+/// §FS-config-adopt-builtins.1.1, §AR-config.10.2: the façade the version-2 file `text` loads
+/// to as the config at `root`, with its errors naming `report_path`, and where its walk met each
+/// header and key. One load answers both, so the plan and the edit read the same file.
+pub(crate) fn config_with_spans(
+    text: &str,
+    report_path: &Path,
+    root: &Path,
+    invocation: &Invocation,
+) -> Result<(Config, v2::Spans)> {
+    let run = Run::of(root.to_path_buf(), root.to_path_buf(), invocation);
+    let mut spans = v2::Spans::default();
+    let config = config_from_text_into(text, report_path, root, run, invocation, &mut spans)?;
+    Ok((config, spans))
+}
+
 /// The façade `text` loads to as the config at `root`, judged and compiled as
 /// a file read from disk is (§AR-config.2).
 fn config_from_text(
@@ -475,9 +490,23 @@ fn config_from_text(
     run: Run,
     invocation: &Invocation,
 ) -> Result<Config> {
+    let mut spans = v2::Spans::default();
+    config_from_text_into(text, report_path, root, run, invocation, &mut spans)
+}
+
+/// [`config_from_text`], recording a version-2 file's spans into `spans`.
+fn config_from_text_into(
+    text: &str,
+    report_path: &Path,
+    root: &Path,
+    run: Run,
+    invocation: &Invocation,
+    spans: &mut v2::Spans,
+) -> Result<Config> {
     v2::refuse_byte_order_mark(text, report_path)?;
     let (project, last) = if v2::selects(text) {
-        let (project, last) = v2::read_held(text, report_path, root)?;
+        let (project, last, walked) = v2::read_held(text, report_path, root)?;
+        *spans = walked;
         validate::reference(report_path, &project)?;
         (project, last)
     } else {

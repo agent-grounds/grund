@@ -14,21 +14,14 @@ section_separator = "."
 heading_depth = "must"
 
 [schema.sources]
-languages = ["v1_markdown", "v1_c_family"]
+languages = ["markdown", "v1_c_family"]
 declarations = "any-comment"
 exclude = ["target/", "node_modules/", ".git/", "dist/", "build/", ".venv/"] # directory names
 respect_gitignore = true
 fenced = []
 
 [schema.sources.extensions]
-md = "v1_markdown"
 rs = "v1_c_family"
-
-[schema.sources.definitions.v1_markdown]
-class = "document"
-comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
-doc_comments = "none"
-docstrings = "off"
 
 [schema.sources.definitions.v1_c_family]
 class = "source"

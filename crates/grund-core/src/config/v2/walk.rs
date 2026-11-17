@@ -22,6 +22,25 @@ use crate::config::project::Project;
 use crate::config::record::ConfigLocation;
 use crate::config::v1::{bail_config, strip_comment};
 
+/// Where one key was written: its table, the key as written, and the first and last line of its
+/// value, which differ for an array written across lines (§FS-config-v2.reader.5).
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub(crate) struct KeySpan {
+    pub(crate) table: String,
+    pub(crate) key: String,
+    pub(crate) first: usize,
+    pub(crate) last: usize,
+}
+
+/// §AR-config.10.2: every header and key the walk met, each at its lines. They are recorded by
+/// the one walk the load makes, so an edit of the file's text reads where the reader found each
+/// key and parses nothing of its own.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub(crate) struct Spans {
+    pub(crate) headers: Vec<(String, usize)>,
+    pub(crate) keys: Vec<KeySpan>,
+}
+
 /// The reader's state: the project lowered so far, and what only the whole
 /// file can judge, kept with the line it was written at (§FS-config-v2.reader.4).
 pub(super) struct Reader<'a> {
@@ -43,6 +62,8 @@ pub(super) struct Reader<'a> {
     /// Whether the array being read read through the 0.21.x trailing-comma window
     /// (§FS-config-v2.reader.5.commas).
     pub(super) through_window: bool,
+    /// Where each header and key was written (§AR-config.10.2).
+    pub(super) spans: Spans,
     headers: BTreeMap<String, usize>,
     header: String,
     keys: BTreeMap<String, usize>,
@@ -61,6 +82,7 @@ impl<'a> Reader<'a> {
             row_ladders: Vec::new(),
             presentation_kinds: Vec::new(),
             through_window: false,
+            spans: Spans::default(),
             headers: BTreeMap::new(),
             header: String::new(),
             keys: BTreeMap::new(),
@@ -228,6 +250,7 @@ impl<'a> Reader<'a> {
 
 /// §FS-config-v2.reader: walk `text` into `reader`, header by header.
 pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
+    let count = text.lines().count();
     let mut lines = text.lines().enumerate();
     while let Some((idx, raw)) = lines.next() {
         let line_no = idx + 1;
@@ -238,6 +261,7 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
         if line.starts_with('[') {
             reader.close()?;
             let name = header_name(reader, line_no, line)?;
+            reader.spans.headers.push((name.clone(), line_no));
             reader.open(name, line_no)?;
             continue;
         }
@@ -258,6 +282,14 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
             return reader.fail(line_no, format!("unclosed array{open}{release}"));
         };
         reader.through_window = joined.through_window;
+        // §AR-config.10.2: the value's last line is the one before the first line left unread.
+        let last = lines.clone().next().map_or(count, |(idx, _)| idx);
+        reader.spans.keys.push(KeySpan {
+            table: reader.header.clone(),
+            key: key.trim().to_string(),
+            first: line_no,
+            last,
+        });
         reader.entry(key.trim(), &value, line_no)?;
     }
     reader.close()

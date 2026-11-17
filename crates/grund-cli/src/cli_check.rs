@@ -293,16 +293,7 @@ fn render_check_text(report: &Report, run_warnings: usize, prepared: &mut Prepar
     }
     for (severity, finding) in sorted_text_findings(report) {
         let cli_level = finding.is_cli_level();
-        let line = match (finding.path.as_deref(), finding.line) {
-            // §FS-errors.2.1: retain the jump-friendly location prefix and
-            // place `check`'s structural channel before unchanged message bytes.
-            (Some(path), Some(line)) if !cli_level => {
-                format!("{path}:{line}: {severity}: {}", finding.message)
-            }
-            (Some(path), None) => format!("{severity}: {path}: {}", finding.message),
-            // §FS-errors.2.2: a CLI-level finding at a config line names it in its text.
-            _ => format!("{severity}: {}", finding.message),
-        };
+        let line = check_text_line(severity, finding);
         if cli_level {
             prepared
                 .stderr
@@ -312,6 +303,21 @@ fn render_check_text(report: &Report, run_warnings: usize, prepared: &mut Prepar
                 .stdout
                 .extend_from_slice(format!("{line}\n").as_bytes());
         }
+    }
+}
+
+/// One finding as `grund check`'s text prints it, without the newline; `config adopt-builtins`
+/// prints its changed findings with it too (§FS-config-adopt-builtins.6.4).
+fn check_text_line(severity: &str, finding: &Finding) -> String {
+    match (finding.path.as_deref(), finding.line) {
+        // §FS-errors.2.1: retain the jump-friendly location prefix and
+        // place `check`'s structural channel before unchanged message bytes.
+        (Some(path), Some(line)) if !finding.is_cli_level() => {
+            format!("{path}:{line}: {severity}: {}", finding.message)
+        }
+        (Some(path), None) => format!("{severity}: {path}: {}", finding.message),
+        // §FS-errors.2.2: a CLI-level finding at a config line names it in its text.
+        _ => format!("{severity}: {}", finding.message),
     }
 }
 

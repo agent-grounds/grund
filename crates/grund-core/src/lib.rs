@@ -224,6 +224,14 @@ pub use api::{MigrateOpts, config_migrate};
 // undo and re-preview with, the one the core spells its own commands with.
 #[doc(hidden)]
 pub use config::path_word;
+// §FS-config-adopt-builtins: `grund config adopt-builtins` and the one record it returns.
+#[doc(hidden)]
+pub use api::{AdoptOpts, config_adopt};
+#[doc(hidden)]
+pub use config::adopt::{
+    AddedSuffixes, AdoptComment, AdoptFailure, AdoptOutcome, AdoptReport, AdoptedSuffix, Compared,
+    KeptSuffix, KeptWhy,
+};
 // §FS-config-explain: `grund config explain`, the answer it returns, and the
 // tables, keys and codes it answers for.
 #[doc(hidden)]

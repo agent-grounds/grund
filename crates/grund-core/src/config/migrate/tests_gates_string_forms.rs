@@ -73,20 +73,16 @@ fn differs_on_sources(lines: &[String]) {
 
 /// §FS-config-migrate.5.1, §FS-languages.multi-line-string.suffix: version 1 reads a `.h` file's
 /// C++ raw strings, because the forms table names `h` in the C++ row, and the built-in `c` reads
-/// none. A candidate that maps `h = "c"` is the same on every other column, and the gate names the
-/// difference on the `sources` line rather than calling the records equal.
+/// none. Migration lists `c` already, since it reads `.c` as version 1 does
+/// (§FS-config-v2.schema.sources.migration). A candidate that maps `h = "c"` is the same on every
+/// other column, and the gate names the difference on the `sources` line rather than calling the
+/// records equal.
 #[test]
 fn records_gate_catches_h_mapped_to_c_losing_cpp_raw_strings() {
     let (v1, v2, root) = edited(
         "h-to-c",
         &format!("extensions = [\"md\", \"c\", \"h\"]\n{C_HOSTS}"),
-        &[
-            (
-                "languages = [\"v1_markdown\", \"v1_c_family\"]",
-                "languages = [\"v1_markdown\", \"v1_c_family\", \"c\"]",
-            ),
-            ("h = \"v1_c_family\"", "h = \"c\""),
-        ],
+        &[("h = \"v1_c_family\"", "h = \"c\"")],
     );
     differs_on_sources(&compare(&v1, &v2, &root, Block::Project));
 }
@@ -94,18 +90,13 @@ fn records_gate_catches_h_mapped_to_c_losing_cpp_raw_strings() {
 /// §FS-config-migrate.5.1, §FS-languages.multi-line-string.suffix: the column holds the reading,
 /// not the suffix. `.cc` under version 1 and `.cc` mapped to the built-in `cpp` both read the one
 /// C++ row, so they compare equal. This passes before the fix and must keep passing after it.
+/// Migration lists `cpp` already (§FS-config-v2.schema.sources.migration), so only `cc` moves.
 #[test]
 fn records_gate_compares_the_reading_not_the_suffix_for_cc_mapped_to_cpp() {
     let (v1, v2, root) = edited(
         "cc-to-cpp",
         &format!("extensions = [\"md\", \"cpp\", \"cc\"]\n{C_HOSTS}"),
-        &[
-            (
-                "languages = [\"v1_markdown\", \"v1_c_family\"]",
-                "languages = [\"v1_markdown\", \"v1_c_family\", \"cpp\"]",
-            ),
-            ("cc = \"v1_c_family\"", "cc = \"cpp\""),
-        ],
+        &[("cc = \"v1_c_family\"", "cc = \"cpp\"")],
     );
     assert_eq!(
         compare(&v1, &v2, &root, Block::Project),
