@@ -74,7 +74,8 @@ fn command_refs_sites(line: RefsSiteLine) -> ExitCode {
                 // §FS-errors.2.2.5: a scan failure prints `check`'s line, the record's own.
                 message: ApiScanError::printed(&err),
                 sites,
-                hints: &hints,
+                hints: &hints.lines,
+                output_format: hints.output_format.as_deref(),
                 path: &path,
                 path_provided,
             };
@@ -148,6 +149,7 @@ fn refs_sites_refused(
         message,
         sites,
         hints,
+        output_format,
         path,
         path_provided,
     } = refusal;
@@ -160,10 +162,9 @@ fn refs_sites_refused(
         eprintln!("error: {message}");
         return ExitCode::from(2);
     };
-    // §FS-refs.3: refs' own format, `--format` or else the configured one.
-    let format = format
-        .or_else(|| effective_config(path).ok().map(|config| config.output_format))
-        .unwrap_or_else(|| "text".to_string());
+    // §FS-refs.3: refs' own format, `--format` or else the configured one, which
+    // §AR-resolver.3.1.1.1 has the core return from the context the run loaded.
+    let format = format.as_deref().or(output_format).unwrap_or("text");
     // §FS-show.3.5.2: `refs` is never the bare form, so no breadcrumb replaces the refusal.
     let refusal = ShowRefusal {
         message: &message,
@@ -171,15 +172,17 @@ fn refs_sites_refused(
         hints,
         path_breadcrumb: false,
     };
-    render_show_error(&source, false, &format, refusal)
+    render_show_error(&source, false, format, refusal)
 }
 
 /// What a failed site-mode run left to render: the error's text, an ambiguous
-/// source's sites, and the path the run was given.
+/// source's sites, the hint lines and format the core took from the run's context
+/// (§AR-resolver.3.1.1.1), and the path the run was given.
 struct RefsSiteRefusal<'a> {
     message: String,
     sites: &'a [FindingSite],
     hints: &'a [String],
+    output_format: Option<&'a str>,
     path: &'a Path,
     path_provided: bool,
 }

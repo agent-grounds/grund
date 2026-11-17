@@ -369,7 +369,7 @@ pub use writers::{
 #[doc(hidden)]
 pub use api::{
     ApiFailure, ApiFailureSite, ApiOutcome, ApiPartialOutput, EmbeddingRequest, ReferenceStyle,
-    RefsSites, RefsSitesOpts, RefsWithMetadata, ShowHints, check_with_run_warnings,
+    RefsSites, RefsSitesHints, RefsSitesOpts, RefsWithMetadata, ShowHints, check_with_run_warnings,
     complete_ids_with_run_warnings, config_run_warnings, config_warnings,
     cover_lines_with_run_warnings, cover_text_with_run_warnings, cover_with_globs,
     cover_with_run_warnings, effective_config, effective_project, embedding_call,

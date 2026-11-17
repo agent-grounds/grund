@@ -44,6 +44,18 @@ pub struct RefsSitesOpts {
     pub sites: RefsSites,
 }
 
+/// What a refused `--from` source is rendered with, beside the refusal: the
+/// `hint:` lines `grund <ID>` prints for it (§FS-refs.from, §AR-resolver.3.1.1),
+/// and the format the run's loaded context renders in, the one its listing prints
+/// in (§AR-resolver.3.1.1.1). Both come from that one context, so `output_format`
+/// is `None` when the load failed before a context existed.
+#[doc(hidden)]
+#[derive(Debug, Default)]
+pub struct RefsSitesHints {
+    pub lines: Vec<String>,
+    pub output_format: Option<String>,
+}
+
 /// Programmatic `refs --glob` and `refs --from`: the selected citation sites in
 /// [`RefsOutput`], whose `note` is the patterns' (§FS-coordinate-globs.errors.note),
 /// never ID mode's (§FS-refs.globs.unresolved). A refused pattern, and a source `grund
@@ -53,25 +65,26 @@ pub struct RefsSitesOpts {
 #[doc(hidden)]
 pub fn refs_sites_with_run_warnings(opts: RefsSitesOpts) -> (Vec<Finding>, Result<RefsOutput>) {
     let mut cautions = Vec::new();
-    let result = refs_sites_run(opts, &mut cautions, None, &mut Vec::new());
+    let result = refs_sites_run(opts, &mut cautions, None, &mut RefsSitesHints::default());
     (cautions, result)
 }
 
 /// §FS-refs.3.1.1 / §FS-refs.3.3.1: the CLI's text-only classification, beside
 /// the unchanged site-mode records and run warnings, without a second scan. A
 /// `--from` source refused as `grund <ID>` refuses it brings that read's `hint:`
-/// lines, built from this run's context (§FS-refs.from, §AR-resolver.3.1.1).
+/// lines and the format to print them in, both from this run's context
+/// (§FS-refs.from, §AR-resolver.3.1.1.1).
 #[doc(hidden)]
 pub fn refs_sites_with_text_annotations(
     opts: RefsSitesOpts,
 ) -> (
     Vec<Finding>,
     Result<(RefsOutput, BTreeSet<(String, usize, usize)>)>,
-    Vec<String>,
+    RefsSitesHints,
 ) {
     let mut cautions = Vec::new();
     let mut entries = BTreeSet::new();
-    let mut hints = Vec::new();
+    let mut hints = RefsSitesHints::default();
     let result = refs_sites_run(opts, &mut cautions, Some(&mut entries), &mut hints)
         .map(|output| (output, entries));
     (cautions, result, hints)
@@ -87,7 +100,7 @@ fn refs_sites_run(
     opts: RefsSitesOpts,
     cautions: &mut Vec<Finding>,
     index_entries: Option<&mut BTreeSet<(String, usize, usize)>>,
-    hints: &mut Vec<String>,
+    hints: &mut RefsSitesHints,
 ) -> Result<RefsOutput> {
     // §FS-coordinate-globs.errors.shape: what the grammar alone refuses, before discovery.
     let globs = match &opts.sites {
@@ -106,8 +119,12 @@ fn refs_sites_run(
         // §AR-resolver.3.3: the same project catalog resolves operands in every mode.
         RefsSites::From(source) => {
             let sites = from_sites(&context, source, scope.as_ref()).inspect_err(|error| {
-                // §FS-refs.from: the source's refusal is `show`'s, hint included.
-                *hints = query_failure_hints(&context, source, &ApiScanError::printed(error));
+                // §FS-refs.from: the source's refusal is `show`'s, hint included, and
+                // §AR-resolver.3.1.1.1: in the format this context's listing prints in.
+                *hints = RefsSitesHints {
+                    lines: query_failure_hints(&context, source, &ApiScanError::printed(error)),
+                    output_format: Some(context.render_config().output_format.clone()),
+                };
             })?;
             (sites, None)
         }
