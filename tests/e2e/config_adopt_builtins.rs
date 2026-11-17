@@ -421,6 +421,85 @@ fn adopt_spells_paths_from_the_invocation() {
     );
 }
 
+/// The issue's project where adoption changes a finding: `src/Text.java` declares `FS-gone` on a
+/// `#` line, which built-in `java` does not read, and `src/Login.java` cites it.
+const GONE_FILES: &[(&str, &str)] = &[
+    ("docs/FS-login.md", "# FS-login: Login\n\nUsers log in.\n"),
+    ("src/Text.java", "# FS-gone: Gone\nclass Text {}\n"),
+    (
+        "src/Login.java",
+        "// \u{a7}FS-login \u{a7}FS-gone\nclass Login {}\n",
+    ),
+];
+
+/// §FS-config-adopt-builtins.1.2, §FS-config-adopt-builtins.6.4: from `src/`, under the default
+/// base and under `--path-base invocation`, each changed finding is the line `grund check` with the
+/// same base prints from there once the candidate is written.
+#[test]
+fn adopt_spells_changed_findings_as_check_does_from_the_invocation() {
+    let tree = Tree::new("path-base-findings", &migrated(), GONE_FILES);
+    let src = tree.0.join("src");
+    let bases: [&[&str]; 2] = [&[], &["--path-base", "invocation"]];
+    let previews: Vec<Output> = bases
+        .iter()
+        .map(|base| tree.run_in(&src, &[&["config", "adopt-builtins"], *base].concat()))
+        .collect();
+    let invocation = "  + Login.java:1: error: unknown reference FS-gone\n";
+    assert!(
+        stderr(&previews[1]).ends_with(&format!("1 finding changes\n{invocation}")),
+        "{}",
+        streams(&previews[1])
+    );
+    let write = tree.run(&["config", "adopt-builtins", "--write"]);
+    assert_eq!(write.status.code(), Some(0), "{}", streams(&write));
+    for (base, preview) in bases.iter().zip(&previews) {
+        assert_eq!(preview.status.code(), Some(0), "{}", streams(preview));
+        let changed: String = stderr(preview)
+            .lines()
+            .filter_map(|line| line.strip_prefix("  + "))
+            .map(|line| format!("{line}\n"))
+            .collect();
+        let check = tree.run_in(&src, &[&["check", "--suggestions"], *base].concat());
+        holds(&check, &changed, "", 1);
+    }
+}
+
+/// [`migrated`] with `languages` across lines, a comment on its opening line, on one name and
+/// after its close, and the same with the names adoption gives it.
+fn languages_across_lines(names: [&str; 4]) -> String {
+    let [md, java, gradle, sh] = names;
+    format!(
+        "languages = [ # the readings\n  \"{md}\",\n  \"{java}\", # java\n  \"{gradle}\",\n  \
+         \"{sh}\",\n] # end\n"
+    )
+}
+
+/// §FS-config-adopt-builtins.4.1, §FS-config-adopt-builtins.7: a `languages` value written across
+/// lines keeps its lines and every comment on them, so nothing is listed and the preview exits
+/// `0`.
+#[test]
+fn adopt_keeps_the_comments_on_languages_across_lines() {
+    let one_line = "languages = [\"v1_markdown\", \"v1_c_family\", \"v1_plain\", \"v1_shell\"]\n";
+    let config = migrated().replacen(
+        one_line,
+        &languages_across_lines(["v1_markdown", "v1_c_family", "v1_plain", "v1_shell"]),
+        1,
+    );
+    let adopted = candidate().replacen(
+        "languages = [\"markdown\", \"java\", \"v1_plain\", \"shell\"]\n",
+        &languages_across_lines(["markdown", "java", "v1_plain", "shell"]),
+        1,
+    );
+    let tree = Tree::new("languages-lines", &config, ISSUE_FILES);
+    let output = tree.run(&["config", "adopt-builtins"]);
+    holds(
+        &output,
+        &adopted,
+        &format!("{PREVIEW}{REPORT}{COMPARED}"),
+        0,
+    );
+}
+
 /// A version-2 project with no `code` row: `docs/FS-login.md` and one source file.
 fn small(source: &'static str, text: &str) -> Vec<(&'static str, String)> {
     vec![

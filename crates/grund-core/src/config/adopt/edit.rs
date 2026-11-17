@@ -1,16 +1,19 @@
 //! §AR-config.10.2: the candidate is the file's own text with three edits, `languages`, the lines
 //! of adopted entries and the tables of definitions nothing names any more
 //! (§FS-config-adopt-builtins.4). Every line span is one the version-2 reader recorded in the load
-//! that built the model, so the edit parses no key itself; the one rule it applies to a line is
-//! the reader's own comment rule, to find the comments it removes (§FS-config-adopt-builtins.7).
+//! that built the model, so the edit parses no key itself. The rules it applies to a line are the
+//! reader's own: its comment rule, to find the comments it removes (§FS-config-adopt-builtins.7),
+//! and, on a `languages` value written across lines, where a string ends (§FS-config.3.11).
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::ops::Range;
+use std::path::Path;
 
 use super::plan::{Decision, Plan};
 use super::record::AdoptComment;
 use crate::config::sources::SourceModel;
-use crate::config::v1::strip_comment;
-use crate::config::v2::Spans;
+use crate::config::v1::{parse_string, string_close, strip_comment};
+use crate::config::v2::{KeySpan, Spans};
 
 const SOURCES: &str = "schema.sources";
 const EXTENSIONS: &str = "schema.sources.extensions";
@@ -32,17 +35,21 @@ pub(crate) fn edit(text: &str, spans: &Spans, model: &SourceModel, plan: &Plan) 
     let languages = renamed(&listed, plan);
     // Each removed line, with the place a comment on it is listed under.
     let mut removed: BTreeMap<usize, String> = BTreeMap::new();
-    let mut languages_line = None;
+    // Each line written anew, the text that takes its place.
+    let mut rewritten: BTreeMap<usize, String> = BTreeMap::new();
     if languages != listed
         && let Some(span) = key_span(spans, SOURCES, "languages")
     {
-        languages_line = Some((span.first, span.last));
-        // §FS-config-adopt-builtins.4.1: the comment after the value stays on the one line.
-        for line in span.first..span.last {
-            removed.insert(line, format!("after [{SOURCES}] languages"));
-        }
-        if span.first < span.last {
-            removed.insert(span.last, String::new());
+        // §FS-config-adopt-builtins.4.1: a value on one line is written back on one line.
+        if span.first == span.last {
+            let raw = lines[span.first - 1];
+            rewritten.insert(span.first, languages_value(raw, &languages));
+        } else {
+            let renaming = Renaming {
+                listed: &listed,
+                plan,
+            };
+            rename_across_lines(&lines, span, &renaming, &mut rewritten, &mut removed);
         }
     }
     let tables = removed_tables(model, plan);
@@ -68,14 +75,9 @@ pub(crate) fn edit(text: &str, spans: &Spans, model: &SourceModel, plan: &Plan) 
     let mut candidate = String::with_capacity(text.len());
     for (at, raw) in lines.iter().enumerate() {
         let line = at + 1;
-        match languages_line {
-            Some((first, last)) if line == first => {
-                candidate.push_str(&languages_value(raw, lines[last - 1], &languages));
-                continue;
-            }
-            _ => {}
-        }
-        if !removed.contains_key(&line) {
+        if let Some(text) = rewritten.get(&line) {
+            candidate.push_str(text);
+        } else if !removed.contains_key(&line) {
             candidate.push_str(raw);
         }
     }
@@ -89,12 +91,32 @@ pub(crate) fn edit(text: &str, spans: &Spans, model: &SourceModel, plan: &Plan) 
 /// §FS-config-adopt-builtins.4.1: `listed` with each fully adopted definition replaced by the rows
 /// its suffixes were adopted into, and each partly kept one followed by them, never twice.
 pub(crate) fn renamed(listed: &[String], plan: &Plan) -> Vec<String> {
+    let renaming = Renaming { listed, plan };
     let mut out: Vec<String> = Vec::new();
     for name in listed {
-        let entries: Vec<_> = plan
+        let becomes = renaming.rename(name, &out);
+        out.extend(becomes);
+    }
+    out
+}
+
+/// §FS-config-adopt-builtins.4.1: what each name of `languages` becomes, asked in the list's
+/// order, so the whole list and a value rewritten name by name agree.
+struct Renaming<'a> {
+    listed: &'a [String],
+    plan: &'a Plan,
+}
+
+impl Renaming<'_> {
+    /// The names `name` becomes after `before`, the list so far: a fully adopted definition the
+    /// rows its suffixes were adopted into, a partly kept one itself and then those rows, any
+    /// other name itself, and nothing that is listed already or earlier by the same edit.
+    fn rename(&self, name: &str, before: &[String]) -> Vec<String> {
+        let entries: Vec<_> = self
+            .plan
             .entries
             .iter()
-            .filter(|entry| entry.definition.name == *name)
+            .filter(|entry| entry.definition.name == name)
             .collect();
         let mut rows: Vec<&str> = Vec::new();
         for entry in &entries {
@@ -107,16 +129,127 @@ pub(crate) fn renamed(listed: &[String], plan: &Plan) -> Vec<String> {
         let keeps = entries
             .iter()
             .any(|entry| matches!(entry.decision, Decision::Kept(_)));
-        if (keeps || rows.is_empty()) && !out.contains(name) {
-            out.push(name.clone());
+        let mut out: Vec<String> = Vec::new();
+        if (keeps || rows.is_empty()) && !before.iter().any(|known| known == name) {
+            out.push(name.to_string());
         }
         for row in rows {
-            if !listed.iter().any(|known| known == row) && !out.iter().any(|known| known == row) {
+            let listed = self.listed.iter().chain(before).any(|known| known == row);
+            if !listed && !out.iter().any(|known| known == row) {
                 out.push(row.to_string());
             }
         }
+        out
     }
-    out
+}
+
+/// §FS-config-adopt-builtins.4.1: a `languages` value written across lines, at `span`, keeps its
+/// lines, and with them every comment: each name is rewritten where it stands, and a line goes
+/// only when the list drops every name on it and nothing else stands on it, its comment then
+/// listed (§FS-config-adopt-builtins.7).
+fn rename_across_lines(
+    lines: &[&str],
+    span: &KeySpan,
+    renaming: &Renaming<'_>,
+    rewritten: &mut BTreeMap<usize, String>,
+    removed: &mut BTreeMap<usize, String>,
+) {
+    let mut out: Vec<String> = Vec::new();
+    for line in span.first..=span.last {
+        let raw = lines[line - 1];
+        match renamed_line(raw, line == span.first, renaming, &mut out) {
+            LineEdit::Kept => {}
+            LineEdit::Rewritten(text) => {
+                rewritten.insert(line, text);
+            }
+            LineEdit::Removed => {
+                removed.insert(line, format!("after [{SOURCES}] languages"));
+            }
+        }
+    }
+}
+
+/// What the edit does to one line of a `languages` value written across lines.
+enum LineEdit {
+    Kept,
+    Rewritten(String),
+    Removed,
+}
+
+/// §FS-config-adopt-builtins.4.1: one line of a `languages` value written across lines, each name
+/// on it renamed after `out`, the list so far, which it extends. The text before the first name
+/// and after the last stays, the comment included; names that stay keep their bytes, and the
+/// names on a line one of them changes on are joined by `, `.
+fn renamed_line(
+    raw: &str,
+    key_line: bool,
+    renaming: &Renaming<'_>,
+    out: &mut Vec<String>,
+) -> LineEdit {
+    let text = body(raw);
+    let code = strip_comment(text);
+    // The key's own line holds the key, quoted or bare, before its `=`.
+    let from = match key_line {
+        true => code.find('=').map_or(code.len(), |at| at + 1),
+        false => 0,
+    };
+    let names = written_strings(code, from);
+    let (Some(first), Some(last)) = (names.first(), names.last()) else {
+        return LineEdit::Kept;
+    };
+    let (lead, trail) = (&code[..first.start], &code[last.end..]);
+    let mut changed = false;
+    let mut written: Vec<String> = Vec::new();
+    for range in &names {
+        let as_written = &code[range.clone()];
+        // A loaded file's names all read; one that does not is left as it is.
+        let Ok(name) = parse_string(Path::new(""), 0, as_written) else {
+            written.push(as_written.to_string());
+            continue;
+        };
+        let becomes = renaming.rename(&name, out);
+        out.extend(becomes.iter().cloned());
+        if becomes.len() == 1 && becomes[0] == name {
+            written.push(as_written.to_string());
+            continue;
+        }
+        changed = true;
+        written.extend(becomes.iter().map(|row| format!("\"{row}\"")));
+    }
+    if !changed {
+        return LineEdit::Kept;
+    }
+    let after = &raw[code.len()..];
+    if !written.is_empty() {
+        return LineEdit::Rewritten(format!("{lead}{}{trail}{after}", written.join(", ")));
+    }
+    // No name is left on the line, so neither is the comma that followed the last.
+    let trail = trail.trim_start().strip_prefix(',').unwrap_or(trail);
+    if lead.trim().is_empty() && trail.trim().is_empty() {
+        return LineEdit::Removed;
+    }
+    LineEdit::Rewritten(format!("{lead}{trail}{after}"))
+}
+
+/// Each basic string in `code` from byte `from`, opening quote to closing quote, where the one
+/// close every reader shares says it ends (§FS-config.3.11). Outside a string, in an array, every
+/// `"` opens one.
+fn written_strings(code: &str, from: usize) -> Vec<Range<usize>> {
+    let bytes = code.as_bytes();
+    let mut strings = Vec::new();
+    let mut at = from;
+    while at < bytes.len() {
+        if bytes[at] == b'"' {
+            let Some(close) = string_close(bytes, at + 1) else {
+                break;
+            };
+            strings.push(at..close + 1);
+            at = close + 1;
+        } else {
+            at += 1;
+        }
+    }
+    strings
 }
 
 /// Each adopted suffix, in entry order.
@@ -197,8 +330,7 @@ fn attached<'a>(lines: &'a [&str], line: usize) -> impl Iterator<Item = usize> +
 }
 
 /// §FS-config-adopt-builtins.7: each run of removed lines that carry a comment and share a place,
-/// in file order. A line with no place is one whose comment stays or that holds none: the last line
-/// of `languages`, rewritten with its comment (§FS-config-adopt-builtins.4.1), or a blank.
+/// in file order. A line with no place is a blank, which holds none.
 fn listed_comments(lines: &[&str], removed: &BTreeMap<usize, String>) -> Vec<AdoptComment> {
     let mut comments: Vec<AdoptComment> = Vec::new();
     for (line, place) in removed {
@@ -217,26 +349,22 @@ fn listed_comments(lines: &[&str], removed: &BTreeMap<usize, String>) -> Vec<Ado
     comments
 }
 
-/// §FS-config-adopt-builtins.4.1: the `languages` line, its key as written, `names` as a one-line
-/// array, and whatever followed the value on its last line, a comment included.
-fn languages_value(first: &str, last: &str, names: &[String]) -> String {
-    let code = strip_comment(body(first));
+/// §FS-config-adopt-builtins.4.1: the one-line `languages` line, its key as written, `names` as a
+/// one-line array, and whatever followed the value, a comment included.
+fn languages_value(raw: &str, names: &[String]) -> String {
+    let line = body(raw);
+    let code = strip_comment(line);
     let eq = code.find('=').map_or(code.len(), |at| at + 1);
     let gap = code[eq..].len() - code[eq..].trim_start().len();
     let key = &code[..eq + gap];
     let array: Vec<String> = names.iter().map(|name| format!("\"{name}\"")).collect();
-    let tail_line = body(last);
-    let tail = &tail_line[strip_comment(tail_line).trim_end().len()..];
-    let ending = &last[body(last).len()..];
+    let tail = &line[code.trim_end().len()..];
+    let ending = &raw[line.len()..];
     format!("{key}[{}]{tail}{ending}", array.join(", "))
 }
 
 /// The span the reader recorded for `key` in `table`.
-fn key_span<'a>(
-    spans: &'a Spans,
-    table: &str,
-    key: &str,
-) -> Option<&'a crate::config::v2::KeySpan> {
+fn key_span<'a>(spans: &'a Spans, table: &str, key: &str) -> Option<&'a KeySpan> {
     spans
         .keys
         .iter()
