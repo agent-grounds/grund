@@ -63,10 +63,6 @@ fn stderr(output: &Output) -> String {
     not(feature = "test-workspace-load-count"),
     ignore = "reads the configuration-resolution observer; run with --features grund/test-workspace-load-count"
 )]
-#[cfg_attr(
-    feature = "test-workspace-load-count",
-    ignore = "red until #1423 takes the refused refs --from source's format from the loaded context; implement removes this"
-)]
 fn refs_from_refusal_resolves_configuration_once() {
     let logs = PathBuf::from(env!("CARGO_TARGET_TMPDIR"))
         .join("refs_from_refusal_resolutions")

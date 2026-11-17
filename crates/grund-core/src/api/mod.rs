@@ -111,7 +111,8 @@ pub use refs::{
     refs_with_text_annotations,
 };
 pub use refs_sites::{
-    RefsSites, RefsSitesOpts, refs_sites_with_run_warnings, refs_sites_with_text_annotations,
+    RefsSites, RefsSitesHints, RefsSitesOpts, refs_sites_with_run_warnings,
+    refs_sites_with_text_annotations,
 };
 pub use report::render_finding_sites_json;
 pub use show::{ShowHints, show, show_from_snapshot, show_with_scope};

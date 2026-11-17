@@ -138,7 +138,6 @@ fn refs_from_refusal_format_controls() {
 /// whether the source is not found or invalid (§FS-refs.from, §FS-refs.3,
 /// §FS-scan.projects.discovery). Until #1423 each printed the root's `json`.
 #[test]
-#[ignore = "red until #1423 takes the refused refs --from source's format from the loaded context; implement removes this"]
 fn refs_from_refusal_in_a_configless_member_prints_in_the_format_the_run_lists_in() {
     let workspace = Workspace::new("configless-member");
     let not_found = format!("ID not found: FS-001-nope\n{NOT_FOUND_HINT}");
