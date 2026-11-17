@@ -226,6 +226,7 @@ takes which:
 | `check` (incl. `--watch`), `list`, `refs`, `cover` | `text\|json` | yes | yes |
 | `show` (incl. `--batch` and the bare-ID form), `id`, `integrations` | `text\|json` | no, so a tree that commits `format = "json"` never changes their bytes ([§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered)) | yes |
 | `fmt`, `config validate`, `config show`, `config migrate` | rejected | — | yes: they render paths and config-load errors |
+| `config adopt-builtins` | rejected | — | yes: it renders paths, config-load errors and the findings it compares ([§FS-config-adopt-builtins.1.2](FS-config-adopt-builtins.md#12-the-flags)) |
 | `schema` | its own `table\|mermaid\|dot` ([§FS-schema.1](FS-schema.md#1-the-command)); `text` and `json` are refused | no | yes: it renders config-load errors |
 | `init`, `fetch`, `completions`, `guide` | rejected | — | rejected |
 

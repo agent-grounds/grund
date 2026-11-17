@@ -35,7 +35,7 @@ A message's exact text is user-visible output that tools grep ([§GOAL-no-silent
 
 **stdout** carries:
 
-- a query result: the body `grund <ID>` prints, `grund list`'s catalog, `grund refs`' citations, `grund cover`'s file graph, `grund id`'s ID, `grund config show`'s config, and `grund config migrate`'s candidate, whose report goes to stderr ([§FS-config-migrate.2.1](FS-config-migrate.md#21-stdout-is-the-candidate));
+- a query result: the body `grund <ID>` prints, `grund list`'s catalog, `grund refs`' citations, `grund cover`'s file graph, `grund id`'s ID, `grund config show`'s config, `grund config migrate`'s candidate, whose report goes to stderr ([§FS-config-migrate.2.1](FS-config-migrate.md#21-stdout-is-the-candidate)), and `grund config adopt-builtins`' candidate, whose report goes to stderr too ([§FS-config-adopt-builtins.5.1](FS-config-adopt-builtins.md#51-stdout-is-the-candidate));
 - a checker report: every located finding of `grund check` ([§FS-check.2.1](FS-check.md#21-report-format)), the text-mode `success` line of a clean one ([§FS-errors.2.4](FS-errors.md#24-text-success-line)), and `grund fmt`'s would-change and did-change report ([§FS-fmt.3](FS-fmt.md#3-outputs)). `grund check --format=json` prints findings only, so a clean run leaves stdout empty.
 
 **stderr** carries:
