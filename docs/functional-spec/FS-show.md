@@ -91,7 +91,7 @@ What `<path>` means is [§FS-scan.path.show](FS-scan.md#pathshow-show-resolves-t
 
 #### 1.4.1 A second coordinate in the path slot
 
-`show` reads one coordinate, so in `grund FS-show FS-cli` the second operand is the path to scan ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)), and when no such path exists the run fails as any missing path does: `error: path does not exist: FS-cli` on stderr, empty stdout, exit `2`. Where that operand reads as a second coordinate, the refusal also says how to read several. It does so when all of these hold:
+`show` reads one coordinate, so in `grund FS-show FS-cli` the second operand is the path to scan ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)), and a missing path fails even at a workspace root: `error: path does not exist: FS-cli` on stderr, empty stdout, exit `2`. Where that operand reads as a second coordinate, the refusal also says how to read several. It does so when all of these hold:
 
 - the path came from the positional `<path>` operand, in the bare or the explicit `show` form, not from `--path`;
 - nothing exists at it, relative to the working directory;
