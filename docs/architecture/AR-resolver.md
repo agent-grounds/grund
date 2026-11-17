@@ -177,6 +177,29 @@ without its hint ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)). The hint trav
 beside its message; the JSON envelope does not print it, so it stays hint-free
 ([§FS-output-shapes.6.1.2](../functional-spec/FS-output-shapes.md#612-from-0160)).
 
+##### 3.1.1.1 A refused `refs --from` source takes its format from the same context
+
+`refs --from` refuses a source with the bytes `grund <ID>` prints for it
+([§FS-refs.from](../functional-spec/FS-refs.md#from---from-lists-what-one-point-cites)), and its hint lines are built as above, from the context the run
+loaded. The format it prints them in is `refs`' own ([§FS-refs.3](../functional-spec/FS-refs.md#3-outputs)): `--format`,
+else the configured one ([§FS-config.3.6](../functional-spec/FS-config.md#36-output--report-format)). The configured one is the format that
+same context renders in, the one the run's listing prints in. The core returns
+it beside the refusal's hint lines, from the same context and where they are
+built, and the CLI never resolves configuration again to choose it. A load that
+fails before a context exists returns no format and needs none: its refusal is
+`error: <message>`, exit `2`, in every format ([§FS-refs.4](../functional-spec/FS-refs.md#4-exit-codes)).
+
+So a refused source renders in the format the run lists in. The CLI chose it
+otherwise before, through `effective_config(path)`, and that is what this point
+rules out. It was one more configuration resolution for every refused source
+given no `--format`. It was also a `Discovery` resolution, which stops before a
+scope inside a member is re-rooted onto it. In a member with no `grund.toml` of
+its own, which runs on the canonical defaults ([§FS-scan.projects.discovery](../functional-spec/FS-scan.md#projectsdiscovery-the-nearest-config-decides)), under
+a workspace root whose `[output] format` is `json`, it read the root's key, so the
+refusal printed JSON where the same run listed in `text`. A test holds a refused
+source, not found and invalid, given no `--format`, to as many resolutions as the
+same command's success path and `grund <ID>`'s own refusal make ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)).
+
 ### 3.2 `grund cover` drops no file
 
 `grund cover` drops **no** file record: it is keyed by file, so every project
