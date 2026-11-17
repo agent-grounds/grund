@@ -42,7 +42,7 @@ The two are never mixed: `grund check 2>/dev/null` shows you the findings and on
 
 **stdout** carries the command's output:
 
-- a query result — the body printed by `grund <ID>`, the catalog from `grund list`, the citations from `grund refs`, the file graph from `grund cover`, the ID from `grund id`, the config from `grund config show`, and the candidate from `grund config migrate`, whose report goes to stderr ([§FS-config-migrate.2.1](FS-config-migrate.md#21-stdout-is-the-candidate));
+- a query result — the body printed by `grund <ID>`, the catalog from `grund list`, the citations from `grund refs`, the file graph from `grund cover`, the ID from `grund id`, the config from `grund config show`, the candidate from `grund config migrate`, whose report goes to stderr ([§FS-config-migrate.2.1](FS-config-migrate.md#21-stdout-is-the-candidate)), and the candidate from `grund config adopt-builtins`, whose report goes to stderr too ([§FS-config-adopt-builtins.5.1](FS-config-adopt-builtins.md#51-stdout-is-the-candidate));
 - a checker report — every located finding from `grund check` ([§FS-check.2.1](FS-check.md#21-report-format)), the text-mode `success` line from a clean `grund check`, and the would-change / did-change report from `grund fmt` ([§FS-fmt.3](FS-fmt.md#3-outputs)).
 - `grund check --format=json` is findings-only: on success with nothing to report, stdout is empty.
 
