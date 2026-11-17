@@ -28,6 +28,11 @@ PRE_COMMIT = REPO_ROOT / ".pre-commit-config.yaml"
 OBSERVERS = {
     "grund/test-workspace-load-count": (
         (
+            "crates/grund-cli/tests/config_show_resolutions.rs",
+            "resolutions",
+            "GRUND_TEST_CONFIG_RESOLUTION_LOG",
+        ),
+        (
             "crates/grund-cli/tests/show_batch_contract.rs",
             "loads",
             "GRUND_TEST_WORKSPACE_LOAD_LOG",
