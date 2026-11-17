@@ -72,10 +72,6 @@ fn stderr(output: &Output) -> String {
     not(feature = "test-workspace-load-count"),
     ignore = "reads the configuration-resolution observer; run with --features grund/test-workspace-load-count"
 )]
-#[cfg_attr(
-    feature = "test-workspace-load-count",
-    ignore = "red until #1425 prints the v2 spelling from the loaded Config; implement removes this"
-)]
 fn config_show_resolves_configuration_once() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../target/config-show-resolutions")
