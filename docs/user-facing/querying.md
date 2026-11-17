@@ -38,6 +38,16 @@ answer ([§FS-workspace.8.2.2.1](../functional-spec/FS-workspace.md#8221-a-membe
 The existing [workspace example](../../examples/workspace/README.md) shows the
 same recovery with `api/FS-session` and `web/FS-session`.
 
+`show` reads one coordinate; a second operand is a path. If that path is missing,
+the command exits 2 with empty stdout, including at a workspace root
+([§FS-show.1.4.1](../functional-spec/FS-show.md#141-a-second-coordinate-in-the-path-slot)):
+
+```console
+$ grund show FS-show FS-cli
+error: path does not exist: FS-cli
+hint: `show` reads one coordinate, so `FS-cli` is the path; read both with `printf '%s\n' '{"id":"FS-show"}' '{"id":"FS-cli"}' | grund show --batch`
+```
+
 ## Select units: `list --glob`, `list --selector`, `list --kind`
 
 `grund list --glob` takes a coordinate pattern and prints one row per declaration

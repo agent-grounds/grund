@@ -74,7 +74,6 @@ fn missing(args: &[&str], stderr: &str) {
 }
 
 #[test]
-#[ignore = "red until #1422 validates missing workspace paths; implement removes this"]
 fn explicit_coordinate_path_refused_with_hint() {
     missing(
         &["show", "FS-root", "FS-gone"],
@@ -83,13 +82,11 @@ fn explicit_coordinate_path_refused_with_hint() {
 }
 
 #[test]
-#[ignore = "red until #1422 validates missing workspace paths; implement removes this"]
 fn bare_coordinate_path_refused_with_hint() {
     missing(&["FS-root", "FS-gone"], &format!("{ERROR}{HINT}`\n"));
 }
 
 #[test]
-#[ignore = "red until #1422 validates missing workspace paths; implement removes this"]
 fn slash_path_refused_without_hint() {
     missing(
         &["show", "FS-root", "docs/gone.md"],
@@ -98,13 +95,11 @@ fn slash_path_refused_without_hint() {
 }
 
 #[test]
-#[ignore = "red until #1422 validates missing workspace paths; implement removes this"]
 fn flag_path_refused_without_hint() {
     missing(&["show", "FS-root", "--path", "FS-gone"], ERROR);
 }
 
 #[test]
-#[ignore = "red until #1422 validates missing workspace paths; implement removes this"]
 fn json_coordinate_path_refused_with_json_batch_hint() {
     missing(
         &["show", "FS-root", "FS-gone", "--format=json"],
@@ -113,7 +108,6 @@ fn json_coordinate_path_refused_with_json_batch_hint() {
 }
 
 #[test]
-#[ignore = "red until #1422 validates missing workspace paths; implement removes this"]
 fn json_bare_coordinate_path_refused_with_json_batch_hint() {
     missing(
         &["FS-root", "FS-gone", "--format=json"],
@@ -122,7 +116,6 @@ fn json_bare_coordinate_path_refused_with_json_batch_hint() {
 }
 
 #[test]
-#[ignore = "red until #1422 validates missing workspace paths; implement removes this"]
 fn json_slash_path_refused_without_hint() {
     missing(
         &["show", "FS-root", "docs/gone.md", "--format=json"],
@@ -131,7 +124,6 @@ fn json_slash_path_refused_without_hint() {
 }
 
 #[test]
-#[ignore = "red until #1422 validates missing workspace paths; implement removes this"]
 fn json_flag_path_refused_without_hint() {
     missing(
         &["show", "FS-root", "--path", "FS-gone", "--format=json"],

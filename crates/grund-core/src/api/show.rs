@@ -17,7 +17,7 @@ use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Declaration, Finding, Id, ShowOutput, ShowRenderMode};
 use crate::queries::{
     LspShowContext, ShowFormat, ShowMode, ShowOpts, answered_coordinate, render_show_output_json,
-    show_declaration_with_home,
+    reported_scope, show_declaration_with_home,
 };
 use crate::resolver::{
     WorkspaceContext, WorkspaceProject, load_reported_workspace_context, scan_failure_refusal,
@@ -114,6 +114,9 @@ fn show_run(
     // §AR-resolver.3.3: the ID resolves against the whole owning project.
     let context = load_reported_workspace_context(&opts.path, path_provided)?;
     *run_warnings = context_run_warnings(&context);
+    // §FS-show.1.4.1: reject missing paths before answering, including at workspace roots.
+    // The scope is discarded: resolution stays project-wide (§AR-resolver.3.3).
+    reported_scope(&context, &opts.path, path_provided)?;
     let answer = show_answer(
         &context,
         id_arg,
