@@ -11,7 +11,9 @@
 //! (§AR-system.2.7).
 
 use anyhow::{Result, anyhow};
+use std::path::Path;
 
+use crate::checker::ScanScope;
 use crate::config::display_path;
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Declaration, Finding, Id, ShowOutput, ShowRenderMode};
@@ -112,11 +114,7 @@ fn show_run(
     // §AR-config.1.5: a command-line run has no buffers; the editor's answer is
     // `show_from_snapshot`, over the context its snapshot loaded with them.
     // §AR-resolver.3.3: the ID resolves against the whole owning project.
-    let context = load_reported_workspace_context(&opts.path, path_provided)?;
-    *run_warnings = context_run_warnings(&context);
-    // §FS-show.1.4.1: reject missing paths before answering, including at workspace roots.
-    // The scope is discarded: resolution stays project-wide (§AR-resolver.3.3).
-    reported_scope(&context, &opts.path, path_provided)?;
+    let (context, _) = load_show_context(&opts.path, path_provided, run_warnings)?;
     let answer = show_answer(
         &context,
         id_arg,
@@ -129,6 +127,23 @@ fn show_run(
         *hints = refusal_hints(&context, id_arg, &ApiScanError::printed(error), bare);
     }
     answer
+}
+
+/// Load once and validate the supplied path before any single or batch answer
+/// (§FS-show.1.4.1, §FS-show.2.6.3), including at workspace roots. Preserve warnings
+/// even when validation refuses the run (§FS-workspace.6.1.7).
+///
+/// Only generated batches use the returned scope to select coordinates; explicit
+/// queries resolve against the whole owning project (§AR-resolver.3.3).
+pub(super) fn load_show_context(
+    path: &Path,
+    path_provided: bool,
+    run_warnings: &mut Vec<Finding>,
+) -> Result<(WorkspaceContext, Option<ScanScope>)> {
+    let context = load_reported_workspace_context(path, path_provided)?;
+    *run_warnings = context_run_warnings(&context);
+    let scope = reported_scope(&context, path, path_provided)?;
+    Ok((context, scope))
 }
 
 /// A refused single read's hints, chosen by the one function a batch asks, over

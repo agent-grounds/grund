@@ -2,13 +2,12 @@
 //! context declares, generated once and in one order, which `--all` reads whole and
 //! `--glob` filters (§FS-show.1.9).
 
-use anyhow::Result;
 use std::collections::BTreeSet;
-use std::path::Path;
 
 use super::batch::BatchShowQuery;
 use super::glob_scope::GlobSelection;
-use super::report_scope::{reported_scope, reports};
+use super::report_scope::reports;
+use crate::checker::ScanScope;
 use crate::grammar::render_catalog_id;
 use crate::model::{Id, paired_declarations};
 use crate::resolver::{WorkspaceContext, WorkspaceProject};
@@ -54,20 +53,18 @@ pub(crate) fn answered_coordinate(
 /// they select, matched against the project-local ID (§FS-show.1.9).
 pub(crate) fn exhaustive_batch_queries(
     context: &WorkspaceContext,
-    path: &Path,
-    path_provided: bool,
+    scope: Option<&ScanScope>,
     globs: Option<&GlobSelection<'_>>,
-) -> Result<Vec<BatchShowQuery>> {
+) -> Vec<BatchShowQuery> {
     let selects = |project: usize, id: &str, section: Option<&str>| {
         globs.is_none_or(|globs| globs.selects(project, id, section))
     };
-    let scope = reported_scope(context, path, path_provided)?;
     let mut queries = Vec::new();
     for (project_index, project) in context.projects.iter().enumerate() {
         for (id, declarations) in &project.findings.declarations {
             let records = paired_declarations(declarations)
                 .records()
-                .filter(|record| reports(scope.as_ref(), declarations, record))
+                .filter(|record| reports(scope, declarations, record))
                 .collect::<Vec<_>>();
             if records.is_empty() {
                 continue;
@@ -112,5 +109,5 @@ pub(crate) fn exhaustive_batch_queries(
             .cmp(right.id.as_bytes())
             .then_with(|| left.section.as_deref().cmp(&right.section.as_deref()))
     });
-    Ok(queries)
+    queries
 }

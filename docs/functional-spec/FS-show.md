@@ -444,8 +444,8 @@ A well-formed query that names an invalid, missing, or ambiguous ID; a missing o
 ambiguous section; a broken stub; an unknown project alias; or both an inline and
 explicit section produces that query's failed record — an envelope in `json`, the failure
 under its header in `text` and `md` ([§FS-show.3.3](FS-show.md#33-batch-query), [§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)) — and does not stop
-later records. Malformed input or invocation, configuration failure, and any scan
-failure are run-level errors: stdout stays empty, stderr carries the error, and no
+later records. Malformed input or invocation, missing paths, configuration or scan
+failures are run-level errors: stdout stays empty, stderr carries the error, and no
 query is attempted. In particular, malformed explicit input is diagnosed as
 `error: batch input line <N>: <reason>` before the workspace loader is called.
 

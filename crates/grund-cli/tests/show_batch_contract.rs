@@ -23,6 +23,9 @@ mod observed;
 #[path = "show_batch_contract/formats.rs"]
 mod formats;
 
+#[path = "show_batch_contract/paths.rs"]
+mod paths;
+
 static NEXT_ROOT: AtomicUsize = AtomicUsize::new(0);
 
 struct Repo(PathBuf);
