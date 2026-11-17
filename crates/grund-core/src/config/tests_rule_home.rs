@@ -182,7 +182,8 @@ fn v2_rule_home_second_file_read_as_rust_after_txt_warns() {
 }
 
 /// §FS-config-v2.schema.sources.rules, §FS-config-v2.schema.sources.migration: what the real
-/// migration writes for a v1 rule kind's `.md` `file` home, `md = "v1_markdown"`, stays one.
+/// migration writes for a v1 rule kind's `.md` `file` home stays one. Under version 1's default
+/// comment prefixes that is the built-in `markdown`, which reads `.md` as version 1 did.
 #[test]
 fn v1_rule_home_carried_through_migration_loads() {
     let home = "rules/rules.md";
@@ -208,8 +209,8 @@ fn v1_rule_home_carried_through_migration_loads() {
     assert_eq!(report.gates, Some(GateResult::Equal), "{report:#?}");
     let candidate = report.candidate.expect("a candidate");
     assert!(
-        candidate.contains("md = \"v1_markdown\""),
-        "the migration should map `.md` to its definition: {candidate}"
+        candidate.contains("languages = [\"markdown\", "),
+        "the migration should read `.md` through the built-in markdown: {candidate}"
     );
     assert_rule_kind_loads("v1_rule_home_migrated", &candidate, home);
 }

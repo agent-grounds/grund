@@ -9,6 +9,6 @@ mapped: grund.toml:7: [id] slug_pattern → [schema] slug_pattern
 mapped: grund.toml:10: [[kinds]] kind → [schema.kinds.FS]
 mapped: grund.toml:11: [[kinds]] file → [schema.kinds.FS] files
 mapped: grund.toml:15: [scan] include → nothing, requirements.md is a place of [schema.kinds.FS] already
-mapped: grund.toml:16: [scan] extensions → [schema.sources] languages and extensions, definition v1_markdown
+mapped: grund.toml:16: [scan] extensions → [schema.sources] languages, built-in markdown
 compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
 not written: 1 comment has no single key to follow (follow the comment guidance above); grund.toml is unchanged

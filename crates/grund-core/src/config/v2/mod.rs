@@ -48,6 +48,7 @@ pub(super) use strings::{
 #[cfg(test)]
 pub(super) use tables::V1_TABLES;
 pub(super) use tables::{admitted, v1_homes};
+pub(crate) use walk::{KeySpan, Spans};
 
 use anyhow::Result;
 use std::path::Path;
@@ -81,13 +82,26 @@ pub(crate) fn version(text: &str) -> Option<&str> {
     None
 }
 
+/// [`read_with_spans`] without the spans, for a test that reads only the project.
+#[cfg(test)]
+pub(super) fn read(text: &str, report_path: &Path, root: &Path) -> Result<Project> {
+    read_with_spans(text, report_path, root).map(|(project, _)| project)
+}
+
 /// §FS-config-v2.reader: lower a v2 file's `text` into a `Project`, refusing
 /// every spelling at the line it was written at (§FS-config-v2.reader.4).
 /// `report_path` is the path every error names, and `root` the config root a
 /// value home must exist under (§FS-fields.forms). The meanings both readers
 /// share are judged afterwards, once, in `config/validate.rs` (§AR-config.4).
-pub(super) fn read(text: &str, report_path: &Path, root: &Path) -> Result<Project> {
+/// The same one walk records where each header and key was written, which
+/// adoption's edit reads (§AR-config.10.2).
+pub(super) fn read_with_spans(
+    text: &str,
+    report_path: &Path,
+    root: &Path,
+) -> Result<(Project, Spans)> {
     let mut reader = walk::Reader::new(report_path);
     walk::walk(text, &mut reader)?;
-    finish::finish(reader, root)
+    let spans = std::mem::take(&mut reader.spans);
+    Ok((finish::finish(reader, root)?, spans))
 }

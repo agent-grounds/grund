@@ -13,6 +13,7 @@ mod candidate;
 mod comment_guidance;
 mod comments;
 mod keymap;
+mod keymap_sources;
 mod keys;
 mod languages;
 mod opted_out;
@@ -50,6 +51,7 @@ pub use record::{
     Gate, GateResult, ListedComment, MappedKey, MigrateFailure, MigrateNotice, MigrateOutcome,
     MigrateRefusal, MigrateReport, RefusalAnchor,
 };
+pub(in crate::config) use records_gate::compare_but_readings;
 
 /// The config a run migrates (§FS-config-migrate.1.1): where it is, the root it
 /// governs, and its path from the report base.

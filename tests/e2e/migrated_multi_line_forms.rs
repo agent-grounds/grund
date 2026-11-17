@@ -26,9 +26,10 @@ const VERSION_1: &str = "grund_config_version = 1\n[id]\nformat = \"{kind}-{slug
                          index = false\n[scan]\ninclude = [\"docs\", \"src\"]\n\
                          extensions = [\"md\", \"rs\", \"ts\", \"py\", \"go\", \"java\", \"sh\"]\n";
 
-/// What `grund config migrate --to 2 --write` writes for [`VERSION_1`], byte for byte, as grund
-/// wrote it before #1406: every suffix a `v1_*` definition. The fix changes what it means, not
-/// its bytes (§FS-config-v2.schema.sources.migration).
+/// What `grund config migrate --to 2 --write` writes for [`VERSION_1`], byte for byte: every
+/// suffix a `v1_*` definition, as grund wrote it before #1406, but `.md`, which the built-in
+/// `markdown` reads as version 1 did (§FS-config-v2.schema.sources.migration). The fix for #1406
+/// changes what it means, not its bytes.
 const MIGRATED: &str = "\
     grund_config_version = 2\n\
     \n\
@@ -42,26 +43,19 @@ const MIGRATED: &str = "\
     heading_depth = \"must\"\n\
     \n\
     [schema.sources]\n\
-    languages = [\"v1_markdown\", \"v1_c_family\", \"v1_python\", \"v1_go\", \"v1_shell\"]\n\
+    languages = [\"markdown\", \"v1_c_family\", \"v1_python\", \"v1_go\", \"v1_shell\"]\n\
     declarations = \"any-comment\"\n\
     exclude = [\"target/\", \"node_modules/\", \".git/\", \"dist/\", \"build/\", \".venv/\"]\n\
     respect_gitignore = true\n\
     fenced = []\n\
     \n\
     [schema.sources.extensions]\n\
-    md = \"v1_markdown\"\n\
     rs = \"v1_c_family\"\n\
     ts = \"v1_c_family\"\n\
     py = \"v1_python\"\n\
     go = \"v1_go\"\n\
     java = \"v1_c_family\"\n\
     sh = \"v1_shell\"\n\
-    \n\
-    [schema.sources.definitions.v1_markdown]\n\
-    class = \"document\"\n\
-    comment_prefixes = [\"//\", \"#\", \";\", \"--\", \"*\", \"/*\"]\n\
-    doc_comments = \"none\"\n\
-    docstrings = \"off\"\n\
     \n\
     [schema.sources.definitions.v1_c_family]\n\
     class = \"source\"\n\

@@ -17,8 +17,8 @@ mapped: grund.toml:24: [[kinds]] file → [schema.kinds.FS] files
 mapped: grund.toml:25: [[kinds]] title → [presentation.kinds.FS] title
 mapped: grund.toml:29: [scan] include → [schema.kinds.code] folders, docs and src; requirements.md is a place of [schema.kinds.FS] already
 mapped: grund.toml:30: [scan] exclude → [schema.sources] exclude
-mapped: grund.toml:31: [scan] extensions → [schema.sources] languages and extensions, definitions v1_markdown and v1_c_family
-mapped: grund.toml:32: [scan] comment_prefixes → comment_prefixes of definitions v1_markdown and v1_c_family
+mapped: grund.toml:31: [scan] extensions → [schema.sources] languages and extensions, built-in markdown, definition v1_c_family
+mapped: grund.toml:32: [scan] comment_prefixes → comment_prefixes of definition v1_c_family, and the comment hosts of built-in markdown
 mapped: grund.toml:35: [citations.FS] must → [rules.citations.FS] must
 written: [schema.sources] declarations = "any-comment": version 1's default, written out
 written: [schema.notes.lines] may = 1: version 1's default, written out

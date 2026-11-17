@@ -12,13 +12,11 @@ use std::path::Path;
 use super::candidate::may_default;
 use super::opted_out::Block;
 use super::places::inside_home;
-use crate::config::file_reading::string_reading;
+use crate::config::file_reading::{SuffixReading, suffix_readings};
 use crate::config::grounding::configured_row_grounding;
 use crate::config::kind::KindResolution;
 use crate::config::project::{Project, Strength};
 use crate::config::rows::{Extent, Place, Row};
-use crate::config::sources::DeclarationMode;
-use crate::grammar::{DocCommentRule, StringReading, extension_rule};
 
 /// One section of the comparison, as a line per reading.
 pub(super) type Section = (&'static str, String);
@@ -32,6 +30,38 @@ fn line(name: &'static str, value: impl Debug) -> Section {
 /// refuses, so the nesting rule decides nothing and is not compared.
 pub(super) fn compare(v1: &Project, v2: &Project, root: &Path, block: Block) -> Vec<String> {
     let (old, new) = (reduce(v1, root, block), reduce(v2, root, block));
+    let mut out = Vec::new();
+    for ((name, before), (_, after)) in old.iter().zip(&new) {
+        if before != after {
+            out.push(format!("- {name}: {before}"));
+            out.push(format!("+ {name}: {after}"));
+        }
+    }
+    out
+}
+
+/// §FS-config-adopt-builtins.6.3, §AR-config.10.3: the version line and the records gate's
+/// sections of two version-2 projects, with `sources` compared without its suffix readings, which
+/// adoption holds to its plan instead (§FS-config-adopt-builtins.6.2). Each differing section as
+/// `- `/`+ ` lines, empty when they are equal.
+pub(in crate::config) fn compare_but_readings(
+    file: &Project,
+    candidate: &Project,
+    root: &Path,
+) -> Vec<String> {
+    let reduced =
+        |p: &Project| {
+            let (_, exclude, gitignore) = sources(p);
+            let mut sections = vec![line("version", p.version)];
+            sections.extend(reduce(p, root, Block::Project).into_iter().map(
+                |section| match section {
+                    ("sources", _) => line("sources", (&exclude, gitignore)),
+                    other => other,
+                },
+            ));
+            sections
+        };
+    let (old, new) = (reduced(file), reduced(candidate));
     let mut out = Vec::new();
     for ((name, before), (_, after)) in old.iter().zip(&new) {
         if before != after {
@@ -206,73 +236,20 @@ pub(super) fn reduce(p: &Project, root: &Path, block: Block) -> Vec<Section> {
     ]
 }
 
-/// One suffix as the records gate reads it: the suffix, its reader class, comment
-/// prefixes, docstring reading, multi-line string and quote reading, note-measurement
-/// rule and eligibility.
-type SuffixReading = (
-    String,
-    bool,
-    Vec<String>,
-    bool,
-    StringReading,
-    DocCommentRule,
-    bool,
-);
-
-/// The source model suffix by suffix (§FS-config-migrate.5.1): reader class, comment
-/// prefixes, docstring reading, the multi-line string and quote reading a file of the
-/// suffix reads, which [`string_reading`] answers as it does for the file itself
-/// (§FS-languages.multi-line-string.suffix), note-measurement rule and declaration
-/// eligibility, with the exclusions as globs and the gitignore switch.
-fn sources(p: &Project) -> (Vec<SuffixReading>, Vec<String>, bool) {
+/// The source model suffix by suffix (§FS-config-migrate.5.1), each suffix's reading as the one
+/// [`suffix_readings`] builds for every caller that compares readings (§AR-config.1.6), with the
+/// exclusions as globs and the gitignore switch.
+fn sources(p: &Project) -> (Vec<(String, SuffixReading)>, Vec<String>, bool) {
     let sources = &p.schema.sources;
-    let mut suffixes = Vec::new();
     let exclude = match &sources.model {
-        None => {
-            for suffix in &sources.extensions {
-                let python = suffix == "py" && sources.docstring_python;
-                let rule = match extension_rule(suffix) {
-                    DocCommentRule::Docstring if !python => DocCommentRule::None,
-                    rule => rule,
-                };
-                suffixes.push((
-                    suffix.clone(),
-                    suffix == "md",
-                    sources.comment_prefixes.clone(),
-                    python,
-                    string_reading(None, Some(suffix)),
-                    rule,
-                    true,
-                ));
-            }
-            sources
-                .exclude
-                .iter()
-                .map(|name| format!("{name}/"))
-                .collect()
-        }
-        Some(model) => {
-            for suffix in model.text_suffixes() {
-                let probe = format!("x.{suffix}");
-                let Some(language) = model.language_of(Path::new(&probe)) else {
-                    continue;
-                };
-                let strings = string_reading(Some(language), Some(&suffix));
-                suffixes.push((
-                    suffix,
-                    language.reads_markdown(),
-                    language.comment_prefixes.clone(),
-                    language.docstrings,
-                    strings,
-                    language.measurement_rule(),
-                    model.declarations == DeclarationMode::AnyComment,
-                ));
-            }
-            model.exclude.clone()
-        }
+        None => sources
+            .exclude
+            .iter()
+            .map(|name| format!("{name}/"))
+            .collect(),
+        Some(model) => model.exclude.clone(),
     };
-    suffixes.sort_by(|a, b| a.0.cmp(&b.0));
-    (suffixes, exclude, sources.respect_gitignore)
+    (suffix_readings(sources), exclude, sources.respect_gitignore)
 }
 
 /// `include` as the derived scan roots: v1's entries outside every home that

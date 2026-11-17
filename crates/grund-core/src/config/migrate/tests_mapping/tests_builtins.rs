@@ -121,7 +121,6 @@ fn failures(cases: &[Case], offset: usize) -> Vec<String> {
 /// built-in row reads it is written as that row, in `languages` and in the `mapped:` lines. The
 /// records gate passes on each. Today every suffix gets a `v1_*` definition.
 #[test]
-#[ignore = "red until #1384 names a built-in where it reads as version 1; implement removes this"]
 fn migration_names_a_builtin_where_it_reads_as_version_1() {
     let failures = failures(NAMES_BUILTINS, 900);
     assert!(failures.is_empty(), "{}", failures.join("\n\n"));

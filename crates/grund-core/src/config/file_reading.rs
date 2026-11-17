@@ -9,8 +9,11 @@
 //! name no admitted language claims is neither read as Markdown nor has its docstrings
 //! read (§FS-fmt.2.3.1). Its string forms are [`string_reading`]'s answer alone, which reads a
 //! `source` definition's file by its own suffix (§FS-languages.multi-line-string.suffix).
-//! Nothing else derives any of them from a path (§AR-system.principle).
+//! Nothing else derives any of them from a path (§AR-system.principle). One suffix's whole
+//! reading, as the records gate compares it, is [`SuffixReading`], built here from those same
+//! answers for every caller that compares readings (§AR-config.1.6).
 
+use std::collections::BTreeSet;
 use std::path::Path;
 
 use super::compiled::Compiled;
@@ -110,8 +113,9 @@ pub(crate) fn model_language<'m>(model: &'m SourceModel, name: &Path) -> Option<
 /// too, because a mapping takes it whole (§FS-config-v2.schema.sources.extensions). A `source`
 /// definition, which has no key for either, a version-1 file and a name no admitted language
 /// claims read the ones their extension names; a `document` or `data` definition reads none. Its
-/// two callers are [`FileReading::source_forms`] and the records gate (§FS-config-migrate.5.1),
-/// and nothing else works out which row or quote reading a file reads.
+/// two callers are [`FileReading::source_forms`] and [`SuffixReading`], which the records gate
+/// compares (§FS-config-migrate.5.1), and nothing else works out which row or quote reading a
+/// file reads.
 pub(crate) fn string_reading(
     language: Option<&Language>,
     extension: Option<&str>,
@@ -123,6 +127,100 @@ pub(crate) fn string_reading(
         None => extension,
     };
     suffix.map_or(StringReading::NONE, StringReading::of_suffix)
+}
+
+/// §FS-config-migrate.5.1, §AR-config.1.6: one suffix's reading as the records gate compares
+/// it. That is its class, its comment hosts as a set, its docstring reading, the multi-line
+/// string and quote reading [`string_reading`] answers, its note-measurement rule and its
+/// declaration eligibility. Hosts are a set because they are matched longest first, so their
+/// order never changes what a file reads (§FS-languages.prefixes.forms). The records gate,
+/// migration's choice of a built-in row (§FS-config-v2.schema.sources.migration) and adoption's
+/// plan and gate (§FS-config-adopt-builtins.6.2) all build it here and keep no matcher of their
+/// own, so two readings one of them calls equal are equal to all three.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct SuffixReading {
+    pub(crate) class: LanguageClass,
+    pub(crate) hosts: BTreeSet<String>,
+    pub(crate) docstrings: bool,
+    pub(crate) strings: StringReading,
+    pub(crate) measurement: DocCommentRule,
+    /// Whether every comment block may declare: version 1, and `any-comment` in version 2.
+    pub(crate) any_comment: bool,
+}
+
+impl SuffixReading {
+    /// A version-2 file's `suffix` read through `language`, under the file's `declarations`.
+    pub(crate) fn of_language(
+        language: &Language,
+        suffix: &str,
+        declarations: DeclarationMode,
+    ) -> Self {
+        Self {
+            class: language.class,
+            hosts: language.comment_prefixes.iter().cloned().collect(),
+            docstrings: Readings::of(true, Some(language), Some(suffix)).docstrings,
+            strings: string_reading(Some(language), Some(suffix)),
+            measurement: language.measurement_rule(),
+            any_comment: declarations == DeclarationMode::AnyComment,
+        }
+    }
+
+    /// A version-1 file's `suffix`, read through its extension and `sources`' `[scan]` keys.
+    pub(crate) fn of_version_1(sources: &Sources, suffix: &str) -> Self {
+        let reads = Readings::of(false, None, Some(suffix));
+        let docstrings = reads.docstrings && sources.docstring_python;
+        let measurement = match extension_rule(suffix) {
+            DocCommentRule::Docstring if !docstrings => DocCommentRule::None,
+            rule => rule,
+        };
+        let class = if reads.markdown {
+            LanguageClass::Document
+        } else {
+            LanguageClass::Source
+        };
+        Self {
+            class,
+            hosts: sources.comment_prefixes.iter().cloned().collect(),
+            docstrings,
+            strings: string_reading(None, Some(suffix)),
+            measurement,
+            any_comment: true,
+        }
+    }
+}
+
+/// §FS-config-adopt-builtins.6.2: a version-2 `model`'s reading of `suffix`, through the
+/// language a file of that suffix resolves to; `None` where no admitted language reads it.
+pub(crate) fn model_suffix_reading(model: &SourceModel, suffix: &str) -> Option<SuffixReading> {
+    let probe = format!("x.{suffix}");
+    let language = model_language(model, Path::new(&probe))?;
+    Some(SuffixReading::of_language(
+        language,
+        suffix,
+        model.declarations,
+    ))
+}
+
+/// §FS-config-migrate.5.1: every suffix `sources` reads as text with its reading, by suffix:
+/// version 1's `[scan] extensions`, or the text suffixes of a version-2 file's model.
+pub(crate) fn suffix_readings(sources: &Sources) -> Vec<(String, SuffixReading)> {
+    let mut readings: Vec<(String, SuffixReading)> = match &sources.model {
+        None => sources
+            .extensions
+            .iter()
+            .map(|suffix| (suffix.clone(), SuffixReading::of_version_1(sources, suffix)))
+            .collect(),
+        Some(model) => model
+            .text_suffixes()
+            .into_iter()
+            .filter_map(|suffix| {
+                let reading = model_suffix_reading(model, &suffix)?;
+                Some((suffix, reading))
+            })
+            .collect(),
+    };
+    readings.sort_by(|a, b| a.0.cmp(&b.0));
+    readings
 }
 
 /// How the text scan, the value homes, the formatter, the editor, the checker and

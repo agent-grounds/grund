@@ -279,8 +279,8 @@ fn grunds_own_config_passes_both_gates() {
         listed[1],
         concat!(
             "  grund.toml:184-186  above [scan] extensions: setting splits or merges into ",
-            "version-2 settings: [schema.sources] languages and extensions, definitions ",
-            "[schema.sources.definitions.v1_markdown], [schema.sources.definitions.v1_c_family], ",
+            "version-2 settings: [schema.sources] languages and extensions, built-in markdown, ",
+            "definitions [schema.sources.definitions.v1_c_family], ",
             "[schema.sources.definitions.v1_go], [schema.sources.definitions.v1_python], ",
             "[schema.sources.definitions.v1_ruby], [schema.sources.definitions.v1_lisp], ",
             "[schema.sources.definitions.v1_sql], [schema.sources.definitions.v1_haddock], ",

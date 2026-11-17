@@ -1,13 +1,15 @@
 //! What a v1 `[scan]` source configuration becomes in version 2
 //! (§FS-config-v2.schema.sources.migration): one `v1_<profile>` definition per
-//! distinct v1 reading, every suffix mapped to its definition, the v1 names as
-//! `<name>/` globs and `declarations = "any-comment"` — and the refusals where no
-//! definition can read a suffix as v1 did.
+//! distinct v1 reading, every suffix mapped to its definition, except a built-in row
+//! that reads every suffix it claims exactly as v1 did, which is named instead; the v1
+//! names as `<name>/` globs and `declarations = "any-comment"` — and the refusals where
+//! no definition can read a suffix as v1 did.
 
 use super::record::{MigrateRefusal, RefusalAnchor};
+use crate::config::file_reading::SuffixReading;
 use crate::config::literal_suffix;
-use crate::config::project::Project;
-use crate::config::sources::{DeclarationMode, Language, LanguageClass, SourceModel};
+use crate::config::project::{Project, Sources};
+use crate::config::sources::{DeclarationMode, Language, LanguageClass, SourceModel, claiming};
 use crate::grammar::{DocCommentRule, DocProfile, extension_rule};
 
 /// The source model a v1 project's `[scan]` keys translate to, and what refuses.
@@ -124,8 +126,9 @@ pub(super) fn translate(
         }
         extensions.push((suffix.clone(), name));
     }
+    let (admitted, extensions, definitions) = name_builtins(sources, definitions, extensions);
     let model = SourceModel {
-        admitted: definitions.clone(),
+        admitted,
         extensions,
         definitions,
         declarations: DeclarationMode::AnyComment,
@@ -139,6 +142,54 @@ pub(super) fn translate(
         fenced: Vec::new(),
     };
     Languages { model, refusals }
+}
+
+/// §FS-config-v2.schema.sources.migration, rule 2 as agent-grounds/grund#1384 amends it: the
+/// languages `extensions` reads through, in the order of the first version-1 extension each
+/// reads, the mappings still written and the definitions they name, in that same order. A suffix
+/// is read through the built-in row that claims it when every suffix the row claims is one
+/// version 1 reads, and each reads as the row reads it, compared by the one per-suffix reading
+/// (§AR-config.1.6). The row is then listed, and no mapping or definition is written for it.
+/// Every other suffix keeps its definition, so the records gate still holds the file to version
+/// 1's meaning.
+fn name_builtins(
+    sources: &Sources,
+    definitions: Vec<Language>,
+    extensions: Vec<(String, String)>,
+) -> (Vec<Language>, Vec<(String, String)>, Vec<Language>) {
+    let read = |suffix: &str| extensions.iter().any(|(read, _)| read == suffix);
+    let equal = |row: &Language| {
+        row.suffixes.iter().all(|suffix| {
+            read(suffix)
+                && SuffixReading::of_version_1(sources, suffix)
+                    == SuffixReading::of_language(row, suffix, DeclarationMode::AnyComment)
+        })
+    };
+    let mut admitted: Vec<Language> = Vec::new();
+    let mut kept: Vec<(String, String)> = Vec::new();
+    for (suffix, name) in &extensions {
+        let language = match claiming(suffix).filter(equal) {
+            Some(row) => row,
+            None => {
+                kept.push((suffix.clone(), name.clone()));
+                let Some(definition) = definitions.iter().find(|def| def.name == *name) else {
+                    continue;
+                };
+                definition.clone()
+            }
+        };
+        if !admitted.iter().any(|listed| listed.name == language.name) {
+            admitted.push(language);
+        }
+    }
+    // In `languages` order, which is creation order when no row is named.
+    let definitions = admitted
+        .iter()
+        .filter(|language| !language.builtin)
+        .filter_map(|language| definitions.iter().find(|def| def.name == language.name))
+        .cloned()
+        .collect();
+    (admitted, kept, definitions)
 }
 
 /// An entry no version 2 mapping can hold. Of these only the empty string reads anything under
