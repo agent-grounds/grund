@@ -37,6 +37,11 @@ OBSERVERS = {
             "resolutions",
             "GRUND_TEST_CONFIG_RESOLUTION_LOG",
         ),
+        (
+            "crates/grund-cli/tests/refs_from_refusal_resolutions.rs",
+            "resolutions",
+            "GRUND_TEST_CONFIG_RESOLUTION_LOG",
+        ),
     ),
 }
 RELINKED = "CARGO_BIN_EXE_"
