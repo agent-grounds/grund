@@ -123,6 +123,7 @@ No command re-implements the resolver, the citation regex, or the alias
 derivation.
 A `<path>` argument therefore means two different things, and [§AR-resolver.3.3](AR-resolver.md#33-two-scopes-and-which-narrowness-a-narrow-scope-keeps) is which.
 The one-invocation batch loader and the `cover` that drops no file are [§AR-resolver.3.1](AR-resolver.md#31-grund-show---batch-loads-once) and [§AR-resolver.3.2](AR-resolver.md#32-grund-cover-drops-no-file).
+`config show`, which loads no context and prints from the one configuration it resolved, is [§AR-resolver.3.4](AR-resolver.md#34-grund-config-show-prints-from-the-one-configuration-it-resolved).
 
 ### 3.1 `grund show --batch` loads once
 
@@ -255,6 +256,35 @@ path is clean and not whether it is self-contained. The narrowing that must stay
 two are kept at visibly different stages so neither drifts into the other: `retain_findings_in_scope` narrows
 the scan result before any rule runs, which is what `--full` additivity needs ([§FS-check.1.3.4](../functional-spec/FS-check.md#134-purely-additive)), and the
 path filter narrows the report after every rule has run.
+
+### 3.4 `grund config show` prints from the one configuration it resolved
+
+`grund config show` reads no findings, so it loads no workspace context. It
+resolves the configuration at its path once, through `effective_config`, and
+builds everything it prints from the `Config` that resolution returns
+([§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)): the `warning:` lines, the v1 spelling, and the v2 spelling,
+which `Project::v2_toml` renders ([§AR-config.7.4](AR-config.md#74-writing-it-back)) from the `Project` that same
+`Config` was built from. So on a standalone project, v1 or v2, it resolves
+configuration once, as often as `grund list` does there.
+
+This is what [§AR-resolver.3.1.1](AR-resolver.md#311-a-batch-builds-every-hint-from-its-one-context) holds a hint to, held of everything one command
+prints: it is built from the configuration the command resolved, never from a
+second resolution of the same path. The point names `config show` alone. A
+command held to the same rule later is named here beside it, rather than this
+point claiming every command.
+
+The command built the v2 spelling otherwise before, and that is what this point
+rules out. It asked `effective_project(path)` for the `Project`, and that is
+`effective_config(path)` again: a second discovery, read, parse and validation
+of the same `grund.toml`, on v1 as on v2, where a v1 project's answer is no v2
+spelling at all. The `Config` façade keeps its `Project` inside the core, and
+the list [§AR-config.5](AR-config.md#5-the-config-façade-and-the-list-that-only-shrinks) holds only shrinks, so the CLI asks a core function over
+the `Config` it already holds for the spelling, as it asks `config_warnings` for
+the `warning:` lines, rather than widening the façade. `effective_project` stays
+published for an embedder, which holds no `Config`. The configuration-resolution
+observer counts every entry of `open()` ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)), so a test holds `config
+show`, on a v1 project and on a v2 one, to as many resolutions as `grund list`
+makes on each.
 
 ## 4. The shorthand a whole run's catalog resolves
 
