@@ -45,7 +45,7 @@ const CASES: [(&str, &str); 4] = [("a", "json"), ("z", "json"), ("a", "yaml"), (
 
 fn misplaced(home: &str, suffix: &str) -> String {
     format!(
-        "{home}/limits.{suffix}:1: error: CONST-room-limit declares kind CONST inside OTHER home {home}\n"
+        "{home}/limits.{suffix}:1: error: CONST-room-limit declares kind CONST inside OTHER home {home}; move it to a home of its own kind\n"
     )
 }
 
@@ -155,7 +155,9 @@ fn text_tree(case: &str, config: &str, id: &str, home: &str, wrong: &str) -> Tre
 }
 
 fn wrong_home(id: &str, wrong: &str) -> String {
-    format!("{wrong}/x.md:1: error: {id} declares kind FS inside AR home {wrong}\n")
+    format!(
+        "{wrong}/x.md:1: error: {id} declares kind FS inside AR home {wrong}; move it to a home of its own kind\n"
+    )
 }
 
 /// Whichever directory sorts first: the link in the home that sorts before the right one, and
