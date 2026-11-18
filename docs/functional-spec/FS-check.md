@@ -631,9 +631,7 @@ The tail is the last resort among the hints. A near ID ([§FS-check.3.1.1](FS-ch
 
 ### 3.2 Missing section
 
-A citation with a section suffix (`§FS-<user-login>.3.1` or, in an opted-in repository, `§FS-<user-login>.goals`) where the declaration exists but the requested section heading does not. A missing marker-prefixed named coordinate is never shortened to its declaration; it produces the ordinary `section not found` error. Every missing section, numeric or named, marked or not, names its fix in its message ([§FS-errors.3.11](FS-errors.md#311-the-missing-section-remedy)). A number-only shorthand carrying a missing named section produces both the existing shorthand finding and this finding: the persisted ID form and the requested target are independent facts ([AR-checker.2.12](../../crates/grund-core/src/checker/report.rs)).
-
-Where the section lock recorded the cited coordinate and its text now sits at another section of the declaration, the message ends in one more clause naming that section ([§FS-section-lock.checks.vanished](FS-section-lock.md#checksvanished-a-cited-address-that-is-gone-and-where-its-text-went)).
+A citation with a section suffix (`§FS-<user-login>.3.1` or, in an opted-in repository, `§FS-<user-login>.goals`) where the declaration exists but the requested section heading does not. A missing marker-prefixed named coordinate is never shortened to its declaration; it produces the ordinary `section not found` error. Every missing section, numeric or named, marked or not, names its fix in its message, and where the section lock knows where the cited text went it names that section too ([§FS-errors.3.11](FS-errors.md#311-the-missing-section-remedy)). A number-only shorthand carrying a missing named section produces both the existing shorthand finding and this finding: the persisted ID form and the requested target are independent facts ([AR-checker.2.12](../../crates/grund-core/src/checker/report.rs)).
 
 An owned declaration-local numeric candidate ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) follows the same rule. Its
 [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) form
@@ -795,10 +793,9 @@ Moved to [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#che
 
 An alias-qualified citation whose alias path is unknown is reported at the citation site in every run, with or without a `[workspace]` ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)); in a workspace run, so is one whose target declaration or target section is missing. The alias resolution rules live in [§FS-workspace.4](FS-workspace.md#4-resolution).
 
-A member-local finding's verified enclosing-workspace explanation and root-check
-remedy are defined by [§FS-workspace.5.1.1](FS-workspace.md#511-verified-enclosing-workspace-guidance).
+A member-local finding's verified enclosing-workspace explanation and root-check remedy are defined by [§FS-workspace.5.1.1](FS-workspace.md#511-verified-enclosing-workspace-guidance).
 
-An unknown alias path names the projects it could have meant, so the fix is in the finding rather than in the config: the outermost workspace root searches every project in scope ([§FS-check.3.8.2](FS-check.md#382-candidates-at-the-outermost-root)); a run narrowed to a subtree searches only for a strict extension of its scope ([§FS-check.3.8.1](FS-check.md#381-a-strict-extension-of-the-narrowed-scope-is-safe-to-hint)) and otherwise names the subtree it covers ([§FS-check.3.8.3](FS-check.md#383-a-narrowed-run-offers-no-candidate)), in the wording [§FS-check.3.8.4](FS-check.md#384-the-scope-only-message-across-three-releases) stages. The citation remains unresolved and the run still fails.
+An unknown alias path carries its fix in the finding: the projects it could have meant, or the `[workspace]` entry that would load the project it names ([§FS-check.3.8.5](FS-check.md#385-an-unlisted-project-is-named-with-its-members-entry)). The outermost workspace root searches every project in scope ([§FS-check.3.8.2](FS-check.md#382-candidates-at-the-outermost-root)); a run narrowed to a subtree searches only for a strict extension of its scope ([§FS-check.3.8.1](FS-check.md#381-a-strict-extension-of-the-narrowed-scope-is-safe-to-hint)) and otherwise names the subtree it covers ([§FS-check.3.8.3](FS-check.md#383-a-narrowed-run-offers-no-candidate)), in the wording [§FS-check.3.8.4](FS-check.md#384-the-scope-only-message-across-three-releases) stages. The citation remains unresolved and the run still fails.
 
 #### 3.8.1 A strict extension of the narrowed scope is safe to hint
 
@@ -810,7 +807,7 @@ Shorter and equal paths, paths whose segments do not begin with the scope, and m
 
 #### 3.8.2 Candidates at the outermost root
 
-At the outermost workspace root — the scope CI runs, and the only one that can see every project a path could name — candidates are taken from the projects in scope in one band only, best first: a project whose slash-separated path has every written segment as a **proper prefix** and at least one further segment, else one whose path **ends with** what was written (a dropped prefix — the mistake full alias paths invite, [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)), else one whose **last segment** matches (a wrong prefix), else one a **typo** away under the near-match rule of [§FS-check.3.1.1](FS-check.md#311-a-near-id). Thus `group` matches `group/alpha`, and `group/alpha` matches `group/alpha/beta`; an exact `group`, `grouped/alpha`, and `other/group` do not match the proper-prefix band. The first non-empty band alone wins, without candidates from any lower band. Its candidates are deduplicated, sorted by alias bytes, and then limited to three — `grund list` is the catalogue, a finding is not — and a path with no candidate reports on its own, unchanged.
+At the outermost workspace root — the scope CI runs, and the only one that can see every project a path could name — candidates are taken from the projects in scope in one band only, best first: a project whose slash-separated path has every written segment as a **proper prefix** and at least one further segment, else one whose path **ends with** what was written (a dropped prefix — the mistake full alias paths invite, [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)), else one whose **last segment** matches (a wrong prefix), else one a **typo** away under the near-match rule of [§FS-check.3.1.1](FS-check.md#311-a-near-id). Thus `group` matches `group/alpha`, and `group/alpha` matches `group/alpha/beta`; an exact `group`, `grouped/alpha`, and `other/group` do not match the proper-prefix band. The first non-empty band alone wins, without candidates from any lower band. Its candidates are deduplicated, sorted by alias bytes, and then limited to three — `grund list` is the catalogue, a finding is not — and a path with no candidate gets no `did you mean`.
 
 ```text
 docs/FS-root.md:3: unknown project alias sprayer; did you mean hardware/sprayer?
@@ -833,6 +830,10 @@ unknown project alias <path>; the <scope> project and its descendants are in sco
 ```
 
 It says what "the subtree" holds — the named project and its descendants — before it says where to check from instead. From `0.13.2` through `0.15.x` it was a compatibility form that kept the earlier `only the <scope> subtree is in scope here` wording as a contiguous prefix and ended with a suffix naming `0.16.0` as the release its wording would change in; that form retired in `0.16.0` ([§FS-errors.3.3](FS-errors.md#33-the-narrowed-run-unknown-project-wording-migration)).
+
+#### 3.8.5 An unlisted project is named with its members entry
+
+A run that is not narrowed and finds no candidate still names the repair when the alias path is a directory beneath the run's root whose `grund.toml` or `.agents/grund.toml` no `[workspace]` lists ([§FS-check.3.29.2](FS-check.md#3292-an-unanswered-claim-is-not-reported-and-is-asked-quietly)): the message gives the `unknown-project` row's `unlisted` case, and stays bare where membership cannot be decided. A root with no `[workspace]` citing `<§>api/FS-orders` into an `api/` laid by `grund init` reports `docs/FS-root.md:3: unknown project alias api; add "api" to [workspace] members in grund.toml`.
 
 ### 3.9 Section heading level mismatch
 
