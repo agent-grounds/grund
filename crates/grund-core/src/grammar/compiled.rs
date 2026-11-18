@@ -18,7 +18,7 @@ use crate::model::Id;
 
 const NUMERIC_SECTION_PATTERN: &str = r"\d+(?:\.\d+)*";
 /// One named section component, the handle `named_sections` admits (§FS-config.3.3.1).
-pub(super) const NAMED_COMPONENT_PATTERN: &str = "[a-z][a-z0-9-]*";
+pub(crate) const NAMED_COMPONENT_PATTERN: &str = "[a-z][a-z0-9-]*";
 /// A named-mode section path that holds a name: a number or a name at every
 /// position, so `goals.3`, `1.goals` and `1.goals.latency` match whole
 /// (§FS-config.3.3.1). It is tried before the purely numeric path, so a mixed

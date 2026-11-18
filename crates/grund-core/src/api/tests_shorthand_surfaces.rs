@@ -10,7 +10,7 @@
 use std::collections::BTreeMap;
 
 use super::*;
-use crate::grammar::render_id;
+use crate::grammar::{NAMED_COMPONENT_PATTERN, render_id};
 use crate::model::Id;
 use crate::queries::{LspSnapshotOpts, ShowFormat, ShowOpts, ShowQueryError};
 use crate::scanner::resolve_id_arg;
@@ -193,10 +193,7 @@ fn lsp_snapshot_navigates_a_shorthand_citation() {
 /// otherwise be free to drift from the engine.
 #[test]
 fn client_matchers_already_accept_the_shorthand() {
-    let citation_shape = Regex::new(
-        r"[^\w\s]{1,3}(?:[a-z][a-z0-9-]*/)?[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*(?:\.[0-9]+)*",
-    )
-    .expect("client citation shape");
+    let citation_shape = Regex::new(&client_citation_shape()).expect("client citation shape");
     for (text, expected) in [
         ("see \u{a7}FS-042 here", "\u{a7}FS-042"),
         ("see \u{a7}FS-042.1 here", "\u{a7}FS-042.1"),
@@ -223,5 +220,84 @@ fn client_matchers_already_accept_the_shorthand() {
             artifact.contains("[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*"),
             "client artifact lost the shared citation shape"
         );
+    }
+}
+
+/// The citation shape every client matcher embeds: the ID shape of
+/// §FS-integrations.3.1.4, then a suffix whose components are digits or the
+/// named handle of §FS-config.3.3.1. The named alternative is read from the
+/// engine's own pattern, so the clients cannot drift from the section grammar.
+fn client_citation_shape() -> String {
+    format!(
+        r"[^\w\s]{{1,3}}(?:[a-z][a-z0-9-]*/)?[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*(?:\.(?:[0-9]+|{NAMED_COMPONENT_PATTERN}))*"
+    )
+}
+
+/// Every citation matcher an artifact carries, unescaped from its host syntax
+/// (a Lua string doubles `\`, a JavaScript literal escapes `/`).
+fn embedded_citation_matchers(artifact: &str) -> Vec<String> {
+    let mut matchers = Vec::new();
+    for start in [r"[^\w\s]{1,3}", r"[^\\w\\s]{1,3}"] {
+        for (at, _) in artifact.match_indices(start) {
+            let rest = &artifact[at..];
+            let end = ["'", "\n", "/g;"]
+                .iter()
+                .filter_map(|terminator| rest.find(terminator))
+                .min()
+                .unwrap_or(rest.len());
+            matchers.push(
+                rest[..end]
+                    .trim_end()
+                    .replace(r"\\", r"\")
+                    .replace(r"\/", "/"),
+            );
+        }
+    }
+    // Prose that names the marker class is not a matcher; one carries the ID shape.
+    matchers.retain(|matcher| matcher.contains("[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*"));
+    matchers
+}
+
+/// §FS-integrations.3.1.4: the matchers keep the whole `.<section>` suffix,
+/// named and mixed paths included, so a click opens the cited section rather
+/// than the declaration heading (§FS-integrations.3.1.5, §FS-integrations.3.2.1).
+#[test]
+#[ignore = "red until #1432 widens the four client matchers' section suffix; implement removes this"]
+fn client_matchers_keep_named_and_mixed_section_paths() {
+    let text = "see \u{a7}FS-login.requirements.lockout, \u{a7}FS-login.1.goals and \
+                \u{a7}FS-login.goals.3 here; \u{a7}FS-login.1.2 too, and \u{a7}FS-login.";
+    let expected = [
+        "\u{a7}FS-login.requirements.lockout",
+        "\u{a7}FS-login.1.goals",
+        "\u{a7}FS-login.goals.3",
+        "\u{a7}FS-login.1.2",
+        "\u{a7}FS-login",
+    ];
+    let shared = Regex::new(&client_citation_shape()).expect("client citation shape");
+    let found: Vec<&str> = shared.find_iter(text).map(|m| m.as_str()).collect();
+    assert_eq!(
+        found, expected,
+        "the shared shape must keep every section path whole"
+    );
+    for (name, artifact, count) in [
+        ("wezterm", WEZTERM_SNIPPET, 1),
+        ("kitty", KITTY_SNIPPET, 2),
+        ("iterm2", ITERM2_SNIPPET, 1),
+        ("vscode", VSCODE_EXTENSION_JS, 1),
+    ] {
+        let matchers = embedded_citation_matchers(artifact);
+        assert_eq!(
+            matchers.len(),
+            count,
+            "{name}: citation matchers found {matchers:?}"
+        );
+        for matcher in matchers {
+            let regex = Regex::new(&matcher).expect("client matcher compiles");
+            let found: Vec<&str> = regex.find_iter(text).map(|m| m.as_str()).collect();
+            assert_eq!(
+                found, expected,
+                "{name} matcher {matcher:?} must keep named and mixed section paths whole"
+            );
+        }
     }
 }
