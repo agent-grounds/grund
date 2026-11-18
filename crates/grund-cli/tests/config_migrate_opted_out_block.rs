@@ -33,8 +33,10 @@ mapped: grund.toml:3: [workspace] members → [workspace] members\n";
 const COMPARED: &str = "compared: the records are equal, and grund check --suggestions on this \
 tree gives the same findings and the same exit before and after\n";
 
-const AFTER_WRITE: &str = "to get version 1 back: it is in version control, e.g. git restore grund.toml\n\
-to see this candidate again: restore version 1 and run grund config migrate --to 2\n\
+/// §FS-config-migrate.6.5.1: the undo and the re-preview are commands spelled
+/// from the root the run was in, so they name `group`, the `PATH` given.
+const AFTER_WRITE: &str = "to get version 1 back: it is in version control, e.g. git restore group/grund.toml\n\
+to see this candidate again: restore version 1 and run grund config migrate --to 2 group\n\
 note: existing AGENTS.md managed instructions may still describe version 1; \
 run grund init in the migrated project to refresh them\n";
 
@@ -92,6 +94,7 @@ fn assert_run(out: &Output, code: i32, stdout: &str, stderr: &str) {
 /// §FS-config-migrate.8.1.5: the bare block previews its compact candidate,
 /// writes exactly those bytes, and a second run finds version 2.
 #[test]
+#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn bare_block_previews_and_writes_its_envelope_and_workspace_table() {
     let root = tree("bare", BARE);
     let preview = migrate(&root, false);
@@ -125,6 +128,7 @@ fn bare_block_previews_and_writes_its_envelope_and_workspace_table() {
 /// force on the block, so they are dropped with a notice each and the file is the
 /// same compact candidate, far under the report's 20-line bound.
 #[test]
+#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn repaired_block_drops_both_repairs_and_writes_the_same_candidate() {
     let root = tree("repaired", REPAIRED);
     let write = migrate(&root, true);
