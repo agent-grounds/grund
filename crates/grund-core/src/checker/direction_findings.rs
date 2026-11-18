@@ -2,6 +2,9 @@
 //! rule it expresses so that config-to-rule deduplication is decided on the
 //! findings, unit by unit (§FS-rules.6).
 
+use std::collections::BTreeSet;
+use std::path::PathBuf;
+
 use super::citation_prohibitions::check_citation_prohibitions;
 use super::citations::{DirectionChannel, DirectionSink, check_citation_obligations};
 use crate::config::{CitationDisjunction, CitationLevel, Frame, Rules, Schema};
@@ -22,6 +25,7 @@ pub(super) fn directions(
     rules: &Rules,
     schema: &Schema,
     frame: Frame<'_>,
+    non_units: &BTreeSet<PathBuf>,
     parsed_rules: &[ParsedRule],
 ) -> Vec<Direction> {
     let precedence = citation_precedence(&rules.citations);
@@ -33,7 +37,7 @@ pub(super) fn directions(
             .collect(),
     );
     if duplicated {
-        check_citation_obligations(findings, rules, schema, frame, &mut directions);
+        check_citation_obligations(findings, rules, schema, frame, non_units, &mut directions);
         check_citation_prohibitions(findings, rules, schema, frame, &mut directions);
     }
     directions.0

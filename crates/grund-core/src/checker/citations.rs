@@ -7,7 +7,7 @@
 //! declaration-shape rules and the diagnostic helpers they share.
 
 use crate::model::remedies;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::obligation_units::{
@@ -105,11 +105,15 @@ impl DirectionSink for CheckReport {
 /// Why the citation indexes are built up front: the per-declaration and per-case
 /// rescans they replace were O(kinds × declarations × citations) and dominated
 /// `grund check` on a large tree.
+///
+/// `non_units` are the generated scoped entrypoints, which never make a folder
+/// non-empty for the `applies to nothing` warning (§FS-init.2.3.5.15).
 pub(super) fn check_citation_obligations(
     findings: &Catalog,
     rules: &Rules,
     schema: &Schema,
     frame: Frame<'_>,
+    non_units: &BTreeSet<PathBuf>,
     report: &mut impl DirectionSink,
 ) {
     // Index every citation once, up front, so each citing kind's obligation pass
@@ -198,6 +202,7 @@ pub(super) fn check_citation_obligations(
                 schema,
                 frame,
                 findings,
+                non_units,
                 citing_kind,
                 Obligor::Table(kind_rules),
             )
@@ -303,11 +308,14 @@ pub(super) fn can_apply_to_nothing<'a>(
 /// uses for citation-source attribution, so explicit paths and symlink spellings
 /// stay inside the same home boundary. The table and a rule ask it alike, so the
 /// two never disagree about whether a folder is empty (§FS-check.2.2.1.4).
+/// Neither the folder's entry file nor a generated scoped entrypoint, one of
+/// `non_units`, is content of it (§FS-check.2.2.1.1, §FS-init.2.3.5.15).
 pub(super) fn empty_citation_obligation_warning(
     rules: &Rules,
     schema: &Schema,
     frame: Frame<'_>,
     findings: &Catalog,
+    non_units: &BTreeSet<PathBuf>,
     citing_kind: &str,
     obligor: Obligor<'_>,
 ) -> Option<Diagnostic> {
@@ -315,6 +323,7 @@ pub(super) fn empty_citation_obligation_warning(
     if !findings.scanned_files.iter().any(|file| {
         file_home_kind(file, schema, frame).as_deref() == Some(citing_kind)
             && !kind_entry_file(file, schema, frame, row)
+            && !non_units.contains(file)
     }) {
         return None;
     }

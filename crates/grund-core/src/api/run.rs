@@ -17,9 +17,9 @@ use super::reporting::{reporting, workspace_block_projects};
 use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
-    CheckWorkspace, UnreadNames, check_chapter_rules, check_project, configured_scope,
-    name_every_spelling, out_of_scope_references, out_of_scope_section_headings, parse_ad_hoc,
-    parse_ad_hoc_with_workspace, partition_scan_failures, path_report_scope,
+    CheckWorkspace, UnreadNames, check_chapter_rules_with_non_units, check_project,
+    configured_scope, name_every_spelling, out_of_scope_references, out_of_scope_section_headings,
+    parse_ad_hoc, parse_ad_hoc_with_workspace, partition_scan_failures, path_report_scope,
     repair_index_citations, retain_diagnostics_in_report_scope, retain_findings_in_scope,
     workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
@@ -191,7 +191,7 @@ pub(super) fn run_check_with_run_warnings(
         config.frame(),
         &CheckWorkspace::alone(&no_workspace).unread(&unread),
     );
-    check_chapter_rules(
+    check_chapter_rules_with_non_units(
         &findings,
         config.rules(),
         config.schema(),
@@ -199,6 +199,7 @@ pub(super) fn run_check_with_run_warnings(
         resolution_was_complete,
         ad_hoc,
         None,
+        &expected.non_units,
         &mut report,
     );
     // §FS-check.3.12.2: both direction producers share entry-preserving advice.
@@ -403,7 +404,7 @@ fn run_workspace_check(
             frame,
             &check_workspace,
         );
-        check_chapter_rules(
+        check_chapter_rules_with_non_units(
             &project.findings,
             project.config.rules(),
             project.config.schema(),
@@ -411,6 +412,7 @@ fn run_workspace_check(
             rules_complete,
             ad_hoc.clone(),
             Some((&project.alias, &workspace)),
+            &expected.non_units,
             &mut project_report,
         );
         // §FS-check.3.12.2: repair in this project's config vocabulary before merging.

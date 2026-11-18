@@ -7,6 +7,7 @@
 
 use std::path::{Path, PathBuf};
 
+use super::read_predicate::unread;
 use super::walk::{Met, MetLinks, scan_roots, scannable_walk_builder, scannable_walker};
 use super::walk_boundaries::{
     is_scannable, outward_directory_link_root, owned_by_another_project, place_root,
@@ -28,6 +29,22 @@ pub(crate) fn effective_scope_reads_any_file(schema: &Schema, frame: Frame<'_>) 
     effective_scope_reads_any_file_with(schema, frame, |root| {
         walk_reads_any_file(schema, frame, root)
     })
+}
+
+/// Whether the effective configured scope would read `planned`, a file a run is about
+/// to create, asked of the read predicate the walk applies to a file it never meets
+/// on disk (§AR-scanner.1.13) from the roots the walk would walk. So a preview judges
+/// the tree the run would leave (§FS-init.1, §FS-init.2.2.2).
+pub(crate) fn effective_scope_reads_planned_file(
+    schema: &Schema,
+    frame: Frame<'_>,
+    planned: &Path,
+) -> bool {
+    let roots: Vec<PathBuf> = root_scope_roots(schema, frame.root(), frame.run.scope.full)
+        .into_iter()
+        .filter(|root| walked_root(frame, root).is_some())
+        .collect();
+    !roots.is_empty() && unread(schema, frame, &roots, planned).is_none()
 }
 
 /// Apply the effective root order lazily, separated only so the short-circuit

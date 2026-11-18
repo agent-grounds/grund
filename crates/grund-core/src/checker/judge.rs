@@ -208,7 +208,14 @@ pub(crate) fn judge(
     // §FS-config.3.9 / §FS-check.3.11 / §FS-check.3.12: citation-direction
     // obligations and prohibitions, when the project declares `[citations]`.
     if rules.citations.declared {
-        check_citation_obligations(findings, rules, schema, frame, &mut units);
+        check_citation_obligations(
+            findings,
+            rules,
+            schema,
+            frame,
+            &expected.non_units,
+            &mut units,
+        );
         check_citation_prohibitions(findings, rules, schema, frame, &mut units);
     }
     let unit = |diagnostic: &Diagnostic| {
