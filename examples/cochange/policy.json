@@ -1,1 +1,1 @@
-{"config_root":".","source_paths":["src/"],"test_paths":["tests/"],"eligible_kinds":["FS"]}
+{"config_root":".","source_paths":["src/"],"test_paths":["tests/e2e/"],"eligible_kinds":["FS"]}

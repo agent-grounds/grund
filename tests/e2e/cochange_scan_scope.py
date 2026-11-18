@@ -15,13 +15,6 @@ import unittest
 
 from cochange_fixture import RECIPE, ROOT, RecipeCase
 
-# Red until #1442 makes the scan-scope message name the policy remedy and narrows the
-# shipped policy; implement removes this marker. GRUND_RED_1442=1 runs them anyway.
-RED = unittest.skipUnless(os.environ.get("GRUND_RED_1442") == "1",
-    "red until #1442 names the policy remedy in scan-scope; implement removes this")
-
-
-@RED
 class ScanScopeTests(RecipeCase):
     def scan_scope(self, report, path):
         rows = [row for row in report["errors"]
