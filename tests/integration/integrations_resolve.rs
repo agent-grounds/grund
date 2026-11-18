@@ -257,6 +257,77 @@ fn a_swept_in_spec_path_fragment_is_one_explanatory_error_never_a_wrong_file() {
     );
 }
 
+/// §FS-integrations.6.2: `--write` with `--format json` is refused with exit 2,
+/// because a write reports on stderr (§FS-integrations.4.1.6), and the refusal
+/// comes before anything is written.
+#[test]
+fn write_with_format_json_is_refused_before_anything_is_written() {
+    let (home, xdg) = install_sandbox("integrations-write-format-json");
+    let output = Command::new(binaries::grund())
+        .args(["integrations", "kitty", "--write", "--format", "json"])
+        .env("HOME", &home)
+        .env("XDG_CONFIG_HOME", &xdg)
+        .output()
+        .expect("run grund integrations");
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr),
+        "error: integrations --write does not support --format json\n"
+    );
+    for dir in [&home, &xdg] {
+        let entries = fs::read_dir(dir).expect("read sandbox").count();
+        assert_eq!(entries, 0, "nothing is written under {}", dir.display());
+    }
+}
+
+/// §FS-integrations.3.1.6: the fragments the matcher claims inside a file
+/// name now that a section component may be named, the extension included:
+/// `/functional-spec/FS-integrations.md` in a printed path and
+/// `(FS-integrations.md` in a Markdown link destination. Each is one
+/// explanatory `unknown id`, never a location in the file it names.
+#[test]
+fn a_file_name_fragment_with_its_extension_is_one_explanatory_error_never_a_wrong_file() {
+    let (home, xdg) = install_sandbox("integrations-file-name-false-positive");
+    installed(&home, Some(&xdg), &["integrations", "kitty", "--write"]);
+    std::os::unix::fs::symlink(binaries::grund(), home.join(".local/bin/grund"))
+        .expect("put the binary under test on the resolver's PATH");
+    for token in [
+        "/functional-spec/FS-integrations.md",
+        "](FS-integrations.md",
+    ] {
+        let output = Command::new(home.join(".local/bin/grund-open"))
+            .arg(token)
+            .current_dir(binaries::repo_root())
+            .env("HOME", &home)
+            .env("XDG_CONFIG_HOME", &xdg)
+            .env(
+                "PATH",
+                format!(
+                    "{}/.local/bin:{}",
+                    home.display(),
+                    std::env::var("PATH").unwrap_or_default()
+                ),
+            )
+            .env("GRUND_OPEN_CMD", "/bin/echo")
+            .output()
+            .expect("run grund-open");
+        let reported = format!(
+            "{}{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(
+            !output.status.success() && reported.contains("unknown id"),
+            "{token} is one explanatory error: {reported}"
+        );
+        assert!(
+            !reported.contains("FS-integrations.md:"),
+            "{token} must not open the file it names: {reported}"
+        );
+    }
+}
+
 /// §FS-show.3.1: installed resolvers trust this terminal pair for declarations
 /// and sections because authored body prose may contain location-shaped JSON.
 #[test]
