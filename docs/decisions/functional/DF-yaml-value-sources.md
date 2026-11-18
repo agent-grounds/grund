@@ -37,7 +37,7 @@ So no tree goes from passing to failing in that release, and every finding that 
 
 ### 3.2 A version-2 config reads files it did not read
 
-[§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning) says a binary keeps interpreting every version under the semantics it shipped with. The value pass is not a meaning of the config file: it is shared by both versions, and what it reads is the home a row names, which this change does not move. What widens is the pass, announced by a coded warning and binding only in a named release, which is the precedent [§DF-default-extensions-follow-language-table](DF-default-extensions-follow-language-table.md#df-default-extensions-follow-language-table-the-scan-extensions-default-reads-every-language-grund-classifies) set for a widened read.
+[§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path) says a binary keeps interpreting every version under the semantics it shipped with. The value pass is not a meaning of the config file: it is shared by both versions, and what it reads is the home a row names, which this change does not move. What widens is the pass, announced by a coded warning and binding only in a named release, which is the precedent [§DF-default-extensions-follow-language-table](DF-default-extensions-follow-language-table.md#df-default-extensions-follow-language-table-the-scan-extensions-default-reads-every-language-grund-classifies) set for a widened read.
 
 ### 3.3 The epoch does not move
 

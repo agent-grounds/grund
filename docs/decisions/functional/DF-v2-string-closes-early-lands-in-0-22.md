@@ -18,7 +18,7 @@ In grund 0.22.0 (agent-grounds/grund#1094), version 2 refuses what 0.21.x warned
 - the quick readers pass over such a value, as they pass over any value they cannot read;
 - `config-not-toml` and `config-multiline-string` no longer fire for it, and stay; once the open-line window closes in the same release nothing fires either, so both are spent ([§DF-v2-open-line-closes-in-0-22](DF-v2-open-line-closes-in-0-22.md#df-v2-open-line-closes-in-0-22-the-version-2-open-line-window-closes-in-0220), [§FS-config-v2.checks.config-not-toml.1](../../functional-spec/FS-config-v2.md#checksconfig-not-toml1-a-warning-in-021x-the-unclosed-array-or-expected-string-refusal-from-0220)).
 
-Version 1 is unchanged: it keeps its reading for good ([§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning)), and `config migrate --to 2` still refuses such a string ([§FS-config-migrate.3.1.8](../../functional-spec/FS-config-migrate.md#318-a-string-that-closes-early)).
+Version 1 is unchanged: it keeps its reading for good ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)), and `config migrate --to 2` still refuses such a string ([§FS-config-migrate.3.1.8](../../functional-spec/FS-config-migrate.md#318-a-string-that-closes-early)).
 
 ## 3. Rejected alternatives
 
