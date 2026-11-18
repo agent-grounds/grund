@@ -1303,9 +1303,8 @@ immediately after `### Citation directions`. It repeats the existing
 rule-ID order — every valid rule, and every rule unverifiable here
 ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)) — each bullet the exact authored sentence followed by its live
 rule citation. A rule-enabled block uses v11 on the v10 base. With no rule kind,
-`init` retains the v10 block byte-for-byte. `grund check` re-renders and
-byte-compares this config-derived section whether or not every rule resolved;
-drift is `agents-init`, and the comparison is never skipped in silence
+`init` retains the v10 block byte-for-byte. `grund check` compares this section
+like the rest of the block, and drift is `agents-init`
 ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)).
 
 Hard rule findings and `invalid-rule` travel through the same core report to
