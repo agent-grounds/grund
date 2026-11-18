@@ -458,7 +458,10 @@ Go-to-definition lands on the Markdown component heading or exact JSON or YAML k
 element; from a binding aimed at a root it lands on the root itself — the whole
 declaration's heading or key, or the marked or chapter root's own heading
 ([§FS-lsp.1.3.5](../functional-spec/FS-lsp.md#135-values-and-named-sections)). `fmt --cross-refs` leaves the citation bytes inside a
-recognized binding unchanged so it cannot destroy the authored form. That now
+recognized binding unchanged so it cannot destroy the authored form. It also
+preserves a split or malformed attempt that `check` refuses, so formatting
+cannot erase that refusal: correct the binding's form and literal, then recheck
+([§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). That now
 includes a whole-value ID with no coordinate, which earlier releases rewrote
 into a Markdown link ([§FS-values.9.2](../functional-spec/FS-values.md#92-the-one-whole-value-formatting-behavior-that-moved)).
 
