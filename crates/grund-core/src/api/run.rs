@@ -104,8 +104,9 @@ pub(super) fn run_check_with_run_warnings(
     // §FS-check.1.3.6.1: below the root the path is the report scope, so the
     // `Check` selection has `open()` build a run whose walk reads the ordinary roots.
 
-    // §FS-check.1: the flag and `[reference] require_grounding` are one knob; it never
-    // turns the key off (§FS-config.3.4.8.3), and reaches every member (§FS-check.3.5).
+    // §FS-check.1: the flag and `[reference] require_grounding` are one knob for findings;
+    // it never turns the key off (§FS-config.3.4.8.3), reaches every member, and never
+    // the managed-block render (§FS-check.3.5.4).
     let invocation = Invocation::new(path, path_provided, Selection::Check)
         .full(full)
         .require_grounding(force_require_grounding);

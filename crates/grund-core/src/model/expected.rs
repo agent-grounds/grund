@@ -34,6 +34,10 @@ pub struct Expected {
     /// lists: guidance about a directory's units, never a unit of it
     /// (§FS-init.2.3.5.11).
     pub non_units: BTreeSet<PathBuf>,
+    /// Whether a genuinely invalid rule left every block of the project
+    /// uncompared, which carries `invalid-rule` with `--only agents-init`
+    /// (§FS-check.3.5.1).
+    pub blocks_withheld: bool,
 }
 
 /// §AR-checker.1.3: one entrypoint and the sections its managed block should

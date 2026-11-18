@@ -70,6 +70,10 @@ pub enum Switch {
 pub struct Armed {
     switches: BTreeSet<Switch>,
     versions: BTreeSet<u32>,
+    /// Whether an invalid rule left some project's blocks uncompared
+    /// (§FS-check.3.5.1): not a switch, but the one other fact the selection
+    /// reads, so `--only agents-init` keeps the error that says why.
+    blocks_withheld: bool,
 }
 
 impl Armed {
@@ -85,6 +89,18 @@ impl Armed {
     pub(crate) fn absorb(&mut self, other: &mut Armed) {
         self.switches.append(&mut other.switches);
         self.versions.append(&mut other.versions);
+        self.blocks_withheld |= other.blocks_withheld;
+    }
+
+    /// Record that an invalid rule left a project's blocks uncompared
+    /// (§FS-check.3.5.1).
+    pub(crate) fn withhold_blocks(&mut self) {
+        self.blocks_withheld = true;
+    }
+
+    /// Whether any project's blocks went uncompared for an invalid rule.
+    pub(crate) fn blocks_withheld(&self) -> bool {
+        self.blocks_withheld
     }
 
     pub fn contains(&self, switch: Switch) -> bool {

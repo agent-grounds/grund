@@ -1,0 +1,22 @@
+would-write AGENTS.md
+would-write docs/functional-spec/AGENTS.md
+would-write tests/e2e/AGENTS.md
+exists grund.toml
+would-write docs/functional-spec/README.md
+would-write docs/requirements/README.md
+would-write docs/grund.md
+would-write docs/goals.md
+would-write docs/roadmap.md
+would-write docs/changelog.md
+would-write docs/architecture/README.md
+would-write docs/decisions/architectural/README.md
+would-write docs/decisions/functional/README.md
+would-write tests/e2e/README.md
+would-write tests/integration/.gitkeep
+
+next:
+  1. run `grund check` — on a fresh scaffold it warns "nothing recognized" until the first declaration; this is expected (exit 0), no repair needed
+  2. allocate an ID:  ID=$(grund id FS "…")  then add it under docs/functional-spec
+     (H1: `# <ID>: <one-line statement of the behavior>`)
+  3. cite it as §<ID> from the docs and e2e tests that depend on it, then `grund check` again
+see AGENTS.md for the full workflow.

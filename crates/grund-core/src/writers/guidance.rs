@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::expected::{block_version, chapter_rules_section};
-use crate::config::Config;
+use crate::config::{Config, Run};
 use crate::grammar::{
     AGENTS_BLOCK_BASE_VERSION, AgentsBlockMember, agents_block_heading, block_sections,
 };
@@ -33,6 +33,9 @@ pub(crate) struct RuleGuidance<'a> {
 /// One run's placement and block version, and the renders that follow from them.
 pub(crate) struct Guidance<'a> {
     config: &'a Config,
+    /// The run as the render reads it, never with `--require-grounding`
+    /// (§FS-check.3.5.4).
+    run: Run,
     pub(crate) layout: Layout,
     /// The version every block of the run carries (§FS-init.2.3.7.1).
     pub(crate) version: u32,
@@ -43,12 +46,31 @@ impl<'a> Guidance<'a> {
     /// Place every row against the directories that exist under the config root
     /// now (§FS-init.2.3.5.11.4).
     pub(crate) fn new(config: &'a Config, rules: Option<RuleGuidance<'a>>) -> Self {
+        Self::laying(config, rules, &[])
+    }
+
+    /// Place every row against the directories that exist under the config root
+    /// or that `laid`, the starter files `--scaffold` writes in this run, lay
+    /// (§FS-init.2.3.5.11.4). Each laid path is relative to the config root.
+    pub(crate) fn laying(
+        config: &'a Config,
+        rules: Option<RuleGuidance<'a>>,
+        laid: &[(String, String)],
+    ) -> Self {
         let subjects: Vec<String> = rules
             .map(|rules| rules.subjects.values().cloned().collect())
             .unwrap_or_default();
         let root = &config.root;
-        let layout = Layout::of(config.project(), config.run(), &subjects, &|dir| {
-            path_is_dir(root.join(dir))
+        let run = config.run().as_written();
+        let lays = |dir: &str| {
+            laid.iter().any(|(path, _)| {
+                Path::new(path)
+                    .parent()
+                    .is_some_and(|parent| parent.starts_with(dir))
+            })
+        };
+        let layout = Layout::of(config.project(), &run, &subjects, &|dir| {
+            path_is_dir(root.join(dir)) || lays(dir)
         });
         // §FS-init.2.3.7.1: a scoped file or a declaration shape selects the scoped pair.
         let shapes = declaration_shapes_section(config.project(), &|_| true).is_some();
@@ -59,6 +81,7 @@ impl<'a> Guidance<'a> {
         .version();
         Self {
             config,
+            run,
             layout,
             version,
             rules,
@@ -104,7 +127,7 @@ impl<'a> Guidance<'a> {
                 noun: "citation directions".into(),
                 bytes: self
                     .layout
-                    .root_citation_directions_in(project, self.config.run(), grammar)
+                    .root_citation_directions_in(project, &self.run, grammar)
                     .unwrap_or_default(),
             },
             ExpectedSection {
@@ -148,7 +171,7 @@ impl<'a> Guidance<'a> {
         let block = render_agents_append_block(
             self.config.project_name.as_deref().unwrap_or_default(),
             self.config.project(),
-            self.config.run(),
+            &self.run,
             self.config.compiled(),
             workspace,
             ConversationSurface::for_entrypoint(path),
@@ -188,7 +211,7 @@ impl<'a> Guidance<'a> {
     /// entrypoint under the config root the chapter-rule links are relative to.
     /// §FS-init.2.3.7.1: select the version paired with this config's rendered guidance.
     pub(crate) fn finish_root_block(&self, mut block: String, path: &Path) -> String {
-        let (project, run) = (self.config.project(), self.config.run());
+        let (project, run) = (self.config.project(), &self.run);
         // §FS-init.2.3.9.3: the template renders the base revision's heading.
         block = block.replacen(
             &agents_block_heading(AGENTS_BLOCK_BASE_VERSION),
@@ -229,7 +252,7 @@ impl<'a> Guidance<'a> {
         let chapter_rules = self.chapter_rules(path, dir);
         self.layout.scoped_block(
             self.config.project(),
-            self.config.run(),
+            &self.run,
             dir,
             self.version,
             chapter_rules.as_deref(),
@@ -255,7 +278,7 @@ impl<'a> Guidance<'a> {
             .layout
             .scoped_sections(
                 self.config.project(),
-                self.config.run(),
+                &self.run,
                 dir,
                 chapter_rules.as_deref(),
             )

@@ -161,8 +161,12 @@ pub(super) fn write_scoped(
     };
     for file in &plan.files {
         if !path_is_entry(&file.path) {
-            // §FS-init.2.3.5.12.3: a created scoped file is the block alone.
+            // §FS-init.2.3.5.12.3: a created scoped file is the block alone, and
+            // its directory is one `--scaffold` lays in this run (§FS-init.2.3.5.11.4).
             if !dry_run {
+                if let Some(parent) = file.path.parent() {
+                    fs::create_dir_all(parent).map_err(|err| (parent.to_path_buf(), err.into()))?;
+                }
                 fs::write(&file.path, &file.block)
                     .map_err(|err| (file.path.clone(), err.into()))?;
             }

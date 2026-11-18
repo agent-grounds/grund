@@ -215,14 +215,22 @@ fn init_run(
             Catalog::default(),
         )
     };
-    // §FS-init.2.3.5.11: one placement for the root block and every scoped file.
-    let guidance = Guidance::new(
+    let fs_home = init_fs_home(&init_config);
+    let files: Vec<(String, String)> = if docs {
+        docs_scaffold_for_config(&fs_home, &init_config)
+    } else {
+        Vec::new()
+    };
+    // §FS-init.2.3.5.11: one placement for the root block and every scoped file,
+    // counting the directories the scaffold lays below (§FS-init.2.3.5.11.4).
+    let guidance = Guidance::laying(
         &init_config,
         rule_kind_enabled.then_some(RuleGuidance {
             findings: &rule_findings,
             rows: &rule_rows,
             subjects: &rule_subjects,
         }),
+        &files,
     );
 
     let agent_entrypoints = match selected_init_agent_entrypoints(&target, &agent_selection, reach)
@@ -439,12 +447,6 @@ fn init_run(
         any_change = true;
     }
 
-    let fs_home = init_fs_home(&init_config);
-    let files: Vec<(String, String)> = if docs {
-        docs_scaffold_for_config(&fs_home, &init_config)
-    } else {
-        Vec::new()
-    };
     // §FS-init.2.1.3: the starter files, laid by the template's own writer.
     any_change |= lay_starter_files(StarterWrite {
         target: &target,

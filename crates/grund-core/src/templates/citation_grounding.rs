@@ -16,9 +16,8 @@ use crate::config::{Project, Row, Run, homeless_row_grounding, row_grounding};
 /// home (§FS-config.3.4.7.4) is left out — nothing in it is scanned, so the rule
 /// never reaches it. Per-row grounding *levels* (§FS-config.3.4.8) are not this
 /// sentence's. Each row's pair is read through [`row_grounding`] — the row's key
-/// or v2 ladder, else the default OR the run's `--require-grounding`
-/// (§FS-config.3.4.8.3) — so the drift `check --require-grounding` reports is
-/// unchanged.
+/// or v2 ladder, else the default (§FS-config.3.4.8.3); the block render hands
+/// it a run without `--require-grounding` (§FS-check.3.5.4).
 pub(super) fn citation_grounding_sentence(
     project: &Project,
     run: &Run,

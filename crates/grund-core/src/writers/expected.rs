@@ -68,28 +68,26 @@ impl WorkspaceBlocks<'_> {
 /// member's cross-boundary rule and so catch a member block missing its bullet
 /// (§FS-rules.9.1).
 ///
-/// §FS-check.3.5.4: the chapter-rule section is rendered whether or not every
-/// configured rule resolved. A rule this scope cannot verify still earns its
-/// bullet (§FS-rules.4.1.2), so the section is left out only for a genuinely
-/// invalid rule — the one case that already carries its own located error at
-/// the rule's heading. `blocks` says whether the workspace sections are
-/// rendered and compared, and from which projects (§FS-check.3.5.5).
+/// A rule this scope cannot verify still earns its bullet (§FS-rules.4.1.2,
+/// §FS-check.3.5.4). A genuinely invalid rule leaves no block of the project
+/// to compare, because `grund init` refuses to write one while it stands: the
+/// entrypoints are dropped and `blocks_withheld` is set, so the rule's own
+/// located error is the finding to act on (§FS-check.3.5.1). `blocks` says
+/// whether the workspace sections are rendered and compared, and from which
+/// projects (§FS-check.3.5.5).
 pub(crate) fn expected(
     findings: &Catalog,
     config: &Config,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     blocks: WorkspaceBlocks<'_>,
 ) -> Expected {
-    let rules = config
-        .kinds
-        .iter()
-        .any(|kind| kind.rules)
-        .then(|| {
-            let vocab =
-                workspace_vocabulary(config.schema(), config.rules(), config.frame(), workspace);
-            configured_rule_sentences(findings, config.schema(), config.frame(), &vocab).ok()
-        })
-        .flatten();
+    let sentences = config.kinds.iter().any(|kind| kind.rules).then(|| {
+        let vocab =
+            workspace_vocabulary(config.schema(), config.rules(), config.frame(), workspace);
+        configured_rule_sentences(findings, config.schema(), config.frame(), &vocab)
+    });
+    let blocks_withheld = matches!(sentences, Some(Err(_)));
+    let rules = sentences.and_then(Result::ok);
     // §FS-init.2.3.5.10: render destinations from the same loaded declarations
     // that supplied the validated, ordered rule sentences.
     let guidance = Guidance::new(
@@ -119,6 +117,9 @@ pub(crate) fn expected(
         Err(error) => entrypoint_probe_error = Some(error),
     }
     let non_units = scoped_entrypoints(config, &guidance, &mut entrypoints);
+    if blocks_withheld {
+        entrypoints.clear();
+    }
     Expected {
         block_version: guidance.version,
         entrypoints,
@@ -132,6 +133,7 @@ pub(crate) fn expected(
             &SettledHeadings::default(),
         ),
         non_units,
+        blocks_withheld,
     }
 }
 

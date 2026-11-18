@@ -5,7 +5,8 @@
 //!
 //! What a command decides arrives as an `Invocation`, handed to `open()` in the
 //! workspace component, which builds every `Run` from it once
-//! (§AR-config.1.5); nothing assigns a scope field of a built `Run`.
+//! (§AR-config.1.5); nothing assigns a scope field of a built `Run`, and the
+//! block render's copy without the run's flag is [`Run::as_written`].
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -275,6 +276,16 @@ impl Run {
             buffers: invocation.buffers.clone(),
             spellings: Spellings::default(),
         }
+    }
+
+    /// This run as the managed-block render reads it: without its
+    /// `--require-grounding`, so `check` holds a block to the bytes `grund init`
+    /// writes from the config alone (§FS-check.3.5.4). A copy for the render;
+    /// the run in use keeps every scope field it was built with.
+    pub(crate) fn as_written(&self) -> Self {
+        let mut run = self.clone();
+        run.scope.require_grounding = false;
+        run
     }
 
     /// The invocation a workspace member of this run is loaded under: the

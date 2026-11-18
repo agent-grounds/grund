@@ -56,10 +56,11 @@ pub(crate) fn stale_section_noun(message: &str) -> Option<&str> {
 /// surface, whether the workspace sections are compared (§FS-check.3.5.5), and
 /// the companion probe's io error.
 /// This rule compares those bytes with disk and renders nothing
-/// (§AR-checker.2.7). §FS-check.3.5.4's chapter-rule section is among them
-/// exactly when the writers could render it, which is every case but a
-/// genuinely invalid rule — and that one carries its own located error at the
-/// rule's heading, from `check_chapter_rules`.
+/// (§AR-checker.2.7). A genuinely invalid rule leaves `Expected` with no
+/// entrypoint, since `grund init` refuses to write while it stands; its own
+/// located error, from `check_chapter_rules`, is the finding to act on, and the
+/// run records the withheld comparison so `--only agents-init` keeps that
+/// error (§FS-check.3.5.1).
 pub(super) fn check_agents_block_version(
     expected: &Expected,
     frame: Frame<'_>,
@@ -74,6 +75,9 @@ pub(super) fn check_agents_block_version(
     };
     for entrypoint in &expected.entrypoints {
         check_agent_block_path(entrypoint, held, frame.sources(), report);
+    }
+    if expected.blocks_withheld {
+        report.armed.withhold_blocks();
     }
     if let Some((path, message)) = &expected.entrypoint_probe_error {
         report.errors.push(Diagnostic {

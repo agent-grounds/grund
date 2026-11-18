@@ -53,6 +53,31 @@ fn citation_directions_drift_is_reported() {
     );
 }
 
+// §FS-check.3.5.4: the render reads no run flag, so the block `grund init`
+// wrote stays current under `check --require-grounding`, whose agents-init
+// error `grund init` could never clear (§FS-check.requirements.no-declined-fix).
+#[test]
+fn require_grounding_flag_leaves_the_block_render_alone() {
+    let root = test_root("require_grounding_flag_leaves_the_block_render_alone");
+    write(
+        &root.join("grund.toml"),
+        "[citations]\n[citations.e2e]\nmust = [\"FS\"]\n",
+    );
+    let mut config = load_config(&root).expect("load config");
+    let fresh =
+        render_agents_append_block_at("demo", &config, &root, true, ConversationSurface::Plain);
+    write(&root.join("AGENTS.md"), &format!("# demo\n\n{fresh}"));
+    let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan");
+
+    config.force_require_grounding();
+    let report = check_findings(&findings, &config);
+    assert!(
+        !report.errors.iter().any(|d| d.code == "agents-init"),
+        "--require-grounding never re-renders the block init wrote: {:?}",
+        report.errors.iter().map(|d| &d.message).collect::<Vec<_>>()
+    );
+}
+
 // §FS-check.3.5 / §FS-init.2.3.6.1: flipping `[reference] conversation` without
 // re-running `grund init` leaves a v-current block whose clickable-citations
 // section disagrees with the live config — an agents-init drift finding.
