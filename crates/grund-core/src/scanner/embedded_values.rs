@@ -122,6 +122,7 @@ pub(super) fn validate_embedded_value_roots(
                     source: decl.source.clone(),
                     binding_namespace: None,
                     binding_section: None,
+                    binding_citation: None,
                 }),
         );
 
@@ -155,6 +156,7 @@ pub(super) fn validate_embedded_value_roots(
                         source: decl.source.clone(),
                         binding_namespace: None,
                         binding_section: None,
+                        binding_citation: None,
                     }
                 }));
                 continue;
@@ -359,6 +361,7 @@ pub(super) fn validate_embedded_value_roots(
                         source: decl.source.clone(),
                         binding_namespace: None,
                         binding_section: None,
+                        binding_citation: None,
                     }),
             );
         }

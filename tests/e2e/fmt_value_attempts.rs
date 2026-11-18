@@ -9,7 +9,6 @@ use support::{CONFIG, FORM, Fixture, SPLIT, VALUE};
 macro_rules! refused_form {
     ($name:ident, $body:expr, $message:expr) => {
         #[test]
-        #[ignore = "red until #1433 fmt preserves refused attempts; implement removes this"]
         fn $name() {
             let fixture = Fixture::new(stringify!($name));
             fixture.project(CONFIG, VALUE, $body);
@@ -51,7 +50,6 @@ refused_form!(
 );
 
 #[test]
-#[ignore = "red until #1433 fmt protects precise occurrence; implement removes this"]
 fn ordinary_occurrence_sharing_refused_target_still_links() {
     let fixture = Fixture::new("same-target");
     fixture.project(
@@ -67,7 +65,6 @@ fn ordinary_occurrence_sharing_refused_target_still_links() {
 }
 
 #[test]
-#[ignore = "red until #1433 fmt shares configured attempt classification; implement removes this"]
 fn custom_marker_and_separator_preserve_attempt() {
     let fixture = Fixture::new("custom-syntax");
     fixture.project(
@@ -86,7 +83,6 @@ fn custom_marker_and_separator_preserve_attempt() {
 }
 
 #[test]
-#[ignore = "red until #1433 fmt preserves marked-root split attempt; implement removes this"]
 fn marked_root_split_retains_refusal() {
     let fixture = Fixture::new("marked-root");
     fixture.project(
@@ -100,7 +96,6 @@ fn marked_root_split_retains_refusal() {
 }
 
 #[test]
-#[ignore = "red until #1433 fmt preserves workspace chapter attempts; implement removes this"]
 fn qualified_chapter_attempt_uses_member_authority() {
     let fixture = Fixture::new("workspace-chapter");
     fixture.write(

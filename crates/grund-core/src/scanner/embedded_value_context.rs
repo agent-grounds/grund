@@ -136,6 +136,7 @@ pub(super) fn invalid_embedded_marker(
         source: DeclarationSource::Text,
         binding_namespace: None,
         binding_section: None,
+        binding_citation: None,
     }
 }
 

@@ -377,6 +377,12 @@ pub(crate) struct LineLinks<'a> {
 }
 
 impl LineLinks<'_> {
+    /// The physical line in the scan, for occurrence-based protection of split
+    /// value-binding attempts (§FS-values.8). A standalone line has no address.
+    pub(crate) fn line_number(self) -> Option<usize> {
+        self.doc.map(|(_, index)| index + 1)
+    }
+
     /// Where the document's spans fall in `line`, the caller's current bytes of
     /// this line.
     pub(crate) fn scan(self, line: &str) -> Rc<LineScan> {

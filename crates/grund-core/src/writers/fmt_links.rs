@@ -20,7 +20,7 @@ use super::fmt_anchor_row::anchor_detail;
 use super::fmt_row::LineRewrite;
 
 use super::fmt_shorthand_links::{accepted_shorthand_link, collect_local_accepted_shorthand_links};
-use super::fmt_value_bindings::markdown_citation_is_value_binding;
+use super::fmt_value_bindings::protected_value_citations;
 use crate::config::Config;
 use crate::grammar::{
     CandidateReading, CitationLink, LineLinks, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX,
@@ -159,9 +159,11 @@ pub(super) fn wrap_markdown_links_with_targets(
     let mut binding_end = 0;
     let mut written_links = Vec::new();
     let mut unproven_aliases = BTreeSet::new();
-    for citation in
-        markdown_link_citations(line, links, config, findings, workspace, shorthand_targets)
-    {
+    let citations =
+        markdown_link_citations(line, links, config, findings, workspace, shorthand_targets);
+    let protected =
+        protected_value_citations(line, links, path, &citations, config, findings, workspace);
+    for citation in citations {
         if citation.marker_start < cursor.max(binding_end) {
             continue;
         }
@@ -173,10 +175,9 @@ pub(super) fn wrap_markdown_links_with_targets(
         {
             continue;
         }
-        // §FS-values.8: wrapping the citation would destroy the sole accepted
-        // authored binding form, so a recognized value binding keeps its bytes,
-        // and a shorter reading of them, such as the citing grammar's, does too.
-        if markdown_citation_is_value_binding(line, &citation, config, findings, workspace) {
+        // §FS-values.8: the scanner's bindings and refused attempts keep their
+        // exact citation occurrence, including a shorter reading of its token.
+        if protected.contains(&citation.marker_start) {
             binding_end = citation.token_end;
             continue;
         }

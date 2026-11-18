@@ -174,6 +174,9 @@ pub struct InvalidValueSite {
     /// (§FS-values.3.1.1, §FS-values.5.1).
     pub binding_namespace: Option<String>,
     pub binding_section: Option<String>,
+    /// The attempted citation's (line, byte column), separate from the literal's
+    /// diagnostic location, especially across split lines (§FS-values.8).
+    pub(crate) binding_citation: Option<(usize, usize)>,
 }
 
 pub(crate) static JSON_NUMBER_RE: Lazy<Regex> =

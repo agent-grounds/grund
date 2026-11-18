@@ -208,5 +208,6 @@ pub(super) fn push_json_invalid(
         },
         binding_namespace: None,
         binding_section: None,
+        binding_citation: None,
     });
 }

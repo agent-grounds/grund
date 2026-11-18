@@ -76,6 +76,7 @@ mod json;
 mod legacy;
 mod legacy_inline;
 mod line_owners;
+mod markdown_value_bindings;
 mod merge;
 mod mounted_ignore;
 mod off_format;
@@ -134,6 +135,7 @@ pub(crate) use legacy::{
     collect_local_legacy_markdown_citations, configured_catalog_ids, legacy_catalog_ids,
     match_legacy_tail, promote_legacy_candidate, resolve_id_arg, sort_citations,
 };
+pub(crate) use markdown_value_bindings::markdown_value_binding_candidates;
 pub(crate) use off_format::record_off_format_citations;
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
 // Gated as its one reader outside this directory is, `api/tests_embedding_scan_errors.rs`.

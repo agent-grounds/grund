@@ -1,75 +1,114 @@
-//! Formatter protection for exact value bindings. Authority comes from the
-//! scanner's local/workspace records so formatting cannot turn a binding into a
-//! link and silently disable comparison (§FS-values.8, §AR-scanner.2.3.5).
+//! Formatter protection from the scanner's binding classifications and check's
+//! authority predicates, never a separate binding grammar (§FS-values.8).
+
+use std::collections::BTreeSet;
+use std::path::Path;
 
 use crate::checker::{
-    binding_aims_at_embedded_value_authority, binding_target_has_any_value_authority,
+    binding_target_has_any_value_authority, binding_target_reports_invalid_attempt,
 };
 use crate::config::Config;
-use crate::grammar::MarkdownLineCitation;
-use crate::grammar::value_binding_section_shape_is_valid;
-use crate::model::{Catalog, component_text_is_valid, value_binding_section_ends_in_coordinate};
+use crate::grammar::{LineLinks, MarkdownLineCitation};
+use crate::model::Catalog;
 use crate::resolver::WorkspaceContext;
+use crate::scanner::markdown_value_binding_candidates;
 
-/// Whether `fmt --cross-refs` must leave this citation's bytes alone as an exact
-/// value binding (§FS-values.8). A component binding under either authority is
-/// protected by the test that made it one, and a bare whole-value ID by the
-/// authority it binds whole, whether the space rule lets it agree or refuses it
-/// (§FS-values.3.1.2, §FS-values.9.2). A path aimed at a marked or chapter root, a
-/// declared chapter, or below a component is protected by the one predicate
-/// check's refusals share.
-pub(super) fn markdown_citation_is_value_binding(
+/// Marker offsets whose citation bytes the link pass must preserve (§FS-values.8).
+/// Same-line forms are read by the scanner on the current normalized bytes,
+/// so earlier rewrites cannot move protection onto another occurrence. Split
+/// attempts come from the whole-file scan, which already judged adjacency and
+/// text-run boundaries. Their citation line starts with only continuation
+/// prefixes and `(` before the marker, so normalization cannot move that marker.
+pub(super) fn protected_value_citations(
     line: &str,
-    citation: &MarkdownLineCitation,
+    links: LineLinks<'_>,
+    path: &Path,
+    citations: &[MarkdownLineCitation],
     config: &Config,
     findings: &Catalog,
     workspace: Option<&WorkspaceContext>,
-) -> bool {
-    let (target_config, target_findings) = match citation.namespace.as_deref() {
-        Some(alias) => {
-            let Some(project) = workspace.and_then(|workspace| workspace.project_by_alias(alias))
-            else {
-                return false;
-            };
-            (&*project.config, &project.findings)
+) -> BTreeSet<usize> {
+    if citations.is_empty() {
+        return BTreeSet::new();
+    }
+    let target = |namespace: Option<&str>| match namespace {
+        Some(alias) => workspace
+            .and_then(|workspace| workspace.project_by_alias(alias))
+            .map(|project| (&project.findings, project.config.schema())),
+        None => Some((findings, config.schema())),
+    };
+    let mut protected = BTreeSet::new();
+    // §FS-values.8: a split refusal's diagnostic points at the earlier literal,
+    // while its citation address identifies just the occurrence to preserve.
+    for site in &findings.invalid_value_bindings {
+        if site.file != path {
+            continue;
         }
-        None => (config, findings),
-    };
-    let section = citation.section.as_deref();
-    let is_binding_shape = section.is_none_or(|section| {
-        value_binding_section_shape_is_valid(section)
-            && value_binding_section_ends_in_coordinate(section)
-    }) && binding_target_has_any_value_authority(
-        target_findings,
-        target_config.schema(),
-        &citation.id,
-        section,
+        let Some((citation_line, column)) = site.binding_citation else {
+            continue;
+        };
+        if links.line_number() == Some(citation_line)
+            && site.line < citation_line
+            && let Some(id) = &site.id
+            && target(site.binding_namespace.as_deref()).is_some_and(|(catalog, schema)| {
+                binding_target_reports_invalid_attempt(
+                    catalog,
+                    schema,
+                    id,
+                    site.binding_section.as_deref(),
+                )
+            })
+        {
+            protected.insert(column - 1);
+        }
+    }
+    if !line.contains('`') {
+        return protected;
+    }
+    let workspace_targets = workspace
+        .map(WorkspaceContext::citation_targets)
+        .unwrap_or_default();
+    let candidates = markdown_value_binding_candidates(
+        line,
+        links,
+        path,
+        config.schema(),
+        config.frame(),
+        config.frame().reading(config.schema(), path).lexical,
+        citations,
+        &workspace_targets,
     );
-    if !is_binding_shape
-        && !section.is_some_and(|section| {
-            binding_aims_at_embedded_value_authority(
-                target_findings,
-                target_config.schema(),
-                &citation.id,
-                section,
+    for binding in &candidates.value_bindings {
+        if target(binding.namespace.as_deref()).is_some_and(|(catalog, schema)| {
+            binding_target_has_any_value_authority(
+                catalog,
+                schema,
+                &binding.id,
+                binding.section.as_deref(),
+            ) || binding_target_reports_invalid_attempt(
+                catalog,
+                schema,
+                &binding.id,
+                binding.section.as_deref(),
             )
-        })
-    {
-        return false;
+        }) {
+            protected.insert(binding.citation_column - 1);
+        }
     }
-    let Some(before_marker) = line[..citation.marker_start].strip_suffix(" (") else {
-        return false;
-    };
-    let Some(close_tick) = before_marker.len().checked_sub(1) else {
-        return false;
-    };
-    if before_marker.as_bytes().get(close_tick) != Some(&b'`')
-        || !line[citation.token_end..].starts_with(')')
-    {
-        return false;
+    for site in &candidates.invalid_value_bindings {
+        if let Some(id) = &site.id
+            && target(site.binding_namespace.as_deref()).is_some_and(|(catalog, schema)| {
+                binding_target_reports_invalid_attempt(
+                    catalog,
+                    schema,
+                    id,
+                    site.binding_section.as_deref(),
+                )
+            })
+            && let Some((_, column)) = site.binding_citation
+        {
+            protected.insert(column - 1);
+        }
     }
-    let Some(open_tick) = before_marker[..close_tick].rfind('`') else {
-        return false;
-    };
-    component_text_is_valid(&before_marker[open_tick + 1..close_tick])
+    protected
 }

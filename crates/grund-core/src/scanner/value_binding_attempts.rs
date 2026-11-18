@@ -54,6 +54,7 @@ pub(super) fn scan_noncanonical_value_binding_attempts(
             Some(target.id),
             target.section,
             open_tick,
+            Some(close_tick + 1 + target.citation_offset),
         ));
     }
 }
@@ -64,6 +65,7 @@ pub(super) fn invalid_value_binding_site(
     id: Option<Id>,
     section: Option<String>,
     open_tick: usize,
+    citation_offset: Option<usize>,
 ) -> InvalidValueSite {
     InvalidValueSite {
         id,
@@ -75,6 +77,7 @@ pub(super) fn invalid_value_binding_site(
         source: DeclarationSource::Text,
         binding_namespace: namespace,
         binding_section: section,
+        binding_citation: citation_offset.map(|offset| (line.lineno, line.column_offset + offset + 1)),
     }
 }
 
@@ -86,6 +89,7 @@ pub(super) fn split_value_binding_site(
     path: &Path,
     (line, column): (usize, usize),
     target: AttemptedValueTarget,
+    citation: (usize, usize),
 ) -> InvalidValueSite {
     InvalidValueSite {
         id: Some(target.id),
@@ -99,6 +103,7 @@ pub(super) fn split_value_binding_site(
         source: DeclarationSource::Text,
         binding_namespace: target.namespace,
         binding_section: target.section,
+        binding_citation: Some(citation),
     }
 }
 
@@ -106,6 +111,7 @@ pub(super) struct AttemptedValueTarget {
     namespace: Option<String>,
     id: Id,
     section: Option<String>,
+    pub(super) citation_offset: usize,
 }
 
 pub(super) fn attempted_value_target(
@@ -122,6 +128,7 @@ pub(super) fn attempted_value_target(
         rest = trimmed;
     }
     rest = rest.trim_start_matches(|ch: char| ch.is_whitespace());
+    let citation_offset = tail.len() - rest.len();
     rest = rest.strip_prefix(&schema.citation.marker).unwrap_or(rest);
 
     if let Some(prefix) = QUALIFIED_CITATION_PREFIX.captures(rest) {
@@ -135,6 +142,7 @@ pub(super) fn attempted_value_target(
             namespace: Some(alias.to_string()),
             id,
             section,
+            citation_offset,
         });
     }
 
@@ -143,6 +151,7 @@ pub(super) fn attempted_value_target(
         namespace: None,
         id,
         section,
+        citation_offset,
     })
 }
 

@@ -119,7 +119,7 @@ pub(crate) use support::sort_diagnostics;
 pub(crate) use unread_homes::UnreadNames;
 pub(crate) use value_declarations::invalid_value_declarations;
 pub(crate) use values::{
-    binding_aims_at_embedded_value_authority, binding_target_has_any_value_authority,
+    binding_target_has_any_value_authority, binding_target_reports_invalid_attempt,
 };
 // §FS-fetch.admission.3: fetch judges its candidate by check's node-local half.
 pub(crate) use conform::conform;
