@@ -22,7 +22,11 @@ use super::report::context_run_warnings;
 #[derive(Clone, Debug, Default)]
 #[non_exhaustive]
 pub struct CoverLinesOpts {
+    /// The one file whose lines are asked about. A path that names nothing is refused with
+    /// `path does not exist: <path>`.
     pub path: PathBuf,
+    /// Whether `path` was given. `false`, the default, names no file, and the request is
+    /// refused with `--lines needs a file path` before anything is read (§FS-cover.6.4).
     pub path_provided: bool,
     pub lines: Vec<String>,
 }

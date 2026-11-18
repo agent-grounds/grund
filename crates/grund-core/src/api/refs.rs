@@ -17,7 +17,13 @@ use crate::scanner::ApiScanError;
 #[derive(Clone)]
 #[non_exhaustive]
 pub struct RefsOpts {
+    /// Where the run starts: the anchor its project is discovered from, and, when
+    /// `path_provided` is set, the given `<path>`. A path that names nothing is refused with
+    /// `path does not exist: <path>` whatever `path_provided` says.
     pub path: PathBuf,
+    /// Whether `path` is the given `<path>` of the CLI command. `false`, the default, makes
+    /// `path` only the anchor the project is discovered from, with the whole project in scope,
+    /// as for a command given no path.
     pub path_provided: bool,
     pub id: String,
     pub section: Option<String>,
