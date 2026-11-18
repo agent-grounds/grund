@@ -1,0 +1,26 @@
+docs/before.md:5: error: invalid value declaration for AR-005-before: embedded value component coordinate must follow physical order (expected `2.1`); correct what the reason names
+docs/before.md:5: error: invalid value declaration for AR-005-before: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/before.md:5: error: unmarked heading inside AR-005-before; number it (### 2.2. 2.2.) as AR-005-before.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/before.md:6: error: invalid value declaration for AR-005-before: embedded value component coordinate must follow physical order (expected `2.2`); correct what the reason names
+docs/colon.md:3: error: invalid value declaration for AR-002-colon: embedded value root must define contiguous numbered components starting at `.1`; correct what the reason names
+docs/colon.md:5: error: invalid value declaration for AR-002-colon: embedded value components must be immediate numeric headings `.1` through `.N` (expected `2.1`); correct what the reason names
+docs/colon.md:5: error: unmarked heading inside AR-002-colon; number it (### 2.1. 2.5: Ten) as AR-002-colon.2.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/first.md:5: error: invalid value declaration for AR-003-first: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/first.md:5: error: unmarked heading inside AR-003-first; number it (### 2.1. 2.1.) as AR-003-first.2.1, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path 2.1 needs a title after it, written ### 2.1. Untitled
+docs/grandchild.md:6: error: invalid value declaration for AR-007-grandchild: embedded value components must be immediate numeric headings `.1` through `.N` (expected `2.2`); correct what the reason names
+docs/grandchild.md:6: error: unmarked heading inside AR-007-grandchild; number it (#### 2.1.1. 2.1.1.) as AR-007-grandchild.2.1.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/named.md:3: error: invalid value declaration for AR-006-named: embedded value root must define contiguous numbered components starting at `.1`; correct what the reason names
+docs/named.md:5: error: invalid value declaration for AR-006-named: embedded value components must be immediate numeric headings `.1` through `.N` (expected `2.1`); correct what the reason names
+docs/named.md:5: error: unmarked heading inside AR-006-named; number it (### 2.1. 2.extra:) as AR-006-named.2.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/next.md:6: error: invalid value declaration for AR-004-next: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/next.md:6: error: unmarked heading inside AR-004-next; number it (### 2.2. 2.2.) as AR-004-next.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path 2.2 needs a title after it, written ### 2.2. Untitled
+docs/skip.md:5: error: invalid value declaration for AR-001-skip: embedded value component coordinate must follow physical order (expected `2.1`); correct what the reason names
+docs/skip.md:5: error: invalid value declaration for AR-001-skip: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/skip.md:5: error: unmarked heading inside AR-001-skip; number it (### 2.1. 2.5.) as AR-001-skip.2.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/before.md:1: warning: declared but never cited: AR-005-before; cite it
+docs/colon.md:1: warning: declared but never cited: AR-002-colon; cite it
+docs/first.md:1: warning: declared but never cited: AR-003-first; cite it
+docs/grandchild.md:1: warning: declared but never cited: AR-007-grandchild; cite it
+docs/named.md:1: warning: declared but never cited: AR-006-named; cite it
+docs/next.md:1: warning: declared but never cited: AR-004-next; cite it
+docs/skip.md:1: warning: declared but never cited: AR-001-skip; cite it
