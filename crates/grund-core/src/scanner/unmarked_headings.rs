@@ -242,6 +242,7 @@ fn fault_hint(
         path: fault.path.to_string(),
         missing_title: fault.title.is_none(),
         underscore: fault.underscore,
+        colon: fault.colon,
         heading: fault.shown_heading(candidate.heading_level),
         corrected: corrected.to_string(),
     })

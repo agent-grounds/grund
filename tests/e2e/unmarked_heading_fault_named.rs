@@ -332,7 +332,6 @@ fn a_repair_that_would_not_declare_a_section_is_not_shown() {
 /// its place, path and title kept, where "number it" alone stacks a fresh number in front of them
 /// (§FS-declarations.checks.unmarked-heading.2.3).
 #[test]
-#[ignore = "red until #1434 names the numeric-path colon in the 2.3 clause; implement removes this"]
 fn a_numeric_path_with_a_colon_is_told_it_takes_a_period() {
     let findings = Tree::with("colon", COLON_FILES).findings();
     assert_message(
@@ -348,7 +347,6 @@ fn a_numeric_path_with_a_colon_is_told_it_takes_a_period() {
 /// agent-grounds/grund#1434: the same shape nested, `### 1.2: Title` under a declared `## 1. One`,
 /// is told the same and shown `### 1.2. Title` (§FS-declarations.checks.unmarked-heading.2.3).
 #[test]
-#[ignore = "red until #1434 names the numeric-path colon in the 2.3 clause; implement removes this"]
 fn a_nested_numeric_path_with_a_colon_is_told_it_takes_a_period() {
     let findings = Tree::with("colon-nested", COLON_FILES).findings();
     assert_message(
@@ -364,7 +362,6 @@ fn a_nested_numeric_path_with_a_colon_is_told_it_takes_a_period() {
 /// agent-grounds/grund#1434: `## 1:` has both faults, the `:` and the missing title, and is told
 /// both in one clause (§FS-declarations.checks.unmarked-heading.2.3).
 #[test]
-#[ignore = "red until #1434 names the numeric-path colon in the 2.3 clause; implement removes this"]
 fn a_numeric_path_with_a_colon_and_no_title_is_told_both_faults() {
     let findings = Tree::with("colon-bare", COLON_FILES).findings();
     assert_message(

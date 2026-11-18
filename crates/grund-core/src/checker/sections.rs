@@ -347,10 +347,16 @@ fn field_heading_hint(
 /// The clause naming what a complete path already in place lacks, and the heading
 /// that repairs it with the path kept (§FS-declarations.checks.unmarked-heading.2.3).
 fn fault_clause(hint: &PathFaultHint) -> String {
-    let fault = match (hint.underscore, hint.missing_title) {
-        (true, true) => format!("{UNDERSCORE_FAULT}, and needs a title after it"),
-        (true, false) => UNDERSCORE_FAULT.to_string(),
-        _ => "needs a title after it".to_string(),
+    // A numeric path carries no `_`, so at most one of the two reasons applies.
+    let reason = if hint.underscore {
+        Some(UNDERSCORE_FAULT)
+    } else {
+        hint.colon.then_some(COLON_FAULT)
+    };
+    let fault = match (reason, hint.missing_title) {
+        (Some(reason), true) => format!("{reason}, and needs a title after it"),
+        (Some(reason), false) => reason.to_string(),
+        (None, _) => "needs a title after it".to_string(),
     };
     format!(
         "; the section path {} {fault}, written {}",
@@ -359,6 +365,8 @@ fn fault_clause(hint: &PathFaultHint) -> String {
 }
 
 const UNDERSCORE_FAULT: &str = "has a _, which a section name ([a-z][a-z0-9-]*) never takes";
+/// A `:` after a purely numeric path (§FS-declarations.checks.unmarked-heading.2.3).
+const COLON_FAULT: &str = "is numeric, so it takes . rather than :";
 
 /// `<ID>` for the declaration, `<ID><sep><path>` for a section of it.
 fn coordinate(owner: &str, separator: &str, path: &str) -> String {

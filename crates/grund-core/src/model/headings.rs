@@ -34,9 +34,9 @@ pub struct UnmarkedHeading {
     /// For a dotted heading whose suggested coordinate has a usable parent, the
     /// relative heading that declares it (§FS-declarations.checks.unmarked-heading.2.1).
     pub relative_hint: Option<RelativeHint>,
-    /// For a heading whose complete path lacks only a title or has a `_`, and
-    /// whose repair would declare a section, that fault and the repairing
-    /// heading (§FS-declarations.checks.unmarked-heading.2.3).
+    /// For a heading whose complete path lacks only a title, has a `_`, or is
+    /// purely numeric before a `:`, and whose repair would declare a section,
+    /// that fault and the repairing heading (§FS-declarations.checks.unmarked-heading.2.3).
     pub(crate) fault_hint: Option<PathFaultHint>,
 }
 
@@ -48,6 +48,8 @@ pub(crate) struct PathFaultHint {
     pub(crate) path: String,
     pub(crate) missing_title: bool,
     pub(crate) underscore: bool,
+    /// A purely numeric path written with the `:` a name-bearing path takes.
+    pub(crate) colon: bool,
     pub(crate) heading: String,
     /// The path the shown heading declares, which a later heading of the same
     /// body is not shown again.
