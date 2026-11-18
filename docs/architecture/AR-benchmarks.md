@@ -193,7 +193,7 @@ Each line names a mode by its key in `surface.json`'s `modes`:
 - `node`: the Node addon, `grund-node`. Waived until its counts are shown repeatable (section 1.7).
 - `sequential-scan`: the scan of a file list below the parallel threshold, on one thread (section 1.8).
 - `rules`: committed rule declarations evaluated by `grund check` ([§AR-rules](AR-rules.md#ar-rules-sentences-and-facts-meet-only-in-the-rule-engine)).
-- `named-sections`: named section paths and the section lock that records cited ones ([§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)).
+- `named-sections`: named section paths and the section lock that records cited ones ([§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went)).
 - `values`: value bindings compared against their declared values ([§FS-values](../functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)).
 - `external-facts`: a fetched external snapshot in its kind's home, scanned and cited like any declaration ([§FS-fetch](../functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)).
 

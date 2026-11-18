@@ -103,7 +103,7 @@ open tool or published work:
 - Dangling-reference lints: rustdoc's `broken_intra_doc_links`, javadoc DocLint's
   `reference` group, Sphinx's nitpicky mode.
 - Marks that flag a changed target, the prior art for the section lock
-  ([§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)): Doorstop's link fingerprints, and the revisions OpenFastTrace and
+  ([§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went)): Doorstop's link fingerprints, and the revisions OpenFastTrace and
   LOBSTER compare.
 - Checks that compare what the referring side states with the target: Duvet's
   quoted-text match and TRLC checks that read a referenced record's fields.

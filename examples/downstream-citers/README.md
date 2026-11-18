@@ -87,7 +87,7 @@ docs/functional-spec/old.md:1: warning: declared but never cited: FS-old; cite i
 
 Swapping the text of `FS-rel`'s two `### .1` sections is refused the same way, by the
 section lock, naming the page as the citing site
-([§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)).
+([§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went)).
 
 ## Trade-offs
 

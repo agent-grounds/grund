@@ -226,7 +226,7 @@ ordinary citing file. From then on `substratevm`'s `check` warns only where
 nothing cites, deleting a listed point is an error at the page —
 `docs/downstream-citers.md:9: error: unknown reference FS-sec; did you mean FS-rel?`
 — and moving a listed section's text to another address is refused by the
-section lock ([§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)). [`examples/downstream-citers`](../../examples/downstream-citers/)
+section lock ([§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went)). [`examples/downstream-citers`](../../examples/downstream-citers/)
 runs the three steps.
 
 The recipe has four limits, and each is part of using it:

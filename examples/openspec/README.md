@@ -371,7 +371,7 @@ def renew(loan: Loan) -> None:
 
 Then run `grund fmt --write` from the project root. It writes each citation
 in Markdown as a link to the heading ([§FS-fmt.6](../../docs/functional-spec/FS-fmt.md#6-cross-reference-emission)), and records every cited
-relative section in `.grund/sections/` ([§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)). Commit the lock with
+relative section in `.grund/sections/` ([§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went)). Commit the lock with
 the change.
 
 A requirement reads on its own. From `2-check/repo`,
