@@ -82,7 +82,9 @@ so `--- ID:`, `-- | ID:` and `;; ID:` as well as `-- ID:` and `; ID:`
 inside a `/* … */` block comment, with or without its ` * ` gutter
 ([§FS-declarations.line.block-comment](FS-declarations.md#lineblock-comment-a-line-inside-a-block-comment), [§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)). The position is necessary and not sufficient. The token that opens the
 line has to be the shape a declaration takes, and one shape that starts out like it is
-not.
+not. A byte-order mark that starts a file is part of line 1, in Markdown and in a source
+file alike, so line 1 is no heading and opens no comment, docstring or block comment, and
+nothing such a block would hold declares.
 
 ### line.block-comment: A line inside a block comment
 

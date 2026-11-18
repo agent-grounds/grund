@@ -397,7 +397,7 @@ The default `section_separator` is `.`. Projects that prefer `:` (`<§>FS-check:
 
 One `[[kinds]]` table per kind. `kind` is its name — mandatory, and what everything else keys on: `[citations.<kind>]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)), `grund list --kind`, and, for a kind that declares IDs, the literal prefix of every ID in it.
 
-A kind is either *multi-file* (`folder = "<dir>"`) — each declaration is the H1 of its own file under `<dir>` — or *single-file* (`file = "<path>"`) — every declaration of the kind is a heading inside that one document — an H2 by convention, and the H1 where the file holds the kind's single declaration ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)). Setting both `folder` and `file` on the same kind is invalid; setting neither leaves the kind with no configured home. What a home means to `grund id` and to the checker is [§FS-config.3.4.11](FS-config.md#3411-what-a-home-is-used-for).
+A kind is either *multi-file* (`folder = "<dir>"`) — each declaration is the H1 of its own file under `<dir>` — or *single-file* (`file = "<path>"`) — every declaration of the kind is a heading inside that one document. Setting both `folder` and `file` on the same kind is invalid; setting neither leaves the kind with no configured home. What a home means to `grund id` and to the checker is [§FS-config.3.4.11](FS-config.md#3411-what-a-home-is-used-for).
 
 Every configured home is also **in the scan scope by construction**, whether or not `[scan] include` names it ([§FS-config.3.5.8](FS-config.md#358-every-configured-kind-home-is-scanned)), except one marked `scan = false`, which is listed and not scanned ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)).
 
