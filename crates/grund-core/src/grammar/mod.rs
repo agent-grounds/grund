@@ -121,6 +121,9 @@ pub(crate) use comment_block::{
 pub(crate) use comment_line::{
     comment_envelope, comment_strip_prefixes, cut_at_block_closer, strip_block_closer,
 };
+/// The client-matcher tests read the section handle from here (§FS-integrations.3.1.4).
+#[cfg(test)]
+pub(crate) use compiled::NAMED_COMPONENT_PATTERN;
 pub(crate) use compiled::{
     QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, is_valid_project_alias, section_path,
 };
