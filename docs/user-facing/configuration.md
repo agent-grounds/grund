@@ -432,7 +432,7 @@ What `grund fmt` writes and leaves alone. [§FS-config-v2.presentation](../funct
 | Key | Type | Default | What it sets |
 |---|---|---|---|
 | `anchors` | `"github"` | `"github"` | The heading-anchor style `grund fmt` writes in citation links; `github` is the only one today. [§FS-config-v2.presentation](../functional-spec/FS-config-v2.md#presentation-the-presentation-concern) |
-| `links` | `"index"` | `"index"` | Where `grund fmt` points citation links; `index` is the only target today. [§FS-config-v2.presentation](../functional-spec/FS-config-v2.md#presentation-the-presentation-concern) |
+| `links` | `"index"` | `"index"` | How `grund fmt` links citations: `index` wraps citations in files read as Markdown as links to the cited declaration's heading. [§FS-config-v2.presentation](../functional-spec/FS-config-v2.md#presentation-the-presentation-concern) |
 | `exclude` | array of strings | `[]` | Files `grund fmt` never rewrites: gitignore-style globs, as v1 `[fmt] exclude`. [§FS-config-v2.presentation](../functional-spec/FS-config-v2.md#presentation-the-presentation-concern) |
 
 For another string value of `anchors` or `links`, the refusal names the supplied

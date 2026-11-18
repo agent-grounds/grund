@@ -1580,7 +1580,7 @@
                   "enum": [
                     "index"
                   ],
-                  "description": "Where `grund fmt` points citation links; `index` is the only target today.",
+                  "description": "How `grund fmt` links citations: `index` wraps citations in files read as Markdown as links to the cited declaration's heading.",
                   "default": "index",
                   "x-grund-spec": {
                     "id": "FS-config-v2.presentation",
