@@ -293,6 +293,32 @@ fn guidance_refuses_a_changed_section_or_version() {
     assert_eq!(changed.len(), 1);
     assert_eq!(changed[0].details, ["- b", "+ c"]);
     assert!(changed[0].what.contains("its citation directions section"));
+    assert!(
+        changed[0]
+            .repair
+            .starts_with("none keeps the generated guidance")
+    );
+    // §FS-config-migrate.5.3.1: a grounding sentence whose subject moves still refuses.
+    let sentence = |subject: &str| {
+        format!(
+            "- {subject} must cite FS. A file there that cites nothing is not checked; \
+             `[rules.citations.e2e.grounding] must = \"file\"` makes it a finding.\n"
+        )
+    };
+    let moved = guidance(
+        &block(
+            19,
+            &sentence("Each file in **tests/e2e/** that cites anything"),
+        ),
+        &block(19, &sentence("Each file in **tests/** that cites anything")),
+        &[],
+    );
+    assert_eq!(moved.len(), 1, "{moved:?}");
+    assert!(
+        moved[0]
+            .repair
+            .starts_with("none keeps the generated guidance")
+    );
     let version = guidance(&block(19, "a\n"), &block(21, "a\n"), &[]);
     assert!(version[0].what.contains("from v19 to v21"), "{version:?}");
     assert!(guidance(&block(19, "a\n"), &block(19, "a\n"), &[]).is_empty());

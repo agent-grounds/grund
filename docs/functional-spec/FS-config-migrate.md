@@ -356,6 +356,7 @@ The candidate is loaded through the v2 reader, the path a file on disk goes thro
 - the config-table names inside messages, such as `[scan] exclude` against `[schema.sources] exclude`: both runs are spelled as v1;
 - the `config-version-1` caution ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)), which the run on the file as read carries and the candidate's run never does, so it is dropped from both before comparing;
 - an `agents-init` finding about a managed block's text outside the block version and the five generated sections: [§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance) passes that difference on purpose, and the candidate's run reports it because `check` compares the whole block ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). Kept, it would refuse every version-1 migration, whose citation scheme paragraph always changes.
+- an `agents-init` finding that the citation directions section is stale, where [§FS-config-migrate.5.3.1](FS-config-migrate.md#531-the-grounding-sentences-setting-is-compared-in-one-grammar) found that section equal once the grounding sentence's setting is spelled in one grammar: the guidance gate passes that difference on purpose, and the candidate's run reports it because the tree's block still spells the setting in version 1 and `check` compares bytes ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). Only that section of the root block is dropped, and only then; any other finding on a generated section is still compared, a scoped or nested block's included, which the root-only guidance gate never renders.
 
 #### 5.2.1 A candidate line with no version-1 line
 
@@ -375,7 +376,7 @@ Line 159 is the `folders` line of the built-in `FS` row the candidate writes out
 
 ### 5.3 Guidance
 
-Migration also renders in memory what `grund init` would write into each `AGENTS.md`, for the file as read and for the candidate, whether or not an `AGENTS.md` exists yet. A difference in the block's version or in one of its five generated sections — `### Citation directions`, `### Clickable citations`, `### Declaration shapes`, `### Chapter rules` and `### Scoped guidance` — is a refusal, because those carry the rules the tree is held to, and a migration must not move them. Every other difference passes: the rest of the block describes the config, the citation scheme, the project map and the declaration forms among it, so it is expected to change under a migration, and `check` reports the block stale until `grund init` runs ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). A value row is the common case: version 2 gives it a declaration shape, which adds a section version 1 never wrote. For a `TERM` row whose `file` is `terms.md`:
+Migration also renders in memory what `grund init` would write into each `AGENTS.md`, for the file as read and for the candidate, whether or not an `AGENTS.md` exists yet. A difference in the block's version or in one of its five generated sections — `### Citation directions`, `### Clickable citations`, `### Declaration shapes`, `### Chapter rules` and `### Scoped guidance` — is a refusal, because those carry the rules the tree is held to, and a migration must not move them. Every other difference passes: the rest of the block describes the config, the citation scheme, the project map and the declaration forms among it, so it is expected to change under a migration, and `check` reports the block stale until `grund init` runs ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). One piece of config grammar inside a generated section is compared in one grammar rather than as bytes: the setting the Citation directions grounding sentence names ([§FS-config-migrate.5.3.1](FS-config-migrate.md#531-the-grounding-sentences-setting-is-compared-in-one-grammar)). A value row is the common case: version 2 gives it a declaration shape, which adds a section version 1 never wrote. For a `TERM` row whose `file` is `terms.md`:
 
 ```text
 refused: grund.toml:11: [[kinds]] `TERM` values = true adds a "Declaration shapes" section to the AGENTS.md block in version 2, which grund check compares
@@ -397,6 +398,26 @@ refused: grund.toml: the AGENTS.md block grund init writes would go from v19 to 
 ```
 
 The Project map row the complement gains once its places are listed is a `note:` line rather than a refusal, because the Project map is not one of the generated sections ([§FS-init.2.3.7.2](FS-init.md#2372-what-check-compares)): `` note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then ``.
+
+#### 5.3.1 The grounding sentence's setting is compared in one grammar
+
+The Citation directions section renders one piece of config grammar: the setting the second sentence of a home whose row grounds nothing names, spelled in the live config's version ([§FS-init.2.3.5.2.2](FS-init.md#23522-a-home-whose-row-grounds-nothing-says-so)). Compared as bytes, that sentence differs between version 1 and the candidate on every such row however the rule stands, so the comparison renders the setting in the candidate's grammar on both sides, from the one place `grund init` spells it, and compares the section then. `grund init` and `grund check` still spell it in the live config's version; only the comparison sets the spelling aside.
+
+What the sentence says is still compared. A row that grounds on one side and not on the other changes the bullet's subject and whether the sentence is there at all, and a different row or home changes the subject and the row the setting names; each is a difference, refused as the rest of 5.3 refuses it, with `repair: none`. Setting the spelling aside moves no rule: on both sides a file there that cites anything is held to the row's rules, and one that cites nothing is not checked.
+
+So a version-1 config whose non-citable `e2e` row carries a rule and grounds nothing migrates with both gates equal:
+
+```toml
+[[kinds]]
+kind = "e2e"
+folder = "tests/e2e"
+citable = false
+
+[citations.e2e]
+must = ["FS"]
+```
+
+The block version 1 renders ends its bullet `` `require_grounding = true` on its `[[kinds]]` row makes it a finding. ``, the candidate's `` `[rules.citations.e2e.grounding] must = "file"` makes it a finding. ``, and the comparison reads both as the second. A single-file home, whose sentence opens `If it cites nothing, it is not checked;`, compares the same way, at whatever strength its rules carry. A several-file home is a version-2 row, so no version-1 config renders one, and the homeless kind's bullet names no setting.
 
 ### 5.4 The result, and a difference
 
