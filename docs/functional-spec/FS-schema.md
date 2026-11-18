@@ -64,6 +64,13 @@ The configuration is discovered by walking up from PATH, `.` by default, exactly
 as `grund config show` discovers it ([§FS-config.1](FS-config.md#1-file-location-and-discovery), [§FS-config.4.2](FS-config.md#42-grund-config-show-path)). A path inside a
 workspace member shows that member.
 
+For a member with neither config form, this is
+[§FS-workspace.2](FS-workspace.md#2-workspace-configuration)'s project rooted at
+the member, even when PATH is a descendant. The view names that member root,
+reports no config file and shows its effective defaults; it does not name or
+read the workspace root's project in its place. The schema-view API carries the
+same identity, config-file absence and version.
+
 ### 2.1 A workspace root shows the root, and names its members
 
 At a workspace root the view is of the root project only. The table ends with one
