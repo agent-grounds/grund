@@ -44,19 +44,25 @@ pub(crate) use crate::config::scope_is_config_root;
 /// a run that holds one has them judged where its workspace is expanded
 /// (§FS-config.3.9.5.2, [`crate::config::install_kind_table`]).
 ///
-/// It is also the one place a scanning run refuses a path that names nothing, whether or not
-/// the caller marked the path as given, so a library caller that sets only `path` cannot be
+/// It is also the one place a scanning run refuses a path that names nothing when the caller
+/// did not mark the path as given, so a library caller that sets only `path` cannot be
 /// answered for the working directory's project (§FS-scan.scope.homes.lookup.path.library). It
 /// asks once discovery has answered, so a config that refuses to load is still that refusal
-/// (§FS-config.1), and before anything is scanned. A `Discovery` run scans nothing and is not
-/// asked, nor is [`resolve_workspace_config`], whose path only selects the project.
+/// (§FS-config.1), and before anything is scanned. A marked path is left to the walk, which
+/// refuses it with the same function after the boundary below has said its warnings
+/// (§FS-scan.scope.homes.lookup.path). A `Discovery` run scans nothing and is not asked, nor
+/// is [`resolve_workspace_config`], whose path only selects the project.
 pub(crate) fn open(invocation: &Invocation) -> Result<Config> {
-    open_refusing(invocation, invocation.selection != Selection::Discovery)
+    open_refusing(
+        invocation,
+        invocation.selection != Selection::Discovery && !invocation.path_provided,
+    )
 }
 
-/// `open()`, refusing a missing path when `refuse_missing` says so
-/// (§FS-scan.scope.homes.lookup.path.library).
-fn open_refusing(invocation: &Invocation, refuse_missing: bool) -> Result<Config> {
+/// `open()`, refusing a missing path when `refuse_missing` says so: what a command opens with
+/// when the invocation it builds marks a path its own caller left unmarked, as `id` reads the
+/// whole project from the caller's path (§FS-scan.scope.homes.lookup.path.library).
+pub(crate) fn open_refusing(invocation: &Invocation, refuse_missing: bool) -> Result<Config> {
     // §AR-resolver.3.1.1: a test can count the resolutions a run makes.
     record_test_config_resolution();
     let mut config = discover_config(invocation)?;
