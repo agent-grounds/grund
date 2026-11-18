@@ -177,9 +177,8 @@ fn parse_integrations_args(args: &[String]) -> Result<IntegrationsInvocation, Ex
         return Err(ExitCode::from(2));
     }
     if write && json {
-        // `--write` reports what it changed on stderr; there is no JSON install
-        // plan. Reject rather than run the side effect and silently drop the
-        // format the caller asked for.
+        // §FS-integrations.6.2: a write reports on stderr (§FS-integrations.4.1.6), with no JSON
+        // plan. Reject rather than run the side effect and silently drop the format asked for.
         eprintln!("error: integrations --write does not support --format json");
         return Err(ExitCode::from(2));
     }

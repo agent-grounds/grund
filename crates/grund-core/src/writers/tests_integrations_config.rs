@@ -1,5 +1,6 @@
 //! Test module: agent overrides, conversation targets, and user config (§FS-integrations)
 
+use super::IntegrationOutcome;
 use super::integrations_agents::*;
 use super::integrations_clients::*;
 use super::integrations_detect::*;
@@ -404,5 +405,28 @@ fn codium_detection_requires_a_vscodium_path_segment() {
         "/usr/share/code/resources/app/out/cli.js",
     ] {
         assert!(!value_names_codium(bystander), "must not mark: {bystander}");
+    }
+}
+
+/// §FS-integrations.4.1.6: the verbs a write reports are the spec's closed
+/// list, `wrote` among them. The `match` has no wildcard arm, so a new outcome
+/// does not compile until it is given a verb here and in the spec.
+#[test]
+fn write_outcome_verbs_are_the_closed_list_of_the_spec() {
+    let spec_verb = |outcome: IntegrationOutcome| match outcome {
+        IntegrationOutcome::Wrote => "wrote",
+        IntegrationOutcome::Appended => "appended",
+        IntegrationOutcome::Updated => "updated",
+        IntegrationOutcome::Unchanged => "exists",
+        IntegrationOutcome::Skipped => "skipped",
+    };
+    for outcome in [
+        IntegrationOutcome::Wrote,
+        IntegrationOutcome::Appended,
+        IntegrationOutcome::Updated,
+        IntegrationOutcome::Unchanged,
+        IntegrationOutcome::Skipped,
+    ] {
+        assert_eq!(outcome.name(), spec_verb(outcome), "{outcome:?}");
     }
 }
