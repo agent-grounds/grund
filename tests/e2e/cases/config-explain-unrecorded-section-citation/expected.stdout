@@ -1,0 +1,8 @@
+grund.toml is read as version 2.
+
+unrecorded-section-citation
+A citation names a locked section address that has no entry in the section lock.
+
+Severity: error, fixed.
+On: when a citation names the address of a relative heading or a mixed path (a condition of the tree)
+Fix: run grund fmt --write with no path at the workspace root, or at the project root outside a workspace

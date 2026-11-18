@@ -13,7 +13,7 @@ use std::path::PathBuf;
 
 use super::fmt_complete_findings::CompleteScan;
 use crate::config::Config;
-use crate::model::{Catalog, render_lock};
+use crate::model::{Catalog, read_lock_lines, render_lock, section_lock_path};
 use crate::resolver::{EntryVerdict, WorkspaceCheckTarget, WorkspaceContext, judge_section_locks};
 
 /// One lock file the pass changes: the text it is brought to, empty for a file
@@ -162,5 +162,59 @@ pub(super) fn section_lock_changes(
             rows,
         });
     }
+    changes.extend(unnamed_alias_drops(judged, targets));
+    changes.sort_by(|a, b| a.path.cmp(&b.path));
     changes
+}
+
+/// The lock files of an alias the run did not load and no citation of the
+/// project names any more, each deleted with one drop row per entry and one
+/// rebuild row per line that is not one (§FS-section-lock.file.members): every
+/// entry there is cited by nothing, so it is dropped (§FS-section-lock.write.rules).
+/// An alias a citation still names is left alone, since the run cannot judge it.
+fn unnamed_alias_drops(
+    judged: &JudgedTree<'_>,
+    targets: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
+) -> Vec<LockChange> {
+    let (config, findings) = (&judged.config, judged.findings());
+    // An alias path below the alias names it too, so its shard is kept.
+    let names = |namespace: &str, alias: &str| {
+        namespace == alias
+            || namespace
+                .strip_prefix(alias)
+                .is_some_and(|rest| rest.starts_with('/'))
+    };
+    let named = |alias: &str| {
+        let mut namespaces = findings
+            .citations
+            .iter()
+            .filter_map(|c| c.namespace.as_deref());
+        namespaces.any(|namespace| names(namespace, alias))
+    };
+    let separator = &config.schema().ids.section_separator;
+    findings
+        .section_locks
+        .iter()
+        .filter_map(|lock| {
+            let alias = lock.alias.as_deref()?;
+            if targets.contains_key(alias) || named(alias) {
+                return None;
+            }
+            let lines = read_lock_lines(&lock.text, &lock.id, separator);
+            let drops = lines.entries.iter().map(|entry| {
+                let coordinate = format!("{}{separator}{}", lock.id, entry.section);
+                (entry.line, format!("section lock: drop {coordinate}"))
+            });
+            let rebuilds =
+                (lines.invalid.iter()).map(|line| (*line, "section lock: rebuild".into()));
+            let mut rows = drops.chain(rebuilds).collect::<Vec<_>>();
+            rows.sort();
+            (!rows.is_empty()).then(|| LockChange {
+                path: section_lock_path(config.frame().root(), Some(alias), &lock.id),
+                text: String::new(),
+                exists: true,
+                rows,
+            })
+        })
+        .collect()
 }

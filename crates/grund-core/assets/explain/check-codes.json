@@ -3205,7 +3205,7 @@
     "kind": "clauses",
     "clauses": [
      {
-      "text": "a citation names a relative heading's address",
+      "text": "a citation names the address of a relative heading or a mixed path",
       "by": "condition"
      }
     ]
@@ -3225,7 +3225,7 @@
     "kind": "clauses",
     "clauses": [
      {
-      "text": "a citation names a relative heading's address",
+      "text": "a citation names the address of a relative heading or a mixed path",
       "by": "condition"
      }
     ]
@@ -4180,7 +4180,7 @@
     "kind": "clauses",
     "clauses": [
      {
-      "text": "a citation names a relative heading's address",
+      "text": "a citation names the address of a relative heading or a mixed path",
       "by": "condition"
      }
     ]
@@ -4200,7 +4200,7 @@
     "kind": "clauses",
     "clauses": [
      {
-      "text": "a citation names a relative heading's address",
+      "text": "a citation names the address of a relative heading or a mixed path",
       "by": "condition"
      }
     ]
