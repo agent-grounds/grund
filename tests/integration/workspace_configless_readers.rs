@@ -8,6 +8,8 @@ use grund_core::{effective_config, effective_project, schema_view};
 fn configless_member_effective_config_root_file_and_defaults() {
     let tree = Tree::workspace();
     let member = tree.0.join("apps/nocfg");
+    // The API returns the root canonical, `\\?\` and long names on Windows (§FS-config.4.2).
+    let root = std::fs::canonicalize(&member).unwrap();
     let mut failures = Vec::new();
     for path in tree
         .scopes()
@@ -15,10 +17,10 @@ fn configless_member_effective_config_root_file_and_defaults() {
         .chain([member.join("docs/functional-spec/login.md")])
     {
         let config = effective_config(&path).unwrap();
-        if config.root != member || config.config_file.is_some() || config.id_format != FORMAT {
+        if config.root != root || config.config_file.is_some() || config.id_format != FORMAT {
             failures.push(format!(
                 "effective_config({}): expected root={}, file=None, format={FORMAT}; actual root={}, file={:?}, format={}",
-                path.display(), member.display(), config.root.display(), config.config_file, config.id_format
+                path.display(), root.display(), config.root.display(), config.config_file, config.id_format
             ));
         }
     }
