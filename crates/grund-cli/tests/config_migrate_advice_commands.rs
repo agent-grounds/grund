@@ -48,6 +48,10 @@ index = false
 include = [\"docs\"]
 ";
 
+/// A comment no single version-2 key follows, so only `--drop-comments` writes
+/// past it (§FS-config-migrate.1.3).
+const LISTED: &str = "# What the walk reads besides the homes.\n";
+
 const PROJECT_MAP: &str = "note: the next grund init adds a `code` row to the AGENTS.md \
 Project map, because the complement's places are now listed; grund check reports the block \
 stale until then";
@@ -78,6 +82,18 @@ impl Tree {
     fn single(name: &str, dir: &str) -> Self {
         let tree = Self(TemporaryRoot::new(&std::env::temp_dir(), name));
         tree.project(dir);
+        tree.commit();
+        tree
+    }
+
+    /// One version-1 project at `dir` whose `[scan] include` carries `LISTED`.
+    fn commented(name: &str, dir: &str) -> Self {
+        let tree = Self(TemporaryRoot::new(&std::env::temp_dir(), name));
+        tree.project(dir);
+        tree.write(
+            &format!("{dir}/grund.toml"),
+            &PROJECT_V1.replace("[scan]\n", &format!("[scan]\n{LISTED}")),
+        );
         tree.commit();
         tree
     }
@@ -446,5 +462,38 @@ fn pastes_as_one_word(name: &str, dir: &str, path: &str, undo: &str, repreview: 
         let again = tree.paste("", &command(&stderr, REPREVIEW));
         passed(&again);
         assert_eq!(text(&again.stdout), candidate, "{name}");
+    }
+}
+
+/// §FS-config-migrate.6.5.1 item 2, §FS-config-migrate.6.5: a write by `PATH`
+/// that dropped comments prints its re-preview with `PATH` as typed and then the
+/// `--drop-comments` the line ends in, so pasted where it ran it previews that
+/// project again and prints the candidate rather than refusing on the comment.
+#[test]
+fn path_and_drop_comments_compose_in_the_repreview() {
+    let tree = Tree::commented("grund-1438-drop", "sub");
+    let write = tree.migrate("", &["sub", "--write", "--drop-comments"]);
+    passed(&write);
+    let stderr = text(&write.stderr);
+    assert_eq!(
+        stderr,
+        format!(
+            "wrote grund.toml: version 1 (14 lines) replaced by version 2\n\
+             dropped the comments at grund.toml:13 (version 1 lines)\n{PROJECT_MAP}\n\
+             {UNDO}sub/grund.toml\n{REPREVIEW} sub --drop-comments\n{REMINDER}\n"
+        ),
+        "PATH comes first, and the line ends in --drop-comments"
+    );
+    #[cfg(unix)]
+    {
+        let candidate = tree.read("sub/grund.toml");
+        let undo = tree.paste("", &command(&stderr, UNDO));
+        assert!(undo.status.success(), "{}", text(&undo.stderr));
+        assert!(tree.read("sub/grund.toml").contains(LISTED));
+        let repreview = command(&stderr, REPREVIEW);
+        assert_eq!(repreview, "grund config migrate --to 2 sub --drop-comments");
+        let again = tree.paste("", &repreview);
+        passed(&again);
+        assert_eq!(text(&again.stdout), candidate);
     }
 }
