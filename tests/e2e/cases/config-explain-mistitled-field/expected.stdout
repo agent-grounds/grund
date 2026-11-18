@@ -1,0 +1,10 @@
+grund.toml is read as version 2.
+
+mistitled-field
+A field's heading is titled differently from the title its kind gives it.
+
+Severity: by strength: the field's presence: must an error, warn a warning, should a suggestion, may an error.
+On: when [schema.kinds.<kind>.fields.<field>] title is set (a setting)
+Fix: retitle the heading to match
+
+Next: grund config explain '[schema.kinds.<kind>.fields.<field>]'

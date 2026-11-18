@@ -1536,7 +1536,7 @@
   "2": {
    "severity": {
     "kind": "strength",
-    "text": "the field's presence"
+    "text": "the field's presence: must an error, warn a warning, should a suggestion, may an error"
    },
    "enabled": {
     "kind": "clauses",
@@ -2057,7 +2057,7 @@
   "2": {
    "severity": {
     "kind": "strength",
-    "text": "the field's presence"
+    "text": "the field's presence: must an error, warn a warning, should a suggestion, may an error"
    },
    "enabled": {
     "kind": "clauses",
@@ -2429,7 +2429,7 @@
   "2": {
    "severity": {
     "kind": "strength",
-    "text": "the field's presence"
+    "text": "the field's presence: must an error, warn a warning, should a suggestion, may an error"
    },
    "enabled": {
     "kind": "clauses",
