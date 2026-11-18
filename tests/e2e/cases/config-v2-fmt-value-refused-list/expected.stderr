@@ -1,0 +1,1 @@
+error: grund.toml:5: `[presentation.fmt] links` is part of the v2 format but not supported by this grund yet; unsupported value "all"; executes only links = "index"

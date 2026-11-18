@@ -1,0 +1,5 @@
+grund.toml is read as version 2.
+
+[presentation.fmt] links
+Values: "index"
+How `grund fmt` links citations: `index` wraps citations in files read as Markdown as links to the cited declaration's heading.

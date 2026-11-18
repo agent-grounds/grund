@@ -46,7 +46,7 @@ pub(super) use values::{
     bail_config, list_elements, parse_bool, parse_string, parse_usize, split_outside_strings,
     string_close,
 };
-pub(crate) use values::{is_header, parse_string_list, strip_comment};
+pub(crate) use values::{parse_string_list, strip_comment};
 
 /// A v1 file read, its `[[kinds]]` table not yet lowered (§AR-config.2).
 /// The two steps are apart so the `[reference]` meanings are judged before
