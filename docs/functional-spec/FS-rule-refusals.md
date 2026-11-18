@@ -87,7 +87,7 @@ modality, verb or accepted count. In a repository whose
 kinds are `GOAL`, `REQ`, `FS`, `AR` and `RULE`, with named sections on, the
 documentation and parser tests carry at least these exact rows. Where a row
 offers no rewrite, `check --rule` prints the reason (including the configuration
-guidance of [§FS-rule-refusals.sentences.rewrite.no-form.place](FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration) where applicable),
+guidance of [§FS-rule-refusals.sentences.rewrite.no-form.place](FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-row-or-path-subject-names-its-citation-configuration) where applicable),
 and then, for the path subject and the unknown kind, the line
 `known kinds: GOAL, REQ, FS, AR, RULE`. The three chapter subjects that offer
 none, `FS-login.*`, `Each chapter of each FS` and `FS-login.2`, print the reason
@@ -743,7 +743,7 @@ is accepted.
 #### sentences.rewrite.no-form: Where no form is offered
 
 Where no form is offered, the refusal is its reason alone. That reason includes
-the supplementary configuration guidance of [§FS-rule-refusals.sentences.rewrite.no-form.place](FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration)
+the supplementary configuration guidance of [§FS-rule-refusals.sentences.rewrite.no-form.place](FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-row-or-path-subject-names-its-citation-configuration)
 where applicable; the guidance is not an accepted sentence rewrite. On `check --rule`,
 the `known kinds:` line [§FS-rule-refusals.sentences.named-sections](FS-rule-refusals.md#sentencesnamed-sections-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) prints follows the reason where what
 could not be supplied is a kind, a subject's or an object's, naming the same
@@ -752,14 +752,14 @@ is anything else, nothing follows the reason. A configured rule declaration's
 `invalid-rule` finding ends at the reason, including that guidance where applicable
 ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)).
 
-##### sentences.rewrite.no-form.place: A refused place subject names its citation configuration
+##### sentences.rewrite.no-form.place: A refused row or path subject names its citation configuration
 
-When `Each PLACE must cite at least one KIND.` names a configured, scanned,
-non-citable row with a configured file or folder, its refusal additionally
-identifies that place and tells the author to express the obligation in
-`grund.toml`: `[rules.citations.PLACE]`
+When `Each ROW must cite at least one KIND.` names a configured, scanned,
+non-citable row with a place, its refusal additionally names that row, as
+`; for configured row "ROW", `, and tells the author to express the obligation
+in `grund.toml`: `[rules.citations.ROW]`
 with `must = ["KIND"]` in version 2 ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations)), or
-`[citations.PLACE]` with the same entry in version 1 ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)).
+`[citations.ROW]` in version 1 ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)).
 The hint is supplied even when that citation entry has not been written yet.
 It names the supported configuration route, never an `accepted form`, and
 never recommends making the row citable. That entry alone judges only a file
@@ -770,7 +770,7 @@ makes a file there that cites nothing a finding. Where the row grounds, the hint
 names the citation entry alone.
 
 `Each file in PATH must cite at least one KIND.` receives the same guidance
-when `PATH` identifies exactly one such row's configured file or folder.
+when `PATH` identifies exactly one such row's place.
 Matching is conservative: compare complete project-relative configured paths,
 allowing a folder's terminal `/` to be present or absent. Do not infer a row
 from an ancestor containing several places, a descendant, a substring, a glob,
@@ -786,11 +786,11 @@ otherwise malformed sentence. It cannot stand in for those predicates.
 
 Both subject forms remain refused with exit `2` on `check --rule`. Their
 existing reasons remain intact as prefixes: the path-subject reason stays
-`path subjects are not accepted in phase 1`, and a named place retains the
+`path subjects are not accepted in phase 1`, and a named row retains the
 shared non-citable-kind reason ([§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)).
 The `known kinds:` line still follows on that command. Refusal precedence
 ([§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails)) is unchanged: guidance supplements a
-place/path-subject refusal, never an earlier refusal. Rule declarations carry
+row or path subject refusal, never an earlier refusal. Rule declarations carry
 the same guidance in their `invalid-rule` reason; unrelated object-kind and
 selector errors retain their existing reasons without a place obligation.
 One sentence-specific derivation supplies the guidance for both subject

@@ -99,7 +99,7 @@ shows the same view, its header aside. A v1 `require_grounding` with its
 lowers to; v1's `avoid` and `never` show as `should not` and `must not`.
 
 Only what is configured or effective is shown. An implicit row the project does
-have, such as the complement place `code`, is shown; a field or a rule nobody
+have, such as the complement's row `code`, is shown; a field or a rule nobody
 configured is never invented. The ID grammar, note budgets, lead sizes, sources
 and the presentation keys stay with `grund config show`: the view says what a
 repository is held to, not every value its configuration evaluates to.

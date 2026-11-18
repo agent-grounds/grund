@@ -85,11 +85,9 @@ outermost root, as its members are ([§FS-workspace.6.1.5](FS-workspace.md#615-a
 
 ### declaration.path: The path is the consumer's, relative and literal
 
-`path` is relative to the consumer's config root, the directory discovery found the config
-for, including when the config lives under `.agents/`; it is never relative to `.agents/`
-itself. It is written with `/` and may use `..`. Nothing in it is expanded: a glob, `~`, an
-environment variable or a URL is a directory name like any other. It is a config error at
-the `path` line when it:
+`path` is relative to the consumer's config root. It is written with `/` and may use
+`..`. Nothing in it is expanded: a glob, `~`, an environment variable or a URL is a
+directory name like any other. It is a config error at the `path` line when it:
 
 - is absolute, or holds a backslash, on every platform;
 - resolves to the consumer's own config root;

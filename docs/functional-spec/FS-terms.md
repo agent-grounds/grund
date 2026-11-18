@@ -117,9 +117,9 @@ part of it.
 
 - **scan** — What a run does to its scope. A scan root is where it starts. Displaces *walk* and *walk root*.
 - **scope** — The files a run reads. Default scope, full scope. Displaces *scan set*, *configured scope* and *tier*.
-- **config root** — The directory holding `grund.toml`.
-- **place** — A kind's home, or the complement of every home: one of the regions of a tree a `[[kinds]]` row governs. A per-place key written on a row says what one place does; written at the top of the file it says what every place does.
-- **complement place** — The place that is every scanned file no home claims. v1 spells it the *homeless kind* and names it `code` by default.
+- **config root** — The directory config discovery stops at ([§FS-config.1](FS-config.md#1-file-location-and-discovery)).
+- **place** — One path a row names as its home, a `files` or `folders` entry (v1's `file` or `folder`), resolved from the config root ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)).
+- **complement place** — Every scanned file no place claims, and the row that owns them; *the complement* for short ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)).
 - **language** — The class a file's syntax puts it in, and therefore how a declaration, a citation and a note are recognized in it. The class, never the keys that spell it; *host language* stays for the language a source declaration is embedded in.
 - **workspace, member, alias** — The cross-project tree, one project in it, and the name a citation uses to reach it. *alias* displaces *namespace* in that sense.
 
