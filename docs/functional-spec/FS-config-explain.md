@@ -57,6 +57,14 @@ With no config file, an answer gives both versions, version 2 first, each under 
 No grund.toml here. grund init writes version 2; until a file exists, check reads version 1's defaults.
 ```
 
+This includes a workspace member with neither config form
+([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)): discovery from the
+member or any descendant stops at the member boundary, so the workspace root's
+file supplies no answering version. It gets the same no-file banner and
+both-version answer as a standalone directory without a config. Selection reads
+only the enclosing workspace's membership and the selected file's version; it
+neither validates that file's remaining settings nor loads sibling configs.
+
 A target only one version knows is answered in that one, and for the other the answer says what [§FS-config-explain.5](FS-config-explain.md#5-a-target-the-version-does-not-know) would, still exit `0`. A target neither version knows is exit `1`.
 
 The answer never prints what the project sets: that is `config show`'s ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)). `config show` and `grund schema` keep their bytes.
