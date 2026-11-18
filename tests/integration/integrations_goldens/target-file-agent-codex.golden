@@ -337,13 +337,13 @@ conversation_target = "file"
 # without them the citation is inert with the reason in a log nobody opens.
 # kitty supplies the clicked window's directory to both spawns itself, so the
 # resolver needs no `cd` to climb from wherever your shell is.
-map ctrl+shift+p>g kitten hints --type regex --regex '(?:[A-Za-z0-9_.~-]+/)*[A-Za-z0-9_.~-]+\.[A-Za-z0-9]+:[0-9]+(?::[0-9]+)?|[^\w\s]{1,3}(?:[a-z][a-z0-9-]*/)?[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*(?:\.[0-9]+)*' --program 'sh -c "PATH=\"$HOME/.local/bin:$HOME/.cargo/bin:$PATH\"; exec grund-open \"$1\"" grund-open'
+map ctrl+shift+p>g kitten hints --type regex --regex '(?:[A-Za-z0-9_.~-]+/)*[A-Za-z0-9_.~-]+\.[A-Za-z0-9]+:[0-9]+(?::[0-9]+)?|[^\w\s]{1,3}(?:[a-z][a-z0-9-]*/)?[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*(?:\.(?:[0-9]+|[a-z][a-z0-9-]*))*' --program 'sh -c "PATH=\"$HOME/.local/bin:$HOME/.cargo/bin:$PATH\"; exec grund-open \"$1\"" grund-open'
 
 # ctrl+shift+p then i *peeks* instead: the declaration — or, for a location,
 # the file from that line — opens in an overlay window over this one, and
 # closes when you quit the pager. kitty has no hover, so this is the
 # read-without-leaving path.
-map ctrl+shift+p>i kitten hints --type regex --regex '(?:[A-Za-z0-9_.~-]+/)*[A-Za-z0-9_.~-]+\.[A-Za-z0-9]+:[0-9]+(?::[0-9]+)?|[^\w\s]{1,3}(?:[a-z][a-z0-9-]*/)?[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*(?:\.[0-9]+)*' --program 'launch --type=overlay sh -c "PATH=\"$HOME/.local/bin:$HOME/.cargo/bin:$PATH\"; exec grund-open --peek \"$1\"" grund-open'
+map ctrl+shift+p>i kitten hints --type regex --regex '(?:[A-Za-z0-9_.~-]+/)*[A-Za-z0-9_.~-]+\.[A-Za-z0-9]+:[0-9]+(?::[0-9]+)?|[^\w\s]{1,3}(?:[a-z][a-z0-9-]*/)?[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*(?:\.(?:[0-9]+|[a-z][a-z0-9-]*))*' --program 'launch --type=overlay sh -c "PATH=\"$HOME/.local/bin:$HOME/.cargo/bin:$PATH\"; exec grund-open --peek \"$1\"" grund-open'
 # <<< grund integrations (v1) <<<
 
 --- end

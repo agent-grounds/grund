@@ -12,7 +12,7 @@ const path = require('path');
 // `[reference] marker` is per-repo while this extension is user-global and
 // installed once, so hardcoding § would leave every repo with a custom marker
 // silently unclickable. The leading punctuation is stripped before resolving.
-const CITATION = /[^\w\s]{1,3}(?:[a-z][a-z0-9-]*\/)?[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*(?:\.[0-9]+)*/g;
+const CITATION = /[^\w\s]{1,3}(?:[a-z][a-z0-9-]*\/)?[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*(?:\.(?:[0-9]+|[a-z][a-z0-9-]*))*/g;
 
 // Resolve a citation to `{path, line, body}` via `grund`. VS Code is the one
 // client that can show declaration content on *hover* rather than on click,
