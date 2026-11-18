@@ -346,7 +346,7 @@ fn a_path_outside_every_member_reports_the_entries_of_the_members_under_it() {
     );
     let json_args = ["list", "apps", "--format", "json"];
     ws.expect(&mut mismatches, "", &json_args, (Some(0), json, Some("")));
-    let summary = "api  FS      2  docs/functional-spec\n";
+    let summary = "api  FS      2  apps/api/docs/functional-spec\n";
     let summary_args = ["list", "apps", "--summary"];
     ws.expect(
         &mut mismatches,
