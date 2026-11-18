@@ -41,7 +41,7 @@ A row that writes no `index` named nothing, so where the default `README.md` is 
 
 ### 2.6 Which refusal a file with several gets
 
-The six are asked of the lowered source model, which the reader builds only once every older question about every row has its answer, so a file that holds one of the six and an older refusal anywhere is refused for the older one, and among the six alone the earliest line is refused. [§FS-config-v2.reader.4](../../functional-spec/FS-config-v2.md#reader4-order-and-location-are-kept) states the order. So a configuration that 0.23.0 refused for an older reason prints exactly what it printed, and the rule row `files = ["rules/rules.md", "rules/more.rs", "rules/other.json"]` keeps the rule-kind refusal at `form` that grund 0.22.x gave it.
+The six are asked last: a file that holds one of them and an older refusal anywhere, in the file or in a pinned target the run judges, is refused for the older one, and among the six alone the earliest line is refused. [§FS-config-v2.reader.4.order](../../functional-spec/FS-config-v2.md#reader4order-which-refusal-a-file-with-several-is-refused-for) states the order. So a configuration that 0.23.0 refused for an older reason is refused for that reason still, and the rule row `files = ["rules/rules.md", "rules/more.rs", "rules/other.json"]` keeps the rule-kind refusal at `form` that grund 0.22.x gave it.
 
 ### 2.7 What stays
 
