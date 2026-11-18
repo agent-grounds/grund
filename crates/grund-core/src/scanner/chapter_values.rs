@@ -105,6 +105,7 @@ pub(super) fn validate_declared_value_chapters(
                 source: decl.source.clone(),
                 binding_namespace: None,
                 binding_section: None,
+                binding_citation: None,
             });
         }
     }

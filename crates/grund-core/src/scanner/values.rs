@@ -70,6 +70,7 @@ pub(super) fn validate_markdown_value_declarations(
             source: invalid_source.clone(),
             binding_namespace: None,
             binding_section: None,
+            binding_citation: None,
         };
         let mut valid = true;
         if !is_md {
@@ -268,6 +269,7 @@ pub(super) fn scan_value_bindings(
                     Some(citation.id.clone()),
                     citation.section.clone(),
                     open_tick,
+                    Some(marker_start),
                 ));
             }
             continue;
@@ -309,6 +311,7 @@ pub(super) fn scan_value_bindings(
                 Some(citation.id.clone()),
                 citation.section.clone(),
                 open_tick,
+                Some(marker_start),
             ));
             continue;
         }

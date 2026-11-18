@@ -64,12 +64,19 @@ pub(super) fn scan_split_binding(
         && literal.run == run
         && let Some(target) = opening_value_citation(line, text, workspace_targets)
     {
+        // §FS-values.8: keep the citation occurrence as well as the diagnostic's
+        // earlier literal, so fmt consumes this split classification directly.
+        let citation_column = line.column_offset
+            + (text.trim_start().as_ptr() as usize - line.scan_line.as_ptr() as usize)
+            + target.citation_offset
+            + 1;
         findings
             .invalid_value_bindings
             .push(split_value_binding_site(
                 line.path,
                 (literal.line, literal.column),
                 target,
+                (line.lineno, citation_column),
             ));
     }
     // A heading's literal ends its paragraph rather than running on into the

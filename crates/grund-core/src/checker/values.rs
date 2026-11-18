@@ -310,7 +310,7 @@ fn embedded_root_for_binding<'a>(
     Some((root, relation))
 }
 
-fn binding_target_reports_invalid_attempt(
+pub(crate) fn binding_target_reports_invalid_attempt(
     findings: &Catalog,
     schema: &Schema,
     id: &Id,
@@ -348,7 +348,7 @@ fn binding_aims_at_declared_chapter(
 /// the refusal that [`value_binding_section_shape_is_valid`] cannot see, a
 /// chapter root's path carrying names and a marked root's subtree reaching
 /// below a component.
-pub(crate) fn binding_aims_at_embedded_value_authority(
+fn binding_aims_at_embedded_value_authority(
     findings: &Catalog,
     schema: &Schema,
     id: &Id,
