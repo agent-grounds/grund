@@ -1215,7 +1215,7 @@ Per [§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out), the follow
 - The set of severities (only `error` and `warning` exist); a suggestion is not a third one ([§FS-config.6.1](FS-config.md#61-suggestions-are-not-a-third-severity)).
 - The exit code mapping (`0`/`1`/`2` per [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)).
 - The ordering of the report (always deterministic).
-- Anything that would let two correctly-configured grund installs disagree on whether a given repo is well-formed ([§GOAL-configurable.2](../goals.md#2-what-is-not-configurable)).
+- Anything that would let two installs disagree on the same input ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 - The local conversation citation *preference*: it follows the user's TUI setup and is installed through `grund integrations --write` ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)). What a repository may commit instead is [§FS-config.6.2](FS-config.md#62-the-repositorys-conversation-opinion).
 
 ### 6.1 Suggestions are not a third severity
