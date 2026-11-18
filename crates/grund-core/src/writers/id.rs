@@ -32,10 +32,8 @@ fn slug_char_class(slug_pattern: &str) -> String {
 
 /// Derive a slug from a `grund id` title (§FS-id.3).
 pub(crate) fn slugify_title(title: &str, slug_pattern: &str) -> String {
-    // §FS-id.3: NFKD-normalize, drop combining marks, lower-case to ASCII, then
-    // replace every run of characters outside the configured slug character class
-    // with a single `-`; trim, collapse, and cut a slug over 60 before the last `-`
-    // among its first 60, or at 60 where they hold none.
+    // §FS-id.3: NFKD, drop marks, ASCII-lower, one `-` per run outside the class;
+    // trim, collapse, cut.
     let class = slug_char_class(slug_pattern);
     let valid = Regex::new(&format!("^(?:{class})$"))
         .unwrap_or_else(|_| Regex::new("^(?:[a-z0-9-])$").unwrap());
