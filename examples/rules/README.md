@@ -70,7 +70,7 @@ produced by each family.
 The separate [`place-obligations/repo`](place-obligations/repo) fixture configures
 a scanned non-citable `e2e` row at `tests/e2e/`.
 Both subject spellings remain refused, with supplementary configuration
-guidance ([§FS-rule-refusals.sentences.rewrite.no-form.place](../../docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration)):
+guidance ([§FS-rule-refusals.sentences.rewrite.no-form.place](../../docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-row-or-path-subject-names-its-citation-configuration)):
 
 ```bash
 grund check examples/rules/place-obligations/repo --rule 'Each e2e must cite at least one FS.' --only-rule

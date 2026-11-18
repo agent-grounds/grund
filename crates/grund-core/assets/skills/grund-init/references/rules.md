@@ -225,7 +225,7 @@ must = "file"
 Use `require_grounding = true` on the `e2e` `[[kinds]]` row in a version-1
 config. Where the row already grounds, the hint names the citation entry alone.
 This is configuration guidance; it offers no accepted sentence rewrite. See the
-[place-subject guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration)
+[place-subject guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-row-or-path-subject-names-its-citation-configuration)
 for the exact matching boundary, and the [runnable example](https://github.com/agent-grounds/grund/tree/main/examples/rules)
 for the refusal and its citation-direction finding.
 
