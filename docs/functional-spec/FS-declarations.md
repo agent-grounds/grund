@@ -391,7 +391,7 @@ them, whether or not anything cites the section
 as `conflict-marker` ([§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)) at the target's lines,
 with the owners the target's own pass gives it, as the same tree with the target scanned
 reports it, and on which `fmt` writes nothing ([§FS-fmt.7.4](FS-fmt.md#74-no-write-without-a-complete-model)). A section the target does not declare is reported
-as before, in the same words — `missing section <ID>.<path>` for a numeric path — and under
+as before, in the same words, remedy included ([§FS-errors.3.11](FS-errors.md#311-the-missing-section-remedy)), and under
 the same `missing-section` code. A broken stub ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)) pairs
 with nothing and gains no section: it keeps its broken-stub finding, and a citation of one of
 its sections is `missing section` as before. A target that declares the ID more than once

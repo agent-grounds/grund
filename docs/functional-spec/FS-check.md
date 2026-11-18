@@ -631,7 +631,7 @@ The tail is the last resort among the hints. A near ID ([§FS-check.3.1.1](FS-ch
 
 ### 3.2 Missing section
 
-A citation with a section suffix (`§FS-<user-login>.3.1` or, in an opted-in repository, `§FS-<user-login>.goals`) where the declaration exists but the requested section heading does not. A missing marker-prefixed named coordinate is never shortened to its declaration; it produces the ordinary `section not found` error and adds `write <§> before it to show the shape without citing it` to the message. A number-only shorthand carrying a missing named section produces both the existing shorthand finding and this finding: the persisted ID form and the requested target are independent facts ([AR-checker.2.12](../../crates/grund-core/src/checker/report.rs)).
+A citation with a section suffix (`§FS-<user-login>.3.1` or, in an opted-in repository, `§FS-<user-login>.goals`) where the declaration exists but the requested section heading does not. A missing marker-prefixed named coordinate is never shortened to its declaration; it produces the ordinary `section not found` error. Every missing section, numeric or named, marked or not, names its fix in its message ([§FS-errors.3.11](FS-errors.md#311-the-missing-section-remedy)). A number-only shorthand carrying a missing named section produces both the existing shorthand finding and this finding: the persisted ID form and the requested target are independent facts ([AR-checker.2.12](../../crates/grund-core/src/checker/report.rs)).
 
 Where the section lock recorded the cited coordinate and its text now sits at another section of the declaration, the message ends in one more clause naming that section ([§FS-section-lock.checks.vanished](FS-section-lock.md#checksvanished-a-cited-address-that-is-gone-and-where-its-text-went)).
 
@@ -951,7 +951,7 @@ Under `--full` ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)), a 
 
 ```
 sim/world.py:12: outside [scan] include: unknown reference RES-061-world-arable-basin-screen
-render/prompts.md:4: outside [scan] include: missing section DA-002-general-field-service-scope.1.4
+render/prompts.md:4: outside [scan] include: missing section DA-002-general-field-service-scope.1.4; write <§> before it to show the shape without citing it
 ```
 
 #### 3.14.1 An error, not a warning
@@ -1287,7 +1287,7 @@ Line 3 of a use case whose `REFLECTION-jvm-reflection` has sections 1 and 2 only
 
 ```text
 usecases/reflection/jvm-reflection.md:3: error: local section citation §5.1; REFLECTION-jvm-reflection has no section 5.1, so write a full citation or <§>5.1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
-usecases/reflection/jvm-reflection.md:3: error: missing section REFLECTION-jvm-reflection.5.1
+usecases/reflection/jvm-reflection.md:3: error: missing section REFLECTION-jvm-reflection.5.1; write <§> before it to show the shape without citing it
 ```
 
 ### 3.25 Invalid rule

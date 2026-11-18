@@ -268,7 +268,7 @@ The shape is structural; the text is human-readable. Style rules apply to every 
 - **Quoted user input** appears in double quotes when the input could be confused with surrounding prose: `"<original title>"`, not `<original title>`.
 - **One base for every path in the line** — [§FS-errors.3.1](FS-errors.md#31-one-base-for-every-path-in-the-line).
 
-[§FS-errors.3.2](FS-errors.md#32-the-unknown-project-recovery-shape) to [§FS-errors.3.10](FS-errors.md#310-the-whose-clause-wording-migration) pin particular messages: the unknown-project recovery shape and its wording migration, `check`'s channel prefix, a missing fetch-backed declaration, `agents-init`, the rule-site unknown alias, the one-grammar refusals, the root-aimed value mismatch, and the whose-clause refusals.
+[§FS-errors.3.2](FS-errors.md#32-the-unknown-project-recovery-shape) to [§FS-errors.3.11](FS-errors.md#311-the-missing-section-remedy) pin particular messages: the unknown-project recovery shape and its wording migration, `check`'s channel prefix, a missing fetch-backed declaration, `agents-init`, the rule-site unknown alias, the one-grammar refusals, the root-aimed value mismatch, the whose-clause refusals, and the missing-section remedy.
 
 ### 3.1 One base for every path in the line
 
@@ -575,6 +575,47 @@ known kinds: SWR, TC, AN
 Exact-line consumers were asked to migrate during the window to the reason
 after the ` — `, which is what `0.22.0` prints; a matcher of the legacy prefix
 no longer finds it.
+
+### 3.11 The missing-section remedy
+
+Every `missing-section` finding ([§FS-check.3.2](FS-check.md#32-missing-section)) carries the *Fix* of its row in [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog), filled with the
+configured escape: `write <§> before it to show the shape without citing it` under the default
+marker, `<@>` under `@`. Every missing section is owed it alike, numeric or named, a citation that
+carries its marker or a bare token a version 1 project reads without one, with
+`[id] named_sections` on or off. A renumbered heading, a mistyped number and an example someone
+meant to escape all reach this one finding, and the remedy may not depend on how the section is
+spelled ([§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read)). The escape clears every one of those sites, because a bare ID-shaped
+token right after the literal escape is no citation under either strict mode
+([§FS-citations.recognized.escapes](FS-citations.md#recognizedescapes-an-id-in-an-escape-position)).
+
+The remedy is appended to the head each form shipped with, so each keeps its old message as a
+verbatim contiguous prefix ([§FS-errors.3](FS-errors.md#3-message-text)):
+
+- a marker-prefixed named coordinate, where named sections are on, is
+  `section not found: <coordinate>; <fix>`, exactly as before;
+- every other missing section is `missing section <coordinate>; <fix>`, where it used to end at
+  the coordinate.
+
+`<coordinate>` is the cited ID as the report renders it, alias included, then
+`[id] section_separator` and the cited path. Where the section lock names where the cited text
+went, its clause keeps its place in each form ([§FS-section-lock.checks.vanished](FS-section-lock.md#checksvanished-a-cited-address-that-is-gone-and-where-its-text-went)). In the
+`section not found` form it follows the remedy. In the `missing section` form it follows the
+coordinate, and the remedy comes last. Code, severity, location, count, exit code and JSON shape
+do not move. Under `--full`, `out-of-scope-missing-section` prints the same message
+after its scope prefix ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)).
+
+Take a declaration `FS-login` with sections `2` and `2.1` only. One source line that cites
+`<§>FS-login.9.9` and `<§>FS-login.2.goals` reports:
+
+```text
+src/main.rs:1: error: missing section FS-login.9.9; write <§> before it to show the shape without citing it
+src/main.rs:1: error: section not found: FS-login.2.goals; write <§> before it to show the shape without citing it
+```
+
+The two heads are still two wordings of one code with one remedy. Giving both the one head
+`section not found: <coordinate>; <fix>` would change bytes the `missing section` form shipped
+in place, and so would rewording the *Fix* cell. Either can only go through the window of
+[§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change).
 
 ## 4. Determinism
 

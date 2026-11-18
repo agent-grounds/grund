@@ -440,7 +440,7 @@ alongside the independent missing-section diagnostic:
 ```text
 local section citation §2.1; write §FS-check.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
 local section citation §9.9; FS-check has no section 9.9, so write a full citation or <§>9.9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
-missing section FS-check.9.9
+missing section FS-check.9.9; write <§> before it to show the shape without citing it
 ```
 
 Definition, references, and highlights follow the existing section

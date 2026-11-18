@@ -75,14 +75,14 @@ Renumber the heading `### 3.2 Missing section` in [`FS-check.md`](../functional-
 
 ```text
 $ grund check
-README.md:34: error: missing section FS-check.3.2
-crates/grund-cli/tests/index_entry_round_trip.rs:232: error: missing section FS-check.3.2
-crates/grund-core/src/checker/index.rs:247: error: missing section FS-check.3.2
-crates/grund-core/src/checker/index.rs:361: error: missing section FS-check.3.2
-crates/grund-core/src/checker/judge.rs:69: error: missing section FS-check.3.2
-crates/grund-core/src/checker/references.rs:2: error: missing section FS-check.3.2
+README.md:34: error: missing section FS-check.3.2; write <§> before it to show the shape without citing it
+crates/grund-cli/tests/index_entry_round_trip.rs:232: error: missing section FS-check.3.2; write <§> before it to show the shape without citing it
+crates/grund-core/src/checker/index.rs:247: error: missing section FS-check.3.2; write <§> before it to show the shape without citing it
+crates/grund-core/src/checker/index.rs:361: error: missing section FS-check.3.2; write <§> before it to show the shape without citing it
+crates/grund-core/src/checker/judge.rs:69: error: missing section FS-check.3.2; write <§> before it to show the shape without citing it
+crates/grund-core/src/checker/references.rs:2: error: missing section FS-check.3.2; write <§> before it to show the shape without citing it
 …
-docs/requirements/REQ-no-wrong-citation.md:7: error: missing section FS-check.3.2
+docs/requirements/REQ-no-wrong-citation.md:7: error: missing section FS-check.3.2; write <§> before it to show the shape without citing it
 ```
 
 `grund check <path>` reports on `<path>` while resolving citations against the whole project; with no path it scans the canonical layout (`requirements.md`, `docs/`, `e2e/`, `src/`). In the scanned tree it enforces:
@@ -164,6 +164,22 @@ in JSON. A directory that failed once prints once however many names reach it,
 under the name a file reached twice keeps: the earlier root's, then the first in
 sort order ([§FS-check.2.4.2](../functional-spec/FS-check.md#242-one-failure-one-line)).
 
+Every missing section names its fix, whatever the section's spelling
+([§FS-errors.3.11](../functional-spec/FS-errors.md#311-the-missing-section-remedy)). A numeric path keeps the `missing section` head
+and a marked named one the `section not found:` head. Both are the
+`missing-section` code and end in the same remedy. If `FS-login` has sections
+`2` and `2.1` only:
+
+```text
+src/main.rs:1: error: missing section FS-login.9.9; write <§> before it to show the shape without citing it
+src/main.rs:1: error: section not found: FS-login.2.goals; write <§> before it to show the shape without citing it
+```
+
+Repair the heading or the citation where it was meant to cite, as after a
+renumbered heading or a mistyped section. Escape a shape shown only as an
+example with `<§>`. Never escape a citation that should resolve, because that
+hides the broken reference instead of fixing it.
+
 With `[id] named_sections = true`, a marked citation of a name under a number
 is checked as a whole. From grund 0.19.0, an absent section or declaration is
 an ordinary error; the warning and its temporary release clause from 0.18.0
@@ -175,8 +191,7 @@ docs/use.md:5: error: section not found: FS-login.1.goals; write <§> before it 
 ```
 
 The finding goes to stdout and makes the check exit `1`; JSON reports
-`missing-section` with severity `error`. Repair the heading or citation, or
-escape an illustrative shape with `<§>`.
+`missing-section` with severity `error`, and the remedy above applies.
 
 When the section was renamed after its section lock recorded it, the finding
 also names where the recorded text sits now
