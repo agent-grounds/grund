@@ -15,7 +15,7 @@ use crate::config::{
     Invocation, KindScope, KindTable, KindVerdict, Quote, Selection, display_path,
 };
 use crate::model::{Finding, Id};
-use crate::scanner::{e2e_case_dir_name, scan_tree_strict};
+use crate::scanner::{e2e_case_dir_name, first_heading_level, scan_tree_strict};
 use crate::sources::paths_same_location;
 use crate::workspace::open_refusing;
 use crate::writers::{format_id, slugify_title};
@@ -58,11 +58,9 @@ pub struct IdProposal {
     pub folders: Option<Vec<String>>,
     pub file: Option<String>,
     pub e2e_case_dir: Option<String>,
-    /// Whether the kind's configured `file` already holds exactly one
-    /// declaration of the kind, which is what makes the new declaration's
-    /// hint an H1 rather than the H2 convention (§FS-id.2.3,
-    /// §FS-config.3.4.4). It is a fact about the file's contents, not about
-    /// the kind's name: `GRUND`'s scaffolded home is the shape, not the test.
+    /// Whether the hint's heading is an H1, as the kind's configured `file`
+    /// says: its first declaration of the kind, else its first heading
+    /// (§FS-id.2.3). The name is kept from the rule it first answered.
     pub file_holds_single_declaration: bool,
 }
 
@@ -205,19 +203,25 @@ fn propose_id_run(
             ),
         });
     }
-    // §FS-id.2.3: the H1 hint is owed where the kind's file holds the kind's single declaration,
-    // counted in that file — a declaration of the kind written elsewhere is
-    // §FS-declarations.checks.misplaced-declaration's error, not this hint's fact.
+    // §FS-id.2.3: the hint's level is read from the kind's file — its first declaration of the
+    // kind there, else its first heading, else H2. A declaration of the kind written elsewhere
+    // is §FS-declarations.checks.misplaced-declaration's error, not this hint's fact.
     let file_holds_single_declaration = kind_config.file.as_deref().is_some_and(|file| {
         let home = config.root.join(file);
-        findings
+        let first = findings
             .declarations
             .iter()
             .filter(|(declared, _)| declared.kind == kind)
             .flat_map(|(_, decls)| decls.iter())
             .filter(|decl| paths_same_location(&decl.file, &home))
-            .count()
-            == 1
+            .min_by_key(|decl| decl.line);
+        let level = match first {
+            Some(decl) => Some(decl.heading_level),
+            None => std::fs::read_to_string(&home)
+                .ok()
+                .and_then(|text| first_heading_level(&text)),
+        };
+        level == Some(1)
     });
     Ok(IdProposalOutcome::Proposed(IdProposal {
         e2e_case_dir: (kind == "E2E").then(|| e2e_case_dir_name(config.schema(), &rendered)),

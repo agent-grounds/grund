@@ -475,6 +475,7 @@ fn config_from_text(
     run: Run,
     invocation: &Invocation,
 ) -> Result<Config> {
+    v2::refuse_byte_order_mark(text, report_path)?;
     let (project, last) = if v2::selects(text) {
         let (project, last) = v2::read_held(text, report_path, root)?;
         validate::reference(report_path, &project)?;

@@ -1,0 +1,4 @@
+grund_config_version = 2
+
+[schema.kinds.GOAL]
+files = ["docs/goals.md"]

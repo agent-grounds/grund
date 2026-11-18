@@ -217,6 +217,8 @@ fn discover(path: &Path) -> Option<(PathBuf, PathBuf)> {
 /// version this grund does not read is refused, with the refusal every command
 /// gives it, which is the v1 reader's.
 fn version_of(text: &str, report: &Path) -> Result<u32> {
+    // §FS-config-v2.reader: a byte-order mark hides the version, so it is named first.
+    v2::refuse_byte_order_mark(text, report)?;
     match v2::version(text) {
         Some("2") => Ok(2),
         None | Some("1") => Ok(1),
