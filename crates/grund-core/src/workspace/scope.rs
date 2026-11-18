@@ -8,7 +8,9 @@
 //! config work every walking command shares, not something `check` owns
 //! (§AR-core-module-layout.1).
 
-use crate::sources::{canonical_path, lookup_refused, path_lookup, record_test_config_resolution};
+use crate::sources::{
+    canonical_path, lookup_refused, path_lookup, record_test_config_resolution, refuse_missing_path,
+};
 use anyhow::Result;
 use std::path::{Component, Path, PathBuf};
 
@@ -41,10 +43,26 @@ pub(crate) use crate::config::scope_is_config_root;
 /// run judges its pinned and `*/` `[citations]` targets, against its own kinds;
 /// a run that holds one has them judged where its workspace is expanded
 /// (§FS-config.3.9.5.2, [`crate::config::install_kind_table`]).
+///
+/// It is also the one place a scanning run refuses a path that names nothing, whether or not
+/// the caller marked the path as given, so a library caller that sets only `path` cannot be
+/// answered for the working directory's project (§FS-scan.scope.homes.lookup.path.library). It
+/// asks once discovery has answered, so a config that refuses to load is still that refusal
+/// (§FS-config.1), and before anything is scanned. A `Discovery` run scans nothing and is not
+/// asked, nor is [`resolve_workspace_config`], whose path only selects the project.
 pub(crate) fn open(invocation: &Invocation) -> Result<Config> {
+    open_refusing(invocation, invocation.selection != Selection::Discovery)
+}
+
+/// `open()`, refusing a missing path when `refuse_missing` says so
+/// (§FS-scan.scope.homes.lookup.path.library).
+fn open_refusing(invocation: &Invocation, refuse_missing: bool) -> Result<Config> {
     // §AR-resolver.3.1.1: a test can count the resolutions a run makes.
     record_test_config_resolution();
     let mut config = discover_config(invocation)?;
+    if refuse_missing {
+        refuse_missing_path(&invocation.path)?;
+    }
     if invocation.selection != Selection::Discovery {
         config = config_for_member_scope(config, invocation)?;
     }
@@ -71,9 +89,11 @@ pub(crate) fn open_at(root: &Path, cli_base: &Path) -> Result<Config> {
 }
 
 /// `open()` for a command whose path only selects the project, with no flag
-/// of its own (§FS-workspace.8.8).
+/// of its own (§FS-workspace.8.8). It scans nothing from the path, which may name an editor's
+/// unsaved buffer, so it does not refuse one that is missing; a walk that starts there still
+/// does (§FS-scan.scope.homes.lookup.path).
 pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
-    open(&Invocation::new(path, true, Selection::Project))
+    open_refusing(&Invocation::new(path, true, Selection::Project), false)
 }
 
 /// §AR-workspace.6: a workspace-declared scan must never descend into member

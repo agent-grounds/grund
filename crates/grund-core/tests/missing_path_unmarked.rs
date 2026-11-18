@@ -68,7 +68,6 @@ fn assert_refused<T: std::fmt::Debug>(entry: &str, path: &Path, result: anyhow::
 }
 
 #[test]
-#[ignore = "red until #1443 refuses a missing unmarked path; implement removes this"]
 fn check_with_opts_refuses_missing_unmarked_path() {
     let repo = Repo::new();
     let mut opts = CheckOpts::default();
@@ -78,7 +77,6 @@ fn check_with_opts_refuses_missing_unmarked_path() {
 }
 
 #[test]
-#[ignore = "red until #1443 refuses a missing unmarked path; implement removes this"]
 fn list_refuses_missing_unmarked_path() {
     let repo = Repo::new();
     let mut opts = ListOpts::default();
@@ -88,7 +86,6 @@ fn list_refuses_missing_unmarked_path() {
 }
 
 #[test]
-#[ignore = "red until #1443 refuses a missing unmarked path; implement removes this"]
 fn list_sizes_refuses_missing_unmarked_path() {
     let repo = Repo::new();
     let mut opts = ListSizeOpts::default();
@@ -98,7 +95,6 @@ fn list_sizes_refuses_missing_unmarked_path() {
 }
 
 #[test]
-#[ignore = "red until #1443 refuses a missing unmarked path; implement removes this"]
 fn refs_refuses_missing_unmarked_path() {
     let repo = Repo::new();
     let mut opts = RefsOpts::default();
@@ -111,7 +107,6 @@ fn refs_refuses_missing_unmarked_path() {
 }
 
 #[test]
-#[ignore = "red until #1443 refuses a missing unmarked path; implement removes this"]
 fn format_references_refuses_missing_unmarked_path() {
     let repo = Repo::new();
     let mut opts = FmtOpts::default();
@@ -121,7 +116,6 @@ fn format_references_refuses_missing_unmarked_path() {
 }
 
 #[test]
-#[ignore = "red until #1443 refuses a missing unmarked path; implement removes this"]
 fn cover_refuses_missing_unmarked_path() {
     let repo = Repo::new();
     let mut opts = CoverOpts::default();
@@ -133,7 +127,6 @@ fn cover_refuses_missing_unmarked_path() {
 }
 
 #[test]
-#[ignore = "red until #1443 refuses a missing unmarked path; implement removes this"]
 fn complete_ids_refuses_missing_unmarked_path() {
     let repo = Repo::new();
     let mut opts = CompleteIdsOpts::default();
@@ -143,7 +136,6 @@ fn complete_ids_refuses_missing_unmarked_path() {
 }
 
 #[test]
-#[ignore = "red until #1443 refuses a missing unmarked path; implement removes this"]
 fn propose_id_refuses_missing_unmarked_path() {
     let repo = Repo::new();
     let mut opts = IdOpts::default();
@@ -153,7 +145,6 @@ fn propose_id_refuses_missing_unmarked_path() {
 }
 
 #[test]
-#[ignore = "red until #1443 refuses a missing unmarked path; implement removes this"]
 fn lsp_snapshot_refuses_missing_unmarked_path() {
     let repo = Repo::new();
     let mut opts = LspSnapshotOpts::default();

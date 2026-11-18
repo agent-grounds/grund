@@ -39,7 +39,7 @@ pub(crate) use disk::{
     Resolution, canonical_path, error_resolution, input_read_to_string, io_reason, is_directory,
     is_regular_file, link_metadata, lookup_refused, open_for_reading, path_exists, path_holds_file,
     path_is_dir, path_is_entry, path_is_file, path_is_symlink, path_lookup, path_metadata,
-    path_resolution, read_bytes, read_git_metadata, read_link,
+    path_resolution, read_bytes, read_git_metadata, read_link, refuse_missing_path,
 };
 pub(crate) use identity::{
     canonicalize_existing_prefix, paths_same_location, physical_path_key,

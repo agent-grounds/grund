@@ -125,6 +125,18 @@ pub(crate) fn path_lookup(path: impl AsRef<Path>) -> std::io::Result<bool> {
     }
 }
 
+/// The one refusal of a path that names nothing (§FS-scan.scope.homes.lookup.path): its
+/// [`path_lookup`] says not found, a file on the way, or a name the file system cannot hold. A
+/// lookup that fails any other way, for permission among them, is no missing path and passes.
+/// `open()` asks it of every scanning run's path once discovery has answered, marked or not
+/// (§FS-scan.scope.homes.lookup.path.library), and the walk of a marked path asks it again.
+pub(crate) fn refuse_missing_path(path: &Path) -> anyhow::Result<()> {
+    match path_lookup(path) {
+        Ok(false) => Err(anyhow::anyhow!("path does not exist: {}", path.display())),
+        _ => Ok(()),
+    }
+}
+
 /// Whether a failed lookup was refused for lack of permission, the one failure that says the
 /// path may well be there (§FS-scan.scope.links.owed.refused). Every caller asks this one question,
 /// so every other failure, a loop among them, keeps the route it had.

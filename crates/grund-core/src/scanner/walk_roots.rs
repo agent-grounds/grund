@@ -2,7 +2,7 @@
 //! whole root, and an explicit path beside or in place of them, resolved once for every
 //! reader of the scope. Apart from the walk itself, which only starts from what this answers.
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 use super::scan_error::{FailureRoots, Place, ScanError, failure_place};
@@ -10,7 +10,7 @@ use super::walk_boundaries::is_directory_symlink;
 use super::walk_errors::root_lookup_failure;
 use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots, spelled_under_root};
 use crate::model::normalize_path_lexically;
-use crate::sources::{canonical_path, path_lookup};
+use crate::sources::{canonical_path, path_lookup, refuse_missing_path};
 
 /// The directories (or single file) the walk starts from, and so which files a run
 /// reads (§FS-scan.scope): `[scan] include`
@@ -109,9 +109,7 @@ fn resolve_scan_roots(
         // §FS-scan.scope.homes.lookup.path: absent only when the lookup says so, as the walk
         // asks of every root; a refused path, link or not (§FS-scan.scope.links.owed.refused),
         // and a looping link (§FS-scan.scope.links.unresolvable.named) are the walk's to report.
-        if matches!(path_lookup(scope), Ok(false)) {
-            return Err(anyhow!("path does not exist: {}", scope.display()));
-        }
+        refuse_missing_path(scope)?;
         let lexical_scope = if scope.is_absolute() {
             normalize_path_lexically(scope)
         } else {
