@@ -5,6 +5,19 @@ import subprocess
 from common import Refusal, error, matches, parse_json
 
 
+def unscanned(path, keys):
+    """Name the classifying selection and the remedy that can work (§FS-cochange-recipe.snapshots.scope).
+
+    A hidden file is never read by any configuration (§FS-scan.scope.hidden), so only a
+    file whose own name is not hidden is offered the scan configuration as a remedy.
+    """
+    selection = ' and '.join(keys)
+    remedy = f'narrow {selection} in the policy to leave it out, or remove it from Git'
+    if not path.rsplit('/', 1)[-1].startswith('.'):
+        remedy += ', or include it in the snapshot scan configuration'
+    return f'{path}: no cover row; grund does not scan this file selected by {selection}; {remedy}.'
+
+
 class Facts:
     """Positive full-coordinate resolution precedes root matching (§FS-cochange-recipe.evidence)."""
     def __init__(self, snapshot, root, tracked, policy, executable, errors, findings):
@@ -17,9 +30,9 @@ class Facts:
         self.read_catalog()
         self.read_cover()
         for path in sorted(tracked):
-            if matches(path, policy['source_paths'] + policy['test_paths']) and path not in self.cover:
-                raise Refusal('scan-scope', f'{path}: no cover row; include the classified file '
-                              'in the snapshot scan configuration.', path, query='cover')
+            keys = [key for key in ('source_paths', 'test_paths') if matches(path, policy[key])]
+            if keys and path not in self.cover:
+                raise Refusal('scan-scope', unscanned(path, keys), path, query='cover')
         self.resolve()
 
     def clean(self, text):

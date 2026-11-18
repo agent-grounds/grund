@@ -54,7 +54,7 @@ def demonstrate(template, grund):
                     stream.write('\nRelated contract edit.\n')
             if test:
                 target = 'FS-beta.1' if test == 'beta' else 'FS-alpha.1'
-                (repo / 'tests/test_lib.py').write_text('# ' + chr(167) + target + '\nvalue = 2\n',
+                (repo / 'tests/e2e/test_lib.py').write_text('# ' + chr(167) + target + '\nvalue = 2\n',
                                                      encoding='utf-8', newline='\n')
             message = name
             if waiver:

@@ -8,20 +8,20 @@ spec only: exit 1
   FS-alpha: spec=["docs/FS-alpha.md"] test=[]
 test only: exit 1
   src/lib.py: missing spec
-  FS-alpha: spec=[] test=["tests/test_lib.py"]
+  FS-alpha: spec=[] test=["tests/e2e/test_lib.py"]
 unrelated test: exit 1
   src/lib.py: missing test
   FS-alpha: spec=["docs/FS-alpha.md"] test=[]
 split targets: exit 1
   src/lib.py: missing test
   FS-alpha: spec=["docs/FS-alpha.md"] test=[]
-  FS-beta: spec=[] test=["tests/test_lib.py"]
+  FS-beta: spec=[] test=["tests/e2e/test_lib.py"]
 complete evidence: exit 0
   src/lib.py: missing none
-  FS-alpha: spec=["docs/FS-alpha.md"] test=["tests/test_lib.py"]
+  FS-alpha: spec=["docs/FS-alpha.md"] test=["tests/e2e/test_lib.py"]
 unchanged contract: exit 0
   src/lib.py: missing none
-  FS-alpha: spec=[] test=["tests/test_lib.py"]
+  FS-alpha: spec=[] test=["tests/e2e/test_lib.py"]
   waiver spec: Existing contract; used=True
 refactor: exit 0
   src/lib.py: missing none

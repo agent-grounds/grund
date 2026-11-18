@@ -21,7 +21,7 @@ its Python modules together. Edit `policy.json` to select the Git-relative
 config root, source and executable-test locations. The four keys are required:
 
 ```json
-{"config_root":".","source_paths":["src/"],"test_paths":["tests/"],"eligible_kinds":["FS"]}
+{"config_root":".","source_paths":["src/"],"test_paths":["tests/e2e/"],"eligible_kinds":["FS"]}
 ```
 
 Selections are exact files or directory prefixes ending `/`. Source and test
