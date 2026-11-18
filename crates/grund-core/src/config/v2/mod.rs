@@ -85,9 +85,25 @@ pub(crate) fn version(text: &str) -> Option<&str> {
 /// every spelling at the line it was written at (§FS-config-v2.reader.4).
 /// `report_path` is the path every error names, and `root` the config root a
 /// value home must exist under (§FS-fields.forms). The meanings both readers
-/// share are judged afterwards, once, in `config/validate.rs` (§AR-config.4).
-pub(super) fn read(text: &str, report_path: &Path, root: &Path) -> Result<Project> {
+/// share are judged afterwards, once, in `config/validate.rs` (§AR-config.4),
+/// and so the refusal among the six that ask the lowered source model is
+/// returned beside the project rather than raised, for the caller to give once
+/// every older question has passed (§FS-config-v2.reader.4.order).
+pub(super) fn read_held(
+    text: &str,
+    report_path: &Path,
+    root: &Path,
+) -> Result<(Project, Option<anyhow::Error>)> {
     let mut reader = walk::Reader::new(report_path);
     walk::walk(text, &mut reader)?;
     finish::finish(reader, root)
+}
+
+/// `read_held` with its held refusal raised: the file alone, as a unit test reads it.
+#[cfg(test)]
+pub(super) fn read(text: &str, report_path: &Path, root: &Path) -> Result<Project> {
+    match read_held(text, report_path, root)? {
+        (_, Some(refusal)) => Err(refusal),
+        (project, None) => Ok(project),
+    }
 }

@@ -2,7 +2,9 @@
 //! read more than one table — a row's keys together, one row's place against
 //! another's, a ladder or a resolution entry against the row it names — and the
 //! rows' lowering into the schema. Every refusal here is located at the line its
-//! value was written at, and the first one in the file is the one reported.
+//! value was written at, and the first one in the file is the one reported; the six
+//! that ask the lowered source model are held for the caller to give last
+//! (§FS-config-v2.reader.4.order).
 
 use anyhow::Result;
 use std::path::Path;
@@ -22,8 +24,10 @@ use super::schema::RowDraft;
 use super::{places, sources, sources_model};
 
 /// §FS-config-v2.reader.4: judge the file whole, then lower its rows. `root` is
-/// the config root a value home must exist under (§FS-fields.forms).
-pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
+/// the config root a value home must exist under (§FS-fields.forms). The refusal
+/// among the six is returned beside the project, not raised, because every
+/// older question of the run is asked before it (§FS-config-v2.reader.4.order).
+pub(super) fn finish(mut r: Reader, root: &Path) -> Result<(Project, Option<anyhow::Error>)> {
     let mut late: Vec<(usize, String)> = Vec::new();
     sources::judge(&r.sources, &mut late);
     for row in &r.rows {
@@ -43,17 +47,16 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
         .map(|(_, _, line)| *line)
         .collect();
     sources_model::lower(&mut r);
-    // §FS-config-v2.reader.4.order: the refusals grund 1.0.0 made of 0.23.0's warnings ask the
-    // lowered source model, so they are given only once every row has passed every older check,
-    // and among them the earliest line is refused.
+    // §FS-config-v2.reader.4.order: the six ask the lowered source model. Among them the
+    // earliest line is held, and at one line the entry written first, since `late` is
+    // collected in written order and `min_by_key` keeps the first minimum.
     let mut late = md_not_markdown(&r, &md_lines);
     for row in &r.rows {
         late.extend(form_prerequisites(&r, row, root)?);
         late.extend(index_not_markdown(&r, row));
     }
-    if let Some((line, message)) = late.into_iter().min_by_key(|(line, _)| *line) {
-        return r.fail(line, message);
-    }
+    let held = (late.into_iter().min_by_key(|(line, _)| *line))
+        .and_then(|(line, message)| r.fail::<()>(line, message).err());
     // §FS-scan.checks.unread-scan-root.message: offer only a valid, row-preserving form edit.
     r.project.schema.value_form_repairs.0 = r
         .rows
@@ -74,7 +77,7 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
         })
         .collect();
     lower(&mut r);
-    Ok(r.project)
+    Ok((r.project, held))
 }
 
 /// §FS-fields.forms, §FS-fields.content.values: `form = "value"`, `form =

@@ -26,7 +26,7 @@ use super::scope::{
 use crate::config::display_path;
 use crate::config::{
     AbsentOptionalNamespace, Compiled, Config, MountEdge, RunWarning, Schema, config_at,
-    install_kind_table,
+    install_kind_table, older_refusal_first,
 };
 
 /// One project of the run a qualified citation can name, as the scanner needs
@@ -262,18 +262,22 @@ pub(crate) fn expand_workspace_tree_with_report_base(
     root_config: &mut Config,
     report_base: &Path,
 ) -> Result<Vec<WorkspaceProjectEntry>> {
-    let mut entries = expand_workspace_projects(root_config, report_base)?;
-    // §AR-config.1.5: the run's one reading of every project's kinds, made here as the
-    // first point that holds them all, and the pinned `[citations]` targets judged
-    // against it once (§AR-workspace.5.2, §FS-config.3.9.5.2).
-    install_kind_table(
-        root_config,
-        entries
-            .iter_mut()
-            .map(|entry| (entry.alias.as_str(), &mut entry.config)),
-        true,
-    )?;
-    Ok(entries)
+    // §FS-config-v2.reader.4.order: a member refused for one of the six asked last is
+    // refused for an older question of the expansion first, its pinned targets included.
+    older_refusal_first(|| {
+        let mut entries = expand_workspace_projects(root_config, report_base)?;
+        // §AR-config.1.5: the run's one reading of every project's kinds, made here as the
+        // first point that holds them all, and the pinned `[citations]` targets judged
+        // against it once (§AR-workspace.5.2, §FS-config.3.9.5.2).
+        install_kind_table(
+            root_config,
+            entries
+                .iter_mut()
+                .map(|entry| (entry.alias.as_str(), &mut entry.config)),
+            true,
+        )?;
+        Ok(entries)
+    })
 }
 
 /// [`expand_workspace_tree_with_report_base`] short of the kind table: every

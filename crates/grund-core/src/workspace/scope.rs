@@ -12,13 +12,15 @@ use crate::sources::{record_test_config_resolution, refuse_missing_path};
 use anyhow::Result;
 use std::path::Path;
 
+use super::expand::expand_workspace_tree;
 use super::findings::reject_absorbed_scan;
 use super::members::{WorkspaceMember, expand_workspace_member_list};
 use crate::config::display_path;
 use crate::config::{
     Config, ConfigLocation, Invocation, RunWarning, Selection, config_at, config_file_in,
-    discover_config, discovery_start, invalid_project_alias_message, is_valid_project_alias,
-    member_root_for_scope, nearest_config, reject_unaccepted_citation_targets,
+    discover_config, discovery_start, holding_last_refusals, invalid_project_alias_message,
+    is_valid_project_alias, member_root_for_scope, nearest_config, older_refusal_first,
+    reject_unaccepted_citation_targets,
 };
 use crate::model::format_path;
 
@@ -64,7 +66,24 @@ pub(crate) fn open(invocation: &Invocation) -> Result<Config> {
 /// `open()`, refusing a missing path when `refuse_missing` says so: what a command opens with
 /// when the invocation it builds marks a path its own caller left unmarked, as `id` reads the
 /// whole project from the caller's path (§FS-scan.scope.homes.lookup.path.library).
+///
+/// A config refused for one of the six asked last is refused for an older
+/// question first where the run has one: its own pinned targets, or, for a
+/// workspace, any refusal its expansion meets (§FS-config-v2.reader.4.order).
 pub(crate) fn open_refusing(invocation: &Invocation, refuse_missing: bool) -> Result<Config> {
+    older_refusal_first(|| {
+        let config = open_once(invocation, refuse_missing)?;
+        if holding_last_refusals()
+            && config.workspace_declared
+            && invocation.selection != Selection::Discovery
+        {
+            expand_workspace_tree(&mut config.clone())?;
+        }
+        Ok(config)
+    })
+}
+
+fn open_once(invocation: &Invocation, refuse_missing: bool) -> Result<Config> {
     // §AR-resolver.3.1.1: a test can count the resolutions a run makes.
     record_test_config_resolution();
     let mut config = discover_config(invocation)?;

@@ -423,7 +423,8 @@ fn settled(
 /// errors reports the first one it always did (§AR-config.4): the `[reference]`
 /// meanings, then the `[[kinds]]` refusals and the kind table, then the grammar,
 /// then the member lists and `[citations]`. The v2 reader has refused every
-/// spelling before the shared judgement starts (§FS-config-v2.reader.4).
+/// spelling before the shared judgement starts, and its six last refusals wait
+/// until it ends (§FS-config-v2.reader.4.order).
 fn read_config(
     read_path: &Path,
     report_path: &Path,
@@ -474,19 +475,23 @@ fn config_from_text(
     run: Run,
     invocation: &Invocation,
 ) -> Result<Config> {
-    let project = if v2::selects(text) {
-        let project = v2::read(text, report_path, root)?;
+    let (project, last) = if v2::selects(text) {
+        let (project, last) = v2::read_held(text, report_path, root)?;
         validate::reference(report_path, &project)?;
-        project
+        (project, last)
     } else {
         let read = v1::read_sections(text, report_path)?;
         validate::reference(report_path, &read.project)?;
-        read.lower_kinds(report_path, root)?
+        (read.lower_kinds(report_path, root)?, None)
     };
     validate::kinds(report_path, &project)?;
     let compiled = compile(&project)
         .with_context(|| format!("{}: invalid [id] grammar", format_path(report_path)))?;
     validate::lists(report_path, &project)?;
+    // §FS-config-v2.reader.4.order: the six come after every question the file can answer.
+    if let Some(refusal) = last {
+        super::call_scope::raise_last_refusal(refusal)?;
+    }
     Ok(settled(&project, &compiled, run, invocation))
 }
 
