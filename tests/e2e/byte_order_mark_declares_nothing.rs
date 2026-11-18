@@ -1,7 +1,8 @@
-//! A byte-order mark that starts a file is part of line 1, so line 1 opens nothing and nothing
-//! a block it would open holds declares, in Markdown and in a source file alike
-//! (§FS-declarations.line). A declaration on a later line of the same file still declares. The
-//! marks are written at run time, so no fixture carries an invisible byte.
+//! A byte-order mark that starts a file is part of line 1, so line 1 declares nothing and a
+//! block comment or docstring opened there holds no declaration, in Markdown and in a source
+//! file alike (§FS-declarations.line). A comment line after line 1 still declares, in the run
+//! line 1 starts or in another. The marks are written at run time, so no fixture carries an
+//! invisible byte.
 
 use std::fs;
 use std::path::PathBuf;
@@ -27,6 +28,11 @@ const FILES: &[(&str, &str, Option<&str>)] = &[
         None,
     ),
     ("src/doc.py", "\"\"\"\nAR-doc: A docstring\n\"\"\"\n", None),
+    (
+        "src/run.rs",
+        "/// A run that line 1 starts.\n/// AR-run: Its second line\n",
+        Some("AR-run"),
+    ),
     (
         "src/second.rs",
         "//! A crate comment.\n/// AR-second: A later line\n",
