@@ -12,8 +12,20 @@ docs/next.md:8: error: unmarked heading inside AR-003-next; number it (#### valu
 docs/skip.md:5: error: invalid value declaration for AR-001-skip: embedded value root must define contiguous numbered components starting at `.1`; correct what the reason names
 docs/skip.md:7: error: invalid value declaration for AR-001-skip: embedded value components must be immediate numeric headings `.1` through `.N` (expected `values.regulator.1`); correct what the reason names
 docs/skip.md:7: error: unmarked heading inside AR-001-skip; number it (#### values.regulator.1: values.regulator.5) as AR-001-skip.values.regulator.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/untitled-next.md:7: error: invalid value declaration for AR-007-untitled-next: embedded value component coordinate must follow physical order (expected `values.regulator.1`); correct what the reason names
+docs/untitled-next.md:7: error: invalid value declaration for AR-007-untitled-next: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/untitled-next.md:7: error: unmarked heading inside AR-007-untitled-next; number it (#### values.regulator.1: values.regulator.5:) as AR-007-untitled-next.values.regulator.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/untitled-next.md:9: error: invalid value declaration for AR-007-untitled-next: embedded value components must be immediate numeric headings `.1` through `.N` (expected `values.regulator.2`); correct what the reason names
+docs/untitled-next.md:9: error: unmarked heading inside AR-007-untitled-next; number it (#### values.regulator.2: values.regulator.2) as AR-007-untitled-next.values.regulator.2, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path values.regulator.2 needs a title after it, written #### values.regulator.2: Untitled
+docs/untitled-skip.md:7: error: invalid value declaration for AR-006-untitled-skip: embedded value component coordinate must follow physical order (expected `values.regulator.1`); correct what the reason names
+docs/untitled-skip.md:7: error: invalid value declaration for AR-006-untitled-skip: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/untitled-skip.md:7: error: unmarked heading inside AR-006-untitled-skip; number it (#### values.regulator.1: values.regulator.5:) as AR-006-untitled-skip.values.regulator.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/untitled-skip.md:9: error: invalid value declaration for AR-006-untitled-skip: embedded value components must be immediate numeric headings `.1` through `.N` (expected `values.regulator.2`); correct what the reason names
+docs/untitled-skip.md:9: error: unmarked heading inside AR-006-untitled-skip; number it (#### values.regulator.2: values.regulator.1) as AR-006-untitled-skip.values.regulator.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
 docs/first.md:1: warning: declared but never cited: AR-002-first; cite it
 docs/named-next.md:1: warning: declared but never cited: AR-005-named-next; cite it
 docs/named-skip.md:1: warning: declared but never cited: AR-004-named-skip; cite it
 docs/next.md:1: warning: declared but never cited: AR-003-next; cite it
 docs/skip.md:1: warning: declared but never cited: AR-001-skip; cite it
+docs/untitled-next.md:1: warning: declared but never cited: AR-007-untitled-next; cite it
+docs/untitled-skip.md:1: warning: declared but never cited: AR-006-untitled-skip; cite it

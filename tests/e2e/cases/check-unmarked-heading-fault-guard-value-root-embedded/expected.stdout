@@ -18,6 +18,8 @@ docs/duplicate-skip.md:7: error: invalid value declaration for AR-013-duplicate-
 docs/duplicate-skip.md:7: error: unmarked heading inside AR-013-duplicate-skip; number it (### 2.2. 2.2.) as AR-013-duplicate-skip.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
 docs/first.md:5: error: invalid value declaration for AR-003-first: embedded value component must be a valid one-line heading title; correct what the reason names
 docs/first.md:5: error: unmarked heading inside AR-003-first; number it (### 2.1. 2.1.) as AR-003-first.2.1, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path 2.1 needs a title after it, written ### 2.1. Untitled
+docs/gap.md:5: error: invalid value declaration for AR-019-gap: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/gap.md:5: error: unmarked heading inside AR-019-gap; number it (### 2.3. 2.1.) as AR-019-gap.2.3, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path 2.1 needs a title after it, written ### 2.1. Untitled
 docs/grandchild-next.md:6: error: invalid value declaration for AR-009-grandchild-next: embedded value components must be immediate numeric headings `.1` through `.N` (expected `2.2`); correct what the reason names
 docs/grandchild-next.md:7: error: invalid value declaration for AR-009-grandchild-next: embedded value component must be a valid one-line heading title; correct what the reason names
 docs/grandchild-next.md:7: error: unmarked heading inside AR-009-grandchild-next; number it (### 2.2. 2.2.) as AR-009-grandchild-next.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path 2.2 needs a title after it, written ### 2.2. Untitled
@@ -41,14 +43,42 @@ docs/nested.md:5: error: invalid value declaration for AR-012-nested: embedded v
 docs/nested.md:7: error: unmarked heading inside AR-012-nested; number it (### 2.2. 2.2.) as AR-012-nested.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path 2.2 needs a title after it, written ### 2.2. Untitled
 docs/next.md:6: error: invalid value declaration for AR-004-next: embedded value component must be a valid one-line heading title; correct what the reason names
 docs/next.md:6: error: unmarked heading inside AR-004-next; number it (### 2.2. 2.2.) as AR-004-next.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path 2.2 needs a title after it, written ### 2.2. Untitled
+docs/relative-grandchild.md:7: error: invalid value declaration for AR-020-relative-grandchild: embedded value components must be immediate numeric headings `.1` through `.N` (expected `2.2`); correct what the reason names
+docs/relative-grandchild.md:7: error: unmarked heading inside AR-020-relative-grandchild; number it (#### 2.1.1. .1: x) as AR-020-relative-grandchild.2.1.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/relative-next.md:7: error: invalid value declaration for AR-022-relative-next: embedded value components must be immediate numeric headings `.1` through `.N` (expected `2.2`); correct what the reason names
+docs/relative-next.md:7: error: unmarked heading inside AR-022-relative-next; number it (### 2.2. .2: x) as AR-022-relative-next.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0; under AR-022-relative-next.2 a relative heading is written ### .2. x
+docs/relative-skip.md:5: error: invalid value declaration for AR-021-relative-skip: embedded value components must be immediate numeric headings `.1` through `.N` (expected `2.1`); correct what the reason names
+docs/relative-skip.md:5: error: unmarked heading inside AR-021-relative-skip; number it (### 2.2. .5: x) as AR-021-relative-skip.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
 docs/skip.md:5: error: invalid value declaration for AR-001-skip: embedded value component coordinate must follow physical order (expected `2.1`); correct what the reason names
 docs/skip.md:5: error: invalid value declaration for AR-001-skip: embedded value component must be a valid one-line heading title; correct what the reason names
 docs/skip.md:5: error: unmarked heading inside AR-001-skip; number it (### 2.1. 2.5.) as AR-001-skip.2.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/untitled-behind.md:7: error: invalid value declaration for AR-016-untitled-behind: embedded value component coordinate must follow physical order (expected `2.2`); correct what the reason names
+docs/untitled-behind.md:7: error: invalid value declaration for AR-016-untitled-behind: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/untitled-behind.md:7: error: unmarked heading inside AR-016-untitled-behind; number it (### 2.2. 2.5.) as AR-016-untitled-behind.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/untitled-behind.md:9: error: invalid value declaration for AR-016-untitled-behind: embedded value component coordinate must follow physical order (expected `2.3`); correct what the reason names
+docs/untitled-behind.md:9: error: invalid value declaration for AR-016-untitled-behind: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/untitled-behind.md:9: error: unmarked heading inside AR-016-untitled-behind; number it (### 2.3. 2.2.) as AR-016-untitled-behind.2.3, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/untitled-first.md:5: error: invalid value declaration for AR-018-untitled-first: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/untitled-first.md:5: error: unmarked heading inside AR-018-untitled-first; number it (### 2.1. 2.1.) as AR-018-untitled-first.2.1, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path 2.1 needs a title after it, written ### 2.1. Untitled
+docs/untitled-first.md:7: error: invalid value declaration for AR-018-untitled-first: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/untitled-first.md:7: error: unmarked heading inside AR-018-untitled-first; number it (### 2.2. 2.2.) as AR-018-untitled-first.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path 2.2 needs a title after it, written ### 2.2. Untitled
+docs/untitled-next.md:7: error: invalid value declaration for AR-017-untitled-next: embedded value component coordinate must follow physical order (expected `2.2`); correct what the reason names
+docs/untitled-next.md:7: error: invalid value declaration for AR-017-untitled-next: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/untitled-next.md:7: error: unmarked heading inside AR-017-untitled-next; number it (### 2.2. 2.5.) as AR-017-untitled-next.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/untitled-next.md:9: error: invalid value declaration for AR-017-untitled-next: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/untitled-next.md:9: error: unmarked heading inside AR-017-untitled-next; number it (### 2.3. 2.3.) as AR-017-untitled-next.2.3, declare an ID, or use a bold label; this became an error in grund 0.16.0; the section path 2.3 needs a title after it, written ### 2.3. Untitled
+docs/untitled-skip.md:5: error: invalid value declaration for AR-015-untitled-skip: embedded value component coordinate must follow physical order (expected `2.1`); correct what the reason names
+docs/untitled-skip.md:5: error: invalid value declaration for AR-015-untitled-skip: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/untitled-skip.md:5: error: unmarked heading inside AR-015-untitled-skip; number it (### 2.1. 2.5.) as AR-015-untitled-skip.2.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/untitled-skip.md:7: error: invalid value declaration for AR-015-untitled-skip: embedded value component coordinate must follow physical order (expected `2.2`); correct what the reason names
+docs/untitled-skip.md:7: error: invalid value declaration for AR-015-untitled-skip: embedded value component must be a valid one-line heading title; correct what the reason names
+docs/untitled-skip.md:7: error: unmarked heading inside AR-015-untitled-skip; number it (### 2.2. 2.1.) as AR-015-untitled-skip.2.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
 docs/before.md:1: warning: declared but never cited: AR-005-before; cite it
 docs/colon.md:1: warning: declared but never cited: AR-002-colon; cite it
 docs/duplicate-next.md:1: warning: declared but never cited: AR-014-duplicate-next; cite it
 docs/duplicate-skip.md:1: warning: declared but never cited: AR-013-duplicate-skip; cite it
 docs/first.md:1: warning: declared but never cited: AR-003-first; cite it
+docs/gap.md:1: warning: declared but never cited: AR-019-gap; cite it
 docs/grandchild-next.md:1: warning: declared but never cited: AR-009-grandchild-next; cite it
 docs/grandchild-skip.md:1: warning: declared but never cited: AR-008-grandchild-skip; cite it
 docs/grandchild.md:1: warning: declared but never cited: AR-007-grandchild; cite it
@@ -57,4 +87,11 @@ docs/named-skip.md:1: warning: declared but never cited: AR-010-named-skip; cite
 docs/named.md:1: warning: declared but never cited: AR-006-named; cite it
 docs/nested.md:1: warning: declared but never cited: AR-012-nested; cite it
 docs/next.md:1: warning: declared but never cited: AR-004-next; cite it
+docs/relative-grandchild.md:1: warning: declared but never cited: AR-020-relative-grandchild; cite it
+docs/relative-next.md:1: warning: declared but never cited: AR-022-relative-next; cite it
+docs/relative-skip.md:1: warning: declared but never cited: AR-021-relative-skip; cite it
 docs/skip.md:1: warning: declared but never cited: AR-001-skip; cite it
+docs/untitled-behind.md:1: warning: declared but never cited: AR-016-untitled-behind; cite it
+docs/untitled-first.md:1: warning: declared but never cited: AR-018-untitled-first; cite it
+docs/untitled-next.md:1: warning: declared but never cited: AR-017-untitled-next; cite it
+docs/untitled-skip.md:1: warning: declared but never cited: AR-015-untitled-skip; cite it

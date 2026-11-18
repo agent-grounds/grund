@@ -1,7 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use super::embedded_value_context::immediate_numeric_component;
+use super::embedded_value_context::{
+    ValueLines, immediate_numeric_component, relative_heading_paths, root_cursor,
+};
 use super::extents::DeclarationBodies;
 use super::relative_sections::usable_section;
 use super::values::value_declaration_is_in_home;
@@ -20,6 +22,7 @@ pub(super) fn assign_unmarked_heading_owners(
     mut candidates: Vec<UnmarkedHeadingCandidate>,
     record: &FileRecord,
     grammar: &Grammar,
+    lines: &ValueLines<'_>,
     value_homes: Option<(&Schema, Frame<'_>, &Path)>,
 ) {
     #[derive(Clone)]
@@ -74,40 +77,47 @@ pub(super) fn assign_unmarked_heading_owners(
             line: candidate.line,
             path: suggested_path.clone(),
         });
-        // §FS-declarations.checks.unmarked-heading.2.1: a dotted heading is shown the
-        // relative form, where the suggested coordinate's parent could hold one.
-        let relative_hint = candidate
-            .title
-            .starts_with('.')
-            .then_some(())
-            .and_then(|()| {
-                let parent = suggested_path.rsplit_once('.').map(|(parent, _)| parent);
-                let decl = findings
-                    .declarations
-                    .values()
-                    .flatten()
-                    .find(|decl| decl.line == body_start)?;
-                parent
-                    .is_none_or(|parent| usable_section(decl, body_end, parent))
-                    .then(|| RelativeHint {
-                        parent: parent.unwrap_or_default().to_string(),
-                        heading: relative_heading_hint(
-                            candidate.heading_level,
-                            &suggested_path,
-                            &candidate.title,
-                        ),
-                    })
-            });
-        let fault_hint = findings
+        let decl = findings
             .declarations
             .values()
             .flatten()
-            .find(|decl| decl.line == body_start)
+            .find(|decl| decl.line == body_start);
+        let value = decl.is_some_and(|decl| {
+            value_homes.is_some_and(|(schema, frame, path)| {
+                value_declaration_is_in_home(schema, frame, path, &decl.id)
+            })
+        });
+        // §FS-declarations.checks.unmarked-heading.2.1: a dotted heading is shown the relative
+        // form where the suggested coordinate's parent could hold one and a value run would
+        // take it there (§FS-declarations.checks.unmarked-heading.2.3).
+        let relative_hint = decl
+            .filter(|_| candidate.title.starts_with('.'))
             .and_then(|decl| {
-                let value = value_homes.is_some_and(|(schema, frame, path)| {
-                    value_declaration_is_in_home(schema, frame, path, &decl.id)
-                });
-                fault_hint(&candidate, decl, body_end, grammar.named_sections, value)
+                let parent = suggested_path.rsplit_once('.').map(|(parent, _)| parent);
+                let line = candidate.line;
+                let next =
+                    |run| next_value_component(decl, body_end, line, run, &suggested_path, lines);
+                (parent.is_none_or(|parent| usable_section(decl, body_end, parent))
+                    && value_run(decl, &suggested_path, value).is_none_or(next))
+                .then(|| RelativeHint {
+                    parent: parent.unwrap_or_default().to_string(),
+                    heading: relative_heading_hint(
+                        candidate.heading_level,
+                        &suggested_path,
+                        &candidate.title,
+                    ),
+                })
+            });
+        let fault_hint = decl
+            .and_then(|decl| {
+                fault_hint(
+                    &candidate,
+                    decl,
+                    body_end,
+                    grammar.named_sections,
+                    value,
+                    lines,
+                )
             })
             .filter(|hint| {
                 repaired_by_body
@@ -223,14 +233,15 @@ pub(super) fn assign_unmarked_heading_owners(
 /// declaration, a parent [`usable_section`] accepts, and a path not already
 /// declared. Where the path lies in a value run — the body of a value declaration
 /// (`value`, §FS-values.2.1), or a value root inside `decl` (§FS-values.2.4,
-/// §FS-values.2.5) — it must also be that run's next component, after every one
-/// the run declares.
+/// §FS-values.2.5) — it must also be the component that run expects at the heading,
+/// as [`next_value_component`] counts it over the file's `lines`.
 fn fault_hint(
     candidate: &UnmarkedHeadingCandidate,
     decl: &Declaration,
     end: usize,
     named_sections: bool,
     value: bool,
+    lines: &ValueLines<'_>,
 ) -> Option<PathFaultHint> {
     let fault = path_fault(&candidate.title)?;
     let corrected = fault.corrected.as_str();
@@ -240,8 +251,9 @@ fn fault_hint(
             .rsplit_once('.')
             .is_none_or(|(parent, _)| usable_section(decl, end, parent))
         && !decl.sections.contains_key(corrected)
-        && value_run(decl, corrected, value)
-            .is_none_or(|run| next_value_component(decl, end, candidate.line, run, corrected));
+        && value_run(decl, corrected, value).is_none_or(|run| {
+            next_value_component(decl, end, candidate.line, run, corrected, lines)
+        });
     declares.then(|| PathFaultHint {
         path: fault.path.to_string(),
         missing_title: fault.title.is_none(),
@@ -272,42 +284,49 @@ fn value_run<'a>(decl: &Declaration, corrected: &'a str, value: bool) -> Option<
         })
 }
 
-/// Whether `corrected`, written at `line`, appends the next component of the value
-/// run rooted at `root` in `decl`, whose body ends on `end`: `root` and one number,
-/// one more than the run's components in the body, all of them above `line`
-/// (§FS-declarations.checks.unmarked-heading.2.3). This is the run's contiguity and
-/// physical order, so the count is the one its own check keeps: every section the
-/// body declares in a value declaration (`root` empty, §FS-values.2.1); under a root,
-/// every heading of an immediate numeric component, a duplicate's too, and neither a
-/// grandchild nor a named child, which the root's cursor skips (§FS-values.2.4.3).
+/// Whether `corrected`, written at `line`, is the component the value run rooted at
+/// `root` in `decl`, whose body ends on `end`, expects there
+/// (§FS-declarations.checks.unmarked-heading.2.3). In a value declaration (`root` empty,
+/// §FS-values.2.1) that is one number, one more than the sections the body declares, all
+/// of them above `line`. Under a root it is `root` and one number, one more than the
+/// lines above `line` that the root's own cursor advances on (§FS-values.2.4.3): every
+/// heading read at an immediate numeric component of `root`, recorded, a duplicate or
+/// one with no title alike, and neither a grandchild nor a named child. The lines are
+/// read through that cursor, [`root_cursor`], so the repair names the coordinate the
+/// root reports as expected on the same line, and a number taken below is left to the
+/// caller's own check that the path is not declared yet.
 fn next_value_component(
     decl: &Declaration,
     end: usize,
     line: usize,
     root: &str,
     corrected: &str,
+    lines: &ValueLines<'_>,
 ) -> bool {
-    let in_body = |info: &&SectionInfo| (decl.body_start..=end).contains(&info.line);
-    let run = if root.is_empty() {
-        decl.sections.values().filter(in_body).collect::<Vec<_>>()
-    } else {
-        let duplicates = decl
-            .duplicate_sections
-            .iter()
-            .map(|(path, info)| (path, info));
-        decl.sections
-            .iter()
-            .chain(duplicates)
-            .filter(|(path, _)| immediate_numeric_component(root, path))
-            .map(|(_, info)| info)
-            .filter(in_body)
-            .collect()
+    if root.is_empty() {
+        let in_body = |info: &&SectionInfo| (decl.body_start..=end).contains(&info.line);
+        let run = decl.sections.values().filter(in_body).collect::<Vec<_>>();
+        let expected = (run.len() + 1).to_string();
+        return run.iter().all(|info| info.line < line) && corrected == expected;
+    }
+    let Some(info) = decl.sections.get(root) else {
+        return false;
     };
-    let next = run.len() + 1;
-    let expected = if root.is_empty() {
-        next.to_string()
-    } else {
-        format!("{root}.{next}")
-    };
-    run.iter().all(|info| info.line < line) && corrected == expected
+    let relative = relative_heading_paths(decl);
+    let (is_md, lexical) = (lines.reading.markdown, lines.reading.lexical);
+    let above = root_cursor(
+        lines.lines(),
+        info,
+        decl.body_end,
+        &relative,
+        is_md,
+        lexical,
+    )
+    .take_while(|(at, _, _)| *at < line)
+    .filter(|(_, _, path)| {
+        path.as_deref()
+            .is_some_and(|path| immediate_numeric_component(root, path))
+    })
+    .count();
+    corrected == format!("{root}.{}", above + 1)
 }

@@ -27,7 +27,7 @@ use super::context::{
 };
 use super::declaration_line::{close_declaration, stub_and_title, text_declaration};
 use super::embedded_value_context::{
-    EMBEDDED_VALUE_MARKER, MISPLACED_MARKER, authored_heading_level,
+    EMBEDDED_VALUE_MARKER, MISPLACED_MARKER, ValueLines, authored_heading_level,
     embedded_value_marker_for_line, invalid_embedded_marker, push_invalid_embedded_marker,
 };
 use super::extents::assign_extents;
@@ -597,7 +597,10 @@ pub(super) fn scan_file_text(
     due.settle_sections(findings, schema, text, is_md, record.front_matter);
     if has_unmarked_headings {
         let homes = due.value_declarations.then_some((schema, frame, path));
-        assign_unmarked_heading_owners(findings, held_headings.unmarked, &record, grammar, homes);
+        // §FS-declarations.checks.unmarked-heading.2.3: a value root's own lines.
+        let lines = ValueLines::new(text, &reading, value_line_contexts.as_deref());
+        let unmarked = held_headings.unmarked;
+        assign_unmarked_heading_owners(findings, unmarked, &record, grammar, &lines, homes);
     }
     due.validate_values(
         path,
