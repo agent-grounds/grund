@@ -43,8 +43,10 @@ pub fn config_v2_toml(config: &Config) -> Option<String> {
     config.project().v2_toml()
 }
 
+/// The path's own project, stopping at a configless member boundary and loading
+/// its canonical defaults without expanding siblings (§FS-config.4.2).
 pub fn effective_config(path: &Path) -> Result<Config> {
-    open(&Invocation::new(path, true, Selection::Discovery))
+    open(&Invocation::new(path, true, Selection::Inspection))
 }
 
 /// The project the config for `path` lowers to, every default applied and no

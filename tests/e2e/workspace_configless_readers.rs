@@ -20,7 +20,6 @@ fn reader_runs(tree: &Tree, command: &[&str]) -> Vec<crate::fixture::Run> {
 }
 
 #[test]
-#[ignore = "red until #1446 show selects the configless member; implement removes this"]
 fn configless_member_show_uses_canonical_defaults() {
     let tree = Tree::workspace();
     let mut failures = Vec::new();
@@ -39,7 +38,6 @@ fn configless_member_show_uses_canonical_defaults() {
 }
 
 #[test]
-#[ignore = "red until #1446 explain stops at the configless member; implement removes this"]
 fn configless_member_explain_answers_without_a_file() {
     let tree = Tree::workspace();
     let mut failures = Vec::new();
@@ -71,7 +69,6 @@ fn configless_member_explain_answers_without_a_file() {
 }
 
 #[test]
-#[ignore = "red until #1446 schema identifies the configless member; implement removes this"]
 fn configless_member_schema_names_member_without_config() {
     let tree = Tree::workspace();
     let mut failures = Vec::new();

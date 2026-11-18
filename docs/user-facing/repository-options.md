@@ -60,6 +60,18 @@ location, and an `.agents/grund.toml` that a `grund.toml` beside it outranks.
 findings; for the set above, run `grund config validate`
 ([§FS-config.4.1.1](../functional-spec/FS-config.md#411-at-a-workspace-root), [§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)).
 
+Inside a member with neither config form, or when given a path into it,
+`grund config show` reports that member's canonical version-1 defaults,
+including `[id] format = "{kind}-{number}-{slug}"`
+([§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)).
+`grund config explain` gives its no-file answer in both versions, version 2
+first ([§FS-config-explain.2](../functional-spec/FS-config-explain.md#2-which-version-answers)),
+and `grund schema` names the member with `defaults, no grund.toml · v1`
+([§FS-schema.2](../functional-spec/FS-schema.md#2-selection)).
+To give that member its own version-2 config, run `grund init` inside the member
+in a version-controlled tree. It writes the member's own `grund.toml`
+([§FS-init.2.4](../functional-spec/FS-init.md#24-generated-grundtoml)).
+
 Every project's managed block lists the workspace's members, so changing the
 membership — adding or removing a member, or editing a `project_description` —
 makes the other projects' blocks stale too. Initializing a project does not:
