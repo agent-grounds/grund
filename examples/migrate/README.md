@@ -93,7 +93,7 @@ dropped the comments at grund.toml:28 (version 1 lines)
 changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
 note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then
 to get version 1 back: it is in version control, e.g. git restore grund.toml
-to see this candidate again: restore version 1 and run grund config migrate --to 2
+to see this candidate again: restore version 1 and run grund config migrate --to 2 --drop-comments
 note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
 ```
 

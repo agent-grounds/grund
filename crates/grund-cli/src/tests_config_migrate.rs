@@ -19,6 +19,7 @@ const PROJECT_MAP: &str = "note: the next grund init adds a `code` row to the AG
 const OUTCOME: &str = "wrote grund.toml: version 1 (24 lines) replaced by version 2\n";
 const DROPS: &str = "dropped the comments at grund.toml:6-7, grund.toml:12 and grund.toml:22-23 (version 1 lines)\n";
 const ADVICE: &str = "to get version 1 back: it is in version control, e.g. git restore grund.toml\nto see this candidate again: restore version 1 and run grund config migrate --to 2\nnote: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them\n";
+const DROPPING_ADVICE: &str = "to get version 1 back: it is in version control, e.g. git restore grund.toml\nto see this candidate again: restore version 1 and run grund config migrate --to 2 --drop-comments\nnote: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them\n";
 const REFUSALS: &str = "3 refusals (follow the repairs above)";
 const COMMENT_REFUSAL: &str =
     "3 comments have no single key to follow (follow the comment guidance above)";
@@ -123,7 +124,7 @@ fn compact_report_orders_all_retained_fields() {
     );
     assert_eq!(
         render(&report, false),
-        [OUTCOME, DROPS, NOTICES, MEMBERS, PROJECT_MAP, ADVICE].concat()
+        [OUTCOME, DROPS, NOTICES, MEMBERS, PROJECT_MAP, DROPPING_ADVICE].concat()
     );
 }
 
@@ -133,11 +134,13 @@ fn compact_report_omits_absent_optional_fields() {
     for mask in 0..16 {
         let mut report = successful_report();
         let mut expected = vec![OUTCOME];
-        if mask & 1 == 0 {
+        let advice = if mask & 1 == 0 {
             report.comments.clear();
+            ADVICE
         } else {
             expected.push(DROPS);
-        }
+            DROPPING_ADVICE
+        };
         if mask & 2 == 0 {
             report.notices.clear();
         } else {
@@ -152,7 +155,7 @@ fn compact_report_omits_absent_optional_fields() {
         if report.code_row_note {
             expected.push(PROJECT_MAP);
         }
-        expected.push(ADVICE);
+        expected.push(advice);
         assert!(!report.refused());
         assert_eq!(
             render(&report, false),
@@ -181,7 +184,7 @@ fn full_report_preserves_legacy_order() {
             PROJECT_MAP,
             OUTCOME,
             DROPS,
-            ADVICE
+            DROPPING_ADVICE
         ]
         .concat()
     );

@@ -43,6 +43,7 @@ fn assert_closing(report: &MigrateReport, expected: &str) {
             );
             assert_eq!(actual.contains(PROJECT_MAP), narrated, "{actual}");
             assert!(!actual.contains(ADVICE), "{actual}");
+            assert!(!actual.contains(DROPPING_ADVICE), "{actual}");
         }
     }
 }

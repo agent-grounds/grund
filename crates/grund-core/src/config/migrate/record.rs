@@ -73,6 +73,14 @@ impl MigrateReport {
         }
         self.candidate.as_deref()
     }
+
+    /// §FS-config-migrate.6.5: the listed comments the write dropped - every
+    /// one on a successful write, which lists them only under `--drop-comments`,
+    /// and none otherwise. The `dropped the comments` line names them, and the
+    /// re-preview ends in `--drop-comments` exactly when there are any.
+    pub fn dropped_comments(&self) -> &[ListedComment] {
+        if self.wrote { &self.comments } else { &[] }
+    }
 }
 
 /// Where a refusal points (§FS-config-migrate.2.2).
