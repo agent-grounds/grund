@@ -463,7 +463,7 @@ preserves a split or malformed attempt that `check` refuses, so formatting
 cannot erase that refusal: correct the binding's form and literal, then recheck
 ([§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). That now
 includes a whole-value ID with no coordinate, which earlier releases rewrote
-into a Markdown link ([§FS-values.9.2](../functional-spec/FS-values.md#92-the-one-whole-value-formatting-behavior-that-moved)).
+into a Markdown link ([§FS-values.9.2](../functional-spec/FS-values.md#92-what-values--true-changes-in-formatting)).
 
 ## Deliberate v1 boundary
 

@@ -23,7 +23,7 @@ form is not reinterpreted as a binding by this correction.
 
 This is a recorded formatter correction under
 [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered),
-as with [§FS-values.9.1](../../functional-spec/FS-values.md#91-the-one-marked-root-formatting-behavior-that-moved).
+as with [§FS-values.9.1](../../functional-spec/FS-values.md#91-what-a-marked-root-changes-in-formatting).
 No previously passing `check` tree acquires a finding, so the verdict-correction
 route in section 5 of [§REQ-backwards-compatibility](../../requirements/REQ-backwards-compatibility.md#req-backwards-compatibility-an-upgrade-never-changes-a-verdict-quietly)
 is not invoked. A deprecation period retaining the destructive link rewrite
