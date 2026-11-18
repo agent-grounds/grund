@@ -21,7 +21,7 @@ const WITH_SECTION: &str = concat!(
 const WITHOUT_SECTION: &str = "/// FS-second: Second\n///\n/// Second lead.\npub fn second() {}\n";
 
 /// What the snapshot reports for `docs/uses.md`'s citation when the section is gone.
-const MISSING: &str = "docs/uses.md:1 missing section FS-second.1";
+const MISSING: &str = "docs/uses.md:1 missing section FS-second.1; write <§> before it to show the shape without citing it";
 
 /// A stub in `docs/` pointing at `source.rs`, which holds `source` on disk and lies
 /// outside `[scan] include`, and a citation of its section `1`.

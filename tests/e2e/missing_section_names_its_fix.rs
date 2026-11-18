@@ -183,7 +183,6 @@ fn the_named_form_keeps_its_message() {
 /// The report: a missing numeric section names the same fix the missing named section beside it
 /// does, after its own head (today: `missing section FS-check.9.9` and nothing more).
 #[test]
-#[ignore = "red until #1436 appends the missing-section fix to the missing section form; implement removes this"]
 fn a_missing_numeric_section_names_the_fix_a_named_one_does() {
     Tree::new("ticket", TICKET).assert_stdout(
         &["check"],
@@ -197,7 +196,6 @@ fn a_missing_numeric_section_names_the_fix_a_named_one_does() {
 
 /// The same two findings in JSON: one code, one severity, and each message carrying the fix.
 #[test]
-#[ignore = "red until #1436 appends the missing-section fix to the missing section form; implement removes this"]
 fn both_are_missing_section_in_json_and_each_names_the_fix() {
     let findings = Tree::new("json", TICKET).json_findings(&["check", "--format", "json"]);
     let expected = [
@@ -210,7 +208,6 @@ fn both_are_missing_section_in_json_and_each_names_the_fix() {
 
 /// A bare version 1 citation of a missing section is owed the fix as well.
 #[test]
-#[ignore = "red until #1436 appends the missing-section fix to the missing section form; implement removes this"]
 fn an_unmarked_citation_of_a_missing_section_names_the_fix() {
     Tree::new("unmarked", &unmarked("FS-001-login.9")).assert_stdout(
         &["check"],
@@ -237,7 +234,6 @@ fn the_escape_the_fix_names_clears_an_unmarked_citation() {
 /// Out past `[scan] include` under `--full`, the same message follows the scope prefix, under
 /// `out-of-scope-missing-section` (§FS-check.3.14).
 #[test]
-#[ignore = "red until #1436 appends the missing-section fix to the missing section form; implement removes this"]
 fn an_out_of_scope_missing_section_names_the_fix() {
     let tree = Tree::new("full", OUT_OF_SCOPE);
     tree.assert_stdout(
@@ -261,7 +257,6 @@ fn an_out_of_scope_missing_section_names_the_fix() {
 /// Where the lock names where a numeric section's text went, the clause keeps its place after
 /// the coordinate and the fix comes last (§FS-section-lock.checks.vanished).
 #[test]
-#[ignore = "red until #1436 appends the missing-section fix to the missing section form; implement removes this"]
 fn the_fix_follows_the_lock_clause_in_the_missing_section_form() {
     Tree::new("renumbered", RENUMBERED).assert_stdout(
         &["check"],

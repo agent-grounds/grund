@@ -1,2 +1,2 @@
 docs/functional-spec/FS-entry.md:3: error: unknown reference AR-haskell-block
-src/Router.hs:9: error: missing section FS-entry.9
+src/Router.hs:9: error: missing section FS-entry.9; write <§> before it to show the shape without citing it

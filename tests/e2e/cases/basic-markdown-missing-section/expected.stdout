@@ -1,1 +1,1 @@
-docs/functional-spec/FS-002-session.md:3: error: missing section FS-001-login.9
+docs/functional-spec/FS-002-session.md:3: error: missing section FS-001-login.9; write <§> before it to show the shape without citing it
