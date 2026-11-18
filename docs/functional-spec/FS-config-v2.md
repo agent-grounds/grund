@@ -49,8 +49,6 @@ What this grund refuses, and who owes it, is the table of [§FS-config-v2.rollou
 
 ## reader: The reader
 
-A `grund.toml` that starts with a byte-order mark is refused at line 1 before its version is read: ``<path>:1: the file starts with a byte-order mark; save it as UTF-8 without one``.
-
 ### reader.1: Tables and keys are closed
 
 The v2 reader admits exactly the tables and keys this file names, at the scope each is named at. An unknown table is ``unknown config section `<table>` ``. An unknown key is ``unknown key `<key>` in [<table>]``, or ``unknown key `<key>` at the top level`` in the envelope. A key written at a table that does not admit it is refused the same way. A key repeated inside one table is ``duplicate key `<key>` in [<table>] (first written at line <n>)``. Every refusal is located at the offending line, per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior). An unknown key and a v1 table then say what to write instead, appended after that text, which stays whole ([§FS-errors.3](FS-errors.md#3-message-text)): an unknown key names the keys its table admits ([§FS-config-v2.reader.1.keys](FS-config-v2.md#reader1keys-an-unknown-key-names-the-keys-its-table-admits)), and a v1 table names the v2 tables its settings are written in ([§FS-config-v2.reader.1.v1-tables](FS-config-v2.md#reader1v1-tables-a-v1-table-names-the-v2-tables-its-settings-are-written-in)). What is appended admits nothing, and the v1 reader, whose unknown section is the same text, appends none ([§FS-config.5.2](FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)).

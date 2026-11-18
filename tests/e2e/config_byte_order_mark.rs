@@ -1,5 +1,5 @@
 //! A `grund.toml` that starts with a byte-order mark is refused at line 1 by name, before its
-//! version is read (§FS-config-v2.reader): every command that loads the project exits 2 and
+//! version is read (§FS-config.5): every command that loads the project exits 2 and
 //! `config validate` exits 1 (§FS-config.4.3), each with the same line. The mark is written at
 //! run time, so no fixture carries an invisible byte.
 
@@ -61,4 +61,23 @@ fn a_byte_order_mark_before_the_version_is_named_by_check_and_validate() {
 fn a_byte_order_mark_before_a_comment_is_named_too() {
     let tree = Tree::new("comment", &format!("# The project's config.\n{V2}"));
     assert_eq!(tree.run(&["check"]), (Some(2), REFUSAL.to_string()));
+}
+
+#[test]
+fn a_byte_order_mark_is_named_whatever_version_the_file_writes() {
+    let tree = Tree::new(
+        "v1",
+        "[[kinds]]\nkind = \"FS\"\nfolder = \"docs/functional-spec\"\n",
+    );
+    assert_eq!(tree.run(&["check"]), (Some(2), REFUSAL.to_string()));
+}
+
+/// §FS-config-explain.2: a mark is one reason a file's version cannot be read.
+#[test]
+fn config_explain_names_a_byte_order_mark() {
+    let tree = Tree::new("explain", V2);
+    assert_eq!(
+        tree.run(&["config", "explain", "oversized-lead"]),
+        (Some(2), REFUSAL.to_string())
+    );
 }
