@@ -49,7 +49,7 @@ An agent that does not load the nested file by itself is served by the root bloc
 
 ## 3. Rejected alternatives
 
-- **`init` creates the destination directory.** Bare `init` promises no directory under `docs/`, `tests/` or a kind home ([§FS-init.3.6](../../functional-spec/FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)). A missing directory renders at the root instead, and `check` reports the drift once it exists ([§FS-init.2.3.5.11.4](../../functional-spec/FS-init.md#235114-a-destination-directory-that-does-not-exist-renders-at-the-root)).
+- **`init` creates the destination directory.** Bare `init` promises no directory under `docs/`, `tests/` or a kind home ([§FS-init.3.6](../../functional-spec/FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)). A missing directory renders at the root instead, and `check` reports the drift once it exists ([§FS-init.2.3.5.11.4](../../functional-spec/FS-init.md#235114-a-destination-renders-at-the-root-until-its-directory-exists-or-the-scaffold-lays-it)).
 - **Walking the tree for managed blocks to find orphans.** It costs a full walk on every `check` and could touch a nested project's own `AGENTS.md`. The root block's list on disk is the record instead ([§FS-init.2.3.5.13.1](../../functional-spec/FS-init.md#235131-the-list-on-disk-records-what-init-owns)).
 - **`.claude/rules/` path-scoped files for Claude.** A second delivery mechanism for bytes that do not differ by agent; the symlink is the one [§REQ-agents-md.1](../../requirements/REQ-agents-md.md#1-one-source-symlinked-companions) already uses.
 - **One universal block bump.** It would change every version-1 repository's bytes when version-1 content does not change.

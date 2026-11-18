@@ -36,7 +36,7 @@ A scope **admits** a fixed set of keys, and the relation above holds only betwee
 
 ### principle.cli: A CLI input enters at the scope its flag spells
 
-A command-line input is not a fourth scope that wins over all three. It enters the relation at the scope its flag spells and resolves from there like any value written at that scope. `grund check --require-grounding` spells the **project** default, so an explicit `require_grounding = false` on a row still wins over the flag ([§FS-config.3.4.8.3](FS-config.md#3483-precedence-is-row-over-global)): the flag and the key are one knob, and the row's word is the more specific one.
+A command-line input is not a fourth scope that wins over all three. It enters the relation at the scope its flag spells and resolves from there like any value written at that scope. `grund check --require-grounding` spells the **project** default, so an explicit `require_grounding = false` on a row still wins over the flag ([§FS-config.3.4.8.3](FS-config.md#3483-precedence-is-row-over-global)).
 
 ### principle.boundary: The project is the widest committed scope
 
@@ -675,7 +675,7 @@ It is an integer in Markdown heading levels, `1..=6`: `1` is the whole file, tex
 
 ##### 3.4.8.3 Precedence is row over global
 
-For both keys, the row wins over `[reference]`. `grund check --require-grounding` ([§FS-check.1](FS-check.md#1-inputs)) is the run-level spelling of the global boolean and sets the same default, so an explicit `require_grounding = false` on a row still wins over the flag: the flag and the key are one knob, and the row's word is the more specific one. The level comes from config only — there is no flag for it.
+For both keys, the row wins over `[reference]`. `grund check --require-grounding` ([§FS-check.1](FS-check.md#1-inputs)) is the run-level spelling of the global boolean and sets the same default, so an explicit `require_grounding = false` on a row still wins over the flag: the row's word is the more specific one. The flag moves findings only; the managed block reads the key ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). The level comes from config only — there is no flag for it.
 
 ##### 3.4.8.4 The homeless kind takes both keys like any row
 
