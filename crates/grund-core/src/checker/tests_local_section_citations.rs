@@ -52,7 +52,10 @@ fn local_section_findings_are_actionable_and_missing_is_independent() {
             // rewrite §FS-fmt.2.4.6 refuses.
             "local section citation \u{a7}9.9; FS-001-alpha has no section 9.9, so write a full citation or <§>9.9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
         ),
-        ("missing-section", "missing section FS-001-alpha.9.9"),
+        (
+            "missing-section",
+            "missing section FS-001-alpha.9.9; write <§> before it to show the shape without citing it",
+        ),
         (
             "local-section-citation",
             "unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
@@ -278,12 +281,12 @@ fn an_absent_target_section_withholds_the_command_and_keeps_both_findings() {
         located_diagnostics(&run.config, local),
         vec![
             "docs/FS-bare.md:3: local section citation \u{a7}1; FS-bare has no section 1, so write a full citation or <§>1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
-            "docs/FS-bare.md:3: missing section FS-bare.1",
+            "docs/FS-bare.md:3: missing section FS-bare.1; write <§> before it to show the shape without citing it",
             "docs/FS-nine.md:3: local section citation \u{a7}2.1; write \u{a7}FS-nine.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
             "docs/FS-nine.md:4: local section citation \u{a7}12; FS-nine has no section 12, so write a full citation or <§>12 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
-            "docs/FS-nine.md:4: missing section FS-nine.12",
+            "docs/FS-nine.md:4: missing section FS-nine.12; write <§> before it to show the shape without citing it",
             "docs/FS-nine.md:5: local section citation \u{a7}2.7; FS-nine has no section 2.7, so write a full citation or <§>2.7 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
-            "docs/FS-nine.md:5: missing section FS-nine.2.7",
+            "docs/FS-nine.md:5: missing section FS-nine.2.7; write <§> before it to show the shape without citing it",
         ],
         "§FS-fmt.2.4.6: only the control keeps the command clause, and every refused site keeps its pair"
     );
@@ -323,13 +326,16 @@ fn escape_follows_missing_section(run: &CheckRun) -> Vec<String> {
             continue; // the ownerless shape, which has no owner to lack anything
         };
         let path = token.strip_prefix(marker).unwrap_or(token);
+        // §FS-errors.3.11: the coordinate ends the head; the fix follows after `; `.
         let missing = run.report.errors.iter().any(|other| {
+            let head = other
+                .message
+                .split_once("; ")
+                .map_or(other.message.as_str(), |(h, _)| h);
             other.code == "missing-section"
                 && other.path == finding.path
                 && other.line == finding.line
-                && other
-                    .message
-                    .ends_with(&format!("{}{path}", run.config.section_separator))
+                && head.ends_with(&format!("{}{path}", run.config.section_separator))
         });
         let escaped = advice.contains(&format!(
             " has no section {path}, so write a full citation or <{marker}>{path} to show the shape without citing it"
@@ -394,18 +400,18 @@ fn an_absent_target_section_is_answered_with_the_escape_exactly_where_missing_se
         located_diagnostics(&run.config, local),
         vec![
             "docs/FS-bare.md:3: local section citation \u{a7}1; FS-bare has no section 1, so write a full citation or <§>1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
-            "docs/FS-bare.md:3: missing section FS-bare.1",
+            "docs/FS-bare.md:3: missing section FS-bare.1; write <§> before it to show the shape without citing it",
             "docs/FS-excluded.md:3: local section citation \u{a7}2; write \u{a7}FS-excluded.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
             "docs/FS-excluded.md:3: local section citation \u{a7}3; FS-excluded has no section 3, so write a full citation or <§>3 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
-            "docs/FS-excluded.md:3: missing section FS-excluded.3",
+            "docs/FS-excluded.md:3: missing section FS-excluded.3; write <§> before it to show the shape without citing it",
             "docs/FS-nine.md:3: local section citation \u{a7}2.1; write \u{a7}FS-nine.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
             "docs/FS-nine.md:4: local section citation \u{a7}12; FS-nine has no section 12, so write a full citation or <§>12 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
-            "docs/FS-nine.md:4: missing section FS-nine.12",
+            "docs/FS-nine.md:4: missing section FS-nine.12; write <§> before it to show the shape without citing it",
             "docs/FS-nine.md:5: local section citation \u{a7}2.7; FS-nine has no section 2.7, so write a full citation or <§>2.7 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
-            "docs/FS-nine.md:5: missing section FS-nine.2.7",
+            "docs/FS-nine.md:5: missing section FS-nine.2.7; write <§> before it to show the shape without citing it",
             "docs/FS-nine.md:6: local section citation \u{a7}2; write \u{a7}FS-nine.2 — unchecked in grund 0.13.1, an error in 0.14.0",
             "docs/FS-nine.md:6: local section citation \u{a7}9; FS-nine has no section 9, so write a full citation or <§>9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
-            "docs/FS-nine.md:6: missing section FS-nine.9",
+            "docs/FS-nine.md:6: missing section FS-nine.9; write <§> before it to show the shape without citing it",
         ],
         "§FS-check.3.24.3: every absent site names the absence and the escape; every resolving one keeps today's bytes"
     );
@@ -453,7 +459,7 @@ fn the_escape_carries_the_configured_marker_and_the_path_without_the_separator()
         vec![
             "docs/FS-a.md:3: local section citation @2; write @FS-a:2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
             "docs/FS-a.md:4: local section citation @5.1; FS-a has no section 5.1, so write a full citation or <@>5.1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
-            "docs/FS-a.md:4: missing section FS-a:5.1",
+            "docs/FS-a.md:4: missing section FS-a:5.1; write <@> before it to show the shape without citing it",
         ],
         "§FS-check.3.24.3: `<@>5.1`, and `5.1` rather than `:5.1`"
     );

@@ -108,7 +108,13 @@ fn local_section_diagnostics_keep_cli_messages_and_exact_token_ranges() {
             8,
             12,
         ),
-        ("missing-section", "missing section FS-a.9.9", 3, 8, 12),
+        (
+            "missing-section",
+            "missing section FS-a.9.9; write <§> before it to show the shape without citing it",
+            3,
+            8,
+            12,
+        ),
         (
             "local-section-citation",
             "unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",

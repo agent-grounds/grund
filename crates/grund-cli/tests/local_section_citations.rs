@@ -79,13 +79,13 @@ fn check_text_reports_owned_missing_unsupported_and_ownerless_local_forms() {
             // escape (§FS-check.3.24.3); §FS-fmt.2.4.6 refuses the site, so
             // §FS-check.3.24.1 withholds the command clause.
             "docs/FS-a.md:5: error: local section citation \u{a7}9.9; FS-a has no section 9.9, so write a full citation or <§>9.9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
-            "docs/FS-a.md:5: error: missing section FS-a.9.9\n",
+            "docs/FS-a.md:5: error: missing section FS-a.9.9; write <§> before it to show the shape without citing it\n",
             "docs/FS-a.md:6: error: unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
             "docs/FS-a.md:7: error: unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
             "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2...; write a full citation or <§>2... to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
             "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
             "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2..goals; write a full citation or <§>2..goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
-            "docs/FS-a.md:10: error: missing section FS-a.9\n",
+            "docs/FS-a.md:10: error: missing section FS-a.9; write <§> before it to show the shape without citing it\n",
             "docs/outside.md:3: error: local section citation \u{a7}2 has no enclosing declaration; write a full citation or <§>2 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
         )
     );
@@ -109,7 +109,10 @@ fn check_json_reports_the_same_local_verdicts() {
     );
     assert_eq!(rows[2]["code"], "local-section-citation");
     assert_eq!(rows[3]["code"], "missing-section");
-    assert_eq!(rows[9]["message"], "missing section FS-a.9");
+    assert_eq!(
+        rows[9]["message"],
+        "missing section FS-a.9; write <§> before it to show the shape without citing it"
+    );
     assert_eq!(rows[10]["path"], "docs/outside.md");
     assert_eq!(rows[10]["code"], "local-section-citation");
     assert_eq!(stderr(&output), "");

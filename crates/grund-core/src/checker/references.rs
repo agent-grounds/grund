@@ -349,23 +349,24 @@ pub(super) fn check_citation_resolution(
                     target.schema.ids.section_separator,
                     sec
                 );
-                let mut message = if target.schema.ids.named_sections
+                // §FS-errors.3.11: every missing section names the row's fix, appended to
+                // the head each form shipped with; only the lock clause's place differs.
+                let fix = remedies::missing_section(format!("<{}>", target.schema.citation.marker));
+                let alias = cite.namespace.as_deref();
+                // §FS-section-lock.checks.vanished: the clause the lock adds, if any.
+                let moved = recorded_text_now_at(locks, alias, &cite.id, sec).map(|(lock, to)| {
+                    let lock = frame.display_path(lock);
+                    format!("; what {lock} recorded for it now sits at {to}")
+                });
+                let moved = moved.unwrap_or_default();
+                let message = if target.schema.ids.named_sections
                     && target.compiled.grammar.is_named_section(Some(sec))
                     && cite.has_marker
                 {
-                    format!(
-                        "section not found: {coordinate}; {}",
-                        remedies::missing_section(format!("<{}>", target.schema.citation.marker))
-                    )
+                    format!("section not found: {coordinate}; {fix}{moved}")
                 } else {
-                    format!("missing section {coordinate}")
+                    format!("missing section {coordinate}{moved}; {fix}")
                 };
-                // §FS-section-lock.checks.vanished: appended after either form whole.
-                let alias = cite.namespace.as_deref();
-                if let Some((lock, to)) = recorded_text_now_at(locks, alias, &cite.id, sec) {
-                    let lock = frame.display_path(lock);
-                    message.push_str(&format!("; what {lock} recorded for it now sits at {to}"));
-                }
                 // §FS-citations.checks.mixed-path: all missing sections use ordinary errors.
                 report.errors.push(Diagnostic {
                     code: Code::MISSING_SECTION,

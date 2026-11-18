@@ -284,7 +284,7 @@ fn a_numbered_heading_in_a_selected_fence_is_no_section() {
     );
     tree.assert_prints(
         &["check"],
-        "README.md:1: error: missing section AR-gateway.1\n\
+        "README.md:1: error: missing section AR-gateway.1; write <§> before it to show the shape without citing it\n\
          docs/ar.md:7: error: unknown reference AR-gone\n",
         1,
     );

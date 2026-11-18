@@ -329,13 +329,13 @@ cd "$demo_root"
 ```console
 $ grund check
 draft-ietf-wsync-widget-sync.md:44: error: draft-ietf-wsync-widget-sync has no iana field; kind draft declares it; add its iana section
-draft-ietf-wsync-widget-sync.md:67: error: missing section draft-ietf-wsync-widget-sync.4.3
+draft-ietf-wsync-widget-sync.md:67: error: missing section draft-ietf-wsync-widget-sync.4.3; write <§> before it to show the shape without citing it
 draft-ietf-wsync-widget-sync.md:116: error: section draft-ietf-wsync-widget-sync.4.2 heading level mismatch: expected ### (level 3), found ## (level 2); re-level the heading, or change its path to match its depth
 draft-ietf-wsync-widget-sync.md:150: error: unknown reference RFC9111; did you mean RFC9110?
 draft-ietf-wsync-widget-sync.md:155: error: unmarked heading inside draft-ietf-wsync-widget-sync; number it (## 5. IANA Considerations {#iana}) as draft-ietf-wsync-widget-sync.5, declare an ID, or use a bold label; this became an error in grund 0.16.0
-draft-ietf-wsync-widget-sync.md:170: error: missing section draft-ietf-wsync-widget-sync.4.3
-src/wsync.py:64: error: missing section draft-ietf-wsync-widget-sync.4.3
-tests/test_wsync.py:31: error: missing section draft-ietf-wsync-widget-sync.4.3
+draft-ietf-wsync-widget-sync.md:170: error: missing section draft-ietf-wsync-widget-sync.4.3; write <§> before it to show the shape without citing it
+src/wsync.py:64: error: missing section draft-ietf-wsync-widget-sync.4.3; write <§> before it to show the shape without citing it
+tests/test_wsync.py:31: error: missing section draft-ietf-wsync-widget-sync.4.3; write <§> before it to show the shape without citing it
 ```
 
 The repairs:
