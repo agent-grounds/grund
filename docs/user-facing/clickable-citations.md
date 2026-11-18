@@ -319,10 +319,11 @@ same environment, not only in your login shell: if `grund` is unavailable,
 the resolver reports `unknown id` for every citation
 ([§FS-integrations.3.1](../functional-spec/FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)).
 
-One case of that is expected: a printed spec *path* contains ID-shaped
-segments, so `docs/functional-spec/FS-integrations.md` is also matched at
-`/functional-spec/FS-integrations` — the matcher cannot tell a path segment
-from a citation with a custom marker. Clicking that fragment reports
+One case of that is expected: a printed file name holds an ID-shaped segment,
+so `docs/functional-spec/FS-integrations.md` is also matched at
+`/functional-spec/FS-integrations.md`, and a link destination
+`(FS-integrations.md#…)` at `(FS-integrations.md` — the matcher cannot tell
+them from a citation with a custom marker. Clicking one reports
 `unknown id`; the real citation on the same line still works. Click the
 `§<ID>`, not the path beside it.
 
