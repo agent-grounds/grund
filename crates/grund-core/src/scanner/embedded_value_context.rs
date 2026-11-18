@@ -140,6 +140,15 @@ pub(super) fn invalid_embedded_marker(
     }
 }
 
+/// Whether `path` is an immediate numeric component of the value root at `root`:
+/// `root`, a dot, and one all-digit component, the only heading a root's physical
+/// cursor advances on (§FS-values.2.4.3). A grandchild or a named child is not one.
+pub(super) fn immediate_numeric_component(root: &str, path: &str) -> bool {
+    path.strip_prefix(root)
+        .and_then(|rest| rest.strip_prefix('.'))
+        .is_some_and(|tail| !tail.is_empty() && tail.bytes().all(|byte| byte.is_ascii_digit()))
+}
+
 /// The line of each heading of `decl` written in the relative form, with the
 /// canonical path the record holds for it, a duplicate's included (§FS-values.2.4).
 pub(super) fn relative_heading_paths(decl: &Declaration) -> BTreeMap<usize, String> {

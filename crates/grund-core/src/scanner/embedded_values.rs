@@ -7,8 +7,8 @@ use std::path::Path;
 
 use super::embedded_value_context::{
     EMBEDDED_VALUE_MARKER, authored_heading_level, authored_heading_path,
-    component_without_block_close, normalized_value_lines, relative_heading_paths,
-    semantic_comment_content,
+    component_without_block_close, immediate_numeric_component, normalized_value_lines,
+    relative_heading_paths, semantic_comment_content,
 };
 use super::value_context::SourceValueLineContext;
 use super::values::{recorded_component, value_declaration_is_in_home};
@@ -251,14 +251,9 @@ pub(super) fn validate_embedded_value_roots(
                 });
                 let level = authored_heading_level(line, markdown, *block_comment, lexical);
                 let expected_path = format!("{root_path}.{expected}");
-                let immediate_numeric = child.as_deref().is_some_and(|path| {
-                    path.strip_prefix(&format!("{root_path}."))
-                        .is_some_and(|tail| {
-                            !tail.is_empty()
-                                && !tail.contains('.')
-                                && tail.bytes().all(|byte| byte.is_ascii_digit())
-                        })
-                });
+                let immediate_numeric = child
+                    .as_deref()
+                    .is_some_and(|path| immediate_numeric_component(&root_path, path));
                 if !immediate_numeric {
                     reasons.push((
                         line_no,
