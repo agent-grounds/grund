@@ -42,7 +42,6 @@ MOVES = (
     ("FS-show.md", "2.3.1", 'What counts as the "comment block"', {"comment-block": ()}),
     ("FS-show.md", "2.3.1.1", "Find the open boundary", {"comment-block.open": (
         "Scan **backwards** from the declaration line over consecutive lines",
-        "matches the same comment prefix family",
         "For Python triple-quoted docstrings: scan backward until the opening",
     )}),
     ("FS-show.md", "2.3.1.2", "Find the close boundary", {"comment-block.close": (
@@ -115,10 +114,9 @@ KEPT = (
     ("FS-fmt.md", "2.3.3", "Every pass stops at a Markdown fence"),
 )
 
-# Today `show` reads a run of line comments by prefix family and the scanner by the
-# exact prefix; the ruling that settles it changes behaviour in a later step, so the
-# page states both and adopts neither the ruling's wording nor a wider `*/` clause.
-LINE_RUN_READINGS = ("the same comment prefix family", "the same line-comment prefix")
+# Every command reads a run of line comments by the exact prefix, and the page
+# adopts neither a pending ruling's wording nor a wider `*/` clause.
+LINE_RUN_READINGS = ("the same line-comment prefix",)
 CLOSER_ON_HEADING = "A block comment's closing `*/` on the heading's own line"
 NOT_YET = (
     "are separate comment blocks",
@@ -213,7 +211,7 @@ class LanguagesMoveTests(unittest.TestCase):
             self.assertTrue(_cites(body, chapter), f"{source} {label} does not cite FS-languages.{chapter}")
             self.assertNotIn("FS-check.1.1.5]", body, f"{source} {label} still names the old coordinate")
 
-    def test_both_readings_of_a_line_comment_run_are_still_stated(self):
+    def test_the_reading_of_a_line_comment_run_is_stated(self):
         declared = self.languages()
         block = _flat(_chapter_and_children(declared, "comment-block"))
         for reading in LINE_RUN_READINGS:
