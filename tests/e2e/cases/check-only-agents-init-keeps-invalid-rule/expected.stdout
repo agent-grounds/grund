@@ -1,0 +1,1 @@
+docs/rules/RULE-glossary.md:1: error: RULE-glossary is not a valid rule: count must be a canonical positive base-10 integer

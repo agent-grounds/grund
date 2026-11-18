@@ -101,6 +101,29 @@ fn an_unarmed_selected_code_earns_one_off_line() {
     );
 }
 
+/// §FS-check.1.4, §FS-check.3.5.1: `--only agents-init` carries `invalid-rule`
+/// in a run where an invalid rule left a project's blocks uncompared, and in no
+/// other run; `--ignore invalid-rule` still wins.
+#[test]
+fn agents_init_carries_invalid_rule_where_blocks_were_withheld() {
+    let report = Report {
+        errors: vec![finding("invalid-rule", &[])],
+        ..Report::default()
+    };
+    let mut withheld = Armed::default();
+    withheld.withhold_blocks();
+    let withheld = ArmedChecks::new(withheld, 2);
+    let only = selection(&["agents-init"], &[]);
+    assert_eq!(only.select(&report, &withheld).errors.len(), 1);
+    assert!(only.select(&report, &armed(&[], 2)).errors.is_empty());
+    assert!(
+        selection(&["agents-init"], &["invalid-rule"])
+            .select(&report, &withheld)
+            .errors
+            .is_empty()
+    );
+}
+
 /// §FS-check.1.4.1: `--ignore` of the code, or of `selected-check-off`, removes
 /// the line, and a code with no switch never earns one.
 #[test]

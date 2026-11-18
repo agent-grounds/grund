@@ -84,6 +84,13 @@ impl CheckFindingSelection {
     /// `2`: the §FS-check.1.3.6.3 unread-source caution wears this code and is
     /// unselectable with it, and is a warning (§FS-check.2.1.2).
     pub fn retains(&self, code: &str, authority: &[String]) -> bool {
+        self.retains_in(code, authority, false)
+    }
+
+    /// [`Self::retains`] in a run where an invalid rule did or did not leave a
+    /// project's blocks uncompared, which carries `invalid-rule` with
+    /// `agents-init` (§FS-check.3.5.1).
+    fn retains_in(&self, code: &str, authority: &[String], blocks_withheld: bool) -> bool {
         code == "io"
             // §FS-check.1.4: a file read and not parsed is the same hole in the run.
             || code == "unparsable-file"
@@ -94,7 +101,7 @@ impl CheckFindingSelection {
             || code == "reading-conflict"
             // §FS-check.1.4.1: about the selection itself, so both axes pass it.
             || code == SELECTED_CHECK_OFF && !self.ignore.contains(code)
-            || self.code_axis_retains(code)
+            || (self.code_axis_retains(code) || self.carried_with_blocks(code, blocks_withheld))
                 && self.authority_axis_retains(authority)
                 && !self.ignore.contains(code)
     }
@@ -104,10 +111,11 @@ impl CheckFindingSelection {
     /// `selected-check-off` warning per selected code the run left off, in code
     /// order (§FS-check.2.1.2, §FS-check.1.4.1).
     pub fn select(&self, report: &Report, armed: &ArmedChecks) -> Report {
+        let withheld = armed.armed.blocks_withheld();
         let retained = |findings: &[Finding]| {
             findings
                 .iter()
-                .filter(|finding| self.retains(finding.code, &finding.authority))
+                .filter(|finding| self.retains_in(finding.code, &finding.authority, withheld))
                 .cloned()
                 .collect::<Vec<_>>()
         };
@@ -154,6 +162,13 @@ impl CheckFindingSelection {
                 && RULE_PRODUCED_CODES
                     .iter()
                     .any(|produced| self.only.contains(*produced))
+    }
+
+    /// §FS-check.1.4: `--only agents-init` carries every `invalid-rule` row in a
+    /// run where an invalid rule left a project's blocks uncompared, so that
+    /// skip never reads as a pass (§FS-check.3.5.1).
+    fn carried_with_blocks(&self, code: &str, blocks_withheld: bool) -> bool {
+        blocks_withheld && code == "invalid-rule" && self.only.contains("agents-init")
     }
 
     /// §FS-rules.8: the authority axis keeps a finding the trial sentence
