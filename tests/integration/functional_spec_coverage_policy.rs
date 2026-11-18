@@ -288,8 +288,6 @@ pub(super) const TEMPORARY_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-init.2.3.3", reason: "generated citation-form proof needs a precise mapping audit" },
     Exception { id: "FS-inline-citation-style.3.2", reason: "the multi-case note boundary needs a proof audit" },
     Exception { id: "FS-inline-citation-style.4.3", reason: "the formatter boundary needs a proof audit" },
-    Exception { id: "FS-languages.comment-block.open", reason: "the backward open-boundary walk changes no CLI output, so the slice has no observable form to assert yet" },
-    Exception { id: "FS-languages.requirements.one-block", reason: "owed to the D17c step of DF-one-answer-rulings-parse; show and the block normalization read a run of line comments differently today" },
     Exception { id: "FS-lsp.3", reason: "shared config parity across CLI and LSP needs a proof audit" },
     Exception { id: "FS-remote-projects.bytes.digest", reason: "specified ahead of its release; the Remotes piece of remote projects proves it" },
     Exception { id: "FS-remote-projects.bytes.entries", reason: "specified ahead of its release; the Remotes piece of remote projects proves it" },
