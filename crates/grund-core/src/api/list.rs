@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use crate::config::{Config, KindConfig, display_path};
-use crate::grammar::{field_value, render_declaration_id};
+use crate::grammar::{field_value, render_declaration_id, without_closing_sequence};
 use crate::model::{
     Declaration, FileRecords, Finding, Id, format_path, paired_declarations, sort_path_key,
 };
@@ -63,17 +63,18 @@ impl Default for ListOpts {
 }
 
 /// §FS-list.3.3: a kind's home as the summary prints it — every place of its row,
-/// comma-separated in written order (§FS-config-v2.schema.places); one place
-/// under v1.
-fn list_summary_home(config: &Config, kind: &KindConfig) -> String {
+/// comma-separated in the row's place order (§FS-config-v2.schema.places), each
+/// spelled from the run's report base as a row's path is (§FS-cli.3.4).
+fn list_summary_home(render_config: &Config, config: &Config, kind: &KindConfig) -> String {
     let row = config
         .schema()
         .rows
         .iter()
         .find(|row| row.name == kind.kind);
-    let places: Vec<&str> = row
+    let places: Vec<String> = row
         .into_iter()
         .flat_map(|row| row.places.iter().filter_map(|place| place.path()))
+        .map(|place| display_path(render_config, &config.root.join(place)))
         .collect();
     places.join(", ")
 }
@@ -238,9 +239,9 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         }
     };
     let render_config = context.render_config();
-    let public_entries = entries
+    let entry_rows = entries
         .iter()
-        .flat_map(|entry| {
+        .map(|entry| {
             let rendered_id = render_qualified(entry);
             let base = || ListEntry {
                 project: context
@@ -253,7 +254,12 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 // §FS-cli.3.4: a record at the report base, an E2E case's directory, reads `.`.
                 path: display_path(render_config, &entry.home.file),
                 line: entry.home.line,
-                title: entry.home.title.clone(),
+                // §FS-list.3.1: the title as written, without a closing `#` run.
+                title: entry
+                    .home
+                    .title
+                    .as_deref()
+                    .map(|title| without_closing_sequence(title).to_string()),
                 stub: entry.home.is_stub,
                 defines: entry
                     .home
@@ -304,7 +310,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 row.title = Some(section_row_title(entry.files, entry.home, section, info));
                 row.stub = false;
                 row.defines = None;
-                row.refs = 0;
+                row.refs = counts.section_refs(entry.project_alias, entry.id, section);
                 row.duplicate = false;
                 row.value_roots.clear();
                 row
@@ -333,19 +339,25 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                         && glob_selects(Some(section))
                 })
                 .map(section_row);
-            declaration.into_iter().chain(sections).collect()
+            declaration.into_iter().chain(sections).collect::<Vec<_>>()
         })
         .collect::<Vec<_>>();
+    // §FS-list.3.3: a summary counts each declaration home with a selected row once.
+    let counted = || {
+        entries
+            .iter()
+            .zip(&entry_rows)
+            .filter(|(_, rows)| !rows.is_empty())
+            .map(|(entry, _)| entry)
+    };
 
     let mut summaries = Vec::new();
     if context.workspace_loaded {
-        let mut counts: BTreeMap<(String, String), usize> = BTreeMap::new();
-        for entry in &public_entries {
-            if let Some(project) = &entry.project {
-                *counts
-                    .entry((project.clone(), entry.kind.clone()))
-                    .or_insert(0) += 1;
-            }
+        let mut counts: BTreeMap<(&str, &str), usize> = BTreeMap::new();
+        for entry in counted() {
+            *counts
+                .entry((entry.project_alias, entry.id.kind.as_str()))
+                .or_insert(0) += 1;
         }
         // §FS-workspace.8.3.4: rows sorted by alias — the same byte-wise `str`
         // order the catalog above sorts `entries` by — then by that
@@ -358,7 +370,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             }
             for kind in &project.config.kinds {
                 let count = counts
-                    .get(&(project.alias.clone(), kind.kind.clone()))
+                    .get(&(project.alias.as_str(), kind.kind.as_str()))
                     .copied()
                     .unwrap_or(0);
                 if count == 0 {
@@ -367,19 +379,17 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 summaries.push(ListSummary {
                     project: Some(project.alias.clone()),
                     kind: kind.kind.clone(),
-                    title: kind
-                        .title
-                        .clone()
-                        .unwrap_or_else(|| "Declaration".to_string()),
-                    home: list_summary_home(&project.config, kind),
+                    // §FS-output-shapes.5: an untitled kind has no title, never a fallback.
+                    title: kind.title.clone(),
+                    home: list_summary_home(render_config, &project.config, kind),
                     count,
                 });
             }
         }
     } else {
         let mut counts: BTreeMap<&str, usize> = BTreeMap::new();
-        for entry in &public_entries {
-            *counts.entry(&entry.kind).or_insert(0) += 1;
+        for entry in counted() {
+            *counts.entry(entry.id.kind.as_str()).or_insert(0) += 1;
         }
         for kind in &render_config.kinds {
             let count = counts.get(kind.kind.as_str()).copied().unwrap_or(0);
@@ -389,11 +399,8 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             summaries.push(ListSummary {
                 project: None,
                 kind: kind.kind.clone(),
-                title: kind
-                    .title
-                    .clone()
-                    .unwrap_or_else(|| "Declaration".to_string()),
-                home: list_summary_home(render_config, kind),
+                title: kind.title.clone(),
+                home: list_summary_home(render_config, render_config, kind),
                 count,
             });
         }
@@ -402,7 +409,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
     Ok(ListOutput {
         output_format: render_config.output_format.clone(),
         workspace: context.workspace_loaded,
-        entries: public_entries,
+        entries: entry_rows.into_iter().flatten().collect(),
         summaries,
         scan_errors,
         note: globs.and_then(|globs| globs.note()),

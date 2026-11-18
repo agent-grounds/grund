@@ -35,7 +35,8 @@ pub struct ListValueRoot {
 pub struct ListSummary {
     pub project: Option<String>,
     pub kind: String,
-    pub title: String,
+    /// The kind's title, `None` when it has none (§FS-output-shapes.5).
+    pub title: Option<String>,
     pub home: String,
     pub count: usize,
 }
