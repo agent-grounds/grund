@@ -28,7 +28,7 @@ use crate::resolver::{
     LockJudgement, WorkspaceCheckTarget, join_alternatives, recorded_text_now_at,
     target_for_citation,
 };
-use crate::workspace::{member_root_guidance, namespace_is_unverified};
+use crate::workspace::{member_root_guidance, namespace_is_unverified, with_unlisted_alias_repair};
 use std::cell::OnceCell;
 use std::collections::BTreeMap;
 
@@ -221,11 +221,13 @@ pub(super) fn check_citation_resolution(
                     .as_ref()
                     .and_then(|guidance| guidance.message(namespace))
                     .unwrap_or_else(|| {
-                        unknown_project_message(
+                        // §FS-check.3.8.5: a bare miss at the root may name an unlisted project.
+                        let message = unknown_project_message(
                             namespace,
                             workspace.keys().map(String::as_str),
                             &frame.run.workspace.scope_path,
-                        )
+                        );
+                        with_unlisted_alias_repair(frame, namespace, message)
                     }),
                 sites: Vec::new(),
                 authority: Vec::new(),
@@ -335,36 +337,37 @@ pub(super) fn check_citation_resolution(
         // which reads a stub's sections from its target, scanned or not (§FS-check.3.2.1).
         if let Some(sec) = &cite.section {
             if !section_resolves(target.catalog, &cite.id, sec) {
-                let coordinate = format!(
-                    "{}{}{}",
-                    qualify(
-                        cite.namespace.as_deref(),
-                        &render_citation_id(
-                            &target.compiled.grammar,
-                            &target.catalog.declarations,
-                            cite,
-                            &schema.citation.marker
-                        )
+                let cited_id = qualify(
+                    cite.namespace.as_deref(),
+                    &render_citation_id(
+                        &target.compiled.grammar,
+                        &target.catalog.declarations,
+                        cite,
+                        &schema.citation.marker,
                     ),
-                    target.schema.ids.section_separator,
-                    sec
                 );
-                // §FS-errors.3.11: every missing section names the row's fix, appended to
+                let coordinate = format!("{cited_id}{}{sec}", target.schema.ids.section_separator);
+                // §FS-errors.3.11: every missing section names the row's escape, appended to
                 // the head each form shipped with; only the lock clause's place differs.
-                let fix = remedies::missing_section(format!("<{}>", target.schema.citation.marker));
+                let escape = format!("<{}>", target.schema.citation.marker);
+                let fix = remedies::missing_section_escape(escape);
                 let alias = cite.namespace.as_deref();
                 // §FS-section-lock.checks.vanished: the clause the lock adds, if any.
                 let moved = recorded_text_now_at(locks, alias, &cite.id, sec).map(|(lock, to)| {
                     let lock = frame.display_path(lock);
                     format!("; what {lock} recorded for it now sits at {to}")
                 });
-                let moved = moved.unwrap_or_default();
                 let message = if target.schema.ids.named_sections
                     && target.compiled.grammar.is_named_section(Some(sec))
                     && cite.has_marker
                 {
-                    format!("section not found: {coordinate}; {fix}{moved}")
+                    // §FS-errors.3.11: the lock clause, or else the section map.
+                    let tail = moved.unwrap_or_else(|| {
+                        format!("; {}", remedies::missing_section_map(&cited_id))
+                    });
+                    format!("section not found: {coordinate}; {fix}{tail}")
                 } else {
+                    let moved = moved.unwrap_or_default();
                     format!("missing section {coordinate}{moved}; {fix}")
                 };
                 // §FS-citations.checks.mixed-path: all missing sections use ordinary errors.

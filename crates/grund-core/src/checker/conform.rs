@@ -103,6 +103,10 @@ fn check_declaration_homes(
             message.push_str(&repair.located_suffix(&rendered_id, |path| {
                 frame.display_path(&spellings.first(path))
             }));
+            // §FS-declarations.checks.duplicate: a stub among the sites names its own repair.
+            if paired.records().all(|declaration| !declaration.is_stub) {
+                message.push_str(&format!("; {}", remedies::duplicate_rename()));
+            }
             report.errors.push(Diagnostic {
                 code: Code::DUPLICATE,
                 path: Some(primary.path),
@@ -175,11 +179,12 @@ fn check_misplaced(
                 // why, rather than pointing at a kind that does not exist.
                 let message = if home.citable {
                     format!(
-                        "{} declares kind {} inside {} home {}",
+                        "{} declares kind {} inside {} home {}; {}",
                         render_catalog_id(frame.grammar(), &findings.declarations, id),
                         id.kind,
                         home.kind,
-                        home.path
+                        home.path,
+                        remedies::misplaced_declaration_move(frame.version)
                     )
                 } else {
                     format!(
@@ -217,6 +222,11 @@ fn explain_unlisted_project_placement(schema: &Schema, frame: Frame<'_>, report:
             && let Some(path) = &error.path
             && let Some(context) = path.ancestors().find_map(|dir| contexts.get(dir))
         {
+            // §FS-declarations.checks.misplaced-declaration: the context's repair replaces `move`.
+            let moved = format!("; {}", remedies::misplaced_declaration_move(frame.version));
+            if let Some(kept) = error.message.strip_suffix(&moved) {
+                error.message.truncate(kept.len());
+            }
             error.message.push_str(context);
         }
     }

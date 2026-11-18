@@ -8,7 +8,7 @@ mod resolution;
 mod selectors;
 mod unreached;
 
-use super::facts::{Completeness, NodeKey, RuleFacts, SiteKey, SiteMeta};
+use super::facts::{Completeness, NodeKey, NonChapters, RuleFacts, SiteKey, SiteMeta};
 use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
 };
@@ -51,23 +51,56 @@ struct SemanticRule {
 
 /// Deduplicate normalized constraints and evaluate them over one snapshot. The
 /// engine never reparses prose or asks a producer for more facts (§AR-rules.4).
-pub(crate) fn evaluate(
+/// `headings` are what a too-low chapter count may name (§FS-rules.7.2.1).
+pub(crate) fn evaluate_with(
     rules: &[ParsedRule],
     precedence: &[Direction],
     facts: &RuleFacts,
+    headings: &NonChapters,
 ) -> Vec<RuleFinding> {
-    evaluate_level(rules, precedence, facts, RuleLevel::Required, true)
+    let input = Input { facts, headings };
+    evaluate_level(rules, precedence, input, RuleLevel::Required, true)
 }
 
 /// Recommendations use the same evaluator and return the same existing
 /// `Diagnostic` boundary; only the report channel chosen by the caller differs
 /// (§AR-rules.1, §AR-rules.5).
+pub(crate) fn evaluate_suggestions_with(
+    rules: &[ParsedRule],
+    precedence: &[Direction],
+    facts: &RuleFacts,
+    headings: &NonChapters,
+) -> Vec<RuleFinding> {
+    let input = Input { facts, headings };
+    evaluate_level(rules, precedence, input, RuleLevel::Recommended, false)
+}
+
+/// The engine over a snapshot with no non-chapter headings, for the tests that build
+/// facts by hand.
+#[cfg(test)]
+pub(crate) fn evaluate(
+    rules: &[ParsedRule],
+    precedence: &[Direction],
+    facts: &RuleFacts,
+) -> Vec<RuleFinding> {
+    evaluate_with(rules, precedence, facts, &NonChapters::new())
+}
+
+/// [`evaluate`] for the recommended level.
+#[cfg(test)]
 pub(crate) fn evaluate_suggestions(
     rules: &[ParsedRule],
     precedence: &[Direction],
     facts: &RuleFacts,
 ) -> Vec<RuleFinding> {
-    evaluate_level(rules, precedence, facts, RuleLevel::Recommended, false)
+    evaluate_suggestions_with(rules, precedence, facts, &NonChapters::new())
+}
+
+/// The snapshot one level is evaluated over, and the non-chapter headings beside it.
+#[derive(Clone, Copy)]
+struct Input<'a> {
+    facts: &'a RuleFacts,
+    headings: &'a NonChapters,
 }
 
 /// Share one immutable fact index across this level's semantic groups and
@@ -75,10 +108,11 @@ pub(crate) fn evaluate_suggestions(
 fn evaluate_level(
     rules: &[ParsedRule],
     precedence: &[Direction],
-    facts: &RuleFacts,
+    input: Input<'_>,
     level: RuleLevel,
     include_invalid: bool,
 ) -> Vec<RuleFinding> {
+    let facts = input.facts;
     let index = FactIndex::new(facts);
     let mut groups: BTreeMap<SemanticRule, BTreeSet<String>> = BTreeMap::new();
     let precedence = reported_by_direction(precedence);
@@ -101,13 +135,13 @@ fn evaluate_level(
     for (rule, origins) in groups {
         let authority = Authority::new(origins);
         let Some(reported) = precedence.get(&rule) else {
-            evaluate_one(&rule, &authority, facts, &index, &mut out);
+            evaluate_one(&rule, &authority, input, &index, &mut out);
             continue;
         };
         // §FS-rules.6: a duplicate of a direction is evaluated all the same, and
         // loses only the findings the direction reported itself, unit by unit.
         let mut own = Vec::new();
-        evaluate_one(&rule, &authority, facts, &index, &mut own);
+        evaluate_one(&rule, &authority, input, &index, &mut own);
         out.extend(own.into_iter().filter(|finding| {
             !reported
                 .iter()
@@ -166,10 +200,11 @@ impl From<&ParsedRule> for SemanticRule {
 fn evaluate_one(
     rule: &SemanticRule,
     authority: &Authority,
-    facts: &RuleFacts,
+    input: Input<'_>,
     index: &FactIndex<'_>,
     out: &mut Vec<RuleFinding>,
 ) {
+    let facts = input.facts;
     let subjects = select_subjects(&rule.subject, facts, index);
     // §FS-rules.4: every positive cardinality conclusion is closed-world, and
     // the absence of §FS-rules.5.2's second premise is one of them.
@@ -205,7 +240,7 @@ fn evaluate_one(
                 if !rule.cardinality.contains(count) {
                     // §FS-rules.7.2.1: show accepted direct chapters in source order,
                     // retaining the complete released prefix (§FS-errors.3).
-                    let mut observed = chapters;
+                    let mut observed = chapters.clone();
                     observed.sort_by_key(|(node, _, _)| {
                         facts.nodes.get(*node).map(|meta| meta.anchor.line)
                     });
@@ -220,11 +255,17 @@ fn evaluate_one(
                             .collect::<Vec<_>>()
                             .join(", ")
                     };
+                    // §FS-rules.7.2.1: a too-low count names a heading that would count.
+                    let named = if rule.cardinality.minimum.is_some_and(|min| count < min) {
+                        named_form(input.headings.get(&subject), name, &chapters)
+                    } else {
+                        String::new()
+                    };
                     let message = format!(
-                        "{} has {count} {name} chapters; {authority} requires {}; expected display name \"{name}\" (case-insensitive, not section handle); observed direct chapters: {observed}; {}",
+                        "{} has {count} {name} chapters; {authority} requires {}; expected display name \"{name}\" (case-insensitive, not section handle); observed direct chapters: {observed}; {}{named}",
                         label(facts, &subject),
                         rule.cardinality.wording(),
-                        remedies::chapter_cardinality()
+                        remedies::chapter_cardinality_count()
                     );
                     push_node(
                         out,
@@ -312,6 +353,50 @@ fn evaluate_one(
                 }
             }
         }
+    }
+}
+
+/// §FS-rules.7.2.1: the `named` case for the first direct non-chapter heading that reads
+/// `name`, unless its lower-case form is no section name or already a direct chapter's handle.
+fn named_form(
+    headings: Option<&Vec<super::facts::NonChapter>>,
+    name: &str,
+    chapters: &[(&NodeKey, &str, &str)],
+) -> String {
+    let handle = name.to_ascii_lowercase();
+    let is_name = handle.starts_with(|c: char| c.is_ascii_lowercase())
+        && handle
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-');
+    if !is_name
+        || chapters
+            .iter()
+            .any(|(_, coordinate, _)| *coordinate == handle)
+    {
+        return String::new();
+    }
+    headings
+        .into_iter()
+        .flatten()
+        .map(|heading| (heading, unnumbered(&heading.text)))
+        .find(|(_, text)| text.eq_ignore_ascii_case(name))
+        .map_or(String::new(), |(heading, text)| {
+            let shown = format!("{} {handle}: {text}", "#".repeat(heading.level));
+            format!(
+                "; {}",
+                remedies::chapter_cardinality_named(heading.line, shown)
+            )
+        })
+}
+
+/// A heading's text after any leading number such as `1.` or `2.3`, which a
+/// numbered heading carries and a chapter's name does not (§FS-rules.7.2.1).
+fn unnumbered(text: &str) -> &str {
+    let rest = text.trim_start_matches(|c: char| c.is_ascii_digit() || c == '.');
+    if rest.len() < text.len() && rest.starts_with(' ') {
+        rest.trim_start()
+    } else {
+        text
     }
 }
 

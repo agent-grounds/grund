@@ -1,0 +1,2 @@
+docs/references.md:1: error: missing section FS-login.7; write <§> before it to show the shape without citing it
+docs/references.md:1: error: section not found: FS-login.session; write <§> before it to show the shape without citing it; run `grund FS-login --toc` to print the lead with the section map

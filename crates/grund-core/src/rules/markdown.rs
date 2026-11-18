@@ -2,9 +2,12 @@
 //! §AR-rules.3). It parses no sentence and evaluates no constraint.
 
 use super::RuleAnchor;
-use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
+use super::facts::{
+    Completeness, FactHeader, NodeKey, NodeMeta, NonChapter, NonChapters, RuleFacts, SiteKey,
+    SiteMeta,
+};
 use crate::grammar::{Grammar, render_catalog_id, section_display_name, unnamed_component};
-use crate::model::{Catalog, Id, paired_declarations, section_resolves};
+use crate::model::{Catalog, Declaration, Id, paired_declarations, section_resolves};
 use std::collections::BTreeMap;
 
 /// What the adapter reads of one project, and nothing more: the rules
@@ -27,6 +30,16 @@ pub(crate) fn adapt_markdown(
     project: MarkdownProject<'_>,
     complete: bool,
 ) -> RuleFacts {
+    adapt_markdown_with_headings(findings, project, complete).0
+}
+
+/// [`adapt_markdown`], with each declaration's direct non-chapter headings beside the
+/// facts (§FS-rules.7.2.1).
+pub(crate) fn adapt_markdown_with_headings(
+    findings: &Catalog,
+    project: MarkdownProject<'_>,
+    complete: bool,
+) -> (RuleFacts, NonChapters) {
     let selected = project.name.unwrap_or("local").to_string();
     adapt_workspace(
         &selected,
@@ -44,11 +57,14 @@ pub(crate) fn adapt_markdown(
 /// citations off the record it is paired with, so a stub's target outside the walk
 /// lends both, judged as scanned ones since §FS-rules.7.11 closed
 /// (§FS-declarations.stubs.target.5).
+/// Each declaration's direct non-chapter headings come beside the facts
+/// (§FS-rules.7.2.1).
 pub(crate) fn adapt_workspace(
     selected: &str,
     projects: &[(&str, &Catalog, MarkdownProject<'_>)],
     complete: bool,
-) -> RuleFacts {
+) -> (RuleFacts, NonChapters) {
+    let mut non_chapters = NonChapters::new();
     let mut facts = RuleFacts {
         header: FactHeader {
             schema: 1,
@@ -109,6 +125,10 @@ pub(crate) fn adapt_workspace(
                         format!("{alias}/{}", id.kind)
                     };
                     facts.decl.push((key.clone(), kind));
+                    let headings = direct_non_chapters(findings, id, record.record);
+                    if !headings.is_empty() {
+                        non_chapters.insert(key.clone(), headings);
+                    }
                     facts.nodes.insert(
                         key,
                         NodeMeta {
@@ -254,7 +274,44 @@ pub(crate) fn adapt_workspace(
         }
     }
 
-    facts
+    (facts, non_chapters)
+}
+
+/// §FS-rules.7.2.1: the direct headings of `record` that no rule counts, a numbered
+/// section or an unmarked heading, in source order.
+fn direct_non_chapters(findings: &Catalog, id: &Id, record: &Declaration) -> Vec<NonChapter> {
+    let level = record.heading_level + 1;
+    let numbered = record
+        .sections
+        .iter()
+        .filter(|(section, info)| {
+            !is_rule_unit(section)
+                && !section.contains('.')
+                && info.heading_level == level
+                && !info.in_front_matter()
+        })
+        .map(|(_, info)| NonChapter {
+            line: info.line,
+            level,
+            text: info.title.clone(),
+        });
+    let unmarked = findings
+        .unmarked_headings
+        .iter()
+        .filter(|heading| {
+            heading.owner == *id
+                && heading.file == record.file
+                && heading.owner_line == record.line
+                && heading.heading_level == level
+        })
+        .map(|heading| NonChapter {
+            line: heading.line,
+            level,
+            text: heading.title.clone(),
+        });
+    let mut headings: Vec<NonChapter> = numbered.chain(unmarked).collect();
+    headings.sort_by_key(|heading| heading.line);
+    headings
 }
 
 /// A section is a rule unit where a chapter subject could name it, which the

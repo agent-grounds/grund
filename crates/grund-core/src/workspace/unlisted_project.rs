@@ -115,13 +115,7 @@ fn placement_context(
     roots: &[PathBuf],
 ) -> String {
     let entry = members_entry(frame.root(), dir);
-    let enclosing = frame
-        .run
-        .config_file
-        .as_ref()
-        .map(|path| frame.run.location_base.join(path))
-        .unwrap_or_else(|| frame.root().join("grund.toml"));
-    let enclosing = frame.display_path(&enclosing);
+    let enclosing = enclosing_config(frame);
     let owner = frame.name.unwrap_or("root");
     // §FS-config.3.5.16: v1 matches directory names at every depth, never paths, so
     // the version's side of the row's Fix excludes the component there.
@@ -145,4 +139,35 @@ fn placement_context(
          kind homes from {enclosing} (project {owner}) apply; {unlisted}{root_advice}",
         nested = frame.display_path(config_path),
     )
+}
+
+/// The enclosing config as the report names it: where a members entry is added.
+fn enclosing_config(frame: Frame<'_>) -> String {
+    let enclosing = frame
+        .run
+        .config_file
+        .as_ref()
+        .map(|path| frame.run.location_base.join(path))
+        .unwrap_or_else(|| frame.root().join("grund.toml"));
+    frame.display_path(&enclosing)
+}
+
+/// §FS-check.3.8.5: a bare unknown-alias `message` of an un-narrowed run, ended in
+/// the members entry its alias path needs when it names a directory beneath the
+/// run's root whose config no workspace lists. An undecidable claim is not
+/// unlisted, so it keeps the message bare (§FS-check.3.29.2).
+pub(crate) fn with_unlisted_alias_repair(frame: Frame<'_>, alias: &str, message: String) -> String {
+    let dir = frame.root().join(alias);
+    let bare = frame.run.workspace.scope_path.is_empty()
+        && message == format!("unknown project alias {alias}")
+        && config_file_in(&dir).is_some()
+        && UnlistedProjects::new(frame.run).is_unlisted(&dir);
+    if !bare {
+        return message;
+    }
+    let repair = remedies::unknown_project_unlisted(
+        members_entry(frame.root(), &dir),
+        enclosing_config(frame),
+    );
+    format!("{message}; {repair}")
 }

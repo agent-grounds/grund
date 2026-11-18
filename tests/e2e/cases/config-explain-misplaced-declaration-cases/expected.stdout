@@ -1,0 +1,12 @@
+grund.toml is read as version 2.
+
+misplaced-declaration
+A declaration sits outside the home its kind is configured to live in.
+
+Severity: error, fixed.
+On: when folders or files is set on a [schema.kinds] table (a setting)
+Fix, move: move it to a home of its own kind
+Fix, unlisted: add "{entry}" to [workspace] members in {enclosing}, or exclude "{entry}/" with [schema.sources] exclude in {enclosing}
+Fix, roots: also remove configured scan roots at or beneath "{entry}" in {enclosing} (source includes or kind homes), because exclude does not prune scan roots
+
+Next: grund config explain '[schema.kinds]'

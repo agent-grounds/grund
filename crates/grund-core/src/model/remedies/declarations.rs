@@ -43,6 +43,12 @@ pub(crate) fn declaration_near_miss() -> String {
     fill(Code::DECLARATION_NEAR_MISS, 2, None, slots)
 }
 
+/// `duplicate`'s *Fix*, case `rename` (§FS-declarations.checks.duplicate).
+pub(crate) fn duplicate_rename() -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::DUPLICATE, 2, Some("rename"), slots)
+}
+
 /// `duplicate`'s *Fix*, case `home` (§FS-declarations.checks.duplicate).
 pub(crate) fn duplicate_home(site: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("site", &site)];
@@ -65,6 +71,12 @@ pub(crate) fn duplicate_section_headings() -> String {
 pub(crate) fn duplicate_section_keys() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
     fill(Code::DUPLICATE_SECTION, 2, Some("keys"), slots)
+}
+
+/// `misplaced-declaration`'s *Fix*, case `move` (§FS-declarations.checks.misplaced-declaration).
+pub(crate) fn misplaced_declaration_move(version: u32) -> String {
+    let slots: &[(&str, &dyn Display)] = &[];
+    fill(Code::MISPLACED_DECLARATION, version, Some("move"), slots)
 }
 
 /// `misplaced-declaration`'s *Fix*, case `unlisted` (§FS-declarations.checks.misplaced-declaration).

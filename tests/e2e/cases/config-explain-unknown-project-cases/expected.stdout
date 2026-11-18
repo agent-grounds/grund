@@ -1,0 +1,11 @@
+grund.toml is read as version 2.
+
+unknown-project
+A citation names a project alias that is not known, or a declaration or section that project does not have.
+
+Severity: error, fixed.
+On: always.
+Fix, root: run `grund check` from the workspace root at `{root}` to validate cross-project citations
+Fix, subtree: check from the workspace root for a path outside that subtree
+Fix, near: did you mean {near}?
+Fix, unlisted: add "{entry}" to [workspace] members in {enclosing}

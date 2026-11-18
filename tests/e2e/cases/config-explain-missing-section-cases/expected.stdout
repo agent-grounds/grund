@@ -1,0 +1,9 @@
+grund.toml is read as version 2.
+
+missing-section
+A citation names a section its declaration does not have.
+
+Severity: error, fixed.
+On: always.
+Fix, escape: write {escape} before it to show the shape without citing it
+Fix, map: run `grund {id} --toc` to print the lead with the section map

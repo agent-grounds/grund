@@ -1,0 +1,2 @@
+{"severity":"error","path":"docs/references.md","line":1,"code":"missing-section","message":"missing section FS-login.7; write <§> before it to show the shape without citing it","sites":null,"authority":null}
+{"severity":"error","path":"docs/references.md","line":1,"code":"missing-section","message":"section not found: FS-login.session; write <§> before it to show the shape without citing it; run `grund FS-login --toc` to print the lead with the section map","sites":null,"authority":null}
