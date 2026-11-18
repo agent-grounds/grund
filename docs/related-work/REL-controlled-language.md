@@ -12,7 +12,8 @@ Knowledge Representation*, Reasoning Web 2008, LNCS, pages 104–124, DOI
 10.1007/978-3-540-85658-0_3 ([Springer](https://link.springer.com/chapter/10.1007/978-3-540-85658-0_3)),
 describe Attempto Controlled English (ACE), which "can automatically and unambiguously be
 translated into first-order logic" and "is supported by a number of tools". The Attempto
-project's [description](https://attempto.ifi.uzh.ch/site/description/description.html)
+project's description
+([Wayback Machine copy of 2 September 2026](https://web.archive.org/web/20260902064016/https://attempto.ifi.uzh.ch/site/main.php?text=description/description.html))
 calls ACE "a rich subset of standard English designed to serve as knowledge representation
 language": ACE texts "can be unambiguously translated into discourse representation
 structures", and "a small set of ACE construction and interpretation rules" fixes that
