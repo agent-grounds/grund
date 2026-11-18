@@ -13,14 +13,19 @@ fn render_list_summary(summaries: &[grund_core::ListSummary], workspace: bool, f
         .unwrap_or(0)
         .min(40);
     for summary in summaries {
+        // §FS-output-shapes.5: an untitled kind's record leaves `title` out.
+        let title = summary
+            .title
+            .as_deref()
+            .map(|title| format!("\"title\":\"{}\",", json_escape(title)))
+            .unwrap_or_default();
         if workspace {
             let project = summary.project.as_deref().unwrap_or("");
             if format == "json" {
                 println!(
-                    "{{\"project\":\"{}\",\"kind\":\"{}\",\"title\":\"{}\",\"home\":\"{}\",\"count\":{}}}",
+                    "{{\"project\":\"{}\",\"kind\":\"{}\",{title}\"home\":\"{}\",\"count\":{}}}",
                     json_escape(project),
                     json_escape(&summary.kind),
-                    json_escape(&summary.title),
                     json_escape(&summary.home),
                     summary.count
                 );
@@ -32,9 +37,8 @@ fn render_list_summary(summaries: &[grund_core::ListSummary], workspace: bool, f
             }
         } else if format == "json" {
             println!(
-                "{{\"kind\":\"{}\",\"title\":\"{}\",\"home\":\"{}\",\"count\":{}}}",
+                "{{\"kind\":\"{}\",{title}\"home\":\"{}\",\"count\":{}}}",
                 json_escape(&summary.kind),
-                json_escape(&summary.title),
                 json_escape(&summary.home),
                 summary.count
             );

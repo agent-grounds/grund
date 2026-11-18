@@ -6,8 +6,9 @@ use crate::resolver::{
     SettledHeadings, WorkspaceContext, WorkspaceProject, index_link_targets, index_link_targets_for,
 };
 
-/// The two per-target-alias citation counts `grund list` needs, built in one
-/// pass (§FS-list.3.2.1, §DF-index-not-an-inbound-citation).
+/// The per-target-alias citation counts `grund list` needs, built in one
+/// pass (§FS-list.3.2.1, §DF-index-not-an-inbound-citation): each ID's, the
+/// same minus index entries, and each exact section's.
 ///
 /// §FS-workspace.8.3: each citation belongs to exactly one target project — its
 /// `namespace` when qualified, the citing project when not — so a single pass
@@ -29,6 +30,7 @@ use crate::resolver::{
 pub(crate) struct ListCitationCounts<'a> {
     refs: BTreeMap<&'a str, BTreeMap<&'a Id, usize>>,
     used: BTreeMap<&'a str, BTreeMap<&'a Id, usize>>,
+    sections: BTreeMap<&'a str, BTreeMap<&'a Id, BTreeMap<&'a str, usize>>>,
     empty: BTreeMap<&'a Id, usize>,
     canonical: BTreeMap<&'a str, &'a str>,
 }
@@ -50,6 +52,7 @@ impl<'a> ListCitationCounts<'a> {
         let mut counts = Self {
             refs: BTreeMap::new(),
             used: BTreeMap::new(),
+            sections: BTreeMap::new(),
             empty: BTreeMap::new(),
             canonical,
         };
@@ -67,6 +70,17 @@ impl<'a> ListCitationCounts<'a> {
                     .or_default()
                     .entry(&citation.id)
                     .or_insert(0) += 1;
+                // §FS-list.3.2.1: a section row counts its exact section, as `refs` does.
+                if let Some(section) = citation.section.as_deref() {
+                    *counts
+                        .sections
+                        .entry(target_alias)
+                        .or_default()
+                        .entry(&citation.id)
+                        .or_default()
+                        .entry(section)
+                        .or_insert(0) += 1;
+                }
                 if !index_entries.is_index_entry(citation) {
                     *counts
                         .used
@@ -96,6 +110,17 @@ impl<'a> ListCitationCounts<'a> {
         'a: 's,
     {
         self.canonical.get(alias).copied().unwrap_or(alias)
+    }
+
+    /// How many citations name `section` of `alias`'s `id` exactly, without its
+    /// descendants: a section row's `refs` (§FS-list.3.2.1).
+    pub(crate) fn section_refs(&self, alias: &str, id: &Id, section: &str) -> usize {
+        self.sections
+            .get(self.tree(alias))
+            .and_then(|ids| ids.get(id))
+            .and_then(|sections| sections.get(section))
+            .copied()
+            .unwrap_or(0)
     }
 
     /// The same count minus each kind's own index entries — what `--unused`

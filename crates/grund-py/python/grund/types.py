@@ -220,7 +220,7 @@ class ListEntry:
 class ListSummary:
     project: str | None
     kind: str
-    title: str
+    title: str | None
     home: str
     count: int
 

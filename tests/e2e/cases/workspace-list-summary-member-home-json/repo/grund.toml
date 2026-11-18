@@ -1,0 +1,11 @@
+grund_config_version = 2
+project_name = "root"
+
+[workspace]
+members = ["api"]
+
+[schema.kinds.FS]
+files = ["docs/req.md"]
+
+[presentation.kinds.FS]
+title = "Root requirements"

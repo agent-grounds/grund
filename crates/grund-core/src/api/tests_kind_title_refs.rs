@@ -1,5 +1,6 @@
 //! Detailed refs metadata comes from the queried target (§FS-config.3.4.3,
 //! §FS-refs.3.2); public carrier construction remains compatible (§AR-bindings.2).
+//! A list summary carries the kind's title only where it has one (§FS-output-shapes.5).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use super::*;
@@ -199,4 +200,44 @@ fn kind_title_snapshot_addition_preserves_existing_carrier_and_title_helper() {
         ),
         "`FS-authored: Authored title` — cited at 1 site across 1 file"
     );
+}
+
+/// §FS-output-shapes.5: a summary carries the kind's title, and none where the
+/// kind has none, never a fallback name.
+#[test]
+fn public_list_api_omits_an_absent_kind_title() {
+    let root = test_root("public_list_api_omits_an_absent_kind_title");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"titles\"\n\n\
+         [schema.kinds.FS]\nfolders = [\"docs/fs\"]\nindex = false\n\n\
+         [schema.kinds.AR]\nfolders = [\"docs/ar\"]\nindex = false\n\n\
+         [presentation.kinds.AR]\ntitle = \"How\"\n",
+    );
+    write(
+        &root.join("docs/fs/FS-alpha.md"),
+        "# FS-alpha: Alpha\n\nLead.\n",
+    );
+    write(
+        &root.join("docs/ar/AR-beta.md"),
+        "# AR-beta: Beta\n\nLead.\n",
+    );
+
+    let catalog = list(ListOpts {
+        path: root.to_path_buf(),
+        path_provided: true,
+        ..ListOpts::default()
+    })
+    .expect("public list api");
+
+    let title = |kind: &str| {
+        catalog
+            .summaries
+            .iter()
+            .find(|summary| summary.kind == kind)
+            .map(|summary| summary.title.clone())
+            .expect("summary")
+    };
+    assert_eq!(title("FS"), None);
+    assert_eq!(title("AR"), Some("How".to_string()));
 }

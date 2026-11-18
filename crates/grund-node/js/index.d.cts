@@ -85,7 +85,7 @@ export type ListEntry = { readonly project: string | null; readonly id: string; 
   readonly sectionSeparator: string; readonly kind: string; readonly path: string; readonly line: number;
   readonly title: string | null; readonly stub: boolean; readonly defines: string | null; readonly refs: number;
   readonly duplicate: boolean; readonly valueRoots: readonly { readonly id: string; readonly valid: boolean }[] };
-export type ListSummary = { readonly project: string | null; readonly kind: string; readonly title: string;
+export type ListSummary = { readonly project: string | null; readonly kind: string; readonly title: string | null;
   readonly home: string; readonly count: number };
 export type ListResult = Cautions & { readonly outputFormat: string; readonly workspace: boolean;
   readonly entries: readonly ListEntry[]; readonly summaries: readonly ListSummary[]; readonly scanErrors: readonly ScanError[];

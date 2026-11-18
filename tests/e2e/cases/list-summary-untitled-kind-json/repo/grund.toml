@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "kinds"
+
+[schema.kinds.GOAL]
+files = ["docs/goal/goals.md"]
+
+[schema.kinds.FS]
+folders = ["docs/fs"]
+index = false
+
+[presentation.kinds.GOAL]
+title = "Where we are going"
