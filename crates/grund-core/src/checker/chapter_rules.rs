@@ -10,9 +10,11 @@ use crate::model::{
 use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{
-    evaluate, evaluate_suggestions, one_rules_authority, unresolved_subject_diagnostic,
+    evaluate_suggestions_with, evaluate_with, one_rules_authority, unresolved_subject_diagnostic,
 };
-use crate::rules::markdown::{MarkdownProject, adapt_markdown, adapt_workspace};
+use crate::rules::markdown::{
+    MarkdownProject, adapt_markdown, adapt_markdown_with_headings, adapt_workspace,
+};
 use crate::rules::sentence::{ParsedRule, RuleSubject, RuleVocabulary, parse_rule};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -347,7 +349,7 @@ pub(crate) fn check_chapter_rules(
         add_workspace_targets(&mut vocab, projects);
     }
     let local = WorkspaceCheckTarget::of(findings, schema, frame);
-    let facts = match workspace {
+    let (facts, headings) = match workspace {
         Some((selected, projects)) => {
             let projects = projects
                 .iter()
@@ -358,7 +360,9 @@ pub(crate) fn check_chapter_rules(
                 .collect::<Vec<_>>();
             adapt_workspace(selected, &projects, complete)
         }
-        None => adapt_markdown(findings, markdown_project(frame.name, &local), complete),
+        None => {
+            adapt_markdown_with_headings(findings, markdown_project(frame.name, &local), complete)
+        }
     };
     let mut parsed_rules = Vec::new();
     let errors_before = report.errors.len();
@@ -407,12 +411,12 @@ pub(crate) fn check_chapter_rules(
     // errors its level already fills and every caller's own sort orders it.
     // §FS-rules.7.10: a rule declared through a stub reports on the ordinary channels.
     report.errors.extend(with_counted_lists(
-        evaluate(&parsed_rules, &precedence, &facts),
+        evaluate_with(&parsed_rules, &precedence, &facts, &headings),
         &spellings,
         frame,
     ));
     report.suggestions.extend(with_counted_lists(
-        evaluate_suggestions(&parsed_rules, &precedence, &facts),
+        evaluate_suggestions_with(&parsed_rules, &precedence, &facts, &headings),
         &spellings,
         frame,
     ));

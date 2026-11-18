@@ -1,0 +1,1 @@
+docs/fs/FS-login.md:5: error: AR-router declares kind AR inside FS home docs/fs; move it to a home of its own kind

@@ -37,10 +37,16 @@ pub(crate) fn agents_init_elsewhere(dir: impl Display) -> String {
     fill(Code::AGENTS_INIT, 2, Some("elsewhere"), slots)
 }
 
-/// `chapter-cardinality`'s *Fix* (§FS-check.3.26).
-pub(crate) fn chapter_cardinality() -> String {
+/// `chapter-cardinality`'s *Fix*, case `count` (§FS-check.3.26).
+pub(crate) fn chapter_cardinality_count() -> String {
     let slots: &[(&str, &dyn Display)] = &[];
-    fill(Code::CHAPTER_CARDINALITY, 2, None, slots)
+    fill(Code::CHAPTER_CARDINALITY, 2, Some("count"), slots)
+}
+
+/// `chapter-cardinality`'s *Fix*, case `named` (§FS-check.3.26).
+pub(crate) fn chapter_cardinality_named(line: impl Display, heading: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("line", &line), ("heading", &heading)];
+    fill(Code::CHAPTER_CARDINALITY, 2, Some("named"), slots)
 }
 
 /// `citation-cardinality`'s *Fix* (§FS-check.3.27).
@@ -349,10 +355,16 @@ pub(crate) fn missing_index_entry(entry: impl Display, index: impl Display) -> S
     fill(Code::MISSING_INDEX_ENTRY, 2, None, slots)
 }
 
-/// `missing-section`'s *Fix* (§FS-check.3.2).
-pub(crate) fn missing_section(escape: impl Display) -> String {
+/// `missing-section`'s *Fix*, case `escape` (§FS-check.3.2).
+pub(crate) fn missing_section_escape(escape: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("escape", &escape)];
-    fill(Code::MISSING_SECTION, 2, None, slots)
+    fill(Code::MISSING_SECTION, 2, Some("escape"), slots)
+}
+
+/// `missing-section`'s *Fix*, case `map` (§FS-check.3.2).
+pub(crate) fn missing_section_map(id: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("id", &id)];
+    fill(Code::MISSING_SECTION, 2, Some("map"), slots)
 }
 
 /// `missing-snapshot`'s *Fix*, case `near` (§FS-check.4.12).
@@ -485,6 +497,12 @@ pub(crate) fn unknown_project_subtree() -> String {
 pub(crate) fn unknown_project_near(near: impl Display) -> String {
     let slots: &[(&str, &dyn Display)] = &[("near", &near)];
     fill(Code::UNKNOWN_PROJECT, 2, Some("near"), slots)
+}
+
+/// `unknown-project`'s *Fix*, case `unlisted` (§FS-check.3.8).
+pub(crate) fn unknown_project_unlisted(entry: impl Display, enclosing: impl Display) -> String {
+    let slots: &[(&str, &dyn Display)] = &[("entry", &entry), ("enclosing", &enclosing)];
+    fill(Code::UNKNOWN_PROJECT, 2, Some("unlisted"), slots)
 }
 
 /// `unlinked-index-entry`'s *Fix* (§FS-check.3.17).

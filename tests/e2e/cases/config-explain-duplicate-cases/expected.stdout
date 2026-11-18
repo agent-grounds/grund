@@ -1,0 +1,10 @@
+grund.toml is read as version 2.
+
+duplicate
+The same ID is declared more than once.
+
+Severity: error, fixed.
+On: always.
+Fix, rename: keep one declaration of the ID and rename or remove the others
+Fix, home: point the stub link at {site} to that real home
+Fix, there: point the stub link there

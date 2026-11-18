@@ -1,0 +1,11 @@
+grund.toml is read as version 2.
+
+chapter-cardinality
+A declaration has more or fewer chapters of a name than a rule's have sentence allows.
+
+Severity: chosen by a setting: error, or a suggestion for a should or should not rule.
+On: when form = "rule" is set on a [schema.kinds] table or --rule is passed (a setting or a flag)
+Fix, count: add, remove or retitle chapters until the count fits
+Fix, named: write line {line} as {heading}
+
+Next: grund config explain '[schema.kinds]'

@@ -152,8 +152,17 @@
     ]
    },
    "fix": {
-    "kind": "template",
-    "text": "add, remove or retitle chapters until the count fits"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "count",
+      "text": "add, remove or retitle chapters until the count fits"
+     },
+     {
+      "label": "named",
+      "text": "write line {line} as {heading}"
+     }
+    ]
    },
    "note": null
   },
@@ -172,8 +181,17 @@
     ]
    },
    "fix": {
-    "kind": "template",
-    "text": "add, remove or retitle chapters until the count fits"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "count",
+      "text": "add, remove or retitle chapters until the count fits"
+     },
+     {
+      "label": "named",
+      "text": "write line {line} as {heading}"
+     }
+    ]
    },
    "note": null
   }
@@ -835,6 +853,10 @@
     "kind": "cases",
     "cases": [
      {
+      "label": "rename",
+      "text": "keep one declaration of the ID and rename or remove the others"
+     },
+     {
       "label": "home",
       "text": "point the stub link at {site} to that real home"
      },
@@ -857,6 +879,10 @@
    "fix": {
     "kind": "cases",
     "cases": [
+     {
+      "label": "rename",
+      "text": "keep one declaration of the ID and rename or remove the others"
+     },
      {
       "label": "home",
       "text": "point the stub link at {site} to that real home"
@@ -1975,6 +2001,10 @@
     "kind": "cases",
     "cases": [
      {
+      "label": "move",
+      "text": "move it to a home of its own kind"
+     },
+     {
       "label": "unlisted",
       "text": "add \"{entry}\" to [workspace] members in {enclosing}, or exclude \"{entry}/\" with [schema.sources] exclude in {enclosing}"
      },
@@ -2003,6 +2033,10 @@
    "fix": {
     "kind": "cases",
     "cases": [
+     {
+      "label": "move",
+      "text": "move it to a home of its own kind"
+     },
      {
       "label": "unlisted",
       "text": "add \"{entry}\" to [workspace] members in {enclosing}, or exclude \"{component}\" with [scan] exclude in {enclosing} (excludes all directories named \"{component}\" at every depth)"
@@ -2239,8 +2273,17 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "write {escape} before it to show the shape without citing it"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "escape",
+      "text": "write {escape} before it to show the shape without citing it"
+     },
+     {
+      "label": "map",
+      "text": "run `grund {id} --toc` to print the lead with the section map"
+     }
+    ]
    },
    "note": null
   },
@@ -2253,8 +2296,17 @@
     "kind": "always"
    },
    "fix": {
-    "kind": "template",
-    "text": "write {escape} before it to show the shape without citing it"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "escape",
+      "text": "write {escape} before it to show the shape without citing it"
+     },
+     {
+      "label": "map",
+      "text": "run `grund {id} --toc` to print the lead with the section map"
+     }
+    ]
    },
    "note": null
   }
@@ -2763,8 +2815,17 @@
     ]
    },
    "fix": {
-    "kind": "template",
-    "text": "write {escape} before it to show the shape without citing it"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "escape",
+      "text": "write {escape} before it to show the shape without citing it"
+     },
+     {
+      "label": "map",
+      "text": "run `grund {id} --toc` to print the lead with the section map"
+     }
+    ]
    },
    "note": null
   },
@@ -2783,8 +2844,17 @@
     ]
    },
    "fix": {
-    "kind": "template",
-    "text": "write {escape} before it to show the shape without citing it"
+    "kind": "cases",
+    "cases": [
+     {
+      "label": "escape",
+      "text": "write {escape} before it to show the shape without citing it"
+     },
+     {
+      "label": "map",
+      "text": "run `grund {id} --toc` to print the lead with the section map"
+     }
+    ]
    },
    "note": null
   }
@@ -2911,6 +2981,10 @@
      {
       "label": "near",
       "text": "did you mean {near}?"
+     },
+     {
+      "label": "unlisted",
+      "text": "add \"{entry}\" to [workspace] members in {enclosing}"
      }
     ]
    },
@@ -2944,6 +3018,10 @@
      {
       "label": "near",
       "text": "did you mean {near}?"
+     },
+     {
+      "label": "unlisted",
+      "text": "add \"{entry}\" to [workspace] members in {enclosing}"
      }
     ]
    },
@@ -3734,6 +3812,10 @@
      {
       "label": "near",
       "text": "did you mean {near}?"
+     },
+     {
+      "label": "unlisted",
+      "text": "add \"{entry}\" to [workspace] members in {enclosing}"
      }
     ]
    },
@@ -3761,6 +3843,10 @@
      {
       "label": "near",
       "text": "did you mean {near}?"
+     },
+     {
+      "label": "unlisted",
+      "text": "add \"{entry}\" to [workspace] members in {enclosing}"
      }
     ]
    },

@@ -50,3 +50,16 @@ pub(crate) struct RuleFacts {
     pub(crate) nodes: BTreeMap<NodeKey, NodeMeta>,
     pub(crate) sites: BTreeMap<SiteKey, SiteMeta>,
 }
+
+/// A direct heading of a declaration that is not a chapter: a numbered section or an
+/// unmarked heading. No rule counts it; a too-low chapter count shows the named form
+/// that would count it (§FS-rules.7.2.1).
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct NonChapter {
+    pub(crate) line: usize,
+    pub(crate) level: usize,
+    pub(crate) text: String,
+}
+
+/// Each declaration node's direct non-chapter headings, in source order.
+pub(crate) type NonChapters = BTreeMap<NodeKey, Vec<NonChapter>>;

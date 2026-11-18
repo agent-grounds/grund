@@ -68,8 +68,10 @@ pub(crate) fn query_failure_hints(
             // coordinate-lexer: hint text for a refusal already made
             .rsplit_once(config.section_separator.as_str())
             .map_or(id_arg, |(base, _)| base);
+        // §FS-errors.5.5: worded once, as `missing-section`'s `map` case.
         vec![format!(
-            "hint: run `grund {base_id} --toc` to print the lead with the section map"
+            "hint: {}",
+            crate::model::remedies::missing_section_map(base_id)
         )]
     } else {
         Vec::new()

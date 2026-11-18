@@ -69,7 +69,7 @@ pub(crate) use scope::{
     populate_workspace_boundary, resolve_workspace_config, scope_is_config_root,
 };
 pub(crate) use unlisted::{unlisted_workspace_block_errors, unlisted_workspace_block_run_warnings};
-pub(crate) use unlisted_project::unlisted_project_contexts;
+pub(crate) use unlisted_project::{unlisted_project_contexts, with_unlisted_alias_repair};
 
 // The boundary-root form of an expanded member list: the scanner's parallel-scan
 // cases compare against it (§AR-core-module-layout.1.3), and migration names each

@@ -1,0 +1,2 @@
+docs/fs/FS-login.md:1: error: FS-login has 0 Notes_x chapters; RULE-notes requires at least one; expected display name "Notes_x" (case-insensitive, not section handle); observed direct chapters: "terms: Terms"; add, remove or retitle chapters until the count fits
+docs/fs/FS-login.md:1: error: FS-login has 1 Terms chapters; RULE-vocabulary requires at least 2; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: "terms: Terms"; add, remove or retitle chapters until the count fits
