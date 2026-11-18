@@ -18,9 +18,9 @@ Leans on [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (doc-comment) and
 
 One requirement on the reading as a whole, carrying a mark of [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to). Three more are left out because they are stated elsewhere: *the same lines give the same body in the editor, on the command line and through the bindings* is [§REQ-one-answer.text.parity](../requirements/REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does) and [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes); *every comment form the defaults claim is proved by a dangling citation planted in it* is [§REQ-no-missed-citation.3](../requirements/REQ-no-missed-citation.md#3-proven-per-host-language), which [§FS-languages.prefixes](FS-languages.md#prefixes-comment_prefixes-compose-with-extensions) serves; and *what `show` prints of a source declaration is its author's text less the comment wrapper* is [§FS-show.requirements.authored-bytes](FS-show.md#requirementsauthored-bytes-a-slice-is-the-authors-bytes-selected-and-never-rewritten--realized).
 
-### requirements.one-block: Every command reads a run of line comments as the same block — deferred
+### requirements.one-block: Every command reads a run of line comments as the same block — realized
 
-The extraction is defined to leave no freedom ([§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block)), yet a run of line comments is read two ways today: the body `show` slices continues across one comment prefix family, so a `//` note under a `///` declaration is part of its body ([§FS-languages.comment-block.open](FS-languages.md#comment-blockopen-find-the-open-boundary)), while the block forms stop where the prefix changes ([§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks)), so `refs` gives that note's citations no enclosing declaration ([§REQ-one-answer.differences.sections](../requirements/REQ-one-answer.md#differencessections-sections)). That `//` and `///` are separate blocks is ruled as D17c of [§DF-one-answer-rulings-parse.decision](../decisions/functional/DF-one-answer-rulings-parse.md#decision-decision), and carrying the ruling out is owed to the later step it names, through the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path). Serves [§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map).
+`show`'s slice, `list --size` and the enclosing declaration `refs` reports all read the block forms ([§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks)), so a `//` note under a `///` declaration is a block of its own: outside that declaration's body, and its citations have no enclosing declaration. That `//` and `///` are two blocks is D17c of [§DF-one-answer-rulings-parse.decision](../decisions/functional/DF-one-answer-rulings-parse.md#decision-decision). Serves [§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map).
 
 ## comment-block: The comment block
 
@@ -28,13 +28,11 @@ Extraction is precisely defined so that the implementation has no freedom and th
 
 The block surrounding a declaration line runs from an open boundary ([§FS-languages.comment-block.open](FS-languages.md#comment-blockopen-find-the-open-boundary)) to a close boundary ([§FS-languages.comment-block.close](FS-languages.md#comment-blockclose-find-the-close-boundary)), and ends early at any other declaration line ([§FS-languages.comment-block.early-end](FS-languages.md#comment-blockearly-end-terminate-early-on-another-declaration)). The block forms the scanner normalizes a file into are [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks).
 
-Every command reads the block forms ([§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks)): a block is a run of one exact prefix, so a `//` run next to a `///` block is a block of its own, outside the `///` body `show` slices and `list --size` measures, and the family rule of [§FS-languages.comment-block.open](FS-languages.md#comment-blockopen-find-the-open-boundary) and [§FS-languages.comment-block.close](FS-languages.md#comment-blockclose-find-the-close-boundary) is read as that exact prefix. grund 0.18.0 still kept the family reading for `show` and `list --size`; 0.19.0 dropped it, by [§DF-one-answer-rulings-parse.decision](../decisions/functional/DF-one-answer-rulings-parse.md#decision-decision) (D17c) and [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves).
-
 ### comment-block.open: Find the open boundary
 
 Scan **backwards** from the declaration line over consecutive lines that are part of the same comment construct:
 
-- For line-style comments (`//`, `///`, `//!`, `#`, `;`, `--`): consecutive lines whose first non-whitespace character matches the same comment prefix family. A blank line ends the block. A line whose first non-whitespace character is not a comment prefix ends the block.
+- For line-style comments (`//`, `///`, `//!`, `#`, `;`, `--`): consecutive lines of one block form ([§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks)). A line that only matches the same comment prefix family, such as a `//` line beside a `///` run, starts a block of its own. A blank line ends the block, and so does a line that is not a comment.
 - For block-style comments (`/* … */`, `/** … */`): scan backward until the opener is found (`/*` or `/**`). The opener line itself is part of the block.
 - For Python triple-quoted docstrings: scan backward until the opening `"""` (or `'''`). The opener line is part of the block.
 
@@ -42,7 +40,7 @@ Scan **backwards** from the declaration line over consecutive lines that are par
 
 Scan **forwards** from the declaration line by the symmetric rules:
 
-- Line-style: until a blank line or a non-comment line.
+- Line-style: until a blank line, a line that is not a comment, or a line of another block form.
 - Block-style: until the closing `*/`. The closer line is part of the block. The closer is the one that ends the declaration's own comment, wherever it falls: a declaration written as a one-line `/* … */` closes on its own line, so its block is that line alone, and a `/* … */` comment on the next line is a separate comment outside it — not a section of the declaration, and not part of its body.
 - Python docstring: until the matching `"""` or `'''`. The closer line is part of the block.
 

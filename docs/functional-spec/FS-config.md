@@ -89,7 +89,7 @@ Read by concern, the two formats line up as follows, and the version-1 sections 
 
 ## requirements: What the config contract holds to
 
-Eight requirements on the key set as a whole, each carrying a **mark**: *realized* where `grund` behaves this way today and a section of this specification says so; *directional* where it binds what is written from here on rather than describing everything already written; *deferred* where a named follow-up owes it. The mark is part of the requirement — a direction is never a statement about how `grund` behaves today, and reading one as the other is the mistake this chapter exists to prevent.
+Eight requirements on the key set as a whole, each carrying a **mark**: *realized* where `grund` behaves this way today and a section of this specification says so, and a run that breaks it is a defect in `grund`, not in the mark; *directional* where it binds what is written from here on; *deferred* where a named follow-up owes it. A direction never states how `grund` behaves today, and reading one as the other is the mistake this chapter exists to prevent.
 
 There is no ninth. *Every key appears in a user-facing reference* is a property of this repository's documentation rather than of what `grund` does, and `FS` states behavior; its behavioral half — that a generated `grund.toml` carries exactly these keys, no extra keys and none missing — is already required, and more strongly, by [§FS-init.2.4.3](FS-init.md#243-every-written-key-differs-from-its-default).
 
