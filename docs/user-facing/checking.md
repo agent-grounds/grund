@@ -167,12 +167,13 @@ sort order ([§FS-check.2.4.2](../functional-spec/FS-check.md#242-one-failure-on
 Every missing section names its fix, whatever the section's spelling
 ([§FS-errors.3.11](../functional-spec/FS-errors.md#311-the-missing-section-remedy)). A numeric path keeps the `missing section` head
 and a marked named one the `section not found:` head. Both are the
-`missing-section` code and end in the same remedy. If `FS-login` has sections
-`2` and `2.1` only:
+`missing-section` code and end in the same escape; the named one then points at
+the section map, which lists the names the declaration has. If `FS-login` has
+sections `2` and `2.1` only:
 
 ```text
 src/main.rs:1: error: missing section FS-login.9.9; write <§> before it to show the shape without citing it
-src/main.rs:1: error: section not found: FS-login.2.goals; write <§> before it to show the shape without citing it
+src/main.rs:1: error: section not found: FS-login.2.goals; write <§> before it to show the shape without citing it; run `grund FS-login --toc` to print the lead with the section map
 ```
 
 Repair the heading or the citation where it was meant to cite, as after a
@@ -187,7 +188,7 @@ are gone ([§FS-citations.checks.mixed-path](../functional-spec/FS-citations.md#
 `FS-login` exists but has no `1.goals` section:
 
 ```text
-docs/use.md:5: error: section not found: FS-login.1.goals; write <§> before it to show the shape without citing it
+docs/use.md:5: error: section not found: FS-login.1.goals; write <§> before it to show the shape without citing it; run `grund FS-login --toc` to print the lead with the section map
 ```
 
 The finding goes to stdout and makes the check exit `1`; JSON reports

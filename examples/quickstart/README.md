@@ -66,7 +66,7 @@ In the temporary copy's `src/login.py`, misspell the citation's section: change
 
 ```console
 $ grund check
-src/login.py:2: error: section not found: FS-login.fromat.1; write <§> before it to show the shape without citing it
+src/login.py:2: error: section not found: FS-login.fromat.1; write <§> before it to show the shape without citing it; run `grund FS-login --toc` to print the lead with the section map
 ```
 
 The command exits `1`: the declaration exists, but the section the code names does
