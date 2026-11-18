@@ -285,4 +285,6 @@ The rulings the one-answer work is built from, one record per step family, each 
 
 - [§DF-format-aware-kind-collisions](DF-format-aware-kind-collisions.md#df-format-aware-kind-collisions-admit-prefix-related-kinds-when-their-formats-distinguish-them) — admit prefix-related kinds when their formats distinguish them
 
+- [§DF-fmt-preserves-value-attempts](DF-fmt-preserves-value-attempts.md#df-fmt-preserves-value-attempts-formatting-preserves-every-refused-value-binding-attempt) — formatting preserves every refused value-binding attempt
+
 This index is navigational — citations should target the decision ID directly, never this file.
