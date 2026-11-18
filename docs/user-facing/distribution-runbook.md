@@ -28,11 +28,9 @@ the [1.0 freeze record](../releases/1.0-freeze.md), remains the owner's
 responsibility. Omitting both inputs selects `next-minor`;
 an optional `expected_main_sha` on that choice is checked too.
 
-First-stable selection refuses another ref, missing or mismatched SHA,
-disagreeing source versions, sources outside `0.x`, missing or unreachable
-latest stable `0.x` history, an empty commit range, or any existing stable
-tag at or above `1.0.0`. Unsupported versions also refuse; prerelease tags
-do not count as stable history. The existing release guard still enforces
+First-stable selection refuses, before it writes anything, each condition
+[§FS-distribution.4.4.2](../functional-spec/FS-distribution.md#442-deliberately-select-the-first-stable-release-from-the-dispatch-main-tip)
+lists. The existing release guard still enforces
 the shared floor and pending retirement promises. Both choices run exact-tip
 CI, both candidates' CI and a non-publishing dry run before advancing main
 and starting Cargo/GitHub publication. Dispatch remains the owner's release
