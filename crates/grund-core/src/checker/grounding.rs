@@ -106,6 +106,13 @@ pub(super) fn check_grounding(
     for (read, file) in judged {
         let file = &file;
         let home = kind_homes.unique_decl_home_for_file(file);
+        // §FS-check.3.6.1: a non-citable folder's entry `README.md` is not governed.
+        if home
+            .as_ref()
+            .is_some_and(|home| home.is_entry_readme(file, frame))
+        {
+            continue;
+        }
         let rungs = governing_rungs(rules, schema, frame, home.as_ref(), file);
         if rungs.is_empty() {
             continue;

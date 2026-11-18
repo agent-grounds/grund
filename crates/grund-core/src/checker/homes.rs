@@ -1,7 +1,8 @@
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
 use crate::config::{Extent, Frame, Owners, Schema};
-use crate::sources::physical_path_key;
+use crate::sources::{paths_same_location, physical_path_key};
 
 pub(super) struct DeclarationHome<'a> {
     pub(super) kind: &'a str,
@@ -27,6 +28,15 @@ impl DeclarationHome<'_> {
         } else {
             format!("{}/", self.path)
         }
+    }
+
+    /// Whether `file` is a non-citable folder's entry `README.md`, which the folder's
+    /// grounding does not govern (§FS-check.3.6.1, §FS-check.2.2.1.1).
+    pub(super) fn is_entry_readme(&self, file: &Path, frame: Frame<'_>) -> bool {
+        !self.citable
+            && !self.exact
+            && file.file_name() == Some(OsStr::new("README.md"))
+            && paths_same_location(file, &frame.root().join(self.path).join("README.md"))
     }
 }
 

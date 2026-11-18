@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "entry-readme"
+
+[schema.kinds.FS]
+folders = ["docs/functional-spec"]
+
+[schema.kinds.e2e]
+citable = false
+folders = ["tests/e2e"]
+
+[rules.citations.e2e.grounding]
+must = "file"

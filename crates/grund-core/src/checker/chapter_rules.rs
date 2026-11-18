@@ -18,6 +18,7 @@ use crate::rules::markdown::{
 };
 use crate::rules::sentence::{ParsedRule, RuleSubject, RuleVocabulary, parse_rule};
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 
 use super::counted_list::with_counted_lists;
 use super::direction_findings::directions;
@@ -326,8 +327,9 @@ pub(crate) fn configured_rule_sentences(
     })
 }
 
-/// Append configured and optional ad-hoc rule results to the shared report.
-/// An incomplete scan passes an explicitly incomplete snapshot to the engine.
+/// [`check_chapter_rules_with_non_units`] for a tree with no generated scoped
+/// entrypoint, as the rules component's own tests build it.
+#[cfg(test)]
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn check_chapter_rules(
     findings: &Catalog,
@@ -337,6 +339,35 @@ pub(crate) fn check_chapter_rules(
     complete: bool,
     ad_hoc: Option<ParsedRule>,
     workspace: Option<(&str, &BTreeMap<String, WorkspaceCheckTarget<'_>>)>,
+    report: &mut CheckReport,
+) {
+    check_chapter_rules_with_non_units(
+        findings,
+        rules,
+        schema,
+        frame,
+        complete,
+        ad_hoc,
+        workspace,
+        &BTreeSet::new(),
+        report,
+    );
+}
+
+/// Append configured and optional ad-hoc rule results to the shared report.
+/// An incomplete scan passes an explicitly incomplete snapshot to the engine.
+/// `non_units` are the generated scoped entrypoints, which a rule's `applies to
+/// nothing` line does not count as content of a folder (§FS-init.2.3.5.15).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn check_chapter_rules_with_non_units(
+    findings: &Catalog,
+    rules: &Rules,
+    schema: &Schema,
+    frame: Frame<'_>,
+    complete: bool,
+    ad_hoc: Option<ParsedRule>,
+    workspace: Option<(&str, &BTreeMap<String, WorkspaceCheckTarget<'_>>)>,
+    non_units: &BTreeSet<PathBuf>,
     report: &mut CheckReport,
 ) {
     let rule_kinds = rule_kinds(schema);
@@ -403,9 +434,10 @@ pub(crate) fn check_chapter_rules(
         rules,
         schema,
         frame,
+        non_units,
         &parsed_rules,
     ));
-    let precedence = directions(findings, rules, schema, frame, &parsed_rules);
+    let precedence = directions(findings, rules, schema, frame, non_units, &parsed_rules);
     // §FS-rules.7.3.1: a count above zero names what it read, on every channel.
     let spellings = PlaceNames::new(schema, frame);
     // §FS-rules.7: one channel per level, so the absence arrives among the

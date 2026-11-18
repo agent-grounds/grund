@@ -5,6 +5,7 @@
 //! `citations.rs`, and both answer it with the one function there.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 
 use super::citations::{Obligor, can_apply_to_nothing, empty_citation_obligation_warning};
 use super::obligation_units::obligation_units;
@@ -70,6 +71,7 @@ pub(super) fn empty_rule_obligations(
     rules: &Rules,
     schema: &Schema,
     frame: Frame<'_>,
+    non_units: &BTreeSet<PathBuf>,
     parsed_rules: &[ParsedRule],
 ) -> Vec<Diagnostic> {
     let mut seen = BTreeSet::new();
@@ -80,7 +82,15 @@ pub(super) fn empty_rule_obligations(
             if !seen.insert((rule.origin.as_str(), kind)) {
                 return None;
             }
-            empty_rule_obligation_warning(rules, schema, frame, findings, kind, &rule.origin)
+            empty_rule_obligation_warning(
+                rules,
+                schema,
+                frame,
+                findings,
+                non_units,
+                kind,
+                &rule.origin,
+            )
         })
         .collect()
 }
@@ -110,6 +120,7 @@ fn empty_rule_obligation_warning(
     schema: &Schema,
     frame: Frame<'_>,
     findings: &Catalog,
+    non_units: &BTreeSet<PathBuf>,
     citing_kind: &str,
     origin: &str,
 ) -> Option<Diagnostic> {
@@ -133,6 +144,7 @@ fn empty_rule_obligation_warning(
         schema,
         frame,
         findings,
+        non_units,
         citing_kind,
         Obligor::Rule(origin),
     )

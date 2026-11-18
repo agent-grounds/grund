@@ -16,7 +16,7 @@ use super::reporting::{reporting, workspace_block_projects};
 use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
-    CheckWorkspace, ScanScope, UnreadNames, check_chapter_rules, check_project,
+    CheckWorkspace, ScanScope, UnreadNames, check_chapter_rules_with_non_units, check_project,
     name_every_spelling, path_report_scope, repair_index_citations,
     retain_diagnostics_in_report_scope,
 };
@@ -167,7 +167,7 @@ fn check_workspace_context(
                 &no_project
             },
         );
-        check_chapter_rules(
+        check_chapter_rules_with_non_units(
             &project.findings,
             config.rules(),
             config.schema(),
@@ -177,6 +177,7 @@ fn check_workspace_context(
             context
                 .workspace_loaded
                 .then_some((project.alias.as_str(), &workspace)),
+            &expected.non_units,
             &mut project_report,
         );
         // §FS-check.3.12.2: the editor uses the same repair as both CLI scopes.

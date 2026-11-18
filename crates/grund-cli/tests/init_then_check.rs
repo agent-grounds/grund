@@ -178,3 +178,82 @@ fn init_without_an_optional_member_writes_blocks_the_full_checkout_accepts() {
         "the full checkout's root check reports blocks init wrote without `secret`: {reported:#?}"
     );
 }
+
+/// The recommended ruleset `grund guide citations` prints for the starter's kinds.
+const GUIDE_RULESET: &str = r#"
+[rules.citations.GOAL]
+should = ["GRUND|GOAL"]
+
+[rules.citations.FS]
+should = ["GOAL|FS"]
+
+[rules.citations.REQ]
+should = ["GRUND|GOAL"]
+
+[rules.citations.AR]
+should = ["FS|GOAL"]
+
+[rules.citations.DF]
+should = ["FS|GOAL"]
+
+[rules.citations.DA]
+should = ["AR|FS"]
+
+[rules.citations.e2e]
+should = ["FS"]
+
+[rules.citations.integration]
+should = ["AR"]
+
+[rules.citations.code]
+should = ["FS|AR"]
+"#;
+
+/// §FS-check.2.2.1.1, §FS-init.2.3.5.15: the scoped `AGENTS.md` files `init` writes
+/// into the starter's empty kind folders are no content of those folders, so a
+/// starter that adopts the recommended ruleset earns no `applies to nothing` line,
+/// from the table or from a rule about the same kind (§FS-check.2.2.1.4).
+#[test]
+fn scaffold_with_the_guide_ruleset_then_init_has_no_empty_obligation() {
+    let repo =
+        std::env::temp_dir().join(format!("grund-init-guide-ruleset-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&repo);
+    fs::create_dir_all(&repo).unwrap();
+    let git = Command::new("git")
+        .args(["init", "-q"])
+        .current_dir(&repo)
+        .output()
+        .expect("git init");
+    assert!(git.status.success());
+    let out = grund(&repo, &["init", ".", "--scaffold"]);
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let config = fs::read_to_string(repo.join("grund.toml")).unwrap();
+    fs::write(repo.join("grund.toml"), config + GUIDE_RULESET).unwrap();
+    init_in(&repo, ".");
+    assert!(
+        repo.join("docs/architecture/AGENTS.md").is_file(),
+        "init writes the scoped entrypoint this test is about"
+    );
+
+    let table = grund(&repo, &["check", "--only", "empty-citation-obligation"]);
+    let rule = grund(
+        &repo,
+        &[
+            "check",
+            "--rule",
+            "Each AR should cite at least one FS.",
+            "--only-rule",
+        ],
+    );
+    let _ = fs::remove_dir_all(&repo);
+    for out in [table, rule] {
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        assert!(!stderr.contains("applies to nothing"), "{stderr}");
+        assert_eq!(out.status.code(), Some(0), "{stderr}");
+    }
+}

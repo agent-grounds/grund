@@ -20,7 +20,7 @@ use crate::config::{Config, config_file_in, display_path};
 use crate::model::{Catalog, Diagnostic, Finding, FindingSite, format_path};
 use crate::scanner::{
     Absolute, CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file,
-    reported_scan_failure, scan_tree,
+    effective_scope_reads_planned_file, reported_scan_failure, scan_tree,
 };
 use crate::templates::{ConversationSurface, render_agents_append_block, render_grund_toml};
 use crate::workspace::{declared_member_schemas, populate_workspace_boundary};
@@ -472,10 +472,20 @@ fn init_run(
     // §FS-init.2.2.2: without `--scaffold` only that refresh suppresses the block, so an
     // all-`exists ` re-run keeps it while the home is missing or no kind is declared.
     let next = ((any_change || !docs) && !refresh_of_complete_setup).then(|| {
-        // §FS-init.2.2.2: only no-`--scaffold` guidance asks this question. The probe
-        // uses the effective config selected above and exits on its first file.
-        let scan_reads_file =
-            !docs && effective_scope_reads_any_file(init_config.schema(), init_config.frame());
+        // §FS-init.2.2.2: only no-`--scaffold` guidance asks; the probe exits on its first
+        // file. A preview also counts the files the run would write (§FS-init.1).
+        let (schema, frame) = (init_config.schema(), init_config.frame());
+        let scan_reads_file = !docs
+            && (effective_scope_reads_any_file(schema, frame)
+                || dry_run
+                    && events.iter().any(|event| {
+                        event.verb == verb_wrote(true)
+                            && effective_scope_reads_planned_file(
+                                schema,
+                                frame,
+                                &target.join(&event.path),
+                            )
+                    }));
         InitNext {
             docs,
             declares_kinds: allocation.is_some(),
