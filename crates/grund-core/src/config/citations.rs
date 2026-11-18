@@ -17,6 +17,7 @@ use std::path::Path;
 
 use super::kind::KindConfig;
 use super::kinds::{KindScope, KindTable, KindVerdict, unverifiable_reason};
+use super::v1::bail_config;
 use super::workspace_block::{INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
 use crate::model::format_path;
 
@@ -120,6 +121,53 @@ pub struct CitationRules {
     /// The `per_kind` names in the order a v2 file wrote their tables, which
     /// `config show` keeps for a name that is no row (§FS-config.4.2.4).
     pub written: WrittenOrder,
+    /// Where a v2 file wrote each table and its lists, which its refusals name
+    /// (§FS-config-v2.rules.citations); empty in v1.
+    pub lines: CitationLines,
+}
+
+/// The line of each `[rules.citations.<KIND>]` header a v2 file wrote, and of
+/// each list under it. Like [`WrittenOrder`] it is layout, not meaning, so two
+/// always compare equal and its `Debug` prints no line.
+#[derive(Clone, Default)]
+pub struct CitationLines(BTreeMap<String, (usize, Vec<(CitationLevel, usize)>)>);
+
+impl CitationLines {
+    pub(crate) fn header(&mut self, kind: &str, line: usize) {
+        self.0.entry(kind.to_string()).or_default().0 = line;
+    }
+
+    pub(crate) fn list(&mut self, kind: &str, level: CitationLevel, line: usize) {
+        self.0
+            .entry(kind.to_string())
+            .or_default()
+            .1
+            .push((level, line));
+    }
+
+    fn header_of(&self, kind: &str) -> Option<usize> {
+        self.0.get(kind).map(|(header, _)| *header)
+    }
+
+    fn list_of(&self, kind: &str, level: CitationLevel) -> Option<usize> {
+        let (_, lists) = self.0.get(kind)?;
+        lists
+            .iter()
+            .find(|(at, _)| *at == level)
+            .map(|(_, line)| *line)
+    }
+}
+
+impl PartialEq for CitationLines {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
+}
+
+impl std::fmt::Debug for CitationLines {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("CitationLines")
+    }
 }
 
 /// The order a file wrote some keyed tables in. It is how the file was laid
@@ -214,20 +262,21 @@ pub(super) fn validate_citation_rules(
         // The citing side is any configured name, `code` included — a
         // non-citable kind cites like any other place (§FS-config.3.9). The
         // cited side is narrower: only a citable kind has IDs to be cited.
+
+        // §FS-config-v2.rules.citations: a v2 refusal names the line it was written at.
+        let header = citations.lines.header_of(citing);
         if local.config_verdict(scope, citing) == KindVerdict::Unknown {
-            return Err(anyhow!(
-                "{}: [{table}.{citing}] names an unknown kind `{citing}`",
-                format_path(path)
-            ));
+            let message = format!("[{table}.{citing}] names an unknown kind `{citing}`");
+            return refuse(path, header, message);
         }
         // §FS-config.3.4.7.6: a rule on a kind whose home is not walked could
         // never fire — the vacuous pass §DF-non-citable-kinds.2.5 refused, one
         // level up — so the config is refused where it makes the promise.
         if kinds.iter().any(|k| k.kind == *citing && !k.scan) {
-            return Err(anyhow!(
-                "{}: [{table}.{citing}] names an unwalked kind `{citing}` (its home is `scan = false`, so no file in it is checked and the rule could never fire)",
-                format_path(path)
-            ));
+            let message = format!(
+                "[{table}.{citing}] names an unwalked kind `{citing}` (its home is `scan = false`, so no file in it is checked and the rule could never fire)"
+            );
+            return refuse(path, header, message);
         }
         // Flatten every target with the level it was declared at, rejecting any
         // that names an unconfigured kind on the way.
@@ -251,11 +300,10 @@ pub(super) fn validate_citation_rules(
                         _ => None,
                     };
                     if let Some(why) = why {
-                        return Err(anyhow!(
-                            "{}: [{table}.{citing}] {level_name} names {why} `{}`",
-                            format_path(path),
-                            target.kind
-                        ));
+                        let kind = &target.kind;
+                        let message =
+                            format!("[{table}.{citing}] {level_name} names {why} `{kind}`");
+                        return refuse(path, citations.lines.list_of(citing, level), message);
                     }
                     targets.push((level_name, target));
                 }
@@ -281,6 +329,15 @@ pub(super) fn validate_citation_rules(
         }
     }
     Ok(())
+}
+
+/// A citation-table refusal at `line` where the file recorded one, as a v2 file
+/// does (§FS-config.4.3), and at the bare path where it did not.
+fn refuse(path: &Path, line: Option<usize>, message: String) -> Result<()> {
+    match line {
+        Some(line) => bail_config(path, line, message),
+        None => Err(anyhow!("{}: {message}", format_path(path))),
+    }
 }
 
 /// §FS-config.3.9.5.2: judge the pinned and `*/` targets of `citations`

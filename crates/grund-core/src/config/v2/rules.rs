@@ -73,6 +73,7 @@ pub(super) fn citation_kind_key(
         CitationLevel::MustNot => &mut rules.must_not,
     } = parsed;
     lists.push((level, line));
+    r.project.rules.citations.lines.list(kind, level, line);
     Ok(true)
 }
 

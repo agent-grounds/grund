@@ -271,6 +271,8 @@ mod tests_validation;
 
 // §FS-distribution.3.3.3: explicit embedding roots never change process cwd.
 pub(crate) use call_scope::with_embedding_base;
-pub(crate) use call_scope::{report_path_base, with_config_text};
+pub(crate) use call_scope::{
+    holding_last_refusals, older_refusal_first, report_path_base, with_config_text,
+};
 // §FS-cli.3.4: the run's `--path-base`, scoped like the embedding base.
 pub use call_scope::{PathBase, with_report_path_base};

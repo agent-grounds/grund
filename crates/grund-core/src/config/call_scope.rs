@@ -1,6 +1,7 @@
 //! Per-call inputs no option carries: embedding's zero-config discovery base
 //! (§FS-distribution.3.3.3), the run's `--path-base` (§FS-cli.3.4), and the
-//! config text migration's report gate checks a tree under (§FS-config-migrate.5.2).
+//! config text migration's report gate checks a tree under (§FS-config-migrate.5.2),
+//! and whether a run's last config refusals are held back (§FS-config-v2.reader.4.order).
 //!
 //! The embedding base: existing options do not carry a fallback cwd. Scope that
 //! one discovery input to the synchronous embedding call, instead of changing
@@ -8,7 +9,7 @@
 //! Config objects handed to worker threads already contain the resolved root;
 //! workspace members use direct `config_at` and do not need this fallback.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
 
 thread_local! {
@@ -108,4 +109,59 @@ pub(crate) fn with_config_text<T>(path: &Path, text: &str, operation: impl FnOnc
     let scoped = Some((path.to_path_buf(), text.to_string()));
     let _restore = Restore(CONFIG_TEXT.with(|slot| slot.replace(scoped)));
     operation()
+}
+
+thread_local! {
+    static HOLDING_LAST_REFUSALS: Cell<bool> = const { Cell::new(false) };
+    static LAST_REFUSAL_RAISED: Cell<bool> = const { Cell::new(false) };
+}
+
+/// Whether this call is the second attempt [`older_refusal_first`] makes.
+pub(crate) fn holding_last_refusals() -> bool {
+    HOLDING_LAST_REFUSALS.get()
+}
+
+/// Give a version-2 load's held refusal, one of the six asked last
+/// (§FS-config-v2.reader.4.order), or keep it back while
+/// [`older_refusal_first`] asks the run's older questions.
+pub(crate) fn raise_last_refusal(refusal: anyhow::Error) -> anyhow::Result<()> {
+    if HOLDING_LAST_REFUSALS.get() {
+        return Ok(());
+    }
+    LAST_REFUSAL_RAISED.set(true);
+    Err(refusal)
+}
+
+/// §FS-config-v2.reader.4.order: run `attempt`, the part of a run that loads its
+/// configs and judges their pinned `[rules.citations]` targets. Where it failed
+/// once one of the six was raised, ask it again with the six held back: the
+/// refusal that second attempt meets is an older question's and is the one
+/// given, and only when it meets none is the first failure given. The guard
+/// restores the caller's scope on return and unwind.
+pub(crate) fn older_refusal_first<T>(
+    mut attempt: impl FnMut() -> anyhow::Result<T>,
+) -> anyhow::Result<T> {
+    struct Restore(bool);
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            HOLDING_LAST_REFUSALS.set(self.0);
+        }
+    }
+    if HOLDING_LAST_REFUSALS.get() {
+        return attempt();
+    }
+    let before = LAST_REFUSAL_RAISED.replace(false);
+    let result = attempt();
+    let raised = LAST_REFUSAL_RAISED.get();
+    LAST_REFUSAL_RAISED.set(before || raised);
+    match result {
+        Err(last) if raised => {
+            let _restore = Restore(HOLDING_LAST_REFUSALS.replace(true));
+            match attempt() {
+                Err(older) => Err(older),
+                Ok(_) => Err(last),
+            }
+        }
+        result => result,
+    }
 }
