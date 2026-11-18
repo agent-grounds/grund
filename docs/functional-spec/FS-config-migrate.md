@@ -59,7 +59,7 @@ Every other line goes to stderr. Only an actual successful write without `--full
    - Listed comments without `--drop-comments`: `1 comment has no single key to follow (follow the comment guidance above)` or `<n> comments have no single key to follow (follow the comment guidance above)`, counting listed ranges, not their lines. Do not invite an unqualified move: the nearest v1 header may itself split. Authorized comments are not a cause. With other causes, the comment remedy applies only to the comments; their authorization does not clear the other causes.
    - A differing gate: `the records differ (inspect the comparison above)` or `grund check --suggestions differs (inspect the comparison above)`, naming the gate that differed. Gates not run because of an earlier refusal add no cause.
 
-A line is never wrapped. Paths inside either report follow `--path-base`. The output policy changes no gates, comment authorization, discovery, atomic config-only writing, or exit codes. The compatibility decision for the successful-write default is [§DF-config-migrate-output.3](../decisions/functional/DF-config-migrate-output.md#3-compatibility-and-alternatives); for refused-write wording it is [§DF-config-migrate-output.4](../decisions/functional/DF-config-migrate-output.md#4-refused-writes-close-with-their-causes-and-remedies); for refused previews it is [§DF-config-migrate-refused-preview](../decisions/functional/DF-config-migrate-refused-preview.md#df-config-migrate-refused-preview-a-refused-migration-preview-closes-with-its-causes-and-keeps-its-candidate-behind---full).
+A line is never wrapped. Paths inside either report follow `--path-base`, except the undo and the re-preview after a write, which are commands spelled from the working directory ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-undo-and-the-re-preview-are-spelled-from-the-working-directory)). The output policy changes no gates, comment authorization, discovery, atomic config-only writing, or exit codes. The compatibility decision for the successful-write default is [§DF-config-migrate-output.3](../decisions/functional/DF-config-migrate-output.md#3-compatibility-and-alternatives); for refused-write wording it is [§DF-config-migrate-output.4](../decisions/functional/DF-config-migrate-output.md#4-refused-writes-close-with-their-causes-and-remedies); for refused previews it is [§DF-config-migrate-refused-preview](../decisions/functional/DF-config-migrate-refused-preview.md#df-config-migrate-refused-preview-a-refused-migration-preview-closes-with-its-causes-and-keeps-its-candidate-behind---full).
 
 ### 2.3 Exits
 
@@ -457,7 +457,7 @@ After an actual successful write without `--full`, stderr contains only these it
 3. Every notice of [§FS-config-migrate.3.2](FS-config-migrate.md#32-notices) and every carried-comment warning promised by [§FS-config-migrate.4.1.1](FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes), in file order. That warning still appears in compact output.
 4. Workspace member commands ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)).
 5. The distinct Project map note ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)), when applicable.
-6. The undo and re-preview advice below.
+6. The undo and re-preview advice below, spelled from the working directory ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-undo-and-the-re-preview-are-spelled-from-the-working-directory)).
 7. The qualified managed-instructions refresh reminder below, exactly once and last.
 
 Compact success omits the heading, key mappings, defaults, passing-gate narration and pre-write comment listing. With `--full`, the complete report of [§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report) precedes the same outcome, dropped ranges, undo/re-preview advice and final reminder; notices, warnings, member commands and the Project map note stay in their complete-report positions and are not repeated.
@@ -470,11 +470,31 @@ to see this candidate again: restore version 1 and run grund config migrate --to
 note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
 ```
 
+That run is at the project root, with no `PATH`. The undo and the re-preview are spelled from the directory the run was in ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-undo-and-the-re-preview-are-spelled-from-the-working-directory)). So at a workspace root, the command the root's `member:` line prints for `apps/api` ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)), run there with `--write`, reports:
+
+```text
+wrote grund.toml: version 1 (13 lines) replaced by version 2
+note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then
+to get version 1 back: it is in version control, e.g. git restore apps/api/grund.toml
+to see this candidate again: restore version 1 and run grund config migrate --to 2 apps/api
+note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
+```
+
 The `dropped the comments` line appears only when `--drop-comments` dropped any, and names every range in file order, joined by `, ` and a final ` and `.
 
 The re-preview is the command that shows the written candidate again, so it ends in `--drop-comments` exactly when the `dropped the comments` line appears: a preview that only listed comments refuse withholds its candidate without that flag ([§FS-config-migrate.1.3](FS-config-migrate.md#13-the-other-flags)), and run without it after such a write it would show a refusal instead. `--full` and `--path-base` never follow, and a write given `--drop-comments` that dropped nothing keeps the plain line, whose preview already shows the candidate.
 
 The final `note:` line appears on stderr after every successful version-1-to-version-2 write, including when no `AGENTS.md` exists. It is a qualified reminder about existing managed instructions, not a claim that a file was inspected or found stale. Run `grund init` in the migrated project to refresh those instructions; migration itself still writes only the config ([§FS-config-migrate.6.4](FS-config-migrate.md#64-a-symbolic-link-and-nothing-else-written)). Migration neither inspects managed blocks for drift nor runs init. The reminder is absent from previews, refused or failed writes, and already-version-2 runs. It does not change exits or replace the distinct Project map note ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)).
+
+#### 6.5.1 The undo and the re-preview are spelled from the working directory
+
+The undo and the re-preview are commands for the user to paste, not report paths ([§FS-errors.terms](FS-errors.md#terms-terms)). They are spelled for the directory `grund config migrate` was run in, whatever the report base, so pasted there they act on the config the run replaced. The root's `member:` command is run from the root ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)), and what it prints next has to hold from the same place. A path spelled from another root sends the reader to a file that is not there ([§FS-errors.3.1](FS-errors.md#31-one-base-for-every-path-in-the-line)), and here it can do worse: from a workspace root, `git restore` exits `0` having restored the root's config instead of the member's.
+
+1. The undo is `to get version 1 back: it is in version control, e.g. git restore <file>`. `<file>` is the config the run replaced, spelled relative to the working directory with `/`, as discovery reached it ([§FS-config.1.5](FS-config.md#15-the-ancestor-search-keeps-the-path-through-directory-links)). It is `grund.toml`, or `.agents/grund.toml` for the deprecated location ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), when the config is in that directory; `apps/api/grund.toml` for one below it; `../grund.toml` for one above it. A command is not a report path, so the bound [§FS-errors.4](FS-errors.md#4-determinism) puts on `..` does not hold it. Where no relative spelling exists, as for a config on another drive on Windows, `<file>` is the absolute path.
+2. The re-preview is `to see this candidate again: restore version 1 and run grund config migrate --to 2`, followed by a space and `PATH` as it was given, when one was, and then by ` --drop-comments` where [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write) says the line ends in it. So the same discovery runs from the same directory ([§FS-config-migrate.1.1](FS-config-migrate.md#11-which-file)). `./apps/api/` stays `./apps/api/`; no `PATH` follows `--to 2` when none was given.
+3. Each path in the two lines is one word to a POSIX shell, on every platform. A path made only of ASCII letters, digits and `_ - . / , : @ % + =` is written as it is. Any other path, the empty one included, is written between single quotes, with each `'` in it written `'\''`. So `grund config migrate --to 2 'my app' --write` prints `git restore 'my app/grund.toml'` and `grund config migrate --to 2 'my app'`. An undo path that would start with `-` is written with `./` before it, so `git` does not read it as an option.
+4. `--path-base` moves neither line ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)). The `wrote` outcome, the dropped ranges and the notices are report paths and keep the report base ([§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report)). After a `PATH` that names another directory, the `wrote` line and the undo can therefore name one file two ways: `wrote grund.toml` from the member's root, and `git restore apps/api/grund.toml` from where the run was.
+5. `--write --full` prints the same two lines. At the project root with no `PATH`, they are the lines [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write) shows, byte for byte.
 
 ### 6.6 A second run is a no-op
 
@@ -550,10 +570,12 @@ With `--write` it writes those bytes, exits `0`, and reports:
 ```text
 wrote grund.toml: version 1 (3 lines) replaced by version 2
 dropped: grund.toml: version 1's defaults: include_root = false, so no project scans this block's own files; it takes version 2's defaults
-to get version 1 back: it is in version control, e.g. git restore grund.toml
-to see this candidate again: restore version 1 and run grund config migrate --to 2
+to get version 1 back: it is in version control, e.g. git restore group/grund.toml
+to see this candidate again: restore version 1 and run grund config migrate --to 2 group
 note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
 ```
+
+`wrote` and `dropped:` name the block from its own root, the report base. The undo and the re-preview are commands spelled from the workspace root the run was in ([§FS-config-migrate.6.5.1](FS-config-migrate.md#651-the-undo-and-the-re-preview-are-spelled-from-the-working-directory)).
 
 The block that the two old repairs produced also adds `[id] named_sections = true` on line 2 and `[scan] include = []` on line 5. It writes the same candidate, with two more lines after `wrote`:
 

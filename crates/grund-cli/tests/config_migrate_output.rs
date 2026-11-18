@@ -328,8 +328,12 @@ fn compact_workspace_keeps_member_commands_in_order() {
 }
 
 /// §FS-config-migrate.1.3, §FS-config-migrate.2.2: full writes restore the
-/// entire legacy report in its order, not just the suppressed stdout.
+/// entire legacy report in its order, not just the suppressed stdout. Its paths
+/// follow `--path-base`; the undo and the re-preview, run from the root with
+/// `PATH` `src`, do not (§FS-config-migrate.6.5.1). The write dropped comments,
+/// so the re-preview ends in `--drop-comments` after `src` (§FS-config-migrate.6.5).
 #[test]
+#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn full_write_restores_candidate_and_complete_report_with_path_and_comments() {
     for base in ["project", "invocation"] {
         let config = if base == "project" {
@@ -353,7 +357,11 @@ fn full_write_restores_candidate_and_complete_report_with_path_and_comments() {
         expected[0] = format!("{config}: version 1 → 2, --write");
         expected.push(outcome(&input, config));
         expected.push(dropped_ranges(&input, config));
-        expected.extend(dropping_advice(config));
+        expected.extend([
+            "to get version 1 back: it is in version control, e.g. git restore grund.toml".into(),
+            format!("{REPREVIEW} src --drop-comments"),
+            REMINDER.into(),
+        ]);
         assert_eq!(
             lines(&write.stderr),
             expected,
