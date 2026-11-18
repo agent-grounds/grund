@@ -39,7 +39,7 @@ The refusal reuses the element reader's `expected string`. A new message would s
 
 ### 2.4 Version 1 is untouched
 
-Version 1's list reader takes no trailing comma at all: `["a",]` is `expected string` there, and so is every shape this decision moves ([§FS-config.3.11](../../functional-spec/FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string)). It keeps that reading for good ([§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning)), and `config migrate` meets none of these shapes, because version 1 refuses them before there is anything to migrate.
+Version 1's list reader takes no trailing comma at all: `["a",]` is `expected string` there, and so is every shape this decision moves ([§FS-config.3.11](../../functional-spec/FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string)). It keeps that reading for good ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)), and `config migrate` meets none of these shapes, because version 1 refuses them before there is anything to migrate.
 
 ### 2.5 The ancestor climb records nothing
 

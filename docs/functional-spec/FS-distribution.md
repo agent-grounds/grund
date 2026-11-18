@@ -700,11 +700,11 @@ with its CLI builder; it does not invent a second native invocation. npm install
 does no automatic source compilation. Lock fragment/build tool versions, record
 input SHA and artifact engine/package versions for packaging and corpus matching.
 
-Current workspace version supplies local npm-valid dev version by the agreed
-single mapping (currently 0.16.2-dev); no repository version bump. Initial API
-is pre-1.0: additive records/operations allowed; removals/renames require the
-existing documented compatibility/deprecation path or an accepted explicit
-pre-1.0 decision. #466 adaptation must not silently alter approved host/wire
+The package takes the workspace version by the one mapping of
+[§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package); no repository version bump. A removal or rename
+of its records or operations takes
+[§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), or before `1.0`
+[§REQ-backwards-compatibility.4](../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise). #466 adaptation must not silently alter approved host/wire
 behavior. Full ecosystem release alignment and a later binding-only maintenance
 cadence remain #471's policy; no publication, registry changes or PGO evidence
 are created here.
@@ -1239,7 +1239,9 @@ Retired. No change waits in the tree for a release: the release lists the pull r
 
 Every npm and PyPI artifact comes from one candidate: assembled from one commit, recorded in an immutable `manifest.json`, installed fresh and proved on every registry row by a rehearsal that holds no credential, and receipted per row. Only those bytes may ever be uploaded, by a publisher that is disabled today and reachable only by a gated manual dispatch naming the candidate's SHA and manifest digest. The detail is [§FS-distribution-candidate](FS-distribution-candidate.md#fs-distribution-candidate-one-candidate-is-assembled-rehearsed-and-verified-before-any-registry-sees-it).
 
-## 5. What we do not promise
+## 5. What a release promises
+
+From `1.0.0` the pre-release licence of [§REQ-backwards-compatibility.4](../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise) is spent: user-visible surfaces move only as [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) says, the `grund-core` names only as [§FS-distribution.3.1.2](FS-distribution.md#312-what-10-freezes) says. Not promised:
 
 - 100% identical APIs across languages. Each binding is idiomatic to its host (camelCase for Node, snake_case for Python, `Result<T,E>` for Rust). The *behavior* is identical; the surface fits each ecosystem.
 - Stable ABI for the C-level FFI. Bindings link against the Rust core at compile time; we do not ship a separate C library.

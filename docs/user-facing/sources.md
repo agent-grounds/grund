@@ -20,7 +20,7 @@ file over. The runnable
 A file without `grund_config_version`, or with `1`, is read by the version-1
 reader. Nothing here changes it: `[scan] extensions`, `comment_prefixes`,
 `exclude` and `docstring_python` keep their meaning, and any comment in
-declaration position still declares ([§FS-config.5.2](../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning)). A file that writes
+declaration position still declares ([§FS-config.5.2](../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)). A file that writes
 `grund_config_version = 2` has no `[scan]` table. Its sources are the table
 below, and the reader refuses a v1 key rather than guess what it meant.
 

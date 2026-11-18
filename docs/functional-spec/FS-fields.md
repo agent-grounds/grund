@@ -472,7 +472,7 @@ On a kind that declares the field, a body `## status:` chapter and a front-matte
 
 ## v1: Version 1 is unchanged
 
-The v1 reader produces exactly one field: `value_chapter = "<name>"` is a `may` field named `<name>` with `content = "values"` and nothing else, so every v1 finding and every byte of v1 output stays as it is ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)). `fields`, `closed`, `form` and `one_of` on a v1 `[[kinds]]` row stay unknown keys.
+The v1 reader produces exactly one field: `value_chapter = "<name>"` is a `may` field named `<name>` with `content = "values"` and nothing else, so every v1 finding and every byte of v1 output stays as it is ([§FS-config.5.2](FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)). `fields`, `closed`, `form` and `one_of` on a v1 `[[kinds]]` row stay unknown keys.
 
 ## checks: Checks
 

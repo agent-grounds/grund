@@ -17,7 +17,7 @@ In grund 0.23.0 (agent-grounds/grund#1321), version 2 refuses what 0.22.x warned
 - a row an earlier release already refused, for lacking a citable row or one place, keeps that error, because a suffix on it would blame a release that changed nothing about it;
 - `config-fetch-names-nothing` is spent and stays, so the `--ignore` the window recommended keeps working and the installed binary still answers for the code ([§REQ-discoverable-offline](../../requirements/REQ-discoverable-offline.md#req-discoverable-offline-the-installed-grund-answers-for-every-setting-and-every-check-code), [§REQ-spec-section-names.permanence](../../requirements/REQ-spec-section-names.md#permanence-a-name-is-permanent)).
 
-Version 1 is unchanged: it keeps loading the key ([§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning)) and meets the rule at `grund fetch` ([§FS-fetch.2.1](../../functional-spec/FS-fetch.md#21-a-value-that-names-no-executable)) and `config migrate` ([§FS-config-migrate.3.1.10](../../functional-spec/FS-config-migrate.md#3110-a-fetch-that-names-no-executable)).
+Version 1 is unchanged: it keeps loading the key ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)) and meets the rule at `grund fetch` ([§FS-fetch.2.1](../../functional-spec/FS-fetch.md#21-a-value-that-names-no-executable)) and `config migrate` ([§FS-config-migrate.3.1.10](../../functional-spec/FS-config-migrate.md#3110-a-fetch-that-names-no-executable)).
 
 ## 3. Rejected alternatives
 

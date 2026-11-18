@@ -38,7 +38,7 @@ The v1 reader refuses these entries from this release on, but files that carry t
 
 ### 3.1 Read the entry as a path or a glob
 
-That would honor what the user probably meant, and change what gets scanned in every repository that carries such an entry, silently: files that have been checked would stop being checked. v1 keeps its meaning ([§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning)); the path reading is v2's.
+That would honor what the user probably meant, and change what gets scanned in every repository that carries such an entry, silently: files that have been checked would stop being checked. v1 keeps its meaning ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)); the path reading is v2's.
 
 ### 3.2 Strip everything before the last `/`
 

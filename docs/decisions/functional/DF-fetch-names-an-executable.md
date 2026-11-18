@@ -24,7 +24,7 @@ The correction route, section 5 of [§REQ-backwards-compatibility](../../require
 
 ### 2.3 Version 1 keeps loading the key
 
-[§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning) keeps version 1's validation and [§FS-config.5.3](../../functional-spec/FS-config.md#53-a-version-1-config-is-cautioned-and-never-retired) never retires a version 1 file, so its reader does not refuse this key. It meets the rule at `grund fetch`, where the refusal moves no verdict, and at `config migrate` ([§FS-config-migrate.3.1.10](../../functional-spec/FS-config-migrate.md#3110-a-fetch-that-names-no-executable)). No version 1 warning is added, as [§DF-v1-empty-extension-reading.2.2](DF-v1-empty-extension-reading.md#22-no-warning-is-added) reasons: a new warning is itself a verdict change, and every version 1 run already names `migrate`.
+[§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path) keeps version 1's validation and [§FS-config.5.3](../../functional-spec/FS-config.md#53-a-version-1-config-is-cautioned-and-never-retired) never retires a version 1 file, so its reader does not refuse this key. It meets the rule at `grund fetch`, where the refusal moves no verdict, and at `config migrate` ([§FS-config-migrate.3.1.10](../../functional-spec/FS-config-migrate.md#3110-a-fetch-that-names-no-executable)). No version 1 warning is added, as [§DF-v1-empty-extension-reading.2.2](DF-v1-empty-extension-reading.md#22-no-warning-is-added) reasons: a new warning is itself a verdict change, and every version 1 run already names `migrate`.
 
 ### 2.4 `grund fetch` changes in this release
 
