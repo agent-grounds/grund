@@ -1,0 +1,1 @@
+error: .agents/grund.toml:6: place `../docs/fs` in `[schema.kinds.FS] folders` is outside the config root
