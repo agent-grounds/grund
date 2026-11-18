@@ -316,9 +316,9 @@ fn render_migrate_outcome(
         "wrote {config}: version 1 ({} lines) replaced by version 2",
         report.v1_lines
     )?;
-    if !report.comments.is_empty() {
-        let ranges: Vec<String> = report
-            .comments
+    let dropped = report.dropped_comments();
+    if !dropped.is_empty() {
+        let ranges: Vec<String> = dropped
             .iter()
             .map(|comment| comment_lines(config, comment))
             .collect();
@@ -333,7 +333,9 @@ fn render_migrate_outcome(
 }
 
 /// §FS-config-migrate.6.5: undo/re-preview advice ends with the qualified
-/// refresh reminder, without inspecting or writing managed instructions.
+/// refresh reminder, without inspecting or writing managed instructions. The
+/// re-preview names `--drop-comments` exactly when the write dropped comments,
+/// since without it that preview refuses on them (§FS-config-migrate.1.3).
 fn render_migrate_advice(
     report: &MigrateReport,
     out: &mut impl std::io::Write,
@@ -343,9 +345,14 @@ fn render_migrate_advice(
         "to get version 1 back: it is in version control, e.g. git restore {}",
         report.config
     )?;
+    let flag = if report.dropped_comments().is_empty() {
+        ""
+    } else {
+        " --drop-comments"
+    };
     writeln!(
         out,
-        "to see this candidate again: restore version 1 and run grund config migrate --to 2"
+        "to see this candidate again: restore version 1 and run grund config migrate --to 2{flag}"
     )?;
     writeln!(
         out,

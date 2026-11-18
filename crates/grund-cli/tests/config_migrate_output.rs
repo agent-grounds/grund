@@ -128,6 +128,14 @@ fn advice(config: &str) -> Vec<String> {
     ]
 }
 
+/// §FS-config-migrate.6.5: after a write that dropped comments the re-preview
+/// carries `--drop-comments`, without which that preview refuses on them.
+fn dropping_advice(config: &str) -> Vec<String> {
+    let mut lines = advice(config);
+    lines[1] = format!("{REPREVIEW} --drop-comments");
+    lines
+}
+
 fn lines(bytes: &[u8]) -> Vec<String> {
     text(bytes).lines().map(str::to_owned).collect()
 }
@@ -259,7 +267,7 @@ fn compact_write_orders_multiple_drops_notices_and_carried_warning() {
     ];
     expected.extend(notices);
     expected.push(PROJECT_MAP.into());
-    expected.extend(advice("grund.toml"));
+    expected.extend(dropping_advice("grund.toml"));
     assert_eq!(lines(&write.stderr), expected);
     assert!(write.stdout.is_empty());
     let mut after = before;
@@ -345,7 +353,7 @@ fn full_write_restores_candidate_and_complete_report_with_path_and_comments() {
         expected[0] = format!("{config}: version 1 → 2, --write");
         expected.push(outcome(&input, config));
         expected.push(dropped_ranges(&input, config));
-        expected.extend(advice(config));
+        expected.extend(dropping_advice(config));
         assert_eq!(
             lines(&write.stderr),
             expected,

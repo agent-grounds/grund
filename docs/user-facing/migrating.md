@@ -160,7 +160,9 @@ A successful write leaves stdout empty. Its compact stderr report starts with
 what was written and the exact original ranges of any dropped comments, then
 retains every notice and carried-comment warning, member migration commands
 and the distinct Project map note when applicable. It explains how to undo the
-write and preview again, then ends with
+write and preview again; after a write that dropped comments, the preview it
+names ends in `--drop-comments`, because without it the preview of version 1
+refuses on those same comments. It then ends with
 ([§FS-config-migrate.6.5](../functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)):
 
 ```text

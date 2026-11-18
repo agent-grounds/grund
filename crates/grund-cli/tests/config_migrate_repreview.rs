@@ -164,7 +164,6 @@ fn round_trip(fixture: &Fixture, flags: &[&str]) -> (String, String) {
 /// refuses on its listed comment and withholds the candidate, so the re-preview after
 /// a write that dropped it must name `--drop-comments` to show what was written.
 #[test]
-#[ignore = "red until #1452 makes the re-preview carry --drop-comments after a write that dropped comments; implement removes this"]
 fn repreview_after_dropping_comments_shows_the_written_candidate() {
     let fixture = Fixture::new(true);
     let preview = fixture.grund(&["config", "migrate", "--to", "2"]);
@@ -190,7 +189,6 @@ fn repreview_after_dropping_comments_shows_the_written_candidate() {
 /// §FS-config-migrate.6.5: `--full` never follows into the re-preview, because a
 /// `--drop-comments` preview already prints the candidate (§FS-config-migrate.1.3).
 #[test]
-#[ignore = "red until #1452 makes the re-preview carry --drop-comments after a write that dropped comments; implement removes this"]
 fn repreview_after_full_write_dropping_comments_names_drop_comments_but_not_full() {
     let fixture = Fixture::new(true);
     let (stderr, command) = round_trip(&fixture, &["--full", "--drop-comments"]);
