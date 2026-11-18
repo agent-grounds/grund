@@ -204,7 +204,7 @@ error: grund.toml:12: [schema.kinds.RULE] sets `form = "rule"`, but files entry 
 error: grund.toml:12: [schema.kinds.RULE] sets `form = "rule"`, but no admitted language reads files entry `rules/notes.txt`; move the rules into a file read as Markdown
 ```
 
-A `files` entry a `source` language reads keeps its load warning ([§FS-config-v2.checks.config-rule-file-not-markdown](FS-config-v2.md#checksconfig-rule-file-not-markdown-a-rule-kinds-files-entry-is-read-as-source)), and every other prerequisite keeps version 1's words at the `form` key ([§DF-reading-at-fetch-and-unread-homes.2.7](../decisions/functional/DF-reading-at-fetch-and-unread-homes.md#27-version-2s-rule-home-refusal-speaks-version-2)).
+A `files` entry a `source` language reads is refused at load ([§FS-config-v2.checks.config-rule-file-not-markdown](FS-config-v2.md#checksconfig-rule-file-not-markdown-a-rule-kinds-files-entry-is-read-as-source)), and every other prerequisite keeps version 1's words at the `form` key ([§DF-reading-at-fetch-and-unread-homes.2.7](../decisions/functional/DF-reading-at-fetch-and-unread-homes.md#27-version-2s-rule-home-refusal-speaks-version-2)).
 
 A kind whose declarations have no authored body to hold a field takes no fields and cannot be closed. Each is refused at the field's header or at `closed`:
 
