@@ -64,7 +64,7 @@ FS-user-can-log-in-with-email
 
 ### 2.3 `--explain` (text only)
 
-Stdout is unchanged — still the bare ID — and stderr carries one more line: where to put the declaration and how to start it. For a kind with a configured file, the hint names the first one its row lists and takes the heading level from that file: the level of the kind's first declaration there, else of the file's first heading, else H2. So the scaffolded `docs/grund.md`, headed `# Why this project exists`, gets an H1, and a `requirements.md` whose declarations are H2s gets an H2:
+Stdout is unchanged — still the bare ID — and stderr carries one more line: where to put the declaration and how to start it. For a kind with a configured file, the hint names the first one its row lists and an H1 or an H2. It is an H1 where the kind's first declaration in that file is an H1, or, with none there, where the file's H1 title is followed by headings of its own, as in the scaffolded `docs/grund.md`. Otherwise it is an H2, as for a `requirements.md` whose declarations are H2s or whose title stands alone:
 
 ```
 $ grund id FS "User can log in with email" --explain

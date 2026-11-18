@@ -82,17 +82,19 @@ pub(crate) fn markdown_heading_level(line: &str) -> Option<usize> {
     }
 }
 
-/// The level of `text`'s first Markdown heading, read as the scan reads one: outside front
-/// matter, fences and raw HTML blocks (§FS-id.2.3, §FS-check.1.1.5).
-pub(crate) fn first_heading_level(text: &str) -> Option<usize> {
+/// Whether `text` opens with an H1 title followed by a heading of its own, read as the scan
+/// reads headings: outside front matter, fences and raw HTML blocks (§FS-id.2.3,
+/// §FS-check.1.1.5).
+pub(crate) fn title_has_sections(text: &str) -> bool {
     let mut blocks = MarkdownBlocks::file(text);
-    text.lines().find_map(|line| {
+    let mut levels = text.lines().filter_map(|line| {
         if blocks.line(line).may_be_heading() {
             markdown_heading_level(line)
         } else {
             None
         }
-    })
+    });
+    levels.next() == Some(1) && levels.next().is_some()
 }
 
 /// Publish every declaration's body line span on the catalog (§AR-scanner.2.4.1),
