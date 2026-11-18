@@ -5,17 +5,30 @@ import subprocess
 from common import Refusal, error, matches, parse_json
 
 
-def unscanned(path, keys):
-    """Name the classifying selection and the remedy that can work (§FS-cochange-recipe.snapshots.scope).
+def scan_config_remedy(path):
+    """Offer the scan configuration only where it can work (§FS-cochange-recipe.snapshots.scope).
 
     A hidden file is never read by any configuration (§FS-scan.scope.hidden), so only a
     file whose own name is not hidden is offered the scan configuration as a remedy.
     """
+    if path.rsplit('/', 1)[-1].startswith('.'):
+        return ''
+    return ', or include it in the snapshot scan configuration'
+
+
+def unscanned(path, keys):
+    """Name the classifying selection and the remedy that can work (§FS-cochange-recipe.snapshots.scope)."""
     selection = ' and '.join(keys)
     remedy = f'narrow {selection} in the policy to leave it out, or remove it from Git'
-    if not path.rsplit('/', 1)[-1].startswith('.'):
-        remedy += ', or include it in the snapshot scan configuration'
+    remedy += scan_config_remedy(path)
     return f'{path}: no cover row; grund does not scan this file selected by {selection}; {remedy}.'
+
+
+def unscanned_move(path):
+    """Name the remedies a source move's destination can take (§FS-cochange-recipe.snapshots.scope.move)."""
+    remedy = 'move it to a path grund scans, whose own name does not begin with "."'
+    remedy += scan_config_remedy(path)
+    return f'{path}: source move has no cover row; grund does not scan this destination; {remedy}.'
 
 
 class Facts:

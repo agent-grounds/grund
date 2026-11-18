@@ -47,6 +47,25 @@ class ScanScopeTests(RecipeCase):
         message = self.scan_scope(report, "src/data.json")
         self.assert_policy_remedy(message, "source_paths", "test_paths")
 
+    def move_destination(self, destination):
+        """A source move to an unscanned destination (§FS-cochange-recipe.snapshots.scope.move)."""
+        (self.fixture.root / "lib").mkdir()
+        self.fixture.git("mv", "src/lib.py", destination)
+        message = self.scan_scope(self.evaluate(2), destination)
+        self.assertIn("source move", message)
+        self.assertRegex(message, re.compile(r"\bnot scan", re.I))
+        self.assertRegex(message, re.compile(r"\bmove it to a path", re.I))
+        self.assertNotRegex(message, re.compile(r"\bnarrow", re.I))
+        return message
+
+    def test_hidden_move_destination_is_not_offered_scan_config(self):
+        message = self.move_destination("lib/.lib.py")
+        self.assertNotRegex(message, re.compile(r"scan configuration", re.I))
+
+    def test_unscanned_move_destination_is_offered_scan_config(self):
+        message = self.move_destination("lib/lib.json")
+        self.assertRegex(message, re.compile(r"scan configuration", re.I))
+
     def test_shipped_policy_accepts_the_scaffold_root_commit(self):
         repo = Path(self.temp.name) / "scaffold"
         repo.mkdir()

@@ -12,7 +12,7 @@ from common import LIMITATION, Refusal, error, parse_json, validate_policy
 from configuration import configuration
 from evidence import evaluate
 from git_snapshot import Git
-from queries import Facts
+from queries import Facts, unscanned_move
 from waivers import messages, parse_waivers
 
 
@@ -79,8 +79,7 @@ def run(args, report, scratch):
                             report['errors'], report['check_findings'])
     for change in changes:
         if change.is_source(policy['source_paths']) and change.path not in facts[change.snapshot].cover:
-            raise Refusal('scan-scope', f'{change.path}: source move has no cover row; '
-                          'include its destination in snapshot scan configuration.', change.path, query='cover')
+            raise Refusal('scan-scope', unscanned_move(change.path), change.path, query='cover')
     report['sources'] = evaluate(changes, facts, policy, scopes, waivers, report['errors'])
     reported_paths = {source['path'] for source in report['sources']}
     report['unused_waivers'] = [waiver for path in sorted(waivers) if path not in reported_paths
