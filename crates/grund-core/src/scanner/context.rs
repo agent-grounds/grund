@@ -5,6 +5,7 @@ use super::extents::body_has_content;
 use super::line_owners::{LineOwners, resolve_requested_lines};
 use super::record::walk_blocks;
 use crate::config::{FileReading, Frame, Owners, Schema};
+use crate::grammar::MarkdownBlocks;
 use crate::grammar::{AliasGrammar, MultiLineStrings, block_declares_id, inline_note_verdicts};
 use crate::model::sort_path_key;
 use crate::model::{
@@ -79,6 +80,19 @@ pub(crate) fn markdown_heading_level(line: &str) -> Option<usize> {
         Some(b' ' | b'\t') => Some(hashes),
         _ => None,
     }
+}
+
+/// The level of `text`'s first Markdown heading, read as the scan reads one: outside front
+/// matter, fences and raw HTML blocks (§FS-id.2.3, §FS-check.1.1.5).
+pub(crate) fn first_heading_level(text: &str) -> Option<usize> {
+    let mut blocks = MarkdownBlocks::file(text);
+    text.lines().find_map(|line| {
+        if blocks.line(line).may_be_heading() {
+            markdown_heading_level(line)
+        } else {
+            None
+        }
+    })
 }
 
 /// Publish every declaration's body line span on the catalog (§AR-scanner.2.4.1),

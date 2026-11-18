@@ -11,6 +11,7 @@
 
 use regex::Regex;
 use unicode_normalization::UnicodeNormalization;
+use unicode_normalization::char::is_combining_mark;
 
 use crate::config::Config;
 use crate::model::Id;
@@ -33,7 +34,8 @@ fn slug_char_class(slug_pattern: &str) -> String {
 pub(crate) fn slugify_title(title: &str, slug_pattern: &str) -> String {
     // §FS-id.3: NFKD-normalize, drop combining marks, lower-case to ASCII, then
     // replace every run of characters outside the configured slug character class
-    // with a single `-`; trim, collapse, truncate to 60 at a `-` boundary.
+    // with a single `-`; trim, collapse, and cut a slug over 60 before the last `-`
+    // among its first 60, or at 60 where they hold none.
     let class = slug_char_class(slug_pattern);
     let valid = Regex::new(&format!("^(?:{class})$"))
         .unwrap_or_else(|_| Regex::new("^(?:[a-z0-9-])$").unwrap());
@@ -41,6 +43,10 @@ pub(crate) fn slugify_title(title: &str, slug_pattern: &str) -> String {
     let mut out = String::new();
     let mut last_dash = false;
     for ch in title.nfkd() {
+        // §FS-id.3: a mark is dropped, not read as a run outside the class, so `ü` gives `u`.
+        if is_combining_mark(ch) {
+            continue;
+        }
         let lower = ch.to_ascii_lowercase();
         if lower.is_ascii() && valid.is_match(lower.encode_utf8(&mut buf)) {
             out.push(lower);

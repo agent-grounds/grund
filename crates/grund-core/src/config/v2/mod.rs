@@ -53,7 +53,7 @@ use anyhow::Result;
 use std::path::Path;
 
 use super::project::Project;
-use super::v1::strip_comment;
+use super::v1::{bail_config, strip_comment};
 
 /// §FS-config.5: whether `text` selects the v2 reader — an explicit
 /// `grund_config_version = 2` among the top-level keys, before any header. An
@@ -79,6 +79,19 @@ pub(crate) fn version(text: &str) -> Option<&str> {
         }
     }
     None
+}
+
+/// §FS-config-v2.reader: a file that starts with a byte-order mark is refused at
+/// line 1 by name, before its version is read, whichever version it writes.
+pub(crate) fn refuse_byte_order_mark(text: &str, report_path: &Path) -> Result<()> {
+    if text.starts_with('\u{feff}') {
+        return bail_config(
+            report_path,
+            1,
+            "the file starts with a byte-order mark; save it as UTF-8 without one".to_string(),
+        );
+    }
+    Ok(())
 }
 
 /// §FS-config-v2.reader: lower a v2 file's `text` into a `Project`, refusing
