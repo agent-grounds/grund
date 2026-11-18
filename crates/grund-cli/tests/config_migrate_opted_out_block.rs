@@ -94,7 +94,6 @@ fn assert_run(out: &Output, code: i32, stdout: &str, stderr: &str) {
 /// §FS-config-migrate.8.1.5: the bare block previews its compact candidate,
 /// writes exactly those bytes, and a second run finds version 2.
 #[test]
-#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn bare_block_previews_and_writes_its_envelope_and_workspace_table() {
     let root = tree("bare", BARE);
     let preview = migrate(&root, false);
@@ -128,7 +127,6 @@ fn bare_block_previews_and_writes_its_envelope_and_workspace_table() {
 /// force on the block, so they are dropped with a notice each and the file is the
 /// same compact candidate, far under the report's 20-line bound.
 #[test]
-#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn repaired_block_drops_both_repairs_and_writes_the_same_candidate() {
     let root = tree("repaired", REPAIRED);
     let write = migrate(&root, true);

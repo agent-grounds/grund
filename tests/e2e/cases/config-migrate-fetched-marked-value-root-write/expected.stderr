@@ -1,5 +1,5 @@
 wrote grund.toml: version 1 (12 lines) replaced by version 2
 note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then
-to get version 1 back: it is in version control, e.g. git restore grund.toml
-to see this candidate again: restore version 1 and run grund config migrate --to 2
+to get version 1 back: it is in version control, e.g. git restore target/e2e-work/config-migrate-fetched-marked-value-root-write/repo/grund.toml
+to see this candidate again: restore version 1 and run grund config migrate --to 2 target/e2e-work/config-migrate-fetched-marked-value-root-write/repo
 note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them

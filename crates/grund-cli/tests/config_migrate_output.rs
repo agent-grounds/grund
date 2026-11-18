@@ -333,7 +333,6 @@ fn compact_workspace_keeps_member_commands_in_order() {
 /// `PATH` `src`, do not (§FS-config-migrate.6.5.1). The write dropped comments,
 /// so the re-preview ends in `--drop-comments` after `src` (§FS-config-migrate.6.5).
 #[test]
-#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn full_write_restores_candidate_and_complete_report_with_path_and_comments() {
     for base in ["project", "invocation"] {
         let config = if base == "project" {

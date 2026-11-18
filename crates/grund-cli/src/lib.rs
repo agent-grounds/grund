@@ -141,6 +141,7 @@ include!("cli_init.rs");
 include!("cli_config.rs");
 include!("cli_config_explain.rs");
 include!("cli_config_migrate.rs");
+include!("cli_config_migrate_commands.rs");
 include!("cli_schema.rs");
 include!("cli_schema_table.rs");
 include!("cli_schema_graph.rs");

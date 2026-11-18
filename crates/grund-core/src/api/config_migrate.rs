@@ -19,10 +19,11 @@ use crate::config::report_path;
 use crate::config::{
     Config, Invocation, PathBase, Project, Selection, config_at, with_report_path_base,
 };
-use crate::model::{Code, Finding, GENERATED_SECTIONS, format_path};
+use crate::model::{Code, Finding, GENERATED_SECTIONS, format_path, relative_from_base};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, walk_scannable_files,
 };
+use crate::sources::canonical_path;
 use crate::writers::{Holds, Install, InstallFailure, atomic_install};
 
 /// The options of one `grund config migrate --to 2` run (§FS-config-migrate.1).
@@ -31,6 +32,21 @@ pub struct MigrateOpts {
     pub path: PathBuf,
     pub write: bool,
     pub drop_comments: bool,
+}
+
+impl MigrateOpts {
+    /// §FS-config-migrate.6.5.1 item 1: the config this run migrates, found by the
+    /// discovery [`config_migrate`] runs (§FS-config-migrate.1.1), spelled from
+    /// `dir` for a command pasted there rather than from the report base. Both
+    /// sides are resolved, so a link adds no `..`; the spelling is `/`-separated,
+    /// climbs with `..` to a config above `dir`, and is the absolute path where no
+    /// relative one exists. `None` where discovery finds no config. A frontend's
+    /// seam, hidden with this record (§FS-distribution.3.1.2).
+    pub fn config_from(&self, dir: &Path) -> Option<String> {
+        let located = locate(&self.path)?;
+        let dir = canonical_path(dir).unwrap_or_else(|_| dir.to_path_buf());
+        Some(format_path(&relative_from_base(&dir, &located.file)))
+    }
 }
 
 /// §FS-config-migrate: migrate the config `opts.path` discovers, writing it only

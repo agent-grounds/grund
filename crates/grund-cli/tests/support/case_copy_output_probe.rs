@@ -96,6 +96,13 @@ fn comparison_and_refresh_preserve_foreign_paths() {
     let logical = case_paths::logical_copy(NAME)
         .to_string_lossy()
         .into_owned();
+    // The copy is typed with `/` on every platform (`command_args`), so its echo
+    // normalizes to that spelling; the resolved absolute path stays native.
+    let typed = if cfg!(windows) {
+        logical.replace('\\', "/")
+    } else {
+        logical.clone()
+    };
     let write_goldens = |text: &str| {
         for stream in ["stdout", "stderr"] {
             fs::write(case.join(format!("expected.{stream}")), text).unwrap();
@@ -103,7 +110,7 @@ fn comparison_and_refresh_preserve_foreign_paths() {
     };
     if !refresh {
         fs::write(&template, TRAP).unwrap();
-        write_goldens(&TRAP.replace("{copy}", &logical));
+        write_goldens(&TRAP.replace("{copy}", &typed));
         let outcome = run_prepared_case(root, &case, NAME, &execution);
         let CaseOutcome::Failed { mismatches, .. } = outcome else {
             panic!("unrelated sibling mismatch must fail comparison");
@@ -116,7 +123,7 @@ fn comparison_and_refresh_preserve_foreign_paths() {
     // logical paths, whereas foreign fields keep the actual invocation bytes.
     fs::write(&template, OUTPUT.replace("{foreign}", "{copy}")).unwrap();
     let expected = OUTPUT
-        .replace("{copy}", &logical)
+        .replace("{copy}", &typed)
         .replace("{absolute}", &root.join(&logical).to_string_lossy())
         .replace("{foreign}", actual);
     write_goldens(if refresh { "stale\n" } else { &expected });

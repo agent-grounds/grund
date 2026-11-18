@@ -1,5 +1,5 @@
 wrote grund.toml: version 1 (18 lines) replaced by version 2
 member: member/grund.toml is version 1; migrate it with grund config migrate --to 2 member
-to get version 1 back: it is in version control, e.g. git restore grund.toml
-to see this candidate again: restore version 1 and run grund config migrate --to 2
+to get version 1 back: it is in version control, e.g. git restore target/e2e-work/config-migrate-workspace-root-only/repo/grund.toml
+to see this candidate again: restore version 1 and run grund config migrate --to 2 target/e2e-work/config-migrate-workspace-root-only/repo
 note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
