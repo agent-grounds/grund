@@ -235,6 +235,24 @@ fn place_hint_names_grounding_only_where_the_row_grounds_nothing() {
     }
 }
 
+/// §FS-rule-refusals.sentences.rewrite.no-form.place: the hint names the row, not a
+/// place; `e2e` is the row and `tests/e2e` its place.
+#[test]
+fn v2_place_hint_names_the_configured_row() {
+    let repo = Repo::new(2);
+    for subject in ["Each e2e", "Each file in tests/e2e/"] {
+        let error = stderr(&repo.rule(&format!("{subject} must cite at least one FS.")));
+        assert!(
+            error.contains(
+                "; for configured row \"e2e\", express this obligation in grund.toml: \
+                 [rules.citations.e2e] with must = [\"FS\"]"
+            ),
+            "{subject}: {error}"
+        );
+        assert!(!error.contains("configured place"), "{subject}: {error}");
+    }
+}
+
 macro_rules! guidance_test {
     ($name:ident, $version:literal, $subject:literal) => {
         #[test]
