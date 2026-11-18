@@ -1,7 +1,8 @@
-//! Black-box: a heading whose path is already written in place, but that lacks only a title or
-//! has a `_` in a named component, is told that fault and shown the heading that repairs it with
-//! its own path kept (§FS-declarations.checks.unmarked-heading.2.3), after the unchanged message
-//! of §FS-declarations.checks.unmarked-heading.2. The controls hold what must not move: a titled,
+//! Black-box: a heading whose path is already written in place, but that lacks only a title, has
+//! a `_` in a named component, or puts a `:` after a purely numeric path, is told that fault and
+//! shown the heading that repairs it with its own path kept
+//! (§FS-declarations.checks.unmarked-heading.2.3), after the unchanged message of
+//! §FS-declarations.checks.unmarked-heading.2. The controls hold what must not move: a titled,
 //! hyphenated heading draws nothing, a dotted heading keeps its relative-form clause alone
 //! (§FS-declarations.checks.unmarked-heading.2.1), and a heading the guard turns away keeps the
 //! message exactly as before.
@@ -60,15 +61,52 @@ const FILES: &[(&str, &str)] = &[
     ),
 ];
 
+/// The fixture of agent-grounds/grund#1434: a purely numeric path written with the colon form,
+/// which only a name-bearing path takes (§FS-config.3.3.1), at the top, nested and with no title,
+/// beside a dotted control and the headings the guard must turn away.
+const COLON_FILES: &[(&str, &str)] = &[
+    (
+        "FS-015-colon.md",
+        "# FS-015-colon: A numeric path with a colon\n\nA paragraph.\n\n## 1: Embedded\n\nBody.\n",
+    ),
+    (
+        "FS-016-nested.md",
+        "# FS-016-nested: A nested numeric path with a colon\n\n## 1. One\n\nBody.\n\n\
+         ### 1.2: Title\n\nBody.\n",
+    ),
+    (
+        "FS-017-bare.md",
+        "# FS-017-bare: A numeric path with a colon and no title\n\nA paragraph.\n\n\
+         ## 1:\n\nBody.\n",
+    ),
+    (
+        "FS-018-relative.md",
+        "# FS-018-relative: A dotted number with a colon\n\n## 1. One\n\nBody.\n\n\
+         ### .1: Title\n\nBody.\n",
+    ),
+    (
+        "FS-019-guard.md",
+        "# FS-019-guard: Guards on a numeric path with a colon\n\n## 1. One\n\nBody.\n\n\
+         ## 1: Again\n\nBody.\n\n\
+         ### 2: Deep\n\nBody.\n\n\
+         ## 2.1: Flat\n\nBody.\n\n\
+         ### 7.1: Orphan\n\nBody.\n",
+    ),
+];
+
 struct Tree(PathBuf);
 
 impl Tree {
     fn new(test: &str) -> Self {
+        Self::with(test, FILES)
+    }
+
+    fn with(test: &str, files: &[(&str, &str)]) -> Self {
         let root = std::env::temp_dir().join(format!("grund-1372-{test}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("docs/fs")).expect("create the kind folder");
         fs::write(root.join("grund.toml"), CONFIG).expect("write the config");
-        for (name, body) in FILES {
+        for (name, body) in files {
             fs::write(root.join("docs/fs").join(name), body).expect("write a declaration");
         }
         Self(root)
@@ -117,6 +155,7 @@ fn prefix(id: &str, suggested: &str, coordinate: &str) -> String {
 
 const NO_TITLE: &str = "needs a title after it";
 const UNDERSCORE: &str = "has a _, which a section name ([a-z][a-z0-9-]*) never takes";
+const COLON: &str = "is numeric, so it takes . rather than :";
 
 /// The message at `site`, failing with the whole report when there is none.
 fn message_at(findings: &[(String, String)], site: &str) -> String {
@@ -285,6 +324,120 @@ fn a_repair_that_would_not_declare_a_section_is_not_shown() {
             &findings,
             &format!("docs/fs/FS-014-guard.md:{line}"),
             &prefix("FS-014-guard", suggested, coordinate),
+        );
+    }
+}
+
+/// agent-grounds/grund#1434: `## 1: Embedded` is told the `:` is the fault and shown the `.` in
+/// its place, path and title kept, where "number it" alone stacks a fresh number in front of them
+/// (§FS-declarations.checks.unmarked-heading.2.3).
+#[test]
+#[ignore = "red until #1434 names the numeric-path colon in the 2.3 clause; implement removes this"]
+fn a_numeric_path_with_a_colon_is_told_it_takes_a_period() {
+    let findings = Tree::with("colon", COLON_FILES).findings();
+    assert_message(
+        &findings,
+        "docs/fs/FS-015-colon.md:5",
+        &format!(
+            "{}; the section path 1 {COLON}, written ## 1. Embedded",
+            prefix("FS-015-colon", "## 1. 1: Embedded", "1")
+        ),
+    );
+}
+
+/// agent-grounds/grund#1434: the same shape nested, `### 1.2: Title` under a declared `## 1. One`,
+/// is told the same and shown `### 1.2. Title` (§FS-declarations.checks.unmarked-heading.2.3).
+#[test]
+#[ignore = "red until #1434 names the numeric-path colon in the 2.3 clause; implement removes this"]
+fn a_nested_numeric_path_with_a_colon_is_told_it_takes_a_period() {
+    let findings = Tree::with("colon-nested", COLON_FILES).findings();
+    assert_message(
+        &findings,
+        "docs/fs/FS-016-nested.md:7",
+        &format!(
+            "{}; the section path 1.2 {COLON}, written ### 1.2. Title",
+            prefix("FS-016-nested", "### 1.1. 1.2: Title", "1.1")
+        ),
+    );
+}
+
+/// agent-grounds/grund#1434: `## 1:` has both faults, the `:` and the missing title, and is told
+/// both in one clause (§FS-declarations.checks.unmarked-heading.2.3).
+#[test]
+#[ignore = "red until #1434 names the numeric-path colon in the 2.3 clause; implement removes this"]
+fn a_numeric_path_with_a_colon_and_no_title_is_told_both_faults() {
+    let findings = Tree::with("colon-bare", COLON_FILES).findings();
+    assert_message(
+        &findings,
+        "docs/fs/FS-017-bare.md:5",
+        &format!(
+            "{}; the section path 1 {COLON}, and {NO_TITLE}, written ## 1. Untitled",
+            prefix("FS-017-bare", "## 1. 1:", "1")
+        ),
+    );
+}
+
+/// A control: the colon form on a purely numeric path stays refused, so every case and every
+/// guard of the colon fixture is still a finding, and its `## 1. One` headings declare.
+#[test]
+fn a_numeric_path_with_a_colon_is_still_refused() {
+    let findings = Tree::with("colon-sites", COLON_FILES).findings();
+    let sites = findings
+        .iter()
+        .map(|(site, _)| site.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        sites,
+        [
+            "docs/fs/FS-015-colon.md:5",
+            "docs/fs/FS-016-nested.md:7",
+            "docs/fs/FS-017-bare.md:5",
+            "docs/fs/FS-018-relative.md:7",
+            "docs/fs/FS-019-guard.md:7",
+            "docs/fs/FS-019-guard.md:11",
+            "docs/fs/FS-019-guard.md:15",
+            "docs/fs/FS-019-guard.md:19",
+        ]
+    );
+}
+
+/// A control: a dotted heading with a `:` after its number is
+/// §FS-declarations.checks.unmarked-heading.2.1's, and its message ends at the relative-form
+/// clause, with no second clause after it.
+#[test]
+fn a_dotted_number_with_a_colon_keeps_only_its_relative_clause() {
+    let findings = Tree::with("colon-relative", COLON_FILES).findings();
+    assert_message(
+        &findings,
+        "docs/fs/FS-018-relative.md:7",
+        &format!(
+            "{}; under FS-018-relative.1 a relative heading is written ### .1. Title",
+            prefix("FS-018-relative", "### 1.1. .1: Title", "1.1")
+        ),
+    );
+}
+
+/// A control: where the shown heading would not declare a recognized section, a numeric path
+/// with a colon keeps the message exactly as it is today, under the guard of
+/// §FS-declarations.checks.unmarked-heading.2.3.
+#[test]
+fn a_numeric_colon_repair_that_would_not_declare_a_section_is_not_shown() {
+    let findings = Tree::with("colon-guard", COLON_FILES).findings();
+    let unchanged = [
+        // the corrected path `1` is already a section of the declaration
+        (7, "## 2. 1: Again", "2"),
+        // one component at two levels deep
+        (11, "### 2.1. 2: Deep", "2.1"),
+        // two components at one level deep
+        (15, "## 3. 2.1: Flat", "3"),
+        // its parent `7` is no section of the declaration
+        (19, "### 3.1. 7.1: Orphan", "3.1"),
+    ];
+    for (line, suggested, coordinate) in unchanged {
+        assert_message(
+            &findings,
+            &format!("docs/fs/FS-019-guard.md:{line}"),
+            &prefix("FS-019-guard", suggested, coordinate),
         );
     }
 }
