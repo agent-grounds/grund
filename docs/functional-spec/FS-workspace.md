@@ -1235,9 +1235,9 @@ final tie-break ([§FS-list.3.4](FS-list.md#34---size--per-coordinate-lead-and-f
 #### 8.3.4 `--summary`
 
 `grund list --summary` ([§FS-list.3.3](FS-list.md#33---summary)) gains a new variant when a workspace is
-loaded: rows are emitted per `(project, kind)` pair, sorted by the whole alias
-path — the same order the catalog's `<alias>/<ID>` rows ([§FS-workspace.8.3.1](FS-workspace.md#831-the-id-column-is-always-qualified)) use — then by
-that project's configured kind order; `--format json` emits in the same
+loaded: rows are emitted per `(project, kind)` pair, sorted by alias path as
+the catalog's rows are ([§FS-list.2.4](FS-list.md#24-order)), then by that project's configured kind
+order; `--format json` emits in the same
 order. `--project <alias>` narrows the summary to that project's kinds, and
 the alias column is sized to the widest alias among the rows emitted after
 that narrowing, capped the way the ID column is ([§FS-list.3.1](FS-list.md#31---format-text-default)).

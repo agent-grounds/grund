@@ -88,8 +88,7 @@ at its line in the target, `src/x.rs:3`, as the same tree with the target scanne
 `check` judges none of that file's own hygiene. A citation of that file the stubbed declaration
 does not make is not in the set, and neither is one that resolves to nothing, so an ID it cites
 that is declared nowhere is not listed from there. `--summary`, `--total`, `list`'s `refs` count
-and the editor's count of a declaration's citing sites count the same set, and so does the
-`unused` warning ([§FS-check.4.1](FS-check.md#41-unused-declaration)).
+and the editor's count of a declaration's citing sites count the same set.
 
 An owned declaration-local numeric citation ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) is in that same set under its resolved full ID and exact section. Whole-ID and `--section` queries include it, while text and JSON retain the authored local token. Ownerless and unsupported local candidates have no guessed target and therefore appear in no target's result.
 

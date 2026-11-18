@@ -26,7 +26,7 @@ This is the narrow reading of the same fact [§FS-check.3.18](../../functional-s
 
 ### 2.3 `refs` in `grund list --format json` stays the total
 
-It is documented as the count of recognized citations across the scanned tree ([§FS-list.3.2](../../functional-spec/FS-list.md#32---format-json)), and `grund refs` lists exactly that set; two counts of "citations of this ID" that differ by which command printed them would be worse than one count that needs a sentence of explanation. The consequence — a declaration selected by `--unused` may carry a non-zero `refs`, namely its index entry — is stated where the field is defined.
+It is documented as the count of recognized citations across the scanned tree ([§FS-list.3.2.1](../../functional-spec/FS-list.md#321-refs-counts-citations)), and `grund refs` lists exactly that set; two counts of "citations of this ID" that differ by which command printed them would be worse than one count that needs a sentence of explanation. The consequence — a declaration selected by `--unused` may carry a non-zero `refs`, namely its index entry — is stated where the field is defined.
 
 ## 3. Alternatives considered
 

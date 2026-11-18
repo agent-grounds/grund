@@ -517,9 +517,8 @@ rendered text, exactly as CommonMark reads an ATX heading: `## 1. Steps ##` read
 so its anchor is `1-steps` ([§FS-fmt.6.2.2](FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)). A `#` run that is not preceded by a space or tab, or that
 is followed by anything but spaces or tabs, is text: `## C#` reads `C#`. Every anchor `fmt`
 writes and `show` reports is slugged from this text ([§DF-closing-hashes-are-not-the-heading](../decisions/functional/DF-closing-hashes-are-not-the-heading.md#df-closing-hashes-are-not-the-heading-a-headings-closing-hashes-are-not-part-of-its-anchor)).
-The `--toc` `title` is this text too: `## 1. Steps ##` is listed with the title `Steps`. grund 0.18.0
-still printed the closing run there; 0.19.0 dropped it
-([§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves)).
+A title, in `--toc` and in `list`, is the heading's text as written, links kept, but it leaves
+the closing run out too: `## 1. Steps ##` is titled `Steps` ([§FS-show.2.1.2](FS-show.md#212-section-map---toc), [§FS-list.3.1](FS-list.md#31---format-text-default)).
 
 ## body: Where a declaration's body ends
 
@@ -735,7 +734,7 @@ sections, so a citation of it with a section suffix names a section that does no
 ([§FS-show.2.4.1](FS-show.md#241-the-slices-over-a-manifest)). It has no title either: no
 heading declares it, so there is no title tail to read, and grund makes none up from the
 directory's name. Where a surface reports a declaration's title, a case's is absent: an
-empty title column in `grund list`, and `null` in its JSON ([§FS-list.3.1.1](FS-list.md#311-row-notes), [§FS-list.3.2](FS-list.md#32---format-json)). Its body is the manifest `grund E2E-<name>` prints ([§FS-show.2.4](FS-show.md#24-e2e-cases)), and
+empty title column in `grund list`, and `null` in its JSON ([§FS-list.3.1.1](FS-list.md#311-row-notes), [§FS-output-shapes.5](FS-output-shapes.md#5-list---formatjson)). Its body is the manifest `grund E2E-<name>` prints ([§FS-show.2.4](FS-show.md#24-e2e-cases)), and
 a case that nothing cites is not reported as unused ([§FS-check.4.1.3](FS-check.md#413-e2e-declarations-are-exempt)).
 
 ### e2e-case.walk: The walk stops at a case directory

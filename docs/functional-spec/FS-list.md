@@ -152,7 +152,7 @@ An exact off-grammar declaration retained under [§FS-config.3.2](FS-config.md#3
 
 ### 2.4 Order
 
-Declarations come out sorted by ID — kind, then number, then slug. The result is deterministic for a given tree.
+Rows come out sorted by ID: kind name, then number, then slug. Names compare in byte order and numbers by value, and an ID with no number comes first, so `FS-9` lists before `FS-10`, and `FS` before `GOAL` whatever order the kinds are configured in. A duplicated ID's homes follow by path, then line, and a declaration's section rows follow it in byte order of their path. In a workspace, rows sort by alias path first, in byte order. The result is deterministic for a given tree.
 
 ### 2.5 Inline homes stay canonical
 
@@ -184,7 +184,7 @@ FS-login        docs/functional-spec/FS-login.md:1    A player can log in with e
 G-no-dangling-refs  docs/goals.md:7     every cited ID resolves to a declaration
 ```
 
-The columns are: the ID (rendered in the repo's `[id] format`, or in its kind's own `format` where the kind sets one ([§FS-config.3.4.10.1](FS-config.md#34101-format)); left-padded so the column aligns — capped so one very long ID does not blow out the table), then `<path>:<line>` of the home declaration (for a collapsed stub-and-inline pair, the source file the body is in), then the title — the heading text the author wrote after `<ID>:`. A heading with no `: <text>` tail leaves the title column empty, a broken stub shows `→ <target>` in its place, a duplicated ID's lines carry a duplicate note, and a row with marked roots appends a suffix naming them in canonical order ([§FS-list.3.1.1](FS-list.md#311-row-notes)). `--kind` and `--unused` select the lines as [§FS-list.1.1](FS-list.md#11---kind) and [§FS-list.1.3](FS-list.md#13---unused) say. An empty catalog (or an empty filter result) prints nothing — that is not an error.
+The columns are: the ID (rendered in the repo's `[id] format`, or in its kind's own `format` where the kind sets one ([§FS-config.3.4.10.1](FS-config.md#34101-format)); left-padded so the column aligns — capped so one very long ID does not blow out the table), then `<path>:<line>` of the home declaration (for a collapsed stub-and-inline pair, the source file the body is in), then the title: the heading's text after its coordinate, as written but without a closing `#` run ([§FS-declarations.heading.rendered-text](FS-declarations.md#headingrendered-text-a-headings-rendered-text)), on a declaration row and a section row alike, so a section row's title is the one `--toc` gives it ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)). A heading with no `: <text>` tail leaves the title column empty, a broken stub shows `→ <target>` in its place, a duplicated ID's lines carry a duplicate note, and a row with marked roots appends a suffix naming them in canonical order ([§FS-list.3.1.1](FS-list.md#311-row-notes)). `--kind` and `--unused` select the lines as [§FS-list.1.1](FS-list.md#11---kind) and [§FS-list.1.3](FS-list.md#13---unused) say. An empty catalog (or an empty filter result) prints nothing — that is not an error.
 
 Stderr is empty on success.
 
@@ -194,18 +194,11 @@ A declaration with no title has an empty title column: one whose heading carries
 
 ### 3.2 `--format json`
 
-NDJSON on stdout — one object per catalog entry, same order as the text form:
-
-```json
-{"id":"AR-event-bus","kind":"AR","path":"src/bus.rs","line":14,"title":"In-process event broadcaster","stub":false,"defines":null,"refs":3,"duplicate":false}
-{"id":"FS-login","kind":"FS","path":"docs/functional-spec/FS-login.md","line":1,"title":"A player can log in with email","stub":false,"defines":null,"refs":7,"duplicate":false}
-```
-
-Fields: `id` (rendered ID), `kind`, `path` and `line` of the home declaration, `title` (`null` when the declaration has no title — a heading with no title tail, or an E2E case ([§FS-declarations.e2e-case.id](FS-declarations.md#e2e-caseid-a-case-directory-and-the-id-it-declares)) — or when the home is a broken stub), `stub` (true when this entry's home is a stub heading — only ever true for a *broken* stub, since a healthy one collapses into its source declaration), `defines` (the `<target>` of a stub heading, else `null`), `refs` (the count of recognised citations of this ID — exactly the number `grund refs` would list, and not the `--unused` predicate; [§FS-list.3.2.1](FS-list.md#321-refs-counts-citations)), and `duplicate` (true when the ID has more than one home). A row with marked roots adds a `value_roots` member in canonical section-path order, omitted when there are none ([§FS-list.3.2.2](FS-list.md#322-value_roots)).
+NDJSON on stdout: one object per row, in the text form's order, each the record of [§FS-output-shapes.5](FS-output-shapes.md#5-list---formatjson).
 
 #### 3.2.1 `refs` counts citations
 
-`refs` is the count of recognised citations of this ID across the scanned tree — exactly the number `grund refs` would list, carried on every entry so a tool need not run `grund refs` per ID to learn it. It is a *count of citations*, not the `--unused` predicate: where a kind's index is checked ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) that count includes the ID's index entry, which `--unused` discounts ([§FS-list.1.3](FS-list.md#13---unused)), so an entry selected by `--unused` may carry `refs: 1`. A tool filtering for uncited IDs should pass `--unused` and read the rows, not threshold on `refs`.
+`refs` is the count of recognised citations of the row's coordinate across the scanned tree: exactly what `grund refs <ID>` lists for a declaration row, and `grund refs <ID>.<section>`, that section without its descendants, for a section row ([§FS-refs.2](FS-refs.md#2-behaviour)). It is carried on every row so a tool need not run `grund refs` per coordinate. It is a *count of citations*, not the `--unused` predicate: where a kind's index is checked ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) that count includes the ID's index entry, which `--unused` discounts ([§FS-list.1.3](FS-list.md#13---unused)), so an entry selected by `--unused` may carry `refs: 1`. A tool filtering for uncited IDs should pass `--unused` and read the rows, not threshold on `refs`.
 
 #### 3.2.2 `value_roots`
 
@@ -213,7 +206,7 @@ A row with value roots of either origin adds `"value_roots":[{"id":"FS-pricing.2
 
 ### 3.3 `--summary`
 
-`grund list --summary` prints one line per kind — in the configured `[[kinds]]` order, for the kinds that have at least one declaration in scope:
+`grund list --summary` prints one line per kind, in the configured kind order, for the kinds that have at least one declaration in the selection:
 
 ```
 $ grund list --summary
@@ -224,7 +217,7 @@ FS   18    requirements.md
 …
 ```
 
-Columns: the kind, the count of declarations of that kind the scan found (after `--kind` / `--unused` narrowing, if any: `--kind` keeps only the selected kinds' rows and `--unused` counts only uncited declarations, [§FS-list.3.3.1](FS-list.md#331-narrowed-summaries)), and that kind's configured home (`file` for single-file kinds, otherwise `folder`; [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)) — so one line tells an agent both how big each slice of the catalog is and where to look. A kind with zero declarations in scope is omitted, which is every non-citable kind by construction; an empty result (every kind empty, or `--kind` narrowed to kinds with no declarations) prints nothing — not an error. `--format json` together with `--summary`: NDJSON, one object per kind, `{"kind":<kind>,"title":<[[kinds]] title>,"home":<file-or-folder>,"count":<n>}`, same order. Exit codes ([§FS-list.4](FS-list.md#4-exit-codes)) are unchanged.
+Columns: the kind; the count of its declarations in the selection, after every filter ([§FS-list.requirements.one-selection](FS-list.md#requirementsone-selection-every-filter-narrows-every-mode-alike--realized-directional-for-the-next-filter), [§FS-list.3.3.1](FS-list.md#331-narrowed-summaries)), where each home of a duplicated ID counts once and a declaration counts once however many of its rows `--glob` or `--selector` selects; and its home, so one line tells an agent both how big each slice of the catalog is and where to look. The home is the kind's places in the row's place order ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)), comma-separated, each spelled as `list` spells a path ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), so a member's place carries the member's directory. A kind with no declaration in the selection is omitted, which is every non-citable kind; an empty result prints nothing, and that is not an error. `--format json` prints [§FS-output-shapes.5](FS-output-shapes.md#5-list---formatjson)'s summary record. Exit codes ([§FS-list.4](FS-list.md#4-exit-codes)) are unchanged.
 
 #### 3.3.1 Narrowed summaries
 
@@ -264,7 +257,7 @@ JSON output is NDJSON with fields in this order: optional workspace `project`, t
 
 #### 3.4.5 Order and `--top`
 
-Normal row order is existing workspace/project order and parsed-ID order, then the declaration before its sections, byte-sorted section path, then byte-sorted path and line to distinguish sites. `--top` is applied after `--project`, `--kind`, and `--unused`; `--unused` selects declarations by its ordinary rule and retains all section rows belonging to those declarations. Top mode sorts descending by the lead value of the first requested unit and uses normal row order as the total tie-break. It omits rows without measurements; fewer than `N` measurable rows returns all of them. An empty filtered result writes nothing and succeeds.
+Normal row order is [§FS-list.2.4](FS-list.md#24-order)'s. `--top` is applied after `--project`, `--kind`, and `--unused`; `--unused` selects declarations by its ordinary rule and retains all section rows belonging to those declarations. Top mode sorts descending by the lead value of the first requested unit and uses normal row order as the total tie-break. It omits rows without measurements; fewer than `N` measurable rows returns all of them. An empty filtered result writes nothing and succeeds.
 
 #### 3.4.6 A home outside the scan
 
