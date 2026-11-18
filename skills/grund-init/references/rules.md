@@ -201,7 +201,7 @@ offers a selector for the two subject forms. A chapter actually named `every`,
 a nested `every.detail` path, and an ID such as `FS-every` remain valid.
 See [the quantifier refusal](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesevery-unsupported-every-is-refused-as-a-quantifier-with-an-each-repair).
 
-For a configured, scanned non-citable place `e2e` at `tests/e2e/`, both
+For a configured, scanned non-citable row `e2e` whose place is `tests/e2e/`, both
 `Each e2e must cite at least one FS.` and
 `Each file in tests/e2e/ must cite at least one FS.` remain refused. Follow
 the supplementary hint to express this obligation in a version-2 `grund.toml`

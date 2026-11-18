@@ -102,7 +102,7 @@ impl SubjectKinds {
             None => remedies::invalid_rule_place(&place.table, &target),
         };
         Some(format!(
-            "; for configured place \"{}\", {express}",
+            "; for configured row \"{}\", {express}",
             place.name
         ))
     }

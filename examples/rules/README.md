@@ -65,7 +65,7 @@ See the [chapter-rules guide](../../docs/user-facing/rules.md) for every accepte
 sentence, every common refusal and any rewrite offered, and the finding
 produced by each family.
 
-## Configured place obligations
+## Configured row obligations
 
 The separate [`place-obligations/repo`](place-obligations/repo) fixture configures
 a scanned non-citable `e2e` row at `tests/e2e/`.
@@ -76,7 +76,7 @@ guidance ([§FS-rule-refusals.sentences.rewrite.no-form.place](../../docs/functi
 grund check examples/rules/place-obligations/repo --rule 'Each e2e must cite at least one FS.' --only-rule
 grund check examples/rules/place-obligations/repo --rule 'Each file in tests/e2e/ must cite at least one FS.' --only-rule
 # Both exit 2. Their existing reasons end with:
-# ; for configured place "e2e", express this obligation in grund.toml: [rules.citations.e2e] with must = ["FS"], and [rules.citations.e2e.grounding] must = "file", without which a file there that cites nothing is not checked
+# ; for configured row "e2e", express this obligation in grund.toml: [rules.citations.e2e] with must = ["FS"], and [rules.citations.e2e.grounding] must = "file", without which a file there that cites nothing is not checked
 ```
 
 This fixture uses version 2. In version 1, the hint instead names
