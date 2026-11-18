@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 use super::check::{CheckOpts, CheckOutput, check_with_projects};
 use super::config_findings::{CONFIG_VERSION_1, version_1_caution};
-use super::config_migrate_guidance::guidance_refusals;
+use super::config_migrate_guidance::{DIRECTIONS, guidance_gate};
 use crate::checker::stale_section_noun;
 use crate::config::migrate::{
     Gate, GateResult, Located, MigrateFailure, MigrateOutcome, MigrateReport, Prepared, locate,
@@ -20,7 +20,9 @@ use crate::config::{
     Config, Invocation, PathBase, Project, Selection, config_at, with_report_path_base,
 };
 use crate::model::{Code, Finding, GENERATED_SECTIONS, format_path};
-use crate::scanner::walk_scannable_files;
+use crate::scanner::{
+    CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, walk_scannable_files,
+};
 use crate::writers::{Holds, Install, InstallFailure, atomic_install};
 
 /// The options of one `grund config migrate --to 2` run (§FS-config-migrate.1).
@@ -67,15 +69,25 @@ pub fn config_migrate(opts: &MigrateOpts) -> Result<MigrateOutcome, MigrateFailu
     }
     report.members = members(&located);
     // §FS-config-migrate.5.3: guidance `check` would compare refuses before the report gate.
+    let mut one_grammar = false;
     if let (Some(GateResult::Equal), Some(candidate)) = (&report.gates, &report.candidate)
-        && let Some(refusals) = guidance_refusals(&located, candidate, &value_lines)
-        && !refusals.is_empty()
+        && let Some(gate) = guidance_gate(&located, candidate, &value_lines)
     {
-        report.refusals = refusals;
-        return Ok(MigrateOutcome::Migrated(Box::new(report)));
+        if !gate.refusals.is_empty() {
+            report.refusals = gate.refusals;
+            return Ok(MigrateOutcome::Migrated(Box::new(report)));
+        }
+        one_grammar = gate.directions_in_one_grammar;
     }
     if let (Some(GateResult::Equal), Some(candidate)) = (&report.gates, &report.candidate) {
-        let lines = report_gate(&located, &v1, candidate, &line_map, &report.config);
+        let lines = report_gate(
+            &located,
+            &v1,
+            candidate,
+            &line_map,
+            &report.config,
+            one_grammar,
+        );
         if !lines.is_empty() {
             report.gates = Some(GateResult::Differs {
                 gate: Gate::Report,
@@ -172,13 +184,16 @@ fn members(located: &Located) -> Vec<String> {
 
 /// §FS-config-migrate.5.2: `check --suggestions` on the root with the file as
 /// read and with the candidate in its place; the lines that differ, `- ` for
-/// version 1 and `+ ` for the candidate.
+/// version 1 and `+ ` for the candidate. `one_grammar` says the guidance gate
+/// passed the root citation directions only in one grammar, so neither run
+/// compares the root block's stale finding on that section.
 pub(super) fn report_gate(
     located: &Located,
     v1: &Project,
     candidate: &str,
     line_map: &[(usize, usize)],
     config: &str,
+    one_grammar: bool,
 ) -> Vec<String> {
     let run = || {
         check_with_projects(CheckOpts {
@@ -188,14 +203,14 @@ pub(super) fn report_gate(
             ..CheckOpts::default()
         })
     };
-    let before = lines(run(), None, config, &located.root);
+    let before = lines(run(), None, config, &located.root, one_grammar);
     // `[output] relative_paths = false` is `--path-base=invocation` once dropped.
     let base = crate::config::report_path_base()
         .or((!v1.presentation.output.relative_paths).then_some(PathBase::Invocation));
     let after = crate::config::with_config_text(&located.file, candidate, || {
         with_report_path_base(base, run)
     });
-    let after = lines(after, Some(line_map), config, &located.root);
+    let after = lines(after, Some(line_map), config, &located.root, one_grammar);
     // Compared as multisets: a line twice in one run and once in the other differs.
     let mut out = surplus(&before, &after, "- ");
     out.extend(surplus(&after, &before, "+ "));
@@ -226,6 +241,7 @@ fn lines(
     line_map: Option<&[(usize, usize)]>,
     config: &str,
     root_dir: &Path,
+    one_grammar: bool,
 ) -> Vec<String> {
     let v1_line =
         |map: &[(usize, usize)], at: usize| map.iter().find(|(v2, _)| *v2 == at).map(|(_, v1)| *v1);
@@ -248,10 +264,13 @@ fn lines(
             f.column.map_or("-".into(), |c| c.to_string()),
         )
     };
-    // §FS-config-migrate.5.2: the v1 run's own caution is what migrating ends, not a
-    // difference the candidate makes, so neither run carries it; nor a stale block
-    // outside the generated sections, which the guidance gate passes (.5.3).
-    let compared = |f: &&Finding| f.code != CONFIG_VERSION_1.as_str() && !describes_config(f);
+    // §FS-config-migrate.5.2: neither run carries the v1 caution, a stale block outside the
+    // generated sections (.5.3), or root citation directions passed in one grammar (.5.3.1).
+    let compared = |f: &&Finding| {
+        f.code != CONFIG_VERSION_1.as_str()
+            && !describes_config(f)
+            && !(one_grammar && root_directions(f))
+    };
     // §FS-config-migrate.5.2: one line per run warning; `output.warnings` repeats these.
     let mut out: Vec<String> = warnings
         .iter()
@@ -301,6 +320,22 @@ pub(super) fn describes_config(finding: &Finding) -> bool {
     finding.code == Code::AGENTS_INIT.as_str()
         && stale_section_noun(&finding.message)
             .is_some_and(|noun| !GENERATED_SECTIONS.contains(&noun))
+}
+
+/// §FS-config-migrate.5.2: a stale finding on the citation directions section of
+/// the root block, in `AGENTS.md` or a companion that carries it
+/// (§FS-check.3.5): the section the guidance gate compares in one grammar
+/// (§FS-config-migrate.5.3.1). A scoped or member block is spelled under its
+/// directory, so it is never one.
+pub(super) fn root_directions(finding: &Finding) -> bool {
+    finding.code == Code::AGENTS_INIT.as_str()
+        && stale_section_noun(&finding.message) == Some(DIRECTIONS)
+        && finding.path.as_deref().is_some_and(|path| {
+            path == CANONICAL_AGENT_ENTRYPOINT
+                || COMPANION_AGENT_ENTRYPOINTS
+                    .iter()
+                    .any(|companion| companion.rel == path)
+        })
 }
 
 /// One candidate config line as the comparison prints it: the version-1 line its

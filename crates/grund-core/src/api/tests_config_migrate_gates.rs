@@ -79,10 +79,10 @@ fn report_gate_catches_a_candidate_that_changes_the_findings() {
         ],
     );
     let (located, v1, candidate, map) = prepared(&root);
-    assert!(report_gate(&located, &v1, &candidate, &map, "grund.toml").is_empty());
+    assert!(report_gate(&located, &v1, &candidate, &map, "grund.toml", false).is_empty());
     let wrong = candidate.replacen("marker = \"§\"", "marker = \"@\"", 1);
     assert_ne!(wrong, candidate, "the candidate spells the marker");
-    let lines = report_gate(&located, &v1, &wrong, &map, "grund.toml");
+    let lines = report_gate(&located, &v1, &wrong, &map, "grund.toml", false);
     assert!(
         lines
             .iter()
@@ -118,7 +118,7 @@ fn report_gate_moves_a_config_finding_through_the_key_map() {
         map.iter().any(|(v2, v1)| v2 != v1),
         "the candidate moves a key: {map:?}"
     );
-    let lines = report_gate(&located, &v1, &candidate, &map, "grund.toml");
+    let lines = report_gate(&located, &v1, &candidate, &map, "grund.toml", false);
     assert_eq!(lines, Vec::<String>::new());
     match config_migrate(&MigrateOpts {
         path: root.to_path_buf(),
@@ -156,7 +156,7 @@ fn report_gate_drops_the_version_1_caution() {
         "the v1 run carries the caution the gate must drop"
     );
     let (located, v1, candidate, map) = prepared(&root);
-    assert!(report_gate(&located, &v1, &candidate, &map, "grund.toml").is_empty());
+    assert!(report_gate(&located, &v1, &candidate, &map, "grund.toml", false).is_empty());
     match config_migrate(&MigrateOpts {
         path: root.to_path_buf(),
         write: false,
@@ -172,7 +172,7 @@ fn report_gate_drops_the_version_1_caution() {
 fn report_gate_counts_an_unmapped_config_finding_as_a_difference() {
     let root = opted_out_root("unmapped");
     let (located, v1, candidate, _) = prepared(&root);
-    let lines = report_gate(&located, &v1, &candidate, &[], "grund.toml");
+    let lines = report_gate(&located, &v1, &candidate, &[], "grund.toml", false);
     assert!(
         lines
             .iter()
@@ -218,7 +218,7 @@ fn report_gate_compares_the_projects_checked() {
     let (located, v1, candidate, map) = prepared(&root);
     let wrong = candidate.replacen("include_root = false", "include_root = true", 1);
     assert_ne!(wrong, candidate, "the candidate spells include_root");
-    let lines = report_gate(&located, &v1, &wrong, &map, "grund.toml");
+    let lines = report_gate(&located, &v1, &wrong, &map, "grund.toml", false);
     assert!(
         lines.iter().any(|line| line.starts_with("+ project ")),
         "{lines:?}"
@@ -379,7 +379,7 @@ fn a_block_init_wrote_passes_both_gates() {
     .expect("init");
     let (located, v1, candidate, map) = prepared(&root);
     assert_eq!(
-        report_gate(&located, &v1, &candidate, &map, "grund.toml"),
+        report_gate(&located, &v1, &candidate, &map, "grund.toml", false),
         Vec::<String>::new()
     );
     match config_migrate(&MigrateOpts {
@@ -479,7 +479,7 @@ fn report_gate_names_an_unmapped_line_in_a_message_as_the_candidates() {
         map.iter().all(|(v2, _)| *v2 != folders),
         "the built-in row is written out, not mapped: {map:?}"
     );
-    let lines = report_gate(&located, &v1, &candidate, &map, "grund.toml");
+    let lines = report_gate(&located, &v1, &candidate, &map, "grund.toml", false);
     let marked = format!("(the candidate's grund.toml:{folders})");
     assert!(
         lines
@@ -526,7 +526,7 @@ fn report_gate_names_an_unmapped_config_finding_at_the_candidates_line() {
     // The same key on the same line 4, with no key map to move it by.
     let candidate =
         "grund_config_version = 2\n[workspace]\nmembers = [\"sub\"]\ninclude_root = false\n";
-    let lines = report_gate(&located, &v1, candidate, &[], "grund.toml");
+    let lines = report_gate(&located, &v1, candidate, &[], "grund.toml", false);
     let unread = |mark: &str| {
         let at: Vec<&String> = lines
             .iter()

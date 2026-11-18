@@ -55,7 +55,19 @@ pub(crate) fn root_citation_directions(
     run: &Run,
     here: &dyn Fn(&str) -> bool,
 ) -> Option<String> {
-    directions_section(project, run, here, true)
+    root_citation_directions_in(project, run, here, project.version)
+}
+
+/// [`root_citation_directions`] with the grounding sentence's setting spelled in
+/// config `grammar` rather than the live version: `config migrate` compares the
+/// section in the candidate's grammar on both sides (§FS-config-migrate.5.3.1).
+pub(crate) fn root_citation_directions_in(
+    project: &Project,
+    run: &Run,
+    here: &dyn Fn(&str) -> bool,
+    grammar: u32,
+) -> Option<String> {
+    directions_section(project, run, here, true, grammar)
 }
 
 /// A scoped block's `### Citation directions` (§FS-init.2.3.5.12.1): the legend
@@ -67,7 +79,7 @@ pub(crate) fn scoped_citation_directions(
     run: &Run,
     here: &dyn Fn(&str) -> bool,
 ) -> Option<String> {
-    directions_section(project, run, here, false)
+    directions_section(project, run, here, false, project.version)
 }
 
 /// The one render of a destination's `### Citation directions`, for the root
@@ -75,12 +87,13 @@ pub(crate) fn scoped_citation_directions(
 /// alike, so a config without rules answers one way at both. The grounding
 /// sentence renders whether or not rules are declared, because it is generated
 /// from each row's effective grounding and not from the direction rules
-/// (§FS-init.2.3.5.7).
+/// (§FS-init.2.3.5.7). `grammar` spells the grounding setting a bullet names.
 fn directions_section(
     project: &Project,
     run: &Run,
     here: &dyn Fn(&str) -> bool,
     at_root: bool,
+    grammar: u32,
 ) -> Option<String> {
     let grounding = citation_grounding_sentence(project, run, here);
     if !project.rules.citations.declared {
@@ -88,7 +101,7 @@ fn directions_section(
         // and the grounding sentence alone where it lands here, else no section.
         return grounding.map(|sentence| format!("### Citation directions\n\n{sentence}"));
     }
-    let bullets = citation_bullets(project, run, here);
+    let bullets = citation_bullets(project, run, here, grammar);
     if !at_root && grounding.is_none() && bullets.is_empty() {
         return None;
     }
@@ -141,8 +154,14 @@ pub(crate) fn row_has_bullet(project: &Project, row: &str) -> bool {
             .is_some()
 }
 
-/// The bullets of the rows `here` admits, in [`bullet_row_order`].
-fn citation_bullets(project: &Project, run: &Run, here: &dyn Fn(&str) -> bool) -> Vec<String> {
+/// The bullets of the rows `here` admits, in [`bullet_row_order`], each
+/// grounding setting spelled in config `grammar`.
+fn citation_bullets(
+    project: &Project,
+    run: &Run,
+    here: &dyn Fn(&str) -> bool,
+    grammar: u32,
+) -> Vec<String> {
     if !project.rules.citations.declared {
         return Vec::new();
     }
@@ -153,7 +172,8 @@ fn citation_bullets(project: &Project, run: &Run, here: &dyn Fn(&str) -> bool) -
         .filter_map(|kind| {
             let rules = project.rules.citations.per_kind.get(kind)?;
             let clauses = citation_direction_clauses(project, rules)?;
-            let (subject, uncited) = citation_direction_subject(project, run, kind, homeless);
+            let (subject, uncited) =
+                citation_direction_subject(project, run, kind, homeless, grammar);
             Some(match uncited {
                 Some(uncited) => format!("- {subject} {clauses}. {uncited}"),
                 None => format!("- {subject} {clauses}."),
@@ -193,6 +213,7 @@ fn citation_direction_subject(
     run: &Run,
     kind: &str,
     homeless: &str,
+    grammar: u32,
 ) -> (String, Option<String>) {
     let kinds = project.kind_configs();
     if kind == homeless {
@@ -243,8 +264,9 @@ fn citation_direction_subject(
     if grounds {
         return (subject, None);
     }
-    // §FS-init.2.3.5.2.2: the one setting that closes the hole, in the live version.
-    let setting = grounding_setting(kind, project.version, |fragment| format!("`{fragment}`"));
+    // §FS-init.2.3.5.2.2: the one setting that closes the hole, in `grammar`: the
+    // live version, but for `config migrate`'s comparison (§FS-config-migrate.5.3.1).
+    let setting = grounding_setting(kind, grammar, |fragment| format!("`{fragment}`"));
     (
         format!("{subject}{narrowed}"),
         Some(format!("{uncited}; {setting} makes it a finding.")),
