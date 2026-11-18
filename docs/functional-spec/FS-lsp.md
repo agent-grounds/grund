@@ -599,6 +599,6 @@ gives, never an ID that has gone and never one short of an ID that is new
 ## 5. Out of scope
 
 - **Per-editor wrappers**: no first-party VSCode/IntelliJ/Vim/Emacs plugin duplicates the LSP server or is published to a marketplace ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)). The LSP server is the executable surface; [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations) ships importable configuration data but the user installs the generic client and performs the import.
-- **Refactoring (rename ID)**: `grund` does not rename IDs; the scheme says IDs are forever ([§FS-non-goals.4](FS-non-goals.md#4-cross-workspace-id-renaming)).
+- **Refactoring (rename ID)**: `grund` does not rename IDs ([§FS-non-goals.4](FS-non-goals.md#4-cross-workspace-id-renaming)).
 - **Inline editing of declaration bodies from the hover popup**: editors already do this well; `grund-lsp` does not implement it.
 - **Network access**: the server performs no network I/O ([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)). All scanning is local.

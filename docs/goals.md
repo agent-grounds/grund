@@ -176,8 +176,9 @@ Neither is a choice about the three frozen things: a project that holds one rule
 at advisory standing has configured that rule, not the severity set
 ([§DF-verdict-vocabulary-freeze](decisions/functional/DF-verdict-vocabulary-freeze.md#df-verdict-vocabulary-freeze-the-freeze-is-on-the-verdict-vocabulary-not-on-which-rules-a-project-holds-in-force)).
 
-Separately, and about a different axis: install-local state may change no
-verdict — that is the bright line
+Separately, and about a different axis: install-local state outside the input
+([§REQ-deterministic-output.2](requirements/REQ-deterministic-output.md#2-input-is-the-tree-the-config-and-the-invocation))
+may change no verdict — that is the bright line
 ([§FS-non-goals.13](functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 The procedure an author of a new key follows to stay on the right side of it is
 [§FS-config.principle.install-local](functional-spec/FS-config.md#principleinstall-local-the-relation-governs-committed-repository-state-only)'s.
