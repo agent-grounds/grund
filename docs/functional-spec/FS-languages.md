@@ -32,7 +32,7 @@ The block surrounding a declaration line runs from an open boundary ([§FS-langu
 
 Scan **backwards** from the declaration line over consecutive lines that are part of the same comment construct:
 
-- For line-style comments (`//`, `///`, `//!`, `#`, `;`, `--`): consecutive lines of one block form ([§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks)). A line that only matches the same comment prefix family, such as a `//` line beside a `///` run, starts a block of its own. A blank line ends the block, and so does a line that is not a comment.
+- For line-style comments (`//`, `///`, `//!`, `#`, `;`, `--`): consecutive lines of one block form ([§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks)). A blank line ends the block, and so does a line that is not a comment.
 - For block-style comments (`/* … */`, `/** … */`): scan backward until the opener is found (`/*` or `/**`). The opener line itself is part of the block.
 - For Python triple-quoted docstrings: scan backward until the opening `"""` (or `'''`). The opener line is part of the block.
 
