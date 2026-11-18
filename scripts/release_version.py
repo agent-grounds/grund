@@ -41,6 +41,13 @@ def check_identity(root, ref, dispatch_sha, expected_sha):
             "expected_main_sha must match the dispatch SHA, checkout HEAD and fetched origin/main SHA")
 
 
+def descends(root, name, tag):
+    """§FS-distribution.4.4.2: whether tag `name` sits on a commit that contains tag `tag`."""
+    base = git(root, "rev-parse", f"refs/tags/{tag}^{{commit}}").strip()
+    tip = git(root, "rev-parse", f"refs/tags/{name}^{{commit}}").strip()
+    return git(root, "merge-base", base, tip, nothing_found=1).strip() == base
+
+
 def select(root, args):
     """§FS-distribution.4.4.2: one preflight returns either choice's existing outputs."""
     first_stable = args.version == "1.0.0"
@@ -66,10 +73,17 @@ def select(root, args):
     if first_stable:
         if number >= (1, 0, 0):
             raise ChangelogError(f"stable tag {tag} already exists; cannot select the first stable release")
-        tagged_commit = git(root, "rev-parse", f"refs/tags/{tag}^{{commit}}").strip()
-        ancestor = git(root, "merge-base", tagged_commit, "HEAD", nothing_found=1).strip()
-        if ancestor != tagged_commit:
-            raise ChangelogError(f"latest stable tag {tag} is not reachable from dispatch main")
+        # §FS-distribution.4.4.2: start from the previous release (§FS-distribution.4.6.1); a higher
+        # tag may only be its patch on a branch off it (§DF-markdown-homes-refused-in-1-0.3).
+        reached = set(git(root, "tag", "--merged", "HEAD", "--list", "v*.*.*").split())
+        released = [(n, t) for n, t in tags if t in reached]
+        if not released:
+            raise ChangelogError("no stable vX.Y.Z tag is reachable from dispatch main")
+        number, tag = max(released)
+        for other, name in sorted(tags, reverse=True):
+            if other > number and not (other[:2] == number[:2] and descends(root, name, tag)):
+                raise ChangelogError(f"stable tag {name} is not reachable from dispatch main "
+                                     f"and is not a patch of {tag} on a branch off it")
 
     count = int(git(root, "rev-list", "--count", f"refs/tags/{tag}..HEAD").strip())
     if count == 0:

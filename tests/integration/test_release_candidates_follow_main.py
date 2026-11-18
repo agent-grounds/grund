@@ -13,6 +13,7 @@ waits (§AR-ci.11): `GRUND_RELEASE_SETTLE`, `GRUND_RELEASE_BUDGET`,
 `GRUND_RELEASE_ROUND_MIN` and `GRUND_RELEASE_RESERVE`, in seconds."""
 
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -206,6 +207,23 @@ class ReleaseMinorFollowsMain(FollowsMain, unittest.TestCase):
 
 class AutoBumpFollowsMain(FollowsMain, unittest.TestCase):
     WORKFLOW, (NEXT, DEV), INPUTS = "auto-bump.yml", PATCH, {}
+
+    def test_a_tree_dated_to_a_later_release_skips_the_patch(self):
+        """§FS-distribution.4.4: a patch below the window's floor is left to the manual helper."""
+        case = Case(self.scratch, self.WORKFLOW)
+        ramp = case.shas["ramp"]
+        subprocess.run(["git", "-C", str(case.origin), "update-ref", "refs/heads/main", ramp], check=True)
+        subprocess.run(["git", "-C", str(case.work), "fetch", "-q", "origin", "main"], check=True, env=case.env)
+        subprocess.run(["git", "-C", str(case.work), "reset", "-q", "--hard", ramp], check=True, env=case.env)
+        case.run()
+        report = case.report()
+        self.assertTrue(case.ok, report)
+        self.assertEqual([], case.runs(), report)
+        self.assertEqual([], case.published(), report)
+        self.assertEqual(ramp, case.main(), report)
+        self.assertEqual([], case.created(), report)
+        notices = "\n".join(out for _name, _code, out, _err in case.ran)
+        self.assertIn(f"at or above {LATER}, not as {self.NEXT}", notices, report)
 
 
 if __name__ == "__main__":
