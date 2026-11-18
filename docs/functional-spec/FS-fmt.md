@@ -418,8 +418,8 @@ Every row an earlier release printed for these lines is a prefix of its row here
 With `--write`, the report names what changed on disk — on stdout, not the stderr transcript shape `grund init` uses ([§FS-errors.6](FS-errors.md#6-the-grund-init-transcript)): a `rewrote N line(s):` summary line, then one `  <path> (<count>)` line per file touched, in lexicographic path order, where both counts are changed-line counts (an empty change set prints `rewrote 0 lines` with no list). The file system carries the actual change; the summary is so a reviewer can see which files to re-inspect without diffing the whole tree, and what kind of change to look for. After `rewrote N line(s):` come totals joined by `, `:
 
 ```text
-rewrote 7 lines: 6 citations marked, 6 links written
-  docs/architecture/AR-ledger.md (1)
+rewrote 2 lines: 2 citations marked, 2 links written
+  requirements.md (2)
 ```
 
 In [§FS-fmt.3.5.1](FS-fmt.md#351-a-line-with-several-rewrites-carries-the-first-label)'s order, the lock last, they are triggers marked, citations marked, local sections expanded, shorthands expanded, links written and section-lock entries; a zero is left out and a one is singular (`1 section-lock entry`). Each occurrence counts: a citation marked and wrapped counts in both, a typed trigger that expands counts as a trigger and a shorthand. A link counts when new or re-pointed. A lock entry counts per add, refresh, drop or rebuild row, rows N already counts, so `rewrote 0 lines` still means nothing was written ([§FS-section-lock.checks.remedy](FS-section-lock.md#checksremedy-the-run-that-writes-the-lock)). A partial run ([§FS-fmt.3.1](FS-fmt.md#31-an-unreadable-path-is-named-and-a-partial-run-still-rewrites)) counts what reached disk.

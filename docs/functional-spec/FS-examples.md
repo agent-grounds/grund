@@ -59,8 +59,8 @@ goldens and documentation coverage are normative in
 [§FS-rules.10](FS-rules.md#10-documentation-and-executable-examples).
 
 They include the review-checklist walkthrough at `examples/review-checklist/`, a
-multi-run example ([§FS-examples.5.5](FS-examples.md#55-an-example-may-pin-several-runs)) whose runs `1-count`, `2-bodies`, `3-owners`, `4-citers` and `5-cites`
-are the review recipe of [§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern), [§FS-refs.globs](FS-refs.md#globs---glob-lists-who-cites-a-set) and [§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites), one step each.
+multi-run example ([§FS-examples.5.5](FS-examples.md#55-an-example-may-pin-several-runs)) whose runs, listed in its README,
+are the review recipe of [§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern), [§FS-refs.globs](FS-refs.md#globs---glob-lists-who-cites-a-set) and [§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites).
 
 They include the downstream-citers walkthrough at `examples/downstream-citers/`,
 a multi-run example ([§FS-examples.5.5](FS-examples.md#55-an-example-may-pin-several-runs)) for a project whose citers live in a repository its
@@ -191,9 +191,7 @@ them. Discovery takes a top-level example directory that holds no
 `expected.exit` and runs each direct subdirectory that does, in name order,
 through the same shared runner; nothing deeper is searched. An example directory
 with neither an `expected.exit` nor such a subdirectory is not a runnable
-example, as before. `examples/migrate/` is the first: its two runs are the
-preview that refuses and the preview after the repairs it names
-([§FS-config-migrate.3.1](FS-config-migrate.md#31-a-refusal-names-a-v1-repair)).
+example.
 
 ### 5.6 Mutable fixtures belong to one invocation
 
