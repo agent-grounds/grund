@@ -62,9 +62,9 @@ Each line is one setting at work:
 `grund check examples/sources/repo` prints `success`. Change `declarations` to `"any-comment"` and `exclude` to `[]`, the reading a v1 project has, and the same tree fails:
 
 ```text
-docs/fs/FS-parser.md:1: error: duplicate declaration of FS-parser (also declared at src/parser.h:7)
-src/generated/parser_gen.h:1: error: duplicate declaration of AR-tokenizer (also declared at src/parser.h:1)
-src/parser.h:7: error: FS-parser declares kind FS inside AR home src
+docs/fs/FS-parser.md:1: error: duplicate declaration of FS-parser (also declared at src/parser.h:7); keep one declaration of the ID and rename or remove the others
+src/generated/parser_gen.h:1: error: duplicate declaration of AR-tokenizer (also declared at src/parser.h:1); keep one declaration of the ID and rename or remove the others
+src/parser.h:7: error: FS-parser declares kind FS inside AR home src; move it to a home of its own kind
 ```
 
 The trade-offs:

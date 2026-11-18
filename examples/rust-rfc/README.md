@@ -230,7 +230,7 @@ Copy the template into `text/` and run the check before writing anything:
 ```console
 $ cp rfcs/0000-template.md rfcs/text/0000-retry-budget.md
 $ grund check
-rfcs/0000-template.md:1: error: duplicate declaration of RFC-0000-my-feature (also declared at rfcs/text/0000-retry-budget.md:1)
+rfcs/0000-template.md:1: error: duplicate declaration of RFC-0000-my-feature (also declared at rfcs/text/0000-retry-budget.md:1); keep one declaration of the ID and rename or remove the others
 ```
 
 The template is a declaration, so the copy must take a slug of its own, as the
@@ -339,8 +339,8 @@ rfcs/text/0007-retry-policy.md:46: error: RFC-0007-retry-policy.reference-level-
 rfcs/text/0012-jittered-backoff.md:1: error: RFC-0012-jittered-backoff has no drawbacks field; kind RFC declares it
 rfcs/text/0012-jittered-backoff.md:53: error: unmarked heading inside RFC-0012-jittered-backoff; number it (## 1. Drawbacks) as RFC-0012-jittered-backoff.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
 rfcs/text/0012-jittered-backoff.md:86: error: RFC-0012-jittered-backoff.security is not a field of kind RFC, which is closed; its fields: summary, motivation, guide-level-explanation, reference-level-explanation, drawbacks, rationale-and-alternatives, prior-art, unresolved-questions, future-possibilities, amendments
-src/lib.rs:36: error: section not found: RFC-0007-retry-policy.reference-level-explanation.limit; write <§> before it to show the shape without citing it
-tests/backoff.rs:19: error: section not found: RFC-0007-retry-policy.reference-level-explanation.limit; write <§> before it to show the shape without citing it
+src/lib.rs:36: error: section not found: RFC-0007-retry-policy.reference-level-explanation.limit; write <§> before it to show the shape without citing it; run `grund RFC-0007-retry-policy --toc` to print the lead with the section map
+tests/backoff.rs:19: error: section not found: RFC-0007-retry-policy.reference-level-explanation.limit; write <§> before it to show the shape without citing it; run `grund RFC-0007-retry-policy --toc` to print the lead with the section map
 ```
 
 The repair for the pasted heading is the field's form, `## drawbacks: Drawbacks`,

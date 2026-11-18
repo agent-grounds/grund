@@ -292,16 +292,16 @@ cd "$demo_root"
 ```console
 $ grund check
 specs/001-photo-upload/plan.md:32: error: PLAN-001-photo-upload.constitution-check cites ART-observability 0 times; RULE-constitution-gate requires at least one; add or remove those citations until the count fits
-specs/001-photo-upload/plan.md:43: error: section not found: SPEC-001-photo-upload.requirements.functional.fr-003; write <§> before it to show the shape without citing it
+specs/001-photo-upload/plan.md:43: error: section not found: SPEC-001-photo-upload.requirements.functional.fr-003; write <§> before it to show the shape without citing it; run `grund SPEC-001-photo-upload --toc` to print the lead with the section map
 specs/001-photo-upload/spec.md:12: error: unmarked heading inside SPEC-001-photo-upload; number it (## 1. Clarifications) as SPEC-001-photo-upload.1, declare an ID, or use a bold label; this became an error in grund 0.16.0; kind SPEC declares the field clarifications, written ## clarifications: Clarifications
 specs/001-photo-upload/spec.md:14: error: unmarked heading inside SPEC-001-photo-upload; number it (### 1.1. Session 2026-10-14) as SPEC-001-photo-upload.1.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
-specs/001-photo-upload/tasks.md:44: error: section not found: SPEC-001-photo-upload.requirements.functional.fr-003; write <§> before it to show the shape without citing it
-specs/001-photo-upload/tasks.md:51: error: section not found: SPEC-001-photo-upload.requirements.functional.fr-003; write <§> before it to show the shape without citing it
+specs/001-photo-upload/tasks.md:44: error: section not found: SPEC-001-photo-upload.requirements.functional.fr-003; write <§> before it to show the shape without citing it; run `grund SPEC-001-photo-upload --toc` to print the lead with the section map
+specs/001-photo-upload/tasks.md:51: error: section not found: SPEC-001-photo-upload.requirements.functional.fr-003; write <§> before it to show the shape without citing it; run `grund SPEC-001-photo-upload --toc` to print the lead with the section map
 specs/002-album-share/plan.md:32: error: PLAN-002-album-share.constitution-check cites ART-observability 0 times; RULE-constitution-gate requires at least one; add or remove those citations until the count fits
 specs/002-album-share/spec.md:95: error: SPEC must not cite PLAN (citation direction) — re-point the citation or downgrade it to a plain Markdown link
 specs/002-album-share/tasks.md:56: error: ungrounded section `## Phase 4: Polish & Cross-Cutting Concerns` in kind home specs/002-album-share/tasks.md: no § citation to a declared ID; cite a declared ID within it
-src/pixelbin/upload.py:27: error: section not found: SPEC-001-photo-upload.requirements.functional.fr-003; write <§> before it to show the shape without citing it
-tests/test_upload.py:18: error: section not found: SPEC-001-photo-upload.requirements.functional.fr-003; write <§> before it to show the shape without citing it
+src/pixelbin/upload.py:27: error: section not found: SPEC-001-photo-upload.requirements.functional.fr-003; write <§> before it to show the shape without citing it; run `grund SPEC-001-photo-upload --toc` to print the lead with the section map
+tests/test_upload.py:18: error: section not found: SPEC-001-photo-upload.requirements.functional.fr-003; write <§> before it to show the shape without citing it; run `grund SPEC-001-photo-upload --toc` to print the lead with the section map
 .specify/memory/constitution.md:27: warning: declared but never cited: ART-observability; cite it
 ```
 
