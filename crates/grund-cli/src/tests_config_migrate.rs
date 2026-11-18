@@ -106,7 +106,7 @@ fn render(report: &MigrateReport, full: bool) -> String {
     let mut sink = Vec::new();
     let commands = report
         .wrote
-        .then(|| MigrateCommands::spelled(&report.config, None));
+        .then(|| MigrateCommands::spelled(Some(&report.config), None));
     render_migrate_report(
         report,
         MigratePresentation::for_report(report, full),

@@ -36,14 +36,20 @@ pub struct MigrateOpts {
 
 impl MigrateOpts {
     /// §FS-config-migrate.6.5.1 item 1: the config this run migrates, found by the
-    /// discovery [`config_migrate`] runs (§FS-config-migrate.1.1), spelled from
-    /// `dir` for a command pasted there rather than from the report base. Both
-    /// sides are resolved, so a link adds no `..`; the spelling is `/`-separated,
+    /// discovery [`config_migrate`] runs (§FS-config-migrate.1.1), spelled from the
+    /// working directory `dir` for a command pasted there rather than from the
+    /// report base. It is the file as git names it: both sides are resolved
+    /// (§FS-config.1.5), so a link on either adds no `..`, and a `PATH` through a
+    /// link is spelled to where the config is. The spelling is `/`-separated,
     /// climbs with `..` to a config above `dir`, and is the absolute path where no
-    /// relative one exists. `None` where discovery finds no config. A frontend's
-    /// seam, hidden with this record (§FS-distribution.3.1.2).
-    pub fn config_from(&self, dir: &Path) -> Option<String> {
+    /// relative one exists, `dir` being `None` for a process with no working
+    /// directory. `None` where discovery finds no config. A frontend's seam,
+    /// hidden with this record (§FS-distribution.3.1.2).
+    pub fn config_from(&self, dir: Option<&Path>) -> Option<String> {
         let located = locate(&self.path)?;
+        let Some(dir) = dir else {
+            return Some(format_path(&located.file));
+        };
         let dir = canonical_path(dir).unwrap_or_else(|_| dir.to_path_buf());
         Some(format_path(&relative_from_base(&dir, &located.file)))
     }
