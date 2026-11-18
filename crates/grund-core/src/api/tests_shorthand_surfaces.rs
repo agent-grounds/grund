@@ -262,7 +262,6 @@ fn embedded_citation_matchers(artifact: &str) -> Vec<String> {
 /// named and mixed paths included, so a click opens the cited section rather
 /// than the declaration heading (§FS-integrations.3.1.5, §FS-integrations.3.2.1).
 #[test]
-#[ignore = "red until #1432 widens the four client matchers' section suffix; implement removes this"]
 fn client_matchers_keep_named_and_mixed_section_paths() {
     let text = "see \u{a7}FS-login.requirements.lockout, \u{a7}FS-login.1.goals and \
                 \u{a7}FS-login.goals.3 here; \u{a7}FS-login.1.2 too, and \u{a7}FS-login.";
