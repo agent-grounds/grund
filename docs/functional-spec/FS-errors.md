@@ -601,7 +601,10 @@ verbatim contiguous prefix ([§FS-errors.3](FS-errors.md#3-message-text)):
 went, its clause keeps its place in each form ([§FS-section-lock.checks.vanished](FS-section-lock.md#checksvanished-a-cited-address-that-is-gone-and-where-its-text-went)). In the
 `section not found` form it follows the remedy. In the `missing section` form it follows the
 coordinate, and the remedy comes last. Code, severity, location, count, exit code and JSON shape
-do not move. Under `--full`, `out-of-scope-missing-section` prints the same message
+do not move. Their order is still that of [§FS-errors.4.1](FS-errors.md#41-ordering), by message, so on one line the
+finding of a coordinate may sort after that of a longer coordinate that starts with it:
+`missing section FS-login.9; …` sorts after `missing section FS-login.9.9; …`, because `;`
+sorts after `.`, where the shorter message used to sort first. Under `--full`, `out-of-scope-missing-section` prints the same message
 after its scope prefix ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)).
 
 Take a declaration `FS-login` with sections `2` and `2.1` only. One source line that cites
