@@ -69,6 +69,9 @@ impl Fixture {
                 "-c",
                 "core.hooksPath=/dev/null",
             ])
+            // `git restore` must give back version 1's bytes, not a CRLF
+            // checkout of them under Windows' default `core.autocrlf=true`.
+            .args(["-c", "core.autocrlf=false", "-c", "core.eol=lf"])
             .args(args)
             .current_dir(&self.0)
             .output()
