@@ -6,17 +6,14 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use super::embedded_value_context::{
-    EMBEDDED_VALUE_MARKER, authored_heading_level, authored_heading_path,
-    component_without_block_close, immediate_numeric_component, normalized_value_lines,
-    relative_heading_paths, semantic_comment_content,
+    EMBEDDED_VALUE_MARKER, authored_heading_level, component_without_block_close,
+    immediate_numeric_component, normalized_value_lines, relative_heading_paths, root_cursor,
 };
 use super::value_context::SourceValueLineContext;
 use super::values::{recorded_component, value_declaration_is_in_home};
 use crate::config::{FileReading, Frame, Schema};
-use crate::grammar::is_lone_block_marker;
 use crate::model::{
-    Catalog, EmbeddedValueRoot, InvalidValueSite, ValueRootOrigin, authored_component,
-    component_text_is_valid,
+    Catalog, EmbeddedValueRoot, InvalidValueSite, authored_component, component_text_is_valid,
 };
 use crate::sources::paths_same_location;
 
@@ -173,13 +170,6 @@ pub(super) fn validate_embedded_value_roots(
                 .value_root
                 .as_ref()
                 .and_then(EmbeddedValueRoot::marker_column);
-            // §FS-values.2.5: only a chapter root's path carries names, so a
-            // marked root's subtree keeps the numeric-only grammar it had
-            // before the key existed (§FS-values.9).
-            let chapter_root = root_info
-                .value_root
-                .as_ref()
-                .is_some_and(|root| matches!(root.origin, ValueRootOrigin::Chapter));
             let root_title_valid = normalized
                 .get(root_line.saturating_sub(1))
                 .and_then(|(line, _, _, block_comment)| {
@@ -209,23 +199,6 @@ pub(super) fn validate_embedded_value_roots(
                 ));
             }
 
-            let subtree_end = ((root_line + 1)..=decl.body_end)
-                .find(|line_no| {
-                    normalized
-                        .get(line_no.saturating_sub(1))
-                        .and_then(|(line, _, docstring, block_comment)| {
-                            authored_heading_level(
-                                line,
-                                is_md || *docstring,
-                                *block_comment,
-                                lexical,
-                            )
-                        })
-                        .is_some_and(|level| level <= root_level)
-                })
-                .map(|line| line - 1)
-                .unwrap_or(decl.body_end);
-
             let mut expected = 1usize;
             let mut component_candidates = 0usize;
             let mut updates = Vec::new();
@@ -235,21 +208,17 @@ pub(super) fn validate_embedded_value_roots(
                 .filter(|(path, _)| path.starts_with(&format!("{root_path}.")))
                 .map(|(_, info)| info.line)
                 .collect::<BTreeSet<_>>();
-            for line_no in root_line.saturating_add(1)..=subtree_end {
-                let Some((line, column_offset, docstring, block_comment)) =
-                    normalized.get(line_no - 1)
-                else {
-                    continue;
-                };
-                let markdown = is_md || *docstring;
-                let content = semantic_comment_content(line, markdown, *block_comment, lexical);
-                if content.is_empty() || is_lone_block_marker(content) {
-                    continue;
-                }
-                let child = recorded(line_no).map(str::to_string).or_else(|| {
-                    authored_heading_path(line, markdown, *block_comment, chapter_root, lexical)
-                });
-                let level = authored_heading_level(line, markdown, *block_comment, lexical);
+            let cursor = root_cursor(
+                &normalized,
+                root_info,
+                decl.body_end,
+                &relative,
+                is_md,
+                lexical,
+            );
+            for (line_no, (line, column_offset, docstring, block_comment), child) in cursor {
+                let level =
+                    authored_heading_level(line, is_md || *docstring, *block_comment, lexical);
                 let expected_path = format!("{root_path}.{expected}");
                 let immediate_numeric = child
                     .as_deref()

@@ -1,6 +1,7 @@
 //! Host-context recognition and heading normalization for embedded values
 //! (§FS-values.2.4, §FS-values.9).
 
+use std::cell::OnceCell;
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -11,7 +12,9 @@ use crate::grammar::{
     LexicalSettings, PythonDocstringScanState, is_lone_block_marker, longest_form_at, prefix_forms,
     source_scan_line,
 };
-use crate::model::{Catalog, Declaration, DeclarationSource, Id, InvalidValueSite};
+use crate::model::{
+    Catalog, Declaration, DeclarationSource, Id, InvalidValueSite, SectionInfo, ValueRootOrigin,
+};
 
 pub(crate) const EMBEDDED_VALUE_MARKER: &str = "<!-- grund:value -->";
 
@@ -82,7 +85,7 @@ pub(super) fn normalized_value_lines(
     text: &str,
     reading: &FileReading<'_>,
     source_contexts: Option<&[Option<SourceValueLineContext>]>,
-) -> Vec<(String, usize, bool, bool)> {
+) -> Vec<ValueLine> {
     let mut py_docstring = PythonDocstringScanState::default();
     text.lines()
         .enumerate()
@@ -103,6 +106,88 @@ pub(super) fn normalized_value_lines(
             )
         })
         .collect()
+}
+
+/// One line as [`normalized_value_lines`] reads it.
+pub(super) type ValueLine = (String, usize, bool, bool);
+
+/// A file's lines as the value validators read them (§FS-values.2.4.1), normalized on
+/// first use, so a pass that only sometimes meets a value root pays only when it does.
+pub(super) struct ValueLines<'a> {
+    text: &'a str,
+    pub(super) reading: &'a FileReading<'a>,
+    contexts: Option<&'a [Option<SourceValueLineContext>]>,
+    lines: OnceCell<Vec<ValueLine>>,
+}
+
+impl<'a> ValueLines<'a> {
+    pub(super) fn new(
+        text: &'a str,
+        reading: &'a FileReading<'a>,
+        contexts: Option<&'a [Option<SourceValueLineContext>]>,
+    ) -> Self {
+        let lines = OnceCell::new();
+        Self {
+            text,
+            reading,
+            contexts,
+            lines,
+        }
+    }
+
+    pub(super) fn lines(&self) -> &[ValueLine] {
+        self.lines
+            .get_or_init(|| normalized_value_lines(self.text, self.reading, self.contexts))
+    }
+}
+
+/// What the physical cursor of the value root `root` reads (§FS-values.2.4.3): each line
+/// of the root's subtree with content, from the line after the root heading to the line
+/// before the next heading no deeper than it, or `end`, with the path the line is read at.
+/// That is the path the record holds for a relative heading (`relative`, §FS-values.2.4),
+/// else the heading's authored coordinate, title or none, name-bearing only under a
+/// chapter root (§FS-values.2.5). The root's own check walks it, and so does the repair
+/// shown under the root (§FS-declarations.checks.unmarked-heading.2.3), so both count the
+/// same components.
+pub(super) fn root_cursor<'n>(
+    normalized: &'n [ValueLine],
+    root: &SectionInfo,
+    end: usize,
+    relative: &'n BTreeMap<usize, String>,
+    is_md: bool,
+    lexical: LexicalSettings<'n>,
+) -> impl Iterator<Item = (usize, &'n ValueLine, Option<String>)> + use<'n> {
+    let (root_line, root_level) = (root.line, root.heading_level);
+    // §FS-values.2.5: only a chapter root's path carries names, so a marked root's
+    // subtree keeps the numeric-only grammar it had before the key existed (§FS-values.9).
+    let chapter_root = root
+        .value_root
+        .as_ref()
+        .is_some_and(|root| matches!(root.origin, ValueRootOrigin::Chapter));
+    let subtree_end = ((root_line + 1)..=end)
+        .find(|line_no| {
+            normalized
+                .get(line_no.saturating_sub(1))
+                .and_then(|(line, _, docstring, block_comment)| {
+                    authored_heading_level(line, is_md || *docstring, *block_comment, lexical)
+                })
+                .is_some_and(|level| level <= root_level)
+        })
+        .map(|line| line - 1)
+        .unwrap_or(end);
+    (root_line.saturating_add(1)..=subtree_end).filter_map(move |line_no| {
+        let entry = normalized.get(line_no - 1)?;
+        let (line, _, docstring, block_comment) = entry;
+        let markdown = is_md || *docstring;
+        let content = semantic_comment_content(line, markdown, *block_comment, lexical);
+        if content.is_empty() || is_lone_block_marker(content) {
+            return None;
+        }
+        let child = relative.get(&line_no).cloned().or_else(|| {
+            authored_heading_path(line, markdown, *block_comment, chapter_root, lexical)
+        });
+        Some((line_no, entry, child))
+    })
 }
 
 pub(super) fn push_invalid_embedded_marker(
