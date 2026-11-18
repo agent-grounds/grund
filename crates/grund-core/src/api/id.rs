@@ -17,7 +17,7 @@ use crate::config::{
 use crate::model::{Finding, Id};
 use crate::scanner::{e2e_case_dir_name, scan_tree_strict};
 use crate::sources::paths_same_location;
-use crate::workspace::open;
+use crate::workspace::open_refusing;
 use crate::writers::{format_id, slugify_title};
 
 #[derive(Clone)]
@@ -119,9 +119,10 @@ fn propose_id_run(
     opts: IdOpts,
     run_warnings: &mut Vec<Finding>,
 ) -> Result<IdProposalOutcome> {
-    // §AR-config.1.5: the project the path discovers, read as `check`'s
-    // resolution scope is, so the number and the collision are the whole project's.
-    let config = open(&Invocation::new(&opts.path, true, Selection::Check))?;
+    let invocation = Invocation::new(&opts.path, true, Selection::Check);
+    // §AR-config.1.5: the path's project, read as `check`'s resolution scope is; marked,
+    // so an unmarked missing path is refused here, as `open()` refuses it for other runs.
+    let config = open_refusing(&invocation, !opts.path_provided)?;
     *run_warnings = config_run_warnings(&config);
     // §AR-config.1.5: `grund id` asks in the project the run loads.
     let table = KindTable::standalone(config.schema(), config.project().version);
