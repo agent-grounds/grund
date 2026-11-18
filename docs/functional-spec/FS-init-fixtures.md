@@ -187,12 +187,7 @@ exists grund.toml
 
 Every reported path is `exists `, which without `--scaffold` suppresses the `next:` block only when the selected home is on disk ([§FS-init.2.2.2.1](FS-init.md#2221-a-refresh-of-a-complete-setup-teaches-nothing)). This repository has no FS home, so the run still prints the [§FS-init.2.2.2](FS-init.md#222-the-next-block) block that teaches creating it.
 
-When `AGENTS.md` exists without a managed block and `--force` is not passed, `init` appends the block and reports:
-
-```text
-appended AGENTS.md
-wrote grund.toml
-```
+When `AGENTS.md` exists without a managed block and `--force` is not passed, `init` appends the block and reports `appended AGENTS.md` and `wrote grund.toml`, then the `next:` block of [§FS-init-fixtures.1](FS-init-fixtures.md#1-default-form).
 
 When `AGENTS.md` exists and `--force` is passed, `init` rewrites the canonical file and reports `wrote AGENTS.md`. An existing config, in either discovery form ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), is never clobbered, not even by `--force`: it is reported `exists ` under the name it was found at, such as `exists grund.toml` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)).
 
@@ -220,7 +215,7 @@ These failures leave the target tree unchanged.
 
 ## 5. Dry-run preview
 
-`grund init --dry-run` reports exactly what a real run would do, without writing anything: `wrote `, `appended `, and `updated ` become `would-write `, `would-append `, and `would-update `, `exists ` lines are unchanged, and the `next:` block follows a real run's rule ([§FS-init.2.2](FS-init.md#22-stdout--stderr)). Exit code is `0` for a clean preview, `2` for an I/O error (e.g. missing target) or a CLI-level error, the same as a real run.
+`grund init --dry-run` reports exactly what a real run would do, without writing anything ([§FS-init.1](FS-init.md#1-inputs)). Exit code is `0` for a clean preview, `2` for an I/O error (e.g. missing target) or a CLI-level error, the same as a real run.
 
 ## 6. Workspace members
 
@@ -250,7 +245,7 @@ packages/ui/
 
 Command: `grund init {repo_copy}`.
 
-The generated `{repo_copy}/AGENTS.md` contains, between `### Project map` and `### Declarations and citations`, exactly this block — byte-identical, including blank lines:
+The generated `{repo_copy}/AGENTS.md` holds, between `### Project namespaces` ([§FS-init.2.3.4.16](FS-init.md#23416-project-boundaries)) and `### Declarations and citations`, exactly this block, blank lines included:
 
 ```markdown
 ### Workspace members
