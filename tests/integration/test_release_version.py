@@ -110,6 +110,27 @@ class ReleaseVersionTests(SelectionRepository, unittest.TestCase):
         self._git(self.repo, "reset", "--hard", self.tip)
         self._refused(self._snapshot(), self._select(), "v0.22.0", "reachable")
 
+    def test_a_patch_cut_from_a_branch_off_the_previous_release_does_not_block_first_stable(self):
+        """§DF-markdown-homes-refused-in-1-0.3: a 0.x fix is tagged on a branch off its release."""
+        self._git(self.repo, "checkout", "-q", "-b", "fix-0.21", "v0.21.3")
+        fix = self._land("Fix on the 0.21 line", {"fix.txt": "fix\n"})
+        self._git(self.repo, "tag", "v0.21.4", fix)
+        self._git(self.repo, "checkout", "-q", "--detach", self.tip)
+        self._outputs(self._select(), "1.0.0")
+
+    def test_a_same_line_tag_not_off_the_previous_release_is_refused(self):
+        self._git(self.repo, "checkout", "-q", "--orphan", "stray")
+        stray = self._land("Not off v0.21.3", {"stray.txt": "stray\n"})
+        self._git(self.repo, "tag", "v0.21.4", stray)
+        self._git(self.repo, "checkout", "-q", "-f", "--detach", self.tip)
+        self._refused(self._snapshot(), self._select(), "v0.21.4", "reachable")
+
+    def test_a_previous_release_off_dispatch_main_is_refused(self):
+        side = self._land("Not on dispatch main", {"side.txt": "side\n"})
+        self._git(self.repo, "tag", "-f", "v0.21.3", side)
+        self._git(self.repo, "reset", "--hard", self.tip)
+        self._refused(self._snapshot(), self._select(), "reachable")
+
     def test_a_stable_tag_at_or_above_one_refuses_even_off_main(self):
         side = self._land("Not on dispatch main", {"side.txt": "side\n"})
         self._git(self.repo, "reset", "--hard", self.tip)
