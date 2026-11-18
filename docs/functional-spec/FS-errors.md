@@ -740,20 +740,17 @@ Value findings use the same object and streams. `invalid-value-declaration`, `in
 ### 5.5 The `check` code catalog
 
 For `grund check`, `code` is also the exact public selector vocabulary for
-[§FS-check.1](FS-check.md#1-inputs), apart from a row marked planned. The catalog is one table sorted by code, and one row is the whole of what the
-catalog says about a code: what it means, the severity it carries, the release a ramp still
-ahead of it changes that severity in, what has to be configured or passed for it
-to fire at all, what clears its finding and what to know before doing so, and
-the specification section that specifies it. Severity lives
-here rather than in the section that specifies the check, so promoting a warning
-to an error edits this cell and moves no coordinate
-([§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)). A code whose row names `—` under *Enabled by* fires on every
-run; `Ramp` is `—` where no promotion is promised, a ramp already spent included.
-A code's remedy lives here too, as its severity does: a finding's message
-and the code's `grund config explain` answer both print its *Fix* cell, so
-rewording a remedy edits that one cell and the two cannot drift apart.
-The rows are what the installed `grund` says about a code, so how each cell is
-written and read is [§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read).
+[§FS-check.1](FS-check.md#1-inputs), apart from a row marked planned. The catalog is one table sorted by code,
+and a code's row is the one place the specification states its severity, the
+release a ramp moves that severity in, what turns it on, and what clears its
+finding; it also says what the code means and names the section that specifies
+it. That section says what the check judges and why and names the code, leaving
+those cells to the row, so promoting a warning or rewording a remedy edits one
+cell and moves no coordinate
+([§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)). To read one row, run
+`grund config explain <code>`: it prints the row as the config in force reads it
+([§FS-config-explain.4](FS-config-explain.md#4-a-codes-answer)), and a finding's message carries its *Fix* cell. How each
+cell is written and read is [§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read).
 
 | Code | Meaning | Severity | Ramp | Enabled by | Fix | Note | Check |
 |---|---|---|---|---|---|---|---|
@@ -790,7 +787,7 @@ written and read is [§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read).
 | `import-live` | An import is read live from the tree at its path, which no commit pins. | warning | — | v2: `[workspace.imports]` is set; in any config the run reads, a dependency's included · v1: not in version 1 | none — nothing here is broken: the verdict reads the tree the import names, and the line says that no commit pins it | — | [§FS-imports.checks.import-live](FS-imports.md#checksimport-live-an-import-is-read-live-unpinned) |
 | `import-missing` | An import's path names no directory, so the citations into it were not checked. | error | — | v2: `[workspace.imports]` is set; in any config the run reads, a dependency's included · v1: not in version 1 | none — the build places the tree an import names, not grund; once the checkout holds it, the citations into it are checked | — | [§FS-imports.checks.import-missing](FS-imports.md#checksimport-missing-an-import-names-no-directory) |
 | `inline-citation-style` | A citation's inline note in a code comment breaks the configured note style: too many lines, too wide, the wrong layout, or prose where only the citation is allowed. | v2: by strength: the `[schema.notes.lines]`, `[schema.notes.columns]`, `[schema.notes.layout]` or `[schema.notes.text]` key it breaks · v1: error; a warning for an overrun of `[reference] inline_note_suggested_lines` under `warn_on_suggested = true`, or for a layout deviation under `inline_note_layout_check = "warn"` | — | — | prose: move the prose into a comment block of its own ‖ lines: shorten the note, or move its detail into a doc-comment ‖ columns: shorten or rewrap its widest line ‖ layout: rewrite the line in that form | — | [§FS-check.3.10](FS-check.md#310-inline-citation-style-violation) |
-| `invalid-field-value` | A field's value is not one of the values its kind admits for it. | v2: by strength: the field's `presence` · v1: not in version 1 | — | v2: `[schema.kinds.<kind>.fields.<field>] one_of` is set · v1: not in version 1 | heading: retitle the heading to one of them ‖ value: change the value to one of them ‖ one-line: write one of them on the key's line | — | [§FS-fields.checks.invalid-field-value](FS-fields.md#checksinvalid-field-value-invalid-field-value) |
+| `invalid-field-value` | A field's value is not one of the values its kind admits for it. | v2: by strength: the field's `presence`: `must` an error, `warn` a warning, `should` a suggestion, `may` an error · v1: not in version 1 | — | v2: `[schema.kinds.<kind>.fields.<field>] one_of` is set · v1: not in version 1 | heading: retitle the heading to one of them ‖ value: change the value to one of them ‖ one-line: write one of them on the key's line | — | [§FS-fields.checks.invalid-field-value](FS-fields.md#checksinvalid-field-value-invalid-field-value) |
 | `invalid-rule` | A rule declaration cannot be read: its title, rationale, vocabulary or subject is invalid. | error | — | v2: `form = "rule"` is set on a `[schema.kinds]` table or `--rule` is passed · v1: `rules = true` is set on a `[[kinds]]` row or `--rule` is passed | form: accepted form: {form} ‖ forms: accepted forms: {forms} ‖ form-enabled: accepted form after enabling it: {form} ‖ forms-enabled: accepted forms after enabling it: {forms} ‖ place: express this obligation in grund.toml: [{table}] with must = ["{target}"] ‖ place-grounding: express this obligation in grund.toml: [{table}] with must = ["{target}"], and {setting}, without which a file there that cites nothing is not checked ‖ rename: rename the chapter ‖ workspace: check from the workspace root | — | [§FS-check.3.25](FS-check.md#325-invalid-rule) |
 | `invalid-section-lock` | A line of a `.grund/sections/` lock file is not an entry grund can read. | error | — | a `.grund/sections/` lock file exists | to rebuild the file, {fix of `unrecorded-section-citation`} | — | [§FS-section-lock.checks.invalid-section-lock](FS-section-lock.md#checksinvalid-section-lock-a-lock-line-grund-cannot-read) |
 | `invalid-value-binding` | A value binding breaks the binding grammar or aims at something it cannot bind. | error | — | v2: `form = "value"` is set on a `[schema.kinds]` table or `content = "values"` on one of its fields; a value tag the scan finds turns it on too · v1: `values = true` or `value_chapter` is set on a `[[kinds]]` row; a value tag the scan finds turns it on too | join the literal and its citation | — | [§FS-check.3.21](FS-check.md#321-invalid-value-binding) |
@@ -798,13 +795,13 @@ written and read is [§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read).
 | `io` | A file or directory could not be read, so the run's view of the tree is incomplete. | error | — | — | v2: entry: make the path readable, or keep it out of the scan ‖ root: make the path readable, or keep it out of the scan by removing it from the [schema.kinds] row that lists it, because exclude does not prune scan roots ‖ passed: make the path readable, or keep it out of the scan by not passing it, because exclude does not prune a path the command is given ‖ value: make the path readable, or keep it out of the scan by moving it out of the value home, because exclude does not reach a value source ‖ readable: make the path readable · v1: entry: make the path readable, or keep it out of the scan ‖ root: make the path readable, or keep it out of the scan by removing it from the [scan] include or [[kinds]] row that lists it, because exclude does not prune scan roots ‖ passed: make the path readable, or keep it out of the scan by not passing it, because exclude does not prune a path the command is given ‖ value: make the path readable, or keep it out of the scan by moving it out of the value home, because exclude does not reach a value source ‖ readable: make the path readable | — | [§FS-check.2.4.3](FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix) |
 | `local-section-citation` | A marker followed by a bare section number is not a citation grund can resolve; write the full ID. | error | — | — | write: write {citation} ‖ escape: write a full citation or {escape} to show the shape without citing it ‖ fmt: {fix of `unlinked-index-entry`} | — | [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) |
 | `misplaced-declaration` | A declaration sits outside the home its kind is configured to live in. | error | — | v2: `folders` or `files` is set on a `[schema.kinds]` table · v1: `folder` or `file` is set on a `[[kinds]]` row | v2: move: move it to a home of its own kind ‖ unlisted: add "{entry}" to [workspace] members in {enclosing}, or exclude "{entry}/" with [schema.sources] exclude in {enclosing} ‖ roots: also remove configured scan roots at or beneath "{entry}" in {enclosing} (source includes or kind homes), because exclude does not prune scan roots · v1: move: move it to a home of its own kind ‖ unlisted: add "{entry}" to [workspace] members in {enclosing}, or exclude "{component}" with [scan] exclude in {enclosing} (excludes all directories named "{component}" at every depth) ‖ roots: also remove configured scan roots at or beneath "{entry}" in {enclosing} (source includes or kind homes), because exclude does not prune scan roots | — | [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) |
-| `misplaced-field` | A field does not stand where its kind places it. | v2: by strength: the field's `presence` · v1: not in version 1 | — | v2: `[schema.kinds.<kind>.fields.<field>] position` or `after` is set · v1: not in version 1 | move the section there | — | [§FS-fields.checks.misplaced-field](FS-fields.md#checksmisplaced-field-misplaced-field) |
+| `misplaced-field` | A field does not stand where its kind places it. | v2: by strength: the field's `presence`: `must` an error, `warn` a warning, `should` a suggestion, `may` an error · v1: not in version 1 | — | v2: `[schema.kinds.<kind>.fields.<field>] position` or `after` is set · v1: not in version 1 | move the section there | — | [§FS-fields.checks.misplaced-field](FS-fields.md#checksmisplaced-field-misplaced-field) |
 | `missing-citation` | A declaration lacks a citation that a `must` entry or rule requires. | v2: by strength: `must` an error, `warn` a warning · v1: error | — | v2: `[rules.citations.<kind>] must` or a `must` rule is set; a `warn` entry turns it on too, as a warning · v1: `[citations.<kind>] must` or a `must` rule is set | add such a citation within it | — | [§FS-check.3.11](FS-check.md#311-missing-required-citation) |
 | `missing-field` | A declaration lacks a field its kind declares. | v2: by strength: the field's `presence` · v1: not in version 1 | — | v2: `[schema.kinds.<kind>.fields.<field>] presence = "must"` is set; a `warn` or `should` `presence` turns it on too, at that strength · v1: not in version 1 | chapter: add its {field} section ‖ block: add front matter at the top of its file ‖ not-first: only a file's first declaration has front matter; move it to a file of its own ‖ doc-comment: only a Markdown file's first declaration has front matter; move it to a Markdown file of its own ‖ byte-order-mark: remove the byte-order mark before the {delimiter} on line 1 ‖ key: add the key to the front matter | — | [§FS-fields.checks.missing-field](FS-fields.md#checksmissing-field-missing-field) |
 | `missing-index-entry` | A declaration in a kind's folder is not listed in that folder's index. | error | — | — | write `{entry}` in {index} | — | [§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index) |
 | `missing-section` | A citation names a section its declaration does not have. | error | — | — | escape: write {escape} before it to show the shape without citing it ‖ map: run `grund {id} --toc` to print the lead with the section map | — | [§FS-check.3.2](FS-check.md#32-missing-section) |
 | `missing-snapshot` | A citation targets a fetched kind whose declarations have not been fetched yet. | warning | — | v2: `[rules.resolution] <KIND> = "warn"` is set for a fetched kind · v1: `resolve = "should"` is set on a fetched `[[kinds]]` row | near: {fix of `dangling`, case `near`} ‖ near-escape: {fix of `dangling`, case `near-escape`} ‖ escape: {fix of `dangling`, case `escape`} ‖ fetch: {fix of `dangling`, case `fetch`} ‖ value-source: {fix of `dangling`, case `value-source`} ‖ source-file: {fix of `dangling`, case `source-file`} ‖ source-file-value: {fix of `dangling`, case `source-file-value`} ‖ fetch-names-nothing: {fix of `dangling`, case `fetch-names-nothing`} | — | [§FS-check.4.12](FS-check.md#412-missing-snapshot) |
-| `mistitled-field` | A field's heading is titled differently from the title its kind gives it. | v2: by strength: the field's `presence` · v1: not in version 1 | — | v2: `[schema.kinds.<kind>.fields.<field>] title` is set · v1: not in version 1 | retitle the heading to match | — | [§FS-fields.checks.mistitled-field](FS-fields.md#checksmistitled-field-mistitled-field) |
+| `mistitled-field` | A field's heading is titled differently from the title its kind gives it. | v2: by strength: the field's `presence`: `must` an error, `warn` a warning, `should` a suggestion, `may` an error · v1: not in version 1 | — | v2: `[schema.kinds.<kind>.fields.<field>] title` is set · v1: not in version 1 | retitle the heading to match | — | [§FS-fields.checks.mistitled-field](FS-fields.md#checksmistitled-field-mistitled-field) |
 | `nothing-recognized` | The scan read files but recognized no declaration and no citation in them. | warning | — | — | Declare its first kind in grund.toml to start | — | [§FS-check.4.5](FS-check.md#45-nothing-recognized) |
 | `off-format-citation` | A marked citation opens with a configured kind, but its kind's ID format does not spell it and nothing declares it. | error | — | — | cite an ID in that format, or write {escape} for an illustration | — | [§FS-check.checks.off-format-citation](FS-check.md#checksoff-format-citation-off-format-citation) |
 | `optional-member-absent` | A workspace member listed as optional is not in this checkout, so it was not read. | warning | — | `[workspace] optional_members` is set; in any `[workspace]` block the run expands, a nested one included | none — nothing here is broken: the member is optional, and only a checkout that holds it can check the citations into it | — | [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent) |
@@ -849,29 +846,6 @@ written and read is [§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read).
 | `value-mismatch` | A value binding's written value differs from the value its target declares. | error | — | v2: `form = "value"` is set on a `[schema.kinds]` table or `content = "values"` on one of its fields; a value tag the scan finds turns it on too · v1: `values = true` or `value_chapter` is set on a `[[kinds]]` row; a value tag the scan finds turns it on too | change the literal to the declared value, or the declaration to the bound one | — | [§FS-check.3.22](FS-check.md#322-value-mismatch) |
 | `yaml-value-source-deferred` | A finding at a YAML value source was a warning for one release, and a fetched kind's home skipped its YAML sources; such a source is now read, and each finding carries its own code and severity. | none — spent from grund 0.22.0 and never fires | — | — | none — it never fires | — | [§FS-values.2.2.4](FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings) |
 
-The four `remote-*` rows are specified ahead of the release that introduces them
-([§FS-remote-projects](FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection)), which their *Enabled by* cell marks `planned`; until it ships, a config declaring `[workspace.remotes]` is refused
-at load ([§FS-remote-projects.declaration.older](FS-remote-projects.md#declarationolder-an-older-grund-refuses-the-table-loudly)), so none of them fires. Shipping them edits that cell and moves no row.
-
-The seven rows that issue #1206's first pull request adds — `config-index-not-markdown`, `config-md-not-markdown`, `config-rule-file-not-markdown`, `config-rule-folder-not-markdown`, `config-value-home-absent`, `config-value-home-invalid` and `rule-folder-file-not-markdown` ([§FS-config-v2.checks](FS-config-v2.md#checks-checks)) — were marked `planned` until it shipped, and shipping them edited that cell and moved no row. The six whose *Ramp* named grund 1.0.0 are each spent there, as `config-fetch-names-nothing` was in 0.23.0 ([§DF-markdown-homes-refused-in-1-0.2.2](../decisions/functional/DF-markdown-homes-refused-in-1-0.md#22-the-codes-are-spent)).
-
-The five field codes `invalid-field-value`, `misplaced-field`, `missing-field`,
-`mistitled-field` and `undeclared-chapter` take their channel from the strength
-their field or kind writes, so one code can be an error, a warning or a
-suggestion ([§FS-fields.strengths.table](FS-fields.md#strengthstable-which-strength-each-finding-takes)).
-
-The front-matter field ([§FS-fields.front-matter](FS-fields.md#front-matter-front-matter-is-a-field)) adds two codes, `front-matter-heading` and
-`unreadable-front-matter`, whose rows are marked `planned` until it ships. It also gives
-`missing-field`, `invalid-field-value`, `undeclared-chapter` and `duplicate-section`
-remedies of their own at front-matter sites ([§FS-fields.front-matter.findings](FS-fields.md#front-matterfindings-what-it-reports)), which their
-*Fix* cells write as cases. Shipping it removes the two marks, turns those four cells into
-cases, and moves no row.
-
-The chapter-rule codes `chapter-cardinality`, `citation-cardinality`,
-`invalid-rule`, `uncited-unit`, and `unreached-declaration` are selectable on
-the same surfaces as every other code
-([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)).
-
 Every future check finding code enters this catalog in the release that
 introduces it; renaming or removing one requires compatibility treatment. The
 catalog changes neither the NDJSON object nor the library/LSP report. `io` is a
@@ -898,10 +872,14 @@ names a specification ID or holds a link, and each is written by these rules.
   severity: the finding is a suggestion, shown only with `--suggestions`
   ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). `none — spent …` is a code that never fires and that `--only` and
   `--ignore` still accept; the rest of the cell, after `none — `, says what
-  became of it. `by strength: <setting>` is chosen by the strength the named
-  setting is written under: `must` an error, `warn` a warning, `should` a
-  suggestion, and `may` not checked. Any other cell names a severity and the
-  setting or the rule strength that changes it, so it is chosen by a setting too.
+  became of it. `by strength:` is chosen by the strength a setting or rule is
+  written under; the rest of the cell names the setting, says what each
+  strength gives, or both; where it does not say, `must` gives an error,
+  `warn` a warning, `should` a suggestion, and `may` is not checked. Any other cell
+  names a severity and the setting or the rule strength that changes it, so it
+  is chosen by a setting too.
+- **Ramp** names the release in which a promised change of severity lands, and
+  is `—` where none is promised, a spent ramp included.
 - **Enabled by.** `—` is always on. `planned — …` marks a row specified ahead of
   its release: its code is in no selector vocabulary, `grund config explain`
   does not know it, and the rest of the cell is what will turn it on. Any other

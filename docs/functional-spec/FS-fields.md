@@ -169,17 +169,17 @@ A field with `one_of` is a scalar: its display name is its value, and a value ou
 
 ### strengths.table: Which strength each finding takes
 
-The first four codes take the field's `presence`; `undeclared-chapter` takes the kind's `closed`.
+The first four codes take their severity from the field's `presence` and `undeclared-chapter` from the kind's `closed`, as each code's row of the catalog says ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)); `duplicate-section` and `invalid-value-declaration` are errors whatever the strength.
 
-| What is wrong | Code | Reported at | `must` | `warn` | `should` | `may` |
-|---|---|---|---|---|---|---|
-| a field is absent | `missing-field` | the declaration's title line | error | warning | suggestion | not reported |
-| a field is out of place | `misplaced-field` | the field's heading | error | warning | suggestion | error |
-| a field shows another title | `mistitled-field` | the field's heading | error | warning | suggestion | error |
-| a scalar is not in `one_of` | `invalid-field-value` | the field's heading | error | warning | suggestion | error |
-| a direct named section no field declares, in a closed kind | `undeclared-chapter` | the section's heading | error | warning | suggestion | open: not reported |
-| a field is written twice | `duplicate-section` | as today | error at every strength | | | |
-| a values chapter is filled wrongly | `invalid-value-declaration` | as today | error at every strength | | | |
+| What is wrong | Code | Reported at |
+|---|---|---|
+| a field is absent | `missing-field` | the declaration's title line |
+| a field is out of place | `misplaced-field` | the field's heading |
+| a field shows another title | `mistitled-field` | the field's heading |
+| a scalar is not in `one_of` | `invalid-field-value` | the field's heading |
+| a direct named section no field declares, in a closed kind | `undeclared-chapter` | the section's heading |
+| a field is written twice | `duplicate-section` | as today |
+| a values chapter is filled wrongly | `invalid-value-declaration` | as today |
 
 The front-matter field's findings reuse these codes at sites of their own, and [§FS-fields.front-matter.findings](FS-fields.md#front-matterfindings-what-it-reports) says where each is reported and which strength it takes: the field's `presence` for an absent block, a key's `presence` for an absent key or a value outside its `one_of`, and the field's own `closed` for an undeclared key.
 
@@ -187,7 +187,7 @@ An error exits `1`. A warning is a standing warning, and a run with only warning
 
 ### strengths.may: A present optional field is still held to its shape
 
-`may` waives absence and nothing else. A `may` field that is present is held to its placement, title and values, and a violation is an error. A `one_of` that nothing enforces would be a declaration that lies; an author who wants the shape soft writes `presence = "warn"`.
+`may` waives absence and nothing else: a `may` field that is present is held to its placement, title and values as a `must` field is. A `one_of` that nothing enforces would be a declaration that lies; an author who wants the shape soft writes `presence = "warn"`.
 
 ### strengths.surfaces: The codes are ordinary check codes
 
@@ -437,7 +437,7 @@ A key's **title** is its value where that is a one-line scalar on the key's line
 | the block cannot be read | `unreadable-front-matter` | the opening delimiter | always an error | as [§FS-fields.checks.unreadable-front-matter](FS-fields.md#checksunreadable-front-matter-unreadable-front-matter) |
 | a heading claims the field's coordinate | `front-matter-heading` | the heading | always an error | as [§FS-fields.checks.front-matter-heading](FS-fields.md#checksfront-matter-heading-front-matter-heading) |
 
-Each strength reaches its channel as [§FS-fields.strengths.table](FS-fields.md#strengthstable-which-strength-each-finding-takes) says, and a `may` key whose value is present and outside its `one_of` is an error ([§FS-fields.strengths.may](FS-fields.md#strengthsmay-a-present-optional-field-is-still-held-to-its-shape)). One defect is one finding ([§FS-fields.requirements.one-finding](FS-fields.md#requirementsone-finding-one-defect-in-a-declarations-shape-is-one-finding--realized)). No key is judged when the block is absent or unreadable. A key written twice is judged once, at its first occurrence. A `## front-matter:` heading is `front-matter-heading` and nothing else. `misplaced-field` counts direct sections only, never the block ([§FS-fields.order.ends](FS-fields.md#orderends-first-and-last)).
+Each finding takes its severity from its code's row ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)), and a `may` key whose value is present is held to its `one_of` ([§FS-fields.strengths.may](FS-fields.md#strengthsmay-a-present-optional-field-is-still-held-to-its-shape)). One defect is one finding ([§FS-fields.requirements.one-finding](FS-fields.md#requirementsone-finding-one-defect-in-a-declarations-shape-is-one-finding--realized)). No key is judged when the block is absent or unreadable. A key written twice is judged once, at its first occurrence. A `## front-matter:` heading is `front-matter-heading` and nothing else. `misplaced-field` counts direct sections only, never the block ([§FS-fields.order.ends](FS-fields.md#orderends-first-and-last)).
 
 ### front-matter.record: The record, and what renders it
 
