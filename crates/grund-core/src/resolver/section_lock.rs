@@ -147,8 +147,8 @@ struct LockTarget<'a, 'b> {
 /// Judge every lock file the scan read and every one a locked address needs, in
 /// path order (§FS-section-lock): a citation into another project
 /// against `targets`, the projects the run loaded, by its alias, and a lock
-/// file of an alias the run did not load not at all
-/// (§FS-section-lock.file.members). Empty, and nothing sliced, in a tree with
+/// file of an alias the run did not load not at all: `fmt` drops it once no
+/// citation names the alias (§FS-section-lock.file.members). Empty, and nothing sliced, in a tree with
 /// neither a lock nor a cited locked address. Whether a citation's section is
 /// locked is asked of the declaration it resolves to, through its stubs, so a
 /// section in a stub's target outside `[scan] include` is locked as one inside it
