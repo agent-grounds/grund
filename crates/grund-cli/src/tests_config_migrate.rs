@@ -100,11 +100,17 @@ fn closing(write: bool, causes: &str) -> String {
     }
 }
 
+/// The report as a run at the project root with no `PATH` prints it, whose
+/// commands keep the bytes of §FS-config-migrate.6.5 (§FS-config-migrate.6.5.1 item 5).
 fn render(report: &MigrateReport, full: bool) -> String {
     let mut sink = Vec::new();
+    let commands = report
+        .wrote
+        .then(|| MigrateCommands::spelled(&report.config, None));
     render_migrate_report(
         report,
         MigratePresentation::for_report(report, full),
+        commands.as_ref(),
         &mut sink,
     )
     .unwrap();

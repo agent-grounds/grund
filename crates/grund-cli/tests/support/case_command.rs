@@ -142,12 +142,20 @@ fn command_args(
         .unwrap_or(&repo)
         .to_string_lossy()
         .into_owned();
+    // §FS-examples.5.6.2: typed with `/` as its logical path is, so an argument echoed as given
+    // (§FS-config-migrate.6.5.1) reads alike everywhere; a Windows join mixes in `\`, while on
+    // unix a backslash is a filename byte.
     let repo_copy_arg = copy.map(|copy| {
-        copy.repo
+        let arg = copy
+            .repo
             .strip_prefix(manifest_dir)
             .unwrap_or(&copy.repo)
-            .to_string_lossy()
-            .into_owned()
+            .to_string_lossy();
+        if cfg!(windows) {
+            arg.replace('\\', "/")
+        } else {
+            arg.into_owned()
+        }
     });
 
     words

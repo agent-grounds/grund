@@ -213,7 +213,6 @@ fn command(stderr: &str, prefix: &str) -> String {
 /// restores the member alone; the re-preview carries `apps/api`, and pasted at
 /// the root it previews the member. `wrote` stays on the member's own root.
 #[test]
-#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn member_migrated_from_the_workspace_root_names_it_from_the_root() {
     let tree = Tree::workspace("grund-1438-member");
     passed(&tree.migrate("", &["--write"]));
@@ -255,7 +254,6 @@ fn member_migrated_from_the_workspace_root_names_it_from_the_root() {
 /// migrated from its parent, is named from the parent and previewed again by
 /// the same `PATH`.
 #[test]
-#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn project_below_the_working_directory_is_named_from_it() {
     let tree = Tree::single("grund-1438-sub", "sub");
     let write = tree.migrate("", &["sub", "--write"]);
@@ -281,7 +279,6 @@ fn project_below_the_working_directory_is_named_from_it() {
 /// the project root, the undo climbs to the config with `..` and the
 /// re-preview stays bare, so the same discovery walks up to the same file.
 #[test]
-#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn no_path_from_a_subdirectory_restores_the_config_above() {
     let tree = Tree::single("grund-1438-subdir", "");
     let write = tree.migrate("docs", &["--write"]);
@@ -301,7 +298,6 @@ fn no_path_from_a_subdirectory_restores_the_config_above() {
 /// project's `docs` from its root tells the two apart, `wrote ../grund.toml`
 /// from the invocation base beside `git restore grund.toml` from the root.
 #[test]
-#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn path_base_moves_wrote_and_neither_command() {
     for base in ["project", "invocation"] {
         let tree = Tree::workspace(&format!("grund-1438-base-{base}"));
@@ -334,7 +330,6 @@ fn path_base_moves_wrote_and_neither_command() {
 /// closes with the same outcome and the same two commands after the complete
 /// report, and restores the candidate on stdout.
 #[test]
-#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn full_write_prints_the_same_commands() {
     let tree = Tree::workspace("grund-1438-full");
     passed(&tree.migrate("", &["--write"]));
@@ -361,7 +356,6 @@ fn full_write_prints_the_same_commands() {
 /// with a space or a `'` is single-quoted, `'` written `'\''`; an undo path
 /// that would start with `-` gets `./`; a `PATH` of safe characters stays bare.
 #[test]
-#[ignore = "red until #1438 spells migrate's undo and re-preview from the working directory; implement removes this"]
 fn paths_paste_as_one_shell_word() {
     for (name, dir, path, undo, repreview) in [
         (

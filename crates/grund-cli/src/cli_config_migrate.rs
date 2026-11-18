@@ -3,13 +3,14 @@
 /// (§FS-config-migrate.1.2), the engine returns one record, and this renders it —
 /// the candidate on stdout (§FS-config-migrate.2.1), the report on stderr in the
 /// order of §FS-config-migrate.2.2 or §FS-config-migrate.6.5, selected by
-/// §FS-config-migrate.1.3, and the exit of §FS-config-migrate.2.3.
+/// §FS-config-migrate.1.3, and the exit of §FS-config-migrate.2.3. The `PATH`
+/// is kept as typed for the re-preview a write prints (§FS-config-migrate.6.5.1).
 fn command_config_migrate(args: &[String]) -> ExitCode {
     let mut to: Option<String> = None;
     let mut write = false;
     let mut drop_comments = false;
     let mut full = false;
-    let mut path: Option<PathBuf> = None;
+    let mut path: Option<&str> = None;
     let mut words = args.iter();
     while let Some(arg) = words.next() {
         match arg.as_str() {
@@ -27,7 +28,7 @@ fn command_config_migrate(args: &[String]) -> ExitCode {
                     eprintln!("error: config migrate takes at most one path argument");
                     return ExitCode::from(2);
                 }
-                path = Some(PathBuf::from(other));
+                path = Some(other);
             }
         }
     }
@@ -43,7 +44,7 @@ fn command_config_migrate(args: &[String]) -> ExitCode {
         }
     }
     let opts = MigrateOpts {
-        path: path.unwrap_or_else(|| ".".into()),
+        path: path.map_or_else(|| ".".into(), PathBuf::from),
         write,
         drop_comments,
     };
@@ -54,13 +55,21 @@ fn command_config_migrate(args: &[String]) -> ExitCode {
         }
         Ok(MigrateOutcome::Migrated(report)) => {
             let presentation = MigratePresentation::for_report(&report, full);
+            let commands = report
+                .wrote
+                .then(|| MigrateCommands::for_run(&opts, path, &report));
             if presentation == MigratePresentation::Complete {
                 if let Some(candidate) = report.stdout() {
                     print!("{candidate}");
                 }
             }
-            render_migrate_report(&report, presentation, &mut std::io::stderr().lock())
-                .expect("failed printing migration report to stderr");
+            render_migrate_report(
+                &report,
+                presentation,
+                commands.as_ref(),
+                &mut std::io::stderr().lock(),
+            )
+            .expect("failed printing migration report to stderr");
             if report.refused() {
                 ExitCode::FAILURE
             } else {
@@ -116,11 +125,13 @@ impl MigratePresentation {
 
 /// §FS-config-migrate.6.5: retained fields move ahead of advice on compact
 /// success; §FS-config-migrate.2.2 keeps complete output in its legacy order,
-/// and every refused run closes with its causes (item 6).
+/// and every refused run closes with its causes (item 6). `commands` is `Some`
+/// exactly when the run wrote, and a write closes with them (§FS-config-migrate.6.5.1).
 /// The local sink lets callers inspect lines without redirecting global stderr.
 fn render_migrate_report(
     report: &MigrateReport,
     presentation: MigratePresentation,
+    commands: Option<&MigrateCommands>,
     out: &mut impl std::io::Write,
 ) -> std::io::Result<()> {
     if presentation == MigratePresentation::CompactWrite {
@@ -134,8 +145,8 @@ fn render_migrate_report(
             render_migrate_outcome(report, out)?;
         }
     }
-    if report.wrote {
-        render_migrate_advice(report, out)?;
+    if let Some(commands) = commands {
+        render_migrate_advice(report, commands, out)?;
     } else if report.refused() {
         let causes = migrate_refusal_causes(report);
         if report.write {
@@ -334,16 +345,19 @@ fn render_migrate_outcome(
 
 /// §FS-config-migrate.6.5: undo/re-preview advice ends with the qualified
 /// refresh reminder, without inspecting or writing managed instructions. The
-/// re-preview names `--drop-comments` exactly when the write dropped comments,
-/// since without it that preview refuses on them (§FS-config-migrate.1.3).
+/// undo and the re-preview are commands spelled from the working directory, not
+/// report paths (§FS-config-migrate.6.5.1). The re-preview names `--drop-comments`,
+/// after any `PATH`, exactly when the write dropped comments, since without it
+/// that preview refuses on them (§FS-config-migrate.6.5, §FS-config-migrate.1.3).
 fn render_migrate_advice(
     report: &MigrateReport,
+    commands: &MigrateCommands,
     out: &mut impl std::io::Write,
 ) -> std::io::Result<()> {
     writeln!(
         out,
         "to get version 1 back: it is in version control, e.g. git restore {}",
-        report.config
+        commands.restore
     )?;
     let flag = if report.dropped_comments().is_empty() {
         ""
@@ -352,7 +366,8 @@ fn render_migrate_advice(
     };
     writeln!(
         out,
-        "to see this candidate again: restore version 1 and run grund config migrate --to 2{flag}"
+        "to see this candidate again: restore version 1 and run grund config migrate --to 2{}{flag}",
+        commands.path
     )?;
     writeln!(
         out,

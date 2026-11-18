@@ -138,6 +138,8 @@ mod tests_check_path_scope;
 #[cfg(test)]
 mod tests_check_run_warnings;
 #[cfg(test)]
+mod tests_config_migrate_from;
+#[cfg(test)]
 mod tests_config_migrate_gates;
 #[cfg(test)]
 mod tests_config_migrate_guidance;
