@@ -1273,12 +1273,9 @@ same subject selects in a rule, in every mode, `--size` included, so
 chapter directly under its declaration ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), and `Each SWR whose
 verification is Test` lists only the declarations its whose clause selects
 ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)). Text prints the
-canonical coordinate, two spaces, location, two spaces, and title. A chapter JSON row uses the list
-object's existing fields in their existing order, adds `"section"` immediately
-after `"id"`, and puts the declaration ID in `id` and exact component path in
-`section`; a declaration row remains byte-for-byte the ordinary list row. In
-both forms a chapter row's title is the chapter's display name
-([§FS-rules.5.1.1](FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote)).
+canonical coordinate, two spaces, location, two spaces, and title. A JSON row is [§FS-output-shapes.5](FS-output-shapes.md#5-list---formatjson)'s,
+a chapter row carrying `section`, and in both forms a chapter row's title is
+[§FS-list.3.1](FS-list.md#31---format-text-default)'s.
 Invalid syntax, unknown vocabulary, disabled named sections, and ambiguous
 exact literals are exit-2 invocation errors, and the first three are answered
 with a selector to paste rather than a rule sentence ([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)). A valid selector with no matches

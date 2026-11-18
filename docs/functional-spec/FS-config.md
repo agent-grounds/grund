@@ -470,7 +470,7 @@ The name-keyed default is additive like the key ([§FS-config.3.4.2](FS-config.m
 
 #### 3.4.3 `title`
 
-`title` is human-readable metadata: it surfaces in `grund list --summary --format json` ([§FS-list.3.3](FS-list.md#33---summary)), the one JSON output that carries it, and in IDE hover previews, and is **not** injected into `grund <ID> --format=md` text (which is the declaration verbatim — [§FS-show.3.1](FS-show.md#31-format-variants)). It is also the text of the kind's Project map row ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), which for a non-citable kind is the only thing that says what the place is for.
+`title` is human-readable metadata: it surfaces in `grund list --summary --format json` ([§FS-output-shapes.5](FS-output-shapes.md#5-list---formatjson)), in show and refs JSON as `kind_title`, and in IDE hover previews, and `md` does not inject it ([§FS-show.3.1.2](FS-show.md#312-md)). It is also the text of the kind's Project map row ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), which for a non-citable kind is the only thing that says what the place is for.
 
 The resolved target kind owns this metadata, including ordinary configuration defaults,
 qualified workspace queries and each batch query's selection. For declaration and
