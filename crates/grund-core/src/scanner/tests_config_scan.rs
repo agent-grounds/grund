@@ -236,7 +236,7 @@ fn check_rejects_declaration_in_wrong_unique_kind_home() {
     assert_eq!(misplaced.len(), 1);
     assert_eq!(
         misplaced[0].message,
-        "AR-001-router declares kind AR inside FS home docs/functional-spec"
+        "AR-001-router declares kind AR inside FS home docs/functional-spec; move it to a home of its own kind"
     );
 }
 
@@ -291,7 +291,7 @@ fn check_uses_scanned_symlink_path_for_kind_home() {
         report.errors.iter().any(|error| {
             error.code == "misplaced-declaration"
                 && error.message
-                    == "AR-001-router declares kind AR inside FS home docs/functional-spec"
+                    == "AR-001-router declares kind AR inside FS home docs/functional-spec; move it to a home of its own kind"
         }),
         "home-kind placement must use the scanned symlink path: {:?}",
         report
