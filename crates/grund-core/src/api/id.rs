@@ -16,7 +16,7 @@ use crate::config::{
 };
 use crate::model::{Finding, Id};
 use crate::scanner::{e2e_case_dir_name, scan_tree_strict, title_has_sections};
-use crate::sources::paths_same_location;
+use crate::sources::{Sources, paths_same_location};
 use crate::workspace::open_refusing;
 use crate::writers::{format_id, slugify_title};
 
@@ -218,7 +218,9 @@ fn propose_id_run(
             .min_by_key(|decl| decl.line);
         match first {
             Some(decl) => decl.heading_level == 1,
-            None => std::fs::read_to_string(&home).is_ok_and(|text| title_has_sections(&text)),
+            None => Sources::on_disk()
+                .text(&home)
+                .is_ok_and(|text| title_has_sections(&text)),
         }
     });
     Ok(IdProposalOutcome::Proposed(IdProposal {
