@@ -1,13 +1,14 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use super::embedded_value_context::immediate_numeric_component;
 use super::extents::DeclarationBodies;
 use super::relative_sections::usable_section;
 use super::values::value_declaration_is_in_home;
 use crate::config::{Frame, Schema};
 use crate::grammar::{Grammar, path_fault, relative_heading_hint};
 use crate::model::{
-    Catalog, Declaration, FileRecord, PathFaultHint, RelativeHint, UnmarkedHeading,
+    Catalog, Declaration, FileRecord, PathFaultHint, RelativeHint, SectionInfo, UnmarkedHeading,
     UnmarkedHeadingCandidate, named_section_path,
 };
 
@@ -273,10 +274,12 @@ fn value_run<'a>(decl: &Declaration, corrected: &'a str, value: bool) -> Option<
 
 /// Whether `corrected`, written at `line`, appends the next component of the value
 /// run rooted at `root` in `decl`, whose body ends on `end`: `root` and one number,
-/// one more than the sections the body declares under `root`, all of them above
-/// `line` (§FS-declarations.checks.unmarked-heading.2.3). This is the run's
-/// contiguity and physical order (§FS-values.2.1, §FS-values.2.4.3), one count for
-/// a whole value declaration (`root` empty) and a value root inside one.
+/// one more than the run's components in the body, all of them above `line`
+/// (§FS-declarations.checks.unmarked-heading.2.3). This is the run's contiguity and
+/// physical order, so the count is the one its own check keeps: every section the
+/// body declares in a value declaration (`root` empty, §FS-values.2.1); under a root,
+/// every heading of an immediate numeric component, a duplicate's too, and neither a
+/// grandchild nor a named child, which the root's cursor skips (§FS-values.2.4.3).
 fn next_value_component(
     decl: &Declaration,
     end: usize,
@@ -284,18 +287,22 @@ fn next_value_component(
     root: &str,
     corrected: &str,
 ) -> bool {
-    let run = decl
-        .sections
-        .iter()
-        .filter(|(path, info)| {
-            (decl.body_start..=end).contains(&info.line)
-                && (root.is_empty()
-                    || path
-                        .strip_prefix(root)
-                        .is_some_and(|rest| rest.starts_with('.')))
-        })
-        .map(|(_, info)| info)
-        .collect::<Vec<_>>();
+    let in_body = |info: &&SectionInfo| (decl.body_start..=end).contains(&info.line);
+    let run = if root.is_empty() {
+        decl.sections.values().filter(in_body).collect::<Vec<_>>()
+    } else {
+        let duplicates = decl
+            .duplicate_sections
+            .iter()
+            .map(|(path, info)| (path, info));
+        decl.sections
+            .iter()
+            .chain(duplicates)
+            .filter(|(path, _)| immediate_numeric_component(root, path))
+            .map(|(_, info)| info)
+            .filter(in_body)
+            .collect()
+    };
     let next = run.len() + 1;
     let expected = if root.is_empty() {
         next.to_string()
