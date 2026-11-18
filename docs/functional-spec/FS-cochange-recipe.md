@@ -87,6 +87,23 @@ renames, including pure moves, and source mode changes retain obligations. Pure
 declaration/test moves and mode-only changes supply no evidence. Content additions,
 edits and deletions may supply evidence using facts from their corresponding tree.
 
+### snapshots.scope: Every classified file is one Grund scans
+
+Every tracked file that `source_paths` or `test_paths` selects must be a file the
+scan reads, whether or not the comparison touches it. A classified existing path
+with no cover row refuses every run, exit 2, with code `scan-scope`, the Git path
+and query `cover`. Its message names the selection key or keys that classified the
+path (`source_paths`, `test_paths`), says Grund does not scan the file, and names
+the remedy the policy offers: narrow that selection so it leaves the file out, or
+remove the file from Git. It offers adding the file to the scan configuration only
+when the file's own name is not hidden, and never for a hidden one, which no
+configuration reads ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)). The refusal stays a refusal: an
+unscanned classified file is never skipped.
+
+The shipped `examples/cochange/policy.json`, and the policy the guide shows, select
+only files that a repository laid by `grund init --scaffold` scans, so the root
+commit of such a repository passes with the policy as shipped.
+
 ## evidence: Both edits for one resolved direct target
 
 Each changed classified source file must directly cite at least one eligible
