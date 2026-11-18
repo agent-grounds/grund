@@ -8,6 +8,9 @@ use std::path::{Path, PathBuf};
 use super::index::{KindIndexTarget, declarations_under_folder, kind_index_targets};
 use super::index_enrollment::enroll_external_inline_declarations;
 use super::spellings_report::PlaceNames;
+use super::values::{
+    binding_target_has_any_value_authority, binding_target_reports_invalid_attempt,
+};
 use crate::config::{Frame, Owners, Schema};
 use crate::model::{
     Catalog, Citation, HeadingKind, Id, scanned_decl_relative_path, scanned_path_key,
@@ -151,6 +154,7 @@ impl KindIndexEntries {
         );
         let binding_sites = index_value_binding_sites(
             findings,
+            schema,
             &folder_owed,
             &names,
             &configured_root,
@@ -174,9 +178,10 @@ impl KindIndexEntries {
     }
 
     /// The IDs this index owes an entry for, or `None` when `path` is not a
-    /// configured index (§FS-fmt.6.1.2). What the always-linkify carve-out wraps:
-    /// declarations under the folder plus an external inline ID only after its
-    /// canonical enrollment link exists (§FS-check.3.18).
+    /// configured index (§FS-fmt.6.1.2). The always-linkify carve-out writes one
+    /// entry for each (§FS-fmt.2.5.3): declarations under the folder plus an
+    /// external inline ID only after its canonical enrollment link exists
+    /// (§FS-check.3.18).
     pub(crate) fn entries_in(&self, path: &Path) -> Option<&BTreeSet<Id>> {
         if self.owed.is_empty() {
             return None;
@@ -298,23 +303,31 @@ impl IndexHeadings {
     }
 }
 
-/// The citation sites of the scanner's recognized value bindings on each kind
-/// index (§FS-check.4.1.2.1, §FS-values.3.2), read off the catalog's binding
-/// records rather than re-parsed.
+/// The citation sites of the scanner's recognized value bindings, and of the
+/// attempts at one `check` refuses, on each kind index (§FS-check.4.1.2.1,
+/// §FS-values.3.2), read off the catalog's records rather than re-parsed.
 fn index_value_binding_sites(
     findings: &Catalog,
+    schema: &Schema,
     folder_owed: &BTreeMap<PathBuf, BTreeSet<Id>>,
     names: &IndexNames,
     configured_root: &Path,
     physical_root: &Path,
 ) -> BTreeMap<PathBuf, BTreeSet<(usize, usize)>> {
     let mut sites: BTreeMap<PathBuf, BTreeSet<(usize, usize)>> = BTreeMap::new();
-    for binding in &findings.value_bindings {
-        if binding.namespace.is_some() {
-            continue;
-        }
-        let Some(relative) =
-            scanned_decl_relative_path(&binding.file, configured_root, physical_root)
+    let bindings = findings
+        .value_bindings
+        .iter()
+        .filter(|binding| binding.namespace.is_none())
+        .map(|binding| {
+            (
+                binding.file.as_path(),
+                binding.line,
+                binding.citation_column,
+            )
+        });
+    for (file, line, column) in bindings.chain(refused_attempt_sites(findings, schema)) {
+        let Some(relative) = scanned_decl_relative_path(file, configured_root, physical_root)
         else {
             continue;
         };
@@ -323,9 +336,64 @@ fn index_value_binding_sites(
                 sites
                     .entry(key.to_path_buf())
                     .or_default()
-                    .insert((binding.line, binding.citation_column));
+                    .insert((line, column));
             }
         }
     }
     sites
+}
+
+/// The unqualified citation sites, as (file, line, column), of the attempts at
+/// a value binding that `check` refuses (§FS-values.3.1.1), by the predicate
+/// `fmt` protects them with (§FS-values.8).
+fn refused_attempt_sites<'a>(
+    findings: &'a Catalog,
+    schema: &'a Schema,
+) -> impl Iterator<Item = (&'a Path, usize, usize)> {
+    findings.invalid_value_bindings.iter().filter_map(|site| {
+        let (line, column) = site.binding_citation?;
+        let id = site.id.as_ref()?;
+        (site.binding_namespace.is_none()
+            && binding_target_reports_invalid_attempt(
+                findings,
+                schema,
+                id,
+                site.binding_section.as_deref(),
+            ))
+        .then_some((site.file.as_path(), line, column))
+    })
+}
+
+/// The unqualified citation sites, as (file, line, column), that `fmt` leaves
+/// unwrapped as a value binding or as an attempt at one `check` refuses
+/// (§FS-values.8), by the predicates the formatter asks. A bare one in a kind's
+/// index is therefore no entry `grund fmt --write` would repair (§FS-check.3.17.4).
+pub(super) fn fmt_protected_value_sites<'a>(
+    findings: &'a Catalog,
+    schema: &'a Schema,
+) -> BTreeSet<(&'a Path, usize, usize)> {
+    findings
+        .value_bindings
+        .iter()
+        .filter(|binding| {
+            binding.namespace.is_none() && {
+                let section = binding.section.as_deref();
+                binding_target_has_any_value_authority(findings, schema, &binding.id, section)
+                    || binding_target_reports_invalid_attempt(
+                        findings,
+                        schema,
+                        &binding.id,
+                        section,
+                    )
+            }
+        })
+        .map(|binding| {
+            (
+                binding.file.as_path(),
+                binding.line,
+                binding.citation_column,
+            )
+        })
+        .chain(refused_attempt_sites(findings, schema))
+        .collect()
 }

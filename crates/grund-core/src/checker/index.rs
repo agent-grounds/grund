@@ -11,7 +11,7 @@ use crate::model::remedies;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use super::index_entries::KindIndexEntries;
+use super::index_entries::{KindIndexEntries, fmt_protected_value_sites};
 use super::index_form::{
     IndexCitationForm, IndexEntryState, index_citation_form, index_citation_form_at,
 };
@@ -279,6 +279,7 @@ pub(super) fn check_kind_indexes(
     };
     // §AR-system.2.13: the index as a save would write it.
     let sources = frame.sources();
+    let mut protected_values = None;
     for target in &targets {
         // `is_file`, not `exists`: a path that is not a readable file is not an index
         // this run failed to read, it is an index that is not there — a missing one or
@@ -328,6 +329,8 @@ pub(super) fn check_kind_indexes(
         // physical config root is readable but not writable by the formatter.
         let bare_repairable = physical_path_key(&target.index_file).starts_with(&physical_root);
         let mut entries: BTreeMap<&Id, IndexEntryState> = BTreeMap::new();
+        let protected_values =
+            protected_values.get_or_insert_with(|| fmt_protected_value_sites(findings, schema));
         for citation in cited_in_index
             .get(target.index_key.as_path())
             .map(Vec::as_slice)
@@ -340,6 +343,12 @@ pub(super) fn check_kind_indexes(
             // is the entry of no ID (§FS-check.4.1.2.1), by the answer the unused carve-out
             // reads too (§AR-checker.2.16). A fence records no citation.
             if index_entries.on_declaration_heading(&citation.file, citation.line) {
+                continue;
+            }
+            // §FS-check.3.17.4: `fmt` leaves a value binding's citation, and a refused
+            // attempt's, unwrapped (§FS-values.8), so neither is an entry.
+            if protected_values.contains(&(citation.file.as_path(), citation.line, citation.column))
+            {
                 continue;
             }
             // An `Ignored` form creates no entry: a citation `fmt` will not wrap

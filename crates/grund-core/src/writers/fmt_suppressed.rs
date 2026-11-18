@@ -4,6 +4,7 @@
 
 use std::path::Path;
 
+use super::fmt_index_carve_out::CarveOutPass;
 use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_rewrite::FmtLineOpts;
 use super::fmt_row::LineRewrite;
@@ -15,13 +16,13 @@ use crate::grammar::LineLinks;
 /// upgrade, the shorthand expansion, and the ordinary wrap alike — so the line
 /// keeps its bytes and the report says nothing about it.
 ///
-/// The one survivor is the always-linkify carve-out (§FS-fmt.2.5.3): a kind's
-/// index entries are wrapped in a suppressed scope exactly as they are under
-/// `[fmt.cross_refs] enabled = false`, because a suppression that could leave an
-/// index in a state §FS-check.3.17 reports and `fmt` refuses to repair would
-/// reopen the hole §DF-index-always-linkified closed. `index_entry_ids` is
-/// `None` for every file that is not a configured index, which is the ordinary
-/// case and returns the line untouched.
+/// The one survivor is the always-linkify carve-out (§FS-fmt.2.5.3): one entry per
+/// ID a kind's index owes is written in a suppressed scope, and no other mention,
+/// because a suppression that could leave an index in a state §FS-check.3.17
+/// reports and `fmt` refuses to repair would reopen the hole
+/// §DF-index-always-linkified closed. `index_entry_ids` is `None` for every file
+/// that is not a configured index, which is the ordinary case and returns the
+/// line untouched.
 pub(super) fn suppressed_line(
     line: &str,
     links: LineLinks<'_>,
@@ -34,7 +35,7 @@ pub(super) fn suppressed_line(
     if !is_md {
         return unchanged();
     }
-    let (Some(entry_ids), Some(findings)) = (opts.index_entry_ids, opts.findings) else {
+    let (Some(carve_out), Some(findings)) = (opts.index_entry_ids, opts.findings) else {
         return unchanged();
     };
     let wrapped = wrap_markdown_links_with_targets(
@@ -44,7 +45,7 @@ pub(super) fn suppressed_line(
         config,
         findings,
         opts.workspace,
-        Some(entry_ids),
+        Some(CarveOutPass::Entries(carve_out)),
         opts.shorthand_targets,
         opts.settled,
     );

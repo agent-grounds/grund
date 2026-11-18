@@ -17,6 +17,7 @@ use std::ops::Range;
 use std::path::Path;
 
 use super::fmt_anchor_row::anchor_detail;
+use super::fmt_index_carve_out::CarveOutPass;
 use super::fmt_row::LineRewrite;
 
 use super::fmt_shorthand_links::{accepted_shorthand_link, collect_local_accepted_shorthand_links};
@@ -26,7 +27,7 @@ use crate::grammar::{
     CandidateReading, CitationLink, LineLinks, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX,
     citation_link, markdown_never_rewrite_context, parse_id, parse_longest_id_prefix,
 };
-use crate::model::{Catalog, Id};
+use crate::model::Catalog;
 use crate::resolver::{
     SettledHeadings, ShorthandTargets, WorkspaceContext, markdown_link_target_with_root,
 };
@@ -52,7 +53,7 @@ pub(crate) fn wrap_markdown_links(
     config: &Config,
     findings: &Catalog,
     workspace: Option<&WorkspaceContext>,
-    only_ids: Option<&BTreeSet<Id>>,
+    carve_out: Option<CarveOutPass<'_>>,
 ) -> String {
     let targets = ShorthandTargets::new(config.frame(), Some(findings), workspace);
     let settled = SettledHeadings::default();
@@ -63,7 +64,7 @@ pub(crate) fn wrap_markdown_links(
         config,
         findings,
         workspace,
-        only_ids,
+        carve_out,
         &targets,
         &settled,
     )
@@ -150,7 +151,7 @@ pub(super) fn wrap_markdown_links_with_targets(
     config: &Config,
     findings: &Catalog,
     workspace: Option<&WorkspaceContext>,
-    only_ids: Option<&BTreeSet<Id>>,
+    carve_out: Option<CarveOutPass<'_>>,
     shorthand_targets: &ShorthandTargets<'_>,
     settled: &SettledHeadings,
 ) -> WrappedLine {
@@ -163,18 +164,21 @@ pub(super) fn wrap_markdown_links_with_targets(
         markdown_link_citations(line, links, config, findings, workspace, shorthand_targets);
     let protected =
         protected_value_citations(line, links, path, &citations, config, findings, workspace);
+    let site_line = links.line_number().unwrap_or_default();
     for citation in citations {
         if citation.marker_start < cursor.max(binding_end) {
             continue;
         }
-        // §FS-fmt.6.1.2: the always-linkify carve-out reaches this file for its
-        // index entries (§FS-check.3.18) and writes nothing else — a qualified
-        // citation is never an entry, and an ID the index does not owe is prose.
-        if let Some(only_ids) = only_ids
-            && (citation.namespace.is_some() || !only_ids.contains(&citation.id))
-        {
+        // §FS-fmt.2.5.3: the always-linkify carve-out reaches this line for the
+        // entries of the IDs the index owes (§FS-check.3.18) and writes nothing
+        // else — a qualified citation is never an entry, and another ID is prose.
+        let owed = carve_out
+            .filter(|pass| citation.namespace.is_none() && pass.carve_out().owes(&citation.id));
+        let in_scope = matches!(carve_out, Some(CarveOutPass::Entries(_)));
+        if in_scope && owed.is_none() {
             continue;
         }
+        let site = (site_line, citation.marker_start);
         // §FS-values.8: the scanner's bindings and refused attempts keep their
         // exact citation occurrence, including a shorter reading of its token.
         if protected.contains(&citation.marker_start) {
@@ -185,7 +189,21 @@ pub(super) fn wrap_markdown_links_with_targets(
         // left, in an index as anywhere, before any target is derived; an image keeps
         // its destination (§FS-citations.wrap.enclosing.images).
         let reading = citation_link(links, line, citation.marker_start, citation.token_end);
+        // §FS-fmt.2.5.3: a wrap or an authored link is an entry, by its shape alone.
+        if let Some(pass) = owed
+            && let CitationLink::Wrap(_) | CitationLink::Enclosing { .. } = reading
+        {
+            pass.carve_out().saw_link(&citation.id, site, in_scope);
+        }
         if let CitationLink::Enclosing { .. } | CitationLink::Image(_) = reading {
+            continue;
+        }
+        // §FS-fmt.2.5.3, §FS-check.3.18.6: where the ordinary pass is off, only the
+        // entry is written, and a surveying walk writes nothing.
+        if let Some(CarveOutPass::Entries(carve_out)) = owed
+            && (carve_out.surveying() && matches!(reading, CitationLink::Wrap(_))
+                || !carve_out.surveying() && !carve_out.is_entry(site))
+        {
             continue;
         }
         // §FS-workspace.8.5: a qualified `§<alias>/<ID>` resolves against the
@@ -254,6 +272,16 @@ pub(super) fn wrap_markdown_links_with_targets(
             output.push_str(&target);
             cursor = wrap.close;
             continue;
+        }
+        match owed {
+            Some(CarveOutPass::Entries(carve_out)) if carve_out.surveying() => {
+                carve_out.saw_bare(&citation.id, site);
+                continue;
+            }
+            Some(CarveOutPass::Watch(carve_out)) => {
+                carve_out.saw_link(&citation.id, site, false);
+            }
+            _ => {}
         }
         // §FS-fmt.3.6.2.1: a fresh span is the one whole citation token.
         let span = marker_start..marked_end;

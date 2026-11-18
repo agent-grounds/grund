@@ -7,6 +7,7 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use super::fmt_complete_findings::{CompleteFindings, CompleteScan, unproven_alias_abort};
+use super::fmt_index_carve_out::IndexCarveOut;
 use super::fmt_plan::{PlannedFile, TreePlan, WalkRead, partial_io_error};
 use super::fmt_rewrite::{FmtLineOpts, rewrite_file};
 use super::fmt_row::FmtRow;
@@ -319,10 +320,34 @@ pub(super) fn plan_tree<'a>(
                 &index_targets,
             ));
         }
-        let index_entry_ids = carve_out
+        let carve_out = carve_out
             .then(|| index_entries.as_ref().and_then(|it| it.entries_in(&path)))
-            .flatten();
+            .flatten()
+            .map(IndexCarveOut::survey);
+        let index_entry_ids = carve_out.as_ref();
         let cross_refs = cross_refs && !file_excluded;
+        // §FS-fmt.2.5.3: which citation is an owed ID's entry depends on the whole
+        // file, so a first walk only surveys it, and its rows and text are dropped.
+        if let Some(carve_out) = index_entry_ids {
+            rewrite_file(
+                &original,
+                &path,
+                config,
+                reading,
+                &FmtLineOpts {
+                    add_marker,
+                    cross_refs,
+                    excluded: file_excluded,
+                    index_entry_ids,
+                    findings,
+                    workspace,
+                    shorthand_targets: &shorthand_targets,
+                    settled,
+                },
+                &mut Vec::new(),
+            );
+            carve_out.decide();
+        }
         let file_changes_start = changes.len();
         let mut rewritten = rewrite_file(
             &original,
