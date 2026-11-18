@@ -195,7 +195,7 @@ fn unresolved_mixed_text_has_exact_ordinary_messages_and_channels() {
     assert!(output.stderr.is_empty(), "{output:?}");
     assert_eq!(
         String::from_utf8_lossy(&output.stdout),
-        "docs/use.md:5: error: section not found: FS-x.1.nope; write <§> before it to show the shape without citing it\n\
+        "docs/use.md:5: error: section not found: FS-x.1.nope; write <§> before it to show the shape without citing it; run `grund FS-x --toc` to print the lead with the section map\n\
          docs/use.md:7: error: unknown reference FS-nope\n"
     );
     assert_eq!(output.status.code(), Some(1));

@@ -1,2 +1,2 @@
-docs/use.md:5: error: section not found: FS-x.1.nope; write <§> before it to show the shape without citing it
+docs/use.md:5: error: section not found: FS-x.1.nope; write <§> before it to show the shape without citing it; run `grund FS-x --toc` to print the lead with the section map
 docs/use.md:7: error: unknown reference FS-nope

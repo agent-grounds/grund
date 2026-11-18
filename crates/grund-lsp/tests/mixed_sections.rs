@@ -45,7 +45,7 @@ fn unresolved_mixed_citations_publish_ordinary_errors() {
         (
             "missing-section",
             2,
-            "section not found: FS-x.1.nope; write <§> before it to show the shape without citing it",
+            "section not found: FS-x.1.nope; write <§> before it to show the shape without citing it; run `grund FS-x --toc` to print the lead with the section map",
         ),
         ("dangling", 3, "unknown reference FS-nope"),
     ] {

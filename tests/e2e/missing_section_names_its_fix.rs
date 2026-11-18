@@ -18,6 +18,9 @@ use std::process::{Command, Output};
 /// The remedy of the `missing-section` row under the default marker, as a message carries it.
 const FIX: &str = "; write <\u{a7}> before it to show the shape without citing it";
 
+/// The `map` case the marked named form gives after the escape, for `FS-check` (§FS-errors.3.11).
+const MAP: &str = "; run `grund FS-check --toc` to print the lead with the section map";
+
 /// The report's tree, a version 2 project with named sections on: `FS-check` declares sections
 /// `2` and `2.1`, and one source line cites a numeric section and a named one it does not have.
 const TICKET: &[(&str, &str)] = &[
@@ -175,7 +178,7 @@ fn the_named_form_keeps_its_message() {
     let tree = Tree::new("named", TICKET);
     let output = tree.run(&["check"]);
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let named = format!("src/main.rs:1: error: section not found: FS-check.2.goals{FIX}\n");
+    let named = format!("src/main.rs:1: error: section not found: FS-check.2.goals{FIX}{MAP}\n");
     assert!(stdout.contains(&named), "{stdout}");
     assert_eq!(output.status.code(), Some(1));
 }
@@ -188,7 +191,7 @@ fn a_missing_numeric_section_names_the_fix_a_named_one_does() {
         &["check"],
         &format!(
             "src/main.rs:1: error: missing section FS-check.9.9{FIX}\n\
-             src/main.rs:1: error: section not found: FS-check.2.goals{FIX}\n"
+             src/main.rs:1: error: section not found: FS-check.2.goals{FIX}{MAP}\n"
         ),
         1,
     );
@@ -200,7 +203,7 @@ fn both_are_missing_section_in_json_and_each_names_the_fix() {
     let findings = Tree::new("json", TICKET).json_findings(&["check", "--format", "json"]);
     let expected = [
         format!("missing section FS-check.9.9{FIX}"),
-        format!("section not found: FS-check.2.goals{FIX}"),
+        format!("section not found: FS-check.2.goals{FIX}{MAP}"),
     ]
     .map(|message| ("missing-section".to_string(), "error".to_string(), message));
     assert_eq!(findings, expected);
