@@ -115,8 +115,8 @@ A key repeated in one JSON object or YAML mapping, the same ID declared across v
 The home is what enrolls a value source, so two opted-in homes are two claims on one set of declarations: the duplicate stands, it names each spelling once, and each spelling is judged at its own home ([§FS-declarations.checks.misplaced-declaration.2](FS-declarations.md#checksmisplaced-declaration2-another-kinds-home)). So with `a/limits.json -> ../values/limits.json`, where CONST owns `values/` and OTHER owns `a/`:
 
 ```text
-a/limits.json:1: error: CONST-room-limit declares kind CONST inside OTHER home a
-a/limits.json:1: error: duplicate declaration of CONST-room-limit (also declared at values/limits.json:1)
+a/limits.json:1: error: CONST-room-limit declares kind CONST inside OTHER home a; move it to a home of its own kind
+a/limits.json:1: error: duplicate declaration of CONST-room-limit (also declared at values/limits.json:1); keep one declaration of the ID and rename or remove the others
 ```
 
 `check a/limits.json` prints those same two lines. `check values/limits.json` prints the duplicate line, same bytes, because a finding that names several sites is in scope at any of them, and leaves out the misplaced line, which belongs to `a/` ([§FS-check.1.3.6.2](FS-check.md#1362-a-finding-that-spans-several-sites-is-in-scope-at-any-of-them)).

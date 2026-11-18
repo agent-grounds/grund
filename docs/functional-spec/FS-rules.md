@@ -877,21 +877,23 @@ Keep the complete message above as a verbatim contiguous prefix
 ([§FS-errors.3](FS-errors.md#3-message-text)) and append:
 
 ```text
-; expected display name "<name>" (case-insensitive, not section handle); observed direct chapters: <observed>; add, remove or retitle chapters until the count fits
+; expected display name "<name>" (case-insensitive, not section handle); observed direct chapters: <observed>; <fix>
 ```
 
 `<observed>` lists every accepted direct chapter in source order, each quoted
 as `"<coordinate>: <display name>"`, separated by `, `; when there are none it
 is `none`. Named coordinates expose the handle alongside the authored display
-name, so the reported example ends in `"goal: Goal and hypothesis"` rather
-than implying that the accepted chapter was not scanned. Nested descendants
-and rejected headings do not enter this direct-chapter list or the count.
+name, so the reported example ends in `"goal: Goal and hypothesis"`. Nested
+descendants, and numbered and rejected headings, which are not chapters, enter
+neither the list nor the count.
 
-Text output and JSON `message` carry the same complete explanation. The code,
-subject-title location, authority, severity/channel, other finding fields and
-exit verdict stay unchanged. The rule guide states this display-name/handle
-distinction beside its presence and chapter-subject examples and explains the
-single-token presence `NAME` restriction using `goal: Goal and hypothesis`.
+The fix is the `chapter-cardinality` row's `count` case
+([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)). When the count is too low and a direct heading of
+the subject that is not a chapter reads `NAME`, case aside, after any number,
+the `named` case follows for the first such heading, so `## 1. Terms` at line 5
+gets `; write line 5 as ## terms: Terms`: its `#` run, `NAME` in lower case,
+`: ` and its title. It is left out where that lower-case `NAME` is not a
+section name or is already the handle of a direct chapter.
 
 ### 7.3 Outbound citation cardinality
 
