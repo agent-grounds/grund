@@ -116,7 +116,7 @@ can read is the same silence in a new spelling.
 - dangling Markdown citation
 - missing Markdown section, every one naming its fix: a numeric path beside a named one, an
   unmarked version 1 citation, one outside `[scan] include` under `--full`, and one after a
-  section-lock clause, each red until #1436 lands
+  section-lock clause
   ([§FS-errors.3.11](../../docs/functional-spec/FS-errors.md#311-the-missing-section-remedy))
 - duplicate Markdown declaration
 - a stub whose target is outside `[scan] include`, counted as the scanned tree counts it

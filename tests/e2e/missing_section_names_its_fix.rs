@@ -7,8 +7,8 @@
 //! Issue #1436 is the report: the tree of [`TICKET`] printed `missing section FS-check.9.9` and
 //! stopped.
 //!
-//! These are not goldens because a golden has no skip, and every test here but the controls is
-//! red until the remedy reaches the `missing section` form. The trees are built in the temp
+//! They are tests rather than goldens because every one but the controls was pinned failing
+//! before #1436 appended the remedy, and a golden has no skip. The trees are built in the temp
 //! directory, so run them with a `TMPDIR` that no git tree or grund config encloses.
 
 use std::fs;
@@ -168,8 +168,8 @@ impl Drop for Tree {
     }
 }
 
-/// The control, green today: the marked named form already names its fix, and its bytes are the
-/// prefix every other form now follows, so they may not move (§FS-errors.3.11).
+/// The control, green before #1436 as well: the marked named form already named its fix, and its
+/// bytes are the prefix every other form now follows, so they may not move (§FS-errors.3.11).
 #[test]
 fn the_named_form_keeps_its_message() {
     let tree = Tree::new("named", TICKET);
@@ -181,7 +181,7 @@ fn the_named_form_keeps_its_message() {
 }
 
 /// The report: a missing numeric section names the same fix the missing named section beside it
-/// does, after its own head (today: `missing section FS-check.9.9` and nothing more).
+/// does, after its own head (before #1436: `missing section FS-check.9.9` and nothing more).
 #[test]
 fn a_missing_numeric_section_names_the_fix_a_named_one_does() {
     Tree::new("ticket", TICKET).assert_stdout(
@@ -218,9 +218,9 @@ fn an_unmarked_citation_of_a_missing_section_names_the_fix() {
     );
 }
 
-/// The control, green today: the fix is true for an unmarked citation, because writing the
-/// escape before the bare token clears it (§FS-citations.recognized.escapes). The run is clean,
-/// so the version 1 caution stands in place of `success`.
+/// The control, green before #1436 as well: the fix is true for an unmarked citation, because
+/// writing the escape before the bare token clears it (§FS-citations.recognized.escapes). The run
+/// is clean, so the version 1 caution stands in place of `success`.
 #[test]
 fn the_escape_the_fix_names_clears_an_unmarked_citation() {
     let tree = Tree::new("escaped", &unmarked("<\u{a7}>FS-001-login.9"));
