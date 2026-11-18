@@ -64,7 +64,7 @@ FS-user-can-log-in-with-email
 
 ### 2.3 `--explain` (text only)
 
-Stdout is unchanged — still the bare ID — and stderr carries one more line: where to put the declaration and how to start it. For a kind with a configured `file`, the hint names that file and an H2 by convention, or the H1 where the file holds the kind's single declaration ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), as `GRUND`'s does:
+Stdout is unchanged — still the bare ID — and stderr carries one more line: where to put the declaration and how to start it. For a kind with a configured file, the hint names the first one its row lists and takes the heading level from that file: the level of the kind's first declaration there, else of the file's first heading, else H2. So the scaffolded `docs/grund.md`, headed `# Why this project exists`, gets an H1, and a `requirements.md` whose declarations are H2s gets an H2:
 
 ```
 $ grund id FS "User can log in with email" --explain
@@ -72,18 +72,18 @@ FS-008-user-can-log-in-with-email
 next: add the declaration to requirements.md  (H2: `## FS-008-user-can-log-in-with-email: <one-line statement>`), then cite it as §FS-008-user-can-log-in-with-email
 ```
 
-For a kind with a configured `folder`, the hint names the new declaration file under that folder and uses an H1; for a kind with neither, it names the H1 and the citation but no path. `E2E` is the exception to the folder form: its declaration is a case directory, not a Markdown file ([§FS-config.3.4.4.3](FS-config.md#3443-e2e-is-configured-not-a-default)), so its hint names the case directory to create under that folder, with `expected.exit` and fixtures. The bare ID still composes in `$(…)`, while a person who ran `grund id` by hand gets the next step without recalling the layout. It creates no file ([§FS-id.7](FS-id.md#7-what-id-does-not-do)).
+For a kind with a configured `folder`, the hint names the new declaration file under that folder and uses an H1; for a kind with neither, it names the H1 and the citation but no path. `E2E` is the exception to the folder form: its declaration is a case directory, not a Markdown file ([§FS-config.3.4.4.3](FS-config.md#3443-e2e-is-configured-not-a-default)), so its hint names the case directory to create under that folder, with `expected.exit` and fixtures. It creates no file ([§FS-id.7](FS-id.md#7-what-id-does-not-do)).
 
 ## 3. Slug derivation
 
 The title becomes a slug deterministically: the same title and the same configured `slug_pattern` give the same slug on every platform, in every locale ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 
-1. Unicode-normalize the title to NFKD and strip combining marks (`Café log-in` → `Cafe log-in`).
+1. Unicode-normalize the title to NFKD and strip combining marks (`Müller café` → `Muller cafe`).
 2. Lower-case, ASCII only; a non-ASCII letter that survives step 1 passes to step 3 unchanged and is filtered there.
 3. Replace every run of characters outside the repeating character class of the configured `slug_pattern` ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — its last `[...]` bracket expression, or `[a-z0-9-]` when it has none — with a single `-`. Under the default pattern, spaces, punctuation and quotes all become `-`. The class is all this step reads of the pattern, so the slug it yields is not yet one the pattern accepts: a pattern that requires a leading letter, or a class without `-`, can still refuse it ([§FS-id.3.2](FS-id.md#32-a-slug-the-pattern-refuses)).
 4. Trim leading and trailing `-`. For example, `---login---` becomes `login`, including when the configured character class accepts hyphens.
 5. Collapse runs of two or more `-` into one.
-6. Truncate to 60 characters at the nearest preceding `-`, so a slug never ends mid-word.
+6. Where the slug is longer than 60 characters, cut it before the last `-` among its first 60, or at 60 where they hold none.
 
 An empty slug is refused ([§FS-id.3.1](FS-id.md#31-an-empty-slug)), and so is a slug the configured pattern does not accept ([§FS-id.3.2](FS-id.md#32-a-slug-the-pattern-refuses)).
 
