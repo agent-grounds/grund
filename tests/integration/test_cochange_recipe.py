@@ -8,6 +8,7 @@ and same-tree entry-point results (§FS-cochange-recipe.exit).
 RefusalTests pins policy validation (§FS-cochange-recipe.inputs) and exact
 snapshot/query refusals (§FS-cochange-recipe.snapshots).
 SnapshotEdgeTests pins deterministic JSON refusals (§FS-cochange-recipe.output).
+ScanScopeTests pins the scan-scope remedy (§FS-cochange-recipe.snapshots.scope).
 """
 from pathlib import Path
 import sys
@@ -19,6 +20,7 @@ from cochange_history import HistoryTests
 from cochange_refusals import RefusalTests, WorkspaceTests
 from cochange_compatibility import CompatibilityTests
 from cochange_snapshot_edges import SnapshotEdgeTests
+from cochange_scan_scope import ScanScopeTests
 
 
 if __name__ == "__main__":

@@ -27,7 +27,12 @@ config root, source and executable-test locations. The four keys are required:
 Selections are exact files or directory prefixes ending `/`. Source and test
 selections must be disjoint. There are no globs or policy switches for weaker
 evidence. Test classification should name your executable tests; the recipe
-only reports edits and CI must execute them. Paths in results are Git-relative,
+only reports edits and CI must execute them. Every tracked file under a
+selection must be one grund scans, whether or not your change touches it: a
+selected file with no `grund cover` row, such as a `.gitkeep` (grund never reads
+a hidden file) or a data file no language reads, refuses every run with
+`scan-scope`. Narrow the selection in the policy to leave it out, or remove the
+file. Paths in results are Git-relative,
 even when `config_root` names a nested app. Configuration edits are read from
 their own snapshots. Namespace migrations and roots outside the Git tree are
 explicitly unsupported.
