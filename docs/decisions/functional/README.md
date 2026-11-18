@@ -288,4 +288,6 @@ The rulings the one-answer work is built from, one record per step family, each 
 
 - [§DF-fmt-preserves-value-attempts](DF-fmt-preserves-value-attempts.md#df-fmt-preserves-value-attempts-formatting-preserves-every-refused-value-binding-attempt) — formatting preserves every refused value-binding attempt
 
+- [§DF-index-carve-out-one-entry](DF-index-carve-out-one-entry.md#df-index-carve-out-one-entry-the-index-carve-out-writes-one-entry-per-owed-id-and-check-names-no-fix-fmt-declines) — the index carve-out writes one entry per owed ID, and check names no fix fmt declines
+
 This index is navigational — citations should target the decision ID directly, never this file.
