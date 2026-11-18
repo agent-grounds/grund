@@ -1,5 +1,5 @@
 //! The spelling of migrate's undo and re-preview (§FS-config-migrate.6.5.1):
-//! one POSIX shell word per path, a leading `-` defused, `PATH` as given.
+//! one POSIX shell word per path, a leading `-` or `:` defused, `PATH` as given.
 //! Where the config lies relative to the working directory — `..`, links, the
 //! absolute fallback — is the core's `MigrateOpts::config_from`, tested there.
 
@@ -8,8 +8,8 @@ use super::*;
 /// The two commands' variable parts for a config spelled `restore` from the
 /// working directory and `given` as the `PATH` argument.
 fn spelled(restore: &str, given: Option<&str>) -> (String, String) {
-    let commands = MigrateCommands::spelled(restore, given);
-    (commands.restore, commands.path)
+    let commands = MigrateCommands::spelled(Some(restore), given);
+    (commands.restore.unwrap(), commands.path)
 }
 
 /// §FS-config-migrate.6.5.1 item 5: at the project root with no `PATH`, the
@@ -76,6 +76,45 @@ fn a_leading_dash_is_not_an_option() {
     assert_eq!(
         spelled("-my x/grund.toml", None),
         ("'./-my x/grund.toml'".into(), String::new())
+    );
+}
+
+/// §FS-config-migrate.6.5.1 item 3: an undo path that would start with `:` gets
+/// `./` too, since `git` reads a leading `:` as pathspec magic and would restore
+/// another file; grund reads no such magic, so `PATH` stays as given.
+#[test]
+fn a_leading_colon_is_not_pathspec_magic() {
+    assert_eq!(
+        spelled(":x/grund.toml", Some(":x")),
+        ("./:x/grund.toml".into(), " :x".into())
+    );
+    assert_eq!(
+        spelled(":my x/grund.toml", Some(":my x")),
+        ("'./:my x/grund.toml'".into(), " ':my x'".into())
+    );
+    assert_eq!(
+        spelled("x:/grund.toml", None).0,
+        "x:/grund.toml",
+        "only a leading `:` is magic"
+    );
+}
+
+/// §FS-config-migrate.6.5.1 item 1: where discovery no longer finds a config,
+/// the undo names no file; it is never spelled from the report base.
+#[test]
+fn no_config_found_prints_no_undo() {
+    let commands = MigrateCommands::spelled(None, Some("apps/api"));
+    let report = MigrateReport {
+        wrote: true,
+        ..MigrateReport::default()
+    };
+    let mut sink = Vec::new();
+    render_migrate_advice(&report, &commands, &mut sink).unwrap();
+    let advice = String::from_utf8(sink).unwrap();
+    assert!(!advice.contains("git restore"), "{advice}");
+    assert!(
+        advice.contains("run grund config migrate --to 2 apps/api\n"),
+        "{advice}"
     );
 }
 

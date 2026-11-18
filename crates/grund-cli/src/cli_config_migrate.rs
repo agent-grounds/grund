@@ -57,7 +57,7 @@ fn command_config_migrate(args: &[String]) -> ExitCode {
             let presentation = MigratePresentation::for_report(&report, full);
             let commands = report
                 .wrote
-                .then(|| MigrateCommands::for_run(&opts, path, &report));
+                .then(|| MigrateCommands::for_run(&opts, path));
             if presentation == MigratePresentation::Complete {
                 if let Some(candidate) = report.stdout() {
                     print!("{candidate}");
@@ -354,11 +354,12 @@ fn render_migrate_advice(
     commands: &MigrateCommands,
     out: &mut impl std::io::Write,
 ) -> std::io::Result<()> {
-    writeln!(
-        out,
-        "to get version 1 back: it is in version control, e.g. git restore {}",
-        commands.restore
-    )?;
+    if let Some(restore) = &commands.restore {
+        writeln!(
+            out,
+            "to get version 1 back: it is in version control, e.g. git restore {restore}"
+        )?;
+    }
     let flag = if report.dropped_comments().is_empty() {
         ""
     } else {

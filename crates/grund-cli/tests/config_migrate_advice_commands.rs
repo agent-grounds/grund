@@ -352,6 +352,37 @@ fn full_write_prints_the_same_commands() {
     );
 }
 
+/// §FS-config-migrate.6.5.1 item 1: a `PATH` through a directory link inside
+/// the repository is named where the config is, the file git tracks, so the
+/// pasted undo restores it; `git restore apps/api/grund.toml` would be refused as
+/// beyond a symbolic link. The re-preview still carries the `PATH` as typed.
+#[cfg(unix)]
+#[test]
+fn path_through_a_link_names_the_file_git_tracks() {
+    let tree = Tree(TemporaryRoot::new(&std::env::temp_dir(), "grund-1438-link"));
+    tree.project("services/api");
+    fs::create_dir_all(tree.path("apps")).unwrap();
+    std::os::unix::fs::symlink("../services/api", tree.path("apps/api")).unwrap();
+    tree.commit();
+    let write = tree.migrate("", &["apps/api", "--write"]);
+    passed(&write);
+    let stderr = text(&write.stderr);
+    assert_eq!(
+        stderr,
+        after_write("grund.toml", 13, "services/api/grund.toml", " apps/api")
+    );
+    let candidate = tree.read("services/api/grund.toml");
+    let undo = tree.paste("", &command(&stderr, UNDO));
+    assert!(undo.status.success(), "{}", text(&undo.stderr));
+    assert_eq!(
+        tree.version("services/api/grund.toml"),
+        "grund_config_version = 1"
+    );
+    let again = tree.paste("", &command(&stderr, REPREVIEW));
+    passed(&again);
+    assert_eq!(text(&again.stdout), candidate);
+}
+
 /// §FS-config-migrate.6.5.1 item 3: each path is one POSIX shell word. A path
 /// with a space or a `'` is single-quoted, `'` written `'\''`; an undo path
 /// that would start with `-` gets `./`; a `PATH` of safe characters stays bare.
@@ -374,29 +405,46 @@ fn paths_paste_as_one_shell_word() {
         ),
         ("dash", "-x", "./-x", "./-x/grund.toml", " ./-x"),
     ] {
-        let tree = Tree::single(&format!("grund-1438-quote-{name}"), dir);
-        let write = tree.migrate("", &[path, "--write"]);
-        passed(&write);
-        let stderr = text(&write.stderr);
-        assert_eq!(
-            stderr,
-            after_write("grund.toml", 13, undo, repreview),
-            "{name}"
+        pastes_as_one_word(name, dir, path, undo, repreview);
+    }
+}
+
+/// §FS-config-migrate.6.5.1 item 3: an undo path that would start with `:` gets
+/// `./`, because `git restore :x/grund.toml` reads the `:` as pathspec magic and
+/// restores `x/grund.toml`; the `PATH` stays as typed. Unix only: `:` cannot be
+/// in a Windows file name.
+#[cfg(unix)]
+#[test]
+fn a_leading_colon_pastes_as_a_path() {
+    pastes_as_one_word("colon", ":x", ":x", "./:x/grund.toml", " :x");
+}
+
+/// One project at `dir`, migrated from the repository root by `path`, prints
+/// `undo` and `repreview` (item 3); where a shell is at hand, both pasted at the
+/// root act on that project's config.
+fn pastes_as_one_word(name: &str, dir: &str, path: &str, undo: &str, repreview: &str) {
+    let tree = Tree::single(&format!("grund-1438-quote-{name}"), dir);
+    let write = tree.migrate("", &[path, "--write"]);
+    passed(&write);
+    let stderr = text(&write.stderr);
+    assert_eq!(
+        stderr,
+        after_write("grund.toml", 13, undo, repreview),
+        "{name}"
+    );
+    #[cfg(unix)]
+    {
+        let config = format!("{dir}/grund.toml");
+        let candidate = tree.read(&config);
+        let restored = tree.paste("", &command(&stderr, UNDO));
+        assert!(
+            restored.status.success(),
+            "{name}: {}",
+            text(&restored.stderr)
         );
-        #[cfg(unix)]
-        {
-            let config = format!("{dir}/grund.toml");
-            let candidate = tree.read(&config);
-            let restored = tree.paste("", &command(&stderr, UNDO));
-            assert!(
-                restored.status.success(),
-                "{name}: {}",
-                text(&restored.stderr)
-            );
-            assert_eq!(tree.version(&config), "grund_config_version = 1", "{name}");
-            let again = tree.paste("", &command(&stderr, REPREVIEW));
-            passed(&again);
-            assert_eq!(text(&again.stdout), candidate, "{name}");
-        }
+        assert_eq!(tree.version(&config), "grund_config_version = 1", "{name}");
+        let again = tree.paste("", &command(&stderr, REPREVIEW));
+        passed(&again);
+        assert_eq!(text(&again.stdout), candidate, "{name}");
     }
 }

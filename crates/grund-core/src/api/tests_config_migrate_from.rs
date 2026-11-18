@@ -6,6 +6,7 @@
 use std::path::Path;
 
 use crate::MigrateOpts;
+use crate::model::format_path;
 use crate::testing::{test_root, write};
 
 const V1: &str = "grund_config_version = 1\n";
@@ -26,14 +27,14 @@ fn a_config_in_the_directory_is_named_as_itself() {
     let root = test_root("migrate-from-here");
     write(&root.join("grund.toml"), V1);
     assert_eq!(
-        opts(&root).config_from(&root).as_deref(),
+        opts(&root).config_from(Some(&root)).as_deref(),
         Some("grund.toml")
     );
 
     let agents = test_root("migrate-from-agents");
     write(&agents.join(".agents/grund.toml"), V1);
     assert_eq!(
-        opts(&agents).config_from(&agents).as_deref(),
+        opts(&agents).config_from(Some(&agents)).as_deref(),
         Some(".agents/grund.toml")
     );
 }
@@ -47,11 +48,13 @@ fn a_config_elsewhere_is_named_from_the_directory() {
     write(&root.join("apps/web/docs/x.md"), "# x\n");
     let member = opts(&root.join("apps/api"));
     assert_eq!(
-        member.config_from(&root).as_deref(),
+        member.config_from(Some(&root)).as_deref(),
         Some("apps/api/grund.toml")
     );
     assert_eq!(
-        member.config_from(&root.join("apps/web/docs")).as_deref(),
+        member
+            .config_from(Some(&root.join("apps/web/docs")))
+            .as_deref(),
         Some("../../api/grund.toml")
     );
 
@@ -60,7 +63,7 @@ fn a_config_elsewhere_is_named_from_the_directory() {
     write(&below.join("docs/x.md"), "# x\n");
     let docs = below.join("docs");
     assert_eq!(
-        opts(&docs).config_from(&docs).as_deref(),
+        opts(&docs).config_from(Some(&docs)).as_deref(),
         Some("../grund.toml"),
         "discovery walks up from docs, and the undo climbs back"
     );
@@ -79,8 +82,42 @@ fn a_linked_directory_is_compared_where_it_resolves() {
     let link = root.join("far/away/docs");
     std::os::unix::fs::symlink(root.join("project/docs"), &link).unwrap();
     assert_eq!(
-        opts(&link).config_from(&link).as_deref(),
+        opts(&link).config_from(Some(&link)).as_deref(),
         Some("../grund.toml")
+    );
+}
+
+/// §FS-config-migrate.6.5.1 item 1: a `PATH` through a link inside the project's
+/// tree is spelled to where the config is, the file git tracks, and not through
+/// the link git refuses to look past.
+#[cfg(unix)]
+#[test]
+fn a_path_through_a_link_names_the_config_where_it_is() {
+    let root = test_root("migrate-from-path-link");
+    write(&root.join("services/api/grund.toml"), V1);
+    std::fs::create_dir_all(root.join("apps")).unwrap();
+    std::os::unix::fs::symlink("../services/api", root.join("apps/api")).unwrap();
+    assert_eq!(
+        opts(&root.join("apps/api"))
+            .config_from(Some(&root))
+            .as_deref(),
+        Some("services/api/grund.toml")
+    );
+}
+
+/// §FS-config-migrate.6.5.1 item 1: a process with no working directory has no
+/// relative spelling, so the config is named by its absolute path, never by the
+/// report base's.
+#[test]
+fn no_working_directory_names_the_absolute_path() {
+    let root = test_root("migrate-from-nowhere");
+    write(&root.join("apps/api/grund.toml"), V1);
+    let absolute = std::fs::canonicalize(root.join("apps/api"))
+        .unwrap()
+        .join("grund.toml");
+    assert_eq!(
+        opts(&root.join("apps/api")).config_from(None),
+        Some(format_path(&absolute))
     );
 }
 
@@ -90,5 +127,6 @@ fn a_linked_directory_is_compared_where_it_resolves() {
 fn no_config_names_nothing() {
     let root = test_root("migrate-from-none");
     write(&root.join("docs/x.md"), "# x\n");
-    assert_eq!(opts(&root).config_from(&root), None);
+    assert_eq!(opts(&root).config_from(Some(&root)), None);
+    assert_eq!(opts(&root).config_from(None), None);
 }
