@@ -25,7 +25,7 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 The entry point is `python3 examples/cochange/cochange.py`. Common arguments are
 `--repo <Git-root> --policy <JSON-file> --grund <executable>`; paths to the policy
 and executable are resolved before creating isolated trees. Policy is exactly
-`{"config_root":".","source_paths":["src/"],"test_paths":["tests/"],"eligible_kinds":["FS"]}`
+`{"config_root":".","source_paths":["src/"],"test_paths":["tests/e2e/"],"eligible_kinds":["FS"]}`
 with caller-selected values. Paths are Git-root relative exact files or directory
 prefixes ending `/`; `.` is allowed only for the config root. No globs, escapes,
 absolute paths, empty selections or overlapping source/test selections are
@@ -103,6 +103,17 @@ unscanned classified file is never skipped.
 The shipped `examples/cochange/policy.json`, and the policy the guide shows, select
 only files that a repository laid by `grund init --scaffold` scans, so the root
 commit of such a repository passes with the policy as shipped.
+
+#### .move: A source move to an unscanned destination
+
+A source move whose destination has no cover row refuses the same way: exit 2,
+code `scan-scope`, the destination's Git path and query `cover`. The destination
+need not lie under any selection, since the move is classified by its old path, so
+the message does not name a selection to narrow. It says Grund does not scan the
+destination and names the remedy that can work: move it to a path Grund scans,
+whose own name is not hidden. As for any classified file, it offers adding the
+destination to the scan configuration only when the destination's own name is not
+hidden.
 
 ## evidence: Both edits for one resolved direct target
 
