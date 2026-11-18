@@ -220,8 +220,10 @@ pub(super) fn assign_unmarked_heading_owners(
 /// whose body ends on `end` (§FS-declarations.checks.unmarked-heading.2.3): named
 /// sections on for a name-bearing path, one component per ATX level below the
 /// declaration, a parent [`usable_section`] accepts, and a path not already
-/// declared. In a value declaration (`value`) the path must also be the next
-/// value component, after every one the body declares (§FS-values.2.1).
+/// declared. Where the path lies in a value run — the body of a value declaration
+/// (`value`, §FS-values.2.1), or a value root inside `decl` (§FS-values.2.4,
+/// §FS-values.2.5) — it must also be that run's next component, after every one
+/// the run declares.
 fn fault_hint(
     candidate: &UnmarkedHeadingCandidate,
     decl: &Declaration,
@@ -237,7 +239,8 @@ fn fault_hint(
             .rsplit_once('.')
             .is_none_or(|(parent, _)| usable_section(decl, end, parent))
         && !decl.sections.contains_key(corrected)
-        && (!value || next_value_component(decl, end, candidate.line, corrected));
+        && value_run(decl, corrected, value)
+            .is_none_or(|run| next_value_component(decl, end, candidate.line, run, corrected));
     declares.then(|| PathFaultHint {
         path: fault.path.to_string(),
         missing_title: fault.title.is_none(),
@@ -248,14 +251,56 @@ fn fault_hint(
     })
 }
 
+/// The root path of the value run `corrected` would join in `decl`, if any
+/// (§FS-declarations.checks.unmarked-heading.2.3): the empty path, the whole body,
+/// in a value declaration (`value`, §FS-values.2.1); otherwise the outermost proper
+/// prefix of `corrected` that is a value root of `decl`, embedded (§FS-values.2.4)
+/// or by a declared chapter (§FS-values.2.5). Outermost, because a root nested in
+/// another is refused anyway (§FS-values.2.4.4) and the outer one is the stricter.
+fn value_run<'a>(decl: &Declaration, corrected: &'a str, value: bool) -> Option<&'a str> {
+    if value {
+        return Some("");
+    }
+    corrected
+        .match_indices('.')
+        .map(|(at, _)| &corrected[..at])
+        .find(|prefix| {
+            decl.sections
+                .get(*prefix)
+                .is_some_and(|info| info.value_root.is_some())
+        })
+}
+
 /// Whether `corrected`, written at `line`, appends the next component of the value
-/// declaration `decl`, whose body ends on `end`: one more than the components its
-/// body declares, all of them above `line` (§FS-declarations.checks.unmarked-heading.2.3).
-fn next_value_component(decl: &Declaration, end: usize, line: usize, corrected: &str) -> bool {
-    let body = decl
+/// run rooted at `root` in `decl`, whose body ends on `end`: `root` and one number,
+/// one more than the sections the body declares under `root`, all of them above
+/// `line` (§FS-declarations.checks.unmarked-heading.2.3). This is the run's
+/// contiguity and physical order (§FS-values.2.1, §FS-values.2.4.3), one count for
+/// a whole value declaration (`root` empty) and a value root inside one.
+fn next_value_component(
+    decl: &Declaration,
+    end: usize,
+    line: usize,
+    root: &str,
+    corrected: &str,
+) -> bool {
+    let run = decl
         .sections
-        .values()
-        .filter(|info| (decl.body_start..=end).contains(&info.line))
+        .iter()
+        .filter(|(path, info)| {
+            (decl.body_start..=end).contains(&info.line)
+                && (root.is_empty()
+                    || path
+                        .strip_prefix(root)
+                        .is_some_and(|rest| rest.starts_with('.')))
+        })
+        .map(|(_, info)| info)
         .collect::<Vec<_>>();
-    body.iter().all(|info| info.line < line) && corrected == (body.len() + 1).to_string()
+    let next = run.len() + 1;
+    let expected = if root.is_empty() {
+        next.to_string()
+    } else {
+        format!("{root}.{next}")
+    };
+    run.iter().all(|info| info.line < line) && corrected == expected
 }
