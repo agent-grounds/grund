@@ -22,7 +22,7 @@ npm pack
 ```
 
 Install the resulting tarball into a consumer with
-`npm install --ignore-scripts /absolute/path/to/grund-cli-0.16.2-dev.tgz`.
+`npm install --ignore-scripts /absolute/path/to/grund-cli-<version>.tgz`.
 Rebuild an unpacked installed package explicitly with `npm run build:source`.
 That uses its bundled, locked source closure; it does not require checkout
 access. Import/install never compiles or downloads a native addon
