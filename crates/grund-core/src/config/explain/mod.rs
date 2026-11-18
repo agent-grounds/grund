@@ -23,7 +23,8 @@ use anyhow::{Context, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::discovery::{discovery_start, nearest_config};
+use super::discovery::discovery_start;
+use super::member_scope::inspected_config;
 use super::v1::{is_header, read_sections, strip_comment};
 use super::v2;
 use super::vocabulary::admitted;
@@ -199,12 +200,13 @@ pub(crate) fn explain(path: &Path, ask: &ExplainAsk) -> Result<Explained> {
     })
 }
 
-/// The nearest config file walking up from `path` (§FS-config.4.2), through the
-/// path's own parents as discovery climbs them (§FS-config.1.5), and its path
-/// spelled from its root, as every config refusal names it.
+/// The selected member's file, or absence of one (§FS-config-explain.2), through
+/// the same discovery as effective config (§FS-config.4.2), without validating
+/// its settings. The report path is spelled from the selected root.
 fn discover(path: &Path) -> Option<(PathBuf, PathBuf)> {
     let start = discovery_start(path);
-    let (dir, file) = nearest_config(&start)?;
+    let (dir, file) = inspected_config(&start)?;
+    let file = file?;
     let report = file.strip_prefix(&dir).unwrap_or(&file).to_path_buf();
     Some((file, report))
 }

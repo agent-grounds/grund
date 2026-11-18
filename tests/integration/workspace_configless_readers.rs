@@ -5,7 +5,6 @@ use crate::fixture::{FORMAT, Tree};
 use grund_core::{effective_config, effective_project, schema_view};
 
 #[test]
-#[ignore = "red until #1446 effective config selects the configless member; implement removes this"]
 fn configless_member_effective_config_root_file_and_defaults() {
     let tree = Tree::workspace();
     let member = tree.0.join("apps/nocfg");
@@ -27,7 +26,6 @@ fn configless_member_effective_config_root_file_and_defaults() {
 }
 
 #[test]
-#[ignore = "red until #1446 dependent views select the configless member; implement removes this"]
 fn configless_member_effective_project_and_schema_identity() {
     let tree = Tree::workspace();
     let mut failures = Vec::new();

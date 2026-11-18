@@ -131,6 +131,17 @@ after one line saying which is which:
 No grund.toml here. grund init writes version 2; until a file exists, check reads version 1's defaults.
 ```
 
+The same answer applies inside a workspace member with neither config form,
+including its descendants and an explicit `--path` into it: discovery stops at
+that member's boundary ([§FS-config-explain.2](../functional-spec/FS-config-explain.md#2-which-version-answers)).
+There, `grund config show` reports the member's canonical version-1 defaults
+([§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)),
+and `grund schema` names the member with `defaults, no grund.toml · v1`
+([§FS-schema.2](../functional-spec/FS-schema.md#2-selection)).
+Run `grund init` inside that member of a version-controlled tree to write its
+own version-2 `grund.toml`
+([§FS-init.2.4](../functional-spec/FS-init.md#24-generated-grundtoml)).
+
 ## A target your version does not have
 
 A target the version does not know prints nothing on stdout and one line on

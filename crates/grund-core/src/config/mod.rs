@@ -66,6 +66,7 @@ mod home_requirement;
 mod inputs;
 mod kind;
 mod kinds;
+mod member_scope;
 pub(crate) mod migrate;
 mod mount_edge;
 mod places;
@@ -172,6 +173,7 @@ pub(crate) use kinds::{
     KindEntry, KindField, KindScope, KindTable, KindVerdict, Quote, install_kind_table,
     known_kinds_line, unverifiable_reason,
 };
+pub(crate) use member_scope::{ancestor_member_entries, member_root_for_scope};
 pub(crate) use point_sizes::measure_point_text;
 pub(crate) use read_name::NamesVerdict;
 pub(crate) use record::{

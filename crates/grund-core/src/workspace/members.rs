@@ -28,7 +28,7 @@ use super::optional_members::expand_optional_members;
 use super::scope::{config_location_error, workspace_members_error};
 use crate::config::{
     AbsentOptionalNamespace, Config, ConfigLocation, Invocation, Selection, config_at,
-    config_file_in, joined_value, selects_v2, strip_comment, unloaded_string_list,
+    config_file_in,
 };
 use crate::model::{Diagnostic, OperationDiagnostic, is_hidden, sort_path_key};
 
@@ -283,103 +283,8 @@ fn member_claims(root: &Path, entries: &[String]) -> Vec<MemberClaim> {
         .collect()
 }
 
-/// The `[workspace] members` and `optional_members` entries of a config, read
-/// from the file text **on its own**: the parser's own line and section rules
-/// applied to those two keys, and nothing else — no other key, no shape rule
-/// (§FS-workspace.2.3), no grammar rebuild (§FS-workspace.6.1.7).
-///
-/// §FS-workspace.2.2.9: both lists claim, by the same entry-text rule. An optional
-/// entry claims the directory below it exactly as a `members` entry does, so a run
-/// started inside a *present* one reads its alias path out of that claim and
-/// spells itself the way the workspace root does; an absent entry claims a
-/// directory no run can be started inside, so including it costs nothing. Reading
-/// only `members` here left a present optional member's subtree named from a
-/// directory nothing lists, which is the disagreement §FS-workspace.6.1.5 exists to
-/// prevent.
-///
-/// The ancestor climb needs the claim answerable for a config that does not
-/// *load*, because the key that decides the claim is the very one a load error
-/// may be about: read from a loaded config, every failure above a repository was
-/// silently equal to "claims nothing", and the alias prefix the rule protects
-/// collapsed. `Err` is the residue where even this read cannot answer — the file
-/// cannot be read, or the value is not a list — and carries the reason the
-/// warning that says so has to name.
-///
-/// A value is read as the config's own version reads it (§FS-workspace.6.1.7.5).
-/// A version-2 config's goes through its reader's own `joined_value`: one written
-/// across lines, or ending in the trailing comma TOML allows, is the list the
-/// config loads, and one still open at the end of the file, or at a line that ends
-/// inside a string, is residue, as the load refuses it
-/// (§FS-config-v2.reader.5.strings.refusal). Read one
-/// line at a time, such a list was "not a list", and a workspace written that way
-/// silenced every unlisted block below it. Another key's array is joined only to
-/// be passed over; one that never closes swallows lines a claim may stand on, and
-/// taking it as residue silenced blocks no ancestor names, so the read goes on at
-/// the next line instead, as it did before arrays were joined, and so it does after
-/// one refused at its open line. A version-1 value
-/// stays on its key's line, as the v1 reader reads every value (§FS-config.3), so
-/// a v1 list written across lines is not a list here either: joining it made it a
-/// claim, and the v1 reader's load error then failed a run below a stray config
-/// that is not that run's problem.
-pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>, String> {
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    let text = Sources::on_disk()
-        .text(config_path)
-        .map_err(|err| err.to_string())?;
-    // §FS-config.3: only the version-2 reader reads an array across lines.
-    let spans_lines = selects_v2(&text);
-    let mut in_workspace = false;
-    let mut entries = Vec::new();
-    let mut optional = Vec::new();
-    let mut lines = text.lines().enumerate();
-    while let Some((idx, raw_line)) = lines.next() {
-        let line = strip_comment(raw_line).trim();
-        if line.is_empty() {
-            continue;
-        }
-        if line.starts_with('[') && line.ends_with(']') {
-            // Read exactly as `parse_config_file` reads a section header, so the
-            // forms it *rejects* still count as the block that claims: a
-            // `[[workspace]]` above a repository has to be able to fail the run
-            // it claims, not vanish from it.
-            in_workspace = line.trim_matches(['[', ']']) == "workspace";
-            continue;
-        }
-        let Some((key, value)) = line.split_once('=') else {
-            continue;
-        };
-        // Last assignment wins, exactly as it does in a full parse. Each key names
-        // itself in the residue, because the sentence that reports one is what tells
-        // the reader which line to open (§FS-check.3.29).
-        let (slot, name) = match key.trim() {
-            "members" if in_workspace => (&mut entries, "members"),
-            "optional_members" if in_workspace => (&mut optional, "optional_members"),
-            _ => {
-                // Another key's array that closes is passed over whole, so no line in it
-                // reads as a header or a key; one that never closes, or has an open line,
-                // holds no claim, so the read goes on at the next line (§FS-workspace.6.1.7.5).
-                if spans_lines {
-                    let mut ahead = lines.clone();
-                    if joined_value(value, idx + 1, &mut ahead).value.is_some() {
-                        lines = ahead;
-                    }
-                }
-                continue;
-            }
-        };
-        // A version-2 claim still open at the end of the file, or at its open line, is not a
-        // list, exactly where the load refuses it (§FS-config-v2.reader.5.strings.refusal).
-        let value = match spans_lines {
-            true => joined_value(value, idx + 1, &mut lines).value,
-            false => Some(value.trim().to_string()),
-        };
-        *slot = value
-            .and_then(|value| unloaded_string_list(spans_lines, config_path, idx + 1, &value))
-            .ok_or_else(|| format!("`{name}` is not a list of strings"))?;
-    }
-    entries.extend(optional);
-    Ok(entries)
-}
+// The lightweight reader is shared with config inspection (§FS-config-explain.2).
+pub(crate) use crate::config::ancestor_member_entries;
 
 /// One ancestor `[workspace]` block: what its `members` entries name, the config
 /// a claim is answered from — or the error loading it produced, carried rather

@@ -9,9 +9,10 @@ use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 use super::compiled::{Compiled, compile};
+use super::member_scope::inspected_config;
 use super::project::Project;
 use super::record::Config;
-use super::run::{Invocation, Run};
+use super::run::{Invocation, Run, Selection};
 use super::scope_roots::spelled_under_root;
 use super::{v1, v2, validate};
 use crate::model::{format_path, normalize_path_lexically, relative_from_base};
@@ -284,7 +285,13 @@ pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
     // Both names are probed at *every* level before climbing, so a bare member
     // config shadows an ancestor's `.agents/` one exactly as a nested
     // `.agents/grund.toml` always did (§FS-config.1, §DF-config-file-location.2.1).
-    if let Some((dir, _)) = nearest_config(&walk_start) {
+
+    // §FS-config.4.2: inspection shares explain's member boundary and file absence.
+    let selected = match invocation.selection {
+        Selection::Inspection => inspected_config(&walk_start).map(|(root, _)| root),
+        _ => nearest_config(&walk_start).map(|(root, _)| root),
+    };
+    if let Some(dir) = selected {
         // §FS-config.1.5: the project's identity resolves links once it is chosen.
         let root = super::canonical_config_root(&dir);
         return config_at(

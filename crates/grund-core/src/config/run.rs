@@ -139,8 +139,11 @@ impl Default for RunScope {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum Selection {
     /// The config discovery finds for the path, with no member rewrite and no
-    /// boundary: what `config show` reads and the embedding preflight climbs.
+    /// boundary: what init reads and the embedding preflight climbs.
     Discovery,
+    /// Member-aware config inspection without workspace expansion
+    /// (§FS-config.4.2, §FS-schema.2).
+    Inspection,
     /// The project the path belongs to, resolved within its tree:
     /// `cover`, `fmt` and the editor's lookups.
     Project,
@@ -227,7 +230,7 @@ impl Invocation {
         match self.selection {
             Selection::Check => !self.names_root(root),
             Selection::Editor => !workspace_declared && !self.names_root(root),
-            Selection::Discovery | Selection::Project => false,
+            Selection::Discovery | Selection::Inspection | Selection::Project => false,
         }
     }
 

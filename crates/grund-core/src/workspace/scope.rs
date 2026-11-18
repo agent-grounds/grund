@@ -8,21 +8,19 @@
 //! config work every walking command shares, not something `check` owns
 //! (§AR-core-module-layout.1).
 
-use crate::sources::{
-    canonical_path, lookup_refused, path_lookup, record_test_config_resolution, refuse_missing_path,
-};
+use crate::sources::{record_test_config_resolution, refuse_missing_path};
 use anyhow::Result;
-use std::path::{Component, Path, PathBuf};
+use std::path::Path;
 
 use super::findings::reject_absorbed_scan;
-use super::members::{WorkspaceMember, canonical_workspace_path, expand_workspace_member_list};
+use super::members::{WorkspaceMember, expand_workspace_member_list};
 use crate::config::display_path;
 use crate::config::{
     Config, ConfigLocation, Invocation, RunWarning, Selection, config_at, config_file_in,
     discover_config, discovery_start, invalid_project_alias_message, is_valid_project_alias,
-    nearest_config, reject_unaccepted_citation_targets,
+    member_root_for_scope, nearest_config, reject_unaccepted_citation_targets,
 };
-use crate::model::{format_path, normalize_path_lexically};
+use crate::model::format_path;
 
 /// Whether the path names the project's root (§FS-check.1.3.6): the invocation's
 /// question, answered in config where the `Run` is built (§AR-config.1.5).
@@ -37,7 +35,8 @@ pub(crate) use crate::config::scope_is_config_root;
 /// here, so workspace handling is identical across `check`, `fmt`, `refs`,
 /// `list`, `cover`, `show`, `id`, and completions; the boundary is what stops a
 /// root-scope scan from absorbing member declarations into the parent namespace.
-/// A `Discovery` selection stops after discovery (§FS-config.1).
+/// A `Discovery` selection stops after discovery (§FS-config.1); `Inspection`
+/// already selected the member without expanding siblings (§FS-config.4.2).
 ///
 /// It is also where a run learns it holds no workspace, so it is where such a
 /// run judges its pinned and `*/` `[citations]` targets, against its own kinds;
@@ -50,12 +49,15 @@ pub(crate) use crate::config::scope_is_config_root;
 /// asks once discovery has answered, so a config that refuses to load is still that refusal
 /// (§FS-config.1), and before anything is scanned. A marked path is left to the walk, which
 /// refuses it with the same function after the boundary below has said its warnings
-/// (§FS-scan.scope.homes.lookup.path). A `Discovery` run scans nothing and is not asked, nor
-/// is [`resolve_workspace_config`], whose path only selects the project.
+/// (§FS-scan.scope.homes.lookup.path). A `Discovery` or `Inspection` run scans nothing and is
+/// not asked, nor is [`resolve_workspace_config`], whose path only selects the project.
 pub(crate) fn open(invocation: &Invocation) -> Result<Config> {
     open_refusing(
         invocation,
-        invocation.selection != Selection::Discovery && !invocation.path_provided,
+        !matches!(
+            invocation.selection,
+            Selection::Discovery | Selection::Inspection
+        ) && !invocation.path_provided,
     )
 }
 
@@ -69,13 +71,17 @@ pub(crate) fn open_refusing(invocation: &Invocation, refuse_missing: bool) -> Re
     if refuse_missing {
         refuse_missing_path(&invocation.path)?;
     }
-    if invocation.selection != Selection::Discovery {
+    let inspection = matches!(
+        invocation.selection,
+        Selection::Discovery | Selection::Inspection
+    );
+    if !inspection {
         config = config_for_member_scope(config, invocation)?;
     }
     if !config.workspace_declared {
         reject_unaccepted_citation_targets(&config, &config.kind_table())?;
     }
-    if invocation.selection == Selection::Discovery {
+    if inspection {
         return Ok(config);
     }
     apply_workspace_boundary(&mut config)?;
@@ -153,101 +159,32 @@ pub(crate) fn populate_workspace_boundary(
     Ok(Some(members))
 }
 
-/// §FS-workspace.2 / §FS-workspace.5.1: when the requested scope lies inside a
+/// §FS-scan.projects.member: when the requested scope lies inside a
 /// configured workspace member, rewrite the resolved config so the run is
 /// rooted at the member rather than the workspace root. This applies whether
 /// the member has its own `grund.toml` or not — either way a
 /// member-scoped command runs as an independent project, with member defaults
-/// when no member config exists.
+/// when no member config exists (§FS-workspace.2, §FS-workspace.5.1).
 fn config_for_member_scope(mut config: Config, invocation: &Invocation) -> Result<Config> {
     if !config.workspace_declared {
         return Ok(config);
     }
     let start = discovery_start(&invocation.path);
-    let scope = match canonical_path(&start) {
-        Ok(scope) => scope,
-        // §FS-scan.scope.homes.lookup.path: a path whose lookup is refused is no member's to
-        // read, so the run keeps the config that holds it and fails at the path as given.
-        Err(_) if path_lookup(&start).is_err_and(|error| lookup_refused(&error)) => {
-            return Ok(config);
-        }
-        Err(_) => start.clone(),
-    };
-    if scope == config.root {
-        return Ok(config);
-    }
-    if let Some(member_root) = lexical_member_root(&config, &start)
-        .or_else(|| configured_member_root_for_scope(&config, &scope))
+    let entries: Vec<_> = config
+        .workspace_members
+        .iter()
+        .chain(config.workspace_optional_members.iter())
+        .cloned()
+        .collect();
+    let discovered_dir = nearest_config(&start)
+        .map(|(dir, _)| dir)
+        .unwrap_or_else(|| config.root.clone());
+    if let Some(member_root) =
+        member_root_for_scope(&config.root, &discovered_dir, &start, &entries)
     {
         config = config_at(&member_root, &config.cli_base, None, invocation)?;
     }
     Ok(config)
-}
-
-/// §FS-config.1.5: the member a scope lies in on the path discovery climbed, written below
-/// the directory the workspace config was found in, so a scope under `m/` is member `m`'s
-/// even through a link out of the workspace. `None` where the start lies in no member as
-/// written; the caller then matches it resolved.
-fn lexical_member_root(config: &Config, start: &Path) -> Option<PathBuf> {
-    let (dir, _) = nearest_config(start)?;
-    let relative = start.strip_prefix(&dir).ok()?;
-    let member = config
-        .workspace_members
-        .iter()
-        .chain(config.workspace_optional_members.iter())
-        .filter_map(|member| lexical_member_candidate(member, relative))
-        .max_by_key(|member| member.components().count())?;
-    Some(canonical_workspace_path(&config.root.join(member)))
-}
-
-/// The member directory `entry` names that holds `relative`, both as written below the
-/// workspace config: the one child of a `parent/*` entry, or the entry itself.
-fn lexical_member_candidate(entry: &str, relative: &Path) -> Option<PathBuf> {
-    if let Some(parent) = entry.strip_suffix("/*") {
-        let parent = normalize_path_lexically(Path::new(parent));
-        let Component::Normal(child) = relative.strip_prefix(&parent).ok()?.components().next()?
-        else {
-            return None;
-        };
-        return Some(parent.join(child));
-    }
-    let member = normalize_path_lexically(Path::new(entry));
-    relative.starts_with(&member).then_some(member)
-}
-
-/// §FS-workspace.2.2: both lists are read here. Present, an optional member is an
-/// ordinary member, so a scope inside one is member-local exactly as a scope inside
-/// a `members` entry is — and an absent one matches nothing, because there is no
-/// directory to stand in.
-fn configured_member_root_for_scope(config: &Config, scope: &Path) -> Option<PathBuf> {
-    config
-        .workspace_members
-        .iter()
-        .chain(config.workspace_optional_members.iter())
-        .filter_map(|member| configured_member_root_candidate(config, member, scope))
-        .max_by_key(|root| root.components().count())
-}
-
-fn configured_member_root_candidate(
-    config: &Config,
-    member: &str,
-    scope: &Path,
-) -> Option<PathBuf> {
-    if let Some(parent) = member.strip_suffix("/*") {
-        let parent = canonical_workspace_path(&config.root.join(parent));
-        let relative = scope.strip_prefix(&parent).ok()?;
-        let Component::Normal(child) = relative.components().next()? else {
-            return None;
-        };
-        let root = parent.join(child);
-        return Some(canonical_workspace_path(&root));
-    }
-    let root = canonical_workspace_path(&config.root.join(member));
-    if scope == root || scope.starts_with(&root) {
-        Some(root)
-    } else {
-        None
-    }
 }
 
 pub(super) fn workspace_members_error(config: &Config, message: String) -> anyhow::Error {
