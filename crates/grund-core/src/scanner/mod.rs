@@ -125,7 +125,7 @@ pub(crate) use agent_entrypoints::{
     existing_init_companion_agent_entrypoints, is_file_or_symlink, is_symlink_to,
     path_missing_without_following_symlinks,
 };
-pub(crate) use context::{file_home_kind, first_heading_level, section_path_is_numeric};
+pub(crate) use context::{file_home_kind, section_path_is_numeric, title_has_sections};
 pub(crate) use declaration_lines::DeclarationLines;
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use e2e_case_failures::with_e2e_case_failures;
