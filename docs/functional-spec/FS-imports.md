@@ -235,8 +235,8 @@ Writers walk only the consumer's own projects: `fmt --write`, `fmt --check`,
 the consumer's own files computed from an import's facts is ordinary: a cross-ref link from a
 consumer document into the imported file, and the consumer's section-lock entries under its
 own `.grund/sections/<alias>/` ([§FS-section-lock.file.members](FS-section-lock.md#filemembers-citations-into-another-project)). A run with a missing import
-leaves the consumer's `.grund/sections/<alias>/` entries for it as they are, as it leaves an
-alias the run does not load.
+treats the consumer's `.grund/sections/<alias>/` for it as one for any alias the run does not
+load ([§FS-section-lock.file.members](FS-section-lock.md#filemembers-citations-into-another-project)).
 
 `grund fetch` of an ID in an import is refused before its integration runs, with exit 2,
 naming the target as the place to run it ([§FS-imports.writes.answer](FS-imports.md#writesanswer-where-a-qualified-id-is-fetched-has-one-answer)):

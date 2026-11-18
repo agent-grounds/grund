@@ -104,13 +104,14 @@ section-address-changed
 A cited section's text has moved to another address, and the cited address now holds something else.
 
 Severity: error, fixed.
-On: when a citation names a relative heading's address (a condition of the tree)
+On: when a citation names the address of a relative heading or a mixed path (a condition of the tree)
 Fix: move it back, cite {new address} instead, or leave a pointer to it at {cited address}; if {new address} is a copy, edit the copy or cite it from {cited address}
 Note: check compares the text at a cited address with the fingerprint .grund/sections/<ID>.lock recorded for it, and finds that fingerprint at another address of the declaration. Only grund fmt --write writes a lock (grund config explain unrecorded-section-citation says where to run it). It never approves a move: the one thing it records at the old address is a pointer to the new one. Do not edit a lock by hand.
 ```
 
 The `Fix:` line is the same three ways out every `section-address-changed`
-error names: undo the move, follow it, or acknowledge it with a pointer. The
+error names: undo the move, follow it, or acknowledge it with a pointer.
+Following it clears the error only where no cited section took the old address. The
 error itself goes on past them to name each line that still cites the old
 address, the lines that following the move means editing; those are the
 finding's own, so the answer leaves them out. The

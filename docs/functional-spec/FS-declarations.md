@@ -643,7 +643,7 @@ Inside a Markdown declaration body a heading may write only the component it add
 
 The form needs no setting and serves every outline, numeric or named, in every repository; relative and complete-path headings mix freely at any depth. It is unambiguous because no repository that passes `grund check` today contains it: before this form, every dotted heading inside a Markdown declaration body was an [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) error. Decided in [§DF-relative-section-headings](../decisions/functional/DF-relative-section-headings.md#df-relative-section-headings-a-heading-may-write-only-the-component-it-adds).
 
-A cited relative section is guarded against silently holding other text after a move by the section lock ([§FS-section-lock](FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)).
+A cited relative section is guarded against silently holding other text after a move by the section lock ([§FS-section-lock](FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went)).
 
 #### section.relative.form: The form
 

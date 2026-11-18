@@ -208,7 +208,7 @@ never a list item. So each criterion becomes a heading. It is written relative,
 `#### .1. Active code`, so its number reads like Kiro's list number, and its
 full address is `REQ-coupon-codes.1.1`. A cited relative section is recorded in
 the section lock, `.grund/sections/REQ-coupon-codes.lock`, with a fingerprint of
-its text ([§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)). The lock is what catches Kiro renumbering criteria
+its text ([§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went)). The lock is what catches Kiro renumbering criteria
 (edit 1 under [Break it](#break-it)).
 
 The EARS sentence goes below a short name, not into the heading, because the

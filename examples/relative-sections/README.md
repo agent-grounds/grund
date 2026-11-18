@@ -30,7 +30,7 @@ Trim surrounding whitespace.
 
 The headings below the one you read, and every heading of a whole-declaration read such as `grund FS-login --full`, print as written.
 
-A relative address has a cost: move the block under another parent and the same words answer to a different address. So a cited relative section is locked to its text ([§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)). `repo/.grund/sections/FS-login.lock` holds one line per cited address with a fingerprint of the section's text, and `grund check examples/relative-sections/repo` prints `success`. Only `grund fmt --write`, run from the root, writes that file, and the file is committed. The sibling example [`relative-sections-lock/`](../relative-sections-lock/) shows the lock catching a citation it does not record.
+A relative address has a cost: move the block under another parent and the same words answer to a different address. So a cited relative section is locked to its text ([§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went)). `repo/.grund/sections/FS-login.lock` holds one line per cited address with a fingerprint of the section's text, and `grund check examples/relative-sections/repo` prints `success`. Only `grund fmt --write`, run from the root, writes that file, and the file is committed. The sibling example [`relative-sections-lock/`](../relative-sections-lock/) shows the lock catching a citation it does not record.
 
 The trade-offs:
 

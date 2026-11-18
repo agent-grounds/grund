@@ -101,7 +101,7 @@ Unison codebase is never in a broken state, even midway through a refactoring."
   permanent, and changing one is a deliberate edit, not an automated operation
   ([§FS-non-goals.4](../functional-spec/FS-non-goals.md#4-cross-workspace-id-renaming)). Nor is its address its content. The text under a stable ID may change,
   and grund fingerprints text only in the section lock, to tell an edit in place from text
-  that left for another address ([§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)).
+  that left for another address ([§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went)).
 - The scope-graph calculus admits ambiguous resolutions by design. In grund ambiguity is an
   error and nothing resolves through it: two declarations of one ID, two headings claiming
   one section path, and a shorthand matching several declarations are each reported, never
@@ -112,4 +112,4 @@ Unison codebase is never in a broken state, even midway through a refactoring."
   one place a grund address leans on structure is a relative heading, which takes its path
   from its parent; when a cited section's text turns up at another address, the section
   lock reports it rather than following it ([§FS-declarations.section.relative](../functional-spec/FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds),
-  [§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)). In the companion's terms, grund takes the strict side.
+  [§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went)). In the companion's terms, grund takes the strict side.

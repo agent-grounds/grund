@@ -1,6 +1,6 @@
 # The section lock: a cited relative section the lock does not record
 
-This runnable mini-repository demonstrates [§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went), the committed file that keeps a cited relative section at its text. It is for anyone citing a relative heading ([§FS-declarations.section.relative](../../docs/functional-spec/FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)) for the first time. The tree is the one in [`relative-sections/`](../relative-sections/), which shows how those headings resolve, except that its lock records one of the two citations. Open `repo/docs/use.md`, then `repo/.grund/sections/FS-login.lock`.
+This runnable mini-repository demonstrates [§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-or-mixed-section-keeps-its-text-or-check-says-where-the-text-went), the committed file that keeps a cited relative section at its text. It is for anyone citing a relative heading ([§FS-declarations.section.relative](../../docs/functional-spec/FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)) for the first time. The tree is the one in [`relative-sections/`](../relative-sections/), which shows how those headings resolve, except that its lock records one of the two citations. Open `repo/docs/use.md`, then `repo/.grund/sections/FS-login.lock`.
 
 Run it from the repository root:
 
