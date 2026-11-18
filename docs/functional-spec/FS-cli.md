@@ -215,7 +215,7 @@ The stream split is the same as the text form ([§FS-errors.1](FS-errors.md#1-st
 
 ### 3.2 At most one path
 
-A second positional — `grund check a b`, `grund <ID> a b`, `grund refs ID a b`, `grund cover a b`, `grund fmt a b`, `grund list a b`, `grund schema a b`, `grund id FS "t" a b` — is a CLI-level error (`error: <subcommand> takes at most one path argument`, exit `2`, [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)), never a silent use of one and a quiet drop of the rest. `config` already enforces this, and `guide` refuses a second section name the same way ([§FS-init.5](FS-init.md#5-the-guide)); the rule is uniform across the surface, so a typo'd path is reported, never absorbed.
+A second positional — `grund check a b`, `grund <ID> a b`, `grund refs ID a b`, `grund cover a b`, `grund fmt a b`, `grund list a b`, `grund schema a b`, `grund id FS "t" a b` — is a CLI-level error, exit `2` ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)), never a silent use of one and a quiet drop of the rest. The line, `error: <command> takes at most one path argument`, names the command as typed and any operand read before the path: `show takes an ID and …`, `refs` in ID mode alike ([§FS-refs.1.2](FS-refs.md#12-refusals)), `id takes <KIND>, <title>, and …`. `config` and `guide` ([§FS-init.5](FS-init.md#5-the-guide)) refuse a second operand the same way, so a typo'd path is reported, never absorbed.
 
 ### 3.3 The `check` selector help
 
