@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "fixture"
+
+[schema.kinds.FS]
+folders = ["docs/functional-spec"]
+
+[presentation.fmt]
+exclude = ["docs/functional-spec/FS-other.md"]
