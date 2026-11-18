@@ -184,7 +184,7 @@ pub(crate) use init_render::render_agents_append_block_at;
 pub(crate) use integrations_clients::{ITERM2_SNIPPET, KITTY_SNIPPET, WEZTERM_SNIPPET};
 #[cfg(test)]
 pub(crate) use integrations_install::{BlockOutcome, install_agent_guidance_block};
-pub(crate) use migrate_guidance::{RootGuidance, root_guidance};
+pub(crate) use migrate_guidance::{ComparedGuidance, RootGuidance, root_guidance};
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).

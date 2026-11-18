@@ -3,29 +3,66 @@
 //! the candidate, and a difference in the block's version or in one of the
 //! five generated sections is a refusal. Every other difference passes: it
 //! describes the config, and `grund check` reports it until `grund init` runs.
+//! The grounding setting the citation directions name is compared in one
+//! grammar (§FS-config-migrate.5.3.1).
 
 use crate::config::migrate::{Located, MigrateRefusal, RefusalAnchor};
 use crate::config::{Invocation, Selection, config_at, with_config_text};
-use crate::writers::{RootGuidance, root_guidance};
+use crate::writers::{ComparedGuidance, RootGuidance, root_guidance};
 
 const KEEP: &str = "none keeps the generated guidance; keep version 1 until that";
 
-/// The refusals the candidate's guidance earns against the file's, or `None`
-/// when either config does not load, which the report gate then says.
-pub(super) fn guidance_refusals(
+/// The noun of the one generated section whose config grammar is compared in
+/// one grammar (§FS-config-migrate.5.3.1), which the report gate reads back
+/// from a stale finding (§FS-config-migrate.5.2).
+pub(super) const DIRECTIONS: &str = "citation directions";
+
+/// What the guidance gate found: its refusals, and whether it passed the root
+/// citation directions section only because the grounding setting is compared
+/// in one grammar (§FS-config-migrate.5.3.1), which the report gate then drops
+/// the stale finding for (§FS-config-migrate.5.2).
+#[derive(Debug)]
+pub(super) struct GuidanceGate {
+    pub(super) refusals: Vec<MigrateRefusal>,
+    pub(super) directions_in_one_grammar: bool,
+}
+
+/// The guidance gate of the candidate against the file, or `None` when either
+/// config does not load, which the report gate then says. The file as read is
+/// rendered with the grounding setting in the candidate's grammar
+/// (§FS-config-migrate.5.3.1), so the refusal's `- ` lines show what is
+/// compared rather than a spelling the comparison set aside.
+pub(super) fn guidance_gate(
     located: &Located,
     candidate: &str,
     value_lines: &[(String, usize)],
-) -> Option<Vec<MigrateRefusal>> {
-    let render = || {
+) -> Option<GuidanceGate> {
+    let render = |grammar: Option<u32>| {
         let invocation = Invocation::new(&located.root, false, Selection::Project);
         config_at(&located.root, &located.root, None, &invocation)
             .ok()
-            .map(root_guidance)
+            .map(|config| root_guidance(config, grammar))
     };
-    let before = render()?;
-    let after = with_config_text(&located.file, candidate, render)?;
-    Some(refusals(&before, &after, value_lines))
+    let after = with_config_text(&located.file, candidate, || render(None))?;
+    let before = render(Some(after.grammar))?;
+    Some(GuidanceGate {
+        refusals: refusals(&before.guidance, &after.guidance, value_lines),
+        directions_in_one_grammar: spelled_apart(&before, &after),
+    })
+}
+
+/// §FS-config-migrate.5.3.1: whether the root citation directions differ as
+/// `init` writes them and are equal once the setting is spelled in one grammar.
+pub(super) fn spelled_apart(before: &ComparedGuidance, after: &ComparedGuidance) -> bool {
+    let compared = |side: &ComparedGuidance| {
+        side.guidance
+            .sections
+            .iter()
+            .find(|section| section.noun == DIRECTIONS)
+            .map(|section| section.bytes.trim_end().to_string())
+    };
+    before.live_directions.trim_end() != after.live_directions.trim_end()
+        && compared(before) == compared(after)
 }
 
 /// Each compared difference between `before` and `after` as a refusal.

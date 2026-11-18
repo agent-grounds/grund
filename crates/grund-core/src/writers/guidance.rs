@@ -93,8 +93,10 @@ impl<'a> Guidance<'a> {
     /// The root entrypoint's five generated sections, rendered for `path`'s
     /// surface (§FS-init.2.3.6.1); a section with no content is expected absent.
     /// They are what `config migrate`'s guidance gate refuses a change to
-    /// (§FS-config-migrate.5.3); `check` compares the whole block.
-    pub(crate) fn generated_sections(&self, path: &Path) -> Vec<ExpectedSection> {
+    /// (§FS-config-migrate.5.3); `check` compares the whole block. The grounding
+    /// setting the citation directions name is spelled in config `grammar`
+    /// (§FS-config-migrate.5.3.1).
+    pub(crate) fn generated_sections(&self, path: &Path, grammar: u32) -> Vec<ExpectedSection> {
         let project = self.config.project();
         let mut sections = vec![
             ExpectedSection {
@@ -102,7 +104,7 @@ impl<'a> Guidance<'a> {
                 noun: "citation directions".into(),
                 bytes: self
                     .layout
-                    .root_citation_directions(project, self.config.run())
+                    .root_citation_directions_in(project, self.config.run(), grammar)
                     .unwrap_or_default(),
             },
             ExpectedSection {

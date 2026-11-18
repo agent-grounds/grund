@@ -10,7 +10,8 @@ use crate::config::{Extent, FIELD_DEPTH, Project, Row, Run, SHAPE_DECLARATION, S
 use crate::grammar::agents_block_heading;
 
 use super::citation_directions::{
-    bullet_row_order, root_citation_directions, row_has_bullet, scoped_citation_directions,
+    bullet_row_order, root_citation_directions, root_citation_directions_in, row_has_bullet,
+    scoped_citation_directions,
 };
 use super::citation_grounding::row_has_grounding_clause;
 
@@ -97,6 +98,17 @@ impl Layout {
     /// when it has nothing to state (§FS-init.2.3.4.10).
     pub(crate) fn root_citation_directions(&self, project: &Project, run: &Run) -> Option<String> {
         root_citation_directions(project, run, &|row| self.lands(row, ROOT))
+    }
+
+    /// [`Self::root_citation_directions`] with the grounding setting spelled in
+    /// config `grammar`, for `config migrate`'s comparison (§FS-config-migrate.5.3.1).
+    pub(crate) fn root_citation_directions_in(
+        &self,
+        project: &Project,
+        run: &Run,
+        grammar: u32,
+    ) -> Option<String> {
+        root_citation_directions_in(project, run, &|row| self.lands(row, ROOT), grammar)
     }
 
     /// The `### Declaration shapes` of `dir`'s block, `None` when no kind with a

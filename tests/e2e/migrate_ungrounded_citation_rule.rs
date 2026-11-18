@@ -124,7 +124,6 @@ fn config_migrate_passes_grounded_rows() {
 /// gates equal, the folder home's `must` and the single-file home's `should` alike. Today the
 /// guidance gate refuses the citation directions section with `repair: none`.
 #[test]
-#[ignore = "red until #1440 compares the grounding sentence's setting in one grammar; implement removes this"]
 fn config_migrate_passes_ungrounded_rows() {
     let tree = Tree::new("ungrounded", "");
     assert_migrates(&tree, &[]);
@@ -135,10 +134,9 @@ fn config_migrate_passes_ungrounded_rows() {
 /// passes a file in the folder home that cites nothing. Today `--write` is refused and writes
 /// nothing.
 #[test]
-#[ignore = "red until #1440 compares the grounding sentence's setting in one grammar; implement removes this"]
 fn migrated_ungrounded_rows_hold_the_same_rule() {
     let tree = Tree::new("written", "");
-    assert_migrates(&tree, &["--write"]);
+    assert_migrates(&tree, &["--write", "--full"]);
     let config = fs::read_to_string(tree.0.join("grund.toml")).expect("read the config");
     assert!(config.starts_with("grund_config_version = 2\n"), "{config}");
     assert!(!config.contains(".grounding]"), "{config}");
@@ -160,7 +158,7 @@ fn migrated_ungrounded_rows_hold_the_same_rule() {
     assert_eq!(check.status.code(), Some(0), "{}", streams(&check));
     assert_eq!(
         String::from_utf8_lossy(&check.stdout),
-        "",
+        "success\n",
         "{}",
         streams(&check)
     );

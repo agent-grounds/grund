@@ -21,10 +21,24 @@ pub(crate) struct RootGuidance {
     pub(crate) sections: Vec<ExpectedSection>,
 }
 
+/// One config's root guidance as the guidance gate compares it
+/// (§FS-config-migrate.5.3.1): the generated sections with the grounding
+/// setting spelled in the grammar asked for, beside the config's own version and
+/// the citation directions it renders in that version, as `init` writes them.
+#[derive(Clone, Debug)]
+pub(crate) struct ComparedGuidance {
+    /// The config's own version: the grammar its `init` spells the setting in.
+    pub(crate) grammar: u32,
+    pub(crate) guidance: RootGuidance,
+    pub(crate) live_directions: String,
+}
+
 /// §FS-config-migrate.5.3: the root `AGENTS.md` block of `config`, with the
 /// chapter rules read from the tree as `init` reads them, or none where the
-/// scan or a rule fails, which `check` reports on its own.
-pub(crate) fn root_guidance(mut config: Config) -> RootGuidance {
+/// scan or a rule fails, which `check` reports on its own. `grammar` spells the
+/// citation directions' grounding setting, the config's own version where it is
+/// `None` (§FS-config-migrate.5.3.1); one scan serves both spellings.
+pub(crate) fn root_guidance(mut config: Config, grammar: Option<u32>) -> ComparedGuidance {
     let _ = populate_workspace_boundary(&mut config);
     let config = &config;
     let scanned = config
@@ -54,8 +68,17 @@ pub(crate) fn root_guidance(mut config: Config) -> RootGuidance {
                 subjects: &rules.subjects,
             }),
     );
-    RootGuidance {
-        version: guidance.version,
-        sections: guidance.generated_sections(&config.root.join(CANONICAL_AGENT_ENTRYPOINT)),
+    let own = config.project().version;
+    let path = config.root.join(CANONICAL_AGENT_ENTRYPOINT);
+    ComparedGuidance {
+        grammar: own,
+        guidance: RootGuidance {
+            version: guidance.version,
+            sections: guidance.generated_sections(&path, grammar.unwrap_or(own)),
+        },
+        live_directions: guidance
+            .layout
+            .root_citation_directions(config.project(), config.run())
+            .unwrap_or_default(),
     }
 }

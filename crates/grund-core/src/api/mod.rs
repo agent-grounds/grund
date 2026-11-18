@@ -140,6 +140,8 @@ mod tests_check_run_warnings;
 #[cfg(test)]
 mod tests_config_migrate_gates;
 #[cfg(test)]
+mod tests_config_migrate_guidance;
+#[cfg(test)]
 mod tests_config_migrate_opted_out;
 #[cfg(test)]
 mod tests_config_version_1;
