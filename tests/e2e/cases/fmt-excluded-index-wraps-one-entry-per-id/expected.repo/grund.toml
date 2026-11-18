@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "carve"
+
+[schema.kinds.FS]
+folders = ["docs/functional-spec"]
+
+[presentation.fmt]
+exclude = ["docs/functional-spec/README.md"]

@@ -86,6 +86,7 @@ mod fetch_write;
 mod fmt_anchor_row;
 mod fmt_complete_findings;
 mod fmt_error;
+mod fmt_index_carve_out;
 mod fmt_links;
 mod fmt_local_sections;
 mod fmt_plan;

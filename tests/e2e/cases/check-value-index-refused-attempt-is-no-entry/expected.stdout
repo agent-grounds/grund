@@ -1,0 +1,2 @@
+values/README.md:3: error: invalid value binding: value binding must be on one physical line; join the literal and its citation
+values/field-price.md:1: error: CONST-field-price appears in values/README.md but not as an entry: an entry is a `§`-marked Markdown link to the declaration — became an error in grund 0.13.0

@@ -17,6 +17,7 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
+use super::fmt_index_carve_out::{CarveOutPass, IndexCarveOut};
 use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_local_sections::expand_local_section_citations;
 use super::fmt_row::{FmtRow, LineRewrite};
@@ -27,7 +28,7 @@ use crate::grammar::{
     MarkdownLinks, id_token_end_at, in_escape_position, never_rewrite_context_in,
     string_literal_in,
 };
-use crate::model::{Catalog, Id};
+use crate::model::Catalog;
 use crate::resolver::{
     SettledHeadings, ShorthandTargets, WorkspaceContext, expand_shorthand_citations_with_origins,
 };
@@ -168,13 +169,12 @@ pub(crate) struct FmtLineOpts<'a> {
     /// of the same verdict and are read line by line in `rewrite_file`.
     pub(crate) excluded: bool,
     /// §FS-fmt.6.1.2: when this file is a kind's index the always-linkify carve-out
-    /// may have to reach, the IDs that index owes an entry for — the only citations
-    /// the pass wraps where the ordinary one is off. `None` for every other file,
-    /// and read on a line only where that line's ordinary pass is off: under
-    /// `[fmt.cross_refs] enabled = false`, or inside a suppressed scope
-    /// (§FS-fmt.2.5.3). Elsewhere `cross_refs` already means "wrap what this file
-    /// has" and the carve-out has nothing to add.
-    pub(crate) index_entry_ids: Option<&'a BTreeSet<Id>>,
+    /// may have to reach, the IDs that index owes an entry for and which citation
+    /// is each one's entry — the only citations the pass wraps where the ordinary
+    /// one is off: under `[fmt.cross_refs] enabled = false`, or inside a suppressed
+    /// scope (§FS-fmt.2.5.3). `None` for every other file. Where the ordinary pass
+    /// runs, the carve-out only notes the links it leaves.
+    pub(crate) index_entry_ids: Option<&'a IndexCarveOut<'a>>,
     pub(crate) findings: Option<&'a Catalog>,
     pub(crate) workspace: Option<&'a WorkspaceContext>,
     /// The declaration indexes the shorthand rewrite resolves against, built once
@@ -282,8 +282,11 @@ fn fmt_line_at(
     let mut final_line = expansion.unwrap_or(marked);
     // §FS-fmt.6.1.2: the carve-out narrows the pass to the index's own entries only
     // where the ordinary pass is off; where it runs, it already wraps the page.
-    let entry_ids = opts.index_entry_ids.filter(|_| !opts.cross_refs);
-    if (opts.cross_refs || entry_ids.is_some())
+    let carve_out = opts.index_entry_ids.map(|carve_out| match opts.cross_refs {
+        true => CarveOutPass::Watch(carve_out),
+        false => CarveOutPass::Entries(carve_out),
+    });
+    if (opts.cross_refs || carve_out.is_some())
         && is_md
         && let Some(findings) = opts.findings
     {
@@ -294,7 +297,7 @@ fn fmt_line_at(
             config,
             findings,
             opts.workspace,
-            entry_ids,
+            carve_out,
             opts.shorthand_targets,
             opts.settled,
         );
