@@ -8,7 +8,8 @@ struct MigrateCommands {
     /// `None` only where discovery no longer finds a config, and then the undo
     /// names no file rather than the report base's.
     restore: Option<String>,
-    /// What follows `--to 2`: a space and `PATH` as given, or nothing (item 2).
+    /// What follows `--to 2`: a space and `PATH` as given, or nothing (item 2),
+    /// before the `--drop-comments` the report adds (§FS-config-migrate.6.5).
     path: String,
 }
 
