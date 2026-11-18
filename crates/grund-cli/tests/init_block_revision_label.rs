@@ -162,7 +162,7 @@ fn reported_repository_gets_a_labelled_heading_beside_an_unchanged_refusal() {
     assert_eq!(
         text(&refused.stderr),
         "error: kind \"e2e\" declares no IDs — tests/e2e/ is not a citable home; for \
-         configured place \"e2e\", express this obligation in grund.toml: \
+         configured row \"e2e\", express this obligation in grund.toml: \
          [rules.citations.e2e] with must = [\"FS\"], and \
          [rules.citations.e2e.grounding] must = \"file\", without which a file there \
          that cites nothing is not checked\n\
