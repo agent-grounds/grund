@@ -81,7 +81,7 @@ pub(crate) fn version(text: &str) -> Option<&str> {
     None
 }
 
-/// §FS-config-v2.reader: a file that starts with a byte-order mark is refused at
+/// §FS-config.5: a file that starts with a byte-order mark is refused at
 /// line 1 by name, before its version is read, whichever version it writes.
 pub(crate) fn refuse_byte_order_mark(text: &str, report_path: &Path) -> Result<()> {
     if text.starts_with('\u{feff}') {
