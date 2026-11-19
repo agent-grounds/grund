@@ -97,19 +97,31 @@ fn no_working_directory_keeps_the_path_as_reached() {
 }
 
 /// §FS-config-migrate.6.5.1 item 3: a directory argument that would start with
-/// `-` gets `./`; one that starts with `:` stays as it is, since grund reads no
-/// pathspec magic; and any other unsafe character is quoted.
+/// `-` gets `./`, and any other unsafe character is quoted.
 #[test]
 fn a_directory_argument_is_one_word_that_reads_as_a_path() {
     let root = test_root("command-path-words");
-    for dir in ["-x", ":x", "my app", "-my x"] {
+    for dir in ["-x", "my app", "-my x"] {
         write(&root.join(dir).join("grund.toml"), "");
     }
     let word = |dir: &str| command_directory(Some(&root), &root.join(dir)).unwrap();
     assert_eq!(word("-x"), "./-x");
-    assert_eq!(word(":x"), ":x");
     assert_eq!(word("my app"), "'my app'");
     assert_eq!(word("-my x"), "'./-my x'");
+}
+
+/// §FS-config-migrate.6.5.1 item 3: a directory argument that starts with `:`
+/// stays as it is, since grund reads no pathspec magic. Unix only: `:` cannot
+/// be in a Windows file name.
+#[cfg(unix)]
+#[test]
+fn a_leading_colon_directory_argument_stays_as_it_is() {
+    let root = test_root("command-path-colon");
+    write(&root.join(":x").join("grund.toml"), "");
+    assert_eq!(
+        command_directory(Some(&root), &root.join(":x")).as_deref(),
+        Some(":x")
+    );
 }
 
 /// §FS-config-migrate.6.5.1 item 3: the undo defuses a leading `:` as well,
