@@ -455,16 +455,35 @@ impl View<'_> {
                             })
                             .count();
                         (count > 0).then(|| {
-                            // An untitled kind's summary reads "Declaration".
-                            let title = k["title"].as_str().unwrap_or("Declaration");
-                            json!({"project":project,"kind":k["kind"],"title":title,
-                        "home":k["home"],"count":count})
+                            // §FS-output-shapes.5: an untitled kind's summary has no title.
+                            json!({"project":project,"kind":k["kind"],"title":k["title"],
+                        "home":self.summary_home(project, &k["home"]),"count":count})
                         })
                     })
                     .collect::<Vec<_>>()
             );
         }
         ok(result)
+    }
+
+    /// §FS-list.3.3: each place of a kind's home spelled as a row's path is, from
+    /// the report base (§FS-cli.3.4), so a member's place carries its directory.
+    fn summary_home(&self, project: &Value, home: &Value) -> String {
+        let aliases = self.m.facts["aliases"].as_array().into_iter().flatten();
+        let dir = match self.member() {
+            Some(member) => member,
+            None => aliases
+                .filter(|a| self.workspace() && a["project"] == *project)
+                .map(|a| parent(a["file"].as_str().unwrap()))
+                .next()
+                .unwrap_or("."),
+        };
+        let places = home.as_str().unwrap_or_default().split(", ");
+        let places = places.map(|place| match dir {
+            "." => self.raw(place),
+            dir => self.raw(&format!("{dir}/{place}")),
+        });
+        places.collect::<Vec<_>>().join(", ")
     }
 
     /// A citation row; `cover` names a qualified target as written
