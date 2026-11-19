@@ -97,7 +97,7 @@ to see this candidate again: restore version 1 and run grund config migrate --to
 note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
 ```
 
-The `wrote` line and the notices are report paths, named from the migrated project's root. The undo and the re-preview are commands to paste where you ran `grund config migrate`, so they name the config from there and carry the path you gave ([§FS-config-migrate.6.5.1](../../docs/functional-spec/FS-config-migrate.md#651-the-undo-and-the-re-preview-are-spelled-from-the-working-directory)).
+The `wrote` line and the notices are report paths, named from the migrated project's root. The undo and the re-preview are commands to paste where you ran `grund config migrate`, so they name the config from there and carry the path you gave ([§FS-config-migrate.6.5.1](../../docs/functional-spec/FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)).
 
 Run `grund init` in the migrated project to refresh managed instructions that may still describe version 1 ([§FS-config-migrate.6.5](../../docs/functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)). The reminder appears even though this fixture has no `AGENTS.md`; migration does not create one. `migrate-3-write/expected.repo/` records the complete final tree: only `grund.toml` changes, and it equals the candidate step 4 prints in `migrate-4-full/expected.stdout`. The harness uses a disposable copy for the write and checks that tree; the follow-up `grund init` is a separate action.
 
@@ -179,7 +179,7 @@ members = ["a"]
 include_root = false
 ```
 
-Both gates still ran. Put a `README.md` or an `AGENTS.md` beside the block's config and the same command exits `1` at the report gate, because version 2 would read that file and warn that nobody scans the block; the block stays on version 1 until the file moves into a member ([§FS-config-migrate.8.1.4](../../docs/functional-spec/FS-config-migrate.md#814-both-gates-still-run)). The report names the file `grund.toml`, from the block's own directory, as every migration report does by default; pass `--path-base=invocation` to see `group/grund.toml`. The undo and the re-preview it closes with already name the block from the workspace root, because they are commands to run there: `git restore group/grund.toml` and `grund config migrate --to 2 group` ([§FS-config-migrate.6.5.1](../../docs/functional-spec/FS-config-migrate.md#651-the-undo-and-the-re-preview-are-spelled-from-the-working-directory)).
+Both gates still ran. Put a `README.md` or an `AGENTS.md` beside the block's config and the same command exits `1` at the report gate, because version 2 would read that file and warn that nobody scans the block; the block stays on version 1 until the file moves into a member ([§FS-config-migrate.8.1.4](../../docs/functional-spec/FS-config-migrate.md#814-both-gates-still-run)). The report names the file `grund.toml`, from the block's own directory, as every migration report does by default; pass `--path-base=invocation` to see `group/grund.toml`. The undo and the re-preview it closes with already name the block from the workspace root, because they are commands to run there: `git restore group/grund.toml` and `grund config migrate --to 2 group` ([§FS-config-migrate.6.5.1](../../docs/functional-spec/FS-config-migrate.md#651-the-commands-a-migrate-report-prints-are-spelled-from-the-working-directory)).
 
 ## Trade-offs
 
