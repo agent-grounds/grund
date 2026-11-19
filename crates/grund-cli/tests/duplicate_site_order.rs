@@ -159,7 +159,7 @@ fn a_file_with_two_names_keeps_checks_located_site() {
     tree.put("docs/fs/b.md", decl);
     tree.link("notes/link.md", "../docs/fs/a.md");
     let want = "docs/fs/a.md:1: error: duplicate declaration of FS-d (also declared at \
-                docs/fs/b.md:1) (also at notes/link.md:1)\n";
+                docs/fs/b.md:1); keep one declaration of the ID and rename or remove the others (also at notes/link.md:1)\n";
     assert_eq!(tree.grund(&["check"]).stdout, want);
     assert_eq!(tree.grund(&["check", "notes/link.md"]).stdout, want);
     let sites = tree

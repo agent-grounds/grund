@@ -1,1 +1,1 @@
-src/lib.rs:1: error: duplicate declaration of FS-existing (also declared at src/lib.rs:5)
+src/lib.rs:1: error: duplicate declaration of FS-existing (also declared at src/lib.rs:5); keep one declaration of the ID and rename or remove the others

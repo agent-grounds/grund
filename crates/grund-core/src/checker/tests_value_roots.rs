@@ -284,8 +284,8 @@ fn a_root_bound_whole_over_a_duplicate_reports_only_the_duplicate() {
     assert_eq!(
         errors(&root),
         [
-            "duplicate: duplicate declaration of DOC-dup (also declared at docs/dup-b.md:1)",
-            "duplicate: duplicate declaration of CONST-dupc (also declared at values/dupc-b.md:1)",
+            "duplicate: duplicate declaration of DOC-dup (also declared at docs/dup-b.md:1); keep one declaration of the ID and rename or remove the others",
+            "duplicate: duplicate declaration of CONST-dupc (also declared at values/dupc-b.md:1); keep one declaration of the ID and rename or remove the others",
         ]
     );
 }

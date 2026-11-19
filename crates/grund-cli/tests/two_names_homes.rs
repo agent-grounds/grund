@@ -63,7 +63,7 @@ fn duplicate(home: &str, suffix: &str) -> String {
         )
     };
     format!(
-        "{first}:1: error: duplicate declaration of CONST-room-limit (also declared at {other}:1)\n"
+        "{first}:1: error: duplicate declaration of CONST-room-limit (also declared at {other}:1); keep one declaration of the ID and rename or remove the others\n"
     )
 }
 

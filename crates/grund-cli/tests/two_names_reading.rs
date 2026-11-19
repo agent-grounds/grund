@@ -336,6 +336,6 @@ fn hard_links_stay_two_files() {
     let check = tree.grund(&["check"]);
     assert_eq!(
         check.stdout,
-        "fs/a.md:1: error: duplicate declaration of FS-x (also declared at fs/b.md:1)\n"
+        "fs/a.md:1: error: duplicate declaration of FS-x (also declared at fs/b.md:1); keep one declaration of the ID and rename or remove the others\n"
     );
 }
