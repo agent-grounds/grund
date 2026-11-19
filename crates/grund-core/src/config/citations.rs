@@ -349,12 +349,14 @@ fn refuse(path: &Path, line: Option<usize>, message: String) -> Result<()> {
 /// project at all, and says so in §FS-errors.3.7.1's wording. `path` is the
 /// config's report path and `table` its spelling of the section, as
 /// [`validate_citation_rules`] names them (§DF-one-grammar-lands-in-0-19).
+/// The line is the level key's where the file recorded one, as a v2 file does
+/// (§FS-config-v2.rules.citations), and is also returned for the caller to locate.
 pub(crate) fn unaccepted_pinned_target(
     path: &Path,
     table: &str,
     citations: &CitationRules,
     kinds: &KindTable,
-) -> Option<String> {
+) -> Option<(Option<usize>, String)> {
     for (citing, rules) in &citations.per_kind {
         for (level, disjunctions) in rules.lists() {
             for target in disjunctions.iter().flat_map(|d| &d.targets) {
@@ -385,10 +387,15 @@ pub(crate) fn unaccepted_pinned_target(
                         unverifiable_reason(alias, kind)
                     ),
                 };
-                return Some(format!(
-                    "{}: [{table}.{citing}] {} names {why}; this became an error in grund 0.19.0",
-                    format_path(path),
-                    level.as_str()
+                let line = citations.lines.list_of(citing, level);
+                let at = line.map_or_else(String::new, |line| format!(":{line}"));
+                return Some((
+                    line,
+                    format!(
+                        "{}{at}: [{table}.{citing}] {} names {why}; this became an error in grund 0.19.0",
+                        format_path(path),
+                        level.as_str()
+                    ),
                 ));
             }
         }

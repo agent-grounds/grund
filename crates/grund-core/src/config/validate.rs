@@ -102,7 +102,7 @@ pub(crate) fn reject_unaccepted_citation_targets(config: &Config, kinds: &KindTa
     if !project.rules.citations.declared {
         return Ok(());
     }
-    let Some(message) = unaccepted_pinned_target(
+    let Some((line, message)) = unaccepted_pinned_target(
         path,
         citations_table(project.version),
         &project.rules.citations,
@@ -112,6 +112,7 @@ pub(crate) fn reject_unaccepted_citation_targets(config: &Config, kinds: &KindTa
     };
     let mut failure = OperationDiagnostic::new("config", "config", message);
     failure.path = Some(format_path(path));
+    failure.line = line;
     failure.file = config_file_in(&config.root);
     Err(failure.into())
 }
