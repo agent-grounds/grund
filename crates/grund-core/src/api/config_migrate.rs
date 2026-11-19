@@ -38,12 +38,16 @@ impl MigrateOpts {
     /// §FS-config-migrate.6.5.1 item 1: the config this run migrates, found by the
     /// discovery [`config_migrate`] runs (§FS-config-migrate.1.1), spelled from the
     /// working directory `dir` for a command pasted there rather than from the
-    /// report base. It is the file as git names it: both sides are resolved
-    /// (§FS-config.1.5), so a link on either adds no `..`, and a `PATH` through a
-    /// link is spelled to where the config is. The spelling is `/`-separated,
-    /// climbs with `..` to a config above `dir`, and is the absolute path where no
-    /// relative one exists, `dir` being `None` for a process with no working
-    /// directory. `None` where discovery finds no config. A frontend's seam,
+    /// report base. With a working directory, it is the file as git names it:
+    /// both sides are resolved (§FS-config.1.5), so a link on either adds no
+    /// `..`, and a `PATH` through a link is spelled to where the config is.
+    /// The spelling is `/`-separated, climbs with `..` to a config above `dir`,
+    /// and is absolute where no relative spelling exists, as across Windows
+    /// drives. With `dir=None`, for a process with no working directory, the
+    /// located path is formatted with `/` as discovery reached it from `PATH`:
+    /// absolute for an absolute `PATH`, but potentially relative for a relative
+    /// `PATH`. A relative hint from a deleted directory is not a portable undo.
+    /// Returns `None` where discovery finds no config. A frontend's seam,
     /// hidden with this record (§FS-distribution.3.1.2).
     pub fn config_from(&self, dir: Option<&Path>) -> Option<String> {
         let located = locate(&self.path)?;
