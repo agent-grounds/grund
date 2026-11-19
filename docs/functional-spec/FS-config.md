@@ -711,8 +711,7 @@ The home is also the complete boundary of its value sources ([§FS-values.terms]
 
 #### 3.4.10 `format`, `resolve`, and `fetch` — external snapshot kinds
 
-A citable kind may override the repository grammar and describe how a missing
-committed snapshot is materialized:
+A citable kind may override the repository grammar and describe how a missing committed snapshot is materialized:
 
 ```toml
 [[kinds]]
@@ -1062,6 +1061,10 @@ A malformed qualifier is rejected with a citation-target finding that names the 
 #### 3.9.4 Defaults and precedence
 
 `default` (top-level, or per-kind inside a `[citations.<KIND>]` table) sets the level for unlisted target kinds; the global default is `may`, so adoption is incremental. Precedence is **explicit target list > per-kind `default` > global `default`**. Obligations come only from explicit `must` / `should` entries — a `default` of `must` or `should` never invents an obligation toward every unlisted kind; `default` governs only how a citation to an otherwise-unlisted target is leveled for the prohibition pass.
+
+##### 3.9.4.1 A row closed to every citation
+
+A citing row is **closed to every citation** when it permits no target: its effective fallback is `must-not`, its own `default` or else the global `default`, and every non-empty list it has is `must-not`. Under the precedence above each citation its units make is then leveled `must-not`, listed or not, so each one is a forbidden citation ([§FS-check.3.12](FS-check.md#312-forbidden-citation)) and a unit that cites nothing already satisfies the row. The test matches no targets, because two targets that could match one citation at different levels are refused ([§FS-config.3.9.5.1](FS-config.md#3951-overlap-not-textual-equality)), and it reads the lowered rules, so a version-1 `[citations.<kind>]` table and a version-2 `[rules.citations.<row>]` table give one answer ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations)). A row with any `must`, `warn`, `should`, `may`, `should-not` or `warn-not` entry is not closed, and neither is one whose effective fallback is any other level, `warn-not` and `should-not` included. The predicate moves no verdict, since `grund check` levels each site as before; the Citation directions bullet reads it ([§FS-init.2.3.5.2.2](FS-init.md#23522-a-home-whose-row-grounds-nothing-says-so), [§FS-init.2.3.5.5](FS-init.md#2355-defaults)).
 
 #### 3.9.5 Validation
 
