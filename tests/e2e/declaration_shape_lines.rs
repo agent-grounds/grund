@@ -9,8 +9,8 @@
 //! (§FS-schema.4.1.3). The table's legend says where a field's heading sits (§FS-schema.8.4),
 //! Mermaid and DOT label the same lines (§FS-schema.9, §FS-schema.10), and `config migrate`
 //! prints them in its refusal (§FS-config-migrate.5.3). A document written from each rendered
-//! line as shown checks clean. A shape-rendering config renders the v49/v50 pair, sharing the
-//! v47–v50 bump of #1408 (§FS-init.2.3.7.1), and a scoped block above an unscoped selection stays
+//! line as shown checks clean. A shape-rendering config renders the scoped pair, v53/v54 since
+//! the v51–v54 bump of #1456 (§FS-init.2.3.7.1), and a scoped block above an unscoped selection stays
 //! stale `scoped guidance` (§FS-init.2.3.7.3.2). The red tests wait on #1373; the controls pass
 //! before it and after.
 #![cfg(unix)]
@@ -579,7 +579,7 @@ const STALE_SCOPED: &str = "AGENTS.md:3: error: repo maintenance: stale grund in
 
 #[test]
 fn a_shape_rendering_config_selects_the_new_scoped_pair() {
-    for (rule_kind, selected, older) in [(false, 49, 45), (true, 50, 46)] {
+    for (rule_kind, selected, older) in [(false, 53, 49), (true, 54, 50)] {
         let tree = Tree::new(&format!("scoped-{selected}"), &scoped_config(rule_kind));
         tree.dir("docs/rules");
         let agents = tree.init();
@@ -594,7 +594,7 @@ fn a_shape_rendering_config_selects_the_new_scoped_pair() {
 
 #[test]
 fn a_new_scoped_block_under_an_unscoped_selection_is_stale_scoped_guidance() {
-    for version in [49, 50] {
+    for version in [53, 54] {
         let tree = Tree::new(&format!("unscoped-{version}"), UNSCOPED_CONFIG);
         tree.init();
         tree.set_block_version(version);
@@ -605,9 +605,9 @@ fn a_new_scoped_block_under_an_unscoped_selection_is_stale_scoped_guidance() {
 }
 
 #[test]
-fn an_unscoped_config_renders_v47_and_checks_clean() {
+fn an_unscoped_config_renders_v51_and_checks_clean() {
     let tree = Tree::new("unscoped", UNSCOPED_CONFIG);
-    assert_eq!(block_version(&tree.init()), "block v47");
+    assert_eq!(block_version(&tree.init()), "block v51");
     tree.grund(&["check"]).assert_no_error();
 }
 

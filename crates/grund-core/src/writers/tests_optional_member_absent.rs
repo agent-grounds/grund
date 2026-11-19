@@ -114,7 +114,7 @@ fn an_older_block_keeps_its_member_list_bytes() {
     write(
         &agents,
         &current
-            .replace("(block v47)", "(block v38)")
+            .replace("(block v51)", "(block v38)")
             .replace(&section, older),
     );
     absent(&root, "secret");
@@ -123,7 +123,7 @@ fn an_older_block_keeps_its_member_list_bytes() {
 
     assert_eq!(events(&output)[0], "updated AGENTS.md");
     let written = read(&agents);
-    assert!(written.contains("(block v47)"), "{written}");
+    assert!(written.contains("(block v51)"), "{written}");
     assert_eq!(members_section(&written).as_deref(), Some(older));
     assert_eq!(output.notes, [note("secret", &format!("AGENTS.md {KEPT}"))]);
 }
@@ -378,7 +378,7 @@ fn an_expansion_error_still_suppresses_the_section() {
 /// block, or its block no member list — the section is then rendered.
 #[test]
 fn the_splice_keeps_nothing_without_a_section_on_disk() {
-    let render = "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (block v47)\n\n\
+    let render = "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (block v51)\n\n\
                   ### Workspace members\n\n- [`billing`](packages/billing/AGENTS.md)\n\n\
                   ### Rules\n\nRule.\n<!-- END GRUND MANAGED BLOCK -->\n";
     assert_eq!(keep_workspace_members("# Notes\n", render), None);

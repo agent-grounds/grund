@@ -1,7 +1,7 @@
 # scoped-guidance-example — agent instructions
 
 <!-- BEGIN GRUND MANAGED BLOCK -->
-## Grounding with grund (block v49)
+## Grounding with grund (block v53)
 
 This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<slug>[.<section>]` (`KIND ∈ {GOAL, FS}`), cited with the marker `§` — e.g. `<§>FS-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` followed by an ID, e.g. `$$FS-user-login`, in a grund-aware editor; the trigger becomes `§` as soon as the ID has its kind's shape. Bare ID-shaped tokens are ignored — config version 2 recognizes only `§`-prefixed citations, with no opt-out.
 
@@ -25,6 +25,7 @@ A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and 
 - [GOAL](docs/goals.md): Declaration
 - [FS](docs/spec/core), [docs/spec/plugins](docs/spec/plugins): Declaration
 - [tests/e2e/](tests/e2e), [tests/integration/](tests/integration): Declaration
+- [tests/fixtures/](tests/fixtures): Declaration
 
 ### Declarations and citations
 
@@ -50,6 +51,7 @@ Some places' citation directions and declaration shapes are in the `AGENTS.md` o
 
 - `docs/spec/AGENTS.md`: FS
 - `tests/AGENTS.md`: tests/e2e/, tests/integration/
+- `tests/fixtures/AGENTS.md`: tests/fixtures/
 
 ### Clickable citations
 

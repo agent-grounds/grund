@@ -141,11 +141,14 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// and a prohibition's targets joined as one "or" list.
 /// v47 to v50 (§FS-init.2.3.8.4, §FS-init.2.3.7.1): each pair four higher again, the
 /// trigger sentence naming the ID that follows the trigger.
+/// v51 to v54 (§FS-init.2.3.5.2.2, §FS-init.2.3.5.5, §FS-init.2.3.7.1): each pair four
+/// higher again, a row closed to every citation rendering one unnarrowed `must not cite
+/// anything`, its `must-not` lists folded in and no grounding sentence after it.
 pub(crate) const AGENTS_BLOCK_VERSION: u32 = AGENTS_BLOCK_BASE_VERSION + 3;
 
 /// The revision the base config selects (§FS-init.2.3.7.1): a rule kind adds one,
 /// and a scoped file or a declaration shape adds two, up to [`AGENTS_BLOCK_VERSION`].
-pub(crate) const AGENTS_BLOCK_BASE_VERSION: u32 = 47;
+pub(crate) const AGENTS_BLOCK_BASE_VERSION: u32 = 51;
 
 /// Which member of the current pairs a managed-block revision is (§FS-init.2.3.7.1):
 /// the scoped pair sits two above the unscoped one, and a pair's rule-kind member

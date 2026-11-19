@@ -61,8 +61,8 @@ The managed block opens with a heading such as `## Grounding with grund (block v
 That number is the revision of the block's text, not a grund release: `grund -V`
 prints the release you are running
 ([§FS-init.2.3.9.3](../functional-spec/FS-init.md#2393-the-headings-two-spellings)). A
-config selects one of four current revisions: v47, v48 once a kind declares rules,
-and v49 or v50 when its guidance lands in a scoped `AGENTS.md` or a declaration
+config selects one of four current revisions: v51, v52 once a kind declares rules,
+and v53 or v54 when its guidance lands in a scoped `AGENTS.md` or a declaration
 shape renders ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)).
 `grund check` reports an older block as outdated, and one `grund init` re-renders
 it. A current block whose text no longer matches what `init` would write — after a
@@ -234,6 +234,7 @@ grounding clause lands has no citation-directions section at all
 wrote AGENTS.md
 wrote docs/spec/AGENTS.md
 wrote tests/AGENTS.md
+wrote tests/fixtures/AGENTS.md
 exists grund.toml
 ```
 
@@ -246,8 +247,8 @@ a symlink to `AGENTS.md`, each scoped directory gets the same symlink
 ([§FS-init.2.3.5.14](../functional-spec/FS-init.md#23514-writing-scoped-files)), and the report names each one:
 `linked docs/spec/CLAUDE.md -> AGENTS.md`, `removed old/AGENTS.md`.
 
-A scoped file, or a declared field, moves the block from v47 to v49, or from
-v48 to v50 where a rule kind is enabled ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)). To keep every
+A scoped file, or a declared field, moves the block from v51 to v53, or from
+v52 to v54 where a rule kind is enabled ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)). To keep every
 row in the root file, set `[presentation] rules = "root"`: the root block is
 then what a version-1 config renders, plus the declaration shapes. A
 version-1 config always renders at the root.

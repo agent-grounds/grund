@@ -170,7 +170,7 @@ pub(crate) use file_reading::{FileReading, Readings, written_language};
 pub(crate) use fmt_block::fmt_excluded;
 pub(crate) use grounding::{
     any_place_grounded, grounding_level_for_kind, grounding_setting, homeless_row_grounding,
-    row_grounding, row_grounds_at_any_strength, soft_grounding_rungs,
+    row_closed_to_every_citation, row_grounding, row_grounds_at_any_strength, soft_grounding_rungs,
 };
 pub(crate) use home_requirement::can_hold_markdown;
 pub(crate) use kind::escape_toml_basic;
@@ -212,6 +212,8 @@ pub(crate) use fmt_block::validate_fmt_exclude;
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
+#[cfg(test)]
+mod tests_closed_row;
 #[cfg(test)]
 mod tests_discovery;
 #[cfg(test)]
