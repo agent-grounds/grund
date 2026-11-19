@@ -102,12 +102,13 @@ The reader keeps the line every value was written at, so the one validation pass
 A version-2 file that holds more than one refusal is refused for the first of these steps that refuses:
 
 1. The reading: the first refusal met top to bottom. A check across one table's keys, such as two overlapping lists, is made where the table ends.
-2. The whole file: what a row says against another row, or against a table that names it, at the earliest line.
-3. The meanings both versions share: the `[reference]` settings, the kind table, the ID grammar, the workspace member lists, and last the citation tables, in the order [§FS-config.3.9.5.2](FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds) gives.
-4. The pinned and `*/` citation targets, where the run judges them ([§FS-config.3.9.5.2](FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)), and in a workspace anything else its expansion refuses.
-5. The six that ask how the configuration reads a name, [§FS-config-v2.checks.config-md-not-markdown](FS-config-v2.md#checksconfig-md-not-markdown-md-is-mapped-away-from-markdown) and the five beside it: the one at the earliest line, and at one line the entry written first in its key.
+2. The whole file: what a row's keys say together, a row against another row, and a table against the row it names, at the earliest line.
+3. Each row's `form` prerequisites ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)), row by row: a rule home read by a `data` language or by none ([§FS-config-v2.schema.sources.rules](FS-config-v2.md#schemasourcesrules-every-home-of-a-rule-kind-is-judged-by-its-reading)) and a value row's first home among them.
+4. The meanings both versions share: the `[reference]` settings, the kind table, the ID grammar, the workspace member lists, and last the citation tables, in the order [§FS-config.3.9.5.2](FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds) gives.
+5. The pinned and `*/` citation targets, where the run judges them ([§FS-config.3.9.5.2](FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)), and in a workspace anything else its expansion refuses.
+6. The six that ask how the configuration reads a name, `config-md-not-markdown`, `config-index-not-markdown`, `config-rule-file-not-markdown`, `config-rule-folder-not-markdown`, `config-value-home-absent` and `config-value-home-invalid` ([§FS-config-v2.checks.config-md-not-markdown](FS-config-v2.md#checksconfig-md-not-markdown-md-is-mapped-away-from-markdown) and the sections after it): the one at the earliest line, and at one line the entry written first in its key.
 
-So `md = "json"` at line 8 is not reported in a file whose rule row is refused at line 12, nor in one that names an unknown citation target anywhere ([§DF-markdown-homes-refused-in-1-0.2.6](../decisions/functional/DF-markdown-homes-refused-in-1-0.md#26-which-refusal-a-file-with-several-gets)).
+So `md = "json"` at line 8 is not reported in a file whose rule row is refused at its `form` line 12 because `json` reads no declarations in its `rules/rules.md` (step 3), nor in one that names an unknown citation target anywhere ([§DF-markdown-homes-refused-in-1-0.2.6](../decisions/functional/DF-markdown-homes-refused-in-1-0.md#26-which-refusal-a-file-with-several-gets)).
 
 ### reader.5: An array may span lines
 
