@@ -245,7 +245,7 @@ packages/ui/
 
 Command: `grund init {repo_copy}`.
 
-The generated `{repo_copy}/AGENTS.md` holds, between `### Project namespaces` ([§FS-init.2.3.4.16](FS-init.md#23416-project-boundaries)) and `### Declarations and citations`, exactly this block, blank lines included:
+The generated `{repo_copy}/AGENTS.md` holds this section byte for byte, blank lines included, after the `### Project namespaces` section ([§FS-init.2.3.4.16](FS-init.md#23416-project-boundaries)) and before `### Declarations and citations`:
 
 ```markdown
 ### Workspace members
