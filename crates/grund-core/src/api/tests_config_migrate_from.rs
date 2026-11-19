@@ -105,11 +105,11 @@ fn a_path_through_a_link_names_the_config_where_it_is() {
     );
 }
 
-/// §FS-config-migrate.6.5.1 item 1: a process with no working directory has no
-/// relative spelling, so the config is named by its absolute path, never by the
-/// report base's.
+/// §FS-config-migrate.6.5.1 item 1: with no working directory supplied, an
+/// absolute input names the config by its absolute path, never by the report
+/// base's. The deleted-directory relative input is covered by the Unix e2e test.
 #[test]
-fn no_working_directory_names_the_absolute_path() {
+fn no_working_directory_with_absolute_input_names_the_absolute_path() {
     let root = test_root("migrate-from-nowhere");
     write(&root.join("apps/api/grund.toml"), V1);
     let absolute = std::fs::canonicalize(root.join("apps/api"))

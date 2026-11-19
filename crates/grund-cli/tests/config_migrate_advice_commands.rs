@@ -370,8 +370,8 @@ fn full_write_prints_the_same_commands() {
 
 /// §FS-config-migrate.6.5.1 item 1: a `PATH` through a directory link inside
 /// the repository is named where the config is, the file git tracks, so the
-/// pasted undo restores it; `git restore apps/api/grund.toml` would be refused as
-/// beyond a symbolic link. The re-preview still carries the `PATH` as typed.
+/// pasted undo restores it; git tracks the link itself, not the file through
+/// that link. The re-preview still carries the `PATH` as typed.
 #[cfg(unix)]
 #[test]
 fn path_through_a_link_names_the_file_git_tracks() {
