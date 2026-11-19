@@ -42,7 +42,7 @@ use grund_core::{
 // this crate renders (§AR-config.8).
 use grund_core::{
     Gate, GateResult, ListedComment, MigrateFailure, MigrateOpts, MigrateOutcome, MigrateReport,
-    RefusalAnchor, config_migrate,
+    RefusalAnchor, config_migrate, path_word,
 };
 
 // §FS-config-explain: the one answer `grund config explain` returns, which this

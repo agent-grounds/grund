@@ -3,8 +3,7 @@
 use super::expand::enclosing_workspace_of;
 use super::members::AncestorWorkspaces;
 use super::scope::{RootMode, derive_alias};
-use crate::config::Run;
-use crate::config::report_path;
+use crate::config::{Run, command_path};
 
 /// §FS-workspace.5.1.1: verified root-project identity and a location usable
 /// from the invocation CWD, independent of the report's path-base setting.
@@ -49,8 +48,13 @@ pub(crate) fn member_root_guidance(run: &Run) -> Option<MemberRootGuidance> {
         return None;
     }
     let alias = derive_alias(&root, None, RootMode::Root).ok()?;
-    let cwd = crate::sources::canonical_path(&std::env::current_dir().ok()?).ok()?;
-    // §AR-config.1.7: the member root named from where the caller stands.
-    let location = report_path(&cwd, &root.root);
+    // No working directory, no location usable from it, so no hint.
+    let cwd = std::env::current_dir().ok()?;
+    // §FS-workspace.5.1.1: the root named from where the caller stands, spelled as a pasted
+    // command spells it (§FS-config-migrate.6.5.1 item 1), and `.` for that directory itself.
+    let location = match command_path(Some(&cwd), &root.root) {
+        here if here.is_empty() => ".".to_owned(),
+        location => location,
+    };
     Some(MemberRootGuidance { alias, location })
 }

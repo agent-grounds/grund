@@ -1,7 +1,8 @@
 //! The spelling of migrate's undo and re-preview (§FS-config-migrate.6.5.1):
 //! one POSIX shell word per path, a leading `-` or `:` defused, `PATH` as given.
 //! Where the config lies relative to the working directory — `..`, links, the
-//! absolute fallback — is the core's `MigrateOpts::config_from`, tested there.
+//! absolute fallback — is the core's `MigrateOpts::config_from`, tested there,
+//! and so is the shell word itself, the core's `path_word`.
 
 use super::*;
 
@@ -39,12 +40,10 @@ fn paths_of_safe_characters_stay_bare() {
         spelled("./apps/api/grund.toml", Some("./apps/api/")),
         ("./apps/api/grund.toml".into(), " ./apps/api/".into())
     );
-    let every_safe = "AZaz09_-./,:@%+=";
-    assert_eq!(shell_word(every_safe), every_safe);
 }
 
-/// §FS-config-migrate.6.5.1 item 3: anything outside the safe set, the empty
-/// word included, is single-quoted, and a `'` inside becomes `'\''`.
+/// §FS-config-migrate.6.5.1 item 3: a path outside the safe set is
+/// single-quoted, and a `'` inside becomes `'\''`.
 #[test]
 fn other_paths_are_single_quoted() {
     assert_eq!(
@@ -55,14 +54,6 @@ fn other_paths_are_single_quoted() {
         spelled("it's/grund.toml", Some("it's")),
         (r"'it'\''s/grund.toml'".into(), r" 'it'\''s'".into())
     );
-    assert_eq!(shell_word(""), "''");
-    for unsafe_char in ["$HOME", "a*b", "a;b", "~/x", "a\"b", "a\\b", "é", "a\tb", "!x"] {
-        let word = shell_word(unsafe_char);
-        assert!(
-            word.starts_with('\'') && word.ends_with('\''),
-            "{unsafe_char:?} -> {word}"
-        );
-    }
 }
 
 /// §FS-config-migrate.6.5.1 item 3: an undo path that would start with `-`

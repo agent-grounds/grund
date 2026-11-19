@@ -134,7 +134,7 @@ fn translate_case(index: usize, case: &Case) -> Result<MigrateReport, String> {
         root: root.clone(),
         config: "grund.toml".into(),
     };
-    let prepared = translate(&located, false, false, &|| true, &|_| Ok(Vec::new()))
+    let prepared = translate(&located, None, false, false, &|| true, &|_| Ok(Vec::new()))
         .map_err(|error| format!("{error:#}"));
     match prepared? {
         Prepared::Translated { report, .. } => Ok(*report),

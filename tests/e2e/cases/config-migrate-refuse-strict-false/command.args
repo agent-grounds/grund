@@ -1,1 +1,1 @@
-config migrate --to 2 --write {repo_copy}
+config migrate --to 2 --write

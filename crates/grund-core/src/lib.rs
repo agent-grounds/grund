@@ -220,6 +220,10 @@ pub use model::schema_text;
 // §FS-config-migrate: `grund config migrate --to 2` and the one record it returns.
 #[doc(hidden)]
 pub use api::{MigrateOpts, config_migrate};
+// §FS-config-migrate.6.5.1 item 3: the shell word a frontend spells migrate's
+// undo and re-preview with, the one the core spells its own commands with.
+#[doc(hidden)]
+pub use config::path_word;
 // §FS-config-explain: `grund config explain`, the answer it returns, and the
 // tables, keys and codes it answers for.
 #[doc(hidden)]

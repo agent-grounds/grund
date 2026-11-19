@@ -71,10 +71,12 @@ pub(super) const CONFIG_VERSION_1: Code = Code::CONFIG_VERSION_1;
 
 /// §FS-check.checks.config-version-1: the one sentence that tells a reader the
 /// config at `file` is on version 1 and names the command that migrates it,
-/// ending at `--to 2` when `dir` is `None`, the report's base, which the caller
-/// asks of the path (§AR-config.1.7). `config migrate` prints
-/// it for a member (§FS-config-migrate.8) and the caution below prints it for
-/// any config, so the two cannot drift apart.
+/// ending at `--to 2` when `dir` is `None`. Each caller passes the directory:
+/// the caution below a report path, `None` for the report's base, which it asks
+/// of the path (§AR-config.1.7); `config migrate`, which prints the sentence for
+/// a member (§FS-config-migrate.8), a command's, spelled from where it ran and
+/// already one shell word (§FS-config-migrate.6.5.1). The words cannot drift
+/// apart, and at the workspace root the two lines agree.
 pub(super) fn version_1_caution(file: &str, dir: Option<&str>) -> String {
     let mut line = format!("{file} is version 1; {}", remedies::config_version_1("it"));
     if let Some(dir) = dir {
@@ -104,6 +106,7 @@ fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Dia
         path: None,
         line: None,
         column: None,
+        // §FS-check.checks.config-version-1: the caution's directory stays a report path.
         message: version_1_caution(
             &display.path(&file),
             (!display.is_base(&config.root))

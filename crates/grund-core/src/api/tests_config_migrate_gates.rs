@@ -44,7 +44,7 @@ fn prepared(root: &Path) -> (Located, Project, String, Vec<(usize, usize)>) {
         v1,
         line_map,
         ..
-    } = translate(&located, false, false, &|| true, &|_| Ok(Vec::new()))
+    } = translate(&located, None, false, false, &|| true, &|_| Ok(Vec::new()))
         .expect("the v1 file reads")
     else {
         panic!("read as version 2");
@@ -518,7 +518,7 @@ fn report_gate_names_an_unmapped_config_finding_at_the_candidates_line() {
         config: "grund.toml".into(),
     };
     let Prepared::Translated { v1, .. } =
-        translate(&located, false, false, &|| true, &|_| Ok(Vec::new()))
+        translate(&located, None, false, false, &|| true, &|_| Ok(Vec::new()))
             .expect("the v1 file reads")
     else {
         panic!("read as version 2");
