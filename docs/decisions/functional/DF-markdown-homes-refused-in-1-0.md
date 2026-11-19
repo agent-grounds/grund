@@ -45,7 +45,7 @@ The six are asked of the lowered source model, which the reader builds only once
 
 ### 2.7 What stays
 
-`rule-folder-file-not-markdown`, which `check` reports on a file a `source` language reads inside a rule folder, stays a warning ([§DF-markdown-homes-warn-before-1-0.2.2](DF-markdown-homes-warn-before-1-0.md#22-a-file-in-a-rule-folder-read-as-source-stays-a-warning)). `md = "markdown"`, `md = "v1_markdown"`, which `config migrate` writes, and an `md` mapped to any `document` definition stay silent. An entry the reader already refuses as a place keeps that refusal. Version 1 is unchanged ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)).
+`rule-folder-file-not-markdown`, which `check` reports on a file a `source` language reads inside a rule folder, stays a warning ([§DF-markdown-homes-warn-before-1-0.2.2](DF-markdown-homes-warn-before-1-0.md#22-a-file-in-a-rule-folder-read-as-source-stays-a-warning)). `md = "markdown"`, `md = "v1_markdown"`, which `config migrate` writes, and an `md` mapped to any `document` definition stay silent. An entry the reader already refuses as a place keeps that refusal. Version 1 is unchanged ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)).
 
 ## 3. Consequences
 

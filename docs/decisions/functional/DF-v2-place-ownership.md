@@ -32,7 +32,7 @@ Letting a file in two nested places fall to the complement, with nesting under `
 
 ## 4. Consequences
 
-- A version-1 config is untouched: its homes, its nesting rule and `[scan] include` keep their meaning ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)).
+- A version-1 config is untouched: its homes, its nesting rule and `[scan] include` keep their meaning ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)).
 - In version 2, a file in a nested place is checked against its owner, and the misplaced-declaration exemption for nested homes has no v2 counterpart.
 - A version-2 config whose rows list places and which writes no `code` row reads the whole config root, and the files outside every place are `code`'s. Before this change such a file read only its places.
 - `grund config migrate` (agent-grounds/grund#461) must report, rather than rewrite silently, each v1 arrangement this changes: nested homes whose files gain an owner, a renamed complement, `include` entries outside the config root or inside a member, homes that are outward directory links, and two kinds with the same home.
