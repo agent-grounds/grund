@@ -109,7 +109,6 @@ KEPT = (
     ("FS-config.md", "3.5", "comment_prefixes"),
     ("FS-rules.md", "5.1.1", "A `chapter` fact's `display_name` is the label the author wrote"),
     ("FS-rules.md", "5.1.1", "a presence rule naming `Terms` counts either"),
-    ("FS-rules.md", "5.1.1", "section map gives that chapter is the same label"),
     ("FS-values.md", "2.4.1", "The language adds no alternate spelling"),
     ("FS-fmt.md", "2.3.1", "Track an open-quote state per"),
     ("FS-fmt.md", "2.3.1.1", "the line this scan reads is the docstring's **content**"),
