@@ -1201,7 +1201,7 @@ What moves the version is [§FS-config.5.2](FS-config.md#52-a-versions-meaning-m
 
 An upgrade reads a config of a known version as the release before it did, except where a verdict moves as [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) allows; [§FS-config-v2.reader.5.strings.refusal](FS-config-v2.md#reader5stringsrefusal-from-grund-0220-the-open-line-ends-the-array) is such a move. A default, a language row or a doc profile the version fixes never moves: a different one is a different version.
 
-That holds of the records, not only of the reports. A v1 state that v2 cannot spell, such as a positive citation default or `strict = false`, keeps its meaning in the records the engine reads, and the tests that hold it read the records ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)). The v1 reader keeps v1's validation too: v2's stricter rules never refuse a file v1 accepts.
+Version 1's reading is frozen: no release changes what a version 1 file means, in the reports or in the records the engine reads. A v1 state that v2 cannot spell, such as a positive citation default or `strict = false`, keeps its meaning in those records, and the tests that hold it read the records ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)). The v1 reader keeps v1's validation too: v2's stricter rules never refuse a file v1 accepts.
 
 ### 5.3 A version 1 config is cautioned and never retired
 
