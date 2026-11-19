@@ -41,11 +41,7 @@ fn translated(
     };
     let text = format!("grund_config_version = 1\n{toml}{include}{NAMED}");
     write(&root.join("grund.toml"), &text);
-    let located = Located {
-        file: root.join("grund.toml"),
-        root: root.clone(),
-        config: "grund.toml".into(),
-    };
+    let located = Located::new(root.clone(), root.join("grund.toml"), root.clone());
     let Prepared::Translated { report, v1, .. } =
         translate(&located, None, false, false, &|| true, &|_| Ok(Vec::new()))
             .expect("the v1 file reads")

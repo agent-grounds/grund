@@ -190,8 +190,8 @@ fn v1_reads(mut v1: Config) -> anyhow::Result<Vec<PathBuf>> {
 }
 
 /// §FS-config-migrate.8: each member of the root's `[workspace]` still on
-/// version 1, by its config's path from the root and the command, pasted in
-/// `cwd`, that migrates it.
+/// version 1, by its config's path from the base the heading reads and the
+/// command, pasted in `cwd`, that migrates it.
 fn members(located: &Located, cwd: Option<&Path>) -> Vec<String> {
     let invocation = Invocation::new(&located.root, false, Selection::Project);
     let Ok(config) = config_at(&located.root, &located.root, None, &invocation) else {
@@ -206,9 +206,9 @@ fn members(located: &Located, cwd: Option<&Path>) -> Vec<String> {
     roots
         .iter()
         .filter_map(|root| {
-            // §AR-config.1.7: the file is a report path, spelled from the root.
-            let file = report_path(&located.root, &member_on_v1(root)?);
-            // §FS-config-migrate.8: the directory is a command's, spelled from where migrate ran.
+            // §FS-config-migrate.8: the file is a report path, from the heading's own base.
+            let file = located.shown(&member_on_v1(root)?);
+            // §FS-config-migrate.6.5.1: the directory is a command's, from where migrate ran.
             let member = command_directory(cwd, root);
             // §FS-check.checks.config-version-1: the caution's renderer, so both say it alike.
             Some(version_1_caution(&file, member.as_deref()))

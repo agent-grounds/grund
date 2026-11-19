@@ -34,11 +34,11 @@ fn tree(name: &str, config: &str, files: &[(&str, &str)]) -> crate::testing::Tem
 /// `root`'s config translated: where it is, the v1 project, the candidate and
 /// its key map.
 fn prepared(root: &Path) -> (Located, Project, String, Vec<(usize, usize)>) {
-    let located = Located {
-        file: root.join("grund.toml"),
-        root: root.to_path_buf(),
-        config: "grund.toml".into(),
-    };
+    let located = Located::new(
+        root.to_path_buf(),
+        root.join("grund.toml"),
+        root.to_path_buf(),
+    );
     let Prepared::Translated {
         report,
         v1,
@@ -512,11 +512,11 @@ fn report_gate_names_an_unmapped_config_finding_at_the_candidates_line() {
             ("sub/grund.toml", "grund_config_version = 2\n"),
         ],
     );
-    let located = Located {
-        file: root.join("grund.toml"),
-        root: root.to_path_buf(),
-        config: "grund.toml".into(),
-    };
+    let located = Located::new(
+        root.to_path_buf(),
+        root.join("grund.toml"),
+        root.to_path_buf(),
+    );
     let Prepared::Translated { v1, .. } =
         translate(&located, None, false, false, &|| true, &|_| Ok(Vec::new()))
             .expect("the v1 file reads")

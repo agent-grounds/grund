@@ -11,11 +11,7 @@ fn report(name: &str, toml: &str) -> MigrateReport {
     let root = test_root(&format!("migrate-comments-{name}"));
     write(&root.join("docs/FS-a.md"), "# FS-a: A\n\nText.\n");
     write(&root.join("grund.toml"), toml);
-    let located = Located {
-        file: root.join("grund.toml"),
-        root: root.clone(),
-        config: "grund.toml".into(),
-    };
+    let located = Located::new(root.clone(), root.join("grund.toml"), root.clone());
     let prepared =
         translate(&located, None, false, false, &|| true, &|_| Ok(Vec::new())).expect("translates");
     match prepared {
