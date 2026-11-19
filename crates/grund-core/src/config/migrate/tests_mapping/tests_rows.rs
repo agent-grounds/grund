@@ -162,7 +162,7 @@ pub(super) const CASES: &[Case] = &[
     case(
         "[scan] extensions",
         then_fs!("[scan]\nextensions = [\"md\", \"rs\"]\n"),
-        &[Mapped("languages = [\"v1_markdown\", \"v1_c_family\"]\n")],
+        &[Mapped("languages = [\"markdown\", \"v1_c_family\"]\n")],
     ),
     case(
         "[scan] extensions",

@@ -6,7 +6,7 @@
 
 ## 1. Context
 
-Version 2 regroups the configuration by concern and fixes its defaults at the version ([§FS-config-v2](../../functional-spec/FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults)), and a v1 file keeps its meaning forever ([§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning)). Moving from one to the other by hand leaves nothing to say whether the hand-written file means what the old one did. agent-grounds/grund#461 asked for `grund config migrate`, with explicit losses and a guarded write. The owner ruled on 2026-10-14 that `--write` is the one bounded exception to "the config is never overwritten" ([§REQ-no-data-loss.4](../../requirements/REQ-no-data-loss.md#4-one-migration-may-replace-the-config)) and that comments carry or are listed, with `--drop-comments` the only way one is lost. The proposal that settles the rest was approved on #461 the same day (comment 6178962696). The command is [§FS-config-migrate](../../functional-spec/FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does).
+Version 2 regroups the configuration by concern and fixes its defaults at the version ([§FS-config-v2](../../functional-spec/FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults)), and a v1 file keeps its meaning forever ([§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning)). Moving from one to the other by hand leaves nothing to say whether the hand-written file means what the old one did. agent-grounds/grund#461 asked for `grund config migrate`, with explicit losses and a guarded write. The owner ruled on 2026-10-14 that `--write` is the one bounded exception to "the config is never overwritten" ([§REQ-no-data-loss.4](../../requirements/REQ-no-data-loss.md#4-two-commands-may-replace-the-config)) and that comments carry or are listed, with `--drop-comments` the only way one is lost. The proposal that settles the rest was approved on #461 the same day (comment 6178962696). The command is [§FS-config-migrate](../../functional-spec/FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does).
 
 ## 2. Decision
 
@@ -24,7 +24,7 @@ A bare `migrate` that defaulted to version 2 would change meaning on the day a v
 
 ### 2.4 No backup file
 
-A `grund.toml.v1` would be a file grund then owns, and [§REQ-no-data-loss.4](../../requirements/REQ-no-data-loss.md#4-one-migration-may-replace-the-config) says the migration writes no other file. Version control already has the old version, and the command says how to get it back ([§FS-config-migrate.6.5](../../functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)).
+A `grund.toml.v1` would be a file grund then owns, and [§REQ-no-data-loss.4](../../requirements/REQ-no-data-loss.md#4-two-commands-may-replace-the-config) says the migration writes no other file. Version control already has the old version, and the command says how to get it back ([§FS-config-migrate.6.5](../../functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)).
 
 ### 2.5 No `--recursive`
 

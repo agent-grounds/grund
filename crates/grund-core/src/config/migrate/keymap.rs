@@ -3,6 +3,7 @@
 //! and each v1 default the candidate writes out (§FS-config-migrate.3.3).
 
 use super::candidate::may_default;
+use super::keymap_sources::{comment_prefixes, extensions, python_docstrings};
 use super::keys::{Keys, unquote};
 use super::opted_out::{Block, UNREAD, kept};
 use super::places::Include;
@@ -11,7 +12,7 @@ use crate::config::citations::CitationLevel;
 use crate::config::project::Project;
 use crate::config::v1::LineKind;
 
-const ALWAYS: &str = "nothing, version 2 always means it";
+pub(super) const ALWAYS: &str = "nothing, version 2 always means it";
 
 /// `A`, `A and B`, `A, B and C`.
 pub(super) fn joined(items: &[String]) -> String {
@@ -20,31 +21,6 @@ pub(super) fn joined(items: &[String]) -> String {
         [one] => one.clone(),
         [init @ .., last] => format!("{} and {last}", init.join(", ")),
     }
-}
-
-/// §FS-config-migrate.2.2: both reports name the same source definitions;
-/// comment guidance spells their full table addresses for manual placement.
-fn definitions(v2: &Project, full_addresses: bool) -> String {
-    let names: Vec<String> = v2
-        .schema
-        .sources
-        .model
-        .iter()
-        .flat_map(|model| model.definitions.iter())
-        .map(|def| {
-            if full_addresses {
-                format!("[schema.sources.definitions.{}]", def.name)
-            } else {
-                def.name.clone()
-            }
-        })
-        .collect();
-    let word = if names.len() == 1 {
-        "definition"
-    } else {
-        "definitions"
-    };
-    format!("{word} {}", joined(&names))
 }
 
 /// §FS-config-migrate.mapping `[scan] include`.
@@ -71,32 +47,6 @@ fn include(plan: &Include) -> String {
         out.push_str(&duplicate);
     }
     out
-}
-
-/// `[scan] docstring_python`'s spelling: the definition `.py` maps to, which
-/// reads docstrings only when the key was on, or nothing when `.py` is not read.
-fn python_docstrings(v2: &Project, full_addresses: bool) -> String {
-    let Some(model) = &v2.schema.sources.model else {
-        return ALWAYS.into();
-    };
-    let definition = model
-        .extensions
-        .iter()
-        .find(|(suffix, _)| suffix == "py")
-        .and_then(|(_, name)| model.definitions.iter().find(|def| def.name == *name));
-    match definition {
-        Some(def) => {
-            let name = if full_addresses {
-                format!("[schema.sources.definitions.{}]", def.name)
-            } else {
-                def.name.clone()
-            };
-            let state = if def.docstrings { "" } else { " (off)" };
-            format!("docstrings of definition {name}{state}")
-        }
-        None if full_addresses => ALWAYS.into(),
-        None => "nothing, [scan] extensions does not read `py`".into(),
-    }
 }
 
 /// The v2 spelling of one authored v1 key (§FS-config-migrate.mapping).
@@ -163,13 +113,8 @@ fn spelling(
             None => ALWAYS.into(),
         },
         ("scan", "include") => include(plan),
-        ("scan", "extensions") => format!(
-            "[schema.sources] languages and extensions, {}",
-            definitions(v2, full_addresses)
-        ),
-        ("scan", "comment_prefixes") => {
-            format!("comment_prefixes of {}", definitions(v2, full_addresses))
-        }
+        ("scan", "extensions") => extensions(v2, full_addresses),
+        ("scan", "comment_prefixes") => comment_prefixes(v2, full_addresses),
         ("scan", "docstring_python") => python_docstrings(v2, full_addresses),
         ("scan", "exclude" | "respect_gitignore") => format!("[schema.sources] {key}"),
         ("fmt.cross_refs", "anchor_format") => "[presentation.fmt] anchors".into(),

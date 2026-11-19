@@ -9,12 +9,17 @@ fn command_config(args: &[String]) -> ExitCode {
     if action == "explain" {
         return command_config_explain(&args[1..]);
     }
+    if action == "adopt-builtins" {
+        return command_config_adopt(&args[1..]);
+    }
     if !matches!(action, "validate" | "show") {
         if action.starts_with('-') {
             eprintln!("error: unknown flag `{action}`");
         } else {
             eprintln!("error: unknown config command `{action}`");
-            eprintln!("expected: config validate, config show, config explain, config migrate");
+            eprintln!(
+                "expected: config validate, config show, config explain, config migrate, config adopt-builtins"
+            );
         }
         return ExitCode::from(2);
     }

@@ -42,6 +42,7 @@
 //! (§AR-config.5), and `v1/` is the version-1 reader with its defaults
 //! (§AR-config.3).
 
+pub(crate) mod adopt;
 mod call_scope;
 mod citation_places;
 mod citations;

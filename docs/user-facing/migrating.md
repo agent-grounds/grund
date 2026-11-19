@@ -189,6 +189,54 @@ already-version-2 output. It can be combined with PATH,
 `--drop-comments` and either `--path-base`
 ([§FS-config-migrate.1.3](../functional-spec/FS-config-migrate.md#13-the-other-flags)).
 
+## 6. Adopt the built-in languages
+
+Migration writes a built-in language only where it reads a suffix exactly as
+version 1 did: under version 1's default comment prefixes, `markdown` for `.md`
+([§FS-config-v2.schema.sources.migration](../functional-spec/FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)). Every other suffix keeps the `v1_*`
+definition that reads it as version 1 did, so the write changes nothing
+`grund check` reports. Once the version-2 file is committed,
+`grund config adopt-builtins` moves those suffixes onto the built-in languages
+that claim them, as a step of its own that names every reading it changes
+([§FS-config-adopt-builtins](../functional-spec/FS-config-adopt-builtins.md#fs-config-adopt-builtins-grund-config-adopt-builtins-reads-a-version-2-files-suffixes-through-the-built-in-languages-that-claim-them-says-every-reading-that-changes-and-writes-only-what-it-planned-only-when-asked)).
+
+```bash
+grund config adopt-builtins                          # preview: nothing is written
+grund config adopt-builtins --write                  # write, past the whole gate
+grund config adopt-builtins --write --drop-comments  # and drop the listed comments
+```
+
+The preview prints the candidate on stdout and the plan on stderr: each suffix
+it adopts with every reading that changes, each suffix an adopted language
+starts to read, and each suffix it keeps and why
+([§FS-config-adopt-builtins.5.2](../functional-spec/FS-config-adopt-builtins.md#52-stderr-is-the-report)):
+
+```text
+adopts: java: definition v1_c_family → built-in java
+  reads differently: `#` is no longer a comment host
+added: bash, zsh: admitted with shell
+kept: gradle: definition v1_plain and gradle = "v1_plain"; version 2 has no built-in language for `.gradle`
+```
+
+A suffix no built-in claims, or one its built-in reads with another class,
+keeps its definition, and that never refuses ([§FS-config-adopt-builtins.3.2](../functional-spec/FS-config-adopt-builtins.md#32-kept)).
+The candidate renames `languages` in place and removes only the adopted
+entries and the definitions nothing names any more
+([§FS-config-adopt-builtins.4](../functional-spec/FS-config-adopt-builtins.md#4-the-candidate)). Before anything is written, the candidate is
+loaded and refused if it reads any suffix otherwise than planned or moves any
+other setting ([§FS-config-adopt-builtins.6](../functional-spec/FS-config-adopt-builtins.md#6-the-gate)). Both versions of the file are
+also checked with `grund check --suggestions`, and each finding that changes is
+printed. A changed finding does not refuse, because changing readings is the
+point, so read the comparison before you write
+([§FS-config-adopt-builtins.6.4](../functional-spec/FS-config-adopt-builtins.md#64-what-check-reports-before-and-after)). Comments on the lines it removes are listed
+and need `--drop-comments`, as in migration ([§FS-config-adopt-builtins.7](../functional-spec/FS-config-adopt-builtins.md#7-comments)). The
+write is atomic and replaces only the config ([§FS-config-adopt-builtins.8](../functional-spec/FS-config-adopt-builtins.md#8-the-write)). A
+version-1 file is refused until it is migrated, and a second run on an adopted
+file says there is nothing to adopt ([§FS-config-adopt-builtins.9](../functional-spec/FS-config-adopt-builtins.md#9-a-second-run-is-a-no-op)).
+
+Steps 6 and 7 of [`examples/migrate`](../../examples/migrate/) preview and
+write it on a migrated project.
+
 ## Workspaces
 
 Migration touches one config. A workspace root lists each member still on

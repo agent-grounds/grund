@@ -220,6 +220,14 @@ pub use model::schema_text;
 // §FS-config-migrate: `grund config migrate --to 2` and the one record it returns.
 #[doc(hidden)]
 pub use api::{MigrateOpts, config_migrate};
+// §FS-config-adopt-builtins: `grund config adopt-builtins` and the one record it returns.
+#[doc(hidden)]
+pub use api::{AdoptOpts, config_adopt};
+#[doc(hidden)]
+pub use config::adopt::{
+    AddedSuffixes, AdoptComment, AdoptFailure, AdoptOutcome, AdoptReport, AdoptedSuffix, Compared,
+    KeptSuffix, KeptWhy,
+};
 // §FS-config-explain: `grund config explain`, the answer it returns, and the
 // tables, keys and codes it answers for.
 #[doc(hidden)]

@@ -45,6 +45,12 @@ use grund_core::{
     RefusalAnchor, config_migrate,
 };
 
+// §FS-config-adopt-builtins: the one record `grund config adopt-builtins` returns, which
+// this crate renders (§AR-config.10).
+use grund_core::{
+    AdoptComment, AdoptOpts, AdoptOutcome, AdoptReport, Compared, KeptSuffix, KeptWhy, config_adopt,
+};
+
 // §FS-config-explain: the one answer `grund config explain` returns, which this
 // crate prints (§AR-config.9).
 use grund_core::{
@@ -140,6 +146,7 @@ include!("cli_id.rs");
 include!("cli_init.rs");
 include!("cli_config.rs");
 include!("cli_config_explain.rs");
+include!("cli_config_adopt.rs");
 include!("cli_config_migrate.rs");
 include!("cli_config_migrate_commands.rs");
 include!("cli_schema.rs");

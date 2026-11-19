@@ -360,3 +360,22 @@ thing:
   compatibility: it reads every file with no extension, and version 2 has no such
   entry. Remove it under version 1, and give any such file you want read an
   extension the list holds. `grund check` shows the effect.
+
+Migration names a built-in language only where it reads a suffix exactly as
+version 1 did, so with version 1's default comment prefixes `.md` is read by
+`markdown`, and every other suffix keeps a `v1_*` definition
+([§FS-config-v2.schema.sources.migration](../functional-spec/FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)). Moving those suffixes onto the
+built-ins changes how their files are read, which is a step of its own:
+`grund config adopt-builtins` previews it, naming every reading that changes
+and every suffix it keeps, and writes it with `--write`
+([§FS-config-adopt-builtins](../functional-spec/FS-config-adopt-builtins.md#fs-config-adopt-builtins-grund-config-adopt-builtins-reads-a-version-2-files-suffixes-through-the-built-in-languages-that-claim-them-says-every-reading-that-changes-and-writes-only-what-it-planned-only-when-asked)). Prefer it to editing `languages` and the
+definitions by hand, which can stop reading a file type without a word:
+
+```bash
+grund config adopt-builtins           # the candidate on stdout, the plan on stderr
+grund config adopt-builtins --write   # replace the v1_* readings a built-in claims
+```
+
+A suffix no built-in language claims, such as `.gradle`, keeps its definition
+([§FS-config-adopt-builtins.3.2](../functional-spec/FS-config-adopt-builtins.md#32-kept)). The [migration guide](migrating.md#6-adopt-the-built-in-languages)
+walks through the report.

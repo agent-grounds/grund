@@ -163,7 +163,7 @@ to record grounding structure for ([§AR-config.6.1](AR-config.md#61-scandemand-
 
 `config` holds the one function that picks the name a reading is taken from, the rule of [§FS-scan.identity.reading](../functional-spec/FS-scan.md#identityreading-how-a-file-is-read-belongs-to-the-file-not-to-the-name-that-reached-it): it takes a spelling and the `Spellings` table `sources` publishes, and returns the name to read or the refusal. No caller can get a reading from a bare spelling without going through it. That is the guard, and it is not the visibility of `FileReading::of`, which is `pub(super)` already, so nothing outside `config` calling it proves nothing. Every caller of the reading is routed here: the text scan and the value reader, the checker, the formatter, the queries and the editor, the index check, and, with [issue #1206](https://github.com/agent-grounds/grund/issues/1206)'s second pull request, fetch's folder walk.
 
-Scan entry stays on the spelling ([§FS-scan.identity.reading.entry](../functional-spec/FS-scan.md#identityreadingentry-whether-a-spelling-enters-the-scan-is-judged-by-the-name-met)). The hidden and listed tests in `read_as_source` and `value_format`, and `lists_extension` in the walk's filter, decide whether a file enters the scan and keep asking the path they were handed; only the reading moves to the chosen name. A name written in the config, an `index` or a `files` or `folders` entry, is judged by the same predicate as a file's reading. One function in `file_reading.rs` takes the configuration's version, the language `language_of` resolves the name to, and the name's final extension, and answers both questions [§FS-fmt.2.3.1](../functional-spec/FS-fmt.md#231-string-literal-exclusion-rule) defines: whether the name is read as Markdown and whether its docstrings are read. `FileReading::of` takes its `markdown` and `python` from it, so in version 2 a name no admitted language claims answers false to both, and no load site, checker or writer tests `.md` or `.py` itself. A third answer comes from the same rule: one free function in `file_reading.rs` takes the language a name resolves to and the name's final extension, and answers which multi-line string row and which quote reading the file reads ([§FS-languages.multi-line-string.suffix](../functional-spec/FS-languages.md#multi-line-stringsuffix-which-row-and-which-quote-reading-a-file-reads)). A built-in gives its own, a `source` definition, an unclaimed name or a version-1 name gives its extension's, and a `document` or `data` language gives none. It has two callers. `FileReading::source_forms` hands its answer to the literal spans and the qualified-comment search, and the records gate compares it suffix by suffix ([§FS-config-migrate.5.1](../functional-spec/FS-config-migrate.md#51-the-records-gate)). Nothing else works out which row or quote reading a file reads. The name tests that stay are the ones whose job is naming: version 1's half of that function, name resolution, the epoch table, version 1's defaults, migration, the multi-line-string table, the editor's language IDs and `show`'s output formats.
+Scan entry stays on the spelling ([§FS-scan.identity.reading.entry](../functional-spec/FS-scan.md#identityreadingentry-whether-a-spelling-enters-the-scan-is-judged-by-the-name-met)). The hidden and listed tests in `read_as_source` and `value_format`, and `lists_extension` in the walk's filter, decide whether a file enters the scan and keep asking the path they were handed; only the reading moves to the chosen name. A name written in the config, an `index` or a `files` or `folders` entry, is judged by the same predicate as a file's reading. One function in `file_reading.rs` takes the configuration's version, the language `language_of` resolves the name to, and the name's final extension, and answers both questions [§FS-fmt.2.3.1](../functional-spec/FS-fmt.md#231-string-literal-exclusion-rule) defines: whether the name is read as Markdown and whether its docstrings are read. `FileReading::of` takes its `markdown` and `python` from it, so in version 2 a name no admitted language claims answers false to both, and no load site, checker or writer tests `.md` or `.py` itself. A third answer comes from the same rule: one free function in `file_reading.rs` takes the language a name resolves to and the name's final extension, and answers which multi-line string row and which quote reading the file reads ([§FS-languages.multi-line-string.suffix](../functional-spec/FS-languages.md#multi-line-stringsuffix-which-row-and-which-quote-reading-a-file-reads)). A built-in gives its own, a `source` definition, an unclaimed name or a version-1 name gives its extension's, and a `document` or `data` language gives none. It has two callers. `FileReading::source_forms` hands its answer to the literal spans and the qualified-comment search, and the per-suffix reading below compares it suffix by suffix. Nothing else works out which row or quote reading a file reads. A fourth answer is built from the other three: the reading of one suffix as the records gate compares it, which covers its class, its comment hosts as a set, its docstrings, its string and quote reading, its note-measurement rule and its declaration eligibility ([§FS-config-migrate.5.1](../functional-spec/FS-config-migrate.md#51-the-records-gate)). One function in `file_reading.rs` builds it, from the answers `FileReading` gives a file of that suffix, for a version-1 project and a version-2 model alike. It has three callers: the records gate, migration's choice of a built-in row ([§FS-config-v2.schema.sources.migration](../functional-spec/FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)), and adoption's plan and gate ([§FS-config-adopt-builtins.6.2](../functional-spec/FS-config-adopt-builtins.md#62-the-readings-are-the-plan)). None of them keeps a matcher of its own, so two readings that one caller calls equal are equal to all three. The name tests that stay are the ones whose job is naming: version 1's half of that function, name resolution, the epoch table, version 1's defaults, migration, the multi-line-string table, the editor's language IDs and `show`'s output formats.
 
 What a form asks of a home is judged in one function, `home_requirement`, called for every `files` and `folders` entry of a row by both loaders, so the first entry is not the only one asked ([§FS-config-v2.schema.sources.rules](../functional-spec/FS-config-v2.md#schemasourcesrules-every-home-of-a-rule-kind-is-judged-by-its-reading), [§FS-config.3.4.9](../functional-spec/FS-config.md#349-values--first-class-value-declarations)).
 
@@ -647,3 +647,44 @@ are config's own, and reaching `KEYS` or the version-1 table list from above
 config would break the v1 reader's isolation that section 2 keeps. So the
 answer is assembled where those lists live, and the frontend only renders it,
 as it renders `config show` and migration ([§AR-system.4](README.md#4-dependency-direction)).
+
+## 10. Adoption plans readings, then edits three keys
+
+`grund config adopt-builtins` ([§FS-config-adopt-builtins](../functional-spec/FS-config-adopt-builtins.md#fs-config-adopt-builtins-grund-config-adopt-builtins-reads-a-version-2-files-suffixes-through-the-built-in-languages-that-claim-them-says-every-reading-that-changes-and-writes-only-what-it-planned-only-when-asked)) lives in an `adopt`
+module under `crates/grund-core/src/config/`, beside `migrate`. Like migration
+it renders nothing: it returns one typed record holding the plan, the candidate
+text, the listed comments and the gate's results, and `grund-cli` renders that
+record in `cli_config_adopt.rs`.
+
+### 10.1 The plan comes first, and from the file alone
+
+The plan is built from the file's resolved source model and version 2's epoch
+table, through the per-suffix reading of section 1.6, before any candidate text
+exists ([§FS-config-adopt-builtins.3](../functional-spec/FS-config-adopt-builtins.md#3-the-plan)). The function that builds it takes no
+candidate and calls no writer, so the expected model cannot follow a writer's
+mistake ([§FS-config-adopt-builtins.6.2](../functional-spec/FS-config-adopt-builtins.md#62-the-readings-are-the-plan)). The same epoch rows that answer a
+version-2 file's reading answer the plan; adoption keeps no second table.
+
+### 10.2 The edit is a text edit on recorded locations
+
+The candidate is the file's own text with three edits: the `languages` value,
+the lines of adopted entries, and the tables of definitions nothing still names
+([§FS-config-adopt-builtins.4](../functional-spec/FS-config-adopt-builtins.md#4-the-candidate)). Their line spans come from the key locations the
+version-2 reader already records, read once in the load that built the model;
+the edit parses no key again. Inside a `languages` value written across lines
+it finds each name by the reader's own rule for where a string ends
+([§FS-config.3.11](../functional-spec/FS-config.md#311-a-list-element-ends-at-a-comma-outside-a-string)), and rewrites it where it stands
+([§FS-config-adopt-builtins.4.1](../functional-spec/FS-config-adopt-builtins.md#41-languages-is-renamed-in-place-never-widened)). A comment on a removed line is found from the
+same spans ([§FS-config-adopt-builtins.7](../functional-spec/FS-config-adopt-builtins.md#7-comments)).
+
+### 10.3 The gate reuses migration's parts
+
+The candidate is loaded back through `pending_config`, as migration's is
+(section 8.1). Its readings are compared with the plan by the per-suffix
+reading, and its other records by the records gate's sections, minus
+`sources`' suffix readings ([§FS-config-adopt-builtins.6.3](../functional-spec/FS-config-adopt-builtins.md#63-nothing-else-moves)). The before-and-after
+`check --suggestions` runs are migration's report gate runs, kept as a
+difference to print rather than a verdict ([§FS-config-adopt-builtins.6.4](../functional-spec/FS-config-adopt-builtins.md#64-what-check-reports-before-and-after)). The
+write is `writers/atomic_install.rs`, unchanged, with its concurrent-edit check
+(section 8.3), and adoption supplies only its messages
+([§FS-config-adopt-builtins.8.1](../functional-spec/FS-config-adopt-builtins.md#81-bounds)).

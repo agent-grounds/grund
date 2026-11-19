@@ -1,12 +1,14 @@
 /// The `grund config --help` page (§FS-cli.2.3, §FS-cli.6): `show` in the file's
 /// own version (§FS-config.4.2), `validate`, `explain` (§FS-config-explain.1) and
-/// `migrate` (§FS-config-migrate.1), how the config is discovered, and examples of each.
+/// `migrate` (§FS-config-migrate.1), `adopt-builtins` (§FS-config-adopt-builtins.1), how the config
+/// is discovered, and examples of each.
 fn print_config_help() {
     println!("grund config — inspect the effective `grund.toml` discovered from a path.");
     println!();
     println!("Usage:  grund config <show | validate> [PATH]");
     println!("        grund config explain [TARGET] [PATH] [--path PATH] [--codes | --all]");
     println!("        grund config migrate --to 2 [PATH] [--write] [--drop-comments] [--full]");
+    println!("        grund config adopt-builtins [PATH] [--write] [--drop-comments]");
     println!();
     println!(
         "  show       print the effective config as TOML in the file's own version (defaults filled in for keys you didn't set)."
@@ -41,6 +43,13 @@ fn print_config_help() {
     );
     // §FS-config-migrate.6.5, §FS-config-migrate.2.2: compact success and refusal.
     println!("             writes nothing unless --write is given; successful writes and refused previews use a compact report.");
+    // §FS-config-adopt-builtins.3, §FS-config-adopt-builtins.5: the step after a migration.
+    println!(
+        "  adopt-builtins  preview a version-2 file with each suffix a built-in language claims read through that built-in,"
+    );
+    println!(
+        "             naming every reading that changes and every suffix it keeps; writes nothing unless --write is given."
+    );
     println!();
     println!("Options:");
     println!("  --codes              explain: every check code the version can report, one line each.");
@@ -59,6 +68,10 @@ fn print_config_help() {
         "  --write              migrate: replace the config with the candidate, once both comparisons pass."
     );
     println!("                       e.g. grund config migrate --to 2 --write");
+    println!(
+        "                       adopt-builtins: replace the config with the candidate, once every part of its gate passes."
+    );
+    println!("                       e.g. grund config adopt-builtins --write");
     // §FS-config-migrate.1.3: expansion belongs only to migration presentation.
     println!(
         "  --full               migrate: restore the candidate and complete report after a successful write, or a preview only comments refuse."
@@ -68,6 +81,10 @@ fn print_config_help() {
         "  --drop-comments      migrate: let --write drop the comments the preview lists, and name them again."
     );
     println!("                       e.g. grund config migrate --to 2 --write --drop-comments");
+    println!(
+        "                       adopt-builtins: the same, for the comments on the lines adoption removes."
+    );
+    println!("                       e.g. grund config adopt-builtins --write --drop-comments");
     print_run_flag_help("grund config show docs/", false);
     println!();
     println!(
@@ -79,7 +96,7 @@ fn print_config_help() {
     println!();
     // §FS-config-migrate.2.3: the examples open the `2` list; that row names every cause.
     println!(
-        "Exit:  0 well-formed / printed / answered / migrated · 1 `validate` found an error, `explain` knows no such target, or `migrate` refused · 2 the command could not run, `migrate` included, such as no subcommand, a config that couldn't be read, or a tree the version 1 scan cannot walk."
+        "Exit:  0 well-formed / printed / answered / migrated / adopted · 1 `validate` found an error, `explain` knows no such target, or `migrate` or `adopt-builtins` refused · 2 the command could not run, `migrate` and `adopt-builtins` included, such as no subcommand, a config that couldn't be read, or a tree the version 1 scan cannot walk."
     );
     println!();
     println!("Examples:");
@@ -100,6 +117,12 @@ fn print_config_help() {
     println!("  grund config migrate --to 2 --write   # compact report on stderr; stdout is empty");
     println!(
         "  grund config migrate --to 2 --write --full   # apply with candidate and complete report"
+    );
+    println!(
+        "  grund config adopt-builtins     # then: the built-in languages previewed; nothing written"
+    );
+    println!(
+        "  grund config adopt-builtins --write   # read each suffix a built-in reads through it"
     );
     print_guide_links(
         &[
