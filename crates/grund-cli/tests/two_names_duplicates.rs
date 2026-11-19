@@ -40,7 +40,7 @@ fn a_duplicate_with_a_third_file_anchors_as_the_whole_run_does() {
     agree(
         &tree,
         &["notes/link.md", "notes", "docs/fs/b.md", "docs/fs/a.md"],
-        "docs/fs/a.md:1: error: duplicate declaration of FS-d (also declared at docs/fs/b.md:1) \
+        "docs/fs/a.md:1: error: duplicate declaration of FS-d (also declared at docs/fs/b.md:1); keep one declaration of the ID and rename or remove the others \
          (also at notes/link.md:1)\n",
     );
 }
@@ -58,7 +58,7 @@ fn a_name_that_is_the_tail_of_another_sites_path_leaves_that_path_alone() {
         &tree,
         &["notes/link.md", "notes", "docs/notes/link.md", "docs/m.md"],
         "docs/b.md:1: error: duplicate declaration of FS-d (also declared at docs/m.md:1, \
-         docs/notes/link.md:1)\n",
+         docs/notes/link.md:1); keep one declaration of the ID and rename or remove the others\n",
     );
 }
 
@@ -71,7 +71,7 @@ fn a_name_that_is_the_tail_of_a_third_file_keeps_its_clause() {
     tree.put("docs/notes/link.md", DECL);
     tree.link("notes/link.md", "../docs/a.md");
     let want = "docs/a.md:1: error: duplicate declaration of FS-d (also declared at \
-                docs/notes/link.md:1) (also at notes/link.md:1)\n";
+                docs/notes/link.md:1); keep one declaration of the ID and rename or remove the others (also at notes/link.md:1)\n";
     agree(
         &tree,
         &["notes/link.md", "notes", "docs/notes/link.md", "docs/a.md"],

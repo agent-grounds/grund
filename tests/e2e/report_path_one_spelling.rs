@@ -254,7 +254,7 @@ fn a_message_naming_the_report_base_reads_dot() {
     let output = run(&case, &["check", "--path-base=invocation"]);
     assert_eq!(
         String::from_utf8_lossy(&output.stdout),
-        "../README.md:1: error: duplicate declaration of E2E-a (also declared at .:1)\n"
+        "../README.md:1: error: duplicate declaration of E2E-a (also declared at .:1); keep one declaration of the ID and rename or remove the others\n"
     );
     assert_eq!(output.status.code(), Some(1));
     let output = run(
@@ -264,7 +264,7 @@ fn a_message_naming_the_report_base_reads_dot() {
     assert_eq!(
         String::from_utf8_lossy(&output.stdout),
         "{\"severity\":\"error\",\"path\":\"../README.md\",\"line\":1,\"code\":\"duplicate\",\
-         \"message\":\"duplicate declaration of E2E-a (also declared at .:1)\",\
+         \"message\":\"duplicate declaration of E2E-a (also declared at .:1); keep one declaration of the ID and rename or remove the others\",\
          \"sites\":[{\"path\":\"../README.md\",\"line\":1},{\"path\":\".\",\"line\":1}],\
          \"authority\":null}\n"
     );

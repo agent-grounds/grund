@@ -200,7 +200,9 @@ fn unsaved_declaration_in_a_scanned_target_pairs_the_stubs() {
 /// as ambiguous: the snapshot reports the duplicate at both lines, as a save does.
 const TWO_HOMES: (Result<&str, &str>, &[&str]) = (
     Err("ambiguous ID: FS-x (declared at src/x.rs:1, src/x.rs:6)"),
-    &["duplicate src/x.rs:1 duplicate declaration of FS-x (also declared at src/x.rs:6)"],
+    &[
+        "duplicate src/x.rs:1 duplicate declaration of FS-x (also declared at src/x.rs:6); keep one declaration of the ID and rename or remove the others",
+    ],
 );
 
 /// A lone stub stands for every declaration its unscanned target holds, so an

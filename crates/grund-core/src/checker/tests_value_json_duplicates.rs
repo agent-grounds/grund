@@ -108,7 +108,9 @@ fn every_json_duplicate_shape_reports_all_sites_without_comparing_a_winner() {
             .join(", ");
         assert_eq!(
             duplicate.message,
-            format!("duplicate declaration of CONST-price (also declared at {others})")
+            format!(
+                "duplicate declaration of CONST-price (also declared at {others}); keep one declaration of the ID and rename or remove the others"
+            )
         );
     }
 }

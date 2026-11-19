@@ -1,2 +1,2 @@
 docs/uses.md:1: error: missing section FS-second.1; write <§> before it to show the shape without citing it
-source.rs:1: error: duplicate declaration of FS-second (also declared at source.rs:10)
+source.rs:1: error: duplicate declaration of FS-second (also declared at source.rs:10); keep one declaration of the ID and rename or remove the others

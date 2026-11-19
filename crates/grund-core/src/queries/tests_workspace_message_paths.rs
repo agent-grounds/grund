@@ -100,7 +100,7 @@ fn duplicate_declaration_names_the_other_home_from_the_workspace_root() {
         vec![
             "apps/api/docs/functional-spec/FS-001-alpha-again.md:1: duplicate declaration of \
              FS-001-alpha (also declared at \
-             apps/api/docs/functional-spec/FS-001-alpha.md:1)"
+             apps/api/docs/functional-spec/FS-001-alpha.md:1); keep one declaration of the ID and rename or remove the others"
         ],
         "§FS-workspace.8.1: the anchor and the site it names come from one root"
     );
