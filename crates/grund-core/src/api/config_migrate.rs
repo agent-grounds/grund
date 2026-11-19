@@ -15,15 +15,14 @@ use crate::config::migrate::{
     Gate, GateResult, Located, MigrateFailure, MigrateOutcome, MigrateReport, Prepared, locate,
     member_on_v1, translate,
 };
-use crate::config::report_path;
 use crate::config::{
-    Config, Invocation, PathBase, Project, Selection, config_at, with_report_path_base,
+    Config, Invocation, PathBase, Project, Selection, command_directory, command_path, config_at,
+    report_path, with_report_path_base,
 };
-use crate::model::{Code, Finding, GENERATED_SECTIONS, format_path, relative_from_base};
+use crate::model::{Code, Finding, GENERATED_SECTIONS, format_path};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, walk_scannable_files,
 };
-use crate::sources::canonical_path;
 use crate::writers::{Holds, Install, InstallFailure, atomic_install};
 
 /// The options of one `grund config migrate --to 2` run (§FS-config-migrate.1).
@@ -38,30 +37,37 @@ impl MigrateOpts {
     /// §FS-config-migrate.6.5.1 item 1: the config this run migrates, found by the
     /// discovery [`config_migrate`] runs (§FS-config-migrate.1.1), spelled from the
     /// working directory `dir` for a command pasted there rather than from the
-    /// report base. With a working directory, it is the file as git names it:
-    /// both sides are resolved (§FS-config.1.5), so a link on either adds no
-    /// `..`, and a `PATH` through a link is spelled to where the config is.
-    /// The spelling is `/`-separated, climbs with `..` to a config above `dir`,
-    /// and is absolute where no relative spelling exists, as across Windows
-    /// drives. With `dir=None`, for a process with no working directory, the
-    /// located path is formatted with `/` as discovery reached it from `PATH`:
-    /// absolute for an absolute `PATH`, but potentially relative for a relative
-    /// `PATH`. A relative hint from a deleted directory is not a portable undo.
+    /// report base, by the one spelling every printed command reads: with a
+    /// working directory, the file as git names it, a `PATH` through a link
+    /// spelled to where the config is; with `dir=None`, for a process with no
+    /// working directory, the located path as discovery reached it from `PATH`,
+    /// absolute for an absolute `PATH` but potentially relative for a relative
+    /// one. A relative hint from a deleted directory is not a portable undo.
     /// Returns `None` where discovery finds no config. A frontend's seam,
     /// hidden with this record (§FS-distribution.3.1.2).
     pub fn config_from(&self, dir: Option<&Path>) -> Option<String> {
-        let located = locate(&self.path)?;
-        let Some(dir) = dir else {
-            return Some(format_path(&located.file));
-        };
-        let dir = canonical_path(dir).unwrap_or_else(|_| dir.to_path_buf());
-        Some(format_path(&relative_from_base(&dir, &located.file)))
+        Some(command_path(dir, &locate(&self.path)?.file))
     }
 }
 
 /// §FS-config-migrate: migrate the config `opts.path` discovers, writing it only
-/// with `write`, past both gates, and only by an atomic replace.
+/// with `write`, past both gates, and only by an atomic replace. The working
+/// directory is read here, once, for the commands the report prints
+/// (§FS-config-migrate.6.5.1); a process with none spells them without it.
 pub fn config_migrate(opts: &MigrateOpts) -> Result<MigrateOutcome, MigrateFailure> {
+    config_migrate_in(opts, std::env::current_dir().ok().as_deref())
+}
+
+/// §FS-config-migrate.6.5.1: [`config_migrate`] run in the working directory
+/// `cwd`, which spells the commands the report prints for the user to paste
+/// there — the `strict = false` repair's project root and each `member:` line's
+/// directory — and nothing else. The seam takes it as a parameter, the way
+/// [`MigrateOpts::config_from`] takes its directory, because the process's
+/// working directory is one for every thread, and a test supplies its own.
+pub(super) fn config_migrate_in(
+    opts: &MigrateOpts,
+    cwd: Option<&Path>,
+) -> Result<MigrateOutcome, MigrateFailure> {
     let Some(located) = locate(&opts.path) else {
         return Err(MigrateFailure::NoConfig {
             path: format_path(&opts.path),
@@ -70,6 +76,7 @@ pub fn config_migrate(opts: &MigrateOpts) -> Result<MigrateOutcome, MigrateFailu
     let scope_on_disk = || default_scope_on_disk(&located);
     let prepared = translate(
         &located,
+        cwd,
         opts.write,
         opts.drop_comments,
         &scope_on_disk,
@@ -93,7 +100,7 @@ pub fn config_migrate(opts: &MigrateOpts) -> Result<MigrateOutcome, MigrateFailu
     if !report.refusals.is_empty() {
         return Ok(MigrateOutcome::Migrated(Box::new(report)));
     }
-    report.members = members(&located);
+    report.members = members(&located, cwd);
     // §FS-config-migrate.5.3: guidance `check` would compare refuses before the report gate.
     let mut one_grammar = false;
     if let (Some(GateResult::Equal), Some(candidate)) = (&report.gates, &report.candidate)
@@ -183,8 +190,9 @@ fn v1_reads(mut v1: Config) -> anyhow::Result<Vec<PathBuf>> {
 }
 
 /// §FS-config-migrate.8: each member of the root's `[workspace]` still on
-/// version 1, by its config's path from the root.
-fn members(located: &Located) -> Vec<String> {
+/// version 1, by its config's path from the root and the command, pasted in
+/// `cwd`, that migrates it.
+fn members(located: &Located, cwd: Option<&Path>) -> Vec<String> {
     let invocation = Invocation::new(&located.root, false, Selection::Project);
     let Ok(config) = config_at(&located.root, &located.root, None, &invocation) else {
         return Vec::new();
@@ -198,10 +206,10 @@ fn members(located: &Located) -> Vec<String> {
     roots
         .iter()
         .filter_map(|root| {
-            let file = member_on_v1(root)?;
-            // §AR-config.1.7: both named from the root the command reports from.
-            let member = (root != &located.root).then(|| report_path(&located.root, root));
-            let file = report_path(&located.root, &file);
+            // §AR-config.1.7: the file is a report path, spelled from the root.
+            let file = report_path(&located.root, &member_on_v1(root)?);
+            // §FS-config-migrate.8: the directory is a command's, spelled from where migrate ran.
+            let member = command_directory(cwd, root);
             // §FS-check.checks.config-version-1: the caution's renderer, so both say it alike.
             Some(version_1_caution(&file, member.as_deref()))
         })

@@ -32,7 +32,9 @@
 //! every component above this one was reading it out of the deprecated path's
 //! `output` category. The spelling it renders through is a function of a `Path`
 //! alone and went further down, to `model/paths.rs`; this is the half that needs
-//! a `Config`.
+//! a `Config`. `command_paths.rs` is its counterpart for a command the user
+//! pastes rather than reads: spelled from the working directory instead of the
+//! report base, with links resolved, as one shell word (§FS-config-migrate.6.5.1).
 //! The concern records of §AR-config.1 are `project.rs` and `rows.rs`, with the
 //! invocation's facts in `run.rs` and what is derived once in `compiled.rs`;
 //! a kind's declared fields are `fields.rs`, and its slots over them `slots.rs`
@@ -45,6 +47,7 @@
 mod call_scope;
 mod citation_places;
 mod citations;
+mod command_paths;
 mod compiled;
 mod discovery;
 mod exclude_globs;
@@ -102,6 +105,8 @@ pub use citations::{
     NamespaceMatch,
 };
 pub(crate) use citations::{parse_citation_target_entry, render_citation_target};
+pub use command_paths::path_word;
+pub(crate) use command_paths::{command_directory, command_path};
 pub use compiled::Compiled;
 pub(crate) use compiled::RefusedHome;
 pub(crate) use exclude_globs::ExcludeGlobs;

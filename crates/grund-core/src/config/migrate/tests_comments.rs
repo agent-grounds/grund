@@ -17,7 +17,7 @@ fn report(name: &str, toml: &str) -> MigrateReport {
         config: "grund.toml".into(),
     };
     let prepared =
-        translate(&located, false, false, &|| true, &|_| Ok(Vec::new())).expect("translates");
+        translate(&located, None, false, false, &|| true, &|_| Ok(Vec::new())).expect("translates");
     match prepared {
         Prepared::Translated { report, .. } => *report,
         Prepared::AlreadyV2 => panic!("read as version 2"),

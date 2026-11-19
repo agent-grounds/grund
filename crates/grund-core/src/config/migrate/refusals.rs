@@ -14,10 +14,32 @@ use crate::config::point_sizes::PointSizeUnit;
 use crate::config::project::Project;
 use crate::config::v1::LineKind;
 use crate::config::v2::{read_string_as_before, read_string_list_as_before};
-use crate::config::{fetch_key_name, fetch_key_repair, names_no_executable};
+use crate::config::{command_directory, fetch_key_name, fetch_key_repair, names_no_executable};
 
 fn at(line: Option<usize>) -> RefusalAnchor {
     line.map_or(RefusalAnchor::Unset, RefusalAnchor::Line)
+}
+
+/// Where a run stands: the root of the project it migrates, and the working
+/// directory its printed commands are spelled from, `None` for a process with
+/// none (§FS-config-migrate.6.5.1).
+#[derive(Clone, Copy)]
+pub(super) struct Here<'a> {
+    pub(super) root: &'a Path,
+    pub(super) cwd: Option<&'a Path>,
+}
+
+/// §FS-config-migrate.3.1.2: the repair for bare citations, `fmt --marker
+/// --write` on the refused project's root and not on `PATH`, since `fmt`
+/// narrows to a path it is given (§FS-fmt.1). The root is spelled from the
+/// working directory and left out where it is that directory
+/// (§FS-config-migrate.6.5.1 item 1); for an `.agents/grund.toml` it is the
+/// project root discovery recorded, not `.agents/`.
+fn bare_citations_repair(here: Here<'_>) -> String {
+    let root = command_directory(here.cwd, here.root).map_or_else(String::new, |r| format!(" {r}"));
+    format!(
+        "run grund fmt --marker --write{root}, then set [reference] strict = true under version 1"
+    )
 }
 
 fn refusal(anchor: RefusalAnchor, what: String, repair: &str) -> MigrateRefusal {
@@ -36,6 +58,7 @@ pub(super) fn settings(
     keys: &Keys,
     reads: &Reads<'_>,
     block: Block,
+    here: Here<'_>,
 ) -> Result<Vec<MigrateRefusal>> {
     let mut out = Vec::new();
     let schema = &v1.schema;
@@ -44,7 +67,7 @@ pub(super) fn settings(
         out.push(refusal(
             at(keys.line("reference", "strict")),
             "[reference] strict = false recognizes bare citations, and version 2 recognizes only marked ones".into(),
-            "run grund fmt --marker --write, then set [reference] strict = true under version 1",
+            &bare_citations_repair(here),
         ));
     }
     // §FS-config-migrate.3.1.1, never on a block nobody reads (§FS-config-migrate.8.1.1)

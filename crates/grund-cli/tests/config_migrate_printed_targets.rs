@@ -348,7 +348,6 @@ fn member_case(name: &str, root: &str, config: &str, cwd: &str, args: &[&str], d
 /// A. Migrated from its parent by `PATH` `sub`, the refused project's repair
 /// names `sub`, and pasted in the parent it marks the project's bare citations.
 #[test]
-#[ignore = "red until #1458 spells migrate's repair and member: directories from the working directory; implement removes this"]
 fn the_repair_pasted_in_the_parent_marks_the_refused_project() {
     let marked = ["sub/docs/ar/AR-x.md", "sub/docs/notes.md"];
     repair_case("parent", "sub/grund.toml", "", &["sub"], " sub", &marked);
@@ -358,7 +357,6 @@ fn the_repair_pasted_in_the_parent_marks_the_refused_project() {
 /// the repair names the project root, not `PATH`: migrating `sub/docs/ar` names
 /// `sub`, and the pasted repair marks `docs/notes.md` outside that path too.
 #[test]
-#[ignore = "red until #1458 spells migrate's repair and member: directories from the working directory; implement removes this"]
 fn the_repair_names_the_project_root_not_the_path() {
     let marked = ["sub/docs/ar/AR-x.md", "sub/docs/notes.md"];
     repair_case(
@@ -375,7 +373,6 @@ fn the_repair_names_the_project_root_not_the_path() {
 /// project root is `..`. Today's bare repair already formatted the whole
 /// project from there, so only the bytes move.
 #[test]
-#[ignore = "red until #1458 spells migrate's repair and member: directories from the working directory; implement removes this"]
 fn the_repair_from_a_project_subdirectory_names_the_root_above() {
     let marked = ["sub/docs/ar/AR-x.md", "sub/docs/notes.md"];
     repair_case("subdir", "sub/grund.toml", "sub/docs", &[], " ..", &marked);
@@ -384,7 +381,6 @@ fn the_repair_from_a_project_subdirectory_names_the_root_above() {
 /// §FS-config-migrate.6.5.1 item 1: for an `.agents/grund.toml` the repair
 /// names the project root, not `.agents/`.
 #[test]
-#[ignore = "red until #1458 spells migrate's repair and member: directories from the working directory; implement removes this"]
 fn an_agents_config_repair_names_the_project_root() {
     let marked = ["sub/docs/ar/AR-x.md"];
     repair_case(
@@ -401,7 +397,6 @@ fn an_agents_config_repair_names_the_project_root() {
 /// word, and one that would start with `-` gets `./`, since grund takes no
 /// `PATH` that starts with `-`.
 #[test]
-#[ignore = "red until #1458 spells migrate's repair and member: directories from the working directory; implement removes this"]
 fn the_repair_directory_pastes_as_one_shell_word() {
     let marked = ["my app/docs/ar/AR-x.md"];
     repair_case(
@@ -420,7 +415,6 @@ fn the_repair_directory_pastes_as_one_shell_word() {
 /// From `ws/docs` with no `PATH`, the pasted command migrates the member, not
 /// the root its discovery reaches when the directory is spelled from the root.
 #[test]
-#[ignore = "red until #1458 spells migrate's repair and member: directories from the working directory; implement removes this"]
 fn the_member_command_pasted_below_the_root_migrates_the_member() {
     member_case(
         "subdir",
@@ -436,7 +430,6 @@ fn the_member_command_pasted_below_the_root_migrates_the_member() {
 /// From the root's parent with `PATH` `ws`, the pasted command reaches the
 /// member instead of failing on a directory that is not there.
 #[test]
-#[ignore = "red until #1458 spells migrate's repair and member: directories from the working directory; implement removes this"]
 fn the_member_command_pasted_above_the_root_migrates_the_member() {
     member_case("parent", "ws/", "grund.toml", "", &["ws"], " ws/apps/api");
 }
@@ -444,7 +437,6 @@ fn the_member_command_pasted_above_the_root_migrates_the_member() {
 /// §FS-config-migrate.6.5.1 item 1: for a member's `.agents/grund.toml` the
 /// command names the member's root, not `.agents/`.
 #[test]
-#[ignore = "red until #1458 spells migrate's repair and member: directories from the working directory; implement removes this"]
 fn an_agents_member_is_named_by_its_project_root() {
     member_case(
         "agents",
@@ -460,7 +452,6 @@ fn an_agents_member_is_named_by_its_project_root() {
 /// that needs quoting is quoted and one starting with `-` gets `./`, while the
 /// files stay report paths.
 #[test]
-#[ignore = "red until #1458 spells migrate's repair and member: directories from the working directory; implement removes this"]
 fn the_member_directories_paste_as_one_shell_word() {
     let tree = Tree::new("grund-1458-word-members");
     tree.workspace("", &["apps/my api", "-x"], "grund.toml");

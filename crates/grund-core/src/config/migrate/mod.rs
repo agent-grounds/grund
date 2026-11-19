@@ -122,7 +122,9 @@ fn read_v1(text: &str, report: &Path, root: &Path) -> Result<(Project, Vec<LineR
 }
 
 /// §FS-config-migrate: translate the config at `located`, everything but the
-/// report gate, the members and the write. `scope_on_disk` says whether a root
+/// report gate, the members and the write. `cwd` is the working directory the
+/// run's printed commands are spelled from, `None` for a process with none
+/// (§FS-config-migrate.6.5.1). `scope_on_disk` says whether a root
 /// of the file's version-1 default scope exists outside its member roots, which
 /// only the surface above config can answer (§FS-config-migrate.8.1.2 item 1).
 /// `v1_walk` is the scan's walk of the version 1 façade, which only that surface
@@ -130,6 +132,7 @@ fn read_v1(text: &str, report: &Path, root: &Path) -> Result<(Project, Vec<LineR
 /// §FS-config-migrate.3.1.5.1).
 pub(crate) fn translate(
     located: &Located,
+    cwd: Option<&Path>,
     write: bool,
     drop_comments: bool,
     scope_on_disk: &dyn Fn() -> bool,
@@ -187,7 +190,8 @@ pub(crate) fn translate(
     );
     // §AR-config.8.1: one read set for both details, walked only if one asks.
     let reads = reads::Reads::new(&project, root, &scan_roots, v1_walk);
-    let mut refusals = refusals::settings(&project, &keys, &reads, block)?;
+    let here = refusals::Here { root, cwd };
+    let mut refusals = refusals::settings(&project, &keys, &reads, block, here)?;
     refusals.extend(places::nested_homes(&project, &keys, &reads)?);
     refusals.extend(include.refusals.iter().cloned());
     refusals.extend(languages.refusals.iter().cloned());

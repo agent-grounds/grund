@@ -28,32 +28,15 @@ impl MigrateCommands {
     }
 
     /// §FS-config-migrate.6.5.1 item 3: the pure spelling, from the config's
-    /// spelling supplied by the core and the `PATH` as given.
+    /// spelling supplied by the core and the `PATH` as given, in the core's
+    /// shell words, the ones its own printed commands are spelled in.
     fn spelled(restore: Option<&str>, given: Option<&str>) -> Self {
         // `git` reads a word that starts with `-` as an option and one that
         // starts with `:` as pathspec magic; `./` makes either a path.
-        let restore = restore.map(|restore| {
-            if restore.starts_with(['-', ':']) {
-                shell_word(&format!("./{restore}")).into_owned()
-            } else {
-                shell_word(restore).into_owned()
-            }
-        });
-        let path = given.map_or_else(String::new, |given| format!(" {}", shell_word(given)));
+        let restore = restore.map(|restore| path_word(restore, &['-', ':']));
+        // `PATH` keeps the spelling it was given: grund takes none that starts with `-`.
+        let path = given.map_or_else(String::new, |given| format!(" {}", path_word(given, &[])));
         Self { restore, path }
-    }
-}
-
-/// §FS-config-migrate.6.5.1 item 3: `text` as one POSIX shell word — as it is
-/// when every character is an ASCII letter, a digit or one of `_ - . / , : @ % + =`,
-/// otherwise between single quotes with each `'` written `'\''`. The empty
-/// word is quoted too, so it is still a word.
-fn shell_word(text: &str) -> std::borrow::Cow<'_, str> {
-    let safe = |c: char| c.is_ascii_alphanumeric() || "_-./,:@%+=".contains(c);
-    if !text.is_empty() && text.chars().all(safe) {
-        std::borrow::Cow::Borrowed(text)
-    } else {
-        std::borrow::Cow::Owned(format!("'{}'", text.replace('\'', r"'\''")))
     }
 }
 

@@ -1,17 +1,20 @@
 //! Test module: the caution a config file read as version 1 earns
 //! (§FS-check.checks.config-version-1, §FS-config.5.3) — for an explicit `1` and
 //! an omitted version, never for version 2 or a project with no config file,
-//! and in the same bytes `config migrate` prints for a member still on version 1.
+//! and in the same bytes `config migrate` prints for a member still on version 1
+//! when it runs at the workspace root, its directory spelled from where it ran
+//! anywhere else (§FS-config-migrate.6.5.1).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::path::Path;
 
 use super::check::{CheckOpts, check_with_projects};
 use super::config_findings::config_diagnostics;
+use super::config_migrate::config_migrate_in;
 use crate::config::load_config;
 use crate::model::Diagnostic;
 use crate::testing::{test_root, write};
-use crate::{MigrateOpts, MigrateOutcome, config_migrate};
+use crate::{MigrateOpts, MigrateOutcome};
 
 /// A project whose config is `config` at `file` (none when `None`), under a
 /// fresh root.
@@ -98,9 +101,25 @@ fn an_agents_config_names_the_project_root_after_the_location_warning() {
     );
 }
 
+/// The `member:` lines a preview of the workspace at `root` prints, run in `cwd`.
+fn migrate_members(root: &Path, cwd: &Path) -> Vec<String> {
+    let opts = MigrateOpts {
+        path: root.to_path_buf(),
+        write: false,
+        drop_comments: false,
+    };
+    let outcome = config_migrate_in(&opts, Some(cwd)).expect("the preview runs");
+    let MigrateOutcome::Migrated(report) = outcome else {
+        panic!("the root is on version 1");
+    };
+    report.members
+}
+
 /// §FS-check.checks.config-version-1, §FS-config-migrate.8: the caution `check`
 /// prints for a v1 member and the member line `config migrate` prints for it
-/// are the same bytes.
+/// are the same bytes when migrate runs at the workspace root; run from below
+/// it, they differ in the directory alone, which the migrate line spells from
+/// where it ran (§FS-config-migrate.6.5.1 item 1).
 #[test]
 fn the_member_caution_and_the_migrate_member_line_are_the_same_bytes() {
     let root = test_root("config-version-1-member-line");
@@ -143,14 +162,11 @@ fn the_member_caution_and_the_migrate_member_line_are_the_same_bytes() {
         ]
     );
 
-    let outcome = config_migrate(&MigrateOpts {
-        path: root.clone(),
-        write: false,
-        drop_comments: false,
-    })
-    .expect("the preview runs");
-    let MigrateOutcome::Migrated(report) = outcome else {
-        panic!("the root is on version 1");
-    };
-    assert_eq!(report.members, [member]);
+    assert_eq!(migrate_members(&root, &root), [member]);
+    assert_eq!(
+        migrate_members(&root, &root.join("docs")),
+        ["packages/beta/grund.toml is version 1; \
+          migrate it with grund config migrate --to 2 ../packages/beta"],
+        "from docs only the directory moves; the file stays a report path"
+    );
 }
