@@ -238,12 +238,17 @@ fn a_workspace_pinned_target_wins_over_the_six() {
     let md = "[schema.sources.extensions]\nmd = \"json\"\n";
     let root_md = root.replacen("\n\n", &format!("\n\n{md}\n"), 1);
     let member_md = member.replacen("\n\n", &format!("\n\n{md}\n"), 1);
-    let pinned = "grund.toml: [rules.citations.FS] must names an unknown target kind `NOPE` in \
-                  namespace `api`; this became an error in grund 0.19.0";
-    for (name, root, member) in [
-        ("ws-root", root_md.as_str(), member),
-        ("ws-member", root, member_md.as_str()),
+    let pinned = |line: usize| {
+        format!(
+            "grund.toml:{line}: [rules.citations.FS] must names an unknown target kind `NOPE` in \
+             namespace `api`; this became an error in grund 0.19.0"
+        )
+    };
+    for (name, root, member, line) in [
+        ("ws-root", root_md.as_str(), member, 10),
+        ("ws-member", root, member_md.as_str(), 7),
     ] {
-        Tree::new(name, &[("grund.toml", root), ("api/grund.toml", member)]).refused_for(pinned);
+        let files = [("grund.toml", root), ("api/grund.toml", member)];
+        Tree::new(name, &files).refused_for(&pinned(line));
     }
 }
