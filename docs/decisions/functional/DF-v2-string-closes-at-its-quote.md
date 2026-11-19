@@ -42,7 +42,7 @@ The line the remedy names is the line the string closes early on, which in an ar
 
 ### 2.5 Version 1 keeps its reading for good
 
-A version-1 file keeps its meaning and its validation in every release, and the stricter rules of version 2 never refuse a file version 1 accepts ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)). So version 1 reads these strings as it always has, with no refusal and no warning of its own: the `config-version-1` caution already names the command that moves it to version 2. The rule meets a version-1 file at that command instead. `config migrate --to 2` refuses a string that closes early at its key's line and gives the version-1 repair ([§FS-config-migrate.3.1.8](../../functional-spec/FS-config-migrate.md#318-a-string-that-closes-early)), because writing the value out escaped would carry the typo into version 2 as valid TOML.
+A version-1 file keeps its meaning and its validation in every release, and the stricter rules of version 2 never refuse a file version 1 accepts ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)). So version 1 reads these strings as it always has, with no refusal and no warning of its own: the `config-version-1` caution already names the command that moves it to version 2. The rule meets a version-1 file at that command instead. `config migrate --to 2` refuses a string that closes early at its key's line and gives the version-1 repair ([§FS-config-migrate.3.1.8](../../functional-spec/FS-config-migrate.md#318-a-string-that-closes-early)), because writing the value out escaped would carry the typo into version 2 as valid TOML.
 
 ### 2.6 The quick readers record nothing
 
@@ -52,7 +52,7 @@ The readers that read one key of a config without loading it, the name of a conf
 
 **Refuse in this release.** Rejected on [§DF-v2-string-closes-at-its-quote.2.2](DF-v2-string-closes-at-its-quote.md#22-the-route-is-the-deprecation-window): it is the correction route with no hard requirement behind it, and it would fail every command on a repository that loads today, with no release to fix it in.
 
-**Refuse in version 1 too, through a window of its own.** Rejected on [§DF-v2-string-closes-at-its-quote.2.5](DF-v2-string-closes-at-its-quote.md#25-version-1-keeps-its-reading-for-good): it would break a version-1 file that version 1 accepts, which [§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path) rules out for every older version.
+**Refuse in version 1 too, through a window of its own.** Rejected on [§DF-v2-string-closes-at-its-quote.2.5](DF-v2-string-closes-at-its-quote.md#25-version-1-keeps-its-reading-for-good): it would break a version-1 file that version 1 accepts, which [§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows) rules out for every older version.
 
 **A code of its own.** Rejected on [§DF-v2-string-closes-at-its-quote.2.3](DF-v2-string-closes-at-its-quote.md#23-one-code-with-a-remedy-for-where-the-string-stands): the class it would name is `config-not-toml`'s, and a second code for it would let `--ignore config-not-toml` keep one TOML refusal and hide another.
 

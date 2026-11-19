@@ -6,7 +6,7 @@
 
 ## context: Context
 
-`grund init` writes a version 2 config ([issue #462](https://github.com/agent-grounds/grund/issues/462)) and grund's own config is on version 2 ([issue #464](https://github.com/agent-grounds/grund/issues/464)), yet a repository that copied a version 1 file from an older one is never told that version 2 exists or how to move to it: a clean run prints `success` and says nothing about the format. Version 1 keeps its meaning permanently ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)), so the deprecation path can only nudge, never retire ([§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
+`grund init` writes a version 2 config ([issue #462](https://github.com/agent-grounds/grund/issues/462)) and grund's own config is on version 2 ([issue #464](https://github.com/agent-grounds/grund/issues/464)), yet a repository that copied a version 1 file from an older one is never told that version 2 exists or how to move to it: a clean run prints `success` and says nothing about the format. Version 1 keeps its meaning permanently ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)), so the deprecation path can only nudge, never retire ([§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
 
 ## decision: Decision
 

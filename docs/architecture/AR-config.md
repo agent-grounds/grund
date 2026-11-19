@@ -7,7 +7,7 @@ and `presentation` say what exists, how it relates and what bytes get written;
 a `Run` for the facts of one invocation; and a `Compiled` for what is derived
 from the `Project` once. No component above config reads a version number, so a
 second reader is a new file under `config/` and nothing else
-([§FS-config.5.2](../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)). This page is the decision [§DA-config-concern-records](../decisions/architectural/DA-config-concern-records.md#da-config-concern-records-the-configuration-becomes-three-concern-records-inside-an-envelope-and-the-checker-splits-in-two) made,
+([§FS-config.5.2](../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)). This page is the decision [§DA-config-concern-records](../decisions/architectural/DA-config-concern-records.md#da-config-concern-records-the-configuration-becomes-three-concern-records-inside-an-envelope-and-the-checker-splits-in-two) made,
 written down as the shape the code has; the sketch it amends is
 [§DISC-core-concerns.5.1](../discussions/proposals/2026-09-30-core-concerns.md#51-the-core-records).
 

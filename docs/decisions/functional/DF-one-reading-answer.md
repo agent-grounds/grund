@@ -42,7 +42,7 @@ Taking the name test away moves four verdicts, each from `2` to whatever the run
 
 ### 2.5 Version 1 does not move
 
-Version 1's readings are its names, so routing its questions through the one predicate changes no answer: its index must still be named `.md`, its rule homes still pass the name test, and its value row still has exactly one home ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-by-the-deprecation-path)).
+Version 1's readings are its names, so routing its questions through the one predicate changes no answer: its index must still be named `.md`, its rule homes still pass the name test, and its value row still has exactly one home ([§FS-config.5.2](../../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)).
 
 ### 2.6 Fetch reads its output as before
 
