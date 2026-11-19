@@ -8,9 +8,8 @@ to that shape, on the channel each field's strength names. The contract is
 actually write, and the runnable [`examples/fields/`](../../examples/fields/)
 repository checks three of them.
 
-Fields are version 2 only. A version-1 `[[kinds]]` row keeps meaning what it
-meant, and `fields` on it is an unknown key; see
-[writing the config in version 2](repository-options.md#write-the-config-in-version-2).
+Fields are configured on version-2 kind tables; see
+[writing the config](repository-options.md#write-the-config-in-version-2).
 
 ## A field is a table under its kind
 
@@ -260,10 +259,8 @@ fourth.
 content = "values"
 ```
 
-A `content = "values"` field is the version-2 spelling of v1's
-`value_chapter`: every named child of that chapter is a value root, with the
-same coordinates, the same `invalid-value-declaration` findings and the same
-prerequisites ([§FS-fields.content.values](../functional-spec/FS-fields.md#contentvalues-a-values-field-is-the-value-chapter)). A fetched kind
+A `content = "values"` field makes every named child of that chapter a value
+root ([§FS-fields.content.values](../functional-spec/FS-fields.md#contentvalues-a-values-field-is-the-value-chapter)). A fetched kind
 [takes no field](#rule-and-value-kinds), so its `value_chapter` has no such
 spelling ([§FS-config-migrate.3.1.7.1](../functional-spec/FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)). What the field adds is optional: a
 `presence`, a `position` or a `title`. A kind has at most one values field. The
@@ -274,16 +271,16 @@ spelling ([§FS-config-migrate.3.1.7.1](../functional-spec/FS-config-migrate.md#
 ```toml
 [schema.kinds.CONST]
 folders = ["values"]
+index = false
 form = "value"
 
 [schema.kinds.RULE]
 folders = ["docs/rules"]
+index = false
 form = "rule"
 ```
 
-`form = "value"` is v1's `values = true` and `form = "rule"` is v1's
-`rules = true`: the same declarations, findings and prerequisites, refused with
-the same messages at the `form` key ([§FS-fields.forms](../functional-spec/FS-fields.md#forms-form-lowers-to-the-version-1-contracts)). A value kind's
+`form = "value"` enables value declarations and `form = "rule"` enables rule declarations ([fields guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/fields.md#rule-and-value-kinds)). A value kind's
 children are numbered components, so it takes no fields and cannot be closed;
 neither can a kind that is not citable or one whose declarations are fetched.
 A rule kind takes fields like any prose kind, including a values field.
@@ -361,7 +358,7 @@ bullet per key nested under it.
 The section sits in the `AGENTS.md` of the directory above the kind's places,
 or in the root block under `[presentation] rules = "root"`
 ([scoped guidance](init.md#scoped-guidance-in-a-version-2-config)). A declared
-field moves the block to v49, or v50 where a rule kind is enabled, so the first
+field moves the block to its scoped revision; see [the current revision list](init.md#the-blocks-revision-is-not-grunds-release), so the first
 `grund check` after adding one reports the block outdated until `grund init`
 runs ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)).
 

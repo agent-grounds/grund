@@ -379,11 +379,11 @@ match as a *location*.
 **You want everyone served, not just you** — teammates who will never run a
 setup command, cloud agent sessions, CI reviewers, and Cursor or Windsurf,
 which have no user-level file grund can write. Commit the opinion in the
-repository's `grund.toml`
+repository's `grund.toml`, which uses `[presentation]`
 ([§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)):
 
 ```toml
-[reference]
+[presentation]
 conversation = "link"
 ```
 
@@ -393,20 +393,24 @@ that reaches readers whose machines grund never touched.
 
 ### 5.1 The key, and where to put it
 
-The setting has one name, `[reference] conversation`, and lives in two files.
-Which file you put it in is the whole decision — it decides *who* is
-instructed, and that in turn decides which values are legal:
+In the repository the setting is `[presentation] conversation`; on your
+machine it is `[reference] conversation`. The machine file is not versioned and
+always uses `[reference]`. Which file you put it in decides *who* is instructed,
+and that in turn decides which values are legal:
 
 | File | Scope | Values | Instructs |
 |---|---|---|---|
 | `~/.config/grund/config.toml` (or `$XDG_CONFIG_HOME/grund/config.toml`) | this machine, every repository | `plain` \| `link` | every agent you run here |
-| `<repo>/grund.toml`, committed | this repository, every machine | `link` only | every agent that clones it |
+| `<repo>/grund.toml`, committed (`[presentation]`) | this repository, every machine | `link` only | every agent that clones it |
 
 ```toml
 # ~/.config/grund/config.toml — your machine
 [reference]
 conversation = "plain"   # or "link"
 ```
+
+The machine file always uses `[reference]`, including when the repository uses
+version 2.
 
 **Use the machine file** to describe *your* setup: `plain` when you installed
 an integration from [section 1](#1-install) and bare citations are already clickable
@@ -642,10 +646,13 @@ today.
    `>>> grund integrations citation rendering` HTML comments; everything
    outside it is yours and was never touched.
 
-No repository is involved in any of this. If you also committed the
-`[reference] conversation` opinion of [section 5.1](#51-the-key-and-where-to-put-it)
-in a repository's `grund.toml`, that is a separate, checked-in setting —
-remove it there and re-run `grund init`.
+No repository is involved in any of this. For repository setup removal, see
+[Removing grund from a repository](init.md#removing-grund-from-a-repository).
+If you also committed the
+`[presentation] conversation` opinion in a version-2 repository, or the
+repository conversation opinion, as described in
+[section 5.1](#51-the-key-and-where-to-put-it), that is a separate, checked-in
+setting — remove it there and re-run `grund init`.
 
 ---
 

@@ -189,6 +189,14 @@ already-version-2 output. It can be combined with PATH,
 `--drop-comments` and either `--path-base`
 ([§FS-config-migrate.1.3](../functional-spec/FS-config-migrate.md#13-the-other-flags)).
 
+The written candidate preserves version 1's reading by defining `v1_*` languages
+and spelling out version 1's defaults. After migration, you can edit it to use
+version 2's [built-in languages](sources.md) or defaults, but those ordinary
+config changes can change findings; check them with `grund check` and inspect
+settings with [`grund config explain`](explain.md). The [configuration reference](configuration.md)
+describes the version-2 settings. Run [`grund init`](init.md) to refresh the
+managed instructions after the migration.
+
 ## Workspaces
 
 Migration touches one config. A workspace root lists each member still on
@@ -274,3 +282,34 @@ what it means
 Migrating is what ends it. Until then, `grund check --ignore config-version-1`
 leaves it out and restores `success`; under `--format json` it is the stderr
 finding with code `config-version-1`.
+
+
+## Moving source settings by hand
+
+`grund config migrate --to 2` writes this out for you:
+every version-1 source default that differs from version 2's is written into the
+candidate. A block with `include_root = false` that nothing would scan is the
+exception: it takes version 2's defaults, since no project reads its files.
+To keep the meaning when moving by hand:
+
+1. Write `declarations = "any-comment"`. That is version 1's reading, and you
+   can switch to `"doc-comments"` once the duplicates it would expose are fixed.
+2. Write `languages` out. For each v1 extension that has no epoch row, add a
+   mapping, and a definition when no built-in language has its comment syntax.
+3. For `.py` with `docstring_python = false`, define a language with
+   `docstrings = "off"`, so a triple-quoted string keeps its raw reading.
+4. Turn each `[scan] exclude` name into the directory glob `<name>/`.
+
+The migration refuses, and so should you, where a v2 table cannot say the same
+thing:
+
+- a v1 `exclude` entry containing `/`. Version 1 never matched it, and as a glob
+  it would start excluding files.
+- a `.json` scanned as text while a kind's `values` also reads it as values. One
+  file has one class.
+- an extension or prefix outside what a mapping or definition accepts, or a
+  source extension that would read no comment.
+- an empty string in `[scan] extensions`, which version 1 keeps reading for
+  compatibility: it reads every file with no extension, and version 2 has no such
+  entry. Remove it under version 1, and give any such file you want read an
+  extension the list holds. `grund check` shows the effect.

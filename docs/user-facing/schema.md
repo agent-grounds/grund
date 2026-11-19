@@ -1,5 +1,7 @@
 # Seeing a repository's schema
 
+Configuration reference: [`[schema.kinds.<NAME>]`, `[rules.citations]` and related tables](configuration.md#schemakindsname) covers the kind places, declaration forms and citation directions shown by `grund schema`.
+
 `grund schema` prints what a repository is held to, on one screen: which kinds
 exist and where they live, which folders are places rather than ID namespaces,
 what shape each kind's declarations must have, which units must be grounded, and
@@ -7,7 +9,7 @@ who must cite whom and how strongly. It reads the effective configuration and
 nothing else, so it answers before the first declaration is written and on a tree
 whose citations are broken. The contract is
 [§FS-schema](../functional-spec/FS-schema.md#fs-schema-grund-schema-shows-what-a-repository-is-held-to-read-from-its-configuration-alone); the runnable
-[`examples/schema/`](../../examples/schema/) repository prints everything below.
+[`examples/schema/repo/`](../../examples/schema/repo/) repository prints everything below.
 
 ```bash
 grund schema                         # the quick terminal view
@@ -105,7 +107,6 @@ them and has no `grounded` badge, the legend says so in a fourth line:
 must/warn/should skip an uncited file of a place or the complement · [rules.citations.<ROW>.grounding] makes it a finding
 ```
 
-A version-1 config reads `require_grounding` in its place. The example above
 grounds both its place and the complement, so it has no such line;
 [`examples/places/`](../../examples/places/) shows one
 ([§FS-schema.8.3](../functional-spec/FS-schema.md#83-the-legend-says-an-obligation-skips-an-uncited-file)).

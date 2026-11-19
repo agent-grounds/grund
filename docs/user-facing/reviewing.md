@@ -4,13 +4,34 @@ Before changing or removing a declaration, see what leans on it:
 
 ```bash
 $ grund refs FS-check.3.2 --summary
-crates/grund-cli/tests/index_entry_round_trip.rs: 1 (line 229)
-crates/grund-core/src/checker/index.rs: 2 (lines 152, 258)
-crates/grund-core/src/checker/references.rs: 2 (lines 2, 378)
-crates/grund-core/src/checker/report.rs: 2 (lines 85, 486)
-docs/decisions/functional/DF-duplicate-section-path.md: 1 (line 26)
-docs/decisions/functional/DF-require-grounding.md: 1 (line 8)
+crates/grund-cli/tests/index_entry_round_trip.rs: 1 (line 232)
+crates/grund-core/src/checker/index.rs: 2 (lines 204, 354)
+crates/grund-core/src/checker/judge.rs: 1 (line 89)
+crates/grund-core/src/checker/references.rs: 2 (lines 2, 333)
+crates/grund-core/src/checker/report.rs: 1 (line 185)
+crates/grund-core/src/checker/tests_local_section_citations.rs: 3 (lines 2, 241, 356)
+crates/grund-core/src/model/codes.rs: 1 (line 105)
+crates/grund-core/src/model/remedies/check.rs: 1 (line 352)
+crates/grund-core/src/model/stub_resolution.rs: 1 (line 176)
+docs/decisions/functional/DF-duplicate-section-path.md: 1 (line 27)
+docs/decisions/functional/DF-local-section-absent-target-escape.md: 1 (line 13)
+docs/decisions/functional/DF-require-grounding.md: 1 (line 9)
+docs/functional-spec/FS-check.md: 8 (lines 500, 508, 938, 950, 1059, 1171, 1223, 1269)
+docs/functional-spec/FS-citations.md: 3 (lines 151, 198, 402)
+docs/functional-spec/FS-declarations.md: 1 (line 1006)
+docs/functional-spec/FS-errors.md: 1 (line 760)
+docs/functional-spec/FS-fmt.md: 3 (lines 205, 210, 539)
+docs/functional-spec/FS-languages.md: 1 (line 94)
+docs/functional-spec/FS-rules.md: 1 (line 795)
+docs/functional-spec/FS-section-lock.md: 7 (lines 155, 175, 177, 189, 191, 195, 211)
+docs/related-work/REL-doc-reference-checkers.md: 1 (line 147)
+docs/related-work/REL-documentation-decay.md: 1 (line 75)
+docs/related-work/REL-traceability-tools.md: 1 (line 46)
 docs/requirements/REQ-no-wrong-citation.md: 1 (line 7)
+docs/roadmap.md: 1 (line 287)
+examples/quickstart/README.md: 1 (line 6)
+examples/rust-rfc/README.md: 1 (line 351)
+examples/spec-kit/README.md: 1 (line 311)
 ```
 
 A section's children break when it moves, so before a move, rename or delete ask the same question of the whole subtree: `grund refs FS-check.3.2 --descendants --summary` folds that section *and every section beneath it* into the same one-line-per-file shape, which is the blast radius of the change rather than of the coordinate. Swap `--summary` for `--total` and the same subtree folds one rung further, to the pair `cited at <n> sites across <m> files` — the size of the move, without the rows ([§FS-refs.3.4](../functional-spec/FS-refs.md#34---total)).
@@ -38,11 +59,19 @@ $ grund cover crates/grund-core/src/checker/references.rs --glob 'FS-check.3.2' 
 ```console
 $ grund cover docs/functional-spec/FS-config.md --lines 115-124
 docs/functional-spec/FS-config.md:115-124
-  115-118  FS-config.requirements.7
-  119-122  FS-config.requirements.8
-  123-124  FS-config.1
+  115  FS-config.requirements.5
+  116-119  FS-config.requirements.6
+  120-123  FS-config.requirements.7
+  124  FS-config.requirements.8
 ```
 
 Each row is a run of lines and the unit that owns it, by the rules the scan itself uses, so named sections, fenced headings and the end of a doc-comment come out as `check` sees them. Pass one `--lines` per hunk to answer a whole file in one scan, and `--format json` for the records of [§FS-output-shapes.5.3](../functional-spec/FS-output-shapes.md#53-cover---lines---formatjson). This is ownership, not coverage: it says which unit a line lies in, never that the line is grounded.
 
+Lines removed by a hunk belong to the base tree: run
+`grund cover <file> --lines <old range>` in a checkout of the base, for example
+a `git worktree add` of it. A hunk with no new-side lines has nothing to ask
+the head checkout about.
+
 For an agent reviewing a code change, the loop is mechanical: list the `§…` citations in the changed files, run `grund <ID>` on each, and ask "does the code still match what the spec claims?"
+
+A changed line in `.grund/sections/<ID>.lock` (`-<address> <old>` / `+<address> <new>`) means the text at that address changed. For each changed address, run `grund refs <address>` and reread every citer against `grund <address>`, including citers outside the diff that may now read different text.

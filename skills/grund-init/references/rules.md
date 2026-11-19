@@ -22,8 +22,11 @@ Subjects select local units only:
 
 Named chapter subjects select handles: `The goal chapter of each FS` reaches `## goal: Goal and hypothesis` by `goal` ([chapter subjects](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#2-subject-selectors)). Presence rules compare direct chapter display names case-insensitively: `Each FS must have exactly one goal chapter.` counts zero for that heading and one for `## goal: Goal` ([presence matching](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#31-chapter-presence)). The finding appends the expected display name and observed pairs such as `"goal: Goal and hypothesis"`, or `none` ([comparison context](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#721-display-name-comparison-context)). Presence `NAME` must be one non-empty token: `Goal and hypothesis` is refused with `NAME forbids whitespace anywhere.` appended to the existing guidance; authored display titles may still contain spaces ([whitespace refusal](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#351-presence-name-whitespace-refusal)).
 
-Named-chapter subjects require `[id] named_sections = true` in version 1;
-version 2 always reads named sections. Phase 1 has no paths, files, folders,
+Chapter subjects and presence rules count named sections only; numbered
+sections do not count as chapters. For a `Terms` chapter rule, change
+`## 1. Terms` to `## terms: Terms`.
+
+Phase 1 has no paths, files, folders,
 wildcards, subject namespaces, numbered-chapter subjects, exceptions,
 definitions, derived terms, settings, or source-code symbols.
 
@@ -158,7 +161,6 @@ Common refusals are intentional. A sentence is refused for the first stage it fa
 - `FS-login.* must cite at least one REQ.` → `section-component wildcards are not accepted in phase 1` (no rewrite)
 - `Each chapter of each FS must cite at least one REQ.` → `chapter-quantified subjects are not accepted in phase 1` (no rewrite)
 - `FS-login.2 must cite at least one REQ.` → `numbered chapter subjects can detach when headings move` (no rewrite)
-- With named sections off, `FS-login.requirements must cite at least one REQ.` → `named chapter subjects require [id] named_sections = true; accepted form after enabling it: FS-login.requirements must cite at least one REQ.`
 - `Each POLICY must cite at least one GOAL.` → `unknown kind "POLICY"`, then `known kinds: GOAL, REQ, FS, AR, RULE`
 - `Each FS must cite at least one distinct GOAL.` → `"distinct" is redundant after "at least one"; accepted form: Each FS must cite at least one GOAL.`
 - `Each FS must cite at least 1 distinct GOAL.` → `numeric "at least 1" is not canonical; accepted form: Each FS must cite at least one GOAL.`
@@ -204,26 +206,14 @@ See [the quantifier refusal](https://github.com/agent-grounds/grund/blob/main/do
 For a configured, scanned non-citable place `e2e` at `tests/e2e/`, both
 `Each e2e must cite at least one FS.` and
 `Each file in tests/e2e/ must cite at least one FS.` remain refused. Follow
-the supplementary hint to express this obligation in a version-2 `grund.toml`
-(`[citations.e2e]` in version 1):
+the supplementary hint to express this obligation in a version-2 `grund.toml`:
 
 ```toml
 [rules.citations.e2e]
 must = ["FS"]
 ```
 
-Use `[citations.e2e]` in a version-1 config. That entry judges only a file
-that already cites something, so a file there that cites nothing still passes.
-Where the row grounds nothing, the hint therefore also names the grounding
-setting that makes such a file a finding, in a version-2 `grund.toml`:
-
-```toml
-[rules.citations.e2e.grounding]
-must = "file"
-```
-
-Use `require_grounding = true` on the `e2e` `[[kinds]]` row in a version-1
-config. Where the row already grounds, the hint names the citation entry alone.
+Where the row already grounds, the hint names the citation entry alone.
 This is configuration guidance; it offers no accepted sentence rewrite. See the
 [place-subject guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration)
 for the exact matching boundary, and the [runnable example](https://github.com/agent-grounds/grund/tree/main/examples/rules)
@@ -260,7 +250,7 @@ folds into a citation direction, `[rules.citations]` in version 2. `grund list -
 same clause.
 
 A clause the grammar does not accept is refused for the part that failed,
-checked in this order: a version-1 config, the clause's shape, the field,
+checked in this order: the clause's shape, the field,
 whether it is a scalar, the value's whitespace, then the value ([whose refusals](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)). In a repository whose
 `SWR` declares the scalar `verification` and the prose field `rationale`, whose
 `AN` declares the scalar `status` with `one_of = ["Draft", "Must fix", "fix and
@@ -279,7 +269,6 @@ retest", "fix must wait"]`, and whose `TC` declares no field, the reasons are:
 - `SWR-brake-latency whose verification is Test must be cited by at least one TC.` → `literal subject "SWR-brake-latency whose verification is Test" does not match the configured ID grammar — a whose clause narrows only Each KIND and The NAME chapter of each KIND`
 - `Each AN must cite at least one SWR whose verification is Test.` → `unknown kind "SWR whose verification is Test" — a whose clause narrows only a rule's subject`, then `known kinds: SWR, TC, AN`
 - `Each POLICY whose status is Open must cite at least one SWR.` → `unknown kind "POLICY"`, then `known kinds: SWR, TC, AN`
-- A version-1 config → `whose clauses require grund_config_version = 2`
 
 Only a value joined by ` or ` is offered a form, one sentence per value; a
 selector is offered none. Every rule row reads the same with
@@ -321,7 +310,7 @@ an `invalid-rule` finding with exit 1.
 
 Findings sort bytewise by path, line, then message. Two identical declarations
 collapse semantically and name sorted authorities, for example
-`(RULE-a, RULE-b)`. If an existing `[citations]` (version 1) or `[rules.citations]`
+`(RULE-a, RULE-b)`. If an existing `[rules.citations]`
 (version 2) entry says the same bare-kind rule, the existing config finding
 wins byte-for-byte and no rule tail is added.
 <!-- END chapter-rules -->

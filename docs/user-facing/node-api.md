@@ -3,9 +3,9 @@
 The Node frontend exposes the shared Rust engine through Promises, with typed
 readonly records ([§FS-distribution.3.2.1](../functional-spec/FS-distribution.md#321-operations-options-and-refusals),
 [§FS-distribution.3.2.2](../functional-spec/FS-distribution.md#322-typed-readonly-host-records)).
-This is a locally buildable API-only rehearsal of the planned `grund-cli`
-package. Publishing and executable/platform package assembly are separate work.
-Use Node 22.x or 24.x.
+The `stage.mjs` route below builds a single API-only tarball. The local candidate
+route in [installation](installation.md#from-a-local-candidate) packages the
+`grund-cli` executable with its platform package. Use Node 22.x or 24.x.
 
 ## Build a local package
 
@@ -30,8 +30,10 @@ access. Import/install never compiles or downloads a native addon
 
 ```js
 import { check, show } from 'grund-cli';
-const report = await check('./repo', { suggestions: true });
-const body = await show('FS-check', { root: './repo', mode: 'brief' });
+// Run from the checkout root; this fixture declares FS-001-alpha.
+const repo = './tests/e2e/cases/json-report/repo';
+const report = await check(repo, { suggestions: true });
+const body = await show('FS-001-alpha', { root: repo, mode: 'brief' });
 console.log(report.report.errors, body.body);
 ```
 
@@ -83,6 +85,10 @@ clients are codium/iterm2/kitty/tmux/vscode/wezterm. Conversation preferences
 require write, and an agent-specific target also requires conversationTarget.
 Core validates active-agent and user-config policy before writing.
 
+For `init`, `docs` is the CLI's `--scaffold` option and `dryRun` corresponds to
+`--dry-run`; Node writes by default like `grund init`, and the bindings do not
+accept the CLI's `--template` option.
+
 ## Results and refusals
 
 Every result has `runCautions`, separate from check report warnings. Check
@@ -95,6 +101,7 @@ partial. Batch query failures continue in order; setup failure rejects the batch
 Each completed report channel stably sorts bytewise by `(path, line, message)`,
 with absent paths first and absent lines counted as zero ([§FS-errors.4.1](../functional-spec/FS-errors.md#41-ordering)).
 `selectedReport` preserves surviving findings' order and appends `selected-check-off` advice.
+For check findings, scan-error codes and exit status, see [checking a repository](checking.md); for globs and coverage queries, see [querying grund](querying.md).
 
 ```js
 import { show, GrundError } from 'grund-cli';
@@ -134,13 +141,9 @@ is promised ([§FS-distribution.3.2.3.1](../functional-spec/FS-distribution.md#3
 See [the native frontend README](../../crates/grund-node/README.md) for builder,
 loader metadata, shared-oracle provenance and verification recipes.
 [The captured consumer example](../../examples/node-api/example.mjs) reads the
-json-report fixture through a locally installed package. Runtime, TS, package,
-silence, lifecycle and parity evidence comes from the acceptance suite, not
-from compilation. #471 owns prebuilt platform certification and the combined
-API/CLI assembly manifest. #470 owns the common oracle/comparator; Node extends
-its same-source framing without substituting CLI output for full native data.
+json-report fixture through a locally installed package. Runtime, TypeScript,
+package, silence, lifecycle and parity evidence is covered under
+`tests/bindings/node/` and `tests/integration/rehearsal/`, not by compilation.
 
 The initial API is pre-1.0; existing compatibility rules govern removals and
-renames. “Adapt Node to #466” is a later internal adaptation preserving approved
-host/wire behavior. #459/#463 proposals are not implemented here
-([§FS-distribution.3.2.4](../functional-spec/FS-distribution.md#324-acceptance-evidence)).
+renames ([§FS-distribution.3.2.4](../functional-spec/FS-distribution.md#324-acceptance-evidence)).

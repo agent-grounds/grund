@@ -6,25 +6,22 @@ let `grund check` compare intentional uses against it. The complete contract is
 
 ## Opt a kind in
 
-Add `values = true` to a citable `[[kinds]]` row that has exactly one existing
-`file` or `folder` home inside the project root:
+Set `form = "value"` on a citable kind with exactly one existing `file` or
+`folder` home inside the project root, as introduced in the
+[fields guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/fields.md#rule-and-value-kinds):
 
 ```toml
-[[kinds]]
-kind = "CONST"
-folder = "values"
+[schema.kinds.CONST]
+folders = ["values"]
 index = false
-format = "{kind}-{slug}"
-values = true
+form = "value"
 ```
-
-The per-kind `format` override ([§FS-config.3.4.10](../functional-spec/FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)) keeps these slug-only IDs valid.
 
 The key is absent and false by default. There is no `value_sources` key, flag,
 or new command. Repositories without an enabled row keep their previous reads,
 diagnostics, output, and exit status.
 
-An explicit `[[kinds]]` list replaces the implicit default kinds
+Explicit `[schema.kinds.<KIND>]` tables configure the kinds
 ([§FS-config.3.4.4](../functional-spec/FS-config.md#344-the-default-kinds)). If the project
 has no kinds table yet, first copy the effective default rows from that section
 before adding `CONST`; otherwise existing declarations disappear from `list`
@@ -57,7 +54,7 @@ Every other valid component is a string.
 When the surrounding declaration should stay prose, end one citable numeric
 section heading with one ASCII space and the exact lowercase
 `<!-- grund:value -->` marker. This independently authorizes that section; no
-`values = true` kind setting is needed ([§FS-values.1](../functional-spec/FS-values.md#1-per-kind-opt-in-and-identity), [§FS-values.2.4](../functional-spec/FS-values.md#24-embedded-section-value-roots)). It is one of two ways a
+a kind form is needed ([§FS-values.1](../functional-spec/FS-values.md#1-per-kind-opt-in-and-identity), [§FS-values.2.4](../functional-spec/FS-values.md#24-embedded-section-value-roots)). It is one of two ways a
 section becomes a value root — the other is
 [a declared values chapter](#declare-a-values-chapter-for-a-kind), which needs
 no marker and works on *named* headings rather than numeric ones:
@@ -112,20 +109,9 @@ NDJSON ([§FS-values.6](../functional-spec/FS-values.md#6-shared-catalog-consume
 ## Declare a values chapter for a kind
 
 A marker names one root at a time. When a whole *kind* keeps its quantities in
-one place, name that place once instead: `value_chapter` on the `[[kinds]]` row
-makes every named direct child of that chapter a value root in every declaration
-of the kind ([§FS-config.3.4.13](../functional-spec/FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values), [§FS-values.2.5](../functional-spec/FS-values.md#25-chapter-declared-value-roots)). Nothing is marked, so nothing can be
+one place, declare a `values` field; every named direct child of that
+chapter becomes a value root in every declaration of the kind ([§FS-config.3.4.13](../functional-spec/FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values), [§FS-values.2.5](../functional-spec/FS-values.md#25-chapter-declared-value-roots)). Nothing is marked, so nothing can be
 forgotten:
-
-```toml
-[id]
-named_sections = true
-
-[[kinds]]
-kind = "AR"
-folder = "docs/architecture"
-value_chapter = "values"
-```
 
 ```markdown
 # AR-value-probe: Auxiliary power
@@ -143,31 +129,22 @@ The regulator expects `24` (§AR-value-probe.values.aux-voltage.1) volts.
 `values.aux-voltage` keeps its coordinate whatever is inserted or reordered
 around it, which is the point of naming it rather than numbering it.
 
-In a version-2 `grund.toml` the same chapter is a field with
-`content = "values"`, and it means exactly what `value_chapter` means — the
-same roots, findings and prerequisites — plus whatever `presence`, `position`
-or `title` the field adds ([§FS-fields.content.values](../functional-spec/FS-fields.md#contentvalues-a-values-field-is-the-value-chapter), [fields guide](fields.md)):
+A values field declares the chapter and can also set `presence`, `position`
+or `title` ([§FS-fields.content.values](../functional-spec/FS-fields.md#contentvalues-a-values-field-is-the-value-chapter), [fields guide](fields.md)):
 
 ```toml
 [schema.kinds.AR.fields.values]
 content = "values"
 ```
 
-Removing `value_chapter` or `values = true` alone, on any kind, stops comparing
-what bound to it, so a wrong literal passes `grund check` and the migration
-reports no difference ([§FS-config-migrate.3.1.7.2](../functional-spec/FS-config-migrate.md#3172-removing-a-value-key-alone-ends-the-comparison)). To keep those bindings
-compared, rewrite the roots as marked sections under version 1, remove the key
-and cite the new paths.
+Removing a values field stops comparing what is bound to it, so a wrong literal
+passes `grund check`. Keep the field while those bindings must remain checked.
 
 A kind that also sets `fetch` has no such field, because a fetched kind takes no
 fields, so that rewrite is its way through ([§FS-config-migrate.3.1.7.1](../functional-spec/FS-config-migrate.md#3171-a-value_chapter-on-a-fetched-kind)).
 
 Four things decide what the key does and do not bend:
 
-- **`[id] named_sections = true` is a prerequisite**, not a consequence. Setting
-  `value_chapter` without it is a located config error rather than a quiet
-  no-op, because without named sections the handle the key names is not a
-  section at all ([§FS-config.3.2.7](../functional-spec/FS-config.md#327-named_sections--the-gate-for-explicit-section-names)).
 - **The chapter is the declaration's own direct chapter**, matched on the
   handle and never on the displayed title. A same-named chapter nested deeper —
   `subsystems.pump.values` — is ordinary prose and gains nothing.
@@ -180,8 +157,8 @@ Four things decide what the key does and do not bend:
 - **Each root's components are the same strict run** as a marked root's:
   contiguous `.1` through `.N`, one heading level below, one line each.
 
-The key is absent by default, refused on a row that also sets `values = true`,
-and printed by `grund config show` only where it is set. A project that does not
+The field is absent by default and printed by `grund config show` only where
+it is set. A project that does not
 set it reads, reports, and exits exactly as before ([§FS-values.9](../functional-spec/FS-values.md#9-compatibility-and-explicit-exclusions)). An older
 binary refuses the unknown key loudly, so adopting it pins the repository to
 this release or later.
@@ -199,15 +176,6 @@ A value source ([§FS-values.terms](../functional-spec/FS-values.md#terms-terms)
 Generic scan extensions, include/exclude and ignore filters, explicit command
 paths, and `--full` cannot add or suppress these inputs. A value source is
 catalog input only and never contributes citations.
-
-> [!WARNING]
-> In a version 1 config, a `.yaml` or `.yml` file whose extension is in the
-> effective `[scan] extensions` — the list the config writes, or the default list
-> where it writes none — stays scan input and declares nothing, even at a value
-> home ([§FS-values.2.2](../functional-spec/FS-values.md#22-declarations-from-value-sources)). Leave `yaml` and `yml` out of that list to read
-> them as values. In version 2 a file is read by its language: a `data` language
-> means JSON whatever the name, and only a file no language claims is read by its
-> extension.
 
 The root is a nonempty object or mapping. Every key is a full, unqualified ID of
 the owning kind, and every value is a nonempty array or sequence of numbers or
@@ -370,8 +338,6 @@ than compared, and the message asks you to join the two lines ([§FS-values.3.1.
 A blank line between them ends the paragraph, so the literal and the citation
 are then ordinary prose and an ordinary citation.
 
-The marker remains mandatory even when `[reference] strict = false`.
-
 ## Equality and diagnostics
 
 When both components are numbers, comparison uses exact arbitrary-precision
@@ -465,9 +431,9 @@ cannot erase that refusal: correct the binding's form and literal, then recheck
 includes a whole-value ID with no coordinate, which earlier releases rewrote
 into a Markdown link ([§FS-values.9.2](../functional-spec/FS-values.md#92-the-one-whole-value-formatting-behavior-that-moved)).
 
-## Deliberate v1 boundary
+## Deliberate scope boundary
 
-V1 has no surrounding-prose inference, interpolation or rendered substitution,
+Value declarations have no surrounding-prose inference, interpolation or rendered substitution,
 bare-literal lint, range or unit semantics, arithmetic, generated code,
 fingerprints or history, `reconcile` or `stale` verb, excluded-path hint,
 value-aware search, generated-file policy, or orphan relief. Ranges and units

@@ -1,12 +1,10 @@
 # The structure that gets cited
 
-From grund 0.19.0, exclude and enabled ignore rules also refuse a stub's target
-([§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)). With `include = ["docs"]`, a stub pointing at
-`notes/gen/a.md` is broken if `exclude = ["gen"]`; removing that exclusion keeps
-the outside-include target readable. A rejected target lends no body, sections,
-chapters or citation edges ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
+Every fact has a stable ID. The default kinds, all configurable — `*` marks a *place* rather than an ID namespace (`citable = false`: a home, a title and citation rules, no declarations), which is what a test is, and what any directory an agent must be told about can be. See [Citation directions](../user-facing/citation-directions.md) for the complete `[rules.citations]` grammar and its rendered examples:
 
-Every fact has a stable ID. The default kinds, all configurable — `*` marks a *place* rather than an ID namespace (`citable = false`: a home, a title and citation rules, no declarations), which is what a test is, and what any directory an agent must be told about can be. See [Citation directions](../user-facing/citation-directions.md) for the complete `[citations]` grammar and its rendered examples:
+A tree with no `grund.toml` is checked with legacy built-in defaults: numbered
+`{kind}-{number}-{slug}` IDs and the kinds in this table, without `REQ`. Run
+`grund init` first to write the version-2 config this guide describes.
 
 Repositories can also declare controlled-English constraints over declarations,
 named chapters, and citations. The [chapter-rules guide](../user-facing/rules.md)
@@ -36,9 +34,9 @@ reminder to list each file or name the folder
 | `DF` | product behavior decisions and tradeoffs | `docs/decisions/functional/` (append-only) |
 | `DA` | architecture decisions and tradeoffs | `docs/decisions/architectural/` (append-only) |
 | `RM`   | planned milestones and sequencing           | `docs/roadmap.md`                              |
-| `e2e` * / `integration` * | proof: the spec as a user sees it, and the parts fitting as designed | `tests/e2e/` (must cite `FS`), `tests/integration/` (should cite `AR`) |
+| `e2e` * / `integration` * | proof: the spec as a user sees it, and the parts fitting as designed | `tests/e2e/`, `tests/integration/` |
 
-† `REQ` is declared by the config `grund init` writes ([§FS-init.2.4.10](../functional-spec/FS-init.md#2410-req-is-declared-in-docsrequirements)) and has no built-in default: a project with no config, or a config that leaves `[[kinds]]` out, has no `REQ`. Before grund 0.19.0 a project with no config homed `FS` in `requirements.md`; such a project now runs `grund init` to write a config that keeps it there, or moves its declarations into `docs/functional-spec/` ([§FS-config.3.4.4](../functional-spec/FS-config.md#344-the-default-kinds)).
+† `REQ` is declared by the config `grund init` writes ([§FS-init.2.4.10](../functional-spec/FS-init.md#2410-req-is-declared-in-docsrequirements)). A version-2 config with no `[schema.kinds]` has no kinds; a tree without a config instead uses the legacy defaults described above. Before grund 0.19.0 a project with no config homed `FS` in `requirements.md`; such a project now runs `grund init` to write a config that keeps it there, or moves its declarations into `docs/functional-spec/` ([§FS-config.3.4.4](../functional-spec/FS-config.md#344-the-default-kinds)).
 
 
 **ID format:**
@@ -56,10 +54,9 @@ reminder to list each file or name the folder
    └────────────────────────────────────────── citation marker
 ```
 
-Three schemes are supported. In version 2, `[schema] id_format` selects the
-repository default and `[schema.kinds.<KIND>] id_format` can override one kind.
-Version 1 uses `[id] format` and `[[kinds]] format` respectively, so
-configured per-kind mixing is supported
+Two schemes are supported. `[schema] id_format` selects the repository default
+and `[schema.kinds.<KIND>] id_format` can override one kind, so configured
+per-kind mixing is supported
 ([§FS-config.3.2](../functional-spec/FS-config.md#32-id--id-grammar)). Each
 scheme has a runnable tiny repo under [`examples/`](../../examples/), maintained as a
 detailed walkthrough for canonical user workflows
@@ -67,9 +64,8 @@ detailed walkthrough for canonical user workflows
 
 | Scheme                                     | Example             | Benefit                                                                                                          | Trade-off                                                                |
 |--------------------------------------------|---------------------|------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
-| `{kind}-{number}-{slug}` *(default)*       | `FS-014-user-login` | Number is stable; a number-only shorthand survives a slug change, while full-ID citations require deliberate updates (and canonical shorthand is reported for rewriting). | Two tokens to type; needs `grund id` to allocate the next number.        |
 | `{kind}-{number}` (RFC-style)              | `FS-014`            | Maximally stable — no slug to drift. Familiar from RFCs/PEPs/JEPs/ADRs.                                          | Opaque at the call site: `<§>FS-014` tells you nothing without resolving it. |
-| `{kind}-{slug}` *(`grund` itself uses this)* | `FS-user-login`     | Self-describing — reads like English in prose and code. No number to allocate.                                   | Renaming a slug rewrites every citation. Slug must be unique per kind.   |
+| `{kind}-{slug}` *(default)*      | `FS-user-login`     | Self-describing — reads like English in prose and code. No number to allocate.                                   | Renaming a slug rewrites every citation. Slug must be unique per kind.   |
 
 Rule of thumb: pick `{kind}-{slug}` until rename churn or ID count starts to hurt; switch to `{kind}-{number}-{slug}` when it does.
 
@@ -89,13 +85,10 @@ A citation is the marker `§`, the ID, and an optional `.<section>` — with the
 
 Type `$$` followed by an ID, e.g. `$$FS-user-login`, in a `grund`-aware editor; the trigger becomes `§` as soon as the ID has its kind's shape, and a bare `$$` is left alone ([§FS-lsp.1.4](../functional-spec/FS-lsp.md#14-live-trigger-transform)). Both marker and trigger are configurable in `grund.toml`.
 
-With the default `{kind}-{number}-{slug}` scheme, a persisted shorthand such as
-`<§>FS-042` is an error and `grund fmt --write` expands it to the descriptive full
-ID. A project that deliberately wants both spellings may opt in
-([§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)):
+To accept number-only citations, set `[schema] shorthand`:
 
 ```toml
-[reference]
+[schema]
 shorthand = "accepted" # default: "canonical"
 ```
 
@@ -107,7 +100,7 @@ tradeoff is permanent mixed-form drift while the policy is enabled: searching by
 the number finds both forms, but searching by the slug misses shorthand sites,
 and the short form is opaque until resolved.
 
-The marker is the whole signal: a `§`-prefixed token is a live, checked citation wherever it appears — including inside Markdown backticks — except in a simple top-level Python assignment whose value is triple-quoted runtime data ([§FS-check.1.1.3.1](../functional-spec/FS-check.md#1131-assigned-python-triple-quoted-data)). To show an *example* ID that shouldn't resolve, write it without the marker (`FS-user-login`), inside a fenced code block (which is how the two citations above are written), or with the marker bracketed (`<§>FS-user-login`) — the escape `grund check` names in its own hint when a citation resolves to nothing, and the one form that is inert under both strict modes ([§FS-check.1.1.9](../functional-spec/FS-check.md#119-an-id-in-an-escape-position)). Put an intentional citation near assigned Python data in a `#` comment or a real docstring.
+The marker is the whole signal: a `§`-prefixed token is a live, checked citation wherever it appears — including inside Markdown backticks — except in a simple top-level Python assignment whose value is triple-quoted runtime data ([§FS-check.1.1.3.1](../functional-spec/FS-check.md#1131-assigned-python-triple-quoted-data)). To show an *example* ID that shouldn't resolve, write it without the marker (`FS-user-login`), inside a fenced code block (which is how the two citations above are written), or with the marker bracketed (`<§>FS-user-login`) — the check offers this escape for an unresolved citation inside a Markdown code span; a near miss gets a “did you mean” hint. The escape is also the one form that is inert under both strict modes ([§FS-check.1.1.9](../functional-spec/FS-check.md#119-an-id-in-an-escape-position)). Put an intentional citation near assigned Python data in a `#` comment or a real docstring.
 
 **Write section citations with their full ID.** This input inside an
 `FS-check` declaration body contains a live local section citation:
@@ -147,7 +140,13 @@ pub struct EventBus { /* … */ }
 
 Only that canonical link enrolls a declaration that lives in source. A link you wrote around the ID and a title is an entry for a declaration in the kind's folder, but it enrolls nothing, and the index's citation of a source declaration through it is an ordinary citation ([§FS-check.3.18.3](../functional-spec/FS-check.md#3183-an-external-source-declaration-enrolls-by-its-canonical-link)).
 
-A stub is a heading whose title is one link, `# AR-event-bus: [bus](../../src/bus.rs)`, at any heading level ([§FS-declarations.stubs.shape](../functional-spec/FS-declarations.md#stubsshape-what-a-stub-looks-like)). It is a stub only in a Markdown file of some kind's home, wherever the checkout sits; a heading of that shape anywhere else is a declaration titled with a link. Before grund 0.19.0 any Markdown file with a directory named `docs` on its path held stubs, and 0.18.0 warned as `stub-shape` at every heading the two readings tell apart ([§FS-declarations.checks.stub-shape](../functional-spec/FS-declarations.md#checksstub-shape-stub-shape-read-differently-from-grund-0190)). `grund list` shows a stubbed declaration at its target, with the target's title. The target need not be scanned: one outside `[scan] include` still gives the stub its declaration, its sections, its citations and its chapters, so rules, `refs` and `unused` read it as if it were scanned, and a section it declares twice is reported where it is written; nothing else about the target file is judged ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). The target must declare the ID itself: a stub there declares nothing, so a chain of stubs is broken ([§FS-declarations.stubs.target.4](../functional-spec/FS-declarations.md#stubstarget4-a-stub-in-the-target-declares-nothing)).
+A stub is a heading whose title is one link, `# AR-event-bus: [bus](../../src/bus.rs)`, at any heading level ([§FS-declarations.stubs.shape](../functional-spec/FS-declarations.md#stubsshape-what-a-stub-looks-like)). It is a stub only in a Markdown file of some kind's home, wherever the checkout sits; a heading of that shape anywhere else is a declaration titled with a link. Before grund 0.19.0 any Markdown file with a directory named `docs` on its path held stubs, and 0.18.0 warned as `stub-shape` at every heading the two readings tell apart ([§FS-declarations.checks.stub-shape](../functional-spec/FS-declarations.md#checksstub-shape-stub-shape-read-differently-from-grund-0190)). `grund list` shows a stubbed declaration at its target, with the target's title. The target need not be scanned: one outside the configured source scope still gives the stub its declaration, its sections, its citations and its chapters, so rules, `refs` and `unused` read it as if it were scanned, and a section it declares twice is reported where it is written; nothing else about the target file is judged ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). The target must declare the ID itself: a stub there declares nothing, so a chain of stubs is broken ([§FS-declarations.stubs.target.4](../functional-spec/FS-declarations.md#stubstarget4-a-stub-in-the-target-declares-nothing)).
+
+From grund 0.19.0, exclude and enabled ignore rules also refuse a stub's target
+([§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)). With `include = ["docs"]`, a stub pointing at
+`notes/gen/a.md` is broken if `exclude = ["gen"]`; removing that exclusion keeps
+the outside-include target readable. A rejected target lends no body, sections,
+chapters or citation edges ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
 
 If `src/bus.rs` moves to `src/events/bus.rs`, update the stub in
 `docs/architecture/AR-event-bus.md` from:
@@ -203,9 +202,9 @@ Every command reads these rules from one parse of each file since grund 0.19.0 (
 
 ## Section headings
 
-A heading inside a declaration body is a citable section. Its path is written in the heading, numbered (`## 1. Overview`, `### 1.1 Scope`) or, with `[id] named_sections = true`, named (`## format: Formatting`, `### format.1: Username`). Its depth must match the path, one level per component ([§FS-config.3.3](../functional-spec/FS-config.md#33-section-paths--arbitrary-nesting-depth)).
+A heading inside a declaration body is a citable section. Its path is written in the heading, numbered (`## 1. Overview`, `### 1.1 Scope`) or named (`## format: Formatting`, `### format.1: Username`). Its depth must match the path, one level per component ([§FS-config.3.3](../functional-spec/FS-config.md#33-section-paths--arbitrary-nesting-depth)).
 
-With named sections on, a name may also follow a number in a Markdown declaration body: `### 1.goals: Goals` under `## 1. Overview` declares `FS-login.1.goals` ([§FS-config.3.3.1](../functional-spec/FS-config.md#331-named-components)). Its address holds the number of the chapter above it, so renumbering that chapter moves it. A cited one is therefore recorded in the section lock described below, as a relative one is ([§FS-section-lock.holds.entry](../functional-spec/FS-section-lock.md#holdsentry-one-line-per-locked-address)).
+With named sections on, a name may also follow a number in a Markdown declaration body: `### 1.goals: Goals` under `## 1. Overview` declares `FS-login.1.goals` ([§FS-config.3.3.1](../functional-spec/FS-config.md#331-named-components)). Its address holds the number of the section above it, so renumbering that section moves it. A cited one is therefore recorded in the section lock described below, as a relative one is ([§FS-section-lock.holds.entry](../functional-spec/FS-section-lock.md#holdsentry-one-line-per-locked-address)).
 
 From grund 0.19.0, a marked citation of that address fails the check if its
 section or declaration is absent, just like any other broken reference. The
@@ -234,9 +233,15 @@ A relative address depends on where its block sits. Move `### .1:` from `## form
 FS-login.format.1 8f332b6fe87bb346
 ```
 
-A citation into another workspace member, of `FS-login.format.1` in the member `api`, is recorded by the project that holds it, in `.grund/sections/api/FS-login.lock` ([§FS-section-lock.file.members](../functional-spec/FS-section-lock.md#filemembers-citations-into-another-project)). After citing a relative section, run `grund fmt --write` with no path at the workspace root, or at the project root outside a workspace, and commit what it writes. Nothing else writes the lock, and `fmt` never rewrites a heading. `check` reports three things. `unrecorded-section-citation` is a cited address with no entry. `section-address-changed` is a cited text that now sits at another address, with both addresses named and every line that still cites the old one. `invalid-section-lock` is a lock line `check` cannot read. To accept a move, leave a pointer in the old section that cites the new address, or rewrite the citations; rewriting does not clear a swap or a shift of cited sections, because the old address stays cited ([§FS-section-lock.move.citations](../functional-spec/FS-section-lock.md#movecitations-update-every-citation)). The lock has one false positive. If you copy a cited section to a new address and then edit the original, the recorded text is found only at the copy, so `check` reports a move. The way out is to edit the copy as well, or to cite the copy from the original ([§FS-section-lock.move.copy](../functional-spec/FS-section-lock.md#movecopy-copy-then-edit-the-original)).
+A citation into another workspace member, of `FS-login.format.1` in the member `api`, is recorded by the project that holds it, in `.grund/sections/api/FS-login.lock` ([§FS-section-lock.file.members](../functional-spec/FS-section-lock.md#filemembers-citations-into-another-project)). After citing a relative section, run `grund fmt --write` with no path at the workspace root, or at the project root outside a workspace, and commit what it writes. Nothing else writes the lock, and `fmt` never rewrites a heading. `check` reports three things. `unrecorded-section-citation` is a cited address with no entry. `section-address-changed` is a cited text that now sits at another address, with both addresses named and every line that still cites the old one. `invalid-section-lock` is a lock line `check` cannot read. To accept a move, leave a pointer in the old section that cites the new address, or rewrite the citations; rewriting does not clear a swap or a shift of cited sections, because the old address stays cited ([§FS-section-lock.move.citations](../functional-spec/FS-section-lock.md#movecitations-update-every-citation)). Copying a cited section to a new address and then editing the original reports a move because the recorded text is found only at the copy. Edit the copy as well, or cite the copy from the original ([§FS-section-lock.move.copy](../functional-spec/FS-section-lock.md#movecopy-copy-then-edit-the-original)). The lock has five limits:
 
-The lock has one gap. A section moved and edited in the same change matches no recorded fingerprint, so the lock reads it as an edit in place. `check` passes, and the only trace is the refreshed line in the lock diff ([§FS-section-lock.limits.edit-and-move](../functional-spec/FS-section-lock.md#limitsedit-and-move-a-section-moved-and-edited-in-one-change)). Where an address must never move, write its complete path: complete-path headings need no lock, unless the path puts a name under a number. The runnable [`examples/relative-sections/`](../../examples/relative-sections/) prints the full path each relative heading resolves to, and [`examples/relative-sections-lock/`](../../examples/relative-sections-lock/) shows the lock catching an unrecorded citation.
+- A section moved and edited in one change can pass `check`; only its refreshed lock line shows the edit ([§FS-section-lock.limits.edit-and-move](../functional-spec/FS-section-lock.md#limitsedit-and-move-a-section-moved-and-edited-in-one-change)).
+- Byte-identical sections cannot be distinguished, so their lock entries do not guard against moves.
+- A section promoted into another declaration is not compared with its former declaration's sections, so a split and renumber is not guarded.
+- Without a prior fingerprint, the lock cannot identify a move; only the added or changed lock line shows the new baseline.
+- Without `fmt --check` in the gate, an unrefreshed lock leaves its old fingerprint in place.
+
+Where an address must never move, write its complete path: complete-path headings need no lock, unless the path puts a name under a number. The runnable [`examples/relative-sections/`](../../examples/relative-sections/) prints the full path each relative heading resolves to, and [`examples/relative-sections-lock/`](../../examples/relative-sections-lock/) shows the lock catching an unrecorded citation.
 
 ## Maintaining declarations
 
@@ -356,15 +361,15 @@ writes, and `grund check` holds it to the rule after.
 
 | Rule | You write | What it means in the graph | `grund check` reports |
 | --- | --- | --- | --- |
-| Kinds and homes | a `[[kinds]]` row: `kind`, and `file` or `folder` ([§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds)) | the node types, and where a node of each type may be declared | `misplaced-declaration`, `duplicate`, `declaration-near-miss` |
-| ID grammar | `[id] format` and its patterns, optionally per kind ([§FS-config.3.2](../functional-spec/FS-config.md#32-id--id-grammar)) | the address space: one spelling per node | a format mismatch, as an error |
+| Kinds and homes | `[schema.kinds.<KIND>]` with `files` or `folders` ([§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds)) | the node types, and where a node of each type may be declared | `misplaced-declaration`, `duplicate`, `declaration-near-miss` |
+| ID grammar | `[schema] id_format` and per-kind `[schema.kinds.<KIND>] id_format` ([§FS-config.3.2](../functional-spec/FS-config.md#32-id--id-grammar)) | the address space: one spelling per node | a format mismatch, as an error |
 | Sections | numbered `## 1. …` or named `## terms: Terms` headings ([§FS-declarations.section](../functional-spec/FS-declarations.md#section-what-a-section-is)) | child coordinates `<ID>.<path>`, and their `contains` rows | `section-heading-level`, `duplicate-section`, `section-outside-declaration`, `orphan-section`, `unmarked-heading` |
 | Inline declarations and stubs | a declaration line in a doc-comment, or a stub heading whose title is one link | a node whose body lives in source | `broken-stub`, `stub-shape` |
 | Declaration bodies | a body with no merge conflict left in it ([§FS-declarations.body.conflict](../functional-spec/FS-declarations.md#bodyconflict-a-body-still-in-the-middle-of-a-merge)) | each node has one text, so a citation and a section-lock fingerprint each read one | `conflict-marker` |
 | Kind index | a folder kind's `README.md` ([§FS-check.3.18](../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)) | every node of the kind is listed there, as a link: the one `fmt` writes, or one you wrote whose text holds the citation ([§FS-check.3.18.5](../functional-spec/FS-check.md#3185-what-an-entry-is)) | `missing-index-entry`, `unlinked-index-entry` |
 | Fields *(config v2)* | `fields` on a kind ([guide](fields.md), [§FS-fields](../functional-spec/FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it)) | which chapters each node carries, in what order, with what values | `missing-field`, `mistitled-field`, `misplaced-field`, `invalid-field-value`, `undeclared-chapter` |
 | Values | a numbered component in an opted-in kind ([guide](values.md), [§FS-values](../functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)) | one node is the source of a value, and every use is compared with it | `invalid-value-declaration`, `invalid-value-binding`, `value-mismatch` |
-| Lead size *(opt-in)* | `[reference] lead_size_warning` ([guide](coordinate-sizes.md)) | what a default `grund <ID>` read costs | `oversized-lead` |
+| Lead size *(opt-in)* | `[schema.leads.words] warn` ([guide](coordinate-sizes.md)) | what a default `grund <ID>` read costs | `oversized-lead` |
 
 A marked kind-index entry also follows citation directions. If it is forbidden,
 keep the entry and use the finding's rule repair rather than removing the
@@ -376,10 +381,10 @@ marker ([§FS-check.3.12.2](../functional-spec/FS-check.md#3122-repair-advice-pr
 | Rule | You write | What it means in the graph | `grund check` reports |
 | --- | --- | --- | --- |
 | Every citation resolves | `§<ID>[.<section>]`, or `§<alias>/<ID>` in a workspace ([§FS-check.3.1](../functional-spec/FS-check.md#31-dangling-citation)) | an edge exists only if its target node does | `dangling`, `missing-section`, `unknown-project`, `glob-citation`, `off-format-citation`, and with `--full` the `out-of-scope-*` codes |
-| One spelling per edge | `[reference] shorthand` and the inline-note limits ([§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)) | the same edge is written the same way everywhere | `shorthand-citation`, `shorthand-numeric-run`, `local-section-citation`, `inline-citation-style` |
-| Citation directions | `[citations.<KIND>]` with `must`, `should`, `should-not`, `must-not` ([guide](citation-directions.md), [§FS-config.3.9](../functional-spec/FS-config.md#39-citations--citation-direction-rules)) | per declaration, at least one `cites` row into the named kinds; per site, no `cites` row into a forbidden one | `missing-citation`, `forbidden-citation`, and with `--suggestions` `suggested-citation`, `discouraged-citation` |
-| Grounding *(opt-in)* | `require_grounding` and `grounding_level`, in `[reference]` or on a kind ([§FS-check.3.6](../functional-spec/FS-check.md#36-ungrounded-unit-opt-in)) | every file, or every unit in it, has at least one outgoing `cites` row | `ungrounded` |
-| Chapter rules | a declaration of a kind with `rules = true`, whose title is one sentence ([guide](rules.md), [`examples/rules/`](../../examples/rules/), [§FS-rules.1](../functional-spec/FS-rules.md#1-rule-declarations-and-opt-in)) | a count over `chapter` or `cites` rows, for every unit the sentence's subject selects | `chapter-cardinality`, `citation-cardinality`, `uncited-unit`, `unreached-declaration`, `invalid-rule` |
+| One spelling per edge | `[schema] shorthand`, and the inline-note limits ([§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)) | the same edge is written the same way everywhere | `shorthand-citation`, `shorthand-numeric-run`, `local-section-citation`, `inline-citation-style` |
+| Citation directions | `[rules.citations.<KIND>]` with `must`, `should`, `should-not`, `must-not` ([guide](citation-directions.md), [§FS-config.3.9](../functional-spec/FS-config.md#39-citations--citation-direction-rules)) | per declaration, at least one `cites` row into the named kinds; per site, no `cites` row into a forbidden one | `missing-citation`, `forbidden-citation`, and with `--suggestions` `suggested-citation`, `discouraged-citation` |
+| Grounding *(opt-in)* | `[rules.citations.grounding]` ladder ([§FS-check.3.6](../functional-spec/FS-check.md#36-ungrounded-unit-opt-in)) | every file, or every unit in it, has at least one outgoing `cites` row | `ungrounded` |
+| Chapter rules | `[schema.kinds.<KIND>] form = "rule"`, and a one-sentence title ([guide](rules.md), [`examples/rules/`](../../examples/rules/), [§FS-rules.1](../functional-spec/FS-rules.md#1-rule-declarations-and-opt-in)) | a count over `chapter` or `cites` rows, for every unit the sentence's subject selects | `chapter-cardinality`, `citation-cardinality`, `uncited-unit`, `unreached-declaration`, `invalid-rule` |
 
 A chapter rule is a sentence from one of five families ([§FS-rules.3](../functional-spec/FS-rules.md#3-the-five-sentence-families)):
 
@@ -406,7 +411,8 @@ catalog lists every finding code, its severity, and the setting that turns it on
   citation in a link to its declaration. It computes the anchor exactly as
   GitHub does ([§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)) and rewrites the link when the target
   moves or its heading changes. Generated configs turn this on with
-  `[fmt.cross_refs]`, and a kind's index is always linked ([§FS-fmt.6](../functional-spec/FS-fmt.md#6-cross-reference-emission)). Source
+  `grund fmt --write` links prose citations by default; `[presentation.fmt]`
+  configures link rendering ([§FS-fmt.6](../functional-spec/FS-fmt.md#6-cross-reference-emission)). Source
   comments keep the bare citation, because their languages do not render
   Markdown. `grund fmt --check` reports a stale link as a pending rewrite.
 

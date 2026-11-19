@@ -127,6 +127,8 @@ explicit project_name can make that member representable. Calls do not change
 cwd, read process argv or exit the interpreter
 ([§FS-distribution.3.3.3](../functional-spec/FS-distribution.md#333-per-call-scope-and-path-encoding)).
 
+For check findings, scan-error codes and exit status, see [checking a repository](checking.md); for globs and coverage queries, see [querying grund](querying.md).
+
 Calls are synchronous and release the GIL during Rust work. Independent reads
 may overlap. Serialize writers to the same files. Pending interrupts are checked
 on return: the operation may finish before KeyboardInterrupt arrives. No async
@@ -140,9 +142,14 @@ unsupported ([§FS-distribution.3.3.4](../functional-spec/FS-distribution.md#334
 cross-reference formatting still applies when cross_refs=False. Each change's
 `label` is the CLI row, so compare its `counts` and `lock_file` rather than the
 text, which grows as fmt names more of what it does
-([§FS-distribution.3.2.2.2](../functional-spec/FS-distribution.md#3222-result-fields)). `init()`
-previews, `init(write=True)` scaffolds, and `init(check=True)` suppresses writes
-even if write=True. Force never replaces existing config. Fetch has no preview:
+([§FS-distribution.3.2.2.2](../functional-spec/FS-distribution.md#3222-result-fields)). For
+`init`, `docs` is the CLI's `--scaffold` option, `write=True` corresponds to
+the inverse of `--dry-run`, and Python previews by default whereas `grund init`
+writes by default; the bindings do not accept the CLI's `--template` option.
+`init()` previews; `init(write=True)` writes the config and agent entrypoint;
+`init(write=True, docs=True)` also scaffolds, as `grund init --scaffold` does.
+`init(check=True)` suppresses writes even if write=True. Force never replaces
+existing config. Fetch has no preview:
 `fetch(id, write=True)` explicitly authorizes materialization; omission refuses
 before loading config or executing a fetcher. Reads execute no fetcher
 ([§FS-distribution.3.3.6](../functional-spec/FS-distribution.md#336-explicit-mutation-opt-ins)).
@@ -156,5 +163,6 @@ require write=True; a clientless write requires a conversation option.
 
 The [runnable example](../../examples/python-api/) and
 [native source handoff](../../crates/grund-py/README.md) accompany this guide.
-The parity corpus targets Rust/Python; Node joins through #469. Local compilation
-alone does not establish passing parity or clean-source install evidence.
+The Rust/Python parity corpus is under `tests/bindings/`; installed cross-binding
+parity and clean-source install evidence is under `tests/integration/rehearsal/`.
+Local compilation alone does not establish either.

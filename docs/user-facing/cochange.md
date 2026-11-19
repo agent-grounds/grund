@@ -5,37 +5,40 @@ defines the copyable [recipe](../../examples/cochange/cochange.py). It reports
 whether each changed source file has a related spec edit **and** a related test
 edit for at least one directly cited declaration. Project identity and full
 coordinate resolution precede declaration-root matching. This is an optional
-repository policy. Grund's ordinary checks remain a separate requirement.
+repository policy. [Grund's ordinary checks](checking.md) remain a separate requirement.
 
 **Install and configure**
 
-Use Python 3.11+, Git 2.32+ and Grund 0.16.1 or a compatible newer build. One
-portable installation of the supported release is:
+Use Python 3.11+, Git 2.32+ and a Grund release at least as new as the one
+that wrote the repository's managed block. The recipe runs whichever Grund
+binary you pass with `--grund`, so it needs no separate installation.
 
-```bash
-cargo install grund --version 0.16.1 --locked
-```
-
-Copy the entire `examples/cochange/` directory into your repository, keeping
-its Python modules together. Edit `policy.json` to select the Git-relative
-config root, source and executable-test locations. The four keys are required:
+Copy the files from `examples/cochange/` into
+`"$(git rev-parse --git-common-dir)/grund-cochange"`, keeping its Python
+modules together; this keeps the recipe outside the scanned tree. Keep your
+policy at a versioned path in the repository, then copy it into
+`"$(git rev-parse --git-common-dir)/grund-cochange/policy.json"` so the local
+hook and CI use the same policy. Edit the versioned policy to select the
+Git-relative config root, source and executable-test locations. The four keys
+are required:
 
 ```json
 {"config_root":".","source_paths":["src/"],"test_paths":["tests/e2e/"],"eligible_kinds":["FS"]}
 ```
 
 Selections are exact files or directory prefixes ending `/`. Source and test
-selections must be disjoint. There are no globs or policy switches for weaker
-evidence. Test classification should name your executable tests; the recipe
-only reports edits and CI must execute them. Every tracked file under a
-selection must be one grund scans, whether or not your change touches it: a
-selected file with no `grund cover` row, such as a `.gitkeep` (grund never reads
-a hidden file) or a data file no language reads, refuses every run with
-`scan-scope`. Narrow the selection in the policy to leave it out, or remove the
-file. Paths in results are Git-relative,
-even when `config_root` names a nested app. Configuration edits are read from
-their own snapshots. Namespace migrations and roots outside the Git tree are
-explicitly unsupported.
+selections must be disjoint, and every tracked file under either selection
+must be scanned by grund; use `grund cover <selection>` to check. A selected
+file with no `grund cover` row, such as a `.gitkeep` (grund never reads a
+hidden file) or a data file no language reads, refuses every run with
+`scan-scope` (exit 2): narrow the selection in the policy to leave it out, or
+remove the file. The `tests/e2e/` selection fits the `grund init --scaffold`
+starter; add `tests/integration/` when it contains a test. There are no globs
+or policy switches for weaker evidence. Test classification should name your
+executable tests; the recipe only reports edits and CI must execute them.
+Paths in results are Git-relative, even when `config_root` names a nested app.
+Configuration edits are read from their own snapshots. Namespace migrations
+and roots outside the Git tree are explicitly unsupported.
 Snapshots also refuse symlink cycles and tracked names or modes the host cannot
 represent, naming the exact Git path. For example, a newline in a filename is
 supported on POSIX but requires another host for evaluation on Windows. The
@@ -54,14 +57,16 @@ to supply that choice, so an amend is never silently checked against itself:
 set -eu
 : "${GRUND_COCHANGE_BASE:?Set HEAD for new commits, HEAD^ for amends, or empty for a root}"
 repo=$(git rev-parse --show-toplevel)
-python3 "$repo/examples/cochange/cochange.py" \
-  --repo "$repo" --policy "$repo/examples/cochange/policy.json" \
+git_common_dir=$(git rev-parse --git-common-dir)
+python3 "$git_common_dir/grund-cochange/cochange.py" \
+  --repo "$repo" --policy "$git_common_dir/grund-cochange/policy.json" \
   --grund "$(command -v grund)" \
   commit-msg --base "$GRUND_COCHANGE_BASE" --message "$1"
 ```
 
-Install this as `.git/hooks/commit-msg` (or integrate it into your existing
-commit-msg hook) and make it executable. Examples:
+Install this as `"$(git rev-parse --git-common-dir)/hooks/commit-msg"` (or
+integrate it into your existing commit-msg hook) and make it executable. The
+hook and recipe are shared by every linked worktree of the clone. Examples:
 
 ```bash
 GRUND_COCHANGE_BASE=HEAD git commit
@@ -80,11 +85,23 @@ enforced at commit-msg rather than pre-commit.
 
 Fetch complete local history during CI setup. For GitHub Actions, use
 `actions/checkout` with `fetch-depth: 0`, explicitly check out the actual PR head,
-and ensure the target commit exists locally. Run:
+and ensure the target commit exists locally. Before the comparison, copy the
+recipe from a pinned grund checkout and the versioned policy into the Git
+common directory:
 
 ```bash
-python3 examples/cochange/cochange.py \
-  --repo "$PWD" --policy examples/cochange/policy.json --grund "$(command -v grund)" \
+git_common_dir=$(git rev-parse --git-common-dir)
+mkdir -p "$git_common_dir/grund-cochange"
+cp /path/to/pinned/grund/examples/cochange/*.py "$git_common_dir/grund-cochange/"
+cp .github/grund-cochange/policy.json "$git_common_dir/grund-cochange/policy.json"
+```
+
+Run the recipe with the same binary choice as the hook:
+
+```bash
+git_common_dir=$(git rev-parse --git-common-dir)
+python3 "$git_common_dir/grund-cochange/cochange.py" \
+  --repo "$PWD" --policy "$git_common_dir/grund-cochange/policy.json" --grund "$(command -v grund)" \
   ci --target "$PR_TARGET_SHA" --head "$PR_HEAD_SHA"
 ```
 
