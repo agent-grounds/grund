@@ -200,7 +200,7 @@ Allowing one sibling but not another takes a pinned target, such as
 has no workspace to resolve the alias in, so it refuses the config and exits 2:
 
 ```text
-error: grund.toml: [rules.citations.FS] may names `compiler/FS`: unknown project alias compiler; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this became an error in grund 0.19.0
+error: grund.toml:14: [rules.citations.FS] may names `compiler/FS`: unknown project alias compiler; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this became an error in grund 0.19.0
 ```
 
 The [`workspace-isolated-member` example](https://github.com/agent-grounds/grund/blob/main/examples/workspace-isolated-member/README.md)
