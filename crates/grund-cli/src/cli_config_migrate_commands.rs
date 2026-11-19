@@ -1,10 +1,10 @@
 /// §FS-config-migrate.6.5.1: the two commands a write closes with — the undo's
 /// `git restore <file>` and the re-preview's `grund config migrate --to 2[ PATH]`
-/// — spelled for the directory `grund config migrate` was run in rather than
-/// from the report base, so `--path-base` moves neither (item 4). Each path is
-/// already one POSIX shell word (item 3).
+/// — spelled for the working directory when available, with the undo keeping
+/// discovery's path otherwise (item 1). `--path-base` moves neither (item 4).
+/// Each path is already one POSIX shell word (item 3).
 struct MigrateCommands {
-    /// The config the run replaced, as `git restore` takes it there (item 1);
+    /// The config the run replaced, spelled by the core's item 1 rules;
     /// `None` only where discovery no longer finds a config, and then the undo
     /// names no file rather than the report base's.
     restore: Option<String>,
@@ -16,16 +16,19 @@ struct MigrateCommands {
 impl MigrateCommands {
     /// §FS-config-migrate.6.5.1 items 1-2: `given` is the `PATH` argument as it
     /// was typed, before it defaults to `.`. The core names the file by the
-    /// discovery the run used, from the working directory, or absolute for a
-    /// process that has none; never by the report path, which is spelled from
-    /// another root.
+    /// discovery the run used: relative to the working directory when possible,
+    /// absolute across Windows drives, or as discovery reached it when the
+    /// process has no working directory. In that last case an absolute `PATH`
+    /// gives an absolute undo, while a relative `PATH` may keep a relative undo
+    /// that is not portable from a deleted directory. The core never uses the
+    /// report path, which is spelled from another root.
     fn for_run(opts: &MigrateOpts, given: Option<&str>) -> Self {
         let dir = std::env::current_dir().ok();
         Self::spelled(opts.config_from(dir.as_deref()).as_deref(), given)
     }
 
     /// §FS-config-migrate.6.5.1 item 3: the pure spelling, from the config's
-    /// path relative to the working directory and the `PATH` as given.
+    /// spelling supplied by the core and the `PATH` as given.
     fn spelled(restore: Option<&str>, given: Option<&str>) -> Self {
         // `git` reads a word that starts with `-` as an option and one that
         // starts with `:` as pathspec magic; `./` makes either a path.
