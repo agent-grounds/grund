@@ -615,11 +615,9 @@ part of it
 `/// ## terms: Terms` in a Rust file and
 `## terms: Terms` in a Markdown file are therefore the same fact,
 `chapter(c, terms, Terms)`, and a presence rule naming `Terms` counts either
-one ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)). The same label is the
-title of that chapter's `list --selector` row
-([§FS-rules.8](FS-rules.md#8-command-surfaces)). The `title` a
-declaration's `--toc --format json` section map gives that chapter is the same
-label ([§FS-show.3.1.3](FS-show.md#313-json)).
+one ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)). The title the
+chapter's `list --selector` row and `--toc` entry carry is a different thing,
+defined in [§FS-list.3.1](FS-list.md#31---format-text-default), and need not match this label.
 
 ### 5.2 Family clauses
 

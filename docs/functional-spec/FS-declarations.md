@@ -517,8 +517,7 @@ rendered text, exactly as CommonMark reads an ATX heading: `## 1. Steps ##` read
 so its anchor is `1-steps` ([§FS-fmt.6.2.2](FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)). A `#` run that is not preceded by a space or tab, or that
 is followed by anything but spaces or tabs, is text: `## C#` reads `C#`. Every anchor `fmt`
 writes and `show` reports is slugged from this text ([§DF-closing-hashes-are-not-the-heading](../decisions/functional/DF-closing-hashes-are-not-the-heading.md#df-closing-hashes-are-not-the-heading-a-headings-closing-hashes-are-not-part-of-its-anchor)).
-A title, in `--toc` and in `list`, is the heading's text as written, links kept, but it leaves
-the closing run out too: `## 1. Steps ##` is titled `Steps` ([§FS-show.2.1.2](FS-show.md#212-section-map---toc), [§FS-list.3.1](FS-list.md#31---format-text-default)).
+A title ([§FS-list.3.1](FS-list.md#31---format-text-default)) is not this text: it keeps its links.
 
 ## body: Where a declaration's body ends
 
