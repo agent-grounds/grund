@@ -26,6 +26,26 @@ local candidate only ([§FS-distribution.4.13](../functional-spec/FS-distributio
 `npm install grund-cli` or `pip install grund` does not install this project.
 What follows shows how to build that candidate and install from its own files.
 
+## From a release archive
+
+Download the matching `grund-<version>-<target>.tar.gz` and its `.sha256` file
+from the [GitHub releases](https://github.com/agent-grounds/grund/releases).
+Windows releases use `.zip` archives. For example, on Linux x86_64:
+
+```bash
+version=0.23.0
+target=x86_64-unknown-linux-gnu
+archive="grund-${version}-${target}.tar.gz"
+curl -LO "https://github.com/agent-grounds/grund/releases/download/v${version}/${archive}"
+curl -LO "https://github.com/agent-grounds/grund/releases/download/v${version}/${archive}.sha256"
+sha256sum -c "${archive}.sha256"
+tar -xzf "$archive"
+install -m 755 grund "$HOME/.local/bin/grund"
+```
+
+Add `$HOME/.local/bin` to `PATH` if it is not already there. The `grund-lsp`
+archive is beside the CLI archive when you also need the language server.
+
 ## Supported platforms
 
 | Row | OS / payload floor | Rust target | npm and wheel packages |

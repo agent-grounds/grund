@@ -1,13 +1,12 @@
 # Additional `grund init` repository-shape examples
 
-These supplementary examples turn repository evidence into `[scan]` settings
+These supplementary examples turn repository evidence into source settings
 without making the shipped init skill's primary workflow harder to scan. They
 apply the generated-config contract in [§FS-init.2.4](../functional-spec/FS-init.md#24-generated-grundtoml); include only directories
 that exist in the repository under analysis.
 
-The shapes below are version-1 `[scan]` tables. A version-2 `grund.toml`
-selects the same files by language instead: name the languages the evidence
-shows, map any suffix the v2 epoch lacks, and write the generated paths as
+The shapes below use the version-2 source languages. Name the languages the
+evidence shows, map any suffix the epoch lacks, and write generated paths as
 globs. For the Ruby / Rails shape:
 
 ```toml
@@ -20,8 +19,8 @@ exclude = ["vendor/", "tmp/", "log/", "coverage/"]
 [sources guide](sources.md) has the language table and the suffix and
 definition tables.
 
-Where v1's `[scan] include` names the directories to read, v2 writes them as
-the places of the `code` row, and a kind spread across directories lists each:
+List source directories as places on the `code` row, and list each directory
+when a kind spans several:
 
 ```toml
 [schema.kinds.AR]
@@ -39,10 +38,12 @@ A file in nested places belongs to the deepest
 Evidence: `Gemfile`, `app/`, `lib/`, `spec/`, `test/`.
 
 ```toml
-include = ["docs", "e2e", "app", "lib", "spec", "test"]
-extensions = ["md", "rb"]
-exclude = ["vendor", "tmp", "log", "coverage", ".git"]
-comment_prefixes = ["#"]
+[schema.sources]
+languages = ["markdown", "ruby"]
+exclude = ["vendor/", "tmp/", "log/", "coverage/"]
+
+[schema.kinds.code]
+folders = ["app", "lib", "spec", "test"]
 ```
 
 Pros: covers Rails and library conventions.
@@ -53,10 +54,12 @@ Cons: Rails apps may need to skip generated schema or fixture-heavy paths.
 Evidence: `composer.json`, `src/`, `app/`, `tests/`.
 
 ```toml
-include = ["docs", "e2e", "src", "app", "tests"]
-extensions = ["md", "php"]
-exclude = ["vendor", "var", "cache", "build", ".git"]
-comment_prefixes = ["//", "#", "/*", "*"]
+[schema.sources]
+languages = ["markdown", "php"]
+exclude = ["vendor/", "var/", "cache/", "build/"]
+
+[schema.kinds.code]
+folders = ["src", "app", "tests"]
 ```
 
 Pros: works for Composer apps and frameworks.
@@ -67,10 +70,12 @@ Cons: framework cache dirs vary; inspect before finalizing.
 Evidence: `Package.swift`, `Sources/`, `Tests/`.
 
 ```toml
-include = ["docs", "e2e", "Sources", "Tests"]
-extensions = ["md", "swift"]
-exclude = [".build", "DerivedData", ".git"]
-comment_prefixes = ["//", "/*", "*"]
+[schema.sources]
+languages = ["markdown", "swift"]
+exclude = [".build/", "DerivedData/"]
+
+[schema.kinds.code]
+folders = ["Sources", "Tests"]
 ```
 
 Pros: matches Swift Package Manager.
@@ -81,14 +86,16 @@ Cons: Xcode projects may have different app/test directories.
 Evidence: `build.sbt`, `src/main/scala`, `src/test/scala`.
 
 ```toml
-include = ["docs", "e2e", "src"]
-extensions = ["md", "scala"]
-exclude = ["target", ".bloop", ".metals", ".git"]
-comment_prefixes = ["//", "/*", "*"]
+[schema.sources]
+languages = ["markdown", "scala"]
+exclude = ["target/", ".bloop/", ".metals/"]
+
+[schema.kinds.code]
+folders = ["src"]
 ```
 
 Pros: covers sbt source layout; `target` names a directory at every depth, so it
-excludes `project/target` too, and a version-1 entry holding `/` is refused.
+excludes `project/target` too.
 Cons: generated sources may need explicit exclusion.
 
 ## SQL / Data Projects
@@ -96,10 +103,12 @@ Cons: generated sources may need explicit exclusion.
 Evidence: `db/`, `migrations/`, `models/`, `*.sql`, `dbt_project.yml`.
 
 ```toml
-include = ["docs", "e2e", "db", "migrations", "models", "tests"]
-extensions = ["md", "sql", "py", "yml", "yaml"]
-exclude = ["target", "logs", ".venv", ".git"]
-comment_prefixes = ["--", "#"]
+[schema.sources]
+languages = ["markdown", "sql", "python"]
+exclude = ["target/", "logs/", ".venv/"]
+
+[schema.kinds.code]
+folders = ["db", "migrations", "models", "tests"]
 ```
 
 Pros: covers dbt and migration-heavy repos.

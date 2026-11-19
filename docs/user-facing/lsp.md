@@ -55,15 +55,19 @@ Rust toolchain, and put the same `grund-lsp` command on `PATH`; see
 
 `grund-lsp` speaks LSP over stdio. Configure your editor to launch `grund-lsp` from the workspace root; there is no daemon, socket, or long-running service outside the editor process ([§FS-lsp.2.2](../functional-spec/FS-lsp.md#22-lifecycle)).
 
-Use the same file types you scan in `grund.toml`. Markdown is the usual minimum; add Rust, Python, Go, JavaScript, TypeScript, or any other source languages in your `[scan] extensions`.
+In a workspace, clients that choose the nearest project marker must still use
+the workspace root, not a member's `grund.toml`.
 
-In a version-2 `grund.toml` the file types are the languages `[schema.sources]` admits rather than `[scan] extensions`: attach the server to each admitted language and to every suffix `[schema.sources.extensions]` maps, such as `.h` when `h = "c"`. A suffix the configuration does not admit is not read, so the server reports nothing in it. See [sources](sources.md).
+Use the same file types you scan in `grund.toml`. In version 2, attach the
+server to each language `[schema.sources]` admits and every suffix
+`[schema.sources.extensions]` maps, such as `.h` when `h = "c"`. A suffix the
+configuration does not admit is not read, so the server reports nothing in it.
 
 ## Write a citation
 
-Completion is available in the source version of `grund-lsp`; use the workspace
-install above until a release includes it. In a Markdown note in this repository,
-type the first line, request completion, and select `FS-lsp`:
+Completion is available in `grund-lsp`. In a Markdown note in your repository,
+type a citation to one of your declarations, request completion, and select it.
+For example, in grund's repository, type:
 
 ```text
 See §FS-ls
@@ -148,7 +152,7 @@ The editor reports changes only inside its folders, so the server watches each i
 
 ## VSCode / VSCodium
 
-Install a generic LSP client extension and configure it to launch `grund-lsp` for Markdown plus the source file types in your `[scan] extensions`. Use one that is available on your editor's marketplace: VSCodium installs from Open VSX, where "Simple LSP Client" (`wdomitrz.simple-lsp-client`) is published — the older `zsol.vscode-glspc` is only on the Microsoft Marketplace and cannot be installed in VSCodium.
+Install a generic LSP client extension and configure it to launch `grund-lsp` for Markdown plus the source file types admitted by your `grund.toml` (see [source-file configuration](sources.md)). Use one that is available on your editor's marketplace: VSCodium installs from Open VSX, where "Simple LSP Client" (`wdomitrz.simple-lsp-client`) is published — the older `zsol.vscode-glspc` is only on the Microsoft Marketplace and cannot be installed in VSCodium.
 
 **Check Workspace Trust first.** Under default Workspace Trust handling, VS Code and VSCodium disable Simple LSP Client 0.1.22 and `zsol.vscode-glspc` 0.2.1 in untrusted folders because those versions do not declare untrusted-workspace support. Look for **Restricted Mode** in the status bar: with the client disabled, there is no hover or diagnostics from grund, and no `grund-lsp` process because the server does not start ([§FS-lsp.2.3](../functional-spec/FS-lsp.md#23-editor-configuration-one-time-per-editor)).
 
@@ -174,7 +178,7 @@ With "Simple LSP Client", add this to your settings (workspace `.vscode/settings
 }
 ```
 
-The `cmd` is the path to the installed binary; `${userHome}/.cargo/bin/grund-lsp` is where `cargo install` places it. If `grund-lsp` is already on the editor's `PATH`, `["grund-lsp"]` works too. The `filetypes` are VS Code language IDs and must match the languages you scan. To get the live `$$` → `§` transform, also enable `"editor.formatOnType": true` for those languages.
+The `cmd` is the path to the installed binary; `${userHome}/.cargo/bin/grund-lsp` is where `cargo install` places it. If `grund-lsp` is already on the editor's `PATH`, `["grund-lsp"]` works too. The `filetypes` are VS Code language IDs and must match the languages admitted by your `grund.toml` (see [source-file configuration](sources.md)). To get the live `$$` → `§` transform, also enable `"editor.formatOnType": true` for those languages.
 
 **Prefer user (global) settings over a per-repo `.vscode/settings.json`.** Put the `simpleLspClient.servers` block above in your user settings once to make the server configuration available in every project you open. User settings do not grant workspace trust; the named clients still need a trusted folder to activate under default handling. A per-repo `.vscode/settings.json` only wires the server for that one repo — without user settings, opening another repo without that file leaves VSCode using its built-in Markdown behavior: Ctrl-click underlines a single hyphen-delimited word instead of the whole `§<ID>` token, and find-references misses the `grund` citation sites. Use a workspace `.vscode/settings.json` only for a deliberate per-project override.
 
@@ -188,11 +192,9 @@ available. See the [official IntelliSense guide](https://code.visualstudio.com/d
 
 ## IntelliJ family
 
-The published `grund-lsp` 0.13.1 does not include the `integrations` subcommand;
-until the next release, use the source-install command documented above.
 Install LSP4IJ, then generate an importable template from the project root. The
 generator discovers that project's `grund.toml`, snapshots its effective
-`[scan].extensions`, and records the absolute path of the installed server
+source file types (see [source-file configuration](sources.md)), and records the absolute path of the installed server
 ([§FS-lsp.2.4](../functional-spec/FS-lsp.md#24-installed-editor-integrations)):
 
 ```bash
@@ -246,9 +248,9 @@ See §FS-lsp
 ```
 
 The imported template launches the installed `grund-lsp` from the IntelliJ
-project root and maps every effective scan extension. It does not install the
-plugin or edit IntelliJ-owned configuration. If `[scan].extensions` changes,
-regenerate and import the directory again. The completion popup opens on `$$`
+project root and maps every effective source file type. It does not install the
+plugin or edit IntelliJ-owned configuration. If the project's admitted source
+file types change, regenerate and import the directory again. The completion popup opens on `$$`
 as you type, with no extra LSP4IJ setting.
 
 Open a file containing a `§` citation and verify hover, navigation, and
@@ -266,6 +268,7 @@ vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
     vim.lsp.start({
       name = "grund-lsp",
       cmd = { "grund-lsp" },
+      -- In a workspace, set this to the workspace root, e.g. "/path/to/workspace".
       root_dir = vim.fs.root(args.buf, { "grund.toml", ".agents/grund.toml", "AGENTS.md", ".git" }),
     })
   end,
@@ -274,7 +277,7 @@ vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
 
 If you use `nvim-lspconfig`, keep your usual language servers and add `grund-lsp` as a separate client for the same buffers; it should not replace `rust_analyzer`, `pyright`, `gopls`, `ts_ls`, or other language-specific servers.
 
-For Vim, use an LSP client plugin that can launch a stdio server and point it at `grund-lsp` for Markdown plus the source file types in your `[scan] extensions`.
+For Vim, use an LSP client plugin that can launch a stdio server and point it at `grund-lsp` for Markdown plus the source file types admitted by your `grund.toml` (see [source-file configuration](sources.md)).
 
 With Neovim's built-in completion, use Ctrl-X Ctrl-O to request and Ctrl-Y to
 accept a selected item. On versions supporting `vim.lsp.completion.enable`,
@@ -423,7 +426,19 @@ Adjust the selector to match the syntaxes you scan in `grund.toml`.
 
 ## Check the wiring
 
-Open a file containing a resolving citation such as `§FS-check`.
+Pick an ID from `grund list`, then open a file containing a citation to it. Check
+the hover against `grund <ID> --toc` and compare its cited-site total with
+`grund refs <ID> --total`.
+
+- Hover should show the same body as `grund <ID> --toc` ([§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview)).
+- Hover a whole-ID title and compare the cited-site total with `grund refs <ID> --total`; an uncited title reads `not cited` ([§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview), [§FS-refs.3.4](../functional-spec/FS-refs.md#34---total)). In a workspace, qualify the ID with its alias and run the command from the workspace root, for example `grund refs api/FS-session --total`.
+- Hover a numeric or opted-in named section heading and the count is that section **and everything under it** — compare with `grund refs <ID>.<section> --descendants --total`. A bare `--section` is still the narrow question, keeping only citations whose coordinate is exactly the one asked for; which of the two a heading counts is stated in [§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview).
+- Go-to-definition should jump to the declaration ([§FS-lsp.1.3](../functional-spec/FS-lsp.md#13-go-to-definition)).
+- Find references from a declaration title should list citation sites ([§FS-lsp.1.3.1](../functional-spec/FS-lsp.md#131-citations-from-declarations)).
+- Clickable citation links target the declaration line; editors that ignore file URI `#L<n>` fragments should still use go-to-definition for the exact jump ([§FS-lsp.1.3.2](../functional-spec/FS-lsp.md#132-document-links)).
+- Typing `$$FS-check` should rewrite the trigger to `§FS-check` ([§FS-lsp.1.4](../functional-spec/FS-lsp.md#14-live-trigger-transform)).
+
+## Local section citations
 
 Stored section citations use the same full-ID form. Consider this example input
 inside an `FS-check` declaration body with section 2.1 but no section 9.9:
@@ -457,11 +472,3 @@ or `<§>9.9` makes it an inert illustration with no citation diagnostic or navig
 The live typing transform remains `$$<ID>` to a full citation. `$$2` is not a
 local-section typing feature and no LSP quick-fix is added; canonicalization is
 the formatter's bulk migration path ([§FS-fmt.2.4](../functional-spec/FS-fmt.md#24-shorthand-to-canonical)).
-
-- Hover should show the same body as `grund FS-check --toc` ([§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview)).
-- Hover a whole-ID title — the `# FS-check: …` heading, the same declaration written inline in a doc-comment, or the stub that points at it — and the popup reads `` `FS-check: …` — cited at 12 sites across 5 files ``: the same sites `grund refs FS-check` lists, counted. An uncited title reads `not cited`, and `grund refs FS-check --total` prints that same clause in a terminal ([§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview), [§FS-refs.3.4](../functional-spec/FS-refs.md#34---total)). Compare from the root the editor opened — in a workspace that is `grund refs <alias>/FS-check` from the workspace root and `grund refs FS-check` from inside the member — or the two are counting different trees.
-- Hover a numeric or opted-in named section heading and the count is that section **and everything under it** — the same set the heading's own references return, and the same set `grund refs FS-check.3.2 --descendants` prints from the terminal, counted by `--total`. A bare `--section` is still the narrow question, keeping only citations whose coordinate is exactly the one asked for; which of the two a heading counts is stated in [§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview).
-- Go-to-definition should jump to the declaration ([§FS-lsp.1.3](../functional-spec/FS-lsp.md#13-go-to-definition)).
-- Find references from a declaration title should list citation sites ([§FS-lsp.1.3.1](../functional-spec/FS-lsp.md#131-citations-from-declarations)).
-- Clickable citation links target the declaration line; editors that ignore file URI `#L<n>` fragments should still use go-to-definition for the exact jump ([§FS-lsp.1.3.2](../functional-spec/FS-lsp.md#132-document-links)).
-- Typing `$$FS-check` should rewrite the trigger to `§FS-check` ([§FS-lsp.1.4](../functional-spec/FS-lsp.md#14-live-trigger-transform)).

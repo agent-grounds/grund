@@ -6,16 +6,17 @@ reader and `grund check` give it the same meaning. See [§FS-rules.1](../functio
 [§FS-rules.10](../functional-spec/FS-rules.md#10-documentation-and-executable-examples).
 
 Opt in one citable Markdown kind, then put one sentence and a non-empty
-rationale in every declaration:
+rationale in every declaration. Set `form = "rule"` on its
+`[schema.kinds.<KIND>]` table, as introduced in the
+[fields guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/fields.md#rule-and-value-kinds):
 
 ```toml
-[[kinds]]
-kind = "RULE"
-folder = "docs/rules"
+[schema.kinds.RULE]
+folders = ["docs/rules"]
 index = false
-rules = true
+form = "rule"
 
-[citations.RULE]
+[rules.citations.RULE]
 must = ["GOAL"]
 ```
 
@@ -47,23 +48,6 @@ In either spelling `NAME` is the chapter's whole path: `FS.requirements.terms`
 selects a nested `requirements.terms` chapter, and `FS.terms` only a `terms`
 chapter directly under each FS ([§FS-rules.2.1](../functional-spec/FS-rules.md#21-a-chapters-name-is-its-whole-path)).
 
-Named-chapter subjects require `[id] named_sections = true`. With named
-sections off, a refused subject is answered with a sentence you can paste
-back, and its label says whether you have to turn the switch on first:
-`accepted form after enabling it:` where you do, and a plain `accepted form:`
-where the sentence works as configured. Where no configured kind can be
-recovered, as in `POLICY.requirements`, no sentence is offered and the refusal
-lists the known kinds instead. Where the only sentence grund could build drops
-a chapter you typed, as in `FS-login.Requirements`, none is offered either.
-`FS-*.requirements` is not an ID, so it is answered with the chapter subject it
-meant
-([§FS-rules.3.5.2](../functional-spec/FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)):
-
-```text
-$ grund check --rule 'FS-*.requirements must cite at least one REQ.'
-error: named chapter subjects require [id] named_sections = true; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.
-```
-
 <!-- BEGIN chapter-rules -->
 ### Chapter rules
 
@@ -88,8 +72,11 @@ Subjects select local units only:
 
 Named chapter subjects select handles: `The goal chapter of each FS` reaches `## goal: Goal and hypothesis` by `goal` ([chapter subjects](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#2-subject-selectors)). Presence rules compare direct chapter display names case-insensitively: `Each FS must have exactly one goal chapter.` counts zero for that heading and one for `## goal: Goal` ([presence matching](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#31-chapter-presence)). The finding appends the expected display name and observed pairs such as `"goal: Goal and hypothesis"`, or `none` ([comparison context](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#721-display-name-comparison-context)). Presence `NAME` must be one non-empty token: `Goal and hypothesis` is refused with `NAME forbids whitespace anywhere.` appended to the existing guidance; authored display titles may still contain spaces ([whitespace refusal](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#351-presence-name-whitespace-refusal)).
 
-Named-chapter subjects require `[id] named_sections = true` in version 1;
-version 2 always reads named sections. Phase 1 has no paths, files, folders,
+Chapter subjects and presence rules count named sections only; numbered
+sections do not count as chapters. For a `Terms` chapter rule, change
+`## 1. Terms` to `## terms: Terms`.
+
+Phase 1 has no paths, files, folders,
 wildcards, subject namespaces, numbered-chapter subjects, exceptions,
 definitions, derived terms, settings, or source-code symbols.
 
@@ -224,7 +211,6 @@ Common refusals are intentional. A sentence is refused for the first stage it fa
 - `FS-login.* must cite at least one REQ.` → `section-component wildcards are not accepted in phase 1` (no rewrite)
 - `Each chapter of each FS must cite at least one REQ.` → `chapter-quantified subjects are not accepted in phase 1` (no rewrite)
 - `FS-login.2 must cite at least one REQ.` → `numbered chapter subjects can detach when headings move` (no rewrite)
-- With named sections off, `FS-login.requirements must cite at least one REQ.` → `named chapter subjects require [id] named_sections = true; accepted form after enabling it: FS-login.requirements must cite at least one REQ.`
 - `Each POLICY must cite at least one GOAL.` → `unknown kind "POLICY"`, then `known kinds: GOAL, REQ, FS, AR, RULE`
 - `Each FS must cite at least one distinct GOAL.` → `"distinct" is redundant after "at least one"; accepted form: Each FS must cite at least one GOAL.`
 - `Each FS must cite at least 1 distinct GOAL.` → `numeric "at least 1" is not canonical; accepted form: Each FS must cite at least one GOAL.`
@@ -270,26 +256,14 @@ See [the quantifier refusal](https://github.com/agent-grounds/grund/blob/main/do
 For a configured, scanned non-citable place `e2e` at `tests/e2e/`, both
 `Each e2e must cite at least one FS.` and
 `Each file in tests/e2e/ must cite at least one FS.` remain refused. Follow
-the supplementary hint to express this obligation in a version-2 `grund.toml`
-(`[citations.e2e]` in version 1):
+the supplementary hint to express this obligation in a version-2 `grund.toml`:
 
 ```toml
 [rules.citations.e2e]
 must = ["FS"]
 ```
 
-Use `[citations.e2e]` in a version-1 config. That entry judges only a file
-that already cites something, so a file there that cites nothing still passes.
-Where the row grounds nothing, the hint therefore also names the grounding
-setting that makes such a file a finding, in a version-2 `grund.toml`:
-
-```toml
-[rules.citations.e2e.grounding]
-must = "file"
-```
-
-Use `require_grounding = true` on the `e2e` `[[kinds]]` row in a version-1
-config. Where the row already grounds, the hint names the citation entry alone.
+Where the row already grounds, the hint names the citation entry alone.
 This is configuration guidance; it offers no accepted sentence rewrite. See the
 [place-subject guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration)
 for the exact matching boundary, and the [runnable example](https://github.com/agent-grounds/grund/tree/main/examples/rules)
@@ -326,7 +300,7 @@ folds into a citation direction, `[rules.citations]` in version 2. `grund list -
 same clause.
 
 A clause the grammar does not accept is refused for the part that failed,
-checked in this order: a version-1 config, the clause's shape, the field,
+checked in this order: the clause's shape, the field,
 whether it is a scalar, the value's whitespace, then the value ([whose refusals](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)). In a repository whose
 `SWR` declares the scalar `verification` and the prose field `rationale`, whose
 `AN` declares the scalar `status` with `one_of = ["Draft", "Must fix", "fix and
@@ -345,7 +319,6 @@ retest", "fix must wait"]`, and whose `TC` declares no field, the reasons are:
 - `SWR-brake-latency whose verification is Test must be cited by at least one TC.` → `literal subject "SWR-brake-latency whose verification is Test" does not match the configured ID grammar — a whose clause narrows only Each KIND and The NAME chapter of each KIND`
 - `Each AN must cite at least one SWR whose verification is Test.` → `unknown kind "SWR whose verification is Test" — a whose clause narrows only a rule's subject`, then `known kinds: SWR, TC, AN`
 - `Each POLICY whose status is Open must cite at least one SWR.` → `unknown kind "POLICY"`, then `known kinds: SWR, TC, AN`
-- A version-1 config → `whose clauses require grund_config_version = 2`
 
 Only a value joined by ` or ` is offered a form, one sentence per value; a
 selector is offered none. Every rule row reads the same with
@@ -387,7 +360,7 @@ an `invalid-rule` finding with exit 1.
 
 Findings sort bytewise by path, line, then message. Two identical declarations
 collapse semantically and name sorted authorities, for example
-`(RULE-a, RULE-b)`. If an existing `[citations]` (version 1) or `[rules.citations]`
+`(RULE-a, RULE-b)`. If an existing `[rules.citations]`
 (version 2) entry says the same bare-kind rule, the existing config finding
 wins byte-for-byte and no rule tail is added.
 <!-- END chapter-rules -->
@@ -427,7 +400,7 @@ judge the rule with the full vocabulary
 ([§FS-init.4.1](../functional-spec/FS-init.md#41-what-earns-the-1)).
 
 A citation counts for a rule wherever `grund check` resolves it, so a rule
-never disagrees with a `[citations.KIND]` obligation about the same citation.
+never disagrees with a citation obligation about the same citation.
 A citation to a named chapter, `GOAL-x.outcome`, counts for that chapter. A
 citation to a numbered section counts for its nearest named ancestor chapter,
 or else for its declaration: `GOAL-x.outcome.2` counts for `GOAL-x.outcome`,
@@ -459,7 +432,7 @@ anchors it, so a narrowed run never passes a count the whole run fails.
 [§FS-rules.7.3.1](../functional-spec/FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted)
 
 A rule reads a declaration written behind a stub on what its target says, even
-where the target is outside `[scan] include`: the target's citations count, its
+where the target is outside the configured source scope: the target's citations count, its
 chapters are counted, and a forbidden citation there is reported at its line in
 the target. A count or chapter count the declaration fails is reported at its
 line in the target too. In 0.18.0 a finding only those citations and chapters
@@ -485,9 +458,10 @@ from 0.19.0 it is an ordinary error and fails the run.
 The runnable [`examples/rules/`](../../examples/rules/) repository includes a
 passing and violated instance of all five families, shared-prefix coverage
 targets, both deduplication directions, both channels, and the strict refusal
-inventory. `grund init` repeats valid configured sentences under a v11
-`### Chapter rules` managed section; without a rule kind, v10 bytes are
-unchanged. [§FS-rules.6](../functional-spec/FS-rules.md#6-semantic-deduplication) [§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits) [§FS-rules.9](../functional-spec/FS-rules.md#9-managed-guidance-and-editor-parity)
+inventory. `grund init` repeats valid configured sentences under the current managed
+block revision: the rules revision when rule guidance is scoped in `AGENTS.md` or a
+declaration; see [the current revision list](init.md#the-blocks-revision-is-not-grunds-release).
+[§FS-rules.6](../functional-spec/FS-rules.md#6-semantic-deduplication) [§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits) [§FS-rules.9](../functional-spec/FS-rules.md#9-managed-guidance-and-editor-parity)
 
 ### Asking only what one sentence found
 
@@ -509,7 +483,7 @@ It requires `--rule` — alone it is `error: --only-rule requires --rule` and ex
 withholds, so the second form needs `--suggestions` as well or the scoped run
 prints `success`. A finding the sentence authored jointly with a declared rule
 that means the same is in a scoped report, with its tail unchanged; a sentence
-duplicating a `[citations]` direction authors nothing, so its scoped report is
+duplicating a citation direction authors nothing, so its scoped report is
 empty and the run says `success` while the tree's own findings still stand.
 
 Narrowing by code to what rules find never hides a rule that could not run.
@@ -528,11 +502,13 @@ $ echo $?
 about the valid rules alone. The same selection carries a rule that applies to
 nothing: a `must` or `should` sentence whose subject kind has a walked folder
 that declares no ID says so, with the rule's authority, so `--only-rule` keeps it
-for the trial sentence and the narrowed run prints no bare `success`:
+for the trial sentence and the narrowed run prints no bare `success`. This
+example uses a citable `test` kind whose folder is `tests/e2e/` and declares no
+ID; `test` is distinct from the non-citable `e2e` place above:
 
 ```console
-$ grund check --rule "Each e2e must cite at least one FS." --only-rule
-warning: --rule applies to nothing — tests/e2e/ declares no e2e ID
+$ grund check --rule "Each test must cite at least one FS." --only-rule
+warning: --rule applies to nothing — tests/e2e/ declares no test ID
 ```
 [§FS-check.1.4](../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore) [§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits) [§FS-check.2.2.1.4](../functional-spec/FS-check.md#2214-a-rules-obligation)
 
@@ -552,7 +528,7 @@ field finds its chapter by section name and adds what a rule cannot say: where
 the chapter stands, what it is titled byte for byte, which values a scalar may
 take, and whether anything else may appear. Reach for a field to state a kind's
 shape, and for a rule to state a count, to bind one declaration, or in a
-version-1 project.
+project.
 
 Neither replaces the other: a presence rule stays valid, rendered and evaluated
 beside a field that expresses it, as `RULE-terms` stays beside a `terms` field.
@@ -561,7 +537,7 @@ equals the rule's chapter name ignoring case. Where both see the same absence
 in one declaration on the same channel — the rule counts zero chapters and the
 field reports `missing-field` or `mistitled-field` — the field's finding is the
 one reported, and the rule's `chapter-cardinality` is dropped with no rule ID
-appended, the way a `[citations]` duplicate already wins. A defect only one of
+appended, the way a citation duplicate already wins. A defect only one of
 them sees still reports: two chapters titled Terms under different names fail
 the rule and not the field, `## glossary: Terms` fails the field and not the
 rule, and a `must` rule beside a `warn` field reports both, so adding a field

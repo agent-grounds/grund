@@ -11,6 +11,20 @@ only puts the recipes side by side ([§FS-init.2.3.4.3.1](../functional-spec/FS-
 Unless a workspace fixture is named, the examples below were run in the `grund`
 repository itself.
 
+## Read one point with `grund <ID>`
+
+Run `grund <ID>` to read a declaration's lead: the introductory text before its
+first child section, or the whole body when the declaration has no sections.
+Add `--toc` to see the nested section map, `--brief` for the heading and first
+paragraph, or `--full` for the whole declaration. For example, after following
+the first declaration in [the init walkthrough](init.md), use its ID:
+
+```sh
+grund FS-store-widgets
+grund FS-store-widgets --toc
+grund FS-store-widgets --full
+```
+
 ## Recover a member's qualified ID
 
 At a workspace root, an unqualified show query searches the root project. If
@@ -96,7 +110,8 @@ where it is declared, its title, and how often it is cited.
 
 A subject may end in a whose clause that keeps only the declarations whose
 scalar field holds one value ([§FS-rules.2.2](../functional-spec/FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)), so the listing shows what a
-filtered rule would reach before you write it:
+filtered rule would reach before you write it. This example runs in the
+[SWR rule-field-value fixture](../../examples/rule-field-value/1-every-swr/repo/):
 
 ```console
 $ grund list --selector "Each SWR whose verification is Test"
@@ -119,7 +134,7 @@ hint: grund show --batch --toc expands each selected unit into its sections
 
 In a workspace, the projects a selector or `--kind` reads each answer for their
 own kinds ([§FS-scan.projects.kinds](../functional-spec/FS-scan.md#projectskinds-whose-kinds-a-run-reads)). A `KIND.NAME` selector follows the
-`[id] named_sections` setting of the project that configures `KIND`, not the
+configuration setting of the project that configures `KIND`, not the
 root's. So when member `api` turns named sections on, `list --selector API.terms`
 lists the same `terms` chapters that `grund api/API-a.terms` shows. A kind
 configured with `citable = false` is refused as a kind that declares no IDs,

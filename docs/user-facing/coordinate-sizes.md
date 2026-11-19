@@ -1,7 +1,10 @@
 # Coordinate sizes
 
+Configuration reference: [`[schema.leads.words]`](configuration.md#schemaleadswords) covers the warning threshold configured here.
+
 `grund list --size` measures the text an agent can fetch through each declaration
-and section coordinate. It reports both the lead returned by a default read and
+and section coordinate. It reports both the
+[lead returned by a default read](querying.md#read-one-point-with-grund-id) and
 the full body returned by `--full`, using the same body slicing as `grund show`
 ([§FS-list.3.4](../functional-spec/FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements)).
 
@@ -35,20 +38,20 @@ fences, because those bytes are part of the exact text body `grund show`
 returns. They can raise byte and word counts (and an opted-in warning near its
 limit), but they do not add lines; wrappers in ordinary prose remain flattened.
 
-## Opt into a warning
+## Opt into a lead-size check
 
-Add one closed inline table to the project whose coordinate leads you want
-checked ([§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)):
+In a version-2 config, add this table to the project whose coordinate leads you
+want checked ([§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)):
 
 ```toml
-[reference]
-lead_size_warning = { max = 600, unit = "words" }
+[schema.leads.words]
+warn = 600
 ```
 
-The key accepts a non-negative `max` and one of `lines`, `words`, or `bytes`.
-It is absent by default. A lead strictly over the maximum produces the fixed
-`oversized-lead` warning; equality passes and warnings do not change the exit
-status ([§FS-declarations.checks.oversized-lead](../functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
+The warning does not change the exit status. Version 2 measures words and is
+off by default. A lead strictly
+over the maximum is reported at the severity set by its strength. Equality passes
+([§FS-declarations.checks.oversized-lead](../functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
 Without the key the check is off, so `grund check --only oversized-lead` says
 `--only oversized-lead judged nothing` and names the key, rather than printing a
 `success` that judged no lead
@@ -56,7 +59,9 @@ Without the key the check is off, so `grund check --only oversized-lead` says
 
 The remedy is structural, not deletion: move detailed prose into citable child
 sections, which keeps the parent coordinate stable, or promote a child section
-to its own declaration after running `grund refs <ID> --total` for its size, or
-`--summary` for the files behind it. Each workspace
+to its own declaration. Before splitting, run `grund refs <ID>.<section>` and
+change each citer to the new ID; then move the section, renumber the remaining
+sections, and run `grund fmt --write`. Run `grund refs <ID> --total` for the
+declaration's size, or `--summary` for the files behind it. Each workspace
 member uses its own config. Explicit-path checks judge only sites in that path,
 and `--full` does not widen this project policy beyond its configured scan scope.

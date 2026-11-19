@@ -9,7 +9,7 @@ whole project ([§FS-check.6.2](../functional-spec/FS-check.md#62-each-run-is-a-
 ```bash
 grund check --watch
 grund check --watch src/ --only dangling
-grund check --watch --format json > findings.ndjson
+grund check --watch --format json > /tmp/findings.ndjson
 ```
 
 Save a file to update the report. A clean text run prints `success`. JSON contains
@@ -22,9 +22,8 @@ screen clearing controls ([§FS-check.6.2.1](../functional-spec/FS-check.md#621-
 is a capable terminal and stderr shares it or is redirected. Each publication
 clears that screen; Ctrl-C restores the content from before watching. Redirected
 stderr keeps appending even while stdout clears. Distinct terminals, dumb terminals
-and redirected stdout append without controls. JSON never clears; switching a
-config default from text to JSON restores the screen, and switching back can
-acquire it again. An explicit format always wins over config defaults
+and redirected stdout append without controls. JSON never clears; switching
+back can acquire it again. Version 2 sets the format only with `--format`.
 ([§FS-check.6.2.2](../functional-spec/FS-check.md#622-owned-terminal-screen)).
 
 **Detection.** Linux, macOS and Windows use native `notify` backends. Watch observes
@@ -58,7 +57,8 @@ exit 2 ([§FS-check.6.3.1](../functional-spec/FS-check.md#631-recoverable-runs),
 [§FS-check.6.3.2](../functional-spec/FS-check.md#632-fatal-watcher-failures)).
 
 Ctrl-C returns the last completed check's status: 0 for the selected report with
-no errors, 1 for selected findings, or 2 for an operational failure. Before any
+no errors, 1 when the selected report has errors, or 2 for an operational failure.
+These exit statuses match [`grund check`](checking.md#the-report). Before any
 check completes, interruption prints `error: interrupted before the first check completed`
 and returns 2. An active scan finishes privately and its unpublished result is
 discarded; publication already begun finishes both streams and flushes. Shutdown

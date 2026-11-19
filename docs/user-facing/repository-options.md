@@ -7,6 +7,7 @@ config orchestrate them:
 
 ```toml
 project_name = "root"
+grund_config_version = 2
 
 [workspace]
 members = ["apps/api", "packages/*"]
@@ -26,13 +27,16 @@ Cross-project citations add a stable alias before the ID:
 §root/GOAL-compatibility
 ```
 
+A member's alias is its `project_name`, or its directory name when it has no
+`grund.toml`. Aliases must match `[a-z][a-z0-9-]*`; `grund init` copies the
+directory name into `project_name`, so set a valid `project_name` or pass a
+valid `grund init --name` before joining if the directory name does not match.
+
 `grund check` at the workspace root validates the root project and every member,
-without letting root scans accidentally absorb member declarations, even if the
-root `[scan] include` names a path inside a member. Members without
-a `grund.toml` of their own use the canonical defaults, and a member that declares its
-own `[workspace]` block is rejected in v1. Each project can also set a one-line
-`project_description` next to `project_name`; `grund init` renders it beside
-the alias in the generated workspace member list (see
+without letting root scans accidentally absorb member declarations. Members
+without a `grund.toml` of their own use the canonical defaults. Set
+`[presentation] description` to show a one-line description beside the alias;
+`grund init` renders it in the generated workspace member list (see
 [§FS-config](../functional-spec/FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)). Cross-repository aliases — an
 alias like `payments/FS-refunds` resolving to a neighboring repo — are not yet
 supported. A project whose citers live in a repository it cannot read can still
@@ -53,9 +57,7 @@ being treated as the root project's name.
 member's, and names the config findings of the root's config, of each project
 the workspace expansion returns, and of each `include_root = false` block it
 reaches, which is no project but whose config the run reads
-([§FS-check.4.11.3](../functional-spec/FS-check.md#4113-once-per-config-not-once-per-scope)) — the set `grund check` names and in its words: a
-config read as version 1, one read from the deprecated `.agents/`
-location, and an `.agents/grund.toml` that a `grund.toml` beside it outranks.
+([§FS-check.4.11.3](../functional-spec/FS-check.md#4113-once-per-config-not-once-per-scope)) — the set `grund check` names and in its words: an `.agents/grund.toml` that a `grund.toml` beside it outranks.
 `grund config show` prints one config, the root's, and names only that config's
 findings; for the set above, run `grund config validate`
 ([§FS-config.4.1.1](../functional-spec/FS-config.md#411-at-a-workspace-root), [§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)).
@@ -97,8 +99,8 @@ only from a full checkout, whose root `check` names every block still waiting
 
 An independently checked project's canonical root also bounds directory
 symlinks: outward directory targets are not scanned, including from inside a
-workspace member, while in-root directory links, file links, and intentional
-parent-relative `[scan] include` paths remain readable
+workspace member, while in-root directory links, file links, and parent-relative paths remain
+readable
 ([§FS-scan.scope.links](../functional-spec/FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)).
 Handing such a link to `grund check x` reads nothing below it, and the warning
 says so: `x` is a directory link out of the project root that grund does not
@@ -236,7 +238,7 @@ The recipe has four limits, and each is part of using it:
 - **It is stale until someone regenerates it.** That is why regeneration is a
   step of the recipe, not an afterthought.
 - **Under a closed `[rules.citations] default = "must-not"`,** the page is in the
-  homeless `code` row, which must `may` the kinds it lists — for example
+  complement `code` row, which must `may` the kinds it lists — for example
   `[rules.citations.code]` with `may = ["FS"]`. Otherwise every line is refused:
   `docs/downstream-citers.md:8: error: code must not cite FS (citation direction) — re-point the citation or downgrade it to a plain Markdown link`.
 - **The closed side's own gate still has to resolve its `substratevm/...`
@@ -259,15 +261,16 @@ way to do that.
 
 A citable kind can opt its numbered fields into exact value checking:
 
-An explicit `[[kinds]]` list replaces the implicit default kinds; copy the default rows from [`FS-config` section 3.4.4](../functional-spec/FS-config.md#344-the-default-kinds) first, or existing declarations may disappear from `list` and `check` remains green because those kinds no longer exist.
+Explicit kind tables replace the implicit defaults; include every kind the project needs.
+
+Version 2:
 
 ```toml
-[[kinds]]
-kind = "CONST"
-folder = "values"
+[schema.kinds.CONST]
+folders = ["values"]
 index = false
-format = "{kind}-{slug}"
-values = true
+id_format = "{kind}-{slug}"
+form = "value"
 ```
 
 ```markdown
@@ -303,16 +306,16 @@ code can read the source directly. See the complete
 
 ## Cite external facts without making checks depend on the network
 
-External tickets and similar facts can use their own numeric grammar while the rest of the repository keeps slug IDs. Configure a committed snapshot home and
-one repository-owned fetcher, then materialize a cited fact deliberately:
+External tickets and similar facts can use their own numeric grammar while the rest of the repository keeps slug IDs. Version 2 configures a committed snapshot home and fetcher, then materializes a cited fact deliberately:
 
 ```toml
-[[kinds]]
-kind = "GH"
-file = "docs/tickets.md"
-format = "{kind}-{number}"
-resolve = "should"
+[schema.kinds.GH]
+files = ["docs/tickets.md"]
+id_format = "{kind}-{number}"
 fetch = "scripts/fetch-ticket"
+
+[rules.resolution]
+GH = "warn"
 ```
 
 ```sh
@@ -354,7 +357,7 @@ warn = ["GOAL"]
 warn = "file"
 ```
 
-`[rules.citations.<KIND>]` writes the same lists as v1's
+`[rules.citations.<KIND>]` writes the citation lists
 [citation directions](citation-directions.md), with two more levels: `warn` is
 the `must` obligation and `warn-not` the `must-not` prohibition, each reported
 as a standing warning that leaves the exit code at 0. A v2 `default` may
@@ -363,7 +366,7 @@ forbid, as `should-not`, `warn-not` or `must-not`, but never obliges:
 
 Each row is its own `[schema.kinds.<NAME>]` table, and a key is read only in
 the table written above it. Its defaults are fixed by the version rather than
-by the binary, and a version-1 file keeps its meaning unchanged.
+by the binary.
 `grund config show` prints a version-2 file back in version-2 spelling. What
 this release reads, and the clauses it still refuses, are in
 [§FS-config-v2](../functional-spec/FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults).
@@ -387,8 +390,8 @@ folders = ["crates", "scripts"]
 A file listed in a row's `files` belongs to that row; otherwise the deepest
 folder holding it decides, so `docs/spec/core/login.md` is `FS`'s, not
 `page`'s; and a file in no place belongs to `code`. The row named `code` is the
-complement: it declares no IDs, and listing places on it narrows the scan to
-the places written. With no `code` row every file under the config root is
+complement: it declares no IDs. In version 2 it may list places, which narrow
+what it covers; files outside those places are not read. With no `code` row every file under the config root is
 read. One place belongs to one row, a place stays inside the config root and
 outside every workspace member, and `scan = false` covers every place of its
 row. The runnable [`examples/places/`](../../examples/places/) walks through it

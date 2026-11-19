@@ -7,12 +7,16 @@ data and prints nothing ([§FS-distribution.3.1](../functional-spec/FS-distribut
 
 ```toml
 [dependencies]
-grund-core = "0.21"
+grund-core = "0.23"
 ```
 
-[`examples/rust-api`](../../examples/rust-api/) is a runnable embedder. It
-installs a terminal integration and checks that it wrote the same bytes as
-`grund integrations kitty --write`.
+[`examples/rust-api`](../../examples/rust-api/) is a runnable embedder. Without
+`--write` it only describes the integration; with `--write` it installs the
+Kitty config, `~/.local/bin/grund-open`, grund's user config (under `~/.config`
+or `$XDG_CONFIG_HOME`), and the global agent instruction files for agents in use.
+See [integrations](clickable-citations.md).
+The byte-for-byte comparison with `grund integrations kitty --write` is performed
+by the example's sandboxed test, not by running the example.
 
 ## What 1.0 promises
 
@@ -23,13 +27,15 @@ installs a terminal integration and checks that it wrote the same bytes as
   `list_sizes`, `refs`, `refs_outcome`, `cover`, `cover_text`, `cover_lines`,
   `format_references`, `propose_id`, `complete_ids`, `init`, `fetch_snapshot`
   and `integrations`.
-- **The typed refusals.** `ShowQueryError`, `FmtScanAbort` and
-  `FmtConflictAbort`, which an error from `show` or `format_references`
-  downcasts to, and `InitError`,
+- **The typed refusals.** The two ambiguity refusals from `show` (two homes
+  and an ambiguous section) downcast to `ShowQueryError`; other `show` failures
+  are untyped `anyhow::Error` values whose only content is the message.
+  `FmtScanAbort` and `FmtConflictAbort`, which an error from
+  `format_references` downcasts to, and `InitError`,
   `FetchFailure` and `IntegrationsError`, which `init`, `fetch_snapshot` and
   `integrations` return. An entry point with no typed refusal returns
   `anyhow::Result`.
-- **Every type those signatures reach,** transitively. That makes 113 names.
+- **Every type those signatures reach,** transitively. That makes 118 names.
 
 A `1.x` release may add a name, a field or a variant, and may deprecate a name.
 Only `2.0` removes or retypes one.
@@ -154,6 +160,8 @@ if let Err(err) = format_references(opts) {
 ```
 
 An `ApiScanError` carries `path`, `message` and `code`: `io` for a path that could not be read, and `unparsable-file` for a file that was read and does not parse, so nothing has to parse `message`.
+
+For check findings, scan-error codes and exit status, see [checking a repository](checking.md); for globs and coverage queries, see [querying grund](querying.md).
 
 ## Migrating
 

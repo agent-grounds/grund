@@ -91,8 +91,7 @@ Next: grund config explain '[schema.leads.words]'
 
 The `On:` line says whether a setting, a flag, either, or a condition of the
 tree meets each clause, and every setting it names is spelled in your file's
-version. A code that version never reports says so, and in version 1 it names
-`grund config migrate --to 2`, the way to a version that can.
+version. A code that the current configuration never reports says so.
 
 The `Fix:` line is what clears the finding, worded once in the code's catalog
 row and carried by every message of that code with its `{slots}` filled in
@@ -121,15 +120,8 @@ If `e2e/cases` links outside your project, `grund check e2e/cases/b`,
 `e2e/cases/b` in your project. They do not jump to a config above the link's
 target. Absolute paths through the same link work the same way. The selected
 config still applies its usual validation: version 2 refuses a kind home linked
-outside the project, and a version-1 check still reports an unreadable manifest
-under the requested path. Fix the named home or file as the finding directs.
+outside the project. Fix the named home or file as the finding directs.
 
-With no `grund.toml` at all, the answer gives both versions, version 2 first,
-after one line saying which is which:
-
-```text
-No grund.toml here. grund init writes version 2; until a file exists, check reads version 1's defaults.
-```
 
 The same answer applies inside a workspace member with neither config form,
 including its descendants and an explicit `--path` into it: discovery stops at
@@ -144,30 +136,16 @@ own version-2 `grund.toml`
 
 ## A target your version does not have
 
-A target the version does not know prints nothing on stdout and one line on
-stderr, exit `1`, naming the next step. A version-1 table asked in a version-2
-project says so, and a `hint:` line names where version 2 writes its settings:
+An unsupported table prints nothing on stdout and one line on stderr, exit `1`,
+naming the next step and the current table that holds those settings. For
+source settings, the hint points to `[schema.sources]` and
+`[schema.kinds.code]`.
 
-```text
-version 2 has no table `[scan]`: it is a version 1 table
-hint: version 2 writes its settings in [schema.sources], [schema.sources.extensions], [schema.sources.definitions.*], [schema.kinds.code]
-```
-
-A version-2 table asked in a version-1 project names
-`grund config migrate --to 2`; a key the table does not have lists the keys it
-does. A target written the way TOML writes a nested key, such as
-`schema.sources` or `schema.sources.exclude`, is read against your version's
-tables. Where it reads one way only, it is answered exactly as its bracketed
-spelling is, exit `0`: `schema.sources` prints what `'[schema.sources]'`
-prints, and `schema.kinds.FS.id_format` what `'[schema.kinds.FS] id_format'`
-prints. Where a segment could be a kind's name or a key of the kind's table,
-the path reads two ways, so it is not answered, and the failure names both, the
-key first:
-
-```text
-version 2 has no top-level key or check code `schema.kinds.id_format`; for the key, ask grund config explain '[schema.kinds.<NAME>] id_format'
-hint: for a kind named id_format, ask grund config explain '[schema.kinds.id_format]'
-```
+A key the table does not have lists the keys it does. A target written the way TOML
+writes a nested key, such as `schema.sources` or `schema.sources.exclude`, is
+read against the current tables. Where it reads one way only, it is answered
+exactly as its bracketed spelling is. Where a segment could be a kind's name
+or a key of the kind's table, the path reads two ways, so it is not answered.
 
 A bare name, such as `exclude`, is not answered either, but the failure names
 every table that holds a key of that name, or whose header ends in it:
@@ -176,12 +154,8 @@ every table that holds a key of that name, or whose header ends in it:
 version 2 has no top-level key or check code `exclude`; for a key of a table, ask grund config explain '[schema.sources] exclude' or '[presentation.fmt] exclude'
 ```
 
-A dotted path copied from a guide for the other version, such as
-`reference.strict` or `scan.include` in a version-2 project, gets what its
-table's bracketed spelling gets: `scan.include` is answered as `'[scan]'` is
-above, with the `hint:` line naming where version 2 writes those settings. A
-table both versions have, such as `[workspace]`, is always read as your own
-version's.
+A dotted path such as `schema.sources.exclude` is answered as its table
+spelling would be. `[workspace]` is read from the selected configuration.
 
 Anything else says how to list what there is: `grund config explain`
 for the tables, `grund config explain --codes` for the codes. A usage mistake,

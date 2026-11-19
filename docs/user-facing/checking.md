@@ -1,73 +1,8 @@
 # Checking a repository
 
-From grund 0.19.0, an excluded or ignored stub target produces `broken-stub`
-with error severity and exit 1 ([§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)). For example, a
-stub to `notes/gen/a.md` under `exclude = ["gen"]` warned in 0.18.0; now it
-errors and show refuses. Move the target or change the rule named in the error.
-The old `excluded-stub-target` code is spent: `--ignore excluded-stub-target`
-leaves the new error visible; `--only excluded-stub-target` selects no findings.
-Use `broken-stub` for the replacement ([§FS-declarations.checks.excluded-stub-target](../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190)).
-
 `grund check` is the gate: it scans the tree, resolves every citation against every
 declaration, and exits non-zero when one dangles or breaks a rule the repository
-declared ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo)). Run it in pre-commit and in CI.
-
-## When only an index cites a declaration
-
-A kind's index lists declarations for navigation. Its entry is a citation that
-`refs` lists, but it does not establish use, so `check` still warns
-([§FS-check.4.1.2](../functional-spec/FS-check.md#412-an-index-entry-does-not-count)).
-The warning locates the discounted entry; text refs labels it, including within
-a file summary ([§FS-refs.3.1.1](../functional-spec/FS-refs.md#311-label-the-excluded-index-sites),
-[§FS-refs.3.3.1](../functional-spec/FS-refs.md#331-identify-the-excluded-sites-within-a-summary)).
-
-For example, from the [authored-citations mini-repository](../../examples/authored-citations/README.md):
-
-```text
-$ grund check examples/authored-citations/repo --only unused
-docs/adr/consider-memory.md:1: warning: declared but never cited: ADR-consider-memory (its index entry at docs/adr/README.md:5 does not count as a use); cite it
-$ grund refs ADR-consider-memory examples/authored-citations/repo
-docs/adr/README.md:5: §ADR-consider-memory (index entry)
-$ grund refs ADR-consider-memory examples/authored-citations/repo --summary
-docs/adr/README.md: 1 (line 5) (index entries at line 5)
-```
-
-These commands agree: the entry exists, and the declaration has no genuine use
-yet. Decide whether the declaration is still useful, or connect it to the
-behavior that actually depends on it. Add a citation when that dependency exists;
-an unused warning alone is no reason to invent one. Ordinary use rows stay
-unannotated; when a summary mixes entry and use sites, its annotation identifies
-only the excluded lines (and columns when they share a line).
-
-When the use lives in a repository this check cannot read — a closed downstream
-that cites your points through a workspace alias — commit a generated page of its
-citations instead, as [Citers in a repository you cannot read](repository-options.md#citers-in-a-repository-you-cannot-read)
-describes, so your own gate guards them. Never write such a page by hand to quiet the warning.
-
-## A misplaced declaration beneath another project's config
-
-A nested `grund.toml` does not make its directory a workspace member. Until an
-enclosing `[workspace] members` entry lists it, that directory is ordinary tree
-to the enclosing scan and its declarations follow the enclosing kind homes.
-When one is misplaced, the error identifies the unread nested config and the
-enclosing config/project whose homes apply, in text and JSON
-([§FS-declarations.checks.misplaced-declaration.unlisted-project](../functional-spec/FS-declarations.md#checksmisplaced-declarationunlisted-project-explain-the-enclosing-homes-beneath-an-unlisted-project)).
-
-For example, `packages/notify/requirements.md` can be misplaced when the enclosing
-project's home is its own root-level `requirements.md`. If notify belongs to the
-workspace, add `"packages/notify"` to `[workspace] members` in the enclosing
-config. Membership alone fixes which homes apply; promoting `## FS-email` to
-`# FS-email` does not change ownership. If notify should stay outside the scan,
-use `[schema.sources] exclude = ["packages/notify/"]` in v2. In v1 use
-`[scan] exclude = ["notify"]`, which excludes every directory named `notify` at
-every depth. If configured source includes or kind homes start a scan at or
-beneath that directory, remove those roots too: exclusions only prune
-descendants. The diagnostic names report-relative locations, but suggested edit
-paths and v2 exclusion patterns are relative to the enclosing config root.
-
-Run the [workspace repair walkthrough](../../examples/workspace/README.md#repairing-an-unlisted-project)
-to see the failing check and both repairs. A plain nested config with no misplaced
-declaration adds no standalone finding.
+declared ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo)). Run it, `grund fmt --check`, and `grund init --check` in pre-commit and CI. `check` does not read link targets or refresh section-lock fingerprints, so only `fmt --check` catches moved files and locks left stale by edits.
 
 ## What it enforces
 
@@ -85,16 +20,24 @@ crates/grund-core/src/checker/references.rs:2: error: missing section FS-check.3
 docs/requirements/REQ-no-wrong-citation.md:7: error: missing section FS-check.3.2; write <§> before it to show the shape without citing it
 ```
 
-`grund check <path>` reports on `<path>` while resolving citations against the whole project; with no path it scans the canonical layout (`requirements.md`, `docs/`, `e2e/`, `src/`). In the scanned tree it enforces:
+`grund check <path>` reports on `<path>` while resolving citations against the whole project; with no path, a version-2 config scans the whole project or workspace discovered from the current directory, using configured places and the `code` complement. In the scanned tree it enforces:
 
 1. Every cited ID resolves to a declaration. *(dangling references)*
+
+   An unresolved ID reports `unknown reference <ID>`. Correct the ID, declare it,
+   or escape an illustrative ID with `<§>`; run `grund config explain dangling`
+   for the repairs grund offers.
 2. Every section coordinate (`.3.1`) resolves to a heading inside the declaration. *(missing sections)*
 3. No ID is declared in two places. *(duplicates)*
 4. Every deeper ATX heading inside a scanned Markdown declaration body is another declaration or carries a numeric or enabled named section coordinate. Fences, file titles, body-closing headings, source doc-comments, setext text, and bold labels are exempt. *(unmarked headings)* A heading whose path is already in place but lacks a title (`### requirements.1`), has a `_` in a name (`## open_questions: Open Questions`), or writes a purely numeric path with a `:` (`## 1: Embedded`) is also told that fault and shown its repair with the path kept, `### requirements.1: Untitled`, `## open-questions: Open Questions` or `## 1. Embedded` ([§FS-declarations.checks.unmarked-heading.2.3](../functional-spec/FS-declarations.md#checksunmarked-heading23-a-complete-path-that-lacks-only-a-title-has-a-_-or-is-numeric-before-a--is-also-shown-its-fault)).
 5. Every stub heading `# <ID>: [<text>](<path>)` points at a file containing the inline declaration. *(broken stubs)*
+
+   A stub target must be a file the scan reads. If an exclusion keeps it out,
+   repair the target or the exclusion named by `broken-stub`
+   ([§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)).
 6. The `AGENTS.md` / `CLAUDE.md` entry-point block is up to date. *(stale init)* `check` holds the whole block to what `grund init` would write there, so a config edit, a migration or a renamed kind reports the part it changed until `grund init` runs ([§FS-check.3.5.4](../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). The two workspace sections, `Project namespaces` and `Workspace members`, are judged only by a run at the root of a full workspace checkout: a run inside a member, at a nested group's root, or in a checkout without an optional member leaves them out ([§FS-check.3.5.5](../functional-spec/FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout)). In a version-2 config that includes each scoped `AGENTS.md` the root block lists: one that is missing, stale, or no longer placed by the config is reported at that file ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)). A scoped `AGENTS.md` is guidance about its directory, never one of its units, so it is not held to that directory's citation rules.
 7. Declared-but-uncited IDs are flagged. *(unused — warning, not error; a configured `E2E` kind's cases are exempt)*
-8. *(opt-in)* With `require_grounding = true`: every source file — or every file of one configured place, down to every `##` section or doc-comment block of it — carries at least one citation. *(ungrounded source file)*
+8. *(opt-in)* Set `[rules.citations.grounding] must = "file"` to require every source file to carry a citation; choose `h2` through `h6` to require citations down to those sections. *(ungrounded source file)*
 9. *(workspace)* Alias-qualified citations resolve across configured sub-projects. *(cross-project references — see [§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace))*
 10. No declaration is left in the middle of a merge. *(conflict markers)* Each block of the lines git writes around a conflict, `<<<<<<<`, `|||||||`, `=======` and `>>>>>>>` at column 0, is one error at its first line, naming every declaration it overlaps ([§FS-declarations.checks.conflict-marker](../functional-spec/FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)).
 
@@ -115,10 +58,41 @@ To ask what one finding code means, how severe it is and what turns it on, run
 `grund config explain <code>`: it answers from the grund you run, in your
 config's version ([config explain](explain.md)).
 
-`grund check` reads the configured source scope: version 1 uses `[scan] include`; version 2 uses configured places, including the `code` complement, with `[schema.sources] exclude` pruning files ([sources guide](sources.md)). Citations outside that scope are invisible to the ordinary run. `grund check --full` ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)) widens the walk past configured scope, including places with `scan = false`, and reports unresolved references and section headings outside declaration bodies there. Source exclusions still apply. The wider walk does not apply the ordinary convention rules outside scope; it is additive, so it can only turn a green run red.
+`grund check` reads the configured source scope: configured places, including the `code` complement, with `[schema.sources] exclude` pruning files ([sources guide](sources.md)). Citations outside that scope are invisible to the ordinary run. `grund check --full` ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)) widens the walk past configured scope, including places with `scan = false`, and reports unresolved references and section headings outside declaration bodies there. Source exclusions still apply. The wider walk does not apply the ordinary convention rules outside scope; it is additive, so it can only turn a green run red.
 
-`grund` doesn't invent citations — that's the contributor's call. What `grund` does is make sure the ones you wrote *resolve*. With `require_grounding = true` — in `[reference]` for every place at once, or on one `[[kinds]]` row for that place alone, at a `grounding_level` from the whole file down to every `##` of it ([§FS-config.3.4.8](../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) — it also fails what carries no resolving citation; the stronger file-level "implementation changed with its spec and test, or bounded waivers" recipe is tracked separately in [§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits).
+`grund` doesn't invent citations — that's the contributor's call. What `grund` does is make sure the ones you wrote *resolve*. Set grounding with `[rules.citations.grounding]` and its `must`, `warn`, `should` and `may` levels ([§FS-config.3.4.8](../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)). This also fails what carries no resolving citation; the stronger file-level "implementation changed with its spec and test, or bounded waivers" recipe is tracked separately in [§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits).
 
+## In pre-commit and CI
+
+The linked [.pre-commit-config.yaml](../../.pre-commit-config.yaml) is grund's own development gate, not a configuration to copy into your repository. For a user repository, add these local hooks; each command must exit 0. Run the same three commands in CI:
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: grund-check
+        name: grund check
+        entry: grund check
+        language: system
+        pass_filenames: false
+      - id: grund-fmt-check
+        name: grund fmt --check
+        entry: grund fmt --check
+        language: system
+        pass_filenames: false
+      - id: grund-init-check
+        name: grund init --check
+        entry: grund init --check
+        language: system
+        pass_filenames: false
+```
+For optional staged commit-msg/whole-PR evidence of related spec and test edits with reason-bearing trailers, see the [co-change recipe](cochange.md); Grund runs its demonstrations without enabling that contribution gate ([§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)).
+
+```bash
+grund check        # exit 0 means citations and declared rules pass
+grund fmt --check  # exit 0 means generated links and section locks are current
+grund init --check # exit 0 means managed guidance is current
+```
 ## Fixing every wide line in a note
 
 A column finding lists every line over its selected limit, in source order, before its remedy
@@ -180,7 +154,7 @@ renumbered heading or a mistyped section. Escape a shape shown only as an
 example with `<§>`. Never escape a citation that should resolve, because that
 hides the broken reference instead of fixing it.
 
-With `[id] named_sections = true`, a marked citation of a name under a number
+With named sections on by default, a marked citation of a name under a number
 is checked as a whole. From grund 0.19.0, an absent section or declaration is
 an ordinary error; the warning and its temporary release clause from 0.18.0
 are gone ([§FS-citations.checks.mixed-path](../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190)). For example, if
@@ -244,17 +218,15 @@ global location order, so a clean `grund check --format=json` prints nothing.
 A run-level `error:` line says what failed by its reason and its fix, and the record's `code` in JSON tells the two kinds apart. `io` means a file or directory could not be read or decoded, and `unparsable-file` means a file was read and does not parse: a case's `expected.exit`, a JSON or YAML value source, or an ignore file. Both exit `2`, and `--only` and `--ignore` hide neither. The fix on the line is the one that works at that path. A scan root is not pruned by `exclude`, so its line says to remove it from the row that lists it, a path you passed says to stop passing it, and a value source says to move it out of its value home.
 
 Some warnings are about what the run did not read rather than what it found.
-A file the configuration names as a scan root — a `[[kinds]]` `file` home, a
-version-2 `files` entry, or an `[scan] include` entry that is a file — is read
-only if its name is not hidden and its configured reader reads declarations:
-version 1 uses `[scan] extensions`, and version 2 uses `[schema.sources] languages`
-and its extension mappings. When either rule keeps it out, the file stays unread and `check` says so at
+A file the configuration names as a source root is read only if its name is not
+hidden and its configured reader reads declarations. When either rule keeps it
+out, the file stays unread and `check` says so at
 the line of the key that named it, keeping the exit code at 0 and withholding
 `success`:
 
 ```text
-grund.toml:10: warning: [[kinds]] TXT home `notes.txt` is not read — extension txt is not in [scan] extensions, so nothing in it is checked. Add "txt" to [scan] extensions, or give the file an extension the list holds.
-grund.toml:10: warning: [[kinds]] NOTE home `.notes.md` is not read — its name begins with `.`, and grund reads no hidden file, so nothing in it is checked. Rename the file to a name that is not hidden.
+grund.toml:7: warning: [schema.kinds.TXT] file `notes.txt` is not read — no language in [schema.sources] languages reads `.txt`, so nothing in it is checked. Give the file an extension a listed language reads.
+grund.toml:10: warning: [schema.kinds.NOTE] file `.notes.md` is not read — its name begins with `.`, and grund reads no hidden file, so nothing in it is checked. Rename the file to a name that is not hidden.
 ```
 
 List the extension, or give the file one the list holds; grund reads no hidden
@@ -309,6 +281,63 @@ success
 ```
 
 Watch stays resident until Ctrl-C; this capture has empty stderr and exits 0 after that initial report.
+
+## When only an index cites a declaration
+
+A kind's index lists declarations for navigation. Its entry is a citation that
+`refs` lists, but it does not establish use, so `check` still warns
+([§FS-check.4.1.2](../functional-spec/FS-check.md#412-an-index-entry-does-not-count)).
+The warning locates the discounted entry; text refs labels it, including within
+a file summary ([§FS-refs.3.1.1](../functional-spec/FS-refs.md#311-label-the-excluded-index-sites),
+[§FS-refs.3.3.1](../functional-spec/FS-refs.md#331-identify-the-excluded-sites-within-a-summary)).
+
+For example, from the [authored-citations mini-repository](../../examples/authored-citations/README.md):
+
+```text
+$ grund check examples/authored-citations/repo --only unused
+docs/adr/consider-memory.md:1: warning: declared but never cited: ADR-consider-memory (its index entry at docs/adr/README.md:5 does not count as a use); cite it
+$ grund refs ADR-consider-memory examples/authored-citations/repo
+docs/adr/README.md:5: §ADR-consider-memory (index entry)
+$ grund refs ADR-consider-memory examples/authored-citations/repo --summary
+docs/adr/README.md: 1 (line 5) (index entries at line 5)
+```
+
+These commands agree: the entry exists, and the declaration has no genuine use
+yet. Decide whether the declaration is still useful, or connect it to the
+behavior that actually depends on it. Add a citation when that dependency exists;
+an unused warning alone is no reason to invent one. Ordinary use rows stay
+unannotated; when a summary mixes entry and use sites, its annotation identifies
+only the excluded lines (and columns when they share a line).
+
+When the use lives in a repository this check cannot read — a closed downstream
+that cites your points through a workspace alias — commit a generated page of its
+citations instead, as [Citers in a repository you cannot read](repository-options.md#citers-in-a-repository-you-cannot-read)
+describes, so your own gate guards them. Never write such a page by hand to quiet the warning.
+
+## A misplaced declaration beneath another project's config
+
+A nested `grund.toml` does not make its directory a workspace member. Until an
+enclosing `[workspace] members` entry lists it, that directory is ordinary tree
+to the enclosing scan and its declarations follow the enclosing kind homes.
+When one is misplaced, the error identifies the unread nested config and the
+enclosing config/project whose homes apply, in text and JSON
+([§FS-declarations.checks.misplaced-declaration.unlisted-project](../functional-spec/FS-declarations.md#checksmisplaced-declarationunlisted-project-explain-the-enclosing-homes-beneath-an-unlisted-project)).
+
+For example, `packages/notify/requirements.md` can be misplaced when the enclosing
+project's home is its own root-level `requirements.md`. If notify belongs to the
+workspace, add `"packages/notify"` to `[workspace] members` in the enclosing
+config. Membership alone fixes which homes apply; promoting `## FS-email` to
+`# FS-email` does not change ownership. If notify should stay outside the scan,
+use `[schema.sources] exclude = ["packages/notify/"]`, which excludes that
+path at
+every depth. If configured source includes or kind homes start a scan at or
+beneath that directory, remove those roots too: exclusions only prune
+descendants. The diagnostic names report-relative locations, but suggested edit
+paths and v2 exclusion patterns are relative to the enclosing config root.
+
+Run the [workspace repair walkthrough](../../examples/workspace/README.md#repairing-an-unlisted-project)
+to see the failing check and both repairs. A plain nested config with no misplaced
+declaration adds no standalone finding.
 
 ## Narrowing the report
 
@@ -371,11 +400,3 @@ What a repository can add to the check:
 - [Workspaces and sub-projects](repository-options.md#workspaces-and-sub-projects)
 - [Keep shared values consistent](repository-options.md#keep-shared-values-consistent)
 - [Cite external facts offline](repository-options.md#cite-external-facts-without-making-checks-depend-on-the-network)
-
-## In pre-commit and CI
-
-This repo ships a ready-to-install [.pre-commit-config.yaml](../../.pre-commit-config.yaml) — `grund check` for citations and the managed blocks it verifies, `grund init --check` for the files `init` would still write, a block `check` leaves alone among them (a member's workspace sections, from a run inside it), `lychee` for Markdown links. For optional staged commit-msg/whole-PR evidence of related spec and test edits with reason-bearing trailers, see the [co-change recipe](cochange.md); Grund runs its demonstrations without enabling that contribution gate ([§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)):
-
-```bash
-pip install pre-commit && cargo install lychee && pre-commit install
-```

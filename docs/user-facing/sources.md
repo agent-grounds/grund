@@ -1,38 +1,13 @@
 # Sources: which files grund reads
 
-Exclusion also refuses a stub target before it can lend content
-([§FS-config-v2.schema.sources.exclude.stubs](../functional-spec/FS-config-v2.md#schemasourcesexcludestubs-a-pattern-is-the-exclude-reason-a-stubs-target-is-not-read), [§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)).
-This applies to v1 directory names and v2 patterns, plus enabled ignore rules.
-`respect_gitignore = false` disables ignore only; an explicit scan root outruns
-descent exclusions. Being outside v1 `include` alone remains allowed.
-Formatter exclusions only prevent rewrites and do not refuse a target.
+Configuration reference: [`[schema.sources]`](configuration.md#schemasources) covers the source readers, suffix mappings, exclusions and ignore behavior discussed here.
 
 A version-2 `grund.toml` says in one table, `[schema.sources]`, which files grund
 reads, which reader and comment syntax each one takes, and which comments may
 declare an ID. The contract is [§FS-config-v2.schema.sources](../functional-spec/FS-config-v2.md#schemasources-schemasources); this guide covers
 choosing languages, remapping a suffix, defining a language of your own, keeping
-generated trees out, reading a diagram fence's citations, and moving a version-1
-file over. The runnable
+generated trees out, and reading a diagram fence's citations. The runnable
 [`examples/sources`](../../examples/sources/) does all of it in one small tree.
-
-## Version 1 and version 2
-
-A file without `grund_config_version`, or with `1`, is read by the version-1
-reader. Nothing here changes it: `[scan] extensions`, `comment_prefixes`,
-`exclude` and `docstring_python` keep their meaning, and any comment in
-declaration position still declares ([§FS-config.5.2](../functional-spec/FS-config.md#52-a-versions-meaning-moves-only-as-backwards-compatibility-allows)). A file that writes
-`grund_config_version = 2` has no `[scan]` table. Its sources are the table
-below, and the reader refuses a v1 key rather than guess what it meant.
-
-The differences that change what a tree reads:
-
-| | Version 1 | Version 2 |
-|---|---|---|
-| What is read | the `[scan] extensions` list | the admitted `languages`, each with its own suffixes |
-| Comment syntax | one global `comment_prefixes` list | each language's own hosts |
-| Which comments declare | any comment in declaration position | only doc comments, by default |
-| Built-in exclusions | `target`, `node_modules`, `.git`, `dist`, `build`, `.venv` | none |
-| `exclude` entries | directory names | gitignore-style globs from the config root |
 
 ## The smallest table
 
@@ -146,8 +121,7 @@ languages = ["markdown", "rust"]
 txt = "rust"
 ```
 
-A name claims a reading when an admitted language reads it; under version 1,
-when the extension list holds its extension. So `docs/license.md -> ../LICENSE`
+A name claims a reading when an admitted language reads it. So `docs/license.md -> ../LICENSE`
 stays Markdown, because `LICENSE` claims nothing. Whether a name enters the scan
 at all is still asked of that name: a hidden link, or one whose extension is
 unlisted, stays unread whatever it points at.
@@ -196,8 +170,7 @@ A prefix is literal. It matches byte for byte at the first non-blank column, and
 the longest prefix wins.
 
 A definition has no key for multi-line strings or for how a `'` is read. A
-`source` definition's files read the ones their own suffix names, as a
-version-1 file does: `java = "myjava"` still reads Java text blocks,
+`source` definition's files read the ones their own suffix names, with its built-in language rules: `java = "myjava"` still reads Java text blocks,
 `rs = "myrs"` Rust raw strings and lifetimes, `hs = "myhs"` Haskell primes, and
 a definition over `.txt` reads none. A definition over such a suffix cannot opt
 out; the one way to read it without them is to map it to a built-in that has
@@ -207,8 +180,7 @@ none. A `document` or `data` definition's files read none
 ## Which comments declare
 
 `declarations = "doc-comments"`, the default, lets a source file declare an ID
-only inside a comment its language calls documentation; `"any-comment"` keeps the
-version-1 reading ([§FS-config-v2.schema.sources.declarations](../functional-spec/FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare)). Citations are
+only inside a comment its language calls documentation. Citations are
 untouched either way: a marked citation in any comment resolves and is checked.
 
 ```rust
@@ -219,9 +191,8 @@ fn example() {
 }
 ```
 
-Version 1 declares `FS-existing` twice here and reports a duplicate. Version 2
-declares it once, at line 1, and the second comment is a note whose citation
-resolves.
+Only the documentation comment declares `FS-existing`; the second comment is
+a note whose citation still resolves.
 
 What each doc profile accepts ([§FS-inline-citation-style.1.1.4](../functional-spec/FS-inline-citation-style.md#114-declaration-applicability)):
 
@@ -234,8 +205,7 @@ What each doc profile accepts ([§FS-inline-citation-style.1.1.4](../functional-
   Go's `func` or Ruby's `def`, with no blank line between, or the file's leading
   block.
 - `lisp`: a `;` block directly above a form whose head starts with `def` or
-  `cl-def`, or is `ns`. It exists for `grund config migrate --to 2`, which
-  carries version 1's Lisp extensions with it.
+  `cl-def`, or is `ns`.
 - `none`: every comment behind the language's hosts, so Lisp, Scheme, Clojure,
   Ada and a definition without `doc_comments` can still declare.
 
@@ -262,8 +232,8 @@ exclude = ["generated", "/docs/archive", "src/**/vendor/**", "build/", "!build/k
   later `!` re-includes. A `!` cannot rescue a file below a directory that is
   already pruned, so `build/keep.md` above stays unread.
 
-The default is `[]`. A v2 project that wants v1's `target` or `node_modules`
-skipped writes them. A pattern the parser refuses, such as an unclosed `[`, is
+The default is `[]`; add generated directories such as `target/` or
+`node_modules/` when the project needs them excluded. A pattern the parser refuses, such as an unclosed `[`, is
 refused at the `exclude` line.
 
 How it composes with the other filters ([§FS-config-v2.schema.sources.exclude.roots](../functional-spec/FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters)):
@@ -276,6 +246,13 @@ How it composes with the other filters ([§FS-config-v2.schema.sources.exclude.r
    and `exclude` still applies under `--full`.
 4. A root outside the config root is matched by its spelling relative to the
    root. Anchored patterns never reach outside it.
+5. If an excluded file is a stub target, grund refuses the stub because it
+   cannot read the target. This applies to exclusion patterns and enabled ignore files; `respect_gitignore = false`
+   disables only ignore files. Being outside a configured place alone is allowed, and formatter exclusions
+   affect rewrites only. An explicit scan
+   root is read, but exclusions still filter what lies below it ([stub target
+   rules](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config-v2.md#schemasourcesexcludestubs-a-pattern-is-the-exclude-reason-a-stubs-target-is-not-read),
+   [scan roots](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters)).
 
 `[presentation.fmt] exclude` uses the same grammar with a different effect: it
 keeps `grund fmt` from rewriting a file that the scan still reads.
@@ -328,35 +305,3 @@ The block `grund init` writes follows the list: with `fenced = ["mermaid"]`, its
 rule on mentioning an ID ends "or use a fenced code block not tagged `mermaid`."
 The runnable [`examples/fenced-citations`](../../examples/fenced-citations/)
 reads one diagram.
-
-## Moving a version-1 file
-
-`grund config migrate --to 2` writes this out for you
-([§FS-config-v2.schema.sources.migration](../functional-spec/FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)):
-every version-1 source default that differs from version 2's is written into the
-candidate. A block with `include_root = false` that nothing would scan is the
-exception: it takes version 2's defaults, since no project reads its files
-([§FS-config-migrate.8.1.3](../functional-spec/FS-config-migrate.md#813-what-a-compact-blocks-candidate-holds)).
-To keep the meaning when moving by hand:
-
-1. Write `declarations = "any-comment"`. That is version 1's reading, and you
-   can switch to `"doc-comments"` once the duplicates it would expose are fixed.
-2. Write `languages` out. For each v1 extension that has no epoch row, add a
-   mapping, and a definition when no built-in language has its comment syntax.
-3. For `.py` with `docstring_python = false`, define a language with
-   `docstrings = "off"`, so a triple-quoted string keeps its raw reading.
-4. Turn each `[scan] exclude` name into the directory glob `<name>/`.
-
-The migration refuses, and so should you, where a v2 table cannot say the same
-thing:
-
-- a v1 `exclude` entry containing `/`. Version 1 never matched it, and as a glob
-  it would start excluding files.
-- a `.json` scanned as text while a kind's `values` also reads it as values. One
-  file has one class.
-- an extension or prefix outside what a mapping or definition accepts, or a
-  source extension that would read no comment.
-- an empty string in `[scan] extensions`, which version 1 keeps reading for
-  compatibility: it reads every file with no extension, and version 2 has no such
-  entry. Remove it under version 1, and give any such file you want read an
-  extension the list holds. `grund check` shows the effect.

@@ -19,9 +19,9 @@ Bare `init` writes `grund.toml` when the repository has none, and the managed
 directory and no `.gitkeep` under `docs/`, `tests/` or any kind home
 ([§FS-init.3.6](../functional-spec/FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)). That makes it safe to run on a repository that already has
 specs. The config is the default template's, `software-development`: the
-`GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA` and `RM` kinds, plus the non-citable
-`e2e` and `integration` test homes. `grund init --template=software-development`
-is the same run.
+`GRUND`, `GOAL`, `FS`, `REQ`, `AR`, `DF`, `DA` and `RM` kinds, plus the
+non-citable `e2e` and `integration` test homes.
+`grund init --template=software-development` is the same run.
 
 The file is short. It is version 2 (`grund_config_version = 2`) and writes only
 what differs from a default: the project name, each kind's row with its places,
@@ -32,9 +32,39 @@ defaults included, in the file's own version ([§FS-config.4.2](../functional-sp
 line from it into `grund.toml` to change that setting. An opt-in table that is
 off, such as `[schema.leads.words]` while no lead is capped, is not printed:
 `grund config explain` lists every table and answers for its keys
-([§FS-config.4.2.3.1](../functional-spec/FS-config.md#4231-what-sends-a-reader-to-show-names-explain)). A version-1 file an
+([§FS-config.4.2.3.1](../functional-spec/FS-config.md#4231-what-sends-a-reader-to-show-names-explain)). A config file an
 earlier `init` wrote keeps loading unchanged, and `grund config migrate` converts
 it when you choose to.
+
+## Your first declaration
+
+Allocate an ID, write a declaration with a section, list it in that kind's
+`README.md` index, then cite the section. See [the structure guide](structure.md)
+for the declaration and citation rules.
+
+```bash
+$ grund id FS "store widgets"
+FS-store-widgets
+$ mkdir -p docs/functional-spec src
+$ cat > docs/functional-spec/store-widgets.md <<'EOF'
+# FS-store-widgets: Store widgets
+
+The storage layer retains each widget record until it is removed.
+
+## terms: Terms
+
+## 1. Storage behavior
+EOF
+$ cat > docs/functional-spec/README.md <<'EOF'
+- [§FS-store-widgets](store-widgets.md#fs-store-widgets-store-widgets)
+EOF
+$ cat > src/main.rs <<'EOF'
+// §FS-store-widgets.1
+fn main() {}
+EOF
+$ grund check
+success
+```
 
 The managed block teaches Project namespaces only for workspace roots and
 claimed members. Standalone repositories omit it. A discovered workspace keeps
@@ -57,9 +87,9 @@ subproject, run `grund guide members`, which prints
 
 ### The block's revision is not grund's release
 
-The managed block opens with a heading such as `## Grounding with grund (block v31)`.
-That number is the revision of the block's text, not a grund release: `grund -V`
-prints the release you are running
+The managed block opens with a labelled heading such as
+`## Grounding with grund`. The revision in that heading describes the block's
+text, not a grund release: `grund -V` prints the release you are running
 ([§FS-init.2.3.9.3](../functional-spec/FS-init.md#2393-the-headings-two-spellings)). A
 config selects one of four current revisions: v47, v48 once a kind declares rules,
 and v49 or v50 when its guidance lands in a scoped `AGENTS.md` or a declaration
@@ -73,8 +103,7 @@ naming the part that differs, and `grund init` refreshes it
 ID without citing it then ends “or use a fenced code block not tagged `mermaid`”,
 naming the fences left unread, and with `fenced = []` it reads as before
 ([Reading the citations in a diagram fence](sources.md#reading-the-citations-in-a-diagram-fence)).
-Blocks up to v30 spell the heading `(vN)`; both spellings are read, and
-`init` writes the labelled one in their place. A grund older than the block reports
+`init` writes the labelled heading. A grund older than the block reports
 it as malformed, so upgrade grund first rather than editing the block by hand.
 
 ## Exit codes and reports
@@ -241,16 +270,17 @@ A scoped file `init` creates holds the managed block and nothing else. The
 root block lists every scoped file under `### Scoped guidance`
 ([§FS-init.2.3.5.13](../functional-spec/FS-init.md#23513-the--scoped-guidance-pointer)), and that list is what `init` owns: a later run updates
 those files, and removes the ones the config no longer places, deleting a file
-only when the block was all of it. Where the root `CLAUDE.md` or `GEMINI.md` is
-a symlink to `AGENTS.md`, each scoped directory gets the same symlink
-([§FS-init.2.3.5.14](../functional-spec/FS-init.md#23514-writing-scoped-files)), and the report names each one:
-`linked docs/spec/CLAUDE.md -> AGENTS.md`, `removed old/AGENTS.md`.
+only when the block was all of it. The entrypoint flag `--claude` creates a real
+`CLAUDE.md`; it does not create a symlink to `AGENTS.md`. Where the root
+`CLAUDE.md` or `GEMINI.md` is a symlink to `AGENTS.md`, `init` links the same
+name in each scoped directory.
 
-A scoped file, or a declared field, moves the block from v47 to v49, or from
-v48 to v50 where a rule kind is enabled ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)). To keep every
+A scoped file, or a declared field, moves the block to its scoped revision; see
+[the current revision list](#the-blocks-revision-is-not-grunds-release). To keep every
 row in the root file, set `[presentation] rules = "root"`: the root block is
-then what a version-1 config renders, plus the declaration shapes. A
-version-1 config always renders at the root.
+then the configured root guidance, plus the declaration shapes. `home` is the
+default and writes scoped files; `rules = "root"` keeps every row in the root
+block.
 
 Whether an agent reads a scoped file by itself depends on the agent. For one
 that does not, the root block's list tells it to read the file before writing
@@ -259,9 +289,9 @@ there. As read from each tool's own documentation
 
 | Agent | What its documentation says | Documentation, read 2026-10-14 |
 |---|---|---|
-| Claude Code | Loads a subdirectory's `CLAUDE.md` once it reads, writes or edits a file in that subdirectory; automatic through the symlink. | <https://code.claude.com/docs/en/memory> |
+| Claude Code | Loads a subdirectory's `CLAUDE.md` once it reads, writes or edits a file in that subdirectory; automatic through the symlink when the root `CLAUDE.md` points to `AGENTS.md`. A real `CLAUDE.md` from `--claude` falls back to the root pointer. | <https://code.claude.com/docs/en/memory> |
 | Codex | Builds its instruction chain once at startup, from the project root down to the working directory, and none below it. Not automatic: it follows the root pointer, or is started in the directory (`--cd docs/spec`). | <https://learn.chatgpt.com/docs/agent-configuration/agents-md> |
-| Gemini CLI | When a tool accesses a file, scans that file's directory and its ancestors for `GEMINI.md`; automatic through the symlink. `context.fileName` may name `AGENTS.md` instead. | <https://geminicli.com/docs/cli/gemini-md/> |
+| Gemini CLI | When a tool accesses a file, scans that file's directory and its ancestors for `GEMINI.md`; automatic when the nested file exists. `context.fileName` may name `AGENTS.md` instead. | <https://geminicli.com/docs/cli/gemini-md/> |
 | Cursor | Applies an `AGENTS.md` in a subdirectory when working with files in that directory or its children; automatic. | <https://cursor.com/docs/context/rules> |
 | Windsurf | Applies a subdirectory's `AGENTS.md` only when Cascade reads or edits files inside that directory; automatic. | <https://docs.devin.ai/desktop/cascade/agents-md> |
 | Pi | Loads context files from the agent directory, the working directory and its parents at startup; nothing below the working directory. Not automatic: it follows the root pointer. | <https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/configuration.md> |
@@ -279,5 +309,21 @@ note: grund.toml exists, so the none template's grund.toml is not written — in
 ```
 
 The managed block is still rendered from the config the repository has. For
-the `[scan]` settings that fit common repository shapes, see the
+the source settings that fit common repository shapes, see the
 [repository-shape examples](init-repo-shapes.md).
+
+## Removing grund from a repository
+
+To remove grund's repository setup, first find the managed guidance blocks:
+
+```bash
+grep -rl --exclude-dir=.git 'BEGIN GRUND MANAGED BLOCK' .
+```
+
+Delete each block from files that also contain your own text; if `init` created
+a file containing only the block, you can delete the whole file. Remove any
+symlinks that `init` linked to those `AGENTS.md` files, then remove
+`.grund/`, `grund.toml`, and any pre-commit or CI step you
+added for grund. Citations and generated links are plain text and can stay or
+be removed. For machine-level integration files, see
+[Remove it](clickable-citations.md#7-remove-it).

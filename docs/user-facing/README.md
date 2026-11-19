@@ -9,8 +9,10 @@ command's own `--help` page links the guide and example that cover it
 | Guide | Example |
 |---|---|
 | [Installation](installation.md) | — |
-| [Setting up a repository](setup.md) | [`examples/scheme-*`](../../examples/) |
+| [Your first grounded repository: init, a first declaration, a first citation](init.md) | [`examples/init-template-none`](../../examples/init-template-none/) |
+| [The structure that gets cited: IDs, citations, sections](structure.md) | — |
 | [Checking a repository](checking.md) | [`examples/authored-citations`](../../examples/authored-citations/) |
+| [`grund init` flags and exit codes](setup.md) | [`examples/scheme-*`](../../examples/) |
 | [The `grund.toml` reference](configuration.md), with its [JSON Schema](../../schemas/grund.schema.json) | [`examples/places`](../../examples/places/) |
 | [Migrating a config to version 2](migrating.md) | [`examples/migrate`](../../examples/migrate/) |
 | [Asking the binary what a key or a check code means](explain.md) | [`examples/config-explain`](../../examples/config-explain/) |
@@ -21,11 +23,11 @@ command's own `--help` page links the guide and example that cover it
 | [Seeing a repository's schema](schema.md) | [`examples/schema`](../../examples/schema/) |
 | [Clickable citations](clickable-citations.md) | — |
 | [Coordinate sizes](coordinate-sizes.md) | — |
-| [Distribution runbook](distribution-runbook.md) | — |
+| [Grund maintainer release runbook](distribution-runbook.md) (for installing, see [Installation](installation.md)) | — |
 | [Git co-change evidence](cochange.md) | [`examples/cochange`](../../examples/cochange/) |
 | [External facts](external-facts.md) | [`examples/external-tickets`](../../examples/external-tickets/) |
-| [Setting up a repository with `grund init`](init.md) | [`examples/init-template-none`](../../examples/init-template-none/) |
 | [`grund init` repository shapes](init-repo-shapes.md) | [`examples/scheme-*`](../../examples/) |
+| [Reviewing changes to declarations](reviewing.md) | — |
 | [Editor support via LSP](lsp.md) | — |
 | [Node Promise API](node-api.md) | [`examples/node-api`](../../examples/node-api/) |
 | [Querying grund](querying.md) | [`examples/refs-unused`](../../examples/refs-unused/) |
