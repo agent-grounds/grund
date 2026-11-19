@@ -78,6 +78,22 @@ impl Located {
     pub(crate) fn shown(&self, path: &Path) -> String {
         super::report_path(&self.base, path)
     }
+
+    /// The config as `grund check` run on the root names it: the one spelling the
+    /// report gate compares findings on, whatever the base (§FS-config-migrate.5.2).
+    pub(crate) fn config_from_root(&self) -> String {
+        super::report_path(&self.root, &self.file)
+    }
+
+    /// A path `grund check` on the root spelled from the root, as this report
+    /// names it (§FS-config-migrate.2.2). Under the root base it is the same
+    /// string, and an absolute path stays absolute.
+    pub(crate) fn from_root(&self, path: &str) -> String {
+        if self.base == self.root || Path::new(path).is_absolute() {
+            return path.to_owned();
+        }
+        self.shown(&self.root.join(path))
+    }
 }
 
 /// §FS-config-migrate.1.1: discovery walks up from `path`, as `config validate`

@@ -17,7 +17,7 @@ use crate::config::migrate::{
 };
 use crate::config::{
     Config, Invocation, PathBase, Project, Selection, command_directory, command_path, config_at,
-    report_path, with_report_path_base,
+    with_report_path_base,
 };
 use crate::model::{Code, Finding, GENERATED_SECTIONS, format_path};
 use crate::scanner::{
@@ -113,14 +113,7 @@ pub(super) fn config_migrate_in(
         one_grammar = gate.directions_in_one_grammar;
     }
     if let (Some(GateResult::Equal), Some(candidate)) = (&report.gates, &report.candidate) {
-        let lines = report_gate(
-            &located,
-            &v1,
-            candidate,
-            &line_map,
-            &report.config,
-            one_grammar,
-        );
+        let lines = report_gate(&located, &v1, candidate, &line_map, one_grammar);
         if !lines.is_empty() {
             report.gates = Some(GateResult::Differs {
                 gate: Gate::Report,
@@ -220,13 +213,14 @@ fn members(located: &Located, cwd: Option<&Path>) -> Vec<String> {
 /// read and with the candidate in its place; the lines that differ, `- ` for
 /// version 1 and `+ ` for the candidate. `one_grammar` says the guidance gate
 /// passed the root citation directions only in one grammar, so neither run
-/// compares the root block's stale finding on that section.
+/// compares the root block's stale finding on that section. Both runs spell
+/// their paths from the root, so the comparison never depends on the base; each
+/// printed path is then spelled from the report's (§FS-config-migrate.2.2).
 pub(super) fn report_gate(
     located: &Located,
     v1: &Project,
     candidate: &str,
     line_map: &[(usize, usize)],
-    config: &str,
     one_grammar: bool,
 ) -> Vec<String> {
     let run = || {
@@ -237,14 +231,14 @@ pub(super) fn report_gate(
             ..CheckOpts::default()
         })
     };
-    let before = lines(run(), None, config, &located.root, one_grammar);
+    let before = lines(run(), None, located, one_grammar);
     // `[output] relative_paths = false` is `--path-base=invocation` once dropped.
     let base = crate::config::report_path_base()
         .or((!v1.presentation.output.relative_paths).then_some(PathBase::Invocation));
     let after = crate::config::with_config_text(&located.file, candidate, || {
         with_report_path_base(base, run)
     });
-    let after = lines(after, Some(line_map), config, &located.root, one_grammar);
+    let after = lines(after, Some(line_map), located, one_grammar);
     // Compared as multisets: a line twice in one run and once in the other differs.
     let mut out = surplus(&before, &after, "- ");
     out.extend(surplus(&after, &before, "+ "));
@@ -269,27 +263,36 @@ pub(super) fn surplus(ours: &[String], theirs: &[String], mark: &str) -> Vec<Str
 
 /// One check run as comparable lines: each project checked, each finding by
 /// channel, the run warnings, and the exit. A finding in the config is moved to
-/// its v1 line, and the v2 table names in a message are spelled as v1.
+/// its v1 line, and the v2 table names in a message are spelled as v1. The
+/// config is recognised by its root spelling, as check printed it, and every
+/// path is printed from the report's base (§FS-config-migrate.2.2).
 fn lines(
     (warnings, output): (Vec<Finding>, anyhow::Result<(CheckOutput, Vec<PathBuf>)>),
     line_map: Option<&[(usize, usize)]>,
-    config: &str,
-    root_dir: &Path,
+    located: &Located,
     one_grammar: bool,
 ) -> Vec<String> {
+    let config = located.config_from_root();
+    let config = config.as_str();
+    let shown = located.config.as_str();
     let v1_line =
         |map: &[(usize, usize)], at: usize| map.iter().find(|(v2, _)| *v2 == at).map(|(_, v1)| *v1);
     let finding = |channel: &str, f: &Finding| {
-        let path = f.path.as_deref().unwrap_or("-");
+        let path = f
+            .path
+            .as_deref()
+            .map_or("-".into(), |p| located.from_root(p));
         let place = match (line_map, f.line) {
             (Some(map), Some(at)) if f.path.as_deref() == Some(config) => {
-                config_line(config, at, v1_line(map, at))
+                config_line(shown, at, v1_line(map, at))
             }
             _ => format!("{path}:{}", f.line.map_or("-".into(), |l| l.to_string())),
         };
         let message = match line_map {
-            Some(map) => v1_spelling(&config_lines(&f.message, config, |at| v1_line(map, at))),
-            None => f.message.clone(),
+            Some(map) => v1_spelling(&config_lines(&f.message, config, shown, |at| {
+                v1_line(map, at)
+            })),
+            None => config_lines(&f.message, config, shown, Some),
         };
         format!(
             "{channel} {} {} {place}:{} {message}",
@@ -313,10 +316,11 @@ fn lines(
         .collect();
     match output {
         Ok((output, projects)) => {
-            out.extend(projects.iter().map(|root| {
-                let shown = report_path(root_dir, root);
-                format!("project {shown}")
-            }));
+            out.extend(
+                projects
+                    .iter()
+                    .map(|root| format!("project {}", located.shown(root))),
+            );
             let report = &output.report;
             out.extend(
                 report
@@ -386,9 +390,11 @@ fn config_line(config: &str, line: usize, v1: Option<usize>) -> String {
 /// Each `<config>:<line>` a message names, its line moved by `v1_line`: a
 /// message that points into the config points at the key's v1 line, and one the
 /// key map does not hold names the candidate's own (§FS-config-migrate.5.2.1).
+/// `config` is the spelling matched, `shown` the one printed (§FS-config-migrate.2.2).
 pub(super) fn config_lines(
     message: &str,
     config: &str,
+    shown: &str,
     v1_line: impl Fn(usize) -> Option<usize>,
 ) -> String {
     let prefix = format!("{config}:");
@@ -402,7 +408,7 @@ pub(super) fn config_lines(
         match tail[..digits].parse::<usize>() {
             Ok(line) if !other => {
                 out.push_str(&rest[..at]);
-                out.push_str(&config_line(config, line, v1_line(line)));
+                out.push_str(&config_line(shown, line, v1_line(line)));
             }
             _ => {
                 out.push_str(head);
