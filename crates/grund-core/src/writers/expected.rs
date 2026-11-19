@@ -72,7 +72,7 @@ impl WorkspaceBlocks<'_> {
 /// §FS-check.3.5.4). A genuinely invalid rule leaves no block of the project
 /// to compare, because `grund init` refuses to write one while it stands: the
 /// entrypoints are dropped and `blocks_withheld` is set, so the rule's own
-/// located error is the finding to act on (§FS-check.3.5.1). `blocks` says
+/// located error is the finding to act on (§FS-check.3.5.4). `blocks` says
 /// whether the workspace sections are rendered and compared, and from which
 /// projects (§FS-check.3.5.5).
 pub(crate) fn expected(

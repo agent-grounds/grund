@@ -36,7 +36,7 @@ pub struct Expected {
     pub non_units: BTreeSet<PathBuf>,
     /// Whether a genuinely invalid rule left every block of the project
     /// uncompared, which carries `invalid-rule` with `--only agents-init`
-    /// (§FS-check.3.5.1).
+    /// (§FS-check.3.5.4).
     pub blocks_withheld: bool,
 }
 
