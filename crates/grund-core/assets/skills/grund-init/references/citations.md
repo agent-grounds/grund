@@ -105,6 +105,34 @@ should = ["FS|AR"]
 Anything not listed above is allowed.
 ```
 
+The `skills/` bullet carries a second sentence because its rule is about what a
+file that cites something cites. A skill that cites nothing slips past
+`must = ["FS"]`, and turning the row's grounding on is what closes that hole. A
+place closed to every citation has no such hole. In a version-1 config, close a
+non-citable `tests/fixtures/` home with a `must-not` default and no list but
+`must-not`, and its one rule is that its files cite nothing, which a file that
+cites nothing already keeps:
+
+```toml
+[citations.fixture]         # citable = false, at tests/fixtures/
+default = "must-not"
+```
+
+```markdown
+- Each file in **tests/fixtures/** must not cite anything.
+```
+
+That bullet is one sentence under either config version, whether the row's
+grounding is on or off. It has no `that cites anything` and names no grounding
+setting, because grounding there would fail every file: an uncited one as
+ungrounded, and a cited one as a forbidden citation. A `must-not` list beside
+the default folds into the same clause, since every target it names is one the
+clause already forbids, and the homeless `code` kind closed the same way reads
+`Each source file outside the Project map (**code**) must not cite anything.`
+A closed default with a `may`, `should-not` or `warn-not` exception beside it
+is not closed, because that target is permitted, discouraged or only warned
+about, so it keeps the bullet the levels above give it ([a row closed to every citation](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config.md#3941-a-row-closed-to-every-citation)).
+
 grund's own convention climbs: goals cite why the project exists, specs cite
 goals, architecture and decisions cite specs, and code and executable tests cite
 the specs they realize. A config holds none of it until it declares it, so the

@@ -361,7 +361,7 @@ bullet per key nested under it.
 The section sits in the `AGENTS.md` of the directory above the kind's places,
 or in the root block under `[presentation] rules = "root"`
 ([scoped guidance](init.md#scoped-guidance-in-a-version-2-config)). A declared
-field moves the block to v49, or v50 where a rule kind is enabled, so the first
+field moves the block to v53, or v54 where a rule kind is enabled, so the first
 `grund check` after adding one reports the block outdated until `grund init`
 runs ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)).
 

@@ -169,11 +169,10 @@ fn v1_migratable() -> String {
 }
 
 /// §FS-init.2.3.5.2.2: issue #1456's case A1. A version-1 closed home that grounds nothing renders
-/// one sentence in the root block, no narrowing and no hint. Today it reads `Each file in **ce/**
+/// one sentence in the root block, no narrowing and no hint. It used to read `Each file in **ce/**
 /// that cites anything must not cite anything. A file there that cites nothing is not checked;
 /// `require_grounding = true` on its `[[kinds]]` row makes it a finding.`
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn a_v1_closed_home_renders_one_sentence_in_the_root_block() {
     let tree = Tree::new("a1", &v1_closed(""), "ce/A.java");
     tree.assert_closed("ce/A.java");
@@ -183,9 +182,8 @@ fn a_v1_closed_home_renders_one_sentence_in_the_root_block() {
 }
 
 /// §FS-init.2.3.5.2.2: case A2. A version-2 closed home that grounds nothing renders the same
-/// sentence in its scoped block. Today it names `[rules.citations.ce.grounding] must = "file"`.
+/// sentence in its scoped block. It used to name `[rules.citations.ce.grounding] must = "file"`.
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn a_v2_closed_home_renders_one_sentence_in_its_scoped_block() {
     let tree = Tree::new("a2", &v2_closed(""), "ce/A.java");
     tree.assert_closed("ce/A.java");
@@ -195,10 +193,9 @@ fn a_v2_closed_home_renders_one_sentence_in_its_scoped_block() {
 }
 
 /// §FS-init.2.3.5.2.1: cases B1 and B2. The homeless kind closed by its own `must-not` default,
-/// with no row declared, is not narrowed in either version. Today it reads `Each source file
+/// with no row declared, is not narrowed in either version. It used to read `Each source file
 /// outside the Project map (**code**) that cites anything must not cite anything.`
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn the_closed_homeless_kind_renders_one_sentence() {
     for (name, config) in [
         (
@@ -244,10 +241,9 @@ fn a_grounded_closed_home_keeps_its_bullet() {
 
 /// §FS-init.2.3.7.1, §FS-init.2.3.7.3.2: the block the previous release wrote, v47 at the root of a
 /// version-1 config and v49 in each block of a version-2 config with a scoped file, is outdated,
-/// and `grund check` names both versions; `grund init` repairs it. Today v47 and v49 are current,
-/// so `grund check` reports nothing.
+/// and `grund check` names both versions; `grund init` repairs it. Before the bump v47 and v49 were
+/// current, and `grund check` reported nothing.
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn the_previous_release_block_is_outdated() {
     for (name, config, files, older, selected) in [
         ("outdated-v1", v1_closed(""), &["AGENTS.md"][..], 47, 51),
@@ -297,9 +293,8 @@ fn config_migrate_passes_a_closed_row() {
 }
 
 /// §FS-config-migrate.5.3.1, §FS-init.2.3.5.2.2: the migrated tree renders the closed home as the
-/// version-1 tree does, one sentence and no hint. Today it names the version-2 ladder.
+/// version-1 tree does, one sentence and no hint. It used to name the version-2 ladder.
 #[test]
-#[ignore = "red until #1456 renders a closed row as must not cite anything; implement removes this"]
 fn a_migrated_closed_home_renders_one_sentence() {
     let tree = Tree::new("migrated", &v1_migratable(), "ce/A.java");
     let output = tree.run(&["config", "migrate", "--to", "2", "--write", "--full"]);
