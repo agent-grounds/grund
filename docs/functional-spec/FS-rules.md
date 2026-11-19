@@ -25,7 +25,9 @@ level, rule, grounded).
   clause does not select. It contributes no unit, no family reports it, and it is never
   unreached ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)).
 - **chapter** — A rule's unit inside a declaration: one named heading in its body, direct or
-  nested, as against the declaration's whole body. The rule grammar's subject-unit word.
+  nested, as against the declaration's whole body. The rule grammar's subject-unit word. A
+  numbered or unmarked heading is no chapter; where a refusal says `numbered chapter`, it means
+  a numbered section path written where a chapter is wanted.
 - **display name** — The label an author wrote after a chapter's coordinate: `Terms` in
   `## terms: Terms`. What a presence rule names, whatever file the heading is in
   ([§FS-rules.5.1.1](FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote)).
@@ -893,7 +895,8 @@ the subject that is not a chapter reads `NAME`, case aside, after any number,
 the `named` case follows for the first such heading, so `## 1. Terms` at line 5
 gets `; write line 5 as ## terms: Terms`: its `#` run, `NAME` in lower case,
 `: ` and its title. It is left out where that lower-case `NAME` is not a
-section name or is already the handle of a direct chapter.
+section name or is already the handle of a direct chapter. An unmarked heading it names shows
+the same form in its own finding ([§FS-declarations.checks.unmarked-heading.2.2](FS-declarations.md#checksunmarked-heading22-a-direct-field-title-or-name-is-also-shown-the-field-form)).
 
 ### 7.3 Outbound citation cardinality
 
