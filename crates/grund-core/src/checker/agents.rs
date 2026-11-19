@@ -60,7 +60,7 @@ pub(crate) fn stale_section_noun(message: &str) -> Option<&str> {
 /// entrypoint, since `grund init` refuses to write while it stands; its own
 /// located error, from `check_chapter_rules`, is the finding to act on, and the
 /// run records the withheld comparison so `--only agents-init` keeps that
-/// error (§FS-check.3.5.1).
+/// error (§FS-check.3.5.4).
 pub(super) fn check_agents_block_version(
     expected: &Expected,
     frame: Frame<'_>,

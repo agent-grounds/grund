@@ -89,7 +89,7 @@ impl CheckFindingSelection {
 
     /// [`Self::retains`] in a run where an invalid rule did or did not leave a
     /// project's blocks uncompared, which carries `invalid-rule` with
-    /// `agents-init` (§FS-check.3.5.1).
+    /// `agents-init` (§FS-check.3.5.4).
     fn retains_in(&self, code: &str, authority: &[String], blocks_withheld: bool) -> bool {
         code == "io"
             // §FS-check.1.4: a file read and not parsed is the same hole in the run.
@@ -166,7 +166,7 @@ impl CheckFindingSelection {
 
     /// §FS-check.1.4: `--only agents-init` carries every `invalid-rule` row in a
     /// run where an invalid rule left a project's blocks uncompared, so that
-    /// skip never reads as a pass (§FS-check.3.5.1).
+    /// skip never reads as a pass (§FS-check.3.5.4).
     fn carried_with_blocks(&self, code: &str, blocks_withheld: bool) -> bool {
         blocks_withheld && code == "invalid-rule" && self.only.contains("agents-init")
     }
