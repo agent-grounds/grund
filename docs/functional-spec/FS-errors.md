@@ -873,9 +873,10 @@ names a specification ID or holds a link, and each is written by these rules.
   ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). `none — spent …` is a code that never fires and that `--only` and
   `--ignore` still accept; the rest of the cell, after `none — `, says what
   became of it. `by strength:` is chosen by the strength a setting or rule is
-  written under; the rest of the cell names the setting, says what each
-  strength gives, or both; where it does not say, `must` gives an error,
-  `warn` a warning, `should` a suggestion, and `may` is not checked. Any other cell
+  written under. A cell that lists what the strengths give lists every strength
+  the code reports, and a strength it leaves out is not reported by this code.
+  A cell that only names the setting takes the default: `must` an error, `warn`
+  a warning, `should` a suggestion, and `may` not checked. Any other cell
   names a severity and the setting or the rule strength that changes it, so it
   is chosen by a setting too.
 - **Ramp** names the release in which a promised change of severity lands, and
