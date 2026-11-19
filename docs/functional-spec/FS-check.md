@@ -849,22 +849,22 @@ With `[reference] inline_note_layout` set to a layout and `inline_note_layout_ch
 
 ### 3.11 Missing required citation
 
-When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) sets a `must` obligation for a citing kind, every top-level declaration of that kind must carry at least one citation satisfying each `must` entry, anywhere in its body. A declaration that does not is an error located at the declaration line, naming the unmet target:
+When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) sets a `must` obligation for a citing kind, every top-level declaration of that kind must carry at least one citation satisfying each `must` entry, anywhere in its body. A declaration that does not is reported as `missing-citation` at the declaration line, naming the unmet target:
 
 ```
 docs/architecture/AR-router.md:1: AR-router must cite FS or GOAL (citation direction); add such a citation within it
 ```
 
-The body extent and the citing-side classification come from the scanner ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)); the obligation pass is [AR-checker.2.9](../../crates/grund-core/src/checker/report.rs). The homeless kind ([§FS-check.3.11.1](FS-check.md#3111-the-homeless-kind)) and a non-citable kind ([§FS-check.3.11.2](FS-check.md#3112-a-non-citable-kind)) are asked per file instead, at the row's `grounding_level` ([§FS-check.3.11.3](FS-check.md#3113-the-unit-follows-grounding_level)); every failing unit is reported ([§FS-check.3.11.4](FS-check.md#3114-every-failing-unit-is-reported)), a file with no citation is no unit ([§FS-check.3.11.5](FS-check.md#3115-a-file-with-no-citation-is-no-unit)), and an `E2E` case has its own unit ([§FS-check.3.11.6](FS-check.md#3116-an-e2e-case)). The parallel `should` obligation is not an error; it is a suggestion ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). A declaration a stub pairs with is the unit wherever its target is: an outside target lends it its citations ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), so the obligation is met by what the target cites, a unit only that target supplies keeps the obligation from applying to nothing ([§FS-check.2.2.1.1](FS-check.md#2211-when-it-fires)), and the finding of one that cites nothing is an error at the declaration's line in the target ([§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target), [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
+The body extent and the citing-side classification come from the scanner ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)); the obligation pass is [AR-checker.2.9](../../crates/grund-core/src/checker/report.rs). The homeless kind ([§FS-check.3.11.1](FS-check.md#3111-the-homeless-kind)) and a non-citable kind ([§FS-check.3.11.2](FS-check.md#3112-a-non-citable-kind)) are asked per file instead, at the row's `grounding_level` ([§FS-check.3.11.3](FS-check.md#3113-the-unit-follows-grounding_level)); every failing unit is reported ([§FS-check.3.11.4](FS-check.md#3114-every-failing-unit-is-reported)), a file with no citation is no unit ([§FS-check.3.11.5](FS-check.md#3115-a-file-with-no-citation-is-no-unit)), and an `E2E` case has its own unit ([§FS-check.3.11.6](FS-check.md#3116-an-e2e-case)). The parallel `should` obligation reports `suggested-citation` instead ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). A declaration a stub pairs with is the unit wherever its target is: an outside target lends it its citations ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), so the obligation is met by what the target cites, a unit only that target supplies keeps the obligation from applying to nothing ([§FS-check.2.2.1.1](FS-check.md#2211-when-it-fires)), and the finding of one that cites nothing is reported at the declaration's line in the target ([§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target), [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
 
 The ordinary rule sentence `<subject> must cite at least one <target-set>.` reuses this code only when its actual count is zero. Rule-to-rule and the narrow config-to-rule bridge deduplicate as [§FS-rules.6](FS-rules.md#6-semantic-deduplication) specifies; when config participates, this section's existing message stays byte-for-byte unchanged.
 
-Under v2 the obligation is written as `must`, `warn` or `should` ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations)); a `warn` obligation is the same finding, code and message at the severity this code's row gives it, and a `should` one is `suggested-citation`. v1's `[citations]` keeps exactly the channels above.
+Under v2 the obligation is written as `must`, `warn` or `should` ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations)); `warn` reports this code too, at the severity its row gives it. v1's `[citations]` keeps exactly the channels above.
 
 
 #### 3.11.1 The homeless kind
 
-A **homeless-kind** obligation ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — is per file rather than per declaration: a source file that contains at least one citation but none satisfying the obligation is the error, located at line 1.
+A **homeless-kind** obligation ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — is per file rather than per declaration: a source file that contains at least one citation but none satisfying the obligation is the finding, located at line 1.
 
 #### 3.11.2 A non-citable kind
 
@@ -888,24 +888,24 @@ Units are built from citations, so a file carrying none produces no unit and `mu
 
 #### 3.11.6 An `E2E` case
 
-An `E2E`-kind obligation ([§FS-config.3.9.1](FS-config.md#391-levels)) is per case declaration ([§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares)), can be satisfied by the case's `spec.refs` manifest entries, and remains an error when the case has no scanned citations or matching manifest entry.
+An `E2E`-kind obligation ([§FS-config.3.9.1](FS-config.md#391-levels)) is per case declaration ([§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares)), can be satisfied by the case's `spec.refs` manifest entries, and is reported when the case has no scanned citations or matching manifest entry.
 
 ### 3.12 Forbidden citation
 
-When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) sets a `must-not` prohibition for a citing kind, every citation site of that kind to a prohibited target is an error located at the citation site:
+When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) sets a `must-not` prohibition for a citing kind, every citation site of that kind to a prohibited target is reported as `forbidden-citation` at the citation site:
 
 ```
 docs/functional-spec/FS-login.md:42: FS must not cite AR (citation direction) — re-point the citation or downgrade it to a plain Markdown link
 ```
 
-The prohibition pass is [AR-checker.2.10](../../crates/grund-core/src/checker/report.rs); how it reads the citing and the cited kind is [§FS-check.3.12.1](FS-check.md#3121-how-the-two-kinds-are-read). The parallel `should-not` prohibition is not an error; it is a suggestion ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). The sanctioned way to keep a discouraged downward pointer is a plain Markdown link, which is not a citation under `strict = true` and so is exempt from this rule. A citation a stub's target outside `[scan] include` lends the stubbed declaration ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)) is a citation site of its kind, reported at its line in the target as an error, as with the target scanned ([§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
+The prohibition pass is [AR-checker.2.10](../../crates/grund-core/src/checker/report.rs); how it reads the citing and the cited kind is [§FS-check.3.12.1](FS-check.md#3121-how-the-two-kinds-are-read). The parallel `should-not` prohibition reports `discouraged-citation` instead ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). The sanctioned way to keep a discouraged downward pointer is a plain Markdown link, which is not a citation under `strict = true` and so is exempt from this rule. A citation a stub's target outside `[scan] include` lends the stubbed declaration ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)) is a citation site of its kind, reported at its line in the target, as with the target scanned ([§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
 
 A rule sentence `<subject> must not cite any <target-set>.` reuses this code and
 the exact citation-site anchor. Outside the index-entry repair below, its message
 replaces only `(citation direction)` with `(<RULE-ID>)`; a config-derived
 duplicate keeps this section's bytes unchanged ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)).
 
-Under v2 the prohibition is written as `must-not`, `warn-not` or `should-not` ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations)); a `warn-not` prohibition is the same finding, code and message at the severity this code's row gives it, and a `should-not` one is `discouraged-citation`.
+Under v2 the prohibition is written as `must-not`, `warn-not` or `should-not` ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations)); `warn-not` reports this code too, at the severity its row gives it.
 
 
 #### 3.12.1 How the two kinds are read

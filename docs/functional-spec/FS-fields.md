@@ -169,7 +169,7 @@ A field with `one_of` is a scalar: its display name is its value, and a value ou
 
 ### strengths.table: Which strength each finding takes
 
-The first four codes take their severity from the field's `presence` and `undeclared-chapter` from the kind's `closed`, as each code's row of the catalog says ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)); `duplicate-section` and `invalid-value-declaration` are errors whatever the strength.
+The first four codes take their severity from the field's `presence` and `undeclared-chapter` from the kind's `closed`, as each code's row of the catalog says ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)); `duplicate-section` and `invalid-value-declaration` take theirs from no strength.
 
 | What is wrong | Code | Reported at |
 |---|---|---|
@@ -433,9 +433,9 @@ A key's **title** is its value where that is a one-line scalar on the key's line
 | a value is not in `one_of` | `invalid-field-value` | the key's line | the key's `presence` | `ADR-cache.front-matter.status is "acepted"; kind ADR admits proposed, accepted; change the value to one of them` |
 | a value under `one_of` is not one line | `invalid-field-value` | the key's line | the key's `presence` | `ADR-cache.front-matter.status is not a one-line value; kind ADR admits proposed, accepted; write one of them on the key's line` |
 | a key the field does not declare, in a closed field | `undeclared-chapter` | the key's line | the field's `closed` | as [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter) |
-| a key written twice, or in TOML contributed to again in a way TOML refuses | `duplicate-section` | its first occurrence | always an error | as [§FS-fields.front-matter.keys](FS-fields.md#front-matterkeys-its-keys-are-its-sections) |
-| the block cannot be read | `unreadable-front-matter` | the opening delimiter | always an error | as [§FS-fields.checks.unreadable-front-matter](FS-fields.md#checksunreadable-front-matter-unreadable-front-matter) |
-| a heading claims the field's coordinate | `front-matter-heading` | the heading | always an error | as [§FS-fields.checks.front-matter-heading](FS-fields.md#checksfront-matter-heading-front-matter-heading) |
+| a key written twice, or in TOML contributed to again in a way TOML refuses | `duplicate-section` | its first occurrence | — | as [§FS-fields.front-matter.keys](FS-fields.md#front-matterkeys-its-keys-are-its-sections) |
+| the block cannot be read | `unreadable-front-matter` | the opening delimiter | — | as [§FS-fields.checks.unreadable-front-matter](FS-fields.md#checksunreadable-front-matter-unreadable-front-matter) |
+| a heading claims the field's coordinate | `front-matter-heading` | the heading | — | as [§FS-fields.checks.front-matter-heading](FS-fields.md#checksfront-matter-heading-front-matter-heading) |
 
 Each finding takes its severity from its code's row ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)), and a `may` key whose value is present is held to its `one_of` ([§FS-fields.strengths.may](FS-fields.md#strengthsmay-a-present-optional-field-is-still-held-to-its-shape)). One defect is one finding ([§FS-fields.requirements.one-finding](FS-fields.md#requirementsone-finding-one-defect-in-a-declarations-shape-is-one-finding--realized)). No key is judged when the block is absent or unreadable. A key written twice is judged once, at its first occurrence. A `## front-matter:` heading is `front-matter-heading` and nothing else. `misplaced-field` counts direct sections only, never the block ([§FS-fields.order.ends](FS-fields.md#orderends-first-and-last)).
 
