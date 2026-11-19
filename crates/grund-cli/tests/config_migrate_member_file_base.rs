@@ -123,7 +123,6 @@ fn heading_and_member_file(out: &Output) -> (String, String) {
 /// `../grund.toml`, and the member's file is `../apps/api/grund.toml`, the
 /// file `grund check` names with the same flag from the same place.
 #[test]
-#[ignore = "red until #1464 rebases the member: file onto the heading's base; implement removes this"]
 fn member_file_follows_the_invocation_base() {
     let root = workspace("grund-1464-invocation");
     let (heading, member) = heading_and_member_file(&grund(

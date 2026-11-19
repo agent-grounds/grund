@@ -44,7 +44,7 @@ use super::run::{Invocation, Selection};
 use super::v1::{LinePass, LineRecord};
 use super::v2::Emission;
 use super::{v1, v2, validate};
-use crate::model::{format_path, relative_from_base};
+use crate::model::format_path;
 use reads::V1Walk;
 pub use record::{
     Gate, GateResult, ListedComment, MappedKey, MigrateFailure, MigrateNotice, MigrateOutcome,
@@ -52,17 +52,39 @@ pub use record::{
 };
 
 /// The config a run migrates (§FS-config-migrate.1.1): where it is, the root it
-/// governs, and its path from the report base.
+/// governs, the base its report spells paths from, and its path from that base.
 pub(crate) struct Located {
     pub(crate) root: PathBuf,
     pub(crate) file: PathBuf,
+    base: PathBuf,
     pub(crate) config: String,
+}
+
+impl Located {
+    /// The config `file` under `root`, its report spelled from `base`.
+    pub(crate) fn new(root: PathBuf, file: PathBuf, base: PathBuf) -> Self {
+        let config = super::report_path(&base, &file);
+        Self {
+            root,
+            file,
+            base,
+            config,
+        }
+    }
+
+    /// `path` as this run's report names it: from the one base the heading reads, so
+    /// every report path follows `--path-base` alike (§FS-config-migrate.2.2,
+    /// §FS-config-migrate.8).
+    pub(crate) fn shown(&self, path: &Path) -> String {
+        super::report_path(&self.base, path)
+    }
 }
 
 /// §FS-config-migrate.1.1: discovery walks up from `path`, as `config validate`
 /// does, and the governing config of the first directory that has one is it —
 /// found on the path's own parents (§FS-config.1.5), its root then resolved as
-/// every loaded root is, and the file spelled under that root.
+/// every loaded root is, and the file spelled under that root. Its report base is
+/// the CLI base under `--path-base invocation`, else that root (§FS-config-migrate.2.2).
 pub(crate) fn locate(path: &Path) -> Option<Located> {
     let start = discovery_start(path);
     let (dir, file) = nearest_config(&start)?;
@@ -71,16 +93,12 @@ pub(crate) fn locate(path: &Path) -> Option<Located> {
     let file = root.join(name);
     let from_cli =
         super::call_scope::report_path_base() == Some(super::call_scope::PathBase::Invocation);
-    let shown = if from_cli {
-        relative_from_base(&cli_base_of(&start, &root), &file)
+    let base = if from_cli {
+        cli_base_of(&start, &root)
     } else {
-        name.to_path_buf()
+        root.clone()
     };
-    Some(Located {
-        root,
-        file,
-        config: format_path(&shown),
-    })
+    Some(Located::new(root, file, base))
 }
 
 /// §FS-config-migrate.8: the config of the member at `root` when it is still on

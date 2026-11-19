@@ -198,11 +198,7 @@ fn v1_rule_home_carried_through_migration_loads() {
         "grund_config_version = 1\n[[kinds]]\nkind = \"RULE\"\nfile = \"rules/rules.md\"\n\
          rules = true\n[scan]\ninclude = [\"docs\"]\n[id]\nnamed_sections = true\n",
     );
-    let located = Located {
-        file: root.join("grund.toml"),
-        root: root.clone(),
-        config: "grund.toml".into(),
-    };
+    let located = Located::new(root.clone(), root.join("grund.toml"), root.clone());
     let Prepared::Translated { report, .. } =
         translate(&located, None, false, false, &|| true, &|_| Ok(Vec::new()))
             .expect("the v1 file reads")
