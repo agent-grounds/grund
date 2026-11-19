@@ -8,12 +8,15 @@ mod resolution;
 mod selectors;
 mod unreached;
 
-use super::facts::{Completeness, NodeKey, NonChapters, RuleFacts, SiteKey, SiteMeta};
+use super::facts::{
+    Completeness, NamedHeading, NodeKey, NonChapter, NonChapters, RuleFacts, SiteKey, SiteMeta,
+};
 use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
 };
 use crate::model::remedies;
 use crate::model::{Code, Diagnostic, citation_direction_repair};
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 
 use authority::Authority;
@@ -51,15 +54,22 @@ struct SemanticRule {
 
 /// Deduplicate normalized constraints and evaluate them over one snapshot. The
 /// engine never reparses prose or asks a producer for more facts (§AR-rules.4).
-/// `headings` are what a too-low chapter count may name (§FS-rules.7.2.1).
+/// `headings` are what a too-low chapter count may name (§FS-rules.7.2.1); the
+/// unmarked ones it names come back beside the findings.
 pub(crate) fn evaluate_with(
     rules: &[ParsedRule],
     precedence: &[Direction],
     facts: &RuleFacts,
     headings: &NonChapters,
-) -> Vec<RuleFinding> {
-    let input = Input { facts, headings };
-    evaluate_level(rules, precedence, input, RuleLevel::Required, true)
+) -> (Vec<RuleFinding>, BTreeSet<NamedHeading>) {
+    let shown = RefCell::new(BTreeSet::new());
+    let input = Input {
+        facts,
+        headings,
+        shown: &shown,
+    };
+    let findings = evaluate_level(rules, precedence, input, RuleLevel::Required, true);
+    (findings, shown.into_inner())
 }
 
 /// Recommendations use the same evaluator and return the same existing
@@ -70,9 +80,15 @@ pub(crate) fn evaluate_suggestions_with(
     precedence: &[Direction],
     facts: &RuleFacts,
     headings: &NonChapters,
-) -> Vec<RuleFinding> {
-    let input = Input { facts, headings };
-    evaluate_level(rules, precedence, input, RuleLevel::Recommended, false)
+) -> (Vec<RuleFinding>, BTreeSet<NamedHeading>) {
+    let shown = RefCell::new(BTreeSet::new());
+    let input = Input {
+        facts,
+        headings,
+        shown: &shown,
+    };
+    let findings = evaluate_level(rules, precedence, input, RuleLevel::Recommended, false);
+    (findings, shown.into_inner())
 }
 
 /// The engine over a snapshot with no non-chapter headings, for the tests that build
@@ -83,7 +99,7 @@ pub(crate) fn evaluate(
     precedence: &[Direction],
     facts: &RuleFacts,
 ) -> Vec<RuleFinding> {
-    evaluate_with(rules, precedence, facts, &NonChapters::new())
+    evaluate_with(rules, precedence, facts, &NonChapters::new()).0
 }
 
 /// [`evaluate`] for the recommended level.
@@ -93,14 +109,16 @@ pub(crate) fn evaluate_suggestions(
     precedence: &[Direction],
     facts: &RuleFacts,
 ) -> Vec<RuleFinding> {
-    evaluate_suggestions_with(rules, precedence, facts, &NonChapters::new())
+    evaluate_suggestions_with(rules, precedence, facts, &NonChapters::new()).0
 }
 
-/// The snapshot one level is evaluated over, and the non-chapter headings beside it.
+/// The snapshot one level is evaluated over, the non-chapter headings beside it, and
+/// the unmarked ones a `named` case showed.
 #[derive(Clone, Copy)]
 struct Input<'a> {
     facts: &'a RuleFacts,
     headings: &'a NonChapters,
+    shown: &'a RefCell<BTreeSet<NamedHeading>>,
 }
 
 /// Share one immutable fact index across this level's semantic groups and
@@ -256,11 +274,30 @@ fn evaluate_one(
                             .join(", ")
                     };
                     // §FS-rules.7.2.1: a too-low count names a heading that would count.
-                    let named = if rule.cardinality.minimum.is_some_and(|min| count < min) {
-                        named_form(input.headings.get(&subject), name, &chapters)
-                    } else {
-                        String::new()
-                    };
+                    let named = rule
+                        .cardinality
+                        .minimum
+                        .is_some_and(|min| count < min)
+                        .then(|| named_form(input.headings.get(&subject), name, &chapters))
+                        .flatten();
+                    let named = named.map_or(String::new(), |(heading, shown)| {
+                        // §FS-declarations.checks.unmarked-heading.2.2: its own finding too.
+                        if let Some(file) = &heading.unmarked {
+                            let clause = format!(
+                                "; the chapter {name} that {authority} counts is written {shown}"
+                            );
+                            let line = heading.line;
+                            let file = file.clone();
+                            input
+                                .shown
+                                .borrow_mut()
+                                .insert(NamedHeading { file, line, clause });
+                        }
+                        format!(
+                            "; {}",
+                            remedies::chapter_cardinality_named(heading.line, shown)
+                        )
+                    });
                     let message = format!(
                         "{} has {count} {name} chapters; {authority} requires {}; expected display name \"{name}\" (case-insensitive, not section handle); observed direct chapters: {observed}; {}{named}",
                         label(facts, &subject),
@@ -358,11 +395,11 @@ fn evaluate_one(
 
 /// §FS-rules.7.2.1: the `named` case for the first direct non-chapter heading that reads
 /// `name`, unless its lower-case form is no section name or already a direct chapter's handle.
-fn named_form(
-    headings: Option<&Vec<super::facts::NonChapter>>,
+fn named_form<'h>(
+    headings: Option<&'h Vec<NonChapter>>,
     name: &str,
     chapters: &[(&NodeKey, &str, &str)],
-) -> String {
+) -> Option<(&'h NonChapter, String)> {
     let handle = name.to_ascii_lowercase();
     let is_name = handle.starts_with(|c: char| c.is_ascii_lowercase())
         && handle
@@ -373,18 +410,17 @@ fn named_form(
             .iter()
             .any(|(_, coordinate, _)| *coordinate == handle)
     {
-        return String::new();
+        return None;
     }
     headings
         .into_iter()
         .flatten()
         .map(|heading| (heading, unnumbered(&heading.text)))
         .find(|(_, text)| text.eq_ignore_ascii_case(name))
-        .map_or(String::new(), |(heading, text)| {
-            let shown = format!("{} {handle}: {text}", "#".repeat(heading.level));
-            format!(
-                "; {}",
-                remedies::chapter_cardinality_named(heading.line, shown)
+        .map(|(heading, text)| {
+            (
+                heading,
+                format!("{} {handle}: {text}", "#".repeat(heading.level)),
             )
         })
 }

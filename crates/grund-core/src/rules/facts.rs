@@ -59,7 +59,19 @@ pub(crate) struct NonChapter {
     pub(crate) line: usize,
     pub(crate) level: usize,
     pub(crate) text: String,
+    /// The file of an unmarked heading in the project being checked, whose own
+    /// finding shows the named form too (§FS-declarations.checks.unmarked-heading.2.2).
+    pub(crate) unmarked: Option<String>,
 }
 
 /// Each declaration node's direct non-chapter headings, in source order.
 pub(crate) type NonChapters = BTreeMap<NodeKey, Vec<NonChapter>>;
+
+/// The clause an unmarked heading's own finding ends in when a chapter rule's `named`
+/// case shows it (§FS-declarations.checks.unmarked-heading.2.2).
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub(crate) struct NamedHeading {
+    pub(crate) file: String,
+    pub(crate) line: usize,
+    pub(crate) clause: String,
+}

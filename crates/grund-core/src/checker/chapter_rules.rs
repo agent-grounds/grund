@@ -12,6 +12,7 @@ use crate::rules::RuleAnchor;
 use crate::rules::engine::{
     evaluate_suggestions_with, evaluate_with, one_rules_authority, unresolved_subject_diagnostic,
 };
+use crate::rules::facts::NamedHeading;
 use crate::rules::markdown::{
     MarkdownProject, adapt_markdown, adapt_markdown_with_headings, adapt_workspace,
 };
@@ -410,18 +411,34 @@ pub(crate) fn check_chapter_rules(
     // §FS-rules.7: one channel per level, so the absence arrives among the
     // errors its level already fills and every caller's own sort orders it.
     // §FS-rules.7.10: a rule declared through a stub reports on the ordinary channels.
-    report.errors.extend(with_counted_lists(
-        evaluate_with(&parsed_rules, &precedence, &facts, &headings),
-        &spellings,
-        frame,
-    ));
-    report.suggestions.extend(with_counted_lists(
-        evaluate_suggestions_with(&parsed_rules, &precedence, &facts, &headings),
-        &spellings,
-        frame,
-    ));
+    let (errors, mut shown) = evaluate_with(&parsed_rules, &precedence, &facts, &headings);
+    let (suggestions, also) =
+        evaluate_suggestions_with(&parsed_rules, &precedence, &facts, &headings);
+    shown.extend(also);
+    show_named_headings(&shown, report);
+    report
+        .errors
+        .extend(with_counted_lists(errors, &spellings, frame));
+    report
+        .suggestions
+        .extend(with_counted_lists(suggestions, &spellings, frame));
     // §FS-rules.6: a field that expresses a rule reports a shared absence once.
     pair_fields_with_rules(findings, schema, frame, report);
+}
+
+/// §FS-declarations.checks.unmarked-heading.2.2: an unmarked heading a chapter rule's
+/// `named` case shows ends its own finding in that form, after every clause it has.
+fn show_named_headings(shown: &BTreeSet<NamedHeading>, report: &mut CheckReport) {
+    for named in shown {
+        let heading = report.errors.iter_mut().find(|error| {
+            error.code == Code::UNMARKED_HEADING
+                && error.line == Some(named.line)
+                && error.path.as_deref() == Some(std::path::Path::new(&named.file))
+        });
+        if let Some(heading) = heading {
+            heading.message.push_str(&named.clause);
+        }
+    }
 }
 
 /// A rule rationale contains authored non-whitespace text after its declaration

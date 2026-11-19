@@ -125,7 +125,7 @@ pub(crate) fn adapt_workspace(
                         format!("{alias}/{}", id.kind)
                     };
                     facts.decl.push((key.clone(), kind));
-                    let headings = direct_non_chapters(findings, id, record.record);
+                    let headings = direct_non_chapters(findings, id, record.record, local);
                     if !headings.is_empty() {
                         non_chapters.insert(key.clone(), headings);
                     }
@@ -279,7 +279,12 @@ pub(crate) fn adapt_workspace(
 
 /// §FS-rules.7.2.1: the direct headings of `record` that no rule counts, a numbered
 /// section or an unmarked heading, in source order.
-fn direct_non_chapters(findings: &Catalog, id: &Id, record: &Declaration) -> Vec<NonChapter> {
+fn direct_non_chapters(
+    findings: &Catalog,
+    id: &Id,
+    record: &Declaration,
+    local: bool,
+) -> Vec<NonChapter> {
     let level = record.heading_level + 1;
     let numbered = record
         .sections
@@ -294,6 +299,7 @@ fn direct_non_chapters(findings: &Catalog, id: &Id, record: &Declaration) -> Vec
             line: info.line,
             level,
             text: info.title.clone(),
+            unmarked: None,
         });
     let unmarked = findings
         .unmarked_headings
@@ -308,6 +314,7 @@ fn direct_non_chapters(findings: &Catalog, id: &Id, record: &Declaration) -> Vec
             line: heading.line,
             level,
             text: heading.title.clone(),
+            unmarked: local.then(|| heading.file.to_string_lossy().into_owned()),
         });
     let mut headings: Vec<NonChapter> = numbered.chain(unmarked).collect();
     headings.sort_by_key(|heading| heading.line);

@@ -1,2 +1,2 @@
 docs/fs/FS-login.md:1: error: FS-login has 0 Terms chapters; RULE-vocabulary requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: none; add, remove or retitle chapters until the count fits; write line 5 as ## terms: Terms
-docs/fs/FS-login.md:5: error: unmarked heading inside FS-login; number it (## 1. Terms) as FS-login.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/fs/FS-login.md:5: error: unmarked heading inside FS-login; number it (## 1. Terms) as FS-login.1, declare an ID, or use a bold label; this became an error in grund 0.16.0; the chapter Terms that RULE-vocabulary counts is written ## terms: Terms
