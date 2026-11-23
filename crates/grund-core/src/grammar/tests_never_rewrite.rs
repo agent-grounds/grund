@@ -4,6 +4,77 @@
 
 use super::*;
 
+/// §FS-citations.zones.link-destination: destination openers use the existing
+/// inline-code reader, including run lengths and literal backslashes in code.
+#[test]
+#[ignore = "red until #1487 skips code spans before destination openers; implement removes this"]
+fn issue_1487_destination_openers_skip_complete_code_spans() {
+    for line in [
+        "`](` then @FS-a",
+        "`` ]( ` `` then @FS-a",
+        "` ]( `` ` then @FS-a",
+        r"` ]( \` then @FS-a",
+        r"\\`](` then @FS-a",
+        "`x` and `](` then @FS-a",
+    ] {
+        let pos = line.find("@FS-a").unwrap();
+        assert!(
+            !is_inside_markdown_link_destination(line, pos),
+            "code punctuation opened a destination: {line}"
+        );
+        assert!(!markdown_never_rewrite_context(
+            LineLinks::default(),
+            line,
+            pos
+        ));
+        assert!(!bare_token_in_never_rewrite_zone(line, 0, true, pos, "@"));
+    }
+
+    // An escaped opener is literal prose, so its ]( is genuine destination
+    // syntax. Inside a real destination, backticks never replace paren balance.
+    for line in [r"\`](` then @FS-a", "[x](`) then @FS-a"] {
+        let pos = line.find("@FS-a").unwrap();
+        assert_eq!(
+            is_inside_markdown_link_destination(line, pos),
+            line.starts_with('\\'),
+            "escaped opening backticks and genuine destinations: {line}"
+        );
+    }
+    for line in [
+        "`](` then [x](nested(1)/@inside) @outside",
+        r"`](` then [x](escaped\)/@inside) @outside",
+        r"`](` then [x](escaped\(/@inside) @outside",
+        "`](` then [x](`@inside) @outside",
+    ] {
+        assert!(is_inside_markdown_link_destination(
+            line,
+            line.find("@inside").unwrap()
+        ));
+        assert!(!is_inside_markdown_link_destination(
+            line,
+            line.find("@outside").unwrap()
+        ));
+    }
+    let unclosed = "`](` then [x](keep/@inside and @later";
+    for token in ["@inside", "@later"] {
+        assert!(is_inside_markdown_link_destination(
+            unclosed,
+            unclosed.find(token).unwrap()
+        ));
+    }
+    let escaped = r"`](` then [x\](literal @outside";
+    assert!(!is_inside_markdown_link_destination(
+        escaped,
+        escaped.find("@outside").unwrap()
+    ));
+    let unclosed_code = "`` ]( ` @code";
+    assert!(markdown_never_rewrite_context(
+        LineLinks::default(),
+        unclosed_code,
+        unclosed_code.find("@code").unwrap()
+    ));
+}
+
 /// §FS-check.1.1.9: the predicate is asked of the *token's own start column*, and
 /// answers for the bytes immediately before it — the configured marker wrapped in
 /// `<` and `>`. A space between the escape and the ID escapes nothing, and a line

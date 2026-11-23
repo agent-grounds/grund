@@ -85,6 +85,22 @@ A citation is the marker `§`, the ID, and an optional `.<section>` — with the
 
 Type `$$` followed by an ID, e.g. `$$FS-user-login`, in a `grund`-aware editor; the trigger becomes `§` as soon as the ID has its kind's shape, and a bare `$$` is left alone ([§FS-lsp.1.4](../functional-spec/FS-lsp.md#14-live-trigger-transform)). Both marker and trigger are configurable in `grund.toml`.
 
+Inline code protects its own bytes from formatting, but punctuation inside it
+cannot open a link destination in the prose that follows. For example:
+
+```markdown
+Before: Code `](` then §FS-user-login and §FS-user-login.3.1.
+After:  Code `](` then [§FS-user-login](FS-user-login.md#fs-user-login-user-login) and [§FS-user-login.3.1](FS-user-login.md#31-username).
+```
+
+The example assumes those declaration and section headings. Run
+`grund fmt --cross-refs --write` to derive the actual paths and anchors. Genuine
+link destinations keep their bytes, and an unclosed destination protects the
+rest of its line ([§FS-citations.zones.link-destination](../functional-spec/FS-citations.md#zoneslink-destination-a-link-destination-is-the-url)).
+Released 0.23.0 could report later citations clean after such a code span; the
+correction and its scanner and index verdict changes are recorded in
+[§DF-code-span-cannot-open-link-destination](../decisions/functional/DF-code-span-cannot-open-link-destination.md#df-code-span-cannot-open-link-destination-code-punctuation-cannot-open-a-destination-in-later-prose).
+
 To accept number-only citations, set `[schema] shorthand`:
 
 ```toml
