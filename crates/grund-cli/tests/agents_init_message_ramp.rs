@@ -1,5 +1,5 @@
 //! Binary-level contract for the `agents-init` messages: the five final
-//! templates §FS-errors.3.6.1 fixes, which the two-release migration of
+//! templates §FS-errors.3.6 fixes, which the two-release migration of
 //! §FS-errors.3.6 ended in.
 //!
 //! Its own target rather than a group inside `check_finding_selection.rs`: that
@@ -88,7 +88,7 @@ fn init_supported_max() -> String {
 }
 
 /// The five §FS-errors.3.6 `agents-init` messages this binary actually prints,
-/// in the order §FS-errors.3.6.1 lists them.
+/// in the order §FS-errors.3.6 lists them.
 ///
 /// Four states are three lines of `AGENTS.md` each. The fifth — a *stale*
 /// managed block — needs a whole rendered current-version block for one section
@@ -129,7 +129,7 @@ fn agents_init_messages() -> Vec<String> {
     messages
 }
 
-/// §FS-errors.3.6.1: the five final templates, filled for these fixtures, in the
+/// §FS-errors.3.6: the five final templates, filled for these fixtures, in the
 /// order the spec lists them — no compatibility tail, the `repo maintenance: `
 /// classification in front, and the `(does not affect citation validity)` clause
 /// behind.

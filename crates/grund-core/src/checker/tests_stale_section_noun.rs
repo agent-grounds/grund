@@ -1,5 +1,5 @@
 //! Test module: the stale-block finding's text and the noun read back out of it
-//! (§FS-errors.3.6.1, §FS-check.3.5.3), the pair `grund config migrate`'s
+//! (§FS-errors.3.6, §FS-check.3.5.3), the pair `grund config migrate`'s
 //! report gate relies on (§FS-config-migrate.5.2).
 
 use super::agents::{stale_block, stale_section_noun};
@@ -22,7 +22,7 @@ const NOUNS: [&str; 13] = [
     "my notes",
 ];
 
-/// §FS-errors.3.6.1: the text a stale `noun` is reported with, for the run's own
+/// §FS-errors.3.6: the text a stale `noun` is reported with, for the run's own
 /// block (`owner` is `None`) or another project's. With no section bytes a
 /// workspace section carries the fallback detail (§FS-check.3.5.3.1).
 fn expected(noun: &str, owner: Option<&str>) -> String {
@@ -44,7 +44,7 @@ fn expected(noun: &str, owner: Option<&str>) -> String {
     }
 }
 
-// §FS-errors.3.6.1: both stale templates name the section as one subject, and
+// §FS-errors.3.6: both stale templates name the section as one subject, and
 // the noun reads back out of either, with or without another project's directory.
 #[test]
 fn every_stale_noun_round_trips_through_the_section_differs_templates() {
@@ -61,7 +61,7 @@ fn every_stale_noun_round_trips_through_the_section_differs_templates() {
     }
 }
 
-// §FS-errors.3.6.1: the other four templates are not stale findings and name no
+// §FS-errors.3.6: the other four templates are not stale findings and name no
 // section.
 #[test]
 fn the_other_agents_init_templates_yield_no_noun() {

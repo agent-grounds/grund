@@ -1,6 +1,6 @@
 //! Black-box: a whose clause the grammar refuses is answered for the part that failed, on
 //! `check --rule`, a declared rule and `list --selector` alike (§FS-rule-refusals.sentences.whose,
-//! §FS-rule-refusals.selectors), alone since the wording window of §FS-errors.3.10 closed; an
+//! §FS-rule-refusals.selectors), alone since the wording window of §FS-rule-refusals.sentences.whose closed; an
 //! exact ID or an object kind with a clause appends why (§FS-rule-refusals.sentences.order).
 
 #[path = "support/rule_field_value.rs"]
@@ -10,7 +10,7 @@ use std::fs;
 
 use support::*;
 
-/// Each row of the §FS-rule-refusals.sentences.whose table the window of §FS-errors.3.10 moved:
+/// Each row of the §FS-rule-refusals.sentences.whose table the window of §FS-rule-refusals.sentences.whose moved:
 /// `(sentence, final reason)`.
 const REFUSED: &[(&str, &str)] = &[
     (
@@ -68,7 +68,7 @@ const REFUSED: &[(&str, &str)] = &[
 ];
 
 /// On `check --rule` each refusal prints its final reason alone, with no legacy prefix and no
-/// suffix, and nothing after it (§FS-errors.3.10).
+/// suffix, and nothing after it (§FS-rule-refusals.sentences.whose).
 #[test]
 fn check_rule_refuses_a_clause_for_the_part_that_failed() {
     let fx = Fixture::table();
@@ -117,7 +117,7 @@ fn a_declared_rule_carries_the_same_reason() {
 }
 
 /// On `list --selector` the reason is the rule's, no selector is offered, and no `known kinds:`
-/// line follows, because the kind was recognised (§FS-rule-refusals.selectors, §FS-errors.3.10).
+/// line follows, because the kind was recognised (§FS-rule-refusals.selectors, §FS-rule-refusals.sentences.whose).
 #[test]
 fn the_selector_refuses_a_clause_for_the_part_that_failed() {
     let fx = Fixture::table();
@@ -147,7 +147,7 @@ fn the_selector_refuses_a_clause_for_the_part_that_failed() {
 
 /// An unknown kind is refused before its clause, naming the kind alone and keeping the
 /// `known kinds:` line, on `check --rule` and every `list --selector` mode
-/// (§FS-rule-refusals.sentences.order stage 5, §FS-errors.3.10).
+/// (§FS-rule-refusals.sentences.order stage 5, §FS-rule-refusals.sentences.whose).
 #[test]
 fn an_unknown_kind_is_refused_before_its_clause() {
     let fx = Fixture::table();
@@ -313,7 +313,7 @@ const LATER: &[(&str, &str, &str)] = &[
 ];
 
 /// A sentence whose clause is accepted and which a later production refuses prints that
-/// production's reason alone, on `check --rule` and as a declared rule (§FS-errors.3.10).
+/// production's reason alone, on `check --rule` and as a declared rule (§FS-rule-refusals.sentences.whose).
 #[test]
 fn a_later_refusal_after_an_accepted_clause_prints_its_reason_alone() {
     let fx = Fixture::table();

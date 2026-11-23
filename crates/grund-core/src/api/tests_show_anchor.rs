@@ -1,6 +1,6 @@
 //! The heading anchor `show --format=json` carries is the fragment
 //! `grund fmt --cross-refs` derives for the same coordinate, under every
-//! `anchor_format` profile (§FS-show.3.1.3.1, §FS-output-shapes.4), and through a
+//! `anchor_format` profile (§FS-show.3.1.3, §FS-output-shapes.4), and through a
 //! stub whose target the walk did not reach (§FS-fmt.6.2.1.1).
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
@@ -166,7 +166,7 @@ fn stub_tree(name: &str, stubs: &[&str], walked: bool) -> crate::testing::Tempor
 }
 
 /// §FS-fmt.6.2.1.1: through a stub, a bare ID anchors on the target's declaration
-/// heading, the anchor `show` reports (§FS-show.3.1.3.1), whether or not the walk
+/// heading, the anchor `show` reports (§FS-show.3.1.3), whether or not the walk
 /// reaches the target and however many stubs point at it. The walked tree is the
 /// control: the link the same tree takes once the target is scanned. Every tree is
 /// run before the verdict, so one failing shape never hides another.

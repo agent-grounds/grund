@@ -199,7 +199,7 @@ fn an_empty_path_still_earns_its_caution_however_much_the_walk_read() {
     );
 }
 
-/// §FS-check.2.2.3.1: the unread-source caution of §FS-check.1.3.6.3 is about a
+/// §FS-check.2.2.3: the unread-source caution of §FS-check.1.3.6.3 is about a
 /// file the *resolution* scope could not read, so it is not a finding about the
 /// report scope and must not suppress that scope's own caution. Guards against
 /// the change: a caution appended before the emptiness question is asked makes
@@ -226,7 +226,7 @@ fn an_unread_file_outside_the_path_does_not_suppress_the_empty_scan_caution() {
             .warnings
             .iter()
             .any(|diagnostic| diagnostic.code == "empty-scan"),
-        "§FS-check.2.2.3.1: the unread file outside the path does not suppress \
+        "§FS-check.2.2.3: the unread file outside the path does not suppress \
          the empty-scan caution, got {:?}",
         codes(&run)
     );

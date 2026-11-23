@@ -89,7 +89,7 @@ fn external_facts_citation_materializes_then_resolves_offline() {
 /// snapshot in <home> — run grund fetch <ID>` — code `dangling`, severity
 /// error, exit 1 — beside §FS-check.4.12's `should` warning on the same tree.
 ///
-/// §FS-errors.3.5: the two frozen identities of a missing fetch-backed
+/// §FS-check.3.1.3: the two frozen identities of a missing fetch-backed
 /// declaration are driven from one table here — `dangling`/`error` and
 /// `missing-snapshot`/`warning`, each with its exact message bytes and its
 /// bare-text fetch remedy, in both the text and the JSON rendering.

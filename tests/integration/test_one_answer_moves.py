@@ -63,14 +63,14 @@ MOVES = (
      {"scope.narrowed": ("never disagree about a citation they both read",)}),
     ("FS-lsp.md", "4.", ("text.parity",),
      {"text.parity": ("same hover body",)}),
-    ("FS-show.md", "3.1.3.1", ("writes.anchors",),
+    ("FS-show.md", "3.1.3", ("writes.anchors",),
      {"writes.anchors": ("`grund fmt --cross-refs` derives for a citation of the same coordinate",)}),
 )
 # What a move leaves behind on purpose: the show-only sentence of 2.2.3 (V-D02 i)
-# and the formatter's form 3.1.3.1 still cites (V-C07).
+# and the formatter's form 3.1.3 still cites (V-C07).
 KEPT = (
     ("FS-show.md", "2.2.3", "A query for its coordinate has the ordinary `section not found` result"),
-    ("FS-show.md", "3.1.3.1", "§FS-fmt.6.2]"),
+    ("FS-show.md", "3.1.3", "§FS-fmt.6.2]"),
 )
 
 

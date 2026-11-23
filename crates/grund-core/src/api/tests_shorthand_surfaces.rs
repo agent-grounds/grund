@@ -74,7 +74,7 @@ fn shorthand_resolves_as_a_query_argument() {
     assert_eq!(render_id(&config.grammar, &id), "FS-999");
 }
 
-// §FS-show.2.2.1.1: an ambiguous shorthand argument is a query failure that
+// §FS-show.2.2.1: an ambiguous shorthand argument is a query failure that
 // lists every candidate rather than picking one.
 #[test]
 fn ambiguous_shorthand_argument_lists_every_candidate() {
@@ -98,7 +98,7 @@ fn ambiguous_shorthand_argument_lists_every_candidate() {
     );
 }
 
-/// §FS-show.2.2.1.1 / §FS-errors.5.2.1: the shorthand's candidates are IDs, not
+/// §FS-show.2.2.1 / §FS-errors.5.2: the shorthand's candidates are IDs, not
 /// `{path, line}` sites — listing either home under `sites` would tell a
 /// JSON consumer to delete one of two *correct* declarations — so the
 /// public `show` query never carries the typed sites carrier for this
@@ -124,7 +124,7 @@ fn ambiguous_shorthand_query_carries_no_sites() {
             ..ShowOpts::default()
         },
     ) else {
-        panic!("§FS-show.2.2.1.1: an ambiguous shorthand argument must refuse");
+        panic!("§FS-show.2.2.1: an ambiguous shorthand argument must refuse");
     };
     assert!(
         err.downcast_ref::<ShowQueryError>().is_none(),

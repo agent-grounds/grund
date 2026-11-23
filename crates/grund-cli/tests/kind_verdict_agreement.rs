@@ -12,7 +12,7 @@
 //! none disagrees with the point that defines the answer. A second test holds a
 //! member's named chapter to one answer (§REQ-one-answer.sections.named), and a
 //! third pins the wording `code` is refused with since its window closed: its one
-//! verdict's reason alone (§FS-errors.3.8.1).
+//! verdict's reason alone (§FS-errors.2.5.1).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -302,7 +302,7 @@ fn every_surface_gives_a_kind_name_one_verdict_in_its_scope() {
     );
 }
 
-/// §FS-errors.3.8.1: `code`, the homeless kind's default name, has no `[[kinds]]`
+/// §FS-errors.2.5.1: `code`, the homeless kind's default name, has no `[[kinds]]`
 /// row in either project (§FS-config.3.9.2). Since its window closed (#680, row G09
 /// of §REQ-one-answer.differences.identity) every surface other than a `[citations]`
 /// target refuses it with §FS-errors.2.5.1's form with no home alone: no legacy

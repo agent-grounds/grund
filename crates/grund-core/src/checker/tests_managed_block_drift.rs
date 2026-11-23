@@ -278,7 +278,7 @@ fn citation_directions_section_extraction_is_position_independent() {
     );
 }
 
-/// §FS-check.3.5.3: all five agents-init variants are §FS-errors.3.6.1's final
+/// §FS-check.3.5.3: all five agents-init variants are §FS-errors.3.6's final
 /// templates, with no compatibility tail. This checker contract survives removal
 /// of the deprecated process adapter.
 #[test]

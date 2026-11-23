@@ -143,7 +143,7 @@ fn ambiguous_shorthand_is_a_failed_query_in_text_and_json() {
     assert_run(&json, expected_json.0, &expected_json.1);
 }
 
-/// §FS-errors.2.3.2: `show` is one of the ID queries the bare query-failure
+/// §FS-errors.2.3: `show` is one of the ID queries the bare query-failure
 /// shape is for — an invalid ID and an ambiguous ID both print the message with
 /// no `error:` prefix on stderr, leave stdout empty, and exit `1` — the bytes
 /// `refs` now matches.

@@ -103,7 +103,7 @@ fn numbered_fixture(root: &Path) {
 /// The triage reproducer, expanded across every CLI consumer that reads the
 /// shared scanner/catalog (§FS-config.3.2.5). This test deliberately gathers all
 /// mismatches so a scanner regression cannot be hidden by `show` failing first.
-/// §FS-show.1.1.1: every whole-declaration slice (`--brief`, the lead, `--toc`,
+/// §FS-show.1.1: every whole-declaration slice (`--brief`, the lead, `--toc`,
 /// `--full`) and both section forms (`FS-x.1` and `--section 1`) read the exact
 /// off-grammar declaration unchanged. §FS-fmt.6.3.2: the `fmt --cross-refs
 /// --write` block wraps the marked, catalog-backed off-grammar citation like any

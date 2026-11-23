@@ -1,4 +1,4 @@
-//! Supplied paths fail before batch answers (§FS-show.2.6.3), while explicit
+//! Supplied paths fail before batch answers (§FS-show.2.6), while explicit
 //! queries retain whole-project resolution and generated queries retain their
 //! path selection (§FS-scan.path.show). Empty streams load nothing (§FS-show.2.6).
 

@@ -1,5 +1,5 @@
-//! The bare form's filesystem-path breadcrumb in a workspace (§FS-show.3.5.2): its format hint
-//! is the one an invalid ID earns, naming the run's own template (§FS-show.3.5.1), whether the
+//! The bare form's filesystem-path breadcrumb in a workspace (§FS-show.3.5): its format hint
+//! is the one an invalid ID earns, naming the run's own template (§FS-show.3.5), whether the
 //! run is at the workspace root, inside a member, or rooted in a member by its path argument.
 //! The same unknown alias with no path behind it, and a batch query that names one, keep their
 //! own bytes and print no breadcrumb (§FS-workspace.8.1, §FS-show.3.3.2). Each test pins the
@@ -71,21 +71,21 @@ fn grund(dir: &Path, args: &[&str], stdin: Option<&str>) -> Run {
     }
 }
 
-/// The invalid-ID hint naming the root's template (§FS-show.3.5.1).
+/// The invalid-ID hint naming the root's template (§FS-show.3.5).
 const ROOT_HINT: &str = "hint: this repo's [id] format is `{kind}-{slug}` \
                          (run `grund config show`); `grund list` shows the IDs that exist\n";
 
-/// The invalid-ID hint naming the member's template (§FS-show.3.5.1).
+/// The invalid-ID hint naming the member's template (§FS-show.3.5).
 const API_HINT: &str = "hint: this repo's [id] format is `{kind}-{number}-{slug}` \
                         (run `grund config show`); `grund list` shows the IDs that exist\n";
 
-/// The breadcrumb's three lines for `operand`, its format hint `hint` (§FS-show.3.5.2).
+/// The breadcrumb's three lines for `operand`, its format hint `hint` (§FS-show.3.5).
 fn breadcrumb(operand: &str, hint: &str) -> String {
     format!("invalid ID `{operand}`\n{hint}hint: run `grund check {operand}` to validate a path\n")
 }
 
 /// Mirrors `workspace-show-path-breadcrumb`: at the workspace root `docs` names no project, so
-/// the hint names the root's template, the very line `grund FS-` prints there (§FS-show.3.5.1).
+/// the hint names the root's template, the very line `grund FS-` prints there (§FS-show.3.5).
 #[test]
 fn breadcrumb_at_the_workspace_root_names_the_root_template() {
     let root = workspace();
@@ -100,7 +100,7 @@ fn breadcrumb_at_the_workspace_root_names_the_root_template() {
 }
 
 /// Inside the member the run is the member's (§FS-workspace.5.1), so its breadcrumb names the
-/// member's template, the line `grund FS-` prints there (§FS-show.3.5.1).
+/// member's template, the line `grund FS-` prints there (§FS-show.3.5).
 #[test]
 fn breadcrumb_inside_a_member_names_the_member_template() {
     let api = workspace().join("api");
@@ -116,7 +116,7 @@ fn breadcrumb_inside_a_member_names_the_member_template() {
 
 /// A path argument naming the member roots the run there (§FS-show.1.4): the operand is still
 /// looked up from the working directory, and the hint names the run's template, the member's
-/// (§FS-show.3.5.1, §FS-show.3.5.2).
+/// (§FS-show.3.5).
 #[test]
 fn breadcrumb_under_a_member_path_names_the_member_template() {
     assert_eq!(
@@ -127,7 +127,7 @@ fn breadcrumb_under_a_member_path_names_the_member_template() {
 
 /// The same unknown alias with no path behind it keeps its own refusal, exit `2` with neither
 /// breadcrumb nor format hint, at the root and inside the member (§FS-workspace.8.1,
-/// §FS-show.3.5.2).
+/// §FS-show.3.5).
 #[test]
 fn unknown_alias_with_no_path_behind_it_keeps_its_refusal() {
     assert_eq!(
@@ -152,7 +152,7 @@ fn unknown_alias_with_no_path_behind_it_keeps_its_refusal() {
 /// A batch query whose alias names no project fails in its place with no hint line, even where
 /// its `id` is a path that exists: the breadcrumb is the bare form's alone, and a batch prints
 /// the hint lines its failure earns and nothing more, in every format (§FS-show.3.3.2,
-/// §FS-show.3.5.2).
+/// §FS-show.3.5).
 #[test]
 fn batch_unknown_alias_over_an_existing_path_prints_no_breadcrumb() {
     let stdin = "{\"id\":\"docs/FS-root.md\"}\n{\"id\":\"FS-root\"}\n";

@@ -16,7 +16,7 @@ pub(crate) fn scan_errors_signature(errors: Vec<ScanError>) -> Vec<String> {
 }
 
 /// The `error: <path>: <reason>` lines a file the scan could not read earns
-/// (§FS-check.2.4, §FS-errors.2.2.1).
+/// (§FS-check.2.4, §FS-errors.2.2).
 /// Unix only: every caller is a symlink case and so `#[cfg(unix)]` too.
 #[cfg(unix)]
 pub(crate) fn scan_errors(run: &CheckRun) -> Vec<String> {

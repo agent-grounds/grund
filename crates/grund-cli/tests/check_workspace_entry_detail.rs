@@ -1,4 +1,4 @@
-//! Black-box regressions for §FS-check.3.5.3.1 and §FS-errors.3.6.1.
+//! Black-box regressions for §FS-check.3.5.3.1 and §FS-errors.3.6.
 //! Port grund#932's intake join/mark reproducer: make blocks current before
 //! changing them, and inspect only detail before the refresh command.
 

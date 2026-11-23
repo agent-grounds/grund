@@ -64,7 +64,7 @@ fn hidden_data_keeps_its_own_repair() {
     assert!(!message.contains("form = \"value\""), "{message}");
 }
 
-/// §FS-check.2.2.2.2: dropping a mapping is offered only when it restores an admitted text
+/// §FS-check.2.2.2: dropping a mapping is offered only when it restores an admitted text
 /// reader, and byte order decides between several such mappings.
 #[test]
 fn empty_scan_caution_names_the_mapping_that_restores_a_text_reader() {

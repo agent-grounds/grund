@@ -196,7 +196,7 @@ fn code_points_escapes_and_the_hash_separator() {
     );
 }
 
-/// §FS-show.1.9 and §FS-show.2.6.2: `show --batch --glob` reads the bodies `--all` would, filtered.
+/// §FS-show.1.9 and §FS-show.2.6: `show --batch --glob` reads the bodies `--all` would, filtered.
 #[test]
 fn batch_glob_filters_the_generated_batch() {
     run_cases(

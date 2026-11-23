@@ -1,5 +1,5 @@
 //! What every command answers from one parse of each file from 0.19.0
-//! (§FS-declarations.body, §FS-declarations.section, §FS-show.2.3.3,
+//! (§FS-declarations.body, §FS-declarations.section, §FS-show.2.3,
 //! §FS-languages.comment-wrapper.headings, §FS-declarations.section.relative.where):
 //! one tree per row of the table §DF-one-parse-answers-from-0-19 moves, the doc-comment
 //! headings that ride it, and the `parse-moves` code that goes with it
@@ -104,7 +104,7 @@ fn p02_a_bare_block_comment_heading_is_a_section() {
     );
 }
 
-// §FS-show.2.3.3 (P03): `/// # 1. Sub` is no section, so `--toc` does not list it.
+// §FS-show.2.3 (P03): `/// # 1. Sub` is no section, so `--toc` does not list it.
 #[test]
 fn p03_a_top_level_doc_heading_is_not_listed() {
     let t = tree(

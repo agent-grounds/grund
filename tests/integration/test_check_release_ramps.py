@@ -356,10 +356,10 @@ class ThisRepositoryTests(unittest.TestCase):
 
     def test_no_golden_still_promises_a_wording_change_in_0_16_0(self):
         """§FS-distribution.4.2.2 — the wording ramps this tree carried all named
-        0.16.0, and their goldens hold the final wording (§FS-errors.3.3,
-        §FS-errors.3.6.1, §FS-errors.3.7.1). A golden that still promised a
+        0.16.0, and their goldens hold the final wording (§FS-check.3.8.4,
+        §FS-errors.3.6, §FS-errors.3.7). A golden that still promised a
         wording change would ship a promise the release has already reached.
-        The one-grammar window names 0.19.0 instead (§FS-errors.3.8)."""
+        The one-grammar window names 0.19.0 instead (§FS-errors.2.5.1)."""
         golden = [
             claim
             for claim in self.claims

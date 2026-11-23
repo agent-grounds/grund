@@ -274,7 +274,7 @@ class ApiTests(unittest.TestCase):
             self.assertTrue(all(f in tuple(result.report) for f in authored))
             self.assertTrue(all(tuple(sorted(f.authority)) == f.authority for f in authored))
 
-    # §FS-check.1.4.1, §FS-check.2.2.1.4: the selected view says what judged nothing.
+    # §FS-check.1.4.1, §FS-check.2.2.1: the selected view says what judged nothing.
     def test_selected_view_says_when_the_selection_judged_nothing(self):
         with temporary() as temp:
             result = self.g.check(fixture(temp, "check-only-opt-in-off"), only=("oversized-lead",))

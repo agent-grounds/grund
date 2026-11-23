@@ -240,7 +240,7 @@ fn show_refuses_the_ambiguous_section_in_every_slice() {
     let (root, config) = duplicated_repo("duplicate_sections_show_refuses", "");
     let findings = scan_findings(&config, &root);
 
-    // §FS-show.2.2.2.3: `--toc` is exempt only over the *whole* declaration.
+    // §FS-show.2.2.2: `--toc` is exempt only over the *whole* declaration.
     // Selected onto the ambiguous coordinate it is one more slice of it.
     for mode in [
         ShowRenderMode::Default,
@@ -269,7 +269,7 @@ fn show_refuses_the_ambiguous_section_in_every_slice() {
     }
 }
 
-/// §FS-show.2.2.2 / §FS-show.2.2.2.4: only the *requested* path can be
+/// §FS-show.2.2.2: only the *requested* path can be
 /// ambiguous — the untouched `2` answers normally beside the colliding `1` —
 /// and `--toc` over the whole declaration still maps what is written.
 #[test]
@@ -304,7 +304,7 @@ fn an_untouched_section_still_answers_and_toc_still_lists_both() {
     .expect("--toc maps the file as written");
     assert_eq!(
         toc.body, "## 1. First\n## 1. Second\n## 2. Third\n",
-        "§FS-show.2.2.2.3: the map shows the collision rather than refusing"
+        "§FS-show.2.2.2: the map shows the collision rather than refusing"
     );
 }
 

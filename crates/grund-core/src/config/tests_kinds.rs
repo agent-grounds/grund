@@ -1,7 +1,7 @@
 //! Test module: the run's one kind table (§FS-scan.projects.kinds) — a verdict
 //! per scope, unverifiable where the run holds no workspace, named sections read
 //! under the project that configures the kind, the non-citable reason in both
-//! quotings (§FS-errors.2.5.1), the first of §FS-errors.3.8.1's final templates.
+//! quotings (§FS-errors.2.5.1), the first of §FS-errors.2.5.1's final templates.
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 
 use std::collections::BTreeSet;
@@ -162,7 +162,7 @@ fn named_sections_follow_the_configuring_project() {
 }
 
 /// §FS-errors.2.5.1: one renderer, in each surface's quoting. The double-quoted
-/// form is the first of §FS-errors.3.8.1's final templates, which `0.19.0`
+/// form is the first of §FS-errors.2.5.1's final templates, which `0.19.0`
 /// prints alone.
 #[test]
 fn the_non_citable_reason_renders_in_both_quotings() {

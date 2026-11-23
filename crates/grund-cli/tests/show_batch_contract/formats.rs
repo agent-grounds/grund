@@ -75,7 +75,7 @@ fn assert_framed(output: &Output, code: i32, expected: &str, context: &str) {
 
 /// The aggregate is the same in every format: a malformed stream is refused
 /// whole, an empty one succeeds silently, and many queries or `--all` succeed
-/// with stderr empty (§FS-show.3.3, §FS-show.2.6.3).
+/// with stderr empty (§FS-show.3.3, §FS-show.2.6).
 #[test]
 fn show_batch_aggregate_is_the_same_in_every_format() {
     let repo = Repo::new("formats-aggregate");
@@ -117,7 +117,7 @@ fn show_batch_loads_one_workspace_in_every_format() {
 
 /// An ambiguous shorthand is one failed query, kept in its place under the query
 /// as written, and the query after it is still answered, headed by the full ID;
-/// the aggregate exits `1` with stderr empty (§FS-show.2.6.3, §FS-show.3.3.2).
+/// the aggregate exits `1` with stderr empty (§FS-show.2.6, §FS-show.3.3.2).
 #[test]
 fn show_batch_framed_ambiguous_shorthand_is_a_query_failure_and_continues() {
     let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -140,7 +140,7 @@ fn show_batch_framed_ambiguous_shorthand_is_a_query_failure_and_continues() {
 /// Under each header is exactly what the single read prints for that coordinate
 /// in the same format and mode, and the header spells the coordinate as `--all`
 /// generates it: a member's with its alias, the current project's alias dropped
-/// (§FS-show.3.3, §FS-show.3.3.1, §FS-show.2.6.2).
+/// (§FS-show.3.3, §FS-show.3.3.1, §FS-show.2.6).
 #[test]
 fn show_batch_framed_bodies_equal_single_reads() {
     let repo = Repo::new("formats-bodies");
@@ -304,7 +304,7 @@ fn format_hint(format: &str) -> String {
 /// member names the member's ID format, a missing section there is cut at the
 /// member's `:`, a shorthand's header is the full ID, and a failed query with a
 /// separate section is headed with the run's separator (§FS-show.3.3.1,
-/// §FS-show.3.3.2, §FS-show.3.5, §FS-show.3.5.1).
+/// §FS-show.3.3.2, §FS-show.3.5).
 #[test]
 fn show_batch_text_reads_each_hint_from_the_project_the_query_names() {
     let repo = member_format_repo();

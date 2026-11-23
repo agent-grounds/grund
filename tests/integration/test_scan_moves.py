@@ -140,25 +140,25 @@ CITED = ("REQ-one-answer.differences.scope", "FS-workspace.6.2")
 # and #756's 9 lines of checks.config-version-1: a restatement still has one line to regrow.
 
 # FS-workspace's adds #823's 20 lines of §FS-workspace.5.1.1 and #921's 3 of §FS-workspace.2.2.2;
-# FS-check's adds #836's 9 of §FS-check.2.3.1.3, #829's 17 of §FS-check.1.4.1 and §FS-check.2.2.1.4,
+# FS-check's adds #836's 9 of §FS-check.2.3.1, #829's 17 of §FS-check.1.4.1 and §FS-check.2.2.1,
 # and #906's 14 of §FS-check.3.5.3, §FS-check.3.5.5 and §FS-check.4.9.1; the margin is unchanged.
 
 # #932 adds 4 lines of §FS-check.3.5.3.1; retain the one-line margin.
 # #1010 adds 8 lines of §FS-workspace.6.1.7.5; the margin is unchanged.
 # #1046 adds 15 lines of §FS-check.1.1.5.2, §FS-check.3.24.1 and §FS-check.3.17.4; the same.
 
-# #1079 adds 14 lines of §FS-check.2.2.2.5, .5.1 and .5.2; the same.
+# #1079 adds 14 lines of §FS-check.2.2.2; the same.
 # #1069 adds 12 lines of §FS-check.3.1.4; the same.
 # #1073 adds 16 lines of §FS-check.1.1.12 and §FS-check.checks.off-format-citation; the same.
 
 # #1322 adds 7 lines of §FS-check.3.1.3.2; the same.
 
-# #1376 adds 7 lines of §FS-check.2.2.2.6; the same.
+# #1376 adds 7 lines of §FS-check.2.2.2; the same.
 
-# #1382 adds 8 lines of §FS-check.2.2.2.6.1; the same.
+# #1382 adds 8 lines of §FS-check.2.2.2; the same.
 
-# #1206 adds 9 lines of §FS-check.2.2.2.1 and §FS-check.2.2.2.2; the same.
-# #1489 adds 6 lines of §FS-check.3.1.5; retain the one-line margin.
+# #1206 adds 9 lines of §FS-check.2.2.2; the same.
+# #1489 adds 6 lines of §FS-check.3.1; retain the one-line margin.
 BASELINES = {"FS-config.md": 765, "FS-workspace.md": 1194, "FS-check.md": 1094}
 
 

@@ -1,7 +1,7 @@
 //! Black-box contract for one-context batch declaration reads
 //! (§FS-show.1, §FS-show.2.6, §FS-output-shapes.4.1, §AR-resolver.3.1), and for
 //! the hint a read builds from that one context, the single read's breadcrumb
-//! included (§FS-show.3.5.2, §AR-resolver.3.1.1).
+//! included (§FS-show.3.5, §AR-resolver.3.1.1).
 //!
 //! The tests that count workspace loads or configuration resolutions read an
 //! observer only the `test-workspace-load-count` feature compiles in, so a build without it
@@ -170,7 +170,7 @@ fn resolutions(path: &Path) -> usize {
 /// record has been emitted (§FS-show.3.3).
 #[test]
 fn show_batch_ambiguous_shorthand_is_a_query_failure_and_continues() {
-    // §FS-show.2.6.3: an ambiguous shorthand is one failed coordinate, not a
+    // §FS-show.2.6: an ambiguous shorthand is one failed coordinate, not a
     // run-level error that suppresses the records after it.
     let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/e2e/cases/check-shorthand-citation-ambiguous-and-unknown/repo");
@@ -193,7 +193,7 @@ fn show_batch_ambiguous_shorthand_is_a_query_failure_and_continues() {
 
 /// An explicit query is answered by the same default/`--brief`/`--toc`/`--full`
 /// renderer as single-coordinate `show`, and the one invocation-level mode
-/// applies to every record (§FS-show.2.6.1).
+/// applies to every record (§FS-show.2.6).
 #[test]
 fn show_batch_all_four_modes_use_single_show_rendering() {
     let repo = Repo::new("modes");
@@ -357,7 +357,7 @@ fn show_batch_loads_one_workspace_for_many_queries_and_for_all() {
     assert_many_queries_succeeded(&explicit, &all);
 }
 
-/// The bare form's filesystem-path breadcrumb (§FS-show.3.5.2) prints the format
+/// The bare form's filesystem-path breadcrumb (§FS-show.3.5) prints the format
 /// hint of an invalid ID, and builds it from the context the read loaded, as every
 /// show failure's hint is built (§AR-resolver.3.1.1): it resolves configuration as
 /// often as the same unknown alias with no path behind it, and as an invalid ID,
@@ -470,7 +470,7 @@ fn top_level_keys(object: &str) -> Vec<String> {
 /// Every successful read, single or batch, carries the selected heading's
 /// anchor before the closing `path`, `line` pair, each `--toc` entry carries
 /// its own, and a member read takes the member's `anchor_format` profile
-/// (§FS-show.3.1.3.1, §FS-output-shapes.4, §FS-output-shapes.4.1).
+/// (§FS-show.3.1.3, §FS-output-shapes.4, §FS-output-shapes.4.1).
 #[test]
 fn show_batch_results_equal_single_reads_and_carry_the_heading_anchor() {
     let repo = Repo::new("anchor");

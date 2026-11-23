@@ -1,13 +1,13 @@
 //! Black-box: an explicit path that is itself a directory link out of the project root is not
 //! followed (§FS-scan.scope.links), and the empty-scan warning says so rather than blaming the
-//! extensions it never consulted (§FS-check.2.2.2.6). A real directory whose walk refused such a
-//! link below it names that link the same way (§FS-check.2.2.2.6.1), and so does a run over the
+//! extensions it never consulted (§FS-check.2.2.2). A real directory whose walk refused such a
+//! link below it names that link the same way (§FS-check.2.2.2), and so does a run over the
 //! project's whole root, given no path from anywhere in it or handed the root. The controls hold
 //! what must not move: a file below the link is read, a link inside the project is walked, an
 //! exclude pattern is named ahead of an outward link, from wherever a run given no path starts
 //! too, a link the run's walk never reached and an E2E case the manifest pass reads are not named,
 //! and a real directory with no file grund reads and no outward link below it keeps the
-//! extensions wording (§FS-check.2.2.2.2). An outward link whose target refuses the lookup takes
+//! extensions wording (§FS-check.2.2.2). An outward link whose target refuses the lookup takes
 //! the same warning; git carries no mode, so that case builds its own tree and skips where mode
 //! 000 does not bar the user (root).
 #![cfg(unix)]
@@ -17,10 +17,10 @@ use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// The words §FS-check.2.2.2.6 gives an outward link, after the path.
+/// The words §FS-check.2.2.2 gives an outward link, after the path.
 const LINK_WORDING: &str = "is a directory link out of the project root, and grund does not \
                             follow one (name a file below it, or move the target inside the project).";
-/// The words §FS-check.2.2.2.2 gives a tree with no file of a read extension.
+/// The words §FS-check.2.2.2 gives a tree with no file of a read extension.
 const EXTENSIONS_WORDING: &str = "matched grund's extensions";
 
 /// `t/p` is a version-2 project, `t/outside` a tree beside it holding `a.md`. `p/x -> ../outside`
@@ -75,7 +75,7 @@ impl Tree {
         symlink(target, path).expect("create the link");
     }
 
-    /// §FS-check.2.2.2.6.1's own fixture: `p/real` holds nothing but `subx`, a link out of the
+    /// §FS-check.2.2.2's own fixture: `p/real` holds nothing but `subx`, a link out of the
     /// project to a directory whose one file is a `.md` the walk would read.
     fn with_link_below(test: &str) -> Self {
         let tree = Self::new(test);
@@ -179,7 +179,7 @@ impl Run {
     }
 
     /// Exit `0` and the one warning naming `link`, an outward link the walk refused below `path`,
-    /// each as written; never the extensions (§FS-check.2.2.2.6.1).
+    /// each as written; never the extensions (§FS-check.2.2.2).
     fn assert_link_below_warning(&self, path: &str, link: &str) {
         assert_eq!(self.code, 0, "{}", self.report());
         let expected = format!(
@@ -197,7 +197,7 @@ impl Run {
         );
     }
 
-    /// Exit `0` and §FS-check.2.2.2.2's extensions wording for `path`, naming no link.
+    /// Exit `0` and §FS-check.2.2.2's extensions wording for `path`, naming no link.
     fn assert_extensions_warning(&self, path: &str) {
         assert_eq!(self.code, 0, "{}", self.report());
         let expected =
@@ -271,7 +271,7 @@ fn an_inward_directory_link_is_walked() {
 }
 
 /// The control: a real directory with no file grund reads, and no outward link below it, keeps
-/// the extensions wording (§FS-check.2.2.2.6.1).
+/// the extensions wording (§FS-check.2.2.2).
 #[test]
 fn a_directory_with_no_read_extension_keeps_the_extensions_wording() {
     let tree = Tree::new("noext");
@@ -300,7 +300,7 @@ fn an_outward_link_whose_target_refuses_the_lookup_is_named_as_the_reason() {
     tree.grund(&["check", "zin"]).assert_lookup_failure("zin");
 }
 
-/// §FS-check.2.2.2.6.1: the walk refused `real/subx` below `real` at the outward-link gate, so
+/// §FS-check.2.2.2: the walk refused `real/subx` below `real` at the outward-link gate, so
 /// the warning names that link, not the extensions `s.md` behind it would have passed.
 #[test]
 fn an_outward_link_below_the_path_is_named_as_the_reason() {
@@ -309,7 +309,7 @@ fn an_outward_link_below_the_path_is_named_as_the_reason() {
         .assert_link_below_warning("real", "real/subx");
 }
 
-/// §FS-check.2.2.2.6.1: the link is spelled from the path as the user wrote it.
+/// §FS-check.2.2.2: the link is spelled from the path as the user wrote it.
 #[test]
 fn every_spelling_of_the_path_spells_the_link_below_it() {
     let tree = Tree::with_link_below("below-spellings");
@@ -319,7 +319,7 @@ fn every_spelling_of_the_path_spells_the_link_below_it() {
         .assert_link_below_warning("./real", "./real/subx");
 }
 
-/// §FS-check.2.2.2.6.1: a link met deeper down is named by its path from the one handed.
+/// §FS-check.2.2.2: a link met deeper down is named by its path from the one handed.
 #[test]
 fn an_outward_link_deeper_below_the_path_is_named_by_its_path() {
     let tree = Tree::new("below-deeper");
@@ -329,7 +329,7 @@ fn an_outward_link_deeper_below_the_path_is_named_by_its_path() {
         .assert_link_below_warning("real", "real/a/subx");
 }
 
-/// §FS-check.2.2.2.6.1: a file of an extension grund does not read, beside the link, does not
+/// §FS-check.2.2.2: a file of an extension grund does not read, beside the link, does not
 /// turn the message back to the extensions; the link is the one place the run never looked.
 #[test]
 fn a_file_of_an_unread_extension_beside_the_link_does_not_hide_it() {
@@ -339,7 +339,7 @@ fn a_file_of_an_unread_extension_beside_the_link_does_not_hide_it() {
         .assert_link_below_warning("real", "real/subx");
 }
 
-/// §FS-check.2.2.2.6.1: grund does not look behind a link it does not follow, so a target with
+/// §FS-check.2.2.2: grund does not look behind a link it does not follow, so a target with
 /// no file it would read takes the same message.
 #[test]
 fn an_outward_link_whose_target_holds_no_read_file_is_still_named() {
@@ -350,7 +350,7 @@ fn an_outward_link_whose_target_holds_no_read_file_is_still_named() {
         .assert_link_below_warning("real", "real/subx");
 }
 
-/// §FS-check.2.2.2.6.1, §FS-errors.4.1: of several outward links, the first in path order is
+/// §FS-check.2.2.2, §FS-errors.4.1: of several outward links, the first in path order is
 /// named, whatever order the directory lists them in, so two runs name the same link. They are
 /// made in path order, which a directory that lists the newest first reverses.
 #[test]
@@ -364,8 +364,8 @@ fn of_several_outward_links_below_the_path_the_first_in_path_order_is_named() {
         .assert_link_below_warning("real", "real/a");
 }
 
-/// §FS-check.2.2.2.6.1: the gate is the member's root in a member run, so a link from one member
-/// into another leaves it and is named, as §FS-check.2.2.2.6 names `m/x -> ../n/y`.
+/// §FS-check.2.2.2: the gate is the member's root in a member run, so a link from one member
+/// into another leaves it and is named, as §FS-check.2.2.2 names `m/x -> ../n/y`.
 #[test]
 fn a_link_below_the_path_from_one_member_into_another_is_named() {
     let tree = Tree::new("below-member");
@@ -388,7 +388,7 @@ fn a_link_below_the_path_from_one_member_into_another_is_named() {
         .assert_link_below_warning("real", "real/x");
 }
 
-/// §FS-check.2.2.2.6.1, §FS-workspace.5.3: a member whose own scan read nothing because its only
+/// §FS-check.2.2.2, §FS-workspace.5.3: a member whose own scan read nothing because its only
 /// entry is an outward link is named by its root from the report base, beside that link.
 #[test]
 fn a_workspace_run_names_the_link_below_a_member_that_read_nothing() {
@@ -409,7 +409,7 @@ fn a_workspace_run_names_the_link_below_a_member_that_read_nothing() {
         .assert_link_below_warning("m", "m/subx");
 }
 
-/// §FS-check.2.2.2.6.1: the JSON warning's `message` carries the same text.
+/// §FS-check.2.2.2: the JSON warning's `message` carries the same text.
 #[test]
 fn the_json_warning_names_the_link_below_the_path() {
     let tree = Tree::with_link_below("below-json");
@@ -426,7 +426,7 @@ fn the_json_warning_names_the_link_below_the_path() {
 }
 
 /// The control: an exclude pattern that pruned a file the walk would have read is the cause the
-/// run proved, so it is named ahead of an outward link beside it (§FS-check.2.2.2.6.1).
+/// run proved, so it is named ahead of an outward link beside it (§FS-check.2.2.2).
 #[test]
 fn an_exclude_pattern_is_named_ahead_of_an_outward_link_below_the_path() {
     let tree = Tree::with_link_below("below-pattern");
@@ -449,7 +449,7 @@ fn an_exclude_pattern_is_named_ahead_of_an_outward_link_below_the_path() {
 }
 
 /// The control: a directory link below the path that stays inside the project is walked, so a
-/// directory whose only link reaches `bin` keeps the extensions wording (§FS-check.2.2.2.6.1).
+/// directory whose only link reaches `bin` keeps the extensions wording (§FS-check.2.2.2).
 #[test]
 fn an_inward_link_below_the_path_keeps_the_extensions_wording() {
     let tree = Tree::new("below-inward");
@@ -458,7 +458,7 @@ fn an_inward_link_below_the_path_keeps_the_extensions_wording() {
         .assert_extensions_warning("real");
 }
 
-/// §FS-check.2.2.2.6.1, §FS-scan.path.none: a run given no path walks the project's root, so the
+/// §FS-check.2.2.2, §FS-scan.path.none: a run given no path walks the project's root, so the
 /// link is spelled from the root as the report spells a path, not from the directory it started in.
 #[test]
 fn a_run_with_no_path_names_the_link_below_the_project_root() {
@@ -467,7 +467,7 @@ fn a_run_with_no_path_names_the_link_below_the_project_root() {
         .assert_link_below_warning(".", "real/subx");
 }
 
-/// §FS-check.2.2.2.6.1, §FS-scan.path.none: from a directory beside the link, or the one holding
+/// §FS-check.2.2.2, §FS-scan.path.none: from a directory beside the link, or the one holding
 /// it, a run given no path walks the same root and names the same link, spelled the same way.
 #[test]
 fn a_run_with_no_path_from_below_the_root_names_the_same_link() {
@@ -478,7 +478,7 @@ fn a_run_with_no_path_from_below_the_root_names_the_same_link() {
     }
 }
 
-/// §FS-check.2.2.2.6.1: handed the root, the link is spelled from the path as written: `.` names
+/// §FS-check.2.2.2: handed the root, the link is spelled from the path as written: `.` names
 /// `./real/subx`, and the root's absolute path, spelled from the report base, names `real/subx`.
 #[test]
 fn a_run_handed_the_project_root_spells_the_link_from_the_path() {
@@ -490,7 +490,7 @@ fn a_run_handed_the_project_root_spells_the_link_from_the_path() {
         .assert_link_below_warning(".", "real/subx");
 }
 
-/// §FS-check.2.2.2.6.1, §FS-scan.path.none: the run's walk pruned `gen` and the hidden `.h`
+/// §FS-check.2.2.2, §FS-scan.path.none: the run's walk pruned `gen` and the hidden `.h`
 /// before reaching the link in each, so no run names it, and a run given no path says from either
 /// one what it says from the root.
 #[test]
@@ -518,7 +518,7 @@ fn a_run_with_no_path_names_no_link_its_walk_never_reached() {
     }
 }
 
-/// §FS-check.2.2.2.2, §FS-check.2.2.2.6.1, §FS-scan.path.none: a run given no path walks the
+/// §FS-check.2.2.2, §FS-scan.path.none: a run given no path walks the
 /// project's roots wherever it started, and both the pattern and the link are asked of that one
 /// walk, so the pattern that pruned `gen` is named ahead of `real/subx` from the root and from
 /// every directory below it, the link's own and the excluded one among them.
@@ -546,7 +546,7 @@ fn a_run_with_no_path_names_the_exclude_pattern_ahead_of_the_link_from_anywhere(
 
 /// The control: the manifest pass reads an E2E case that links out of the project, so the walk
 /// refused nothing there that went unread, and the warning keeps the extensions wording
-/// (§FS-check.2.2.2.6.1, §FS-declarations.e2e-case.excluded).
+/// (§FS-check.2.2.2, §FS-declarations.e2e-case.excluded).
 #[test]
 fn an_e2e_case_that_links_out_of_the_project_is_read_so_it_is_not_named() {
     let tree = Tree::empty("below-e2e-case");

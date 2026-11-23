@@ -46,7 +46,7 @@ fn toc_and_query_agree(tree: &Tree, id: &str) -> Verdict {
 
 /// r3, row P05: the anchor `show` reports is the one `fmt --cross-refs` writes
 /// (§REQ-one-answer.writes.anchors), and both are the rendered heading's, a
-/// closing `#` run taken off (§FS-show.3.1.3.1).
+/// closing `#` run taken off (§FS-show.3.1.3).
 pub fn the_anchor_is_one_and_the_headings() -> Verdict {
     let tree = Tree::new(
         "r3-closing-hashes",

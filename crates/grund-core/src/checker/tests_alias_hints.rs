@@ -71,7 +71,7 @@ fn proper_prefix_candidates_are_sorted_and_truncated_to_three() {
     );
 }
 
-/// §FS-errors.3.2: the proper-prefix tier uses the frozen one-, two-, and
+/// §FS-errors.3: the proper-prefix tier uses the frozen one-, two-, and
 /// three-candidate message forms without changing the base error.
 #[test]
 fn proper_prefix_messages_use_the_exact_candidate_phrasing() {
@@ -93,7 +93,7 @@ fn proper_prefix_messages_use_the_exact_candidate_phrasing() {
     );
 }
 
-/// §FS-check.3.8.4 / §FS-errors.3.3: the scope-only message is the final
+/// §FS-check.3.8.4: the scope-only message is the final
 /// wording byte for byte — what the subtree holds, then where to check from —
 /// with neither the earlier `only the <scope> subtree` prefix nor a suffix
 /// naming the release its wording changes in.

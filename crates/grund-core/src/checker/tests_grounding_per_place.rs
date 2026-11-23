@@ -330,7 +330,7 @@ fn no_unit_warning(name: &str, rows: &str) -> String {
         .expect("the no-unit warning")
 }
 
-/// §FS-check.2.2.1.2: the row-key half of the message is advice, so it is given
+/// §FS-check.2.2.1: the row-key half of the message is advice, so it is given
 /// only where it is still advice — a row that already grounds has made that
 /// setting, and this run is already reporting what it caught (§FS-check.3.6).
 #[test]

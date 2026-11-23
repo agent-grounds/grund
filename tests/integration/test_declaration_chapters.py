@@ -40,7 +40,7 @@ MOVES = (
     ("FS-show.md", "2.1", "lead",
      ("the prose between the declaration heading and the first child citable section heading",
       "a plain heading remains prose and does not cut it")),
-    ("FS-show.md", "2.1.5", "lead.section",
+    ("FS-show.md", "2.2", "lead.section",
      ("the prose between that heading and the first *child* heading",)),
     ("FS-show.md", "2.1.2.1", "body",
      ("The span, not the most recently scanned declaration, owns the coordinate",
@@ -107,14 +107,14 @@ CITED = (
 # Each adds the bytes of the requirements chapter its spec gained since (#634: 5295
 # and 4680), so the room a restatement could grow back into is what it was.
 
-# FS-show.md grew by the 463 bytes of §FS-show.3.2.1's paragraph on where a wrap
+# FS-show.md grew by the 463 bytes of §FS-show.3.2's paragraph on where a wrap
 # ends, which cites the wrap test rather than restating it (grund#655).
 
 # FS-show.md grew by the 1006 bytes of `show --batch --glob`: §FS-show.1.9's paragraph
-# and §FS-show.2.6.2's sentence on filtering the generation, which cite
-# §FS-coordinate-globs.errors and §FS-show.2.6.3 rather than restating them (grund#503).
+# and §FS-show.2.6's sentence on filtering the generation, which cite
+# §FS-coordinate-globs.errors and §FS-show.2.6 rather than restating them (grund#503).
 
-# FS-show.md grew 449 bytes in §FS-show.3.2.1 and FS-fmt.md 959 in §FS-fmt.6.4, each on a
+# FS-show.md grew 449 bytes in §FS-show.3.2 and FS-fmt.md 959 in §FS-fmt.6.4, each on a
 # citation in a link its author wrote, citing §FS-citations.wrap.enclosing rather than
 # restating it (grund#825).
 
@@ -129,7 +129,7 @@ CITED = (
 # FS-fmt.md grew by 162 bytes in §FS-fmt.1 and §FS-fmt.3.2, citing §FS-scan.path.none for
 # what a run with no path covers rather than restating it (grund#854).
 
-# FS-show.md grew 118 bytes in §FS-show.3.2.1 and FS-fmt.md 345 in §FS-fmt.6.4, citing
+# FS-show.md grew 118 bytes in §FS-show.3.2 and FS-fmt.md 345 in §FS-fmt.6.4, citing
 # §FS-citations.wrap.enclosing.scope and .images rather than restating them (grund#839).
 
 # FS-show.md grew by 1498 bytes in §FS-show.requirements.authored-bytes, .2.2, .3.1.1,
@@ -143,13 +143,13 @@ CITED = (
 # .requirements.next-class: a dry-run row now names every kind its line receives and the
 # write summary totals them, new behaviour no other point states (grund#1021).
 
-# FS-show.md grew by 421 bytes in §FS-show.2.1.2.1, .2.2 and .3.1.3.1, saying the section
+# FS-show.md grew by 421 bytes in §FS-show.2.1.2.1, .2.2 and .3.1.3, saying the section
 # map, a section read and a JSON anchor answer for front-matter coordinates by citing
 # §FS-fields.front-matter.coordinates, .surfaces and §FS-output-shapes.4.4 (grund#1048).
 
-# FS-show.md grew by 1228 bytes in §FS-show.3.5.1 and .3.5.2, saying an invalid-ID hint in a
-# run that loaded no config names the project config below it, as §FS-check.2.2.2.5.1 and
-# .5.2 choose it, in place of the default format (grund#1079).
+# FS-show.md grew by 1228 bytes in §FS-show.3.5, saying an invalid-ID hint in a run that
+# loaded no config names the project config below it, as §FS-check.2.2.2 chooses it, in
+# place of the default format (grund#1079).
 
 # FS-fmt.md grew by 42 bytes in §FS-fmt.2.4, .2.4.1.2, .2.4.2, .2.4.3, .2.4.6 and .3.6: its
 # shorthand illustrations take the <§> escape, so none is an off-format citation (grund#1073).

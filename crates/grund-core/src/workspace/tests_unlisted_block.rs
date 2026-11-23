@@ -164,7 +164,7 @@ fn the_finding_is_a_report_error_at_the_blocks_workspace_line() {
 
 /// §FS-check.3.29.15: the five walking surfaces of §FS-check.3.29.9 keep the
 /// CLI-level `warning:` form, and it keeps its location *inside* the text —
-/// §FS-errors.2.2.1's shape, since the CLI is the only frontend they have and it
+/// §FS-errors.2.2's shape, since the CLI is the only frontend they have and it
 /// prints the sentence rather than placing it. Without this the flip would take
 /// the location away from `list`, `refs`, `cover`, `fmt` and the ID read, which
 /// were promised one word of change.

@@ -94,7 +94,7 @@ fn narrowed_alias_hints_only_rewrite_paths_inside_the_scope() {
     assert_failed_with(&narrowed, &narrowed_text(), "(cd group && grund check)");
 }
 
-/// §FS-errors.3.3: text and JSON carry the same final message bytes in one
+/// §FS-check.3.8.4: text and JSON carry the same final message bytes in one
 /// error diagnostic per citation; stable codes still drive `--only`/`--ignore`.
 #[test]
 fn narrowed_scope_clarification_preserves_json_fields_and_code_selection() {

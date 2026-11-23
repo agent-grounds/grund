@@ -35,7 +35,7 @@ for (const finding of [...check.report.errors, ...check.report.warnings,
 const selected = await invoke('check', [root, { only: ['dangling'], ignore: ['dangling'] }]);
 assert.ok(selected.report.errors.some(f => f.code === 'dangling'));
 assert.equal(selected.selectedReport.errors.length, 0);
-// §FS-check.1.4.1, §FS-check.2.2.1.4: the selected view says what judged nothing.
+// §FS-check.1.4.1, §FS-check.2.2.1: the selected view says what judged nothing.
 const caseRepo = name => process.env.GRUND_TEST_REPO + '/tests/e2e/cases/' + name + '/repo';
 const off = await invoke('check', [caseRepo('check-only-opt-in-off'), { only: ['oversized-lead'] }]);
 const offLines = off.selectedReport.warnings.filter(f => f.code === 'selected-check-off');

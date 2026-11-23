@@ -1,5 +1,5 @@
 //! Selected target spelling agrees across catalog reports, generated queries
-//! and completion (§FS-config.3.2.8, §FS-show.2.6.2, §FS-completions.3).
+//! and completion (§FS-config.3.2.8, §FS-show.2.6, §FS-completions.3).
 
 #[path = "support/numeric_spelling.rs"]
 #[allow(dead_code)]

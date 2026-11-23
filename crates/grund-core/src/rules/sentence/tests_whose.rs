@@ -123,7 +123,7 @@ fn the_chapter_form_carries_the_clause() {
 
 /// §FS-rule-refusals.sentences.whose: a kind that is not configured fails before its
 /// clause is read, so an unknown field of it is never what is named; since the window of
-/// §FS-errors.3.10 closed the kind is named alone.
+/// §FS-rule-refusals.sentences.whose closed the kind is named alone.
 #[test]
 fn an_unknown_kind_is_refused_before_an_unknown_field() {
     assert_eq!(
@@ -148,7 +148,7 @@ fn a_conjunction_is_refused_before_the_clause() {
 
 /// §FS-rule-refusals.sentences.whose: within the clause, the shape is checked first,
 /// then the field, then whether it is a scalar, then the value's whitespace,
-/// then the value. Each reason is the whole message (§FS-errors.3.10).
+/// then the value. Each reason is the whole message (§FS-rule-refusals.sentences.whose).
 #[test]
 fn the_clause_is_checked_in_its_order() {
     let reason = |sentence: &str| subject(sentence).unwrap_err();

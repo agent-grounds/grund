@@ -132,7 +132,7 @@ const INPUT_COUNTED: Counted = &[
 const LABOR_COUNTED: Counted = &[(P2, 8, "LABOR-001-driver"), (P3, 3, "LABOR-001-driver")];
 
 /// `; counted at <path>:<line> (<citation>), …`, every path spelled from `base` the way the
-/// report spells it (§FS-errors.3.1): `""` is the root, and a base is a directory every counted
+/// report spells it (§FS-errors.3): `""` is the root, and a base is a directory every counted
 /// citation here is written under.
 fn clause(counted: Counted, base: &str) -> String {
     let entries: Vec<String> = counted
@@ -461,7 +461,7 @@ fn a_check_of_a_record_reports_every_count_its_citations_are_in() {
 
 /// The report base spells the listed paths as it spells the row's own: under
 /// `--path-base=invocation docs/prices` a counted citation inside is named from there, and a
-/// subject outside, brought into scope by its counted sites, from `../` (§FS-errors.3.1).
+/// subject outside, brought into scope by its counted sites, from `../` (§FS-errors.3).
 #[test]
 fn the_counted_list_is_spelled_from_the_report_base() {
     let tree = Tree::new("path-base");

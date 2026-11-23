@@ -152,7 +152,7 @@ fn guidance_contract(version: u8, subject: &str) {
     let repo = Repo::new(version);
     let sentence = format!("{subject} must cite at least one FS.");
     let prefix = if subject == "Each e2e" {
-        // §FS-errors.3.8.1: the non-citable reason alone, since the window closed.
+        // §FS-errors.2.5.1: the non-citable reason alone, since the window closed.
         "error: kind \"e2e\" declares no IDs — tests/e2e/ is not a citable home"
     } else {
         "error: path subjects are not accepted in phase 1"

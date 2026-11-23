@@ -1,5 +1,5 @@
 //! Binary-level contract for the rule-site unknown-alias reasons: the two final
-//! templates §FS-errors.3.7.1 fixes, which the wording migration of
+//! templates §FS-errors.3.7 fixes, which the wording migration of
 //! §FS-errors.3.7 ended in.
 //!
 //! Its own target for the reason `agents_init_message_ramp.rs` is one: this is
@@ -76,7 +76,7 @@ fn invalid_rule_reason(name: &str, object: &str) -> String {
         .to_string()
 }
 
-/// §FS-errors.3.7.1: the two final reasons, exactly — no legacy `unknown kind`
+/// §FS-errors.3.7: the two final reasons, exactly — no legacy `unknown kind`
 /// prefix and no suffix naming the release the wording changes in.
 #[test]
 fn the_rule_alias_reasons_are_the_two_final_templates() {

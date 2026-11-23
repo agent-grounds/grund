@@ -6,7 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
-/// §FS-errors.3.6.1: the outdated-block template, filled for this fixture.
+/// §FS-errors.3.6: the outdated-block template, filled for this fixture.
 const OUTDATED: &str = "repo maintenance: outdated grund init block v3 — run `grund init` to update to v47 (does not affect citation validity)";
 
 fn fixture_root(name: &str) -> PathBuf {

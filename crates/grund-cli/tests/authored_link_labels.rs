@@ -357,7 +357,7 @@ fn an_empty_destination_label_is_a_missing_entry() {
     assert_eq!(read(&dir, "docs/adr/README.md"), index);
 }
 
-/// §FS-show.3.2.1: `show` collapses only a wrap — the author's link is printed as
+/// §FS-show.3.2: `show` collapses only a wrap — the author's link is printed as
 /// written, and on a nested line only the inner wrap collapses.
 #[test]
 fn show_prints_an_authored_label_as_written() {

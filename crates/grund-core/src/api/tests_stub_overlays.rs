@@ -1,7 +1,7 @@
 //! A stub's target is read as a save would write it
 //! (§FS-declarations.stubs.target.1): with the target open in an editor,
 //! `show` and the editor snapshot answer what they answer once that text is
-//! saved (§FS-show.2.3.4, §FS-show.2.3.7, §FS-lsp.1.1), whether or not the
+//! saved (§FS-show.2.3.4, §FS-show.2.3, §FS-lsp.1.1), whether or not the
 //! target is in the scan.
 //! Fixture builders retain their temporary-root owner (§FS-repository-maintenance.4.1).
 

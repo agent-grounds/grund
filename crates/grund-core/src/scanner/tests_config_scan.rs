@@ -401,7 +401,7 @@ fn qualified_citation_suppression_is_uniform_across_passes() {
     );
 }
 
-/// §FS-check.2.3.1.1: a `<§>`-escaped illustration is inert to every check, but
+/// §FS-check.2.3.1: a `<§>`-escaped illustration is inert to every check, but
 /// one whose ID resolves is surfaced as a suggestion (not an error). Also
 /// guards the per-file findings merge (§AR-scanner) — both escapes must
 /// survive `merge_findings`, which once dropped `escaped_citations`.

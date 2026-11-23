@@ -121,7 +121,7 @@ fn only_a_fetched_kind_that_warns_arms_missing_snapshot() {
     }
 }
 
-/// §FS-check.1.4.1, §FS-check.2.2.1.1: an obligation arms `empty-citation-obligation`
+/// §FS-check.1.4.1, §FS-check.2.2.1: an obligation arms `empty-citation-obligation`
 /// only on a scanned kind with a folder home, the only kind it warns about, so an
 /// entry's or a rule's on a file home, and an entry's on the homeless kind, leave
 /// it off. The advice names the folder home, in the version the project reads.

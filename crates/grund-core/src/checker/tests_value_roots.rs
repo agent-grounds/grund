@@ -111,7 +111,7 @@ fn a_root_literal_agrees_under_every_authority() {
 /// The walk compares in declared order and stops at the first inequality, so a
 /// literal wrong in two components reports the earlier one alone; a literal that
 /// joins with a no-break space has fewer parts than the run, so it names the
-/// root (§FS-values.5.2.2, §FS-errors.3.9.1).
+/// root (§FS-values.5.2.2).
 #[test]
 fn the_walk_stops_at_the_first_unequal_component() {
     let run = ["1200", "USD", "per\u{a0}year"].map(|text| authored_component(text, 1));
@@ -140,7 +140,7 @@ fn the_walk_stops_at_the_first_unequal_component() {
 }
 
 /// What an equal-count root-aimed mismatch prints: the root's message alone, then the
-/// remedy (§FS-errors.3.9.1).
+/// remedy (§FS-values.5.2.2).
 fn root_aimed(root: &str) -> String {
     format!(
         "value-mismatch: {root}; change the literal to the declared value, \
@@ -152,7 +152,7 @@ fn root_aimed(root: &str) -> String {
 /// written — its numeric spelling and its no-break spaces kept — and the first
 /// unequal component by its section path, under every authority, whether that
 /// component is the first or a later one; a mixed-kind clause names its pair
-/// (§FS-values.5.2.2, §FS-values.5.2.1, §FS-errors.3.9.1).
+/// (§FS-values.5.2.2, §FS-values.5.2.1, §FS-values.5.2.2).
 #[test]
 fn a_root_aimed_mismatch_names_the_root_the_literal_and_the_component() {
     let root = roots_repo(
