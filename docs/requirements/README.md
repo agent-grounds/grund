@@ -21,5 +21,6 @@ What `grund` must never break — the hard invariants a release is blocked on �
 - [§REQ-agents-md](REQ-agents-md.md#req-agents-md-the-agent-entrypoint-stays-managed-and-grounded) — the agent entrypoint stays managed and grounded
 - [§REQ-shipped-surfaces](REQ-shipped-surfaces.md#req-shipped-surfaces-what-grund-ships-or-prints-resolves-where-it-lands) — what grund ships or prints resolves where it lands
 - [§REQ-spec-section-names](REQ-spec-section-names.md#req-spec-section-names-a-section-name-says-what-the-thing-is-and-never-moves) — a section name says what the thing is, and never moves
+- [§REQ-spec-content](REQ-spec-content.md#req-spec-content-the-functional-spec-says-what-grund-does-now-once-at-the-grain-of-a-promise) — the functional spec says what grund does now, once, at the grain of a promise
 
 This index is navigational only. Citations should target the requirement ID directly, never this file.

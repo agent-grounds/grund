@@ -86,7 +86,9 @@ There is no rename map, so a rename is a break. A name that has shipped is kept,
 section that has to move leaves its old coordinate behind as a one-line pointer to the
 new one for as long as `grund refs` still finds a site on it. The pointer is retired
 when nothing cites it, and retiring it is a change of its own — not a side effect of the
-move that made it.
+move that made it. A fold is not a move: a section folded into its ancestor leaves no
+pointer, because the ancestor still says what the old address named, and its citations
+are retargeted in the same change ([§REQ-spec-content.fold](REQ-spec-content.md#fold-folding-a-section)).
 
 A relative heading takes its path from its parent, so moving it under another parent, or
 renaming or renumbering any of its ancestors, renames every address beneath it. The rule

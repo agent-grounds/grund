@@ -2,6 +2,8 @@
 
 This is the external behavior of `grund` — *what* it does, not how it's built. Each spec lives in its own file. The H1 of that file declares an `FS-<slug>` ID, and the body is its contract. Anywhere else in the tree, a citation like `§FS-<slug>.<section>` resolves back into one of these files.
 
+A spec is written to [§REQ-spec-content](../requirements/REQ-spec-content.md#req-spec-content-the-functional-spec-says-what-grund-does-now-once-at-the-grain-of-a-promise): what a page keeps, where everything else lives, and when a point is a section of its own.
+
 ## CLI commands
 
 The subcommands a user runs on the command line.
