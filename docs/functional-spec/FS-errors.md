@@ -1,10 +1,6 @@
 # FS-errors: grund emits messages in fixed shapes
 
-This spec defines the style every `grund` subcommand uses when it speaks to a user or to a downstream tool. It is cross-cutting: [§FS-check](FS-check.md#fs-check-grund-validates-every-citation-in-a-repo), [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id), [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id), [§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-citations-in-bulk), [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot), [§FS-init](FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo), [§FS-id](FS-id.md#fs-id-grund-proposes-ids-for-new-declarations), [§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up), and [§FS-completions](FS-completions.md#fs-completions-grund-completes-declared-ids-in-shells) all conform to it, and the global-flag behaviour in [§FS-cli](FS-cli.md#fs-cli-grunds-command-line-surface-conventions) routes its errors through [§FS-errors.2.2](FS-errors.md#22-cli-level-message) here. Serves [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements) (errors point at the line, no surprises) and [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible) (the message shapes are user-visible output).
-
-The shapes are **frozen** by the same logic as [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree): two installs must agree on what they print for the same input. A subcommand that needs to say something new picks one of the shapes below; it does not invent an ad hoc one.
-
-For verbose implementer examples of JSON objects, empty-output behavior, stream split, and ordering, see [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes). This file defines the general rules; that appendix pins representative wire examples.
+Every `grund` command speaks in a few fixed shapes — the stream a line goes to, the prefix that sets a finding apart from a message about the run, the exit status beside it, the style of its text, the order its lines come in, and the JSON a program reads instead — so that an editor, a script and another install read the same bytes for the same input ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). A command with something new to say uses one of these shapes rather than inventing one. Serves [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements) (errors point at the line) and [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible) (the shapes are user-visible output). This page states the rules, and [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes) shows examples of them on the wire.
 
 ## terms: Terms
 
@@ -20,168 +16,96 @@ verdict), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (rule), 
 - **report base** — The directory every `path` in a report is rendered against, selected by
   `--path-base` when it is passed, else by `relative_paths`.
 
+
 ## requirements: What every message holds to
 
-Two requirements on the shapes as a whole, carrying the marks of [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to). Left out because a tool-wide requirement states them: two runs over one input print the same bytes on both streams, which is [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes) and is restated at [§FS-errors.4](FS-errors.md#4-determinism); the exit code each shape accompanies is [§REQ-never-crashes.2](../requirements/REQ-never-crashes.md#2-exit-codes-are-the-api)'s mapping; a finding at a site points at `path:line` under [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements); and a message's text is user-visible bytes that move only through [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s path, so the second point below says how that path is walked for a message rather than restating it.
+Two requirements bind the shapes as a whole, beside the tool-wide ones every message already serves: the same bytes for the same input ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)), the exit-code mapping ([§REQ-never-crashes.2](../requirements/REQ-never-crashes.md#2-exit-codes-are-the-api)), and the deprecation path for user-visible bytes ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
 
-### requirements.fields: What a program needs from a finding is a field — realized, directional for the next finding
+### requirements.fields: What a program needs from a finding is a field
 
-A consumer never parses `message` to act on a finding. What it is, is its `code`, the exact selector vocabulary ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)); how serious, its `severity` or `channel` ([§FS-errors.3.4](FS-errors.md#34-the-check-channel-prefix), [§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)); which rule said it, its `authority` ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)); and every site its text names is in `sites` ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output), [§FS-errors.5.4](FS-errors.md#54-value-findings)), which for an ambiguity refusal is exactly the pairs the message lists, in its order ([§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal)). Where one code has two shapes, a field tells them apart, as `sites` tells the two `ambiguous` refusals ([§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal)). The two exceptions are about the run rather than the graph: a run-level warning carries its location in its text alone, but for the config-line warnings that carry it in `path` and `line` as well ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)), and a launch-time message stays text under every `--format` and is told by its exit code ([§FS-errors.5.2.2](FS-errors.md#522-launch-time-messages-stay-text)). A finding added from here on that names a site in its text carries it in `sites`, and one that shares a code with a sibling differs from it in a field. Serves [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements).
+A consumer never parses `message` to act on a finding. What it is, is its `code`, the exact selector vocabulary ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)); how serious, its `severity` or `channel`, and which rule said it, its `authority` ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)); and every site its text names is in `sites`, in the order the text names them ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output), [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output)). Where one code has two shapes, a field tells them apart, as `sites` tells the two `ambiguous` refusals ([§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output)). The exceptions are about the run rather than the graph: a run-level warning carries its location in its text, and also in `path` and `line` where it is raised at a line of a config file ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)), and a launch-time message stays text under every `--format` and is told by its exit code ([§FS-errors.5.2.2](FS-errors.md#522-launch-time-messages-stay-text)). Every finding holds to this, and so must every finding added: one that names a site in its text carries it in `sites`, and one that shares a code with a sibling differs from it in a field. Serves [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements).
 
-### requirements.prefix-windows: A wording change keeps the old message whole until its window closes — realized, directional for the next change
+### requirements.prefix-windows: A wording change keeps the old message whole until its window closes
 
-Every wording change this file records, but the exceptions named below, kept the text a consumer matched as a verbatim contiguous prefix through its window, appended whatever it added after that prefix, named the release the window ends in, and said what an exact-line consumer moves to meanwhile; the code, the severity and the exit verdict did not move ([§FS-errors.3.3](FS-errors.md#33-the-narrowed-run-unknown-project-wording-migration), [§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages), [§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-wording-migration), [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration), [§FS-errors.3.9](FS-errors.md#39-the-root-aimed-value-mismatch-wording-migration)). Bytes appended after a surviving prefix are no change at all and ship in one release ([§FS-errors.3](FS-errors.md#3-message-text)). One change is the named exception: the stale-block template of [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates) kept only `repo maintenance: stale grund init block: ` when it was corrected in place in 0.20.0, under the pre-1.0 licence, with no window, because a window would have shown the ungrammatical sentence on purpose to every project migrating that release while its consumers already match `code == "agents-init"` ([§DF-stale-section-differs-in-0-20](../decisions/functional/DF-stale-section-differs-in-0-20.md#df-stale-section-differs-in-0-20-the-stale-block-finding-names-its-section-as-one-subject-corrected-in-place-in-0200)). Another is two families of scan-failure line in 0.23.0, under the same licence and with no window, the last release before 1.0 where this can happen at all: the lines of a file that was read and does not parse, which move from `io`'s remedy to `unparsable-file`'s, and the `readable` lines, which lose `, or keep it out of the scan`, because each old remedy does not work where it changes ([§DF-scan-failure-code-and-fix](../decisions/functional/DF-scan-failure-code-and-fix.md#df-scan-failure-code-and-fix-a-scan-failure-carries-its-own-code-and-a-fix-that-works-at-its-path)). The `root`, `passed` and `value` lines are not exceptions: they keep today's remedy whole and append how, which is no change at all. The third is `check`'s fetch tail where `grund fetch` cannot run what it would name, and the absent-value-home hint for the same key: the value-source and source-file tails of 0.22.0 ([§DF-fetch-source-home.3.4](../decisions/functional/DF-fetch-source-home.md#34-what-each-finding-names)), the unread-home tail of 0.23.0 ([[§DF-fetch-unread-home](../decisions/functional/DF-fetch-unread-home.md#df-fetch-unread-home-fetch-refuses-a-home-the-scan-does-not-read-before-the-integration-runs)]), and the blank-key tail and hint of 0.23.0 ([§DF-blank-fetch-check-tail](../decisions/functional/DF-blank-fetch-check-tail.md#df-blank-fetch-check-tail-check-offers-the-repair-not-a-command-that-can-only-refuse-for-a-fetch-key-with-nothing-to-run), [§FS-fetch.4.1](FS-fetch.md#41-an-absent-value-home-is-refused-with-the-way-through)) each replaced `run grund fetch <ID>` in one release, under the same licence and with no window, because a window would keep recommending on purpose a command that can only refuse; the base of the message, and the refusal line above the hint, survive as verbatim prefixes. Another is four `grund fetch` refusals corrected in place in 0.23.0, under the same licence and with no window, because each old line names, on purpose, what the scan does not read there: `snapshot file <path> already exists for a different ID` keeps `snapshot file <path> already exists` and corrects its tail where the scan reads no ID in the file, and, where the walk does not read the file, becomes the unread-home line, or, for a link to a directory, the link line; `snapshot home has malformed declaration heading` becomes `contains the requested ID beside other content` where the scan reads the ID beside other content; `fetch output heading depth <n> is invalid` becomes `check`'s own line for a section at the wrong level; and the walk's `cannot read snapshot folder` becomes the dangling-link line ([[§FS-fetch.4.2.1](FS-fetch.md#421-a-home-the-scan-does-not-read-is-refused)], [[§FS-fetch.5.5](FS-fetch.md#55-which-file-declares-and-what-idmd-may-hold)], [[§FS-fetch.links](FS-fetch.md#links-a-link-at-the-target-is-written-through-when-it-stays-inside-the-config-root)], [[§DF-fetch-refusals-follow-the-scan](../decisions/functional/DF-fetch-refusals-follow-the-scan.md#df-fetch-refusals-follow-the-scan-four-fetch-refusals-say-what-the-scan-reads-corrected-in-place-and-an-empty-idmd-is-filled)]). Another is the rule surfaces' presence-name whitespace reason where the `NAME` holds `or` between two words, corrected in place in 0.23.0, under the same licence and with no window, because a window would keep sending the author, on purpose, to retitle a chapter that does not exist: `check --rule` and the `invalid-rule` finding refuse that `NAME` for its `or`, and every other `NAME` keeps the whitespace reason whole ([§FS-rule-refusals.sentences.presence-or](FS-rule-refusals.md#sentencespresence-or-or-between-chapter-names-is-refused-for-the-or), [§DF-presence-or-refusal](../decisions/functional/DF-presence-or-refusal.md#df-presence-or-refusal-a-presence-name-holding-or-between-two-words-is-refused-for-the-or-corrected-in-place)). Another is every rule refusal of a sentence with `distinct` after its count, corrected in place in 0.23.0, under the same licence and with no window, because a window would print `unknown kind "distinct X"` on purpose, naming as unknown a kind nobody configured: such a sentence is now accepted where it is a distinct count, and refused otherwise for what the same sentence without `distinct` is refused for, or for the place of its `distinct` ([§FS-rules.3.2.1](FS-rules.md#321-counting-distinct-cited-declarations), [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals), [§DF-distinct-target-counts](../decisions/functional/DF-distinct-target-counts.md#df-distinct-target-counts-an-outbound-count-may-count-distinct-cited-declarations-spelled-distinct-after-the-count)). The last is six messages corrected in place in 0.23.0 by issue #1206's second pull request, under the same licence and with no window, because each old message names, on purpose, a cause that is not what keeps the file out, or a key the file does not have: why a name is not read gains the data row where a listed `data` language reads the name, with its fix, in `check`'s unread-root warning, the broken-stub line and `fetch`'s refusal of a home the scan does not read alike ([§FS-scan.checks.unread-scan-root.message](FS-scan.md#checksunread-scan-rootmessage-the-message)); version 2's empty-scan caution names the languages where the extension list it named is empty ([§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path)); version 2's refusal of a rule kind whose `files` entry is not read as Markdown names `form = "rule"`, the entry and how it is read, in place of `rules = true` ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)); a folder fetch at a file read as Markdown under another name that holds the ID beside other content says `contains the requested ID beside other content` in place of `already declares it`; one whose file read as Markdown under another name holds a stub whose target in the home declares the ID says `snapshot folder has multiple declarations for requested ID` in place of `already declares it`; and a folder fetch at an `<ID>.md` the scan reads as source and finds declaring the ID says `already declares it` in place of `fetch output must begin with one Markdown declaration` ([§FS-fetch.5.2](FS-fetch.md#52-a-file-it-does-not-replace-that-declares-the-id-prevents-installation), [§FS-fetch.5.5](FS-fetch.md#55-which-file-declares-and-what-idmd-may-hold), [§DF-reading-at-fetch-and-unread-homes.3.2](../decisions/functional/DF-reading-at-fetch-and-unread-homes.md#32-messages-corrected-in-place)). Apart from these, a wording change from here on takes the same route — prefix kept, last release named, migration named, verdict unmoved — which is what the new form beside the old of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) means for the bytes of a message. Serves [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path).
+A message's exact text is user-visible output that tools grep ([§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible)), so a change to it walks [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s path this way: through its window the text a consumer matched stays whole as a verbatim contiguous prefix, what the change adds follows that prefix, the message names the release the window ends in, and the change names what an exact-line consumer moves to meanwhile: the finding's stable `code`, or, for a refusal that has no code ([§FS-errors.2.5](FS-errors.md#25-refused-input)), the exit status and the new reason. The code, the severity and the exit verdict do not move. Bytes appended after a prefix that survives are no change at all and ship in one release, because every prefix and `code` consumer still reads what it read, and only an exact-line consumer has to move. A message is corrected in place instead, with no window, under the pre-release licence of [§REQ-backwards-compatibility.4](../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise), where a window would print on purpose a sentence that does not parse, a cause that is not the one, or a remedy that cannot work; each such correction is argued in its decision: [§DF-stale-section-differs-in-0-20](../decisions/functional/DF-stale-section-differs-in-0-20.md#df-stale-section-differs-in-0-20-the-stale-block-finding-names-its-section-as-one-subject-corrected-in-place-in-0200), [§DF-scan-failure-code-and-fix](../decisions/functional/DF-scan-failure-code-and-fix.md#df-scan-failure-code-and-fix-a-scan-failure-carries-its-own-code-and-a-fix-that-works-at-its-path), [§DF-fetch-source-home.3.4](../decisions/functional/DF-fetch-source-home.md#34-what-each-finding-names), [§DF-fetch-unread-home](../decisions/functional/DF-fetch-unread-home.md#df-fetch-unread-home-fetch-refuses-a-home-the-scan-does-not-read-before-the-integration-runs), [§DF-blank-fetch-check-tail](../decisions/functional/DF-blank-fetch-check-tail.md#df-blank-fetch-check-tail-check-offers-the-repair-not-a-command-that-can-only-refuse-for-a-fetch-key-with-nothing-to-run), [§DF-fetch-refusals-follow-the-scan](../decisions/functional/DF-fetch-refusals-follow-the-scan.md#df-fetch-refusals-follow-the-scan-four-fetch-refusals-say-what-the-scan-reads-corrected-in-place-and-an-empty-idmd-is-filled), [§DF-presence-or-refusal](../decisions/functional/DF-presence-or-refusal.md#df-presence-or-refusal-a-presence-name-holding-or-between-two-words-is-refused-for-the-or-corrected-in-place), [§DF-distinct-target-counts](../decisions/functional/DF-distinct-target-counts.md#df-distinct-target-counts-an-outbound-count-may-count-distinct-cited-declarations-spelled-distinct-after-the-count) and [§DF-reading-at-fetch-and-unread-homes.3.2](../decisions/functional/DF-reading-at-fetch-and-unread-homes.md#32-messages-corrected-in-place). Every other wording change holds to this, and the next one must. Serves [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path).
 
 ## 1. Streams
 
-`grund` follows the **linter convention** (`eslint`, `ruff`, `shellcheck`, `golangci-lint`): a checker's findings *are* its output, so they go to **stdout** — `grund check | grep …`, `grund check > findings.txt`, and `grund check --format=json | jq …` all work with no stream redirection. `stderr` is reserved for what the command says *about* the run, not *as* its output. What stdout carries is [§FS-errors.1.1](FS-errors.md#11-what-stdout-carries), and what stderr carries is [§FS-errors.1.2](FS-errors.md#12-what-stderr-carries).
+`grund` follows the linter convention of `eslint`, `ruff` and `shellcheck`: what a command produces goes to **stdout**, a checker's findings included, and **stderr** carries only what the command says about the run. The two never mix, so `grund check 2>/dev/null` shows the findings and only the findings, `grund check >/dev/null` only the run-level errors, and `grund <ID> | …` gets the body and nothing else.
 
-The two are never mixed: `grund check 2>/dev/null` shows you the findings and only the findings; `grund check >/dev/null` shows you only the run-level errors; `grund <ID> | …` is the body and nothing else.
+**stdout** carries:
 
-### 1.1 What stdout carries
+- a query result: the body `grund <ID>` prints, `grund list`'s catalog, `grund refs`' citations, `grund cover`'s file graph, `grund id`'s ID, `grund config show`'s config, and `grund config migrate`'s candidate, whose report goes to stderr ([§FS-config-migrate.2.1](FS-config-migrate.md#21-stdout-is-the-candidate));
+- a checker report: every located finding of `grund check` ([§FS-check.2.1](FS-check.md#21-report-format)), the text-mode `success` line of a clean one ([§FS-errors.2.4](FS-errors.md#24-text-success-line)), and `grund fmt`'s would-change and did-change report ([§FS-fmt.3](FS-fmt.md#3-outputs)). `grund check --format=json` prints findings only, so a clean run leaves stdout empty.
 
-**stdout** carries the command's output:
+**stderr** carries:
 
-- a query result — the body printed by `grund <ID>`, the catalog from `grund list`, the citations from `grund refs`, the file graph from `grund cover`, the ID from `grund id`, the config from `grund config show`, and the candidate from `grund config migrate`, whose report goes to stderr ([§FS-config-migrate.2.1](FS-config-migrate.md#21-stdout-is-the-candidate));
-- a checker report — every located finding from `grund check` ([§FS-check.2.1](FS-check.md#21-report-format)), the text-mode `success` line from a clean `grund check`, and the would-change / did-change report from `grund fmt` ([§FS-fmt.3](FS-fmt.md#3-outputs)).
-- `grund check --format=json` is findings-only: on success with nothing to report, stdout is empty.
+- `error:` lines, for a failure that means the run could not do its job, always with a non-zero exit ([§FS-errors.2.2](FS-errors.md#22-cli-level-message));
+- `warning:` lines about the run rather than its content, such as an empty scan ([§FS-check.2.2](FS-check.md#22-empty-scan)), which leave the exit alone;
+- `note:` and `hint:` recovery lines ([§FS-refs.2](FS-refs.md#2-behaviour), [§FS-show.3.4](FS-show.md#34-what-a-failed-query-prints)), among them a coordinate glob's empty-scope `note:` and its PATH `hint:` ([§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note), [§FS-coordinate-globs.errors.hint](FS-coordinate-globs.md#errorshint-a-glob-typed-as-path-gets-a-hint));
+- the bare message of a failed query, which has no result to put on stdout ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure));
+- the progress transcripts of `grund init` and `grund integrations --write` ([§FS-errors.6](FS-errors.md#6-the-grund-init-transcript)).
 
-### 1.2 What stderr carries
-
-**stderr** carries everything else:
-
-- `error:` lines — a launch-time failure or an I/O failure that means the run could not do its job ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)), always with a non-zero exit;
-- `warning:` lines about the run itself, not its content — e.g. an empty scan ([§FS-check.2.2](FS-check.md#22-empty-scan)) — exit unchanged;
-- `note:` / `hint:` recovery breadcrumbs ([§FS-refs.2](FS-refs.md#2-behaviour), [§FS-show.3.4](FS-show.md#34-what-a-failed-query-prints)), a coordinate glob's empty-scope `note:` and its PATH `hint:` among them ([§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note), [§FS-coordinate-globs.errors.hint](FS-coordinate-globs.md#errorshint-a-glob-typed-as-path-gets-a-hint));
-- the bare message a *failed query* prints when it has no result to put on stdout ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure) — an ID query on a missing ID);
-- `grund init`'s file-by-file transcript ([§FS-errors.6](FS-errors.md#6-the-grund-init-transcript) — `init`'s real output is the scaffold on disk; the transcript is progress), and `grund integrations --write`'s transcript in the same shape ([§FS-errors.6](FS-errors.md#6-the-grund-init-transcript)).
-
-One command keeps a failed query's bare message and its `hint:` lines off stderr: `show --batch`, in every format, prints each query's outcome on stdout, a failure in its place among the answers, so its stderr carries only the run's warnings, a glob's `note:` and run-level `error:` lines ([§FS-show.3.3](FS-show.md#33-batch-query), [§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)). Its JSON form is [§FS-errors.5.3](FS-errors.md#53-show---batch).
+`show --batch` keeps a failed query off stderr in every format ([§FS-show.3.3](FS-show.md#33-batch-query)): `text` and `md` print the failure's message and its `hint:` lines on stdout in the query's place among the answers ([§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)), and JSON carries the failure in that query's record of its envelope, with no hint ([§FS-errors.5.3](FS-errors.md#53-show---batch)).
 
 ## 2. The Fixed Shapes
 
 ### 2.1 Located finding
 
-A finding that points at a specific source site:
+A finding at a site in the repository, on **stdout** because it is the command's output:
 
 ```
 <path>:<line>: <message>
 <path>:<line>: <channel>: <message>
 ```
 
-- `<path>` is rendered against the report base that `--path-base` selects, else `relative_paths` ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from), [§FS-config.3.6](FS-config.md#36-output--report-format)).
-- `<line>` is 1-indexed.
-- `<channel>` is the lowercase `error`, `warning`, or `suggestion` prefix used
-  by `grund check`; other commands omit it.
-- `<message>` is a single line — no embedded newlines, no terminal period — and
-  does not include the channel prefix.
+- `<path>` is rendered against the report base ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from), [§FS-config.3.6](FS-config.md#36-output--report-format)), and `<line>` is 1-indexed.
+- `<channel>` is `error`, `warning` or `suggestion`, written on every finding `grund check` prints ([§FS-check.2.1](FS-check.md#21-report-format)) and carried by JSON's `severity` or `channel` instead ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)). `fmt`'s would-change lines ([§FS-fmt.3](FS-fmt.md#3-outputs)) and `refs`' citations ([§FS-refs.3.1](FS-refs.md#31---format-text-default)) take the form without it, and an LSP diagnostic keeps its own content, without the prefix ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+- `<message>` is a single line with no terminal period, and never includes the channel.
 - The `<path>:<line>:` prefix is mandatory: editors and agents jump on this exact shape.
-
-Emitted on **stdout** — it is the command's output ([§FS-errors.1.1](FS-errors.md#11-what-stdout-carries)). Which form each command uses is [§FS-errors.2.1.1](FS-errors.md#211-which-form-each-command-uses).
-
-#### 2.1.1 Which form each command uses
-
-Every finding from
-`grund check` uses the channel-bearing form ([§FS-check.2.1](FS-check.md#21-report-format)); every would-change line from `grund fmt` ([§FS-fmt.3](FS-fmt.md#3-outputs)) and every citation from `grund refs` ([§FS-refs.3.1](FS-refs.md#31---format-text-default)) keeps the channel-less form. The optional LSP server likewise keeps its existing diagnostic content ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)); the CLI text prefix does not become part of an LSP message. The `<path>:<line>:` prefix is shared; the command, stream, and `check` channel distinguish the meanings.
 
 ### 2.2 CLI-level message
 
-A line that is about the *run*, not a finding at a site in the repo:
+A line about the run rather than a site in the repository, on **stderr** because it is not the command's output:
 
 ```
 error: <message>
 warning: <message>
 ```
 
-- On **stderr** ([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)) — it is not the command's output.
-- The literal leading `error: ` / `warning: ` prefix is what distinguishes a
-  CLI-level message from a located finding, whose severity prefix follows its
-  `<path>:<line>:` prefix. CI scripts grep for the leading `error:` to tell a
-  launch-time failure from a clean run that found findings on stdout.
-
-Where the message text still carries a location is [§FS-errors.2.2.1](FS-errors.md#221-a-location-inside-the-message-text); the exit code each prefix accompanies is [§FS-errors.2.2.2](FS-errors.md#222-exit-codes); who uses the shape is [§FS-errors.2.2.3](FS-errors.md#223-who-uses-it); how it renders under `--format=json` is [§FS-errors.2.2.4](FS-errors.md#224-under---formatjson).
-
-#### 2.2.1 A location inside the message text
-
-The `<path>:<line>:` *prefix* a located finding wears ([§FS-errors.2.1](FS-errors.md#21-located-finding)) is never used
-here — a line beginning with that prefix is the signal of a per-site finding
-on stdout, whether a `check` channel prefix or the message follows it. The
-message *text* may still carry a location: a `grund.toml` schema error is
-reported `error: <path>:<line>: <message>` ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)) — the leading `error:` marks it CLI-level (stderr, non-zero exit), and the `<path>:<line>:` inside the text is the breadcrumb to the bad line, since a config file has one where a bad flag does not. Other CLI-level messages carry a location in the text the same way when they have one — a config line (`warning: b/grund.toml:3: …`, which is what [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block) still prints on the five scanning surfaces that have no error channel — `check` reports the same fact as a located error on stdout, with this prefix and without the location in the text) or a whole file (`error: <path>: <reason>`, [§FS-check.2](FS-check.md#2-outputs)) — or name the file in prose (e.g. `error: read grund.toml: Permission denied (os error 13)`).
+The leading `error: ` or `warning: ` is what sets it apart from a located finding, whose channel follows its location, and CI scripts grep for a leading `error:` to tell a launch-time failure from a clean run that found findings. So a CLI-level message never begins with `<path>:<line>:`, though its text may name a location after the prefix: a config line, as in `error: <path>:<line>: <message>` for a `grund.toml` schema error ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)) or `warning: b/grund.toml:3: …`, an unlisted workspace block on the scanning surfaces other than `check` ([§FS-check.3.29](FS-check.md#329-unlisted-workspace-block)); a whole file, as in `error: <path>: <reason>` ([§FS-check.2](FS-check.md#2-outputs)); or a file in prose, as in `error: read grund.toml: Permission denied (os error 13)`. How it renders under `--format=json` is [§FS-errors.5.2.2](FS-errors.md#522-launch-time-messages-stay-text)'s for a launch-time message and [§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)'s for a failure `check` collects mid-scan.
 
 #### 2.2.2 Exit codes
 
-`error:` always accompanies a non-zero exit — exit `2` unless a section names
-otherwise — for a failure that means the run could not do its job: a
-launch-time, setup, or I/O failure that leaves no query context or
-trustworthy scan, or an operational command's own failure, such as `fetch`'s
-rejected integration output or ambiguous existing content
-([§FS-fetch.7](FS-fetch.md#7-output-and-exits)). The named
-exception is `grund config validate`, which prints the same located
-`error: <path>:<line>: <message>` for an invalid config and exits `1`
-([§FS-config.4.1](FS-config.md#41-grund-config-validate-path)). `warning:` leaves the exit code alone — it is a
-caution, not a failure.
-
-Once context has selected a project's ID grammar, a resolver-rejected operand
-is instead an exit-`1` query failure, alongside `grund id`'s empty-slug /
-collision and the other failed ID queries, so it takes the bare shape of
-[§FS-errors.2.3](FS-errors.md#23-bare-query-failure) with no `error:` prefix.
-
-#### 2.2.3 Who uses it
-
-Used by [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location) (unknown subcommand / bad flag), [§FS-id.6](FS-id.md#6-exit-codes) (unknown kind, unknown `--format`, scan / I/O error), [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) (config validation), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages) (a malformed config or a per-file read failure mid-scan), [§FS-check.2.2](FS-check.md#22-empty-scan) (the empty-scan `warning:`), [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) (the empty citation-obligation `warning:`, a table's or a rule's), [§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so) (the selected-check-off `warning:`), and any subcommand reporting a launch-time failure.
-
-#### 2.2.4 Under `--format=json`
-
-A *launch-time* `error:` (bad flag, unreadable config, missing path) is printed as raw text and is never JSON-ified; a *mid-scan* per-file failure collected by `grund check` is one of the report's findings and is rendered in `--format=json` like the others ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)), still on stderr because it is not a finding about the spec graph.
+`error:` always accompanies a non-zero exit, `2` unless a section names another, for a failure that means the run could not do its job: a launch-time, setup or I/O failure that leaves no query context or trustworthy scan, or an operational command's own failure, such as `fetch`'s rejected integration output or ambiguous existing content ([§FS-fetch.7](FS-fetch.md#7-output-and-exits)). `grund config validate` is the named exception: it prints the same `error: <path>:<line>: <message>` for an invalid config and exits `1` ([§FS-config.4.1](FS-config.md#41-grund-config-validate-path)). `warning:` leaves the exit code alone; it is a caution, not a failure. Once context has selected a project's ID grammar, an operand its resolver rejects is a failed query instead, exit `1`, in the bare shape of [§FS-errors.2.3](FS-errors.md#23-bare-query-failure) ([§DF-refs-resolver-rejection](../decisions/functional/DF-refs-resolver-rejection.md#df-refs-resolver-rejection-an-id-rejected-by-a-selected-grammar-is-a-failed-query)). The exit-code mapping itself is [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed).
 
 #### 2.2.5 One scan failure, one rendering
 
-A per-file scan failure has one reported form for a run: its location, spelled from the report base with the base itself `.` ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)); its message, the reason followed by `; ` and its *Fix* ([§FS-check.2.4.3](FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix)); and its code. Every surface that publishes the failure publishes that form: the `error: <location>: <message>` line `check`, `list`, `show`, `show --batch`, `refs`, `id` and `fetch` print, `check`'s JSON record, the embedding API's record, and the failure a binding's `scan`, `show` and `showBatch` fail with, which carries the record's location as `path`, its message and its code, whichever command or operation met the failure ([§FS-workspace.8.7.3](FS-workspace.md#873-paths)). `proposeId`'s operation failure carries the same message, with the location at its head, because it has no `path`. `init`, which stops on the first failure its scan meets, prints that failure's message too, its *Fix* included; where `init` locates the failure is not settled here. None drops the *Fix*, and none repeats the location at the head of a message whose record carries it as `path`: `show` publishes the message `show --batch` and the scan's own record publish.
+A file the scan could not read or parse has one reported form in a run: its location, spelled from the report base with the base itself `.` ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)); its message, the reason followed by `; ` and its *Fix* ([§FS-check.2.4.3](FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix)); and its code. Every surface that publishes the failure publishes that form: the `error: <location>: <message>` line of `check`, `list`, `show`, `show --batch`, `refs`, `id` and `fetch`, `check`'s JSON record, the embedding API's record, and the failure a binding's `scan`, `show` and `showBatch` fail with, which carries the location as `path` ([§FS-workspace.8.7.3](FS-workspace.md#873-paths)). `proposeId` has no `path`, so its failure carries the same message with the location at its head. `init` stops on the first failure its scan meets and prints that failure's message, *Fix* included; where `init` locates it is not specified. No surface drops the *Fix*, and none repeats the location at the head of a message whose record carries it as `path`.
 
-A file the reason names is part of what failed, not text written while scanning. It is spelled when the report is, by the spelling of the location beside it, so the same tree prints the same bytes wherever it sits ([§FS-errors.4](FS-errors.md#4-determinism)), a run from a subdirectory under `--path-base=invocation` names it with the `..` the location takes, and a member's file is named from the workspace root rather than from the member that scanned it. An `expected.exit` that does not parse at a workspace root with `members = ["m"]` is therefore `error: m/e2e/cases/a/expected.exit: parse m/e2e/cases/a/expected.exit: invalid digit found in string; …`.
+A file the reason names is part of what failed, so it is spelled like the location beside it, and the same tree prints the same bytes wherever it sits ([§FS-errors.4](FS-errors.md#4-determinism)): a run from a subdirectory under `--path-base=invocation` names it with the location's `..`, and a member's file is named from the workspace root, not from the member that scanned it. An `expected.exit` that does not parse at a workspace root with `members = ["m"]` is therefore `error: m/e2e/cases/a/expected.exit: parse m/e2e/cases/a/expected.exit: invalid digit found in string; …`.
 
 ### 2.3 Bare query failure
 
-When a subcommand established its query context but has no result to put on
-stdout — an ID query on a missing ID, a missing section, an invalid ID under the
-selected grammar, an ambiguous ID or section, or a broken stub; `grund refs` when
-the selected resolver rejects an invalid ID or ambiguous number-only
-shorthand; `grund id` when the title slugifies to nothing or the proposed ID
-collides with an existing declaration:
+A command that established its query context but has no result to print says why in one line with no prefix, on **stderr**, and exits `1`, leaving stdout empty:
 
 ```
 <message>
 ```
 
-- No prefix at all, on **stderr**, exit `1`. There is no single site to point at and no result to return, so stdout is empty; this line plus the exit code is what tells the caller what happened.
-- Distinct from [§FS-errors.2.2](FS-errors.md#22-cli-level-message): there is no `error:` prefix, because this is not a launch/run failure — the command ran fine, the request was just unsatisfiable.
-- A batch is the exception to the stream: `show --batch` prints the same message, and the `hint:` lines below it, on **stdout**, in the failed query's place among the answers, in `text` and `md` as `json` carries it inside its envelope, and stderr stays empty for it ([§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)). Its exit is the batch's aggregate ([§FS-show.3.3](FS-show.md#33-batch-query)).
+It has no `error:` prefix because the run did not fail; the request could not be satisfied ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)). The shape answers an ID query that reads one coordinate, for an ID that is missing, invalid under the selected grammar or ambiguous, a missing or ambiguous section, or a broken stub ([§FS-show.3](FS-show.md#3-outputs), [§FS-show.2.2.1](FS-show.md#221-ambiguous-id), [§FS-show.2.2.2](FS-show.md#222-ambiguous-section), [§FS-show.2.3.4](FS-show.md#234-broken-stub)); `grund refs` when its resolver rejects an invalid ID or an ambiguous number-only shorthand ([§FS-refs.4](FS-refs.md#4-exit-codes)); `grund id` when a title slugifies to nothing or the proposed ID collides with a declaration ([§FS-id.3](FS-id.md#3-slug-derivation), [§FS-id.5](FS-id.md#5-collision-check)); and `grund config explain` for a target its version does not know ([§FS-config-explain.5](FS-config-explain.md#5-a-target-the-version-does-not-know)). `check` never uses it.
 
-How ambiguity and hint lines read is [§FS-errors.2.3.1](FS-errors.md#231-ambiguity-and-hint-lines); who uses the shape is [§FS-errors.2.3.2](FS-errors.md#232-who-uses-it).
+An ambiguity lists every site in the order of [§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites), but an ambiguous number-only shorthand lists its candidate IDs in ID order ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates)). A `hint:` line may follow where the next step is obvious, and a missing-target stub beside another home appends its repair after the complete ambiguity, leaving JSON `sites` as the ambiguity listed them ([§FS-declarations.stubs.repair](FS-declarations.md#stubsrepair-a-missing-target-beside-another-declaration-explains-the-repair)).
 
-#### 2.3.1 Ambiguity and hint lines
-
-Ambiguity messages list every site in the order [§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites) defines, except an ambiguous number-only shorthand's, which lists its candidate IDs in ID order ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates)). A `hint:` line may follow on stderr where the next step is obvious ([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)), or on stdout below a batch's failed query ([§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)).
-
-A missing-target stub beside another home appends repair guidance after the complete
-ambiguity prefix, as [§FS-declarations.stubs.repair](FS-declarations.md#stubsrepair-a-missing-target-beside-another-declaration-explains-the-repair) defines.
-The appended explanation does not add, repeat, annotate, or reorder entries in JSON `sites`;
-that array continues to represent the original ambiguity list.
-
-#### 2.3.2 Who uses it
-
-Used by ID queries (missing or invalid ID and missing section — [§FS-show.3](FS-show.md#3-outputs); ambiguous ID — [§FS-show.2.2.1](FS-show.md#221-ambiguous-id); ambiguous section — [§FS-show.2.2.2](FS-show.md#222-ambiguous-section); broken stub — [§FS-show.2.3.4](FS-show.md#234-broken-stub)) when they read one coordinate, while a batch query prints the same message on stdout in its place ([§FS-show.3.3.2](FS-show.md#332-a-failure-stays-in-its-place)), by `refs` resolver rejections after its compatibility window ([§FS-refs.4](FS-refs.md#4-exit-codes)), and by `grund id` for a satisfiable query context whose requested allocation has no result (empty slug — [§FS-id.3](FS-id.md#3-slug-derivation); proposed-ID collision — [§FS-id.5](FS-id.md#5-collision-check)), and by `grund config explain` for a target the version it answers in does not know ([§FS-config-explain.5](FS-config-explain.md#5-a-target-the-version-does-not-know)). `check` does not use this shape — every line it prints is a located finding (stdout) or a CLI-level message (stderr).
+`show --batch` prints the failure on **stdout** instead, in its query's place among the answers ([§FS-errors.1](FS-errors.md#1-streams)), and exits with the batch's aggregate ([§FS-show.3.3](FS-show.md#33-batch-query)).
 
 ### 2.4 Text success line
 
-A text-mode `grund check` run with zero retained errors and zero retained warnings, and no retained suggestion or unselectable run-level line ([§FS-check.2.1.3](FS-check.md#213-the-success-line)), prints exactly:
+`grund check`'s text form prints exactly this line on **stdout**, with one trailing newline, when its selected report is otherwise empty, and exits `0` ([§FS-check.2.1.3](FS-check.md#213-the-success-line)):
 
 ```
 success
 ```
-
-One trailing newline follows the line. The line is on **stdout** because it is the command's output ([§FS-errors.1.1](FS-errors.md#11-what-stdout-carries)), exits `0`, and appears only when the selected report is otherwise empty: it says that report is empty, not that the repository has no findings ([§FS-check.2.1.3](FS-check.md#213-the-success-line)). It is not emitted in `--format=json`, where stdout remains findings-only.
 
 ### 2.5 Refused input
 
@@ -196,23 +120,20 @@ error: <reason>
 ```
 
 - It is a CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)): on **stderr**, with nothing on stdout,
-  and exit `2` ([§FS-errors.2.2.2](FS-errors.md#222-exit-codes)).
+  and exit `2`.
 - `<reason>` names the production that failed, and does not change with what
   follows it. After `; ` stands exactly one label and what it labels: a rule
   sentence after `accepted form:`, several quoted after `accepted forms:`, a
   selector after `accepted selector:`, a double-quoted glob after `accepted glob:`,
   and several joined with `or` after `accepted globs:` ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)).
-  A label that ends in
-  `after enabling it:` says the input is accepted only once the configuration
-  enables what the reason names.
+  A label that ends in `after enabling it:` says the input is accepted only once
+  the configuration enables what the reason names.
 - Where nothing can be offered, the reason stands alone. Where what could not
   be supplied is a kind, the next line is `known kinds: <kinds>`, and a refusal
-  that has a next step to name ends in one `hint:` line
-  ([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)).
+  that has a next step to name ends in one `hint:` line.
 - A configured rule declaration refused for the same reason is a located
-  finding ([§FS-errors.2.1](FS-errors.md#21-located-finding)), in the CLI and in the editor alike, whose message carries
-  the same reason and accepted input after `is not a valid rule: ` and never the
-  lines after it.
+  finding ([§FS-errors.2.1](FS-errors.md#21-located-finding)) whose message carries the same reason and accepted
+  input after `is not a valid rule: `, and never the lines after it.
 
 Which inputs each surface refuses, and how the accepted input is built from
 what was typed, is [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) for rule sentences and [§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)
@@ -223,8 +144,9 @@ for selectors.
 A configured kind that is not citable ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is refused by every
 surface that takes a kind name with one reason, built in one place from the
 kind and its home, in the quoting that surface already uses: a backtick on
-`list --kind` and `grund id`, a double quote on `list --selector` and on a
-rule's subject and object.
+`list --kind` and `grund id` ([§FS-list.1.1](FS-list.md#11---kind), [§FS-id.1.1](FS-id.md#11-unknown-and-non-citable-kinds)), a double quote on
+`list --selector`, whether the kind opens a sentence or a `KIND` or `KIND.NAME`
+selector, and on a rule's subject and object.
 
 ```text
 kind `<KIND>` declares no IDs — <home>/ is not a citable home
@@ -235,88 +157,35 @@ The verdict is [§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a
 and on the command line the next line is `known kinds: <kinds>`, naming the
 citable kinds of that scope. A configured rule declaration's `invalid-rule`
 finding carries the reason alone after `is not a valid rule: `
-([§FS-errors.2.5](FS-errors.md#25-refused-input)). A `[citations]` target keeps the wording [§FS-config.3.9.5](FS-config.md#395-validation)
-documents for it, *a non-citable target kind*.
+([§FS-errors.2.5](FS-errors.md#25-refused-input)). A `[citations]` target keeps its own wording, *a non-citable
+target kind* ([§FS-config.3.9.5](FS-config.md#395-validation)).
 
-`list --kind` and `grund id` print the first form ([§FS-list.1.1](FS-list.md#11---kind),
-[§FS-id.1.1](FS-id.md#11-unknown-and-non-citable-kinds)). The selector and rule surfaces reach the second through the
-window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration): until `0.19.0` they kept the reason they printed
-before and appended this one, and since `0.19.0` they print it alone.
-
-The homeless kind under its default name, `code`, in a project whose
-`[[kinds]]` declares no homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), has no row, yet it
-is the kind `[citations]` refuses as not citable, so every surface above
-refuses it with this reason too. It has no home, so the reason ends at
-`declares no IDs`:
+`code`, the homeless kind's default name, has no row in a project whose
+`[[kinds]]` declares no homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), yet `[citations]`
+refuses it as not citable, so `list --kind`, `list --selector` and a rule's
+subject and object refuse it with this reason too. It has no home, so the
+reason ends at `declares no IDs`:
 
 ```text
 kind `code` declares no IDs
 kind "code" declares no IDs
 ```
 
-All four surfaces called it unknown before, `list --kind` included, so all
-four reach it through the window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration).
-
 ## 3. Message text
 
-The shape is structural; the text is human-readable. Style rules apply to every shape:
+The shape is structural and the text is for a reader. Every shape's text keeps these rules, and the sections below fix the exact text of the messages whose owners hand their wording here:
 
-- **Lowercase first letter.** `unknown reference <ID>` — not `Unknown reference <ID>`.
-- **No terminal period.** A single-clause message does not end in `.` or `!`. A run-level caution that runs to more than one clause, such as the empty-scan warning ([§FS-check.2.2.2](FS-check.md#222-the-message-names-the-likely-cause)), is written in sentences and punctuates each, its last included.
-- **No ANSI colors yet.** Once colored output lands, the `[output] color` key, whose default is `auto` ([§FS-config.3.6](FS-config.md#36-output--report-format)), may add them ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) applies); until then plain bytes are the contract.
-- **Stable phrasing.** The exact text of each message is part of the user-visible output covered by [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible): changing it goes through a deprecation path. Tools grep on it. Appending to a message is not changing it: bytes added after text that survives as a verbatim contiguous prefix leave every prefix and `code` consumer reading what it read, so they ship in one release, and only an exact-line consumer is affected — whose migration is the stable `code` of [§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages). [§FS-check.3.24.2](FS-check.md#3242-an-append-not-a-wording-change) is the worked case.
-- **Quoted user input** appears in double quotes when the input could be confused with surrounding prose: `"<original title>"`, not `<original title>`.
-- **One base for every path in the line** — [§FS-errors.3.1](FS-errors.md#31-one-base-for-every-path-in-the-line).
-
-[§FS-errors.3.2](FS-errors.md#32-the-unknown-project-recovery-shape) to [§FS-errors.3.11](FS-errors.md#311-the-missing-section-remedy) pin particular messages: the unknown-project recovery shape and its wording migration, `check`'s channel prefix, a missing fetch-backed declaration, `agents-init`, the rule-site unknown alias, the one-grammar refusals, the root-aimed value mismatch, the whose-clause refusals, and the missing-section remedy.
-
-### 3.1 One base for every path in the line
-
-A path written *inside* the message text — a duplicate declaration's other homes, an ambiguous ID's competing sites, the stub a broken-stub refusal names — is a report path like the `<path>` the shape is located at, and is rendered against the same base ([§FS-config.3.6](FS-config.md#36-output--report-format)). In a workspace that base is the root the run reports from, never the member the finding came out of ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)): a line whose two halves are relative to two different roots sends the reader — and an editor following it — to a file that is not there. The path the message quotes back from the user's own text, such as a stub's link target, is not a resolved path and stays verbatim.
-
-### 3.2 The unknown-project recovery shape
-
-The unknown-project recovery shape in [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) freezes the base `unknown project alias <written>` and, when its first non-empty candidate band supplies alternatives, appends `; did you mean <a>?`, `; did you mean <a> or <b>?`, or `; did you mean <a>, <b> or <c>?`. The base begins lowercase and has no period; the recovery clause has one terminal question mark. Text output carries the whole message, and JSON retains `code: "unknown-project"` while carrying the same bytes in `message` ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)).
-
-### 3.3 The narrowed-run unknown-project wording migration
-
-The narrowed-run scope-only unknown-project message took a three-release wording
-migration, which ended in `0.16.0`: its final template is fixed in
-[§FS-check.3.8.4](FS-check.md#384-the-scope-only-message-across-three-releases), and the `0.13.2` compatibility suffix — part of the error
-message, never a second warning finding — is gone. Exact-line consumers were
-asked to migrate during the window to the stable `code == "unknown-project"`;
-the code, error severity, sites, selectors, and exit verdict did not change.
-Workspace-root candidate messages and bare unknown-project messages were
-unchanged throughout.
-
-### 3.4 The `check` channel prefix
-
-For `grund check`, the fixed rule supplies the channel and every located text
-line makes it explicit after the location prefix: [§FS-check.3](FS-check.md#3-errors-detected) is `error:`, [§FS-check.4](FS-check.md#4-warnings) is `warning:`, and enabled [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) advisories are `suggestion:`. That structural prefix does not change the finding's message bytes. JSON continues to carry the same distinction in its existing `severity` or `channel` field ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)); `fmt`, `refs`, run-level messages, and LSP retain their existing shapes.
-
-### 3.5 A missing fetch-backed declaration
-
-A missing fetch-backed declaration has two frozen identities, `dangling` /
-`error` ([§FS-check.3.1](FS-check.md#31-dangling-citation)) and
-`missing-snapshot` / `warning` ([§FS-check.4.12](FS-check.md#412-missing-snapshot)); those sections own the exact
-message bytes, the bare-text fetch remedy, and the precedence of an existing
-member-candidate, near-ID or illustration hint over the fetch-action tail
-([§FS-check.3.1.5](FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member)).
+- **Lowercase first letter**: `unknown reference <ID>`, not `Unknown reference <ID>`.
+- **No terminal period.** A single-clause message ends in no `.` or `!`. A run-level caution of more than one clause, such as the empty-scan warning ([§FS-check.2.2.2](FS-check.md#222-the-message-names-the-likely-cause)), is written in sentences and punctuates each, its last included.
+- **No ANSI colors.** Output is plain bytes whatever `[output] color` is set to ([§FS-config.3.6](FS-config.md#36-output--report-format)).
+- **Stable phrasing.** Tools grep a message's exact text, so it changes only as [§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes) says.
+- **Candidates** are offered in one recovery clause after `; `: `did you mean <a>?`, `did you mean <a> or <b>?` or `did you mean <a>, <b> or <c>?`, with no comma before `or`, and the clause ends in one `?`.
+- **Quoted user input** stands in double quotes where it could be confused with the prose around it: `"<original title>"`, not `<original title>`.
+- **One base for every path in the line.** A path inside the message text — a duplicate's other homes, an ambiguous ID's competing sites, the stub a broken-stub refusal names — is a report path, rendered against the same base as the location ([§FS-config.3.6](FS-config.md#36-output--report-format)). In a workspace that base is the root the run reports from, never the member the finding came out of ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)), because a line whose two halves start from two roots sends the reader, and an editor following it, to a file that is not there. A path the message quotes back from the user's own text, such as a stub's link target, is not resolved and stays verbatim.
 
 ### 3.6 The `agents-init` messages
 
-The five `agents-init` messages took a three-release migration, which ended in
-`0.16.0`. In the first two releases each existing message stayed a verbatim
-contiguous prefix and gained a fixed tail classifying it as repo maintenance,
-saying the citation checks still ran, and naming `0.16.0` as the release its
-wording would change in. Exact-line consumers were asked to migrate during that
-window to the stable `code == "agents-init"`; code, error severity, and the
-default exit verdict did not change. The messages are now the final templates
-of [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates).
-
-#### 3.6.1 The final templates
-
-Since `0.16.0`, with the compatibility tail removed, the templates are these five, and a sixth since the check compares the whole block ([§FS-check.3.5.5](FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout), [§DF-check-compares-the-whole-block](../decisions/functional/DF-check-compares-the-whole-block.md#df-check-compares-the-whole-block-grund-check-holds-the-whole-managed-block-the-workspace-sections-at-the-outermost-root-of-a-full-checkout)):
+An `agents-init` finding ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) prints one of six templates, the sixth because the check compares the whole block ([§FS-check.3.5.5](FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout), [§DF-check-compares-the-whole-block](../decisions/functional/DF-check-compares-the-whole-block.md#df-check-compares-the-whole-block-grund-check-holds-the-whole-managed-block-the-workspace-sections-at-the-outermost-root-of-a-full-checkout)):
 
 ```text
 repo maintenance: malformed grund managed block: <detail> (does not affect citation validity)
@@ -327,430 +196,138 @@ repo maintenance: missing grund init block v<current> — run `grund init` to in
 repo maintenance: stale grund init block: the <section> section differs from the workspace (<detail>) — run `grund init` in <dir> to refresh (does not affect citation validity)
 ```
 
-`<found>` is the version the block's heading carries. `<current>` is the version the live config selects in `outdated` and `missing`, and in `unsupported` the maximum this binary supports, the number `grund init`'s refusal of the same block names, never the config's selection ([§FS-init.2.3.7.3.1](FS-init.md#23731-above-the-maximum-unsupported)). `<section>` is one of the nouns of [§FS-check.3.5.3](FS-check.md#353-code-and-message), and the sixth template carries the two workspace sections. Both stale templates name the section as one subject, `the <section> section`, so the sentence reads the same whichever heading it names, a heading someone wrote into the block included. The fourth template was corrected once, in 0.20.0, from `<section> differ from grund.toml`, which a singular section such as `scoped guidance` could not agree with; only its leading `repo maintenance: stale grund init block: ` was kept ([§DF-stale-section-differs-in-0-20](../decisions/functional/DF-stale-section-differs-in-0-20.md#df-stale-section-differs-in-0-20-the-stale-block-finding-names-its-section-as-one-subject-corrected-in-place-in-0200)). `<dir>` is the root of the project that owns the block, from the finding's own base; where that project is the one the run started in, ` in <dir>` is left out. The first five templates are held stable, so where they report another project's block they grow at the end rather than change in the middle — `outdated`, `stale … differs from grund.toml` and `missing` each append `; run it in <dir>` after their last byte:
+`<found>` is the version the block's heading carries. `<current>` is the version the live config selects in `outdated` and `missing`, and in `unsupported` the highest this binary supports, the number `grund init`'s refusal of the same block names, never the config's selection ([§FS-init.2.3.7.3.1](FS-init.md#23731-above-the-maximum-unsupported)). `<section>` is one of the nouns of [§FS-check.3.5.3](FS-check.md#353-code-and-message), named as one subject, `the <section> section`, so the sentence reads the same whichever heading it names, a heading someone wrote into the block included ([§DF-stale-section-differs-in-0-20](../decisions/functional/DF-stale-section-differs-in-0-20.md#df-stale-section-differs-in-0-20-the-stale-block-finding-names-its-section-as-one-subject-corrected-in-place-in-0200)). The sixth template names one of the two workspace sections, and its `<detail>` is the first differing entry of [§FS-check.3.5.3.1](FS-check.md#3531-first-differing-workspace-entry). `<dir>` is the root of the project that owns the block, spelled from the finding's own base, and ` in <dir>` is left out where that project is the one the run started in. The first five templates grow only at the end ([§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes)), so where they report another project's block, `outdated`, the first `stale` and `missing` append `; run it in <dir>`, while `malformed` and `unsupported` name no command and append nothing:
 
 ```text
-packages/billing/AGENTS.md:3: error: repo maintenance: outdated grund init block v43 — run `grund init` to update to v47 (does not affect citation validity); run it in packages/billing
+packages/billing/AGENTS.md:3: error: repo maintenance: outdated grund init block v35 — run `grund init` to update to v47 (does not affect citation validity); run it in packages/billing
 ```
 
-`malformed` and `unsupported` name no command and append nothing. The sixth template's `<detail>` is the first differing entry or section fallback defined by [§FS-check.3.5.3.1](FS-check.md#3531-first-differing-workspace-entry); it does not change the five stable templates. For example:
+`repo maintenance` classifies the message only; it is not a finding category or selector value ([§FS-check.1](FS-check.md#1-inputs)).
 
-```text
-AGENTS.md:3: error: repo maintenance: stale grund init block: the workspace members section differs from the workspace (expected - [`billing`](packages/billing/); found - [`billing`](packages/billing/) *(not yet initialized)*) — run `grund init` to refresh (does not affect citation validity)
-```
+### 3.7 The rule-site unknown-alias reasons
 
-These are message classifications only: `repo maintenance` is not a finding
-category or selector value ([§FS-check.1](FS-check.md#1-inputs)).
-
-### 3.7 The rule-site unknown-alias wording migration
-
-A rule object kind the run holds no workspace vocabulary to resolve is reported
-at the rule's own heading as `invalid-rule` ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)). Until the correcting
-release its reason named the kind as the defect — `unknown kind "<KIND>" in
-namespace "<ALIAS>"` for a pinned object, `unknown kind "<KIND>" in any
-workspace namespace` for `*/<KIND>` — in a scope that cannot know whether that
-kind exists anywhere. What such a run actually cannot reach is the workspace.
-Those are bytes a consumer may match, so the correction took the three-release
-route of [§FS-errors.3.3](FS-errors.md#33-the-narrowed-run-unknown-project-wording-migration) and [§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages) rather than changing outright
-([§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered), [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
-
-Until `0.16.0` each complete legacy reason stayed a verbatim contiguous
-prefix and gained the true clause after it, followed by a suffix
-naming `0.16.0` as the release its wording would change in. In `0.16.0` the
-prefix and the suffix went, and the reason is the true clause alone, in the
-shape a narrowed run already uses for a citation it cannot place — say what
-cannot be resolved here, offer no candidate, send the reader to the workspace
-root ([§FS-check.3.8.3](FS-check.md#383-a-narrowed-run-offers-no-candidate)). Its templates are [§FS-errors.3.7.1](FS-errors.md#371-the-final-templates).
-
-Exact-line consumers were asked to migrate during the window to the stable
-`code == "invalid-rule"`; the code, the error severity, the selectors, and the
-exit verdict did not change, and `--only invalid-rule` keeps selecting the
-finding. An alias the run *can* judge and rejects keeps its legacy reason
-unchanged, because there the kind really is what failed.
-
-The reason belongs to the vocabulary check rather than to the finding, so the
-same two forms also reach `check --rule`'s pre-scan refusal
-([§FS-rules.4](FS-rules.md#4-validation-lifecycle)), where there is no rule heading to report at and therefore no
-`code` to migrate to: that surface prints `error: <reason>` on stderr, writes
-nothing to stdout, and exits 2. A consumer of it keys on the exit code, which
-this migration did not move, and on the sentence it passed in.
-
-#### 3.7.1 The final templates
-
-Since `0.16.0`, with the compatibility prefixes removed, the two reasons are
-exactly:
+A rule whose object kind is pinned at an alias (`<ALIAS>/<KIND>`) or matched across every alias (`*/<KIND>`), in a run that holds no workspace vocabulary to resolve it, is unverifiable here ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)). Its reason says what cannot be resolved in this scope, offers no candidate, and sends the reader to the workspace root, as a narrowed run does for a citation it cannot place ([§FS-check.3.8.3](FS-check.md#383-a-narrowed-run-offers-no-candidate)). It is exactly the first line for a pinned object and the second for `*/<KIND>`:
 
 ```text
 unknown project alias <ALIAS>; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root
 no workspace is in scope here, so no namespace can be searched for <KIND> — check from the workspace root
 ```
 
-### 3.8 The one-grammar wording migration
-
-Two refusals changed the reason they print, and both are bytes a consumer may
-match, so they took the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)
-rather than changing outright ([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), D10):
-
-- A configured kind that is not citable, named on `list --selector`,
-  `list --size --selector`, or in a rule's subject or object on `check`,
-  `check --rule` or a configured rule declaration, was refused as though it
-  were not configured: `unknown kind "<KIND>"`, or, for a selector spelled
-  `KIND` or `KIND.NAME`, `literal subject "<selector>" does not match the
-  configured ID grammar`. Its reason is §FS-errors.2.5.1's. So was `code`,
-  the homeless kind's default name, in a project whose `[[kinds]]` declares no
-  homeless kind, on those surfaces and on `list --kind`, where the legacy
-  reason is ``unknown kind `code` ``. Its reason is [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s form
-  with no home ([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), G09).
-- A subject with a section-component wildcard in a sentence that joins clauses
-  with `and` was refused as a conjunction. Under the order of
-  [§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails) the wildcard is refused first.
-
-Its window opened in `0.18.0` and closed in `0.19.0` (#881): until then each
-complete legacy reason, accepted forms included, stayed a verbatim contiguous
-prefix — `unknown kind "e2e"`, `literal subject "e2e.terms" does not match the
-configured ID grammar`, or the conjunction refusal with its accepted forms —
-followed by ` — `, the reason it was moving to, and the suffix `; this wording
-changes in grund 0.19.0`. In `0.19.0` the prefix and the suffix went, and each
-refusal prints [§FS-errors.3.8.1](FS-errors.md#381-the-final-templates)'s reason alone ([§DF-one-grammar-lands-in-0-19](../decisions/functional/DF-one-grammar-lands-in-0-19.md#df-one-grammar-lands-in-0-19-the-one-grammar-window-closes-in-0190-and-a-pinned-target-the-run-cannot-accept-fails-the-load)).
-Whatever followed the legacy reason on the next line — `known kinds:`, a
-`hint:` — still follows the reason. The exit code, the `invalid-rule` code and
-its severity, and what is refused did not move; only the reason's text did. In
-a repository whose kinds are `FS`, `RULE` and the non-citable `e2e` homed at
-`tests/e2e/`, with named sections on, these are the exact lines:
-
-| Input | Exact reason |
-|---|---|
-| `list --selector e2e.terms` | `kind "e2e" declares no IDs — tests/e2e/ is not a citable home` |
-| `list --selector 'Each e2e'` | `kind "e2e" declares no IDs — tests/e2e/ is not a citable home` |
-| `check --rule 'Each e2e must have exactly one terms chapter.'` | `kind "e2e" declares no IDs — tests/e2e/ is not a citable home` |
-| `check --rule 'Each FS must cite at least one e2e.'` | `kind "e2e" declares no IDs — tests/e2e/ is not a citable home` |
-| `check --rule 'FS-x.* must cite at least one FS and must not cite any FS.'` | `section-component wildcards are not accepted in phase 1` |
-
-The first four are each followed by `known kinds: FS, RULE`, as before. The
-fifth is followed by nothing: once its subject is rebuilt the sentence is still
-a conjunction, so no accepted form is offered ([§FS-errors.3.8.1](FS-errors.md#381-the-final-templates)). Exact-line
-consumers were asked to migrate during the window to the reason after the
-` — `, which is what `0.19.0` prints; a matcher of the legacy prefix no longer
-finds it.
-
-The same repository declares no homeless kind, so `code` has no row there.
-Its window opened in `0.18.0` and closed in `0.19.0` (#680): each of these
-refusals printed its legacy reason in front — `unknown kind "code"`,
-``unknown kind `code` `` on `list --kind`, or `literal subject "code" does not
-match the configured ID grammar` on a bare selector — then ` — `, the reason
-below and the suffix. Each now prints [§FS-errors.3.8.1](FS-errors.md#381-the-final-templates)'s form with no home
-alone, followed by `known kinds: FS, RULE`, as before, with exit `2`
-([§DF-homeless-code-declares-no-ids](../decisions/functional/DF-homeless-code-declares-no-ids.md#df-homeless-code-declares-no-ids-code-with-no-row-is-refused-as-declaring-no-ids-alone-from-0190)):
-
-| Input | Exact reason |
-|---|---|
-| `list --kind code` | ``kind `code` declares no IDs`` |
-| `list --selector 'Each code'` | `kind "code" declares no IDs` |
-| `list --selector code` | `kind "code" declares no IDs` |
-| `check --rule 'Each code must have exactly one terms chapter.'` | `kind "code" declares no IDs` |
-| `check --rule 'Each FS must cite at least one code.'` | `kind "code" declares no IDs` |
-
-Retiring the window was [§RM-one-grammar-flip](../roadmap.md#rm-one-grammar-flip-end-the-one-grammar-window-in-0190).
-
-#### 3.8.1 The final templates
-
-Since `0.19.0`, with the legacy prefix and the suffix gone, the reasons are exactly
-[§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s double-quoted form and the wildcard reason of
-[§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals):
-
-```text
-kind "<KIND>" declares no IDs — <home>/ is not a citable home
-section-component wildcards are not accepted in phase 1
-```
-
-`code` with no row prints the form with no home, `kind "code" declares no IDs`,
-and ``kind `code` declares no IDs`` on `list --kind`; its window has already
-closed (#680).
-
-The wildcard reason is then followed by the accepted form
-[§FS-rule-refusals.sentences.rewrite](FS-rule-refusals.md#sentencesrewrite-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced) builds, where it builds one; for a
-sentence that is still a conjunction once its subject is rebuilt it builds
-none ([§FS-rule-refusals.sentences.rewrite.reparsed](FS-rule-refusals.md#sentencesrewritereparsed-a-form-is-parsed-before-it-is-offered)).
-
-### 3.9 The root-aimed value-mismatch wording migration
-
-A `value-mismatch` at a binding aimed at a whole value root, whose literal
-splits into as many parts as the root has components, named only the first
-unequal component, by that component's own coordinate, and quoted only the part
-bound to it. A site binding `30 minutes` to the root `FS-session.1`, whose
-components are `45` and `minutes`, read exactly as a site binding `30` to the
-component `FS-session.1.1` does, so its author was sent to re-cite a citation
-that was right. The final message names the cited root and quotes the literal
-whole ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). Those were bytes a consumer may match, so the
-change took the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather
-than replacing the message outright (#1008).
-
-Its window opened in `0.21.0` and closed in `0.22.0` (#1118,
-[§DF-root-value-mismatch-wording-lands-in-0-22](../decisions/functional/DF-root-value-mismatch-wording-lands-in-0-22.md#df-root-value-mismatch-wording-lands-in-0-22-the-root-aimed-value-mismatch-wording-window-closes-in-0220)): through it the legacy message
-stood whole in front of the final one, joined by ` — whole binding: `, and the
-line ended `; this wording changes in grund 0.22.0` before its remedy. From
-`0.22.0` the message is [§FS-errors.3.9.1](FS-errors.md#391-the-final-templates)'s template alone. Two messages
-were never reworded, before, through or after the window: a component-aimed
-mismatch, and a root-aimed one whose part count differs from the component
-count, which already names the root and the literal as authored
-([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)).
-
-An exact-line consumer was to migrate during the window to the stable
-`code == "value-mismatch"`; one that matched the legacy prefix read what it
-read until `0.22.0`, and matches nothing from then on. The code, the error
-severity, the primary location, the one `sites` entry, the selectors and the
-exit verdict do not move, and the `--format json` `message` and the editor's
-diagnostic carry the bytes the text line carries ([§FS-errors.5.4](FS-errors.md#54-value-findings),
-[§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)).
-
-#### 3.9.1 The final templates
-
-A root-aimed mismatch whose part count equals the component count is exactly
-the first line below, and the second where its one pair differs in kind:
-
-```text
-value mismatch for <root> (component <section-path>): bound `<literal>`, declared `<joined>` at <site>; change the literal to the declared value, or the declaration to the bound one
-value mismatch for <root> (component <section-path>): bound `<literal>`, declared `<joined>` at <site> — component <section-path>: bound is a <kind>, declared is a <kind>; a number and a string are never equal; change the literal to the declared value, or the declaration to the bound one
-```
-
-[§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component) defines each slot and [§FS-values.5.2.1](FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind) the clause. For the site
-above, written at `docs/operations.md:3` with `45` declared at
-`requirements.md:11`:
-
-```text
-docs/operations.md:3: error: value mismatch for FS-session.1 (component 1.1): bound `30 minutes`, declared `45 minutes` at requirements.md:11; change the literal to the declared value, or the declaration to the bound one
-```
-
-### 3.10 The whose-clause wording migration
-
-Before a rule subject could carry a whose clause ([§FS-rules.2.2](FS-rules.md#22-a-whose-clause-selects-on-a-scalar-fields-value)), every subject
-spelled with one was refused as an unknown kind: `Each SWR whose verfication is
-Test` printed `unknown kind "SWR whose verfication is Test"`, the whole text
-after `Each ` or `of each ` up to the modality read as one kind name. The
-refusals that stay are now answered for the part that failed
-([§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed)). Those were bytes a consumer may match, so
-the change took the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather
-than replacing the reason outright ([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), D10).
-
-Its window opened in `0.21.0` and closed in `0.22.0` (#1063). Until then the
-complete legacy reason stayed a verbatim contiguous prefix, followed by ` — `,
-the reason of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) with any append and accepted
-forms it carries, and the suffix `; this wording changes in grund 0.22.0`, on
-`check --rule`, on a configured rule declaration's `invalid-rule` finding, and
-on every `list --selector` mode. The window covered every refusal of a sentence
-whose subject carried a whose clause from the subject on, not only the clause's
-own: a sentence whose clause is accepted but which a later production refuses,
-for its quantifier, a prohibition, an object kind or a chapter subject that
-would have chapters, printed the same prefix, ` — `, the later production's
-reason and the suffix, which ended the whole message. Whatever had followed the
-legacy reason on the next line still followed it: on `list --selector` that was
-`known kinds:` and the configured kinds.
-
-In `0.22.0` the prefix, the ` — ` and the suffix went, and each such refusal
-prints the reason of [§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed), or of the later
-production, alone, with any append and accepted forms it carries
-([§DF-whose-clause-window-closes-in-0-22](../decisions/functional/DF-whose-clause-window-closes-in-0-22.md#df-whose-clause-window-closes-in-0-22-the-whose-clause-wording-window-closes-in-0220)). The `known kinds:` line went with the
-prefix after a refused clause, because the kind was recognised; it still
-follows a kind that is not configured, in the subject or as an object, on
-every surface where an unknown kind is followed by it. A refusal raised before
-the subject is read, such as a missing terminal period, never took the window.
-Neither did three refusals that only append or do not move, which keep their
-bytes and the line after them: an exact ID followed by a clause, an object kind
-followed by one under a subject that carries none, and `KIND.NAME` followed by
-one. The exit code `2`, the `invalid-rule` code and its severity, and what is
-refused did not move; only the reason's text did. In the repository of
-[§FS-rule-refusals.sentences.whose](FS-rule-refusals.md#sentenceswhose-a-whose-clause-is-refused-for-the-part-that-failed) these are the exact lines:
-
-```text
-$ grund check --rule 'Each SWR whose verfication is Test must be cited by at least one TC.'
-error: "verfication" is not a field of kind SWR; its scalar fields: verification
-$ grund check --rule 'Each SWR whose verification is Test must cite every TC.'
-error: quantifier "every" is not accepted
-$ grund list --selector 'Each SWR whose verification is Tset'
-error: "Tset" is not a value of SWR.verification; kind SWR admits Test, Analysis, Inspection, Demonstration
-$ grund list --selector 'Each POLICY whose status is Open'
-error: unknown kind "POLICY"
-known kinds: SWR, TC, AN
-```
-
-Exact-line consumers were asked to migrate during the window to the reason
-after the ` — `, which is what `0.22.0` prints; a matcher of the legacy prefix
-no longer finds it.
+A configured rule declaration carries the reason in its `invalid-rule` finding at the rule's heading, and `check --rule` refuses the sentence with it as refused input ([§FS-errors.2.5](FS-errors.md#25-refused-input)). An alias the run can judge and rejects is refused for its kind instead, as `unknown kind "<KIND>" in namespace "<ALIAS>"` or `unknown kind "<KIND>" in any workspace namespace`, because there the kind really is what failed ([§FS-rules.4.1.1](FS-rules.md#411-the-distinction-is-mechanical)).
 
 ### 3.11 The missing-section remedy
 
-Every `missing-section` finding ([§FS-check.3.2](FS-check.md#32-missing-section)) carries the `escape` case of its row in [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog), filled with the
-configured escape: `write <§> before it to show the shape without citing it` under the default
-marker, `<@>` under `@`. Every missing section is owed it alike, numeric or named, a citation that
-carries its marker or a bare token a version 1 project reads without one, with
-`[id] named_sections` on or off. A renumbered heading, a mistyped number and an example someone
-meant to escape all reach this one finding, and the escape may not depend on how the section is
-spelled ([§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read)). The escape clears every one of those sites, because a bare ID-shaped
-token right after the literal escape is no citation under either strict mode
-([§FS-citations.recognized.escapes](FS-citations.md#recognizedescapes-an-id-in-an-escape-position)).
+Every `missing-section` finding ([§FS-check.3.2](FS-check.md#32-missing-section)) gives the `escape` case of its row's *Fix* in [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog), its `{escape}` the configured marker's escape: `<§>` under the default marker, `<@>` under `@`. Every missing section is owed it alike — numeric or named, a citation that carries its marker or a bare token a version 1 project reads without one, with `[id] named_sections` on or off — because a renumbered heading, a mistyped number and an example someone meant to escape all reach this one finding. The escape clears each of those sites, since an ID-shaped token right after the literal escape is no citation under either strict mode ([§FS-citations.recognized.escapes](FS-citations.md#recognizedescapes-an-id-in-an-escape-position)).
 
-The remedy is appended to the head each form shipped with, so each keeps its old message as a
-verbatim contiguous prefix ([§FS-errors.3](FS-errors.md#3-message-text)):
+The remedy follows one of two heads:
 
 - a marker-prefixed named coordinate, where named sections are on, is
-  `section not found: <coordinate>; <escape>; <map>`. A handle is a name someone guessed, so
-  the row's `map` case names the command that lists the ones the declaration has:
-  ``run `grund <ID> --toc` to print the lead with the section map``;
+  `section not found: <coordinate>; <escape>; <map>`, its `map` case naming the command that
+  lists the handles the declaration has, because a handle is a name someone guessed;
 - every other missing section is `missing section <coordinate>; <escape>`.
 
 `<coordinate>` is the cited ID as the report renders it, alias included, then
-`[id] section_separator` and the cited path, and `<ID>` is that cited ID alone. Where the section lock names where the cited text
-went, its clause keeps its place in each form ([§FS-section-lock.checks.vanished](FS-section-lock.md#checksvanished-a-cited-address-that-is-gone-and-where-its-text-went)). In the
-`section not found` form it takes the place of the map, which it makes redundant. In the `missing section` form it follows the
-coordinate, and the remedy comes last. Code, severity, location, count, exit code and JSON shape
-do not move. Their order is still that of [§FS-errors.4.1](FS-errors.md#41-ordering), by message, so on one line the
-finding of a coordinate may sort after that of a longer coordinate that starts with it:
-`missing section FS-login.9; …` sorts after `missing section FS-login.9.9; …`, because `;`
-sorts after `.`, where the shorter message used to sort first. Under `--full`, `out-of-scope-missing-section` prints the same message
-after its scope prefix ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)).
+`[id] section_separator` and the cited path, and the `map` case's `<ID>` is that cited ID alone.
+Where the section lock names where the cited text went, its clause ([§FS-section-lock.checks.vanished](FS-section-lock.md#checksvanished-a-cited-address-that-is-gone-and-where-its-text-went))
+takes the place of the map in the `section not found` form, and follows the coordinate in the
+`missing section` form, the remedy last. Under `--full`, `out-of-scope-missing-section` prints
+the same message after its scope prefix ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)).
 
-Take a declaration `FS-login` with sections `2` and `2.1` only. One source line that cites
-`<§>FS-login.9.9` and `<§>FS-login.2.goals` reports:
+A declaration `FS-login` whose only section is `1`, cited as `<§>FS-login.session` and
+`<§>FS-login.7` on one line, reports:
 
 ```text
-src/main.rs:1: error: missing section FS-login.9.9; write <§> before it to show the shape without citing it
-src/main.rs:1: error: section not found: FS-login.2.goals; write <§> before it to show the shape without citing it; run `grund FS-login --toc` to print the lead with the section map
+docs/references.md:1: error: missing section FS-login.7; write <§> before it to show the shape without citing it
+docs/references.md:1: error: section not found: FS-login.session; write <§> before it to show the shape without citing it; run `grund FS-login --toc` to print the lead with the section map
 ```
-
-The two heads are still two wordings of one code. Giving both the one head
-`section not found: <coordinate>; <fix>` would change bytes the `missing section` form shipped
-in place, and so would rewording a *Fix* case. Either can only go through the window of
-[§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change).
 
 ## 4. Determinism
 
-Two runs of the same subcommand on the same input must produce byte-identical stdout *and* stderr ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)). This rules out:
+Two runs of one command on the same input print byte-identical stdout *and* stderr ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)), so no report holds:
 
-- Wall-clock timestamps in messages.
-- Process IDs, hostnames, or — in the reports of the tree-reading commands
-  [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes) names — an absolute path or one that escapes the loaded
-  root other than the `..` path of a config above it that the run had to read, with
-  no absolute fallback for an in-root target ([§FS-config.3.6](FS-config.md#36-output--report-format),
-  [§DF-cli-base-parent-paths.2](../decisions/functional/DF-cli-base-parent-paths.md#2-decision)). The `..` path of a file in an import is the other
-  ([§FS-imports.paths](FS-imports.md#paths-imported-files-are-reported-where-they-are)).
-- Non-deterministic ordering — the order each report keeps is [§FS-errors.4.1](FS-errors.md#41-ordering).
-- Platform-native path separators in repo-relative output. Any path that appears in a report, JSON field, e2e case manifest, duplicate-site list, stub-link note, or formatter summary is rendered with `/`, so Windows and Unix runs over the same tree compare byte-for-byte.
+- a wall-clock timestamp, a process ID or a hostname;
+- in the reports of the tree-reading commands [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes) names, an absolute path, or a path that escapes the loaded root other than the `..` path of a config above it that the run had to read or of a file in an import, with no absolute fallback for a target inside the root ([§FS-config.3.6](FS-config.md#36-output--report-format), [§DF-cli-base-parent-paths.2](../decisions/functional/DF-cli-base-parent-paths.md#2-decision), [§FS-imports.paths](FS-imports.md#paths-imported-files-are-reported-where-they-are));
+- an order that is not fixed ([§FS-errors.4.1](FS-errors.md#41-ordering));
+- a platform-native path separator: every path in a report, a JSON field, an e2e case manifest, a duplicate's site list, a stub-link note or a formatter summary is written with `/`, so Windows and Unix runs over one tree compare byte for byte.
 
-How `check --only` and `--ignore` keep the contract is [§FS-errors.4.2](FS-errors.md#42-finding-selection).
+Finding selection keeps this contract: `check --only` and `--ignore` filter the complete report before the sort ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)), and the order or repetition of their flags changes nothing.
 
 ### 4.1 Ordering
 
-Each completed engine check report stably sorts its `errors`, `warnings`, and
+Each completed `check` report stably sorts its `errors`, `warnings` and
 `suggestions` channels bytewise by `(path, line, message)`, after path narrowing
-and caution insertion. An absent path sorts first; an absent line counts as zero;
-ties retain their existing order. Finding selection retains this order, with
-selection-generated `selected-check-off` advice appended afterwards
-([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)). The compatibility decision is [§DF-completed-check-report-order](../decisions/functional/DF-completed-check-report-order.md#df-completed-check-report-order-completed-check-reports-share-one-order).
-
-Text `check` findings are grouped as errors,
-warnings, then enabled suggestions and sort bytewise by `(path, line,
-message)` within each group. JSON `check` findings retain their global
-bytewise `(path, line, message)` order across channels. Other reports retain
-their existing documented order; multi-site findings are located at their
-first site ([§FS-check.2.1](FS-check.md#21-report-format)), which for a duplicate is the first in the order of
-[§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites).
-
-A message that would otherwise be non-deterministic (e.g. the order of duplicate-declaration sites) is sorted before printing.
-
-Rule findings obey this same ordering without a rule-specific sorter. In a
-same-anchor `cite each` group, the fixed message puts the target ID immediately
-after `<subject> cites ` and before its count, so bytewise message ordering also
-orders shared-prefix target IDs bytewise
-([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)).
+and caution insertion: an absent path sorts first, an absent line counts as zero,
+and ties keep their order ([§DF-completed-check-report-order](../decisions/functional/DF-completed-check-report-order.md#df-completed-check-report-order-completed-check-reports-share-one-order)). Text prints errors,
+then warnings, then enabled suggestions, each group in that order; JSON keeps one
+global `(path, line, message)` order across channels. Selection keeps the order,
+and the `selected-check-off` advice it generates is appended after it ([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)). A
+message whose content would otherwise vary in order, such as a duplicate's sites, is sorted
+before it is printed ([§FS-errors.4.1.1](FS-errors.md#411-the-order-of-a-duplicates-sites)). Rule findings take this order with no
+sorter of their own ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)). Every other report keeps the order its own
+section documents.
 
 #### 4.1.1 The order of a duplicate's sites
 
 The sites of one duplicate, which `duplicate`, `ambiguous` and `ambiguous-section` list in the
 message and in JSON `sites`, have one order whichever command names them
-([§REQ-one-answer.identity.declarations](../requirements/REQ-one-answer.md#identitydeclarations-every-command-reads-one-declaration-set)). They sort by path, then by line as a number. The path
-is the name the site is reported by, relative to its project root, taken before it is rendered
-against the report base, and compared bytewise with `/` separators. So line 9 comes before line
-10, and neither `--path-base` nor the directory a run starts from moves a site. The **first
-site** is the first in this order, and it is where `check` locates the finding
-([§FS-check.2.1](FS-check.md#21-report-format)).
+([§REQ-one-answer.identity.declarations](../requirements/REQ-one-answer.md#identitydeclarations-every-command-reads-one-declaration-set), [§DF-one-site-order](../decisions/functional/DF-one-site-order.md#df-one-site-order-a-duplicates-sites-have-one-order-checks-whichever-command-lists-them)): by path, then by line as a number.
+The path is the name the site is reported by, relative to its project root, taken before it is
+rendered against the report base and compared bytewise with `/` separators, so neither
+`--path-base` nor the directory a run starts from moves a site. The **first site** is the first
+in this order, and it is where `check` locates the finding ([§FS-check.2.1](FS-check.md#21-report-format)).
 
 A file reached by two names is one site here, under the name
-[§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name) settles on. Its other names, added beside that site, take no
-part in the order. This point covers a duplicate's sites only: a content finding's `(also at …)`
-names and a value mismatch's sites keep their own orders.
-
-### 4.2 Finding selection
-
-`grund check --only` and `--ignore` preserve [§FS-errors.4](FS-errors.md#4-determinism)'s contract: selection precedes
-the format-specific sort and rendering, retained findings keep their
-locations, messages, codes, sites, and channels, and reordering or duplicating
-selector flags cannot alter the result ([§FS-check.2.1](FS-check.md#21-report-format)).
+[§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name) settles on, and its other names take no part in the order. A
+content finding's `(also at …)` names and a value mismatch's sites keep their own orders.
 
 ## 5. JSON format
 
-The subcommands with a machine-readable result or finding surface accept `--format=json`: `check`, `show`, `list`, `refs`, `cover`, `id`, and `integrations` ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements), [§FS-cli.3](FS-cli.md#3-cross-subcommand-flags), [§FS-integrations.5](FS-integrations.md#5-json-format)). Operational commands whose output is human text or generated files (`fmt`, `fetch`, `init`, `config`, `guide`, `completions`) do not accept `--format` unless their own spec adds a JSON surface later. JSON follows the same stream split as the text form ([§FS-errors.1](FS-errors.md#1-streams)): what goes to stdout is [§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output), what goes to stderr is [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output), and `show --batch` is the query-stream exception of [§FS-errors.5.3](FS-errors.md#53-show---batch).
-
-So `grund check --format=json | jq …`, `grund <ID> --format=json | jq …`, `grund list --format=json | jq …` all work with no stream juggling, and `grund <missing> --format=json | jq …` does not choke because the finding is on stderr where the pipe does not see it.
-
-The text-form messages defined above remain the default. JSON is opt-in.
-
-Value findings are [§FS-errors.5.4](FS-errors.md#54-value-findings); the `code` catalog `check` selects on is [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog).
+`check`, `show`, `list`, `refs`, `cover`, `id` and `integrations` accept `--format=json` ([§FS-cli.3](FS-cli.md#3-cross-subcommand-flags), [§FS-integrations.5](FS-integrations.md#5-json-format)); `fmt`, `fetch`, `init`, `config`, `guide` and `completions`, whose output is human text or generated files, do not. JSON keeps the stream split of [§FS-errors.1](FS-errors.md#1-streams).
 
 ### 5.1 On stdout — the command's output
 
-`grund check --format=json` emits its findings as NDJSON, one object per line, in the binding-level shape from [§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes) (`{ severity, path, line, code, message, sites, authority }`); `severity` carries the `error`/`warning` distinction as a structured field, while text carries the explicit channel prefix after its location prefix ([§FS-errors.3.4](FS-errors.md#34-the-check-channel-prefix)), and `sites` is `null` for an ordinary single-site finding, a `[{ path, line }]` list naming every site for a multi-site finding (a duplicate declaration, [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)). A finding with one location whose text names other sites carries those in `sites` the same way, the sites its text names in its order: a value mismatch ([§FS-errors.5.4](FS-errors.md#54-value-findings)), a moved cited section, located at the heading that now holds the old address, whose `sites` are the lines that still cite that address and not the heading ([§FS-section-lock.checks.section-address-changed](FS-section-lock.md#checkssection-address-changed-a-cited-sections-text-sits-at-another-address)), and a `citation-cardinality` or `uncited-unit` row whose count is above zero, located at its subject's title, whose `sites` are the lines of the citations it counted ([§FS-rules.7.3.1](FS-rules.md#731-a-count-above-zero-names-the-citations-it-counted)). A finding about the content of a file with two names carries each spelling in `sites`, its shape unchanged ([§FS-scan.identity.findings.content](FS-scan.md#identityfindingscontent-a-content-finding-is-one-line-naming-every-name)), and so does the refusal of a file two names read differently ([§FS-scan.checks.reading-conflict](FS-scan.md#checksreading-conflict-two-names-of-one-file-read-it-differently)). `authority` is the last key and follows `sites` in the same shape: `null` for a finding no chapter rule authored, or a bytewise-sorted list of the rule origins that did ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)) — `["RULE-security"]` for one declared rule, `["--rule"]` for an ad-hoc trial sentence, `["--rule","RULE-security"]` where both reached the same meaning ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)). It is what lets a caller ask *which rule said this* without matching message text, and it is the field `check --only-rule` queries ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A clean JSON check emits no `success` object. A **suggestion** ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)), emitted only under `grund check --suggestions`, carries `"channel": "suggestion"` in place of a `severity` — keeping the frozen `{error, warning}` severity set ([§FS-config.6](FS-config.md#6-what-is-not-configured-here)) intact, so a consumer filtering on `severity` never sees one. Query subcommands' results are [§FS-errors.5.1.1](FS-errors.md#511-query-results).
+`grund check --format=json` prints its findings as NDJSON on stdout, one object per line, in the shape of [§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes) with its keys in this order: `{ severity, path, line, code, message, sites, authority }` (examples in [§FS-output-shapes.1](FS-output-shapes.md#1-finding-object)).
+
+- `severity` is `error` or `warning`. A suggestion, printed only under `--suggestions` ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)), carries `"channel": "suggestion"` in its place, so the severity set stays `{error, warning}` ([§FS-config.6](FS-config.md#6-what-is-not-configured-here)) and a consumer filtering on `severity` never sees one.
+- `message` is the text line's bytes after its location and channel prefixes.
+- `sites` is `null` for a finding at one site whose text names no other. A finding at several sites, such as a duplicate declaration ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)), lists every site as `[{ path, line }]`, and so does a finding with one location whose text names other sites: its `sites` are what its text names, in the text's order, rather than its location. The section that specifies such a finding says which sites its text names.
+- `authority` is `null` for a finding no chapter rule authored, else the bytewise-sorted list of the rule origins that did ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)); it is what `check --only-rule` queries ([§FS-rules.8](FS-rules.md#8-command-surfaces)).
 
 #### 5.1.1 Query results
 
-Query subcommands emit their result on stdout too: one JSON object for a single-result command (`grund <ID> --format=json` — [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id); `grund id --format=json` — [§FS-id](FS-id.md#fs-id-grund-proposes-ids-for-new-declarations)), NDJSON — one object per row — for a list command (`grund list` per declaration, `grund refs` per citation, `grund cover` per scanned file).
+Query commands print their result on stdout too: one JSON object for a single result (`grund <ID> --format=json`, [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id); `grund id --format=json`, [§FS-id](FS-id.md#fs-id-grund-proposes-ids-for-new-declarations)), and NDJSON, one object per row, for a list (`grund list` per declaration, `grund refs` per citation, `grund cover` per scanned file).
 
 ### 5.2 On stderr — what is not output
 
-A *failed ID query* (`ID not found` / `ambiguous` / `broken stub` / `section not found` / `invalid ID`, exit `1`) emits its one finding object on stderr in the same `{ severity, path, line, code, message, sites, authority }` shape, with `path` and `line` `null` — there is no single site, and there is no result, so nothing goes to stdout. `authority` is present and always `null` there: no query failure is a chapter rule's, and the key set is one set across every record of this shape rather than a conditional a consumer has to branch on. This includes `refs`' invalid-ID and ambiguous-number-only rejections; their codes are respectively `invalid-id` and `ambiguous`, both carry `sites:null`, and neither carries the text-mode hint.
+A failed ID query (`ID not found`, `ambiguous`, `broken stub`, `section not found`, `invalid ID`; exit `1`) prints its one finding object on stderr, in the shape of [§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output) with `path` and `line` `null`: there is no single site and no result, so nothing goes to stdout. `authority` is there and always `null`, so every record of the shape has one key set ([§DF-rule-authority-is-a-field.2](../decisions/functional/DF-rule-authority-is-a-field.md#2-decision)). `refs`' invalid-ID and ambiguous number-only rejections are among them, with the codes `invalid-id` and `ambiguous`, and neither carries the text-mode hint.
 
-Which ambiguity refusals carry `sites` is [§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal); the messages that stay raw text under any `--format` are [§FS-errors.5.2.2](FS-errors.md#522-launch-time-messages-stay-text); run-level findings in `check`'s report are [§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report).
-
-#### 5.2.1 `sites` on an ambiguity refusal
-
-`sites` carries the `[{ path, line }]` list the message names, the same pairs in the same order, for an `ambiguous` refusal naming an ID with two homes ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)) and for an `ambiguous-section` refusal ([§FS-show.2.2.2](FS-show.md#222-ambiguous-section)). The number-only shorthand's `ambiguous` refusal names candidate IDs rather than sites ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), so — like every other query failure — it carries `sites: null`; a consumer tells the two `ambiguous` shapes apart by whether `sites` is `null`, not by `code`.
+`sites` is `null` on a query failure but two: an `ambiguous` refusal naming an ID with two homes ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)) and an `ambiguous-section` refusal ([§FS-show.2.2.2](FS-show.md#222-ambiguous-section)) carry the `[{ path, line }]` pairs the message names, in its order. The number-only shorthand's `ambiguous` refusal names candidate IDs rather than sites, so it carries `null`, and a consumer tells the two `ambiguous` shapes apart by whether `sites` is `null`, not by `code`.
 
 #### 5.2.2 Launch-time messages stay text
 
-A *launch-time* CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) — an error such as a bad flag, unknown kind, unknown project alias, unreadable config or path, or a config the workspace refuses such as [§FS-check.3.30](FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan)'s (exit `2`), or a warning carried in the run's warning channel, such as [§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)'s and [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)'s — stays as its `error:` / `warning:` text line on stderr regardless of `--format`. What decides is which channel carries the fact: a warning settled from the loaded config but carried as one of `check`'s report warnings, such as [§FS-check.4.3](FS-check.md#43-redundant-config-pair)'s and [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)'s, is data, and renders as a JSON finding ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)).
+A *launch-time* CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) stays its `error:` or `warning:` text line on stderr under every `--format`: an error such as a bad flag, an unknown kind or project alias, an unreadable config or path, or a config the workspace refuses ([§FS-check.3.30](FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan)), and a warning carried in the run's warning channel, such as [§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)'s and [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)'s. What decides is which channel carries the fact: a warning settled from the loaded config but carried as one of `check`'s report warnings, such as [§FS-check.4.3](FS-check.md#43-redundant-config-pair)'s and [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)'s, is data, and renders as a JSON finding ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)).
 
 #### 5.2.3 Run-level findings in `check`'s report
 
-A run-level finding in `grund check`'s report — about the run, not a finding about the graph, such as the empty-scan `warning:` ([§FS-check.2.2](FS-check.md#22-empty-scan)), the nothing-recognized `warning:` ([§FS-check.4.5](FS-check.md#45-nothing-recognized)), or a per-file read failure collected mid-scan (a `line`-less finding) — is likewise on stderr in both forms; under JSON a run-level warning carries `path`, `line`, `sites`, and `authority` all `null`, any location being in its message text ([§FS-check.4.5](FS-check.md#45-nothing-recognized)). Three are the exceptions. A rule's line saying it applies to nothing is a diagnostic its rule produced, so it carries that rule's `authority` and a run scoped to the trial sentence keeps the sentence's line ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)); the selected-check-off line is about the selection itself, so it passes both axes ([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)); and a warning a version-2 config's deprecation window raises at a line of the config file ([§FS-config-v2.checks.config-not-toml](FS-config-v2.md#checksconfig-not-toml-a-version-2-config-holds-text-toml-refuses), [§FS-config-v2.checks.config-multiline-string](FS-config-v2.md#checksconfig-multiline-string-a-version-2-config-value-holds-a-multi-line-string)) keeps its `warning: <path>:<line>:` text on stderr but under JSON carries that `path` and `line`, `sites` and `authority` `null`, because its fact is a line of a file and a program needs that line as a field. Any run-level finding but the first two is about the run rather than about a unit, so no rule authored it and `--only-rule` cannot retain it. A scoped run therefore drops it along with everything else no rule authored, exactly as the code axis drops it — `--ignore empty-scan` by name, `--only <any other code>` by omission — and only a mid-scan failure's `io` finding is beyond either axis ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)). Say the consequence plainly, because this is where a scoped trial can still mislead: an author who scopes a sentence over a tree that scanned nothing gets `success` at exit `0`, and the warning that would have said *nothing was scanned, so the sentence never got a chance* is gone with the rest. The `success` there means what it always means — the selected report is empty, not that the repository has no findings ([§FS-check.2.1.3](FS-check.md#213-the-success-line)). The exit code is unmoved either way, these being warnings.
+A run-level finding in `grund check`'s report is about the run rather than the graph, such as the empty-scan warning ([§FS-check.2.2](FS-check.md#22-empty-scan)), the nothing-recognized warning ([§FS-check.4.5](FS-check.md#45-nothing-recognized)), or a per-file read failure collected mid-scan, and it is on stderr in both formats.
+
+Under JSON, a warning raised at a line of a version-2 config file ([§FS-config-v2.checks](FS-config-v2.md#checks-checks)) keeps its `warning: <path>:<line>:` text on stderr and carries that `path` and `line` as fields too, with `sites` `null`, because a program needs the line as a field; every other run-level warning carries `path`, `line` and `sites` `null`, any location being in its message ([§FS-check.4.5](FS-check.md#45-nothing-recognized)).
+
+Selection treats two run-level lines apart: a rule's line saying it applies to nothing is its rule's diagnostic, so it carries that rule's `authority` and a run scoped to the trial sentence keeps it ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)), and the selected-check-off line is about the selection itself, so it passes both axes ([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)). Every other run-level finding has `authority` `null`, because no rule authored it, so `--only-rule` drops it just as the code axis does, `--ignore empty-scan` by name and `--only <any other code>` by omission, and of those only a mid-scan failure is beyond either axis ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)). An author who scopes a trial sentence over a tree that scanned nothing therefore gets `success` at exit `0`, and the warning that nothing was scanned is dropped with the rest.
 
 ### 5.3 `show --batch`
 
-`show --batch` is the explicit query-stream exception in every format
-([§FS-show.3.3](FS-show.md#33-batch-query)); this is its JSON form. Every
-well-formed query, including a failed one, produces one ordered stdout envelope
-([§FS-output-shapes.4.1](FS-output-shapes.md#41-show---batch---formatjson)), hint-free; stderr
-is reserved for invocation, batch-input, configuration, and scan failures that
-abort the run. A batch-input error uses raw
-`error: batch input line <N>: <reason>` text because no data-producing phase
-began. The entire stream is validated before scanning, so this error leaves
-stdout empty and produces no partial records.
-
-### 5.4 Value findings
-
-Value findings use the same object and streams. `invalid-value-declaration`, `invalid-value-binding`, and `value-mismatch` are fixed error codes; a mismatch's `sites` is the sorted declaration-site array, and its `message` is byte-identical to the text message after the primary `path:line:` prefix and its channel prefix ([§FS-errors.2.1](FS-errors.md#21-located-finding), [§FS-values.5](FS-values.md#5-resolution-findings-and-exit-status)). The `invalid-value-binding` that refuses a root-aimed binding for a space carries the offending component's declaration site as its one `sites` entry, the site its text names ([§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root)), so text and NDJSON name the same component. A value source ([§FS-values.terms](FS-values.md#terms-terms)) that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete remains a run-level incomplete-scan failure at exit `2` rather than a semantic value finding, whichever its format, and every other finding at a YAML value source is the finding it is at a JSON one ([§FS-values.2.2.4](FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings)).
+`show --batch` keeps its stream exception in JSON ([§FS-errors.1](FS-errors.md#1-streams)): every well-formed query, a failed one included, is one record of one ordered, hint-free envelope on stdout ([§FS-output-shapes.4.1](FS-output-shapes.md#41-show---batch---formatjson)). Its stderr carries only invocation, batch-input, configuration and scan failures, which abort the run. A batch-input error is the raw text `error: batch input line <N>: <reason>` and leaves stdout empty, because the whole input stream is validated before the scan.
 
 ### 5.5 The `check` code catalog
 
-For `grund check`, `code` is also the exact public selector vocabulary for
-[§FS-check.1](FS-check.md#1-inputs), apart from a row marked planned. The catalog is one table sorted by code,
-and a code's row is the one place the specification states its severity, the
-release a ramp moves that severity in, what turns it on, and what clears its
-finding; it also says what the code means and names the section that specifies
-it. That section says what the check judges and why and names the code, leaving
-those cells to the row, so promoting a warning or rewording a remedy edits one
-cell and moves no coordinate
-([§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)). To read one row, run
-`grund config explain <code>`: it prints the row as the config in force reads it
-([§FS-config-explain.4](FS-config-explain.md#4-a-codes-answer)), and a finding's message carries its *Fix* cell. How each
+For `grund check`, the codes of this table are the exact public selector vocabulary of
+[§FS-check.1](FS-check.md#1-inputs), but for a row marked planned. The table is sorted by code, and a code's row is the
+one place the specification states what the code means, its severity, the release a ramp moves
+that severity in, what turns it on, what clears its finding, and which section specifies it.
+That section says what the check judges and names the code, leaving these cells to the row
+([§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)). `grund config explain <code>` prints a row as the config in
+force reads it ([§FS-config-explain.4](FS-config-explain.md#4-a-codes-answer)), and a finding's message carries its *Fix* cell. How each
 cell is written and read is [§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-read).
 
 | Code | Meaning | Severity | Ramp | Enabled by | Fix | Note | Check |
@@ -847,12 +424,9 @@ cell is written and read is [§FS-errors.5.5.1](FS-errors.md#551-how-a-row-is-re
 | `value-mismatch` | A value binding's written value differs from the value its target declares. | error | — | v2: `form = "value"` is set on a `[schema.kinds]` table or `content = "values"` on one of its fields; a value tag the scan finds turns it on too · v1: `values = true` or `value_chapter` is set on a `[[kinds]]` row; a value tag the scan finds turns it on too | change the literal to the declared value, or the declaration to the bound one | — | [§FS-check.3.22](FS-check.md#322-value-mismatch) |
 | `yaml-value-source-deferred` | A finding at a YAML value source was a warning for one release, and a fetched kind's home skipped its YAML sources; such a source is now read, and each finding carries its own code and severity. | none — spent from grund 0.22.0 and never fires | — | — | none — it never fires | — | [§FS-values.2.2.4](FS-values.md#224-from-grund-0220-a-yaml-source-is-reported-as-a-json-one-is-after-one-release-of-warnings) |
 
-Every future check finding code enters this catalog in the release that
-introduces it; renaming or removing one requires compatibility treatment. The
-catalog changes neither the NDJSON object nor the library/LSP report. `io` is a
-recognized code but an incomplete-scan safety finding remains retained and
-exit `2` even when `--ignore io` or an excluding `--only` set is present
-([§FS-check.2](FS-check.md#2-outputs)).
+Every `check` finding code has a row here from the release that introduces it, and renaming or
+removing one takes the compatibility treatment of [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered). No selector
+hides `io`, `unparsable-file`, or the other codes [§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report) puts beyond both axes.
 
 #### 5.5.1 How a row is read
 
@@ -901,7 +475,6 @@ names a specification ID or holds a link, and each is written by these rules.
   word or hyphenated words. **`none — <why>`** is a code that nothing the user
   does clears, and the rest of the cell says why; it is never an invented
   remedy.
-- **Dangling suggestions.** The `dangling` row's `near` and `near-escape` slots hold the selected suggestion: declared member alternatives first, otherwise a local near ID, as [§FS-check.3.1.5](FS-check.md#315-an-unqualified-id-declared-in-a-loaded-member) specifies. Their labels and templates are unchanged; several alternatives occupy the one `{near}` slot.
 - **Inside a template**, `{words}`, lowercase words in braces, is a slot the
   finding fills, such as `{new address}`, and `` {fix of `<code>`} `` stands
   for that row's *Fix* template, worded once there: its side of the same
@@ -930,11 +503,11 @@ names a specification ID or holds a link, and each is written by these rules.
 
 ## 6. The `grund init` transcript
 
-`grund init` ([§FS-init.2.2](FS-init.md#22-stdout--stderr)) writes status lines to **stderr** — `wrote AGENTS.md`, `appended CLAUDE.md`, `exists grund.toml`, etc. — followed by the `next:` block. These are **not** the command's output: `init`'s output is the scaffold it wrote to disk; the transcript is progress, and nobody pipes `grund init`. They use a `<verb> <path>` shape. This is one of two carve-outs from [§FS-errors.1](FS-errors.md#1-streams); the other is `grund integrations --write`, which reports what it wrote on stderr in the same `<verb> <path>` shape ([§FS-integrations.4.1.6](FS-integrations.md#416-outcome-verbs)). Every other subcommand puts its output on stdout. In particular `grund fmt --write` ([§FS-fmt.3](FS-fmt.md#3-outputs)) does **not** use this shape: its `rewrote N line(s):` report is `fmt`'s output and goes to stdout, the same stream as its `--check` dry-run report. A subcommand with no output and no transcript stays silent and lets the exit code carry the verdict.
+`grund init` ([§FS-init.2.2](FS-init.md#22-stdout--stderr)) and `grund integrations --write` ([§FS-integrations.4.1.6](FS-integrations.md#416-outcome-verbs)) report what they wrote on **stderr**, one `<verb> <path>` line per file — `wrote AGENTS.md`, `appended CLAUDE.md`, `exists grund.toml` — and `init` follows its lines with the `next:` block. The transcript is progress, not output: the command's output is what it wrote to disk. These are the two exceptions to [§FS-errors.1](FS-errors.md#1-streams). `grund fmt --write`'s `rewrote N line(s):` report is `fmt`'s output and goes to stdout, as its `--check` report does ([§FS-fmt.3](FS-fmt.md#3-outputs)). A command with no output and no transcript stays silent and lets the exit code carry the verdict.
 
 ## 7. What this rules out
 
-- A severity prefix (`error:`, `warning:`) ahead of a located finding's `<path>:<line>:` prefix — that leading position marks a CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)); the channel prefix `check` places goes after the location ([§FS-errors.3.4](FS-errors.md#34-the-check-channel-prefix)).
+- A severity prefix (`error:`, `warning:`) ahead of a located finding's `<path>:<line>:` prefix: that leading position marks a CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)), and the channel `check` writes follows the location ([§FS-errors.2.1](FS-errors.md#21-located-finding)).
 - Multi-line messages. A finding that wants to elaborate uses `--format=json` and its `code` ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)), not a wrapped paragraph.
-- Interactive prompts, progress bars, or spinners. Per [§FS-non-goals.10](FS-non-goals.md#10-interactive-mode), every subcommand is non-interactive.
+- Interactive prompts, progress bars or spinners: every command is non-interactive ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
 - Localization. Messages are English; translation is downstream's problem.
