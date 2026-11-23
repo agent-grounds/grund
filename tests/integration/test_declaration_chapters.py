@@ -68,8 +68,6 @@ POINTER_WORDS = 60
 # cited heading and slugifies it, and FS-show.2.5, which this step does not move.
 KEPT = (
     ("FS-show.md", "2.1", "The opening heading is omitted in `text` format and included in `md`"),
-    ("FS-show.md", "2.1.3", "Every subsection and sub-subsection body is included"),
-    ("FS-show.md", "2.1.5", "If the section opens directly with a sub-subsection, the output is just the section heading line"),
     ("FS-show.md", "2.2", "The flag determines how much of it is printed"),
     ("FS-show.md", "2.2.3", "emits none of the outside heading's body"),
     ("FS-show.md", "2.5", "is content, never structure"),
