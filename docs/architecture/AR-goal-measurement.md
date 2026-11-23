@@ -44,6 +44,13 @@ rejects duplicate, invalid, non-leaf, and newly covered entries, as well as an
 uncovered leaf absent from both tables; proof therefore retires a temporary
 entry instead of allowing the baseline to conceal it.
 
+A parent whose lead keeps a promise none of its children holds is listed in a
+third table, the lead promises, each with the promise in a few words
+([§REQ-spec-content.grain](../requirements/REQ-spec-content.md#grain-when-a-point-is-its-own-section)). The gate demands exact evidence of each listed parent
+as it does of a leaf, since a citation of a child is no evidence for its parent,
+and rejects a duplicate entry, an empty reason, and an entry that names no
+section or a leaf, which the leaf rule holds already.
+
 ## 2. Goal meters
 
 `tests/bindings/` is the executable Rust/Python complete-data and canonical-byte

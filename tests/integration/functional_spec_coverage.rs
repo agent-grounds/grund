@@ -13,8 +13,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[path = "functional_spec_coverage_policy.rs"]
 mod policy;
 use policy::{
-    CoverageProblem, Exception, PERMANENT_EXCEPTIONS, TEMPORARY_EXCEPTIONS,
-    functional_spec_coverage_problems,
+    CoverageProblem, Exception, LEAD_PROMISES, LeadPromise, PERMANENT_EXCEPTIONS,
+    TEMPORARY_EXCEPTIONS, functional_spec_coverage_problems, lead_promise_problems,
 };
 
 fn repository_root() -> PathBuf {
@@ -99,12 +99,13 @@ fn every_behavioral_functional_spec_leaf_has_exact_test_evidence() {
     let catalog = scan(&root).expect("scan repository with the production scanner");
     let evidence = repository_evidence(&root, &catalog);
     let borrowed = evidence.iter().map(String::as_str).collect::<BTreeSet<_>>();
-    let problems = functional_spec_coverage_problems(
+    let mut problems = functional_spec_coverage_problems(
         &catalog,
         &borrowed,
         PERMANENT_EXCEPTIONS,
         TEMPORARY_EXCEPTIONS,
     );
+    problems.extend(lead_promise_problems(&catalog, &borrowed, LEAD_PROMISES));
     assert!(
         problems.is_empty(),
         "functional-spec coverage policy failed:\n{problems:#?}"
@@ -316,6 +317,33 @@ fn newly_covered_temporary_entry_must_be_retired() {
     assert_eq!(
         functional_spec_coverage_problems(&catalog, &evidence, no_exceptions(), &temporary),
         [CoverageProblem::CoveredException("FS-coverage.1.1".into())]
+    );
+}
+
+#[rustfmt::skip]
+const LISTED: [LeadPromise<'static>; 5] = [
+    LeadPromise { id: "FS-coverage.1", reason: "cited exactly" },
+    LeadPromise { id: "FS-coverage.named", reason: " " },
+    LeadPromise { id: "FS-coverage.1.1", reason: "a leaf" },
+    LeadPromise { id: "FS-coverage.missing", reason: "no such section" },
+    LeadPromise { id: "FS-coverage.1", reason: "listed twice" },
+];
+
+/// A listed parent needs a citation of its own (§AR-goal-measurement.1): its
+/// child's evidence does not prove the parent's lead, and a leaf or a missing
+/// section is no parent to list.
+#[test]
+fn a_listed_lead_promise_needs_exact_parent_evidence() {
+    let child = BTreeSet::from(["FS-coverage.1", "FS-coverage.named.child"]);
+    assert_eq!(
+        lead_promise_problems(&Fixture::new().scan(), &child, &LISTED),
+        [
+            CoverageProblem::UncitedLeadPromise("FS-coverage.named".into()),
+            CoverageProblem::EmptyReason("FS-coverage.named".into()),
+            CoverageProblem::InvalidLeadPromise("FS-coverage.1.1".into()),
+            CoverageProblem::InvalidLeadPromise("FS-coverage.missing".into()),
+            CoverageProblem::DuplicateLeadPromise("FS-coverage.1".into()),
+        ]
     );
 }
 
