@@ -1,12 +1,12 @@
 # FS-cover: grund groups citations by scanned file
 
-The `cover` subcommand exposes the citation graph as data: for each scanned file, which declaration IDs does it cite, and where? This is the plumbing surface for the diff-aware co-change recipe ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits)): git decides what changed, `cover` says which IDs the changed files lean on. Asked for line ranges of one file with `--lines`, it also says which declaration and section own each line ([§FS-cover.6](FS-cover.md#6-line-ownership)), so a caller holding a diff hunk can name the spec points it edits. Serves [§GOAL-agent-grounding.1](../goals.md#1-the-three-layers) and keeps the policy layer out of `grund-core`.
+The `cover` subcommand exposes the citation graph as data: for each scanned file, which declaration IDs does it cite, and where? It is the plumbing of a diff-aware co-change check ([§FS-cochange-recipe](FS-cochange-recipe.md#fs-cochange-recipe-an-opt-in-git-recipe-reports-related-declaration-and-test-edits)): git decides what changed, and `cover` says which IDs the changed files lean on. Given line ranges of one file with `--lines`, it says instead which declaration and section own each line ([§FS-cover.6](FS-cover.md#6-line-ownership)), so a caller holding a diff hunk can name the spec points it edits. Serves [§GOAL-agent-grounding.1](../goals.md#1-the-three-layers).
 
 ## terms: Terms
 
 Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, section, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations)
 (marker, citation), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, workspace, member, alias),
-[§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value,
+[§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value,
 binding, snapshot).
 
 ## 1. Inputs
@@ -16,168 +16,147 @@ grund cover [<path>] [--glob <pattern> …] [--format text|json]
 grund cover <file> --lines <N>|<N>-<M> [--lines …] [--format text|json]
 ```
 
-- `<path>` — directory or file whose tree is scanned; with none, the project discovered from the current directory ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)). Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). An explicit path bounds the **scan**, and that is what decides the scope: every project at a workspace root, that member alone inside a member, that subtree alone below a config root ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)).
-- `--glob <pattern>` — keep only the citations whose cited coordinate a pattern matches, and every file record still ([§FS-cover.globs](FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches)). Repeatable; it cannot be combined with `--lines` ([§FS-cover.6.4](FS-cover.md#64-errors)).
+- `<path>` — the tree to scan; with none, the project that discovery finds ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)). An explicit path bounds the **scan**, and that decides the scope: every project at a workspace root, that member alone inside a member ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)), and one narrowed scan of the enclosing project for a path narrower than its config root ([§FS-scan.path.cover](FS-scan.md#pathcover-cover-runs-one-narrowed-scan)).
+- `--glob <pattern>` — keep only the citations a pattern matches; every file still gets its record ([§FS-cover.globs](FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches)). Repeatable; refused beside `--lines` ([§FS-cover.6.4](FS-cover.md#64-errors)).
 - `--lines <N>|<N>-<M>` — answer line ownership for that range of `<file>` instead of grouping citations ([§FS-cover.6.1](FS-cover.md#61-input)). Repeatable.
-- `--format text|json` — output shape ([§FS-cover.3](FS-cover.md#3-outputs)). Default `text`. An unsupported value is answered before anything is loaded ([§FS-cover.1.1](FS-cover.md#11-an-unsupported---format-is-answered-before-the-load)).
+- `--format text|json` — the output shape ([§FS-cover.3](FS-cover.md#3-outputs)), default `text`. An unsupported value is answered before anything is loaded, as every command answers a bad run flag ([§FS-cli.3.5](FS-cli.md#35-a-bad-run-flag-is-answered-before-the-load)).
 
-`cover` is a query, like `list` and `refs` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)). It reads no git history ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)) and parses no AST ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)).
+`cover` is a non-interactive query ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)). It reads no git history ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)) and parses no AST ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)).
 
-### 1.1 An unsupported `--format` is answered before the load
-
-A `--format` value outside `text|json` is a usage error the caller can fix without touching the repository, so it is answered **before anything is loaded**: the scan can fail first ([§FS-cover.4](FS-cover.md#4-exit-codes)), and which of two errors a caller sees must not depend on the tree they happened to point at. A `[output] format` key carrying an unsupported value is a property of the tree, so it is reported after the load, like any other config fault. Every command answers a bad run flag this way ([§FS-cli.3.5](FS-cli.md#35-a-bad-run-flag-is-answered-before-the-load)); `cover` is where the rule was first stated.
-
-### 1.2 A path that holds an E2E case's file reads that case
-
-The narrowed scan of [§FS-scan.path.cover](FS-scan.md#pathcover-cover-runs-one-narrowed-scan) reads every E2E case one of whose files its `<path>` holds as the tree spells it under the kind's configured folder: a path naming that file (`grund cover e2e/cases/b/expected.exit`), the case directory, or a directory above it, and the same whether the case directory or the folder itself is a link and wherever the link resolves (`e2e/cases/b` linked to `../../elsewhere/b`, or `e2e/cases` linked to `../shared/cases`, under which `grund cover e2e` holds the case). A failure reading such a file is held as [§FS-declarations.e2e-case.failure](FS-declarations.md#e2e-casefailure-a-case-that-cannot-be-read-fails-alone) says for any run narrowed to a path, so the run exits `2` and names the file at that spelling ([§FS-cover.4](FS-cover.md#4-exit-codes)), the exit and the path `grund check` on the same path gives; the remedy closing the line may differ, since the path the run was handed is what read the file ([§FS-check.2.4.3](FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix)). A path that holds none of the case's failing files, such as another, readable file of the case or the case link's target `elsewhere/b`, holds no failure there, and the run prints what it prints over a healthy case. One shape keeps the reading it had before this point: where the folder itself is a link, a directory at, above or below its target as it resolves (`shared`, `shared/cases`, `shared/cases/b`) reads the cases there and names a failure at the configured spelling, exit `2`, where `grund check` on that path cautions and exits `0`. Decided in [§DF-cover-reads-the-case-its-path-holds](../decisions/functional/DF-cover-reads-the-case-its-path-holds.md#df-cover-reads-the-case-its-path-holds-a-narrowed-grund-cover-reads-the-e2e-case-its-path-holds-so-a-case-file-named-on-the-command-line-or-a-case-linked-out-of-the-cases-folder-fails-as-check-does).
+A narrowed `cover` reads every E2E case one of whose files its `<path>` holds as the tree spells it under the kind's configured folder, whether the case directory or the folder itself is a link and wherever the link resolves. A failure reading such a file is held as [§FS-declarations.e2e-case.failure](FS-declarations.md#e2e-casefailure-a-case-that-cannot-be-read-fails-alone) says for any run narrowed to a path, so the run exits `2` naming the file at that spelling, as `grund check` on the same path does, though the remedy closing the line follows the path the run was handed ([§FS-check.2.4.3](FS-check.md#243-what-failed-and-where-decide-the-code-and-the-fix)). A path that holds none of the case's failing files, such as another readable file of the case or the resolved target of a case linked out of the folder, prints what it prints over a healthy case. One shape exits differently from `check`: where the folder itself is a link, a directory at, above or below its target as it resolves reads the cases there and names a failure at the configured spelling, exit `2`, where `grund check` on that path cautions and exits `0`. Decided in [§DF-cover-reads-the-case-its-path-holds](../decisions/functional/DF-cover-reads-the-case-its-path-holds.md#df-cover-reads-the-case-its-path-holds-a-narrowed-grund-cover-reads-the-e2e-case-its-path-holds-so-a-case-file-named-on-the-command-line-or-a-case-linked-out-of-the-cases-folder-fails-as-check-does).
 
 ## 2. Behaviour
 
-`cover` runs the same scan as `check`, `list`, and `refs` ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)) and only renders the `Catalog` the scanner already collected. It does not decide whether a file is sufficiently covered, whether a hunk is behavioral, or whether a spec/test co-change is required; those are recipe concerns ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits)).
+`cover` renders the citations the scan recognized, with no grammar of its own, and judges none of them: whether a file is covered enough, a hunk behavioral or a spec and test co-change required is a question for a recipe built on it ([§FS-cochange-recipe](FS-cochange-recipe.md#fs-cochange-recipe-an-opt-in-git-recipe-reports-related-declaration-and-test-edits)).
 
-An owned declaration-local numeric citation ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) is one ordinary resolved citation in this grouping: it carries the owner's full ID and exact section while its `text` remains the authored local spelling. It therefore also counts for unused-declaration, grounding, and citation-direction questions that consume the same graph. Ownerless and unsupported local candidates contribute no guessed edge.
+It prints one record per scanned file, sorted by path, its citations sorted by `(line, column)`. A file that cites nothing still gets its record, so a caller can tell it from a file outside the scan.
 
-Output is grouped by scanned file, sorted by path. Within a file, citations are sorted by `(line, column)`, and without `--glob` every recognised citation is listed; with it, this complete set is what the patterns filter ([§FS-cover.globs](FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches)). Files with no recognised citations are still included, so a caller can distinguish "the file was scanned and cites nothing" from "the file was outside the scan scope." A citation object is the same shape `grund refs --format=json` emits ([§FS-cover.3.2](FS-cover.md#32---format-json)): path, line, column, rendered ID, optional section, marker boolean, and the verbatim token text.
+Every citation the scan recognized in a file counts toward that file:
 
-Which citations count is [§FS-cover.2.1](FS-cover.md#21-a-cross-project-citation-counts) for a cross-project one, [§FS-cover.2.2](FS-cover.md#22-a-value-bindings-citation) for a value binding's, [§FS-cover.2.3](FS-cover.md#23-a-citation-whose-fetched-snapshot-is-missing) for one whose fetched snapshot is missing, and [§FS-cover.2.4](FS-cover.md#24-a-declaration-backed-exact-citation) for a declaration-backed exact one.
-
-### 2.1 A cross-project citation counts
-
-Every citation the scanner recognised in the file counts, **including a cross-project `<§><alias>/<ID>`**, and its rendered `id` keeps the alias it was written with and adds none of its own. `cover` does not judge whether the alias resolves; an unknown one is a `check` error, not a reason to drop the row. The rules and their reasons are [§FS-workspace.8.6.3](FS-workspace.md#863-qualified-citations-count-toward-the-citing-file) and [§FS-workspace.8.6.4](FS-workspace.md#864-the-rendered-id-says-what-the-token-says), decided in [§DF-cover-workspace-scope](../decisions/functional/DF-cover-workspace-scope.md#df-cover-workspace-scope-cover-indexes-the-whole-run-and-counts-cross-project-citations).
-
-### 2.2 A value binding's citation
-
-A recognized value binding contributes its ordinary citation to the citing scanned file. A value source ([§FS-values.terms](FS-values.md#terms-terms)) is catalog input, not a scanned citing file, and therefore adds no file or citation row ([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources), [§FS-values.3.2](FS-values.md#32-recognized-text-contexts)).
-
-### 2.3 A citation whose fetched snapshot is missing
-
-A citation parsed under a per-kind format is included even while its fetched
-snapshot is missing. Fetching changes resolution, not whether the citing file
-is covered. `cover` remains offline and never invokes the integration.
-
-### 2.4 A declaration-backed exact citation
-
-A declaration-backed exact marked citation retained through [§FS-config.3.2](FS-config.md#32-id--id-grammar) is
-counted at its written site and rendered with its exact ID. `cover`
-consumes the shared scanner result and adds no fallback grammar of its own.
+- A cross-project `<§><alias>/<ID>`, whether or not the alias resolves ([§FS-workspace.8.6.3](FS-workspace.md#863-qualified-citations-count-toward-the-citing-file), [§DF-cover-workspace-scope.2.2](../decisions/functional/DF-cover-workspace-scope.md#22-a-qualified-citation-counts-toward-the-citing-file)).
+- An owned declaration-local numeric citation, as a citation of its owner's ID and numeric section whose `text` is the local spelling ([§FS-citations.recognized.local-sections](FS-citations.md#recognizedlocal-sections-declaration-local-numeric-section-candidates)).
+- A value binding's citation; a value source is catalog input, not a scanned file, and adds no record or citation ([§FS-values.2.2](FS-values.md#22-declarations-from-value-sources), [§FS-values.3.2](FS-values.md#32-recognized-text-contexts)).
+- A citation parsed under a per-kind format while its fetched snapshot is missing: fetching changes what resolves, not what a file cites, and `cover` never runs the integration ([§REQ-runs-offline.1](../requirements/REQ-runs-offline.md#1-read-and-verification-paths-execute-nothing)).
 
 ## globs: `--glob` keeps the citations a pattern matches
 
-`grund cover [<path>] --glob <pattern>` keeps, in each file record, only the citations whose cited coordinate a pattern matches, as [§FS-coordinate-globs.matching.citations](FS-coordinate-globs.md#matchingcitations-on-refs-and-cover-a-glob-selects-citation-sites) matches it, judged against the project each citation targets ([§FS-coordinate-globs.scope.targets](FS-coordinate-globs.md#scopetargets-on-a-citation-the-qualifier-names-the-project-it-targets)). Repeated, the patterns union. Every scanned file keeps its record, in the same order and shape ([§FS-cover.3](FS-cover.md#3-outputs)): one left with no citation reads `(no citations)` in text and `"citations":[]` in JSON, so a filtered run still tells a scanned file from an unscanned one, and a pattern that matches nothing prints every record empty and exits `0`.
+`grund cover [<path>] --glob <pattern>` keeps, in each file record, only the citations whose cited coordinate a pattern matches, as [§FS-coordinate-globs.matching.citations](FS-coordinate-globs.md#matchingcitations-on-refs-and-cover-a-glob-selects-citation-sites) matches it, judged against the project each citation targets ([§FS-coordinate-globs.scope.targets](FS-coordinate-globs.md#scopetargets-on-a-citation-the-qualifier-names-the-project-it-targets)). Repeated, the patterns union. Every scanned file keeps its record, in the same order and shape ([§FS-cover.3](FS-cover.md#3-outputs)), even with no citation left, and a pattern that matches nothing prints every record empty and exits `0`. A refused pattern exits `2` before anything is printed, and the note of a pattern no kind in scope can start goes to stderr ([§FS-coordinate-globs.errors](FS-coordinate-globs.md#errors-refusals-notes-and-hints)).
 
 ```text
-$ grund cover src/ --glob 'FS-login.requirements.{lockout,reset}'
-src/login.py:
-  5:11 §FS-login.requirements.lockout
-  11:7 §FS-login.requirements.reset
+$ grund cover --glob 'FS-audit{,.**}'
+docs/fs/FS-audit.md:
+  (no citations)
+docs/fs/FS-ledger.md:
+  3:24 §FS-audit
+  7:13 §FS-audit.entries
+docs/fs/FS-login.md:
+  3:24 §FS-audit
+  7:33 §FS-audit.entries
+src/app.rs:
+  4:4 §FS-audit
 ```
-
-It composes with `<path>` and `--format`. A refused pattern exits `2` before anything is printed, and the note of a pattern no kind in scope can start goes to stderr ([§FS-coordinate-globs.errors](FS-coordinate-globs.md#errors-refusals-notes-and-hints)).
 
 ## 3. Outputs
 
 ### 3.1 `--format text` (default)
 
-Text output goes to stdout. It prints a heading line per scanned file, followed by either the citation line/column and token, or `(no citations)`:
+Text goes to stdout: a `<path>:` line per scanned file, then one line per citation, two spaces, `<line>:<column>`, a space and the token as written, or `(no citations)` under the same indent:
 
 ```
-$ grund cover src/
-src/login.rs:
-  14:5 §FS-login.2
-  28:9 §DF-password-policy
-src/untouched.rs:
+$ grund cover
+docs/functional-spec/FS-001-widget.md:
   (no citations)
+docs/functional-spec/README.md:
+  5:4 §FS-001-widget
+docs/notes.md:
+  3:28 §FS-001-widget
 ```
 
 ### 3.2 `--format json`
 
-NDJSON on stdout — one object per scanned file:
+NDJSON on stdout, one object per scanned file, `path` then `citations`:
 
 ```json
-{"path":"src/login.rs","citations":[{"path":"src/login.rs","line":14,"column":5,"id":"FS-login","section":"2","marker":true,"text":"§FS-login.2","enclosing_declaration":"AR-login-flow","enclosing_section":"2"},{"path":"src/login.rs","line":28,"column":9,"id":"DF-password-policy","section":null,"marker":true,"text":"§DF-password-policy","enclosing_declaration":null,"enclosing_section":null}]}
-{"path":"src/untouched.rs","citations":[]}
+{"path":"docs/functional-spec/FS-001-alpha.md","citations":[{"path":"docs/functional-spec/FS-001-alpha.md","line":3,"column":42,"id":"FS-002-beta","section":null,"marker":true,"text":"§FS-002-beta","enclosing_declaration":null,"enclosing_section":null},{"path":"docs/functional-spec/FS-001-alpha.md","line":7,"column":50,"id":"FS-002-beta","section":null,"marker":true,"text":"§FS-002-beta","enclosing_declaration":"FS-001-alpha","enclosing_section":null},{"path":"docs/functional-spec/FS-001-alpha.md","line":11,"column":23,"id":"FS-002-beta","section":null,"marker":true,"text":"§FS-002-beta","enclosing_declaration":"FS-001-alpha","enclosing_section":"terms"},{"path":"docs/functional-spec/FS-001-alpha.md","line":15,"column":26,"id":"FS-002-beta","section":null,"marker":true,"text":"§FS-002-beta","enclosing_declaration":"FS-001-alpha","enclosing_section":"1"}]}
+{"path":"docs/functional-spec/FS-002-beta.md","citations":[]}
 ```
 
-The nested citation objects intentionally carry `path` too, matching `refs` JSON byte shape so a caller can compare `cover` and `refs` without a field mapping layer. The parity is of **fields** — same names, same order, same types — not of every value: `refs` renders `id` for the target its query named, so an `<§>api/FS-login` site reads `"id":"FS-login"` there and `"id":"api/FS-login"` here. `refs` was handed the alias in the argument; `cover` was not, and dropping it would leave the row unable to say what it points at, since `project` names the *citing* project.
+Each citation object carries `path`, `line`, `column`, `id`, `section`, `marker`, `text`, `enclosing_declaration` and `enclosing_section`, in that order: the fields of a `refs --format json` record ([§FS-output-shapes.5.1](FS-output-shapes.md#51-refs---formatjson)), with the same names, order and types, so a caller can compare the two without a mapping layer. `id` says what the token says, keeping the alias a citation was written with and adding none to a local one ([§FS-workspace.8.6.4](FS-workspace.md#864-the-rendered-id-says-what-the-token-says)), while `refs <ID>` renders it as the target its query named, so an `<§>api/FS-login` site reads `"id":"FS-login"` there and `"id":"api/FS-login"` here.
 
-`enclosing_declaration` and `enclosing_section` name the unit the **citing** site sits in, and they sit after `text`. They are the citing-side counterpart of `id` and `section`, which name the target: `enclosing_declaration` is the nearest preceding declaration whose body range contains the site, or, in a Markdown file's front matter, the file's first declaration ([§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)), and `enclosing_section` the nearest accepted section path containing it ([AR-scanner.2.4.3](../architecture/AR-scanner.md#243-the-enclosing-declaration), [AR-scanner.2.4.4](../architecture/AR-scanner.md#244-the-enclosing-accepted-chapter)) — numbered and named alike, `"1"` under `## 1. Inputs` and `"terms"` under `## terms: Terms`. Both are `string | null` and both are always present: `enclosing_declaration` is `null` where the site sits in no declaration body, and `enclosing_section` is `null` where no accepted section contains it, which includes every site in a declaration's lead above its first section. The first occurrence of a duplicated path is the primary and keeps its sites, so that path still appears here; a site under the duplicate occurrence, or under a rejected path, has none. `enclosing_declaration` renders bare, under the **citing** project's `[id]` config — the declaration it names sits in the citing file, and `project` already says which project that is ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)).
+`enclosing_declaration` and `enclosing_section` name the declaration and section the **citing** site sits in, as `id` and `section` name its target, by the ownership rules of [§FS-cover.6.2](FS-cover.md#62-ownership-rules), numbered and named alike (`"1"` under `## 1. Inputs`, `"terms"` under `## terms: Terms`). Both are always present, each `string | null`: `enclosing_declaration` is `null` where no declaration owns the site, and `enclosing_section` is `null` where no accepted section contains it, every site in a declaration's lead above its first section included. `enclosing_declaration` renders bare, under the citing project's `[id]` config, since `project` already names that project.
 
-Together they are the `from` half of the `cites` edge ([§FS-rules.5.1](FS-rules.md#51-facts-and-identity)): a caller reads "`FS-cover`'s `terms` section cites `FS-terms`" out of the same scan that checked it, instead of re-parsing the tree to recover a unit the scan already held — the reconstruction [§FS-cover.5](FS-cover.md#5-why-this-exists) exists to remove. `cover` and `refs` pay the citing-side classification pass for them; the other read-only queries still skip it ([AR-scanner.2.4.2](../architecture/AR-scanner.md#242-citation-source-kind)).
-
-In workspace mode both the per-file object and each nested citation object gain a leading `"project":"<alias>"` — the project that contains the file, which is also the citing project — exactly as `refs` does ([§FS-workspace.8.2](FS-workspace.md#82-grund-refs), [§FS-workspace.8.6](FS-workspace.md#86-grund-cover)). Outside workspace mode the field is absent and the bytes above are unchanged:
+In workspace mode the file object and each citation object begin with `"project":"<alias>"`, the project that contains the file, which is the citing project ([§DF-cover-workspace-scope.2.3](../decisions/functional/DF-cover-workspace-scope.md#23-the-project-field-is-added-and-only-in-workspace-mode)); outside workspace mode the field is absent:
 
 ```json
-{"project":"api","path":"apps/api/src/login.rs","citations":[{"project":"api","path":"apps/api/src/login.rs","line":14,"column":5,"id":"FS-login","section":"2","marker":true,"text":"§FS-login.2","enclosing_declaration":"AR-login-flow","enclosing_section":"2"}]}
+{"project":"alpha","path":"packages/alpha/docs/FS-alpha-thing.md","citations":[{"project":"alpha","path":"packages/alpha/docs/FS-alpha-thing.md","line":3,"column":18,"id":"beta/FS-beta-thing","section":null,"marker":true,"text":"§beta/FS-beta-thing","enclosing_declaration":"FS-alpha-thing","enclosing_section":null}]}
 ```
 
 ## 4. Exit codes
 
-- `0` — scan succeeded; the emitted file records are the result, a `--glob` that matched nothing included.
-- `2` — the run could not read the tree it was asked about, in either of two ways:
-  - **A config the run needs does not load** — including a `[workspace]` block whose members cannot be expanded (a duplicate or invalid alias, a missing member, a block with nothing in scope). `cover` spans the whole workspace ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)), so it fails on such a tree exactly where `grund list` does.
-  - **A scan / I/O error in any project the run loaded** ([§FS-check.2](FS-check.md#2-outputs) partial-scan semantics apply: records found before or after the unreadable file may print, but the result is not trustworthy as complete). A member's unreadable file fails the run at the workspace root, because the grouping the run just printed is incomplete for the tree it claimed ([§FS-workspace.8.7](FS-workspace.md#87-output-and-exit-codes)).
+- `0` — the scan succeeded, a `--glob` that matched nothing included.
+- `2` — the run could not read the tree it was asked about, or refused the request:
+  - **A config the run needs does not load**, a `[workspace]` block whose members cannot be expanded included (a duplicate or invalid alias, a missing member, a block with nothing in scope); spanning the whole workspace ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)), `cover` fails on such a tree exactly where `grund list` does.
+  - **A scan or I/O failure in any project the run loaded**, reported as [§FS-check.2.4](FS-check.md#24-an-incomplete-run) says: records may print around it, but the result is not complete. A member's unreadable file fails a run at the workspace root, because the grouping it printed is incomplete for the tree it claimed ([§DF-cover-workspace-scope.4](../decisions/functional/DF-cover-workspace-scope.md#4-consequences)).
+  - **A usage error in the request**, `--glob` beside `--lines` or a refused pattern among them, answered before any output ([§FS-cover.6.4](FS-cover.md#64-errors), [§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)).
 
-With `--lines` or `--glob`, a third way to exit `2` is a usage error in the request itself, `--glob` beside `--lines` included, or a refused pattern, answered before any output ([§FS-cover.6.4](FS-cover.md#64-errors), [§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)).
-
-There is no `1`: `cover` is a query over the current tree and has no finding class of its own.
+There is no `1`: `cover` is a query over the current tree and has no finding of its own.
 
 ## 5. Why this exists
 
-`grund refs <ID>` answers "who cites this ID?" and `grund list` answers "what IDs exist?". The co-change gate needs the inverse grouping: "for this changed file, what IDs does it cite?" A shell script could run `grund refs` once per ID and regroup the output, but that is slower, loses files with zero citations, and makes every recipe reconstruct scanner state. `cover` provides that view directly while preserving the no-git, no-policy boundary: git diff is an input to the recipe, not to `grund cover`. Which declaration and section own a changed line is the same reconstruction one level down — a caller's own heading regex misplaces named sections, depth rules, fences and doc-comment ends — so `--lines` answers it from the scan as well ([§FS-cover.6](FS-cover.md#6-line-ownership)).
+`grund refs <ID>` answers "who cites this ID?" and `grund list` answers "what IDs exist?". The co-change check needs the inverse grouping: "for this changed file, what IDs does it cite?" Regrouping `grund refs` once per ID is slower, loses the files that cite nothing, and makes every recipe reconstruct what the scan already holds. Which declaration and section own a changed line is the same reconstruction one level down, where a caller's own heading regex misplaces named sections, depth rules, fences and doc-comment ends.
 
 ## 6. Line ownership
 
-`grund cover <file> --lines <range>` reports, for each requested range, which declaration bodies and which sections the range's lines lie in, by the rules the scan already applies to a citation site's `enclosing_declaration` and `enclosing_section` ([§FS-cover.3.2](FS-cover.md#32---format-json)). A caller that holds a diff's line numbers can then name the spec points a hunk edits without parsing the file itself.
-
-The input is a path and line numbers in the current tree, never a revision or a diff ([§FS-cover.5](FS-cover.md#5-why-this-exists), [§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)): the caller already has the line numbers from its diff, and they must be numbers of the tree on disk. Ownership is **structural** — which body a line lies in. It is not citation coverage and says nothing about whether a line is grounded, so the co-change recipe's rule against inferring coverage from a nearby citation is unaffected ([§FS-cochange-recipe.evidence](FS-cochange-recipe.md#evidence-both-edits-for-one-resolved-direct-target)).
+`grund cover <file> --lines <range>` reports, for each requested range, which declaration bodies and which sections the range's lines lie in.
 
 ### 6.1 Input
 
-- Exactly one `<path>`, and it must be a file ([§FS-cover.6.4](FS-cover.md#64-errors)). Discovery and scope are those of any other `cover` run with that path ([§FS-cover.1](FS-cover.md#1-inputs)): a file is narrower than its config root, so the run is one narrowed scan of the enclosing project ([§FS-workspace.8.6.1](FS-workspace.md#861-a-narrower-path-is-one-narrowed-scan)).
-- `--lines <N>` or `--lines <N>-<M>`, also spelled `--lines=<…>`, with 1-based line numbers and `N <= M`; `<N>` alone is `<N>-<N>`. The range is inclusive at both ends and its end must not pass the file's last line.
+- Exactly one `<path>`, and it must be a file ([§FS-cover.6.4](FS-cover.md#64-errors)). Discovery is that of any `cover` run with that path ([§FS-cover.1](FS-cover.md#1-inputs)), and a file is narrower than its config root, so the run is one narrowed scan of the enclosing project ([§FS-scan.path.cover](FS-scan.md#pathcover-cover-runs-one-narrowed-scan)).
+- `--lines <N>` or `--lines <N>-<M>`, also spelled `--lines=<…>`, with 1-based line numbers and `N <= M`; `<N>` alone is `<N>-<N>`. The range is inclusive at both ends and must end at or before the file's last line. The numbers are those of the file on disk, never of a revision or a diff ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)).
 - `--lines` may be repeated, so a caller sends every hunk of one file in one scan. Each range is answered independently, in the order given; overlapping or repeated ranges are answered as often as they are asked.
-- `--format` and `[output] format` apply as to any `cover` run, including [§FS-cover.1.1](FS-cover.md#11-an-unsupported---format-is-answered-before-the-load).
 
-Under `--lines` the per-file record of [§FS-cover.3](FS-cover.md#3-outputs) is not emitted; the two record shapes never mix in one run. Without `--lines`, `cover` prints exactly what it printed before.
+Under `--lines` the per-file record of [§FS-cover.3](FS-cover.md#3-outputs) is not emitted; the two record shapes never mix in one run.
 
 ### 6.2 Ownership rules
 
-A line's **owner** is the declaration whose body range contains it, the nearest preceding one when bodies nest, or, for a line of a Markdown file's front matter, the file's first declaration ([§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration)); its **section** is the innermost accepted section of that declaration containing it, or none. These are the scan's own rules for a citation site, applied to every line, so a line that carries a citation is owned exactly as that citation's `enclosing_declaration` / `enclosing_section` say. At the edges:
+A line's **owner** is the declaration whose body range contains it, the nearest preceding one when bodies nest, and its **section** the innermost accepted section of that declaration containing it, or none; a line of a Markdown file's front matter has the owner and section [§FS-check.1.1.5.2.1](FS-check.md#11521-its-citations-belong-to-the-files-first-declaration) gives it. These are the scan's own rules for a citation site, applied to every line, so a line that carries a citation is owned exactly as that citation's `enclosing_declaration` and `enclosing_section` say. Ownership is structural: it says which declaration owns a line, not whether a citation covers it, so a recipe infers no coverage from it ([§FS-cochange-recipe.evidence](FS-cochange-recipe.md#evidence-both-edits-for-one-resolved-direct-target)). At the edges:
 
-- A declaration's heading line belongs to that declaration, under no section.
-- A section heading line belongs to its own section.
-- A blank line belongs to the unit it sits in: one just above a heading still belongs to the section above it.
-- A Markdown body ends at the next heading of the same or a shallower level; from there on nothing owns the lines unless another declaration does.
+- A declaration's heading line belongs to that declaration, under no section; a section heading line belongs to its own section.
+- A blank line belongs to the declaration and section it sits in: one just above a heading still belongs to the section above it.
+- Past the end of a body ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)), nothing owns a line unless another declaration does.
 - A rejected or duplicate section heading closes the section above it and opens nothing; its lines belong to the declaration under no section until an accepted heading opens one. The first occurrence of a duplicated path keeps its lines.
-- A `#` line inside a fenced code block is not a heading and changes nothing.
 - A stub owns only its one line.
-- A line of the front matter of a declaration whose kind declares a `front-matter` field is in `front-matter.<key>` inside a key's slice and in `front-matter` elsewhere in the block ([§FS-fields.front-matter.surfaces](FS-fields.md#front-mattersurfaces-what-each-surface-does-with-them)).
 - A source declaration owns its comment or docstring block up to the next declaration line in that block. The code below the block is owned by nothing: grund does not understand scopes ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)).
 
 ### 6.3 Output
 
-One record per `--lines`, in the order given. A record lists the range's **owner runs**: the maximal runs of consecutive lines owned by one declaration, clipped to the range, in line order. A range that crosses a declaration boundary has two or more, and one declaration appears twice when a nested declaration's body interrupts it. Each owner run is partitioned into **section runs**, the maximal runs of lines under one innermost section, where no section is `null` — the lead, or lines no accepted section contains. Lines owned by nothing appear in no owner run.
+One record per `--lines`, in the order given. A record lists the range's **owner runs**: the maximal runs of consecutive lines owned by one declaration, clipped to the range, in line order. One declaration appears twice when a nested declaration's body interrupts it. Each owner run is partitioned into **section runs**, the maximal runs of lines under one innermost section, where no section is `null`: the lead, or lines no accepted section contains. Lines owned by nothing appear in no owner run.
 
 `--format json` writes one NDJSON object per range, in the shape [§FS-output-shapes.5.3](FS-output-shapes.md#53-cover---lines---formatjson) fixes:
 
 ```json
-{"path":"docs/functional-spec/FS-config.md","start":115,"end":124,"owners":[{"declaration":"FS-config","start":115,"end":124,"sections":[{"section":"requirements.7","start":115,"end":118},{"section":"requirements.8","start":119,"end":122},{"section":"1","start":123,"end":124}]}]}
-{"path":"src/report.rs","start":347,"end":358,"owners":[{"declaration":"AR-checker","start":347,"end":355,"sections":[{"section":"4","start":347,"end":355}]}]}
+{"path":"docs/functional-spec/FS-001-alpha.md","start":1,"end":14,"owners":[{"declaration":"FS-001-alpha","start":5,"end":14,"sections":[{"section":null,"start":5,"end":8},{"section":"terms","start":9,"end":12},{"section":"terms.words","start":13,"end":14}]}]}
+{"path":"docs/functional-spec/FS-001-alpha.md","start":33,"end":49,"owners":[{"declaration":"FS-001-alpha","start":33,"end":34,"sections":[{"section":"2","start":33,"end":34}]},{"declaration":"FS-002-beta","start":39,"end":46,"sections":[{"section":null,"start":39,"end":42},{"section":"1","start":43,"end":46}]}]}
 ```
 
-`"owners":[]` means no line of the range is owned. `path` renders as on the [§FS-cover.3.2](FS-cover.md#32---format-json) record of the same run, and `declaration` renders bare, as `enclosing_declaration` does.
-
-`--format text` prints, per range, a heading `<path>:<range>`, then one row per run, in line order: two spaces, the run, two spaces, and its unit — `<declaration>` for a run under no section, `<declaration>.<section>` under one, `(no owner)` for lines nothing owns. A range or run of one line prints as `<N>`, a longer one as `<N>-<M>`:
+`--format text` prints, per range, a heading `<path>:<range>`, then one row per run, in line order: two spaces, the run, two spaces, and what owns it: `<declaration>` for a run under no section, `<declaration>.<section>` under one, `(no owner)` for lines nothing owns. A range or run of one line prints as `<N>`, a longer one as `<N>-<M>`:
 
 ```
-$ grund cover docs/functional-spec/FS-config.md --lines 115-124
-docs/functional-spec/FS-config.md:115-124
-  115-118  FS-config.requirements.7
-  119-122  FS-config.requirements.8
-  123-124  FS-config.1
+$ grund cover docs/functional-spec/FS-001-alpha.md --lines 1-14 --lines 33-49
+docs/functional-spec/FS-001-alpha.md:1-14
+  1-4  (no owner)
+  5-8  FS-001-alpha
+  9-12  FS-001-alpha.terms
+  13-14  FS-001-alpha.terms.words
+docs/functional-spec/FS-001-alpha.md:33-49
+  33-34  FS-001-alpha.2
+  35-38  (no owner)
+  39-42  FS-002-beta
+  43-46  FS-002-beta.1
+  47-49  (no owner)
 ```
 
-A file that exists but that the scan does not read — an excluded path, or a type grund does not scan — produces no record and exits `0`, which is how `cover` already tells "not scanned" from "scanned" ([§FS-cover.2](FS-cover.md#2-behaviour)).
+A file that exists but that the scan does not read, an excluded path or a type grund does not scan, produces no record and exits `0` ([§FS-cover.2](FS-cover.md#2-behaviour)).
 
 ### 6.4 Errors
 
@@ -186,10 +165,10 @@ Each of these is a usage error: one `error:` line on stderr, nothing on stdout, 
 - `--lines` with no `<path>`: `error: --lines needs a file path`.
 - `--lines` with a directory: ``error: --lines needs a file path, and `<path>` is a directory``.
 - `--lines` with no value: `error: --lines requires a value`.
-- `--lines` beside `--glob`, which filters the grouping `--lines` does not print: `error: --glob cannot be combined with --lines`, before the path is read.
+- `--lines` beside `--glob`, before the path is read: `error: --glob cannot be combined with --lines`.
 - A range that is not `<N>` or `<N>-<M>` in decimal digits: ``error: --lines takes <N> or <N>-<M>, got `<range>` ``.
 - A `0` in a range: ``error: --lines `<range>`: lines are numbered from 1``.
 - An end before its start: ``error: --lines `<range>` ends before it starts``.
-- An end past the file's last line, the commonest mistake, line numbers taken from the old side of a diff: ``error: --lines `<range>` ends past line <L>, the last line of `<path>` ``.
+- An end past the file's last line: ``error: --lines `<range>` ends past line <L>, the last line of `<path>` ``.
 
-`<path>` and `<range>` are echoed as the caller wrote them; `<L>` is the file's line count. A path that does not exist exits `2` as it does without `--lines`, and so does a scan that cannot read the file ([§FS-cover.4](FS-cover.md#4-exit-codes)). There is still no exit `1`.
+`<path>` and `<range>` are echoed as the caller wrote them; `<L>` is the file's line count. A path that does not exist exits `2` as it does without `--lines`, and so does a scan that cannot read the file ([§FS-cover.4](FS-cover.md#4-exit-codes)).
