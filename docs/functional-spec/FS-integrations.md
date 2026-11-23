@@ -1,6 +1,11 @@
 # FS-integrations: grund prints and installs its rendering-layer integrations
 
-Locally, a plain `§<ID>` citation is meant to be clickable and hoverable — resolution belongs to the rendering layer ([§DF-neural-link-generation](../decisions/functional/DF-neural-link-generation.md#df-neural-link-generation-agents-compose-clickable-citation-links-themselves-grund-does-not-grow-a-link-command)). That layer is user-side, one-time configuration in the spirit of the editor LSP snippets ([§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor)): grund ships no first-party marketplace plugin. `grund integrations` is the one-stop shop that makes those integrations installable by humans and agents alike — the binary carries every artifact and prints it on demand, in the same dry-run-first ethos as `grund completions` ([§FS-completions](FS-completions.md#fs-completions-grund-completes-declared-ids-in-shells)) and `grund init` ([§FS-init](FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo)). It exists so that `cargo install grund` is enough to get clickable citations in a terminal or editor, serving [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work) without asking the user to hand-assemble scripts. Why a one-time-setup command earns a slot on the frozen subcommand surface when a per-citation `link` command did not is recorded in [§DF-integrations-command](../decisions/functional/DF-integrations-command.md#df-integrations-command-integrations-earns-a-cli-slot-as-one-time-setup-where-a-per-citation-link-command-did-not).
+A plain `§<ID>` citation is made clickable where the reader is by a rendering layer, not by
+grund ([§DF-neural-link-generation](../decisions/functional/DF-neural-link-generation.md#df-neural-link-generation-agents-compose-clickable-citation-links-themselves-grund-does-not-grow-a-link-command)). `grund integrations` prints and installs that layer: the
+binary carries every client's artifact, prints it on demand, and writes it into the client's
+configuration only when asked, so `cargo install grund` is enough to get clickable
+citations in a terminal or editor. Why a one-time setup step is a subcommand is
+[§DF-integrations-command](../decisions/functional/DF-integrations-command.md#df-integrations-command-integrations-earns-a-cli-slot-as-one-time-setup-where-a-per-citation-link-command-did-not). Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
 
 ## terms: Terms
 
@@ -17,23 +22,56 @@ workspace, member, alias), and [§FS-terms.terms.5](FS-terms.md#terms5-findings)
 
 ## requirements: What every installed integration holds to
 
-Four requirements on the integrations as a whole, each carrying a mark in the sense of [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to). Two more are left out because a requirement already states them: *detection and every printed form write nothing* is [§REQ-no-data-loss.1](../requirements/REQ-no-data-loss.md#1-the-query-surface-never-writes), and *`--write` touches only the marked things it owns* is [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own).
+Two promises on the integrations as a whole are stated where they live: detection and every
+printed form write nothing ([§REQ-no-data-loss.1](../requirements/REQ-no-data-loss.md#1-the-query-surface-never-writes)), and `--write` touches only the marked
+things it owns ([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)).
 
-### requirements.through-grund: Every client answers a citation with what `grund <ID>` answers — realized, directional for the next client
+### requirements.through-grund: Every client answers a citation with what `grund <ID>` answers
 
-No client resolves a citation on its own. The terminal resolver asks `grund <ID>[.<section>] --format json` from the root it climbs to ([§FS-integrations.3.1.3](FS-integrations.md#313-find-the-root-the-climb), [§FS-integrations.3.1.5](FS-integrations.md#315-resolve-and-join)), the editor extension asks the `--brief` form ([§FS-integrations.3.2.1](FS-integrations.md#321-resolving-a-link)), a peek is the same resolver in another mode ([§FS-integrations.3.3.4](FS-integrations.md#334-the-peek-resolver)), and a keyboard pick hands its match to the call a click makes ([§FS-integrations.3.3.3](FS-integrations.md#333-the-keyboard-form)); a qualified citation goes through grund's alias routing and a shorthand through the engine's own rule, never through a client's regex ([§FS-integrations.3.1.7](FS-integrations.md#317-qualified-and-shorthand-citations)). So a click, a peek and a hover cannot disagree with `grund <ID>` or with each other; only a location token, which is not a citation, opens without asking ([§FS-integrations.3.1.9](FS-integrations.md#319-opening-a-location)). This binds the next client, gesture and citation form to resolve by calling `grund` too. Serves [§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree) and [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
+No client resolves a citation on its own: the terminal resolver asks
+`grund <ID>[.<section>] --format json`, so a qualified or shorthand citation resolves through
+`grund`'s own rules, never a client's regex ([§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)); the editor extension asks
+the `--brief` form ([§FS-integrations.3.2](FS-integrations.md#32-editor-clients-vscode-codium)); a peek is the same resolver in `--peek` mode, and a
+keyboard pick goes through the call a click makes ([§FS-integrations.3.3](FS-integrations.md#33-reading-a-declaration-without-leaving)). So a click, a peek
+and a hover cannot disagree with `grund <ID>` or with each other; only a location, which is
+not a citation, opens without asking ([§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)). Every client holds to this, and
+it binds the next client, gesture and citation form to resolve by calling `grund` too. Serves
+[§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree) and [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
 
-### requirements.loud: An integration that cannot work says so — realized, directional for the next client
+### requirements.loud: An integration that cannot work says so
 
-Every silent failure this specification names for the six clients is designed out or reported. Designed out: the spawn's `PATH` ([§FS-integrations.3.1.10](FS-integrations.md#3110-the-spawns-path)), WezTerm's mouse capture and Flatpak boundary ([§FS-integrations.3.1.12](FS-integrations.md#3112-wezterm-mouse-capture), [§FS-integrations.3.1.13](FS-integrations.md#3113-wezterm-the-flatpak-boundary)), VSCodium's extensions root ([§FS-integrations.3.2.4](FS-integrations.md#324-codium)) and `$XDG_CONFIG_HOME` ([§FS-integrations.4.1.7](FS-integrations.md#417-where-a--target-resolves)). Reported: a click that arrives with no pane directory ([§FS-integrations.3.1.15](FS-integrations.md#3115-wezterm-osc-7)), a config that never calls the installed helper ([§FS-integrations.4.1.3](FS-integrations.md#413-the-unwired-config-note)), an agent skipped or gated to another form ([§FS-integrations.4.3.9](FS-integrations.md#439-only-agents-in-use), [§FS-integrations.4.4.4](FS-integrations.md#444-both-layers-in-the-report)), a manual client's state as not knowable rather than not installed ([§FS-integrations.3.4.2](FS-integrations.md#342---write-on-a-manual-client)), and the prerequisites `--write` cannot perform, in the guide detection names ([§FS-integrations.2.1](FS-integrations.md#21-the-setup-guide)). This binds the next client to name each silent failure it could cost in its own section and to prevent or report it, because a citation that silently does nothing is indistinguishable from an integration never installed. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
+A citation that silently does nothing looks like an integration never installed, so every
+silent failure named here is designed out or reported. Designed out: the
+spawn's `PATH`, WezTerm's mouse capture and Flatpak boundary ([§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)),
+VSCodium's extensions root ([§FS-integrations.3.2](FS-integrations.md#32-editor-clients-vscode-codium)) and `$XDG_CONFIG_HOME`
+([§FS-integrations.4.1.7](FS-integrations.md#417-where-a--target-resolves)). Reported: a click with no pane directory ([§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)), a
+config that never calls the installed helper ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)), an agent skipped or gated
+to another form ([§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files), [§FS-integrations.4.4](FS-integrations.md#44-per-agent-overrides)), a manual client's state as not
+knowable ([§FS-integrations.3.4](FS-integrations.md#34-manual-client-iterm2)), and the prerequisites `--write` cannot perform, in the guide
+detection names ([§FS-integrations.2](FS-integrations.md#2-detection)). Every client holds to this, and it binds the next one to
+prevent or report each silent failure it could cost. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
 
-### requirements.any-repository: What is installed once serves every repository the user opens — realized
+### requirements.any-repository: What is installed once serves every repository the user opens
 
-The artifacts are user-global and written before grund knows which repositories they will meet, so nothing in them is one repository's. The matchers and the resolver accept every configured marker ([§FS-integrations.3.1.4](FS-integrations.md#314-strip-the-marker-keep-the-section)); the resolver and the extension climb to the first root that resolves the citation, past a workspace member's own config ([§FS-integrations.3.1.3](FS-integrations.md#313-find-the-root-the-climb), [§FS-integrations.3.2.2](FS-integrations.md#322-the-config-root)); the preference is the machine's ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)); and the instruction blocks scope themselves to grund repositories and carry the policy while each repository's entrypoint carries its syntax ([§FS-integrations.4.3.10](FS-integrations.md#4310-the-blocks-carry-policy-not-syntax), [§FS-integrations.4.3.11](FS-integrations.md#4311-the-plain-block-text)). Serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable), whose per-repository marker no installed artifact may undo, and [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
+The artifacts are user-global, so nothing in them is one repository's. The matchers and the
+resolver accept every configured marker, and the resolver and the extension climb to the first
+root that resolves the citation, past a workspace member's own config ([§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2),
+[§FS-integrations.3.2](FS-integrations.md#32-editor-clients-vscode-codium)); the preference is the machine's ([§FS-integrations.4.3.1](FS-integrations.md#431-the-conversation-key)); and the
+instruction blocks scope themselves to grund repositories and name no marker, carrying the
+policy while each repository's entrypoint carries its syntax and the repository-web rule
+([§FS-integrations.4.3.11](FS-integrations.md#4311-the-plain-block-text), [§FS-integrations.4.3.12](FS-integrations.md#4312-the-link-block-texts), [§FS-init.2.3.6](FS-init.md#236-clickable-citations)). Serves
+[§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable), whose per-repository marker no installed artifact may undo, and
+[§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
 
-### requirements.never-worse: No instruction grund writes leaves a citation harder to read than a bare one — realized, directional for the next agent or target
+### requirements.never-worse: No instruction grund writes leaves a citation harder to read than a bare one
 
-The linked form falls back to the bare citation when unsure ([§FS-integrations.1.1](FS-integrations.md#11---conversation)), the default `file` target degrades to a readable location where its scheme does not dispatch ([§FS-integrations.4.3.2](FS-integrations.md#432-the-conversation_target-key)), an agent and target pair no click test has verified is written as `path` ([§FS-integrations.4.3.3](FS-integrations.md#433-the-per-agent-gate)), and a per-agent override moves the request, never the gate's verdict ([§FS-integrations.4.4.3](FS-integrations.md#443-the-gate-still-runs-last)). This binds a new agent or target to enter the gate at `path` and leave it only once a click test verifies the pair, since the failure the gate exists for, a citation erased where nothing says so, is silent. Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
+The linked form falls back to the bare citation when unsure ([§FS-integrations.4.3.12](FS-integrations.md#4312-the-link-block-texts)), the
+default `file` target degrades to a readable location where its scheme does not dispatch
+([§FS-integrations.4.3.2](FS-integrations.md#432-the-conversation_target-key)), a pair of agent and target no click test has verified is written as
+`path` ([§FS-integrations.4.3.3](FS-integrations.md#433-the-per-agent-gate)), and a per-agent override moves the request, never the
+gate's verdict ([§FS-integrations.4.4](FS-integrations.md#44-per-agent-overrides)). Every agent and target holds to this, and it binds a
+new one to enter the gate at `path` until a click test verifies the pair, because a citation
+erased where nothing says so is a silent failure. Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
 
 ## 1. User-facing command
 
@@ -41,50 +79,93 @@ The linked form falls back to the bare citation when unsure ([§FS-integrations.
 grund integrations [<client>] [--write] [--conversation plain|link] [--conversation-target <target>] [--agent <name>] [--format text|json]
 ```
 
-- With no `<client>` and no write flags, grund detects the caller's environment ([§FS-integrations.2](FS-integrations.md#2-detection)) and prints the integrations that apply, each with its one-line install command. `--format json` prints the same detection as a machine-shaped plan ([§FS-integrations.5](FS-integrations.md#5-json-format)).
-- With a `<client>` — one of `codium`, `iterm2`, `kitty`, `tmux`, `vscode`, `wezterm` — grund prints that client's integration: the config snippet plus, for the terminal clients, the embedded `grund-open` resolver script ([§FS-integrations.3](FS-integrations.md#3-per-client-artifacts)). Deterministic and environment-independent ([§FS-integrations.6](FS-integrations.md#6-determinism-and-exit-codes)).
-- With an explicit client, `--write` applies the integration to the client's real configuration instead of printing it, as a managed, marked block ([§FS-integrations.4](FS-integrations.md#4-managed-writes---write)), and synchronizes the user's local-conversation preference into global agent instructions ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)). A client with no writable configuration installs what it can and prints the rest for the user to apply ([§FS-integrations.3.4](FS-integrations.md#34-manual-client-iterm2)).
+- With no `<client>` and no write flags, grund detects the caller's environment and prints
+  the integrations that apply, each with its one-line install ([§FS-integrations.2](FS-integrations.md#2-detection)), or, under
+  `--format json`, the same detection as a plan ([§FS-integrations.5](FS-integrations.md#5-json-format)).
+- With a `<client>`, one of `codium`, `iterm2`, `kitty`, `tmux`, `vscode` or `wezterm`, grund
+  prints that client's integration ([§FS-integrations.3](FS-integrations.md#3-per-client-artifacts)).
+- With a `<client>` and `--write`, grund installs the integration into the client's
+  configuration instead of printing it, and records the user's local-conversation preference
+  in the global agent instructions ([§FS-integrations.4](FS-integrations.md#4-managed-writes---write)); the manual client installs what it
+  can and prints the rest ([§FS-integrations.3.4](FS-integrations.md#34-manual-client-iterm2)).
 
 ### 1.1 `--conversation`
 
-`--conversation plain|link` overrides the user preference while writing, and is accepted only with `--write`. When present without a client, the command updates only the user preference and global agent instructions; this preference-only form is unambiguous and does not install an arbitrary client. With no override, a client installation records `plain` on first use and preserves the stored preference thereafter. `plain` tells agents to write bare citations for the installed rendering layer, while `link` tells them to carry the declaration's location with the citation, addressed by the target of [§FS-integrations.4.3.2](FS-integrations.md#432-the-conversation_target-key) — a Markdown link over an absolute URI ([§DF-conversation-link-target](../decisions/functional/DF-conversation-link-target.md#df-conversation-link-target-the-conversation-link-form-is-a-markdown-link-over-an-absolute-uri-addressed-per-machine)), or plain `path:line` text under the `path` target — and fall back to the bare citation when uncertain.
+`--conversation plain|link` sets the user's local-conversation preference
+([§FS-integrations.4.3.1](FS-integrations.md#431-the-conversation-key)) and is accepted only with `--write`. Without a client, the write
+updates only the preference and the global agent instructions and installs no client. With no
+conversation flag, the first client write records `plain`, and a stored preference survives
+later writes unless a flag changes it.
 
 ### 1.2 `--conversation-target` and `--agent`
 
-`--conversation-target <target>` selects how the `link` form addresses the declaration — one of `file` (default), `path`, `web`, `vscode`, `vscodium`, `cursor` ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)). `--agent <name>` scopes it to a single agent instead of the machine ([§FS-integrations.4.4](FS-integrations.md#44-per-agent-overrides)). Like `--conversation`, it is accepted only with `--write`, and either flag alone is enough for the clientless preference-only form ([§FS-integrations.1.1](FS-integrations.md#11---conversation)). It is accepted while the effective preference is `plain`, where it is recorded and inert: a machine that later switches to `link` keeps the target it already chose. An unknown value is a CLI-level error listing the accepted set, exit `2`. Bare `grund integrations --write`, with neither a client nor a conversation flag, remains an error.
+`--conversation-target <target>` sets how the `link` form addresses a declaration, one of
+`file` (default), `path`, `web`, `vscode`, `vscodium` or `cursor` ([§FS-integrations.4.3.2](FS-integrations.md#432-the-conversation_target-key)),
+and `--agent <name>` scopes it to one agent instead of the machine ([§FS-integrations.4.4](FS-integrations.md#44-per-agent-overrides)).
+Both are accepted only with `--write`, `--agent` only beside `--conversation-target`, and
+either conversation flag is enough for the clientless form of [§FS-integrations.1.1](FS-integrations.md#11---conversation). A target
+given while the effective preference is `plain` is recorded and inert, so a machine that
+later switches to `link` keeps the target it chose. An unknown target or agent is a
+CLI-level error listing the accepted set, exit `2`, and so is bare
+`grund integrations --write`, with neither a client nor a conversation flag
+([§FS-integrations.6.2](FS-integrations.md#62-exit-codes)).
 
 ### 1.3 Which side owns what
 
-The argument parsing above and every byte below belong to the CLI, like every other subcommand's ([§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)): the engine answers with data — which clients the environment detects ([§FS-integrations.2](FS-integrations.md#2-detection)), each client's artifact ([§FS-integrations.3](FS-integrations.md#3-per-client-artifacts)), and what a `--write` would change or has changed ([§FS-integrations.4](FS-integrations.md#4-managed-writes---write)) — and renders none of it, so the text form and the JSON plan of [§FS-integrations.5](FS-integrations.md#5-json-format) are one frontend's two spellings of one answer ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)). Nothing a user sees turns on this: the bytes, the frozen client set, the idempotence of `--write` and the exit codes of [§FS-integrations.6](FS-integrations.md#6-determinism-and-exit-codes) are the command's, wherever they are assembled.
+`integrations(IntegrationsOpts)` is the one engine operation behind every form of the
+command, and it answers with data, rendering none of it ([§FS-distribution.3.1.3](FS-distribution.md#313-integrations-is-the-one-integrations-entry-point)). The CLI's
+text and JSON plan and the Python and Node `integrations` operations
+([§FS-distribution.3.3.6](FS-distribution.md#336-explicit-mutation-opt-ins)) all render that answer, so nothing a `--write` changes is planned,
+spliced or written outside it.
 
-The CLI's text and its `--format json` plan both render the engine's `integrations` answer of [§FS-integrations.1.3.1](FS-integrations.md#131-the-engines-answer), and so do the Python and Node `integrations` operations ([§FS-distribution.3.3.6](FS-distribution.md#336-explicit-mutation-opt-ins)): nothing a `--write` changes is planned, spliced or written outside it, so the CLI keeps only its argument parsing, its messages and the command line it prints.
+`IntegrationsOpts` is built from `Default` and carries `client: Option<IntegrationClient>`,
+`write: bool`, `conversation: Option<ConversationRendering>`,
+`conversation_target: Option<ConversationTarget>` and `agent: Option<IntegrationAgent>`, the
+command's arguments in their closed vocabularies. The operation refuses a combination
+[§FS-integrations.6.2](FS-integrations.md#62-exit-codes) refuses before it reads anything, reads the preference file once
+([§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error)), and plans every guidance target before it writes the first
+([§FS-integrations.4.3.14](FS-integrations.md#4314-delimiters-and-failures)).
 
-#### 1.3.1 The engine's answer
-
-`integrations(IntegrationsOpts)` is the one engine operation behind every form of the command ([§FS-distribution.3.1.3](FS-distribution.md#313-integrations-is-the-one-integrations-entry-point)). `IntegrationsOpts` is built from `Default` and carries `client: Option<IntegrationClient>`, `write: bool`, `conversation: Option<ConversationRendering>`, `conversation_target: Option<ConversationTarget>` and `agent: Option<IntegrationAgent>`, the command's arguments in their closed vocabularies. It refuses a combination of these fields that [§FS-integrations.6.2](FS-integrations.md#62-exit-codes) refuses before it reads anything, reads the preference file before any client artifact is written, and plans every guidance target before it writes the first of them, so a run fails at the point and with the partial writes of [§FS-integrations.4.3.14](FS-integrations.md#4314-delimiters-and-failures).
-
-#### 1.3.2 The output
-
-`IntegrationsOutput` holds only facts, never a line of output:
+`IntegrationsOutput` holds facts, never a line of output:
 
 - `detected`, the clients the environment shows ([§FS-integrations.2](FS-integrations.md#2-detection));
-- `clients`, one `IntegrationClientStatus` per client: its client, its `InstallKind`, whether it is detected, whether its artifacts are installed and current, and its config target. It carries no install command: `grund integrations <client> --write` is the CLI's own argv, which the CLI builds from the client's `name` and which the JSON projection keeps under its `install` key;
-- `artifact`, an `IntegrationArtifact` for a named client: its snippet, and the resolver, `package.json` and `extension.js` as content with the resolver's target ([§FS-integrations.3](FS-integrations.md#3-per-client-artifacts));
-- `events`, one `IntegrationEvent` per target a `--write` touched, in the order it touched them: its path, an `IntegrationOutcome` (`Wrote`, `Appended`, `Updated`, `Unchanged` or `Skipped`, whose `name` gives the verbs of [§FS-integrations.4.1.6](FS-integrations.md#416-outcome-verbs), `exists` for `Unchanged`), and an optional `IntegrationNote`: the WezTerm config's missing apply call ([§FS-integrations.4.1.3](FS-integrations.md#413-the-unwired-config-note)), the guidance form an agent's block was written in with its requested target and whether an agent override chose it ([§FS-integrations.4.4.4](FS-integrations.md#444-both-layers-in-the-report)), or the agent home whose absence skipped it ([§FS-integrations.4.3.9](FS-integrations.md#439-only-agents-in-use));
-- `manual_steps`, one `IntegrationManualStep` per client the user must set up by hand, naming the client and its snippet ([§FS-integrations.3.4.2](FS-integrations.md#342---write-on-a-manual-client));
-- `warnings`, the user configuration's cautions as `Finding`s with path and line ([§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error)).
+- `clients`, one `IntegrationClientStatus` per client: its client, its `InstallKind`, whether
+  it is detected, whether its artifacts are installed and current, and its config target, but
+  no install command, which the CLI builds from the client's `name` and the JSON plan prints
+  as `install`;
+- `artifact`, an `IntegrationArtifact` for a named client: its snippet, and the resolver,
+  `package.json` and `extension.js` as content with the resolver's target
+  ([§FS-integrations.3](FS-integrations.md#3-per-client-artifacts));
+- `events`, one `IntegrationEvent` per target a `--write` touched, in order: its path, an
+  `IntegrationOutcome` (`Wrote`, `Appended`, `Updated`, `Unchanged` or `Skipped`, whose `name`
+  is the verb of [§FS-integrations.4.1.6](FS-integrations.md#416-outcome-verbs), `exists` for `Unchanged`), and an optional
+  `IntegrationNote`: the WezTerm config's missing apply call ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)), an
+  agent block's written form, requested target and override ([§FS-integrations.4.4](FS-integrations.md#44-per-agent-overrides)), or the
+  agent home whose absence skipped it ([§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files));
+- `manual_steps`, one `IntegrationManualStep` per client the user must set up by hand, naming
+  the client and its snippet ([§FS-integrations.3.4](FS-integrations.md#34-manual-client-iterm2));
+- `warnings`, the user configuration's cautions as `Finding`s with path and line
+  ([§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error)).
 
-#### 1.3.3 The refusal
-
-`IntegrationsError` implements `std::error::Error` and carries the events written before it, so a run that fails partway still says what it changed, and one `IntegrationsFailure`: the option combination it refused, or the path and the filesystem's message ([§FS-integrations.6.2](FS-integrations.md#62-exit-codes)). The CLI renders it as its `error:` line and exit `2`, after the lines for what was written.
+`IntegrationsError` implements `std::error::Error` and carries the events written before it
+and one `IntegrationsFailure`: the option combination it refused, or the path and the
+filesystem's message. So the CLI prints what a run that failed partway wrote, then the
+failure as its `error:` line, and exits `2`.
 
 ### 1.4 Unknown client
 
-An unknown client is a CLI-level error: `error: unknown integration client \`<client>\`` plus `known clients: codium, iterm2, kitty, tmux, vscode, wezterm` on stderr, empty stdout, exit `2`. The client set is closed and frozen the same way the subcommand surface is ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)), so adding a client is a deliberate, changelog-gated change.
+An unknown client is a CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)): these two lines on stderr, empty stdout,
+exit `2`. The client set is closed.
+
+```text
+error: unknown integration client `<client>`
+known clients: codium, iterm2, kitty, tmux, vscode, wezterm
+```
 
 ## 2. Detection
 
-With no `<client>`, grund inspects the environment to decide which integrations apply. Detection reads only these variables, in this fixed order, and never writes or scans ([§REQ-no-data-loss.1](../requirements/REQ-no-data-loss.md#1-the-query-surface-never-writes)):
+With no `<client>`, grund decides which integrations apply from these environment variables
+alone, and never writes or scans ([§REQ-no-data-loss.1](../requirements/REQ-no-data-loss.md#1-the-query-surface-never-writes)):
 
 - `WEZTERM_EXECUTABLE` → `wezterm`
 - `KITTY_WINDOW_ID` → `kitty`
@@ -92,139 +173,133 @@ With no `<client>`, grund inspects the environment to decide which integrations 
 - `VSCODE_PID` or any `VSCODE_*` variable → `vscode`; additionally → `codium` when any of those values names VSCodium's application directory
 - `TMUX` (non-empty) → `tmux`
 
-Zero, one, or several clients may match at once. Matches are reported in the frozen client order `codium, iterm2, kitty, tmux, vscode, wezterm`, deduplicated, never in environment-probe order, so a given environment always prints the same text. When nothing matches, grund prints the full catalog of clients with their one-line installs and a note that none was detected — a discoverable menu rather than an error. Detection succeeds with exit `0` in every case.
+The clients that match are printed deduplicated in the client order
+`codium, iterm2, kitty, tmux, vscode, wezterm`, each with its one-line
+install; when none matches, grund prints every client with its install and a note that none
+was detected. Either list closes with how to preview a client before installing it, the URL
+of the setup guide, which writes down the prerequisites `--write` cannot perform and each
+client's manual step, and two lines pointing at `grund-lsp`:
 
-### 2.1 The setup guide
+```text
+Editors get go-to-definition and hover from grund-lsp (IntelliJ: `grund-lsp integrations lsp4ij`).
+LSP guide: https://github.com/agent-grounds/grund/blob/main/docs/user-facing/lsp.md
+```
 
-The detected list and the catalog both close with the same lines: how to preview a client before installing it and the URL of the setup guide, then the way to `grund-lsp` ([§FS-integrations.2.3](FS-integrations.md#23-the-way-to-grund-lsp)). The guide is where the parts of this setup that `--write` cannot perform are written down — the prerequisites that each fail silently (the resolver's directory on `PATH`, an editor it can find) and the per-client manual step ([§FS-integrations.3.4](FS-integrations.md#34-manual-client-iterm2), [§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)) — and detection is the command a user runs *first*, often having reached it from `grund --help` rather than from the README. Naming the guide there costs two lines and is the only pointer that reaches a caller who never saw the repository.
-
-### 2.2 Byte stability
-
-Because detection depends on ambient environment variables, only the explicit-`<client>` form ([§FS-integrations.1](FS-integrations.md#1-user-facing-command)) and `--help` are byte-stable across machines; the no-client form is stable only for a fixed environment. Golden coverage therefore pins explicit clients ([§FS-integrations.6](FS-integrations.md#6-determinism-and-exit-codes)).
-
-### 2.3 The way to grund-lsp
-
-`grund integrations` installs what renders a citation as a link: in a terminal, in an agent's answer, in an editor's terminal pane. What an editor does with a citation in its buffer — go-to-definition, hover, references, completion, diagnostics — comes from `grund-lsp` instead, a separate command family with integrations of its own ([§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor), [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations)). An editor with no clickable-citation client — IntelliJ IDEA and its family through LSP4IJ, Helix, Neovim, Zed, Emacs, Sublime Text — is served by `grund-lsp` alone. So every surface where `grund` offers this setup names it:
-
-- **Detection.** After the setup guide ([§FS-integrations.2.1](FS-integrations.md#21-the-setup-guide)), the detected list and the catalog both close with the same two further lines: one naming `grund-lsp` for go-to-definition and hover and `grund-lsp integrations lsp4ij` for IntelliJ-family editors, and one giving the public address of the LSP guide, which is where every editor's setup is written down:
-
-  ```text
-  Editors get go-to-definition and hover from grund-lsp (IntelliJ: `grund-lsp integrations lsp4ij`).
-  LSP guide: https://github.com/agent-grounds/grund/blob/main/docs/user-facing/lsp.md
-  ```
-
-  The address is the guide's public `blob/main` one, like the setup guide's printed just before it, rather than a `grund guide` section: `grund guide editor` itself defers to the LSP guide for each editor's steps, and the LSP4IJ import is written down there alone.
-- **The command's page.** `grund integrations -h` says in its body that go-to-definition, hover and completion in an editor come from `grund-lsp`, not from these integrations, and names `grund-lsp integrations lsp4ij` for IntelliJ-family editors. Its closing guide links ([§FS-cli.2.3](FS-cli.md#23-a-subcommands-help-page)) list the LSP guide after the setup guide.
-- **The top-level row.** The `integrations` row of `grund --help` names `grund-lsp` in its one-line description, within that page's one-screen budget ([§FS-cli.2.2](FS-cli.md#22-the-top-level-help-page)).
-
-The reason is the one [§FS-integrations.2.1](FS-integrations.md#21-the-setup-guide) gives for the setup guide: these are the surfaces a user reaches first, often from `grund --help`, and the only ones that reach a caller who never saw the repository. Without the pointer they tell an IntelliJ user, accurately as far as they go, that nothing applies to them, while `grund-lsp` already ships what that editor needs. The pointer is text a person reads and nothing more: the JSON detection plan ([§FS-integrations.5](FS-integrations.md#5-json-format)) carries no pointer and does not change, the client set stays closed ([§FS-integrations.1.4](FS-integrations.md#14-unknown-client)), and `grund integrations` never detects, installs or runs `grund-lsp`. The separation of [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations) stands; this is its cross-reference run the other way.
+Go-to-definition, hover, references, completion and diagnostics in an editor's buffer come
+from `grund-lsp` ([§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor), [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations)), which alone serves an editor with no
+clickable-citation client, such as the IntelliJ family, Helix or Neovim. So the body of
+`grund integrations -h` says that go-to-definition, hover and completion in an editor come
+from `grund-lsp`, not from these integrations, names `grund-lsp integrations lsp4ij`, and
+lists the LSP guide after the setup guide ([§FS-cli.2.3](FS-cli.md#23-a-subcommands-help-page)); the `integrations` row of
+`grund --help` names `grund-lsp` ([§FS-cli.2.2](FS-cli.md#22-the-top-level-help-page)). The JSON plan carries no pointer
+([§FS-integrations.5](FS-integrations.md#5-json-format)), and `grund integrations` never detects, installs or runs `grund-lsp`.
+Detection exits `0` in every case.
 
 ## 3. Per-client artifacts
 
-Every artifact is embedded in the binary, like the `init` templates and `completions` scripts; nothing is fetched and nothing is published to a marketplace, so the no-first-party-plugins stance ([§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor)) holds.
+Every artifact is embedded in the binary: nothing is fetched, and nothing is published to a
+marketplace ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)).
 
 ### 3.1 Terminal clients: `wezterm`, `kitty`, `tmux`, `iterm2`
 
-Each prints two things on stdout, exit `0`:
+Each prints on stdout, exit `0`, a config snippet that binds `§<ID>` citations to the
+resolver, as a click or hints handler or, in tmux, which cannot make text clickable, a prefix
+key over the copy buffer; and the `grund-open` resolver, a POSIX shell script that also opens
+a location.
 
-1. A config snippet for that terminal that registers its own handler or binding for `§<ID>` citations, wired to run the resolver — a click or hints handler, or in tmux, which cannot make text clickable, a prefix key over the copy buffer ([§FS-integrations.3.3.2](FS-integrations.md#332-peek)).
-2. The embedded `grund-open` resolver script — a POSIX shell script that takes a citation or bare `<ID>`, resolves it with `grund` to a `path:line` site, and opens it. The command it opens with is `GRUND_OPEN_CMD` when set, else `EDITOR`, else a platform default; the user's editor choice lives in that environment variable, never in shared repository text ([§DF-neural-link-generation](../decisions/functional/DF-neural-link-generation.md#df-neural-link-generation-agents-compose-clickable-citation-links-themselves-grund-does-not-grow-a-link-command)).
+The resolver opens a site with `GRUND_OPEN_CMD` when it is set, else `EDITOR`, else a
+platform default, never an editor named in repository text ([§DF-neural-link-generation](../decisions/functional/DF-neural-link-generation.md#df-neural-link-generation-agents-compose-clickable-citation-links-themselves-grund-does-not-grow-a-link-command)).
+`GRUND_OPEN_CMD` is an argv prefix, not shell source: one `path:line` argument is appended and
+no repository path is evaluated as a command, and the text a handler passes in, a tmux copy
+buffer or a kitty hint, arrives as one quoted argument.
 
-The snippet and the resolver are printed together so a human can read both before installing; the one-line install shown by detection ([§FS-integrations.2](FS-integrations.md#2-detection)) is the `--write` form ([§FS-integrations.4](FS-integrations.md#4-managed-writes---write)). Resolution proceeds in three steps — find the root ([§FS-integrations.3.1.2](FS-integrations.md#312-find-the-root-the-clicked-panes-directory), [§FS-integrations.3.1.3](FS-integrations.md#313-find-the-root-the-climb)), strip the marker ([§FS-integrations.3.1.4](FS-integrations.md#314-strip-the-marker-keep-the-section)), resolve and join ([§FS-integrations.3.1.5](FS-integrations.md#315-resolve-and-join)) — and each exists because the click carries less context than a command line does.
+A citation is matched as one to three characters that are neither word nor space, then an
+optional `<alias>/`, then a kind that begins with an uppercase letter and may carry digits
+(`E2E`), `-` and a slug, which may begin with a digit, then the whole `.<section>` suffix,
+each component digits or a letter-first lowercase handle ([§FS-config.3.3.1](FS-config.md#331-named-components)); a sentence-ending
+`.` is left out. The resolver drops any leading run of non-alphanumeric characters. Neither
+hardcodes `§`, because `[reference] marker` is per repository ([§FS-config.3.1](FS-config.md#31-reference--citation-form)) and an artifact
+is written once for all of them. The resolver then:
 
-#### 3.1.1 The resolver's command line
+1. starts in the clicked pane's directory, which every handler `cd`s into except kitty's,
+   whose hints kitten starts there itself;
+2. tries every ancestor holding a config under either discovery name ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), nearest
+   first, and keeps the first root where `grund <ID>[.<section>] --format json` resolves the
+   citation. A failed resolution continues the climb, so a qualified `<alias>/<ID>` clicked
+   inside a workspace member resolves from the workspace root ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)), and a
+   number-only shorthand opens because `grund` resolves it ([§FS-citations.shorthand.cli](FS-citations.md#shorthandcli-the-shorthand-as-a-cli-id-argument),
+   [§DF-number-only-citation-shorthand.4](../decisions/functional/DF-number-only-citation-shorthand.md#4-consequences));
+3. joins the reported `path`, relative to the config root ([§FS-config.3.6](FS-config.md#36-output--report-format)), onto that root
+   and opens the absolute path at the cited section's own line, or, for an E2E case answered
+   with the manifest shape ([§FS-show.2.4](FS-show.md#24-e2e-cases)), opens the case directory with no line.
+   A body that itself holds `"path":` or `"line":` does not move the site.
 
-`GRUND_OPEN_CMD` is an argv-style command prefix, not shell source: grund-open appends one `path:line` argument without evaluating repository-controlled paths as commands; users who need more elaborate argument placement use a wrapper executable. Any text the handler passes in — a tmux copy buffer, a kitty hint — reaches grund-open as a single quoted argument, never as shell source.
+With no config-bearing ancestor the resolver prints
+`grund-open: no grund.toml (root or .agents/) at or above <dir>` and exits `1`; when every
+ancestor fails to resolve the citation, the error is the ID's.
 
-#### 3.1.2 Find the root: the clicked pane's directory
+A token whose final path segment has a dot-extension and ends in `:<line>`, optionally
+`:<col>`, is a **location**, the `path:line` of the `path` conversation target
+([§FS-integrations.4.3.2](FS-integrations.md#432-the-conversation_target-key)); a section suffix is dotted, never coloned. Every terminal matcher but
+iTerm2's citation-only rule ([§FS-integrations.3.4](FS-integrations.md#34-manual-client-iterm2)) hands a location to `grund-open`, which
+opens it without consulting `grund`: it climbs ancestors, nearest first, until the relative
+path exists (an absolute path is tested directly) and opens that line, dropping any column,
+in any repository.
 
-The handler passes a token, never a directory, so the click may arrive with the shell anywhere in the tree — which is why every client handler must first put the resolver in the *clicked pane's* working directory: tmux's `run-shell` starts in the server's start directory and WezTerm spawns from the GUI process's, so without an explicit `cd` a click works only when the terminal happened to be launched inside the repository. kitty is the exception that needs no `cd`: its hints kitten records the picked window's directory and supplies it to whatever it spawns — as the process working directory for a program, as `--cwd` for a `launch` — so the snippet must not add one.
+Two false positives cost one explanatory error each, never a wrong file, and the real citation
+on the same line still matches: an ID-shaped file name, its extension read as a section, since
+no portable matcher can look around a match; and `host.com:8080`, which has a location's
+shape. WezTerm and kitty try the location shape first, so there a `path:line` token opens
+whole and the file-name false positive arises only without a line suffix.
 
-#### 3.1.3 Find the root: the climb
+Every GUI terminal spawns the resolver through `sh` with `~/.local/bin` and `~/.cargo/bin`
+prepended to `PATH`, since a terminal started from a desktop launcher inherits neither
+directory. Beyond that:
 
-From the pane's directory the resolver climbs: it tries every ancestor holding a config under either discovery name ([§FS-config.1](FS-config.md#1-file-location-and-discovery)) — either will do, since the resolver only needs the directory — nearest first, and keeps the first root where `grund` resolves the citation. Nearest-only is not enough — from inside a workspace member the member's config resolves its own bare IDs, but a workspace-qualified `<alias>/<ID>` resolves only from the workspace root above it, so a failed resolution continues the climb instead of ending it. With no config-bearing ancestor at all it reports `grund-open: no grund.toml (root or .agents/) at or above <dir>` and exits `1` — naming the real problem rather than blaming the ID; with ancestors that all failed to resolve, the error is the ID's.
-
-#### 3.1.4 Strip the marker, keep the section
-
-`[reference] marker` is per-repo ([§FS-config.3.1](FS-config.md#31-reference--citation-form)) while the installed artifacts are user-global and written once, so neither the click matchers nor the resolver may hardcode `§`. The matchers require a 1–3 character run of non-word, non-space characters before the ID shape, and the resolver drops any leading run of non-alphanumeric characters. This admits every configured marker, tolerates punctuation the matcher swept in (`(<§>FS-x`), and leaves a qualified `<alias>/<ID>` intact because an alias begins alphanumeric. The ID shape the matchers accept is a kind that starts with an uppercase letter and may carry digits after it — `E2E` is a kind grund itself declares, and a letters-only kind pattern would leave every `<§>E2E-<case>` citation silently unclickable — then `-` and the slug. The `.<section>` suffix is **preserved**, not truncated ([§FS-integrations.3.1.5](FS-integrations.md#315-resolve-and-join)). Each component of that suffix is what a section path may hold: digits, or the letter-first lowercase handle `named_sections` admits ([§FS-config.3.3.1](FS-config.md#331-named-components)). A named or mixed path — `<§>FS-login.requirements.lockout`, `<§>FS-login.1.goals`, `<§>FS-login.goals.3` — is therefore claimed whole, never cut at its first named component, and a sentence-ending `.` is still left out, because a component holds at least one character.
-
-#### 3.1.5 Resolve and join
-
-`grund <ID>[.<section>] --format json` reports the cited section's own line — truncating the suffix would send every subsection click to the declaration heading — and a `path` relative to the config root ([§FS-config.3.6](FS-config.md#36-output--report-format)). The resolver joins that path onto the root it found and hands the editor an absolute path. `grund`'s tree-reading reports still never emit one ([§FS-errors.4](FS-errors.md#4-determinism)); composing it at the point of use is what makes a click work from a subdirectory. Field extraction is anchored to the end of the JSON object, because `body` carries arbitrary declaration prose that may itself contain `"path":` or `"line":`. A directory-backed E2E declaration answers with the manifest shape instead ([§FS-show.2.4](FS-show.md#24-e2e-cases)) — no `body` and no `"line"` — so a second extraction, anchored on the grund-controlled `{"id":…,"kind":"E2E"` prefix, accepts it; the case *directory* is what opens, with no `:line` suffix to garble the argument.
-
-#### 3.1.6 The path false positive
-
-The marker tolerance of [§FS-integrations.3.1.4](FS-integrations.md#314-strip-the-marker-keep-the-section) has one recorded false positive: an ID-shaped file name, its extension read as a named section. The path `docs/functional-spec/FS-integrations.md` matches at `/functional-spec/FS-integrations.md`, the link destination `(FS-integrations.md#…)` at `(FS-integrations.md`, and clicking either reports the id unknown. It is accepted rather than excluded because no portable matcher can look around a match (the terminal engines disagree on lookaround), so it can neither require a word boundary before the marker nor tell an extension from a section, and excluding `/` from the marker class merely moves the match to the preceding `-`. The real citation on the same line still matches and resolves; the false link costs one explanatory error, never a wrong file — and in WezTerm a `:line`-suffixed path is claimed whole by the location matcher ([§FS-integrations.3.1.8](FS-integrations.md#318-location-tokens)) before this fragment can form ([§FS-integrations.3.1.9](FS-integrations.md#319-opening-a-location)).
-
-#### 3.1.7 Qualified and shorthand citations
-
-Both the click matchers and the resolver accept a bare local `§<ID>` and a qualified `§<alias>/<ID>` ([§FS-integrations.3.1.4](FS-integrations.md#314-strip-the-marker-keep-the-section)); in a workspace the qualified form resolves through `grund`'s own alias routing ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)) rather than through string matching over the ID catalog.
-
-The number-only shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) needs no separate matcher and gets none. The ID shape of [§FS-integrations.3.1.4](FS-integrations.md#314-strip-the-marker-keep-the-section) — a kind, `-`, then a slug that may begin with a digit — already matches `<§>FS-042` and `<§>FS-042.1`, so a clicked shorthand reaches `grund-open` exactly like a full citation, and it opens because `grund <ID>` resolves the shorthand at the CLI boundary. That ordering is deliberate: putting the shorthand rule in the engine rather than in six hand-written client regexes is what keeps the clients from drifting from it ([§DF-number-only-citation-shorthand.4](../decisions/functional/DF-number-only-citation-shorthand.md#4-consequences)). Before the engine accepted it, these matchers linked the shorthand and the resolver then reported the ID unknown — a live link to a dead end.
-
-#### 3.1.8 Location tokens
-
-The `link` conversation form ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions), [§DF-repo-conversation-opinion.2.1](../decisions/functional/DF-repo-conversation-opinion.md#21-the-link-form-is-a-markdown-link-over-an-absolute-uri)) is a Markdown link over a URI, but under its `path` target ([§FS-integrations.4.3.2](FS-integrations.md#432-the-conversation_target-key)), the fallback every gated agent receives ([§FS-integrations.4.3.3](FS-integrations.md#433-the-per-agent-gate)), it has agents follow a citation with its plain declaration location — `<§>AR-scanner docs/architecture/AR-scanner.md:1`, escaped here because an FS example must not *cite* an AR — and some surfaces open that `path:line` natively (iTerm2's Semantic History, the VS Code terminal's own link detection) while the terminals grund configures match URLs only. Each terminal matcher therefore also matches a **location** token — a final path segment carrying a dot-extension and a `:<line>` suffix, optionally `:<col>` — and hands it to the same `grund-open`. The resolver tells the shapes apart mechanically: an ID's section suffix is dotted, never coloned, so a token ending in colon-digits is a location.
-
-#### 3.1.9 Opening a location
-
-A location is opened without consulting `grund` at all — the printed path is config-root-relative while the click may arrive anywhere in the tree, so the resolver climbs ancestors, nearest first, until the relative path exists (an absolute path is tested directly), then opens the editor at that line, dropping any column; because no repository config is involved, a location click works in any repository, grund-using or not. A peek on a location pages the file from the cited line ([§FS-integrations.3.3.4](FS-integrations.md#334-the-peek-resolver)). In WezTerm the location rule is registered *before* the citation rule, which converts the citation false positive on `:line`-suffixed paths ([§FS-integrations.3.1.6](FS-integrations.md#316-the-path-false-positive)) into one correct link — the whole `docs/functional-spec/FS-integrations.md:<line>` token opens that file at that line, rather than the `/functional-spec/FS-integrations.md` fragment inside it failing to resolve — leaving the fragment case to bare paths with no line suffix. The location shape has its own accepted false positive, `host.com:8080`, which is dot-extension-and-line shaped; clicking it costs a no-such-file log line, never a wrong file.
-
-#### 3.1.10 The spawn's `PATH`
-
-Every GUI terminal spawns the resolver through `sh` with `~/.local/bin` and `~/.cargo/bin` — the documented homes of `grund-open` ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)) and `grund` — prepended to `PATH`. A terminal started from a desktop launcher inherits the session's environment, which never sourced the user's shell profile and typically carries neither directory; the spawn then fails to find `grund-open` at all, and the failure is a line in a log the user never opens while the citation simply does nothing. This is why the handler's command is a shell fragment rather than a bare program name, in every client that spawns from a GUI process.
-
-#### 3.1.11 kitty's keymap
-
-A terminal's keymap is the user's, not grund's, and a binding that quietly deletes one of the terminal's own is a worse trade than a longer chord. kitty's gestures therefore live under `ctrl+shift+p`, kitty's own hints prefix (`p>f` for a path, `p>l` for a line, `p>y` for a hyperlink): `p>g` opens a citation and `p>i` peeks ([§FS-integrations.3.3](FS-integrations.md#33-reading-a-declaration-without-leaving)), which is one more hint type in the family the prefix already names. Neither key is otherwise free — `ctrl+shift+g` is kitty's `show_last_command_output`, and a plain `map ctrl+shift+p` is worse than a collision, because kitty resolves a trigger by discarding every sequence mapped before the last non-sequence definition: one binding would silently remove all nine of kitty's `ctrl+shift+p` mappings.
-
-#### 3.1.12 WezTerm: mouse capture
-
-Three WezTerm facts are part of the contract because each failure is silent; this is the first, and [§FS-integrations.3.1.13](FS-integrations.md#3113-wezterm-the-flatpak-boundary) and [§FS-integrations.3.1.14](FS-integrations.md#3114-wezterm-the-panes-directory) are the others. The click and peek gestures are registered twice — once plainly and once with `mouse_reporting = true` — because WezTerm ignores user mouse bindings while the foreground program has captured the mouse, and the programs that print citations (agent TUIs like Claude Code, full-screen editors) are exactly such programs; without the second registration the primary use case never clicks.
-
-#### 3.1.13 WezTerm: the Flatpak boundary
-
-The `PATH` prepend every GUI terminal needs ([§FS-integrations.3.1.10](FS-integrations.md#3110-the-spawns-path)) has one more layer here: when WezTerm itself runs inside a Flatpak sandbox (detected via `FLATPAK_ID`), whose `PATH` carries neither binary, the spawn is handed back to the host through `flatpak-spawn --host` — but only the spawn grund performs itself. A peek is a *pane command*, spawned by WezTerm the same way it spawns the user's shell, which the Flatpak build already routes to the host (`flatpak-spawn --host --watch-bus --directory=…`). Wrapping such an argv a second time runs `flatpak-spawn` on the host, where it has no portal to talk to and exits `127` with no output, so the pane closes before it draws anything and the peek reads as a flicker. The two spawn sites therefore differ by construction, and which one is inside the sandbox is the thing that decides it.
-
-#### 3.1.14 WezTerm: the pane's directory
-
-The third is how the pane's directory is discovered, and it is the one place where a Lua error costs the whole feature. WezTerm has no single way to ask: newer builds answer `pane:get_current_working_directory()` with a `Url` object, older ones spell it `get_current_working_dir` and answer with a `file://host/path` string, and calling a method the running build does not export is not a nil result but a Lua error that aborts the handler before it spawns anything. Every lookup is therefore guarded and tried in turn, and `pane:get_foreground_process_info().cwd` follows as an OS-side answer that needs no cooperation from the shell — except under Flatpak, where it is skipped: there the pane's program is spawned on the *host* through `flatpak-spawn`, so the process WezTerm can see is the sandbox-side helper and its `cwd` is a real directory that is simply not the shell's, which is worse than none.
-
-#### 3.1.15 WezTerm: `OSC 7`
-
-What remains is `OSC 7`, the only channel that crosses the sandbox boundary of [§FS-integrations.3.1.14](FS-integrations.md#3114-wezterm-the-panes-directory), and **the shell must be made to emit it** — most do not, because the usual emitter, the distributions' `vte.sh`, returns early for every terminal that is not VTE. This is a prerequisite of the same kind as wiring `grund_apply_hyperlink_rule(config)` ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)): the artifact installs, and until the shell reports its directory the click cannot work. So it is stated in the artifact, in the setup guide, and — when a click arrives with no directory — in a toast notification and the WezTerm log, because a citation that silently does nothing is indistinguishable from an integration that was never installed.
+- **kitty** binds its gestures under its own hints prefix, `ctrl+shift+p`
+  ([§FS-integrations.3.3](FS-integrations.md#33-reading-a-declaration-without-leaving)), and never maps `ctrl+shift+p` alone, which would discard every
+  sequence kitty maps under it.
+- **WezTerm** registers the click and peek gestures twice, once with
+  `mouse_reporting = true`, because it ignores user mouse bindings while a program such as an
+  agent TUI has captured the mouse. Under Flatpak (`FLATPAK_ID`) the click's spawn goes to the
+  host through `flatpak-spawn --host`, while the peek, a pane command WezTerm already routes
+  there, is not wrapped again. The pane's directory comes first from WezTerm's own report of
+  it, asked under both spellings builds have so that neither one's absence aborts the handler;
+  that report answers only when the shell emits `OSC 7`, which most shells must be made to do.
+  Failing it, the directory comes from the foreground process's `cwd`, except under Flatpak,
+  where that is the sandbox helper's, so there `OSC 7` is the only source. The artifact and
+  the setup guide say so, and a click with no directory raises a toast and a WezTerm log line.
 
 ### 3.2 Editor clients: `vscode`, `codium`
 
-`grund integrations vscode` prints the terminal-citations extension source and the one-line `--write` install. `grund integrations vscode --write` materializes the unpacked extension into the editor's extensions directory ([§FS-integrations.4.2](FS-integrations.md#42-the-vs-code-extension)); the binary carries the artifact, so nothing is published to a marketplace ([§FS-integrations.3](FS-integrations.md#3-per-client-artifacts)). The extension is a `TerminalLinkProvider` that turns `§<ID>` occurrences in the integrated terminal into links resolved through `grund`.
+`grund integrations vscode` prints the terminal-citations extension's source and its
+`--write` install ([§FS-integrations.4.2](FS-integrations.md#42-the-vs-code-extension)). The extension is a `TerminalLinkProvider` that turns
+citations in the integrated terminal into links:
 
-#### 3.2.1 Resolving a link
+- It matches and strips the marker as the terminal clients do, keeps the `.<section>` suffix
+  ([§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)), and resolves with one
+  `grund <ID>[.<section>] --brief --format json`, whose `path` and `line` a click needs and
+  whose body is the hover ([§FS-integrations.3.3](FS-integrations.md#33-reading-a-declaration-without-leaving)). It caches only successful resolutions,
+  so a citation that failed resolves once its declaration exists.
+- It finds the root by the resolver's climb from the workspace folder
+  ([§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)), runs `grund` there, and joins the reported path onto it.
+- An E2E case, answered with the manifest shape ([§FS-show.2.4](FS-show.md#24-e2e-cases)), reveals its case directory in
+  the Explorer, or in the OS file manager when the directory lies outside the opened folder.
 
-It matches and strips the marker exactly as the terminal clients do ([§FS-integrations.3.1.4](FS-integrations.md#314-strip-the-marker-keep-the-section)) and likewise keeps the `.<section>` suffix, resolving through `grund <ID>[.<section>] --brief --format json` — one resolution, because the brief report already carries the `path` and `line` a click needs while its body is exactly the hover slice ([§FS-integrations.3.3.1](FS-integrations.md#331-hover)), so a click on a hovered citation spawns nothing. Only successful resolutions are cached: a failure may mean the declaration does not exist *yet*, and pinning it until the extension host restarts would outlive the cause.
-
-#### 3.2.2 The config root
-
-It finds the root by the resolver's climb ([§FS-integrations.3.1.3](FS-integrations.md#313-find-the-root-the-climb)): from the workspace folder it tries every ancestor holding a config under either discovery name ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), nearest first, and keeps the first where `grund` resolves the citation, since a folder opened on a workspace member resolves a qualified `<alias>/<ID>` only from the workspace root above it. It uses that root both as the directory it runs `grund` in and as the base it joins the reported path against, so the two can never disagree when the opened folder is a subdirectory of the repository.
-
-#### 3.2.3 E2E directories
-
-A directory-backed E2E declaration answers with the manifest shape — no `"line"` ([§FS-show.2.4](FS-show.md#24-e2e-cases)) — and its case *directory* is revealed in the Explorer: there is no file for `showTextDocument` to open, so this is the editor's form of the bare directory open the terminal resolver performs ([§FS-integrations.3.1.5](FS-integrations.md#315-resolve-and-join)). When that directory lies outside the opened folder — the workspace is a subdirectory of the repository — the Explorer cannot show it, and the reveal falls back to the OS file manager.
-
-#### 3.2.4 `codium`
-
-`codium` installs the identical extension into VSCodium's own extensions root, `~/.vscode-oss/extensions`. It is a separate client rather than a flag because it is a separate application: writing to `~/.vscode` for a VSCodium user drops the extension where nothing ever loads it, and the failure is silent — the install reports success and no link is ever produced. Detection cannot separate the two by presence, since both export an identical `VSCODE_*` environment; what differs is where those variables *point*, so `codium` is marked in addition to `vscode` when one of those values names VSCodium's application directory ([§FS-integrations.2](FS-integrations.md#2-detection)). Marking both is the honest outcome of an ambiguous environment: the catalog then offers both one-line installs and the user picks the application they are actually running.
+`codium` installs the same extension into VSCodium's own root, `~/.vscode-oss/extensions`,
+as a client of its own, because an extension written under `~/.vscode` for a VSCodium user is
+never loaded while the install reports success. Both editors export the same `VSCODE_*`
+variables, so detection marks `codium` beside `vscode`, not instead of it, when one of their
+values names VSCodium's application directory ([§FS-integrations.2](FS-integrations.md#2-detection)).
 
 ### 3.3 Reading a declaration without leaving
 
-Opening a citation answers *where*; often the question is only *what does it say*, and switching to an editor to find out costs more than the answer is worth. Every client therefore also offers a read-in-place path, in whichever form that client can express: hover in VS Code ([§FS-integrations.3.3.1](FS-integrations.md#331-hover)), peek in the terminals ([§FS-integrations.3.3.2](FS-integrations.md#332-peek)).
-
-#### 3.3.1 Hover
-
-Only VS Code can offer true hover. Its `TerminalLinkProvider` attaches a tooltip to each link, so the declaration's `--brief` slice — heading plus first paragraph — plus the resolved `path:line` is shown on hover, with no click. Because tooltips must carry their text when the link is *provided*, and a provider runs per rendered line, successful resolutions are cached per citation ([§FS-integrations.3.2.1](FS-integrations.md#321-resolving-a-link)); the same citation scrolling past repeatedly costs one resolution, not one per line.
-
-#### 3.3.2 Peek
-
-The terminal clients cannot hover, and the reason is structural rather than a missing convenience: a hover handler needs an event that fires on motion with no button held, and none of these terminals has one. WezTerm is the case worth naming, because its Lua surface otherwise looks rich enough — its mouse bindings trigger only on `Down`, `Up`, `Drag`, `WheelUp`, and `WheelDown`, all of which require a button or a wheel, no callback is given the cursor's row and column, and no tooltip API exists ([wezterm#4](https://github.com/wezterm/wezterm/issues/4) has requested one since 2018 with no implementation). They offer **peek** instead — a second binding that renders the declaration into a disposable surface next to the work, rather than opening an editor:
+Every client also reads a citation in place. In VS Code a hover shows the declaration's
+`--brief` slice and its resolved `path:line` with no click, from the resolution the extension
+caches ([§FS-integrations.3.2](FS-integrations.md#32-editor-clients-vscode-codium)). A terminal has no event for motion with no button held, so the
+terminal clients offer **peek**: a second gesture runs `grund-open --peek <citation>`, which
+prints the resolved `path:line` and the declaration's lead, or for a location the file from
+the cited line, through a pager, in a surface that closes when the pager exits:
 
 | Client | Peek | Surface |
 | --- | --- | --- |
@@ -232,51 +307,61 @@ The terminal clients cannot hover, and the reason is structural rather than a mi
 | tmux | `prefix` + `G` | popup (requires tmux 3.2+; inert on older tmux, where `prefix` + `g` still opens) |
 | wezterm | `ctrl+shift+`-click, or `ctrl+shift+i` and the label | split pane |
 
-#### 3.3.3 The keyboard form
-
-WezTerm's keyboard form is not a convenience twin of the click but the more dependable of the two, and it is the same shape kitty's hints kitten uses: one gesture labels every citation on the screen, and the label picks one. The mouse is the fragile path — a full-screen program that has captured the mouse can swallow the click ([§FS-integrations.3.1.12](FS-integrations.md#3112-wezterm-mouse-capture)) — and citations are read while typing, when reaching for the pointer is the expensive part. Both terminals spell the two gestures `g` for *go* and `i` for *inspect*: in WezTerm as `ctrl+shift+g` and `ctrl+shift+i`, which are free there, and in kitty under its hints prefix as `ctrl+shift+p` `g` and `ctrl+shift+p` `i`, because kitty's own bindings own both plain keys ([§FS-integrations.3.1.11](FS-integrations.md#3111-kittys-keymap)). Sharing the letters is what one carries between the two; the prefix is kitty's convention, not a difference in the feature. The picker matches with the citation shape of [§FS-integrations.3.1.4](FS-integrations.md#314-strip-the-marker-keep-the-section), and its result is handed to the same resolver call the click makes, so the two cannot drift. Supplying a custom action suppresses the picker's normal copy-to-clipboard, so using it costs the user nothing they had selected.
-
-#### 3.3.4 The peek resolver
-
-Peek is the same resolver in a different mode — `grund-open --peek <citation>` ([§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)) — so a peek and a click can never disagree about where a citation points. It prints the resolved `path:line` followed by the declaration lead — or, for a location token ([§FS-integrations.3.1.8](FS-integrations.md#318-location-tokens)), the file from the cited line — through a pager, because each of those surfaces closes when the process exits.
-
-#### 3.3.5 WezTerm's peek indirection
-
-WezTerm's peek needs one indirection, deliberate though it looks accidental: Lua cannot ask which link is under the mouse — only the built-in `OpenLinkAtMouseCursor` knows, and it exposes only the resulting URI through `open-uri`, while `window:current_event()` does not carry modifiers. The peek binding therefore records the intent, delegates to that built-in action, and the `open-uri` handler reads the intent back. Both run inside one synchronous event, so the flag cannot leak across clicks.
+WezTerm and kitty also pick from the keyboard, `g` to go and `i` to inspect: `ctrl+shift+g` in
+WezTerm and `ctrl+shift+p` `g` in kitty go, and the `i` gestures of the table inspect. Either
+gesture labels every citation on the screen with the shape of [§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2), and the
+picked label goes to the call a click makes; WezTerm's picker leaves the clipboard untouched.
 
 ### 3.4 Manual client: `iterm2`
 
-iTerm2 stores its configuration in a binary property list, not a text file. There is no comment syntax to carry delimiters and no safe place to put them, so the managed-block contract ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)) simply does not apply — and rewriting a live profile blob under the user is not a trade grund makes for a convenience. `iterm2` is therefore the one **manual** client.
+iTerm2 keeps its configuration in a binary property list, with no comment syntax for a
+managed block's delimiters ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)), and grund does not rewrite it under the
+user, so `iterm2` is the one **manual** client. `grund integrations iterm2` prints the Smart
+Selection rule to add: the citation regex of [§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2) at precision `Very High`,
+so it does not lose to iTerm2's built-in filesystem-path rule; a first action `Run Command…`
+of `grund-open \0`, which cmd-click fires; and a second, `grund-open --peek \0`, which the
+right-click menu offers as peek ([§FS-integrations.3.3](FS-integrations.md#33-reading-a-declaration-without-leaving)). `\0` is the whole match, marker
+included.
 
-#### 3.4.1 The Smart Selection rule
+`grund integrations iterm2 --write` installs what grund can, the `grund-open` resolver and
+the user preference and global agent instructions ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)), then prints the
+steps it cannot apply and reports `manual <client> (<where>)` on stderr, exit `0`. A
+manual client always reports `installed: false`, since grund never reads that property list,
+and `"install_kind":"manual"`, so a caller can tell *not knowable* from *not installed*
+([§FS-integrations.5](FS-integrations.md#5-json-format)).
 
-`grund integrations iterm2` prints the Smart Selection rule to add: the citation regex from [§FS-integrations.3.1.4](FS-integrations.md#314-strip-the-marker-keep-the-section), precision `Very High` so it does not lose to iTerm2's built-in filesystem-path rule, and a `Run Command…` action of `grund-open \0` — the first action on a rule is what fires on cmd-click. A second action, `grund-open --peek \0`, is offered for the right-click menu, which is where actions after the first appear; that is peek ([§FS-integrations.3.3.2](FS-integrations.md#332-peek)) in the form iTerm2 can express. `\0` is the whole match, and needs no capture group because the resolver strips the marker itself.
-
-#### 3.4.2 `--write` on a manual client
-
-`grund integrations iterm2 --write` installs everything grund *can* install — the `grund-open` resolver and the user preference and global agent instructions ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)) — then prints the steps it cannot apply, reporting `manual <client> (<where>)` on stderr. The exit code is `0`: nothing failed, and the remaining work is the user's. `integration_is_current` ([§FS-integrations.5](FS-integrations.md#5-json-format)) always reports `installed: false` for a manual client, because grund never reads that plist and reporting a guess would be worse than reporting nothing; the detection plan carries `"install_kind":"manual"` so a caller can tell the difference between *not installed* and *not knowable*.
-
-#### 3.4.3 Without the rule
-
-A Mac user may not need the rule at all. iTerm2's Semantic History already makes a plain `path:line` cmd-clickable, so `--conversation link` with the `path` target ([§FS-integrations.4.3.2](FS-integrations.md#432-the-conversation_target-key)) — which has agents write the declaration location as plain `path:line` beside each citation — produces clickable citations there with no integration installed. That is the same reason `link` exists for TUIs: it degrades to something the host already understands.
+iTerm2's Semantic History already makes a plain `path:line` cmd-clickable, so
+`--conversation link` with the `path` target ([§FS-integrations.4.3.2](FS-integrations.md#432-the-conversation_target-key)) makes citations
+clickable there with no rule installed.
 
 ### 3.5 Clients grund cannot support, and why
 
-The client set is closed ([§FS-integrations.1.4](FS-integrations.md#14-unknown-client)), but absence from it is not always a judgement about the client — sometimes there is simply no hook:
+A terminal can be a client only if its configuration binds arbitrary matched text to an
+arbitrary command; these cannot, so the closed client set ([§FS-integrations.1.4](FS-integrations.md#14-unknown-client)) leaves them
+out:
 
-- **Ghostty** — documents exactly the option needed, `link`, which matches a regex against terminal text and runs an arbitrary binding action. The reference marks it `TODO: This can't currently be set!`; only the built-in `link-url` matcher works, and it takes no regex of its own. Nor does the `--conversation link` fallback help, since Ghostty has no `path:line` opener either. When `link` ships, the artifact is the [§FS-integrations.3.1.4](FS-integrations.md#314-strip-the-marker-keep-the-section) regex plus `grund-open` and nothing else.
-- **Apple Terminal.app** — no regex-to-action mechanism of any kind. Nothing to build against.
-- **Windows Terminal** — same: URL detection only, with no configurable matcher.
-
-The common shape is that a terminal must let configuration bind *arbitrary matched text* to *an arbitrary command*. Every supported terminal client offers that; these do not.
+- **Ghostty** marks its regex-to-action `link` option `TODO: This can't currently be set!`,
+  and its built-in URL matcher opens no `path:line`, so `--conversation link` does not help
+  either.
+- **Apple Terminal.app** has no regex-to-action mechanism of any kind.
+- **Windows Terminal** detects URLs only, with no configurable matcher.
 
 ## 4. Managed writes (`--write`)
 
-`--write` never prints an artifact; with a client it installs that integration, while the clientless `--conversation` form updates only user guidance ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)). It reports what it did on stderr, exit `0`. Writes are idempotent and reversible by construction, mirroring the `init` managed-block contract ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)): a re-run of an up-to-date integration changes nothing and reports `exists`; an upgrade is a diff of the marked region; removal is deleting the marked region.
+`--write` never prints an artifact: with a client it installs that integration, and without
+one it updates only the user guidance ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)). It reports on stderr
+([§FS-integrations.4.1.6](FS-integrations.md#416-outcome-verbs)) and exits `0`. It touches only what grund owns
+([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)): a marked block in a client configuration or an agent's instruction
+file, the resolver, its own extension directory, and the keys it records in the preference
+file. Outside these it writes only the starter scaffold of a WezTerm config it creates
+([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)). Every write is idempotent, as `init`'s managed block is ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)): a re-run of a
+current integration changes nothing and reports `exists`, an upgrade rewrites only what grund
+owns, and removal is deleting it.
 
 ### 4.1 Marked blocks in dotfiles
 
-For `kitty`, `tmux`, and `wezterm`, `--write` splices a comment-delimited managed block into the client's configuration file:
+For `kitty`, `tmux`, and `wezterm`, `--write` splices a managed block into the client's
+configuration file and installs the `grund-open` resolver:
 
 ```
 # >>> grund integrations (v1) >>>
@@ -284,51 +369,73 @@ For `kitty`, `tmux`, and `wezterm`, `--write` splices a comment-delimited manage
 # <<< grund integrations (v1) <<<
 ```
 
-#### 4.1.1 The host file's comment token
-
-The delimiter's comment token is the one the **host file's own language** uses, not a fixed `#`: `#` for `kitty.conf` and `.tmux.conf`, `--` for `wezterm.lua`. A delimiter in the wrong dialect is not an inert stray line — in Lua `#` is the length operator, so a `#` delimiter is a syntax error that costs the user their entire WezTerm configuration, not just the grund block. Block lookup is scoped to the client's dialect for the same reason: a block found under the wrong comment token would be spliced with the wrong delimiters on the next write.
-
-#### 4.1.2 The starter scaffold
-
-When `--write` creates the config file from scratch, a client whose configuration is a *program* rather than a list of settings also receives a starter scaffold below the block, so a fresh install is usable without hand-editing. WezTerm is the case that needs it: it applies hyperlink rules only from the config object the file returns, so a file containing the block alone parses and registers nothing. The scaffold is unmanaged — it sits outside the delimiters, later writes rewrite only the block, and the user owns it from then on. An existing config never receives a scaffold; there, calling `grund_apply_hyperlink_rule(config)` on the config being returned is the user's one wiring step ([§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)).
-
-#### 4.1.3 The unwired-config note
-
-That wiring step is **reported**, because nothing else in the run distinguishes a wired config from an unwired one: the block installs identically either way, so the install says `updated` and every click stays inert — the same silent shape as the `OSC 7` prerequisite ([§FS-integrations.3.1.15](FS-integrations.md#3115-wezterm-osc-7)) and the wrong-VSCodium install ([§FS-integrations.3.2.4](FS-integrations.md#324-codium)). When the host file *outside* the managed block does not call the helper, the write emits one `note:` line on stderr naming the call and the file. Only that unmanaged remainder is searched: the block defines the helper and names it in its own comments, so a whole-file search would never report anything. A config that already calls it — including one grund scaffolded on a from-scratch write ([§FS-integrations.4.1.2](FS-integrations.md#412-the-starter-scaffold)) — is silent, and so is every client that needs no wiring. Like the note `grund init` emits for a symlinked entrypoint ([§FS-init.2.3.6](FS-init.md#236-clickable-citations)), it is a report, not a finding: nothing is rewritten and the exit code is untouched. It repeats on every write until the call appears, since the write is idempotent and so is the omission.
-
-#### 4.1.4 Replacing the block
-
-The begin and end delimiters carry a block version. On write grund finds one existing block at any supported version and replaces its complete delimiter-line span, preserving everything outside byte-for-byte; a file with no block gets the block appended after a blank-line separator. Indented delimiter lines are accepted and consumed as complete lines. A missing matching delimiter, multiple blocks, or a block whose version is newer than the binary understands is a hard error (`exit 2`), the same guard `init` applies to a newer AGENTS block ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)).
-
-#### 4.1.5 The resolver script
-
-The resolver script is written alongside, to a fixed resolver path, only when absent or when its embedded version differs, and a failure to make it executable is an I/O error rather than a successful install.
+- The delimiters use the host file's own comment token, `#` in `kitty.conf` and `.tmux.conf`
+  and `--` in `wezterm.lua`, and a block is looked up under that token alone.
+- One existing block at any supported version has its complete delimiter-line span replaced,
+  indented delimiter lines included, and every byte outside it kept; a file with no block gets
+  the block appended after a blank line. A missing matching delimiter, several blocks, or a
+  block newer than the binary understands is an error, exit `2`.
+- A WezTerm config that `--write` creates also gets an unmanaged starter scaffold below the
+  block, which the user owns from then on, because WezTerm applies hyperlink rules only from
+  the config object the file returns; an existing config never gets one. While the config
+  outside the block does not call `grund_apply_hyperlink_rule(config)`, every write prints one
+  `note:` line on stderr naming the call and the file, with the exit code unchanged, since the
+  block installs the same either way.
+- The resolver is written to its fixed path, `~/.local/bin/grund-open`, only when absent or
+  when its embedded version differs, and failing to make it executable is an I/O error, not a
+  successful install.
 
 #### 4.1.6 Outcome verbs
 
-Each target a write touches is one stderr line, `<verb> <path>`: `wrote` for the resolver script ([§FS-integrations.4.1.5](FS-integrations.md#415-the-resolver-script)) or a first VS Code extension ([§FS-integrations.4.2](FS-integrations.md#42-the-vs-code-extension)), `appended` for an added block, `updated` for a replaced block or extension, `exists` for a current target, and `skipped` for a user-guidance target whose agent is not in use ([§FS-integrations.4.3.9](FS-integrations.md#439-only-agents-in-use)).
+Each target a write touches is one stderr line, `<verb> <path>`, in the order the write
+touched them: the client's own targets, then the preference file, then each agent's
+instruction file in the order of the table of [§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files). The verb is `wrote` for
+the resolver script or a first VS Code extension ([§FS-integrations.4.2](FS-integrations.md#42-the-vs-code-extension)), `appended` for an
+added block, `updated` for a replaced block or extension, `exists` for a current target, and
+`skipped` for a user-guidance target whose agent is not in use ([§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files)).
 
 #### 4.1.7 Where a `~` target resolves
 
-The install-target hints ([§FS-integrations.1](FS-integrations.md#1-user-facing-command), [§FS-integrations.5](FS-integrations.md#5-json-format)) are printed verbatim and stay `~`-rooted so the artifact and the JSON descriptor are byte-stable across machines ([§FS-integrations.6](FS-integrations.md#6-determinism-and-exit-codes)); only resolution consults the environment. A `~/.config/…` target resolves against `$XDG_CONFIG_HOME` when that variable is set and non-empty, and against `~/.config` otherwise, because kitty, WezTerm, Zed, and grund's own user configuration each read their directory from it: a hardcoded `~/.config` on a machine that sets it writes where the tool never looks — the same silent, install-reports-success failure the separate `codium` client exists to prevent ([§FS-integrations.3.2.4](FS-integrations.md#324-codium)). Targets outside `~/.config` — `~/.local/bin/grund-open`, `~/.vscode/extensions`, `~/.tmux.conf`, the agent instruction files of [§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files) other than Zed's — are the paths those tools define and resolve against `$HOME` alone.
+Install targets are printed `~`-rooted, so the artifacts and the JSON descriptor are the
+same bytes on every machine ([§FS-integrations.6](FS-integrations.md#6-determinism-and-exit-codes)), and only a write resolves them. A
+`~/.config/…` target resolves against `$XDG_CONFIG_HOME` when it is set and non-empty, else
+`~/.config`, as kitty, WezTerm, Zed and grund's own user configuration do. Every other target,
+`~/.local/bin/grund-open`, `~/.vscode/extensions`, `~/.tmux.conf` and the agent instruction
+files of [§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files) other than Zed's, resolves against `$HOME` alone.
 
 ### 4.2 The VS Code extension
 
-`vscode --write` writes the unpacked extension directory (its `package.json`, the provider script, and a stamp file recording the embedded version) into the editor extensions directory. A present, byte-current same-version extension is left untouched (`exists`); a different, missing, or damaged grund-owned file is repaired. grund writes only files it owns inside its own extension directory; it never edits the user's `settings.json`.
+`vscode --write` writes the unpacked extension directory (its `package.json`, the provider
+script, and a stamp file recording the embedded version) into the editor extensions
+directory. A present, byte-current same-version extension is left untouched (`exists`); a
+different, missing, or damaged grund-owned file is repaired. grund writes only files it owns
+inside its own extension directory; it never edits the user's `settings.json`.
 
 ### 4.3 User preference and global agent instructions
 
-Every client `--write`, and every clientless `--write` carrying `--conversation` or `--conversation-target`, records the effective local-conversation preference in the user's Grund configuration at `~/.config/grund/config.toml`, resolved like every `~/.config` target ([§FS-integrations.4.1.7](FS-integrations.md#417-where-a--target-resolves)). This is deliberately user-scoped: whether a TUI has the rendering integration is a property of the user's machine, not a repository. The first client write defaults to `plain`; a stored value survives later writes unless the corresponding flag explicitly changes it. The same write synchronizes the preference into the global instruction file of every agent in use on the machine ([§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files), [§FS-integrations.4.3.9](FS-integrations.md#439-only-agents-in-use)).
+Every client `--write`, and every clientless `--write` with a conversation flag, records the
+effective local-conversation preference in the user preference file ([§FS-integrations.4.3.1](FS-integrations.md#431-the-conversation-key))
+and writes it into the global instruction file of every agent in use
+([§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files)).
 
 #### 4.3.1 The `conversation` key
 
-The key is **`[reference] conversation`** — the repository config's spelling for the same concept ([§FS-config.3.1.3](FS-config.md#313-conversation--one-name-two-scopes)); the scope alone decides the legal values: `plain` and `link` here, `link` only in a repository. Set it to `plain` when a rendering layer from [§FS-integrations.3](FS-integrations.md#3-per-client-artifacts) is installed and bare `§<ID>` citations are already clickable; set it to `link` when the surface cannot click a bare citation — a stock terminal, `ssh`, a TUI with no matcher — so the declaration location travels with the citation instead. Editing the file by hand is supported and equivalent to `--conversation`; `--write` is what synchronizes the instruction blocks from it.
-
-The repository side may commit the `link`-only opinion ([§FS-config.3.1](FS-config.md#31-reference--citation-form), [§DF-repo-conversation-opinion](../decisions/functional/DF-repo-conversation-opinion.md#df-repo-conversation-opinion-repositories-may-commit-a-link-only-conversation-rendering-opinion)); that opinion is the fallback for machines that never stated a preference, and an explicitly recorded preference here wins over it ([§DF-repo-conversation-opinion.2.3](../decisions/functional/DF-repo-conversation-opinion.md#23-precedence)).
+**`[reference] conversation`**, in the user preference file `~/.config/grund/config.toml`
+([§FS-integrations.4.1.7](FS-integrations.md#417-where-a--target-resolves)), is the repository config's key at the user's scope, where it takes
+`plain` or `link` ([§FS-config.3.1.3](FS-config.md#313-conversation--one-name-two-scopes)); the preference is the machine's, not a repository's
+([§DF-integrations-command.3](../decisions/functional/DF-integrations-command.md#3-consequences)). `plain` says a rendering layer of [§FS-integrations.3](FS-integrations.md#3-per-client-artifacts) makes a
+bare citation clickable; `link` says the surface cannot, as a stock terminal, `ssh` or a TUI
+with no matcher cannot, so the location travels with the citation. Editing the file by hand
+is equivalent to `--conversation`, and `--write` is what carries it into the instruction
+blocks. A repository's committed `link` opinion ([§FS-config.3.1](FS-config.md#31-reference--citation-form),
+[§DF-repo-conversation-opinion](../decisions/functional/DF-repo-conversation-opinion.md#df-repo-conversation-opinion-repositories-may-commit-a-link-only-conversation-rendering-opinion)) is the fallback for a machine that recorded no preference; a
+preference recorded here wins over it ([§DF-repo-conversation-opinion.2.3](../decisions/functional/DF-repo-conversation-opinion.md#23-precedence)).
 
 #### 4.3.2 The `conversation_target` key
 
-**`[reference] conversation_target`** selects how a linked citation addresses its declaration, and has no repository spelling at all ([§DF-conversation-link-target.2.3](../decisions/functional/DF-conversation-link-target.md#23-the-target-is-user-scoped-but-the-default-is-committable)). Each value names one fixed template, filled from the declaration's absolute path and line:
+**`[reference] conversation_target`** selects how a linked citation addresses its
+declaration, and has no repository spelling ([§DF-conversation-link-target.2.3](../decisions/functional/DF-conversation-link-target.md#23-the-target-is-user-scoped-but-the-default-is-committable)). Each value
+names one fixed template, filled from the declaration's absolute path and line:
 
 | Value | Rendered target |
 | --- | --- |
@@ -337,79 +444,110 @@ The repository side may commit the `link`-only opinion ([§FS-config.3.1](FS-con
 | `web` | the forge blob URL for the current ref, per the repository-web rule ([§FS-init.2.3.6](FS-init.md#236-clickable-citations)) |
 | `vscode`, `vscodium`, `cursor` | `<scheme>://file<abs>:<line>` |
 
-`file` is the default because it presumes nothing about the machine beyond a handler for `file:`, and because it degrades to a readable location where the scheme does not dispatch. An unknown value is a CLI error listing the accepted set on the flag ([§FS-integrations.6.2](FS-integrations.md#62-exit-codes)), and a warning that leaves no target from this file — falling back to `file` — when hand-written into the configuration ([§FS-integrations.4.3.5.3](FS-integrations.md#4353-an-uninterpretable-value)).
+`file` is the default, presuming only a handler for `file:` and degrading to a readable
+location where none dispatches ([§DF-conversation-link-target.2.2](../decisions/functional/DF-conversation-link-target.md#22-the-scheme-is-chosen-per-machine-and-file-is-the-default)). An
+unknown value is a CLI error on the flag ([§FS-integrations.6.2](FS-integrations.md#62-exit-codes)), and, written in the file, a
+warning that leaves no target from the file, so `file` applies ([§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error)).
 
 #### 4.3.3 The per-agent gate
 
-The linked form is **gated per agent** ([§DF-conversation-link-target.2.4](../decisions/functional/DF-conversation-link-target.md#24-the-form-is-gated-per-agent-and-the-fallback-is-path)): the Codex TUI renders a local-path Markdown destination in place of the link label, erasing the visible citation on a surface where the failure is silent. A target is therefore written into an agent's block only where the pair is verified, and every other block falls back to `path`: Claude receives every target; Pi receives `file` and `web`; Codex receives `web` and falls back to `path` for the local schemes; Gemini, Copilot, and Zed receive `path` until a click-test says otherwise. The gate can only hold a target at the form it already had, never make one worse, and it is reported rather than silent: each written instruction target's line names the form it received and, when that is not the form asked for, why — so a machine that set `vscodium` can see which agents took it ([§FS-integrations.4.4.4](FS-integrations.md#444-both-layers-in-the-report)).
-
-#### 4.3.4 Reading the file as TOML
-
-Because the file is hand-editable, grund reads the key the way TOML defines it rather than by matching one literal spelling: whitespace inside the section header, a dotted key path, and either quote style are all the same setting, because a spelling grund failed to *recognize* would be silently reversed to the default and then written back beside the original, leaving the opposite of what the user asked for.
+The linked form is gated per agent ([§DF-conversation-link-target.2.4](../decisions/functional/DF-conversation-link-target.md#24-the-form-is-gated-per-agent-and-the-fallback-is-path)): a target is written
+into an agent's block only where the pair is verified, and every other block falls back to
+`path`. Claude receives every target; Pi receives `file` and `web`; Codex receives `web`;
+Gemini, Copilot, and Zed receive `path`. The gate is reported rather than silent: each
+instruction target's line names the form it received and, when that is not the form asked
+for, why ([§FS-integrations.4.4](FS-integrations.md#44-per-agent-overrides)).
 
 #### 4.3.5 Nothing in the file is an error
 
-Nothing in the file says which keys grund consumes: `reference.conversation`, `reference.conversation_target`, and the per-agent overrides of [§FS-integrations.4.4](FS-integrations.md#44-per-agent-overrides) are the whole set, and **nothing in this file is ever an error**. One rule covers all of it: report the line, ignore it, continue on the effective preference. Each report is one `warning:` naming the line and what is being ignored, of the four kinds below. None of this changes the exit code ([§FS-integrations.6.2](FS-integrations.md#62-exit-codes)).
+grund reads `reference.conversation`, `reference.conversation_target` and the per-agent
+overrides of [§FS-integrations.4.4](FS-integrations.md#44-per-agent-overrides) as TOML defines them, so whitespace inside a section
+header, a dotted key path and either quote style are one setting. It reads and reports the
+file once per invocation, before any client artifact is installed, and nothing in it is an
+error: each line grund ignores is one `warning:` naming the line and what is ignored, and the
+run continues on the effective preference. A line is ignored when it holds:
 
-##### 4.3.5.1 An unused key
+- a key grund does not read, reported as `unused key <path>; grund reads only reference.conversation, reference.conversation_target, and reference.agents.<agent>.conversation_target from this file`;
+- an override under an agent grund does not know, reported as `unknown agent <name> in reference.agents; known agents: codex, claude, gemini, copilot, zed, pi`;
+- a value grund cannot interpret, quoted wrongly or outside `plain | link` for `conversation`
+  and the target set for `conversation_target`, which leaves grund with no such preference
+  from the file, so the run uses the flag if given and otherwise the `plain` and `file`
+  defaults. The two keys fail independently;
+- a repeated key after its first occurrence, which is the one a read uses and a write
+  rewrites.
 
-A key grund does not read is reported as `unused key <path>; grund reads only reference.conversation, reference.conversation_target, and reference.agents.<agent>.conversation_target from this file`. That covers a typo, a retired spelling, and a repository-only key set here in the belief that it applies to every project, all of which otherwise read as configured and do nothing.
-
-##### 4.3.5.2 An unknown agent
-
-An override under an agent grund does not know is reported as `unknown agent <name> in reference.agents; known agents: codex, claude, gemini, copilot, zed, pi`. It is the one warning that names the closed set rather than the key, because the mistake is almost always the agent's spelling.
-
-##### 4.3.5.3 An uninterpretable value
-
-A value grund cannot interpret — quoted wrongly, or outside `plain | link` for `conversation` and the target set for `conversation_target` — leaves grund with **no such preference from this file**, the same state as a machine that never wrote one: the run proceeds on the flag if given, and otherwise on the `plain` and `file` defaults. The two keys fail independently, so an unreadable target never costs the `plain`/`link` preference recorded beside it.
-
-##### 4.3.5.4 A repeated key
-
-For a repeated key the **first occurrence wins**, for each key separately. That is also the occurrence a write rewrites, so a read and a write can never disagree about which line is the setting.
-
-#### 4.3.6 Why the file warns where the repository config refuses
-
-That the whole file warns is the one place the two configurations deliberately differ. The repository config is a closed allow-list where an unknown section or an uninterpretable value is a hard error ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)), because it governs whether a tree checks clean and two installs must never disagree about it ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). Nothing here is shared or checked: this file is machine-local, read by one command, and expresses a preference between two renderings of the same true citation. Refusing to install a terminal integration because of a stale line in it would be the worse failure — an unparseable value is no more of a reason than an unread key, since both leave grund with nothing stated — and the user is told, at the line, what was ignored.
-
-#### 4.3.7 Read once, before any install
-
-The file is therefore read and reported on exactly once per invocation, **before** any client artifact is installed: the warnings appear once rather than per target, and the only thing that can fail is being unable to reach the file at all.
+The only failure the file can cause is being unreachable ([§FS-integrations.4.3.14](FS-integrations.md#4314-delimiters-and-failures)). It warns
+where the repository config refuses ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)) because it is machine-local and states
+only a preference between two renderings of one citation, so refusing to install over a
+stale line in it would be the worse failure.
 
 #### 4.3.8 The global instruction files
 
-The same write synchronizes a marked `## Grund citation rendering` block into the global instruction files for every supported agent with a file-backed user scope: Codex (`~/.codex/AGENTS.md`), Claude (`~/.claude/CLAUDE.md`), Gemini (`~/.gemini/GEMINI.md`), GitHub Copilot (`~/.copilot/copilot-instructions.md`), Zed (`~/.config/zed/AGENTS.md`), and Pi (`~/.pi/agent/AGENTS.md`). This is the global-file subset of the fixed supported-agent superset in [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints); Cursor and Windsurf expose user rules through their own settings rather than a portable file target, so their repository entrypoints still receive the same managed guidance through `grund init`. The committed entrypoint is also the only channel that reaches ephemeral environments — cloud agent sessions, CI, fresh containers — whose `$HOME` never persists a `--write`; the repository opinion ([§DF-repo-conversation-opinion](../decisions/functional/DF-repo-conversation-opinion.md#df-repo-conversation-opinion-repositories-may-commit-a-link-only-conversation-rendering-opinion)) exists for exactly the readers these files cannot reach.
+A write that records the preference ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)) also keeps a marked
+`## Grund citation rendering` block in the global instruction file of every supported agent
+with one, while the agent is in use on the machine: its directory exists, or the file already
+does.
 
-#### 4.3.9 Only agents in use
+| Agent | File | Directory |
+| --- | --- | --- |
+| Codex | `~/.codex/AGENTS.md` | `~/.codex` |
+| Claude | `~/.claude/CLAUDE.md` | `~/.claude` |
+| Gemini | `~/.gemini/GEMINI.md` | `~/.gemini` |
+| GitHub Copilot | `~/.copilot/copilot-instructions.md` | `~/.copilot` |
+| Zed | `~/.config/zed/AGENTS.md` | `~/.config/zed` |
+| Pi | `~/.pi/agent/AGENTS.md` | `~/.pi` |
 
-A target receives the block when the agent is **in use on this machine** — its own directory exists (`~/.claude`, `~/.codex`, `~/.gemini`, `~/.copilot`, `~/.config/zed`, `~/.pi`), or the instruction file already does, which keeps a file grund wrote earlier synchronized even if the directory test would no longer select it. Otherwise the target is reported `skipped <path> (no <dir>)` and nothing is created: `--write` installs a *rendering layer*, not the configuration trees of agents the machine does not have, and a stray `~/.pi/agent/AGENTS.md` on a machine that never ran Pi is a file the user did not ask for and will not think to remove. This mirrors the discovery rule the repository entrypoints already follow ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)): grund updates what is there and creates only what the environment shows is wanted. Installing an agent afterwards is served by re-running the command, which is idempotent ([§FS-integrations.6.1](FS-integrations.md#61-idempotent-writes)) and reports every target either way, so the skip is visible rather than silent.
-
-#### 4.3.10 The blocks carry policy, not syntax
-
-The block texts are self-scoping: they apply only inside grund repositories, so their entire footprint elsewhere is one inert sentence of session context. They **name no marker**, for the same reason the click matchers and the resolver may not hardcode one ([§FS-integrations.3.1.4](FS-integrations.md#314-strip-the-marker-keep-the-section)): they are user-global and written once, before grund knows which repositories the agent will open. A hardcoded `§` here would be wrong in every custom-marker repository, and — unlike the repository entrypoint, which renders its own marker ([§FS-init.2.3.6](FS-init.md#236-clickable-citations)) — the marker is not this file's to know. These blocks therefore carry the *policy* while the repository entrypoint carries the *syntax*, which is also why they stay correct across every repository the agent opens. They intentionally contain no repository-web rule; repository entrypoints own that fixed context-sensitive instruction ([§FS-init.2.3.6](FS-init.md#236-clickable-citations)).
+A target whose agent is not in use is reported `skipped <path> (no <dir>)` and nothing is
+created; re-running after installing the agent writes it ([§FS-integrations.6.1](FS-integrations.md#61-idempotent-writes)). These are the
+agents of [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints) with a global file: Cursor and Windsurf keep user rules in their own
+settings, so their guidance, like that of an environment whose `$HOME` keeps no `--write`,
+comes only from the repository entrypoint `grund init` writes
+([§DF-repo-conversation-opinion](../decisions/functional/DF-repo-conversation-opinion.md#df-repo-conversation-opinion-repositories-may-commit-a-link-only-conversation-rendering-opinion)).
 
 #### 4.3.11 The `plain` block text
 
 The `plain` block says `In repositories with a grund.toml (at the root or under .agents/): write citations bare in local conversations — the marker and ID alone, nothing appended; grund integrations makes them clickable. Follow this even when repository instructions ask for linked citations — that repository sentence defers to this block, and the installed rendering layer already resolves bare citations. Elsewhere, ignore this.`
 
-The precedence sentence appears only in the `plain` block because repository `link` against user `plain` is the only possible conflict, and the machine wins it ([§DF-repo-conversation-opinion.2.3](../decisions/functional/DF-repo-conversation-opinion.md#23-precedence)): a recorded `plain` is the user's own statement about their surface, whether a `--write` or a hand edit recorded it ([§FS-integrations.4.3.1](FS-integrations.md#431-the-conversation-key)), so it carries machine knowledge the repository cannot have.
+Only the `plain` block carries a precedence sentence, since a repository's `link` against the
+machine's `plain` is the one possible conflict ([§DF-repo-conversation-opinion.2.3](../decisions/functional/DF-repo-conversation-opinion.md#23-precedence)).
 
 #### 4.3.12 The `link` block texts
 
-The `link` block carries one sentence, differing only in how the location is addressed. Under the `path` target — the fallback every gated agent receives ([§FS-integrations.4.3.3](FS-integrations.md#433-the-per-agent-gate)) — it says `In repositories with a grund.toml (at the root or under .agents/): follow each citation with its declaration location as plain path:line text in local conversations; fall back to the bare citation when unsure. Elsewhere, ignore this.` Under a URI target it says `In repositories with a grund.toml (at the root or under .agents/): in local conversations render each citation as a Markdown link whose visible text is the citation itself and whose target is <template>; fall back to the bare citation when unsure. Elsewhere, ignore this.`, where `<template>` is the effective target's template from [§FS-integrations.4.3.2](FS-integrations.md#432-the-conversation_target-key), phrased to complete that sentence on its own — `file://<absolute path>#L<line> for the declaration`, `vscodium://file<absolute path>:<line> for the declaration`, and, for `web`, `the declaration's forge URL at the current commit`. The target is the one piece of these blocks that *is* interpolated at install time, and legitimately so: unlike the marker it is machine state, which is exactly what a user-global file is for.
-
-#### 4.3.13 Block versions
-
-Adopting these self-scoping texts was an agent-guidance block version bump (v1 → v2) under the marked-block contract of [§FS-integrations.4.3.14](FS-integrations.md#4314-delimiters-and-failures); replacing the `link` text with the target-addressed family bumps it again (v2 → v3), and naming both discovery locations in the self-scoping gate — a repository configured by a bare root `grund.toml` is a grund repository the old gate did not describe ([§FS-config.1](FS-config.md#1-file-location-and-discovery), [§DF-config-file-location](../decisions/functional/DF-config-file-location.md#df-config-file-location-grundtoml-is-discovered-at-two-names-per-directory-and-init-writes-the-bare-one)) — bumps it once more (v3 → v4).
+The `link` block carries one sentence, differing only in how the location is addressed. Under
+the `path` target, which every gated agent receives ([§FS-integrations.4.3.3](FS-integrations.md#433-the-per-agent-gate)), it says `In repositories with a grund.toml (at the root or under .agents/): follow each citation with its declaration location as plain path:line text in local conversations; fall back to the bare citation when unsure. Elsewhere, ignore this.`
+Under a URI target it says `In repositories with a grund.toml (at the root or under .agents/): in local conversations render each citation as a Markdown link whose visible text is the citation itself and whose target is <template>; fall back to the bare citation when unsure. Elsewhere, ignore this.`,
+where `<template>` is the effective target's template from [§FS-integrations.4.3.2](FS-integrations.md#432-the-conversation_target-key), phrased to
+complete that sentence on its own: `file://<absolute path>#L<line> for the declaration`,
+`vscodium://file<absolute path>:<line> for the declaration`, and, for `web`,
+`the declaration's forge URL at the current commit`.
 
 #### 4.3.14 Delimiters and failures
 
-The global instruction block uses versioned HTML-comment begin/end delimiters. The replacement, append, newer-version refusal, malformed/multiple-block rejection, preservation, idempotence, and stderr outcome rules are the same as the dotfile block's ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)). For a selected target ([§FS-integrations.4.3.9](FS-integrations.md#439-only-agents-in-use)), missing parent directories and the file itself are created because `--write` is the explicit installation action.
+The block sits between versioned HTML-comment delimiters:
 
-A failure to update the preference or any instruction file is an error. The preference file is validated first, before any client artifact is written, so the one failure [§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error) leaves — a preference file grund cannot reach ([§FS-integrations.4.3.7](FS-integrations.md#437-read-once-before-any-install)) — costs nothing and changes nothing; a block failure discovered later may leave an integration artifact already written, and re-running after correction safely completes the installation.
+```
+<!-- >>> grund integrations citation rendering (v4) >>> -->
+## Grund citation rendering
+
+<block text>
+<!-- <<< grund integrations citation rendering (v4) <<< -->
+```
+
+It is replaced, appended, refused, kept idempotent and reported by the rules of the dotfile
+block ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles), [§FS-integrations.4.1.6](FS-integrations.md#416-outcome-verbs)). For a target in use
+([§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files)), missing parent directories and the file itself are created.
+
+Failing to update the preference or any instruction file is an error. Failing to reach the
+preference file changes nothing ([§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error)); a block failure found later may
+leave an integration artifact already written, and re-running after the fix completes the
+installation.
 
 ### 4.4 Per-agent overrides
 
-One machine can read more than one agent, and the evidence says they do not render the same ([§FS-integrations.4.3.3](FS-integrations.md#433-the-per-agent-gate)). `[reference.agents.<agent>]` is therefore a **partial of the settings above, keyed by agent**, merged over them:
+Agents on one machine do not render alike ([§FS-integrations.4.3.3](FS-integrations.md#433-the-per-agent-gate)), so
+`[reference.agents.<agent>]`, where `<agent>` is one of `codex`, `claude`, `gemini`, `copilot`,
+`zed` or `pi`, the agents of [§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files), is a partial of the settings above,
+merged over them:
 
 ```toml
 [reference]
@@ -420,52 +558,78 @@ conversation_target = "vscodium"   # the machine-wide base
 conversation_target = "web"        # this agent only
 ```
 
-#### 4.4.1 The merge
+A key present under an agent replaces the machine-wide value for that agent, and an absent
+key inherits it; there is no per-agent default and no way to unset the base, so deleting the
+entry restores inheritance. `conversation_target` is the only key the partial accepts
+([§DF-conversation-link-target.2.5](../decisions/functional/DF-conversation-link-target.md#25-a-per-agent-override-is-a-preference-not-evidence)). `--agent <name>` takes the same names and scopes
+`--conversation-target`, and nothing else, to that agent: it writes one such entry and leaves
+both machine-wide keys as they were ([§FS-integrations.1.2](FS-integrations.md#12---conversation-target-and---agent)).
 
-The merge is shallow and the rule is one line: **a key present under an agent replaces the machine-wide value for that agent; an absent key inherits it.** There is no per-agent default and no way to unset the base — deleting the entry restores inheritance — so the base is always the answer unless something explicitly says otherwise. Only `conversation_target` is accepted inside the partial today; the shape is what makes adding a second key later a no-op rather than a second map keyed by the same agent names ([§DF-conversation-link-target.2.5](../decisions/functional/DF-conversation-link-target.md#25-a-per-agent-override-is-a-preference-not-evidence)).
-
-#### 4.4.2 `--agent`
-
-`--agent <name>` writes one such entry, scoping `--conversation-target` to that agent instead of the machine. It is accepted only with `--write` and only alongside `--conversation-target`; it scopes nothing else, and `--agent` with no target is a CLI error rather than a silent no-op. The accepted names are the six agents of [§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files) — `codex`, `claude`, `gemini`, `copilot`, `zed`, `pi` — and an unknown one is a CLI error listing them ([§FS-integrations.6.2](FS-integrations.md#62-exit-codes)). A scoped write leaves both machine-wide keys exactly as they were: the point of the flag is to change one agent without disturbing the base every other agent inherits.
-
-#### 4.4.3 The gate still runs last
-
-An override is a *preference*; the per-agent gate of [§FS-integrations.4.3.3](FS-integrations.md#433-the-per-agent-gate) is *evidence*, and evidence wins. Asking for `[reference.agents.codex] conversation_target = "vscodium"` resolves to `vscodium` and is then gated to `path`, exactly as the machine-wide value would be — the override moves the request, never the verdict. That keeps a per-agent escape hatch from becoming a way to write an instruction that is recorded as erasing citations.
-
-#### 4.4.4 Both layers in the report
-
-Both layers are visible in the report line of [§FS-integrations.4.3.3](FS-integrations.md#433-the-per-agent-gate):
+An override is a preference and the gate of [§FS-integrations.4.3.3](FS-integrations.md#433-the-per-agent-gate) is evidence, so the gate
+runs last: `[reference.agents.codex] conversation_target = "vscodium"` resolves to
+`vscodium` and is then written as `path`. Each instruction target's report line shows both
+layers:
 
 ```
-$ grund integrations --write --conversation-target vscodium
-updated /home/you/.claude/CLAUDE.md (link → vscodium)
-updated /home/you/.codex/AGENTS.md (link → web; agent override)
-updated /home/you/.gemini/GEMINI.md (link → path; vscodium unverified here)
-skipped /home/you/.pi/agent/AGENTS.md (no ~/.pi)
+$ grund integrations kitty --write --conversation link --conversation-target web --agent codex
+appended <sandbox>/xdg/kitty/kitty.conf
+wrote <sandbox>/home/.local/bin/grund-open
+appended <sandbox>/xdg/grund/config.toml
+appended <sandbox>/home/.codex/AGENTS.md (link → web; agent override)
+appended <sandbox>/home/.claude/CLAUDE.md (link → file)
+appended <sandbox>/home/.gemini/GEMINI.md (link → path; file unverified here)
+appended <sandbox>/home/.copilot/copilot-instructions.md (link → path; file unverified here)
+appended <sandbox>/xdg/zed/AGENTS.md (link → path; file unverified here)
+appended <sandbox>/home/.pi/agent/AGENTS.md (link → file)
 ```
-
-Without this the two layers are indistinguishable from a typo: a machine that set `vscodium` and finds `path` in a block has no way to tell an override from a gate from a key grund never read. The line is part of the contract for that reason, not a convenience.
 
 ## 5. JSON format
 
-`grund integrations --format json` (no client) emits the detection plan as one JSON object on stdout: the detected clients in frozen order, and for each the client name, whether it is detected, whether its grund-owned artifacts are installed and current, how it installs (`install_kind`, the [§FS-integrations.3.4.2](FS-integrations.md#342---write-on-a-manual-client) field that lets a caller tell a manual client's *not knowable* from *not installed*), and the exact `--write` command an agent would run. Installation checks read only the fixed integration targets; they never search the filesystem.
+`grund integrations --format json` with no client prints the detection plan as one JSON
+object on stdout, and any CLI-level `error:` on stderr ([§FS-errors.1](FS-errors.md#1-streams)). The plan is
+`{"detected":[…],"clients":[…]}`: `detected` lists the detected clients in client order, and
+`clients` holds one object per client, in client order, with these fields in this order:
+`client`, its name; `detected`; `installed`, whether its grund-owned artifacts are installed
+and current; `install_kind`, one of `block`, `extension` or `manual`
+([§FS-integrations.3.4](FS-integrations.md#34-manual-client-iterm2)); and `install`, the exact `--write` command an agent would run.
+Installation checks read only the fixed integration targets and never search the filesystem.
+It is the surface `grund guide` points an agent at ([§FS-init.5](FS-init.md#5-the-guide)): detect, show the diff, and
+write only on the user's confirmation.
 
 ### 5.1 The single-client object
 
-`grund integrations <client> --format json` emits one deterministic object describing that client's artifact — its target path(s) and the `--write` command — without printing the artifact bytes.
+`grund integrations <client> --format json` prints one object describing that client's
+artifact, its target paths and its `--write` command, without the artifact's bytes:
 
-### 5.2 Streams and the setup workflow
-
-The stream split follows the rest of the surface ([§FS-errors.1](FS-errors.md#1-streams)): the plan is stdout, any CLI-level `error:` is stderr. This is the machine surface `grund guide` points an agent at ([§FS-init.5](FS-init.md#5-the-guide)): detect, show the diff, write only on user confirmation.
+```json
+{"client":"wezterm","kind":"terminal","install":"grund integrations wezterm --write","install_kind":"block","config_target":"~/.config/wezterm/wezterm.lua","resolver_target":"~/.local/bin/grund-open"}
+```
 
 ## 6. Determinism and exit codes
 
-With an explicit `<client>`, output is a pure function of the binary version and the flags — no environment, no tree scan, no clock — so it is byte-identical across machines and safe to golden. The no-client detection form ([§FS-integrations.2](FS-integrations.md#2-detection)) is a pure function of the binary version, the named environment variables, and, for JSON, the fixed installation targets; it is byte-identical for a fixed environment and installation state.
+With an explicit `<client>`, output depends only on the binary version and the flags, never
+on the environment, a tree or the clock. Detection with no client depends also on the
+variables of [§FS-integrations.2](FS-integrations.md#2-detection) and, for JSON, the fixed installation targets.
 
 ### 6.1 Idempotent writes
 
-`--write` is idempotent ([§FS-integrations.4](FS-integrations.md#4-managed-writes---write)), and that holds for the preference file too: a recorded value equal to the effective one is left byte-for-byte alone, including any comment written beside it, rather than re-emitted in grund's own spelling. A manual client ([§FS-integrations.3.4](FS-integrations.md#34-manual-client-iterm2)) has no target to compare, so its `--write` is idempotent in the weaker sense that it re-installs the resolver only when stale and re-prints the same steps.
+`--write` is idempotent ([§FS-integrations.4](FS-integrations.md#4-managed-writes---write)), the preference file included: a recorded value
+equal to the effective one is left byte for byte, with any comment beside it, rather than
+rewritten in grund's spelling. A manual client ([§FS-integrations.3.4](FS-integrations.md#34-manual-client-iterm2)) has no target to
+compare, so its `--write` reinstalls the resolver only when stale and prints the same steps.
 
 ### 6.2 Exit codes
 
-Exit codes follow the frozen mapping ([§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)): `0` printed, written, or already current; `2` an unknown client, bare `--write` with neither a client nor a conversation flag, `--conversation` or `--conversation-target` without `--write`, `--agent` without `--write` or without `--conversation-target`, `--write` with `--format json`, an unknown agent name, an unknown flag, a managed block [§FS-integrations.4.1.4](FS-integrations.md#414-replacing-the-block) refuses (a missing matching delimiter, multiple blocks, or a version newer than this binary understands), or an I/O failure ([§FS-integrations.4.1.5](FS-integrations.md#415-the-resolver-script), [§FS-integrations.4.3.7](FS-integrations.md#437-read-once-before-any-install), [§FS-integrations.4.3.14](FS-integrations.md#4314-delimiters-and-failures)). There is no `1` outcome — `integrations` has no findings surface. Nothing in the user preference file is an exit code: its unused keys, uninterpretable values, and duplicates are warnings ([§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error)), as are `skipped` targets ([§FS-integrations.4.3.9](FS-integrations.md#439-only-agents-in-use)). An invalid `--conversation` or `--conversation-target` *argument* remains an error, because that is a value the caller typed on this command line rather than a stale line in a file.
+Exit codes follow the fixed mapping of [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed):
+
+- `0`: printed, written, or already current.
+- `2`: an unknown client; bare `--write` with neither a client nor a conversation flag;
+  `--conversation` or `--conversation-target` without `--write`; `--agent` without `--write`
+  or without `--conversation-target`; `--write` with `--format json`; an unknown agent name,
+  target or flag; a managed block [§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles) refuses; or an I/O failure
+  ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles), [§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error), [§FS-integrations.4.3.14](FS-integrations.md#4314-delimiters-and-failures)).
+
+There is no `1`: `integrations` has no findings. Nothing in the user preference file and no
+`skipped` target moves the exit code ([§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error), [§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files)), while
+an invalid `--conversation` or `--conversation-target` argument on the command line is an
+error.
