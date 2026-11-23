@@ -59,7 +59,7 @@ No section but a pointer sits more than three components below its ID. Where a s
 children are cases, all of them fold, so the parent states the promise whole. A lead says
 what its children decide, never how, and promises nothing they do not, because the
 exact-leaf coverage gate (`tests/integration/functional_spec_coverage.rs`) asks evidence of
-leaves alone.
+leaves alone, and of a parent only where its table of lead promises lists that parent.
 
 ## writing: How it is written
 

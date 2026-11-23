@@ -10,10 +10,21 @@ pub(super) enum CoverageProblem {
     InvalidException(String),
     CoveredException(String),
     EmptyReason(String),
+    DuplicateLeadPromise(String),
+    InvalidLeadPromise(String),
+    UncitedLeadPromise(String),
 }
 
 #[derive(Clone, Copy)]
 pub(super) struct Exception<'a> {
+    pub(super) id: &'a str,
+    pub(super) reason: &'a str,
+}
+
+/// A parent whose lead holds a promise none of its children holds
+/// (§REQ-spec-content.grain), with the promise in a few words.
+#[derive(Clone, Copy)]
+pub(super) struct LeadPromise<'a> {
     pub(super) id: &'a str,
     pub(super) reason: &'a str,
 }
@@ -28,16 +39,7 @@ pub(super) fn functional_spec_coverage_problems(
     temporary: &[Exception<'_>],
 ) -> Vec<CoverageProblem> {
     let sections = functional_spec_sections(catalog);
-    let leaves = sections
-        .iter()
-        .filter(|candidate| {
-            let descendant_prefix = format!("{candidate}.");
-            !sections
-                .iter()
-                .any(|section| section.starts_with(&descendant_prefix))
-        })
-        .map(String::as_str)
-        .collect::<BTreeSet<_>>();
+    let leaves = leaves_of(&sections);
     let exceptions = permanent.iter().chain(temporary);
     let mut occurrences = BTreeMap::<&str, usize>::new();
     for exception in exceptions.clone() {
@@ -75,6 +77,48 @@ pub(super) fn functional_spec_coverage_problems(
             .map(|id| CoverageProblem::UncoveredLeaf((*id).to_string())),
     );
     problems
+}
+
+/// Hold each listed parent's lead to exact evidence (§AR-goal-measurement.1): a
+/// citation of a child does not prove what only the parent's lead promises. An
+/// entry that names no section, or a leaf the rule above holds already, is invalid.
+pub(super) fn lead_promise_problems(
+    catalog: &Catalog,
+    evidence: &BTreeSet<&str>,
+    promises: &[LeadPromise<'_>],
+) -> Vec<CoverageProblem> {
+    let sections = functional_spec_sections(catalog);
+    let leaves = leaves_of(&sections);
+    let mut listed = BTreeSet::new();
+    let mut problems = Vec::new();
+    for promise in promises {
+        let id = promise.id.to_string();
+        if !listed.insert(promise.id) {
+            problems.push(CoverageProblem::DuplicateLeadPromise(id.clone()));
+        } else if !sections.contains(promise.id) || leaves.contains(promise.id) {
+            problems.push(CoverageProblem::InvalidLeadPromise(id.clone()));
+        } else if !evidence.contains(promise.id) {
+            problems.push(CoverageProblem::UncitedLeadPromise(id.clone()));
+        }
+        if promise.reason.trim().is_empty() {
+            problems.push(CoverageProblem::EmptyReason(id));
+        }
+    }
+    problems
+}
+
+/// The sections with no recorded descendant.
+fn leaves_of(sections: &BTreeSet<String>) -> BTreeSet<&str> {
+    sections
+        .iter()
+        .filter(|candidate| {
+            let descendant_prefix = format!("{candidate}.");
+            !sections
+                .iter()
+                .any(|section| section.starts_with(&descendant_prefix))
+        })
+        .map(String::as_str)
+        .collect()
 }
 
 fn functional_spec_sections(catalog: &Catalog) -> BTreeSet<String> {
@@ -322,4 +366,15 @@ pub(super) const TEMPORARY_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-show.2.3.1.1", reason: "the backward open-boundary walk changes no CLI output, so the slice has no observable form to assert yet" },
     Exception { id: "FS-workspace.8.4.3", reason: "the single-project fallback this names is not what complete_ids_run does today; the wording and the code have to be reconciled first" },
     Exception { id: "FS-workspace.requirements.ahead", reason: "specified ahead of its release; the Mount and Remotes pieces of remote projects prove it, and the relaxed standalone mode is owed to its own change" },
+];
+
+// Parents whose leads keep a promise of their own; the gate demands a test citing each exactly.
+// Sorted by coordinate; the fold pass appends a record's `lead-promises` here.
+#[rustfmt::skip]
+pub(super) const LEAD_PROMISES: &[LeadPromise<'static>] = &[
+    LeadPromise { id: "FS-show.2.1", reason: "a declaration with no lead prints nothing and exits 0 (folded 2.1.4)" },
+    LeadPromise { id: "FS-show.2.1.2", reason: "an empty lead or map, and a selected section's map (folded 2.1.2.2, 2.1.2.3)" },
+    LeadPromise { id: "FS-show.2.2", reason: "the default prints a section's heading and its lead (moved 2.1.5)" },
+    LeadPromise { id: "FS-show.2.3", reason: "section selection, the doc-comment forms, several declarations per comment and a stub read as its target (folded 2.3.3, 2.3.5-2.3.7)" },
+    LeadPromise { id: "FS-show.2.4", reason: "the slices over a manifest, which has no sections (folded 2.4.1)" },
 ];
