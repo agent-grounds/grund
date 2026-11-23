@@ -1,10 +1,10 @@
 # FS-repository-maintenance: Checkout maintenance stays discoverable
 
 The repository keeps its maintenance scripts under `scripts/`, carries the
-bindings needed to invoke them in each checkout, and keeps its acceptance
-tests tied to the checkout they exercise. This makes contributor
-housekeeping and verification reliable and easy to operate, serving
-[§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
+bindings that invoke them in each checkout, ties its acceptance builds to the
+checkout they exercise, and gives each temporary test root an owner, so
+contributor housekeeping and verification stay reliable in every checkout,
+serving [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
 These are repository maintenance hooks; they add no public `grund` command or
 hook to `grund check`.
 
@@ -25,149 +25,74 @@ Leans on [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure)
 
 ## 1. Clean verb
 
-### 1.1 Executable home
+The clean verb is the regular executable `scripts/clean.sh`, tracked with Git
+mode `100755`; the checkout root holds no `clean.sh` or wrapper. The
+checkout's root `ephor.json` declares `clean` as an object with
+`"command": "./scripts/clean.sh"` and `"cwd": "root"`, so the binding travels
+with the branch and needs no machine-local site override. Without one, ephor's
+non-acting clean preview resolves this executable for the intended checkout,
+reports `would-clean` with gated output, and exits `0`; acceptance uses the
+supported `ephor clean --workspace grund --json` preview without `--act`.
 
-The tracked clean verb is a regular executable at `scripts/clean.sh`, with Git
-mode `100755`. No `clean.sh` file or wrapper remains at the checkout root. The
-script cites the cleanup responsibilities in [§FS-repository-maintenance.1.4](FS-repository-maintenance.md#14-cleanup-responsibilities).
-
-### 1.2 Checkout-owned discovery
-
-The checkout's root `ephor.json` declares `clean` as an object with
-`"command": "./scripts/clean.sh"` and `"cwd": "root"`. This binding travels with
-the branch, preserves any other manifest fields, and requires no machine-local
-site override. In the absence of a site override, ephor's non-acting clean
-preview must resolve this executable for the intended checkout, report
-`would-clean` with gated output, and exit 0. Acceptance uses the supported
-`ephor clean --workspace grund --json` preview without `--act`.
-
-### 1.3 Checkout-root execution
-
-The clean verb runs with the checkout root as its working directory, despite
-living under `scripts/`. Both `cargo clean` and the cache-tag traversal operate
-on that checkout, including cache-tagged build output outside `scripts/`.
-
-### 1.4 Cleanup responsibilities
-
-The verb first runs `cargo clean`; a failed cargo invocation stops cleanup and
-returns a nonzero status. On success it removes directories beneath the checkout
-that contain a valid cache tag, including scratch builds, and exits 0. It leaves
-untagged directories and directories with invalid cache tags intact. Traversal
-prunes `.git` entries, so Git metadata and cache-tagged content inside `.git`
-remain intact. Relocation preserves these existing responsibilities.
-
-#### 1.4.1 Disposable acceptance remains reliable under writable-descriptor pressure
-
-Cleanup acceptance reads the actual copied `scripts/clean.sh` bytes in an
-exclusively owned disposable root. A controlled cargo substitute records its
-working directory and arguments and supplies the selected exit status; installed
-cargo must never run. This proves checkout-root execution
-[§FS-repository-maintenance.1.3](FS-repository-maintenance.md#13-checkout-root-execution)
-without cleaning the working checkout.
-
-On Linux, keeping writable descriptors open on the copied script and, separately,
-any generated cargo executable must not prevent acceptance from running. Each
-boundary is exercised with cargo status 0 and 7. Success records exactly
-`cargo clean` at the fixture root, removes valid tagged directories, and preserves
-invalid tags, untagged content, and Git metadata including tagged Git content.
-Status 7 records the same invocation, returns 7, and leaves all cache payloads
-and preserved content intact. A removed generated cargo executable needs no
-writer, but still requires these invocation, status, and cleanup assertions.
-Portable cleanup acceptance and the independent executable-mode and
-checkout-manifest checks remain in place.
+The verb runs with the checkout root as its working directory although it
+lives under `scripts/`, so `cargo clean` and the cache-tag traversal both run
+on the checkout. It runs `cargo clean` first; if that fails, it removes no
+cache-tagged directory and exits with cargo's status. Otherwise its traversal,
+which prunes every entry named `.git` at any depth, removes each cache-tagged
+directory it reaches and exits `0`: Git metadata, cache-tagged content inside
+`.git`, untagged directories and directories with an invalid cache tag stay
+intact. Its acceptance runs the script's actual bytes, copied into an
+exclusively owned disposable root, against a controlled cargo substitute, so
+testing it never cleans the working checkout or runs the installed cargo. On
+Linux, a writable descriptor held open on the copied script or on a generated
+cargo executable never stops that acceptance from running.
 
 ## 2. External Node acceptance target lifetime
 
-### 2.1 Ownership and reuse
+The Node acceptance harness's `node_target()` gives each checkout, by its
+resolved root, one target under the Node target root, records that root in
+the target as its owner, and every call for that checkout returns that target
+with its build output intact. Each call also reclaims every other target
+whose recorded owner checkout is gone, so contributors need no prune command.
+A target is reclaimed only when it is a regular directory directly under the
+Node target root holding a readable, complete ownership record, itself no
+symlink, that names an absolute resolved checkout root whose digest matches
+the target directory, and a filesystem lookup confirms that checkout is
+missing. A permission failure or any other uncertainty preserves the target,
+cleanup never follows an entry outside the shared root, and the shared tools
+are never reclaimed. An unowned target is never reclaimed, because its one-way
+name does not identify its checkout: a call from its live checkout adopts it
+with its build output, and one whose checkout is gone stays until someone
+removes it by hand.
 
-The Node acceptance harness must record each target's owning resolved checkout
-root. Repeated calls, including separate processes and calls through a symlink
-to the same checkout, must retain the same target and its build output. Two live
-checkouts must retain separate targets. Revisiting an existing unowned target
-for the current checkout must add ownership without discarding its artifacts.
-The shared root, target paths and shared tools remain stable.
-
-### 2.2 Automatic reclamation
-
-Each call to the harness's existing `node_target()` must reclaim other targets
-under the Node target root whose valid ownership positively identifies a
-checkout that no longer exists, including nonempty build output. A later call
-from a surviving checkout is sufficient; contributors need no separate prune
-command. Live targets and their artifacts, including the caller's, and shared
-tools must survive reclamation.
-
-### 2.3 Conservative deletion boundary and legacy entries
-
-Only a regular directory directly under the Node target root with a readable,
-complete ownership record naming an absolute resolved checkout root whose
-digest matches the target directory is eligible. A missing checkout must be
-confirmed by a filesystem lookup; permission failures and other uncertainty
-must preserve the target. Missing, malformed, incomplete or mismatched records,
-symlink entries or ownership records, and unrelated directories must not
-authorize deletion. Cleanup must never follow an entry outside the shared root.
-
-Legacy entries without ownership remain untouched: their one-way names do not
-identify their checkout. A returning live checkout can acquire ownership under
-[§FS-repository-maintenance.2.1](FS-repository-maintenance.md#21-ownership-and-reuse) for later reclamation, but this policy cannot
-automatically reclaim all old unrecorded entries. Identifying those entries
-remains a manual operation.
-
-### 2.4 Concurrent callers and source lifetime
-
-Concurrent helper calls must preserve live targets and artifacts and publish
-complete ownership records atomically, so another caller never consumes a
-partially written record as permission to delete. Concurrent reclamation of
-the same dead target must not fail an otherwise valid call. Once eligibility
-is established under [§FS-repository-maintenance.2.3](FS-repository-maintenance.md#23-conservative-deletion-boundary-and-legacy-entries), removal of that target or
-its descendants must tolerate transient Windows deletion contention within a
-bounded time. Removal counts as complete only when it succeeds or a filesystem
-lookup positively confirms that the affected path has disappeared. Persistent
-permission denial and unrelated errors must remain visible failures; an
-uncertain lookup does not establish absence.
-
-This is checkout lifetime tracking, with no build lease: callers must keep a
-source checkout present for the duration of builds using its target. Removing
-that source while its build still runs permits a later helper call to reclaim
-the target.
+Concurrent calls publish ownership records atomically, so no caller takes a
+partly written record as leave to delete, and concurrent reclamation of one
+dead target fails no otherwise valid call. Removal waits out transient Windows
+deletion contention for a bounded time, and only a success or a filesystem
+lookup that confirms the path is gone completes it: a persistent permission
+denial or any unrelated error fails the call. Ownership tracks the checkout,
+not a build: removing a checkout while a build uses its target lets a later
+call reclaim that target.
 
 ## 3. Checkout-owned terminal acceptance
 
-The terminal watch acceptance must exercise the CLI and core from its own
-checkout when no build input is supplied. Two checkouts under one home must
-not share the default build output or executable: a successful test must not
-silently exercise another checkout's core, and incompatible cores must not
-break an unrelated checkout's build. Cleaning shared build output does not
-establish checkout ownership and must not substitute for isolation.
-
-A caller may supply its own executable or Cargo target, taking responsibility
-for that input. Preparing the executable must propagate a build failure as an
-error, never skip acceptance. These are internal acceptance requirements; the
-terminal behavior remains [§FS-check.6.2.2](FS-check.md#622-owned-terminal-screen).
+With no build input supplied, the terminal watch acceptance exercises the CLI
+and core of its own checkout, and two checkouts under one home never share its
+default build output or executable. A caller may supply its own executable or
+Cargo target and answers for that input. A build failure while preparing the
+executable fails the acceptance rather than skipping it. The terminal behavior
+itself is [§FS-check.6.2.2](FS-check.md#622-owned-terminal-screen).
 
 ## 4. Temporary test roots have an owner
 
-### 4.1 Lifetime and removal
+The temporary-root helpers of the core, CLI and LSP tests own each root they
+create from the creation of its leaf, through setup, to the caller's last use,
+and remove it with its contents when that ends, on normal scope exit and while
+a test unwinds from a panic alike, so a passing suite leaves at most an empty
+shared base in its temporary area.
 
-The repository's temporary-root helpers retain ownership from successful leaf
-creation through setup and the caller's last use, including canonicalization,
-derived paths and constructors that consume a path. The root and its contents
-remain usable throughout that lifetime and are removed at its end, both on
-normal scope exit and while a test unwinds from a panic. Passing suites leave
-no owned roots or fixture contents in their temporary area; an empty shared
-base may remain. A panic does not opt a fixture out of removal.
-
-This covers core's `test_root` and `physical_test_root`, LSP's unit-test
-`test_root` and configured integration `support::test_root`, and the CLI's
-`off_grammar_precedence`, `off_grammar_compatibility` and
-`off_grammar_regressions` helpers. It adds no production API or retention
-environment variable.
-
-### 4.2 Independent allocation and occupied roots
-
-Repeated allocations with the same name on one thread have independent roots.
-Constructing or dropping either fixture must preserve the other's live files.
-Allocation exclusively claims an unoccupied leaf; an occupied candidate is
-refused without changing its contents, or a distinct candidate is chosen.
-Neither pre-clearing an occupied tree nor adopting it establishes ownership.
-Cleanup removes only the claimed leaf, never shared parents, historical roots
-or a refused candidate.
+Each allocation exclusively claims an unoccupied leaf, so allocations with the
+same name get independent roots. An occupied candidate is refused without
+changing its contents, or a distinct candidate is chosen. Cleanup removes only
+the claimed leaf, never a shared parent, a root an earlier run left, or a
+refused candidate.
