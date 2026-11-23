@@ -1,8 +1,6 @@
 # FS-non-goals: what grund will deliberately not do
 
-This spec exists to prevent feature creep. Every entry below is a thing `grund` could plausibly grow into and is **deliberately out of scope**. When a contributor proposes one of these, the answer is "no" — not because it would be hard, but because the answer was decided.
-
-A non-goal is not the same as "we'll do it later." Non-goals are commitments. To turn one into a goal requires a decision record under `docs/decisions/architectural/` overturning this spec, with a clear rationale.
+This page holds the line against feature creep: each entry below is something `grund` could plausibly grow into and deliberately does not do. A non-goal is a commitment, not a postponement: turning one into a goal takes a decision record under `docs/decisions/architectural/` that overturns this spec.
 
 ## terms: Terms
 
@@ -12,74 +10,39 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 
 ## 1. Markdown link validation
 
-`grund` does **not** validate `[text](url)` links, anchor `#section` references inside markdown, or HTTP URLs. Use [`lychee`](https://github.com/lycheeverse/lychee) for those — it is fast, focused, and well-maintained. Reasoning: there is no token-cheap reason to merge two lints into one binary.
+`grund` does **not** validate `[text](url)` links, anchor `#section` references inside markdown, or HTTP URLs. Use [`lychee`](https://github.com/lycheeverse/lychee) for those: there is no token-cheap reason to merge two lints into one binary.
 
-### 1.1 This repository's external-link gate
+This repository checks its own links with lychee, as a maintenance gate rather than a workflow required of `grund` users, and adds no network I/O to verification ([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)). On each change, the gate checks every internal link in the tree without the network, relative paths and their fragments included, and sends to the network only the external URLs on lines the change adds or modifies; a scheduled sweep of the default branch checks every external URL in the tree and reports what it finds dead rather than failing anyone's change. A canonical link to this repository's default branch counts as internal: its target and fragment are validated locally, and a missing target or a bad fragment fails the run before any network request is made.
 
-This repository runs lychee alongside its offline grund checks, in two places.
-The gate - every pull request, every merge-queue group, and the local
-`pre-commit run --all-files` - checks every internal link across the whole
-tree without the network: relative paths, fragments, and canonical links to
-this repository's default branch. It sends an external URL to the network only
-where the change adds or modifies the line that carries it. A scheduled sweep
-on the default branch checks every external URL in the tree, and reports what
-it finds dead rather than failing anyone's change. So a dead link a change adds
-or edits fails that change; a link already in the tree that goes dead fails the
-sweep, and no pull request that leaves it alone.
-
-Wherever an external URL is checked, the same tolerance applies. A bounded
-request timeout and retry policy tolerates transient network delays only when a
-subsequent attempt obtains a successful response. When a
-page on `github.com` answers a server error, a successful answer about the same
-resource from GitHub's API is that successful response; nothing passes without
-one. For a failure of a transient shape from any host, a second check of the same
-URL after the gate's own pass is such a subsequent attempt. A modestly slow response and recovery after four retryable failures must
-be tolerated; persistent timeouts and HTTP 404 responses must still fail the
-check that met them. No finite budget guarantees success through arbitrary external outages.
-
-Canonical links to this repository's default branch must first pass local
-target and fragment validation. Missing targets and bad fragments stop before
-network work; only the exact successfully checked self URLs are excluded from
-the network. This is the repository's own maintenance gate, not a workflow
-required of grund users, and it adds no network I/O to verification
-([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)).
+Wherever an external URL is checked, it passes only on a successful response. Its first attempt, a retry within a bounded timeout and retry policy, or a second check of a transient-shaped failure after the gate's own pass can obtain one; when a page on `github.com` answers a server error, a successful answer about the same resource from GitHub's API is that successful response.
 
 ## 2. Spelling, grammar, prose quality
 
-`grund` reads spec text as opaque content between IDs except for the explicitly delimited value-binding form defined by the value specification; it compares only that form's authored literal with the one numbered component it cites, or with the components of the root it cites joined by one ASCII space, and never infers values from surrounding prose. It does not lint English. Use any general-purpose linter — `vale`, `ltex-ls`, or a thousand others — alongside `grund`. Decided in [§DA-explicit-value-bindings](../decisions/architectural/DA-explicit-value-bindings.md#da-explicit-value-bindings-compare-only-authored-delimited-value-bindings) and [§DA-root-aimed-value-bindings](../decisions/architectural/DA-root-aimed-value-bindings.md#da-root-aimed-value-bindings-a-value-binding-may-aim-at-the-whole-root-its-components-joined-by-one-ascii-space), and specified by [§FS-values.3](FS-values.md#3-explicit-value-bindings).
+`grund` does not lint English. It reads spec text as opaque content between IDs, except for the explicit value binding [§FS-values.3](FS-values.md#3-explicit-value-bindings) defines, and never infers a value from surrounding prose. Use a general-purpose linter, such as `vale` or `ltex-ls`, alongside `grund`. Decided in [§DA-explicit-value-bindings](../decisions/architectural/DA-explicit-value-bindings.md#da-explicit-value-bindings-compare-only-authored-delimited-value-bindings) and [§DA-root-aimed-value-bindings](../decisions/architectural/DA-root-aimed-value-bindings.md#da-root-aimed-value-bindings-a-value-binding-may-aim-at-the-whole-root-its-components-joined-by-one-ascii-space).
 
 ## 3. Code AST parsing
 
-`grund` does not parse code. It does line-oriented regex over comments and doc-comments (per [AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)). It does not understand classes, methods, types, scopes, or call graphs. The stub-heading link is a file path, not a symbol reference. Reasoning: [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) rules out per-language parsers, and IDs are syntactic by design.
+`grund` does not parse code: it does not understand classes, methods, types, scopes or call graphs, and a stub's link is a file path, not a symbol reference ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)). [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) rules out per-language parsers, and IDs are syntactic by design.
 
 ## 4. Cross-workspace ID renaming
 
-`grund` does not provide a "rename ID" refactoring. A rename is the author's edit of the declaration and of the citations that name it, the steps [§FS-init.2.3.4](FS-init.md#234-managed-block-content-sections) teaches. The optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)) omits the affordance, and no first-party editor wrapper would add it ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)).
+`grund` does not provide a "rename ID" refactoring, and neither the optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)) nor any first-party editor wrapper ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)) adds one. A rename is the author's edit of the declaration and of the citations that name it, the steps [§FS-init.2.3.4.9](FS-init.md#2349-declaration-blast-radius) teaches.
 
 ## 5. Documentation generation
 
-`grund` does not generate HTML, PDF, or any rendered documentation from specs. It reads, validates, and slices spec content; it does not publish. Static-site generators are the right tool for that downstream — `grund <ID>` is a building block they can use.
+`grund` does not generate HTML, PDF, or any rendered documentation from specs. A static-site generator does that downstream, and `grund <ID>` is a building block it can use.
 
 ## 6. Decision database, audit log, history tracking
 
-`grund` does not store decisions in a database, render decision graphs over time, track who changed what when, or visualize the ID graph. Git is the audit log; `git log` is the time machine. The reverse-lookup the project does ship — `grund refs <ID>` ([§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id)) — answers "who cites this ID *now*" from a single scan; it is a query over the current tree, not a stored graph or a history view.
+`grund` does not store decisions in a database, render decision graphs over time, track who changed what when, or visualize the ID graph: git is the audit log. `grund refs <ID>` ([§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id)) answers who cites an ID now, from one scan of the current tree; it is a query, not a stored graph or a history view.
 
 ## 7. Inter-agent messaging or workflow
 
-`grund` is a checker and a retriever. It does not coordinate agents, queue work, route messages, or implement any kind of state machine. Tools like `rhei` exist for that.
+`grund` is a checker and a retriever. It does not coordinate agents, queue work, route messages, or implement any kind of state machine; tools like `rhei` do that.
 
 ## 8. Generalization beyond the ID scheme
 
-`grund` does not validate citation syntaxes outside configured `[[kinds]]` and
-the ordinary marked citation scheme. A project may model an RFC, ticket, or
-incident as a committed declaration and explicitly materialize it with
-[§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot),
-but there is no URL-only external resolver, markerless ticket recognition,
-remote lookup during resolution, or second external-citation catalog.
-
-The permitted form stays inside the ID scheme: a per-kind grammar parses the
-ID, a local Markdown declaration grounds it, and every reader uses the ordinary
-scanner. [§DISC-external-facts](../discussions/proposals/2026-09-07-external-facts.md#disc-external-facts-external-facts-are-committed-declarations-materialized-explicitly) replaces the earlier external-resolver proposal and records why that boundary preserves [§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check).
+`grund` does not validate citation syntaxes outside its configured kinds and the marked citation scheme ([§FS-citations](FS-citations.md#fs-citations-what-a-citation-is-and-where-its-text-is-never-rewritten)). A project may model an RFC, ticket, or incident as a committed Markdown declaration whose ID its kind's grammar parses, materialized explicitly with [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot) and read by the ordinary scanner, but there is no URL-only external resolver, markerless ticket recognition, remote lookup during resolution, or second external-citation catalog. [§DISC-external-facts](../discussions/proposals/2026-09-07-external-facts.md#disc-external-facts-external-facts-are-committed-declarations-materialized-explicitly) records why that boundary preserves [§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check).
 
 ## 9. Severity, exit code, or report-ordering customization
 
@@ -87,34 +50,30 @@ The set of severities, the exit-code mapping (`0`/`1`/`2`) and the report orderi
 
 ## 10. Interactive mode
 
-`grund` does not have a TUI, an interactive prompt, or a confirmation step. Every subcommand is non-interactive and CI-friendly. Reasoning: [§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out) — interactive flows block CI and complicate scripting.
+`grund` does not have a TUI, an interactive prompt, or a confirmation step. Every subcommand is non-interactive and CI-friendly, because an interactive flow would block CI and complicate scripting ([§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out)).
 
 ## 11. Network access during a check
 
-`grund check` performs no network I/O and executes no configured integration.
-Neither do queries, formatting, completion, or LSP requests
-([§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service)). There is no "fetch this URL," no "validate against a remote schema," and no telemetry. Only an explicit `grund fetch` ([§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)) materializes an external fact, and the fact is checked only once saved in the repository, as a declaration or a committed projection; verification itself stays offline.
+`grund check` performs no network I/O and executes no configured integration, and neither do queries, formatting, completion, or LSP requests ([§REQ-runs-offline.1](../requirements/REQ-runs-offline.md#1-read-and-verification-paths-execute-nothing)). There is no telemetry. Only an explicit `grund fetch` ([§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)) materializes an external fact, which is checked only once saved in the repository, as a declaration or a committed projection ([§REQ-runs-offline.2](../requirements/REQ-runs-offline.md#2-materialization-is-explicit)).
 
 ## 12. Surfaces outside `grund-core` and the LSP transport
 
-`grund` ships exactly two kinds of surface over the engine: the bindings [§FS-distribution](FS-distribution.md#fs-distribution-grund-distribution-targets) targets (cargo CLI, Node API, Python API, LSP server) and nothing else. Anything that would add a third — in-engine scripting, per-editor wrappers, marketplace plugins — is out of scope.
+`grund` ships exactly two kinds of surface over the engine, the bindings and the LSP server [§FS-distribution](FS-distribution.md#fs-distribution-grund-distribution-targets) targets, and nothing else: anything that would add a third, such as in-engine scripting, a per-editor wrapper or a marketplace plugin, is out of scope.
 
 ### 12.1 Plugins or scripting hooks inside the engine
 
-`grund-core` is a library. Bindings ([§FS-distribution](FS-distribution.md#fs-distribution-grund-distribution-targets)) are first-party. There is no plugin system, no Lua hook, no JavaScript user script that runs during a check. Custom behavior is achieved by calling the API from your own code; the core stays small. Reasoning: a plugin surface multiplies attack surface, breaks reproducibility, and undermines "two installs agree."
+`grund-core` has no plugin system, and no Lua hook or JavaScript user script runs in it: it is a library, and custom behavior calls its first-party bindings ([§FS-distribution](FS-distribution.md#fs-distribution-grund-distribution-targets)) from your own code. A plugin surface multiplies attack surface and breaks reproducibility, letting two installs disagree ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 
 ### 12.2 First-party per-editor plugins
 
-`grund` does not publish editor plugins to a marketplace, and does not ship or maintain an editor plugin that duplicates the LSP server: no VSCode extension, IntelliJ plugin, Vim/Neovim plugin, Emacs package, or other editor-specific wrapper of it. The optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)) is the only first-party surface for what the protocol serves; configuring an editor to talk to it is the user's one-time work, with the example snippets of [§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor). The terminal-link extension the binary carries ([§FS-integrations.3.2](FS-integrations.md#32-editor-clients-vscode-codium)) stays in scope: it is never published to a marketplace, and it links `§<ID>` in the integrated terminal, which the LSP does not reach. Reasoning: per-editor plugins multiply maintenance surface across release cadences we do not control (marketplace review, extension manifests, native UI APIs), and the LSP protocol already gives every modern editor the capabilities `grund-lsp` exposes ([§FS-lsp.1](FS-lsp.md#1-capabilities)) for free. Decided in [§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary). Reconsidering this entry would require an architectural decision record overturning [§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary).
+`grund` does not publish editor plugins to a marketplace, and does not ship or maintain an editor plugin that duplicates the LSP server, for VSCode, IntelliJ, Vim, Emacs or any other editor. The optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)) is the only first-party surface for what the protocol serves, and configuring an editor to use it is the user's one-time work ([§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor)). The terminal-link extension the binary carries ([§FS-integrations.3.2](FS-integrations.md#32-editor-clients-vscode-codium)) stays in scope: it is never published to a marketplace, and it links `§<ID>` in the integrated terminal, which the LSP does not reach. Per-editor plugins would multiply maintenance across release cadences `grund` does not control, for capabilities the protocol already gives every modern editor ([§FS-lsp.1](FS-lsp.md#1-capabilities)). Decided in [§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary).
 
 ## 13. Anything that would let two `grund` installs disagree
 
-Above all: any feature that could make two correctly-configured `grund` installs of one version (for a development build, one commit, [§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit)) disagree, on the same input ([§REQ-deterministic-output.2](../requirements/REQ-deterministic-output.md#2-input-is-the-tree-the-config-and-the-invocation)), about whether a repo is well-formed or about any output byte is permanently out of scope. This is the bright line.
+Any feature that could make two correctly-configured `grund` installs of one version (for a development build, one commit, [§FS-distribution.4.1.1](FS-distribution.md#411-a-development-build-names-its-commit)) disagree, on the same input ([§REQ-deterministic-output.2](../requirements/REQ-deterministic-output.md#2-input-is-the-tree-the-config-and-the-invocation)), about whether a repo is well-formed or about any output byte is permanently out of scope: this is the bright line.
 
 ## 14. Generated summaries; token-saving inside `check`
 
-The token-cheap read modes — the default `grund <ID>` lead slice ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)), `grund <ID> --brief` ([§FS-show.2.1.1](FS-show.md#211-brief---brief)), `grund <ID> --toc` ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), `grund refs <ID> --summary` ([§FS-refs.3.3](FS-refs.md#33---summary)), `grund list --summary` ([§FS-list.3.3](FS-list.md#33---summary)) — are *structural slices* of the heading tree and the citation graph: heading lines, lead prose, per-file counts. There is no model-generated summary, no paraphrase, no "TL;DR": a slice prints the author's bytes with only the rewrites [§FS-show.requirements.authored-bytes](FS-show.md#requirementsauthored-bytes-a-slice-is-the-authors-bytes-selected-and-never-rewritten) names, so it stays byte-deterministic on its input like every other output ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). Reasoning: `grund`'s value is that the same input gives the same answer everywhere; a generative summarizer is the opposite of that. Decided in [§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in), carrying forward the structural-slices rule from [§DF-show-token-cheap-reads](../decisions/functional/DF-show-token-cheap-reads.md#df-show-token-cheap-reads-grund-show-keeps-the-full-body-default-token-cheap-slices-are-opt-in).
+The token-cheap reads, `grund <ID>` ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)), `--brief` ([§FS-show.2.1.1](FS-show.md#211-brief---brief)), `--toc` ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), `grund refs <ID> --summary` ([§FS-refs.3.3](FS-refs.md#33---summary)) and `grund list --summary` ([§FS-list.3.3](FS-list.md#33---summary)), are structural slices of the heading tree and the citation graph, never a generated summary or paraphrase: a slice prints the author's bytes with only the rewrites [§FS-show.requirements.authored-bytes](FS-show.md#requirementsauthored-bytes-a-slice-is-the-authors-bytes-selected-and-never-rewritten) names, so it stays byte-deterministic on its input ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). Decided in [§DF-show-token-cheap-reads](../decisions/functional/DF-show-token-cheap-reads.md#df-show-token-cheap-reads-grund-show-keeps-the-full-body-default-token-cheap-slices-are-opt-in) and [§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in).
 
-### 14.1 Token-saving inside `check`
-
-The token economy applies only to the read/query surface: `grund check` findings are never abridged — every dangling citation, every warning, in full located form ([§FS-errors.2.1](FS-errors.md#21-located-finding)) — because a check that hides findings to save tokens would defeat the point. A quiet checker is worse than a verbose one.
+The token economy applies only to the read and query surface: `grund check` never abridges its findings to save tokens, and prints every retained finding whole, in its located form ([§FS-check.2.1](FS-check.md#21-report-format), [§DF-show-token-cheap-reads.2.3](../decisions/functional/DF-show-token-cheap-reads.md#23-check-is-not-abridged)).
