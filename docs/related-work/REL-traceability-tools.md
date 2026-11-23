@@ -123,7 +123,7 @@ documentation is silent says so. A capability not named was not found on the pag
   build. `needimport` from a [URL](https://sphinx-needs.readthedocs.io/en/8.5.0/directives/needimport.html) and [`needservice`](https://sphinx-needs.readthedocs.io/en/8.5.0/directives/needservice.html) fetch remote data; the `needs_id`
   [builder](https://sphinx-needs.readthedocs.io/en/8.5.0/builders.html) writes one JSON file per need. Its editor support, [ubCode](https://sphinx-needs.readthedocs.io/en/8.5.0/installation.html), is the vendor's
   [proprietary](https://ubcode.useblocks.com/usage/ublicense.html) VS Code extension.
-- **StrictDoc 0.30.2** (Apache-2.0, [released 2026-10-09](https://github.com/strictdoc-project/strictdoc/releases/tag/0.30.2)). Its [user guide](https://strictdoc.readthedocs.io/en/stable/stable/docs/strictdoc_01_user_guide.html) ([source](https://github.com/strictdoc-project/strictdoc/blob/0.30.2/docs/strictdoc_01_user_guide.sdoc))
+- **StrictDoc 0.30.2** (Apache-2.0, [released 2026-10-09](https://github.com/strictdoc-project/strictdoc/releases/tag/0.30.2)). Its [user guide](https://strictdoc.readthedocs.io/en/stable/stable/docs/strictdoc_01_user_guide.sdoc.html) ([source](https://github.com/strictdoc-project/strictdoc/blob/0.30.2/docs/strictdoc_01_user_guide.sdoc))
   documents SDoc, experimental Markdown, and opt-in source traceability: `@relation`
   markers in Python, C/C++, Rust and Robot Framework files, read by language-aware
   parsers, and in any other file through a generic parser, resolve against the UIDs the
