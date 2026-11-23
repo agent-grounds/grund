@@ -2,13 +2,9 @@
 
 The words the functional spec and the architecture share are settled here, once, and
 every spec and every architecture page leans on the groups below instead of defining
-them again. A slice read on its own only answers on its own if its words mean one
-thing, which is what the escalation ladder of
-[§GOAL-token-economy.1](../goals.md#1-what-this-requires) assumes: the cheap read stops being cheap the moment a reader has
-to open thirty-seven other files to learn which sense of *declaration*, *coordinate* or
-*finding* is meant. A group here is a coordinate and a term is a **bold label**, so the
-vocabulary joins that ladder at the group and no individual word becomes a citation
-target.
+them again, because a slice read on its own answers on its own only if its words mean
+one thing ([§GOAL-token-economy.1](../goals.md#1-what-this-requires)). A group here is a coordinate and a term is a **bold label**,
+so a page cites a group and no individual word becomes a citation target.
 
 ## terms: Terms
 
@@ -19,63 +15,49 @@ The entry states only what it adds and neither restates nor contradicts the shar
 definition.
 
 Every declaration the functional-spec index lists carries exactly one
-`## terms: Terms` chapter, placed immediately after its lead. Every page the
-architecture index links carries the same chapter, placed immediately after its
-`placement` chapter, the index page itself excepted. That chapter opens with a **lean
-line**: a citation of each group below that the document takes a word from, naming
-those words in parentheses.
+`## terms: Terms` chapter, placed immediately after its lead, and every page the
+architecture index links, the index page excepted, carries one placed immediately after
+its `placement` chapter. The chapter opens with a **lean line**: a citation of each group
+below that the document takes a word from, naming those words in parentheses.
 
 ```text
 Leans on §FS-terms.terms.1 (declaration, ID, section, coordinate),
 §FS-terms.terms.2 (marker, citation), and §FS-terms.terms.5 (finding, severity).
 ```
 
-The line is exhaustive over the shared words the document uses in the shared sense:
-groups in ascending order, the words inside a group's parentheses in the order of their
-rows, and a group the document takes no word from omitted entirely. After the lean line
-the chapter carries only the words that document introduces or narrows, as bold labels
-in a list with no child headings. A chapter holding nothing but a lean line is correct
-rather than incomplete — the chapter's presence is what is required, and inventing a
-word to fill it is the drift this file exists to close.
+The lean line names every shared word the document uses in the shared sense
+([§FS-terms.senses](FS-terms.md#senses-what-counts-as-a-use)): groups in ascending order, the words inside a group's parentheses in
+the order of its rows, and a group the document takes no word from left out. After it
+the chapter lists only the words the document introduces or narrows, as bold labels with
+no child headings, and a chapter holding nothing but a lean line is complete.
 
-The *Displaces* sentences below bind prose. They do not reach a shipped surface or a
-frozen text: the `value_chapter` config key, the `unknown reference` message, the
-`namespace` bytes `grund init` writes from `crates/grund-core/assets/templates/`, the
-ID `DF-chapter-rules`, and the accepted GOAL, REQ and decision-record texts keep the
-words they have. The debt they create is never a precondition: a retired word is
-rewritten as prose is written or rewritten, so no change owes a pass of its own and none
-is held for one. A pass commissioned on purpose is the other way to pay it and is
-permitted; it answers for the words it names and for nothing else.
+A *Displaces* sentence below binds prose, never a shipped surface or a frozen text: a
+config key such as `value_chapter`, a message, the bytes `grund init` writes, an ID, and
+the accepted GOAL, REQ and decision-record texts keep the words they have. A retired word
+is rewritten when its prose is next written; no change owes or waits for a sweep, and a
+sweep made on purpose answers only for the words it names.
 
-[§GRUND-links.2](../grund.md#2-holding-every-edit-to-them) promises that every cited ID and section coordinate resolves. A term
-here is a bold label, not a coordinate, so `grund check` holds the sections that contain
-the vocabulary and the citations that reach those sections — not the labels, the names
-in a lean line's parentheses, their uniqueness or their meaning, or whether a document's
-lean line is complete.
+`grund check` holds the sections that contain the vocabulary and the citations that
+reach them ([§GRUND-links.2](../grund.md#2-holding-every-edit-to-them)), not the labels, the words in a lean line's parentheses, their
+uniqueness or meaning, or whether a lean line is complete. In the functional spec
+[§RULE-terms](../rules/RULE-terms.md#rule-terms-each-fs-must-have-exactly-one-terms-chapter), a chapter rule this repository declares ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)), fails `grund check` on
+a spec that drops the chapter, and four fixed-syntax invariants gate beside it: a word
+defined under two groups, a parenthesised word the group it cites does not define, a word
+defined twice in one document's own chapter, and a shared word redefined without the
+`(narrowed)` form. The invariants are held by
+`tests/integration/test_functional_spec_terms_content.py`, and the advisory report of
+[§FS-terms.senses](FS-terms.md#senses-what-counts-as-a-use) is its `--advisory` mode. Two failures are left over, a label renamed here
+while other documents still use the word and a lean line that names a group the document
+does not lean on or omits one it does, and both are reported rather than gated. In the
+architecture only the chapter's presence is held, by a test rather than a rule, because no
+rule sentence can except the index page.
 
-What holds the rest is written down home by home, so a reader knows what a green run has
-said and what it has not. In the functional spec the chapter's presence is
-[§RULE-terms](../rules/RULE-terms.md#rule-terms-each-fs-must-have-exactly-one-terms-chapter), a chapter rule this repository declares
-([§FS-rules.3.1](FS-rules.md#31-chapter-presence)), so a spec that drops the chapter fails `grund check` rather than
-passing it, and four fixed-syntax invariants gate beside that
-rule: a word defined under two groups, a parenthesised word the group it cites does not
-define, a word defined twice in one document's own chapter, and a shared word redefined
-without the `(narrowed)` form. Two failures are left over — a label renamed here while
-other documents still use the word, and a lean line that names a group the document no
-longer leans on or omits one it does — and both are reported rather than asserted,
-because [§FS-terms.senses](FS-terms.md#senses-what-counts-as-a-use) excludes two senses no machine recognizes and a gate over them
-would ask authors to name words they do not use. In the architecture only the chapter's
-presence is held, by a test rather than by a rule, because no rule sentence can except
-the index page: all three failures still pass the gate there.
-
-The two left over are what this file asks a reviewer to verify by hand, and the report of
-[§FS-terms.senses.5](FS-terms.md#senses5-what-the-advisory-reports) is what they read instead of searching. For a change that touches
-shared-term prose, this file, or a Terms chapter: run that report, reconcile what it says
-about the documents the change touches with `grund refs FS-terms.terms.N`, and add to
-each document's lean line, under its group, every shared word the change newly gives the
-document in the shared sense. The review accounts for that and for any pre-existing
-omission it is shown; certifying the completeness of unchanged prose beyond that is not
-part of it.
+A reviewer checks those two by hand. For a change that touches shared-term prose, this
+file or a Terms chapter, the reviewer runs the advisory report, reconciles what it says
+about the documents the change touches with `grund refs FS-terms.terms.N`, and adds to
+each such document's lean line, under its group, every shared word the change newly gives
+it in the shared sense. The review answers for that and for any pre-existing omission it
+is shown, and certifies no other unchanged prose.
 
 ### terms.1: Declarations and coordinates
 
@@ -85,17 +67,17 @@ part of it.
 - **home** — The file or folder a kind's declarations live in. Never where one ID is declared: say *declaring file* for that.
 - **citable** — Can be the target of a citation.
 - **body** — The declaration heading through the heading that closes it.
-- **section** — A numbered or named heading inside a body. Its section path is the dotted tail. The front matter of a declaration whose kind declares a `front-matter` field, and each of its top-level keys, are sections too, with no heading and outside the body ([§FS-fields.front-matter.coordinates](FS-fields.md#front-mattercoordinates-its-coordinates)). Displaces *chapter* and *point* in prose: a heading inside a body is a section, a whole declaration is a *declaration*, and a measurement taken per declaration or per section site is *per-coordinate*. *chapter* remains the rule grammar's subject-unit word, and stays for a named second-level section that a chapter rule or an obligation requires by name — the Terms chapter, the `placement` chapter; a numbered heading is a section.
+- **section** — A numbered or named heading inside a body. Its section path is the dotted tail. The front matter of a declaration whose kind declares a `front-matter` field, and each of its top-level keys, are sections too, with no heading and outside the body ([§FS-fields.front-matter.coordinates](FS-fields.md#front-mattercoordinates-its-coordinates)). Displaces *chapter* and *point* in prose: a heading inside a body is a section, a whole declaration is a *declaration*, and a measurement taken per declaration or per section site is *per-coordinate*. *chapter* remains the rule grammar's subject-unit word, and stays for a named second-level section that a chapter rule or an obligation requires by name, such as the Terms chapter or the `placement` chapter.
 - **relative heading** — A section heading inside a Markdown declaration body that writes one `.` and one component (`### .1: Username`) and takes the rest of its path from its parent heading ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)).
 - **canonical path** — The complete section path a heading declares: the path a complete-path heading writes, or a relative heading's parent path, a `.` and its component. It is the section's one coordinate.
 - **section lock** — The committed record, one file per cited declaration under `.grund/sections/`, of what each cited address it enrols ([§FS-section-lock.holds.entry](FS-section-lock.md#holdsentry-one-line-per-locked-address)) held when `grund fmt --write` last recorded it. Bare *lock* stays `grund.lock` ([§FS-remote-projects.terms](FS-remote-projects.md#terms-terms)).
-- **field** — A kind's requirement that every declaration in it carry a given named section, as a `[[kinds]]` row, a chapter rule or a version-2 `fields.<name>` table writes it. A v2 field also carries a strength, where `may` makes it optional, a placement among the direct sections, and its content: prose, values, or one of a closed list of titles ([§FS-fields](FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it)). The section itself is a *chapter*; the field is the requirement on it. The one field that is no chapter is `front-matter`, which requires the file's front matter and holds its keys ([§FS-fields.front-matter](FS-fields.md#front-matter-front-matter-is-a-field)). Does not displace the JSON output *field*, which is always qualified by the object it is on.
-- **form** — What a kind's declarations are: prose, values, or rules. v1 spells it `values = true` and `rules = true`, v2 `form` ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)).
+- **field** — A kind's requirement that every declaration in it carry a given named section, as a `[[kinds]]` row, a chapter rule or a version-2 `fields.<name>` table writes it; a version-2 field also carries a strength, a placement and its content ([§FS-fields](FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it)). The section itself is a *chapter*; the field is the requirement on it. The one field that is no chapter is `front-matter`, which requires the file's front matter and holds its keys ([§FS-fields.front-matter](FS-fields.md#front-matter-front-matter-is-a-field)). Does not displace the JSON output *field*, which is always qualified by the object it is on.
+- **form** — What a kind's declarations are: prose, values, or rules ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)).
 - **closed** — Said of a kind whose declarations admit only its declared fields and numbered sections as direct sections, at the strength its `closed` key writes ([§FS-fields.declare.closed](FS-fields.md#declareclosed-closed-is-a-strength-on-the-row)).
 - **coordinate** — An ID with an optional section path: the complete target of a citation. Displaces *section reference*.
 - **lead** — The prose of a declaration or section, cut at its first child section.
 - **index** — A kind's index file, and its entries. Every other *index* becomes a table, a map or a cache.
-- **catalog** — The scan's shared set of declarations and their citable sections, which query commands select or render. Bare *catalog* is that ID catalog; a compound whose qualifying noun names what it catalogs — the code catalog, a finding catalog, a rule catalog — is a term of its own.
+- **catalog** — The scan's shared set of declarations and their citable sections, which query commands select or render. Bare *catalog* is that ID catalog; a compound whose qualifying noun names what it catalogs, such as the code catalog, is a term of its own.
 
 ### terms.2: Citations
 
@@ -125,16 +107,16 @@ part of it.
 
 ### terms.5: Findings
 
-- **finding** — one item of a report, or the single item a failed ID query emits on stderr: a `code`, a `message`, and nullable `path`, `line` and `sites`, where `sites` names every location only when one item has several. On the errors and warnings channels it carries `severity` `error` or `warning`; on the suggestions channel it carries no severity and `"channel":"suggestion"` stands in its place. Displaces *diagnostic* in prose except where FS-lsp names the protocol object; the internal `Diagnostic` type is unchanged.
-- **severity** — the `error`-or-`warning` classification a finding carries on the errors or warnings channel; a suggestion carries none. The set is frozen at exactly those two, so a consumer filtering on `severity` never sees a suggestion. Displaces *level* for this sense.
-- **suggestion** — a finding on the suggestions channel, emitted only under `grund check --suggestions`, carrying `"channel":"suggestion"` in place of a severity; it never changes exit status or replaces the `success` line. A channel, not a third severity.
-- **caution** — a run-level message with no location. Displaces *CLI-level warning* and *announcement*.
-- **verdict** — whether a run passes.
-- **anchor** — a Markdown heading fragment only. Findings are located: replace *anchors at* / *anchored at* with *is located at* / *located at*; rule facts are keyed.
+- **finding** — One item of a report, or the single item a failed ID query emits on stderr: a `code`, a `message`, and nullable `path`, `line` and `sites` (its JSON shape and channels are [§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)), where `sites` names every location only when one item has several. Displaces *diagnostic* in prose except where FS-lsp names the protocol object.
+- **severity** — The `error`-or-`warning` classification a finding carries on the errors or warnings channel; a suggestion carries none, and the set stays those two ([§FS-config.6.1](FS-config.md#61-suggestions-are-not-a-third-severity)). Displaces *level* for this sense.
+- **suggestion** — A finding on the suggestions channel, carrying `"channel":"suggestion"` in place of a severity: a channel, not a third severity ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). It never changes exit status ([§FS-check.2](FS-check.md#2-outputs)) or replaces the `success` line.
+- **caution** — A run-level message with no location. Displaces *CLI-level warning* and *announcement*.
+- **verdict** — Whether a run passes.
+- **anchor** — A Markdown heading fragment only. Displaces *anchors at* and *anchored at*: a finding is *located at* a site, and a rule fact is *keyed*.
 
 ### terms.6: Rules and directions
 
-- **direction, level** — The two parts of a `[citations]` rule: that one kind cites, or never cites, another, and its must / should / avoid / never strength. *rule* names the entry as a whole. *level* carries this sense alone, and heading depth and severity take their own words.
+- **direction, level** — The two parts of a `[citations]` rule: that one kind cites, or never cites, another, and its must / should / avoid / never strength. *level* carries this sense alone, and heading depth and severity take their own words.
 - **rule** — One rule the checker applies, as the config and the rule grammar name it: a `[citations]` entry as a whole, a `[[kinds]]` rule, or a chapter rule — a declaration whose title is one sentence. Checker behavior is a *check*.
 - **unit** — What a rule is applied once per: the node its subject selects, so that a finding names that node. The compound *grounding unit* is the same word at `require_grounding`'s scale and keeps its own name, and a measurement's `unit` key names what is counted rather than what a rule is applied to.
 - **grounded** — A grounding unit that cites at least one declaration.
@@ -158,64 +140,40 @@ part of it.
 
 ## senses: What counts as a use
 
-The comparison a lean line stands or falls by is over senses, not tokens: a document
-leans on a shared word where it uses that word in the shared sense, and an occurrence
-that is not that sense is not a lean. Four exclusions say which occurrences those are.
-Two of them are mechanical and the report of [§FS-terms.senses.5](FS-terms.md#senses5-what-the-advisory-reports) applies them; two are
-judgements a reader makes, which is why that report is advice and the completeness of a
-lean line is never a gate.
+A document leans on a shared word where it uses that word in the shared sense, and an
+occurrence in any other sense is not a lean. Four kinds of occurrence are not uses:
 
-### senses.1: A word written in a different sense is not a lean
+1. A word written in a different sense: `note:` before a stderr hint line is not a lean on
+   *note*, which [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) gives to an inline comment block.
+2. A word inside a compound, in both directions: "CLI-level error" does not lean on
+   *level*, and *declaration-local* does not use *declaration*. A hyphenated compound is
+   one name, so a word counts only where it stands on its own, with no word character and
+   no hyphen on either side of it.
+3. A word used only in the sense its own row retires: that prose is a debt the vocabulary
+   has already named, not a lean the lean line is missing.
+4. A token that names rather than uses: one occurring only inside a fenced block, a link
+   target, a heading anchor or a frozen code name, such as the `value_chapter` config key.
+   The retired-word test, `tests/integration/test_functional_spec_retired_words.py`, reads
+   prose through the same exclusion.
 
-A document that writes `note:` for a stderr hint line is not leaning on *note*, whose row
-gives the word to an inline comment block carrying a citation and its rationale. The
-exclusion is over the sense the row defines, so recognizing it means reading the sentence
-the word stands in. Not mechanical: the report names such an occurrence as a use, and the
-reader it is written for discards the line.
+The second and fourth are matched; the first and third are read from the sentence the
+word stands in, so no machine applies them and the completeness of a lean line is never
+a gate.
 
-### senses.2: A word occurring only inside a compound is not a use of that word
-
-The exclusion runs in both directions, and what spells a compound is the hyphen: a
-document that writes "CLI-level error" is not leaning on *level*, and a document that
-writes *declaration-local* is not using *declaration*. A hyphenated compound is one name,
-so the words inside it are not separately in play and a word counts only where it stands
-on its own, with no word character and no hyphen on either side of it. Mechanical, and the
-report applies it. The price is the occurrence where a compound really does carry its
-parts' sense, and that price is paid on purpose: the report never gates, and reading a
-compound as its parts would contradict the exclusion this one sits beside.
-
-### senses.3: A word used only in the sense its own row retires is not a lean
-
-A row that retires a word retires one sense of it, and prose still carrying that sense is
-a debt the vocabulary has already named rather than a lean the lean line is missing. Not
-mechanical, for the reason [§FS-terms.senses.1](FS-terms.md#senses1-a-word-written-in-a-different-sense-is-not-a-lean) gives: which sense an occurrence carries is
-read, not matched.
-
-### senses.4: A token that names rather than uses is not a lean
-
-A token occurring only inside a fenced block, a link target, a heading anchor or a frozen
-code name is a name, not a use — the `value_chapter` config key, the anchor a heading
-rename moves, the example a fence holds. Mechanical, and the report applies it. It is the
-same exclusion `tests/integration/test_functional_spec_retired_words.py` already reads
-prose through, so one implementation serves both and the exclusion has one place to drift
-from.
-
-### senses.5: What the advisory reports
-
-The report is per document and has two line forms, the first for a shared word the
-document uses without leaning on it and the second for a word it leans on without using:
+The advisory report applies the second and fourth to each document's prose outside its
+own Terms chapter, and reports an occurrence of the first or third kind as a use, for its
+reader to discard. It prints a line for a shared word the document uses without leaning
+on it, naming the group whose row defines the word, and a line for a word it leans on
+without using:
 
 ```text
-FS-cli: uses *catalog* in prose but does not lean on it (terms.1)
-FS-cli: leans on *kind* but the token appears nowhere in its prose
+<ID>: uses *<word>* in prose but does not lean on it (terms.<N>)
+<ID>: leans on *<word>* but the token appears nowhere in its prose
 ```
 
-It reads a document's prose outside that document's own Terms chapter, applies
-[§FS-terms.senses.2](FS-terms.md#senses2-a-word-occurring-only-inside-a-compound-is-not-a-use-of-that-word) and [§FS-terms.senses.4](FS-terms.md#senses4-a-token-that-names-rather-than-uses-is-not-a-lean), and cannot apply [§FS-terms.senses.1](FS-terms.md#senses1-a-word-written-in-a-different-sense-is-not-a-lean) or
-[§FS-terms.senses.3](FS-terms.md#senses3-a-word-used-only-in-the-sense-its-own-row-retires-is-not-a-lean). Its order is fixed — every line of the first form before every line of
-the second, documents in ascending ID order, and inside one document the shared words in
-group order and then in row order — so two runs over one tree print the same bytes
-([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)). It is silent unless it is asked for, and it is never an exit
-condition: it changes no verdict, and a line it prints is a question for an author rather
-than a failure. The count it reaches is not a contract and is never asserted, because a
-frozen count is a gate wearing another name.
+Every line of the first form comes before every line of the second, documents in
+ascending ID order, and inside one document the shared words in group order and then in
+row order, so two runs over one tree print the same bytes
+([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)). The report is silent unless it is asked for and is never an
+exit condition: a line it prints is a question for an author, and no count it reaches is
+asserted, because a frozen count would be a gate.
