@@ -58,22 +58,35 @@ sub-point of one goes to the same target. On top of the two rewrites above, it:
   points, the cited half of a `POINTERS` row, a moves test's `CHAPTERS`, and the
   schema's `x-grund-spec` id and href, then re-renders the configuration
   reference from the schema;
-- deletes the coverage exception rows of removed leaves;
+- deletes the coverage exception rows of removed leaves, and adds each record's
+  `lead-promises` to the gate's `LEAD_PROMISES` table, sorted and each once;
 - repoints every link to a heading anchor the rewrite removed or retitled,
   wherever it is written, a commit-pinned GitHub link aside, because `fmt`
-  re-derives only a link beside a citation.
+  re-derives only a link beside a citation;
+- keeps once a citation the retarget made repeat beside itself (`§A, §A`) on a
+  line it changed, outside the changelogs, agreement facts and e2e cases.
+
+It rewrites nothing inside a fenced block outside the spec, a verbatim quote such
+as a commit subject or a sample output, and names each removed coordinate there.
 
 It reads the section maps itself, at `--base` with `git show` and in the working
 tree, and refuses records it cannot apply safely before it writes anything, with
-exit status 2: a line it cannot read, a fold whose target is no ancestor, a target
-that is itself removed or absent, a source the base lacks or the tree still has.
+exit status 2: every record line it cannot read (`folds` and `moves` hold entry
+lines alone; `notes` is never read), a fold whose target is no ancestor, a target
+that is itself removed or absent, a source the base lacks or the tree still has, a
+lead promise that is no parent in the tree. A record every source of which is gone
+at the base and in the tree was applied by an earlier pass: it is named and
+skipped, so a run may be given every record so far.
 A removed section no record lists is printed as not retargeted, and the pass goes
 on, since another page's rewrite may still be in progress. What it cannot rewrite
 safely it reports, one site per line: a bare mention elsewhere, a removed section
 named in a run after a citation, a cited sub-point a record does not list, a moved
 section's relative name in a test row, a link to a removed heading that was no
-coordinate, an exception row it added, a `POINTERS` row whose pointer is gone, and
-every `pins` entry of a record. `--check` writes nothing: it compares each touched
+coordinate, an exception row it added, a `POINTERS` row whose pointer is gone, a
+fenced quote of a removed coordinate, and every `pins` and `overrides` entry of a
+record. It also names each section the retarget made cite itself, each repeat it
+collapsed, and each Rust file whose code and `#[cfg(test)]` code both changed, with
+the lines on each side. `--check` writes nothing: it compares each touched
 FS declaration's section map at the base with the tree's and exits 1 on a removed
 coordinate no record lists or a record problem.
 
@@ -94,6 +107,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import spec_fold_map as folds  # noqa: E402
+import spec_fold_records as recorded  # noqa: E402
 from spec_fold_pass import SCHEMA, FoldPass, read_text  # noqa: E402
 
 
@@ -239,23 +253,25 @@ def move_table(root: Path, dry_run: bool) -> int:
     return 0
 
 
-def read_records(paths: list[Path]) -> list[folds.Record] | None:
-    try:
-        return [folds.read_record(path) for path in paths]
-    except (folds.RecordError, OSError) as error:
-        print(error)
-        return None
+def applied_lines(records: list, done: set) -> list[str]:
+    """What a cumulative run says of each record an earlier pass applied."""
+    return [f"{record.path}: applied by an earlier pass, all {len(record.entries)} entries gone; skipped"
+            for record in records if record.entries and set(record.entries) <= done]
 
 
 def fold_records(root: Path, paths: list[Path], base: str, dry_run: bool, check: bool) -> int:
-    records = read_records(paths)
-    if records is None:
+    records, unreadable = recorded.read_records(paths)
+    if unreadable:
+        for line in unreadable:
+            print(line)
+        print(f"{len(unreadable)} record line(s) refused; nothing was rewritten")
         return 2
     before, after = folds.spec_at(root, base), folds.spec_in(root)
-    refused = folds.problems(records, before, after)
-    fold, _ = folds.fold_map(records)
+    done = recorded.applied(records, before, after)
+    refused = folds.problems(records, before, after, done)
+    fold, _ = folds.fold_map(records, done)
     missing, notes = folds.compare(before, after, fold)
-    for line in refused:
+    for line in applied_lines(records, done) + refused:
         print(line)
     for line in missing:
         print(line if check else f"not retargeted: {line}")
@@ -264,12 +280,12 @@ def fold_records(root: Path, paths: list[Path], base: str, dry_run: bool, check:
             print(f"note: {line}")
         verdict = "fail" if refused or missing else "ok"
         print(f"check {verdict}: {len(fold.targets)} removed coordinate(s) recorded, "
-              f"{len(missing)} in no record, {len(refused)} record problem(s)")
+              f"{len(done)} applied before, {len(missing)} in no record, {len(refused)} record problem(s)")
         return 1 if refused or missing else 0
     if refused:
         print(f"{len(refused)} record problem(s); nothing was rewritten")
         return 2
-    fold_pass = FoldPass(root, records, before, after)
+    fold_pass = FoldPass(root, records, before, after, done)
     stranded, rewrites = fold_pass.plan(tracked_files(root), untracked_files(root))
     if stranded:
         return stranded_refusal(stranded, root)

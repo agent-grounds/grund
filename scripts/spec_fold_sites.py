@@ -250,37 +250,6 @@ def schema_ids(node) -> list[str]:
     return []
 
 
-ROW = re.compile(r'^(?P<indent>\s*)Exception \{ id: "(?P<id>[^"]+)", reason: "(?P<reason>(?:[^"\\]|\\.)*)" \},\s*$')
-
-
-def retarget_exceptions(text: str, fold: FoldMap, after: Spec, evidence: set[str], path: str, hand: list[str]) -> str:
-    """Delete the coverage exception rows of removed leaves.
-
-    The gate holds evidence of leaves alone (§AR-goal-measurement.1), so a target the fold
-    leaves a leaf with no evidence takes one row in the place of its children's, with the
-    reason they gave; the row is reported, because evidence is read here by pattern, not by
-    the scanner the gate runs.
-    """
-    out, orphaned = [], {}
-    for line in text.split("\n"):
-        row = ROW.match(line)
-        target = fold.lookup(row.group("id")) if row else None
-        if target is None:
-            out.append(line)
-            continue
-        slot = orphaned.setdefault(target, [len(out), row.group("indent"), []])
-        if row.group("reason") not in slot[2]:
-            slot[2].append(row.group("reason"))
-    kept = {row.group("id") for row in map(ROW.match, out) if row}
-    for target, (index, indent, reasons) in sorted(orphaned.items(), key=lambda item: -item[1][0]):
-        if after.is_leaf(target) and target not in evidence and target not in kept:
-            out.insert(index, f'{indent}Exception {{ id: "{target}", reason: "{"; ".join(reasons)}" }},')
-            hand.append(f"{path}: added the exception row of `{target}`, a leaf with no evidence; check its reason")
-    for target in sorted(set(fold.targets.values()) & kept & evidence):
-        hand.append(f"{path}: `{target}` keeps an exception row but now has evidence; retire the row")
-    return "\n".join(out)
-
-
 REFS_BYTES = re.compile(r'("spec\.refs"\s*:\s*\{\s*"bytes"\s*:\s*\[)([0-9,\s]*)(\])')
 
 
@@ -342,15 +311,50 @@ def run_sites(path: str, text: str, fold: FoldMap) -> list[str]:
     return sites
 
 
-def relative_sites(path: str, text: str, removed: list[str]) -> list[str]:
-    """Lines of a Python test that name a removed section by its path within its page alone,
-    as a moves test's `MOVES` and `KEPT` rows do."""
+TABLE = re.compile(r"^[A-Z][A-Z0-9_]* = ", re.M)
+ROW_PAGE = re.compile(rf'\(\s*"(?P<page>{ID})(?:\.md)?"\s*,\s*"(?P<label>[^"]*)"')
+ROW_LABEL = re.compile(r'\(\s*"(?P<label>[^"]*)"')
+STRING = re.compile(r'"([^"\n]*)"')
+LABEL = re.compile(r"^[0-9a-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)*\.?$")
+
+
+def page_of(before: Spec, labels: list[str]) -> str | None:
+    """The one declaration whose base sections hold every label, or `None`."""
+    owners = [d.id for d in before.declarations.values() if labels and all(label in d.sections for label in labels)]
+    return owners[0] if len(owners) == 1 else None
+
+
+def relative_sites(path: str, text: str, fold: FoldMap, before: Spec) -> list[str]:
+    """Each row of a Python test that names a removed section by its path within its page, as a
+    moves test's `MOVES` and `KEPT` rows do, where the row's page is the removed section's.
+
+    A table's rows name their page first, `("FS-show.md", "2.1", …)`, or name none and belong
+    to the one page whose sections hold every first label, as the `FS-rules` rows of a test
+    that also reads `FS-errors` do. Every other path a row holds is a chapter of the
+    destination page, the one `CHAPTERS` lists, which `retarget_chapters` rewrites itself.
+    """
     sites = []
-    for coordinate in removed:
-        page, _, relative = coordinate.partition(".")
-        if f"{page}.md" not in text and f'{page}"' not in text:
+    chapters = CHAPTERS.search(text)
+    destination = page_of(before, re.findall(r'"([^"]*)"', chapters.group("body"))) if chapters else None
+    bounds = [m.start() for m in TABLE.finditer(text)] + [len(text)]
+    for start, end in zip(bounds, bounds[1:]):
+        table = text[start:end]
+        if table.startswith("CHAPTERS = "):
             continue
-        for number, line in enumerate(text.split("\n"), 1):
-            if f'"{relative}"' in line:
-                sites.append(f"{path}:{number}: names `{relative}` of `{page}`, a removed section")
+        rows = [(m.group("page"), m.group("label"), m.start("label")) for m in ROW_PAGE.finditer(table)]
+        if not rows:
+            labels = [(m.group("label"), m.start("label")) for m in ROW_LABEL.finditer(table)
+                      if LABEL.match(m.group("label"))]
+            page = page_of(before, [label.rstrip(".") for label, _ in labels])
+            rows = [(page, label, at) for label, at in labels] if page else []
+        named = {at for _, _, at in rows}
+        if destination:
+            rows += [(destination, m.group(1), m.start(1)) for m in STRING.finditer(table)
+                     if m.start(1) not in named and LABEL.match(m.group(1))]
+        for page, label, at in sorted(rows, key=lambda row: row[2]):
+            coordinate = f"{page}.{label.rstrip('.')}"
+            if coordinate in fold.targets:
+                line = text.count("\n", 0, start + at) + 1
+                sites.append(f"{path}:{line}: names `{label}` of `{page}`, a removed section; "
+                             f"it is now `{fold.targets[coordinate]}`")
     return sites
